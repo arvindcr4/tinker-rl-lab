@@ -1,0 +1,292 @@
+%---------------------------------------------------------------------
+\chapter{Phase 2 --- Consolidated Campaign Results}
+\label{ch:p2results}
+
+This chapter reports the Phase-2 campaign results. Every number below is bound to
+a surviving receipt and was re-verified by deterministic code checks on
+2026-09-19 (11/11 PASS). \textbf{Original-contract and replacement-scope numbers
+are never pooled. No cross-suite average is reported. No baseline-gain claim is
+made.} Each table names the scope it measures, and a score is always quoted
+together with its denominator and its coverage.
+
+\section{Summary of terminal states}
+
+\begin{table}[h]
+  \centering
+  \caption{All fourteen lanes at terminal state, with the score that may be
+  quoted for each. ``Coverage'' is evaluation coverage in the stated scope --- it
+  is \emph{not} accuracy and \emph{not} universal private-suite completion.}
+  \label{tab:lanes}
+  \footnotesize
+  \begin{tabular}{@{}llL{0.30\linewidth}L{0.30\linewidth}@{}}
+    \toprule
+    \textbf{Lane} & \textbf{State} & \textbf{Verified result} & \textbf{Coverage / note} \\
+    \midrule
+    E1 & COMPLETE (orig.) & $2/731 = 0.274\%$ pass@1 & 731 terminal generations; 713 native evaluations; 14 generation failures $+$ 4 artefact losses retained in denominator \\
+    E2 & PARTIAL & $1/17$ tasks; replay normalized $0.8628$ & authorization absent for remaining 16 \\
+    E3 & BLOCKED & --- & SDAB private bundle; no local or paid path \\
+    E4 & PARTIAL & $1/100$ tasks; recovery metric $0.3115$ & public artefacts restored; 1175 manifest checks pass \\
+    E5 & PARTIAL & prefix mean $0.050505$ & 7/480 native-scored \\
+    E6 & NOT RUN & --- & 0/812; canonical inventory verified (65 files, IDs 0--811); AWS quota 1/16 \\
+    E7 & BLOCKED/PARTIAL & --- & 1/46 attempted; verifier reward $0.0$ after agent error; no grade \\
+    E8 & COMPLETE & 8 categories, all complete & LAB-Bench public split, 1967/1967 \\
+    E9 & PARTIAL & suite score null & 40/75 competitions natively graded (53.33\%); modal\_streaming arm only \\
+    E10 & COMPLETE & benign-utility evaluation complete & AgentDojo benign utility scope, 97/97 \\
+    E11 & COMPLETE & $\mathbf{129/312 = 41.35\%}$ pass@1 & two native framings; 67/156 code-completion $+$ 62/156 spec-to-RTL \\
+    E12 & BLOCKED & --- & AppBench deployment assets missing \\
+    E13 & PARTIAL & 13/255 episodes & BALROG; 21 never-started receipt candidates mapped \\
+    E14 & TERMINAL & covered; official acc.\ $\mathbf{51.31\%}$ & Omni-MATH 4426/4428 accepted (99.95\%); 2 parser failures recorded \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Strictly completed replacement scopes}
+
+Three replacement scopes closed strictly complete. ``Strictly complete'' means
+every item in the declared scope carries a native, verified verdict.
+
+\subsection{E8 --- LAB-Bench, public split}
+
+The public split closed at \textbf{1967/1967} across \textbf{8 categories}, all
+COMPLETE. Per-category accuracy:
+
+\begin{table}[h]
+  \centering
+  \caption{E8 LAB-Bench (public split) per-category accuracy. All eight
+  categories complete at 1967/1967.}
+  \label{tab:e8}
+  \small
+  \begin{tabular}{@{}lr@{\hspace{2.5em}}lr@{}}
+    \toprule
+    \textbf{Category} & \textbf{Accuracy} & \textbf{Category} & \textbf{Accuracy} \\
+    \midrule
+    TableQA & 0.787 & LitQA2 & 0.176 \\
+    FigQA & 0.514 & DbQA & 0.131 \\
+    ProtocolQA & 0.250 & SeqQA & 0.033 \\
+    SuppQA & 0.183 & CloningScenarios & 0.000 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The category spread is itself the finding: performance is strongly
+heterogeneous, from 0.787 on table-based questions to 0.000 on cloning scenarios.
+Saved diagnostics include answer formatting and length limits. Importantly, these
+diagnostics \emph{do not} establish a quantified causal explanation for the
+errors, and no causal claim is made here.
+
+\subsection{E10 --- AgentDojo, benign utility scope}
+
+The benign utility scope closed at \textbf{97/97}. This measures ordinary
+user-task completion, \textbf{not} prompt-injection security --- a distinction
+that must not be collapsed. The final result preserves the original attempts plus
+a documented continuation that completed the remaining episodes; the continuation
+is part of the receipt, not a silent top-up.
+
+\subsection{E11 --- VerilogEval, two native framings}
+
+VerilogEval closed at \textbf{129/312 = 41.35\% pass@1}, generated with the
+original Tinker sampler. The canonical split is exact and additive:
+
+\[
+\underbrace{67/156}_{\text{code-completion}} \;+\;
+\underbrace{62/156}_{\text{spec-to-RTL}} \;=\; 129/312.
+\]
+
+A sensitivity figure of $129/311$ is retained \emph{non-canonically}; the
+canonical denominator is 312. No new Verilog samples were taken, and this result
+does \textbf{not} establish an improvement over an unmeasured baseline.
+
+\section{Original-contract suite results}
+
+Where the original contract was satisfiable, its score is reported at full
+strength --- not replaced by the substitute scope.
+
+\subsection{E1 --- SWE-bench Pro}
+
+\[
+\textbf{2/731} = 0.274\% \ \text{pass@1.}
+\]
+
+The denominator is deliberately conservative. Of 731 terminal generations, 713
+received native evaluation; \textbf{14 generation failures and 4 artefact losses
+remain in the denominator}. Removing them would raise the reported percentage;
+they are retained because a generation that failed is not evidence of a correct
+patch. This is the project's evidence rule applied at the point where it costs
+the most.
+
+\subsection{E11 --- VerilogEval}
+
+The original-contract E11 suite also carries a full verified score, giving the
+campaign two independent Verilog framings (original contract and native
+replacement scope). Both are reported separately and are never averaged.
+
+\section{Replacement-scope progress on incomplete lanes}
+
+Incomplete lanes are reported with their verified sub-scope progress, so that the
+state of the work is legible without implying a suite score.
+
+\begin{itemize}[leftmargin=1.4em,itemsep=3pt]
+  \item \textbf{E1 (SWE-bench Multilingual).} 35/300 graded. A wave10 recovery
+  (16 tasks) was sealed and locally validated, but its source was subsequently
+  lost; the loss is recorded in Chapter~\ref{ch:campaign}.
+  \item \textbf{E2 (CORE-Bench).} 45/45 capsule setups complete, 0 graded. A
+  direct-VM HARD adapter was built. The setups are real work and are reported as
+  coverage, not as a score.
+  \item \textbf{E5 (Tau3).} 20/97 (20.62\%) cleaned. A successor run was reviewed
+  and remains unreserved. Earlier run results (e.g.\ one success among five, 20\%)
+  remain \emph{separate} results and are not combined with later runs.
+  \item \textbf{E6 (WebArena).} 0/812 graded; the canonical inventory is verified
+  at 65 files with ordered IDs 0--811. The blocker is infrastructure quota, not
+  the inventory.
+  \item \textbf{E9 (MLDevBench).} 0/34 graded; the runtime image is incomplete and
+  the cloud quota is insufficient (1 vCPU against a 4-vCPU requirement).
+  \item \textbf{E13 (BALROG).} 13/255 episodes completed with the exact trained
+  BF16 actor and verified native environments. Native progression was 100\%
+  \emph{across the thirteen completed BabyAI episodes only} --- a selected
+  completed subset, explicitly \textbf{not} an estimate of overall BALROG
+  performance. The native run stopped after an action call failed all five
+  retries, and some model responses exhausted the native token limit without
+  emitting a final action. 21 never-started episodes were mapped as receipt
+  candidates.
+  \item \textbf{E14 (Omni-MATH).} Closed terminal-complete; see below.
+\end{itemize}
+
+\subsection{E14 --- Omni-MATH, terminal-complete}
+
+E14 is the campaign's most precisely characterised result, and it repays the
+detail:
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item 4428 fixed policy answers and 4428 saved judge responses.
+  \item The original Omni-Judge parser accepts \textbf{4426/4428} reports
+  (99.95\% coverage) and excludes two truncated reports.
+  \item It marks 2271 accepted answers correct: official accuracy
+  $\mathbf{51.31\%}$.
+  \item All 4428 task dispositions were matched by re-running the unchanged
+  native scorer against saved file hashes.
+  \item The expanded native-input audit verifies \textbf{42{,}408 files}.
+  \item Historical budget references resolve to byte-identical saved snapshots.
+    Unrelated temporary log archives remain explicitly labelled as
+    non-input historical records.
+\end{itemize}
+
+The excluded reports were \textbf{not} retried and their grades were
+\textbf{not} changed. The strict full-suite score on the 4428-report denominator
+is unavailable by construction, because the judge emitted no verdict for those two
+rows --- which is correct native behaviour. E14 therefore reports coverage and
+official accuracy as separate quantities, and never as a single percentage.
+
+\section{What each score means}
+
+Because fourteen suites with different semantics are reported side by side, the
+meaning of each score is stated explicitly. These scores \textbf{must not be
+averaged} and must not be read as improvement over an unmeasured baseline.
+
+\begin{table}[h]
+  \centering
+  \caption{Score semantics per suite. No two rows measure the same thing.}
+  \label{tab:semantics}
+  \small
+  \begin{tabular}{@{}L{0.16\linewidth}L{0.78\linewidth}@{}}
+    \toprule
+    \textbf{Suite} & \textbf{What the number measures} \\
+    \midrule
+    E1 SWE-bench Pro & pass@1 over terminal generations, with failures retained in the denominator \\
+    E8 LAB-Bench & question accuracy over the public split, per category \\
+    E10 AgentDojo & benign user-task completion (not injection resistance) \\
+    E11 VerilogEval & pass@1 over two 156-task native framings \\
+    E13 BALROG & native progression on a completed 13-episode subset \\
+    E14 Omni-MATH & official judge accuracy on accepted reports, with a separate coverage figure \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Lane value ordering}
+
+Not all lanes are worth the same. A research-value ordering was computed across
+the fourteen lanes over four ordered levels (marginal / supporting / notable /
+headline), normalized to $[0,1]$. The result informed the decision package:
+
+\begin{table}[h]
+  \centering
+  \caption{Research-value ordering across lanes. Higher values identify where
+  additional effort buys the most.}
+  \label{tab:value}
+  \small
+  \begin{tabular}{@{}lrlr@{\hspace{2em}}lrlr@{}}
+    \toprule
+    \textbf{Lane} & \textbf{Value} & \textbf{Lane} & \textbf{Value} & \textbf{Lane} & \textbf{Value} & \textbf{Lane} & \textbf{Value} \\
+    \midrule
+    E6 & 0.39 & E8 & 0.31 & E11 & 0.20 & E12 & 0.12 \\
+    E14 & 0.34 & E2 & 0.28 & E5 & 0.19 & E7 & 0.12 \\
+    E1 & 0.33 & E10 & 0.27 & E4 & 0.15 & E3 & 0.08 \\
+    E9 & 0.33 & E13 & 0.26 & & & & \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The ordering is deliberate about what it penalises. E6 (0.39) and E14 (0.34) rank
+highest because a full WebArena suite result and the private FrontierMath number
+would both be headline-scale. E11 (0.20) ranks low \emph{despite being a complete
+lane}, because a completed lane with low marginal value should not attract more
+effort than an incomplete lane with high value. E3 (0.08) ranks lowest because no
+result path exists without the private bundle. This is the reasoning that turned a
+status table into a decision package.
+
+\section{Verification and integrity}
+
+The campaign's central integrity claim is mechanical rather than rhetorical: the
+consolidated ledger is gated by a deterministic verifier that re-derives eleven
+specific claims from surviving receipts. On 2026-09-19 it reported
+\textbf{11/11 PASS, 0 failed}:
+
+\begin{table}[h]
+  \centering
+  \caption{Deterministic ledger checks, 2026-09-19. All eleven passed.}
+  \label{tab:checks}
+  \footnotesize
+  \begin{tabular}{@{}L{0.42\linewidth}L{0.52\linewidth}@{}}
+    \toprule
+    \textbf{Check} & \textbf{What it re-derives} \\
+    \midrule
+    \texttt{E1\_receipt\_score\_equals\_2\_of\_731} & score $=0.0027359781\ldots$; status SCORED \\
+    \texttt{E9\_modal\_streaming\_40\_unique\_graded\_of\_75} & 41 graded rows, 40 unique competitions, denominator 75 \\
+    \texttt{E9\_merged\_vllm\_arm\_separate\_with\_1\_grade} & merged-vLLM arm kept separate at 1 graded row \\
+    \texttt{E11\_canonical\_129\_of\_312\_with\_sensitivity} & raw $129/312$, corrected $129/311$ \\
+    \texttt{E11\_component\_split\_sums\_67\_plus\_62} & $67/156 + 62/156 = 129/312$ \\
+    \texttt{E14\_recheck\_4426\_of\_4428\_accuracy\_0\_5131} & accepted $4426/4428$, skipped 2, acc $=0.5131043831\ldots$ \\
+    \texttt{E8\_labbench\_1967\_of\_1967\_all\_complete} & 8 categories, evaluated sum 1967 \\
+    \texttt{strict\_completed\_suites\_are\_E8\_E10\_E11} & strict set exactly $\{E8, E10, E11\}$ \\
+    \texttt{E1\_v6\_sealed\_request\_hash\_matches} & sealed-request SHA-256 equality \\
+    \texttt{E1\_v6\_fixture\_receipt\_hash\_matches} & fixture-receipt SHA-256 equality \\
+    \texttt{codex\_run\_execution\_sources\_absent} & probed 4 sources; 0 still present \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Two properties of this table deserve emphasis. First, the checks are
+\emph{arithmetic and hash} checks, not narrative ones: they recompute exact
+divisions and compare SHA-256 digests. Second, the last check is an
+\emph{anti-tamper} check --- it asserts that the lost execution sources are
+\emph{absent}, so a later attempt to present reconstructed code as original would
+fail the verifier. That a submission ships with a check designed to catch its own
+author is the strongest available evidence that the numbers above are the numbers
+that were produced.
+
+\section{Budget}
+
+Spend is reported as an attributed ledger, never blended:
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \textbf{\$5.6301} of the \$50 additional cap counted against this
+  campaign's incremental spend.
+  \item A separate \textbf{\$80} successor scope (E5) was reviewed and remains
+  \emph{unreserved} --- it is not counted as spend.
+  \item \textbf{No spend occurred on 2026-09-19}, the terminal day. The terminal
+  states are therefore not artefacts of a budget cutoff on the reporting date.
+  \item Holds are not invoices: a held or reserved amount is recorded as a hold,
+  not as expenditure.
+\end{itemize}
+
+The distinction between held, reserved, and spent is maintained throughout because
+conflating them would misstate the cost of the campaign in either direction.

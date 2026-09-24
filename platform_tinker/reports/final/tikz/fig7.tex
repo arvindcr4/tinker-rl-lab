@@ -1,0 +1,17 @@
+\begin{figure}[h]\centering
+\begin{tikzpicture}[x=34mm,y=15mm,every node/.style={font=\footnotesize}]
+\foreach \p/\x/\y/\name/\col/\st in {
+ P1/0/1/{scaling / layer-freeze}/good/{positive: overlap=1.0},
+ P2/1/1/{ZVF collapse}/warn/{measured: 72--77\%},
+ P3/2/1/{group size}/warn/{null: no sweet spot},
+ P4/3/1/{length bias}/blue/{designed},
+ P5/0/0/{provenance (flagship)}/good/{built: verifier A/F},
+ P6/1/0/{GRPO-registry}/blue/{fold into P5},
+ P7/2/0/{ZVF controller}/blue/{designed},
+ P8/3/0/{integrity}/warn/{AUROC 0.63}} {
+  \node[blk, fill=\col!12, minimum width=30mm, minimum height=11mm] at (\x,\y)
+    {\textbf{\p}: \name\\[1pt]\scriptsize \st};
+}
+\end{tikzpicture}
+\caption{The eight-study portfolio and honest status. Strongest \emph{original} bets: P1 (predictive layer-freeze) and P5 (verifiable provenance). Green = positive/built, amber = measured/null, blue = designed.}
+\end{figure}

@@ -1,0 +1,291 @@
+\chapter{Intermediate Results and Discussion}
+\label{ch:results}
+
+\section{Datasets and Experimental Configuration}
+The empirical studies use GSM8K~\cite{cobbe2021gsm8k} (grade-school math word problems,
+exact-match verifiable reward) and, for the code pillar, a HumanEval~\cite{chen2021humaneval}
+subset (unit-test reward). Held-out prompts are disjoint from the training prompts and are
+deliberately small so that noise is visible rather than hidden; every reported gain carries
+its denominator $n$. Table~\ref{tab:hparams} lists the common hyperparameters; per-study
+deviations (model size, group size $G$, step count, seeds) are stated in each section and
+consolidated in Appendix~\ref{app:registry}.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}L{0.34\linewidth}L{0.30\linewidth}L{0.26\linewidth}@{}}
+\toprule
+\textbf{Setting} & \textbf{Value} & \textbf{Notes} \\
+\midrule
+Base models & Qwen2.5-1.5B/3B; Qwen3.5-4B & P1 white-box vs.\ managed \\
+Task / reward & GSM8K exact-match; HumanEval unit-test & binary verifiable \\
+Group size $G$ & $\{2,4,8,16\}$ (P3); $4$ (campaign) & swept / fixed \\
+Steps & $5$--$10$ (P1); $6$--$8$ (P2/P3/campaign) & short by design (budget) \\
+Seeds & $1$ (sweeps) $\to$ $3$ (campaign) & multi-seed for headline claims \\
+Decoding & $T{=}1.0$, top-$p$, capped max tokens & shared across back-ends \\
+Adapters & LoRA on $q/k/v/o$ projections & white-box P1 \\
+Held-out $n$ & $8$--$20$ & reported with every gain \\
+\bottomrule
+\end{tabular}
+\caption{Common experimental configuration. Small step counts and held-out sets are a
+deliberate budget choice; conclusions are correspondingly framed as noise-limited and
+re-tested multi-seed where a claim is made.}
+\label{tab:hparams}
+\end{table}
+
+We report the portfolio honestly, \emph{including the negatives}, which are the
+scientific point of the exercise. Table~\ref{tab:summary} is the portfolio-level
+summary; the sections below give the detail and the caveats.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}L{0.14\linewidth}L{0.30\linewidth}L{0.37\linewidth}L{0.10\linewidth}@{}}
+\toprule
+\textbf{Study} & \textbf{Setup} & \textbf{Key result} & \textbf{Verdict} \\
+\midrule
+P1 layer-freeze
+& 1.5B/5-step \emph{vs.} 3B/10-step/4-seed
+& overlap $1.0$ (1.5B) $\to$ $0.083\pm0.048$ (3B, ${\approx}$chance); concentration $0.48{\to}0.39$ holds
+& \textbf{null (pred.)} \\
+P2 ZVF
+& 4 methods, 40 steps, $16\times8$, GSM8K
+& mean ZVF $0.72$--$0.77$; all-correct $0.65$--$0.71$
+& diagnostic \\
+P3 group size
+& Qwen3.5-4B, $G\in\{2,4,8,16\}$, 6 steps, s0
+& one seed cannot establish a universal optimum
+& suggestive \\
+Curriculum
+& Qwen3.5-4B, 8 steps, s0
+& ZVF $0.50\to0.00$ at $4.81\times$ cost; $+0.05$ both arms
+& \textbf{negative} \\
+Matched-token curriculum
+& Qwen3.5-4B, $G{=}4$, ${\sim}30$k tokens, 3 seeds
+& both arms average $+0.028$ held-out; curriculum skips 11--20 groups
+& \textbf{negative} \\
+P8 method traces
+& one trajectory/method, $N=160$ correlated rows
+& row-CV AUROC $0.838\pm0.010$ vs reward-only $0.426\pm0.027$
+& proof of concept \\
+\bottomrule
+\end{tabular}
+\caption{Portfolio-level summary of the empirical findings. ``n.s.'' = not
+statistically significant. Held-out sets are small ($n=8$ to $20$); all
+learning-gain magnitudes should be read as noise-limited (see text).}
+\label{tab:summary}
+\end{table}
+
+\section{P2 --- Advantage-Signal Starvation is Large and Easy-Driven}
+On real reward tensors for four methods (40 steps each, $16$ prompts $\times\,8$
+samples, binary verifiable reward on GSM8K), the mean zero-variance fraction is
+$\zvf = 0.72$--$0.77$: in this fixed shared-schedule, seed-0 study, roughly
+three-quarters of prompt groups contribute no reward-derived surrogate signal.
+The collapse is \emph{easy-driven}, not chance: about $65$--$71\%$ of
+prompts are \emph{all-correct} (already solved) versus only ${\sim}5\%$ all-wrong.
+We then tested whether a re-baselining trick could recover gradient from collapsed
+groups. A naive cross-prompt baseline (advantage against the global mean) gives
+$|A|\approx0.21$, but that ``signal'' is just a proxy for prompt
+easiness/difficulty --- not a learning signal --- which is precisely what
+RLOO~\cite{ahmadian2024rloo} already captures. A difficulty-isocline baseline
+correctly recovers $|A|\approx0.012$--$0.02$, i.e.\ essentially zero, confirming that
+\emph{no recoverable reward-contrast signal exists} in these groups. \textbf{Honest redirect:}
+re-baselining is the wrong lever; the data point instead to difficulty-targeted
+sampling / curriculum, motivating the experiments below.
+
+\section{P3 --- A Single-Seed Sweep Does Not Establish a Group-Size Optimum}
+\label{sec:p3}
+\input{tikz/fig8.tex}
+A single-seed sweep (Table~\ref{tab:p3}) is suggestive: $G{=}2$ sits below the
+learning threshold ($50\%$ of steps collapse, $+0.000$ held-out), $G{=}4$ looks best
+($+0.125$ held-out), and $G\ge8$ shows diminishing returns as token cost scales
+roughly linearly with $G$ while the easy subset gets mastered and groups collapse to
+all-correct anyway. But the $G{=}4$ ``win'' is literally one extra correct held-out
+example ($7/8 \to 8/8$, $n=8$, single seed). When the multi-seed campaign (below)
+re-tested this, the sweet spot did \emph{not} survive: at seed 0 the baseline
+held-out gains were $G2\,{+}0.083$, $G4\,{0.000}$, $G8\,{+}0.083$, $G16\,{+}0.083$
+--- i.e.\ $G{=}4$ was the \emph{worst} point, not the best.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+$G$ & batch-level zero-loss frac & mean reward & held-out gain & tokens used \\
+\midrule
+2  & 0.50 & 0.75 & $+0.000$ & 9{,}663 \\
+4  & 0.17 & 0.71 & $+0.125$ & 19{,}964 \\
+8  & rising (collapses by step 5--6) & ${\sim}0.8$ & (trained) & 34{,}084 \\
+16 & rising (collapses by step 5--6) & ${\sim}0.8$ & (trained) & 68{,}055 \\
+\bottomrule
+\end{tabular}
+\caption{P3 single-seed group-size sweep (Qwen3.5-4B, 6 steps, GSM8K, seed 0). The
+$G{=}4$ held-out gain is a single example ($n=8$). The ``zero-loss frac'' here is a
+stricter \emph{batch-level} collapse than the per-group $\zvf$ of P2; the $G\ge8$
+rows depend on W\&B logs whose summary writes were lost to the thread-safety bug
+(Chapter~\ref{ch:impl}).}
+\label{tab:p3}
+\end{table}
+
+\section{Curriculum --- Eliminating Waste is Not a Free Lunch}
+A curriculum that trains only on mixed-variance (non-collapsed) groups does exactly
+what it is designed to do: it drives the zero-loss fraction from $0.50$ to $0.00$.
+But it pays $4.81\times$ the sampling cost (oversampling to \emph{find} non-collapsed
+groups) and delivers an \emph{identical} held-out gain to the baseline ($+0.05$ vs
+$+0.05$, held-out $n=20$, one seed, both gains equal to one extra correct answer).
+Eliminating the visible zero-advantage groups does not, by itself, buy accuracy: the
+sampling overhead offsets the gradient-density benefit.
+
+\section{Matched-Token Re-Test Yields an Honest Null}
+\label{sec:campaign}
+The self-contained matched-token experiment in
+\path{experiments/results/token\_budget/results.json} compares baseline and
+curriculum at approximately $30{,}000$ rollout tokens across three seeds at $G{=}4$
+(Table~\ref{tab:campaign}). Both arms average the same held-out gain, $+0.028$.
+The curriculum skips 11--20 collapsed groups and therefore makes only 2, 8, and 5
+optimizer steps, compared with 12, 11, and 10 for the baseline, without improving
+the mean held-out outcome. With only three seeds and held-out $n=12$, these are
+descriptive, noise-limited results; they support a null conclusion, not equivalence.
+
+\paragraph{Snapshot provenance.} An earlier nine-run oversampling campaign, frozen
+at Git commit \texttt{9b3d2560} and summarized in
+\path{experiments/results/campaign/FINDINGS.md}, likewise found no reliable
+curriculum advantage while using roughly $5$--$6\times$ more sampling. A later
+unmanifested export overwrote the associated \path{results.json} with different
+values but did not update the findings note. Those disputed numbers are excluded
+from the headline analysis pending W\&B/provenance reconciliation; the matched-token
+artifact above is the current defensible comparison.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}cccc@{}}
+\toprule
+seed & baseline gain & curriculum gain & curriculum groups skipped \\
+\midrule
+0 & $+0.083$ & $+0.083$ & $20$ \\
+1 & $+0.083$ & $+0.000$ & $11$ \\
+2 & $-0.083$ & $+0.000$ & $14$ \\
+\midrule
+\textbf{mean} & $\mathbf{+0.028}$ & $\mathbf{+0.028}$ & --- \\
+\bottomrule
+\end{tabular}
+\caption{Matched-token baseline vs curriculum at $G{=}4$ (Qwen3.5-4B,
+${\sim}30$k rollout tokens, GSM8K, held-out $n=12$). Both arms average the same
+noise-limited held-out gain; the curriculum performs fewer optimizer updates after
+discarding collapsed groups.}
+\label{tab:campaign}
+\end{table}
+
+\section{P1 --- Step-1 Predictability Holds at Toy Scale but Collapses at 3B}
+\label{sec:p1}
+\input{tikz/fig4.tex}
+The white-box layer profile at toy scale (Qwen2.5-1.5B, 28 layers, 5 GRPO-style
+steps, a hardcoded arithmetic set) initially looked like the clearest positive in
+the portfolio: the top-$k$ highest-gradient layers after a \emph{single} step were
+identical to the top-$k$ over all steps
+(\texttt{step1\_predicts\_final\_topk\_overlap} $=1.0$), suggesting one could decide
+what to freeze after one update. \textbf{This did not survive scaling.} A four-seed
+re-test (Qwen2.5-3B, 36 layers, 10 steps, \emph{real} GSM8K, seeds
+$\{0,1,2,3\}$) drops the mean step-1$\to$final overlap to
+$0.083\pm0.048$ --- i.e.\ ${\approx}$chance. The mid-late band that dominates by end-of-training
+\emph{emerges} over steps and is invisible at step~1, so the apparent predictability
+was an artifact of the toy setup. Adaptation is only \emph{moderately} concentrated:
+the top $25\%$ of layers carry ${\sim}48\%$ of the total gradient norm
+(\texttt{concentration\_top25pct\_share} $=0.476$ at 1.5B, $0.39$ at 3B), not the
+$>90\%$ that a ``freeze almost everything'' story would need.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Freeze rule & Cold layers & Freeze-able frac. & Est.\ LoRA-bwd FLOP saving$^{\dagger}$ \\
+\midrule
+Conservative ($g<0.6\,\bar{g}$) & $5/28$  & $18\%$ & $\sim\!18\%$ \\
+Moderate ($g<0.7\,\bar{g}$)     & $11/28$ & $39\%$ & $\sim\!39\%$ \\
+\bottomrule
+\end{tabular}
+\caption{Freeze-able fraction and estimated FLOP saving. $^{\dagger}$\textbf{Estimate,
+not measured.} Assumes per-layer LoRA backward cost is uniform, so freezing $k$ of
+$28$ layers saves $\approx k/28$ of the \emph{LoRA-backward} FLOP only; the frozen
+base-model forward/backward (which dominates end-to-end training FLOP) is unchanged.
+Derived from a 1.5B, 5-step proof-of-concept; a scaled run is needed to confirm.}
+\label{tab:p1-freeze-estimate}
+\end{table}
+
+\section{P8 --- Telemetry Separates Method Traces in a Small Proof of Concept}
+Using the per-step telemetry rather than reward alone, an exploratory classifier
+separates the four method traces with row-wise cross-validated AUROC $0.838\pm0.010$,
+versus $0.426\pm0.027$ for reward-only features. This shows that the stored telemetry
+contains method-identifying structure beyond the reward summary; it does \emph{not}
+yet establish run-integrity detection or generalisation. The result is
+recomputed from the raw \texttt{n2\_reward\_tensor\_resume} tensors by
+\texttt{p8\_detector.py}: four reward-optimisation algorithms each contribute $40$
+per-step rows ($N=160$); the positive ``surrogate'' class is three GRPO variants
+reported as GRPO ($120$ rows) and the negative class is genuine GRPO ($40$ rows), a
+$3{:}1$ imbalance. Features are derived entirely from the raw reward/length/advantage
+arrays (\texttt{zvf}, \texttt{reward\_mean}, \texttt{reward\_std},
+\texttt{frac\_all\_zero}, \texttt{frac\_all\_one}, \texttt{mean\_len},
+\texttt{cv\_len}, \texttt{len\_reward\_corr}, \texttt{adv\_abs\_mean},
+\texttt{adv\_std}, \texttt{lag1\_autocorr}). A logistic-regression classifier
+(median-imputed, standardised, $5$-fold stratified CV) reaches
+$\mathrm{AUROC}=0.838\pm0.010$, versus $0.426\pm0.027$ for a reward-only auditor
+(below chance). \textbf{Overfitting caveat:} with $N=160$ rows, $11$ features, and a
+$3{:}1$ class imbalance, one trajectory per method, temporal correlation between rows,
+and row-wise rather than run-wise splits, the AUROC is susceptible to severe optimism.
+It should be read only as a \emph{method-classification proof of concept}. A larger,
+multi-run evaluation with grouped temporal/run-level holdout (diverse base
+models/tasks, thousands of steps) is required before any integrity claim. Remaining provenance caveat: the base
+model/task are not recorded in the tensor rows, so provenance is incomplete --- exactly
+the gap the P5 protocol is designed to close.
+
+\section{Cross-Study Synthesis}
+Read together, the eight studies tell a coherent story rather than eight isolated
+results. P2 establishes that the dominant measured phenomenon in the fixed study is
+advantage-signal starvation
+($\zvf\approx0.72$--$0.77$), and that it is \emph{easy-driven} (the collapsed groups
+are mostly already-solved prompts). That immediately rules out the tempting fix ---
+re-baselining --- because P2 also shows the ``recovered'' signal is just a difficulty
+proxy with no learning content. The natural next lever, a curriculum that removes the
+waste, is exactly what the curriculum and matched-token studies test; both return
+honest nulls. P3 tells the same cautionary tale for group size: a single-seed sweep
+does not establish a universal optimum. P1 extends
+the pattern to a structural claim --- step-1 predictability of layer adaptation ---
+which likewise fails to survive scaling. P8 adds a narrower systems observation:
+telemetry separates the four available method traces better than reward-only features,
+but integrity generalisation remains untested. The synthesis, then, is that on this
+compute scale the \emph{measurement} is useful while most
+\emph{algorithmic} levers are noise-limited --- which is what justifies steering
+Phase-2 toward the systems/provenance direction (P5) rather than chasing another
+GRPO variant.
+
+\section{Rigour and Threats to Validity}
+\label{sec:rigor}
+The methodology is deliberately adversarial toward its own results.
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \textbf{Multi-seed with matched baselines where feasible.} The curriculum
+  intervention is re-tested across three seeds at matched token budget; the P1
+  scaling check uses four seeds. P2 remains a shared-schedule seed-0 diagnostic, P3
+  remains a single-seed sweep, and P8 remains one trajectory per method; these are
+  explicitly labelled exploratory rather than confirmatory.
+  \item \textbf{Held-out evaluation.} Gains are measured on held-out prompts, and we
+  report the held-out $n$ ($8$--$20$) alongside every gain so the reader can see that
+  magnitudes are noise-limited.
+  \item \textbf{Recompute-from-tensors.} Published diagnostics are recomputable from
+  stored raw tensors (e.g.\ \texttt{p2\_collapse\_analysis.py}), not merely read back
+  from a logged summary.
+  \item \textbf{Adversarial review plus deterministic verification.} Critical review
+  of the early single-seed conclusions prompted the multi-seed and matched-token
+  re-tests. The evidence retained in the submission is the script-based recomputation:
+  ZVF $0.72$--$0.77$, all-correct $0.65$--$0.71$, and the stored P8 row-CV output.
+\end{itemize}
+Known threats we do \emph{not} hide: small held-out sets; a partially-recorded P3
+sweep artefact (G8/G16 summaries lost to the W\&B thread-safety bug); a deterministic
+prompt schedule shared across the four P2 methods; and an invalidated
+\texttt{zero\_loss\_frac} in the first campaign batch (since fixed). Re-running P3
+under the process-per-run launcher yields corrected G8/G16 held-out gains of
+$+0.083$ (both from $0.750\to0.833$, single seed), superseding the thread-bug-affected
+values --- but these remain single-seed point estimates pending multi-seed
+replication.
+
+%---------------------------------------------------------------------

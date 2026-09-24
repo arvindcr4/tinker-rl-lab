@@ -1,0 +1,186 @@
+\documentclass[border=6pt]{standalone}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,decorations.pathreplacing,patterns,pgfplots.groupplots}
+\tikzset{
+  blk/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=blue!6,
+              minimum height=8mm, minimum width=20mm, align=center, font=\small},
+  io/.style={rectangle, rounded corners=6pt, draw=black!70, thick, fill=green!8,
+             minimum height=8mm, align=center, font=\small},
+  proc/.style={rectangle, draw=black!70, thick, fill=orange!10, minimum height=8mm,
+               align=center, font=\small},
+  dec/.style={diamond, aspect=2, draw=black!70, thick, fill=yellow!15, align=center, font=\footnotesize},
+  warnbox/.style={rectangle, rounded corners=2pt, draw=red!60!black, thick, fill=red!7,
+                  minimum height=8mm, align=center, font=\small},
+  oklbox/.style={rectangle, rounded corners=2pt, draw=green!45!black, thick, fill=green!8,
+                 minimum height=8mm, align=center, font=\small},
+  ar/.style={-{Latex[length=2mm]}, thick},
+  arl/.style={-{Latex[length=2mm]}, thick, dashed, draw=black!55},
+  lbl/.style={font=\footnotesize\itshape, text=black!60},
+}
+\definecolor{good}{RGB}{34,139,34}
+\definecolor{bad}{RGB}{178,34,34}
+\definecolor{warn}{RGB}{218,165,32}
+\definecolor{pesblue}{RGB}{0,45,98}
+\definecolor{complete}{RGB}{30,125,79}
+\definecolor{partial}{RGB}{176,106,0}
+\definecolor{blocked}{RGB}{166,43,43}
+\begin{document}
+\tikzset{
+  colhead/.style={rectangle, rounded corners=2pt, draw=pesblue, very thick,
+                  fill=pesblue, text=white, align=center, inner sep=3.5pt,
+                  text width=4.6cm, font=\small\bfseries},
+  threat/.style={warnbox, text width=4.3cm, align=left, inner sep=3pt,
+                 font=\scriptsize, minimum height=0pt},
+  mit/.style={oklbox, text width=4.3cm, align=left, inner sep=3pt,
+              font=\scriptsize, minimum height=0pt},
+  pairrule/.style={draw=black!45, thick, line cap=round},
+  chip/.style={rectangle, rounded corners=1.5pt, draw=black!60, thick,
+               inner sep=3pt, font=\scriptsize, align=center},
+  note/.style={rectangle, rounded corners=2pt, draw=black!40, densely dashed,
+               fill=black!3, align=left, font=\scriptsize, inner sep=4pt,
+               text width=4.3cm},
+}
+\begin{tikzpicture}
+
+% ================= group headers =================
+\node[colhead] (h1) at (0,0)
+  {Internal validity\\[1pt]{\scriptsize\mdseries single-seed runs $\cdot$ short horizons $\cdot$ lost archive}};
+\node[colhead] (h2) at (5.4,0)
+  {Construct validity\\[1pt]{\scriptsize\mdseries denominators $\cdot$ no aggregate $\cdot$ scope $\cdot$ sampler}};
+\node[colhead] (h3) at (10.8,0)
+  {External validity\\[1pt]{\scriptsize\mdseries closed platform $\cdot$ withheld third-party access}};
+
+% ================= INTERNAL =================
+\node[threat, below=0.30cm of h1, anchor=north] (t1)
+  {\textbf{T1. Single-seed Tinker runs.}\\
+   Each Tinker configuration ran once; cost precluded repetition, so no variance
+   estimate and no significance test exists on Tinker data at all. Henderson
+   et al.\ (2018) recommend at least ten seeds.};
+\node[mit, below=1mm of t1, anchor=north] (m1)
+  {\textbf{$\rightarrow$ Mitigation.} Quantitative conclusions are drawn only
+   from runs with repeated seeds --- the TRL baseline and the held-out GSM8K
+   evaluation --- while Tinker figures are reported descriptively and marked
+   $\dagger$. No significance claim rests on a single-seed comparison.};
+
+\node[threat, below=2.6mm of m1, anchor=north] (t2)
+  {\textbf{T2. Horizons of 30--50 steps.}\\
+   The runs are early-training snapshots. Reward hacking, catastrophic
+   forgetting and late-stage policy collapse need longer horizons to manifest,
+   so asymptotic claims are unsupported.};
+\node[mit, below=1mm of t2, anchor=north] (m2)
+  {\textbf{$\rightarrow$ Mitigation.} Every claim is scoped to the observed
+   horizon: the scaling-law null is a bounded negative at this horizon, not a
+   statement about GRPO's asymptotics, and the 200-token cap bounds the
+   length-bias drift. No ``converges to'' language is used.};
+
+\node[threat, below=2.6mm of m2, anchor=north] (t3)
+  {\textbf{T3. A missing pass3/pass16 archive.}\\
+   The E4 recovery's per-task artefacts do not survive: zero of six verify, and
+   only \texttt{TINKER\_BRIDGE.json} does.};
+\node[mit, below=1mm of t3, anchor=north] (m3)
+  {\textbf{$\rightarrow$ Mitigation.} The surviving 0.3115 is reported as a
+   receipt-only verifier recovery metric on one of 100 tasks, labelled
+   \texttt{CLOSED\_PARTIAL}, never as a suite score or as the fraction 37/128.};
+
+% ================= CONSTRUCT =================
+\node[threat, below=0.30cm of h2, anchor=north] (t4)
+  {\textbf{T4. Native denominators are not comparable.}\\
+   Every result sits on its own suite's denominator --- 2/731 SWE-bench Pro,
+   0/812 WebArena, 13/255 BALROG, 40/75 MLE-bench competitions, 4{,}428
+   Omni-MATH dispositions --- which differ in size and in what they count and
+   exclude.};
+\node[mit, below=1mm of t4, anchor=north] (m4)
+  {\textbf{$\rightarrow$ Mitigation.} Results are never pooled, within lanes or
+   across them (E1's two scopes, E2's, E5's, E9's). A 41.35\% and a 0.274\% on
+   different denominators license no comparison, average or ranking.};
+
+\node[threat, below=2.6mm of m4, anchor=north] (t5)
+  {\textbf{T5. No cross-suite aggregate.}\\
+   No mean, median or composite index over suites appears anywhere in this
+   work, so the campaign has no single headline number.};
+\node[mit, below=1mm of t5, anchor=north] (m5)
+  {\textbf{$\rightarrow$ Mitigation.} A position, not an omission: an
+   aggregate over native denominators would be a number with no referent. The
+   four complete scopes and the two original-contract scores are the honest
+   maximum.};
+
+\node[threat, below=2.6mm of m5, anchor=north] (t6)
+  {\textbf{T6. The E10 scope measures benign utility only.}\\
+   E10's completed evidence is 97/97 tasks under AgentDojo's benign scope; its
+   original contract, private AgentHarm tasks, is externally blocked, so the
+   result says nothing about adversarial robustness.};
+\node[mit, below=1mm of t6, anchor=north] (m6)
+  {\textbf{$\rightarrow$ Mitigation.} The benign scope is named at every
+   reference to the result; no adversarial-robustness claim is made for the
+   trained actor.};
+
+\node[threat, below=2.6mm of m6, anchor=north] (t7)
+  {\textbf{T7. The retained E11 result came from the original sampler.}\\
+   VerilogEval's 129/312 = 41.35\% was sampled through the Tinker managed
+   sampler, as the receipt records. That route is gone --- the run is purged ---
+   and the recovery path is a vLLM serve of the HuggingFace mirror.};
+\node[mit, below=1mm of t7, anchor=north] (m7)
+  {\textbf{$\rightarrow$ Mitigation.} The lane is receipt-bound, with
+   provenance recorded down to the sampler path. No backend numerical-parity
+   claim is made, and a re-run would be a same-weights, different-sampler
+   comparison whose divergence is not measured.};
+
+% ================= EXTERNAL =================
+\node[threat, below=0.30cm of h3, anchor=north] (t8)
+  {\textbf{T8. Closed Tinker internals.}\\
+   The SDK exposes a custom loss path, a limited optimiser surface and standard
+   LoRA hyperparameters, but not the server-side GRPO loss formulation, the
+   reward normalisation or baseline-subtraction scheme, minibatch construction,
+   hardware configuration or system telemetry. Tinker results therefore measure
+   the \emph{platform's} implementation of GRPO, not an abstract algorithmic
+   specification; the SDK is also a moving target, with Phase~1 pinned at
+   \texttt{tinker==0.16.1} and the September 2026 bridge work requiring
+   \texttt{tinker==0.30.0}.};
+\node[mit, below=1mm of t8, anchor=north] (m8)
+  {\textbf{$\rightarrow$ Mitigation.} No backend numerical-parity claim is
+   made. Serving conditions and the pinned SDK version are recorded per lane,
+   and the stack is reported as part of the result: a label without its stack
+   is not a reproducible experimental specification.};
+
+\node[threat, below=2.6mm of m8, anchor=north] (t9)
+  {\textbf{T9. Third-party access withheld.}\\
+   Six original contracts could not obtain their private bundles or hosted
+   evaluations --- E3 SDAB, E7 BinaryAudit, E8 LifeSciBench, E10 AgentHarm,
+   E12 AppBench and E14 FrontierMath --- and the access requests remain
+   unanswered, so those scores are not producible outside the provider.};
+\node[mit, below=1mm of t9, anchor=north] (m9)
+  {\textbf{$\rightarrow$ Mitigation.} Each lane carries a terminal close-out
+   record with a named reopen condition. The replacement scope is reported
+   under its own name and never under the original's, and no substitute number
+   is reported where the original was withheld.};
+
+% ================= pair rules =================
+\foreach \a/\b in {t1/m1, t2/m2, t3/m3, t4/m4, t5/m5, t6/m6, t7/m7, t8/m8, t9/m9}{
+  \draw[pairrule] ([xshift=-3.0mm]\a.north west) -- ([xshift=-3.0mm]\b.south west);
+  \draw[pairrule] ([xshift=-3.0mm]\a.west) -- (\a.west);
+  \draw[pairrule] ([xshift=-3.0mm]\b.west) -- (\b.west);
+}
+
+% ================= legend =================
+\node[chip, draw=red!60!black, fill=red!7, anchor=west] (c1) at (-2.4,1.15)
+  {threat to validity};
+\node[chip, draw=green!45!black, fill=green!8, anchor=west] (c2)
+  at ([xshift=2.5mm]c1.east)
+  {applied mitigation, paired by the rule at left};
+
+% ================= closing notes (placed in column slack) =================
+\node[note, below=7mm of m3, anchor=north] (n1)
+  {\textbf{Each threat above is paired with the mitigation actually applied},
+   and the pairing is mostly a reduction in what is claimed rather than a
+   repair of the evidence: where the evidence is partial the claim is narrowed
+   to what it supports, not extended to what a reader might prefer.};
+
+\node[note, below=7mm of m9, anchor=north] (n2)
+  {$\dagger$ marks figures and summary statistics drawn from Tinker data only;
+   independent replication of them requires Tinker API access
+   (\texttt{LIMITATIONS\_AND\_IMPACT.md}, Sec.~6.3).};
+
+\end{tikzpicture}
+\end{document}

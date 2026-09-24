@@ -1,0 +1,74 @@
+\chapter{Implementation Details}
+\label{ch:impl}
+
+\section{The Tinker GRPO Loop}
+\label{sec:impl-loop}
+\input{tikz/fig2.tex}
+\input{tikz/fig3.tex}
+The reference loop in \texttt{platform\_tinker/tinker\_rl/grpo.py} follows the standard
+sample~$\rightarrow$~advantage~$\rightarrow$~loss~$\rightarrow$~optimise cycle. For a
+prompt $q$ we draw a group of $G$ completions $\{o_i\}_{i=1}^{G}$ from the current
+policy and score each with the verifiable reward $r_i$; the group-relative advantage
+is Eq.~\eqref{eq:adv}. The optimisation objective is the PPO-clipped surrogate with
+a KL penalty to a frozen reference policy $\pi_{\mathrm{ref}}$,
+\begin{align}
+\mathcal{L}(\theta) &\;=\;
+-\,\mathbb{E}_{i,t}\!\left[
+\min\!\big(\rho_{i,t}A_i,\;
+\mathrm{clip}(\rho_{i,t},1-\epsilon,1+\epsilon)A_i\big)
+\right]
+\;+\; \beta\, \mathrm{KL}\!\big(\pi_\theta \,\|\, \pi_{\mathrm{ref}}\big),
+\label{eq:loss}\\[0.2em]
+\text{where}\quad
+\rho_{i,t} &=\frac{\pi_\theta(o_{i,t}\mid q,o_{i,<t})}{\pi_{\theta_{\mathrm{old}}}(o_{i,t}\mid q,o_{i,<t})}.
+\nonumber
+\end{align}
+The critical observation, made mechanical by Eq.~\eqref{eq:adv}, is that whenever
+$\sigma_g = 0$ every $A_i = 0$, so the whole group contributes nothing to the
+\emph{surrogate} term of Eq.~\eqref{eq:loss}; the KL-penalty term still applies, so
+the update is a pure pull toward the reference rather than reward-driven learning.
+
+\section{Parallel Runner and a Real Logging Defect}
+\label{sec:runner}
+To sweep configurations (e.g.\ $G \in \{2,4,8,16\}$ or three seeds $\times$ two arms)
+within a fixed wall-clock budget, \texttt{parallel\_sweep.py} and \texttt{campaign.py}
+launch runs concurrently. An early threaded runner hit a real bug: Weights \& Biases
+keeps a thread-unsafe global \texttt{run} object, so with four threads calling
+\texttt{wandb.init(reinit=True)} the summary writes for later runs failed (``Run is
+finished'') even though per-step logs survived. The fix, used by the multi-seed
+\texttt{campaign.py}, is one \emph{process} per run rather than one thread. We report
+this because it is exactly the kind of silent logging failure the benchmark is meant
+to surface (see the P3 caveat in Chapter~\ref{ch:results}).
+
+\section{The Colab White-Box Path (P1)}
+\label{sec:colab}
+P1 needs per-layer gradient norms, which the managed Tinker back-end does not expose.
+It therefore runs on a Colab L4 GPU (\texttt{p1\_layer\_profile.py}):
+Qwen2.5-1.5B-Instruct with LoRA adapters on the $q/k/v/o$ projections, five
+GRPO-style advantage-weighted steps, recording the per-layer LoRA gradient norm at
+each step. This white-box route complements the black-box managed runs used for
+P2/P3.
+
+\section{Software Modules}
+Table~\ref{tab:modules} lists the principal modules and their responsibilities.
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}L{0.34\linewidth}L{0.58\linewidth}@{}}
+\toprule
+\textbf{Module} & \textbf{Responsibility} \\
+\midrule
+\texttt{platform\_local/unified/launcher.py} & Map one config onto a chosen back-end. \\
+\texttt{platform\_tinker/tinker\_rl/grpo.py} & Reference GRPO loop (managed back-end). \\
+\path{platform\_local/trl\_integrations/}, \path{verl/}, \path{platform\_modal/openrlhf/}, \path{platform\_hybrid/skyrl/},
+\path{platform\_tinker/atropos/} & Thin per-framework adapters. \\
+\texttt{p2\_collapse\_analysis.py} & Recompute ZVF / collapse from reward tensors. \\
+\texttt{p1\_layer\_profile.py} & White-box per-layer LoRA grad-norm profile. \\
+\texttt{parallel\_sweep.py}, \texttt{campaign.py} & Concurrent sweeps; process-per-run campaign. \\
+\texttt{p8\_detector.py} & Exploratory method-trace classifier (row-wise CV AUROC). \\
+\bottomrule
+\end{tabular}
+\caption{Principal software modules and responsibilities.}
+\label{tab:modules}
+\end{table}
+
+%---------------------------------------------------------------------

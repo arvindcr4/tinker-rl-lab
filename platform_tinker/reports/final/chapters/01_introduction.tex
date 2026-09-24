@@ -1,0 +1,183 @@
+%---------------------------------------------------------------------
+\chapter{Introduction}
+\label{ch:intro}
+
+\section{Background}
+Post-training with reinforcement learning has shifted from human-preference reward
+models (RLHF~\cite{ouyang2022instructgpt}) toward \emph{verifiable} rewards, where
+a programmatic checker --- an exact-match grader for GSM8K, a unit test for code
+--- supplies a binary or scalar reward with no learned reward model in the
+loop~\cite{lambert2024tulu3,guo2025r1}. Within this RLVR setting, Group Relative
+Policy Optimization (GRPO)~\cite{shao2024deepseekmath} has become the default
+algorithm. It drops PPO's value network~\cite{schulman2017ppo} and instead
+estimates the advantage of each sampled completion \emph{relative to its own group}
+of same-prompt samples. Because GRPO removes a whole model (the critic), it is
+cheaper and simpler to run at scale, and it was central to the DeepSeek-R1
+reasoning models~\cite{guo2025r1}; it is now the recipe most open post-training
+efforts reach for first.
+
+This simplicity has a cost that is rarely reported. Because the advantage is a
+within-group standardisation, any prompt for which every sampled completion
+receives the \emph{same} reward contributes an advantage of exactly zero, and
+therefore \emph{no policy-gradient (advantage) signal} --- only the KL penalty
+toward the reference policy still acts. On an easy dataset the model quickly solves most
+prompts, so a large fraction of every batch collapses to zero advantage. We call
+this the \textbf{Zero-Variance Fraction (ZVF)}, and it is, empirically, the single
+largest measured source of zero-advantage sampling in this fixed study. ZVF is the namesake and the
+organising measurement of this project: every study in the portfolio either
+measures it, tests a lever intended to reduce it, or uses it as a feature.
+
+\section{A Motivating Example}
+Consider a single training step with a group size of $G=8$ on an easy GSM8K prompt
+that the current policy already solves. All eight sampled completions produce the
+correct final answer, so each receives reward $r_i=1$. The group mean is $\mu_g=1$
+and the group standard deviation is $\sigma_g=0$, so by Eq.~\eqref{eq:adv} every
+advantage $A_i=0$. The advantage (surrogate) term of the objective then contributes
+no reward-derived surrogate gradient for the entire group of eight rollouts --- eight full forward-decode
+passes that cost real tokens and money --- so the group supplies \emph{no
+task-learning signal}. (The KL-regularisation term of Eq.~\eqref{eq:loss} still nudges
+the policy toward the reference; the point is that no \emph{reward-driven} learning
+happens.)
+Now imagine a batch of $16$ such prompts where $12$ are already solved: $12/16=0.75$
+of the batch is ``dark'' compute. This is not a corner case; Chapter~\ref{ch:results}
+shows it is the \emph{typical} regime ($\zvf\approx0.72$--$0.77$). The Zero-Variance
+Fraction turns this intuition into one loggable number, and the rest of the report is
+an attempt to measure it precisely and to test whether it can be reduced into real
+held-out accuracy.
+
+\section{Problem Statement}
+Three concrete problems motivate this project.
+\begin{enumerate}[leftmargin=1.6em,itemsep=3pt]
+  \item \textbf{A reproducibility crisis.} GRPO/RLVR results are reported on
+  different frameworks with different (often undocumented) reward parsers, decoding
+  temperatures, KL coefficients, and clip ranges. A headline number cannot be
+  attributed to the \emph{algorithm} versus the \emph{stack}.
+  \item \textbf{Advantage-signal starvation is invisible.} Standard training logs
+  report reward and loss, but not what fraction of the batch supplied a non-zero
+  reward-relative advantage. Such rollouts may still receive KL regularisation, but
+  they provide no task-reward direction and still consume sampling compute.
+  \item \textbf{No provenance standard.} There is no machine-readable record of
+  \emph{what} was trained, on which verifier version, with which rollouts, so
+  contamination and silent reward drift go undetected.
+\end{enumerate}
+
+\section{Objectives}
+The Phase-1 objectives, against which the work is evaluated, are:
+\begin{enumerate}[leftmargin=1.6em,itemsep=2pt]
+  \item Build a \textbf{unified harness} that runs the identical task, reward, and
+  decoding configuration across multiple RL post-training back-ends, so that
+  cross-framework differences are attributable to the stack.
+  \item Instrument a \textbf{per-step telemetry layer} that surfaces ZVF, gradient
+  utilisation, entropy, completion length, and KL, and that saves raw group reward
+  tensors so any published diagnostic can be \emph{recomputed}, not merely trusted.
+  \item \textbf{Measure} the zero-variance phenomenon on real reward tensors, and
+  test whether any re-baselining or curriculum lever can convert zero-advantage
+  sampling into held-out accuracy.
+  \item Establish a \textbf{scientific protocol} --- multi-seed, matched baselines,
+  held-out evaluation with reported $n$, deterministic recomputation --- and apply it
+  honestly, reporting negative and null results where they occur.
+  \item Scope the most \emph{original} Phase-2 direction (a GRPO provenance /
+  reporting standard) via a literature scan for open white space.
+\end{enumerate}
+
+\section{Scope and Non-Goals}
+Phase-1 is deliberately a \emph{measurement and diagnostics} phase on small-to-mid
+open models (Qwen2.5 / Qwen3.5 at $1.5$B--$4$B) and math/code verifiers (GSM8K,
+a HumanEval subset). It is explicitly \textbf{not} an attempt to top a GRPO
+leaderboard, nor to train a frontier reasoning model. Held-out evaluation sets are
+intentionally small and every gain is reported with its denominator so that the
+reader can see when a result is noise-limited. Novel-algorithm claims (P4 length
+weighting, P7 controller) are \emph{designed} in Phase-1 and deferred to Phase-2
+for powered evaluation. This honest scoping is itself a deliverable: it is what
+makes the benchmark trustworthy.
+
+\section{Contribution of the Candidate}
+\label{sec:contribution}
+This is an \emph{individual Semester-4 continuation}. The candidate's new work in
+this report comprises the ZVF-centred diagnostic framing, post-capstone experiment
+expansion, telemetry and recomputation analyses, the P1--P8 synthesis, provenance
+prototype, and the writing and evaluation presented here. The scientific posture is
+\emph{verify $\rightarrow$ replicate where feasible $\rightarrow$ report the honest
+null}.
+
+\paragraph{Inherited foundation vs.\ new work.} The repository intentionally retains
+the Semester-3 Group-6 foundation: the multi-framework research codebase, literature
+survey, baseline integrations, and early experiments are inherited shared
+infrastructure frozen at Git tag \texttt{capstone-final-2026-04-25}. Semester 4 begins
+after that boundary and is the candidate's solo continuation under the present guide.
+This report does not claim the inherited Group-6 foundation as new individual work;
+it claims the post-boundary diagnostic, experiment, analysis, and provenance additions
+that build on it. \texttt{PROJECT\_HISTORY.md} and \texttt{sem 4 work/PROVENANCE.md}
+record the boundary.
+
+\paragraph{What was built vs.\ leveraged.} To delineate the candidate's own effort from
+reused infrastructure: the ZVF / collapse instrumentation, the
+recompute-from-tensors diagnostics, the process-per-run campaign launcher, the P8
+method-trace classifier, and the P5 provenance prototype are post-boundary additions
+used by this project. Leveraged (not claimed as new individual work) are the shared
+Semester-3 codebase and baseline experiments, the underlying model weights
+(Qwen2.5 / Qwen3.5), the managed training back-end (Tinker), the RL framework libraries
+being unified (TRL, veRL, OpenRLHF), and standard libraries (PyTorch, Transformers,
+PEFT, scikit-learn). Table~\ref{tab:impl} summarises the implementation status.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}L{0.34\linewidth}L{0.12\linewidth}L{0.44\linewidth}@{}}
+\toprule
+\textbf{Component} & \textbf{Status} & \textbf{Evidence} \\
+\midrule
+GRPO reference loop (\texttt{platform\_tinker/tinker\_rl/grpo.py}) & Done & P2/P3/campaign runs \\
+ZVF / collapse instrumentation & Done & recomputed by \texttt{p2\_collapse\_analysis.py} \\
+Per-step telemetry $\to$ JSONL / W\&B & Done & project \texttt{rlvr-openings} \\
+Process-per-run campaign launcher & Done & 9-run multi-seed campaign \\
+White-box P1 layer profiler & Done & 1.5B + scaled 3B re-test \\
+P8 method-trace classifier & Prototype & \texttt{detector\_reproduced.json} (row-CV AUROC $0.838$) \\
+Per-framework adapters (TRL/veRL/OpenRLHF) & Partial & implemented; four-way run is Phase-2 \\
+P5 provenance / P6 registry & Prototype & schema + \texttt{minreport verify} \\
+P4 length weighting, P7 controller & Designed & specified for Phase-2 \\
+\bottomrule
+\end{tabular}
+\caption{Implementation-completion matrix. The core measurement and diagnostic stack is
+complete; cross-framework comparison and the designed algorithmic levers (P4, P7) are
+Phase-2 work. Overall the implemented core corresponds to the ${\sim}80\%$
+Phase-1 code expectation, with the remaining ${\sim}20\%$ scoped for Phase-2.}
+\label{tab:impl}
+\end{table}
+
+\section{Project Plan and Timeline}
+The project follows the PES Phase-1 review cadence: a zeroth review (title, abstract,
+literature, proposed system, timeline), three internal reviews at roughly fortnightly
+intervals, and an End-Semester Assessment (ESA) viva. Table~\ref{tab:timeline} maps the
+deliverables of this report onto that schedule.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}L{0.20\linewidth}L{0.24\linewidth}L{0.46\linewidth}@{}}
+\toprule
+\textbf{Milestone} & \textbf{Window (2026)} & \textbf{Deliverable} \\
+\midrule
+Initiation / Zeroth & May & Title, abstract, literature survey, proposed system \\
+First Review & early June & Architecture, algorithm design, ${\sim}30\%$ code \\
+Second Review & mid June--July & Detailed design, intermediate results, ${\sim}80\%$ code \\
+Third Review & early July & Overall design, experimental results, ${\sim}100\%$ code, paper draft \\
+Phase-1 ESA & July & Presentation + code walkthrough/demo (viva) \\
+Phase-2 & Jul--Oct & Novelty (P5 provenance), publication \\
+\bottomrule
+\end{tabular}
+\caption{Phase-1 milestones and deliverables against the PES review schedule.}
+\label{tab:timeline}
+\end{table}
+
+\section{Organisation of the Report}
+Chapter~\ref{ch:lit} surveys the relevant literature and positions the eight
+studies against the closest prior art. Chapter~\ref{ch:srs} specifies the system
+requirements (functional, non-functional, test cases, and the hardware/software
+environment). Chapter~\ref{ch:method} describes the proposed methodology --- the
+unified harness architecture, the telemetry design, the formalisation of ZVF, and
+the P1--P8 portfolio design. Chapter~\ref{ch:impl} details the implementation.
+Chapter~\ref{ch:results} presents the intermediate results and discussion,
+including the rigour and threats-to-validity analysis. Chapter~\ref{ch:conclusion}
+concludes and lays out the Phase-2 plan. Appendices give the complete run registry
+and reproducibility details.
+
+%---------------------------------------------------------------------

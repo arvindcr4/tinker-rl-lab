@@ -1,0 +1,227 @@
+%=====================================================================
+% Front matter: title page, certificate, declaration, acknowledgement,
+% abstract, contents, list of figures, list of tables.
+%=====================================================================
+\begin{titlepage}
+\centering
+\thispagestyle{empty}
+\begin{spacing}{1.0}
+\vspace*{0.02in}
+
+{\large PES UNIVERSITY\par}
+{\footnotesize (Established under Karnataka Act No.\ 16 of 2013)\\
+100-ft Ring Road, Banashankari Stage III, Bengaluru --- 560085, Karnataka, India\par}
+
+\vspace{0.25in}
+{\normalsize A Project Report\par}
+{\normalsize On\par}
+\vspace{0.5em}
+{\Large\bfseries Tinker RL Lab:\\[0.35em]
+A Multi-Framework Benchmark and Study of\\[0.25em]
+GRPO-Style Reinforcement-Learning\\[0.25em]
+Post-Training of Large Language Models\par}
+\vspace{0.6em}
+{\normalsize Cross-library attribution, signal-starvation diagnostics, and\\[0.15em]
+a fourteen-suite held-out evaluation campaign\par}
+
+\vfill
+
+{\large Submitted in partial fulfilment of the requirements for\par}
+{\large Project Phase-2 of the degree of\par}
+\vspace{0.6em}
+{\large\bfseries Master of Technology\par}
+\vspace{0.2em}
+{\normalsize in\par}
+\vspace{0.2em}
+{\large Data Science and Artificial Intelligence\par}
+
+\vfill
+
+{\normalsize Submitted by\par}
+\vspace{0.3em}
+{\large\bfseries Arvind C R\par}
+{\normalsize SRN: PES2PGE24DS140\par}
+
+\vspace{0.5em}
+{\normalsize Under the guidance of\par}
+\vspace{0.2em}
+{\large\bfseries Ramesh Prakash Guledgudd\par}
+{\normalsize Project Guide\par}
+
+\vfill
+
+{\normalsize Course: UE20CS971 --- Project Phase-2 \quad$\vert$\quad August 2026 --- September 2026\par}
+\vspace{0.3em}
+{\large\bfseries FACULTY OF ENGINEERING AND TECHNOLOGY\par}
+{\normalsize DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\par}
+\vspace{0.1em}
+{\large\bfseries 2026\par}
+\end{spacing}
+\end{titlepage}
+
+%---------------------------------------------------------------------
+\begin{titlepage}
+\centering
+\thispagestyle{empty}
+\vspace*{0.4in}
+{\Large\bfseries PES UNIVERSITY\par}
+\vspace{0.2in}
+{\large\bfseries FACULTY OF ENGINEERING AND TECHNOLOGY\par}
+{\normalsize DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\par}
+\vspace{0.5in}
+{\Large\bfseries CERTIFICATE\par}
+\vspace{0.5in}
+\begin{spacing}{1.4}
+\noindent This is to certify that the project report entitled
+\textbf{``Tinker RL Lab: A Multi-Framework Benchmark and Study of GRPO-Style
+Reinforcement-Learning Post-Training of Large Language Models''} is a
+bonafide record of the project work carried out by
+\textbf{Arvind C R} (SRN: \textbf{PES2PGE24DS140}), in partial fulfilment of
+the requirements for the award of the degree of Master of Technology in
+Data Science and Artificial Intelligence of PES University, during the
+academic year 2026.
+
+\vspace{0.3in}
+The candidate's individual contribution, the inherited Semester-3 group
+infrastructure, and the boundary between them are stated in the Declaration
+and in Chapter 1 \S1.7.
+\end{spacing}
+\vspace{0.6in}
+\noindent\begin{tabular}{@{}p{2.4in}p{2.4in}@{}}
+\dotfill & \dotfill \\
+\textbf{Ramesh Prakash Guledgudd} & \textbf{Head of the Department} \\
+Project Guide & Department of CSE \\
+\end{tabular}
+\vspace{0.5in}
+\noindent\begin{tabular}{@{}p{2.4in}@{}}
+\dotfill \\
+\textbf{External Examiner} \\
+\end{tabular}
+\vfill
+{\normalsize September 2026\par}
+\end{titlepage}
+
+%---------------------------------------------------------------------
+\chapter*{Declaration}
+\addcontentsline{toc}{chapter}{Declaration}
+\thispagestyle{plain}
+
+I declare that this project report is my own work. Where the work of others has
+been used, it is cited and acknowledged.
+
+The multi-framework benchmark infrastructure, the baseline framework
+integrations, and the initial GRPO/PPO/DPO experimentation were produced by the
+Semester-3 project group, of which I was a member, and are inherited here as
+the shared foundation. The research direction, the experimental expansion, the
+statistical analyses, the P1--P8 paper series, the reporting and registry
+artefacts, the adaptive group-size controller, the applied fraud study, and the
+E1--E14 held-out evaluation campaign reported in this document are my
+individual contribution, carried out under the guidance of my project guide.
+
+Every quantitative result in this report is bound to an evidence file in the
+project repository. Where a result is incomplete, blocked, or negative, it is
+reported as such rather than omitted. The boundary between inherited and
+individual work is stated precisely in \texttt{platform\_hybrid/sem 4
+work/PROVENANCE.md}.
+
+\vspace{0.4in}
+\noindent\begin{tabular}{@{}p{2.6in}@{}}
+\dotfill \\
+\textbf{Arvind C R} \\
+SRN: PES2PGE24DS140 \\
+\end{tabular}
+
+%---------------------------------------------------------------------
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+\thispagestyle{plain}
+
+I thank my project guide, \textbf{Ramesh Prakash Guledgudd}, for direction and
+sustained feedback throughout this work, and for the freedom to pursue the
+conservative and negative results that form a significant part of it.
+
+I thank the Semester-3 project group for the shared multi-framework benchmark
+and the baseline integrations on which the Semester-4 studies build. I thank
+the maintainers of the benchmark suites used in the E1--E14 campaign, whose
+native evaluators made an independently checkable evaluation possible, and the
+platforms --- Tinker, Modal, and Google Cloud --- on which the experiments ran.
+
+Finally, I thank the reviewers whose questions at earlier reviews shaped the
+reporting discipline this report depends on: the insistence on stating what a
+number does \emph{not} establish has improved the work materially.
+
+\vspace{0.3in}
+\noindent\textbf{Arvind C R}
+
+%---------------------------------------------------------------------
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\thispagestyle{plain}
+
+This report presents a multi-framework benchmark for group-relative
+reinforcement-learning post-training of large language models, a study of that
+post-training's behaviour across libraries, scales, group sizes and datasets,
+and a held-out evaluation of a single trained actor against fourteen agentic
+and reasoning benchmark suites.
+
+The benchmark is multi-framework by construction: a shared task, reward and
+decoding configuration is dispatched through thin adapters onto each backend's
+own interface, so the same experiment is runnable on any of them without
+re-implementing the grader. That design property is distinct from completed-run
+parity, and this report does not conflate the two. Of the cross-launcher roster,
+only Tinker and TRL produced completed runs in this release; the veRL and
+OpenRLHF entries in the comparison artefact are dry-run placeholders that
+resolve a launch plan without executing it, and are never pooled with real
+results or read as framework-comparison evidence (Chapter 3 \S3.8; Chapter 5
+\S5.1). Comparative claims in this report are therefore constrained to the
+runs actually recorded, and the diagnostic portability results are stated at
+the strength their own source asserts.
+
+The central methodological commitment is \emph{attribution}: every comparative
+claim is made with the entire training stack held fixed except the one factor
+under test. Four de-confound pillars --- a matched same-stack PPO/GRPO
+contrast, the Zero-Variance Fraction as a signal-starvation diagnostic, a
+group-size sweep, and a length-bias and held-out-generalisation study --- are
+reported under that commitment, alongside a cross-library cross-scale scaling
+study, a minimum reporting standard for stack-conditioned results, a
+machine-readable stack registry, an adaptive group-size controller derived from
+the ZVF diagnostic, and an applied credit-card fraud case study.
+
+The principal results are deliberately conservative. Across more than seventy
+runs spanning roughly 2.4 orders of magnitude in model scale, \textbf{no
+reliable scaling law is recovered from reward curves}. A matched same-stack
+comparison of PPO and GRPO finds the two estimators \textbf{statistically
+indistinguishable} (Welch $p = 0.7605$). A single-seed group-size sweep does
+\textbf{not} establish an optimum, and trainability is non-monotone in group
+size. Four of eleven GRPO runs peak before 65\% of training and then decay,
+consistent with length bias rather than capability gain, while Dr.\ GRPO does
+not exhibit the pattern.
+
+The E1--E14 campaign evaluates one Tinker-trained actor
+(\texttt{Qwen/Qwen3.6-35B-A3B} with the
+\texttt{pavlov-portfolio-qwen36-seed809-stepfinal} adapter) using each suite's
+own native evaluator at a pinned revision, with no per-lane tuning. Four suites
+carry strictly complete graded scopes: LAB-Bench public split (1{,}967/1{,}967
+questions, micro accuracy 0.2288), AgentDojo benign utility (97/97, utility
+0.9072), VerilogEval (312/312, $129/312 = 41.35\%$ pass@1), and Omni-MATH (all
+4{,}428 dispositions recorded, official accuracy $2{,}271/4{,}428 = 51.31\%$
+reproduced). Two carry full verified scores under their original contracts:
+SWE-bench Pro ($2/731 = 0.274\%$ pass@1, with all eighteen non-native outcomes
+retained in the denominator) and VerilogEval. The remaining lanes are reported
+as partial, quota-blocked, or externally blocked, each with an explicit
+terminal state and a named reopen condition.
+
+Original-contract and replacement-scope benchmark results are never pooled, no
+cross-suite aggregate is computed, and no claim of improvement over a baseline
+is made anywhere in this work. All structural claims were re-verified by
+deterministic code checks on 19 September 2026 (11/11 PASS).
+
+\vspace{0.25in}
+\noindent\textbf{Keywords:} GRPO, RLVR, zero-variance fraction, signal
+starvation, stack-conditioned results, benchmark evaluation, reproducibility,
+held-out evaluation, attribution.
+
+%---------------------------------------------------------------------
+\tableofcontents
+\listoffigures
+\listoftables

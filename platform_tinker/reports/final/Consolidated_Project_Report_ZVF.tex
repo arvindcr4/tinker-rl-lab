@@ -1,0 +1,348 @@
+%=====================================================================
+% PES University --- M.Tech (Data Science and Machine Learning)
+% CONSOLIDATED PROJECT REPORT --- Phase 1 + Phase 2
+% Zero-Variance Fraction (ZVF) and the Tinker RL Lab Capstone Campaign
+% Author: Arvind C R (SRN PES2PGE24DS140)
+%
+% Format: modelled on the PES "Sample-Project-Phase-1-Report" (bound thesis):
+%   Title -> Certificate -> Declaration -> Acknowledgement -> Abstract ->
+%   Table of Contents -> List of Figures -> List of Tables -> chapters ->
+%   References -> Appendices.
+%
+% Compile: tectonic Consolidated_Project_Report_ZVF.tex
+%
+% EVIDENCE RULE (project-wide, carried from Phase 1):
+%   Every number in this report is bound to a surviving receipt in the
+%   repository. The consolidated ledger is
+%   outputs/E1_E14_FINAL_RESULTS_2026-09-19.md, gated by the deterministic
+%   verifier outputs/verification/LEDGER_CODE_CHECK_2026-09-19.json (11/11 PASS).
+%   Original-contract and replacement-scope numbers are NEVER pooled.
+%   No cross-suite average and no baseline-gain claim is made anywhere.
+%=====================================================================
+\documentclass[12pt,a4paper]{report}
+
+% ---- binding margin: extra room on the left (spine) side --------------
+\usepackage[a4paper,left=1.5in,right=1in,top=1in,bottom=1in]{geometry}
+\usepackage{setspace}
+\onehalfspacing                 % 1.5 line spacing (thesis requirement)
+
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+  pdftitle={Zero-Variance Fraction (ZVF) and the Tinker RL Lab Capstone Campaign: A Consolidated Phase 1 + Phase 2 Report},
+  pdfauthor={Arvind C R},
+  pdfsubject={M.Tech Project Consolidated Report, PES University},
+  pdfkeywords={GRPO, RLVR, zero-variance fraction, reproducibility, telemetry, provenance}
+}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,decorations.pathreplacing}
+
+% ---- shared tikz styles (identical to the ESA draft figures) ----
+\tikzset{
+  blk/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=blue!6,
+              minimum height=8mm, minimum width=20mm, align=center, font=\small},
+  io/.style={rectangle, rounded corners=6pt, draw=black!70, thick, fill=green!8,
+             minimum height=8mm, align=center, font=\small},
+  proc/.style={rectangle, draw=black!70, thick, fill=orange!10, minimum height=8mm,
+               align=center, font=\small},
+  dec/.style={diamond, aspect=2, draw=black!70, thick, fill=yellow!15, align=center, font=\footnotesize},
+  ar/.style={-{Latex[length=2mm]}, thick},
+  lbl/.style={font=\footnotesize\itshape, text=black!60},
+}
+\definecolor{good}{RGB}{34,139,34}
+\definecolor{bad}{RGB}{178,34,34}
+\definecolor{warn}{RGB}{218,165,32}
+\definecolor{pesblue}{RGB}{0,45,98}
+\newcommand{\zvf}{\mathrm{ZVF}}
+\renewcommand{\bibname}{References}   % rubric mandates "References", not "Bibliography"
+
+\setlength{\parskip}{0.4em}
+\setlength{\parindent}{0pt}
+\setlength{\emergencystretch}{3em} % absorb unbreakable \texttt / slashed tokens
+
+\begin{document}
+\hypersetup{pageanchor=false}
+
+%=====================================================================
+% COVER / TITLE PAGE
+%=====================================================================
+\begin{titlepage}
+\centering
+\thispagestyle{empty}
+\vspace*{0.05in}
+
+{\large PES UNIVERSITY\par}
+{\footnotesize (Established under Karnataka Act No.\ 16 of 2013)\\
+100-ft Ring Road, Banashankari Stage III, Bengaluru --- 560085, Karnataka, India\par}
+
+\vspace{0.25in}
+{\normalsize A Project Report\par}
+{\normalsize On\par}
+\vspace{0.5em}
+{\Large\bfseries Zero-Variance Fraction (ZVF) and the\\[0.25em]
+Tinker RL Lab Capstone Campaign\par}
+\vspace{0.6em}
+{\normalsize A Consolidated Report of Phase 1 and Phase 2 Work\par}
+\vspace{0.35em}
+{\small Measurement, Diagnostics, Provenance, and Reproducibility\\ Tooling for RLVR Post-Training\par}
+
+\vfill
+
+{\large Submitted in partial fulfilment of the requirements for\par}
+{\large Project Phase-2 of the degree of\par}
+\vspace{0.6em}
+{\large\bfseries Master of Technology\par}
+\vspace{0.2em}
+{\normalsize in\par}
+\vspace{0.2em}
+{\large Data Science and Machine Learning\par}
+
+\vfill
+
+{\normalsize Submitted by\par}
+\vspace{0.3em}
+{\large\bfseries Arvind C R\par}
+{\normalsize SRN: PES2PGE24DS140\par}
+
+\vspace{0.5em}
+{\normalsize Under the guidance of\par}
+\vspace{0.2em}
+{\large\bfseries Ramesh Prakash Guledgudd\par}
+{\normalsize Project Guide\par}
+
+\vfill
+
+{\normalsize Course: UE20CS971 / UE20CS981 --- Project Phase 1 \& 2 \quad$\vert$\quad May 2026 --- September 2026\par}
+\vspace{0.3em}
+{\large\bfseries FACULTY OF ENGINEERING AND TECHNOLOGY\par}
+{\normalsize DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\par}
+\vspace{0.2em}
+{\large\bfseries 2026\par}
+
+\end{titlepage}
+
+%=====================================================================
+% CERTIFICATE PAGE
+%=====================================================================
+\thispagestyle{empty}
+\begin{center}
+{\large PES UNIVERSITY, BENGALURU\par}
+{\normalsize FACULTY OF ENGINEERING AND TECHNOLOGY\par}
+{\normalsize DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\par}
+\vspace{1.0em}
+{\Large\bfseries CERTIFICATE\par}
+\end{center}
+\vspace{1.0em}
+
+This is to certify that the Consolidated Project Report entitled
+\textbf{``Zero-Variance Fraction (ZVF) and the Tinker RL Lab Capstone
+Campaign''} is a bona fide record of the work carried out by \textbf{Arvind C R}
+(SRN \textbf{PES2PGE24DS140}), a student of the Master of Technology programme in
+Data Science and Machine Learning, PES University, in partial fulfilment of the
+requirements for the courses \textbf{UE20CS971 --- Project Phase-1} and
+\textbf{UE20CS981 --- Project Phase-2}, during the academic year 2025--2026. This
+is an \emph{individual} project; the candidate has worked on a unique project
+title and has independently carried out the work reported herein.
+
+\vspace{0.6em}
+
+The work presented in this report has been carried out under my supervision and
+guidance. To the best of my knowledge, the contents of this report, in full or in
+parts, have not been submitted to any other institute or university for the award
+of any degree or diploma.
+
+\vspace{3.2em}
+
+\noindent
+\begin{minipage}[t]{0.48\linewidth}
+\centering
+\rule{5cm}{0.4pt}\\
+\textbf{Ramesh Prakash Guledgudd}\\
+Project Guide\\
+Dept.\ of Computer Science and Engineering\\
+PES University
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\centering
+\rule{5cm}{0.4pt}\\
+\textbf{Chairperson}\\
+Dept.\ of Computer Science and Engineering\\
+PES University
+\end{minipage}
+
+\vspace{3.0em}
+
+\begin{center}\textbf{External Viva}\end{center}
+\vspace{0.3em}
+\noindent
+\begin{minipage}[t]{0.48\linewidth}
+\centering
+\rule{5cm}{0.4pt}\\
+Name and Signature of Examiner~1
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\centering
+\rule{5cm}{0.4pt}\\
+Name and Signature of Examiner~2
+\end{minipage}
+
+%=====================================================================
+% DECLARATION PAGE
+%=====================================================================
+\clearpage
+\thispagestyle{empty}
+\begin{center}
+{\Large\bfseries DECLARATION\par}
+\end{center}
+\vspace{1.0em}
+
+I, \textbf{Arvind C R} (SRN \textbf{PES2PGE24DS140}), hereby declare that the
+Consolidated Project Report entitled \textbf{``Zero-Variance Fraction (ZVF) and
+the Tinker RL Lab Capstone Campaign''}, submitted in partial fulfilment of the
+requirements for the courses \textbf{UE20CS971 --- Project Phase-1} and
+\textbf{UE20CS981 --- Project Phase-2} of the Master of Technology programme in
+Data Science and Machine Learning, is an original piece of work carried out by me
+under the guidance of \textbf{Ramesh Prakash Guledgudd}.
+
+\vspace{0.6em}
+
+I further declare that the matter embodied in this report has not been submitted,
+in full or in parts, to any other institute or university for the award of any
+degree or diploma. All sources of information and prior work drawn upon have been
+duly acknowledged and cited. The empirical findings reported herein --- including
+the negative, null, partial, and externally blocked outcomes --- are reported
+honestly and reflect the actual outcomes of the experiments conducted. Every
+quantitative claim is bound to a surviving artefact in the project repository and
+is re-verified by deterministic code checks.
+
+\vspace{3.2em}
+
+\noindent
+\begin{minipage}[t]{0.5\linewidth}
+Place: Bengaluru\\[0.4em]
+Date: \rule{3cm}{0.4pt}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\linewidth}
+\centering
+\vspace{1.2em}
+\rule{5cm}{0.4pt}\\
+\textbf{Arvind C R}\\
+SRN: PES2PGE24DS140\\
+M.Tech, Data Science and Machine Learning
+\end{minipage}
+
+%=====================================================================
+% FRONT MATTER (roman numerals)
+%=====================================================================
+\clearpage
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+I express my sincere gratitude to my project guide, \textbf{Ramesh Prakash
+Guledgudd}, for the weekly guidance, the sharp questions during review calls, and
+for encouraging a scientific posture that values honest negative results over
+cherry-picked positives. I thank the Department of Computer Science and
+Engineering, PES University, and the Great Learning programme office for the
+project framework, review structure, and infrastructure guidance. I also
+acknowledge the managed-training and compute platforms (Tinker, Modal, Google
+Colab, AWS, and Weights \& Biases) that made the empirical portfolio feasible
+within a modest budget, the maintainers of the fourteen benchmark suites whose
+public artefacts made external evaluation possible, and the frontier models used
+as adversarial auditors, whose independent re-checks materially improved the
+rigour of the findings.
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+Reinforcement learning with verifiable rewards (RLVR), and in particular Group
+Relative Policy Optimization (GRPO), has become the de facto default recipe for
+post-training reasoning-capable language models. Yet reported gains are hard to
+reproduce: results are spread across incompatible frameworks (TRL, veRL,
+OpenRLHF, Tinker), are frequently single-seed, and rarely expose the internal
+training signal that would explain \emph{why} a run learned or failed to learn.
+
+This consolidated report covers both project phases. \textbf{Phase 1} built a
+unified, provenance-tracked benchmark and diagnostic harness for GRPO/RLVR
+post-training, organised around a single measurable quantity --- the
+\textbf{Zero-Variance Fraction (ZVF)}, the fraction of prompt groups whose
+within-group reward variance is zero and which therefore contribute no
+reward-derived advantage signal. Eight focused studies (P1--P8) were run on that
+harness. The honest Phase-1 headline is a set of strong negatives: on the fixed
+40-step GSM8K study, $72$--$77\%$ of prompt groups carry zero within-group reward
+variance (P2); a single-seed group-size sweep establishes no robust optimum (P3);
+at a matched ${\sim}30$k-token budget the baseline and curriculum arms both
+average $+0.028$ held-out gain; and the apparent step-1 predictability of
+per-layer adaptation (top-$k$ overlap $=1.0$ at 1.5B) collapses to chance
+($0.083\pm0.048$) under a scaled 3B, four-seed re-test.
+
+\textbf{Phase 2} extended the work along two axes. First, it converted the
+diagnostic into an \emph{auditable conformance and decision layer}: a fail-closed
+conformance chain from objective equation to gradient relation, adaptive decision,
+and training record, with a frozen CPU differential (14 intended cases per stack
+for TRL and verl, plus a shared 36-case controller matrix) and cost-accounting
+corollaries of the binary-starvation model. Second, it executed a
+\textbf{fourteen-lane external evaluation campaign} (E1--E14) against held-out
+agent and RL benchmark suites under strict receipt, budget, and decontamination
+governance. Three replacement scopes closed strictly complete (E8 LAB-Bench
+1967/1967 across 8 categories; E10 AgentDojo 97/97 benign utility; E11
+VerilogEval 312/312 native checks), one closed terminal-complete at 99.95\%
+coverage (E14 Omni-MATH 4426/4428 accepted, official accuracy 51.31\%
+reproduced), and the original-contract E1 and E11 suites carry full verified
+scores (E1 SWE-bench Pro 2/731 $=0.274\%$ pass@1; E11 129/312 $=41.35\%$
+pass@1). The remaining lanes are recorded as honestly partial or externally
+blocked, each with an immutable evidence trail.
+
+The report's central methodological commitment is that \textbf{no number is
+invented and no lane is silently rounded up}. Original-contract and
+replacement-scope denominators are never pooled, no cross-suite average is
+reported, and no baseline-gain or causal-capability claim is made. The
+consolidated ledger is gated by a deterministic verifier that re-derives eleven
+specific claims from surviving receipts --- exact divisions, receipt presence,
+sealed-artefact hash equality, and lost-source absence probes --- and reports
+\textbf{11/11 PASS}. The contribution of this work is therefore best understood
+as an auditable boundary between what was measured, what was proven, and what
+remains open.
+
+\clearpage
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+
+%=====================================================================
+% BODY
+%=====================================================================
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\input{chapters/01_introduction}
+\input{chapters/02_literature}
+\input{chapters/03_requirements}
+\input{chapters/04_methodology}
+\input{chapters/05_implementation}
+\input{chapters/06_phase1_results}
+\input{chapters/07_phase2_conformance}
+\input{chapters/08_phase2_campaign}
+\input{chapters/09_phase2_results}
+\input{chapters/10_rigour}
+\input{chapters/11_conclusions}
+\input{chapters/12_references}
+\input{chapters/13_appendices}
+
+\end{document}

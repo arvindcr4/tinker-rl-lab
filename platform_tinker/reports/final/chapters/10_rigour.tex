@@ -1,0 +1,145 @@
+%---------------------------------------------------------------------
+\chapter{Rigour, Threats to Validity, and Honest Non-Claims}
+\label{ch:rigour}
+
+This chapter exists because the campaign's strongest property is not any single
+score. It is that the boundary between what was proven, what was measured, and
+what remains open is stated explicitly, in the same document as the results, at
+the same level of specificity. A report that claims twelve complete suites would
+be easier to write and impossible to verify. This one is verifiable.
+
+\section{The evidence rule}
+
+Every number in this report is bound to a surviving artefact in the version
+-controlled repository. The rule has four operative clauses:
+
+\begin{enumerate}[leftmargin=1.6em,itemsep=3pt]
+  \item \textbf{No pooled denominators.} Original-contract and replacement-scope
+  numbers are never combined, and a partial sub-scope is never reported as a
+  suite score.
+  \item \textbf{No cross-suite averages.} Fourteen suites with different
+  semantics do not have a meaningful mean. None is reported.
+  \item \textbf{No baseline-gain claims.} Several suites have no measured
+  baseline under matched conditions. Where a baseline was not measured, no
+  improvement is claimed --- including where the result is complete and strong.
+  \item \textbf{Failures stay in the denominator.} A generation failure or an
+  artefact loss is retained, even when removing it would improve the headline
+  percentage.
+\end{enumerate}
+
+Clause~4 is the one that costs the most and therefore proves the most. E1 reports
+$2/731$ with 14 generation failures and 4 artefact losses retained. E8 reports a
+0.000 category accuracy for CloningScenarios rather than omitting a category that
+dragged the profile down. These choices are visible in the numbers themselves.
+
+\section{Honest non-claims}
+
+Stating what is \emph{not} claimed is a load-bearing part of the methodology, not
+a hedge. The following are explicit non-claims:
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \textbf{No causal capability gain.} No result establishes that training
+  improved the model relative to an unmeasured baseline.
+  \item \textbf{No security claim.} E10 measures benign task completion. It is not
+  a prompt-injection resistance result.
+  \item \textbf{No serving parity.} Three serving configurations were used
+  (eager, graph at 32k, graph at 65k context). No numerical parity between them is
+  claimed.
+  \item \textbf{No algorithmic win.} No new GRPO variant is proposed as superior.
+  Phase 1's algorithmic levers returned honest nulls and Phase 2 did not reopen
+  them.
+  \item \textbf{No integrity generalisation.} The Phase-1 P8 method-trace
+  classifier is a proof of concept; cross-run integrity detection remains untested.
+  \item \textbf{No aggregate grade.} The fourteen lanes do not sum to a
+  program-level score, and no such aggregation is offered.
+\end{itemize}
+
+\section{Known threats}
+
+The threats below are recorded rather than hidden, in the form a reviewer would
+need to assess them.
+
+\begin{itemize}[leftmargin=1.4em,itemsep=3pt]
+  \item \textbf{Contamination checks are bounded.} Source-overlap checks cover a
+  defined source envelope. They do not cover images, semantic similarity, or
+  universal pretraining exposure. Any decontamination statement in this report
+  carries that bound.
+  \item \textbf{Serving-configuration heterogeneity.} LAB-Bench combined 240
+  eager-serving responses, 1504 graph-serving responses at 32{,}768-token context,
+  and 223 at 65{,}536-token context. Original answers were retained across
+  configurations; the configuration is a source of variance that is disclosed, not
+  removed.
+  \item \textbf{Evidence-source loss.} The \texttt{.codex-run} deletion removed
+  finish-era recovery code. It is confined to build/recovery code; native runners
+  survive; sealed requests and hashes pin faithful re-implementation. Reproduction
+  is less convenient, not invalid.
+  \item \textbf{Small held-out sets in Phase 1.} Held-out $n=8$--$20$ in the
+  Phase-1 studies. Magnitudes are noise-limited and are stated as such.
+  \item \textbf{Single-seed and single-trajectory Phase-1 results.} P2 is a
+  shared-schedule seed-0 diagnostic; P3 is a single-seed sweep; P8 is one
+  trajectory per method. Each is labelled exploratory, not confirmatory.
+  \item \textbf{A partially recorded sweep artefact.} G8/G16 summaries in the P3
+  sweep were lost to a logging thread-safety bug. Re-running under a
+  process-per-run launcher yields corrected held-out gains of $+0.083$ (both from
+  $0.750\to0.833$, single seed), which \emph{supersede} the affected values --- but
+  they remain single-seed point estimates pending multi-seed replication.
+  \item \textbf{An invalidated metric from the first campaign batch.} A
+  \texttt{zero\_loss\_frac} field was invalid in the first batch and has since been
+  fixed. No result in this report depends on it.
+  \item \textbf{Judge-instrument degradation.} See below.
+\end{itemize}
+
+\section{The judgment-layer incident}
+
+The campaign included a receipt-recording judgment harness used for triage
+classification, claim-faithfulness, and value ordering. Its behaviour is reported
+because it bears directly on which claims in this report rest on what evidence.
+
+\textbf{Completed before degradation.} The research-value ordering of
+Chapter~\ref{ch:p2results} (14 lanes, one ask battery) completed and its receipt
+survives.
+
+\textbf{Invalidated by the incident.} Both blocker-classification batteries
+returned degenerate distributions --- near-uniform, or a constant class across all
+lanes --- after approximately 13:10Z, when both the latest and preview instances
+stopped reading state. A controlled yes-probe fell from approximately $1.0$ to
+approximately $0.3$. Those receipts are retained as \emph{incident evidence} and
+are not used to support any claim. They must be re-run before the judgment layer
+can be relied upon again.
+
+\textbf{Consequence for this report.} The per-lane ``first uncleared blocker''
+column is grounded in document evidence, \textbf{not} in judgment-layer output.
+This is stated explicitly so that a reader knows exactly which claims rest on
+which instrument.
+
+\textbf{Design rule banked from the healthy window.} Arithmetic and string
+lookups stay in code. The judgment layer once mis-answered a parity probe even
+while healthy; it is reserved for classification, faithfulness, and value
+ordering, exactly as its documentation intends. A model verdict is never reported
+as an empirical result anywhere in this report.
+
+\section{Rigour practices carried from Phase 1}
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \textbf{Multi-seed with matched baselines where feasible.} The curriculum
+  intervention was re-tested across three seeds at matched token budget; the P1
+  scaling check used four seeds.
+  \item \textbf{Held-out evaluation with reported $n$.} Every Phase-1 gain is
+  reported alongside its held-out $n$ so the reader can see the noise floor.
+  \item \textbf{Recompute-from-tensors.} Published diagnostics are recomputable
+  from stored raw tensors, not merely read back from a logged summary.
+  \item \textbf{Adversarial review plus deterministic verification.} Adversarial
+  review of early single-seed conclusions prompted the multi-seed and matched-token
+  re-tests. The retained evidence is script-based recomputation: $\zvf$
+  $0.72$--$0.77$, all-correct $0.65$--$0.71$, and the stored P8 row-CV output.
+\end{itemize}
+
+\section{AI-assistance disclosure}
+
+Language models assisted with adversarial review, code review, and editorial
+revision. They were also used as an independent auditor of some claims. These
+model assessments are \textbf{not} treated as scientific evidence and are not
+required to reproduce any number in this report. Verification in this submission
+is script-based, using stored tensors, hashes, and explicit result JSONs. The
+candidate remains responsible for the research design, execution choices, source
+verification, calculations, and every final claim.

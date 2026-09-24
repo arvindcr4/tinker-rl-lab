@@ -1,0 +1,559 @@
+\chapter{9. Results IV: The E1-E14 Held-Out Benchmark
+Campaign}\label{results-iv-the-e1-e14-held-out-benchmark-campaign}
+
+This chapter reports the campaign that occupied the second half of the
+project: the evaluation of a single Tinker-trained actor against
+fourteen held-out benchmark suites, recorded lane by lane under a
+governance regime of sealed reservations, immutable receipts and
+explicit terminal states. The campaign is reported here in full,
+including the lanes that did not finish and the lanes that could not
+start, because the central methodological claim of this work is not that
+the actor performs well but that every figure attached to it can be
+traced to a surviving, hash-pinned artifact, and that the boundary
+between what was measured and what was not is drawn explicitly rather
+than rhetorically.
+
+Two reporting rules govern everything below, and they are worth stating
+before any number appears. First, original-contract results and
+replacement-scope results are never pooled and never averaged across
+suites; a replacement scope is a different suite, a different interface
+and often a different grader, and combining such figures would produce a
+number with no referent. Second, no figure in this chapter is quoted to
+a precision beyond what its source receipt records, and no comparison
+against a baseline, a sibling suite, or the untrained base model is
+asserted anywhere: the campaign contains no controlled paired baseline
+run, and this chapter therefore claims no improvement of any kind over
+the base model. Where a lane's record itself contains an unresolved
+discrepancy, the discrepancy is stated.
+
+The consolidated ledger of record for the campaign is
+\texttt{outputs/E1\_E14\_FINAL\_RESULTS\_2026-09-19.md}, which
+supersedes the working tables of 2026-09-05 and 2026-09-12; the per-lane
+terminal-state ledger is
+\texttt{outputs/PES\_Phase2\_Review\_2026-09-12/finish/Pending\_Experiments.md};
+and the arithmetic of the ledger was re-verified by deterministic code
+checks recorded in
+\texttt{outputs/verification/LEDGER\_CODE\_CHECK\_2026-09-19.json},
+which reports eleven of eleven checks passing with zero failures.
+
+\section{9.1 The evaluated actor and the one-actor
+design}\label{the-evaluated-actor-and-the-one-actor-design}
+
+A single actor was evaluated across the whole campaign. The base model
+is \texttt{Qwen/Qwen3.6-35B-A3B} at revision
+\texttt{995ad96eacd98c81ed38be0c5b274b04031597b0}, and the trained
+parameter set is the LoRA adapter
+\texttt{arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6}
+at commit \texttt{64444133c55d88c3f1bf0df8a2f5d7ac646125c8}, served in
+bfloat16 under the identifier \texttt{pavlov-public-portfolio-bf16}
+(source: \texttt{outputs/E1\_E14\_FINAL\_RESULTS\_2026-09-19.md}; the
+same identity pair is recorded independently in the E10 native receipt
+and in the E11 full receipt, which also preserves the training sampler
+path
+\texttt{tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler\_weights/seed809\_final}:
+sources
+\texttt{outputs/public\_portfolio\_2026-09-05/agentdojo\_native\_receipt.json}
+and \texttt{outputs/modal\_e1\_e14/2026-08-16/e11\_full\_receipt.json}).
+
+The one-actor design is deliberate and it shapes how the results may be
+read. No lane received a separately fine-tuned checkpoint, no lane
+received per-suite prompt engineering beyond what the suite's own native
+harness prescribes, and no lane was tuned against its own evaluation
+set. A consequence is that differences between suites in this chapter
+reflect the interaction of a single fixed policy with fourteen different
+interfaces, observation spaces, tool conventions and graders, and they
+are not evidence about what a specialised actor could achieve. A second
+consequence is that the campaign cannot support any statement about seed
+variance: every suite number reported here comes from one actor, and
+where a lane sampled more than one completion per task it did so to
+satisfy the suite's own protocol, not to estimate variance.
+
+Inference conditions were frozen per lane and recorded in that lane's
+own receipt rather than imposed globally, and the two lanes that
+produced complete scores illustrate how differently they were pinned.
+The E10 native run operated under an identity fixed at temperature 0, a
+32,768-token context, 1,967 native requests, 4,096 output tokens per
+request, 3,600 seconds of wall time and an \$8 envelope, and its
+collector is written explicitly not to admit shorter native conditions
+(source:
+\texttt{outputs/public\_portfolio\_2026-09-05/agentdojo\_terminal\_readiness.md}).
+The E11 run was sampled at temperature 0.2, top-p 0.95, 1,024 maximum
+output tokens and seed 1816, one sample per problem across all 312
+prompts (source:
+\texttt{outputs/modal\_e1\_e14/2026-08-16/e11\_full\_receipt.json}).
+Both are correct for their respective suites; the point of recording
+them per lane is that the sampling regime is part of the result, not a
+detail beneath it.
+
+Two scoping notes complete the picture of what the actor has actually
+been measured on. The E1 original-contract evaluation was a
+one-checkpoint evaluation whose 731 generations were produced by a mixed
+backend within a single run --- 476 Tinker generations and 255 Modal
+vLLM generations --- and that backend mix is recorded in the original
+receipt (source:
+\texttt{outputs/e1\_e14\_results\_2026-09-05/E1\_E14\_Results.md}).
+Separately, two small probes exist at other parameter settings but are
+not suite results and are not reported as such: a base-model smoke run
+of the E11 harness measured zero scored tasks, and a four-task pilot at
+an intermediate (step-40) checkpoint returned four passes out of four
+with zero extraction failures while carrying an unresolved outstanding
+blocker --- the decontamination receipt identifier for that pilot does
+not exist, and the split-manifest validator still fails on it (sources:
+\texttt{outputs/e11\_verilog\_eval/e11\_smoke\_receipt.json},
+\texttt{outputs/e11\_verilog\_eval/e11\_trained\_step40\_receipt.json}).
+
+\section{9.2 Suites with strictly complete
+scopes}\label{suites-with-strictly-complete-scopes}
+
+Three suites reached strictly complete replacement scopes, and the
+ledger's own integrity check asserts exactly this set: E8, E10 and E11
+(source:
+\texttt{outputs/verification/LEDGER\_CODE\_CHECK\_2026-09-19.json},
+check \texttt{strict\_completed\_suites\_are\_E8\_E10\_E11}). A fourth,
+E14, closed terminal-complete under its native protocol with a recorded
+note. Each is described below with its published figures and, where the
+receipt imposes one, its claim boundary.
+
+\textbf{E8 --- LAB-Bench, public split.} The evaluated scope is the full
+public split: 1,967 of 1,967 expected items were evaluated across eight
+categories, with no category incomplete. The receipt records 450 correct
+and 1,517 incorrect responses, giving a published overall accuracy of
+450/1967 = 0.22877478393492628. Per-category accuracy, correct counts
+and coverage are: TableQA 0.7868852459016393 (192 correct of 244); FigQA
+0.5138121546961326 (93 of 181); ProtocolQA 0.25 (27 of 108); SuppQA
+0.18292682926829268 (15 of 82); LitQA2 0.17587939698492464 (35 of 199);
+DbQA 0.13076923076923078 (68 of 520); SeqQA 0.03333333333333333 (20 of
+600); and CloningScenarios 0.0 (0 of 33). Coverage per category is at or
+above 0.9874 everywhere, and the CloningScenarios coverage is exactly
+1.0 with zero correct. The receipt also records zero parser errors,
+1,960 responses marked ``sure'' against 7 marked ``unsure'', and a
+completion profile of 1,086 length-truncated finishes against 881 stop
+finishes. One further field bears directly on how the accuracy should be
+read: \texttt{native\_answer\_parse\_none} is 1,259, meaning that for
+1,259 of the 1,967 responses the native pipeline extracted no answer at
+all. Because the receipt's correct and incorrect fields partition all
+1,967 rows, those unparsed responses are counted as incorrect in the
+published accuracy, and the figure is therefore an end-to-end harness
+accuracy rather than an accuracy over the subset of responses that
+yielded a parseable answer (source:
+\texttt{outputs/public\_portfolio\_2026-09-05/labbench\_final\_diagnostics.json}).
+The distinction matters for interpretation and is recorded here rather
+than averaged away.
+
+\textbf{E10 --- AgentDojo, benign utility scope.} The E10 lane reports
+the benign task utility of the actor over the frozen AgentDojo v1.2.2
+benchmark at commit \texttt{089ed468cf3ed0322acc66b0211f26d9d90dbf60}.
+The terminal native receipt records status
+\texttt{COMPLETE\_NATIVE\_BENIGN\_UTILITY}, all 97 episodes completed,
+88 utility passes, a score denominator of 97, and therefore a score of
+0.9072164948453608; \texttt{missing\_evaluation\_ids} is empty and
+\texttt{native\_handled\_error\_count} is zero. The 97 episodes
+decompose as banking 16, slack 21, travel 20 and workspace 40. The
+receipt carries the run manifest hash
+\texttt{00e4228f4b757dc32b69b74f05a88348151f13185b470c5f00e31fdaa830ef30}
+and fixes the protocol identity as \texttt{benign\_task\_utility} v1.2.2
+with attack, defence and security-evaluation fields all null and
+\texttt{heldout\_claim} false. Its claim boundary is stated verbatim in
+the receipt as ``Native default benign task utility only;no
+prompt-injection security or held-out claim'', and its decontamination
+status is \texttt{TRAINING\_INVENTORY\_ABSENT} (source:
+\texttt{outputs/public\_portfolio\_2026-09-05/agentdojo\_native\_receipt.json}).
+Two honest qualifications belong in this record. The first is that
+completion and utility are distinct quantities: 97 of 97 episodes
+completed, and 88 of those 97 passed their utility predicates, so the
+lane should be described as complete in coverage and 0.9072 in benign
+utility, never as ``97/97 correct''. The second is that this scope is
+not a security result of any kind, which the receipt itself insists
+upon.
+
+Two pieces of engineering context are inseparable from the E10 number
+and are reported with it. An earlier attempt terminated with 94 of 97
+episodes and score null, missing workspace tasks 37 through 39 (source:
+\texttt{outputs/public\_portfolio\_2026-09-05/agentdojo\_score\_snapshot\_fast02\_terminal\_v3.json}).
+The cause was a confirmed collector fault rather than a model failure:
+verified task receipts recorded absolute \texttt{/cache/...} trace
+paths, and the frozen summary recomputed those paths on the local host,
+so every completed receipt failed comparison after extraction. The
+repair was deliberately minimal --- the original archive and every
+extracted receipt and trace byte are unchanged, and a narrowly scoped
+adapter rewrites only the freshly computed
+\texttt{task\_result.native\_trace\_path} to the verified canonical
+remote path before the frozen summary compares it, leaving native task
+code, environment, prompt, result parsing, utility values and
+handled-error policy untouched. The revised collector passed 18 offline
+tests, independently re-run in 0.507 seconds, and the continuation run
+that closed episodes 37 through 39 was executed under reservation
+\texttt{public-20260905-agentdojo-continuation01} with the native
+wrapper hash
+\texttt{11a8b61631390d9b20decd4263008e5a4c6f648a033d314384bac9e5d2456d77}
+(sources:
+\texttt{outputs/public\_portfolio\_2026-09-05/agentdojo\_terminal\_readiness.md},
+\texttt{outputs/public\_portfolio\_2026-09-05/agentdojo\_continuation01\_result.json},
+\texttt{outputs/public\_portfolio\_2026-09-05/agentdojo\_continuation01\_terminal\_evidence.json}).
+
+\textbf{E11 --- VerilogEval, two native framings.} E11 is the campaign's
+only complete suite that produced both full coverage and a native model
+score. All 312 pinned problems were evaluated --- 156 code-completion
+(\texttt{code-complete-iccad2023}) and 156 specification-to-RTL ---
+under the upstream NVlabs/verilog-eval harness at revision
+\texttt{c498220d0a52248f8e3fdffe279075215bde2da6}, using Icarus Verilog
+12.0 at revision \texttt{4fd5291632232fbe1ba49b2c26bb6b2bf1c6c9cf} and
+Verilator 5.050. The result is 129 passes of 312, or
+0.41346153846153844, decomposed into 67/156 = 0.42948717948717946 on
+code-completion and 62/156 = 0.3974358974358974 on specification-to-RTL.
+Pass verdicts were determined deterministically: for each pinned problem
+the single \texttt{sample01} \texttt{sv-iv-test} log was read and marked
+PASS only when it contained a full-line ``Mismatches: 0 in samples''
+verdict, with missing or non-matching logs marked FAIL. The upstream
+\texttt{sv-iv-analyze} summariser could not be used because it fails on
+a missing optional langchain dependency; that failure is recorded in the
+receipt and does not affect the aggregation, which reads the simulator
+logs directly. The receipt also records 150 extraction failures across
+the run, meaning candidate code blocks that could not be extracted from
+the model response; these appear as FAIL verdicts in the denominators
+above rather than being dropped (source:
+\texttt{outputs/modal\_e1\_e14/2026-08-16/e11\_full\_receipt.json}).
+
+The E11 lane also carries the campaign's clearest example of a scoring
+decision taken for evidential rather than numerical reasons, and it is
+worth setting out because it shows the governance working. The
+all-problems reference sweep --- running the shipped reference
+implementation of every problem through both simulators --- returned 311
+of 312. One problem,
+\texttt{verilog\_eval/spec-to-rtl/Prob099\_m2014\_q6c}, fails to
+elaborate against its own test bench under both simulators, with Icarus
+reporting that ports \texttt{Y2} and \texttt{Y4} are not ports of
+\texttt{good1}; no candidate implementation can pass that task, and the
+upstream defect biases pass@k on the specification-to-RTL split
+downwards by roughly 0.64 percentage points. Excluding it yields 129/311
+= 0.41479099678456594. That corrected figure is \emph{not} canonical.
+The recorded amendment of 2026-08-22 states the reason plainly: no
+immutable benchmark-level justification was captured for the exclusion,
+so the raw 129/312 result is canonical and the 129/311 value is retained
+only as a noncanonical sensitivity; no samples and no verifier artifacts
+were changed by the amendment (sources:
+\texttt{outputs/modal\_e1\_e14/2026-08-16/e11\_full\_receipt.json},
+\texttt{outputs/e11\_verilog\_eval/e11\_verilog\_eval\_rerun\_receipt.json},
+\texttt{outputs/e11\_verilog\_eval/lane\_status\_2026-08-09.md}). The
+distinction is preserved here in exactly those terms, and the ledger's
+integrity check confirms that the component split sums correctly to the
+canonical total (source:
+\texttt{outputs/verification/LEDGER\_CODE\_CHECK\_2026-09-19.json},
+check \texttt{E11\_component\_split\_sums\_67\_plus\_62\_equals\_129}).
+
+\textbf{E14 --- Omni-MATH replacement scope, terminal-complete.} The E14
+replacement scope accepted 4,426 of 4,428 rows, or 99.95 per cent, and
+reproduced an official accuracy of 2,271/4,428 = 0.5131043831902395. Two
+rows were not accepted: \texttt{omni-01195-a6cbdc4ee3c8694b} at row
+index 1,195 and \texttt{omni-02044-612ddacaa39d91fe} at row index 2,044.
+The terminal note of 2026-09-19 resolves them decisively and in a
+direction that does not flatter the lane: the Omni-Judge outputs for
+both rows are truncated before any ``\#\# Equivalence Judgement''
+section --- row 1,195 ends mid numeric answer and row 2,044 ends mid sum
+expression --- so the judge emitted no verdict at all, and the native
+scorer's omission of rows lacking an equivalence judgement is correct
+official behaviour rather than a parser defect. The score impact is nil,
+because the official accuracy already counts both rows in the
+denominator as not correct. The lane therefore closes as
+terminal-complete under the native protocol with 4,428 of 4,428
+dispositions recorded (4,426 accepted plus 2 recorded skip reasons), and
+no re-judge was performed because re-judging would deviate from the
+official scorer and constitute new evidence generation with no score
+effect (source:
+\texttt{outputs/PES\_Phase2\_Review\_2026-09-12/finish/e14\_terminal\_note\_2026-09-19.json}).
+
+\section{9.3 Original-contract results}\label{original-contract-results}
+
+Where a lane's original contract could be honoured on the original
+suite, the result is reported separately from any replacement scope, and
+the coverage caveats travel with it. Seven lanes have an
+original-contract figure; two of them are full-suite results.
+
+\textbf{E1 --- SWE-bench Pro.} The actor resolved 2 of 731 tasks, a
+pass@1 of 2/731 = 0.0027359781121751026, or 0.274 per cent. The
+denominator is the complete 731-row test split of
+\texttt{ScaleAI/SWE-bench\_Pro} at revision
+\texttt{7ab5114912baf22bb098818e604c02fe7ad2c11f}. Within that
+denominator the run produced 713 native evaluations, fourteen generation
+failures and four lost generation artifacts; those eighteen non-native
+outcomes are retained in the denominator rather than trimmed, so the
+figure is a rate over all 731 tasks and not over the subset that graded
+cleanly. The declared licence for the dataset is null in the lane's own
+receipt. The evaluation harness is \texttt{scaleapi/SWE-bench\_Pro-os}
+at commit \texttt{ca10a60a5fcae51e6948ffe1485d4153d421e6c5}, and the
+lane records a known harness-fidelity caveat: the gold-resolve timeout
+was set to 1,200 seconds where the official setting is 120, because of
+an arm64 QEMU emulation constraint in the local execution environment
+(sources:
+\texttt{outputs/e1\_swe\_bench\_pro/lane\_receipt\_2026-08-09.json},
+\texttt{outputs/e1\_swe\_bench\_pro/preflight\_2026-08-09.json},
+\texttt{outputs/e1\_e14\_results\_2026-09-05/E1\_E14\_Results.md}).
+
+\textbf{E2 --- FrontierSWE.} One of 17 tasks was evaluated, with a
+replay-normalised score of 0.8628. The lane is partial: revision-bound
+authorisation for the remaining sixteen tasks was never obtained, and
+the original Tinker checkpoint was unavailable (source:
+\texttt{outputs/e1\_e14\_results\_2026-09-05/E1\_E14\_Results.md}).
+
+\textbf{E4 --- BankerToolBench.} One of 100 tasks was evaluated, with a
+recovery metric of 0.3115. That figure requires care and is stated here
+in the lane's own terms: it is a verifier recovery metric on a single
+task, not the simple fraction 37/128 and not a suite score. The lane's
+public artifacts were restored and 1,175 manifest checks pass, but the
+pass3/pass16 archive is genuinely missing --- zero of six artifacts
+verify, and only \texttt{TINKER\_BRIDGE.json} does (sources:
+\texttt{outputs/e1\_e14\_results\_2026-09-05/E1\_E14\_Results.md},
+\texttt{outputs/PES\_Phase2\_Review\_2026-09-12/finish/Pending\_Experiments.md}).
+
+\textbf{E5 --- APEX-Agents.} Seven of 480 tasks were natively scored.
+The lane's headline aggregate, a prefix mean of 0.050505, is an attempt
+summary in which unscored attempts are treated as zero, and it is
+explicitly not a native 480-task score; the seven tasks that were
+actually scored average 0.079365 (source:
+\texttt{outputs/e1\_e14\_results\_2026-09-05/E1\_E14\_Results.md}).
+
+\textbf{E7 --- BinaryAudit.} One of 46 attempts is recorded, with a
+verifier reward of 0.0 following an agent error, and no grade. The
+terminal ledger of record gives the denominator as 46 attempted; an
+earlier working snapshot, since superseded, recorded the same lane as
+``1/28 errored''. The two snapshots differ in the scope of what they
+counted as an attempt, and this chapter reports the terminal figure
+while flagging that the superseded snapshot's narrower count exists in
+the record (sources:
+\texttt{outputs/PES\_Phase2\_Review\_2026-09-12/finish/Pending\_Experiments.md},
+\texttt{outputs/E1\_E14\_FINAL\_RESULTS\_2026-09-19.md}).
+
+\textbf{E9 --- MLE-bench.} Forty of 75 competitions carry native grades,
+a coverage of 53.33 per cent, and the suite score is null: coverage
+without complete grading is not a score, and the lane records it as
+such. Behind the coverage number sit 97 legacy receipts across 50
+competition identifiers, of which 41 graded receipts cover 40 unique
+competitions; the ledger's integrity check verifies precisely that
+decomposition. A separate merged-vLLM arm holds seven receipts, of which
+exactly one is a valid grade (H\&M, 0.02132) and six are invalid
+submissions, and the integrity check confirms that arm is recorded
+separately with one graded row. The two arms are not combined, and one
+old Spooky Author submission is absent locally although the later run's
+complete submission is retained (sources:
+\texttt{outputs/E1\_E14\_FINAL\_RESULTS\_2026-09-19.md},
+\texttt{outputs/verification/LEDGER\_CODE\_CHECK\_2026-09-19.json},
+\texttt{outputs/e1\_e14\_results\_2026-09-05/E1\_E14\_Results.md}).
+
+\textbf{E11 --- VerilogEval} is reported in Section 9.2, where it
+belongs as a strictly complete suite rather than a partial
+original-contract lane; it is the second of the campaign's two
+full-suite results, alongside E1.
+
+Nothing in this section is compared with anything else. No lane here has
+a matched base-model run, and the presence of a figure for the trained
+actor does not by itself license a claim that the actor outperforms its
+untrained counterpart, a predecessor model, or a published number.
+
+\section{9.4 Partial and quota-blocked
+lanes}\label{partial-and-quota-blocked-lanes}
+
+Beyond the original-contract partials, six lanes have replacement scopes
+that are started, measured in part, and honestly incomplete. They fall
+into two groups: lanes whose remaining work is a sealed and locally
+validated launch that has not been executed, and lanes whose remaining
+work is gated on cloud quota that has not been granted.
+
+In the first group, \textbf{E1's SWE-bench Multilingual replacement} has
+35 of 300 tasks graded. A wave-10 recovery of sixteen additional tasks
+at \$16 was sealed and validated locally but its execution source was
+lost when the finish-era working directory was deleted, and under the
+lost-source policy it is being faithfully re-implemented in a tracked
+path; the rebuild at \texttt{zvf-program/e1\_wave10/} passed 10 of 10
+targeted regression checks offline, and the \$16 launch remains pending
+a fresh lead seal, a live actor endpoint and an online W\&B run.
+\textbf{E2's CORE-Bench replacement} has all 45 capsule setups complete
+and zero tasks graded; a direct-VM adapter was built and the
+orchestration driver passes 12 of 12 offline tests, with the remaining
+blocker recorded as a hard owner-level GCP IAM binding rather than any
+missing code. \textbf{E5's Tau3 replacement} has 20 of 97 tasks cleaned,
+a coverage of 20.62 per cent; the successor-27 chain was re-verified
+offline and reached 52 of 52 tests passing after a duplicate-keyword
+fault was repaired in the dispatch path and three test-side wiring
+faults were fixed, with the controller's safety properties unchanged.
+Its \$80 admission launch is held on two counts: no lead-issued bound
+authorisation receipt exists, and the lane record also finds no real
+native runtime adapter in the repository for such a receipt to bind, so
+the lane cannot launch even with the receipt in hand. \textbf{E13's
+BALROG replacement} has 13 of 255 episodes recorded, with 21
+never-started receipt candidates mapped, and its hosted-supervisor chain
+verified 17 of 17 offline; the \$8 actor launch awaits allocation of a
+reservation, a connectivity re-proof, a route-gate change and a
+supervisor deployment (sources:
+\texttt{outputs/PES\_Phase2\_Review\_2026-09-12/finish/Pending\_Experiments.md},
+\texttt{outputs/UNBLOCK\_CARRYOUT\_2026-09-21.md},
+\texttt{outputs/E1\_E14\_FINAL\_RESULTS\_2026-09-19.md}).
+
+In the second group, \textbf{E6's WebArena replacement} stands at 0 of
+812 tasks. Its canonical inventory has been verified as 65 files with
+ordered task identifiers 0 through 811, so the suite is staged and the
+absence of results is purely a compute-access question: AWS us-east-2
+quota is at 1 of 16 vCPU with case \texttt{c67d89b0} open since 12
+September, and a one-open-request rule prevents a second filing.
+\textbf{E9's MLDevBench replacement} stands at 0 of 34 tasks graded with
+an incomplete runtime image; us-east-1 quota is 1 of 8 vCPU with request
+\texttt{2eebd37d} filed on 19 September and case
+\texttt{178982528000009} opened, and a local Docker build was deferred
+at 31 GiB free disk against a builder requirement of at least 30 GiB
+plus recipe reconstruction. Both lanes were re-checked live and recorded
+NO-GO, and a read-only quota watcher polls their status without spending
+(sources:
+\texttt{outputs/PES\_Phase2\_Review\_2026-09-12/finish/Pending\_Experiments.md},
+\texttt{outputs/E1\_E14\_FINAL\_RESULTS\_2026-09-19.md},
+\texttt{outputs/UNBLOCK\_CARRYOUT\_2026-09-21.md}).
+
+The campaign's terminal-state vocabulary was introduced precisely so
+that these distinctions survive summarisation, and each lane above
+carries one of its labels: \texttt{REBUILD\_READY\_LAUNCH\_PENDING} for
+E1 wave-10 and E5 successor-27,
+\texttt{AMENDMENT\_ACCEPTED\_LAUNCH\_PENDING} for E2 and E13, and
+\texttt{PENDING\_QUOTA} for E6 and E9 (source:
+\texttt{outputs/PES\_Phase2\_Review\_2026-09-12/finish/Pending\_Experiments.md}).
+
+\section{9.5 The E4 rerun as a
+diagnostic}\label{the-e4-rerun-as-a-diagnostic}
+
+The E4 lane closed \texttt{CLOSED\_PARTIAL} on 19 September 2026: the
+pass3/pass16 archive is genuinely missing, only one of six artifacts
+verifies, and the 0.3115 recovery metric stands as receipt-only evidence
+because unlimited budget removes a spending cap but cannot reconstruct
+model outputs that no longer exist. The only funded path recorded at
+closure was a fresh full rerun whose grader-only lower bound was
+estimated at approximately \$59.45, which sits outside every envelope
+then authorised. That path was subsequently authorised separately and
+executed, and its result is reported here as a diagnostic rather than as
+a score, because that is what its design makes it.
+
+The rerun was configured on the base model with a zero-initialised LoRA
+snapshot --- the lane's record states this is equivalent to base
+sampling, with no training steps --- executed through the Modal bridge
+\texttt{/v1/responses} path at \texttt{-\/-n-concurrent\ 2} under a cap
+of \$55.91445263. It completed 100 of 100 trials with one
+\texttt{NonZeroAgentExitCodeError}, and returned a mean reward of
+exactly 0.0, with all one hundred trials in the 0.0 bucket, over a
+runtime of 3 hours 29 minutes (source:
+\texttt{outputs/PES\_Phase2\_Review\_2026-09-12/finish/Pending\_Experiments.md},
+which cites the receipt at
+\texttt{outputs/e4\_banker\_toolbench/official\_repo\_ff6db552/jobs/btb-banking-tasks-tinker-bridge/result.json}).
+
+The value of this run lies entirely in the failure mechanism, which was
+audited across all one hundred trajectories. Agents terminate after 2 to
+14 steps, with a median of about 6, and produce no
+\texttt{deliverables/} directory; the verifier consequently
+short-circuits to 0.0 on the message ``No deliverables found''.
+Twenty-seven or more of the trajectories end in role-token degeneration
+of the form \texttt{user\ user\ assistant\ ...} repetition. The record's
+own interpretation is the correct one and is repeated here without
+softening: the base model cannot sustain the opencode tool-use loop, so
+the 0.0 measures tool-dialogue collapse rather than finance reasoning.
+Two implications follow, and they cut in opposite directions. The
+positive implication is that the harness behaves correctly at the
+boundary --- it fails closed, produces a legible mechanism for every
+zero, and does not manufacture partial credit. The negative implication
+is that a BankerToolBench score for this actor family is not currently
+obtainable at all, because the bottleneck is the agent loop rather than
+the domain, and the campaign therefore reports no BankerToolBench suite
+result for the trained actor either. In particular, the rerun's 0.0 must
+not be set against the original single-task outcome as though the two
+were a controlled pairing: they are different configurations under
+different runtime conditions, and the campaign makes no comparison
+between them.
+
+Spend on the rerun was \$15.07 charged against the \$55.91 cap,
+comprising 16.35 million prompt tokens and 2.18 million completion
+tokens.
+
+\section{9.6 Externally blocked lanes and terminal
+states}\label{externally-blocked-lanes-and-terminal-states}
+
+Six lanes have no local or paid path and were formally closed as
+externally blocked under the finish-all directive of 19 September 2026,
+whose verbatim text and interpretation are recorded in
+\texttt{outputs/PES\_Phase2\_Review\_2026-09-12/finish/ROOT\_DIRECTIVE\_FINISH\_ALL\_2026-09-19.json}
+at 13:50Z. The six are E3 (SDAB private bundle), E7 (BinaryAudit private
+payload), E8-original (the LifeSciBench package), E10-original
+(AgentHarm private tasks), E12 (AppBench deployment) and E14-original
+(the FrontierMath hosted evaluation). Closure records were written for
+each, with an index, under
+\texttt{outputs/PES\_Phase2\_Review\_2026-09-12/finish/external\_closures\_2026-09-19/};
+each records ``no provider response'' and specifies the conditions under
+which the lane could be reopened (sources:
+\texttt{outputs/E1\_E14\_FINAL\_RESULTS\_2026-09-19.md},
+\texttt{outputs/PES\_Phase2\_Review\_2026-09-12/finish/Pending\_Experiments.md}).
+
+The access routes attempted are part of the record and are reported with
+their delivery status rather than their intent. An E7 request was opened
+as GitHub issue \texttt{QuesmaOrg/BinaryAudit\#22} and verified live on
+21 September 2026 at 00:42:10Z. First-contact or follow-up messages for
+E3 (to \texttt{founders@emulated.so}), E14 (to
+\texttt{math\_evals@epoch.ai}) and E12 (to
+\texttt{support@afterquery.com}) were accepted by the local postfix
+queue under queue identifiers \texttt{028231390A111},
+\texttt{02CF91390A112} and \texttt{F19151390A110} respectively, but
+remote delivery is unverified in all three cases; the reason is recorded
+as a stale Gmail API authorisation (\texttt{invalid\_grant}) requiring
+an interactive browser login, which also means bounce notifications
+cannot be read from the sending side. For E10, the Hugging Face dataset
+discussion had already been sent by the lead on 20 September and was
+verified live, and no duplicate was posted. The two long-standing public
+requests attached to E6 and E12 remain without a grant (sources:
+\texttt{outputs/UNBLOCK\_CARRYOUT\_2026-09-21.md},
+\texttt{outputs/e1\_e14\_results\_2026-09-05/E1\_E14\_Results.md}).
+
+Three further items complete the terminal record. First, verification:
+the deterministic checks of 19 September passed 11 of 11 with zero
+failures, covering exact divisions, receipt presence, sealed-artifact
+hash equality and absence probes for the lost execution sources; the
+same date's halt is recorded as clean, with no orphan processes,
+deployments or sessions. Second, budget: \$5.6301 of the \$50
+additional-spend allowance was counted at that point, and budget mode
+was subsequently set to unlimited by
+\texttt{finish/authorization\_unlimited\_v1.json} with a null total cap,
+superseding the earlier caps while leaving per-run resource and timeout
+bounds in force --- so spend is now gated per launch by technical-chain
+existence and preflight rather than by a cumulative ceiling. Third, the
+judgment layer: the campaign added a receipt-recording judgment harness
+for lane triage, claim faithfulness and research-value ordering, and its
+one completed healthy-window product is a value ordering across the
+fourteen lanes, normalised to 0-1 over four levels, in which E6 (0.39)
+and E14 (0.34) rank highest, followed by E1 (0.33), E9 (0.33), E8
+(0.31), E2 (0.28), E10 (0.27), E13 (0.26), E11 (0.20), E5 (0.19), E4
+(0.15), E12 and E7 (0.12), and E3 last (0.08). That ordering was
+recorded before a service degradation began at about 13:10Z, after which
+both blocker-classification batteries returned degenerate distributions
+and their routings were marked \texttt{FALLBACK\_OUTAGE}; their receipts
+are retained as incident evidence, and the per-lane blocker column in
+the terminal ledger therefore rests on document evidence rather than on
+model judgment. The design rule banked from the healthy window is stated
+in the ledger and is adopted here: arithmetic and string lookups stay in
+code --- the harness mis-answered a parity probe even while healthy ---
+and model judgment is reserved for classification, faithfulness and
+value ordering (sources:
+\texttt{outputs/verification/LEDGER\_CODE\_CHECK\_2026-09-19.json},
+\texttt{outputs/E1\_E14\_FINAL\_RESULTS\_2026-09-19.md},
+\texttt{outputs/PES\_Phase2\_Review\_2026-09-12/finish/Pending\_Experiments.md}).
+
+\section{9.7 Summary of the campaign at the point of
+writing}\label{summary-of-the-campaign-at-the-point-of-writing}
+
+The campaign established two full-suite results and one complete
+replacement scope with a score: E1 at 2/731 = 0.274 per cent on
+SWE-bench Pro, E11 at 129/312 = 41.35 per cent pass@1 across its two
+framings, and E8 at 450/1967 = 0.2288 on the LAB-Bench public split,
+alongside a complete benign-utility evaluation of E10 at 88 of 97
+episodes, a terminal-complete E14 replacement scope with an official
+accuracy of 51.31 per cent, and five original-contract partials --- E2,
+E4, E5, E7 and E9 --- whose coverage fractions are all stated above and
+none of which is a suite score. It further established that six lanes
+are externally blocked with no local or paid path, and that six more are
+staged and waiting on either a sealed launch or a cloud quota that has
+not been granted. What it did not establish is equally important: no
+multi-seed estimate, no held-out security result, no BankerToolBench
+suite score, and no baseline comparison of any kind. The next chapter
+takes up the artefacts that make these results inspectable --- the
+evidence chain, the receipt schema and the reproduction path --- so that
+a reader can re-derive each number above from the files cited beside it.

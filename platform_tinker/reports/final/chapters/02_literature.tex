@@ -1,0 +1,112 @@
+\chapter{Literature Survey}
+\label{ch:lit}
+
+\section{From RLHF and PPO to Group-Relative Methods}
+Policy-gradient post-training began with PPO~\cite{schulman2017ppo} and generalised
+advantage estimation~\cite{schulman2015gae}, used at scale for instruction
+tuning~\cite{ouyang2022instructgpt}. PPO learns a value network (critic) to
+baseline the advantage, which adds memory and a second optimisation problem. GRPO
+\cite{shao2024deepseekmath} removed the learned value function and replaced the
+per-token advantage with a group-relative baseline: it samples a \emph{group} of
+$G$ completions per prompt and standardises each completion's reward against the
+group mean and standard deviation. GRPO was central to the DeepSeek-R1 reasoning
+models~\cite{guo2025r1}. RLOO~\cite{ahmadian2024rloo} is a closely related
+leave-one-out estimator that baselines each sample against the mean of the
+\emph{other} samples in the group --- i.e.\ it already performs a form of
+within-group baselining, which is directly relevant to our P2 analysis.
+
+\section{Direct Preference Optimisation as a Contrast}
+An orthogonal branch of post-training removes on-policy sampling entirely: Direct
+Preference Optimisation (DPO)~\cite{rafailov2023dpo} optimises a classification
+loss over fixed preference pairs, trading the exploration of on-policy RL for
+stability and simplicity. The contrast is instructive for this project: DPO never
+suffers zero-variance collapse because it does not standardise within a sampled
+group, but it also cannot exploit a verifiable reward signal online. GRPO's
+zero-variance pathology is thus the price of its on-policy, verifier-in-the-loop
+design --- which is exactly what makes measuring that price worthwhile.
+
+\section{Fixing GRPO's Biases and Collapse}
+A fast-growing line of work targets specific GRPO pathologies. Dr.\
+GRPO~\cite{liu2025drgrpo} removes the length and difficulty normalisation biases in
+the standard objective. DAPO~\cite{yu2025dapo} introduces \emph{dynamic sampling},
+explicitly resampling to avoid groups whose reward variance is zero, plus decoupled
+clipping --- this is the most direct prior art for the ZVF problem we quantify in
+P2 and the curriculum lever we test. Group-variance methods such as
+GVPO~\cite{gvpo2025} re-weight by within-group variance. A cluster of very recent
+variants (AERO~\cite{aero2026}, NGRPO~\cite{ngrpo2025},
+$\lambda$-GRPO~\cite{lambdagrpo2025}, MC-GRPO~\cite{mcgrpo2026},
+AVSPO~\cite{avspo2026}) attack advantage collapse, length bias, and rollout
+accounting from different angles. The density of this literature is precisely why
+Phase-1 narrows the crowded pillars (P2 zero-variance, P4 length bias) to
+\emph{measurement} rather than a new algorithm.
+
+\section{Verifiable Rewards, Frameworks, and Reporting}
+RLVR was formalised for open post-training in T\"ULU~3~\cite{lambert2024tulu3}. The
+implementations we unify are TRL~\cite{vonwerra2020trl}, veRL /
+HybridFlow~\cite{sheng2024hybridflow}, and OpenRLHF~\cite{hu2024openrlhf}, plus
+Tinker as a managed training back-end. Our evaluation tasks are
+GSM8K~\cite{cobbe2021gsm8k} and a HumanEval~\cite{chen2021humaneval} subset. For the
+reporting/provenance pillar (P5/P6) we build on Datasheets for
+Datasets~\cite{gebru2021datasheets} and Model Cards~\cite{mitchell2019modelcards},
+but target the \emph{RL-run} object (verifier version, rollout provenance, reward
+drift) that neither of those artefacts captures. Static run-config registries
+(Weights \& Biases, MLflow) record hyperparameters but not the temporal, versioned
+evolution of verifier logic and reward drift that P6 targets.
+
+\section{Scaling and Layer-Adaptation Context}
+Whole-model scaling and saturation laws describe how loss and capability track
+parameters, data, and compute. P1 asks a narrower, orthogonal question: \emph{where}
+inside the network does GRPO-style adaptation concentrate, and can the layers that
+will matter be identified early enough to freeze the rest? This connects
+parameter-efficient fine-tuning (LoRA adapters on the attention projections) with
+the question of predictive layer-freezing, and is the one pillar in the portfolio
+that requires white-box per-layer gradient access.
+
+\section{Process-, Tree-, and Stability-Aware Variants}
+Beyond the group-baseline fixes above, a parallel line of work changes \emph{what}
+signal drives the update. Process-reward and tree-search methods supply denser,
+step-level feedback instead of a single terminal reward, which reduces the chance
+that a whole group collapses to identical terminal rewards; stability-aware variants
+constrain the update (e.g.\ trust-region or entropy controls) to avoid the
+advantage-collapse and length-inflation failure modes that a raw group baseline can
+induce. These methods are complementary to the measurement stance taken here: they
+propose \emph{levers}, whereas this project first builds the \emph{instrumentation}
+(ZVF, gradient utilisation, collapse decomposition) needed to tell whether any such
+lever actually converts wasted rollouts into held-out accuracy. The Phase-1 nulls in
+Chapter~\ref{ch:results} are precisely the kind of evidence this instrumentation is
+designed to produce, and they caution against adopting a variant on the strength of a
+single-seed improvement.
+
+\section{Positioning the Portfolio}
+Table~\ref{tab:position} states, per pillar, the closest prior art and the narrow
+axis we claim. Two pillars (P2 zero-variance and P4 length bias) are crowded; there
+we \emph{narrow} claims to measurement rather than a new algorithm. The widest open
+ground is the systems/reporting side (P5/P6/P8), where no GRPO-specific
+machine-readable standard or infrastructure-level integrity benchmark currently
+exists.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}L{0.045\linewidth}L{0.33\linewidth}L{0.50\linewidth}@{}}
+\toprule
+\textbf{P\#} & \textbf{Closest prior art} & \textbf{Our narrowed axis} \\
+\midrule
+P1 & whole-model scaling / saturation laws & \emph{per-layer} adaptation is moderately concentrated (step-1 predictability does \emph{not} survive scaling) \\
+P2 & DAPO dynamic sampling, GVPO, AERO/NGRPO & \emph{measure} ZVF and show re-baselining cannot recover gradient \\
+P3 & integer-$G$ sweeps, MC-GRPO & token/compute-bounded group sizing (not integer $G$) \\
+P4 & Dr.\ GRPO, $\lambda$-GRPO length fixes & semantic-density token weighting (\emph{designed}) \\
+P5 & Datasheets, Model Cards & GRPO datasheet + cryptographic rollout provenance \\
+P6 & static run-config registries (W\&B/MLflow) & temporal/versioned run-state ontology \\
+P7 & heuristic adaptive-$G$ (G2RPO-A) & PID control of temperature/clipping (\emph{designed}) \\
+P8 & output-level reward-hack benchmarks (EvilGenie, TRACE) & infrastructure-telemetry integrity auditing \\
+\bottomrule
+\end{tabular}
+\caption{Positioning of the eight studies against the closest prior art. Crowded
+pillars (P2, P4) are narrowed to measurement/design; the widest open ground is
+systems/reporting (P5, P6, P8).}
+\label{tab:position}
+\end{table}
+
+%---------------------------------------------------------------------

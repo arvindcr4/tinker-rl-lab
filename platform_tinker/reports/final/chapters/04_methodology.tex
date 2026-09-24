@@ -1,0 +1,103 @@
+\chapter{Proposed Methodology}
+\label{ch:method}
+
+\section{Design Commitment: Attribution}
+\label{sec:harness}
+\input{tikz/fig1.tex}
+The core design commitment is \emph{attribution}: hold the experiment fixed and vary
+only the stack. A single configuration object specifies the model, dataset, reward
+function, decoding parameters (temperature, top-$p$, max tokens), group size $G$,
+learning rate, KL coefficient, and seed. A launcher (\texttt{platform\_local/unified/launcher.py})
+maps that one config onto any of the supported back-ends through thin per-framework
+adapters (\texttt{trl\_integrations/}, \texttt{verl/}, \texttt{platform\_modal/openrlhf/},
+\texttt{platform\_hybrid/skyrl/}, \texttt{platform\_tinker/atropos/}), while \texttt{platform\_tinker/tinker\_rl/grpo.py} implements the
+reference GRPO loop against the managed Tinker back-end. Because the reward grader
+and decoding are shared code, a difference in outcome between two back-ends is
+attributable to the framework, not to a divergent reward parser or sampler.
+
+\paragraph{Scope of what Phase-1 exercises.} The adapter layer for TRL, veRL, and
+OpenRLHF is \emph{implemented}, but the empirical results in Chapter~\ref{ch:results}
+are produced on the Tinker managed back-end (and a Colab GPU for the white-box P1
+path). A head-to-head cross-framework divergence table --- identical config run on all
+four back-ends --- is deferred to Phase-2; Phase-1 delivers the harness and the
+attribution \emph{design}, and we are careful not to claim cross-framework results we
+have not yet run.
+
+\section{Per-Step Telemetry}
+\label{sec:telemetry}
+Every training step emits a telemetry record to JSONL and to Weights \& Biases. The
+fields that distinguish this harness from a standard trainer are:
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt]
+  \item \textbf{ZVF} --- the fraction of prompt-groups in the step whose within-group
+  reward variance is zero (hence zero reward-relative advantage; the KL term may
+  still act);
+  \item \textbf{gradient utilisation} --- the complementary fraction of groups
+  with non-zero reward-relative advantage signal, excluding KL-only updates;
+  \item \textbf{collapse decomposition} --- of the collapsed groups, how many are
+  \emph{all-correct} (already solved) versus \emph{all-wrong};
+  \item plus reward, loss, entropy, completion length, and KL to the reference.
+\end{itemize}
+The raw group reward tensors are also saved, so any downstream diagnostic (e.g.\
+\texttt{p2\_collapse\_analysis.py}) can \emph{recompute} a published number from the
+stored tensors rather than trusting a logged summary.
+
+\section{Formalising the Zero-Variance Fraction}
+For a prompt $q$ we draw a group of $G$ completions $\{o_i\}_{i=1}^{G}$ from the
+current policy and score each with a verifiable reward $r_i$. The group-relative
+advantage is the within-group standardisation
+\begin{equation}
+A_i \;=\; \frac{r_i - \mu_g}{\sigma_g + \varepsilon},
+\qquad
+\mu_g = \frac{1}{G}\sum_{j} r_j,\quad
+\sigma_g = \sqrt{\tfrac{1}{G}\sum_j (r_j-\mu_g)^2}.
+\label{eq:adv}
+\end{equation}
+(We write the population standard deviation; the sample-variance form $\tfrac{1}{G-1}$
+differs only by a constant factor and does not change the zero-variance condition
+$\sigma_g=0$ that this project measures.) Whenever $\sigma_g = 0$ --- every completion in the group receives the same reward ---
+every $A_i = 0$, so the whole group contributes no gradient \emph{through the
+advantage (surrogate) term}; only the KL-penalty term of Eq.~\eqref{eq:loss} is
+unaffected. The Zero-Variance
+Fraction is exactly the batch-mean of the indicator $\mathbb{1}[\sigma_g = 0]$:
+\begin{equation}
+\zvf \;=\; \frac{1}{|B|}\sum_{g \in B} \mathbb{1}\!\left[\sigma_g = 0\right].
+\label{eq:zvf}
+\end{equation}
+This makes zero-advantage sampling a single, loggable scalar --- the measurement around
+which the entire portfolio is organised.
+
+\section{The Eight-Study Portfolio}
+\label{sec:portfolio}
+\input{tikz/fig7_zvf.tex}
+\textbf{P1 --- Scaling / layer dynamics.} A white-box study of \emph{where} a model
+adapts under GRPO-style updates, recording per-layer LoRA gradient norms to test
+whether the layers that will matter can be identified early (predictive
+layer-freezing). Requires per-layer gradient access, so it runs on a local GPU
+rather than the managed back-end.
+
+\textbf{P2 --- Zero-variance / advantage starvation.} Quantifies ZVF on real reward
+tensors and asks whether any re-baselining scheme can recover reward contrast from
+collapsed groups.
+
+\textbf{P3 --- Group size.} Studies how collapse, reward, held-out gain, and token
+cost vary with the group size $G$, and reframes $G$ as a compute budget rather than
+an integer.
+
+\textbf{P4 --- Length bias (designed).} Proposes semantic-density /
+surprise-weighted token normalisation instead of uniform or static length penalties.
+
+\textbf{P5 --- Reporting / provenance (flagship, systems).} A GRPO post-training
+datasheet plus cryptographic rollout provenance, so one can prove which verifier
+version and which rollouts produced a checkpoint.
+\input{tikz/fig6.tex}
+
+\textbf{P6 --- Registry.} A versioned, temporal registry of evolving run state
+(verifier-logic updates, reward drift), intended to fold into the P5 standard.
+
+\textbf{P7 --- Controller (designed).} Classical PID control of decoding temperature
+and clip range, using live advantage-variance / KL-drift as sensor inputs.
+
+\textbf{P8 --- Integrity / anomaly.} An auditor that uses the per-step telemetry
+(not just reward) to detect anomalous / manipulated runs.
+
+%---------------------------------------------------------------------

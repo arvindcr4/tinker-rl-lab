@@ -1,0 +1,158 @@
+%=====================================================================
+% PES University --- M.Tech (Data Science and Artificial Intelligence)
+% Project Phase-2 Report / Thesis
+% Tinker RL Lab --- Multi-Framework GRPO Post-Training Study
+% Author: Arvind C R (SRN PES2PGE24DS140)   Guide: Ramesh Prakash Guledgudd
+% Built with tectonic:  cd <dir> && tectonic thesis_master.tex
+%=====================================================================
+\documentclass[12pt,a4paper]{report}
+
+% ---- binding margin: extra room on the left (spine) side --------------
+\usepackage[a4paper,left=1.5in,right=1in,top=1in,bottom=1in]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{calc}          % required by pandoc's table column-width arithmetic
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+  pdftitle={Tinker RL Lab: A Multi-Framework Benchmark and Study of GRPO-Style Reinforcement-Learning Post-Training of Large Language Models},
+  pdfauthor={Arvind C R},
+  pdfsubject={M.Tech Project Phase-2 Report, PES University},
+  pdfkeywords={GRPO, RLVR, zero-variance fraction, reproducibility, telemetry, benchmark evaluation}
+}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,
+                decorations.pathreplacing,patterns,pgfplots.groupplots}
+
+% ---- shared tikz styles (identical to the ESA / Phase-1 figure set) ----
+\tikzset{
+  blk/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=blue!6,
+              minimum height=8mm, minimum width=20mm, align=center, font=\small},
+  io/.style={rectangle, rounded corners=6pt, draw=black!70, thick, fill=green!8,
+             minimum height=8mm, align=center, font=\small},
+  proc/.style={rectangle, draw=black!70, thick, fill=orange!10, minimum height=8mm,
+               align=center, font=\small},
+  dec/.style={diamond, aspect=2, draw=black!70, thick, fill=yellow!15, align=center,
+              font=\footnotesize},
+  warnbox/.style={rectangle, rounded corners=2pt, draw=red!60!black, thick, fill=red!7,
+                  minimum height=8mm, align=center, font=\small},
+  oklbox/.style={rectangle, rounded corners=2pt, draw=green!45!black, thick, fill=green!8,
+                 minimum height=8mm, align=center, font=\small},
+  ar/.style={-{Latex[length=2mm]}, thick},
+  arl/.style={-{Latex[length=2mm]}, thick, dashed, draw=black!55},
+  lbl/.style={font=\footnotesize\itshape, text=black!60},
+}
+\definecolor{good}{RGB}{34,139,34}
+\definecolor{bad}{RGB}{178,34,34}
+\definecolor{warn}{RGB}{218,165,32}
+\definecolor{pesblue}{RGB}{0,45,98}
+\definecolor{complete}{RGB}{30,125,79}
+\definecolor{partial}{RGB}{176,106,0}
+\definecolor{blocked}{RGB}{166,43,43}
+
+\newcommand{\zvf}{\mathrm{ZVF}}
+\renewcommand{\bibname}{References}
+
+\setlength{\parskip}{0.4em}
+\setlength{\parindent}{0pt}
+\setlength{\emergencystretch}{3em}
+
+% ---- pandoc compatibility -------------------------------------------
+% pandoc's LaTeX fragments reference macros that live in pandoc's own
+% default template, not in the fragment. Define them here.
+\providecommand{\real}[1]{#1}          % table column-width arithmetic
+\providecommand{\tightlist}{%          % compact lists
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\providecommand{\pandocbounded}[1]{#1} % image bounding wrapper
+\providecommand{\passthrough}[1]{#1}
+\newenvironment{Shaded}{}{}            % syntax-highlighted code block
+\newenvironment{Highlighting}{}{}
+
+% pandoc emits \XxxTok{...} for syntax-highlighted spans. Render each as
+% monospace with no colour so highlighted code compiles under any engine.
+\providecommand{\NormalTok}[1]{\texttt{#1}}
+\providecommand{\KeywordTok}[1]{\texttt{#1}}
+\providecommand{\DataTypeTok}[1]{\texttt{#1}}
+\providecommand{\DecValTok}[1]{\texttt{#1}}
+\providecommand{\BaseNTok}[1]{\texttt{#1}}
+\providecommand{\FloatTok}[1]{\texttt{#1}}
+\providecommand{\ConstantTok}[1]{\texttt{#1}}
+\providecommand{\CharTok}[1]{\texttt{#1}}
+\providecommand{\SpecialCharTok}[1]{\texttt{#1}}
+\providecommand{\StringTok}[1]{\texttt{#1}}
+\providecommand{\VerbatimStringTok}[1]{\texttt{#1}}
+\providecommand{\SpecialStringTok}[1]{\texttt{#1}}
+\providecommand{\ImportTok}[1]{\texttt{#1}}
+\providecommand{\CommentTok}[1]{\texttt{#1}}
+\providecommand{\DocumentationTok}[1]{\texttt{#1}}
+\providecommand{\AnnotationTok}[1]{\texttt{#1}}
+\providecommand{\CommentVarTok}[1]{\texttt{#1}}
+\providecommand{\OtherTok}[1]{\texttt{#1}}
+\providecommand{\FunctionTok}[1]{\texttt{#1}}
+\providecommand{\VariableTok}[1]{\texttt{#1}}
+\providecommand{\ControlFlowTok}[1]{\texttt{#1}}
+\providecommand{\OperatorTok}[1]{\texttt{#1}}
+\providecommand{\BuiltInTok}[1]{\texttt{#1}}
+\providecommand{\ExtensionTok}[1]{\texttt{#1}}
+\providecommand{\PreprocessorTok}[1]{\texttt{#1}}
+\providecommand{\AttributeTok}[1]{\texttt{#1}}
+\providecommand{\RegionMarkerTok}[1]{\texttt{#1}}
+\providecommand{\InformationTok}[1]{\texttt{#1}}
+\providecommand{\WarningTok}[1]{\texttt{#1}}
+\providecommand{\AlertTok}[1]{\texttt{#1}}
+\providecommand{\ErrorTok}[1]{\texttt{#1}}
+
+% ---- unicode glyphs absent from Latin Modern ----
+\usepackage{newunicodechar}
+\newunicodechar{∈}{\ensuremath{\in}}
+\newunicodechar{∉}{\ensuremath{\notin}}
+\newunicodechar{≤}{\ensuremath{\leq}}
+\newunicodechar{≥}{\ensuremath{\geq}}
+\newunicodechar{≠}{\ensuremath{\neq}}
+\newunicodechar{≈}{\ensuremath{\approx}}
+\newunicodechar{±}{\ensuremath{\pm}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{←}{\ensuremath{\leftarrow}}
+\newunicodechar{⁻}{\ensuremath{^{-}}}
+\newunicodechar{⁰}{\ensuremath{^{0}}}
+\newunicodechar{¹}{\ensuremath{^{1}}}
+\newunicodechar{²}{\ensuremath{^{2}}}
+\newunicodechar{³}{\ensuremath{^{3}}}
+\newunicodechar{⁴}{\ensuremath{^{4}}}
+\newunicodechar{⁵}{\ensuremath{^{5}}}
+\newunicodechar{⁶}{\ensuremath{^{6}}}
+\newunicodechar{⁷}{\ensuremath{^{7}}}
+\newunicodechar{⁸}{\ensuremath{^{8}}}
+\newunicodechar{⁹}{\ensuremath{^{9}}}
+\newunicodechar{₀}{\ensuremath{_{0}}}
+\newunicodechar{₁}{\ensuremath{_{1}}}
+\newunicodechar{₂}{\ensuremath{_{2}}}
+\newunicodechar{₃}{\ensuremath{_{3}}}
+\newunicodechar{σ}{\ensuremath{\sigma}}
+\newunicodechar{π}{\ensuremath{\pi}}
+\newunicodechar{θ}{\ensuremath{\theta}}
+\newunicodechar{Δ}{\ensuremath{\Delta}}
+\newunicodechar{μ}{\ensuremath{\mu}}
+\newunicodechar{α}{\ensuremath{\alpha}}
+\newunicodechar{β}{\ensuremath{\beta}}
+
+% ---- figure inclusion helper: \fig{name}{caption}{label} ----
+\newcommand{\fig}[3]{%
+  \begin{figure}[htbp]\centering
+  \includegraphics[width=0.94\linewidth]{figures/#1.pdf}%
+  \caption{#2}\label{#3}%
+  \end{figure}}
+
+\begin{document}
+\hypersetup{pageanchor=false}

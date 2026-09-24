@@ -1,0 +1,14 @@
+\begin{figure}[h]\centering
+\begin{tikzpicture}[node distance=8mm and 14mm]
+\node[proc] (run) {GRPO\\run};
+\node[blk, right=of run] (rec) {Provenance record\\\footnotesize 7-item block +\\\footnotesize hashes + rigor};
+\node[dec, right=18mm of rec, minimum width=22mm] (ver) {\texttt{minreport}\\\texttt{verify}};
+\node[blk, right=16mm of ver, fill=good!12] (a) {\textbf{A}\\\footnotesize campaign\\\footnotesize (3 seeds)};
+\node[blk, below=6mm of a, fill=bad!12] (f) {\textbf{FAIL}\\\footnotesize single-seed\\\footnotesize sweep};
+\draw[ar] (run)--(rec); \draw[ar] (rec)--(ver);
+\draw[ar] (ver)--(a); \draw[ar] (ver)--(f);
+\node[lbl,above=0.5mm of ver,align=center,text width=30mm] {completeness /\\integrity / rigor};
+\node[lbl,below=1mm of rec,align=center,text width=30mm] {git SHA, code\_hash,\\reward\_hash, data\_hash};
+\end{tikzpicture}
+\caption{P5 MIN-REPORT-RL verifier. Each run emits a signed provenance record; the verifier grades completeness (7 items), integrity (recomputes \texttt{code\_hash} vs live source), and rigor (hard-fails single-seed). It automatically flags the exact weakness kimi/codex caught by hand.}
+\end{figure}

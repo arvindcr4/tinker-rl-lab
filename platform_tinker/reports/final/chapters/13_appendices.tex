@@ -1,0 +1,96 @@
+\appendix
+
+\chapter{Complete Run Registry}
+\label{app:registry}
+Table~\ref{tab:registry} lists the runs behind the Phase-1 findings. All runs log to
+Weights \& Biases (project \texttt{rlvr-openings}) with per-step telemetry and saved
+group reward tensors; runs are pinned by config, seed, and framework.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}L{0.13\linewidth}L{0.32\linewidth}L{0.14\linewidth}L{0.28\linewidth}@{}}
+\toprule
+\textbf{Study} & \textbf{Model / setup} & \textbf{Seeds} & \textbf{Primary output} \\
+\midrule
+P1 (toy) & Qwen2.5-1.5B, 28 layers, 5 steps, arithmetic & 1 & per-layer grad-norm; overlap$=1.0$ \\
+P1 (scaled) & Qwen2.5-3B, 36 layers, 10 steps, GSM8K & $\{0,1,2,3\}$ & overlap $0.083\pm0.048$; top-25\% share $0.39$ \\
+P2 & 4 methods, 40 steps, $16\times8$, GSM8K & shared seed-0 sched. & ZVF $0.72$--$0.77$ \\
+P3 & Qwen3.5-4B, $G\in\{2,4,8,16\}$, 6 steps & 0 & token cost $9.7$k--$68$k; exploratory sweep \\
+Curriculum & Qwen3.5-4B, 8 steps, mixed-variance filter & 0 & ZVF $0.50\to0.00$, $4.81\times$ cost \\
+Matched-token & Qwen3.5-4B, $G{=}4$, baseline vs curriculum, ${\sim}30$k tokens & $\{0,1,2\}$ & both arms $+0.028$ mean \\
+P8 & method-trace classifier, $N=160$ correlated rows, 5-fold row CV & 1 trace/method & AUROC $0.838\pm0.010$ \\
+\bottomrule
+\end{tabular}
+\caption{Complete Phase-1 run registry.}
+\label{tab:registry}
+\end{table}
+
+\chapter{Reproducibility and Provenance}
+\label{app:repro}
+Every published diagnostic in this report is regenerable from stored artefacts:
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt]
+  \item \texttt{p2\_collapse\_analysis.py} regenerates the ZVF / collapse JSON from
+  the saved P2 reward tensors (reproduces $\zvf=0.72$--$0.77$).
+  \item \texttt{p8\_detector.py} regenerates \texttt{detector\_reproduced.json} from
+  the \path{n2\_reward\_tensor\_resume} tensors (reproduces row-CV AUROC $0.838$).
+  \item \path{experiments/results/token\_budget/results.json} records the matched-token
+  three-seed baseline-vs-curriculum comparison.
+\end{itemize}
+Platforms and budget: managed GRPO training via Tinker; white-box P1 on a Google
+Colab L4 GPU; batch scoring on Modal; logging on Weights \& Biases. The full
+Phase-1 empirical portfolio was executed within a modest budget (order of tens of
+US dollars of managed compute plus free-tier GPU time).
+
+\paragraph{Adversarial review and verification.} AI-assisted adversarial review was
+used during development to identify overclaims and prompt additional checks. These
+model assessments are not treated as scientific evidence and are not required to
+reproduce any number in the report. Verification in the submission is script-based,
+using stored tensors and explicit result JSONs as described above.
+
+\paragraph{AI-assistance disclosure.} Language models assisted with adversarial
+review, code review, and editorial revision. The candidate remains responsible for
+the research design, execution choices, source verification, calculations, and final
+claims. No model-generated verdict is reported as an empirical result.
+
+\paragraph{Code availability.} All harness code, diagnostic scripts, raw reward tensors,
+and result JSONs are maintained in the project repository under version control, pinned
+by configuration, seed, and framework; the run registry (Table~\ref{tab:registry}) keys
+each finding to its producing run. The complete report source, figures, and this
+document are likewise version-controlled.
+
+\paragraph{Originality / plagiarism.} This report is an original individual work. All
+external sources and prior art are cited (Chapter~\ref{ch:lit}, References). The report
+has been prepared for the institutional similarity (plagiarism) check with a target
+similarity of $\le 15\%$ in line with the programme guidelines, and reuses the
+candidate's own prior project write-ups where applicable.
+
+\chapter{Notation, Symbols, and Abbreviations}
+\label{app:glossary}
+\small
+\begin{longtable}{@{}L{0.22\linewidth}L{0.70\linewidth}@{}}
+\toprule
+\textbf{Term / symbol} & \textbf{Meaning} \\
+\midrule
+\endhead
+GRPO & Group Relative Policy Optimization; the group-baseline RL post-training
+algorithm studied here~\cite{shao2024deepseekmath}. \\
+RLVR & Reinforcement Learning with Verifiable Rewards; a programmatic checker
+supplies the reward with no learned reward model. \\
+ZVF ($\zvf$) & Zero-Variance Fraction; the fraction of prompt-groups in a step whose
+within-group reward variance is zero (Eq.~\eqref{eq:zvf}). \\
+$G$ & Group size; number of sampled completions drawn per prompt. \\
+$A_i$ & Group-relative advantage of completion $i$ (Eq.~\eqref{eq:adv}). \\
+$\mu_g,\sigma_g$ & Within-group reward mean and standard deviation. \\
+$\beta$ & KL-penalty coefficient toward the frozen reference policy. \\
+Gradient utilisation & Complementary fraction of groups with non-zero reward-relative
+advantage signal ($1-\zvf$ at the group level); excludes KL-only updates. \\
+Held-out gain & Change in accuracy on a held-out prompt set; always reported with
+its denominator $n$. \\
+All-correct / all-wrong & Decomposition of collapsed (zero-variance) groups by
+whether every completion was right or wrong. \\
+Matched baseline & A control run identical to the treatment except for the single
+lever under study. \\
+AUROC & Area under the ROC curve; the exploratory P8 method-trace classifier metric. \\
+\bottomrule
+\end{longtable}
+\normalsize

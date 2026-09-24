@@ -1,0 +1,259 @@
+%---------------------------------------------------------------------
+\chapter{Phase 2 --- A Fail-Closed Conformance Layer}
+\label{ch:conformance}
+
+Phase 1 ended with the observation that the \emph{measurement} of zero-variance
+structure is reliable while most \emph{algorithmic} levers tested were
+noise-limited. Phase 2 therefore did not chase another GRPO variant. It built the
+layer the Phase-1 synthesis pointed at: an auditable chain from the stated
+objective to the recorded training decision, and a benchmark-independent standard
+for reporting what a run actually did. This chapter specifies that layer. It is
+the methodological spine on which the fourteen-lane campaign of
+Chapters~\ref{ch:campaign}--\ref{ch:p2results} rests.
+
+\section{Motivation: the same terminal signal can demand opposite actions}
+
+Group-relative RL can assign exactly zero centered advantage to a group whose
+rewards are all equal --- the $\zvf$ event Phase 1 measured. The event is trivial
+to detect and entirely ambiguous to interpret. An all-zero group may reflect:
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item an \emph{impossible} prompt, where no completion can succeed and the group
+  should be dropped;
+  \item a \emph{capable} policy that was unlucky on this sample, where the group is
+  informative and dropping it discards signal;
+  \item a \emph{false-negative verifier}, where the reward channel is broken and
+  the correct action is to halt rather than adapt;
+  \item an \emph{execution failure}, where the infrastructure, not the policy, is at
+  fault.
+\end{itemize}
+
+These four states can require \textbf{opposite} decisions --- resample, retain,
+halt, or retry --- despite exposing an identical terminal reward history. A
+controller that keys only on ``was the group zero-variance?'' is therefore not
+merely imprecise; it is decision-insufficient. This is the ambiguity that
+motivates a conformance layer rather than another sampling heuristic.
+
+\section{Reference semantics and the frozen differential}
+
+The harness evaluates frozen reward and mask fixtures on CPU without loading a
+model or running an optimizer. A framework-neutral reference emits advantages,
+selected rows, losses, and decision outputs. Separate adapters evaluate pinned
+TRL and verl distributions and record package versions, source paths, and
+hashes. The combined receipt carries a SHA-256 fixture digest and contains
+\textbf{14 intended cases per stack} plus a \textbf{shared 36-case controller
+matrix}, with no recorded errors.
+
+\subsection{The scalar objective under test}
+
+Let $\mathcal{S}$ be the selected completion rows and $M_{it}\in\{0,1\}$ the
+completion mask. Within each reward group, GRPO, DAPO, and GSPO use the sample
+standard deviation (Bessel correction); if it is at most $10^{-8}$, $A_i=0$.
+DrGRPO uses only the centered reward. AERO replaces the zero-variance branch with
+its frozen Beta-smoothed posterior scale. For token log probabilities
+$\ell_{it}$ and old log probabilities $\ell^{\mathrm{old}}_{it}$, the exact
+advantage rule is
+
+\begin{equation}
+A_i=\begin{cases}
+(R_i-\bar R_g)/s_g, & \text{arm}\ne\text{DrGRPO},\ s_g>10^{-8},\\[2pt]
+R_i-\bar R_g, & \text{arm}=\text{DrGRPO},\\[2pt]
+(R_i-\tilde p_g)/\sqrt{\tilde p_g(1-\tilde p_g)},
+  & \text{arm}=\text{AERO},\ s_g\leq10^{-8},\\[2pt]
+0, & \text{otherwise},
+\end{cases}
+\quad \tilde p_g=\frac{k_g+1}{n_g+2},
+\label{eq:s1-advantage}
+\end{equation}
+
+where $\bar R_g$ and $s_g$ use the active rows of group $g$, and $(k_g,n_g)$ are
+the frozen AERO success/observation counts. The loss is
+
+\begin{align}
+ \rho_{it}&=\exp(\ell_{it}-\ell^{\mathrm{old}}_{it}), \nonumber\\
+ h_{it}&=-\min\!\left\{\rho_{it}A_i,
+     \operatorname{clip}(\rho_{it};0.8,1+u)A_i\right\}, \nonumber\\
+ L_{\mathrm{ref}}&=\frac{1}{|\mathcal{S}|}\sum_{i\in\mathcal{S}}
+   \frac{\sum_t M_{it}h_{it}}{\sum_t M_{it}},
+ \label{eq:s1-objective}
+\end{align}
+
+where $u=0.28$ for DAPO and $0.20$ otherwise. GSPO replaces the token ratio by
+the sequence ratio
+$\exp(\sum_t M_{it}(\ell_{it}-\ell^{\mathrm{old}}_{it})/\sum_t M_{it})$. There
+is no KL or other auxiliary term in this CPU differential.
+
+\subsection{Four campaign conditions}
+
+The four campaign conditions use the DAPO loss structure of
+Eq.~\eqref{eq:s1-objective}, but the training implementation carries a separate
+$10^{-12}$ zero-standard-deviation floor (S1 uses $10^{-8}$ for its float64
+conformance comparisons):
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \texttt{intended\_full} --- standardizes selected rewards without an
+  additive epsilon, emits zero advantages at the campaign floor, and averages
+  completion means.
+  \item \texttt{epsilon\_only} --- adds $10^{-4}$ to a nonzero selected standard
+  deviation.
+  \item \texttt{reduction\_only} --- keeps the intended advantages but uses one
+  global masked-token mean.
+  \item \texttt{native\_trl} --- standardizes all eight reward rows with
+  $s+10^{-4}$ \emph{before} selection and uses the global masked-token mean; it
+  does not use the campaign's explicit floor branch.
+\end{itemize}
+
+Inactive rows carry all-zero masks. The verifier reads and asserts both source
+constants, so a silent change to either floor fails the protocol rather than
+altering the verdict.
+
+The harness deliberately separates two questions:
+
+\begin{enumerate}[leftmargin=1.6em,itemsep=3pt]
+  \item Does the intended integration reproduce the canonical reference within
+  absolute tolerance $10^{-8}$ and relative tolerance $10^{-6}$ in float64?
+  \item What does the stack's \emph{native} objective do on the same fixture?
+\end{enumerate}
+
+The combined receipt is \texttt{S1\_PASS} for the first question. For the second,
+it preserves native verdicts without relabelling them as conformance failures.
+Table~\ref{tab:s1} records the split. These verdicts mean ``different from this
+reference,'' not ``framework bug.''
+
+\begin{table}[h]
+  \centering
+  \caption{Frozen S1 conformance receipt. ``Material'' and ``not tested'' are
+  native-versus-reference verdicts; intended integrations pass separately.}
+  \label{tab:s1}
+  \begin{tabular}{lrrr}
+    \toprule
+    Stack & Intended cases & Native material & Native not tested \\
+    \midrule
+    TRL 1.2.0 & 14 & 4 & 1 \\
+    verl 0.3.0.post1 & 14 & 1 & 4 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{The controller matrix}
+
+The controller matrix is shared across stacks: six policies crossed with six
+observations. The policies are fixed $G\in\{8,16\}$, symmetric-ZVF,
+failure-only, boundary-aware, and full-triage. The observations are all-wrong,
+all-correct, mixed, noisy, missing, and delayed. Every policy returns
+\texttt{recheck} for an unresolved reward. Otherwise:
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item static policies keep their named size;
+  \item \textbf{symmetric-ZVF} escalates any zero-variance group to 16;
+  \item \textbf{failure-only} escalates all-wrong groups;
+  \item \textbf{boundary-aware} escalates all-wrong and drops all-correct groups;
+  \item \textbf{full-triage} escalates all-wrong when the Wilson upper bound is at
+  least $0.05$ (dropping it otherwise), drops all-correct when the Wilson lower
+  bound is at least $0.95$, and keeps $G=8$ otherwise.
+\end{itemize}
+
+\section{Zero gradients are relations, not angles}
+
+Let $g_a$ and $g_b$ be gradients under two semantics. A cosine is meaningful only
+when both norms are positive. Here each gradient is the float64 CPU gradient of
+the complete selected policy objective in Eq.~\eqref{eq:s1-objective}; ``zero''
+means a bit-exact stored norm of zero, not a tunable threshold. Receipts retain
+both norms and use four logical cases:
+
+\begin{equation}
+\operatorname{rel}(g_a,g_b)=
+\begin{cases}
+  \texttt{joint\_zero}, & \lVert g_a\rVert=\lVert g_b\rVert=0,\\
+  \texttt{a\_zero}, & \lVert g_a\rVert=0<\lVert g_b\rVert,\\
+  \texttt{b\_zero}, & \lVert g_b\rVert=0<\lVert g_a\rVert,\\
+  \texttt{nonzero}, & \lVert g_a\rVert\lVert g_b\rVert>0.
+\end{cases}
+\label{eq:gradient-relation}
+\end{equation}
+
+Cosine and relative $\ell_2$ distance are null in the first three cases. Joint
+zero counts as equivalence; a one-sided zero is a categorical material
+divergence. This classification alone makes no general claim about parameter
+updates under momentum, weight decay, auxiliary losses, or accumulation. In the
+frozen campaign specifically, $\beta=0$, weight decay is zero, gradient
+accumulation is one, and a selected zero gradient explicitly skips
+\texttt{optimizer.step}; parameters and AdamW state are unchanged while the
+linear scheduler advances. This avoids both a division-by-zero artifact and the
+selective deletion of hard replay groups.
+
+\section{Cost-accounting corollaries of the starvation model}
+
+Phase 1 modelled starvation descriptively. Phase 2 added cost-accounting
+corollaries that hold for the known binary-starvation model, giving the
+controller a principled reason to prefer some escalations over others:
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \textbf{Contrast is monotone in $G$.} For fixed $G$, increasing group size
+  reduces the expected number of groups needed to observe a contrast.
+  \item \textbf{Complete-group sampling is not free.} For every $G$,
+  complete-group sampling costs at least $1/\epsilon$ expected rollouts to reach
+  success probability $\epsilon$ on a group whose success probability is bounded
+  below by $\epsilon$.
+  \item \textbf{Decision reversal.} A restricted two-state witness shows that when
+  $\Delta>0$, the two actions $\{\text{stop},\ \text{commit to }m\text{ batch
+  rollouts}\}$ reverse rank across compatible latent states and incur positive
+  two-point minimax regret.
+\end{itemize}
+
+The practical consequence is that ``resample until a contrast appears'' is not a
+free repair. It has a quantified rollout cost, and under latent-state uncertainty
+the better action can reverse. That is precisely why the campaign's lanes are
+budgeted and gated rather than open-ended.
+
+\section{Failure boundaries and immutable evidence}
+
+The protocol \textbf{rejects} a unit when any required source hash, corpus
+fingerprint, package pin, profiler phase, gradient relation, checkpoint manifest,
+or matched-budget field is absent or inconsistent. Three design commitments
+follow, and they govern every result reported in Chapters~\ref{ch:campaign} and
+\ref{ch:p2results}:
+
+\begin{enumerate}[leftmargin=1.6em,itemsep=3pt]
+  \item \textbf{Infrastructure attempts are not scientific units.} Failed
+  attempts remain separate from accepted units; they are never pooled into a
+  denominator or averaged into a score.
+  \item \textbf{Costs are attributed, not blended.} Corpus generation, diagnostic
+  backward passes, and held-out evaluation are charged explicitly, so a lane's
+  spend is auditable to its receipts.
+  \item \textbf{Retries are constrained.} A retry may resume only the greatest
+  checkpoint whose manifest and content fingerprints match.
+\end{enumerate}
+
+Development logs record several infrastructure and diagnostic corrections, but
+this report does not treat those anecdotes as scientific evidence. The claim
+boundary begins at immutable accepted receipts. In particular, a failed
+positive-control construction is reported as a \emph{registered feasibility
+outcome}, not quietly rerun and replaced with a passing version.
+
+\section{The registered feasibility outcome}
+
+The frozen screening campaign reported in this chapter produced the following
+outcome, stated without filling in missing evidence:
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \textbf{Six scientific units completed} in the balanced equal-length
+  negative control.
+  \item Each contained \textbf{100 replay steps}, of which \textbf{62--65 store
+  exact joint-zero gradient diagnostics}.
+  \item All remaining intended-versus-native cosines were at least
+  \textbf{0.999844}.
+  \item High cosine was \emph{not} the registered gate: the sole completed
+  intended-full cell satisfies the joint cosine/relative-$\ell_2$ criterion on
+  \textbf{69/100 steps}, below the required \textbf{95/100}.
+  \item The filtered variable-length positive control was
+  \textbf{contract-infeasible}; four seed-37 units remain pending for accelerator
+  quota; and \textbf{no confirmatory matrix ran}.
+\end{itemize}
+
+Consequently this registered feasibility outcome establishes \emph{neither} a
+causal training effect \emph{nor} a scientific negative result about objective
+semantics. It establishes what the protocol was able to prove on the compute it
+had. The contribution of this chapter is the auditable boundary between
+conformance evidence, mathematical necessity, and a registered feasibility
+outcome --- not a headline number.

@@ -148,3 +148,6 @@ outputs/e9_mle_bench/modal_streaming/
 outputs/e9_mle_bench/merged_vllm/
 outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/evaluation/instance_*
 outputs/public_portfolio_2026-09-05/
+
+# Large media recordings (387MB, not source)
+outputs/PES_FAQ_Call_2026-09-20/

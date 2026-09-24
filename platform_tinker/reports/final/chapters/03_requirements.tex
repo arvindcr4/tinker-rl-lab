@@ -1,0 +1,144 @@
+\chapter{System Requirements Specification}
+\label{ch:srs}
+
+This chapter specifies the requirements the diagnostic harness must satisfy. Because
+the project is a \emph{measurement and reproducibility} system rather than a
+user-facing application, the requirements emphasise attribution, determinism, and
+recomputability over interactive features.
+
+\section{Overview and Actors}
+The system has three actors: (i) the \textbf{experimenter}, who declares a run via a
+single configuration object; (ii) the \textbf{back-end} (Tinker managed trainer, or
+a local GPU for white-box runs), which executes the GRPO loop; and (iii) the
+\textbf{auditor} (a downstream script or an independent model), who recomputes
+published diagnostics from stored raw tensors. The system's central object is a
+\emph{run}: one configuration, one seed, one framework, producing per-step telemetry
+and saved reward tensors.
+
+\section{Functional Requirements}
+\begin{longtable}{@{}L{0.10\linewidth}L{0.82\linewidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Functional requirement} \\
+\midrule
+\endhead
+FR-1 & The harness shall accept a single configuration object specifying model,
+dataset, reward function, decoding parameters ($T$, top-$p$, max tokens), group
+size $G$, learning rate, KL coefficient $\beta$, and seed. \\
+FR-2 & The harness shall map one configuration onto any supported back-end (TRL,
+veRL, OpenRLHF, Tinker) through thin per-framework adapters, sharing the reward
+grader and decoding code across back-ends. \\
+FR-3 & The harness shall compute, per training step, the Zero-Variance Fraction ---
+the fraction of prompt-groups whose within-group reward variance is zero. \\
+FR-4 & The harness shall emit per-step telemetry (reward, ZVF, gradient
+utilisation, all-correct / all-wrong collapse decomposition, entropy, completion
+length, KL) to JSONL and to Weights \& Biases. \\
+FR-5 & The harness shall persist the raw group reward tensors so that any published
+diagnostic can be \emph{recomputed} from stored data rather than trusted from a
+logged summary. \\
+FR-6 & The harness shall support configuration sweeps ($G\in\{2,4,8,16\}$; multiple
+seeds; baseline vs.\ curriculum arms) launched concurrently under a fixed
+wall-clock budget. \\
+FR-7 & The harness shall support a white-box path that records per-layer LoRA
+gradient norms for the layer-adaptation study (P1). \\
+FR-8 & The system shall emit a machine-readable provenance record (configuration,
+verifier version, rollout hashes) per run (P5 prototype). \\
+\bottomrule
+\end{longtable}
+
+\section{Non-Functional Requirements}
+\begin{longtable}{@{}L{0.10\linewidth}L{0.82\linewidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Non-functional requirement} \\
+\midrule
+\endhead
+NFR-1 (Attribution) & A difference in outcome between two back-ends must be
+attributable to the framework, not to a divergent reward parser or sampler; the
+reward grader and decoding must be shared code. \\
+NFR-2 (Reproducibility) & Headline learning claims should target $\ge 3$ seeds
+against a matched baseline; any lower-seed diagnostic must be labelled exploratory. \\
+NFR-3 (Recomputability) & Published diagnostics must be regenerable from stored raw
+tensors by a documented script. \\
+NFR-4 (Honesty) & Held-out gains must be reported with their denominator $n$;
+negative and null results must be reported, not suppressed. \\
+NFR-5 (Isolation) & Concurrent runs must not corrupt each other's logs (process
+isolation, not thread sharing --- see the W\&B thread-safety defect in
+Chapter~\ref{ch:impl}). \\
+NFR-6 (Budget) & The full Phase-1 portfolio must fit a modest budget (order of tens
+of US dollars of managed compute plus free-tier GPUs). \\
+\bottomrule
+\end{longtable}
+
+\section{Test-Case Specification}
+Because the system's guarantee is recomputability, its tests are recompute-and-match
+checks rather than UI tests.
+\begin{longtable}{@{}L{0.09\linewidth}L{0.40\linewidth}L{0.42\linewidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Test} & \textbf{Expected outcome} \\
+\midrule
+\endhead
+TC-1 & Recompute ZVF and collapse decomposition from stored P2 reward tensors via
+\texttt{p2\_collapse\_analysis.py}. & Matches published $\zvf=0.72$--$0.77$,
+all-correct $0.65$--$0.71$. \\
+TC-2 & Recompute the P8 detector AUROC from raw tensors via
+\texttt{p8\_detector.py} (5-fold stratified CV). & AUROC $0.84\pm0.01$ vs.\
+reward-only $0.43$. \\
+TC-3 & Re-run baseline and curriculum at a matched ${\sim}30$k-token budget across
+3 seeds. & Both arms average $+0.028$ held-out; no curriculum advantage. \\
+TC-4 & Recompute headline diagnostics directly from stored tensors. &
+Published ZVF and P8 row-CV metrics reproduce without model judgement. \\
+TC-5 & Provenance verify: \texttt{minreport verify} on a run's provenance block. &
+Config, verifier version, and rollout hashes validate. \\
+\bottomrule
+\end{longtable}
+
+\section{Requirements Traceability}
+Table~\ref{tab:trace} maps functional requirements to the studies and chapters that
+exercise them.
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}L{0.10\linewidth}L{0.34\linewidth}L{0.42\linewidth}@{}}
+\toprule
+\textbf{Req.} & \textbf{Exercised by} & \textbf{Where reported} \\
+\midrule
+FR-1,2 & Unified config + adapters & \S\ref{sec:harness}, \S\ref{sec:impl-loop} \\
+FR-3,4,5 & Telemetry + tensor dumps & \S\ref{sec:telemetry}, TC-1/TC-2 \\
+FR-6 & Sweeps / campaign & \S\ref{sec:runner}, \S\ref{sec:campaign} \\
+FR-7 & P1 white-box path & \S\ref{sec:colab}, \S\ref{sec:p1} \\
+FR-8 & P5 provenance prototype & \S\ref{sec:portfolio}, TC-5 \\
+\bottomrule
+\end{tabular}
+\caption{Requirements traceability matrix.}
+\label{tab:trace}
+\end{table}
+
+\section{Hardware Requirements}
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt]
+  \item \textbf{Managed training back-end (Tinker):} black-box GRPO training for
+  P2/P3/curriculum/campaign on Qwen3.5-4B; no direct GPU management required.
+  \item \textbf{White-box GPU (Google Colab L4, 24\,GB):} per-layer LoRA gradient
+  norms for P1 (Qwen2.5-1.5B; scaled 3B re-test).
+  \item \textbf{Serverless compute (Modal):} batch scoring / held-out evaluation.
+  \item Local workstation for orchestration, analysis, and report/figure generation.
+\end{itemize}
+
+\section{Software Requirements}
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt]
+  \item Python 3.11; PyTorch; Hugging Face Transformers, PEFT (LoRA), and Datasets.
+  \item RL back-ends: TRL, veRL / HybridFlow, OpenRLHF; Tinker client SDK.
+  \item Weights \& Biases (project \texttt{rlvr-openings}) for logging; JSONL for
+  raw telemetry and reward tensors.
+  \item Analysis/diagnostic scripts (\texttt{p2\_collapse\_analysis.py},
+  \texttt{p8\_detector.py}, \texttt{campaign.py}); \LaTeX{}/TikZ/pgfplots for
+  figures and this report.
+\end{itemize}
+
+\section{Constraints and Assumptions}
+The evaluation assumes binary verifiable rewards (exact-match GSM8K; unit-test
+HumanEval subset) and small held-out sets ($n=8$--$20$), so all learning-gain
+magnitudes are noise-limited by construction. The managed back-end does not expose
+per-layer gradients, which is why P1 uses a separate white-box path. A shared,
+deterministic prompt schedule across the four P2 methods means method-to-method ZVF
+differences reflect training dynamics, not independent samples --- an acknowledged
+limitation rather than a hidden one.
+
+%---------------------------------------------------------------------

@@ -1,0 +1,184 @@
+%---------------------------------------------------------------------
+\chapter{Phase 2 --- The Fourteen-Lane Evaluation Campaign}
+\label{ch:campaign}
+
+Phase 2's second axis was empirical scale. Phase 1 evaluated a diagnostic harness
+on a small number of studies. Phase 2 evaluated a single trained actor against
+\textbf{fourteen held-out agent and RL benchmark suites} under strict governance.
+This chapter specifies the evaluated model, the governance that constrains what
+may be claimed, and the scope semantics that keep the results comparable. The
+results themselves are in Chapters~\ref{ch:p2results} and the appendices.
+
+\section{The evaluated actor}
+
+The campaign evaluates \textbf{one} actor under a single frozen configuration:
+
+\begin{table}[h]
+  \centering
+  \caption{Evaluated actor and adapter, as recorded in the campaign receipts.}
+  \label{tab:actor}
+  \small
+  \begin{tabular}{@{}L{0.26\linewidth}L{0.68\linewidth}@{}}
+    \toprule
+    \textbf{Component} & \textbf{Value} \\
+    \midrule
+    Base model & \texttt{Qwen/Qwen3.6-35B-A3B}, commit \texttt{995ad96e\ldots} \\
+    Adapter & \texttt{arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1\ldots}, commit \texttt{64444133\ldots} \\
+    Precision & bfloat16 (merged weights for LAB-Bench, AgentDojo, Omni-MATH) \\
+    Training back-end & Tinker (managed GRPO) \\
+    Sampling & original Tinker sampler for VerilogEval; merged BF16 serving for the rest \\
+    Math grading & separate Omni-Judge grader, later grading campaign on Modal A100 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Because the same actor, task, reward function, and decoding configuration are held
+fixed across suites, observed differences are attributable to the \emph{stack}
+rather than to the experiment --- the attribution commitment inherited from
+Phase~1. Two serving back-ends were used (eager-serving, graph-serving at 32{,}768
+and 65{,}536-token context). \textbf{No numerical parity between serving back-ends
+is claimed.} A fresh metadata request for the original sampler returns checkpoint
+not found, and that gap is recorded rather than papered over.
+
+\section{Governance: receipts, budget, decontamination}
+
+Every lane is governed by four controls, applied uniformly:
+
+\begin{enumerate}[leftmargin=1.6em,itemsep=3pt]
+  \item \textbf{Receipt discipline.} A lane may advance only on a surviving
+  receipt: a sealed request, a validation record, or a native evaluation log.
+  Sealed artefacts carry SHA-256 hashes; the verifier re-derives them.
+  \item \textbf{Explicit budget attribution.} Managed compute is charged per lane.
+  Spend is tracked against an authorised cap and reported as a ledger, never
+  blended across lanes.
+  \item \textbf{Decontamination.} Source-overlap checks are run against a defined
+  source envelope. This is a bounded check: it covers the declared envelope, not
+  images, semantic similarity, or universal pretraining exposure. The bound is
+  stated wherever the check is reported.
+  \item \textbf{Scope separation.} Where a suite has an \emph{original contract}
+  and a later \emph{replacement scope}, the two are never pooled. A replacement
+  scope is named as such in every table.
+\end{enumerate}
+
+\section{Scope semantics: original contract vs replacement scope}
+
+The single most important reporting decision in this campaign is the separation of
+scope. Each of the fourteen lanes is in exactly one of five states, and the state
+--- not a percentage alone --- is what determines whether a number may be quoted:
+
+\begin{table}[h]
+  \centering
+  \caption{Lane state vocabulary. A percentage without its state is not a
+  result.}
+  \label{tab:states}
+  \small
+  \begin{tabular}{@{}L{0.20\linewidth}L{0.74\linewidth}@{}}
+    \toprule
+    \textbf{State} & \textbf{Meaning} \\
+    \midrule
+    COMPLETE & Every item in the declared scope carries a native, verified verdict. A score may be quoted with its denominator. \\
+    TERMINAL & All dispositions are recorded, including explicit skip reasons, under the native protocol. Coverage is quoted; score semantics are stated separately. \\
+    PARTIAL & A verified score exists over a stated sub-scope. The score is quoted \emph{with its coverage}; the full-suite score is explicitly unavailable. \\
+    BLOCKED & No local or paid path to the artefacts exists (private bundle, missing payload, unanswered access request). No score is quoted. \\
+    NOT RUN & Preconditions are unmet within budget or quota. No score is quoted. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Three replacement scopes closed strictly \textbf{COMPLETE} (E8 public, E10
+benign, E11 native). One closed \textbf{TERMINAL} at 99.95\% coverage (E14
+Omni-MATH). The original-contract \textbf{E1} and \textbf{E11} suites carry full
+verified scores. The remainder are recorded as PARTIAL or BLOCKED with immutable
+evidence trails. Seven lanes have \emph{no} local or paid path at all, because
+the required artefacts are private, held out, or gated behind an unanswered
+access request:
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item E3 --- SDAB private bundle
+  \item E7 --- BinaryAudit private payload
+  \item E8-original --- LifeSciBench package
+  \item E10-original --- AgentHarm private tasks
+  \item E12 --- AppBench deployment
+  \item E13-original --- OpenReward held-out games
+  \item E14-original --- FrontierMath hosted evaluation
+\end{itemize}
+
+Access requests were sent for all seven. \textbf{None answered.} This is reported
+as a finding about artefact accessibility in this benchmark ecosystem, not as a
+gap in effort.
+
+\section{Why a blocked lane is a result}
+
+It is worth stating explicitly, because it is the question every reviewer of a
+multi-lane campaign asks first: why are seven lanes not done? The answer is a
+property of the ecosystem, and it is measurable.
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item The suites in question gate their task payloads behind private bundles,
+  hosted evaluation services, or per-institution deployment. There is no public
+  download and no paid acquisition path.
+  \item The campaign documented the dependency for each lane \emph{before}
+  attempting it, so the blocked state is a predicted outcome rather than a
+  discovered failure.
+  \item Requests were filed, tracked, and left unanswered. Each unanswered request
+  is itself a receipt.
+\end{itemize}
+
+A rigorous multi-suite campaign therefore reports \emph{coverage of the
+accessible set} and \emph{accessibility of the inaccessible set}. Conflating the
+two --- by quoting a partial score as if it were the suite score, or by silently
+omitting the blocked lanes --- is the failure mode this campaign was designed to
+avoid. Chapter~\ref{ch:rigour} returns to this as a threat to validity.
+
+\section{Evidence accounting and loss}
+
+Full transparency requires recording what happened to the evidence, not only to
+the runs. One execution-source loss occurred and is retained in the record:
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item A \texttt{.codex-run} deletion removed the finish-era recovery and build
+  code --- specifically the E1 wave10 controller, E9 restored dependencies, and
+  the E6 validator.
+  \item The loss is \textbf{confined to recovery/build code}. The replacement-lane
+  native runners survive intact under the flagship program directories.
+  \item Sealed requests, validation receipts, and test logs pin any faithful
+  re-implementation, so the loss degrades \emph{convenience} of reproduction, not
+  the validity of any reported score.
+  \item The verifier carries an explicit check for this condition
+  (\texttt{codex\_run\_execution\_sources\_absent}), which asserts the sources are
+  absent rather than pretending they are present.
+\end{itemize}
+
+The 2026-09-12 halt was clean: no orphan processes, deployments, or sessions
+remained, and disk was recovered. Freezing the campaign at a known-clean boundary
+is what makes the terminal states in Chapter~\ref{ch:p2results} trustworthy.
+
+\section{Terminal-state directive and decision package}
+
+The campaign was closed by an explicit directive rather than by attrition. A
+decision package enumerated six user-level decisions (E2/E13 lifecycle amendment;
+E5 successor budget; E1 re-implementation and incremental budget; E4 cap and
+scope; AWS quota requests; external follow-ups), each with a recommendation
+derived from the research-value ordering described in Chapter~\ref{ch:rigour}.
+The terminal directive was recorded verbatim at the time and treated as
+acceptance of those recommendations. The per-lane ledger of record is the
+terminal-state table, and the actions taken under the directive are:
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \textbf{E14 closed terminal-complete.} The two parser-exclusion rows were
+  resolved by reading the native judge outputs directly: both are truncated before
+  any ``Equivalence Judgement'' section, so the judge emitted no verdict, and the
+  native scorer's omission of missing-verdict rows is \emph{correct official
+  behaviour}, not a parser bug. Score impact is none --- official accuracy
+  $2271/4428 = 0.5131043831902395$ already counts both rows in the denominator as
+  not-correct. The $4426/4428$ figure is \emph{parser coverage}, not the score
+  denominator. No re-judge was performed: it would deviate from the official
+  scorer and generate new evidence with no score effect.
+  \item Remaining lanes held at their documented terminal states, with budget and
+  quota blockers recorded rather than worked around.
+\end{itemize}
+
+This distinction --- coverage versus score denominator --- is the kind of
+precision the campaign insists on, and it is why E14 is reported as 99.95\%
+coverage at 51.31\% official accuracy rather than as a single misleading
+percentage.

@@ -1,0 +1,145 @@
+%---------------------------------------------------------------------
+\chapter{Conclusions and Future Work}
+\label{ch:conclusion}
+
+\section{Conclusions: Phase 1}
+
+Phase 1 delivered a working unified GRPO/RLVR benchmark, a per-step diagnostic
+telemetry layer, and eight studies whose honest verdict is: the algorithmic levers
+we could test on this setup (naive curriculum, integer group-size sweeps) do
+\emph{not} produce reliable held-out gains, while the large descriptive effect in
+the fixed P2 study is \emph{advantage-signal starvation} ($\zvf \approx
+0.72$--$0.77$). Reporting those negatives --- rather than the cherry-picked
+single-seed positives --- is the contribution: it is what makes the portfolio
+defensible and the benchmark trustworthy. P8 supplied a proof-of-concept systems
+result: telemetry separates the available method traces better than reward-only
+features, but cross-run integrity generalisation remains untested.
+
+\paragraph{Where the original value is.} The strongest \emph{original} bet is
+\textbf{P5, a GRPO provenance / reporting standard}. A targeted search of the
+cited GRPO, model-reporting, and provenance literature through July 2026 did not
+identify an equivalent GRPO-specific machine-readable run datasheet with rollout
+provenance; this is an evidence-bounded novelty claim, not proof of
+non-existence. The earlier second bet --- \textbf{P1 predictive layer-freezing}
+--- is now weakened: its step-1 predictability held at 1.5B but collapsed to
+chance (mean $0.083\pm0.048$) on the scaled 3B four-seed re-test.
+
+\section{Conclusions: Phase 2}
+
+Phase 2 took the Phase-1 synthesis seriously --- that the \emph{measurement} is
+useful while most \emph{algorithmic} levers are noise-limited --- and built the
+two layers the synthesis pointed at.
+
+\paragraph{First, an auditable conformance and decision layer.} A fail-closed
+chain from objective equation to gradient relation, adaptive decision, and
+training record. A frozen CPU differential covers 14 intended cases per stack
+(TRL, verl) plus a shared 36-case controller matrix, and preserves native
+differences as verdicts rather than relabelling them as conformance failures. The
+layer contributes three durable ideas: that \emph{zero gradients are relations,
+not angles} (a four-case classification where joint zero is equivalence and a
+one-sided zero is a categorical material divergence); that starvation has
+\emph{cost-accounting corollaries} (contrast is monotone in $G$, complete-group
+sampling costs at least $1/\epsilon$ expected rollouts, and under latent-state
+uncertainty the stop/commit actions reverse rank); and that a registered
+feasibility outcome must be reported as such, without filling in missing
+evidence.
+
+\paragraph{Second, a fourteen-lane external evaluation campaign.} A single
+Tinker-trained actor (base \texttt{Qwen3.6-35B-A3B} with the final seed-809
+Pavlov adapter, bfloat16) was evaluated against fourteen held-out agent and RL
+suites under strict receipt, budget, and decontamination governance. The
+campaign's outcome is precisely characterised:
+
+\begin{table}[h]
+  \centering
+  \caption{Phase-2 campaign outcome summary.}
+  \label{tab:outcome}
+  \small
+  \begin{tabular}{@{}L{0.34\linewidth}L{0.58\linewidth}@{}}
+    \toprule
+    \textbf{Category} & \textbf{Outcome} \\
+    \midrule
+    Strictly complete replacement scopes & 3 --- E8 LAB-Bench (1967/1967, 8 categories), E10 AgentDojo (97/97 benign), E11 VerilogEval (129/312 $=41.35\%$ pass@1) \\
+    Terminal-complete & 1 --- E14 Omni-MATH (99.95\% coverage, official accuracy 51.31\% reproduced) \\
+    Original-contract full scores & 2 --- E1 SWE-bench Pro ($2/731=0.274\%$), E11 (two framings) \\
+    Partial with verified sub-scope & 6 --- E1-ML, E2, E4, E5, E9, E13 \\
+    Externally blocked & 7 --- E3, E7, E8-orig., E10-orig., E12, E13-orig., E14-orig. \\
+    Deterministic verification & 11/11 PASS, 0 failed \\
+    Incremental spend counted & \$5.6301 (E5 \$80 separately unreserved) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{The unified claim.} Across both phases the contribution is the same in
+kind: an \textbf{auditable boundary}. Phase 1 established that a specific
+diagnostic (ZVF) is measurable, that it is large, and that the obvious repairs do
+not work. Phase 2 established what can and cannot be concluded from a
+multi-suite evaluation run under real artefact, quota, and budget constraints ---
+and it made that boundary mechanical by shipping a verifier that re-derives its
+own claims, including a check that the lost sources are absent. Neither phase
+claims a capability win. Both phases produce results that survive re-derivation.
+
+\section{Future Work (Phase-3 Plan)}
+
+\begin{enumerate}[leftmargin=1.6em,itemsep=3pt]
+  \item \textbf{Re-run the invalidated judgment batteries.} Both
+  blocker-classification batteries must be re-run once the health check passes.
+  Until then, the judgment layer may not be used to support a claim. This is the
+  single highest-priority remediation because it restores an instrument the
+  campaign deliberately stopped trusting.
+  \item \textbf{Restore fidelity-reproducible execution sources.} The lost
+  finish-era recovery code (E1 wave10 controller, E9 restored dependencies, E6
+  validator) should be re-implemented against the sealed requests and validation
+  receipts that pin them. The point is to convert pinned but absent code into
+  present code, so the E1-ML and E6 lanes become resume-capable.
+  \item \textbf{Close the six partial lanes to their declared scopes.} Under the
+  decision package, roughly \$108 of additional spend completes every lane that is
+  \emph{not} externally blocked. Priorities follow the research-value ordering:
+  E6 (0.39) and E14 (0.34) first, then E1 (0.33) and E9 (0.33).
+  \item \textbf{Achieve a confirmed cause for LAB-Bench category failure.} E8
+  closed complete, but the error profile (0.787 on TableQA down to 0.000 on
+  CloningScenarios) has diagnostics without a quantified causal explanation. A
+  controlled error-analysis study --- format, length, retrieval, and
+  question-parsing ablations --- should convert the diagnostic into a cause.
+  \item \textbf{Test cross-serving parity explicitly.} Three serving
+  configurations were used and no parity was claimed. A matched-input parity study
+  across eager and graph-serving at both context lengths would either establish
+  parity or quantify the divergence that currently sits inside the E8 and E14
+  results.
+  \item \textbf{Establish a measured baseline for VerilogEval.} E11 is complete at
+  41.35\% but is not compared against a measured baseline. A matched baseline run
+  converts a complete result into an interpretable one.
+  \item \textbf{Adequately powered Phase-1 replication.} Move from held-out
+  $n=8$--$20$ to the full GSM8K test split (or a large stratified subset), run
+  $\ge 5$ seeds, and report confidence intervals on every headline metric, so a
+  genuine effect can be distinguished from the noise floor that dominated the
+  Phase-1 nulls.
+  \item \textbf{A token-budget-optimal curriculum.} Replace the naive ``filter
+  collapsed groups'' rule with an allocation that trades oversampling against
+  training under an explicit token budget with staleness bounds --- informed by
+  the Phase-2 cost-accounting corollaries rather than by intuition.
+  \item \textbf{Harden the P8 classifier.} Re-train and evaluate the method-trace
+  classifier on a much larger, multi-run, multi-model, multi-task corpus with
+  grouped run-level and temporal held-out splits (not row-CV only) to establish
+  whether the AUROC $0.84$ proof of concept generalises.
+  \item \textbf{Cross-framework divergence study.} Execute the identical
+  task/reward/decoding/seed configuration on TRL, veRL, OpenRLHF, and Tinker and
+  publish the divergence table --- the concrete demonstration of the attribution
+  claim that Phase 1 designed and Phase 2's conformance layer instruments but does
+  not yet run at scale.
+  \item \textbf{Publication.} Consolidate the diagnostic findings, the conformance
+  protocol, and the campaign's evidence methodology into a paper draft targeting a
+  reputed peer-reviewed venue, as required by the programme guidelines.
+\end{enumerate}
+
+\section{Closing statement}
+
+The work reported here contains complete results, partial results, blocked lanes,
+an instrument that failed mid-campaign, a source loss, a null hypothesis that
+survived, and an artefact that deletes itself from the claim boundary. Every one
+of those facts is in the document, in the chapter where a reader would look for
+it, with the receipt that establishes it. The fourteen-lane campaign did not
+produce the twelve complete suites that would make the strongest possible slide.
+It produced something more useful to a reader who intends to build on it: a
+dataset of results in which each number can be independently re-derived, and a
+written record of exactly which questions remain open and at what price.

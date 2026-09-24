@@ -1,0 +1,404 @@
+# Appendix A. Complete Run Registry
+
+This appendix is the auditable index of every training and evaluation run on
+which the claims of this report rest. It does not present results — those live
+in Chapters 6–9 — but makes each claim traceable to the artefacts that
+produced it: run identifier, library and platform, base model, algorithm,
+group size, dataset, seed, steps, and terminal status. Where a claim cannot be
+traced through this appendix to a run, the project's evidence rules require it
+to be withdrawn rather than stated.
+
+**The registry covers 1,708 runs: 1,662 in the machine-readable ledger and 46
+more recorded only in the Semester-4 opening artefacts of §A.3.1.** The ledger,
+`platform_hybrid/experiments/results/experiment_ledger.tsv`, holds one row per
+run with the columns `source, project, run_id, model, task, algo, G, steps,
+created, headline_metric`. Its 1,662 data rows decompose into **844 runs
+inventoried from the Tinker training service** and **818 runs inventoried from
+Weights & Biases**. The Tinker inventory was built by paginating
+`RestClient.list_training_runs` and `list_checkpoints`; the W&B inventory was
+built per project and validated against the live W&B API. The ledger's
+provenance document, `EXPERIMENT_LEDGER.md`, records the same grand total and
+notes that the W&B workspace holds fourteen projects, not the thirteen
+previously believed (`tinker-new-research` was the omission).
+
+Two other totals appear in the repository and are deliberately *not* used
+here: the identity-audit manifest records 949 Tinker and 940 W&B runs, and
+`tinker_runs.txt` reports "20 training runs (963 more not shown)". These are
+snapshots of the same platforms at different times and are not reconcilable
+without re-querying them. The ledger is the only artefact carrying per-run
+identifiers for both platforms in one file, so it is the figure used
+throughout for ledgered runs. The 46 runs outside it are counted separately,
+from the per-run `name` and mode fields of the artefacts that recorded them,
+and are named individually in §A.3.1.
+
+## A.1 Composition and temporal split
+
+Semester 3 ends at the tag `capstone-final-2026-04-25`, boundary commit
+`21a99ef7` dated 23 April 2026. Because every ledger row carries a creation
+timestamp, the two eras separate mechanically rather than by assertion:
+**806 runs were created before 2026-04-23** and **856 on or after it**.
+
+**Table A.1 — Registry composition by logging project.**
+
+| Project | Source | Runs | Era | Distinct base models | Algorithm | G | Dataset | Status |
+|---|---|---|---|---|---|---|---|---|
+| `tinker` (training-service inventory) | Tinker API | 844 | 387 S3 / 457 S4 | 31 | — | — | — | all terminal at snapshot |
+| `tinker-rl-lab-world-class` | W&B | 174 | Semester 3 | 14 | GRPO | — | gsm8k | logged |
+| `tinker-rl-scaling` | W&B | 88 | Semester 3 | — | — | — | — | logged |
+| `tinker-structural-ceiling` | W&B | 72 | Semester 3 | — | — | — | — | logged |
+| `tinker-rl-webarena` | W&B | 40 | Semester 3 | — | — | — | WebArena | logged |
+| `webarena-eval` | W&B | 26 | Semester 3 | — | — | — | WebArena | logged |
+| `tinker-agentic-smoke` | W&B | 10 | Semester 3 | — | — | — | — | smoke |
+| `huggingface` | W&B | 3 | Semester 3 | — | — | 16 | — | logged |
+| `skyrl-tinker` | W&B | 3 | Semester 3 | Qwen/Qwen3-8B | grpo | 8 | — | logged |
+| `tinker-rl-zvf-counterfactual` | W&B | 9 | 3 S3 / 6 S4 | — | — | — | — | logged |
+| `zvf-audit` | W&B | 368 | Semester 4 | 3 | — | 4, 8 | llama3, qwen3_instruct | logged |
+| `zvf-colab-experiments` | Colab → W&B | 16 | Semester 4 | — | — | — | — | logged |
+| `tinker-new-research` | W&B | 9 | Semester 4 | — | — | — | — | logged |
+
+: Registry composition by logging project, with temporal split and distinct base models.
+
+Runs span 8 January to 4 July 2026. The split is not clean with respect to
+authorship — a single Tinker account was used throughout, with 387 Tinker rows
+before the boundary and 457 after — which is why the inherited-versus-individual
+statement in Appendix B rests on commit history rather than run counts.
+
+## A.2 Semester-3 shared benchmark runs
+
+The Semester-3 contribution was the multi-framework benchmark infrastructure:
+a common harness, a fixed evaluation configuration, and integrations for
+several independent RL post-training libraries. These runs are the shared
+baseline measurements, and they are the ones for which the registry is *most*
+complete, because each was produced under a declared configuration.
+
+**Table A.2 — Cross-framework comparison at the fixed benchmark configuration.**
+Configuration for all four rows: model `Qwen/Qwen3-8B` (Tinker row uses
+`Qwen/Qwen3-8B-Base`), algorithm GRPO, group size G = 8, learning rate 1e-5,
+dataset GSM8K[:500], 30 steps, seed 42. Metric is `last10_avg`, the mean of
+the final ten reported training rewards. Source:
+`platform_hybrid/experiments/results/framework_comparison.json`, generated by
+`aggregate_framework_comparison.py`.
+
+| Run identifier | Stack / platform | Model | Algo | G | Dataset | Seed | Steps | Outcome / status |
+|---|---|---|---|---|---|---|---|---|
+| `campaign_v2_w1_qwen3-8b-base` | Tinker | Qwen/Qwen3-8B-Base | GRPO | 8 | gsm8k-500 | 42 | 30 | last10 = 0.85625 — **real run** |
+| `modal_trl_trl_qwen3_8b` | TRL on Modal H100 | Qwen/Qwen3-8B | GRPO | 8 | gsm8k-500 | 42 | 30 | last10 = 0.05, 735.7 s — **real run** |
+| `verl-dryrun` | verl | Qwen/Qwen3-8B | GRPO | 8 | gsm8k-500 | 42 | 30 | last10 = 0.5528 — **seeded dryrun, not a training run** |
+| `openrlhf-dryrun` | OpenRLHF | Qwen/Qwen3-8B | GRPO | 8 | gsm8k-500 | 42 | 30 | last10 = 0.4785 — **seeded dryrun, not a training run** |
+
+: Semester-3 cross-framework shared benchmark runs.
+
+The two `dryrun` rows are a documented threat to validity, not a result: the
+generator falls back to a deterministic seeded trace from `verl.VERLTrainer` /
+`OpenRLHFTrainer` when the framework is absent from the sandbox, and the JSON
+carries the note "Seeded deterministic fallback … (verl not installed in
+sandbox)". Any comparison reading them as measurements of verl or OpenRLHF is
+invalid. The Tinker row also initialises from the *base* checkpoint while the
+open-framework rows use the instruction-tuned one, so even the two real rows
+are not a clean framework contrast.
+
+**Table A.3 — Modal multi-framework campaign, 4 frameworks × 5 seeds = 20 runs.**
+Source: `modal_results_all.json` (repository root). All rows: model
+`Qwen/Qwen2.5-0.5B`, dataset arithmetic/math, 125 training steps, NVIDIA L4,
+one run per seed. Seeds are 42, 123, 456, 789, 1024. Group size is not
+recorded in the artefact and is therefore shown as "—".
+
+| Run identifier | Stack / platform | Model | Algo | G | Dataset | Seed | Steps | Outcome / status |
+|---|---|---|---|---|---|---|---|---|
+| `trl_grpo_math` | TRL / Modal L4 | Qwen/Qwen2.5-0.5B | GRPO | — | math | 42, 123, 456, 789, 1024 | 125 | final acc 0.735 / 0.810 / 0.620 / 0.740 / 0.765; 139.8–183.7 s |
+| `sb3_ppo_math` | Stable-Baselines3 / Modal L4 | Qwen/Qwen2.5-0.5B | PPO | — | math | 42, 123, 456, 789, 1024 | 125 | final acc 0.003 / 0.014 / 0.011 / 0.012 / 0.010; `steps_to_95` null for all five |
+| `cleanrl_ppo_math` | CleanRL / Modal L4 | Qwen/Qwen2.5-0.5B | PPO | — | math | 42, 123, 456, 789, 1024 | 125 | final acc 0.010 / 0.008 / 0.014 / 0.009 / 0.004; 25.4–32.4 s |
+| `tianshou_ppo_math` | Tianshou / Modal L4 | Qwen/Qwen2.5-0.5B | PPO | — | math | 42, 123, 456, 789, 1024 | 125 | final acc 0.011 / 0.002 / 0.005 / 0.002 / 0.009; 1.67–3.30 s |
+
+: Semester-3 Modal campaign runs.
+
+**Table A.4 — Group-size sweep, shared-harness runs.** Source:
+`platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv`. Model
+`Qwen/Qwen3-8B` on GSM8K, 3 seeds per group size (12 runs). Held-out accuracy
+is the mean over seeds; `mean ZVF` is the mean zero-variance fraction.
+
+| Run identifier | Stack / platform | Model | Algo | G | Dataset | Seed | Steps | Outcome / status |
+|---|---|---|---|---|---|---|---|---|
+| `groupsize_g2` | Tinker | Qwen/Qwen3-8B | GRPO | 2 | GSM8K held-out | 3 seeds | — | held-out acc 0.9817 ± 0.0044; mean ZVF 0.8380 |
+| `groupsize_g4` | Tinker | Qwen/Qwen3-8B | GRPO | 4 | GSM8K held-out | 3 seeds | — | held-out acc 0.9883 ± 0.0017; mean ZVF 0.7635 |
+| `groupsize_g8` | Tinker | Qwen/Qwen3-8B | GRPO | 8 | GSM8K held-out | 3 seeds | — | held-out acc 0.9900 ± 0.0029; mean ZVF 0.6906 |
+| `groupsize_g16` | Tinker | Qwen/Qwen3-8B | GRPO | 16 | GSM8K held-out | 3 seeds | — | held-out acc 0.9783 ± 0.0060; mean ZVF 0.6312 |
+
+: Semester-3 group-size sweep runs.
+
+The remaining Semester-3 runs are the exploratory blocks of Table A.1:
+`tinker-rl-lab-world-class` (174 runs over fourteen base models from
+Llama-3.2-1B to Qwen3-235B-A22B), `tinker-rl-scaling` (88, the material behind
+the cross-scale study), `tinker-structural-ceiling` (72), `tinker-rl-webarena`
+(40) plus the separate `webarena-eval` scoring pass (26), the agentic smoke
+block (10), three SkyRL-on-Tinker runs, and three Hugging Face runs. These are
+indexed by identifier in the ledger but given here in aggregate, because for
+most of them fewer than half the required columns have values.
+
+## A.3 Semester-4 P1–P8 study runs
+
+The P1–P8 series is the individual Semester-4 contribution, and its runs are
+indexed by *claim* rather than by project. The audit ledger at
+`platform_hybrid/experiments/results/claim_to_run/` maps each published claim
+to its supporting run identifiers, the W&B URLs where they can be inspected,
+whether the model named in the paper matches the model actually trained, the
+seed and step counts, the held-out metric, and an evidence tier. It holds
+**18 claims** carrying **713 claim-to-run links** — a count of links, not of
+distinct runs, and the 368 links on P7-C1 are the `zvf-audit` project count
+rather than 368 separable experiments.
+
+**Table A.5 — P1–P8 claim-to-run ledger.** Tier vocabulary: A = ≥5 seeds and
+≥100 steps; B = 3–4 seeds and 50–99 steps; C = completed/descriptive; R =
+deterministic resource or schema claim; X = unlinked, contradicted, or
+provenance-conflicted.
+
+| Claim | Linked runs (representative) | Stack | Model | Algo | G | Dataset | Seeds / steps | Outcome | Tier |
+|---|---|---|---|---|---|---|---|---|---|
+| P1-C1 | 20 — `tinker:51a8ef9e…` | Tinker (managed) + W&B | 5 GSM8K anchors: Qwen3.5-4B, Qwen3-8B, Llama-3.1-8B-Instruct, Nemotron-120B, DeepSeek-V3.1 | — | — | GSM8K | 1 per anchor (seed 42) / 20–30 | No held-out metric on the exact-linked runs; the claim rests on training-reward traces | C |
+| P1-C2 | 1 — `tinker:657a920a…` (HF-arbitrated) | Tinker (managed) + HF adapter | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16` (MoE, A12B active) | — | — | `frontier_gsm8k` | 1 (seed 42) / 20 | Peak 0.875, last-10 0.1625, zero-reward step fraction 0.55 (11/20); no held-out metric | C |
+| P2-C1 | 80 local rows pooled to 23 cells | Local analysis pool (no W&B) | Heterogeneous; Qwen3-8B at G = 8 among the listed rows | — | — | GSM8K | up to 3 per source row / 30–600 | Mean ZVF versus collapse: Spearman 0.56, point-biserial 0.62 (n = 23) | C |
+| P2-C2 | 80 (as P2-C1) | as P2-C1 | as P2-C1 | — | — | GSM8K | as P2-C1 | Spearman ρ = 0.27, bootstrap 95% CI [−0.37, 0.88] (n = 23) | C |
+| P3-C1 | 12 — `wandb:rlvr-openings/l22x3tca` | W&B-managed open trainer; no Tinker identity | Qwen/Qwen3.5-4B | — | 2, 4, 8, 16 | — (saturated arithmetic regime; dataset not recorded) | 3 per G (seeds 0, 1, 2) / 8 | Mean held-out Δ: G=2 +0.0000, G=4 +0.0000, G=8 −0.0625, G=16 +0.0000; evaluation size not logged | C |
+| P3-C2 | 5 — `wandb:zvf-audit-v2/6snvz1qd` | W&B, sampling only | — (G = 32 cells) | — | 32 | — | 5 cells / 0 optimizer steps | No matched G = 4/G = 32 training replication; the comparison cannot be executed | X |
+| P4-C1 | 6 — `local:drgrpo_gsm8k_cot:grpo:seed42` | Local | Qwen/Qwen2.5-1.5B-Instruct as mapped (abstract says Qwen3-8B) — conflict | GRPO / Dr.GRPO | — | GSM8K CoT | 3 per arm (42, 123, 456) / 30 | GRPO 0.2017→0.2633 (Δ +0.0617); Dr.GRPO 0.2050→0.2550 (Δ +0.0500); n = 200/seed | X |
+| P5-C1 | 2 — `wandb:tinker-rl-lab-world-class/xmot42ot`, `…/w83mv3ok` | Tinker-managed versus TRL backend | Qwen/Qwen3-8B-Base versus Qwen/Qwen3-8B — confounded | GRPO / TRL-GRPO | 8 | GSM8K | 1 per backend (seed 42) / 30 | Final/last-10 training reward 0.050→0.856; no held-out metric | X |
+| P5-C2 | 2 — `zvf-colab-experiments/6c7p198f`, `…/l5m9lqij` | Open trainer versus managed stack | Qwen2.5-0.5B-Instruct versus Qwen3.5-4B (declared non-consistent exhibit) | DAPO label versus asymmetric-clip surrogate | — | — | 2 open versus 3 managed / not logged (open), 15 (managed) | Mean ZVF 0.00 versus 0.58; no comparable held-out metric | C |
+| P5-C3 | 1 — `zvf-colab-experiments/l5m9lqij` | Managed summary | Qwen/Qwen3.5-4B | Four algorithm labels | — | — | 3 per arm (42, 123, 456) / 15 | Last-10 reward band 0.710–0.744 (width 0.034); no held-out metric | C |
+| P6-C1 | 48 registry entries | Registry (schema validation) | N/A | N/A | N/A | N/A | N/A | 44/48 entries pass schema validation | R |
+| P6-C2 (new audit) | 82 — `tinker:0dfee749…` | Tinker ↔ W&B ↔ HF, three-way | N/A (identity audit) | N/A | N/A | N/A | as logged per underlying run | 33/41 exact IDs model-consistent; 5 HF-arbitrated mislinks; 3 unresolved | R |
+| P7-C1 | 368 — `wandb:zvf-audit/fzforbvg` | W&B only (0 exact Tinker IDs) | Qwen3-4B-Instruct-2507 (113), Llama-3.2-3B (112), Llama-3.2-1B (107), 3 further models (36) | — | 4, 8, 16 (also 6) | — (prompt/tokenizer families `llama3`, `qwen3_instruct` recorded, not datasets) | 10 logged labels (0–9) / 2–12 | ZVF U-shape reproduced; no held-out metric in the W&B summaries | C |
+| P7-C2 | 1 — `zvf-colab-experiments/ds83rymc` | W&B (Colab) | Qwen/Qwen2.5-0.5B-Instruct | — | — | — | 3 (0, 1, 2) in one aggregate / 30 | Gradient magnitude versus p(1−p): Pearson r = +0.71 | C |
+| P7-C3 | 1 — `zvf-colab-experiments/6c7p198f` | W&B (Colab) | Qwen/Qwen2.5-0.5B-Instruct | Adaptive-G versus fixed recipes | — | — | 1 per arm / not logged | Adaptive-G held-out Δ +0.575; mean ZVF 0.23; 186 rollouts | C |
+| P8-C1 | 1 — `local:qp8_fraud:xgboost:seed42` | Local (XGBoost) | Gradient-boosted trees (200 estimators, depth 6) | — | N/A | Synthetic card-fraud: 50,000 rows; 10,000-row held-out split | random_state 42 / 200 estimators | AUC 0.7955 on the 10,000-row held-out split | C |
+| P8-C2 | 1 — `wandb:tinker-new-research/ek1b2cxn` | Tinker (managed SFT) | Qwen/Qwen3.5-4B | SFT row serialisation (no KL, no reference policy) | N/A | Row-to-text serialisations; 500-row positive-enriched held-out subset | 1 (seed 0) / 63 minibatches | AUC 0.482675, accuracy 0.792 (n = 500) — near chance | C |
+| P8-C3 | 0 — UNLINKED | — | Proposed sensor / scribe / triage architecture | — | — | — | 0 / 0 | No execution; operational benefit over XGBoost alone not measured | X |
+
+: Semester-4 P1-P8 study runs: each claim mapped to its linked runs, stack, model and algorithm.
+
+Three facts here are load-bearing. First, **no empirical headline row in the
+P1–P8 ledger reaches Tier A or B** under the statistical-rigor thresholds; the
+rectified tally is C = 12, R = 2, X = 4, and the registry's only Tier A block
+belongs to P11, an extension described below. Second, the four Tier X rows are
+X for specific, checkable reasons: **P3-C2** rests on G = 32 *sampling* cells
+with zero optimizer steps, so no matched G = 4/G = 32 training replication
+exists; **P4-C1**'s abstract names Qwen3-8B while every mapped run is
+`Qwen/Qwen2.5-1.5B-Instruct`; **P5-C1** compares `Qwen/Qwen3-8B-Base` against
+`Qwen/Qwen3-8B`, so the base checkpoint changes together with the backend and
+the pair must not be cited as a backend-only causal effect; and **P8-C3** is a
+proposed architecture with no execution, hence zero linked runs. Third, of 41
+exact Tinker identifiers in the identity audit, 33 are model-consistent with
+their W&B counterpart and 8 conflict; five conflicts were resolved as W&B
+mislinks by three-way arbitration against the Hugging Face adapter listing, and
+three remain unresolved (`0ef59237`, Qwen3.5-4B recorded against a Nemotron
+run; `78e2d35b`, Qwen3.5-27B; `0dfee749`, Llama-3.1-8B-Instruct recorded
+against a DeepSeek V3.1 run). Those three `model` fields are contested.
+
+Two column caveats travel with the table. The dataset cell for P7-C1 is `—`
+because the ledger's only dataset-adjacent field for those 368 runs is a
+prompt/tokenizer family (`llama3`, `qwen3_instruct`, `gpt_oss_low_reasoning`,
+`nemotron3_disable_thinking`), not a dataset name. And the P3 sweep here is
+**not** the Semester-3 sweep of Table A.4: it is a different project
+(`rlvr-openings`), a different model (Qwen3.5-4B), and it reports deltas of
+0.0000 rather than held-out accuracies near 0.99. The two share a group-size
+grid and nothing else.
+
+The extension ledger added in August 2026 carries five rows besides P11:
+P10-C1 is Tier R (an algebraic identity, not an empirical result), P10-C2 and
+P12-C2 are Tier X (placeholder figures and unlinked prospective claims, zero
+runs), and P12-C1 is Tier R as a lemma and Tier X as an empirical headline.
+
+**P11** is the only block in the registry meeting the report's strictest
+evidence bar: 40 arm–seed units at
+`local:zvf-program/audit/results/full/{grpo,dapo,gspo,drgrpo,aero}-seed-{11,23,37,53,71,89,107,131}.json`,
+five arms × eight seeds on one stack (Qwen3-8B, GSM8K, 30 steps, Colab A100,
+held-out n = 500). Its headline contrast, DAPO versus GRPO, is Δ = +0.001,
+CI [−0.0045, +0.00675], MDE₈₀ = 0.01012, all raw p > 0.21, with
+Benjamini–Hochberg rejecting nothing. The mechanism is visible in the
+diagnostic: DAPO's mean ZVF is 0.000 against GRPO's 0.693, bought with 3.61×
+the rollouts (1,734 versus 480) and 1.44× the wall clock. It is the only place
+in the work where a claim rests on five or more seeds over a hundred or more
+steps, and it supports a null.
+
+### A.3.1 Opening and null-result runs
+
+Chapter 6 reports four null families — a mixed-variance curriculum, a matched
+token budget, hard-prompt filtering, and step-1 layer selection (§6.4.3) — and
+each rests on runs that are not in the ledger. They are absent for a checkable
+reason: the string `rlvr-openings` occurs nowhere in the ledger, and no file in
+the fourteen-project `wandb_inventory/` covers it, although every Tinker-managed
+block below is logged to that project under the groups named in the table. The
+rows are counted from the per-run `name` (or mode) fields of
+each artefact's JSON — `results.json` for the curriculum, token-budget,
+hard-prompt and loss-formulation blocks, `result.json` and its siblings for
+P1 — not from an inventory API, which is why this cohort is reported as its
+own total. Three neighbouring blocks add nothing to
+it: the P3 group-size artefacts are already indexed — `groupsize_zvf/results.json`
+reproduces the per-group deltas of Table A.5's P3-C1 row exactly, and the
+second sweep file is discussed below — and the P2, P7 and P8 "openings"
+(`p2_openings/collapse_baseline_analysis.json`, `p7_controller/sim.json`,
+`p8_openings/*.json`) are zero-compute re-analyses that launch no runs.
+
+**Table A.6 — Semester-4 opening and null-result runs (46 runs).** Model is
+`Qwen/Qwen3.5-4B` and dataset GSM8K unless a row says otherwise. All rows are
+Tinker-managed except the P1 layer-freeze block, which ran on Colab for
+per-layer gradient access. "Curriculum" means training only on non-collapsed
+(mixed-variance) groups. Group sizes marked *default* are the launch defaults
+of the scripts in `platform_hybrid/experiments/openings/`; only the campaign
+artefact records a group size per run. Δ is the change in held-out accuracy.
+
+| Run identifier | Stack / platform | Model | Algo | G | Dataset | Seed | Steps | Outcome / status |
+|---|---|---|---|---|---|---|---|---|
+| `campaign/baseline-G4-s0…s5` | Tinker → W&B `rlvr-openings` (`campaign`) | Qwen/Qwen3.5-4B | GRPO | 4 | GSM8K | 0–5 | 8 | 6 runs; mean Δ +0.0111 (0.0000–0.0333) |
+| `campaign/curriculum-G4-s0…s5` | Tinker → W&B `rlvr-openings` (`campaign`) | Qwen/Qwen3.5-4B | GRPO + curriculum filter | 4 | GSM8K | 0–5 | 8 | 6 runs; mean Δ +0.0167 (−0.0667 to +0.0667); oversample 3.3–7.2×; zero-loss fraction 0.0 |
+| `campaign/baseline-G2-s0` | Tinker → W&B `rlvr-openings` (`campaign`) | Qwen/Qwen3.5-4B | GRPO | 2 | GSM8K | 0 | 8 | 1 run; Δ 0.0000; zero-loss fraction 0.7 |
+| `campaign/baseline-G8-s0` | Tinker → W&B `rlvr-openings` (`campaign`) | Qwen/Qwen3.5-4B | GRPO | 8 | GSM8K | 0 | 8 | 1 run; Δ −0.1333 |
+| `campaign/baseline-G16-s0` | Tinker → W&B `rlvr-openings` (`campaign`) | Qwen/Qwen3.5-4B | GRPO | 16 | GSM8K | 0 | 8 | 1 run; Δ +0.0333 |
+| `curriculum_opening/baseline` | Tinker → W&B `rlvr-openings` (ungrouped) | Qwen/Qwen3.5-4B | GRPO | 4 *default* | GSM8K | 0 | 8 | 1 run; Δ +0.0500; held-out 20; zero-loss fraction 0.50 |
+| `curriculum_opening/curriculum` | Tinker → W&B `rlvr-openings` (ungrouped) | Qwen/Qwen3.5-4B | GRPO + curriculum filter | 4 *default* | GSM8K | 0 | 8 | 1 run; Δ +0.0500; held-out 20; oversample 4.81×; zero-loss fraction 0.00; superseded, see below |
+| `token_budget/baseline-b30000-s0…s2` | Tinker → W&B `rlvr-openings` (`token-budget`) | Qwen/Qwen3.5-4B | GRPO | 4 *default* | GSM8K | 0–2 | 30k-token budget | 3 runs; mean Δ +0.0278; no groups skipped |
+| `token_budget/curriculum-b30000-s0…s2` | Tinker → W&B `rlvr-openings` (`token-budget`) | Qwen/Qwen3.5-4B | GRPO + curriculum filter | 4 *default* | GSM8K | 0–2 | 30k-token budget | 3 runs; mean Δ +0.0278; 11–20 groups skipped per seed |
+| `hard_curriculum/baseline-hard-s0…s2` | Tinker → W&B `rlvr-openings` (`hard-curriculum`) | Qwen/Qwen3.5-4B | GRPO | 6 *default* | GSM8K hard-learnable pool (40 of 300 probed) | 0–2 | 10 | 3 runs; mean Δ +0.0278; zero-loss fraction 0.1–0.2 |
+| `hard_curriculum/curriculum-hard-s0…s2` | Tinker → W&B `rlvr-openings` (`hard-curriculum`) | Qwen/Qwen3.5-4B | GRPO + curriculum filter | 6 *default* | GSM8K hard-learnable pool (40 of 300 probed) | 0–2 | 10 | 3 runs; mean Δ 0.0000; zero-loss fraction 0.0 |
+| `p4_surprise/{sum,mean,surprise}-s0…s1` | Tinker → W&B `rlvr-openings` (`p4-surprise`) | Qwen/Qwen3.5-4B | GRPO, loss variant | 4 *default* | GSM8K | 0–1 | 8 | 6 runs; mean Δ +0.1250 (sum) / 0.0000 (mean) / +0.0417 (surprise) |
+| `p1_layerfreeze/result.json` | Colab L4 | Qwen/Qwen2.5-1.5B-Instruct | — (gradient probe, no optimizer steps) | — | — | — | 5 | 1 run; step-1 predicts final top-layer set at overlap 1.0; top-25% concentration 0.476 |
+| `p1_layerfreeze/scaled_4seed_result.json` | Colab L4 | Qwen/Qwen2.5-3B-Instruct | GRPO | 4 | GSM8K (24 problems) | 0–3 | 10 | 4 runs; overlap 0.0833 ± 0.0481 — approximately chance; concentration 0.3908 |
+| `p1_layerfreeze/freeze_flop_result.json` | Colab L4 | Qwen/Qwen2.5-1.5B-Instruct | GRPO (step-1-frozen arm) | — | — | 0–1 | — | 4 runs, full and frozen arms; frozen arm gains 0.0000 against 0.0625 at 60.7% of the parameter count |
+| `p1_layerfreeze/emergence_result.json` | Colab L4 | Qwen/Qwen2.5-1.5B-Instruct | GRPO (step-1 layer selection) | — | — | 0–1 | — | 2 runs; mean step-1 overlap 0.643 |
+
+: Semester-4 opening and null-result runs: the curriculum, token-budget, hard-prompt, loss-formulation and layer-freeze blocks.
+
+Three provenance notes belong with this table, because two of its blocks carry
+superseded siblings and one carries a refuted claim. First,
+`campaign/FINDINGS.md` describes a nine-run, three-seed version of the campaign
+on a twelve-prompt held-out set with arm means of +0.028 and −0.028;
+`campaign/results.json` holds fifteen runs over six seeds on a thirty-prompt
+held-out set (0.8667 = 26/30), and the table follows the per-run file. The
+FINDINGS warning that `zero_loss_frac` was invalid (an empty-metrics-dict bug,
+"since fixed") belongs to the nine-run batch, not to that file. Second, the P1
+layer-freeze block has the same shape: the two-seed 3B pass (overlap
+0.1111 ± 0.0000) is superseded by the four-seed pass (0.0833 ± 0.0481), and
+both sit near chance, so the toy-scale overlap of 1.0 must not be read as a
+transferable layer-selection signal. Third, the two single-seed training
+blocks flagged SUSPECT by independent verification (kimi, 2026-07-06) are
+superseded by the multi-seed blocks above: the curriculum opening's +0.05
+(campaign curriculum and baseline arms separate by 0.006 over six seeds, at
+3.3–7.2× oversample cost), and a single-seed G = 4 gain of +0.125 in `p3_groupsize/sweep_results.json`
+— the campaign's G4 seed-0 baseline gains 0.0000, not 0.125, and that sweep
+file retains only two of its twelve entries, so the W&B group is its record.
+
+## A.4 E1–E14 held-out campaign lanes
+
+The fourteen evaluation lanes are not training runs; they are evaluations of a
+single frozen actor, and they carry the registry's strictest receipt
+discipline. The actor is base `Qwen/Qwen3.6-35B-A3B` (commit `995ad96e…`) with
+adapter `arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1…`
+(commit `64444133…`), bfloat16, trained on Tinker, run seed 809 taken from the
+adapter name. The training step count behind that adapter survives in no
+artefact and is shown as "—"; group size and algorithm are properties of the
+single actor rather than of any lane, and are shown as "—" rather than
+repeated. Terminal states are from the ledger of record,
+`outputs/PES_Phase2_Review_2026-09-12/finish/Pending_Experiments.md`; all
+scores are from `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md`.
+
+**Table A.7 — E1–E14 campaign lanes.**
+
+| Lane / run identifier | Stack / platform | Model / actor | Algo | G | Dataset / suite | Seed | Steps | Outcome / terminal state |
+|---|---|---|---|---|---|---|---|---|
+| E1 SWE-bench Pro | native harness, Tinker actor | Qwen3.6-35B-A3B + adapter | — | — | SWE-bench Pro | 809 | — | 2/731 = 0.274% pass@1 (97.54% coverage, 713/731 native evals); originals retained |
+| E1 replacement (wave10) | native harness | as above | — | — | SWE-bench Multilingual | 809 | — | 35/300 graded; wave10 v6 sealed then source lost — `REBUILD_READY_LAUNCH_PENDING` |
+| E2 FrontierSWE | native harness | as above | — | — | FrontierSWE | 809 | — | 1/17 tasks; replay normalized 0.8628 |
+| E2 replacement | native harness | as above | — | — | CORE-Bench | 809 | — | 45/45 capsule setups, 0 graded — `AMENDMENT_ACCEPTED_LAUNCH_PENDING` |
+| E3 SDAB | — | as above | — | — | SDAB (private bundle) | 809 | — | no local or paid path — `CLOSED_EXTERNAL` |
+| E4 BankerToolBench | Tinker→Modal bridge | as above | — | — | BankerToolBench | 809 | — | 1/100 tasks, recovery 0.3115 — `CLOSED_PARTIAL` |
+| E4 base-model rerun | Modal `/v1/responses` | base model, zero-init LoRA | — | — | BankerToolBench | 809 | 0 | 100/100 trials, mean reward 0.0, $15.07 of $55.91 cap; measures tool-dialogue collapse |
+| E5 APEX-Agents | native harness | as above | — | — | APEX-Agents | 809 | — | 7/480 native-scored; prefix mean 0.050505 |
+| E5 replacement (successor27) | native harness | as above | — | — | Tau3 | 809 | — | 20/97 = 20.62% cleaned — `REBUILD_READY_LAUNCH_PENDING` |
+| E6 WebArena | AWS-hosted | as above | — | — | WebArena | 809 | — | 0/812 run; 65 files, IDs 0–811 inventory-verified — `PENDING_QUOTA` |
+| E7 BinaryAudit | native harness | as above | — | — | BinaryAudit (private payload) | 809 | — | 1/46 attempted, verifier reward 0.0, no grade — `CLOSED_EXTERNAL` |
+| E8 LAB-Bench (public) | native harness | as above | — | — | LAB-Bench public, 8 categories | 809 | — | **1967/1967 COMPLETE** |
+| E8 LifeSciBench (original) | — | as above | — | — | LifeSciBench private | 809 | — | `CLOSED_EXTERNAL` |
+| E9 MLE-bench | Modal streaming arm | as above | — | — | MLE-bench | 809 | — | 40/75 natively graded (53.33%); suite score null |
+| E9 replacement | AWS runtime builder | as above | — | — | MLDevBench | 809 | — | 0/34 graded; image incomplete — `PENDING_QUOTA` |
+| E10 AgentDojo (benign) | native harness | as above | — | — | AgentDojo benign utility | 809 | — | **97/97 COMPLETE** |
+| E10 AgentHarm (original) | — | as above | — | — | AgentHarm private | 809 | — | `CLOSED_EXTERNAL` |
+| E11 VerilogEval | native harness | as above | — | — | VerilogEval (both framings) | 809 | — | **312/312 = 129/312 pass@1 (41.35%)**; 67/156 completion + 62/156 spec-to-RTL |
+| E12 AppBench | — | as above | — | — | AppBench deployment | 809 | — | `CLOSED_EXTERNAL` |
+| E13 BALROG | hosted supervisor | as above | — | — | BALROG | 809 | — | 13/255 episodes; 21 never-started candidates — `AMENDMENT_ACCEPTED_LAUNCH_PENDING` |
+| E13 OpenReward (original) | — | as above | — | — | OpenReward held-out games | 809 | — | `CLOSED_EXTERNAL` |
+| E14 Omni-MATH | native scorer | as above | — | — | Omni-MATH | 809 | — | 4426/4428 accepted (99.95%); official accuracy 2271/4428 = 51.31% — `COMPLETE_TERMINAL_NOTE` |
+| E14 FrontierMath (original) | — | as above | — | — | FrontierMath hosted | 809 | — | `CLOSED_EXTERNAL` |
+
+: E1-E14 held-out campaign lanes with their run identifiers, stacks, platforms, models, algorithms and group sizes.
+
+Two source documents disagree on two lanes, and both observations are retained
+rather than resolved into one, because the disagreement is itself evidence: the
+historical snapshot records E7 as "1/28 errored, no grade" against the
+terminal-state table's "1/46 attempted" — both real observations at different
+points in the lane's life. Likewise E11's canonical figure is 129/312 = 41.35%;
+a 129/311 sensitivity figure survives in non-canonical receipts and is not used
+as the headline.
+
+## A.5 Completeness limitations
+
+The registry is complete as an *index* and incomplete as a *dataset*, and the
+distinction governs how it may be used. Coverage is measured over the 1,662
+ledger rows only — the 46 opening runs of §A.3.1 are logged per run in their
+own artefacts and are not part of this table:
+
+**Table A.8 — Field coverage across the 1,662 ledgered runs.**
+
+| Field | Rows with a value | Rows blank or `UNKNOWN` | Notes |
+|---|---|---|---|
+| `model` | 1,632 | 30 | all 30 gaps are W&B rows |
+| `task` (dataset) | 544 | 1,118 | only 188 are real dataset names; 356 are tokenizer-family labels (`llama3` 225, `qwen3_instruct` 131) |
+| `algo` | 139 | 1,523 | only 139 rows name an algorithm at all |
+| `G` | 626 | 1,036 | distribution where known: G=8 → 270, G=4 → 181, G=16 → 151, G=6 → 10, G=32 → 6, G=64 → 5, G=2 → 3 |
+| `steps` | 628 | 1,034 | bimodal: 5 steps → 318 rows, 30 steps → 207 rows, then a long tail |
+| `headline_metric` | 28 | 1,634 | 98.3% of runs carry no recorded outcome value |
+
+: Field coverage across the 1,662-run ledger: rows carrying a value against rows blank or UNKNOWN.
+
+The largest gap is structural: **all 844 Tinker-source rows record `task`,
+`algo`, `G` and `steps` as `UNKNOWN`.** The Tinker pagination API returns
+training-run identity, base model, LoRA rank and checkpoint metadata but not
+the training configuration, so those runs' configurations cannot be recovered
+from the surviving inventory, and every algorithm label in the registry comes
+from the W&B half of the ledger. The raw snapshot `tinker_runs.txt` shows the
+same boundary differently: run ID, base model truncated to "Qwen…", LoRA rank
+4, timestamp and status "OK" — no configuration at all.
+
+Four further limits apply.
+
+1. **Aggregate presentation.** This appendix names 105 runs individually: the 4
+   cross-framework runs of Table A.2, the 20 Modal campaign runs of A.3, the 12
+   sweep runs (in 4 rows) of A.4, the 46 opening runs (in 16 rows) of A.6, and
+   the 23 E-lane rows of A.7 — plus the 18 claim rows of Table A.5, which index
+   claims rather than runs.
+   The remaining ~1,600 runs are indexed by identifier and project in
+   `experiment_ledger.tsv`, presented here in aggregate because for most of
+   them fewer than half the required columns have values.
+
+2. **Non-runs inside the count.** Three entries are not training results:
+   `verl-dryrun` and `openrlhf-dryrun` are seeded deterministic fallbacks, and
+   the E4 base-model rerun performs zero training steps; to these add
+   §A.3.1's P1 gradient probe, which takes no optimizer steps at all. They are
+   counted because they are runs in the registry's sense, and flagged so no
+   reader treats them as measurements.
+
+3. **Identity conflicts.** Eight Tinker identifiers were linked to W&B runs
+   whose recorded model did not match; five were resolved against the Hugging
+   Face adapter listing, three remain unresolved, and those `model` fields are
+   contested.
+
+4. **Snapshot disagreement.** The 844/818 split used here, the 949/940 split
+   in the audit manifest, and the "983 runs" implied by `tinker_runs.txt` are
+   three observations of the same platforms at three times. No reconciliation
+   was attempted and none should be inferred.
+
+None of this changes a reported result, because every result in Chapters 6–9
+is bound to named artefacts rather than to the registry as a whole. It does
+bound what the registry can be used for: it establishes provenance and
+identity, shows that the run population is far larger than the reported
+claims, and shows that those claims rest on a small, explicitly tiered subset
+— one Tier A block, a majority Tier C, and four Tier X rows that must not be
+cited as evidence.

@@ -5,7 +5,7 @@
 \label{sec:impl-loop}
 \input{tikz/fig2.tex}
 \input{tikz/fig3.tex}
-The reference loop in \texttt{platform\_tinker/tinker\_rl/grpo.py} follows the standard
+The reference loop in \texttt{platform\_\-tinker/\allowbreak tinker\_\-rl/\allowbreak grpo.py} follows the standard
 sample~$\rightarrow$~advantage~$\rightarrow$~loss~$\rightarrow$~optimise cycle. For a
 prompt $q$ we draw a group of $G$ completions $\{o_i\}_{i=1}^{G}$ from the current
 policy and score each with the verifiable reward $r_i$; the group-relative advantage
@@ -31,7 +31,7 @@ the update is a pure pull toward the reference rather than reward-driven learnin
 \section{Parallel Runner and a Real Logging Defect}
 \label{sec:runner}
 To sweep configurations (e.g.\ $G \in \{2,4,8,16\}$ or three seeds $\times$ two arms)
-within a fixed wall-clock budget, \texttt{parallel\_sweep.py} and \texttt{campaign.py}
+within a fixed wall-clock budget, \texttt{parallel\_\-sweep.py} and \texttt{campaign.py}
 launch runs concurrently. An early threaded runner hit a real bug: Weights \& Biases
 keeps a thread-unsafe global \texttt{run} object, so with four threads calling
 \texttt{wandb.init(reinit=True)} the summary writes for later runs failed (``Run is
@@ -43,7 +43,7 @@ to surface (see the P3 caveat in Chapter~\ref{ch:results}).
 \section{The Colab White-Box Path (P1)}
 \label{sec:colab}
 P1 needs per-layer gradient norms, which the managed Tinker back-end does not expose.
-It therefore runs on a Colab L4 GPU (\texttt{p1\_layer\_profile.py}):
+It therefore runs on a Colab L4 GPU (\texttt{p1\_\-layer\_\-profile.py}):
 Qwen2.5-1.5B-Instruct with LoRA adapters on the $q/k/v/o$ projections, five
 GRPO-style advantage-weighted steps, recording the per-layer LoRA gradient norm at
 each step. This white-box route complements the black-box managed runs used for
@@ -57,14 +57,14 @@ Table~\ref{tab:modules} lists the principal modules and their responsibilities.
 \toprule
 \textbf{Module} & \textbf{Responsibility} \\
 \midrule
-\texttt{platform\_local/unified/launcher.py} & Map one config onto a chosen back-end. \\
-\texttt{platform\_tinker/tinker\_rl/grpo.py} & Reference GRPO loop (managed back-end). \\
-\path{platform\_local/trl\_integrations/}, \path{verl/}, \path{platform\_modal/openrlhf/}, \path{platform\_hybrid/skyrl/},
-\path{platform\_tinker/atropos/} & Thin per-framework adapters. \\
-\texttt{p2\_collapse\_analysis.py} & Recompute ZVF / collapse from reward tensors. \\
-\texttt{p1\_layer\_profile.py} & White-box per-layer LoRA grad-norm profile. \\
-\texttt{parallel\_sweep.py}, \texttt{campaign.py} & Concurrent sweeps; process-per-run campaign. \\
-\texttt{p8\_detector.py} & Exploratory method-trace classifier (row-wise CV AUROC). \\
+\texttt{platform\_\-local/\allowbreak unified/\allowbreak launcher.py} & Map one config onto a chosen back-end. \\
+\texttt{platform\_\-tinker/\allowbreak tinker\_\-rl/\allowbreak grpo.py} & Reference GRPO loop (managed back-end). \\
+\path{platform\_\-local/\allowbreak trl\_\-integrations/\allowbreak }, \path{verl/\allowbreak }, \path{platform\_\-modal/\allowbreak openrlhf/\allowbreak }, \path{platform\_\-hybrid/\allowbreak skyrl/\allowbreak },
+\path{platform\_\-tinker/\allowbreak atropos/\allowbreak } & Thin per-framework adapters. \\
+\texttt{p2\_\-collapse\_\-analysis.py} & Recompute ZVF / collapse from reward tensors. \\
+\texttt{p1\_\-layer\_\-profile.py} & White-box per-layer LoRA grad-norm profile. \\
+\texttt{parallel\_\-sweep.py}, \texttt{campaign.py} & Concurrent sweeps; process-per-run campaign. \\
+\texttt{p8\_\-detector.py} & Exploratory method-trace classifier (row-wise CV AUROC). \\
 \bottomrule
 \end{tabular}
 \caption{Principal software modules and responsibilities.}

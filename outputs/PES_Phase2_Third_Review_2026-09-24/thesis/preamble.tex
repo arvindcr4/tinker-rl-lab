@@ -67,6 +67,50 @@
 \setlength{\parindent}{0pt}
 \setlength{\emergencystretch}{3em}
 
+%=====================================================================
+% ---- LONG UNBREAKABLE STRINGS: allow line breaks inside \texttt ----
+%=====================================================================
+% The corpus contains file paths, JSON fragments, model ids, W&B keys and
+% SHA-256 digests far wider than the text column and containing no spaces.
+% Left alone, TeX cannot break them and the line runs past the right margin
+% (measured on the 2026-09-25 build: 558 overfull hboxes, 39 of them >150pt,
+% i.e. running off the page).
+%
+% Fix: redefine \texttt so that after each delimiter-ish character TeX is
+% offered a zero-width discretionary break. \nolinkurl/\detokenize are
+% avoided so existing escape sequences (\_, \&, \#) keep working.
+\makeatletter
+% Offer a zero-width break opportunity after each delimiter-ish character.
+\newcommand{\tb@brkafter}[1]{#1\penalty\@m\hskip\z@skip}
+\newcommand{\tb@scanloop}[1]{%
+  \ifx#1\@nil\else
+    \ifx#1/\tb@brkafter{#1}\else
+    \ifx#1.\tb@brkafter{#1}\else
+    \ifx#1:\tb@brkafter{#1}\else
+    \ifx#1=\tb@brkafter{#1}\else
+    \ifx#1,\tb@brkafter{#1}\else
+    \ifx#1;\tb@brkafter{#1}\else
+      #1%
+    \fi\fi\fi\fi\fi\fi
+    \expandafter\tb@scanloop
+  \fi
+}
+% Patch \texttt itself so EVERY existing call site becomes breakable.
+% \tb@scanloop re-inserts group braces verbatim, so \texttt{...\_...}
+% and \texttt{a{b}c} keep their original meaning.
+\let\tb@origtexttt\texttt
+\DeclareRobustCommand{\texttt}[1]{\tb@origtexttt{\tb@scanloop#1\@nil}}
+\makeatother
+
+% Widen TeX's tolerance so it actually takes the offered break points.
+\tolerance=6000
+\hbadness=10000
+\vbadness=10000
+\hyphenpenalty=50
+\exhyphenpenalty=50
+\sloppy
+\emergencystretch=4em
+
 % ---- pandoc compatibility -------------------------------------------
 % pandoc's LaTeX fragments reference macros that live in pandoc's own
 % default template, not in the fragment. Define them here.

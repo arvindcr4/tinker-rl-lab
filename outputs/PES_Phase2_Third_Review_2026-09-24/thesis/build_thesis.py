@@ -269,6 +269,215 @@ def inject_figures(tex: str, chapter_md: str, have: set[str]) -> tuple[str, int,
     return tex, inserted, missing
 
 
+def breakable_long_tokens(master: str) -> tuple[str, int]:
+    """Rewrite over-wide \\texttt{...} arguments to \\longtok{...}.
+
+    Pandoc emits code spans as \\texttt{...}. Long unbroken tokens (paths,
+    SHA-256 hashes, HF/tinker URIs, receipt status constants) contain no
+    spaces, so TeX cannot break them and the line runs past the right
+    margin. \\longtok wraps the content in \\seqsplit so it may break at
+    any character.
+
+    Only tokens whose *longest unbroken run* exceeds THRESHOLD chars are
+    rewritten: short code spans keep plain \\texttt (no visual change) and
+    spans containing spaces or display math are left untouched, since
+    \\seqsplit would mangle them.
+
+    Brace matching is done by depth counting so nested groups such as
+    \\texttt{a{b}c} survive intact.
+    """
+    THRESHOLD = 28          # chars; ~the width of the text column in lmtt
+    # Inside narrow table columns even short identifiers overflow, so use a
+    # much lower bar there. \_ renders as a wide underscore and cannot be
+    # broken, so a 15-char token like CLOSED\_EXTERNAL is already too wide
+    # for a 9-column table cell.
+    TABLE_THRESHOLD = 8
+    out: list[str] = []
+    i, n = 0, len(master)
+    rewritten = 0
+    OPEN = "\\texttt{"
+
+    # Pre-compute which character ranges lie inside a longtable/tabular body
+    # so the threshold can be lowered there.
+    in_table = bytearray(n)
+    for tm in re.finditer(
+            r"\\begin\{(?:longtable|tabular)\}.*?\\end\{(?:longtable|tabular)\}",
+            master, re.S):
+        for k in range(tm.start(), tm.end()):
+            in_table[k] = 1
+
+    while True:
+        j = master.find(OPEN, i)
+        if j == -1:
+            out.append(master[i:])
+            break
+        out.append(master[i:j])
+
+        # walk forward to the matching close brace
+        k = j + len(OPEN)
+        depth = 1
+        while k < n and depth:
+            ch = master[k]
+            if ch == "\\":          # skip escaped char (e.g. \_ \{ )
+                k += 2
+                continue
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+            k += 1
+
+        if depth != 0:              # unbalanced; leave as-is
+            out.append(master[j:])
+            break
+
+        arg = master[j + len(OPEN):k]      # inner content
+        longest = max((len(t) for t in re.split(r"\s+", arg)), default=0)
+        has_space = bool(re.search(r"\s", arg))
+        has_math = "$" in arg
+
+        thr = TABLE_THRESHOLD if in_table[j] else THRESHOLD
+        # escaped chars render wider than their source length
+        longest_rendered = longest - 2 * arg.count("\\_")
+
+        if has_math:
+            out.append(master[j:k + 1])
+        elif longest_rendered > thr and not has_space:
+            # pure long token (path/hash/URI): seqsplit breaks it anywhere
+            out.append("\\longtok{%s}" % arg)
+            rewritten += 1
+        elif longest > thr and has_space:
+            # Spaced content (JSON blob, or a token containing escaped spaces
+            # such as  model.sampler\_path\ =\ tinker://...  ). seqsplit would
+            # destroy the spacing, so instead insert explicit zero-width break
+            # points after the delimiter characters that appear inside long
+            # runs. Covers JSON punctuation, path separators, RFC-3986 URI
+            # scheme separators, hyphens (UUIDs / slugs) and underscore
+            # escapes, which is where these tokens can legally wrap.
+            patched = re.sub(
+                r'(&quot;|"|,|:|/|\\}|\[|\]|=|-|\+|@|~|%|\\_)(?=[^\s])',
+                lambda mm: mm.group(1) + "\\allowbreak{}",
+                arg)
+            out.append("\\texttt{%s}" % patched)
+            rewritten += 1
+        else:
+            out.append(master[j:k + 1])
+
+        i = k + 1
+
+    return "".join(out), rewritten
+
+
+def fix_table_widths(master: str) -> tuple[str, int]:
+    """Correct pandoc's tabcolsep arithmetic in longtable column specs.
+
+    Pandoc emits each column as
+        >{\\raggedright\\arraybackslash}p{(\\linewidth - N\\tabcolsep) * \\real{f}}
+    where N should be 2 * (number of columns) -- two \\tabcolsep per column.
+    In practice pandoc under-counts by 2 on every table in this corpus
+    (e.g. a 9-column table gets N=16 instead of 18), which makes the table
+    wider than \\linewidth and pushes the last column past the right margin
+    (measured: the appendix run-registry tables overflowed by ~11pt).
+
+    This pass recomputes N = 2 * ncols for every longtable whose spec is
+    wrong. Tables that already agree are left untouched.
+    """
+    LT = re.compile(r"\\begin\{longtable\}\[\]\{@\{\}(.*?)@\{\}\}", re.S)
+    MULT = re.compile(r"\\linewidth\s*-\s*(\d+)\\tabcolsep")
+    fixed = 0
+
+    def repl(m: re.Match) -> str:
+        nonlocal fixed
+        spec = m.group(1)
+        ncols = spec.count("p{")
+        gaps = MULT.findall(spec)
+        if not gaps or ncols == 0:
+            return m.group(0)
+        used = int(gaps[0])
+        need = 2 * ncols
+        if used == need:
+            return m.group(0)
+        new_spec = MULT.sub(
+            lambda mm: "\\linewidth - %d\\tabcolsep" % need, spec)
+        fixed += 1
+        return "\\begin{longtable}[]{@{}%s@{}}" % new_spec
+
+    return LT.sub(repl, master), fixed
+
+
+def fix_wide_tables(master: str) -> tuple[str, int]:
+    """Shrink padding and font for many-column tables so they fit the margin.
+
+    Even with correct column-width arithmetic, a 9- or 10-column table has
+    so little room per cell that identifiers like CLOSED\\_EXTERNAL cannot fit
+    on a line and the row pokes past the right margin (measured: 543.7pt
+    against a 523.3pt limit). Wrapping the table in \\scriptsize and halving
+    \\tabcolsep reclaims enough width to fit (measured: 518.2pt).
+
+    Only tables with >= 4 columns are touched. The trigger is column COUNT,
+    not column width, because a 4-column table whose last column holds
+    21-character status constants (e.g. Table 13.3, REBUILD\\_READY\\_LAUNCH\\_)
+    overflows just as badly as a 9-column one -- measured 602.1pt on a
+    595.3pt page, i.e. off the paper. Narrower tables are left at natural size.
+    """
+    MIN_COLS = 4
+    fixed = 0
+
+    def repl(m: re.Match) -> str:
+        nonlocal fixed
+        whole = m.group(0)
+        spec = m.group(1)
+        ncols = spec.count("p{")
+        if ncols < MIN_COLS:
+            return whole
+        fixed += 1
+        return ("\\begingroup\\scriptsize\\setlength{\\tabcolsep}{3pt}\n"
+                + whole + "\n\\endgroup")
+
+    pat = re.compile(
+        r"\\begin\{longtable\}\[\]\{@\{\}(.*?)@\{\}\}.*?\\end\{longtable\}",
+        re.S)
+    return pat.sub(repl, master), fixed
+
+
+def break_bare_identifiers(master: str) -> tuple[str, int]:
+    """Add break opportunities to long bare identifiers anywhere in the source.
+
+    Some status constants appear as PLAIN TEXT -- not inside \\texttt{} --
+    either in running prose or as a bare table cell (e.g. Table 13.3 lists
+    REBUILD\\_READY\\_LAUNCH\\_PENDING with no \\texttt wrapper). Those cannot
+    break at all and ran off the paper (measured: 596-602pt on a 595.3pt
+    page). Insert a zero-width break after each \\_ in any run of >= 3
+    underscore-escaped segments.
+
+    This deliberately DOES cover longtable bodies. The earlier version skipped
+    them, on the assumption that the \\texttt pass handled table cells -- but
+    bare (non-\\texttt) identifiers in table cells fell through the gap
+    between the two passes and were the last remaining source of off-paper
+    text. \\allowbreak inside a p{} column is harmless: it only offers a
+    break, it does not force one.
+    """
+    MIN_SEGMENTS = 3
+
+    # identifier candidate: word chars joined by escaped underscores.
+    # Guard (?<![\\{]) so we do not match inside an existing macro name or
+    # immediately after a backslash.
+    ident = re.compile(
+        r"(?<![\\{])([A-Za-z0-9][A-Za-z0-9]*(?:\\_[A-Za-z0-9]+){%d,})"
+        % (MIN_SEGMENTS - 1))
+
+    counter = 0
+
+    def rep(m: re.Match) -> str:
+        nonlocal counter
+        counter += 1
+        return m.group(1).replace("\\_", "\\_\\allowbreak{}")
+
+    return ident.sub(rep, master), counter
+
+
 def main() -> int:
     os.makedirs(BUILD, exist_ok=True)
     have = available_figures()
@@ -306,6 +515,27 @@ def main() -> int:
 
     pieces.append("\n\\end{document}\n")
     master = "\n".join(pieces)
+
+    # ---- long-token pass: make over-wide \texttt args breakable ----------
+    # Paths, hashes, URIs and receipt constants emitted by pandoc as
+    # \texttt{...} contain no spaces and cannot break, so they run past the
+    # right margin (measured: 72/217 pages overflowed before this pass).
+    # Route the long ones through \longtok = \texttt{\seqsplit{...}}.
+    # Order matters: the bare-identifier pass must run BEFORE the \\texttt
+    # pass so that bare table cells (which the \\texttt pass cannot see) get
+    # their break opportunities too.
+    master, n_bare = break_bare_identifiers(master)
+    print(f"bare-identifier pass: added breaks to {n_bare} identifier(s)")
+
+    master, n_longtok = breakable_long_tokens(master)
+    print(f"long-token pass: rewrote {n_longtok} \\texttt argument(s) to \\longtok")
+
+    master, n_tables = fix_table_widths(master)
+    print(f"table-width pass: corrected {n_tables} longtable column spec(s)")
+
+    master, n_wide = fix_wide_tables(master)
+    print(f"wide-table pass: shrank {n_wide} many-column table(s)")
+
     with open(MASTER, "w", encoding="utf-8") as fh:
         fh.write(master)
 

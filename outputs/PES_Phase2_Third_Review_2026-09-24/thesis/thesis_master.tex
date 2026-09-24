@@ -1265,12 +1265,12 @@ metadata (4/4 pass on year, five-gram title, and author-family overlap ≥
 0.6) and retrofitted two entries that had been present in the
 bibliography but never cited (sources:
 \texttt{platform\_hybrid/paper/sections/p5\_related.tex};
-\texttt{p5\_iter109\_minreport\_coupling.tsv};
-\texttt{p5\_iter109\_crossref\_verify.tsv};
-\texttt{p5\_iter109\_bib\_audit.tsv}). The resulting standard,
-MIN-REPORT-RL, is an eight-item list aligned at eight items on
-2026-07-11, whose eighth item (held-out pass@k) is an evaluation-report
-field rather than run-start stack identity (source:
+\texttt{platform\_hybrid/experiments/results/p5p8/p5\_iter109\_minreport\_coupling.tsv};
+\texttt{platform\_hybrid/experiments/results/p5p8/p5\_iter109\_crossref\_verify.tsv};
+\texttt{platform\_hybrid/experiments/results/p5p8/p5\_iter109\_bib\_audit.tsv}).
+The resulting standard, MIN-REPORT-RL, is an eight-item list aligned at
+eight items on 2026-07-11, whose eighth item (held-out pass@k) is an
+evaluation-report field rather than run-start stack identity (source:
 \texttt{platform\_hybrid/paper/sections/p5\_related.tex},
 \texttt{platform\_hybrid/paper/sections/p6\_intro.tex}).
 
@@ -1353,19 +1353,22 @@ of the model-range: the P1 paper's introduction states the range as
 cross-family data as spanning 0.6B to 235B across five families and four
 frameworks (sources:
 \texttt{platform\_hybrid/paper/sections/p1\_intro.tex},
-\texttt{p2\_intro.tex}, \texttt{p3\_intro.tex}, \texttt{p4\_intro.tex},
-\texttt{related\_work\_v2.tex}). This divergence is a reporting defect
-in the portfolio's own documents and is recorded here rather than
-harmonised, because harmonising it would mean asserting a range that no
-single source states. The principal empirical result of the scaling work
-is a null: across that range, no reliable scaling law is recovered from
-reward curves (source:
-\texttt{outputs/PES\_Phase2\_Third\_Review\_2026-09-24/thesis/assemble\_thesis.py}).
-The companion group-size study adds a second bounded negative: a
-single-seed sweep does not establish an optimum, trainability is
-non-monotone in group size, and the measured signal-to-noise ratio grows
-at only about 52\% of the √G ideal, with G ∈ \{2, 4, 8, 16\} measured
-and G ∈ \{4, 8, 16, 32, 64\} explicitly reconstructed rather than run.
+\texttt{platform\_hybrid/paper/sections/p2\_intro.tex},
+\texttt{platform\_hybrid/paper/sections/p3\_intro.tex},
+\texttt{platform\_hybrid/paper/sections/p4\_intro.tex},
+\texttt{platform\_hybrid/paper/sections/related\_work\_v2.tex}). This
+divergence is a reporting defect in the portfolio's own documents and is
+recorded here rather than harmonised, because harmonising it would mean
+asserting a range that no single source states. The principal empirical
+result of the scaling work is a null: across that range, no reliable
+scaling law is recovered from reward curves (sources:
+\texttt{platform\_hybrid/paper/sections/frontier\_synthesis\_scaling.tex},
+\texttt{platform\_hybrid/paper/sections/p1\_conclusion.tex}). The
+companion group-size study adds a second bounded negative: a single-seed
+sweep does not establish an optimum, trainability is non-monotone in
+group size, and the measured signal-to-noise ratio grows at only about
+52\% of the √G ideal, with G ∈ \{2, 4, 8, 16\} measured and G ∈ \{4, 8,
+16, 32, 64\} explicitly reconstructed rather than run.
 
 Layer adaptation supplies the second half of this section's context, and
 connects the project's white-box investigation to the
@@ -2557,8 +2560,9 @@ diagnostic cannot acquire hidden behaviour:
 \end{Highlighting}
 \end{Shaded}
 
-(source: zvf\_pipeline\_spec.tex). Gradient utilisation is then defined
-as its complement, GU\_t = 1 − ZVF\_t (source:
+(source: platform\_hybrid/paper/sections/zvf\_pipeline\_spec.tex).
+Gradient utilisation is then defined as its complement, GU\_t = 1 −
+ZVF\_t (source:
 platform\_hybrid/paper/neurips\_2026\_variants/paper\_P8\_workshop.tex).
 The complement is a descriptive accounting identity, not a claim about
 optimiser behaviour: when ZVF\_t = 1, every prompt has zero centred
@@ -2607,17 +2611,19 @@ reward and mask fields onto the common definition --- TRL's
 \texttt{attention\_mask}; veRL's \texttt{data\_source/reward} with
 \texttt{uid} and \texttt{response\_mask} --- and emits JSONL records of
 the form \texttt{\{step,\ zvf,\ batch\_reward\_mean,\ n\_groups,\ K\}}
-(source: zvf\_pipeline\_spec.tex). The scope correction attached to that
-parser is that it normalises reward logs and does not make its runner
-canonical GRPO; because the project does not bundle raw per-group
-rollout JSONL for every framework, no fresh four-way pointwise ZVF
-overlay is claimed, only the narrower implementation-level portability
-claim (source: zvf\_pipeline\_spec.tex). Sensitivity to the threshold ε
-is bounded: the reported ε-sensitivity is at most 0.4\% (source:
-zvf\_pipeline\_spec.tex). Boundary conditions are declared where the
-diagnostic does not apply: dense or continuous reward signals, K = 1,
-SFT-saturated baselines and non-outcome-reward RL all fall outside the
-setting in which the definition is meaningful (source:
+(source: platform\_hybrid/paper/sections/zvf\_pipeline\_spec.tex). The
+scope correction attached to that parser is that it normalises reward
+logs and does not make its runner canonical GRPO; because the project
+does not bundle raw per-group rollout JSONL for every framework, no
+fresh four-way pointwise ZVF overlay is claimed, only the narrower
+implementation-level portability claim (source:
+platform\_hybrid/paper/sections/zvf\_pipeline\_spec.tex). Sensitivity to
+the threshold ε is bounded: the reported ε-sensitivity is at most 0.4\%
+(source: platform\_hybrid/paper/sections/zvf\_pipeline\_spec.tex).
+Boundary conditions are declared where the diagnostic does not apply:
+dense or continuous reward signals, K = 1, SFT-saturated baselines and
+non-outcome-reward RL all fall outside the setting in which the
+definition is meaningful (source:
 platform\_hybrid/paper/sections/appendix\_zvf\_formalization.tex).
 
 The methodological point of this section is that ZVF is a diagnostic and
@@ -2827,14 +2833,14 @@ boosted-tree model, against a Qwen3.5-4B scorer at accuracy 0.792 with
 AUC 0.483, i.e.~chance-level ranking, at roughly eighty-five times lower
 cost as a triage component (source: platform\_hybrid/sem 4
 work/submissions/mtech-final-review/README.md;
-platform\_hybrid/paper/sections/p8\_abstract.tex). The roster evolved
-after the semester-4 title list was fixed, and the present position is
-recorded honestly rather than smoothed over: the fraud study is parked
-outside the ZVF thesis, contributes no RL evidence, and is retained for
-its measurement discipline; the active P8 slot in the current paper
-roster is an exploratory workshop artifact (source: PAPERS\_README.md).
-No result from P8 is used anywhere in this thesis to support an RL
-claim.
+platform\_hybrid/paper/archive/absorbed/P08\_fraud/sections/p8\_abstract.tex).
+The roster evolved after the semester-4 title list was fixed, and the
+present position is recorded honestly rather than smoothed over: the
+fraud study is parked outside the ZVF thesis, contributes no RL
+evidence, and is retained for its measurement discipline; the active P8
+slot in the current paper roster is an exploratory workshop artifact
+(source: platform\_hybrid/paper/PAPERS\_README.md). No result from P8 is
+used anywhere in this thesis to support an RL claim.
 
 \section{The Design of the E1--E14 Held-Out Evaluation
 Campaign}\label{the-design-of-the-e1e14-held-out-evaluation-campaign}
@@ -4528,12 +4534,13 @@ platform\_hybrid/paper/archive/absorbed/U01\_main\_compendium/main.tex).
 Stated as a mean improvement over the pre-RL checkpoint, the gain is
 +0.013 with a paired p = 0.256 at n = 5 --- small and not statistically
 significant, and a matched pre-RL control for the Qwen3-8B-Base
-checkpoint is not available (source:
-platform\_hybrid/paper/sections/p4\_results\_intro.tex; p4\_intro.tex).
-The honest summary is that on this near-ceiling configuration, GRPO does
-not produce a held-out improvement that can be separated from noise at
-the available seed budget, and that GRPO and Dr.~GRPO produce held-out
-gains that are indistinguishable from each other at that budget (source:
+checkpoint is not available (sources:
+\texttt{platform\_hybrid/paper/sections/p4\_results\_intro.tex},
+\texttt{platform\_hybrid/paper/sections/p4\_intro.tex}). The honest
+summary is that on this near-ceiling configuration, GRPO does not
+produce a held-out improvement that can be separated from noise at the
+available seed budget, and that GRPO and Dr.~GRPO produce held-out gains
+that are indistinguishable from each other at that budget (source:
 platform\_hybrid/paper/sections/p4\_abstract.tex).
 
 The lower-accuracy configuration behaves differently and more

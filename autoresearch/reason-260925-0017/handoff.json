@@ -1,0 +1,77 @@
+{
+  "version": "2.1.0",
+  "source": "reason",
+  "timestamp": "2026-09-25T00:40:00+05:30",
+  "status": "CONVERGED",
+  "convergence_note": "Single-pass adversarial audit, not a candidate-refinement loop. The reason protocol's generate/synthesize machinery was deliberately not used: the target is a graded 216pp thesis, and regenerating its chapters is not an appropriate remedy for evidentiary defects. The protocol's detection machinery (forced adversarial critique, cold-start isolation between critic and defender, independent blind adjudication) was used in full.",
+  "results_tsv": "autoresearch/reason-260925-0017/reason-results.tsv",
+  "summary": "autoresearch/reason-260925-0017/summary.md",
+  "config": {
+    "task": "adversarially attack the theoretical claims in the M.Tech thesis",
+    "domain": "research",
+    "mode": "convergent",
+    "judges": 3,
+    "agents": 15,
+    "target": "outputs/PES_Phase2_Third_Review_2026-09-24/thesis/"
+  },
+  "claim_verdicts": {
+    "C1_zvf_formalisation": "WEAKENED",
+    "C2_attribution_design": "WEAKENED",
+    "C3_cross_scale_null": "WEAKENED",
+    "C4_zvf_g_confound": "WEAKENED",
+    "C5_length_bias": "FALLS",
+    "C6_p7_controller": "WEAKENED"
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "type": "recommendation",
+      "severity": "fatal",
+      "claim": "C5",
+      "summary": "The length-bias claim fails unanimously. The thesis's own 65%/90% rule fires on 18 of 29 GRPO runs (62%) when a judge applied it to master_results.json, versus the 4 of 11 reported; neither threshold is pre-registered; the project's own source reads the flag as a generic instability detector, not a length measure. Withdraw or restate as a negative about the rule.",
+      "independently_verified": true
+    },
+    {
+      "id": "F2",
+      "type": "recommendation",
+      "severity": "fatal",
+      "claim": "C3",
+      "summary": "5 of 12 cross-scale anchors are interrupted runs whose values are means of 3-5 steps rather than 20-30, undisclosed. Model scale is also perfectly collinear with the training recipe (four hyperparameters change together at the scale boundary), so the null cannot separate scale from recipe.",
+      "independently_verified": true
+    },
+    {
+      "id": "F3",
+      "type": "recommendation",
+      "severity": "fatal",
+      "claim": "C2",
+      "summary": "The n=10 PPO/GRPO contrast is the autocorrelated last-10 steps of one run per arm, not ten runs; ch01 states 'ten runs per arm'. The file cited for the Pillar-1 figure is a different model at 1/16th scale and the Qwen3-8B label appears in neither cited source. The eta-squared decomposition is four marginal ANOVAs summing to 1.897, not a partition.",
+      "independently_verified": false
+    },
+    {
+      "id": "F4",
+      "type": "recommendation",
+      "severity": "serious",
+      "claim": "C1",
+      "summary": "The 'descriptive accounting identity' caveat disclaims KL, auxiliary losses, clipping and token masking, but the measured runner contains none of them (its driver is annotated 'no KL/clip'). On the system that produced every ZVF number, ZVF=1 does entail a zero step gradient, so the caveat is non-actual and GU has no stated refutation condition.",
+      "independently_verified": false
+    },
+    {
+      "id": "F5",
+      "type": "recommendation",
+      "severity": "serious",
+      "claim": "C1/C4/C6",
+      "summary": "Cross-cutting sign error: the same four ZVF values are compared against the closed form at two different p in different chapters, giving opposite-sign residuals. The thesis's own source names the per-step-average baseline (0.60 at G=8) as correct, finds ZVF exceeds it by ~0.09, and declines to interpret; ch06 uses the other baseline and reads the flattering direction.",
+      "independently_verified": false
+    },
+    {
+      "id": "F6",
+      "type": "recommendation",
+      "severity": "moderate",
+      "claim": "C6",
+      "summary": "The P7 controller is only ever scored on its own diagnostic: every headline zvf-triage number is ZVF-derived, and gradient utilisation never exceeds 0.369 at G=16, so ~63% of groups remain zero-contrast at the largest audited group size.",
+      "independently_verified": false
+    }
+  ],
+  "what_survives": "The formal core. h_G(p)=p^G+(1-p)^G is a genuinely refutable null, the ZVF definition is precise and reproducible, and the descriptive runner-level identity is the thesis's soundest content. Judges scored testability 6-9 on the formalisation while rejecting the inferences drawn from it. Consistent pattern: the mathematics is right, the evidential claims built on it are not.",
+  "next": "Orchestrator to triage: mechanical corrections (F3 scale label, F3 eta-squared wording, F4 caveat re-derivation, F5 baseline alignment) are safe to apply. Claim-level dispositions (F1, F2, F3 pseudo-replication) change what the thesis asserts and require the author's decision."
+}

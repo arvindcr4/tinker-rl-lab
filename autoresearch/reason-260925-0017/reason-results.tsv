@@ -1,0 +1,2 @@
+round	timestamp	candidate_label	judge_verdict	convergence_count	description
+1	00:37	C1-C6	WEAKENED x4, FALLS x1(C5), SPLIT x1(C2,C3)	3	adversarial theory review; 6 claims, 3 blind judges

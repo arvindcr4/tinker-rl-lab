@@ -1,0 +1,406 @@
+\documentclass[runningheads]{llncs}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{array}
+\renewcommand\UrlFont{\color{blue}\rmfamily}
+\newcommand{\adapter}{the LoRA adapter \texttt{arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal} (commit \texttt{64444133})}
+
+\begin{document}
+\sloppy
+
+\title{Receipt-Bound Held-Out Evaluation of a GRPO-Trained Language Model Across Fourteen Agentic and Reasoning Suites}
+\titlerunning{Receipt-Bound Evaluation of a GRPO-Trained LLM}
+
+%AUTHORBLOCK-START
+\author{Arvind C R \and Ramesh Prakash Guledgudd}
+\authorrunning{A. C R and R. P. Guledgudd}
+\institute{Department of Computer Science and Engineering, PES University, Bengaluru, India\\
+\email{arvindcr4@gmail.com}}
+%AUTHORBLOCK-END
+
+\maketitle
+
+\begin{abstract}
+Benchmark results for reinforcement-learning post-trained language models are
+usually reported as single headline numbers. The report rarely says how much of
+each suite was actually graded, whether the original benchmark or a substitute
+was run, or whether the number can still be traced to the run that produced it.
+We report a held-out evaluation of one Group Relative Policy Optimization
+(GRPO)-trained actor against fourteen agentic and reasoning benchmark suites
+under a receipt-bound, fail-closed governance regime. The actor is fixed across
+every lane, each suite is graded only by its own native evaluator at a pinned
+revision, and every reported figure is bound to a write-once receipt that a
+deterministic ledger check recomputes. Four scopes closed complete: LAB-Bench
+public split (1,967/1,967 items, accuracy 0.2288), AgentDojo benign utility
+(97/97 episodes, utility 0.9072), VerilogEval (312/312 problems, 41.35\%
+pass@1) and Omni-MATH (4,428/4,428 dispositions, official accuracy 51.31\%
+reproduced). SWE-bench Pro carries a full original-contract score of
+2/731 = 0.274\% pass@1 with every non-native outcome retained in the
+denominator. The remaining lanes are reported at their true terminal states:
+partial with coverage, blocked on cloud quota, or closed as externally blocked
+with a named reopen condition. A separately authorised base-model rerun of
+BankerToolBench scored 0.0 over 100/100 trials, which an audit traces to
+tool-dialogue collapse rather than domain reasoning. Eleven of eleven
+deterministic ledger checks pass. Original-contract and replacement-scope
+numbers are never pooled, no cross-suite aggregate is computed, and no
+improvement over any baseline is claimed.
+\keywords{Large language models \and Reinforcement learning \and Benchmark evaluation \and Agentic evaluation \and Reproducibility \and Evaluation governance}
+\end{abstract}
+
+\section{Introduction}
+
+Reinforcement learning with verifiable rewards has become a standard stage in
+post-training large language models (LLMs). Group Relative Policy Optimization
+(GRPO)~\cite{shao2024deepseekmath,guo2025deepseekr1} is a common choice because
+it removes the value critic and derives each completion's advantage from the
+reward statistics of its sampling group. Once a model has been trained this way,
+the question most readers ask is how well it does on held-out benchmarks. The
+answer is usually a table of headline numbers.
+
+Such tables hide three things. First, many recent agentic and reasoning suites
+are \emph{multi-scope}: a public split and a private original contract, or a
+benign-utility scope and an adversarial scope. A number from one scope is easily
+read as a number for the suite. Second, many suites are quota-limited, gated
+behind private payloads, or expensive, so a run may grade only a fraction of the
+suite. Reports tend either to drop such suites or to quote a score over whatever
+subset graded, which hides the coverage. Third, the chain from a reported number
+back to the run that produced it is often broken: the sampler path is gone, the
+execution script was deleted, or the arithmetic was done by hand. Earlier work
+showed how sensitive reinforcement-learning results are to seeds and
+implementation details~\cite{henderson2018deep}, and reproducibility
+checklists~\cite{pineau2020improving}, model cards~\cite{mitchell2019modelcards}
+and datasheets~\cite{gebru2021datasheets} set norms for disclosure. The
+evaluation layer of RL post-trained LLMs has not yet been held to the same
+standard.
+
+This paper reports one campaign built to that standard. A single GRPO-trained
+actor is evaluated against fourteen suites (lanes E1--E14) spanning software
+engineering, tool-using agents, web navigation, binary analysis, scientific
+question answering, machine-learning engineering, agent safety and utility,
+hardware design, application deployment, sequential games and competition
+mathematics. The contributions are:
+\begin{itemize}
+\item a \textbf{one-actor, native-evaluator design}: no per-lane fine-tuning,
+prompt tuning or evaluator substitution, so differences between lanes reflect
+the tasks rather than per-lane preparation;
+\item a \textbf{receipt-bound, fail-closed governance regime} in which every
+figure traces to a write-once receipt, preparation, execution and scoring are
+tracked separately, and a lane that cannot meet its preconditions records that
+state instead of substituting a neighbouring benchmark;
+\item \textbf{per-lane results at their true terminal states}, including
+complete scopes, full-suite original-contract scores, partial lanes with their
+denominators, and externally blocked lanes with reopen conditions;
+\item an \textbf{explicit account of threats} that governance could not remove,
+including a sampler path that no longer exists and execution sources lost after
+the fact.
+\end{itemize}
+The companion training study, which examines GRPO's zero-variance
+signal-starvation regime, is reported separately and is referred to here only
+for context.
+
+\section{Campaign Design}
+
+\subsection{The Evaluated Actor}
+
+One actor is evaluated in every lane. The base model is
+\texttt{Qwen/Qwen3.6-35B-A3B}, a sparse mixture-of-experts model, at revision
+\texttt{995ad96e}. The trained parameters are \adapter, produced by GRPO
+training on the Tinker platform~\cite{thinkingmachines2024tinker} with low-rank
+adaptation~\cite{hu2022lora}, and served in bfloat16. No lane received a
+separately fine-tuned checkpoint, per-suite prompt engineering beyond what the
+suite's own harness prescribes, or tuning against its evaluation set.
+Two consequences follow. Differences between lanes reflect one fixed policy
+meeting fourteen different interfaces, observation spaces, tool conventions
+and graders, not what a specialised actor could achieve. And the campaign
+cannot say anything about seed variance: where a lane sampled more than one
+completion per task, it did so because the suite's protocol requires it.
+
+Inference conditions are fixed per lane and recorded in that lane's receipt
+rather than imposed globally, because the sampling regime is part of the
+result. For example, the AgentDojo lane ran at temperature 0 with a
+32,768-token context and 4,096 output tokens per request, while the VerilogEval
+lane sampled at temperature 0.2, top-$p$ 0.95, 1,024 maximum output tokens and
+seed 1816, one sample per problem.
+
+\subsection{Lanes, Contracts and Replacement Scopes}
+
+Each lane is defined by one original benchmark contract and, where the
+original could not be obtained, one named replacement scope
+(Table~\ref{tab:lanes}). The replacement is always named and reported
+separately. It is never presented under the original suite's name, and the two
+are never pooled, because a replacement is a different suite with a different
+interface and often a different grader.
+
+Each lane is graded only by its suite's native evaluator at a pinned revision.
+No lane replaces the upstream grader with a re-implemented metric, because a
+substituted metric would no longer be evidence about the benchmark it claims to
+measure.
+
+\subsection{Governance: Receipts, Budgets and Decontamination}
+
+Every graded run follows the pipeline in Fig.~\ref{fig:pipeline}. A sealed,
+hash-pinned request authorises execution under a bound budget. The suite's
+native grader produces rows and its own denominator. A write-once JSON receipt
+records the actor identity, sampler path, suite revision, inference settings,
+spend and decontamination status. A deterministic ledger check then recomputes
+the arithmetic before any figure enters a results table. If any link is
+missing, the chain stops and the lane reports no number.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_receipt_pipeline_cropped.pdf}
+\caption{Receipt-bound evaluation chain (top). A figure is reported only if
+every link exists. When a link is missing, e.g.\ a lost execution source
+(bottom), the chain stops and the lane reports no number.}
+\label{fig:pipeline}
+\end{figure}
+
+Three quantities are tracked separately: what was \emph{prepared} (suite
+inventoried, harness built, manifest validated), what was \emph{executed}
+(tasks actually run against the actor) and what was \emph{scored} (tasks with a
+native, verifiable verdict). A lane with heavy preparation and little scoring
+is a different situation from a lane that was never attempted, and the records
+keep them apart.
+
+Each paid run is authorised with a per-run spend cap and timeout. A later
+authorisation removed the cumulative campaign cap but kept every per-run
+resource and timeout bound, so spend is gated at each launch by a preflight
+check rather than by a campaign-wide ceiling. Receipts also carry a
+decontamination status. For example, the AgentDojo receipt records
+\texttt{TRAINING\_INVENTORY\_ABSENT} and states its claim boundary verbatim as
+benign task utility only, with no prompt-injection security or held-out claim.
+
+The campaign is \emph{fail-closed}. When a precondition cannot be met, e.g.\ a
+withheld credential, a denied cloud quota or an unreleased private bundle, the
+lane records that state. Every lane ends in a named terminal state:
+\texttt{COMPLETE}, \texttt{CLOSED\_PARTIAL},
+\texttt{REBUILD\_READY\_LAUNCH\_PENDING},
+\texttt{AMENDMENT\_ACCEPTED\_LAUNCH\_PENDING}, \texttt{PENDING\_QUOTA}, or
+\texttt{CLOSED\_EXTERNAL} with a reopen condition.
+
+Two reporting rules hold throughout. Original-contract and replacement-scope
+numbers are never pooled. And no cross-suite mean, median or composite index is
+computed, because native denominators differ in size, in what they count and in
+what they exclude, so an aggregate over them would have no referent.
+
+\section{Results}
+
+Table~\ref{tab:lanes} gives every lane at its terminal state, and
+Fig.~\ref{fig:lanes} summarises the states. Figures are quoted with their own
+denominators and coverage; rows are not comparable with one another.
+
+\begin{table}[t]
+\caption{All fourteen lanes. O = original contract, R = replacement scope.
+Coverage and score use each suite's native denominator. ``---'' means no
+score exists. Rows are never pooled or averaged.}
+\label{tab:lanes}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}l l c l l l@{}}
+\toprule
+Lane & Suite & & Coverage & Score & Terminal state \\
+\midrule
+E1  & SWE-bench Pro~\cite{deng2025swebenchpro} & O & 731/731 & 2/731 = 0.274\% & full suite \\
+    & SWE-bench Multilingual & R & 35/300 graded & --- & rebuild ready, launch pending \\
+E2  & FrontierSWE & O & 1/17 & 0.8628 (1 task) & partial \\
+    & CORE-Bench & R & 0 graded (45 setups) & --- & launch pending \\
+E3  & SDAB (private bundle) & O & --- & --- & closed, external \\
+E4  & BankerToolBench & O & 1/100 & 0.3115 (recovery) & closed, partial \\
+E5  & APEX-Agents & O & 7/480 & --- (not suite score) & partial \\
+    & Tau3 & R & 20/97 (20.62\%) & --- & rebuild ready, launch pending \\
+E6  & WebArena & R & 0/812 & --- & pending quota \\
+E7  & BinaryAudit & O & 1/46 attempted & --- (agent error) & closed, external \\
+E8  & LAB-Bench public~\cite{laurent2024labbench} & R & 1,967/1,967 & 0.2288 & complete \\
+E9  & MLE-bench & O & 40/75 (53.33\%) & null & partial \\
+    & MLDevBench & R & 0/34 & --- & pending quota \\
+E10 & AgentDojo benign~\cite{debenedetti2024agentdojo} & R & 97/97 & 0.9072 & complete \\
+E11 & VerilogEval~\cite{liu2023verilogeval} & O & 312/312 & 129/312 = 41.35\% & complete \\
+E12 & AppBench & O & --- & --- & closed, external \\
+E13 & BALROG & R & 13/255 & --- & launch pending \\
+E14 & Omni-MATH~\cite{gao2024omnimath} & R & 4,428/4,428 & 2,271/4,428 = 51.31\% & terminal-complete \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_lane_status_cropped.pdf}
+\caption{Terminal state of every lane: complete, partial (awaiting launch or
+closed with partial evidence), or blocked (external closure or cloud quota).}
+\label{fig:lanes}
+\end{figure}
+
+\subsection{Complete Scopes}
+
+\textbf{E8, LAB-Bench (public split).} All 1,967 of 1,967 items across eight
+categories were evaluated, with 450 correct: accuracy
+$450/1967 = 0.2288$. Per-category accuracy ranges from 0.7869 on TableQA
+(192/244) to 0.0 on CloningScenarios (0/33). One receipt field matters for how
+this figure is read. For 1,259 of the 1,967 responses the native pipeline
+extracted no answer, and these are counted as incorrect. The figure is
+therefore an end-to-end harness accuracy, not accuracy over the parseable
+subset.
+
+\textbf{E10, AgentDojo (benign-utility scope).} Against AgentDojo v1.2.2, all 97
+episodes completed and 88 passed their utility predicates, for a benign utility
+of $88/97 = 0.9072$ (banking 16, slack 21, travel 20, workspace 40 episodes). The
+list of missing evaluation IDs is empty and no native errors were handled.
+Completion and utility are different quantities, so the lane is ``complete in
+coverage, 0.9072 in benign utility'', never ``97/97 correct'', and it says
+nothing about security. An earlier attempt stopped at 94/97 because of a
+collector fault in trace-path comparison, not a model failure. The repair
+touched only that path rewrite, passed 18 offline tests, and a continuation run
+closed the remaining three episodes.
+
+\textbf{E11, VerilogEval.} All 312 pinned problems were evaluated with the
+upstream harness, Icarus Verilog and Verilator: 129 passed, or 41.35\% pass@1.
+Of these, 67/156 were code-completion problems and 62/156
+specification-to-RTL problems. A reference sweep showed that one problem cannot
+be passed by any implementation because its test bench fails to elaborate.
+Excluding it gives 129/311, but no benchmark-level justification for the
+exclusion was recorded, so 129/312 remains the canonical figure and 129/311 is
+kept only as a non-canonical sensitivity. The 150 responses from which no code
+could be extracted count as failures in the denominator.
+
+\textbf{E14, Omni-MATH (replacement for FrontierMath).} The native scorer
+accepted 4,426 of 4,428 rows and reproduced an official accuracy of
+$2{,}271/4{,}428 = 51.31\%$. For the two rejected rows, the judge's output was
+truncated before any equivalence verdict, so omitting them is correct official
+behaviour. Both already count as not correct in the denominator, so the score
+impact is nil. The lane closes terminal-complete with all 4,428 dispositions
+recorded, and no re-judge was run, since that would depart from the official
+scorer.
+
+\subsection{Original-Contract Results}
+
+\textbf{E1, SWE-bench Pro.} The actor resolved 2 of 731 tasks in the full test
+split, a pass@1 of 0.274\%. Within that denominator are 713 native evaluations,
+14 generation failures and 4 lost generation artifacts. These 18 non-native
+outcomes stay in the denominator, so the figure is a rate over all 731 tasks.
+The lane records one fidelity caveat: the gold-resolve timeout was 1,200\,s
+rather than the official 120\,s, because of an emulation constraint in the local
+execution environment.
+
+The other original-contract figures are partial and none is a suite score.
+FrontierSWE (E2) evaluated 1 of 17 tasks, with a replay-normalised score of
+0.8628. BankerToolBench (E4) evaluated 1 of 100 tasks, with a verifier recovery
+metric of 0.3115 on that single task. APEX-Agents (E5) natively scored 7 of 480
+tasks, averaging 0.079365. Its prefix mean of 0.050505 is an attempt summary
+that counts unscored attempts as zero, not a 480-task score. BinaryAudit (E7)
+records 1 of 46 attempts, with a verifier reward of 0.0 after an agent error and
+no grade. MLE-bench (E9) has native grades for 40 of 75 competitions (53.33\%
+coverage) but a null suite score, because coverage without complete grading is
+not a score.
+
+\subsection{Partial and Quota-Blocked Replacement Scopes}
+
+Four replacement scopes are staged, partly measured, and waiting on a launch
+step. SWE-bench Multilingual (E1) has 35/300 graded. CORE-Bench (E2) has all 45
+capsule setups done and 0 graded; its driver passes 12/12 offline tests and it
+is blocked on an owner-level cloud IAM binding. Tau3 (E5) has 20/97 tasks
+cleaned (20.62\%). BALROG (E13) has 13/255 episodes recorded. Two scopes are
+blocked only on cloud quota. WebArena (E6) is at 0/812 with its 812-task
+inventory verified, blocked on a 1-of-16 vCPU regional quota. MLDevBench (E9)
+is at 0/34 with an incomplete runtime image, blocked on a 1-of-8 vCPU quota.
+Both were rechecked live and recorded NO-GO.
+
+\subsection{Externally Blocked Lanes}
+
+Lanes whose original suite depends on a private or hosted resource were closed
+as \texttt{CLOSED\_EXTERNAL}: SDAB (E3, private bundle), BinaryAudit (E7,
+private payload), LifeSciBench (E8-original), AgentHarm (E10-original, private
+tasks), AppBench (E12, deployment), OpenReward Games (E13-original) and
+FrontierMath (E14-original, hosted evaluation). Each has a closure record and
+a reopen condition that depends on a provider response. Access requests
+were made through public issue trackers, dataset discussions and email, and
+are reported with their delivery status. Where email delivery could not be
+verified, the record says so.
+
+\subsection{A Diagnostic Zero: the BankerToolBench Rerun}
+
+A separately authorised rerun of BankerToolBench used the base model (a
+zero-initialised LoRA snapshot, equivalent to base sampling). It completed
+100/100 trials in 3 hours 29 minutes and cost \$15.07 against a \$55.91 cap.
+Mean reward was exactly 0.0, with all 100 trials in the 0.0 bucket. An audit of
+every trajectory found the mechanism. Agents stop after 2 to 14 steps (median
+about 6) without producing a deliverables directory, so the verifier returns 0.0
+with ``No deliverables found''. At least 27 trajectories end in role-token
+degeneration of the form \texttt{user user assistant \dots}. The zero therefore
+measures \emph{tool-dialogue collapse}, not finance reasoning. The harness
+fails closed and gives a clear reason for every zero instead of manufacturing
+partial credit. It also means no BankerToolBench suite score is currently
+obtainable for this actor family. The rerun is not set against the earlier
+single-task E4 figure, since the two were run under different configurations.
+
+\subsection{Ledger Verification}
+
+The ledger's arithmetic and provenance were re-verified by eleven deterministic
+code checks, and all eleven pass with zero failures. They cover exact divisions
+(e.g.\ $67 + 62 = 129$ for E11's two framings), receipt presence,
+sealed-artifact hash equality, the claim that exactly E8, E10 and E11 are the
+strictly complete replacement scopes, and absence probes for the lost execution
+sources. A reviewer can therefore verify every number's arithmetic and
+provenance without the compute that produced it. The same deterministic rule
+applies to model-assisted triage used during the campaign: arithmetic and
+string lookups stay in code, and model judgment is used only for
+classification.
+
+\section{Threats to Validity}
+
+\textbf{No base-model comparator.} No lane has a matched base-model run, so no
+campaign figure is evidence of what the GRPO step contributed. The one
+base-model result (E4 rerun) is a diagnostic, not a paired baseline.
+
+\textbf{Native denominators are not comparable.} 41.35\% on 312 problems and
+0.274\% on 731 tasks measure different capabilities under different scoring
+rules. No average, ranking or composite is offered, and the rule applies
+within lanes too.
+
+\textbf{A sampling path that no longer exists.} The VerilogEval scores were
+produced by sampling the adapter through the training platform's managed
+sampler. That sampler checkpoint was later purged, so a rerun would require
+serving the published mirror of the same weights through a different sampler.
+The result stays receipt-bound, but its sampling path cannot be re-run, and a
+rerun would compare the same weights through a different sampler, a divergence
+that has not been measured.
+
+\textbf{Lost execution sources.} A working-directory deletion removed the
+execution sources of several late recovery launches, while their sealed
+requests, validation receipts and test logs survive with matching hashes. Under
+a lost-source policy, one launcher was faithfully re-implemented in a tracked
+path and passes 10/10 targeted regressions offline. A sealed request without
+its execution source is not a rerun, and re-implementation cannot restore what
+was lost. From then on, all execution sources are kept in tracked paths.
+
+\textbf{Scope and harness fidelity.} The benign AgentDojo scope measures no
+adversarial robustness. SWE-bench Pro ran with a longer gold-resolve timeout
+than the official setting. LAB-Bench accuracy counts unparsed responses as
+incorrect. Each caveat is reported alongside its number rather than corrected
+after the fact.
+
+\section{Conclusion}
+
+A governance-first campaign produced complete, receipt-bound results on four
+scopes, a full original-contract score on SWE-bench Pro, and an auditable
+terminal state for every remaining lane, each with a named gate and reopen
+condition. Its value lies in the rules it enforced. Original-contract and
+replacement-scope numbers are never pooled, no cross-suite aggregate is
+computed, and no improvement over a baseline is claimed. The strongest complete
+positive figure, 41.35\% pass@1 on VerilogEval at full coverage, is a
+measurement of one actor on one suite, with provenance recorded down to its
+sampler path. We suggest that evaluations of RL post-trained LLMs report
+prepared, executed and scored coverage separately, bind each figure to a
+receipt, and record blocked lanes as blocked rather than dropping them. Future
+work will add matched base-model runs, so that per-suite post-training effects
+can be estimated, and will complete the staged lanes once their gates clear.
+
+\bibliographystyle{splncs04}
+\bibliography{refs}
+
+\end{document}

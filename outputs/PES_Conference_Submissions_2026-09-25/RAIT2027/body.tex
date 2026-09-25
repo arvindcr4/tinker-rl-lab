@@ -1,0 +1,296 @@
+\begin{abstract}
+Group Relative Policy Optimization (GRPO) standardises each reward against the
+statistics of a group of $G$ completions for the same prompt. When all
+completions in a group receive the same verifiable reward, every advantage is
+exactly zero and the group contributes no reward-driven gradient, even though
+it was sampled and scored at full cost. We study this \emph{signal
+starvation} directly. We define the Zero-Variance Fraction (ZVF), recompute
+it from stored reward tensors, and find that on our main configuration
+roughly 0.72--0.77 of each batch is starved, mostly because prompts are
+already solved rather than because they are too hard. A simple signal model,
+$S = p(1-p)(1-h_G(p))$ with $h_G(p) = p^G + (1-p)^G$, makes three
+falsifiable predictions; two reproduce at scale, including a U-shape of ZVF
+across a 368-run audit, and the third holds only directionally at toy scale.
+Because ZVF cannot tell mastery from incapacity and collapses under a
+$10^{-4}$ reward jitter, we promote the pairwise contrast density (PCD) as the
+control signal. Finally, we audit an adaptive group-size controller: it ties
+the best fixed recipe (+0.575 held-out gain at 186 rollouts), but 92.3\% of its
+escalations fire on all-correct groups, where no group size can restore
+contrast. Curriculum and re-baselining interventions return nulls. We
+conclude that ZVF and PCD are useful monitoring diagnostics, not objectives
+to optimise.
+\end{abstract}
+
+\begin{IEEEkeywords}
+reinforcement learning, GRPO, large language models, verifiable rewards,
+advantage estimation, group size
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+Reinforcement learning with verifiable rewards (RLVR) trains a language model
+against a programmatic checker, such as exact match for mathematics or unit
+tests for code, instead of a learned reward model~\cite{ouyang2022training}.
+GRPO~\cite{shao2024deepseekmath,guo2025deepseekr1} has become the default
+optimiser for this setting because it removes the value network of
+PPO~\cite{schulman2017proximal}. It samples $G$ completions per prompt and
+standardises their rewards within the group:
+\begin{equation}
+A_i = \frac{r_i - \mu_g}{\sigma_g + \varepsilon}, \quad
+\mu_g = \tfrac{1}{G}\textstyle\sum_j r_j, \quad
+\sigma_g^2 = \tfrac{1}{G}\textstyle\sum_j (r_j-\mu_g)^2 .
+\label{eq:adv}
+\end{equation}
+If every completion in the group receives the same reward, $\sigma_g = 0$ and
+every $A_i$ is zero. The KL term still acts, but the group-relative part of
+the update, which is the only part driven by the task, vanishes. Standard
+training logs (reward, loss, gradient norm, entropy, length) do not show how
+often this happens: a rising reward curve looks the same whether a fifth or
+four fifths of the batch is starved.
+
+This paper measures that quantity and asks what, if anything, it tells a
+practitioner to do. Our contributions are:
+\begin{itemize}
+\item a precise, recomputable definition of the Zero-Variance Fraction and
+its measurement on real GRPO reward tensors;
+\item evidence that starvation in our regime is \emph{easy-driven}, and that
+ZVF aliases mastery with incapacity, which motivates the pairwise contrast
+density (PCD) as a more robust signal;
+\item a signal model for group size with three falsifiable predictions, and
+the measurements that test them;
+\item a counterfactual audit of an adaptive group-size controller, together
+with null results for curriculum and re-baselining interventions.
+\end{itemize}
+
+\section{Related Work}
+
+DAPO~\cite{yu2025dapo} addresses degenerate groups by dynamic sampling,
+discarding and resampling groups whose rewards are uniform.
+GSPO~\cite{qwen2025gspo} moves the importance ratio to the sequence level,
+and Dr.\ GRPO~\cite{liu2025understanding} removes the length and
+standard-deviation normalisations that it shows to be biased. Open-source
+training stacks such as TRL~\cite{vonwerra2022trl}, veRL~\cite{sheng2024verl}
+and OpenRLHF~\cite{hu2024openrlhf} implement these variants with different
+defaults. Henderson et al.~\cite{henderson2018deep} showed how sensitive deep
+RL conclusions are to seeds and implementation details, which shapes our
+statistical protocol. Unlike this work on new estimators, we do not propose
+an optimiser; we measure how much of the group-relative signal is available
+in the first place, and test whether acting on that measurement helps.
+
+\section{Method}
+
+\subsection{Zero-Variance Fraction}
+For a batch $\mathcal{B}_t$ of prompt groups at step $t$, each with $K$
+sampled completions and rewards normalised to $[0,1]$,
+\begin{equation}
+\mathrm{ZVF}_t = \frac{1}{|\mathcal{B}_t|}\sum_{g\in\mathcal{B}_t}
+\mathbb{1}\!\left[\widehat{\mathrm{Var}}(r_{g,1},\dots,r_{g,K}) \le \epsilon\right],
+\end{equation}
+with $\widehat{\mathrm{Var}}$ the unbiased sample variance and
+$\epsilon = 10^{-6}$. Gradient utilisation is its complement,
+$\mathrm{GU}_t = 1 - \mathrm{ZVF}_t$. This is an accounting identity about the
+centred reward contrast, not a claim that the total gradient is zero:
+objectives with KL, clipping or auxiliary losses still produce an update.
+Sensitivity to $\epsilon$ is at most 0.4\%. The definition does not apply to
+dense rewards, $K = 1$, or non-outcome rewards.
+
+\subsection{Pairwise contrast density}
+ZVF is unsigned: an all-wrong group and an all-correct group score
+identically. We therefore also track the pairwise contrast density,
+\begin{equation}
+\mathrm{PCD} = \tfrac{G-1}{G}\,\mathbb{E}\left[p(1-p)\right],
+\end{equation}
+the expected fraction of within-group pairs whose rewards differ.
+
+\subsection{A signal model for group size}
+For a prompt with per-rollout success probability $p$ and $G$
+conditionally independent Bernoulli rewards, the probability that the group
+is degenerate is $h_G(p) = p^G + (1-p)^G$. We model usable signal per
+prompt as
+\begin{equation}
+S(p,G) = p(1-p)\bigl(1 - h_G(p)\bigr).
+\label{eq:signal}
+\end{equation}
+The first factor is the contrast a non-degenerate group can carry; the second
+is the probability that any contrast survives centring. Both vanish at
+$p \in \{0,1\}$ and peak at $p = \tfrac12$. Three consequences follow:
+\textbf{(T1)} the expected ZVF indicator of a group equals $h_G(p)$;
+\textbf{(T2)} $h_G$ is strictly decreasing in $G$, at rate
+$-\ln\max(p,1-p)$; and \textbf{(T3)} with unnormalised group-centred
+advantages, the mean absolute advantage is $2\hat p(1-\hat p)$, so gradient
+magnitude should track $p(1-p)$.
+
+\subsection{Experimental setup}
+Training runs use LoRA~\cite{hu2022lora} adapters on Qwen-family models
+from 0.5B to 32B parameters, together with Llama-3 models, against GSM8K
+exact-match~\cite{cobbe2021training} and synthetic arithmetic verifiers. The
+training loop logs per-step ZVF, gradient utilisation, entropy, completion
+length and KL, and persists the raw per-group reward tensors so that every
+diagnostic can be recomputed rather than read from a log line. The same
+task, reward and decoding specification is dispatched to a managed training
+API and to an open trainer; comparisons hold the stack fixed and vary one
+factor. Held-out evaluation uses disjoint splits, and every gain is reported
+with its $n$.
+
+\section{Results}
+
+\subsection{Starvation is the typical, easy-driven regime}
+On the main configuration ZVF is approximately 0.72--0.77: about three
+quarters of each rollout batch contributes no group-relative gradient. The
+statistic is mechanically checked by recomputation: three stored GSM8K
+group tensors give 0.130, 0.190 and 0.155 (pooled 0.1583), exactly matching
+the logged values. A matched-budget panel of 2,560 rollouts per arm on
+Qwen3-8B/GSM8K shows the mechanism. Late $G=2$ arms reach a training reward
+of about 1.0 with ZVF between 0.75 and 1.0, while $G=16$ arms hold ZVF at or
+below 0.25 at the same budget. When the policy solves the task, nearly every
+group becomes all-correct. Starvation here is driven by ease, not
+difficulty.
+
+\subsection{ZVF is a diagnostic, not a score}
+Four observations argue against optimising ZVF directly. First, it aliases
+mastery with incapacity: in a 368-run audit across seven models, ZVF is
+0.95--0.97 at both reward extremes and 0.25--0.29 at mid-range rewards of
+0.35--0.50. Second, its association with final held-out outcome is weak
+($\rho \approx 0.27$), although it correlates better with catastrophic
+collapse (Spearman $\rho = 0.56$). Third, ZVF rises only 1--3 steps before a
+reward plateau, so it is a warning signal rather than a forecast. Fourth, it
+is fragile: adding micro-jitter $\epsilon \sim U(0, 10^{-4})$ to the rewards
+collapses batch ZVF from 0.158 to 0.000, while PCD moves by only
+$3\times10^{-7}$. A diagnostic that verifier rounding can zero out is reporting a
+property of the stack as much as of the policy. This is why we use PCD
+as the control signal.
+
+\subsection{Testing the signal model}
+\textbf{T1.} Binning per-group reward tensors by empirical success rate gives
+a ZVF indicator of 1.000 at $\hat p \in \{0,1\}$ and 0.000 in every interior
+bin. At run level, measured ZVF sits above $h_G(\bar p)$ at every $G$, which
+is consistent with a Jensen gap: the prompt population mixes mastered and
+hopeless prompts.
+
+\textbf{T2.} Two independent grids agree. In the 368-run audit, ZVF declines
+monotonically in $G$ for every model with interior success (Qwen3-32B:
+0.33 $\to$ 0.18 $\to$ 0.08; Llama-3.1-8B: 0.76 $\to$ 0.65 $\to$ 0.47 across
+$G = 4/8/16$). The two boundary models behave as the theory predicts:
+Llama-3.2-1B, near $p\approx0$, stays at 0.98 $\to$ 0.97, and a near-saturated
+Qwen3-4B model produces the single non-monotone cell. A controlled
+Qwen2.5-0.5B sweep gives the same decline (Table~\ref{tab:gsweep},
+Fig.~\ref{fig:gu}), with held-out accuracy essentially flat near 0.98.
+Raising $G$ buys signal, but on this near-saturated task it does not buy
+outcome.
+
+\textbf{T3.} Per-group gradients are not exposed by the managed stack. On an
+open backward pass with a 0.5B model and synthetic arithmetic,
+$\mathrm{corr}(\lVert\nabla\rVert, \hat p(1-\hat p)) = +0.71$. We report this
+as directional evidence only.
+
+\begin{table}[t]
+\caption{Group-size sweep (Qwen2.5-0.5B, 3 seeds, 40 steps): measured ZVF
+against the i.i.d.\ prediction $h_G$, and gradient utilisation.}
+\label{tab:gsweep}
+\centering
+\small
+\begin{tabular}{@{}rcccc@{}}
+\toprule
+$G$ & ZVF (measured) & $h_G$ (theory) & Residual & GU \\
+\midrule
+2  & 0.838 & 0.964 & $-0.126$ & 0.162 \\
+4  & 0.764 & 0.954 & $-0.191$ & 0.236 \\
+8  & 0.691 & 0.923 & $-0.232$ & 0.309 \\
+16 & 0.631 & 0.704 & $-0.073$ & 0.369 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.78\textwidth]{figures/fig_gradient_utilisation.pdf}
+\caption{Gradient utilisation ($1-\mathrm{ZVF}$) rises with group size with
+diminishing returns (left); the relative gain per doubling of $G$ declines
+(right).}
+\label{fig:gu}
+\end{figure*}
+
+\subsection{Group size has a shallow optimum at best}
+The marginal ZVF reduction shrinks with $G$: 0.075 from $G=2$ to 4, but only
+0.059 from $G=8$ to 16. The signal-to-noise ratio reaches about 52\% of the
+$\sqrt{G}$ ideal. On the near-ceiling sweep, held-out accuracy is
+0.982, 0.990 and 0.978 at $G = 2, 8, 16$, which are statistically
+indistinguishable at three seeds, and $G=2$ retains 100.3\% of $G=16$. A
+505-task conditional utility audit prefers $G=4$ over $G=5$ by 0.00177
+(95\% bootstrap CI $[0.00082, 0.00270]$): the difference is positive but small,
+and it depends on the task cohort and the objective. Eq.~(\ref{eq:signal}) explains why
+only a shallow optimum should exist; the measured data do not support a
+universal best $G$.
+
+\subsection{Acting on the diagnostic}
+\textbf{Adaptive group size.} We audited an adaptive-$G$ controller that
+escalates group size on ZVF spikes, using PCD as an aliasing guard, in a
+four-arm open-trainer comparison on the same data, budget and seeds
+(Table~\ref{tab:arms}). Dynamic sampling reaches perfect telemetry
+(ZVF 0.00) at a 45\% rollout premium, without beating the cheaper fixed
+recipe. Adaptive-$G$ ties the best held-out gain at 186 rollouts.
+It is competitive with the best fixed recipe, not superior to it, and the
+comparison is small-$n$ and single-task.
+
+\begin{table}[t]
+\caption{Four-arm open-trainer audit (same data, budget and seeds).}
+\label{tab:arms}
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Arm & Held-out gain & Mean ZVF & Rollouts \\
+\midrule
+GRPO & +0.500 & 0.25 & 120 \\
+Dr.\ GRPO~\cite{liu2025understanding} & +0.575 & 0.27 & 120 \\
+Dynamic sampling~\cite{yu2025dapo} & +0.550 & 0.00 & 174 \\
+Adaptive-$G$ & +0.575 & 0.23 & 186 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Counterfactual controller trace.} Replaying 2,560 prompt-step
+decisions on real reward tensors shows why escalation cannot help much here.
+Of GRPO's 640 prompt-step pairs, 461 are truly degenerate (427 all-correct,
+34 all-wrong) with $\hat p$ exactly 0 or 1, and at those points no $G$ restores
+contrast. Bootstrapping the observed rewards to $G = 16$ restores 0 of 1,867
+boundary prompts. Of 1,867 escalation events, 1,723 (92.3\%) fire on
+all-correct groups and only 144 on all-wrong ones, so a symmetric ZVF trigger
+spends most of its budget on prompts that are already solved. Removing those fires is
+a counterfactual proposal; we did not measure whether performance is
+preserved.
+
+\textbf{Curriculum and re-baselining.} A difficulty curriculum that filters
+collapsed groups drives the zero-gradient waste fraction from 0.50 to 0.00,
+but at about 4.81$\times$ the sampling cost, and its held-out gain equals the
+baseline's (+0.05 in both arms). At a matched 30k-token budget the two tie at
++0.028. A single-seed $G=4$ ``win'' of +0.125 did not survive multi-seed
+re-testing. Re-baselining the advantages does not create learning signal;
+it only turns the collapsed groups into a difficulty proxy. The
+interventions that target the mechanism ZVF identifies do not improve
+held-out outcomes at matched cost.
+
+\section{Discussion and Limitations}
+The theory is checked in telemetry, but its causal link to the gradient (T3)
+remains toy-scale. Many managed-stack runs are single-seed early-training
+snapshots of 30--50 steps, so asymptotic claims are unsupported. The sweep
+task is near ceiling, where variance is compressed, so the flat retention
+curve should not be generalised to hard, unsaturated tasks. The closed form
+$h_G$ assumes i.i.d.\ Bernoulli rewards; measured ZVF falls below it
+(Table~\ref{tab:gsweep}), which is consistent with a less extreme reward
+distribution. Finally, reporting ZVF as a trajectory alongside the full
+training stack is part of a broader reporting practice that we treat
+separately.
+
+\section{Conclusion}
+Signal starvation is the typical state of GRPO training in our regime, and
+it is driven by prompts the model already solves. A two-factor signal model
+explains how group size affects it and why only a shallow optimum should
+exist; two of its three predictions reproduce at scale. ZVF aliases mastery
+with incapacity and is fragile under reward jitter, so PCD is the better
+control signal. Neither an adaptive controller nor a curriculum converted
+the diagnostic into a held-out gain at matched cost. We therefore recommend
+logging ZVF and PCD as standard telemetry next to reward: a rise of more
+than 0.3 sustained over ten steps is a warning. We do not recommend them as
+quantities to maximise. A pre-registered bake-off of an asymmetric,
+PCD-guarded controller against a static $G = 16$ is the natural next test.

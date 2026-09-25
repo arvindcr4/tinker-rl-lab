@@ -1,0 +1,199 @@
+\begin{abstract}
+Comparative claims about reinforcement-learning post-training of language
+models are usually made between method labels: ``GRPO beats PPO'', ``DAPO beats
+GRPO''. We report a set of negative and cautionary results showing that, in
+the GRPO family, the label is not the unit of evidence: the training stack is
+part of the result. A variance decomposition over 42 experiments attributes a
+framework share ($\eta^2=0.546$) of the same order as the algorithm share
+($0.558$). A matched PPO/GRPO contrast is a null (Welch $p=0.7605$, power
+$0.06$) that reverses on a second model family. A same-stack audit of four
+GRPO variants is inconclusive in every contrast. Under a fixed label, final
+reward spans 5.0\% to 85.6\% across backends, and one label (``DAPO'') yields
+opposite telemetry on two stacks; conversely, four labels on one fixed stack
+land within a 0.034 band. We distil these exhibits into an eight-item
+minimum reportable stack and a machine-readable registry whose diff tool flags
+such label collisions from manifests alone.
+\end{abstract}
+
+\section{Introduction}
+
+Group Relative Policy Optimization (GRPO) \citep{shao2024deepseekmath,guo2025deepseekr1}
+replaces PPO's learned critic \citep{schulman2017proximal} with a baseline
+computed from a group of $G$ sampled completions per prompt, and has spawned a
+family of variants such as DAPO \citep{yu2025dapo}, Dr.\ GRPO
+\citep{liu2025understanding} and GSPO \citep{qwen2025gspo}. Each is available
+in several libraries, including TRL \citep{vonwerra2022trl}, veRL
+\citep{sheng2024verl}, OpenRLHF \citep{hu2024openrlhf} and managed services such
+as Tinker \citep{thinkingmachines2024tinker}, which differ in answer parser,
+sampler, KL handling, clip range, LoRA targets \citep{hu2022lora}, precision
+and evaluator. Deep-RL results are known to be sensitive to such details
+\citep{henderson2018deep}, but papers in this area are not asked to report
+them, so a gain attributed to a method label may belong to the stack.
+
+This short paper asks a narrow question: \emph{how much of a reported GRPO-family
+difference survives once the stack is held fixed?} Our answer, from our own
+experiments, is: little that we could detect. We contribute (i) seven exhibits
+of stack sensitivity, including three nulls that we report as nulls rather
+than as equivalences, and (ii) an eight-item minimum reportable stack with an
+auditor and a diff tool that operationalise the lesson.
+
+\section{Setting and Protocol}
+
+All runs use verifiable rewards, principally GSM8K exact match
+\citep{cobbe2021training}, on open models from the Qwen and Llama families.
+Where possible, each comparison fixes model, prompts, verifier, decoding
+configuration, step budget and held-out evaluation, and varies one factor.
+We use Welch or paired $t$-tests with Benjamini--Hochberg correction across the
+test family, report effect sizes with 95\% confidence intervals, and state
+observed power and the minimum detectable effect (MDE). An inconclusive test
+is reported as inconclusive; it is not read as equivalence. Where we use the
+zero-variance fraction (ZVF), it is the share of a batch's prompt groups in
+which every completion received the same reward, so the group-relative
+advantage is identically zero.
+
+\section{Exhibits}
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{@{}p{3.2cm}p{6.4cm}p{5.2cm}@{}}
+\toprule
+Exhibit & Result & Reading \\
+\midrule
+E-1 Variance decomposition (42 expts.) &
+$\eta^2$: framework 0.546, algorithm 0.558, model family 0.471, scale 0.322 &
+Framework term of the same order as the algorithm term; factors confounded \\
+E-2 Matched PPO vs.\ GRPO (Qwen3-8B) &
+Welch $p=0.7605$; $d=-0.14$, 95\% CI $[-1.02, 0.74]$; power 0.06; MDE 1.25 &
+Failure to detect, not equivalence \\
+E-3 Same contrast, Llama-3.1-8B-Instruct &
+$d=12.75$, 95\% CI $[8.49, 17.00]$, $p<0.001$ &
+Direction reverses across families; arms on different back-ends \\
+E-4 Same-stack variant audit (8 paired seeds) &
+DAPO $+0.00100$, GSPO $+0.00500$, Dr.\ GRPO $-0.00200$, AERO $-0.00075$ vs.\ GRPO; all inconclusive &
+Exact MDE 0.0101 exceeds the 0.010 design margin \\
+E-5 Same label, different backend &
+Final training reward 5.0\% to 85.6\% ($17\times$) &
+Backend bundled a different base checkpoint; not a backend-only effect \\
+E-6 Same label ``DAPO'', two stacks &
+Mean ZVF 0.00 (open trainer, true dynamic sampling) vs.\ 0.58 (closed stack, asymmetric-clip surrogate) &
+One label, opposite telemetry \\
+E-7 Four labels, one fixed stack (12 cells) &
+Last-10 reward 0.744 DAPO, 0.742 Dr.\ GRPO, 0.723 GRPO, 0.710 GSPO; band 0.034 &
+Comparable to seed variation; labels stop separating \\
+\bottomrule
+\end{tabular}
+\caption{Stack-sensitivity exhibits. Rewards are GSM8K training or held-out
+accuracy as stated in the text.}
+\label{tab:exhibits}
+\end{table*}
+
+Table~\ref{tab:exhibits} summarises the exhibits.
+
+\paragraph{The framework term is as large as the algorithm term (E-1).}
+Across 42 experiments, a variance decomposition attributes
+$\eta^2=0.546$ of outcome variation to library or framework, $0.558$ to
+training algorithm, $0.471$ to model family and $0.322$ to model scale. These
+factors are confounded with one another and with back-end, reward
+implementation, hardware and task, so the shares are not additive causal
+estimates. They do show that the framework is not a nuisance term that can be
+ignored.
+
+\paragraph{The headline comparison is a null (E-2, E-3).}
+On Qwen3-8B, a matched PPO/GRPO contrast with ten runs per arm gives Welch
+$p=0.7605$, the only one of twenty tests in our family that does not survive
+Benjamini--Hochberg correction. The effect size is $d=-0.14$ with 95\% CI
+$[-1.02, 0.74]$, observed power $0.06$ and an MDE of $1.25$ outcome units. The
+interval admits effects in both directions; the study could rule out only a
+very large difference. On Llama-3.1-8B-Instruct, the same contrast gives
+$d=12.75$ ($[8.49, 17.00]$, $p<0.001$). The Qwen arms, however, ran on
+different back-ends (managed service vs.\ an H100 cluster), so we treat both
+rows as stack-conditioned evidence and withhold a directional algorithm
+claim.
+
+\paragraph{Same-stack variants do not separate (E-4).}
+Holding a frozen stack fingerprint, we compared DAPO, GSPO, Dr.\ GRPO and AERO
+against GRPO over eight paired seeds, evaluating each unit on 500 held-out
+GSM8K items. All four contrasts are inconclusive, e.g.\ GSPO $+0.00500$
+($[-0.00125, +0.01200]$, $p=0.210$) and AERO $-0.00075$
+($[-0.00825, +0.00675]$, $p=0.858$). An earlier aggregator had concluded that
+the differences ``disappear''; we retract that verdict because the locked
+exact MDE ($0.0101$) exceeds the study's $0.010$ design margin. The
+permitted conclusion is narrower: no arm produced a significant held-out
+difference, and none met the pre-registered equivalence rule.
+
+\paragraph{Labels hide stacks (E-5, E-6).}
+Under a fixed label, changing the backend moved final training reward from
+5.0\% to 85.6\%. We do not report this as a backend effect, because the same
+inspection found that the managed backend had silently pinned a different base
+checkpoint. That undisclosed bundling is itself the finding. Similarly, the
+label ``DAPO'' produced mean ZVF 0.00 on an open trainer that implements true
+dynamic sampling, and 0.58 on a closed stack that implements only an
+asymmetric-clip surrogate.
+
+\paragraph{Fixed stacks erase labels (E-7).}
+The converse also holds. Running GRPO, DAPO, Dr.\ GRPO and GSPO on one
+managed stack (Qwen3.5-4B, GSM8K, three seeds per arm), mean last-10 training
+reward spans 0.710--0.744, a band of 0.034 that is comparable to seed-level
+variation. On this corpus the algorithm term explains $\eta^2=0.0075$ of
+reward variance, while the group-size axis explains far more.
+
+\section{A Minimum Reportable Stack}
+
+The exhibits motivate eight items that a stack-conditioned result must
+report, each tied to a documented lever: (1)~the loss form (ratio level, clip
+bounds, token mask, advantage normalisation, dynamic sampling), since E-6
+shows one label with and without dynamic sampling; (2)~reference policy and
+KL handling; (3)~sampler, backend and precision, including base-checkpoint
+identity, motivated by E-5; (4)~the per-step ZVF and gradient-utilisation
+trajectory, since a single mean conflates opposite regimes; (5)~the
+group-size schedule; (6)~a held-out split disjoint from the reward
+environment; (7)~a contamination check and parser-robustness probe; and
+(8)~held-out pass@$k$ curves, reported with the evaluation rather than the run.
+The items extend general reporting norms
+\citep{pineau2020improving,mitchell2019modelcards,gebru2021datasheets} to the
+specifics of group-relative RL.
+
+We release the standard as a JSON schema, a registry of stack records and
+variant-delta records, and a standard-library CLI. The schema separates an
+unreported field (null) from a field reported as absent (e.g.\ ``no KL term''),
+because only the latter is a checkable claim. An outcome-blind auditor scores
+each record from 0 to 100 against the items; on the twenty seed records,
+badges span 43--96. Toy-scale open runs score highest because every field is
+reportable, not because they are better experiments. A diff tool maps a pair
+of records onto a six-rung risk ladder, from identical manifests (R0) to
+unauditable (R5, a differing item is null on one side). From manifests alone
+it flags the E-6 ``DAPO'' pair as an R5 label-flip risk. In the registry,
+the label ``DAPO'' is claimed by ten entries that cover four distinct
+implementations.
+
+\section{Discussion}
+
+None of these exhibits shows that the GRPO variants are equivalent. They show
+that, at the scale and power available to us, the comparisons that are
+commonly reported could not have distinguished a method effect from a stack
+effect. We think the productive response is procedural rather than
+algorithmic: report the stack, audit it mechanically, and treat a label-only
+comparison as unfalsifiable.
+
+\section*{Limitations}
+
+Our evidence comes from small-to-mid open models (roughly 0.5B--35B),
+mathematics-style verifiable rewards and short training horizons (typically
+30--50 steps on the managed service), so it says nothing about asymptotic
+behaviour, preference-model rewards or frontier-scale training. Several
+comparisons are single-seed or low-seed. The variance decomposition in E-1 is
+confounded by design, and the managed service's GRPO internals are closed, so
+results on it describe that platform's implementation rather than an abstract
+algorithm. The 5.0\%--85.6\% exhibit mixes backend and checkpoint changes. The
+registry's twenty seed records collapse to ten distinct fingerprints, and 20
+of 23 sub-fields take at most two values, so the badge is coarse on this
+corpus. The standard's eight items are motivated by our levers and have not
+been validated by independent groups.
+
+\section*{Ethics Statement}
+
+This work uses public models and public mathematics benchmarks and involves
+no human subjects or personal data. Its main risk is over-reading: our nulls
+are underpowered and should not be cited as evidence that the methods are
+equivalent.

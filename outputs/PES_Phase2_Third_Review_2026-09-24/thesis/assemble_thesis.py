@@ -40,7 +40,7 @@ date: "24 September 2026"
 |---|---|
 | **Candidate** | Arvind C R |
 | **SRN** | PES2PGE24DS140 |
-| **Programme** | M.Tech Data Science & Artificial Intelligence |
+| **Programme** | M.Tech Data Science and Machine Learning |
 | **Institution** | PES University |
 | **Project guide** | Ramesh Prakash Guledgudd |
 | **Date** | 24 September 2026 |

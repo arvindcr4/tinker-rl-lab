@@ -26,16 +26,16 @@ BUILD = os.path.join(HERE, "build")
 PDF = os.path.join(HERE, "Thesis_Report_ArvindCR.pdf")
 
 CHAPTERS = [
-    ("ch01_introduction.md", "Part I --- Foundations"),
+    ("ch01_introduction.md", "Foundations"),
     ("ch02_literature.md", None),
     ("ch03_requirements.md", None),
-    ("ch04_methodology.md", "Part II --- Design and Implementation"),
+    ("ch04_methodology.md", "Design and Implementation"),
     ("ch05_implementation.md", None),
-    ("ch06_results_core.md", "Part III --- Results"),
+    ("ch06_results_core.md", "Results"),
     ("ch07_results_infra.md", None),
     ("ch08_results_fraud.md", None),
     ("ch09_results_campaign.md", None),
-    ("ch10_synthesis_conclusions.md", "Part IV --- Synthesis"),
+    ("ch10_synthesis_conclusions.md", "Synthesis"),
 ]
 
 APPENDICES = [
@@ -130,15 +130,16 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "reporting the stack alongside any reward figure.",
          "fig:zvflib", ["Zero-Variance", "P2", "Results"]),
         ("fig_group_size",
-         "Trainability as a function of group size $G$. The relationship is "
-         "non-monotone: intermediate group sizes outperform both the smallest "
-         "and the largest tested, and a single-seed sweep does not establish an "
-         "optimum.",
+         "Held-out accuracy as a function of group size $G$ over three seeds. "
+         "The point estimates peak at $G=8$, but at $n=3$ seeds the arms are "
+         "statistically indistinguishable, so no optimum is established.",
          "fig:groupsize", ["Group Size", "P3", "Results"]),
         ("fig_length_bias",
-         "Length bias. Four of eleven GRPO runs peak before 65\\% of training "
-         "and then decay, consistent with the policy optimising response length "
-         "rather than correctness. Dr.\\ GRPO does not exhibit the pattern.",
+         "Roster-level reward trajectories. Four of eleven GRPO runs carry the "
+         "post-hoc verbosity-trap flag (peak before 65\\% of training, terminal "
+         "reward below 90\\% of peak). The flag tests in-training reward, not "
+         "length, so it is a description of the roster and not evidence of "
+         "length bias; the controlled sixteen-run comparison shows no flags.",
          "fig:lengthbias", ["Length Bias", "P4", "Results"]),
         ("fig_scaling_null",
          "Cross-scale behaviour of reward across the studied model range. No "
@@ -184,22 +185,65 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
 
 # Headings in the chapter markdown carry manual numbers ("## 3.2 Foo").
 # LaTeX numbers them itself, so strip the manual ones to avoid "3.2 3.2 Foo".
-_HEAD_NUM = re.compile(r"^(#{1,6})\s+(\d+(?:\.\d+)*)\.?\s+(.*)$")
-_APPENDIX_NUM = re.compile(r"^(#{1,2})\s+(Appendix\s+[A-Z]\.?)\s+(.*)$", re.I)
+_HEAD_NUM = re.compile(r"^(#{1,6})\s+([A-Z]?\d*(?:\.\d+)*)\.?\s+(.*)$")
+# Appendix chapters are lettered by \appendix, so drop the manual "Appendix A."
+_APPENDIX_NUM = re.compile(r"^(#{1,2})\s+Appendix\s+[A-Z]\.?\s+(.*)$", re.I)
 
 
 def _strip_heading_numbers(md_text: str) -> str:
     out = []
     for line in md_text.split("\n"):
-        m = _HEAD_NUM.match(line)
-        if m:
-            line = f"{m.group(1)} {m.group(3)}"
+        m2 = _APPENDIX_NUM.match(line)
+        if m2:
+            line = f"{m2.group(1)} {m2.group(2)}"
         else:
-            m2 = _APPENDIX_NUM.match(line)
-            if m2:
-                line = f"{m2.group(1)} {m2.group(2)} {m2.group(3)}"
+            m = _HEAD_NUM.match(line)
+            # only strip tokens that really are numbers ("3.2", "A.1"), not words
+            if m and re.fullmatch(r"(\d+|[A-Z]\.\d+)(\.\d+)*", m.group(2)):
+                line = f"{m.group(1)} {m.group(3)}"
         out.append(line)
     return "\n".join(out)
+
+
+# Inline "(source: path)" / "(sources: a, b)" evidence notes interrupt the
+# prose (~450 of them). Move each into a footnote. Table rows and headings are
+# left alone: footnotes inside longtable cells and \section{} are fragile.
+_SRC_OPEN = re.compile(r"\s?\((sources?):\s")
+
+
+def _sources_to_footnotes(md_text: str) -> tuple[str, int]:
+    out, n = [], 0
+    for line in md_text.split("\n"):
+        if line.lstrip().startswith(("|", "#")):
+            out.append(line)
+            continue
+        buf, i = [], 0
+        while True:
+            m = _SRC_OPEN.search(line, i)
+            if not m:
+                buf.append(line[i:])
+                break
+            # find the matching close paren, respecting nesting and `code`
+            j, depth, in_code = m.end(), 1, False
+            while j < len(line) and depth:
+                ch = line[j]
+                if ch == "`":
+                    in_code = not in_code
+                elif not in_code and ch == "(":
+                    depth += 1
+                elif not in_code and ch == ")":
+                    depth -= 1
+                j += 1
+            if depth:                       # unbalanced: leave as-is
+                buf.append(line[i:])
+                break
+            label = "Sources" if m.group(1) == "sources" else "Source"
+            body = line[m.end():j - 1].strip()
+            buf.append(line[i:m.start()] + f"^[{label}: {body}.]")
+            n += 1
+            i = j
+        out.append("".join(buf))
+    return "\n".join(out), n
 
 
 def pandoc_md_to_tex(md_path: str, tex_path: str) -> bool:
@@ -211,11 +255,18 @@ def pandoc_md_to_tex(md_path: str, tex_path: str) -> bool:
         # keep the H1 as the chapter title (pandoc -> \chapter) with its number
         # removed too, since \chapter supplies its own.
         tmp = md_path + ".numbered.md"
+        body, _ = _sources_to_footnotes(_strip_heading_numbers(raw))
+        # appendix tables carry a bold "**Table A.1 — Title.**" lead-in on top
+        # of their numbered caption; keep the lead-in text, drop the duplicate
+        # number (LaTeX numbers the caption itself)
+        body = re.sub(r"^\*\*Table [A-Z]\.\d+ [—-]+ ", "**", body, flags=re.M)
         with open(tmp, "w", encoding="utf-8") as fh:
-            fh.write(_strip_heading_numbers(raw))
+            fh.write(body)
+        # --natbib turns [@key] into \citep{key}; the IEEE-style numeric
+        # reference list is produced by bibtex at the end of the document.
         subprocess.run(
             ["pandoc", tmp, "-t", "latex", "--top-level-division=chapter",
-             "-o", tex_path],
+             "--natbib", "-o", tex_path],
             check=True, capture_output=True, timeout=120,
         )
         os.remove(tmp)
@@ -247,24 +298,57 @@ def inject_figures(tex: str, chapter_md: str, have: set[str]) -> tuple[str, int,
         pending.append((name, caption, label, anchors))
 
     for name, caption, label, anchors in pending:
-        block = (f"\n\\fig{{{name}}}\n{{{caption}}}\n{{{label}}}\n\n")
         safe_caption = caption.replace("\n", " ")
-        block = f"\n\n\\fig{{{name}}}\n{{{safe_caption}}}\n{{{label}}}\n\n"
+        # short caption (first sentence) keeps the List of Figures readable
+        short = re.split(r"(?<=[.])\s", safe_caption, maxsplit=1)[0].rstrip(".")
+        block = f"\n\n\\fig{{{name}}}\n{{{short}}}\n{{{safe_caption}}}\n{{{label}}}\n\n"
+        ref = f" (Figure~\\ref{{{label}}})"
         placed = False
         for anchor in anchors:
             # find a heading line containing the anchor
             pat = re.compile(r"^(\\(?:chapter|section|subsection)\*?\{[^}]*"
-                             + re.escape(anchor) + r"[^}]*\})", re.M)
-            m = pat.search(tex)
-            if m:
-                # insert after the end of that heading's first paragraph block
-                end = tex.find("\n\n", m.end())
-                end = end if end != -1 else m.end()
-                tex = tex[:end] + "\n" + block + tex[end:]
+                             + r"\s+".join(map(re.escape, anchor.split())) + r"[^}]*\})", re.M | re.I)
+            # the chapter title may also contain the anchor and be followed
+            # directly by a section, so try every matching heading in turn
+            for m in pat.finditer(tex):
+                # cite the figure at the end of the first complete prose
+                # paragraph of the section, then place the float after it
+                nxt = re.compile(r"^\\(?:chapter|section)\*?\{", re.M).search(tex, m.end())
+                limit = nxt.start() if nxt else len(tex)
+                pos = tex.find("\n\n", m.end())
+                target = None
+                while pos != -1 and pos < limit:
+                    end = tex.find("\n\n", pos + 2)
+                    end = end if end != -1 and end <= limit else limit
+                    para = tex[pos:end].strip()
+                    if (para.endswith(".")
+                            and not re.match(r"\\(begin|fig|section|subsection|label)\b", para)
+                            and "\\end{" not in para[-40:]):
+                        target = (pos, end)
+                        break
+                    pos = tex.find("\n\n", pos + 2)
+                if target is None:
+                    continue
+                pos, end = target
+                para = tex[pos:end].rstrip()
+                prev = re.search(r" \(Figures?~\\ref\{([^}]*)\}(?: and~\\ref\{[^}]*\})*\)\.$", para)
+                if prev:                     # merge with a reference already there
+                    labels = re.findall(r"\\ref\{([^}]*)\}", prev.group(0)) + [label]
+                    refs = " and~".join(f"\\ref{{{l}}}" for l in labels)
+                    para = para[:prev.start()] + f" (Figures~{refs})."
+                else:
+                    para = para[:-1] + ref + "."
+                # keep figure order: go past floats already placed here
+                tail = tex[end:]
+                fm = re.match(r"(\s*\\fig\{[^}]*\}\n\{[^\n]*\}\n\{[^\n]*\}\n\{[^}]*\}\n)+", tail)
+                skip = fm.end() if fm else 0
+                tex = tex[:pos] + para + tail[:skip] + "\n" + block + tail[skip:]
                 placed = True
                 break
+            if placed:
+                break
         if not placed:
-            tex = tex.rstrip() + "\n" + block
+            tex = tex.rstrip() + f"\n\nFigure~\\ref{{{label}}} summarises this chapter.\n" + block
         inserted += 1
     return tex, inserted, missing
 
@@ -483,8 +567,25 @@ def main() -> int:
     have = available_figures()
     print(f"figures available: {len(have)}")
 
-    pieces = [open(os.path.join(HERE, "preamble.tex"), encoding="utf-8").read()]
+    preamble = open(os.path.join(HERE, "preamble.tex"), encoding="utf-8").read()
+    # numeric, sorted citations for the IEEE reference list; natbib must load
+    # before hyperref
+    preamble = preamble.replace(
+        "\\usepackage[hidelinks]{hyperref}",
+        "\\usepackage[numbers,sort&compress]{natbib}\n\\usepackage[hidelinks]{hyperref}", 1)
+    # \fig{name}{short caption}{caption}{label}
+    preamble = re.sub(r"\\newcommand\{\\fig\}\[3\]\{%.*?\\end\{figure\}\}",
+                      lambda _: ("\\newcommand{\\fig}[4]{%\n"
+                                 "  \\begin{figure}[htbp]\\centering\n"
+                                 "  \\includegraphics[width=0.94\\linewidth]{figures/#1.pdf}%\n"
+                                 "  \\caption[#2]{#3}\\label{#4}%\n"
+                                 "  \\end{figure}}"),
+                      preamble, count=1, flags=re.S)
+    # front matter in roman numerals; arabic restarts at Part I / Chapter 1
+    preamble = preamble.replace("\\begin{document}", "\\begin{document}\n\\pagenumbering{roman}", 1)
+    pieces = [preamble]
     pieces.append(open(os.path.join(HERE, "frontmatter.tex"), encoding="utf-8").read())
+    pieces.append("\n\\cleardoublepage\n\\pagenumbering{arabic}\n\\hypersetup{pageanchor=true}\n")
 
     total_figs, all_missing, missing_ch, empty_ch = 0, set(), [], []
 
@@ -510,6 +611,11 @@ def main() -> int:
 
     for md_name, part in CHAPTERS:
         emit(md_name, part)
+    # IEEE-style numbered reference list, before the appendices (PES template)
+    pieces.append("\n\\cleardoublepage\n\\phantomsection\n"
+                  "\\addcontentsline{toc}{chapter}{References}\n"
+                  "\\bibliographystyle{IEEEtran}\n\\bibliography{references}\n")
+    pieces.append("\n\\appendix\n")
     for md_name, part in APPENDICES:
         emit(md_name, part)
 

@@ -289,7 +289,7 @@ def slide_title(prs, n):
     _rect(s, Inches(0), Inches(0.30), SLIDE_W, Pt(2.5), fill=ACCENT)
 
     _text(s, M, Inches(1.55), SLIDE_W - 2 * M, Inches(0.34),
-          [("PES UNIVERSITY  ·  M.TECH DATA SCIENCE & AI", 12, True, ACCENT)],
+          [("PES UNIVERSITY  ·  M.TECH DATA SCIENCE & MACHINE LEARNING", 12, True, ACCENT)],
           space_after=Pt(0))
     _text(s, M, Inches(2.02), SLIDE_W - 2 * M, Inches(0.70),
           [("Phase 2 Third Review", 44, True, PES_BLUE)], space_after=Pt(0))
@@ -716,7 +716,7 @@ def slide_thanks(prs, n):
     _rect(s, M, Inches(4.00), Inches(2.6), Pt(2.5), fill=ACCENT)
     _text(s, M, Inches(4.34), SLIDE_W - 2 * M, Inches(1.20),
           [("Arvind C R   ·   SRN PES2PGE24DS140", 14.5, True, INK),
-           ("M.Tech Data Science & AI, PES University", 13, False, MUTED),
+           ("M.Tech Data Science and Machine Learning, PES University", 13, False, MUTED),
            ("Project Guide:  Ramesh Prakash Guledgudd", 13, False, MUTED)],
           space_after=Pt(7))
     return s

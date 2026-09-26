@@ -60,12 +60,12 @@ Electronic City, Hosur Road, Bengaluru -- 560 100, Karnataka, India\par}
 \begin{titlepage}
 \centering
 \thispagestyle{empty}
-\vspace*{0.4in}
+\vspace*{0.1in}
 {\Large\bfseries PES UNIVERSITY\par}
 \vspace{0.2in}
-{\large\bfseries FACULTY OF ENGINEERING AND TECHNOLOGY\par}
+{\large\bfseries FACULTY OF ENGINEERING\par}
 {\normalsize DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\par}
-\vspace{0.5in}
+\vspace{0.35in}
 {\Large\bfseries CERTIFICATE\par}
 \vspace{0.5in}
 \begin{spacing}{1.4}
@@ -76,20 +76,21 @@ bonafide record of the project work carried out by
 \textbf{Arvind C R} (SRN: \textbf{PES2PGE24DS140}), in partial fulfilment of
 the requirements for the award of the degree of Master of Technology in
 Data Science and Machine Learning of PES University, during the period
-May 2026 -- October 2026.
+May 2026 -- October 2026. It is certified that all corrections/suggestions
+indicated for internal assessment have been incorporated in the report.
 
 \vspace{0.3in}
 The candidate's individual contribution, the inherited Semester-3 group
 infrastructure, and the boundary between them are stated in the Declaration
-and in Chapter 1 \S1.7.
+and in Chapter 1 \S1.6.
 \end{spacing}
-\vspace{0.6in}
+\vspace{0.4in}
 \noindent\begin{tabular}{@{}p{2.4in}p{2.4in}@{}}
 \dotfill & \dotfill \\
 \textbf{Ramesh Prakash Guledgudd} & \textbf{Head of the Department} \\
 Project Guide & Department of CSE \\
 \end{tabular}
-\vspace{0.5in}
+\vspace{0.3in}
 \noindent\begin{tabular}{@{}p{2.4in}@{}}
 \dotfill \\
 \textbf{External Examiner} \\
@@ -104,7 +105,9 @@ Project Guide & Department of CSE \\
 \thispagestyle{plain}
 
 I declare that this project report is my own work. Where the work of others has
-been used, it is cited and acknowledged.
+been used, it is cited and acknowledged. The matter embodied in this report has
+not been submitted, in part or in full, to this or any other university or
+institution for the award of any other degree or diploma.
 
 The multi-framework benchmark infrastructure, the baseline framework
 integrations, and the initial GRPO/PPO/DPO experimentation were produced by the
@@ -187,23 +190,28 @@ the ZVF diagnostic, and an applied credit-card fraud case study.
 
 The principal results are deliberately conservative. Across more than seventy
 runs spanning roughly 2.4 orders of magnitude in model scale, \textbf{no
-reliable scaling law is recovered from reward curves}. A matched same-stack
-comparison of PPO and GRPO finds the two estimators \textbf{statistically
-indistinguishable} (Welch $p = 0.7605$). A single-seed group-size sweep does
-\textbf{not} establish an optimum, and trainability is non-monotone in group
-size. Four of eleven GRPO runs peak before 65\% of training and then decay,
-consistent with length bias rather than capability gain, while Dr.\ GRPO does
-not exhibit the pattern.
+reliable scaling law is recovered from reward curves}. A same-stack
+comparison of PPO and GRPO (Qwen2.5-0.5B, five paired seeds) finds the two
+estimators \textbf{statistically indistinguishable} (paired
+$\Delta = -0.002$, $p = 0.374$). A three-seed group-size sweep
+($G \in \{2, 4, 8, 16\}$) finds its arms statistically indistinguishable and
+does \textbf{not} establish an optimum. A roster-level flag marks four of
+eleven GRPO runs as peaking before 65\% of training and then decaying, but its
+thresholds are post hoc and it is not specific to length, so it is
+\textbf{not} evidence of length bias; in the controlled sixteen-run comparison
+neither GRPO nor Dr.\ GRPO shows the pattern, and completion length drifts
+shorter rather than longer.
 
 The E1--E14 campaign evaluates one Tinker-trained actor
 (\texttt{Qwen/Qwen3.6-35B-A3B} with the
 \texttt{pavlov-portfolio-qwen36-seed809-stepfinal} adapter) using each suite's
-own native evaluator at a pinned revision, with no per-lane tuning. Four suites
-carry strictly complete graded scopes: LAB-Bench public split (1{,}967/1{,}967
-questions, micro accuracy 0.2288), AgentDojo benign utility (97/97, utility
-0.9072), VerilogEval (312/312, $129/312 = 41.35\%$ pass@1), and Omni-MATH (all
-4{,}428 dispositions recorded, official accuracy $2{,}271/4{,}428 = 51.31\%$
-reproduced). Two carry full verified scores under their original contracts:
+own native evaluator at a pinned revision, with no per-lane tuning. Three
+replacement scopes are strictly complete: LAB-Bench public split
+(1{,}967/1{,}967 questions, micro accuracy 0.2288), AgentDojo benign utility
+(97/97, utility 0.9072), and VerilogEval (312/312, $129/312 = 41.35\%$
+pass@1). Omni-MATH is terminal-complete under its native protocol (all
+4{,}428 dispositions recorded, 4{,}426 accepted; official accuracy
+$2{,}271/4{,}428 = 51.31\%$ reproduced). Two carry full verified scores under their original contracts:
 SWE-bench Pro ($2/731 = 0.274\%$ pass@1, with all eighteen non-native outcomes
 retained in the denominator) and VerilogEval. The remaining lanes are reported
 as partial, quota-blocked, or externally blocked, each with an explicit

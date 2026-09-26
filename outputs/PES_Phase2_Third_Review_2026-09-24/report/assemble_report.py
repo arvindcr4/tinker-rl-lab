@@ -29,7 +29,7 @@ date: "24 September 2026"
 
 # Phase 2 Third Review — Written Report
 
-**Programme:** M.Tech Data Science & Artificial Intelligence, PES University
+**Programme:** M.Tech Data Science and Machine Learning, PES University
 **Student:** Arvind C R  ·  SRN PES2PGE24DS140
 **Project guide:** Ramesh Prakash Guledgudd
 **Review:** Phase 2, Third Review

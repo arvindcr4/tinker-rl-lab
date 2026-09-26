@@ -1,0 +1,78 @@
+{
+  "schema": "adapter-availability-check-v1",
+  "checked_utc": "2026-09-26T14:17:59+00:00",
+  "adapter_recorded_in_ch9": "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6@64444133c55d88c3f1bf0df8a2f5d7ac646125c8",
+  "hf_repos": {
+    "arvindcr4/pavlov-portfolio-qwen36-seed809-step0-tinker-cf0ad8c1-1f1b-5ff-c94ff15e4b6f": {
+      "sha": "6e8cc73d194c2dac2976ed1688c0caddd928a6f2",
+      "files": [
+        [
+          ".gitattributes",
+          1519
+        ]
+      ]
+    },
+    "arvindcr4/pavlov-portfolio-qwen36-seed809-step20-tinker-cf0ad8c1-1f1b-5ff-92c860aa9bec": {
+      "sha": "092f6840dda4b13f0718de849e06536003730482",
+      "files": [
+        [
+          ".gitattributes",
+          1519
+        ]
+      ]
+    },
+    "arvindcr4/pavlov-portfolio-qwen36-seed809-step40-tinker-cf0ad8c1-1f1b-5ff-b610a692a428": {
+      "sha": "73b268cd87e4693d065bf5c666afc78dd76843fa",
+      "files": [
+        [
+          ".gitattributes",
+          1519
+        ]
+      ]
+    },
+    "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6": {
+      "sha": "ab115425b0786c5120256d579cc124d1a4a1cac1",
+      "files": [
+        [
+          ".gitattributes",
+          1519
+        ]
+      ]
+    }
+  },
+  "tinker_run": "cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0 listed by `tinker run list` with last_checkpoint=null and last_sampler_checkpoint=null (tinker 0.30.4)",
+  "conclusion": "The Tinker training run is purged, but the evaluated adapter is preserved on the HF branch checkpoint-seed809-stepfinal-9f777c4018b6 at the recorded commit 64444133 (adapter_model.safetensors, 2.25 GB) and can be re-served off-Tinker, e.g. with vLLM/PEFT.",
+  "checkpoint_branches": {
+    "step0": "checkpoint-seed809-step0-c94ff15e4b6f@0fc06d0117",
+    "step20": "checkpoint-seed809-step20-92c860aa9bec@5a8b948c05",
+    "step40": "checkpoint-seed809-step40-b610a692a428@226a50e08a",
+    "stepfinal": "checkpoint-seed809-stepfinal-9f777c4018b6@64444133c5"
+  },
+  "stepfinal_files_at_64444133": [
+    [
+      ".gitattributes",
+      1519
+    ],
+    [
+      "README.md",
+      825
+    ],
+    [
+      "adapter_config.json",
+      953
+    ],
+    [
+      "adapter_model.safetensors",
+      2245975768
+    ]
+  ],
+  "stepfinal_adapter_config": {
+    "base_model": "Qwen/Qwen3.6-35B-A3B",
+    "peft_type": "LORA",
+    "r": 32,
+    "lora_alpha": 32,
+    "target_modules": "all-linear",
+    "peft_version": "0.18.1"
+  },
+  "note_on_hf_repos_field": "hf_repos lists the main branch only; main holds just .gitattributes. The weights live on the checkpoint-* branches."
+}

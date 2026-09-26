@@ -3,11 +3,13 @@ Comparative claims about reinforcement-learning post-training of language
 models are usually made between method labels: ``GRPO beats PPO'', ``DAPO beats
 GRPO''. We report a set of negative and cautionary results showing that, in
 the GRPO family, the label is not the unit of evidence: the training stack is
-part of the result. A variance decomposition over 42 experiments attributes a
-framework share ($\eta^2=0.546$) of the same order as the algorithm share
-($0.558$). A matched PPO/GRPO contrast is a null (Welch $p=0.7605$, power
-$0.06$) that reverses on a second model family. A same-stack audit of four
-GRPO variants is inconclusive in every contrast. Under a fixed label, final
+part of the result. Over 42 experiments, separate one-way ANOVAs give a
+marginal $\eta^2$ for framework ($0.546$) of the same order as for algorithm
+($0.558$); these marginal values sum above one and are not a variance
+decomposition. A matched same-stack PPO/GRPO contrast is a null
+($\Delta=-0.002$, $p=0.374$), while cross-back-end PPO/GRPO contrasts reverse
+direction between model families. A same-stack audit of four GRPO variants is
+inconclusive in every contrast. Under a fixed label, final
 reward spans 5.0\% to 85.6\% across backends, and one label (``DAPO'') yields
 opposite telemetry on two stacks; conversely, four labels on one fixed stack
 land within a 0.034 band. We distil these exhibits into an eight-item
@@ -60,15 +62,15 @@ advantage is identically zero.
 \toprule
 Exhibit & Result & Reading \\
 \midrule
-E-1 Variance decomposition (42 expts.) &
-$\eta^2$: framework 0.546, algorithm 0.558, model family 0.471, scale 0.322 &
-Framework term of the same order as the algorithm term; factors confounded \\
-E-2 Matched PPO vs.\ GRPO (Qwen3-8B) &
-Welch $p=0.7605$; $d=-0.14$, 95\% CI $[-1.02, 0.74]$; power 0.06; MDE 1.25 &
+E-1 Marginal one-way ANOVAs (42 expts.) &
+Marginal $\eta^2$: framework 0.546, algorithm 0.558, model family 0.471, scale 0.322 (sum 1.897) &
+Not a decomposition; factors collinear; framework varies as much as algorithm \\
+E-2 Same-stack PPO vs.\ GRPO (Qwen2.5-0.5B, 5 paired seeds) &
+Paired held-out $\Delta=-0.002$, $p=0.374$ &
 Failure to detect, not equivalence \\
-E-3 Same contrast, Llama-3.1-8B-Instruct &
-$d=12.75$, 95\% CI $[8.49, 17.00]$, $p<0.001$ &
-Direction reverses across families; arms on different back-ends \\
+E-3 Cross-back-end PPO vs.\ GRPO (Qwen3-8B; Llama-3.1-8B-Instruct) &
+Qwen3-8B Welch $p=0.7605$ (provenance conflict); Llama $d=12.75$, 95\% CI $[8.49, 17.00]$ &
+Arms on different back-ends; direction reverses across families \\
 E-4 Same-stack variant audit (8 paired seeds) &
 DAPO $+0.00100$, GSPO $+0.00500$, Dr.\ GRPO $-0.00200$, AERO $-0.00075$ vs.\ GRPO; all inconclusive &
 Exact MDE 0.0101 exceeds the 0.010 design margin \\
@@ -90,26 +92,26 @@ accuracy as stated in the text.}
 
 Table~\ref{tab:exhibits} summarises the exhibits.
 
-\paragraph{The framework term is as large as the algorithm term (E-1).}
-Across 42 experiments, a variance decomposition attributes
-$\eta^2=0.546$ of outcome variation to library or framework, $0.558$ to
-training algorithm, $0.471$ to model family and $0.322$ to model scale. These
-factors are confounded with one another and with back-end, reward
-implementation, hardware and task, so the shares are not additive causal
-estimates. They do show that the framework is not a nuisance term that can be
-ignored.
+\paragraph{Framework varies outcomes as much as algorithm (E-1).}
+Across 42 experiments, four separate one-way ANOVAs give marginal
+$\eta^2=0.546$ for library or framework, $0.558$ for training algorithm,
+$0.471$ for model family and $0.322$ for model scale. These sum to 1.897, so
+they are not a partition of variance: the factors are collinear with one
+another and with back-end, reward implementation, hardware and task, and each
+marginal $\eta^2$ absorbs its correlates. They estimate no factor's
+independent contribution, but they show that the framework is not a nuisance
+term that can be ignored.
 
 \paragraph{The headline comparison is a null (E-2, E-3).}
-On Qwen3-8B, a matched PPO/GRPO contrast with ten runs per arm gives Welch
-$p=0.7605$, the only one of twenty tests in our family that does not survive
-Benjamini--Hochberg correction. The effect size is $d=-0.14$ with 95\% CI
-$[-1.02, 0.74]$, observed power $0.06$ and an MDE of $1.25$ outcome units. The
-interval admits effects in both directions; the study could rule out only a
-very large difference. On Llama-3.1-8B-Instruct, the same contrast gives
-$d=12.75$ ($[8.49, 17.00]$, $p<0.001$). The Qwen arms, however, ran on
-different back-ends (managed service vs.\ an H100 cluster), so we treat both
-rows as stack-conditioned evidence and withhold a directional algorithm
-claim.
+With the whole stack held fixed (Qwen2.5-0.5B, 40 steps, five paired seeds),
+PPO and GRPO differ by $-0.002$ on held-out accuracy ($p=0.374$): a failure
+to detect a difference, not equivalence. An earlier Qwen3-8B comparison gives
+Welch $p=0.7605$, but it is a provenance conflict rather than a matched
+result: its arms ran on different back-ends (managed service vs.\ an H100
+cluster), and its $n=10$ is the last ten autocorrelated steps of one run per
+arm. On Llama-3.1-8B-Instruct the cross-back-end contrast gives $d=12.75$
+($[8.49, 17.00]$, $p<0.001$). We treat both cross-back-end rows as
+stack-conditioned evidence and withhold a directional algorithm claim.
 
 \paragraph{Same-stack variants do not separate (E-4).}
 Holding a frozen stack fingerprint, we compared DAPO, GSPO, Dr.\ GRPO and AERO
@@ -182,8 +184,8 @@ Our evidence comes from small-to-mid open models (roughly 0.5B--35B),
 mathematics-style verifiable rewards and short training horizons (typically
 30--50 steps on the managed service), so it says nothing about asymptotic
 behaviour, preference-model rewards or frontier-scale training. Several
-comparisons are single-seed or low-seed. The variance decomposition in E-1 is
-confounded by design, and the managed service's GRPO internals are closed, so
+comparisons are single-seed or low-seed. The marginal $\eta^2$ values in E-1
+are confounded by design, and the managed service's GRPO internals are closed, so
 results on it describe that platform's implementation rather than an abstract
 algorithm. The 5.0\%--85.6\% exhibit mixes backend and checkpoint changes. The
 registry's twenty seed records collapse to ten distinct fingerprints, and 20

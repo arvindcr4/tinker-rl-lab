@@ -42,7 +42,7 @@ A_i = \frac{r_i - \mu_g}{\sigma_g + \varepsilon}, \quad
 \label{eq:adv}
 \end{equation}
 If every completion in the group receives the same reward, $\sigma_g = 0$ and
-every $A_i$ is zero. The KL term still acts, but the group-relative part of
+every $A_i$ is zero. Any KL term still acts, but the group-relative part of
 the update, which is the only part driven by the task, vanishes. Standard
 training logs (reward, loss, gradient norm, entropy, length) do not show how
 often this happens: a rising reward curve looks the same whether a fifth or
@@ -88,9 +88,11 @@ sampled completions and rewards normalised to $[0,1]$,
 \end{equation}
 with $\widehat{\mathrm{Var}}$ the unbiased sample variance and
 $\epsilon = 10^{-6}$. Gradient utilisation is its complement,
-$\mathrm{GU}_t = 1 - \mathrm{ZVF}_t$. This is an accounting identity about the
-centred reward contrast, not a claim that the total gradient is zero:
-objectives with KL, clipping or auxiliary losses still produce an update.
+$\mathrm{GU}_t = 1 - \mathrm{ZVF}_t$. For objectives with KL, clipping or
+auxiliary losses this is an accounting identity, not a claim that the total
+gradient is zero. Our measured runner has no KL or clip term, so there
+$\mathrm{ZVF}_t = 1$ does zero the policy-term step gradient, up to optimiser
+momentum and normalisers.
 Sensitivity to $\epsilon$ is at most 0.4\%. The definition does not apply to
 dense rewards, $K = 1$, or non-outcome rewards.
 
@@ -185,7 +187,8 @@ as directional evidence only.
 
 \begin{table}[t]
 \caption{Group-size sweep (Qwen2.5-0.5B, 3 seeds, 40 steps): measured ZVF
-against the i.i.d.\ prediction $h_G$, and gradient utilisation.}
+against the i.i.d.\ prediction $h_G$ at a single pooled rate, and gradient
+utilisation.}
 \label{tab:gsweep}
 \centering
 \small
@@ -210,7 +213,7 @@ diminishing returns (left); the relative gain per doubling of $G$ declines
 \label{fig:gu}
 \end{figure*}
 
-\subsection{Group size has a shallow optimum at best}
+\subsection{Group size: no optimum established}
 The marginal ZVF reduction shrinks with $G$: 0.075 from $G=2$ to 4, but only
 0.059 from $G=8$ to 16. The signal-to-noise ratio reaches about 52\% of the
 $\sqrt{G}$ ideal. On the near-ceiling sweep, held-out accuracy is
@@ -218,9 +221,9 @@ $\sqrt{G}$ ideal. On the near-ceiling sweep, held-out accuracy is
 indistinguishable at three seeds, and $G=2$ retains 100.3\% of $G=16$. A
 505-task conditional utility audit prefers $G=4$ over $G=5$ by 0.00177
 (95\% bootstrap CI $[0.00082, 0.00270]$): the difference is positive but small,
-and it depends on the task cohort and the objective. Eq.~(\ref{eq:signal}) explains why
-only a shallow optimum should exist; the measured data do not support a
-universal best $G$.
+and it depends on the task cohort and the objective. Eq.~(\ref{eq:signal})
+gives group size a mechanism, but the three-seed sweep establishes no
+optimum.
 
 \subsection{Acting on the diagnostic}
 \textbf{Adaptive group size.} We audited an adaptive-$G$ controller that
@@ -276,17 +279,18 @@ remains toy-scale. Many managed-stack runs are single-seed early-training
 snapshots of 30--50 steps, so asymptotic claims are unsupported. The sweep
 task is near ceiling, where variance is compressed, so the flat retention
 curve should not be generalised to hard, unsaturated tasks. The closed form
-$h_G$ assumes i.i.d.\ Bernoulli rewards; measured ZVF falls below it
-(Table~\ref{tab:gsweep}), which is consistent with a less extreme reward
-distribution. Finally, reporting ZVF as a trajectory alongside the full
+$h_G$ assumes i.i.d.\ Bernoulli rewards. Measured ZVF falls below it at a
+single pooled rate (Table~\ref{tab:gsweep}), but against the correct
+per-step-average baseline it modestly exceeds it (0.69 vs.\ 0.60 at $G=8$),
+mostly a Jensen effect; neither residual is evidence about dependence. Finally, reporting ZVF as a trajectory alongside the full
 training stack is part of a broader reporting practice that we treat
 separately.
 
 \section{Conclusion}
 Signal starvation is the typical state of GRPO training in our regime, and
 it is driven by prompts the model already solves. A two-factor signal model
-explains how group size affects it and why only a shallow optimum should
-exist; two of its three predictions reproduce at scale. ZVF aliases mastery
+gives group size a mechanism, though our three-seed sweep establishes no
+optimum; two of its three predictions reproduce at scale. ZVF aliases mastery
 with incapacity and is fragile under reward jitter, so PCD is the better
 control signal. Neither an adaptive controller nor a curriculum converted
 the diagnostic into a held-out gain at matched cost. We therefore recommend

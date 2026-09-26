@@ -37,6 +37,7 @@ MARKERS = (
     "correction",
     "must not",
     "invalidat",
+    "invalid",
     "no longer",
     "do not quote",
     "unsafe",

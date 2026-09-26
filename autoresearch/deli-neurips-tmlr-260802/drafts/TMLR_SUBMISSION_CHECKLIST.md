@@ -66,4 +66,4 @@ One-sentence summary:
 
 ## Stop conditions (either track)
 
-Stop upload if: identity leak; DISAPPEARS sold as live verdict; inconclusive sold as improvement; manifest/hash mismatch; dual-submission policy violated.
+Stop upload if: identity leak; superseded DAPO DISAPPEARS verdict sold as live; inconclusive sold as improvement; manifest/hash mismatch; dual-submission policy violated.

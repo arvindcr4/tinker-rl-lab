@@ -34,17 +34,17 @@ We report a held-out evaluation of one Group Relative Policy Optimization
 under a receipt-bound, fail-closed governance regime. The actor is fixed across
 every lane, each suite is graded only by its own native evaluator at a pinned
 revision, and every reported figure is bound to a write-once receipt that a
-deterministic ledger check recomputes. Four scopes closed complete: LAB-Bench
-public split (1,967/1,967 items, accuracy 0.2288), AgentDojo benign utility
-(97/97 episodes, utility 0.9072), VerilogEval (312/312 problems, 41.35\%
-pass@1) and Omni-MATH (4,428/4,428 dispositions, official accuracy 51.31\%
-reproduced). SWE-bench Pro carries a full original-contract score of
+deterministic ledger check recomputes. Three scopes closed strictly complete:
+LAB-Bench public split (1,967/1,967 items, accuracy 0.2288), AgentDojo benign
+utility (97/97 episodes, utility 0.9072) and VerilogEval (312/312 problems,
+41.35\% pass@1). Omni-MATH closed terminal-complete (4,426/4,428 rows
+accepted, official accuracy 51.31\% reproduced). SWE-bench Pro carries a full original-contract score of
 2/731 = 0.274\% pass@1 with every non-native outcome retained in the
 denominator. The remaining lanes are reported at their true terminal states:
 partial with coverage, blocked on cloud quota, or closed as externally blocked
 with a named reopen condition. A separately authorised base-model rerun of
-BankerToolBench scored 0.0 over 100/100 trials, which an audit traces to
-tool-dialogue collapse rather than domain reasoning. Eleven of eleven
+BankerToolBench scored 0.0 over 100/100 trials, which an audit traces to a
+serving bridge that passed no stop sequences, not to the model. Eleven of eleven
 deterministic ledger checks pass. Original-contract and replacement-scope
 numbers are never pooled, no cross-suite aggregate is computed, and no
 improvement over any baseline is claimed.
@@ -223,7 +223,7 @@ E10 & AgentDojo benign~\cite{debenedetti2024agentdojo} & R & 97/97 & 0.9072 & co
 E11 & VerilogEval~\cite{liu2023verilogeval} & O & 312/312 & 129/312 = 41.35\% & complete \\
 E12 & AppBench & O & --- & --- & closed, external \\
 E13 & BALROG & R & 13/255 & --- & launch pending \\
-E14 & Omni-MATH~\cite{gao2024omnimath} & R & 4,428/4,428 & 2,271/4,428 = 51.31\% & terminal-complete \\
+E14 & Omni-MATH~\cite{gao2024omnimath} & R & 4,426/4,428 accepted & 2,271/4,428 = 51.31\% & terminal-complete \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -232,7 +232,9 @@ E14 & Omni-MATH~\cite{gao2024omnimath} & R & 4,428/4,428 & 2,271/4,428 = 51.31\%
 \centering
 \includegraphics[width=\textwidth]{figures/fig_lane_status_cropped.pdf}
 \caption{Terminal state of every lane: complete, partial (awaiting launch or
-closed with partial evidence), or blocked (external closure or cloud quota).}
+closed with partial evidence), or blocked (external closure or cloud quota).
+``Complete'' includes terminal-complete E14; only E8, E10 and E11 are
+strictly complete.}
 \label{fig:lanes}
 \end{figure}
 
@@ -315,9 +317,9 @@ Both were rechecked live and recorded NO-GO.
 Lanes whose original suite depends on a private or hosted resource were closed
 as \texttt{CLOSED\_EXTERNAL}: SDAB (E3, private bundle), BinaryAudit (E7,
 private payload), LifeSciBench (E8-original), AgentHarm (E10-original, private
-tasks), AppBench (E12, deployment), OpenReward Games (E13-original) and
-FrontierMath (E14-original, hosted evaluation). Each has a closure record and
-a reopen condition that depends on a provider response. Access requests
+tasks), AppBench (E12, deployment) and FrontierMath (E14-original, hosted
+evaluation). Each has a closure record and a reopen condition that depends on
+a provider response. Access requests
 were made through public issue trackers, dataset discussions and email, and
 are reported with their delivery status. Where email delivery could not be
 verified, the record says so.
@@ -331,11 +333,12 @@ Mean reward was exactly 0.0, with all 100 trials in the 0.0 bucket. An audit of
 every trajectory found the mechanism. Agents stop after 2 to 14 steps (median
 about 6) without producing a deliverables directory, so the verifier returns 0.0
 with ``No deliverables found''. At least 27 trajectories end in role-token
-degeneration of the form \texttt{user user assistant \dots}. The zero therefore
-measures \emph{tool-dialogue collapse}, not finance reasoning. The harness
-fails closed and gives a clear reason for every zero instead of manufacturing
-partial credit. It also means no BankerToolBench suite score is currently
-obtainable for this actor family. The rerun is not set against the earlier
+degeneration of the form \texttt{user user assistant \dots}. A later check
+traced this to the serving bridge: its route passed no stop sequences and
+stripped special tokens, so generation ran past the end-of-turn token into
+invented turns; with a stop sequence set, the same base model scored 0.41 on
+one task. The zero measures a serving defect, not tool use or finance
+reasoning, and no BankerToolBench suite score exists for this actor family. The rerun is not set against the earlier
 single-task E4 figure, since the two were run under different configurations.
 
 \subsection{Ledger Verification}
@@ -354,8 +357,10 @@ classification.
 \section{Threats to Validity}
 
 \textbf{No base-model comparator.} No lane has a matched base-model run, so no
-campaign figure is evidence of what the GRPO step contributed. The one
-base-model result (E4 rerun) is a diagnostic, not a paired baseline.
+campaign figure is evidence of what the GRPO step contributed. The E4 rerun
+is a diagnostic, not a paired baseline. A separate small-scale paired rerun
+(trained vs.\ base, one serving engine, 5--151 items per lane) found no
+significant difference in any lane; it is not pooled with these figures.
 
 \textbf{Native denominators are not comparable.} 41.35\% on 312 problems and
 0.274\% on 731 tasks measure different capabilities under different scoring
@@ -366,9 +371,8 @@ within lanes too.
 produced by sampling the adapter through the training platform's managed
 sampler. That sampler checkpoint was later purged, so a rerun would require
 serving the published mirror of the same weights through a different sampler.
-The result stays receipt-bound, but its sampling path cannot be re-run, and a
-rerun would compare the same weights through a different sampler, a divergence
-that has not been measured.
+The result stays receipt-bound, but the divergence between the two samplers
+has not been measured.
 
 \textbf{Lost execution sources.} A working-directory deletion removed the
 execution sources of several late recovery launches, while their sealed
@@ -386,8 +390,8 @@ after the fact.
 
 \section{Conclusion}
 
-A governance-first campaign produced complete, receipt-bound results on four
-scopes, a full original-contract score on SWE-bench Pro, and an auditable
+A governance-first campaign produced receipt-bound results on three strictly
+complete scopes and one terminal-complete scope, a full original-contract score on SWE-bench Pro, and an auditable
 terminal state for every remaining lane, each with a named gate and reopen
 condition. Its value lies in the rules it enforced. Original-contract and
 replacement-scope numbers are never pooled, no cross-suite aggregate is
@@ -396,9 +400,8 @@ positive figure, 41.35\% pass@1 on VerilogEval at full coverage, is a
 measurement of one actor on one suite, with provenance recorded down to its
 sampler path. We suggest that evaluations of RL post-trained LLMs report
 prepared, executed and scored coverage separately, bind each figure to a
-receipt, and record blocked lanes as blocked rather than dropping them. Future
-work will add matched base-model runs, so that per-suite post-training effects
-can be estimated, and will complete the staged lanes once their gates clear.
+receipt, and record blocked lanes as blocked rather than dropping them. Future work will add full-scale matched base-model runs and complete the
+staged lanes once their gates clear.
 
 \bibliographystyle{splncs04}
 \bibliography{refs}

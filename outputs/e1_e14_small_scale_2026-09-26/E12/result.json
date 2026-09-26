@@ -1,0 +1,54 @@
+{
+ "lane": "E12",
+ "original_benchmark": "AppBench (AfterQuery; held-out evaluation prompts not public)",
+ "benchmark_run": "AppBench public tasks (HF 'AppBench vExternal.csv', 6 tasks / 151 rubric items), one-shot source generation + LLM-judge static review -- public tasks, not held-out",
+ "scope": "original-public-subset",
+ "substitute_gap": "Public tasks, not held-out; the app is generated as source in one response and graded by static code review, not built, deployed, or functionally tested by two human graders as in AppBench.",
+ "actor": "Qwen/Qwen3.6-35B-A3B base (no adapter), Tinker",
+ "thinking": false,
+ "temperature": 0,
+ "max_tokens": 16384,
+ "n_selected": 151,
+ "n_scored": 151,
+ "n_errors": 0,
+ "item_ids": [
+  "all 6 public tasks (#1 Financial Dashboard 24, #2 Hospital Dashboard 33, #3 Legal Assistant 22, #4 Pharmacy System 25, #5 Drawing Game 23, #6 Rental Booking 24 rubric items); no sampling needed"
+ ],
+ "metric": "rubric-item pass rate (items judged PASS / 151)",
+ "value": 0.8079,
+ "numerator": 122,
+ "denominator": 151,
+ "wilson95": [
+  0.7378,
+  0.8628
+ ],
+ "grader": "llm-judge(Qwen/Qwen3.6-35B-A3B base on Tinker, same model as actor; non-thinking, T=0, max_tokens 6144; judge v2 evidence-first)",
+ "compute_route": "Tinker sampling direct (E12/code/run_e12.py, E12/code/judge_v2.py); no containers",
+ "cost": {
+  "tinker_tokens": 270566,
+  "colab_units": 0.0,
+  "modal_usd": 0.0
+ },
+ "started_utc": "2026-09-26T14:14:54Z",
+ "finished_utc": "2026-09-26T14:21:48Z",
+ "commands": [
+  "set -a; source .env; set +a; cd E12/code; /Users/arvind/.local/share/uv/tools/tinker/bin/python run_e12.py   # generation + judge v1",
+  "cd E12/code; /Users/arvind/.local/share/uv/tools/tinker/bin/python judge_v2.py   # judge v2 (primary), rescoring is offline from raw/judge_v2_<n>.json",
+  "python3 E3/code/finalize.py E12 '<overrides>'"
+ ],
+ "raw_dir": "E12/raw/",
+ "caveats": [
+  "Public tasks, not held-out. Label mandatory. New base-model arm; never pool with the original lane.",
+  "Self-judging: the judge is the same base model as the actor, so the rate is likely inflated and is not comparable to AppBench's binary human functional grading.",
+  "Judge instability: judge v1 (JSON, bare PASS/FAIL, ignored the requested reasons) scored 81/151 = 0.536 with tasks #4 and #6 all-FAIL; judge v2 (evidence-first, one line per item) scored 122/151 = 0.808 with task #4 25/25. v2 is reported because v1 did not follow its output spec; the spread (0.54 vs 0.81) is the honest uncertainty, larger than the Wilson CI.",
+  "Two parser fixes were applied after inspecting raw judge text (v1: accept string PASS/FAIL; v2: accept verdict in either pipe field, conflicting verdicts = FAIL). No model call was repeated for the parser fixes; all scores recompute from raw/*.json.",
+  "Generation for task #6 hit the 16384-token cap (truncated output), yet v2 passed 15/24 items for it -- evidence of judge leniency.",
+  "Wilson CI treats 151 items as independent; they are clustered in 6 apps, so true uncertainty is wider."
+ ],
+ "judge_v1_result": {
+  "numerator": 81,
+  "denominator": 151,
+  "value": 0.5364,
+  "file": "E12/raw/scores.json"
+ }
+}

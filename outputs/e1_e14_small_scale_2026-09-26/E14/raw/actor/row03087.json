@@ -1,0 +1,15 @@
+{
+ "row_index": 3087,
+ "domain": [
+  "Mathematics -> Algebra -> Prealgebra -> Fractions"
+ ],
+ "difficulty": 1.5,
+ "source": "fermat",
+ "problem": "When $x=2021$, what is the value of $\frac{4x}{x+2x}$?",
+ "answer": "\frac{4}{3}",
+ "model_generation": "To find the value of the expression $\\frac{4x}{x+2x}$ when $x=2021$, we can follow these steps:\n\n### Step 1: Simplify the Expression\n\nFirst, let's simplify the algebraic expression before substituting the value of $x$. This often makes the calculation easier and reduces the chance of arithmetic errors.\n\nThe expression is:\n$$ \\frac{4x}{x+2x} $$\n\nCombine the like terms in the denominator:\n$$ x + 2x = 3x $$\n\nSo the expression becomes:\n$$ \\frac{4x}{3x} $$\n\nAssuming $x \\neq 0$ (which is true since $x=2021$), we can cancel $x$ from the numerator and the denominator:\n$$ \\frac{4}{3} $$\n\n### Step 2: Substitute the Value of $x$\n\nSince the simplified expression $\\frac{4}{3}$ is a constant, it does not depend on the specific value of $x$ (as long as $x \\neq 0$). Therefore, for $x=2021$, the value remains:\n\n$$ \\frac{4}{3} $$\n\n### Alternative Method: Direct Substitution\n\nIf you prefer to substitute first, you can do so as follows:\n\n1.  Substitute $x = 2021$ into the original expression:\n    $$ \\frac{4(2021)}{2021 + 2(2021)} $$\n\n2.  Calculate the numerator:\n    $$ 4 \\times 2021 = 8084 $$\n\n3.  Calculate the denominator:\n    $$ 2021 + 4042 = 6063 $$\n\n4.  Form the fraction:\n    $$ \\frac{8084}{6063} $$\n\n5.  Simplify the fraction. Notice that $8084 = 4 \\times 2021$ and $6063 = 3 \\times 2021$.\n    $$ \\frac{4 \\times 2021}{3 \\times 2021} = \\frac{4}{3} $$\n\n### Conclusion\n\nThe value of the expression is $\\frac{4}{3}$.\n\n**Answer:** $\\frac{4}{3}$",
+ "prompt_tokens": 58,
+ "completion_tokens": 519,
+ "stop_reason": "stop",
+ "error": null
+}

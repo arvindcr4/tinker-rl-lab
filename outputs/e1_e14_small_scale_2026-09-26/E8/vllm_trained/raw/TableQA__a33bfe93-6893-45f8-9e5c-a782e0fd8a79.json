@@ -1,0 +1,10 @@
+{
+ "task_id": "TableQA/a33bfe93-6893-45f8-9e5c-a782e0fd8a79",
+ "category": "TableQA",
+ "prompt_sha256": "ac8ea31c1928e9ad242c3b651a423fe86f8f406fdcae3c80bfe9ab4ccafcf68c",
+ "raw_text": "To determine which dose demonstrated the highest average area under the curve (AUC), we look at the \"Mean (SE)\" column under \"Area under the curve (0\u201324 h; h\u00d7ng/mL)\" in the table.\n\nThe doses and their corresponding mean AUC values are:\n\n- 0.15 mg \u2192 4.2\n- 0.50 mg \u2192 0.0\n- 1.50 mg \u2192 34.9\n- 3.00 mg \u2192 77.6\n\nThe highest mean AUC is 77.6, which corresponds to the 3.00 mg dose.\n\nNote: Option (B) 0.25 mg is not listed in the table, so it cannot be considered. Among the given options that appear in the table, 3.00 mg has the highest value.\n\n[ANSWER]A[/ANSWER]",
+ "prompt_tokens": 2692,
+ "completion_tokens": 197,
+ "stop_reason": "stop",
+ "error": null
+}

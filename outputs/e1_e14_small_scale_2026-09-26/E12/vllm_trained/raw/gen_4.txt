@@ -1,0 +1,1655 @@
+Here is the complete implementation of the Pharmacy Management System.
+
+### Technical Decisions
+*   **Framework**: Next.js 14+ (App Router) with TypeScript.
+*   **Styling**: Tailwind CSS for a responsive, clean UI.
+*   **Database/Auth**: Supabase (PostgreSQL + Auth + Realtime).
+*   **Email**: Resend API (via Next.js API Routes) for reliable transactional emails.
+*   **State Management**: React Context for Auth and Cart.
+*   **Real-time**: Supabase Realtime for order status and pharmacist messaging.
+
+### Prerequisites
+You must have a Supabase project and a Resend API key.
+1.  **Supabase**: Create a project. Run the SQL schema provided below in the SQL Editor.
+2.  **Resend**: Sign up at resend.com and get an API key.
+3.  **Environment Variables**: Create a `.env.local` file in the root directory with the keys provided in the code comments.
+
+=== FILE: supabase_schema.sql ===
+```sql
+-- Enable UUID extension
+create extension if not exists "uuid-ossp";
+
+-- 1. Profiles Table (Extends Supabase Auth)
+create table profiles (
+  id uuid references auth.users on delete cascade primary key,
+  email text,
+  full_name text,
+  role text check (role in ('patient', 'pharmacist')) not null default 'patient',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 2. Medications Table
+create table medications (
+  id uuid default uuid_generate_v4() primary key,
+  name text not null,
+  description text,
+  price numeric(10, 2) not null,
+  stock_quantity integer not null default 0,
+  is_active boolean default true,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 3. Orders Table
+create table orders (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references profiles(id) on delete cascade not null,
+  status text check (status in ('pending', 'processing', 'ready_for_pickup', 'completed', 'cancelled')) default 'pending',
+  total_amount numeric(10, 2) not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 4. Order Items Table
+create table order_items (
+  id uuid default uuid_generate_v4() primary key,
+  order_id uuid references orders(id) on delete cascade not null,
+  medication_id uuid references medications(id) on delete cascade not null,
+  quantity integer not null,
+  price_at_purchase numeric(10, 2) not null
+);
+
+-- 5. Messages Table (Pharmacist to Pharmacist)
+create table messages (
+  id uuid default uuid_generate_v4() primary key,
+  sender_id uuid references profiles(id) on delete cascade not null,
+  receiver_id uuid references profiles(id) on delete cascade not null,
+  content text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Row Level Security (RLS) Policies
+
+-- Profiles
+alter table profiles enable row level security;
+create policy "Public profiles are viewable by everyone."
+  on profiles for select using (true);
+create policy "Users can update own profile."
+  on profiles for update using (auth.uid() = id);
+
+-- Medications
+alter table medications enable row level security;
+create policy "Medications are viewable by everyone."
+  on medications for select using (true);
+create policy "Pharmacists can insert medications."
+  on medications for insert with check (
+    exists (select 1 from profiles where id = auth.uid() and role = 'pharmacist')
+  );
+create policy "Pharmacists can update medications."
+  on medications for update using (
+    exists (select 1 from profiles where id = auth.uid() and role = 'pharmacist')
+  );
+create policy "Pharmacists can delete medications."
+  on medications for delete using (
+    exists (select 1 from profiles where id = auth.uid() and role = 'pharmacist')
+  );
+
+-- Orders
+alter table orders enable row level security;
+create policy "Users can view own orders."
+  on orders for select using (auth.uid() = user_id);
+create policy "Users can insert own orders."
+  on orders for insert with check (auth.uid() = user_id);
+create policy "Pharmacists can view all orders."
+  on orders for select using (
+    exists (select 1 from profiles where id = auth.uid() and role = 'pharmacist')
+  );
+create policy "Pharmacists can update all orders."
+  on orders for update using (
+    exists (select 1 from profiles where id = auth.uid() and role = 'pharmacist')
+  );
+
+-- Order Items
+alter table order_items enable row level security;
+create policy "Users can view own order items."
+  on order_items for select using (
+    exists (select 1 from orders where orders.id = order_items.order_id and orders.user_id = auth.uid())
+  );
+create policy "Users can insert own order items."
+  on order_items for insert with check (
+    exists (select 1 from orders where orders.id = order_items.order_id and orders.user_id = auth.uid())
+  );
+create policy "Pharmacists can view all order items."
+  on order_items for select using (
+    exists (select 1 from profiles where id = auth.uid() and role = 'pharmacist')
+  );
+
+-- Messages
+alter table messages enable row level security;
+create policy "Pharmacists can view messages they are involved in."
+  on messages for select using (
+    sender_id = auth.uid() or receiver_id = auth.uid()
+  );
+create policy "Pharmacists can insert messages."
+  on messages for insert with check (
+    sender_id = auth.uid() and
+    exists (select 1 from profiles where id = auth.uid() and role = 'pharmacist')
+  );
+
+-- Triggers for updated_at
+create or replace function update_updated_at_column()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger update_profiles_updated_at before update on profiles
+  for each row execute procedure update_updated_at_column();
+
+create trigger update_orders_updated_at before update on orders
+  for each row execute procedure update_updated_at_column();
+
+-- Initial Seed Data (Optional: Run once to populate some meds)
+-- INSERT INTO medications (name, description, price, stock_quantity) VALUES
+-- ('Amoxicillin', 'Antibiotic 500mg', 15.00, 100),
+-- ('Ibuprofen', 'Pain reliever 200mg', 5.00, 200),
+-- ('Lisinopril', 'Blood pressure medication 10mg', 20.00, 50);
+```
+
+=== FILE: .env.local ===
+```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url_here
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# Resend API Configuration (For Email Notifications)
+RESEND_API_KEY=re_your_resend_api_key_here
+```
+
+=== FILE: package.json ===
+```json
+{
+  "name": "pharmacy-management-system",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.9.0",
+    "@supabase/ssr": "^0.1.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "next": "14.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "resend": "^2.1.0",
+    "date-fns": "^2.30.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.4",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5"
+  }
+}
+```
+
+=== FILE: tailwind.config.ts ===
+```typescript
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: [
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: '#0ea5e9',
+        secondary: '#64748b',
+      }
+    },
+  },
+  plugins: [],
+}
+export default config
+```
+
+=== FILE: postcss.config.js ===
+```javascript
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+```
+
+=== FILE: tsconfig.json ===
+```json
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+```
+
+=== FILE: next.config.js ===
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {}
+
+module.exports = nextConfig
+```
+
+=== FILE: lib/supabase/server.ts ===
+```typescript
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export function createClient() {
+  const cookieStore = cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch (error) {
+            // Handle cookie setting errors
+          }
+        },
+        remove(name: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch (error) {
+            // Handle cookie removal errors
+          }
+        },
+      },
+    }
+  )
+}
+```
+
+=== FILE: lib/supabase/client.ts ===
+```typescript
+import { createBrowserClient } from '@supabase/ssr'
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+```
+
+=== FILE: lib/supabase/middleware.ts ===
+```typescript
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function updateSession(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
+
+  await supabase.auth.getUser()
+
+  return response
+}
+```
+
+=== FILE: middleware.ts ===
+```typescript
+import { type NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
+
+export async function middleware(request: NextRequest) {
+  return await updateSession(request)
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+}
+```
+
+=== FILE: app/globals.css ===
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+```
+
+=== FILE: app/layout.tsx ===
+```typescript
+import './globals.css'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import { AuthProvider } from '@/context/AuthContext'
+import { CartProvider } from '@/context/CartContext'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'PharmaCare - Pharmacy Management System',
+  description: 'Manage medications, orders, and pharmacy operations',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>
+        <AuthProvider>
+          <CartProvider>
+            {children}
+          </CartProvider>
+        </AuthProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+=== FILE: context/AuthContext.tsx ===
+```typescript
+'use client'
+
+import { createContext, useContext, useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { User, Session, AuthError } from '@supabase/supabase-js'
+
+type AuthContextType = {
+  user: User | null
+  session: Session | null
+  loading: boolean
+  signIn: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string, fullName: string, role: 'patient' | 'pharmacist') => Promise<void>
+  signOut: () => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setSession(session)
+      setUser(session?.user ?? null)
+      setLoading(false)
+    }
+
+    getSession()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase])
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) throw error
+  }
+
+  const signUp = async (email: string, password: string, fullName: string, role: 'patient' | 'pharmacist') => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    })
+    if (error) throw error
+    
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: data.user.id,
+          email,
+          full_name: fullName,
+          role
+        })
+      
+      if (profileError) throw profileError
+    }
+  }
+
+  const signOut = async () => {
+    await supabase.auth.signOut()
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
+```
+
+=== FILE: context/CartContext.tsx ===
+```typescript
+'use client'
+
+import { createContext, useContext, useState, useEffect } from 'react'
+import { Medication } from '@/types'
+
+type CartItem = Medication & { quantity: number }
+
+type CartContextType = {
+  cart: CartItem[]
+  addToCart: (medication: Medication) => void
+  removeFromCart: (medicationId: string) => void
+  updateQuantity: (medicationId: string, quantity: number) => void
+  clearCart: () => void
+  total: number
+}
+
+const CartContext = createContext<CartContextType | undefined>(undefined)
+
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [cart, setCart] = useState<CartItem[]>([])
+
+  useEffect(() => {
+    const savedCart = localStorage.getItem('pharmacy_cart')
+    if (savedCart) {
+      setCart(JSON.parse(savedCart))
+    }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('pharmacy_cart', JSON.stringify(cart))
+  }, [cart])
+
+  const addToCart = (medication: Medication) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === medication.id)
+      if (existing) {
+        return prev.map(item => 
+          item.id === medication.id 
+            ? { ...item, quantity: item.quantity + 1 } 
+            : item
+        )
+      }
+      return [...prev, { ...medication, quantity: 1 }]
+    })
+  }
+
+  const removeFromCart = (medicationId: string) => {
+    setCart(prev => prev.filter(item => item.id !== medicationId))
+  }
+
+  const updateQuantity = (medicationId: string, quantity: number) => {
+    if (quantity < 1) return
+    setCart(prev => prev.map(item => 
+      item.id === medicationId ? { ...item, quantity } : item
+    ))
+  }
+
+  const clearCart = () => {
+    setCart([])
+  }
+
+  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+
+  return (
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, total }}>
+      {children}
+    </CartContext.Provider>
+  )
+}
+
+export function useCart() {
+  const context = useContext(CartContext)
+  if (context === undefined) {
+    throw new Error('useCart must be used within a CartProvider')
+  }
+  return context
+}
+```
+
+=== FILE: types/index.ts ===
+```typescript
+export interface User {
+  id: string
+  email: string
+  full_name: string
+  role: 'patient' | 'pharmacist'
+}
+
+export interface Medication {
+  id: string
+  name: string
+  description: string
+  price: number
+  stock_quantity: number
+  is_active: boolean
+}
+
+export interface Order {
+  id: string
+  user_id: string
+  status: 'pending' | 'processing' | 'ready_for_pickup' | 'completed' | 'cancelled'
+  total_amount: number
+  created_at: string
+  updated_at: string
+}
+
+export interface OrderItem {
+  id: string
+  order_id: string
+  medication_id: string
+  quantity: number
+  price_at_purchase: number
+}
+
+export interface Message {
+  id: string
+  sender_id: string
+  receiver_id: string
+  content: string
+  created_at: string
+  sender_name?: string
+}
+```
+
+=== FILE: app/login/page.tsx ===
+```typescript
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/AuthContext'
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isSignUp, setIsSignUp] = useState(false)
+  const [fullName, setFullName] = useState('')
+  const [role, setRole] = useState<'patient' | 'pharmacist'>('patient')
+  const { signIn, signUp } = useAuth()
+  const router = useRouter()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    try {
+      if (isSignUp) {
+        await signUp(email, password, fullName, role)
+        alert('Account created! Please sign in.')
+        setIsSignUp(false)
+      } else {
+        await signIn(email, password)
+        router.push('/')
+      }
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            {isSignUp ? 'Create your account' : 'Sign in to your account'}
+          </h2>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="text-sm text-red-700">{error}</div>
+            </div>
+          )}
+          <div className="rounded-md shadow-sm -space-y-px">
+            {isSignUp && (
+              <div>
+                <label htmlFor="full-name" className="sr-only">Full Name</label>
+                <input
+                  id="full-name"
+                  name="fullName"
+                  type="text"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  placeholder="Full Name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
+            )}
+            <div>
+              <label htmlFor="email-address" className="sr-only">Email address</label>
+              <input
+                id="email-address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">Password</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {isSignUp && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Role</label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value as 'patient' | 'pharmacist')}
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
+              >
+                <option value="patient">Patient</option>
+                <option value="pharmacist">Pharmacist</option>
+              </select>
+            </div>
+          )}
+
+          <div>
+            <button
+              type="submit"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            >
+              {isSignUp ? 'Sign Up' : 'Sign In'}
+            </button>
+          </div>
+        </form>
+        <div className="text-center">
+          <button
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-sm text-primary hover:text-blue-600"
+          >
+            {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+=== FILE: app/dashboard/page.tsx ===
+```typescript
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/AuthContext'
+import { createClient } from '@/lib/supabase/client'
+import { Medication, Order, Message, User } from '@/types'
+import Link from 'next/link'
+
+export default function DashboardPage() {
+  const { user, signOut } = useAuth()
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState('home')
+  const [medications, setMedications] = useState<Medication[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
+  const [pharmacists, setPharmacists] = useState<User[]>([])
+  const [selectedPharmacist, setSelectedPharmacist] = useState<string | null>(null)
+  const [newMessage, setNewMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login')
+      return
+    }
+
+    const fetchData = async () => {
+      setLoading(true)
+      
+      // Fetch Medications
+      const { data: meds } = await supabase
+        .from('medications')
+        .select('*')
+        .eq('is_active', true)
+      if (meds) setMedications(meds)
+
+      // Fetch Orders
+      const { data: userOrders } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      if (userOrders) setOrders(userOrders)
+
+      // Fetch Pharmacists (for messaging)
+      if (user.role === 'pharmacist') {
+        const { data: pharmUsers } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .neq('id', user.id)
+        if (pharmUsers) setPharmacists(pharmUsers)
+      }
+
+      setLoading(false)
+    }
+
+    fetchData()
+
+    // Real-time subscriptions
+    const ordersChannel = supabase
+      .channel('orders_changes')
+      .on('postgres_changes', 
+        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          setOrders(prev => prev.map(o => o.id === payload.new.id ? payload.new : o))
+        }
+      )
+      .subscribe()
+
+    const messagesChannel = supabase
+      .channel('messages_changes')
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        (payload) => {
+          const msg = payload.new as Message
+          if (msg.sender_id === user.id || msg.receiver_id === user.id) {
+            setMessages(prev => [...prev, msg])
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(ordersChannel)
+      supabase.removeChannel(messagesChannel)
+    }
+  }, [user, router, supabase])
+
+  const handlePlaceOrder = async () => {
+    if (!user) return
+    
+    // Get cart from localStorage
+    const cart = JSON.parse(localStorage.getItem('pharmacy_cart') || '[]')
+    if (cart.length === 0) return
+
+    try {
+      // Create Order
+      const total = cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          total_amount: total,
+          status: 'pending'
+        })
+        .select()
+        .single()
+
+      if (orderError) throw orderError
+
+      // Create Order Items
+      const items = cart.map((item: any) => ({
+        order_id: order.id,
+        medication_id: item.id,
+        quantity: item.quantity,
+        price_at_purchase: item.price
+      }))
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(items)
+
+      if (itemsError) throw itemsError
+
+      // Update Stock
+      for (const item of cart) {
+        const { error: stockError } = await supabase
+          .from('medications')
+          .update({ stock_quantity: Math.max(0, item.stock_quantity - item.quantity) })
+          .eq('id', item.id)
+        
+        if (stockError) throw stockError
+      }
+
+      // Clear Cart
+      localStorage.removeItem('pharmacy_cart')
+      alert('Order placed successfully!')
+      window.location.reload()
+    } catch (error) {
+      alert('Failed to place order')
+    }
+  }
+
+  const handleSendMessage = async () => {
+    if (!selectedPharmacist || !newMessage.trim()) return
+    
+    const { error } = await supabase
+      .from('messages')
+      .insert({
+        sender_id: user!.id,
+        receiver_id: selectedPharmacist,
+        content: newMessage
+      })
+
+    if (error) {
+      alert('Failed to send message')
+    } else {
+      setNewMessage('')
+    }
+  }
+
+  const getFilteredMessages = () => {
+    if (!selectedPharmacist) return []
+    return messages.filter(m => 
+      (m.sender_id === user!.id && m.receiver_id === selectedPharmacist) ||
+      (m.sender_id === selectedPharmacist && m.receiver_id === user!.id)
+    ).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+  }
+
+  if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <nav className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex">
+              <div className="flex-shrink-0 flex items-center">
+                <h1 className="text-xl font-bold text-primary">PharmaCare</h1>
+              </div>
+              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                <button
+                  onClick={() => setActiveTab('home')}
+                  className={`${activeTab === 'home' ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                >
+                  {user?.role === 'patient' ? 'Browse Medications' : 'Dashboard'}
+                </button>
+                {user?.role === 'patient' && (
+                  <button
+                    onClick={() => setActiveTab('orders')}
+                    className={`${activeTab === 'orders' ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                  >
+                    My Orders
+                  </button>
+                )}
+                {user?.role === 'pharmacist' && (
+                  <>
+                    <button
+                      onClick={() => setActiveTab('inventory')}
+                      className={`${activeTab === 'inventory' ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                    >
+                      Inventory
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('orders')}
+                      className={`${activeTab === 'orders' ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                    >
+                      Manage Orders
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('messages')}
+                      className={`${activeTab === 'messages' ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                    >
+                      Messages
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center">
+              <span className="text-sm text-gray-700 mr-4">{user?.full_name} ({user?.role})</span>
+              <button
+                onClick={signOut}
+                className="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {user?.role === 'patient' && activeTab === 'home' && (
+          <PatientHome medications={medications} />
+        )}
+        {user?.role === 'patient' && activeTab === 'orders' && (
+          <PatientOrders orders={orders} />
+        )}
+        {user?.role === 'pharmacist' && activeTab === 'inventory' && (
+          <PharmacistInventory medications={medications} />
+        )}
+        {user?.role === 'pharmacist' && activeTab === 'orders' && (
+          <PharmacistOrders orders={orders} />
+        )}
+        {user?.role === 'pharmacist' && activeTab === 'messages' && (
+          <PharmacistMessages 
+            pharmacists={pharmacists} 
+            selectedPharmacist={selectedPharmacist} 
+            setSelectedPharmacist={setSelectedPharmacist}
+            messages={getFilteredMessages()}
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            handleSendMessage={handleSendMessage}
+          />
+        )}
+      </main>
+    </div>
+  )
+}
+
+function PatientHome({ medications }: { medications: Medication[] }) {
+  const { addToCart, cart, total } = useCart()
+  const [search, setSearch] = useState('')
+  const [filteredMeds, setFilteredMeds] = useState(medications)
+
+  useEffect(() => {
+    setFilteredMeds(medications.filter(m => 
+      m.name.toLowerCase().includes(search.toLowerCase())
+    ))
+  }, [search, medications])
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="lg:col-span-3">
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search medications..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredMeds.map(med => (
+            <div key={med.id} className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900">{med.name}</h3>
+              <p className="mt-2 text-sm text-gray-500">{med.description}</p>
+              <div className="mt-4 flex justify-between items-center">
+                <span className="text-lg font-bold text-primary">${med.price.toFixed(2)}</span>
+                <span className="text-sm text-gray-500">Stock: {med.stock_quantity}</span>
+              </div>
+              <button
+                onClick={() => addToCart(med)}
+                disabled={med.stock_quantity === 0}
+                className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:bg-gray-400"
+              >
+                {med.stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="lg:col-span-1">
+        <div className="bg-white rounded-lg shadow p-6 sticky top-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Shopping Cart</h2>
+          {cart.length === 0 ? (
+            <p className="text-gray-500">Your cart is empty</p>
+          ) : (
+            <>
+              <ul className="divide-y divide-gray-200">
+                {cart.map(item => (
+                  <li key={item.id} className="py-3 flex justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                      <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">${(item.price * item.quantity).toFixed(2)}</p>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Total</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+                <button
+                  onClick={handlePlaceOrder}
+                  className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                >
+                  Place Order
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function handlePlaceOrder() {
+  // This function needs to be lifted to the parent component or passed as prop
+  // For simplicity in this structure, we'll assume it's handled in the parent
+  // But since we can't easily lift state here without refactoring, 
+  // we'll use a workaround: dispatch an event or use a global store.
+  // However, to keep it simple and functional, let's just alert for now 
+  // and rely on the parent's handlePlaceOrder.
+  // Actually, let's fix this by making PatientHome a child that receives the handler.
+}
+
+// Fix: Pass handler to PatientHome
+function PatientHome({ medications, onPlaceOrder }: { medications: Medication[], onPlaceOrder: () => void }) {
+  const { addToCart, cart, total } = useCart()
+  const [search, setSearch] = useState('')
+  const [filteredMeds, setFilteredMeds] = useState(medications)
+
+  useEffect(() => {
+    setFilteredMeds(medications.filter(m => 
+      m.name.toLowerCase().includes(search.toLowerCase())
+    ))
+  }, [search, medications])
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="lg:col-span-3">
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search medications..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredMeds.map(med => (
+            <div key={med.id} className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900">{med.name}</h3>
+              <p className="mt-2 text-sm text-gray-500">{med.description}</p>
+              <div className="mt-4 flex justify-between items-center">
+                <span className="text-lg font-bold text-primary">${med.price.toFixed(2)}</span>
+                <span className="text-sm text-gray-500">Stock: {med.stock_quantity}</span>
+              </div>
+              <button
+                onClick={() => addToCart(med)}
+                disabled={med.stock_quantity === 0}
+                className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:bg-gray-400"
+              >
+                {med.stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="lg:col-span-1">
+        <div className="bg-white rounded-lg shadow p-6 sticky top-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Shopping Cart</h2>
+          {cart.length === 0 ? (
+            <p className="text-gray-500">Your cart is empty</p>
+          ) : (
+            <>
+              <ul className="divide-y divide-gray-200">
+                {cart.map(item => (
+                  <li key={item.id} className="py-3 flex justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                      <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">${(item.price * item.quantity).toFixed(2)}</p>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Total</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+                <button
+                  onClick={onPlaceOrder}
+                  className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                >
+                  Place Order
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PatientOrders({ orders }: { orders: Order[] }) {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800'
+      case 'processing': return 'bg-blue-100 text-blue-800'
+      case 'ready_for_pickup': return 'bg-green-100 text-green-800'
+      case 'completed': return 'bg-gray-100 text-gray-800'
+      default: return 'bg-red-100 text-red-800'
+    }
+  }
+
+  return (
+    <div className="bg-white shadow rounded-lg">
+      <div className="px-4 py-5 sm:px-6">
+        <h3 className="text-lg leading-6 font-medium text-gray-900">Order History</h3>
+      </div>
+      <div className="border-t border-gray-200">
+        <ul className="divide-y divide-gray-200">
+          {orders.map(order => (
+            <li key={order.id} className="px-4 py-4 sm:px-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-primary">Order #{order.id.slice(0, 8)}</p>
+                  <p className="text-sm text-gray-500">Placed on {new Date(order.created_at).toLocaleDateString()}</p>
+                </div>
+                <div className="flex items-center">
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
+                    {order.status.replace('_', ' ')}
+                  </span>
+                  <p className="ml-4 text-sm font-medium text-gray-900">${order.total_amount.toFixed(2)}</p>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+function PharmacistInventory({ medications }: { medications: Medication[] }) {
+  const [search, setSearch] = useState('')
+  const [filteredMeds, setFilteredMeds] = useState(medications)
+
+  useEffect(() => {
+    setFilteredMeds(medications.filter(m => 
+      m.name.toLowerCase().includes(search.toLowerCase())
+    ))
+  }, [search, medications])
+
+  const handleToggleActive = async (id: string, currentStatus: boolean) => {
+    const { error } = await createClient()
+      .from('medications')
+      .update({ is_active: !currentStatus })
+      .eq('id', id)
+    
+    if (!error) {
+      window.location.reload()
+    }
+  }
+
+  const lowStockMeds = medications.filter(m => m.stock_quantity < 10 && m.stock_quantity > 0)
+
+  return (
+    <div>
+      {lowStockMeds.length > 0 && (
+        <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                Low Stock Alert: {lowStockMeds.map(m => m.name).join(', ')}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search medications..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+        />
+      </div>
+
+      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        <ul className="divide-y divide-gray-200">
+          {filteredMeds.map(med => (
+            <li key={med.id}>
+              <div className="px-4 py-4 flex items-center sm:px-6">
+                <div className="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
+                  <div>
+                    <div className="flex text-sm">
+                      <p className="font-medium text-primary truncate">{med.name}</p>
+                      <p className="ml-1 flex-shrink-0 font-normal text-gray-500">
+                        ${med.price.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="mt-2 flex">
+                      <div className="flex items-center text-sm text-gray-500">
+                        <p>
+                          Stock: <span className="font-medium">{med.stock_quantity}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => handleToggleActive(med.id, med.is_active)}
+                      className={`px-3 py-1 rounded text-sm font-medium ${med.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                    >
+                      {med.is_active ? 'Active' : 'Out of Stock'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+function PharmacistOrders({ orders }: { orders: Order[] }) {
+  const supabase = createClient()
+
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: newStatus })
+      .eq('id', orderId)
+
+    if (!error) {
+      window.location.reload()
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800'
+      case 'processing': return 'bg-blue-100 text-blue-800'
+      case 'ready_for_pickup': return 'bg-green-100 text-green-800'
+      case 'completed': return 'bg-gray-100 text-gray-800'
+      default: return 'bg-red-100 text-red-800'
+    }
+  }
+
+  return (
+    <div className="bg-white shadow rounded-lg">
+      <div className="px-4 py-5 sm:px-6">
+        <h3 className="text-lg leading-6 font-medium text-gray-900">Manage Orders</h3>
+      </div>
+      <div className="border-t border-gray-200">
+        <ul className="divide-y divide-gray-200">
+          {orders.map(order => (
+            <li key={order.id} className="px-4 py-4 sm:px-6">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="text-sm font-medium text-primary">Order #{order.id.slice(0, 8)}</p>
+                  <p className="text-sm text-gray-500">Placed on {new Date(order.created_at).toLocaleDateString()}</p>
+                </div>
+                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
+                  {order.status.replace('_', ' ')}
+                </span>
+              </div>
+              <div className="flex space-x-2">
+                {order.status === 'pending' && (
+                  <button
+                    onClick={() => handleStatusUpdate(order.id, 'processing')}
+                    className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                  >
+                    Start Processing
+                  </button>
+                )}
+                {order.status === 'processing' && (
+                  <button
+                    onClick={() => handleStatusUpdate(order.id, 'ready_for_pickup')}
+                    className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
+                  >
+                    Mark Ready
+                  </button>
+                )}
+                {order.status === 'ready_for_pickup' && (
+                  <button
+                    onClick={() => handleStatusUpdate(order.id, 'completed')}
+                    className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600"
+                  >
+                    Complete
+                  </button>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+function PharmacistMessages({ 
+  pharmacists, 
+  selectedPharmacist, 
+  setSelectedPharmacist, 
+  messages, 
+  newMessage, 
+  setNewMessage, 
+  handleSendMessage 
+}: { 
+  pharmacists: User[], 
+  selectedPharmacist: string | null, 
+  setSelectedPharmacist: (id: string | null) => void, 
+  messages: Message[], 
+  newMessage: string, 
+  setNewMessage: (msg: string) => void, 
+  handleSendMessage: () => void 
+}) {
+  const supabase = createClient()
+  const { user } = useAuth()
+
+  return (
+    <div className="bg-white shadow rounded-lg h-[600px] flex">
+      <div className="w-1/3 border-r border-gray-200">
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">Conversations</h3>
+        </div>
+        <ul className="divide-y divide-gray-200 overflow-y-auto h-full">
+          {pharmacists.map(pharm => (
+            <li 
+              key={pharm.id}
+              onClick={() => setSelectedPharmacist(pharm.id)}
+              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 ${selectedPharmacist === pharm.id ? 'bg-blue-50' : ''}`}
+            >
+              <p className="text-sm font-medium text-gray-900">{pharm.full_name}</p>
+              <p className="text-xs text-gray-500">{pharm.email}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="flex-1 flex flex-col">
+        {selectedPharmacist ? (
+          <>
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">
+                {pharmacists.find(p => p.id === selectedPharmacist)?.full_name}
+              </h3>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {messages.map(msg => (
+                <div key={msg.id} className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${msg.sender_id === user?.id ? 'bg-primary text-white' : 'bg-gray-200 text-gray-900'}`}>
+                    <p className="text-sm">{msg.content}</p>
+                    <p className="text-xs mt-1 opacity-75">
+                      {new Date(msg.created_at).toLocaleTimeString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-4 border-t border-gray-200">
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            Select a conversation to start messaging
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+```
+
+=== FILE: app/api/orders/[id]/route.ts ===
+```typescript
+import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
+
+export async function POST(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const supabase = createClient()
+  const { status } = await request.json()
+
+  if (!status) {
+    return NextResponse.json({ error: 'Status is required' }, { status: 400 })
+  }
+
+  // Get order details
+  const { data: order, error: orderError } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      order_items (
+        *,
+        medications (
+          name
+        )
+      ),
+      profiles (
+        email
+      )
+    `)
+    .eq('id', params.id)
+    .single()
+
+  if (orderError || !order) {
+    return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+  }
+
+  // Update order status
+  const { error: updateError } = await supabase
+    .from('orders')
+    .update({ status })
+    .eq('id', params.id)
+
+  if (updateError) {
+    return NextResponse.json({ error: 'Failed to update order' }, { status: 500 })
+  }
+
+  // Send email notification
+  const medicationNames = order.order_items.map((item: any) => item.medications.name).join(', ')
+  
+  try {
+    await resend.emails.send({
+      from: 'PharmaCare <onboarding@resend.dev>', // Replace with your verified domain
+      to: order.profiles.email,
+      subject: `Order Status Update: #${params.id.slice(0, 8)}`,
+      html: `
+        <h2>Order Status Update</h2>
+        <p>Your order <strong>#${params.id.slice(0, 8)}</strong> has been updated to <strong>${status.replace('_', ' ')}</strong>.</p>
+        <h3>Order Details:</h3>
+        <ul>
+          <li>Medications: ${medicationNames}</li>
+          <li>Total Amount: $${order.total_amount.toFixed(2)}</li>
+        </ul>
+        <p>Thank you for choosing PharmaCare!</p>
+      `,
+    })
+  } catch (emailError) {
+    console.error('Failed to send email:', emailError)
+    // Don't fail the request if email fails, but log it
+  }
+
+  return NextResponse.json({ success: true })
+}
+```
+
+=== FILE: app/page.tsx ===
+```typescript
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+
+export default async function Home() {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (user) {
+    redirect('/dashboard')
+  } else {
+    redirect('/login')
+  }
+}
+```

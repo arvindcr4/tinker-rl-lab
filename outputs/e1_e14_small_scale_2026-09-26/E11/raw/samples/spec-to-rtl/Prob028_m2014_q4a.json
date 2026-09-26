@@ -1,0 +1,10 @@
+{
+ "dataset": "spec-to-rtl",
+ "problem_id": "Prob028_m2014_q4a",
+ "response": "```verilog\nmodule TopModule (\n    input d,\n    input ena,\n    output reg q\n);\n\n    always @(*) begin\n        if (ena) begin\n            q = d;\n        end\n    end\n\nendmodule\n```",
+ "prompt_tokens": 71,
+ "completion_tokens": 57,
+ "stop_reason": "stop",
+ "error": null,
+ "module": "module TopModule (\n    input d,\n    input ena,\n    output reg q\n);\n\n    always @(*) begin\n        if (ena) begin\n            q = d;\n        end\n    end\n\nendmodule"
+}

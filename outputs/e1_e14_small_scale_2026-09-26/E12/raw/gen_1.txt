@@ -1,0 +1,1017 @@
+Here is the complete implementation for the Bloomberg Terminal-style dashboard.
+
+### Prerequisites
+You must have a Supabase project.
+1. Create a project at [supabase.com](https://supabase.com).
+2. Run the SQL provided in `supabase_schema.sql` in your Supabase SQL Editor.
+3. Get your `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+4. Create a `.env.local` file in the root directory with:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   OPENAI_API_KEY=your_openai_api_key
+   ```
+
+=== FILE: supabase_schema.sql ===
+```sql
+-- Enable UUID extension
+create extension if not exists "uuid-ossp";
+
+-- 1. Authentication (Handled by Supabase Auth, but we need a profile table)
+create table public.profiles (
+  id uuid references auth.users not null primary key,
+  email text,
+  username text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.profiles enable row level security;
+
+create policy "Public profiles are viewable by everyone."
+  on public.profiles for select
+  using ( true );
+
+create policy "Users can insert their own profile."
+  on public.profiles for insert
+  with check ( auth.uid() = id );
+
+create policy "Users can update own profile."
+  on public.profiles for update
+  using ( auth.uid() = id );
+
+-- Trigger to create profile on signup
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, email, username)
+  values (new.id, new.email, split_part(new.email, '@', 1));
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- 2. Public Chat Room
+create table public.chat_messages (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users not null,
+  message text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.chat_messages enable row level security;
+
+create policy "Messages are viewable by authenticated users."
+  on public.chat_messages for select
+  using ( auth.role() = 'authenticated' );
+
+create policy "Authenticated users can insert messages."
+  on public.chat_messages for insert
+  with check ( auth.role() = 'authenticated' );
+
+-- 3. AI Chat History (Private per user)
+create table public.ai_chats (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users not null,
+  role text not null, -- 'user' or 'assistant'
+  content text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.ai_chats enable row level security;
+
+create policy "Users can view own AI chats."
+  on public.ai_chats for select
+  using ( auth.uid() = user_id );
+
+create policy "Users can insert own AI chats."
+  on public.ai_chats for insert
+  with check ( auth.uid() = user_id );
+```
+
+=== FILE: .env.local ===
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+OPENAI_API_KEY=sk-your-openai-key-here
+```
+
+=== FILE: package.json ===
+```json
+{
+  "name": "bloomberg-terminal",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.9.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "autoprefixer": "^10.4.16",
+    "axios": "^1.6.2",
+    "date-fns": "^2.30.0",
+    "next": "^14.0.4",
+    "openai": "^4.15.4",
+    "postcss": "^8.4.32",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.10.3",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.0"
+  }
+}
+```
+
+=== FILE: tailwind.config.ts ===
+```typescript
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        terminal: {
+          bg: '#0a0a0a',
+          panel: '#111111',
+          border: '#333333',
+          text: '#e0e0e0',
+          accent: '#00ff00',
+          red: '#ff3333',
+          blue: '#00ccff',
+          yellow: '#ffcc00'
+        }
+      },
+      fontFamily: {
+        mono: ['"JetBrains Mono"', 'monospace'],
+      }
+    },
+  },
+  plugins: [],
+}
+export default config
+```
+
+=== FILE: postcss.config.js ===
+```javascript
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+```
+
+=== FILE: tsconfig.json ===
+```json
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+```
+
+=== FILE: src/lib/supabase.ts ===
+```typescript
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+export const supabase = createClient(supabaseUrl, supabaseKey)
+```
+
+=== FILE: src/lib/openai.ts ===
+```typescript
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export async function generateAIResponse(
+  messages: { role: string; content: string }[],
+  context?: string
+) {
+  const systemPrompt = `You are a financial analyst assistant integrated into a Bloomberg Terminal. 
+  You provide concise, data-driven insights. 
+  If a date range is provided in the context, you must explicitly reference it in your analysis.
+  If the user asks for news or current events, simulate a web search by providing the most relevant recent financial context you have, or general market trends if specific real-time data isn't available in the prompt.`;
+
+  const fullMessages = [
+    { role: 'system', content: systemPrompt },
+    ...(context ? [{ role: 'system', content: `CURRENT CONTEXT: ${context}` }] : []),
+    ...messages
+  ];
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: fullMessages,
+      temperature: 0.7,
+    });
+    return response.choices[0].message.content;
+  } catch (error) {
+    console.error("OpenAI Error:", error);
+    return "Error generating response. Please try again.";
+  }
+}
+```
+
+=== FILE: src/app/globals.css ===
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 224, 224, 224;
+  --background-start-rgb: 10, 10, 10;
+  --background-end-rgb: 0, 0, 0;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  font-family: 'JetBrains Mono', monospace;
+  overflow: hidden; /* App handles scrolling */
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #111; 
+}
+::-webkit-scrollbar-thumb {
+  background: #333; 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+
+.terminal-glow {
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+}
+
+/* Chart Selection Overlay */
+.recharts-wrapper {
+  user-select: none;
+}
+```
+
+=== FILE: src/app/layout.tsx ===
+```tsx
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { AuthProvider } from '@/components/AuthProvider'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'Bloomberg Terminal Clone',
+  description: 'Real-time financial dashboard',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+=== FILE: src/app/page.tsx ===
+```tsx
+'use client';
+
+import { useSession } from '@/components/AuthProvider';
+import Dashboard from '@/components/Dashboard';
+import Login from '@/components/Login';
+import { useEffect, useState } from 'react';
+
+export default function Home() {
+  const { session, loading } = useSession();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient || loading) {
+    return (
+      <div className="min-h-screen bg-terminal-bg flex items-center justify-center text-terminal-accent">
+        <div className="animate-pulse">INITIALIZING TERMINAL...</div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Login />;
+  }
+
+  return <Dashboard />;
+}
+```
+
+=== FILE: src/components/AuthProvider.tsx ===
+```tsx
+'use client';
+
+import { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import type { Session, User } from '@supabase/supabase-js';
+
+type AuthContextType = {
+  session: Session | null;
+  user: User | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
+};
+
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Set session from local storage immediately
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  return (
+    <AuthContext.Provider value={{ session, user, loading, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useSession = () => useContext(AuthContext);
+```
+
+=== FILE: src/components/Login.tsx ===
+```tsx
+'use client';
+
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useSession } from './AuthProvider';
+
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [error, setError] = useState('');
+  const { signOut } = useSession(); // To handle redirect after login
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) setError(error.message);
+      else setError('Check your email for confirmation link.');
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setError(error.message);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-terminal-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-terminal-panel border border-terminal-border p-8 rounded shadow-lg terminal-glow">
+        <h1 className="text-2xl font-bold text-terminal-accent mb-6 text-center uppercase tracking-widest">
+          {isSignUp ? 'New User Registration' : 'Terminal Access'}
+        </h1>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-terminal-text text-sm mb-1">EMAIL</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-terminal-bg border border-terminal-border text-terminal-text p-2 focus:outline-none focus:border-terminal-accent"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-terminal-text text-sm mb-1">PASSWORD</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-terminal-bg border border-terminal-border text-terminal-text p-2 focus:outline-none focus:border-terminal-accent"
+              required
+            />
+          </div>
+          
+          {error && <p className="text-terminal-red text-sm">{error}</p>}
+          
+          <button
+            type="submit"
+            className="w-full bg-terminal-accent text-terminal-bg font-bold py-2 px-4 hover:bg-green-400 transition-colors uppercase"
+          >
+            {isSignUp ? 'Register' : 'Login'}
+          </button>
+        </form>
+
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-terminal-blue text-sm hover:underline"
+          >
+            {isSignUp ? 'Already have an account? Login' : 'Need an account? Register'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+=== FILE: src/components/Dashboard.tsx ===
+```tsx
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { useSession } from './AuthProvider';
+import StockChart from './StockChart';
+import NewsFeed from './NewsFeed';
+import AIChat from './AIChat';
+import PublicChat from './PublicChat';
+import { supabase } from '@/lib/supabase';
+
+// Mock data for initial load
+const INITIAL_STOCKS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA'];
+
+export default function Dashboard() {
+  const { user, signOut } = useSession();
+  const [stocks, setStocks] = useState<string[]>(INITIAL_STOCKS);
+  const [newSymbol, setNewSymbol] = useState('');
+  const [selectedStock, setSelectedStock] = useState('AAPL');
+  const [news, setNews] = useState<any[]>([]);
+  const [aiContext, setAiContext] = useState('');
+
+  // Fetch initial news
+  useEffect(() => {
+    fetchNews();
+    const interval = setInterval(fetchNews, 60000); // Update news every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchNews = async () => {
+    // In a real app, this would call a news API. 
+    // Here we simulate fetching relevant financial news.
+    const mockNews = [
+      { title: "Market Rally Continues as Tech Stocks Surge", source: "Bloomberg", time: "2m ago" },
+      { title: "Fed Signals Potential Rate Cut in Q4", source: "Reuters", time: "15m ago" },
+      { title: "Oil Prices Stabilize Amid Global Tensions", source: "CNBC", time: "1h ago" },
+      { title: "Crypto Markets See Volatility", source: "CoinDesk", time: "2h ago" },
+    ];
+    setNews(prev => [...mockNews, ...prev].slice(0, 20));
+  };
+
+  const addStock = () => {
+    if (newSymbol && !stocks.includes(newSymbol.toUpperCase())) {
+      setStocks([...stocks, newSymbol.toUpperCase()]);
+      setNewSymbol('');
+    }
+  };
+
+  const handleChartSelection = (start: Date, end: Date) => {
+    const context = `Date Range: ${start.toISOString()} to ${end.toISOString()}`;
+    setAiContext(context);
+  };
+
+  return (
+    <div className="h-screen w-screen bg-terminal-bg text-terminal-text flex flex-col overflow-hidden">
+      {/* Header */}
+      <header className="h-12 bg-terminal-panel border-b border-terminal-border flex items-center justify-between px-4 shrink-0">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-terminal-accent font-bold text-lg tracking-wider">TERMINAL</h1>
+          <div className="flex space-x-2">
+            {stocks.map(s => (
+              <button
+                key={s}
+                onClick={() => setSelectedStock(s)}
+                className={`px-2 py-1 text-xs border ${selectedStock === s ? 'bg-terminal-accent text-terminal-bg border-terminal-accent' : 'border-terminal-border hover:border-terminal-accent'}`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <input 
+              type="text" 
+              value={newSymbol}
+              onChange={(e) => setNewSymbol(e.target.value)}
+              placeholder="ADD SYMBOL"
+              className="bg-terminal-bg border border-terminal-border text-xs p-1 w-24 focus:outline-none focus:border-terminal-accent"
+              onKeyDown={(e) => e.key === 'Enter' && addStock()}
+            />
+            <button onClick={addStock} className="text-xs text-terminal-blue hover:text-white">+</button>
+          </div>
+          <span className="text-xs text-terminal-text opacity-70">USER: {user?.email}</span>
+          <button onClick={signOut} className="text-xs text-terminal-red hover:text-white">LOGOUT</button>
+        </div>
+      </header>
+
+      {/* Main Content Grid */}
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* Left Column: Chart & News */}
+        <div className="flex-1 flex flex-col border-r border-terminal-border min-w-0">
+          {/* Chart Section */}
+          <div className="h-1/2 border-b border-terminal-border p-2 relative">
+            <div className="absolute top-2 left-2 z-10 bg-terminal-panel/80 px-2 py-1 text-xs border border-terminal-border">
+              {selectedStock} | REAL-TIME
+            </div>
+            <StockChart 
+              symbol={selectedStock} 
+              onSelectionChange={handleChartSelection} 
+            />
+          </div>
+
+          {/* News Section */}
+          <div className="h-1/2 p-2 overflow-hidden flex flex-col">
+            <h2 className="text-terminal-accent text-sm font-bold mb-2 border-b border-terminal-border pb-1">LIVE NEWS FEED</h2>
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+              {news.map((item, idx) => (
+                <div key={idx} className="text-xs border-b border-terminal-border/30 pb-1">
+                  <span className="text-terminal-blue font-bold">{item.source}</span> 
+                  <span className="text-terminal-text ml-2">{item.title}</span>
+                  <span className="text-terminal-text/50 ml-2 float-right">{item.time}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: AI Chat & Public Chat */}
+        <div className="w-96 flex flex-col shrink-0">
+          {/* AI Chat */}
+          <div className="h-1/2 border-b border-terminal-border flex flex-col">
+            <div className="p-2 bg-terminal-panel border-b border-terminal-border flex justify-between items-center">
+              <h2 className="text-terminal-yellow text-sm font-bold">AI ASSISTANT</h2>
+              {aiContext && <span className="text-[10px] text-terminal-text/70 truncate max-w-[150px]">{aiContext}</span>}
+            </div>
+            <AIChat context={aiContext} />
+          </div>
+
+          {/* Public Chat */}
+          <div className="h-1/2 flex flex-col">
+            <div className="p-2 bg-terminal-panel border-b border-terminal-border">
+              <h2 className="text-terminal-blue text-sm font-bold">PUBLIC FORUM</h2>
+            </div>
+            <PublicChat />
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+```
+
+=== FILE: src/components/StockChart.tsx ===
+```tsx
+'use client';
+
+import React, { useEffect, useState, useRef } from 'react';
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  ReferenceArea, Brush 
+} from 'recharts';
+
+interface StockChartProps {
+  symbol: string;
+  onSelectionChange: (start: Date, end: Date) => void;
+}
+
+const StockChart: React.FC<StockChartProps> = ({ symbol, onSelectionChange }) => {
+  const [data, setData] = useState<any[]>([]);
+  const [selectedRange, setSelectedRange] = useState<{x1: number, x2: number} | null>(null);
+  const chartRef = useRef<any>(null);
+
+  // Generate mock stock data
+  useEffect(() => {
+    const generateData = () => {
+      const now = new Date();
+      const dataPoints = [];
+      let price = 150 + Math.random() * 50;
+      
+      for (let i = 0; i < 100; i++) {
+        const time = new Date(now.getTime() - (100 - i) * 60000); // Last 100 minutes
+        const change = (Math.random() - 0.5) * 2;
+        price += change;
+        dataPoints.push({
+          time: time.toISOString(),
+          price: parseFloat(price.toFixed(2)),
+          originalTime: time
+        });
+      }
+      return dataPoints;
+    };
+
+    setData(generateData());
+
+    // Simulate real-time updates
+    const interval = setInterval(() => {
+      setData(prev => {
+        const last = prev[prev.length - 1];
+        const newTime = new Date();
+        const change = (Math.random() - 0.5) * 2;
+        const newPrice = last.price + change;
+        
+        const newData = [...prev.slice(1), {
+          time: newTime.toISOString(),
+          price: parseFloat(newPrice.toFixed(2)),
+          originalTime: newTime
+        }];
+        return newData;
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [symbol]);
+
+  const handleMouseDown = (e: any) => {
+    if (e.activeLabelIndex !== undefined) {
+      setSelectedRange({ x1: e.activeLabelIndex, x2: e.activeLabelIndex });
+    }
+  };
+
+  const handleMouseMove = (e: any) => {
+    if (selectedRange && e.activeLabelIndex !== undefined) {
+      setSelectedRange({ 
+        x1: Math.min(selectedRange.x1, e.activeLabelIndex), 
+        x2: Math.max(selectedRange.x1, e.activeLabelIndex) 
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (selectedRange && selectedRange.x1 !== selectedRange.x2 && chartRef.current) {
+      const xScale = chartRef.current.internal.xScale;
+      const startIdx = Math.min(selectedRange.x1, selectedRange.x2);
+      const endIdx = Math.max(selectedRange.x1, selectedRange.x2);
+      
+      const startDate = data[startIdx]?.originalTime;
+      const endDate = data[endIdx]?.originalTime;
+
+      if (startDate && endDate) {
+        onSelectionChange(startDate, endDate);
+      }
+    }
+    setSelectedRange(null);
+  };
+
+  return (
+    <div className="w-full h-full bg-terminal-panel border border-terminal-border p-2">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart
+          data={data}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          ref={chartRef}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+          <XAxis 
+            dataKey="time" 
+            tickFormatter={(val) => new Date(val).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} 
+            stroke="#666"
+            tick={{fontSize: 10}}
+          />
+          <YAxis 
+            domain={['auto', 'auto']} 
+            stroke="#666"
+            tick={{fontSize: 10}}
+          />
+          <Tooltip 
+            contentStyle={{ backgroundColor: '#111', border: '1px solid #333', color: '#fff' }}
+            labelFormatter={(val) => new Date(val).toLocaleString()}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="price" 
+            stroke="#00ff00" 
+            dot={false} 
+            activeDot={{ r: 4 }}
+          />
+          {selectedRange && (
+            <ReferenceArea 
+              x1={selectedRange.x1} 
+              x2={selectedRange.x2} 
+              fill="#00ff00" 
+              fillOpacity={0.1} 
+              strokeOpacity={0}
+            />
+          )}
+          <Brush 
+            dataKey="time" 
+            height={20} 
+            stroke="#00ccff" 
+            tickFormatter={(val) => ''}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export default StockChart;
+```
+
+=== FILE: src/components/NewsFeed.tsx ===
+```tsx
+// This component is integrated into Dashboard.tsx for simplicity in this single-file structure
+// but exported here if needed separately.
+export default function NewsFeed() {
+  return null; 
+}
+```
+
+=== FILE: src/components/AIChat.tsx ===
+```tsx
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useSession } from './AuthProvider';
+import { generateAIResponse } from '@/lib/openai';
+
+interface AIChatProps {
+  context?: string;
+}
+
+export default function AIChat({ context }: AIChatProps) {
+  const { user } = useSession();
+  const [messages, setMessages] = useState<{role: string, content: string}[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Load history
+  useEffect(() => {
+    if (!user) return;
+
+    const loadHistory = async () => {
+      const { data, error } = await supabase
+        .from('ai_chats')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+      
+      if (data) {
+        setMessages(data.map((m: any) => ({ role: m.role, content: m.content })));
+      }
+    };
+
+    loadHistory();
+
+    // Listen for new messages (if shared, though this is private)
+    const channel = supabase
+      .channel('ai_chats_changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ai_chats', filter: `user_id=eq.${user.id}` }, (payload) => {
+        setMessages(prev => [...prev, { role: payload.new.role, content: payload.new.content }]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  // Auto-scroll
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!input.trim() || !user) return;
+
+    const userMsg = { role: 'user', content: input };
+    const newMessages = [...messages, userMsg];
+    
+    setMessages(newMessages);
+    setInput('');
+    setIsLoading(true);
+
+    // Save user message
+    await supabase.from('ai_chats').insert({ user_id: user.id, role: 'user', content: input });
+
+    // Get AI Response
+    const response = await generateAIResponse(newMessages, context);
+    
+    const aiMsg = { role: 'assistant', content: response };
+    setMessages(prev => [...prev, aiMsg]);
+    
+    // Save AI message
+    await supabase.from('ai_chats').insert({ user_id: user.id, role: 'assistant', content: response });
+    setIsLoading(false);
+  };
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden bg-terminal-bg">
+      <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`text-xs ${msg.role === 'user' ? 'text-terminal-blue' : 'text-terminal-accent'}`}>
+            <span className="font-bold mr-2">{msg.role === 'user' ? 'YOU' : 'AI'}:</span>
+            {msg.content}
+          </div>
+        ))}
+        {isLoading && <div className="text-xs text-terminal-text/50">Thinking...</div>}
+        <div ref={messagesEndRef} />
+      </div>
+      <div className="p-2 border-t border-terminal-border flex">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          placeholder="Ask about the market..."
+          className="flex-1 bg-terminal-panel border border-terminal-border text-terminal-text p-2 text-xs focus:outline-none focus:border-terminal-accent"
+        />
+        <button 
+          onClick={handleSend}
+          disabled={isLoading}
+          className="ml-2 bg-terminal-accent text-terminal-bg px-3 py-2 text-xs font-bold hover:bg-green-400 disabled:opacity-50"
+        >
+          SEND
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+=== FILE: src/components/PublicChat.tsx ===
+```tsx
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useSession } from './AuthProvider';
+
+export default function PublicChat() {
+  const { user } = useSession();
+  const [messages, setMessages] = useState<any[]>([]);
+  const [input, setInput] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const loadMessages = async () => {
+      const { data } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .order('created_at', { ascending: true })
+        .limit(50);
+      
+      if (data) setMessages(data);
+    };
+
+    loadMessages();
+
+    const channel = supabase
+      .channel('public_chat_changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
+        setMessages(prev => [...prev, payload.new]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!input.trim() || !user) return;
+    
+    await supabase.from('chat_messages').insert({
+      user_id: user.id,
+      message: input
+    });
+    
+    setInput('');
+  };
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden bg-terminal-bg">
+      <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        {messages.map((msg) => (
+          <div key={msg.id} className="text-xs border-b border-terminal-border/20 pb-1">
+            <span className="text-terminal-blue font-bold">[{new Date(msg.created_at).toLocaleTimeString()}]</span>
+            <span className="text-terminal-yellow ml-2">{msg.user_id === user?.id ? 'YOU' : 'USER'}</span>
+            <span className="text-terminal-text ml-2">{msg.message}</span>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+      <div className="p-2 border-t border-terminal-border flex">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          placeholder="Type a message..."
+          className="flex-1 bg-terminal-panel border border-terminal-border text-terminal-text p-2 text-xs focus:outline-none focus:border-terminal-accent"
+        />
+        <button 
+          onClick={handleSend}
+          className="ml-2 bg-terminal-blue text-terminal-bg px-3 py-2 text-xs font-bold hover:bg-blue-400"
+        >
+          POST
+        </button>
+      </div>
+    </div>
+  );
+}
+```

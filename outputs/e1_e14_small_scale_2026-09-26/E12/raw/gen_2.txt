@@ -1,0 +1,1885 @@
+Here is the complete implementation for the Hospital Patient Tracking Board.
+
+### Technical Architecture
+1.  **Framework**: Next.js 14+ (App Router) with TypeScript.
+2.  **Database & Auth**: Supabase (PostgreSQL, Auth, Realtime).
+3.  **State Management**: React Context for Auth/Presence, Supabase JS Client for Data/Realtime.
+4.  **Styling**: Tailwind CSS.
+5.  **Icons**: Lucide React.
+
+### Prerequisites
+You must have a Supabase project.
+1.  Create a project.
+2.  Run the SQL schema provided in `supabase-schema.sql` in the SQL Editor.
+3.  Get your `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
+=== FILE: supabase-schema.sql ===
+```sql
+-- Enable Realtime for specific tables
+alter publication supabase_realtime add table users;
+alter publication supabase_realtime add table units;
+alter publication supabase_realtime add table beds;
+alter publication supabase_realtime add table encounters;
+alter publication supabase_realtime add table tasks;
+alter publication supabase_realtime add table chat_messages;
+alter publication supabase_realtime add table emergency_alerts;
+
+-- 1. Users (Extends Supabase Auth)
+create table public.profiles (
+  id uuid references auth.users not null primary key,
+  full_name text,
+  role text check (role in ('admin', 'nurse', 'physician')),
+  is_active boolean default true,
+  created_at timestamptz default now(),
+  last_seen timestamptz default now()
+);
+
+-- 2. Units
+create table public.units (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  description text,
+  created_at timestamptz default now()
+);
+
+-- 3. Beds
+create table public.beds (
+  id uuid default gen_random_uuid() primary key,
+  unit_id uuid references public.units(id) on delete cascade,
+  bed_number text not null,
+  is_active boolean default true,
+  created_at timestamptz default now(),
+  unique(unit_id, bed_number)
+);
+
+-- 4. Encounters (Patient Data)
+create table public.encounters (
+  id uuid default gen_random_uuid() primary key,
+  bed_id uuid references public.beds(id) on delete cascade,
+  patient_name text not null,
+  mrn text not null,
+  dob date,
+  status text default 'admitted', -- admitted, procedure, recovery, discharge-ready
+  notes text default '',
+  assigned_nurse_id uuid references public.profiles(id),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- 5. Tasks
+create table public.tasks (
+  id uuid default gen_random_uuid() primary key,
+  encounter_id uuid references public.encounters(id) on delete cascade,
+  description text not null,
+  is_completed boolean default false,
+  created_by uuid references public.profiles(id),
+  created_at timestamptz default now()
+);
+
+-- 6. Chat Messages
+create table public.chat_messages (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id),
+  message text not null,
+  created_at timestamptz default now()
+);
+
+-- 7. Emergency Alerts
+create table public.emergency_alerts (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  message text not null,
+  severity text default 'high', -- low, medium, high, critical
+  category text default 'general',
+  is_active boolean default true,
+  created_by uuid references public.profiles(id),
+  created_at timestamptz default now()
+);
+
+-- Row Level Security (RLS) Policies
+alter table public.profiles enable row level security;
+alter table public.units enable row level security;
+alter table public.beds enable row level security;
+alter table public.encounters enable row level security;
+alter table public.tasks enable row level security;
+alter table public.chat_messages enable row level security;
+alter table public.emergency_alerts enable row level security;
+
+-- Profiles: Users can read all profiles, update own
+create policy "Public profiles are viewable by everyone."
+  on public.profiles for select using (true);
+create policy "Users can update own profile."
+  on public.profiles for update using (auth.uid() = id);
+
+-- Units: Everyone can read, only admins can write
+create policy "Units viewable by all."
+  on public.units for select using (true);
+create policy "Admins can insert units."
+  on public.units for insert with check (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+create policy "Admins can update units."
+  on public.units for update using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+create policy "Admins can delete units."
+  on public.units for delete using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+
+-- Beds: Everyone can read, only admins can write
+create policy "Beds viewable by all."
+  on public.beds for select using (true);
+create policy "Admins can insert beds."
+  on public.beds for insert with check (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+create policy "Admins can update beds."
+  on public.beds for update using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+create policy "Admins can delete beds."
+  on public.beds for delete using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+
+-- Encounters: Everyone can read/write
+create policy "Encounters viewable by all."
+  on public.encounters for select using (true);
+create policy "Users can insert encounters."
+  on public.encounters for insert with check (true);
+create policy "Users can update encounters."
+  on public.encounters for update using (true);
+create policy "Users can delete encounters."
+  on public.encounters for delete using (true);
+
+-- Tasks: Everyone can read/write
+create policy "Tasks viewable by all."
+  on public.tasks for select using (true);
+create policy "Users can insert tasks."
+  on public.tasks for insert with check (true);
+create policy "Users can update tasks."
+  on public.tasks for update using (true);
+create policy "Users can delete tasks."
+  on public.tasks for delete using (true);
+
+-- Chat: Everyone can read/write
+create policy "Chat messages viewable by all."
+  on public.chat_messages for select using (true);
+create policy "Users can insert chat messages."
+  on public.chat_messages for insert with check (true);
+
+-- Alerts: Everyone can read, only admins can write
+create policy "Alerts viewable by all."
+  on public.emergency_alerts for select using (true);
+create policy "Admins can insert alerts."
+  on public.emergency_alerts for insert with check (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+create policy "Admins can update alerts."
+  on public.emergency_alerts for update using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+create policy "Admins can delete alerts."
+  on public.emergency_alerts for delete using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+
+-- Trigger to create profile on signup
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, full_name, role)
+  values (new.id, new.raw_user_meta_data->>'full_name', 'nurse'); -- Default role
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+```
+
+=== FILE: .env.local ===
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_ANON_KEY
+```
+
+=== FILE: package.json ===
+```json
+{
+  "name": "hospital-tracking-board",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.9.0",
+    "@supabase/ssr": "^0.1.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "date-fns": "^3.0.0",
+    "lucide-react": "^0.300.0",
+    "next": "14.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0"
+  }
+}
+```
+
+=== FILE: tailwind.config.ts ===
+```typescript
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: '#0ea5e9',
+        secondary: '#64748b',
+        danger: '#ef4444',
+        success: '#22c55e',
+        warning: '#eab308',
+      }
+    },
+  },
+  plugins: [],
+}
+export default config
+```
+
+=== FILE: postcss.config.js ===
+```javascript
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+```
+
+=== FILE: src/lib/supabase.ts ===
+```typescript
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+})
+```
+
+=== FILE: src/lib/utils.ts ===
+```typescript
+import { supabase } from './supabase'
+
+export const getProfile = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single()
+  
+  if (error) return null
+  return data
+}
+
+export const updateProfileLastSeen = async (userId: string) => {
+  await supabase
+    .from('profiles')
+    .update({ last_seen: new Date().toISOString() })
+    .eq('id', userId)
+}
+```
+
+=== FILE: src/contexts/AuthContext.tsx ===
+```typescript
+'use client'
+
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { supabase } from '@/lib/supabase'
+import { User, Session } from '@supabase/supabase-js'
+import { getProfile } from '@/lib/utils'
+
+interface AuthContextType {
+  user: User | null
+  session: Session | null
+  profile: any
+  loading: boolean
+  signOut: () => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        getProfile(session.user.id).then(setProfile)
+      }
+      setLoading(false)
+    })
+
+    // Listen for changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        getProfile(session.user.id).then(setProfile)
+      } else {
+        setProfile(null)
+      }
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const signOut = async () => {
+    await supabase.auth.signOut()
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, session, profile, loading, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
+```
+
+=== FILE: src/contexts/PresenceContext.tsx ===
+```typescript
+'use client'
+
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from './AuthContext'
+import { updateProfileLastSeen } from '@/lib/utils'
+
+interface PresenceContextType {
+  onlineUsers: string[]
+}
+
+const PresenceContext = createContext<PresenceContextType | undefined>(undefined)
+
+export const PresenceProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth()
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!user) return
+
+    // Update last seen on mount and interval
+    const updatePresence = async () => {
+      await updateProfileLastSeen(user.id)
+    }
+
+    updatePresence()
+    const interval = setInterval(updatePresence, 30000) // Every 30s
+
+    // Listen for profile updates (last_seen changes)
+    const channel = supabase
+      .channel('presence_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+        },
+        (payload) => {
+          // If the user is still active (last_seen within 1 min), consider them online
+          const lastSeen = new Date(payload.new.last_seen)
+          const now = new Date()
+          if (now.getTime() - lastSeen.getTime() < 60000) {
+            setOnlineUsers((prev) => {
+              if (!prev.includes(payload.new.id)) {
+                return [...prev, payload.new.id]
+              }
+              return prev
+            })
+          } else {
+            setOnlineUsers((prev) => prev.filter((id) => id !== payload.new.id))
+          }
+        }
+      )
+      .subscribe()
+
+    // Initial load of online users
+    supabase
+      .from('profiles')
+      .select('id')
+      .eq('is_active', true)
+      .then(({ data }) => {
+        if (data) {
+          setOnlineUsers(data.map((p) => p.id))
+        }
+      })
+
+    return () => {
+      clearInterval(interval)
+      channel.unsubscribe()
+    }
+  }, [user])
+
+  return (
+    <PresenceContext.Provider value={{ onlineUsers }}>
+      {children}
+    </PresenceContext.Provider>
+  )
+}
+
+export const usePresence = () => {
+  const context = useContext(PresenceContext)
+  if (context === undefined) {
+    throw new Error('usePresence must be used within a PresenceProvider')
+  }
+  return context
+}
+```
+
+=== FILE: src/app/globals.css ===
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 241, 245, 249;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* Custom Scrollbar for Chat */
+.chat-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+```
+
+=== FILE: src/app/layout.tsx ===
+```typescript
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { PresenceProvider } from '@/contexts/PresenceContext'
+import { AlertProvider } from '@/contexts/AlertContext'
+import { BoardProvider } from '@/contexts/BoardContext'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'Hospital Patient Tracking Board',
+  description: 'Real-time patient tracking and management system',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>
+        <AuthProvider>
+          <PresenceProvider>
+            <AlertProvider>
+              <BoardProvider>
+                {children}
+              </BoardProvider>
+            </AlertProvider>
+          </PresenceProvider>
+        </AuthProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+=== FILE: src/contexts/AlertContext.tsx ===
+```typescript
+'use client'
+
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from './AuthContext'
+
+interface Alert {
+  id: string
+  title: string
+  message: string
+  severity: string
+  category: string
+  is_active: boolean
+  created_by: string
+  created_at: string
+}
+
+interface AlertContextType {
+  alerts: Alert[]
+  dismissedAlerts: string[]
+  addAlert: (alert: Omit<Alert, 'id' | 'created_at' | 'is_active' | 'created_by'>) => Promise<void>
+  dismissAlert: (id: string) => void
+}
+
+const AlertContext = createContext<AlertContextType | undefined>(undefined)
+
+export const AlertProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth()
+  const [alerts, setAlerts] = useState<Alert[]>([])
+  const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!user) return
+
+    // Load active alerts
+    const loadAlerts = async () => {
+      const { data } = await supabase
+        .from('emergency_alerts')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+      
+      if (data) setAlerts(data)
+    }
+
+    loadAlerts()
+
+    // Listen for new alerts
+    const channel = supabase
+      .channel('alerts_channel')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'emergency_alerts',
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setAlerts((prev) => [payload.new as Alert, ...prev])
+          } else if (payload.eventType === 'DELETE') {
+            setAlerts((prev) => prev.filter((a) => (a as any).id !== (payload.old as any).id))
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [user])
+
+  const addAlert = async (alertData: Omit<Alert, 'id' | 'created_at' | 'is_active' | 'created_by'>) => {
+    if (!user) return
+    await supabase.from('emergency_alerts').insert({
+      ...alertData,
+      is_active: true,
+      created_by: user.id,
+    })
+  }
+
+  const dismissAlert = (id: string) => {
+    setDismissedAlerts((prev) => [...prev, id])
+  }
+
+  return (
+    <AlertContext.Provider value={{ alerts, dismissedAlerts, addAlert, dismissAlert }}>
+      {children}
+    </AlertContext.Provider>
+  )
+}
+
+export const useAlerts = () => {
+  const context = useContext(AlertContext)
+  if (context === undefined) {
+    throw new Error('useAlerts must be used within an AlertProvider')
+  }
+  return context
+}
+```
+
+=== FILE: src/contexts/BoardContext.tsx ===
+```typescript
+'use client'
+
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from './AuthContext'
+
+interface Unit {
+  id: string
+  name: string
+  description: string
+}
+
+interface Bed {
+  id: string
+  unit_id: string
+  bed_number: string
+  is_active: boolean
+}
+
+interface Encounter {
+  id: string
+  bed_id: string
+  patient_name: string
+  mrn: string
+  dob: string
+  status: string
+  notes: string
+  assigned_nurse_id: string
+}
+
+interface Task {
+  id: string
+  encounter_id: string
+  description: string
+  is_completed: boolean
+}
+
+interface BoardData {
+  units: Unit[]
+  beds: Bed[]
+  encounters: Encounter[]
+  tasks: Task[]
+}
+
+interface BoardContextType {
+  data: BoardData
+  loading: boolean
+  addUnit: (name: string, description: string) => Promise<void>
+  updateUnit: (id: string, name: string, description: string) => Promise<void>
+  deleteUnit: (id: string) => Promise<void>
+  addBed: (unitId: string, bedNumber: string) => Promise<void>
+  updateBed: (id: string, bedNumber: string) => Promise<void>
+  deleteBed: (id: string) => Promise<void>
+  updateEncounter: (id: string, data: Partial<Encounter>) => Promise<void>
+  addTask: (encounterId: string, description: string) => Promise<void>
+  updateTask: (id: string, isCompleted: boolean) => Promise<void>
+  deleteTask: (id: string) => Promise<void>
+}
+
+const BoardContext = createContext<BoardContextType | undefined>(undefined)
+
+export const BoardProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth()
+  const [data, setData] = useState<BoardData>({
+    units: [],
+    beds: [],
+    encounters: [],
+    tasks: [],
+  })
+  const [loading, setLoading] = useState(true)
+
+  const loadData = async () => {
+    const [unitsRes, bedsRes, encountersRes, tasksRes] = await Promise.all([
+      supabase.from('units').select('*').order('name'),
+      supabase.from('beds').select('*').order('bed_number'),
+      supabase.from('encounters').select('*').order('updated_at', { ascending: false }),
+      supabase.from('tasks').select('*').order('created_at', { ascending: false }),
+    ])
+
+    if (unitsRes.data && bedsRes.data && encountersRes.data && tasksRes.data) {
+      setData({
+        units: unitsRes.data,
+        beds: bedsRes.data,
+        encounters: encountersRes.data,
+        tasks: tasksRes.data,
+      })
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    if (!user) return
+    loadData()
+
+    // Listen for changes
+    const channel = supabase
+      .channel('board_channel')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'units',
+        },
+        () => loadData()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'beds',
+        },
+        () => loadData()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'encounters',
+        },
+        () => loadData()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+        },
+        () => loadData()
+      )
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [user])
+
+  const addUnit = async (name: string, description: string) => {
+    await supabase.from('units').insert({ name, description })
+  }
+
+  const updateUnit = async (id: string, name: string, description: string) => {
+    await supabase.from('units').update({ name, description }).eq('id', id)
+  }
+
+  const deleteUnit = async (id: string) => {
+    await supabase.from('units').delete().eq('id', id)
+  }
+
+  const addBed = async (unitId: string, bedNumber: string) => {
+    await supabase.from('beds').insert({ unit_id: unitId, bed_number: bedNumber })
+  }
+
+  const updateBed = async (id: string, bedNumber: string) => {
+    await supabase.from('beds').update({ bed_number }).eq('id', id)
+  }
+
+  const deleteBed = async (id: string) => {
+    await supabase.from('beds').delete().eq('id', id)
+  }
+
+  const updateEncounter = async (id: string, data: Partial<Encounter>) => {
+    await supabase.from('encounters').update(data).eq('id', id)
+  }
+
+  const addTask = async (encounterId: string, description: string) => {
+    await supabase.from('tasks').insert({ encounter_id: encounterId, description })
+  }
+
+  const updateTask = async (id: string, isCompleted: boolean) => {
+    await supabase.from('tasks').update({ is_completed: isCompleted }).eq('id', id)
+  }
+
+  const deleteTask = async (id: string) => {
+    await supabase.from('tasks').delete().eq('id', id)
+  }
+
+  return (
+    <BoardContext.Provider
+      value={{
+        data,
+        loading,
+        addUnit,
+        updateUnit,
+        deleteUnit,
+        addBed,
+        updateBed,
+        deleteBed,
+        updateEncounter,
+        addTask,
+        updateTask,
+        deleteTask,
+      }}
+    >
+      {children}
+    </BoardContext.Provider>
+  )
+}
+
+export const useBoard = () => {
+  const context = useContext(BoardContext)
+  if (context === undefined) {
+    throw new Error('useBoard must be used within a BoardProvider')
+  }
+  return context
+}
+```
+
+=== FILE: src/app/login/page.tsx ===
+```typescript
+'use client'
+
+import { useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      router.push('/dashboard')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-lg shadow-md w-96">
+        <h1 className="text-2xl font-bold mb-6 text-center text-primary">Hospital Board Login</h1>
+        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+        <form onSubmit={handleLogin}>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <button
+              type="submit"
+              className="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+              disabled={loading}
+            >
+              {loading ? 'Logging in...' : 'Sign In'}
+            </button>
+          </div>
+        </form>
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-600">
+            Don't have an account?{' '}
+            <button
+              onClick={() => router.push('/register')}
+              className="text-primary hover:underline"
+            >
+              Register
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+=== FILE: src/app/register/page.tsx ===
+```typescript
+'use client'
+
+import { useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+
+export default function RegisterPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
+    })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      alert('Registration successful! Please check your email to confirm your account.')
+      router.push('/login')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-lg shadow-md w-96">
+        <h1 className="text-2xl font-bold mb-6 text-center text-primary">Register</h1>
+        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+        <form onSubmit={handleRegister}>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fullName">
+              Full Name
+            </label>
+            <input
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <button
+              type="submit"
+              className="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+              disabled={loading}
+            >
+              {loading ? 'Registering...' : 'Register'}
+            </button>
+          </div>
+        </form>
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-600">
+            Already have an account?{' '}
+            <button
+              onClick={() => router.push('/login')}
+              className="text-primary hover:underline"
+            >
+              Login
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+=== FILE: src/app/dashboard/page.tsx ===
+```typescript
+'use client'
+
+import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import Navbar from '@/components/Navbar'
+import PatientBoard from '@/components/PatientBoard'
+import AdminPanel from '@/components/AdminPanel'
+import ChatRoom from '@/components/ChatRoom'
+import EmergencyAlerts from '@/components/EmergencyAlerts'
+
+export default function DashboardPage() {
+  const { user, profile, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login')
+    }
+  }, [user, loading, router])
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>
+  }
+
+  if (!user) {
+    return null
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <EmergencyAlerts />
+      <main className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <PatientBoard />
+          </div>
+          <div className="lg:col-span-1">
+            {profile?.role === 'admin' && <AdminPanel />}
+            <ChatRoom />
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
+```
+
+=== FILE: src/components/Navbar.tsx ===
+```typescript
+'use client'
+
+import { useAuth } from '@/contexts/AuthContext'
+import { usePresence } from '@/contexts/PresenceContext'
+import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+import { Users, LogOut } from 'lucide-react'
+
+export default function Navbar() {
+  const { user, profile, signOut } = useAuth()
+  const { onlineUsers } = usePresence()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
+  return (
+    <nav className="bg-white shadow-md">
+      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          <h1 className="text-xl font-bold text-primary">Hospital Board</h1>
+          <div className="flex items-center space-x-1 text-sm text-gray-600">
+            <Users size={16} />
+            <span>{onlineUsers.length} Online</span>
+          </div>
+        </div>
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-gray-600">
+            {profile?.full_name} ({profile?.role})
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center space-x-1 text-gray-600 hover:text-red-600"
+          >
+            <LogOut size={18} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+  )
+}
+```
+
+=== FILE: src/components/EmergencyAlerts.tsx ===
+```typescript
+'use client'
+
+import { useAlerts } from '@/contexts/AlertContext'
+import { AlertTriangle, X } from 'lucide-react'
+
+export default function EmergencyAlerts() {
+  const { alerts, dismissedAlerts, dismissAlert } = useAlerts()
+
+  const visibleAlerts = alerts.filter((alert) => !dismissedAlerts.includes(alert.id))
+
+  if (visibleAlerts.length === 0) return null
+
+  return (
+    <div className="space-y-2">
+      {visibleAlerts.map((alert) => (
+        <div
+          key={alert.id}
+          className={`p-4 rounded-md shadow-md flex justify-between items-start ${
+            alert.severity === 'critical'
+              ? 'bg-red-100 border-l-4 border-red-500'
+              : alert.severity === 'high'
+              ? 'bg-orange-100 border-l-4 border-orange-500'
+              : 'bg-yellow-100 border-l-4 border-yellow-500'
+          }`}
+        >
+          <div className="flex items-start space-x-3">
+            <AlertTriangle
+              className={`flex-shrink-0 ${
+                alert.severity === 'critical'
+                  ? 'text-red-500'
+                  : alert.severity === 'high'
+                  ? 'text-orange-500'
+                  : 'text-yellow-500'
+              }`}
+              size={24}
+            />
+            <div>
+              <h3 className="font-bold text-gray-900">{alert.title}</h3>
+              <p className="text-gray-700">{alert.message}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {alert.category} • {new Date(alert.created_at).toLocaleString()}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => dismissAlert(alert.id)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+```
+
+=== FILE: src/components/PatientBoard.tsx ===
+```typescript
+'use client'
+
+import { useBoard } from '@/contexts/BoardContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { getProfile } from '@/lib/utils'
+import { useState, useEffect } from 'react'
+import { Plus, Edit, Trash2, Save, X, Check, AlertCircle } from 'lucide-react'
+
+interface BedWithEncounter {
+  bed: any
+  encounter: any
+  tasks: any[]
+  unit: any
+}
+
+export default function PatientBoard() {
+  const { data, loading, updateEncounter, addTask, updateTask, deleteTask } = useBoard()
+  const { profile } = useAuth()
+  const [nurses, setNurses] = useState<any[]>([])
+  const [editingEncounter, setEditingEncounter] = useState<string | null>(null)
+  const [editData, setEditData] = useState<any>({})
+  const [newTask, setNewTask] = useState<{ [key: string]: string }>({})
+
+  useEffect(() => {
+    const loadNurses = async () => {
+      const { data } = await getProfile('') // This is a hack, better to fetch all profiles
+      // Actually, let's fetch all profiles from supabase directly in the component or context
+      // For simplicity, we'll fetch them here
+      const { data: profiles } = await (await import('@/lib/supabase')).supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'nurse')
+        .eq('is_active', true)
+      if (profiles) setNurses(profiles)
+    }
+    loadNurses()
+  }, [])
+
+  if (loading) return <div className="text-center py-10">Loading Board...</div>
+
+  // Build bed data with encounters and tasks
+  const bedsWithEncounters: BedWithEncounter[] = data.beds
+    .filter((bed) => bed.is_active)
+    .map((bed) => {
+      const encounter = data.encounters.find((e) => e.bed_id === bed.id)
+      const tasks = data.tasks.filter((t) => t.encounter_id === encounter?.id)
+      const unit = data.units.find((u) => u.id === bed.unit_id)
+      return { bed, encounter, tasks, unit }
+    })
+
+  // Group by unit
+  const unitsWithBeds = data.units.map((unit) => ({
+    unit,
+    beds: bedsWithEncounters.filter((b) => b.unit?.id === unit.id),
+  }))
+
+  const handleSaveEncounter = async (id: string) => {
+    await updateEncounter(id, editData)
+    setEditingEncounter(null)
+  }
+
+  const handleAddTask = async (encounterId: string) => {
+    if (newTask[encounterId]) {
+      await addTask(encounterId, newTask[encounterId])
+      setNewTask({ ...newTask, [encounterId]: '' })
+    }
+  }
+
+  const handleToggleTask = async (taskId: string, isCompleted: boolean) => {
+    await updateTask(taskId, !isCompleted)
+  }
+
+  const handleDeleteTask = async (taskId: string) => {
+    await deleteTask(taskId)
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-800">Patient Board</h2>
+      {unitsWithBeds.map(({ unit, beds }) => (
+        <div key={unit.id} className="bg-white rounded-lg shadow-md p-4">
+          <h3 className="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">{unit.name}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {beds.map(({ bed, encounter, tasks }) => (
+              <BedCard
+                key={bed.id}
+                bed={bed}
+                encounter={encounter}
+                tasks={tasks}
+                nurses={nurses}
+                profile={profile}
+                editingEncounter={editingEncounter}
+                setEditingEncounter={setEditingEncounter}
+                editData={editData}
+                setEditData={setEditData}
+                handleSaveEncounter={handleSaveEncounter}
+                newTask={newTask}
+                setNewTask={setNewTask}
+                handleAddTask={handleAddTask}
+                handleToggleTask={handleToggleTask}
+                handleDeleteTask={handleDeleteTask}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function BedCard({
+  bed,
+  encounter,
+  tasks,
+  nurses,
+  profile,
+  editingEncounter,
+  setEditingEncounter,
+  editData,
+  setEditData,
+  handleSaveEncounter,
+  newTask,
+  setNewTask,
+  handleAddTask,
+  handleToggleTask,
+  handleDeleteTask,
+}: any) {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'admitted': return 'bg-blue-100 text-blue-800'
+      case 'procedure': return 'bg-yellow-100 text-yellow-800'
+      case 'recovery': return 'bg-green-100 text-green-800'
+      case 'discharge-ready': return 'bg-purple-100 text-purple-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const completedTasks = tasks.filter((t: any) => t.is_completed).length
+  const totalTasks = tasks.length
+
+  if (editingEncounter === encounter?.id) {
+    return (
+      <div className="bg-white p-4 rounded-lg shadow-md border-2 border-primary">
+        <h4 className="font-bold text-lg mb-2">Edit Patient</h4>
+        <div className="space-y-2">
+          <input
+            type="text"
+            value={editData.patient_name || ''}
+            onChange={(e) => setEditData({ ...editData, patient_name: e.target.value })}
+            className="w-full p-2 border rounded"
+            placeholder="Patient Name"
+          />
+          <input
+            type="text"
+            value={editData.mrn || ''}
+            onChange={(e) => setEditData({ ...editData, mrn: e.target.value })}
+            className="w-full p-2 border rounded"
+            placeholder="MRN"
+          />
+          <input
+            type="date"
+            value={editData.dob || ''}
+            onChange={(e) => setEditData({ ...editData, dob: e.target.value })}
+            className="w-full p-2 border rounded"
+          />
+          <select
+            value={editData.status || 'admitted'}
+            onChange={(e) => setEditData({ ...editData, status: e.target.value })}
+            className="w-full p-2 border rounded"
+          >
+            <option value="admitted">Admitted</option>
+            <option value="procedure">Procedure</option>
+            <option value="recovery">Recovery</option>
+            <option value="discharge-ready">Discharge Ready</option>
+          </select>
+          <select
+            value={editData.assigned_nurse_id || ''}
+            onChange={(e) => setEditData({ ...editData, assigned_nurse_id: e.target.value })}
+            className="w-full p-2 border rounded"
+          >
+            <option value="">Select Nurse</option>
+            {nurses.map((nurse: any) => (
+              <option key={nurse.id} value={nurse.id}>
+                {nurse.full_name}
+              </option>
+            ))}
+          </select>
+          <textarea
+            value={editData.notes || ''}
+            onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
+            className="w-full p-2 border rounded"
+            placeholder="Notes"
+            rows={3}
+          />
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleSaveEncounter(encounter.id)}
+              className="flex-1 bg-primary text-white py-2 rounded hover:bg-blue-700"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setEditingEncounter(null)}
+              className="flex-1 bg-gray-300 text-gray-800 py-2 rounded hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+      <div className="flex justify-between items-start mb-2">
+        <h4 className="font-bold text-lg text-gray-800">Bed {bed.bed_number}</h4>
+        {profile?.role === 'admin' && (
+          <button
+            onClick={() => setEditingEncounter(encounter?.id)}
+            className="text-gray-500 hover:text-primary"
+          >
+            <Edit size={16} />
+          </button>
+        )}
+      </div>
+
+      {encounter ? (
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="font-semibold text-gray-900">{encounter.patient_name}</span>
+            <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(encounter.status)}`}>
+              {encounter.status}
+            </span>
+          </div>
+          <div className="text-sm text-gray-600">
+            <p>MRN: {encounter.mrn}</p>
+            <p>DOB: {encounter.dob}</p>
+            <p>Nurse: {nurses.find((n: any) => n.id === encounter.assigned_nurse_id)?.full_name || 'Unassigned'}</p>
+          </div>
+          <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded">
+            <p className="font-semibold">Notes:</p>
+            <p className="truncate">{encounter.notes}</p>
+          </div>
+          <div className="text-sm text-gray-600">
+            <p>Tasks: {completedTasks}/{totalTasks}</p>
+          </div>
+          <div className="space-y-1 mt-2">
+            {tasks.map((task: any) => (
+              <div key={task.id} className="flex items-center justify-between text-xs">
+                <span className={task.is_completed ? 'line-through text-gray-400' : 'text-gray-700'}>
+                  {task.description}
+                </span>
+                <div className="flex space-x-1">
+                  <button
+                    onClick={() => handleToggleTask(task.id, task.is_completed)}
+                    className="text-green-600 hover:text-green-800"
+                  >
+                    <Check size={12} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteTask(task.id)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex space-x-2 mt-2">
+            <input
+              type="text"
+              value={newTask[encounter.id] || ''}
+              onChange={(e) => setNewTask({ ...newTask, [encounter.id]: e.target.value })}
+              className="flex-1 p-1 text-xs border rounded"
+              placeholder="Add task..."
+            />
+            <button
+              onClick={() => handleAddTask(encounter.id)}
+              className="bg-primary text-white p-1 rounded hover:bg-blue-700"
+            >
+              <Plus size={12} />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-4 text-gray-500">
+          <p>No patient assigned</p>
+        </div>
+      )}
+    </div>
+  )
+}
+```
+
+=== FILE: src/components/AdminPanel.tsx ===
+```typescript
+'use client'
+
+import { useBoard } from '@/contexts/BoardContext'
+import { useAlerts } from '@/contexts/AlertContext'
+import { useState } from 'react'
+import { Plus, Trash2, Edit, Save, X } from 'lucide-react'
+
+export default function AdminPanel() {
+  const { data, addUnit, updateUnit, deleteUnit, addBed, updateBed, deleteBed } = useBoard()
+  const { addAlert } = useAlerts()
+  const [newUnit, setNewUnit] = useState({ name: '', description: '' })
+  const [newBed, setNewBed] = useState({ unitId: '', bedNumber: '' })
+  const [newAlert, setNewAlert] = useState({ title: '', message: '', severity: 'high', category: 'general' })
+  const [editingUnit, setEditingUnit] = useState<string | null>(null)
+  const [editUnitData, setEditUnitData] = useState({ name: '', description: '' })
+  const [editingBed, setEditingBed] = useState<string | null>(null)
+  const [editBedData, setEditBedData] = useState({ bedNumber: '' })
+
+  const handleAddUnit = async () => {
+    if (newUnit.name) {
+      await addUnit(newUnit.name, newUnit.description)
+      setNewUnit({ name: '', description: '' })
+    }
+  }
+
+  const handleUpdateUnit = async () => {
+    if (editingUnit) {
+      await updateUnit(editingUnit, editUnitData.name, editUnitData.description)
+      setEditingUnit(null)
+    }
+  }
+
+  const handleDeleteUnit = async (id: string) => {
+    if (confirm('Are you sure? This will delete all beds and encounters in this unit.')) {
+      await deleteUnit(id)
+    }
+  }
+
+  const handleAddBed = async () => {
+    if (newBed.unitId && newBed.bedNumber) {
+      await addBed(newBed.unitId, newBed.bedNumber)
+      setNewBed({ unitId: '', bedNumber: '' })
+    }
+  }
+
+  const handleUpdateBed = async () => {
+    if (editingBed) {
+      await updateBed(editingBed, editBedData.bedNumber)
+      setEditingBed(null)
+    }
+  }
+
+  const handleDeleteBed = async (id: string) => {
+    if (confirm('Are you sure? This will delete the encounter and tasks for this bed.')) {
+      await deleteBed(id)
+    }
+  }
+
+  const handleAddAlert = async () => {
+    if (newAlert.title && newAlert.message) {
+      await addAlert(newAlert)
+      setNewAlert({ title: '', message: '', severity: 'high', category: 'general' })
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-md p-4">
+        <h3 className="text-lg font-bold text-gray-800 mb-4">Manage Units</h3>
+        <div className="space-y-2 mb-4">
+          <input
+            type="text"
+            value={newUnit.name}
+            onChange={(e) => setNewUnit({ ...newUnit, name: e.target.value })}
+            className="w-full p-2 border rounded"
+            placeholder="Unit Name"
+          />
+          <input
+            type="text"
+            value={newUnit.description}
+            onChange={(e) => setNewUnit({ ...newUnit, description: e.target.value })}
+            className="w-full p-2 border rounded"
+            placeholder="Description"
+          />
+          <button
+            onClick={handleAddUnit}
+            className="w-full bg-primary text-white py-2 rounded hover:bg-blue-700"
+          >
+            Add Unit
+          </button>
+        </div>
+        <div className="space-y-2">
+          {data.units.map((unit) => (
+            <div key={unit.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+              {editingUnit === unit.id ? (
+                <div className="flex-1 space-x-2">
+                  <input
+                    type="text"
+                    value={editUnitData.name}
+                    onChange={(e) => setEditUnitData({ ...editUnitData, name: e.target.value })}
+                    className="p-1 border rounded"
+                  />
+                  <input
+                    type="text"
+                    value={editUnitData.description}
+                    onChange={(e) => setEditUnitData({ ...editUnitData, description: e.target.value })}
+                    className="p-1 border rounded"
+                  />
+                  <button onClick={handleUpdateUnit} className="text-green-600"><Save size={16} /></button>
+                  <button onClick={() => setEditingUnit(null)} className="text-red-600"><X size={16} /></button>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <span className="font-semibold">{unit.name}</span>
+                    <span className="text-sm text-gray-500 ml-2">{unit.description}</span>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button onClick={() => { setEditingUnit(unit.id); setEditUnitData({ name: unit.name, description: unit.description }) }} className="text-primary"><Edit size={16} /></button>
+                    <button onClick={() => handleDeleteUnit(unit.id)} className="text-red-600"><Trash2 size={16} /></button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-4">
+        <h3 className="text-lg font-bold text-gray-800 mb-4">Manage Beds</h3>
+        <div className="space-y-2 mb-4">
+          <select
+            value={newBed.unitId}
+            onChange={(e) => setNewBed({ ...newBed, unitId: e.target.value })}
+            className="w-full p-2 border rounded"
+          >
+            <option value="">Select Unit</option>
+            {data.units.map((unit) => (
+              <option key={unit.id} value={unit.id}>{unit.name}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={newBed.bedNumber}
+            onChange={(e) => setNewBed({ ...newBed, bedNumber: e.target.value })}
+            className="w-full p-2 border rounded"
+            placeholder="Bed Number"
+          />
+          <button
+            onClick={handleAddBed}
+            className="w-full bg-primary text-white py-2 rounded hover:bg-blue-700"
+          >
+            Add Bed
+          </button>
+        </div>
+        <div className="space-y-2">
+          {data.beds.map((bed) => {
+            const unit = data.units.find((u) => u.id === bed.unit_id)
+            return (
+              <div key={bed.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                {editingBed === bed.id ? (
+                  <div className="flex-1 space-x-2">
+                    <input
+                      type="text"
+                      value={editBedData.bedNumber}
+                      onChange={(e) => setEditBedData({ ...editBedData, bedNumber: e.target.value })}
+                      className="p-1 border rounded"
+                    />
+                    <button onClick={handleUpdateBed} className="text-green-600"><Save size={16} /></button>
+                    <button onClick={() => setEditingBed(null)} className="text-red-600"><X size={16} /></button>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <span className="font-semibold">{bed.bed_number}</span>
+                      <span className="text-sm text-gray-500 ml-2">({unit?.name})</span>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button onClick={() => { setEditingBed(bed.id); setEditBedData({ bedNumber: bed.bed_number }) }} className="text-primary"><Edit size={16} /></button>
+                      <button onClick={() => handleDeleteBed(bed.id)} className="text-red-600"><Trash2 size={16} /></button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-4">
+        <h3 className="text-lg font-bold text-gray-800 mb-4">Emergency Alert</h3>
+        <div className="space-y-2">
+          <input
+            type="text"
+            value={newAlert.title}
+            onChange={(e) => setNewAlert({ ...newAlert, title: e.target.value })}
+            className="w-full p-2 border rounded"
+            placeholder="Alert Title"
+          />
+          <textarea
+            value={newAlert.message}
+            onChange={(e) => setNewAlert({ ...newAlert, message: e.target.value })}
+            className="w-full p-2 border rounded"
+            placeholder="Alert Message"
+            rows={3}
+          />
+          <select
+            value={newAlert.severity}
+            onChange={(e) => setNewAlert({ ...newAlert, severity: e.target.value })}
+            className="w-full p-2 border rounded"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+          <input
+            type="text"
+            value={newAlert.category}
+            onChange={(e) => setNewAlert({ ...newAlert, category: e.target.value })}
+            className="w-full p-2 border rounded"
+            placeholder="Category"
+          />
+          <button
+            onClick={handleAddAlert}
+            className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700"
+          >
+            Broadcast Alert
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+=== FILE: src/components/ChatRoom.tsx ===
+```typescript
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
+import { Send } from 'lucide-react'
+
+export default function ChatRoom() {
+  const { user, profile } = useAuth()
+  const [messages, setMessages] = useState<any[]>([])
+  const [newMessage, setNewMessage] = useState('')
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!user) return
+
+    const loadMessages = async () => {
+      const { data } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .order('created_at', { ascending: true })
+        .limit(50)
+      if (data) setMessages(data)
+    }
+
+    loadMessages()
+
+    const channel = supabase
+      .channel('chat_channel')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+        },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new])
+        }
+      )
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [user])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newMessage.trim() || !user) return
+
+    await supabase.from('chat_messages').insert({
+      user_id: user.id,
+      message: newMessage,
+    })
+
+    setNewMessage('')
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-4 h-96 flex flex-col">
+      <h3 className="text-lg font-bold text-gray-800 mb-4">Public Forum</h3>
+      <div className="flex-1 overflow-y-auto chat-scroll space-y-2 mb-4">
+        {messages.map((msg) => {
+          const sender = profile?.id === msg.user_id ? profile : null
+          // In a real app, you'd fetch the sender's profile for each message
+          // For simplicity, we'll just show the user_id if not the current user
+          return (
+            <div key={msg.id} className="bg-gray-50 p-2 rounded">
+              <div className="flex justify-between items-center mb-1">
+                <span className="font-semibold text-sm text-primary">
+                  {sender?.full_name || 'Unknown User'} ({sender?.role || 'User'})
+                </span>
+                <span className="text-xs text-gray-500">
+                  {new Date(msg.created_at).toLocaleTimeString()}
+                </span>
+              </div>
+              <p className="text-sm text-gray-700">{msg.message}</p>
+            </div>
+          )
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+      <form onSubmit={handleSendMessage} className="flex space-x-2">
+        <input
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          className="flex-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+          placeholder="Type a message..."
+        />
+        <button
+          type="submit"
+          className="bg-primary text-white p-2 rounded hover:bg-blue-700"
+        >
+          <Send size={18} />
+        </button>
+      </form>
+    </div>
+  )
+}
+```

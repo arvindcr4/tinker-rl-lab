@@ -1,0 +1,39 @@
+{
+    "task": {
+        "path": "datasets/btb/btb-990cf5d7",
+        "source": "btb"
+    },
+    "trial_name": "btb-990cf5d7__VoDjizU",
+    "trials_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e1_e14_small_scale_2026-09-26/E4/raw/jobs/e4-small-btb-990cf5d7",
+    "agent": {
+        "name": "opencode",
+        "model_name": "openai/pavlov-qwen36-tinker",
+        "kwargs": {
+            "prompt_template_path": "prompts/system_prompt.j2",
+            "opencode_config": {
+                "experimental": {
+                    "continue_loop_on_deny": true
+                },
+                "provider": {
+                    "openai": {
+                        "models": {
+                            "pavlov-qwen36-tinker": {
+                                "limit": {
+                                    "context": 65536,
+                                    "output": [REDACTED]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "env": {
+            "OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX": "****"
+        }
+    },
+    "artifacts": [
+        "/home/agent/workspace"
+    ],
+    "job_id": "00b541f3-0d8d-4de3-ac3d-4338d9aae5a4"
+}

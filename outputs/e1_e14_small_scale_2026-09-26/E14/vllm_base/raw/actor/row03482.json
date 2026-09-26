@@ -1,0 +1,15 @@
+{
+ "row_index": 3482,
+ "domain": [
+  "Mathematics -> Algebra -> Prealgebra -> Simple Equations"
+ ],
+ "difficulty": 1.5,
+ "source": "pascal",
+ "problem": "Which of the following is closest in value to 7?",
+ "answer": "\\sqrt{50}",
+ "model_generation": "To determine which value is closest to 7, I need to see the list of options you are referring to. You haven't provided the choices in your message.\n\nHowever, I can explain the general method to solve this type of problem:\n\n1.  **Identify the options**: Look at the numbers provided (e.g., $6.9$, $7.1$, $\\sqrt{50}$, $22/3$, etc.).\n2.  **Calculate the difference**: For each option, subtract it from 7 (or subtract 7 from it) and take the absolute value. This gives the distance from 7 on the number line.\n    *   Formula: $| \\text{Option} - 7 |$\n3.  **Compare the differences**: The option with the **smallest** absolute difference is the closest to 7.\n\n### Example:\nIf your options were:\nA) $6.8$\nB) $7.2$\nC) $\\sqrt{49}$\nD) $22/3$\n\n**Step-by-step calculation:**\n*   **A)** $|6.8 - 7| = |-0.2| = 0.2$\n*   **B)** $|7.2 - 7| = |0.2| = 0.2$\n*   **C)** $\\sqrt{49} = 7$, so $|7 - 7| = 0$\n*   **D)** $22/3 \\approx 7.333$, so $|7.333 - 7| = 0.333$\n\n**Conclusion:**\nOption C ($\\sqrt{49}$) has a difference of 0, making it exactly 7, and thus the closest.\n\n**Please provide the specific options you are working with, and I will give you the exact answer!**",
+ "prompt_tokens": 43,
+ "completion_tokens": 409,
+ "stop_reason": "stop",
+ "error": null
+}

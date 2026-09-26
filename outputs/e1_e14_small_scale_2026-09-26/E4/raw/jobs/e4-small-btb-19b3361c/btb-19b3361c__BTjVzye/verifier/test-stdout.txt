@@ -1,0 +1,121 @@
+[batch-concurrent] Splitting 113 criteria into 2 chunks (max_concurrency=2, sizes: 57, 56)
+  [split 1/2] 57 criteria (timeout=1740s)...
+  [split 2/2] 56 criteria (timeout=1740s)...
+    [1/113] UNMET: The font colors in the Excel file are all set to 'None' (automatic), not following the blue/black/green convention for h
+    [2/113] UNMET: The number formats in the Excel file ('General', '0', 'MM/DD/YYYY') do not specify parentheses for negative numbers, and
+    [3/113] MET: No visible errors (#DIV/0!, #N/A, etc.) were found in the Excel workbook.
+    [4/113] MET: Calculated values in the Excel sheet, such as the 'End Date', are implemented using formulas.
+    [5/113] MET: The milestone dates in the Excel file tie exactly to the dates provided in the task instructions (e.g., CIM Release Apri
+    [6/113] UNMET: The analysis period covers only the transaction timeline in 2025, not 2015 to 2025 as required by the criterion.
+    [7/113] UNMET: Assumptions (specifically key dates) are hardcoded in multiple locations rather than being centralized in a single locat
+    [8/113] UNMET: No footnotes, comments, or disclosures were provided in the Excel file to source values.
+    [9/113] UNMET: Calculations cannot be verified to tie across outputs as the PowerPoint deck is missing, and there are no links between 
+    [10/113] UNMET: Values such as milestone dates are hardcoded in multiple cells rather than having a single precedent cell.
+    [11/113] UNMET: No legal disclosures were found in the deliverable files.
+    [12/113] UNMET: The PowerPoint file was not created, so formatting and layout criteria cannot be met.
+    [13/113] UNMET: The output is missing the PowerPoint summary and the actual Gantt chart bars in the Excel file.
+    [14/113] UNMET: The PowerPoint deliverable is missing entirely.
+    [15/113] UNMET: The Excel file contains two sheets instead of a single Gantt Chart sheet, and the Gantt Chart sheet lacks actual chart b
+    [16/113] UNMET: The PowerPoint file does not exist.
+    [17/113] MET: The Gantt Chart sheet includes columns for Task / Workstream, Start Date, Duration, and End Date.
+    [18/113] UNMET: There is no blank separator column because there are no weekly date columns.
+    [19/113] UNMET: The Excel file lacks the weekly columns spanning March 30 through June 8.
+    [20/113] MET: The CIM & Datapack Release milestone is present with the date April 6, 2025.
+    [21/113] MET: The IOI milestone is present with the date April 24, 2025.
+    [22/113] MET: The Partial Data Room milestone is present with the date April 27, 2025.
+    [23/113] MET: The LOI milestone is present with the date May 8, 2025.
+    [24/113] MET: The Full Data Room milestone is present with the date May 11, 2025.
+    [25/113] MET: The Signing milestone is present with the date June 5, 2025.
+    [26/113] UNMET: The timeline is organized into 6 phases with different labels, not the three requested: Pre-IOI, Pre-LOI, and Pre-SPA.
+    [27/113] UNMET: Phases are not separated by blank rows with top and bottom borders.
+    [28/113] MET: CIM is listed as a workstream in the preparation phase.
+    [29/113] MET: Model overview guidance is listed as a workstream/sub-item.
+    [30/113] MET: Initial management meetings are included in the timeline.
+    [31/113] MET: QoE financials are listed as a workstream or sub-item.
+    [32/113] MET: Census data is listed as a workstream or sub-item.
+    [33/113] MET: Org structure is listed as a workstream or sub-item.
+    [34/113] MET: Q1 actuals are listed as a workstream or sub-item.
+    [35/113] MET: 2025 budget drivers are listed as a workstream or sub-item.
+    [36/113] MET: Off-the-shelf legal documents are listed as a workstream or sub-item.
+    [37/113] MET: Raw customer data with contract renewal statuses is listed as a workstream or sub-item.
+    [38/113] MET: Financial diligence is listed as a workstream in the exclusivity phase.
+    [39/113] MET: Cap Table review is listed as a workstream in the exclusivity phase.
+    [40/113] UNMET: PowerPoint Slide 3 does not exist.
+    [41/113] UNMET: PowerPoint Slide 3 does not exist.
+    [42/113] UNMET: PowerPoint Slide 2 does not exist.
+    [43/113] UNMET: PowerPoint Slide 2 does not exist.
+    [44/113] MET: The Beginning Date column contains valid dates that align with the required milestones.
+    [45/113] MET: The Duration column contains numeric values.
+    [46/113] MET: The End Date column correctly calculates the end date as Start Date + Duration - 1.
+    [47/113] MET: The End Date column uses formulas referencing the Start Date and Duration columns.
+    [48/113] MET: IOI submission date (April 24) is 18 days after CIM release (April 6).
+    [49/113] MET: Partial Data Room opening (April 27) is 3 days after IOI (April 24).
+    [50/113] MET: LOI date (May 8) is exactly 14 days (two weeks) after IOI (April 24).
+    [51/113] MET: Full Data Room opening (May 11) is 3 days after LOI (May 8).
+    [52/113] MET: Signing date (June 5) is exactly four weeks after LOI (May 8).
+    [53/113] UNMET: Some Pre-IOI workstreams end after the April 24 IOI deadline.
+    [54/113] UNMET: Workstreams for the LOI stage (which should be provided Pre-LOI) start after the May 8 LOI deadline.
+    [55/113] MET: The exclusivity phase workstreams fit within the required timeframe ending by June 5.
+    [56/113] UNMET: No conditional formatting was found in the Excel workbook.
+    [57/113] UNMET: No conditional formatting exists to verify.
+    [58/113] UNMET: The CIM Release milestone row (Row 17 or Row 49) does not use a dark green fill color. Row 17 uses a blue fill (004472C4
+    [59/113] UNMET: The IOI milestone row (Row 21 or Row 50) does not use a dark green fill color. Row 21 uses a blue fill (004472C4) and Ro
+    [60/113] UNMET: The Partial Data Room milestone row (Row 19 or Row 51) does not use a dark green fill color. Row 19 uses a blue fill (00
+    [61/113] UNMET: The Signing day milestone (Row 43 or Row 54) does not use a dark red fill color. Row 43 uses gold (00FFC000) and Row 54 
+    [62/113] MET: Major workstream/phase headers (Rows 5, 11, 16, 22, 30) use a dark blue fill color (001B2A4A).
+    [63/113] MET: Sub-workstream rows use shades of light and medium blue (002E5090 and 004472C4).
+    [64/113] UNMET: There are no blank separator rows between major phases; phase headers immediately follow the preceding task.
+    [65/113] UNMET: Only 'thin' border styles were found in the workbook; no dashed or broken line style borders were used.
+    [66/113] MET: Business diligence (Financial) is listed before third-party diligence (Tax, Legal, Regulatory) in the Exclusivity phase.
+    [67/113] MET: Financial diligence items are listed before customer diligence items in the LOI stage.
+    [68/113] MET: Dependencies are logically sequenced, e.g., CIM release depends on materials preparation, and financial diligence depend
+    [69/113] MET: Sub-workstreams are logically grouped under their parent phase headers.
+    [70/113] UNMET: QoE is mentioned as a deliverable but is not included as a separate sub-workstream under a Financial Diligence category 
+    [71/113] MET: Customer data task (Row 26) explicitly includes contract renewal statuses in the deliverables description.
+    [72/113] MET: Third-party diligence streams (Tax, Legal, Regulatory) are positioned after Financial diligence in the Exclusivity phase
+    [73/113] MET: End Date cells contain formulas (e.g., =D6+E6-1) that reference the Beginning Date and Duration cells.
+    [74/113] UNMET: No conditional formatting rules were found in the workbook, so no Gantt bar shifts automatically.
+    [75/113] UNMET: The Excel output lacks a visual Gantt chart (bars/timeline), which is a key requirement for a client-ready presentation 
+    [76/113] MET: Workstream descriptions use standard industry terms such as CIM, IOI, LOI, QoE, and SPA.
+    [77/113] UNMET: There is no visual Gantt chart layout, making it impossible to visually identify overlapping workstreams.
+    [78/113] UNMET: No PowerPoint file was produced by the agent.
+    [79/113] UNMET: No PowerPoint file was produced.
+    [80/113] UNMET: No PowerPoint file was produced.
+    [81/113] MET: The Excel sheet mentions taking 5-8 parties through to the LOI stage in the descriptions of the IOI and LOI tasks.
+    [82/113] MET: The Excel sheet explicitly mentions selecting 1 party for a 4-week exclusivity period.
+    [83/113] MET: Key diligence items are listed in both the Gantt Chart (Col G) and the Workstream Details sheet.
+    [84/113] MET: The Excel sheet includes clear headers for all columns and sections.
+    [85/113] MET: Date formats are consistent throughout the Excel file (MM/DD/YYYY).
+    [86/113] UNMET: No PowerPoint file was produced.
+    [87/113] UNMET: The colors used do not match the specified green/blue/red scheme for milestones vs. workstreams.
+    [88/113] MET: The timeline clearly lists what information (CIM, partial DR, full DR) is provided at each phase.
+    [89/113] UNMET: No PowerPoint file was produced.
+    [90/113] UNMET: No PowerPoint file was produced.
+    [91/113] UNMET: No PowerPoint file was produced.
+    [92/113] MET: Beginning dates are explicitly stated for each workstream.
+    [93/113] MET: Every task/sub-workstream row has a populated Duration cell.
+    [94/113] UNMET: No assumptions about timing were explicitly labeled as such in the Excel workbook.
+    [95/113] UNMET: No conditional formatting rules exist in the workbook.
+    [96/113] MET: The End Date formulas are visible and traceable.
+    [97/113] UNMET: The source of the key dates is not acknowledged in the deliverable.
+    [98/113] MET: Workstream categorization and placement of diligence items align with the requirements for each phase (Pre-IOI, Pre-LOI,
+    [99/113] UNMET: No deviations are noted or explained in the output.
+    [100/113] UNMET: No PowerPoint file was produced.
+    [101/113] UNMET: No PowerPoint file was produced.
+    [102/113] UNMET: No PowerPoint file was produced.
+    [103/113] UNMET: No PowerPoint file was produced.
+    [104/113] UNMET: No PowerPoint file was produced.
+    [105/113] UNMET: No PowerPoint file was produced.
+    [106/113] UNMET: No PowerPoint file was produced.
+    [107/113] MET: The Signing date is consistently represented as June 5, 2025.
+    [108/113] MET: The CIM & Datapack Release date is consistently represented as April 6, 2025.
+    [109/113] UNMET: There is no acknowledgment of the risk of delays in the timeline.
+    [110/113] UNMET: Management availability is not identified as a dependency risk.
+    [111/113] UNMET: Third-party diligence provider timing is not identified as a dependency risk.
+    [112/113] UNMET: Exclusivity work begins May 12, not May 8, and Regulatory ends June 1, not June 14.
+    [113/113] UNMET: The deliverable does not include a note about the potential need for exclusivity extension.
+
+Reward: 0.4087 (raw: 215.0)
+Grader LLM cost: $0.3255 (113 criteria, 1807968 prompt + 39748 completion tokens)
+Mode: batch (batch_splits=2, max_concurrency=2)
+Results written to /logs/verifier/

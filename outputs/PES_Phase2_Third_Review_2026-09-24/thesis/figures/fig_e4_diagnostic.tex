@@ -152,8 +152,9 @@
 \node[rectangle, rounded corners=2pt, draw=blocked!70!black, thick, fill=blocked!6,
       font=\scriptsize, align=left, inner sep=4pt, text width=148mm, anchor=north west]
       (readbox) at ([yshift=-19mm]A.south west)
-  {\textbf{Reading: the 0.0 mean reward measures tool-dialogue collapse, not finance
-   reasoning.} The 3.6B base model cannot sustain the opencode tool-use loop: it dies at a
+  {\textbf{Reading: the 0.0 mean reward is not a measurement of finance reasoning.}
+   The serving bridge passed no stop sequences, so generation ran past the end-of-turn
+   token and the opencode tool-use loop broke: agents die at a
    median of 6 steps (range 2--14), and in 29 of 100 trajectories the final agent
    message carries runs of bare role tokens (\texttt{useruser},
    \texttt{assistantassistant}, \texttt{assistantuser}) in place of well-formed
@@ -161,7 +162,7 @@
    sees a banking deliverable, short-circuiting 98 of 100 trials; the 2 trajectories
    that did leave one reached the judge and still scored 0.0. With all 100 trials in
    the zero bucket, this number is a property of the harness and of the actor's
-   dialogue stability, not of its finance capability.};
+   serving bridge, not of the model's finance capability.};
 
 \node[rectangle, rounded corners=2pt, draw=black!40, thick, fill=black!3,
       font=\tiny, align=left, inner sep=4pt, text width=148mm, anchor=north west]

@@ -68,7 +68,7 @@ The E4 lane closed `CLOSED_PARTIAL` on 19 September 2026: the pass3/pass16 archi
 
 The rerun was configured on the base model with a zero-initialised LoRA snapshot --- the lane's record states this is equivalent to base sampling, with no training steps --- executed through the Modal bridge `/v1/responses` path at `--n-concurrent 2` under a cap of \$55.91445263. It completed 100 of 100 trials with one `NonZeroAgentExitCodeError`, and returned a mean reward of exactly 0.0, with all one hundred trials in the 0.0 bucket, over a runtime of 3 hours 29 minutes (source: `outputs/PES_Phase2_Review_2026-09-12/finish/Pending_Experiments.md`, which cites the receipt at `outputs/e4_banker_toolbench/official_repo_ff6db552/jobs/btb-banking-tasks-tinker-bridge/result.json`).
 
-The value of this run lies entirely in the failure mechanism, which was audited across all one hundred trajectories. Agents terminate after 2 to 14 steps, with a median of about 6, and produce no `deliverables/` directory; the verifier consequently short-circuits to 0.0 on the message "No deliverables found". Twenty-seven or more of the trajectories end in role-token degeneration of the form `user user assistant ...` repetition. The record's own interpretation is the correct one and is repeated here without softening: the base model cannot sustain the opencode tool-use loop, so the 0.0 measures tool-dialogue collapse rather than finance reasoning. Two implications follow, and they cut in opposite directions. The positive implication is that the harness behaves correctly at the boundary --- it fails closed, produces a legible mechanism for every zero, and does not manufacture partial credit. The negative implication is that a BankerToolBench score for this actor family is not currently obtainable at all, because the bottleneck is the agent loop rather than the domain, and the campaign therefore reports no BankerToolBench suite result for the trained actor either. In particular, the rerun's 0.0 must not be set against the original single-task outcome as though the two were a controlled pairing: they are different configurations under different runtime conditions, and the campaign makes no comparison between them.
+The value of this run lies entirely in the failure mechanism, which was audited across all one hundred trajectories. Agents terminate after 2 to 14 steps, with a median of about 6, and produce no `deliverables/` directory; the verifier consequently short-circuits to 0.0 on the message "No deliverables found". Twenty-seven or more of the trajectories end in role-token degeneration of the form `user user assistant ...` repetition. The record at the time read this as the base model being unable to sustain the opencode tool-use loop. A later check does not support that reading. The bridge's `/v1/responses` path passed no stop sequences and decoded with special tokens removed, so generation ran past the end-of-turn token into invented `user`, `tool_response` and `assistant` turns, which is exactly the role-token degeneration observed; with a stop sequence set, the same base model scored 0.41 on one of six tasks in the small-scale rerun of Section 9.7. The 0.0 is therefore attributed to the serving bridge rather than to the model's tool use or its finance reasoning (source: `outputs/e1_e14_small_scale_2026-09-26/E4/BRIDGE_STOP_TOKEN_FINDING.md`). Two implications follow, and they cut in opposite directions. The positive implication is that the harness behaves correctly at the boundary --- it fails closed, produces a legible mechanism for every zero, and does not manufacture partial credit. The negative implication is that a BankerToolBench score for this actor family is not currently obtainable at all, because the bottleneck is the agent loop rather than the domain, and the campaign therefore reports no BankerToolBench suite result for the trained actor either. In particular, the rerun's 0.0 must not be set against the original single-task outcome as though the two were a controlled pairing: they are different configurations under different runtime conditions, and the campaign makes no comparison between them.
 
 Spend on the rerun was \$15.07 charged against the \$55.91 cap, comprising 16.35 million prompt tokens and 2.18 million completion tokens.
 
@@ -79,6 +79,74 @@ Six lanes have no local or paid path and were formally closed as externally bloc
 Access was requested through each provider's public channel: a GitHub issue for E7 (`QuesmaOrg/BinaryAudit#22`), a Hugging Face dataset discussion for E10, and direct requests to the maintainers of E3, E12 and E14. No grant had been received at the time of writing, and delivery of the direct requests could not be confirmed from the sending side (sources: `outputs/UNBLOCK_CARRYOUT_2026-09-21.md`, `outputs/e1_e14_results_2026-09-05/E1_E14_Results.md`).
 
 Two further items complete the terminal record. First, verification: the deterministic checks of 19 September passed 11 of 11 with zero failures, covering exact divisions, receipt presence, sealed-artifact hash equality and absence probes for the lost execution sources. Second, the judgment layer: a model-based triage harness was used only for classification and value ordering, never for arithmetic; it became unreliable during a service degradation on 19 September, so the per-lane blocker column in the terminal ledger rests on document evidence rather than on model judgment (sources: `outputs/verification/LEDGER_CODE_CHECK_2026-09-19.json`, `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md`).
+
+<!-- small-scale:begin -->
+## Small-scale reruns of all fourteen lanes
+
+The lane results above were produced by the trained actor at the time of the campaign and are left exactly as recorded. This section adds a separate, smaller set of runs, made on 26 September 2026, whose purpose is narrower: to give every one of the fourteen lanes a measured number under one fixed protocol, including the lanes that never produced a score. None of the figures below is pooled with, averaged against, or substituted for an original-contract or replacement-scope result reported earlier in this chapter.
+
+The protocol fixes one actor family, a fixed item-selection seed (20260926), temperature 0 and a non-thinking chat template, and scores each lane with its native grader where one could be run. Lanes whose original benchmark is externally blocked were run on a public substitute, and each substitute's gap from the original suite is recorded in its lane file. Items that errored or timed out are counted as failures in the denominator. Each lane's items, raw outputs and grader logs are kept so that every figure can be recomputed (source: `outputs/e1_e14_small_scale_2026-09-26/PROTOCOL.md`).
+
+Two arms were run. The first is the base model, `Qwen/Qwen3.6-35B-A3B` with no adapter, sampled on Tinker (Table 9.A). The second is a paired comparison of the trained actor against the same base model, both served by one vLLM configuration on Modal, on identical items (Table 9.B). The pairing exists because the adapter's effect on individual token probabilities was measured to be about the same size as the numerical difference between the two serving engines on the same base weights. A comparison of trained-on-vLLM against base-on-Tinker would therefore confound the adapter with the engine, and no such cross-engine comparison is made here (source: `outputs/e1_e14_small_scale_2026-09-26/TRAINED_ACTOR_ENDPOINT.md`).
+
+**Table 9.A — Base model on Tinker, small-scale subsets.**
+
+| Lane | Benchmark run | Scope | Metric | Result | 95% CI |
+|---|---|---|---|---|---|
+| E1 | SWE-bench Pro public test split | original-public-subset | resolved rate | 0/10 = 0.000 | [0.00, 0.28] |
+| E2 | EffiBench | substitute | pass@1 | 23/30 = 0.767 | [0.59, 0.88] |
+| E3 | Terminal-Bench v2.0 | substitute | task success rate | 4/8 = 0.500 | [0.22, 0.78] |
+| E4 | BankerToolBench official Harbor tasks… | original-public-subset | mean native verifier rewa… | 0.068 (n = 6) | ≈ [0.01, 0.47] |
+| E5 | tau2-bench | substitute | pass^1 | 3/10 = 0.300 | [0.11, 0.60] |
+| E6 | MiniWoB++ | substitute | episode success rate | 15/36 = 0.417 | [0.27, 0.58] |
+| E7 | BinaryAudit upstream cbd86c7 | original-public-subset | task success rate | 0/6 = 0.000 | [0.00, 0.39] |
+| E8 | LAB-Bench public MCQ | substitute | accuracy | 26/80 = 0.325 | [0.23, 0.43] |
+| E9 | MLE-bench lite/low-complexity split | original-public-subset | any-medal rate | 1/5 = 0.200 | [0.04, 0.62] |
+| E10 | AgentHarm test_public | original-public-subset | harmful refusal rate | 20/30 = 0.667 | [0.49, 0.81] |
+| E11 | VerilogEval | original-public-subset | pass@1 | 35/50 = 0.700 | [0.56, 0.81] |
+| E12 | AppBench public tasks | original-public-subset | rubric-item pass rate | 122/151 = 0.808 | [0.74, 0.86] |
+| E13 | BALROG | substitute | BALROG native progression… | 23.1% | — |
+| E14 | Omni-MATH test | substitute | accuracy | 38/100 = 0.380 | [0.29, 0.48] |
+
+**Table 9.B — Trained actor versus base model on the same vLLM engine, identical items.**
+
+| Lane | Items | Trained | Base | Trained − base | Test |
+|---|---|---|---|---|---|
+| E1 | 10 | 0.000 | 0.000 | 0.000 | McNemar p = 1 (b/c 0/0) |
+| E2 | 30 | 0.700 | 0.800 | -0.100 | McNemar p = 0.25 (b/c 0/3) |
+| E3 | 8 | 0.625 | 0.375 | 0.250 | McNemar p = 0.5 (b/c 2/0) |
+| E4 | 6 | 0.066 | 0.093 | -0.027 | 95% CI [-0.080, 0.000] |
+| E5 | 10 | 0.500 | 0.200 | 0.300 | McNemar p = 0.38 (b/c 4/1) |
+| E6 | 36 | 0.444 | 0.472 | -0.028 | McNemar p = 1 (b/c 1/2) |
+| E7 | 6 | 0.167 | 0.000 | 0.167 | McNemar p = 1 (b/c 1/0) |
+| E8 | 80 | 0.312 | 0.312 | 0.000 | McNemar p = 1 (b/c 6/6) |
+| E9 | 5 | 0.000 | 0.000 | 0.000 | McNemar p = 1 (b/c 0/0) |
+| E9 (above median) | 5 | 0.000 | 0.200 | -0.200 | McNemar p = 1 (b/c 0/1) |
+| E10 (refusal rate) | 30 harmful, 30 benign | 0.700 | 0.667 | 0.033 | McNemar p = 1 (b/c 3/2) |
+| E10 (harm score) | 30 harmful, 30 benign | 0.247 | 0.236 | 0.011 | 95% CI [-0.053, 0.078] |
+| E10 (benign score) | 30 harmful, 30 benign | 0.780 | 0.794 | -0.015 | 95% CI [-0.050, 0.012] |
+| E11 | 50 | 0.660 | 0.660 | 0.000 | McNemar p = 1 (b/c 2/2) |
+| E12 | 151 | 0.748 | 0.781 | -0.033 | McNemar p = 0.3 (b/c 5/10) |
+| E13 | 26 | 25.510 | 23.630 | 1.875 | 95% CI [-2.73, 7.09] |
+| E14 | 100 | 0.430 | 0.440 | -0.010 | McNemar p = 1 (b/c 5/6) |
+
+These are small samples, and the tables should be read accordingly. Most lanes score between five and eighty items, so a single item moves a lane's rate by several percentage points and the confidence intervals are wide. In Table 9.B, b and c count items solved only by the trained actor and only by the base model respectively, and the CI is a paired bootstrap interval on the difference. For E12 the 151 rubric items come from only six generated applications, so they are not independent and its McNemar p-value overstates the evidence. For E9, the one competition that earned a medal in the Tinker run (nomad2018) has a 46.8k-token prompt that exceeds the vLLM serving limit of 32,768 tokens, so it fails identically in both vLLM arms; the vLLM medal rates are therefore not comparable with Table 9.A. The paired differences are reported with their own test and are not combined across lanes; no lane-level difference is interpreted as evidence that the adapter improves or degrades performance unless its test excludes zero, and none is extrapolated to the full suite. The principal caveat for each lane, as recorded in its result file, is listed below; the full list is in each lane's `result.json`.
+
+- **E1.** New base-model arm; not comparable to or poolable with the original 2/731 (lost seed809 adapter, temperature 0.2).
+- **E2.** Substitute benchmark; never pool with or present as the FrontierSWE lane score (original: 1/17 tasks, replay 0.8628, lost adapter).
+- **E3.** New base-model arm; never pool with or present as the original SDAB/seed809 lane score.
+- **E4.** Small n=6 of 100; wide interval. Wilson95 computed on summed fractional reward (approximation for a [0,1] score).
+- **E5.** n=10, not the requested 20: the E4+E5 6M Tinker-token cap was exhausted (E4 1.56M, abandoned APEX attempt 2.33M, tau2 2.05M).
+- **E6.** Tasks drawn by random.Random(20260926).sample from all 128 sorted miniwob env ids; episode seeds 0-2.
+- **E7.** New base-model arm; never pool with or present as the original lane score.
+- **E8.** New base-model arm; not comparable to or poolable with the lost-adapter 1967/1967 run (22.88%).
+- **E9.** Competition pool: 6 low-split competitions with small non-image-heavy data (detecting-insults, jigsaw-toxic, leaf-classification, nomad2018, random-acts-of-pizza, spooky); 5 drawn by random.Random(20260926).sample. n=5 so the CI is very wide.
+- **E10.** New base-model arm on AgentHarm itself; the lost-adapter lane figure (AgentDojo benign 97/97, 90.72%) is a different benchmark and not comparable.
+- **E11.** New base-model arm; not comparable to the retained adapter receipt 129/312 = 41.35% (that run used thinking-default template, temperature 0.2, all 312).
+- **E12.** Public tasks, not held-out. Label mandatory. New base-model arm; never pool with the original lane.
+- **E13.** New base-model arm; not comparable to or pooled with the original seed809-LoRA E13 plan (21-episode BabyAI admission set).
+- **E14.** New base-model arm; the prior 2271/4428 = 51.31% figure is not comparable (different actor, full split).
+<!-- small-scale:end -->
 
 ## Summary of the campaign at the point of writing
 

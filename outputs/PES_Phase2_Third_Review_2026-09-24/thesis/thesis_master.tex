@@ -943,15 +943,17 @@ across every trial, and the audit identified the mechanism as
 tool-dialogue collapse: agents terminated after 2 to 14 steps with no
 deliverables, and 27 or more trajectories ended in role-token
 degeneration of the form \texttt{user\ user\ assistant\ …}. That result
-is reported as a measurement of the base model's inability to sustain an
-open-ended tool-use loop, not as a measurement of finance reasoning, and
-it is retained in the record\footnote{Source:
-  outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md.}. The second is the
-discipline applied to the project's own claims: the same-stack audit
-that invalidated the pre-audit aggregator's ``disappears'' verdict did
-so on the strength of the study's own locked minimum detectable effect,
-and the permitted wording it left in place is narrower than the finding
-it refuted\footnote{Source:
+was first read as the base model's inability to sustain an open-ended
+tool-use loop; a later check traced the degeneration to the serving
+bridge, which passed no stop sequences, so it is retained in the record
+as an infrastructure finding rather than a model result\footnote{Sources:
+  outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md,
+  outputs/e1\_\allowbreak{}e14\_\allowbreak{}small\_\allowbreak{}scale\_\allowbreak{}2026-09-26/E4/BRIDGE\_\allowbreak{}STOP\_\allowbreak{}TOKEN\_\allowbreak{}FINDING.md.}.
+The second is the discipline applied to the project's own claims: the
+same-stack audit that invalidated the pre-audit aggregator's
+``disappears'' verdict did so on the strength of the study's own locked
+minimum detectable effect, and the permitted wording it left in place is
+narrower than the finding it refuted\footnote{Source:
   autoresearch/deli-neurips-tmlr-260802/audits/statistical\_refutation.md.}.
 
 The report does not reallocate the shared runtime code. The inherited
@@ -1716,10 +1718,11 @@ September 2026 at 11/11 PASS\footnote{Source:
 improvement over a baseline or over the base model is made anywhere in
 the campaign, and the agentic-suite results in particular --- E4's mean
 reward of 0.0 across 100 base-model trials, with 27 or more trajectories
-ending in role-token degeneration --- are reported as evidence about
-tool-dialogue collapse rather than as evidence about the tasks the
-suites nominally measure\footnote{Source:
-  \longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md}.}.
+ending in role-token degeneration --- are not evidence about the tasks
+the suites nominally measure; that zero was later traced to the serving
+bridge passing no stop sequences, as Section 9.5 records\footnote{Sources:
+  \longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md},
+  \longtok{outputs/e1\_\allowbreak{}e14\_\allowbreak{}small\_\allowbreak{}scale\_\allowbreak{}2026-09-26/E4/BRIDGE\_\allowbreak{}STOP\_\allowbreak{}TOKEN\_\allowbreak{}FINDING.md}.}.
 
 Two gaps in this survey should be stated plainly, since the chapter's
 purpose is to locate the work rather than to flatter it. First, the
@@ -3256,11 +3259,12 @@ hundred trajectories attributed the result to a mechanism rather than to
 reasoning: agents terminate after two to fourteen steps with a median of
 about six and no deliverables, so the verifier short-circuits to zero,
 and 27 or more trajectories end in role-token degeneration; the source's
-own reading is that this zero measures tool-dialogue collapse in the
-base model and not finance reasoning\footnote{Source:
-  outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md.}. Reporting those
-outcomes as findings about the actor, with the mechanism identified, is
-the behaviour the whole apparatus is designed to produce.
+original reading was that this zero measured tool-dialogue collapse in
+the base model rather than finance reasoning\footnote{Source:
+  outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md.}, and a later check
+traced it to the serving bridge passing no stop sequences (Section 9.5).
+Reporting those outcomes as findings about the actor, with the mechanism
+identified, is the behaviour the whole apparatus is designed to produce.
 
 The campaign also carries its integrity accounting in the same register.
 Eleven of eleven deterministic checks passed on 2026-09-19, covering
@@ -3768,15 +3772,16 @@ mechanism is that agents terminated after 2--14 steps (median about 6)
 without producing output in \texttt{deliverables/}, causing the verifier
 to short-circuit to zero on a ``No deliverables found'' condition, and
 that 27 or more trajectories ended in role-token degeneration of the
-form \texttt{user\ user\ assistant\ …} repeated. The source's own
-reading is that the 3.6B base model cannot sustain the opencode tool-use
-loop, so this zero measures tool-dialogue collapse rather than finance
-reasoning; the run cost \$15.07 of the cap over 3h29m, against 16.35M
-prompt and 2.18M completion tokens\footnote{Source:
-  outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md.}. Reporting a mean
-reward of 0.0 with its mechanism attached, rather than reporting a low
-score and moving on, is the standard this chapter's evidence rules are
-meant to enforce.
+form \texttt{user\ user\ assistant\ …} repeated. The source's original
+reading was that the base model could not sustain the opencode tool-use
+loop; a later check found that this bridge path set no stop sequences,
+which produces exactly this degeneration, so the zero is attributed to
+the bridge rather than to the model (Section 9.5); the run cost \$15.07
+of the cap over 3h29m, against 16.35M prompt and 2.18M completion
+tokens\footnote{Source: outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md.}.
+Reporting a mean reward of 0.0 with its mechanism attached, rather than
+reporting a low score and moving on, is the standard this chapter's
+evidence rules are meant to enforce.
 
 \section{The Bridge and Sampler Path}\label{the-bridge-and-sampler-path}
 
@@ -6367,7 +6372,7 @@ a score, because that is what its design makes it (Figure~\ref{fig:e4}).
 
 \fig{fig_e4_diagnostic}
 {The E4 rerun diagnostic}
-{The E4 rerun diagnostic. Across 100 trials agents terminate at a median of roughly six steps without producing deliverables, and more than a quarter end in role-token degeneration. The 0.0 mean reward therefore measures tool-dialogue collapse, not finance reasoning.}
+{The E4 rerun diagnostic. Across 100 trials agents terminate at a median of roughly six steps without producing deliverables, and more than a quarter end in role-token degeneration, consistent with generation running past the end-of-turn token because the serving bridge passed no stop sequences. The 0.0 is not a measurement of finance reasoning.}
 {fig:e4}
 
 
@@ -6390,10 +6395,18 @@ audited across all one hundred trajectories. Agents terminate after 2 to
 \texttt{deliverables/} directory; the verifier consequently
 short-circuits to 0.0 on the message ``No deliverables found''.
 Twenty-seven or more of the trajectories end in role-token degeneration
-of the form \texttt{user~user~assistant~...} repetition. The record's
-own interpretation is the correct one and is repeated here without
-softening: the base model cannot sustain the opencode tool-use loop, so
-the 0.0 measures tool-dialogue collapse rather than finance reasoning.
+of the form \texttt{user~user~assistant~...} repetition. The record at
+the time read this as the base model being unable to sustain the
+opencode tool-use loop. A later check does not support that reading. The
+bridge's \texttt{/v1/responses} path passed no stop sequences and
+decoded with special tokens removed, so generation ran past the
+end-of-turn token into invented \texttt{user}, \texttt{tool\_response}
+and \texttt{assistant} turns, which is exactly the role-token
+degeneration observed; with a stop sequence set, the same base model
+scored 0.41 on one of six tasks in the small-scale rerun of Section 9.7.
+The 0.0 is therefore attributed to the serving bridge rather than to the
+model's tool use or its finance reasoning\footnote{Source:
+  \longtok{outputs/e1\_\allowbreak{}e14\_\allowbreak{}small\_\allowbreak{}scale\_\allowbreak{}2026-09-26/E4/BRIDGE\_\allowbreak{}STOP\_\allowbreak{}TOKEN\_\allowbreak{}FINDING.md}.}.
 Two implications follow, and they cut in opposite directions. The
 positive implication is that the harness behaves correctly at the
 boundary --- it fails closed, produces a legible mechanism for every
@@ -6457,6 +6470,227 @@ blocker column in the terminal ledger rests on document evidence rather
 than on model judgment\footnote{Sources:
   \longtok{outputs/verification/LEDGER\_\allowbreak{}CODE\_\allowbreak{}CHECK\_\allowbreak{}2026-09-19.json},
   \longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md}.}.
+
+\section{Small-scale reruns of all fourteen
+lanes}\label{small-scale-reruns-of-all-fourteen-lanes}
+
+The lane results above were produced by the trained actor at the time of
+the campaign and are left exactly as recorded. This section adds a
+separate, smaller set of runs, made on 26 September 2026, whose purpose
+is narrower: to give every one of the fourteen lanes a measured number
+under one fixed protocol, including the lanes that never produced a
+score. None of the figures below is pooled with, averaged against, or
+substituted for an original-contract or replacement-scope result
+reported earlier in this chapter.
+
+The protocol fixes one actor family, a fixed item-selection seed
+(20260926), temperature 0 and a non-thinking chat template, and scores
+each lane with its native grader where one could be run. Lanes whose
+original benchmark is externally blocked were run on a public
+substitute, and each substitute's gap from the original suite is
+recorded in its lane file. Items that errored or timed out are counted
+as failures in the denominator. Each lane's items, raw outputs and
+grader logs are kept so that every figure can be recomputed\footnote{Source:
+  \longtok{outputs/e1\_\allowbreak{}e14\_\allowbreak{}small\_\allowbreak{}scale\_\allowbreak{}2026-09-26/PROTOCOL.md}.}.
+
+Two arms were run. The first is the base model,
+\texttt{Qwen/Qwen3.6-35B-A3B} with no adapter, sampled on Tinker (Table
+9.A). The second is a paired comparison of the trained actor against the
+same base model, both served by one vLLM configuration on Modal, on
+identical items (Table 9.B). The pairing exists because the adapter's
+effect on individual token probabilities was measured to be about the
+same size as the numerical difference between the two serving engines on
+the same base weights. A comparison of trained-on-vLLM against
+base-on-Tinker would therefore confound the adapter with the engine, and
+no such cross-engine comparison is made here\footnote{Source:
+  \longtok{outputs/e1\_\allowbreak{}e14\_\allowbreak{}small\_\allowbreak{}scale\_\allowbreak{}2026-09-26/TRAINED\_\allowbreak{}ACTOR\_\allowbreak{}ENDPOINT.md}.}.
+
+\textbf{Table 9.A --- Base model on Tinker, small-scale subsets.}
+
+{\def\LTcaptype{none} % do not increment counter
+\begingroup\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Lane
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Benchmark run
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Scope
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Metric
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Result
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+95\% CI
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+E1 & SWE-bench Pro public test split & original-public-subset & resolved
+rate & 0/10 = 0.000 & {[}0.00, 0.28{]} \\
+E2 & EffiBench & substitute & pass@1 & 23/30 = 0.767 & {[}0.59,
+0.88{]} \\
+E3 & Terminal-Bench v2.0 & substitute & task success rate & 4/8 = 0.500
+& {[}0.22, 0.78{]} \\
+E4 & BankerToolBench official Harbor tasks\ldots{} &
+original-public-subset & mean native verifier rewa\ldots{} & 0.068 (n =
+6) & ≈ {[}0.01, 0.47{]} \\
+E5 & tau2-bench & substitute & pass\^{}1 & 3/10 = 0.300 & {[}0.11,
+0.60{]} \\
+E6 & MiniWoB++ & substitute & episode success rate & 15/36 = 0.417 &
+{[}0.27, 0.58{]} \\
+E7 & BinaryAudit upstream cbd86c7 & original-public-subset & task
+success rate & 0/6 = 0.000 & {[}0.00, 0.39{]} \\
+E8 & LAB-Bench public MCQ & substitute & accuracy & 26/80 = 0.325 &
+{[}0.23, 0.43{]} \\
+E9 & MLE-bench lite/low-complexity split & original-public-subset &
+any-medal rate & 1/5 = 0.200 & {[}0.04, 0.62{]} \\
+E10 & AgentHarm test\_public & original-public-subset & harmful refusal
+rate & 20/30 = 0.667 & {[}0.49, 0.81{]} \\
+E11 & VerilogEval & original-public-subset & pass@1 & 35/50 = 0.700 &
+{[}0.56, 0.81{]} \\
+E12 & AppBench public tasks & original-public-subset & rubric-item pass
+rate & 122/151 = 0.808 & {[}0.74, 0.86{]} \\
+E13 & BALROG & substitute & BALROG native progression\ldots{} & 23.1\% &
+--- \\
+E14 & Omni-MATH test & substitute & accuracy & 38/100 = 0.380 & {[}0.29,
+0.48{]} \\
+\end{longtable}
+\endgroup
+}
+
+\textbf{Table 9.B --- Trained actor versus base model on the same vLLM
+engine, identical items.}
+
+{\def\LTcaptype{none} % do not increment counter
+\begingroup\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Lane
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Items
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Trained
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Base
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Trained − base
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Test
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+E1 & 10 & 0.000 & 0.000 & 0.000 & McNemar p = 1 (b/c 0/0) \\
+E2 & 30 & 0.700 & 0.800 & -0.100 & McNemar p = 0.25 (b/c 0/3) \\
+E3 & 8 & 0.625 & 0.375 & 0.250 & McNemar p = 0.5 (b/c 2/0) \\
+E4 & 6 & 0.066 & 0.093 & -0.027 & 95\% CI {[}-0.080, 0.000{]} \\
+E5 & 10 & 0.500 & 0.200 & 0.300 & McNemar p = 0.38 (b/c 4/1) \\
+E6 & 36 & 0.444 & 0.472 & -0.028 & McNemar p = 1 (b/c 1/2) \\
+E7 & 6 & 0.167 & 0.000 & 0.167 & McNemar p = 1 (b/c 1/0) \\
+E8 & 80 & 0.312 & 0.312 & 0.000 & McNemar p = 1 (b/c 6/6) \\
+E9 & 5 & 0.000 & 0.000 & 0.000 & McNemar p = 1 (b/c 0/0) \\
+E9 (above median) & 5 & 0.000 & 0.200 & -0.200 & McNemar p = 1 (b/c
+0/1) \\
+E10 (refusal rate) & 30 harmful, 30 benign & 0.700 & 0.667 & 0.033 &
+McNemar p = 1 (b/c 3/2) \\
+E10 (harm score) & 30 harmful, 30 benign & 0.247 & 0.236 & 0.011 & 95\%
+CI {[}-0.053, 0.078{]} \\
+E10 (benign score) & 30 harmful, 30 benign & 0.780 & 0.794 & -0.015 &
+95\% CI {[}-0.050, 0.012{]} \\
+E11 & 50 & 0.660 & 0.660 & 0.000 & McNemar p = 1 (b/c 2/2) \\
+E12 & 151 & 0.748 & 0.781 & -0.033 & McNemar p = 0.3 (b/c 5/10) \\
+E13 & 26 & 25.510 & 23.630 & 1.875 & 95\% CI {[}-2.73, 7.09{]} \\
+E14 & 100 & 0.430 & 0.440 & -0.010 & McNemar p = 1 (b/c 5/6) \\
+\end{longtable}
+\endgroup
+}
+
+These are small samples, and the tables should be read accordingly. Most
+lanes score between five and eighty items, so a single item moves a
+lane's rate by several percentage points and the confidence intervals
+are wide. In Table 9.B, b and c count items solved only by the trained
+actor and only by the base model respectively, and the CI is a paired
+bootstrap interval on the difference. For E12 the 151 rubric items come
+from only six generated applications, so they are not independent and
+its McNemar p-value overstates the evidence. For E9, the one competition
+that earned a medal in the Tinker run (nomad2018) has a 46.8k-token
+prompt that exceeds the vLLM serving limit of 32,768 tokens, so it fails
+identically in both vLLM arms; the vLLM medal rates are therefore not
+comparable with Table 9.A. The paired differences are reported with
+their own test and are not combined across lanes; no lane-level
+difference is interpreted as evidence that the adapter improves or
+degrades performance unless its test excludes zero, and none is
+extrapolated to the full suite. The principal caveat for each lane, as
+recorded in its result file, is listed below; the full list is in each
+lane's \texttt{result.json}.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{E1.} New base-model arm; not comparable to or poolable with
+  the original 2/731 (lost seed809 adapter, temperature 0.2).
+\item
+  \textbf{E2.} Substitute benchmark; never pool with or present as the
+  FrontierSWE lane score (original: 1/17 tasks, replay 0.8628, lost
+  adapter).
+\item
+  \textbf{E3.} New base-model arm; never pool with or present as the
+  original SDAB/seed809 lane score.
+\item
+  \textbf{E4.} Small n=6 of 100; wide interval. Wilson95 computed on
+  summed fractional reward (approximation for a {[}0,1{]} score).
+\item
+  \textbf{E5.} n=10, not the requested 20: the E4+E5 6M Tinker-token cap
+  was exhausted (E4 1.56M, abandoned APEX attempt 2.33M, tau2 2.05M).
+\item
+  \textbf{E6.} Tasks drawn by random.Random(20260926).sample from all
+  128 sorted miniwob env ids; episode seeds 0-2.
+\item
+  \textbf{E7.} New base-model arm; never pool with or present as the
+  original lane score.
+\item
+  \textbf{E8.} New base-model arm; not comparable to or poolable with
+  the lost-adapter 1967/1967 run (22.88\%).
+\item
+  \textbf{E9.} Competition pool: 6 low-split competitions with small
+  non-image-heavy data (detecting-insults, jigsaw-toxic,
+  leaf-classification, nomad2018, random-acts-of-pizza, spooky); 5 drawn
+  by random.Random(20260926).sample. n=5 so the CI is very wide.
+\item
+  \textbf{E10.} New base-model arm on AgentHarm itself; the lost-adapter
+  lane figure (AgentDojo benign 97/97, 90.72\%) is a different benchmark
+  and not comparable.
+\item
+  \textbf{E11.} New base-model arm; not comparable to the retained
+  adapter receipt 129/312 = 41.35\% (that run used thinking-default
+  template, temperature 0.2, all 312).
+\item
+  \textbf{E12.} Public tasks, not held-out. Label mandatory. New
+  base-model arm; never pool with the original lane.
+\item
+  \textbf{E13.} New base-model arm; not comparable to or pooled with the
+  original seed809-LoRA E13 plan (21-episode BabyAI admission set).
+\item
+  \textbf{E14.} New base-model arm; the prior 2271/4428 = 51.31\% figure
+  is not comparable (different actor, full split).
+\end{itemize}
 
 \section{Summary of the campaign at the point of
 writing}\label{summary-of-the-campaign-at-the-point-of-writing}
@@ -6643,9 +6877,11 @@ base-model arm it is the separately authorised E4 BankerToolBench rerun,
 and there the mean reward was 0.0 across 100/100 completed trials, with
 the audited mechanism recorded as agents dying after 2--14 steps with no
 \texttt{deliverables/} output so that the verifier short-circuits 0.0;
-the ledger's verdict is that this 0.0 ``measures tool-dialogue collapse,
-not finance reasoning''\footnote{Source:
-  outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md §9.7.}.
+the ledger's verdict at the time was that this 0.0 ``measures
+tool-dialogue collapse, not finance reasoning''\footnote{Source:
+  outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md §9.7.}, and a later
+check attributes that collapse to missing stop sequences in the serving
+bridge rather than to the model (Section 9.5).
 
 What governance bought is visible in the ledger itself: eleven of eleven
 deterministic checks passing on 2026-09-19, and a historical snapshot
@@ -7950,8 +8186,8 @@ BankerToolBench & 809 & --- & 1/100 tasks, recovery 0.3115 ---
 \longtok{CLOSED\_PARTIAL} \\
 E4 base-model rerun & Modal \longtok{/v1/responses} & base model,
 zero-init LoRA & --- & --- & BankerToolBench & 809 & 0 & 100/100 trials,
-mean reward 0.0, \$15.07 of \$55.91 cap; measures tool-dialogue
-collapse \\
+mean reward 0.0, \$15.07 of \$55.91 cap; zero traced to bridge passing
+no stop sequences (§9.5) \\
 E5 APEX-Agents & native harness & as above & --- & --- & APEX-Agents &
 809 & --- & 7/480 native-scored; prefix mean 0.050505 \\
 E5 replacement (successor27) & native harness & as above & --- & --- &

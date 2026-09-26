@@ -1,0 +1,8 @@
+{"tag": "detecting-insults-in-social-commentary#1", "prompt_tokens": 2743, "sample_tokens": 1062, "error": null, "latency_s": 16.17}
+{"tag": "spooky-author-identification#1", "prompt_tokens": 3492, "sample_tokens": 831, "error": null, "latency_s": 12.84}
+{"tag": "random-acts-of-pizza#1", "prompt_tokens": 3609, "sample_tokens": 3192, "error": null, "latency_s": 45.02}
+{"tag": "random-acts-of-pizza#2", "prompt_tokens": 7574, "sample_tokens": 3265, "error": null, "latency_s": 43.35}
+{"tag": "leaf-classification#1", "prompt_tokens": 2866, "sample_tokens": 798, "error": null, "latency_s": 10.2}
+{"tag": "nomad2018-predict-transparent-conductors#1", "prompt_tokens": 46767, "sample_tokens": 0, "error": "<HTTPError 400: 'Bad Request'>", "latency_s": 34.3}
+{"tag": "nomad2018-predict-transparent-conductors#2", "prompt_tokens": 46893, "sample_tokens": 0, "error": "<HTTPError 400: 'Bad Request'>", "latency_s": 34.06}
+{"tag": "nomad2018-predict-transparent-conductors#3", "prompt_tokens": 47019, "sample_tokens": 0, "error": "<HTTPError 400: 'Bad Request'>", "latency_s": 34.68}

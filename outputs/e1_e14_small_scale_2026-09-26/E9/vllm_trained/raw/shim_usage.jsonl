@@ -1,0 +1,13 @@
+{"tag": "detecting-insults-in-social-commentary#1", "prompt_tokens": 2743, "sample_tokens": 1398, "error": null, "latency_s": 23.57}
+{"tag": "detecting-insults-in-social-commentary#2", "prompt_tokens": 4499, "sample_tokens": 1403, "error": null, "latency_s": 18.99}
+{"tag": "detecting-insults-in-social-commentary#3", "prompt_tokens": 6167, "sample_tokens": 1433, "error": null, "latency_s": 21.43}
+{"tag": "spooky-author-identification#1", "prompt_tokens": 3492, "sample_tokens": 1109, "error": null, "latency_s": 17.34}
+{"tag": "spooky-author-identification#2", "prompt_tokens": 5135, "sample_tokens": 1158, "error": null, "latency_s": 17.39}
+{"tag": "spooky-author-identification#3", "prompt_tokens": 6483, "sample_tokens": 1180, "error": null, "latency_s": 17.38}
+{"tag": "random-acts-of-pizza#1", "prompt_tokens": 3609, "sample_tokens": 2594, "error": null, "latency_s": 27.6}
+{"tag": "random-acts-of-pizza#2", "prompt_tokens": 6713, "sample_tokens": 2654, "error": null, "latency_s": 28.67}
+{"tag": "random-acts-of-pizza#3", "prompt_tokens": 9870, "sample_tokens": 2714, "error": null, "latency_s": 29.85}
+{"tag": "leaf-classification#1", "prompt_tokens": 2866, "sample_tokens": 928, "error": null, "latency_s": 10.63}
+{"tag": "nomad2018-predict-transparent-conductors#1", "prompt_tokens": 46767, "sample_tokens": 0, "error": "<HTTPError 400: 'Bad Request'>", "latency_s": 34.5}
+{"tag": "nomad2018-predict-transparent-conductors#2", "prompt_tokens": 46893, "sample_tokens": 0, "error": "<HTTPError 400: 'Bad Request'>", "latency_s": 34.16}
+{"tag": "nomad2018-predict-transparent-conductors#3", "prompt_tokens": 47019, "sample_tokens": 0, "error": "<HTTPError 400: 'Bad Request'>", "latency_s": 34.31}

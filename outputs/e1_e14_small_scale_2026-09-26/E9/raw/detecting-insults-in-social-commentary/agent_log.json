@@ -1,0 +1,17 @@
+{
+ "comp": "detecting-insults-in-social-commentary",
+ "upload_rc": 0,
+ "setup_out": " 0.6.0)\n[colab] Run 'colab update' to update.\n[colab] To silence this check, set \"enable_update_check\": false in ~/.config/colab-cli/settings.json\n\nextracted\n/tmp/ipykernel_1542/1375208746.py:1: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.\n  import tarfile; tarfile.open('/content/detecting-insults-in-social-commentary.tar.gz').extractall('/content'); print('extracted')\n",
+ "attempts": [
+  {
+   "attempt": 1,
+   "prompt_tokens": 2743,
+   "sample_tokens": 1354,
+   "shim_error": null,
+   "exec_seconds": 27.4,
+   "ok": true,
+   "exec_tail": "\n[colab] A new version of Colab CLI is available: 0.7.4 (current: 0.6.0)\n[colab] Run 'colab update' to update.\n[colab] To silence this check, set \"enable_update_check\": false in ~/.config/colab-cli/settings.json\n\nRC= 0 HAS_SUB= True\nSTDOUT_TAIL Loading data...\nCleaning data...\nExtracting TF-IDF features...\nExtracting additional features...\nTraining LightGBM model...\nTraining fold 1/5...\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's binary_logloss: 0.364318\n[200]\tvalid_0's binary_logloss: 0.357987\nEarly stopping, best iteration is:\n[163]\tvalid_0's binary_logloss: 0.353317\nTraining fold 2/5...\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's binary_logloss: 0.350166\nEarly stopping, best iteration is:\n[149]\tvalid_0's binary_logloss: 0.346022\nTraining fold 3/5...\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's binary_logloss: 0.374049\nEarly stopping, best iteration is:\n[142]\tvalid_0's binary_logloss: 0.371951\nTraining fold 4/5...\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's binary_logloss: 0.382826\nEarly stopping, best iteration is:\n[104]\tvalid_0's binary_logloss: 0.38248\nTraining fold 5/5...\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's binary_logloss: 0.399707\nEarly stopping, best iteration is:\n[82]\tvalid_0's binary_logloss: 0.398104\nOut-of-fold Log Loss: 0.3704\nCreating submission...\nSubmission saved to submission.csv\n\nSTDERR_TAIL /content/detecting-insults-in-social-commentary/solution.py:51: SyntaxWarning: invalid escape sequence '\\?'\n  features['question_count'] = df['Comment'].str.count('\\?')\n\n"
+  }
+ ],
+ "download_rc": 0
+}

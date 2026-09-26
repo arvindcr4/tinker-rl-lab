@@ -1,0 +1,248 @@
+{
+ "numerator": 21,
+ "denominator": 30,
+ "value": 0.7,
+ "wilson95": [
+  0.5212,
+  0.8334
+ ],
+ "net_geomean_over_passed": 0.7908195419004825,
+ "n_faster_than_canonical": 16,
+ "prompt_tokens": 25520,
+ "sample_tokens": 18184,
+ "n_errors": 0,
+ "grade_wall_s": 5.7,
+ "per_problem": {
+  "52": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 1.1023386386792333
+  },
+  "93": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.8779405284166085
+  },
+  "115": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.45033993788380966
+  },
+  "123": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.8481911686683963
+  },
+  "169": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.8958234854356889
+  },
+  "306": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.6912998368060699
+  },
+  "342": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.5000144623357644
+  },
+  "477": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.9479538574853735
+  },
+  "624": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.5999460235890671
+  },
+  "629": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.7332876754587909
+  },
+  "672": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.777293285181614
+  },
+  "869": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.7577366831973744
+  },
+  "1012": {
+   "passed": false,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop"
+  },
+  "1120": {
+   "passed": false,
+   "canonical_passed": false,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop"
+  },
+  "1386": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.4149596481854302
+  },
+  "1425": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.470146579543662
+  },
+  "1564": {
+   "passed": false,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop"
+  },
+  "1707": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 1.3011970831494328
+  },
+  "1772": {
+   "passed": false,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop"
+  },
+  "1842": {
+   "passed": false,
+   "canonical_passed": false,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop"
+  },
+  "2052": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 1.0601805117101342
+  },
+  "2100": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.8654389823208395
+  },
+  "2137": {
+   "passed": false,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop"
+  },
+  "2154": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.8454972230587867
+  },
+  "2251": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 2.2023044285822384
+  },
+  "2317": {
+   "passed": false,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop"
+  },
+  "2513": {
+   "passed": false,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "length"
+  },
+  "2517": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 0.5585325763519928
+  },
+  "2533": {
+   "passed": false,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "length"
+  },
+  "2546": {
+   "passed": true,
+   "canonical_passed": true,
+   "extractable": true,
+   "gen_error": null,
+   "finish_reason": "stop",
+   "net": 1.0627372557700832
+  }
+ }
+}

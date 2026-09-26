@@ -1,0 +1,1477 @@
+Traceback (most recent call last):
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/trial/trial.py", line 351, in run
+    await self._prepare()
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/trial/trial.py", line 385, in _prepare
+    await self._setup_agent_environment()
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/trial/trial.py", line 1148, in _setup_agent_environment
+    await self._start_agent_environment()
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/trial/trial.py", line 1154, in _start_agent_environment
+    await asyncio.wait_for(
+  File "/Users/arvind/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 520, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/environments/docker/docker.py", line 891, in start
+    await self._run_docker_compose_command(["build"])
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/environments/docker/docker.py", line 656, in _run_docker_compose_command
+    raise RuntimeError(
+RuntimeError: Docker compose command failed for environment btb-19b3361c. Command: docker compose --project-name btb-19b3361c__vfjnngc__env --project-directory /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/datasets/btb/btb-19b3361c/environment -f /private/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/tmpf7lqbvye/btb-19b3361c__vfJNngC__env-docker-compose-resources.json -f /Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/environments/docker/docker-compose-build.yaml -f /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/datasets/btb/btb-19b3361c/environment/docker-compose.yaml -f /private/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/tmpq7twt_8m/docker-compose-environment.json -f /private/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/tmpxcjzrxyv/docker-compose-mounts.json build. Return code: 1. Stdout:  Image btb-19b3361c__vfjnngc__env-main Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 762B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 5.23kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/ubuntu:24.04
+#3 ...
+
+#4 [internal] load metadata for ghcr.io/astral-sh/uv:latest
+#4 DONE 2.0s
+
+#3 [internal] load metadata for docker.io/library/ubuntu:24.04
+#3 DONE 2.1s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 85B done
+#5 DONE 0.0s
+
+#6 [build 1/4] FROM docker.io/library/ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3
+#6 resolve docker.io/library/ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 0.0s done
+#6 DONE 0.1s
+
+#7 FROM ghcr.io/astral-sh/uv:latest@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea90c8573340950a0ac2d1aef424
+#7 resolve ghcr.io/astral-sh/uv:latest@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea90c8573340950a0ac2d1aef424 0.0s done
+#7 ...
+
+#8 [internal] load build context
+#8 transferring context: 214.89kB done
+#8 DONE 0.1s
+
+#7 FROM ghcr.io/astral-sh/uv:latest@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea90c8573340950a0ac2d1aef424
+#7 sha256:add291d7adc1edf47af06a937ab5dce60a2485ced5c7094ba09a1e9f6e2d2c00 0B / 22.24MB 0.2s
+#7 sha256:f10633f532e3165bbdcff02b4f1ea01aaff38568f56e2f267e255247bd1f6888 0B / 98B 0.2s
+#7 sha256:f10633f532e3165bbdcff02b4f1ea01aaff38568f56e2f267e255247bd1f6888 98B / 98B 0.6s done
+#7 sha256:add291d7adc1edf47af06a937ab5dce60a2485ced5c7094ba09a1e9f6e2d2c00 3.15MB / 22.24MB 1.7s
+#7 sha256:add291d7adc1edf47af06a937ab5dce60a2485ced5c7094ba09a1e9f6e2d2c00 6.29MB / 22.24MB 2.0s
+#7 sha256:add291d7adc1edf47af06a937ab5dce60a2485ced5c7094ba09a1e9f6e2d2c00 8.39MB / 22.24MB 2.3s
+#7 sha256:add291d7adc1edf47af06a937ab5dce60a2485ced5c7094ba09a1e9f6e2d2c00 10.49MB / 22.24MB 2.6s
+#7 sha256:add291d7adc1edf47af06a937ab5dce60a2485ced5c7094ba09a1e9f6e2d2c00 12.58MB / 22.24MB 4.7s
+#7 ...
+
+#6 [build 1/4] FROM docker.io/library/ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3
+#6 sha256:8a38824eedc553ba80cf1eb7df278a003340f7409fd4b9002bce07db8840a9a2 28.94MB / 28.94MB 5.5s done
+#6 extracting sha256:8a38824eedc553ba80cf1eb7df278a003340f7409fd4b9002bce07db8840a9a2 0.4s done
+#6 DONE 6.0s
+
+#7 FROM ghcr.io/astral-sh/uv:latest@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea90c8573340950a0ac2d1aef424
+#7 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 0.526 Get:1 http://ports.ubuntu.com/ubuntu-ports noble InRelease [256 kB]
+#9 ...
+
+#7 FROM ghcr.io/astral-sh/uv:latest@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea90c8573340950a0ac2d1aef424
+#7 sha256:add291d7adc1edf47af06a937ab5dce60a2485ced5c7094ba09a1e9f6e2d2c00 22.24MB / 22.24MB 8.8s done
+#7 extracting sha256:add291d7adc1edf47af06a937ab5dce60a2485ced5c7094ba09a1e9f6e2d2c00 0.2s done
+#7 DONE 9.1s
+
+#7 FROM ghcr.io/astral-sh/uv:latest@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea90c8573340950a0ac2d1aef424
+#7 extracting sha256:f10633f532e3165bbdcff02b4f1ea01aaff38568f56e2f267e255247bd1f6888 0.0s done
+#7 DONE 9.1s
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 0.519 Get:1 http://ports.ubuntu.com/ubuntu-ports noble InRelease [256 kB]
+#10 3.690 Get:2 http://ports.ubuntu.com/ubuntu-ports noble-updates InRelease [126 kB]
+#10 5.384 Get:3 http://ports.ubuntu.com/ubuntu-ports noble-backports InRelease [126 kB]
+#10 7.153 Get:4 http://ports.ubuntu.com/ubuntu-ports noble-security InRelease [126 kB]
+#10 8.521 Get:5 http://ports.ubuntu.com/ubuntu-ports noble/multiverse arm64 Packages [274 kB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 3.798 Get:2 http://ports.ubuntu.com/ubuntu-ports noble-updates InRelease [126 kB]
+#9 5.577 Get:3 http://ports.ubuntu.com/ubuntu-ports noble-backports InRelease [126 kB]
+#9 7.199 Get:4 http://ports.ubuntu.com/ubuntu-ports noble-security InRelease [126 kB]
+#9 8.433 Get:5 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 Packages [1776 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 10.31 Get:6 http://ports.ubuntu.com/ubuntu-ports noble/restricted arm64 Packages [113 kB]
+#10 10.91 Get:7 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 Packages [1776 kB]
+#10 15.24 Get:8 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 Packages [19.0 MB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 15.36 Get:6 http://ports.ubuntu.com/ubuntu-ports noble/restricted arm64 Packages [113 kB]
+#9 15.56 Get:7 http://ports.ubuntu.com/ubuntu-ports noble/multiverse arm64 Packages [274 kB]
+#9 16.45 Get:8 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 Packages [19.0 MB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 27.79 Get:9 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 Packages [1692 kB]
+#10 28.33 Get:10 http://ports.ubuntu.com/ubuntu-ports noble-updates/multiverse arm64 Packages [94.8 kB]
+#10 28.34 Get:11 http://ports.ubuntu.com/ubuntu-ports noble-updates/restricted arm64 Packages [2996 kB]
+#10 29.41 Get:12 http://ports.ubuntu.com/ubuntu-ports noble-updates/universe arm64 Packages [2198 kB]
+#10 29.90 Get:13 http://ports.ubuntu.com/ubuntu-ports noble-backports/multiverse arm64 Packages [671 B]
+#10 29.90 Get:14 http://ports.ubuntu.com/ubuntu-ports noble-backports/universe arm64 Packages [36.3 kB]
+#10 29.90 Get:15 http://ports.ubuntu.com/ubuntu-ports noble-backports/main arm64 Packages [49.0 kB]
+#10 29.90 Get:16 http://ports.ubuntu.com/ubuntu-ports noble-security/universe arm64 Packages [1635 kB]
+#10 30.52 Get:17 http://ports.ubuntu.com/ubuntu-ports noble-security/main arm64 Packages [1356 kB]
+#10 30.75 Get:18 http://ports.ubuntu.com/ubuntu-ports noble-security/restricted arm64 Packages [2811 kB]
+#10 31.63 Get:19 http://ports.ubuntu.com/ubuntu-ports noble-security/multiverse arm64 Packages [89.7 kB]
+#10 31.71 Fetched 34.8 MB in 32s (1103 kB/s)
+#10 31.71 Reading package lists...
+#10 32.20 Reading package lists...
+#10 32.68 Building dependency tree...
+#10 32.79 Reading state information...
+#10 32.94 bash is already the newest version (5.2.21-2ubuntu4).
+#10 32.94 The following additional packages will be installed:
+#10 32.94   adduser adwaita-icon-theme alsa-topology-conf alsa-ucm-conf apparmor
+#10 32.94   at-spi2-common at-spi2-core binutils binutils-aarch64-linux-gnu
+#10 32.94   binutils-common build-essential ca-certificates ca-certificates-java cpp
+#10 32.94   cpp-13 cpp-13-aarch64-linux-gnu cpp-aarch64-linux-gnu dbus dbus-bin
+#10 32.94   dbus-daemon dbus-session-bus-common dbus-system-bus-common dbus-user-session
+#10 32.94   dconf-gsettings-backend dconf-service default-jre default-jre-headless
+#10 32.94   dictionaries-common dirmngr dmsetup dpkg-dev emacsen-common eslint fakeroot
+#10 32.94   firebird3.0-common firebird3.0-common-doc firebird3.0-server-core
+#10 32.94   firebird3.0-utils fontconfig fontconfig-config fonts-crosextra-caladea
+#10 32.94   fonts-crosextra-carlito fonts-dejavu fonts-dejavu-core fonts-dejavu-extra
+#10 32.94   fonts-dejavu-mono fonts-liberation fonts-liberation-sans-narrow
+#10 32.94   fonts-linuxlibertine fonts-noto-core fonts-noto-extra fonts-noto-mono
+#10 32.94   fonts-noto-ui-core fonts-opensymbol fonts-sil-gentium
+#10 32.94   fonts-sil-gentium-basic g++ g++-13 g++-13-aarch64-linux-gnu
+#10 32.94   g++-aarch64-linux-gnu gcc gcc-13 gcc-13-aarch64-linux-gnu gcc-13-base
+#10 32.94   gcc-aarch64-linux-gnu gir1.2-girepository-2.0 gir1.2-glib-2.0 git-man gnupg
+#10 32.94   gnupg-l10n gnupg-utils gpg gpg-agent gpg-wks-client gpgconf gpgsm
+#10 32.94   gsettings-desktop-schemas gstreamer1.0-gl gstreamer1.0-gtk3
+#10 32.94   gstreamer1.0-plugins-base gtk-update-icon-cache gyp handlebars
+#10 32.94   hicolor-icon-theme humanity-icon-theme hunspell-en-us iso-codes java-common
+#10 32.94   javascript-common keyboxd krb5-locales less libabsl20220623t64 libabw-0.1-1
+#10 32.94   libalgorithm-diff-perl libalgorithm-diff-xs-perl libalgorithm-merge-perl
+#10 32.94   libaom3 libapparmor1 libargon2-1 libasan8 libasound2-data libasound2t64
+#10 32.94   libatk-bridge2.0-0t64 libatk-wrapper-java libatk-wrapper-java-jni
+#10 32.94   libatk1.0-0t64 libatomic1 libatspi2.0-0t64 libauthen-sasl-perl
+#10 32.94   libavahi-client3 libavahi-common-data libavahi-common3 libbinutils
+#10 32.94   libboost-iostreams1.83.0 libboost-locale1.83.0 libboost-thread1.83.0
+#10 32.94   libbrotli1 libbsd0 libbsh-java libc-dev-bin libc-devtools libc6-dev
+#10 32.94   libcairo-gobject2 libcairo2 libcap2-bin libcares2 libcbor0.10 libcc1-0
+#10 32.94   libcdparanoia0 libcdr-0.1-1 libclone-perl libclucene-contribs1t64
+#10 32.94   libclucene-core1t64 libcolamd3 libcolord2 libcrypt-dev libcryptsetup12
+#10 32.94   libctf-nobfd0 libctf0 libcups2t64 libcurl3t64-gnutls libcurl4t64
+#10 32.94   libdata-dump-perl libdatrie1 libdbus-1-3 libdconf1 libdeflate0
+#10 32.94   libdevmapper1.02.1 libdpkg-perl libdrm-amdgpu1 libdrm-common libdrm2
+#10 32.94   libdw1t64 libe-book-0.1-1 libedit2 libegl-mesa0 libegl1 libel-api-java
+#10 32.94   libelf1t64 libencode-locale-perl libeot0 libepoxy0 libepubgen-0.1-1
+#10 32.94   liberror-perl libetonyek-0.1-1 libevent-core-2.1-7t64 libexpat1
+#10 32.94   libexttextcat-2.0-0 libexttextcat-data libfakeroot libfbclient2 libfdisk1
+#10 32.94   libfido2-1 libfile-basedir-perl libfile-desktopentry-perl
+#10 32.94   libfile-fcntllock-perl libfile-listing-perl libfile-mimeinfo-perl
+#10 32.94   libfont-afm-perl libfontconfig1 libfreehand-0.1-1 libfreetype6 libfribidi0
+#10 32.94   libgbm1 libgcc-13-dev libgd3 libgdbm-compat4t64 libgdbm6t64
+#10 32.94   libgdk-pixbuf-2.0-0 libgdk-pixbuf2.0-bin libgdk-pixbuf2.0-common libgif7
+#10 32.94   libgirepository-1.0-1 libgl1 libgl1-mesa-dri libgles2 libglib2.0-0t64
+#10 32.94   libglib2.0-data libglvnd0 libglx-mesa0 libglx0 libgpgme11t64 libgpgmepp6t64
+#10 32.94   libgprofng0 libgraphene-1.0-0 libgraphite2-3 libgssapi-krb5-2
+#10 32.94   libgstreamer-gl1.0-0 libgstreamer-plugins-base1.0-0 libgstreamer1.0-0
+#10 32.94   libgtk-3-0t64 libgtk-3-bin libgtk-3-common libgudev-1.0-0 libharfbuzz-icu0
+#10 32.94   libharfbuzz0b libheif-plugin-aomdec libheif-plugin-aomenc libheif1
+#10 32.94   libhsqldb1.8.0-java libhtml-form-perl libhtml-format-perl
+#10 32.94   libhtml-parser-perl libhtml-tagset-perl libhtml-tree-perl
+#10 32.94   libhttp-cookies-perl libhttp-daemon-perl libhttp-date-perl
+#10 32.94   libhttp-message-perl libhttp-negotiate-perl libhunspell-1.7-0 libhwasan0
+#10 32.94   libhyphen0 libib-util libice6 libicu74 libio-html-perl libio-socket-ssl-perl
+#10 32.94   libio-stringy-perl libipc-system-simple-perl libisl23 libitm1 libjansson4
+#10 32.94   libjbig0 libjpeg-turbo8 libjpeg8 libjs-async libjs-events libjs-inherits
+#10 32.94   libjs-is-typedarray libjs-prettify libjs-regenerate libjs-source-map
+#10 32.94   libjs-sprintf-js libjs-typedarray-to-buffer libjs-util libjson-c5
+#10 32.94   libjsp-api-java libk5crypto3 libkeyutils1 libkmod2 libkrb5-3 libkrb5support0
+#10 32.94   libksba8 liblangtag-common liblangtag1 liblcms2-2 libldap-common libldap2
+#10 32.94   liblerc4 liblibreoffice-java libllvm20 liblocale-gettext-perl liblsan0
+#10 32.94   libltdl7 liblwp-mediatypes-perl liblwp-protocol-https-perl libmailtools-perl
+#10 32.94   libmhash2 libmpc3 libmpfr6 libmspub-0.1-1 libmwaw-0.3-3 libmysqlclient21
+#10 32.94   libmythes-1.2-0 libnet-dbus-perl libnet-http-perl libnet-smtp-ssl-perl
+#10 32.94   libnet-ssleay-perl libnghttp2-14 libnode-dev libnode109 libnotify-bin
+#10 32.94   libnotify4 libnspr4 libnss-systemd libnss3 libodfgen-0.1-1 libogg0
+#10 32.94   libopenjp2-7 libopus0 liborc-0.4-0t64 liborcus-0.18-0 liborcus-parser-0.18-0
+#10 32.94   libpagemaker-0.0-0 libpam-cap libpam-systemd libpango-1.0-0
+#10 32.94   libpangocairo-1.0-0 libpangoft2-1.0-0 libpaper-utils libpaper1 libpcsclite1
+#10 32.94   libperl5.38t64 libpixman-1-0 libpng16-16t64 libpoppler134 libpq5 libpsl5t64
+#10 32.94   libpython3-stdlib libpython3.12-minimal libpython3.12-stdlib
+#10 32.94   libpython3.12t64 libraptor2-0 librasqal3t64 librdf0t64 libre2-10
+#10 32.94   libreadline8t64 libreoffice-base libreoffice-base-core
+#10 32.94   libreoffice-base-drivers libreoffice-calc libreoffice-common
+#10 32.94   libreoffice-core libreoffice-draw libreoffice-gnome libreoffice-gtk3
+#10 32.94   libreoffice-impress libreoffice-java-common libreoffice-math
+#10 32.94   libreoffice-nlpsolver libreoffice-report-builder
+#10 32.94   libreoffice-report-builder-bin libreoffice-script-provider-bsh
+#10 32.94   libreoffice-script-provider-js libreoffice-script-provider-python
+#10 32.94   libreoffice-sdbc-firebird libreoffice-sdbc-hsqldb libreoffice-sdbc-mysql
+#10 32.94   libreoffice-sdbc-postgresql libreoffice-style-colibre
+#10 32.94   libreoffice-style-elementary libreoffice-style-yaru
+#10 32.94   libreoffice-uiconfig-base libreoffice-uiconfig-calc
+#10 32.94   libreoffice-uiconfig-common libreoffice-uiconfig-draw
+#10 32.94   libreoffice-uiconfig-impress libreoffice-uiconfig-math
+#10 32.94   libreoffice-uiconfig-report-builder libreoffice-uiconfig-writer
+#10 32.94   libreoffice-wiki-publisher libreoffice-writer librevenge-0.0-0 librsvg2-2
+#10 32.94   librsvg2-common librtmp1 libsasl2-2 libsasl2-modules libsasl2-modules-db
+#10 32.94   libsensors-config libsensors5 libservlet-api-java libservlet3.1-java
+#10 32.94   libsframe1 libsharpyuv0 libsm6 libsqlite3-0 libssh-4 libssl-dev
+#10 32.94   libstdc++-13-dev libsuitesparseconfig7 libsystemd-shared libtext-iconv-perl
+#10 32.94   libthai-data libthai0 libtheora0 libtie-ixhash-perl libtiff6
+#10 32.94   libtimedate-perl libtommath1 libtry-tiny-perl libtsan2 libubsan1
+#10 32.94   libuno-cppu3t64 libuno-cppuhelpergcc3-3t64 libuno-purpenvhelpergcc3-3t64
+#10 32.94   libuno-sal3t64 libuno-salhelpergcc3-3t64 libunoloader-java libunwind8
+#10 32.94   liburi-perl libutempter0 libuv1-dev libuv1t64 libvisio-0.1-1 libvisual-0.4-0
+#10 32.94   libvorbis0a libvorbisenc2 libvulkan1 libwayland-client0 libwayland-cursor0
+#10 32.94   libwayland-egl1 libwebp7 libwebsocket-api-java libwpd-0.10-10 libwpg-0.3-3
+#10 32.94   libwps-0.4-4 libwww-perl libwww-robotrules-perl libx11-6 libx11-data
+#10 32.94   libx11-protocol-perl libx11-xcb1 libxau6 libxaw7 libxcb-dri3-0 libxcb-glx0
+#10 32.94   libxcb-present0 libxcb-randr0 libxcb-render0 libxcb-shape0 libxcb-shm0
+#10 32.94   libxcb-sync1 libxcb-xfixes0 libxcomposite1 libxcursor1 libxdamage1 libxdmcp6
+#10 32.94   libxext6 libxfixes3 libxft2 libxi6 libxinerama1 libxkbcommon0 libxkbfile1
+#10 32.94   libxml-parser-perl libxml-twig-perl libxml-xpathengine-perl libxml2
+#10 32.94   libxmlsec1t64 libxmlsec1t64-nss libxmu6 libxmuu1 libxpm4 libxrandr2
+#10 32.94   libxrender1 libxshmfence1 libxslt1.1 libxt6t64 libxtst6 libxv1 libxxf86dga1
+#10 32.94   libxxf86vm1 libyajl2 linux-libc-dev lp-solve lto-disabled-list make manpages
+#10 32.94   manpages-dev media-types mesa-libgallium mesa-vulkan-drivers mysql-common
+#10 32.94   netbase networkd-dispatcher node-abbrev node-acorn node-agent-base node-ajv
+#10 32.94   node-ajv-keywords node-ampproject-remapping node-ansi-escapes
+#10 32.94   node-ansi-regex node-ansi-styles node-anymatch node-aproba node-archy
+#10 32.94   node-are-we-there-yet node-argparse node-arrify node-assert node-async
+#10 32.94   node-async-each node-auto-bind node-babel-helper-define-polyfill-provider
+#10 32.94   node-babel-plugin-add-module-exports node-babel-plugin-lodash
+#10 32.94   node-babel-plugin-polyfill-corejs2 node-babel-plugin-polyfill-corejs3
+#10 32.94   node-babel-plugin-polyfill-regenerator node-babel7 node-babel7-runtime
+#10 32.95   node-balanced-match node-base node-base64-js node-binary-extensions
+#10 32.95   node-brace-expansion node-braces node-browserslist node-builtins node-busboy
+#10 32.95   node-cacache node-cache-base node-camelcase node-caniuse-lite node-chalk
+#10 32.95   node-chokidar node-chownr node-chrome-trace-event node-ci-info
+#10 32.95   node-cjs-module-lexer node-cli-boxes node-cli-cursor node-cli-table
+#10 32.95   node-cli-truncate node-cliui node-clone node-clone-deep
+#10 32.95   node-collection-visit node-color-convert node-color-name node-colors
+#10 32.95   node-columnify node-commander node-commondir node-concat-stream
+#10 32.95   node-console-control-strings node-convert-source-map node-copy-concurrently
+#10 32.95   node-core-js node-core-js-compat node-core-js-pure node-core-util-is
+#10 32.95   node-coveralls node-css-loader node-css-selector-tokenizer
+#10 32.95   node-data-uri-to-buffer node-debbundle-es-to-primitive node-debug
+#10 32.95   node-decamelize node-decompress-response node-deep-equal node-deep-is
+#10 32.95   node-defaults node-define-properties node-define-property node-defined
+#10 32.95   node-del node-delegates node-depd node-diff node-doctrine
+#10 32.95   node-electron-to-chromium node-encoding node-end-of-stream
+#10 32.95   node-enhanced-resolve node-err-code node-errno node-error-ex
+#10 32.95   node-es-abstract node-es-module-lexer node-es6-error
+#10 32.95   node-escape-string-regexp node-escodegen node-eslint-scope node-eslint-utils
+#10 32.95   node-eslint-visitor-keys node-espree node-esprima node-esquery
+#10 32.95   node-esrecurse node-estraverse node-esutils node-events node-fancy-log
+#10 32.95   node-fast-deep-equal node-fast-levenshtein node-fetch node-file-entry-cache
+#10 32.95   node-fill-range node-find-cache-dir node-find-up node-flat-cache
+#10 32.95   node-flatted node-for-in node-for-own node-foreground-child
+#10 32.95   node-fs-readdir-recursive node-fs-write-stream-atomic node-fs.realpath
+#10 32.95   node-function-bind node-functional-red-black-tree node-gauge
+#10 32.95   node-get-caller-file node-get-stream node-get-value node-glob
+#10 32.95   node-glob-parent node-globals node-globby node-got node-graceful-fs
+#10 32.95   node-growl node-gyp node-has-flag node-has-unicode node-has-value
+#10 32.95   node-has-values node-hosted-git-info node-http-proxy-agent
+#10 32.95   node-https-proxy-agent node-iconv-lite node-icss-utils node-ieee754
+#10 32.95   node-iferr node-ignore node-imurmurhash node-indent-string node-inflight
+#10 32.95   node-inherits node-ini node-interpret node-ip node-ip-regex node-is-arrayish
+#10 32.95   node-is-binary-path node-is-buffer node-is-descriptor node-is-extendable
+#10 32.95   node-is-extglob node-is-glob node-is-number node-is-path-cwd
+#10 32.95   node-is-path-inside node-is-plain-obj node-is-plain-object node-is-primitive
+#10 32.95   node-is-stream node-is-typedarray node-is-windows node-isarray node-isexe
+#10 32.95   node-isobject node-istanbul node-jest-debbundle node-jest-worker
+#10 32.95   node-js-tokens node-js-yaml node-jsesc node-json-buffer
+#10 32.95   node-json-parse-better-errors node-json-schema node-json-schema-traverse
+#10 32.95   node-json-stable-stringify node-json5 node-jsonify node-jsonparse
+#10 32.95   node-kind-of node-lcov-parse node-levn node-loader-runner node-locate-path
+#10 32.95   node-lodash node-lodash-packages node-log-driver node-lowercase-keys
+#10 32.95   node-lru-cache node-make-dir node-map-visit node-memfs node-memory-fs
+#10 32.95   node-merge-stream node-micromatch node-mime node-mime-types
+#10 32.95   node-mimic-response node-minimatch node-minimist node-minipass
+#10 32.95   node-mixin-deep node-mkdirp node-move-concurrently node-ms node-mute-stream
+#10 32.95   node-n3 node-negotiator node-neo-async node-nopt node-normalize-package-data
+#10 32.95   node-normalize-path node-npm-bundled node-npm-package-arg node-npm-run-path
+#10 32.95   node-npmlog node-object-assign node-object-inspect node-object-visit
+#10 32.95   node-once node-opener node-optimist node-optionator node-osenv
+#10 32.95   node-p-cancelable node-p-limit node-p-locate node-p-map node-parse-json
+#10 32.95   node-pascalcase node-path-dirname node-path-exists node-path-is-absolute
+#10 32.95   node-path-is-inside node-path-type node-picocolors node-pify node-pkg-dir
+#10 32.95   node-postcss node-postcss-modules-extract-imports
+#10 32.95   node-postcss-modules-values node-postcss-value-parser node-prelude-ls
+#10 32.95   node-process-nextick-args node-progress node-promise-inflight
+#10 32.95   node-promise-retry node-promzard node-prr node-pump node-punycode
+#10 32.95   node-quick-lru node-randombytes node-re2 node-read node-read-package-json
+#10 32.95   node-read-pkg node-readable-stream node-readdirp node-rechoir
+#10 32.95   node-regenerate node-regenerate-unicode-properties node-regenerator-runtime
+#10 32.95   node-regenerator-transform node-regexpp node-regexpu-core node-regjsgen
+#10 32.95   node-regjsparser node-repeat-string node-require-directory
+#10 32.95   node-require-from-string node-resolve node-resolve-cwd node-resolve-from
+#10 32.95   node-restore-cursor node-resumer node-retry node-rimraf node-run-queue
+#10 32.95   node-safe-buffer node-schema-utils node-sellside-emitter node-semver
+#10 32.95   node-serialize-javascript node-set-blocking node-set-immediate-shim
+#10 32.95   node-set-value node-shebang-command node-shebang-regex node-shell-quote
+#10 32.95   node-signal-exit node-slash node-slice-ansi node-source-list-map
+#10 32.95   node-source-map node-source-map-support node-spdx-correct
+#10 32.95   node-spdx-exceptions node-spdx-expression-parse node-spdx-license-ids
+#10 32.95   node-sprintf-js node-ssri node-stack-utils node-string-decoder
+#10 32.95   node-string-width node-strip-ansi node-strip-bom node-strip-json-comments
+#10 32.95   node-supports-color node-tap node-tap-mocha-reporter node-tap-parser
+#10 32.95   node-tapable node-tape node-tar node-terser node-text-table node-through
+#10 32.95   node-time-stamp node-to-fast-properties node-to-regex-range node-tslib
+#10 32.95   node-type-check node-typedarray node-typedarray-to-buffer node-undici
+#10 32.95   node-unicode-canonical-property-names-ecmascript
+#10 32.95   node-unicode-match-property-ecmascript
+#10 32.95   node-unicode-match-property-value-ecmascript
+#10 32.95   node-unicode-property-aliases-ecmascript node-union-value
+#10 32.95   node-unique-filename node-unset-value node-uri-js node-util
+#10 32.95   node-util-deprecate node-uuid node-v8-compile-cache node-v8flags
+#10 32.95   node-validate-npm-package-license node-validate-npm-package-name
+#10 32.95   node-watchpack node-wcwidth.js node-webassemblyjs node-webpack-sources
+#10 32.95   node-which node-wide-align node-widest-line node-wordwrap node-wrap-ansi
+#10 32.95   node-wrappy node-write node-write-file-atomic node-ws node-xtend node-y18n
+#10 32.95   node-yallist node-yaml node-yargs node-yargs-parser nodejs-doc
+#10 32.95   openjdk-21-jre openjdk-21-jre-headless openssh-client openssl patch perl
+#10 32.95   perl-base perl-modules-5.38 perl-openssl-defaults pinentry-curses
+#10 32.95   poppler-data publicsuffix python3 python3-dbus python3-gi python3-minimal
+#10 32.95   python3-pkg-resources python3-six python3-uno python3.12 python3.12-minimal
+#10 32.95   readline-common rpcsvc-proto session-migration shared-mime-info systemd
+#10 32.95   systemd-dev systemd-resolved systemd-sysv systemd-timesyncd terser tzdata
+#10 32.95   ubuntu-mono ucf uno-libs-private ure ure-java webpack x11-common x11-utils
+#10 32.95   x11-xserver-utils xauth xdg-user-dirs xdg-utils xkb-data xz-utils zutty
+#10 32.95 Suggested packages:
+#10 32.95   cron quota ecryptfs-utils apparmor-profiles-extra apparmor-utils
+#10 32.95   binutils-doc gprofng-gui bzip2-doc cpp-doc gcc-13-locales cpp-13-doc ispell
+#10 32.95   | aspell | hunspell wordlist pinentry-gnome3 tor debian-keyring
+#10 32.95   node-babel-eslint node-esprima-fb node-inquirer firebird3.0-server
+#10 32.95   firebird3.0-doc gcc-13-doc gcc-multilib autoconf automake libtool flex bison
+#10 32.95   gdb gcc-doc gdb-aarch64-linux-gnu gettext-base git-daemon-run
+#10 32.95   | git-daemon-sysvinit git-doc git-email git-gui gitk gitweb git-cvs
+#10 32.95   git-mediawiki git-svn parcimonie xloadimage gpg-wks-server scdaemon gvfs
+#10 32.95   hunspell openoffice.org-hunspell | openoffice.org-core isoquery apache2
+#10 32.95   | lighttpd | httpd alsa-utils libasound2-plugins libdigest-hmac-perl
+#10 32.95   libgssapi-perl glibc-doc colord cups-common bzr libgd-tools gdbm-l10n
+#10 32.95   low-memory-monitor krb5-doc krb5-user libvisual-0.4-plugins
+#10 32.95   gstreamer1.0-tools libheif-plugin-libde265 libheif-plugin-x265
+#10 32.95   libheif-plugin-ffmpegdec libheif-plugin-jpegdec libheif-plugin-jpegenc
+#10 32.95   libheif-plugin-j2kdec libheif-plugin-j2kenc libheif-plugin-rav1e
+#10 32.95   libheif-plugin-svtenc java-virtual-machine libhsqldb1.8.0-java-gcj
+#10 32.95   libio-compress-brotli-perl libjs-angularjs liblcms2-utils
+#10 32.95   libcrypt-ssleay-perl notification-daemon opus-tools pcscd raptor2-utils
+#10 32.95   rasqal-utils librdf-storage-mysql librdf-storage-postgresql
+#10 32.95   librdf-storage-sqlite librdf-storage-virtuoso redland-utils cups-bsd firefox
+#10 32.95   | firefox-esr | thunderbird ghostscript gpa hyphen-hyphenation-patterns
+#10 32.95   imagemagick | graphicsmagick-imagemagick-compat libreoffice-grammarcheck
+#10 32.95   libreoffice-help libreoffice-l10n libreoffice-librelogo myspell-dictionary
+#10 32.95   mythes-thesaurus openclipart-libreoffice pstoedit unixodbc
+#10 32.95   gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly gstreamer1.0-plugins-bad
+#10 32.95   gstreamer1.0-libav libsane1 libofficebean-java python3-access2base
+#10 32.95   libjtds-java libsqliteodbc | tdsodbc | odbc-mdbtools ocl-icd-libopencl1
+#10 32.95   | mesa-opencl-icd | beignet-opencl-icd python3-scriptforge
+#10 32.95   libreoffice-evolution seahorse libreofficekit-data bluez
+#10 32.95   libreoffice-help-common default-mysql-server | virtual-mysql-server
+#10 32.95   postgresql mediawiki librsvg2-bin libsasl2-modules-gssapi-mit
+#10 32.95   | libsasl2-modules-gssapi-heimdal libsasl2-modules-ldap libsasl2-modules-otp
+#10 32.95   libsasl2-modules-sql lm-sensors libssl-doc libstdc++-13-doc libsub-name-perl
+#10 32.95   libbusiness-isbn-perl libregexp-ipv6-perl libauthen-ntlm-perl
+#10 32.95   libunicode-map8-perl libunicode-string-perl xml-twig-tools make-doc
+#10 32.95   man-browser iw | wireless-tools node-babel-plugin-polyfill-es-shims
+#10 32.95   node-babel7-debug livescript chai node-jest-diff libnss-mdns
+#10 32.95   fonts-ipafont-gothic fonts-ipafont-mincho fonts-wqy-microhei
+#10 32.95   | fonts-wqy-zenhei fonts-indic keychain libpam-ssh monkeysphere ssh-askpass
+#10 32.95   ed diffutils-doc perl-doc libterm-readline-gnu-perl
+#10 32.95   | libterm-readline-perl-perl libtap-harness-archive-perl debhelper
+#10 32.95   pinentry-doc fonts-japanese-mincho | fonts-ipafont-mincho
+#10 32.95   fonts-japanese-gothic | fonts-ipafont-gothic fonts-arphic-ukai
+#10 32.95   fonts-arphic-uming fonts-nanum python3-doc python3-tk python3-venv
+#10 32.95   python-dbus-doc python3-setuptools python3.12-venv python3.12-doc
+#10 32.95   binfmt-support readline-doc systemd-container systemd-homed systemd-userdbd
+#10 32.95   systemd-boot libip4tc2 libqrencode4 libtss2-esys-3.0.2-0 libtss2-mu-4.0.1-0
+#10 32.95   libtss2-rc0 libtss2-tcti-device0 polkitd zip mesa-utils nickle cairo-5c
+#10 32.95   xorg-docs-core
+#10 32.95 Recommended packages:
+#10 32.95   luit
+#10 35.05 The following NEW packages will be installed:
+#10 35.05   adduser adwaita-icon-theme alsa-topology-conf alsa-ucm-conf apparmor
+#10 35.05   at-spi2-common at-spi2-core binutils binutils-aarch64-linux-gnu
+#10 35.05   binutils-common build-essential bzip2 ca-certificates ca-certificates-java
+#10 35.05   cpp cpp-13 cpp-13-aarch64-linux-gnu cpp-aarch64-linux-gnu curl dbus dbus-bin
+#10 35.05   dbus-daemon dbus-session-bus-common dbus-system-bus-common dbus-user-session
+#10 35.05   dconf-gsettings-backend dconf-service default-jre default-jre-headless
+#10 35.05   dictionaries-common dirmngr dmsetup dpkg-dev emacsen-common eslint fakeroot
+#10 35.05   firebird3.0-common firebird3.0-common-doc firebird3.0-server-core
+#10 35.05   firebird3.0-utils fontconfig fontconfig-config fonts-crosextra-caladea
+#10 35.05   fonts-crosextra-carlito fonts-dejavu fonts-dejavu-core fonts-dejavu-extra
+#10 35.05   fonts-dejavu-mono fonts-liberation fonts-liberation-sans-narrow
+#10 35.05   fonts-linuxlibertine fonts-noto-core fonts-noto-extra fonts-noto-mono
+#10 35.05   fonts-noto-ui-core fonts-opensymbol fonts-sil-gentium
+#10 35.05   fonts-sil-gentium-basic g++ g++-13 g++-13-aarch64-linux-gnu
+#10 35.05   g++-aarch64-linux-gnu gcc gcc-13 gcc-13-aarch64-linux-gnu gcc-13-base
+#10 35.05   gcc-aarch64-linux-gnu gir1.2-girepository-2.0 gir1.2-glib-2.0 git git-man
+#10 35.05   gnupg gnupg-l10n gnupg-utils gpg gpg-agent gpg-wks-client gpgconf gpgsm
+#10 35.05   gsettings-desktop-schemas gstreamer1.0-gl gstreamer1.0-gtk3
+#10 35.05   gstreamer1.0-plugins-base gtk-update-icon-cache gyp handlebars
+#10 35.05   hicolor-icon-theme humanity-icon-theme hunspell-en-us iso-codes java-common
+#10 35.05   javascript-common keyboxd krb5-locales less libabsl20220623t64 libabw-0.1-1
+#10 35.05   libalgorithm-diff-perl libalgorithm-diff-xs-perl libalgorithm-merge-perl
+#10 35.05   libaom3 libapparmor1 libargon2-1 libasan8 libasound2-data libasound2t64
+#10 35.05   libatk-bridge2.0-0t64 libatk-wrapper-java libatk-wrapper-java-jni
+#10 35.05   libatk1.0-0t64 libatomic1 libatspi2.0-0t64 libauthen-sasl-perl
+#10 35.05   libavahi-client3 libavahi-common-data libavahi-common3 libbinutils
+#10 35.05   libboost-iostreams1.83.0 libboost-locale1.83.0 libboost-thread1.83.0
+#10 35.05   libbrotli1 libbsd0 libbsh-java libc-dev-bin libc-devtools libc6-dev
+#10 35.05   libcairo-gobject2 libcairo2 libcap2-bin libcares2 libcbor0.10 libcc1-0
+#10 35.05   libcdparanoia0 libcdr-0.1-1 libclone-perl libclucene-contribs1t64
+#10 35.05   libclucene-core1t64 libcolamd3 libcolord2 libcrypt-dev libcryptsetup12
+#10 35.05   libctf-nobfd0 libctf0 libcups2t64 libcurl3t64-gnutls libcurl4t64
+#10 35.05   libdata-dump-perl libdatrie1 libdbus-1-3 libdconf1 libdeflate0
+#10 35.05   libdevmapper1.02.1 libdpkg-perl libdrm-amdgpu1 libdrm-common libdrm2
+#10 35.05   libdw1t64 libe-book-0.1-1 libedit2 libegl-mesa0 libegl1 libel-api-java
+#10 35.05   libelf1t64 libencode-locale-perl libeot0 libepoxy0 libepubgen-0.1-1
+#10 35.05   liberror-perl libetonyek-0.1-1 libevent-core-2.1-7t64 libexpat1
+#10 35.05   libexttextcat-2.0-0 libexttextcat-data libfakeroot libfbclient2 libfdisk1
+#10 35.05   libfido2-1 libfile-basedir-perl libfile-desktopentry-perl
+#10 35.05   libfile-fcntllock-perl libfile-listing-perl libfile-mimeinfo-perl
+#10 35.05   libfont-afm-perl libfontconfig1 libfreehand-0.1-1 libfreetype6 libfribidi0
+#10 35.05   libgbm1 libgcc-13-dev libgd3 libgdbm-compat4t64 libgdbm6t64
+#10 35.05   libgdk-pixbuf-2.0-0 libgdk-pixbuf2.0-bin libgdk-pixbuf2.0-common libgif7
+#10 35.05   libgirepository-1.0-1 libgl1 libgl1-mesa-dri libgles2 libglib2.0-0t64
+#10 35.05   libglib2.0-data libglvnd0 libglx-mesa0 libglx0 libgomp1 libgpgme11t64
+#10 35.05   libgpgmepp6t64 libgprofng0 libgraphene-1.0-0 libgraphite2-3 libgssapi-krb5-2
+#10 35.05   libgstreamer-gl1.0-0 libgstreamer-plugins-base1.0-0 libgstreamer1.0-0
+#10 35.05   libgtk-3-0t64 libgtk-3-bin libgtk-3-common libgudev-1.0-0 libharfbuzz-icu0
+#10 35.05   libharfbuzz0b libheif-plugin-aomdec libheif-plugin-aomenc libheif1
+#10 35.05   libhsqldb1.8.0-java libhtml-form-perl libhtml-format-perl
+#10 35.05   libhtml-parser-perl libhtml-tagset-perl libhtml-tree-perl
+#10 35.05   libhttp-cookies-perl libhttp-daemon-perl libhttp-date-perl
+#10 35.05   libhttp-message-perl libhttp-negotiate-perl libhunspell-1.7-0 libhwasan0
+#10 35.05   libhyphen0 libib-util libice6 libicu74 libio-html-perl libio-socket-ssl-perl
+#10 35.05   libio-stringy-perl libipc-system-simple-perl libisl23 libitm1 libjansson4
+#10 35.05   libjbig0 libjpeg-turbo8 libjpeg8 libjs-async libjs-events libjs-inherits
+#10 35.05   libjs-is-typedarray libjs-prettify libjs-regenerate libjs-source-map
+#10 35.05   libjs-sprintf-js libjs-typedarray-to-buffer libjs-util libjson-c5
+#10 35.05   libjsp-api-java libk5crypto3 libkeyutils1 libkmod2 libkrb5-3 libkrb5support0
+#10 35.05   libksba8 liblangtag-common liblangtag1 liblcms2-2 libldap-common libldap2
+#10 35.05   liblerc4 liblibreoffice-java libllvm20 liblocale-gettext-perl liblsan0
+#10 35.05   libltdl7 liblwp-mediatypes-perl liblwp-protocol-https-perl libmailtools-perl
+#10 35.05   libmhash2 libmpc3 libmpfr6 libmspub-0.1-1 libmwaw-0.3-3 libmysqlclient21
+#10 35.05   libmythes-1.2-0 libnet-dbus-perl libnet-http-perl libnet-smtp-ssl-perl
+#10 35.05   libnet-ssleay-perl libnghttp2-14 libnode-dev libnode109 libnotify-bin
+#10 35.05   libnotify4 libnspr4 libnss-systemd libnss3 libodfgen-0.1-1 libogg0
+#10 35.05   libopenjp2-7 libopus0 liborc-0.4-0t64 liborcus-0.18-0 liborcus-parser-0.18-0
+#10 35.05   libpagemaker-0.0-0 libpam-cap libpam-systemd libpango-1.0-0
+#10 35.05   libpangocairo-1.0-0 libpangoft2-1.0-0 libpaper-utils libpaper1 libpcsclite1
+#10 35.05   libperl5.38t64 libpixman-1-0 libpng16-16t64 libpoppler134 libpq5 libpsl5t64
+#10 35.05   libpython3-stdlib libpython3.12-minimal libpython3.12-stdlib
+#10 35.05   libpython3.12t64 libraptor2-0 librasqal3t64 librdf0t64 libre2-10
+#10 35.05   libreadline8t64 libreoffice libreoffice-base libreoffice-base-core
+#10 35.05   libreoffice-base-drivers libreoffice-calc libreoffice-common
+#10 35.05   libreoffice-core libreoffice-draw libreoffice-gnome libreoffice-gtk3
+#10 35.05   libreoffice-impress libreoffice-java-common libreoffice-math
+#10 35.05   libreoffice-nlpsolver libreoffice-report-builder
+#10 35.05   libreoffice-report-builder-bin libreoffice-script-provider-bsh
+#10 35.05   libreoffice-script-provider-js libreoffice-script-provider-python
+#10 35.05   libreoffice-sdbc-firebird libreoffice-sdbc-hsqldb libreoffice-sdbc-mysql
+#10 35.05   libreoffice-sdbc-postgresql libreoffice-style-colibre
+#10 35.05   libreoffice-style-elementary libreoffice-style-yaru
+#10 35.05   libreoffice-uiconfig-base libreoffice-uiconfig-calc
+#10 35.05   libreoffice-uiconfig-common libreoffice-uiconfig-draw
+#10 35.05   libreoffice-uiconfig-impress libreoffice-uiconfig-math
+#10 35.05   libreoffice-uiconfig-report-builder libreoffice-uiconfig-writer
+#10 35.05   libreoffice-wiki-publisher libreoffice-writer librevenge-0.0-0 librsvg2-2
+#10 35.05   librsvg2-common librtmp1 libsasl2-2 libsasl2-modules libsasl2-modules-db
+#10 35.05   libsensors-config libsensors5 libservlet-api-java libservlet3.1-java
+#10 35.05   libsframe1 libsharpyuv0 libsm6 libsqlite3-0 libssh-4 libssl-dev
+#10 35.05   libstdc++-13-dev libsuitesparseconfig7 libsystemd-shared libtext-iconv-perl
+#10 35.05   libthai-data libthai0 libtheora0 libtie-ixhash-perl libtiff6
+#10 35.05   libtimedate-perl libtommath1 libtry-tiny-perl libtsan2 libubsan1
+#10 35.05   libuno-cppu3t64 libuno-cppuhelpergcc3-3t64 libuno-purpenvhelpergcc3-3t64
+#10 35.05   libuno-sal3t64 libuno-salhelpergcc3-3t64 libunoloader-java libunwind8
+#10 35.05   liburi-perl libutempter0 libuv1-dev libuv1t64 libvisio-0.1-1 libvisual-0.4-0
+#10 35.05   libvorbis0a libvorbisenc2 libvulkan1 libwayland-client0 libwayland-cursor0
+#10 35.05   libwayland-egl1 libwebp7 libwebsocket-api-java libwpd-0.10-10 libwpg-0.3-3
+#10 35.05   libwps-0.4-4 libwww-perl libwww-robotrules-perl libx11-6 libx11-data
+#10 35.05   libx11-protocol-perl libx11-xcb1 libxau6 libxaw7 libxcb-dri3-0 libxcb-glx0
+#10 35.05   libxcb-present0 libxcb-randr0 libxcb-render0 libxcb-shape0 libxcb-shm0
+#10 35.05   libxcb-sync1 libxcb-xfixes0 libxcb1 libxcomposite1 libxcursor1 libxdamage1
+#10 35.05   libxdmcp6 libxext6 libxfixes3 libxft2 libxi6 libxinerama1 libxkbcommon0
+#10 35.05   libxkbfile1 libxml-parser-perl libxml-twig-perl libxml-xpathengine-perl
+#10 35.05   libxml2 libxmlsec1t64 libxmlsec1t64-nss libxmu6 libxmuu1 libxpm4 libxrandr2
+#10 35.05   libxrender1 libxshmfence1 libxslt1.1 libxt6t64 libxtst6 libxv1 libxxf86dga1
+#10 35.05   libxxf86vm1 libyajl2 linux-libc-dev lp-solve lto-disabled-list make manpages
+#10 35.05   manpages-dev media-types mesa-libgallium mesa-vulkan-drivers mysql-common
+#10 35.05   netbase networkd-dispatcher node-abbrev node-acorn node-agent-base node-ajv
+#10 35.05   node-ajv-keywords node-ampproject-remapping node-ansi-escapes
+#10 35.05   node-ansi-regex node-ansi-styles node-anymatch node-aproba node-archy
+#10 35.05   node-are-we-there-yet node-argparse node-arrify node-assert node-async
+#10 35.05   node-async-each node-auto-bind node-babel-helper-define-polyfill-provider
+#10 35.05   node-babel-plugin-add-module-exports node-babel-plugin-lodash
+#10 35.05   node-babel-plugin-polyfill-corejs2 node-babel-plugin-polyfill-corejs3
+#10 35.05   node-babel-plugin-polyfill-regenerator node-babel7 node-babel7-runtime
+#10 35.05   node-balanced-match node-base node-base64-js node-binary-extensions
+#10 35.05   node-brace-expansion node-braces node-browserslist node-builtins node-busboy
+#10 35.05   node-cacache node-cache-base node-camelcase node-caniuse-lite node-chalk
+#10 35.05   node-chokidar node-chownr node-chrome-trace-event node-ci-info
+#10 35.05   node-cjs-module-lexer node-cli-boxes node-cli-cursor node-cli-table
+#10 35.05   node-cli-truncate node-cliui node-clone node-clone-deep
+#10 35.05   node-collection-visit node-color-convert node-color-name node-colors
+#10 35.05   node-columnify node-commander node-commondir node-concat-stream
+#10 35.05   node-console-control-strings node-convert-source-map node-copy-concurrently
+#10 35.05   node-core-js node-core-js-compat node-core-js-pure node-core-util-is
+#10 35.05   node-coveralls node-css-loader node-css-selector-tokenizer
+#10 35.05   node-data-uri-to-buffer node-debbundle-es-to-primitive node-debug
+#10 35.05   node-decamelize node-decompress-response node-deep-equal node-deep-is
+#10 35.05   node-defaults node-define-properties node-define-property node-defined
+#10 35.05   node-del node-delegates node-depd node-diff node-doctrine
+#10 35.05   node-electron-to-chromium node-encoding node-end-of-stream
+#10 35.05   node-enhanced-resolve node-err-code node-errno node-error-ex
+#10 35.05   node-es-abstract node-es-module-lexer node-es6-error
+#10 35.05   node-escape-string-regexp node-escodegen node-eslint-scope node-eslint-utils
+#10 35.05   node-eslint-visitor-keys node-espree node-esprima node-esquery
+#10 35.05   node-esrecurse node-estraverse node-esutils node-events node-fancy-log
+#10 35.05   node-fast-deep-equal node-fast-levenshtein node-fetch node-file-entry-cache
+#10 35.05   node-fill-range node-find-cache-dir node-find-up node-flat-cache
+#10 35.05   node-flatted node-for-in node-for-own node-foreground-child
+#10 35.05   node-fs-readdir-recursive node-fs-write-stream-atomic node-fs.realpath
+#10 35.05   node-function-bind node-functional-red-black-tree node-gauge
+#10 35.05   node-get-caller-file node-get-stream node-get-value node-glob
+#10 35.05   node-glob-parent node-globals node-globby node-got node-graceful-fs
+#10 35.05   node-growl node-gyp node-has-flag node-has-unicode node-has-value
+#10 35.05   node-has-values node-hosted-git-info node-http-proxy-agent
+#10 35.05   node-https-proxy-agent node-iconv-lite node-icss-utils node-ieee754
+#10 35.05   node-iferr node-ignore node-imurmurhash node-indent-string node-inflight
+#10 35.05   node-inherits node-ini node-interpret node-ip node-ip-regex node-is-arrayish
+#10 35.05   node-is-binary-path node-is-buffer node-is-descriptor node-is-extendable
+#10 35.05   node-is-extglob node-is-glob node-is-number node-is-path-cwd
+#10 35.05   node-is-path-inside node-is-plain-obj node-is-plain-object node-is-primitive
+#10 35.05   node-is-stream node-is-typedarray node-is-windows node-isarray node-isexe
+#10 35.05   node-isobject node-istanbul node-jest-debbundle node-jest-worker
+#10 35.05   node-js-tokens node-js-yaml node-jsesc node-json-buffer
+#10 35.05   node-json-parse-better-errors node-json-schema node-json-schema-traverse
+#10 35.05   node-json-stable-stringify node-json5 node-jsonify node-jsonparse
+#10 35.05   node-kind-of node-lcov-parse node-levn node-loader-runner node-locate-path
+#10 35.05   node-lodash node-lodash-packages node-log-driver node-lowercase-keys
+#10 35.05   node-lru-cache node-make-dir node-map-visit node-memfs node-memory-fs
+#10 35.05   node-merge-stream node-micromatch node-mime node-mime-types
+#10 35.05   node-mimic-response node-minimatch node-minimist node-minipass
+#10 35.05   node-mixin-deep node-mkdirp node-move-concurrently node-ms node-mute-stream
+#10 35.05   node-n3 node-negotiator node-neo-async node-nopt node-normalize-package-data
+#10 35.05   node-normalize-path node-npm-bundled node-npm-package-arg node-npm-run-path
+#10 35.05   node-npmlog node-object-assign node-object-inspect node-object-visit
+#10 35.05   node-once node-opener node-optimist node-optionator node-osenv
+#10 35.05   node-p-cancelable node-p-limit node-p-locate node-p-map node-parse-json
+#10 35.05   node-pascalcase node-path-dirname node-path-exists node-path-is-absolute
+#10 35.05   node-path-is-inside node-path-type node-picocolors node-pify node-pkg-dir
+#10 35.05   node-postcss node-postcss-modules-extract-imports
+#10 35.05   node-postcss-modules-values node-postcss-value-parser node-prelude-ls
+#10 35.05   node-process-nextick-args node-progress node-promise-inflight
+#10 35.05   node-promise-retry node-promzard node-prr node-pump node-punycode
+#10 35.05   node-quick-lru node-randombytes node-re2 node-read node-read-package-json
+#10 35.05   node-read-pkg node-readable-stream node-readdirp node-rechoir
+#10 35.05   node-regenerate node-regenerate-unicode-properties node-regenerator-runtime
+#10 35.05   node-regenerator-transform node-regexpp node-regexpu-core node-regjsgen
+#10 35.05   node-regjsparser node-repeat-string node-require-directory
+#10 35.05   node-require-from-string node-resolve node-resolve-cwd node-resolve-from
+#10 35.05   node-restore-cursor node-resumer node-retry node-rimraf node-run-queue
+#10 35.05   node-safe-buffer node-schema-utils node-sellside-emitter node-semver
+#10 35.05   node-serialize-javascript node-set-blocking node-set-immediate-shim
+#10 35.05   node-set-value node-shebang-command node-shebang-regex node-shell-quote
+#10 35.05   node-signal-exit node-slash node-slice-ansi node-source-list-map
+#10 35.05   node-source-map node-source-map-support node-spdx-correct
+#10 35.05   node-spdx-exceptions node-spdx-expression-parse node-spdx-license-ids
+#10 35.05   node-sprintf-js node-ssri node-stack-utils node-string-decoder
+#10 35.05   node-string-width node-strip-ansi node-strip-bom node-strip-json-comments
+#10 35.05   node-supports-color node-tap node-tap-mocha-reporter node-tap-parser
+#10 35.05   node-tapable node-tape node-tar node-terser node-text-table node-through
+#10 35.05   node-time-stamp node-to-fast-properties node-to-regex-range node-tslib
+#10 35.05   node-type-check node-typedarray node-typedarray-to-buffer node-undici
+#10 35.05   node-unicode-canonical-property-names-ecmascript
+#10 35.05   node-unicode-match-property-ecmascript
+#10 35.05   node-unicode-match-property-value-ecmascript
+#10 35.05   node-unicode-property-aliases-ecmascript node-union-value
+#10 35.05   node-unique-filename node-unset-value node-uri-js node-util
+#10 35.05   node-util-deprecate node-uuid node-v8-compile-cache node-v8flags
+#10 35.05   node-validate-npm-package-license node-validate-npm-package-name
+#10 35.05   node-watchpack node-wcwidth.js node-webassemblyjs node-webpack-sources
+#10 35.05   node-which node-wide-align node-widest-line node-wordwrap node-wrap-ansi
+#10 35.05   node-wrappy node-write node-write-file-atomic node-ws node-xtend node-y18n
+#10 35.05   node-yallist node-yaml node-yargs node-yargs-parser nodejs nodejs-doc npm
+#10 35.05   openjdk-21-jre openjdk-21-jre-headless openssh-client openssl patch perl
+#10 35.05   perl-modules-5.38 perl-openssl-defaults pinentry-curses poppler-data
+#10 35.05   poppler-utils publicsuffix python3 python3-dbus python3-gi python3-minimal
+#10 35.05   python3-pkg-resources python3-six python3-uno python3.12 python3.12-minimal
+#10 35.05   readline-common rpcsvc-proto session-migration shared-mime-info sudo systemd
+#10 35.05   systemd-dev systemd-resolved systemd-sysv systemd-timesyncd terser tmux
+#10 35.05   tzdata ubuntu-mono ucf uno-libs-private unzip ure ure-java webpack
+#10 35.05   x11-common x11-utils x11-xserver-utils xauth xdg-user-dirs xdg-utils
+#10 35.05   xkb-data xz-utils zutty
+#10 35.05 The following packages will be upgraded:
+#10 35.05   perl-base
+#10 35.47 1 upgraded, 910 newly installed, 0 to remove and 2 not upgraded.
+#10 35.47 Need to get 548 MB of archives.
+#10 35.47 After this operation, 2272 MB of additional disk space will be used.
+#10 35.47 Get:1 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 perl-base arm64 5.38.2-3.2ubuntu0.6 [1780 kB]
+#10 45.86 Get:2 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 liblocale-gettext-perl arm64 1.07-6ubuntu5 [15.3 kB]
+#10 45.95 Get:3 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libpython3.12-minimal arm64 3.12.3-1ubuntu0.17 [835 kB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 47.37 Get:9 http://ports.ubuntu.com/ubuntu-ports noble-updates/multiverse arm64 Packages [94.8 kB]
+#9 47.41 Get:10 http://ports.ubuntu.com/ubuntu-ports noble-updates/restricted arm64 Packages [2996 kB]
+#9 48.59 Get:11 http://ports.ubuntu.com/ubuntu-ports noble-updates/universe arm64 Packages [2198 kB]
+#9 49.33 Get:12 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 Packages [1692 kB]
+#9 49.89 Get:13 http://ports.ubuntu.com/ubuntu-ports noble-backports/multiverse arm64 Packages [671 B]
+#9 49.89 Get:14 http://ports.ubuntu.com/ubuntu-ports noble-backports/universe arm64 Packages [36.3 kB]
+#9 49.90 Get:15 http://ports.ubuntu.com/ubuntu-ports noble-backports/main arm64 Packages [49.0 kB]
+#9 49.92 Get:16 http://ports.ubuntu.com/ubuntu-ports noble-security/main arm64 Packages [1356 kB]
+#9 50.36 Get:17 http://ports.ubuntu.com/ubuntu-ports noble-security/universe arm64 Packages [1635 kB]
+#9 50.87 Get:18 http://ports.ubuntu.com/ubuntu-ports noble-security/multiverse arm64 Packages [89.7 kB]
+#9 50.87 Get:19 http://ports.ubuntu.com/ubuntu-ports noble-security/restricted arm64 Packages [2811 kB]
+#9 51.80 Fetched 34.8 MB in 52s (674 kB/s)
+#9 51.80 Reading package lists...
+#9 52.32 Reading package lists...
+#9 52.83 Building dependency tree...
+#9 52.96 Reading state information...
+#9 53.10 The following additional packages will be installed:
+#9 53.10   binutils binutils-aarch64-linux-gnu binutils-common cpp cpp-13
+#9 53.10   cpp-13-aarch64-linux-gnu cpp-aarch64-linux-gnu fontconfig-config
+#9 53.10   fonts-dejavu-core fonts-dejavu-mono gcc-13 gcc-13-aarch64-linux-gnu
+#9 53.10   gcc-13-base gcc-aarch64-linux-gnu libaom3 libasan8 libatomic1 libbinutils
+#9 53.10   libbrotli1 libbsd0 libc-dev-bin libc-devtools libc6-dev libcc1-0
+#9 53.10   libcrypt-dev libctf-nobfd0 libctf0 libdeflate0 libexpat1 libfontconfig1
+#9 53.10   libfreetype6 libgcc-13-dev libgd3 libgomp1 libgprofng0 libheif-plugin-aomdec
+#9 53.10   libheif-plugin-aomenc libheif1 libhwasan0 libisl23 libitm1 libjansson4
+#9 53.10   libjbig0 libjpeg-turbo8 libjpeg8 liblerc4 liblsan0 libmpc3 libmpfr6
+#9 53.10   libpng16-16t64 libsframe1 libsharpyuv0 libtiff6 libtsan2 libubsan1 libwebp7
+#9 53.10   libx11-6 libx11-data libxau6 libxcb1 libxdmcp6 libxpm4 linux-libc-dev
+#9 53.10   manpages manpages-dev rpcsvc-proto
+#9 53.10 Suggested packages:
+#9 53.10   binutils-doc gprofng-gui cpp-doc gcc-13-locales cpp-13-doc gcc-multilib make
+#9 53.10   autoconf automake libtool flex bison gdb gcc-doc gcc-13-doc
+#9 53.10   gdb-aarch64-linux-gnu glibc-doc libgd-tools libheif-plugin-libde265
+#9 53.10   libheif-plugin-x265 libheif-plugin-ffmpegdec libheif-plugin-jpegdec
+#9 53.10   libheif-plugin-jpegenc libheif-plugin-j2kdec libheif-plugin-j2kenc
+#9 53.10   libheif-plugin-rav1e libheif-plugin-svtenc man-browser
+#9 53.14 The following NEW packages will be installed:
+#9 53.14   binutils binutils-aarch64-linux-gnu binutils-common cpp cpp-13
+#9 53.14   cpp-13-aarch64-linux-gnu cpp-aarch64-linux-gnu fontconfig-config
+#9 53.14   fonts-dejavu-core fonts-dejavu-mono gcc gcc-13 gcc-13-aarch64-linux-gnu
+#9 53.14   gcc-13-base gcc-aarch64-linux-gnu libaom3 libasan8 libatomic1 libbinutils
+#9 53.14   libbrotli1 libbsd0 libc-dev-bin libc-devtools libc6-dev libcc1-0
+#9 53.14   libcrypt-dev libctf-nobfd0 libctf0 libdeflate0 libexpat1 libfontconfig1
+#9 53.14   libfreetype6 libgcc-13-dev libgd3 libgomp1 libgprofng0 libheif-plugin-aomdec
+#9 53.14   libheif-plugin-aomenc libheif1 libhwasan0 libisl23 libitm1 libjansson4
+#9 53.14   libjbig0 libjpeg-turbo8 libjpeg8 liblerc4 liblsan0 libmpc3 libmpfr6
+#9 53.14   libpng16-16t64 libsframe1 libsharpyuv0 libtiff6 libtsan2 libubsan1 libwebp7
+#9 53.14   libx11-6 libx11-data libxau6 libxcb1 libxdmcp6 libxpm4 linux-libc-dev
+#9 53.14   manpages manpages-dev rpcsvc-proto
+#9 53.70 0 upgraded, 67 newly installed, 0 to remove and 3 not upgraded.
+#9 53.70 Need to get 60.6 MB of archives.
+#9 53.70 After this operation, 204 MB of additional disk space will be used.
+#9 53.70 Get:1 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libbsd0 arm64 0.12.1-1build1.1 [41.0 kB]
+#9 54.39 Get:2 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libexpat1 arm64 2.6.1-2ubuntu0.6 [89.8 kB]
+#9 55.91 Get:3 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libjansson4 arm64 2.14-2build2 [34.4 kB]
+#9 56.76 Get:4 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libpng16-16t64 arm64 1.6.43-5ubuntu0.6 [187 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 47.92 Get:4 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libexpat1 arm64 2.6.1-2ubuntu0.6 [89.8 kB]
+#10 48.24 Get:5 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 python3.12-minimal arm64 3.12.3-1ubuntu0.17 [2253 kB]
+#10 53.29 Get:6 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 python3-minimal arm64 3.12.3-0ubuntu2.1 [27.4 kB]
+#10 53.29 Get:7 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 media-types all 10.1.0 [27.5 kB]
+#10 53.30 Get:8 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 netbase all 6.4 [13.1 kB]
+#10 53.31 Get:9 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 tzdata all 2026c-0ubuntu0.24.04.1 [280 kB]
+#10 53.81 Get:10 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 readline-common all 8.2-4build1 [56.5 kB]
+#10 53.82 Get:11 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libreadline8t64 arm64 8.2-4build1 [153 kB]
+#10 54.03 Get:12 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libsqlite3-0 arm64 3.45.1-1ubuntu2.8 [691 kB]
+#10 54.86 Get:13 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libpython3.12-stdlib arm64 3.12.3-1ubuntu0.17 [2039 kB]
+#10 57.83 Get:14 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 python3.12 arm64 3.12.3-1ubuntu0.17 [651 kB]
+#10 58.54 Get:15 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libpython3-stdlib arm64 3.12.3-0ubuntu2.1 [10.1 kB]
+#10 58.55 Get:16 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 python3 arm64 3.12.3-0ubuntu2.1 [23.0 kB]
+#10 58.55 Get:17 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libapparmor1 arm64 4.0.1really4.0.1-0ubuntu0.24.04.8 [51.9 kB]
+#10 58.76 Get:18 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libargon2-1 arm64 0~20190702+dfsg-4build1 [20.5 kB]
+#10 58.77 Get:19 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libdevmapper1.02.1 arm64 2:1.02.185-3ubuntu3.2 [128 kB]
+#10 58.88 Get:20 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libjson-c5 arm64 0.17-1build1 [36.4 kB]
+#10 58.89 Get:21 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libcryptsetup12 arm64 2:2.7.0-1ubuntu4.2 [261 kB]
+#10 59.25 Get:22 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libfdisk1 arm64 2.39.3-9ubuntu6.6 [142 kB]
+#10 59.46 Get:23 http://ports.ubuntu.com/ubuntu-ports noble-security/main arm64 libkmod2 arm64 31+20240202-2ubuntu7.2 [52.0 kB]
+#10 59.59 Get:24 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libsystemd-shared arm64 255.4-1ubuntu8.17 [2021 kB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 59.90 Get:5 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxau6 arm64 1:1.0.9-1build6 [7264 B]
+#9 59.90 Get:6 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxdmcp6 arm64 1:1.1.3-0ubuntu6 [10.4 kB]
+#9 59.98 Get:7 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxcb1 arm64 1.15-1ubuntu2 [49.4 kB]
+#9 60.47 Get:8 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libx11-data all 2:1.8.7-1build1 [115 kB]
+#9 62.99 Get:9 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libx11-6 arm64 2:1.8.7-1build1 [649 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 61.54 Get:25 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 systemd-dev all 255.4-1ubuntu8.17 [107 kB]
+#10 61.69 Get:26 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 systemd arm64 255.4-1ubuntu8.17 [3407 kB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 72.07 Get:10 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 manpages all 6.7-2 [1384 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 73.11 Get:27 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 systemd-sysv arm64 255.4-1ubuntu8.17 [11.9 kB]
+#10 73.11 Get:28 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 perl-modules-5.38 all 5.38.2-3.2ubuntu0.6 [3110 kB]
+#10 76.58 Get:29 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libgdbm6t64 arm64 1.23-5.1build1 [34.4 kB]
+#10 76.59 Get:30 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libgdbm-compat4t64 arm64 1.23-5.1build1 [6578 B]
+#10 76.59 Get:31 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libperl5.38t64 arm64 5.38.2-3.2ubuntu0.6 [4785 kB]
+#10 79.73 Get:32 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 perl arm64 5.38.2-3.2ubuntu0.6 [231 kB]
+#10 79.80 Get:33 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 poppler-data all 0.4.12-1 [2060 kB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 80.56 Get:11 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 binutils-common arm64 2.42-4ubuntu2.10 [240 kB]
+#9 81.60 Get:12 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libsframe1 arm64 2.42-4ubuntu2.10 [15.4 kB]
+#9 81.81 Get:13 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libbinutils arm64 2.42-4ubuntu2.10 [766 kB]
+#9 84.64 Get:14 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libctf-nobfd0 arm64 2.42-4ubuntu2.10 [101 kB]
+#9 85.28 Get:15 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libctf0 arm64 2.42-4ubuntu2.10 [95.7 kB]
+#9 85.81 Get:16 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgprofng0 arm64 2.42-4ubuntu2.10 [776 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 80.88 Get:34 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 ucf all 3.0043+nmu1 [56.5 kB]
+#10 80.90 Get:35 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libreoffice-style-colibre all 4:24.2.7-0ubuntu0.24.04.6 [7276 kB]
+#10 84.38 Get:36 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libreoffice-uiconfig-common all 4:24.2.7-0ubuntu0.24.04.6 [343 kB]
+#10 84.48 Get:37 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libuno-sal3t64 arm64 4:24.2.7-0ubuntu0.24.04.6 [229 kB]
+#10 84.56 Get:38 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libuno-salhelpergcc3-3t64 arm64 4:24.2.7-0ubuntu0.24.04.6 [19.4 kB]
+#10 84.56 Get:39 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libuno-cppu3t64 arm64 4:24.2.7-0ubuntu0.24.04.6 [88.0 kB]
+#10 84.58 Get:40 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 uno-libs-private arm64 4:24.2.7-0ubuntu0.24.04.6 [215 kB]
+#10 84.64 Get:41 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libicu74 arm64 74.2-1ubuntu3.1 [10.8 MB]
+#10 87.66 Get:42 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libxml2 arm64 2.9.14+dfsg-1.3ubuntu3.9 [737 kB]
+#10 87.90 Get:43 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 liblangtag-common all 0.6.7-1build2 [210 kB]
+#10 87.90 Get:44 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 liblangtag1 arm64 0.6.7-1build2 [53.4 kB]
+#10 87.90 Get:45 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libuno-cppuhelpergcc3-3t64 arm64 4:24.2.7-0ubuntu0.24.04.6 [342 kB]
+#10 87.94 Get:46 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libuno-purpenvhelpergcc3-3t64 arm64 4:24.2.7-0ubuntu0.24.04.6 [17.7 kB]
+#10 87.94 Get:47 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 ure arm64 4:24.2.7-0ubuntu0.24.04.6 [1387 kB]
+#10 88.23 Get:48 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libreoffice-common all 4:24.2.7-0ubuntu0.24.04.6 [20.3 MB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 89.68 Get:17 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 binutils-aarch64-linux-gnu arm64 2.42-4ubuntu2.10 [3304 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 97.60 Get:49 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libbrotli1 arm64 1.1.0-2build2 [339 kB]
+#10 99.00 Get:50 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libpng16-16t64 arm64 1.6.43-5ubuntu0.6 [187 kB]
+#10 99.68 Get:51 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libfreetype6 arm64 2.13.2+dfsg-1ubuntu0.1 [394 kB]
+#10 100.7 Get:52 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 fonts-dejavu-mono all 2.37-8 [502 kB]
+#10 101.7 Get:53 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 fonts-dejavu-core all 2.37-8 [835 kB]
+#10 103.0 Get:54 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 fonts-liberation all 1:2.1.5-3 [1603 kB]
+#10 104.9 Get:55 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 fonts-noto-mono all 20201225-2 [435 kB]
+#10 105.1 Get:56 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 fonts-noto-core all 20201225-2 [13.3 MB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 111.0 Get:18 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 binutils arm64 2.42-4ubuntu2.10 [18.1 kB]
+#9 111.8 Get:19 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gcc-13-base arm64 13.3.0-6ubuntu2~24.04.1 [51.6 kB]
+#9 112.2 Get:20 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libisl23 arm64 0.26-3build1.1 [669 kB]
+#9 114.3 Get:21 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libmpfr6 arm64 4.2.1-1build1.1 [329 kB]
+#9 114.9 Get:22 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libmpc3 arm64 1.3.1-1build1.1 [56.4 kB]
+#9 115.2 Get:23 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 cpp-13-aarch64-linux-gnu arm64 13.3.0-6ubuntu2~24.04.1 [9560 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 112.2 Get:57 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 fontconfig-config arm64 2.15.0-1.1ubuntu2 [37.4 kB]
+#10 112.2 Get:58 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libfontconfig1 arm64 2.15.0-1.1ubuntu2 [142 kB]
+#10 112.2 Get:59 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 fontconfig arm64 2.15.0-1.1ubuntu2 [190 kB]
+#10 112.3 Get:60 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 fonts-opensymbol all 4:102.12+LibO24.2.7-0ubuntu0.24.04.6 [138 kB]
+#10 112.4 Get:61 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libabsl20220623t64 arm64 20220623.1-3.1ubuntu3.2 [413 kB]
+#10 112.5 Get:62 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libboost-thread1.83.0 arm64 1.83.0-2.1ubuntu3.2 [275 kB]
+#10 112.8 Get:63 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libboost-locale1.83.0 arm64 1.83.0-2.1ubuntu3.2 [403 kB]
+#10 112.8 Get:64 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libpixman-1-0 arm64 0.42.2-1build1 [204 kB]
+#10 112.8 Get:65 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxau6 arm64 1:1.0.9-1build6 [7264 B]
+#10 112.8 Get:66 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libbsd0 arm64 0.12.1-1build1.1 [41.0 kB]
+#10 112.8 Get:67 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxdmcp6 arm64 1:1.1.3-0ubuntu6 [10.4 kB]
+#10 112.8 Get:68 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxcb1 arm64 1.15-1ubuntu2 [49.4 kB]
+#10 112.8 Get:69 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libx11-data all 2:1.8.7-1build1 [115 kB]
+#10 112.8 Get:70 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libx11-6 arm64 2:1.8.7-1build1 [649 kB]
+#10 113.0 Get:71 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxcb-render0 arm64 1.15-1ubuntu2 [16.6 kB]
+#10 113.1 Get:72 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxcb-shm0 arm64 1.15-1ubuntu2 [5876 B]
+#10 113.1 Get:73 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxext6 arm64 2:1.3.4-1build2 [30.4 kB]
+#10 113.1 Get:74 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxrender1 arm64 1:0.9.10-1.1build1 [18.8 kB]
+#10 113.1 Get:75 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libcairo2 arm64 1.18.0-3build1 [555 kB]
+#10 113.3 Get:76 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libclucene-core1t64 arm64 2.3.3.4+dfsg-1.2ubuntu2 [541 kB]
+#10 113.3 Get:77 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libclucene-contribs1t64 arm64 2.3.3.4+dfsg-1.2ubuntu2 [92.8 kB]
+#10 113.3 Get:78 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libavahi-common-data arm64 0.8-13ubuntu6.2 [30.0 kB]
+#10 113.3 Get:79 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libavahi-common3 arm64 0.8-13ubuntu6.2 [23.3 kB]
+#10 113.3 Get:80 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libdbus-1-3 arm64 1.14.10-4ubuntu4.1 [210 kB]
+#10 113.4 Get:81 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libavahi-client3 arm64 0.8-13ubuntu6.2 [27.3 kB]
+#10 113.4 Get:82 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libkrb5support0 arm64 1.20.1-6ubuntu2.10 [35.4 kB]
+#10 113.4 Get:83 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libk5crypto3 arm64 1.20.1-6ubuntu2.10 [85.8 kB]
+#10 113.4 Get:84 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libkeyutils1 arm64 1.6.3-3build1 [9654 B]
+#10 113.4 Get:85 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libkrb5-3 arm64 1.20.1-6ubuntu2.10 [350 kB]
+#10 113.6 Get:86 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgssapi-krb5-2 arm64 1.20.1-6ubuntu2.10 [142 kB]
+#10 113.8 Get:87 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libcups2t64 arm64 2.4.7-1.2ubuntu7.14 [277 kB]
+#10 113.8 Get:88 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libsasl2-modules-db arm64 2.1.28+dfsg1-5ubuntu3.1 [21.6 kB]
+#10 113.8 Get:89 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libsasl2-2 arm64 2.1.28+dfsg1-5ubuntu3.1 [54.7 kB]
+#10 113.8 Get:90 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libldap2 arm64 2.6.10+dfsg-0ubuntu0.24.04.1 [196 kB]
+#10 113.8 Get:91 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libnghttp2-14 arm64 1.59.0-1ubuntu0.4 [74.8 kB]
+#10 113.8 Get:92 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libpsl5t64 arm64 0.21.2-1.1build1 [57.4 kB]
+#10 113.8 Get:93 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 librtmp1 arm64 2.4+20151223.gitfa8646d.1-2build7 [57.8 kB]
+#10 113.8 Get:94 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libssh-4 arm64 0.10.6-2ubuntu0.5 [192 kB]
+#10 113.8 Get:95 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libcurl4t64 arm64 8.5.0-2ubuntu10.15 [337 kB]
+#10 113.9 Get:96 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libglib2.0-0t64 arm64 2.80.0-6ubuntu3.9 [1533 kB]
+#10 114.3 Get:97 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libdconf1 arm64 0.40.0-4ubuntu0.1 [39.9 kB]
+#10 114.3 Get:98 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libeot0 arm64 0.01-5build3 [28.4 kB]
+#10 114.3 Get:99 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libepoxy0 arm64 1.5.10-1build1 [240 kB]
+#10 114.4 Get:100 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libexttextcat-data all 3.4.7-1build1 [193 kB]
+#10 114.4 Get:101 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libexttextcat-2.0-0 arm64 3.4.7-1build1 [13.3 kB]
+#10 114.8 Get:102 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 adduser all 3.137ubuntu1 [101 kB]
+#10 116.7 Get:103 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gpgconf arm64 2.4.4-2ubuntu17.6 [103 kB]
+#10 119.7 Get:104 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libksba8 arm64 1.6.6-1build1 [119 kB]
+#10 121.0 Get:105 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 dirmngr arm64 2.4.4-2ubuntu17.6 [316 kB]
+#10 126.3 Get:106 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gnupg-utils arm64 2.4.4-2ubuntu17.6 [107 kB]
+#10 128.1 Get:107 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gpg arm64 2.4.4-2ubuntu17.6 [549 kB]
+#10 132.8 Get:108 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 pinentry-curses arm64 1.2.1-3ubuntu5 [34.3 kB]
+#10 133.3 Get:109 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gpg-agent arm64 2.4.4-2ubuntu17.6 [221 kB]
+#10 134.3 Get:110 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gpgsm arm64 2.4.4-2ubuntu17.6 [225 kB]
+#10 135.5 Get:111 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 keyboxd arm64 2.4.4-2ubuntu17.6 [75.9 kB]
+#10 135.9 Get:112 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gnupg all 2.4.4-2ubuntu17.6 [359 kB]
+#10 137.5 Get:113 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libgpgme11t64 arm64 1.18.0-4.1ubuntu4 [136 kB]
+#10 138.0 Get:114 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libgpgmepp6t64 arm64 1.18.0-4.1ubuntu4 [115 kB]
+#10 138.5 Get:115 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgraphite2-3 arm64 1.3.14-2ubuntu0.24.04.1 [71.1 kB]
+#10 138.6 Get:116 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libdrm-common all 2.4.125-1ubuntu0.1~24.04.2 [9250 B]
+#10 138.6 Get:117 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libdrm2 arm64 2.4.125-1ubuntu0.1~24.04.2 [42.9 kB]
+#10 139.0 Get:118 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libelf1t64 arm64 0.190-1.1ubuntu0.1 [58.4 kB]
+#10 139.0 Get:119 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libdw1t64 arm64 0.190-1.1ubuntu0.1 [258 kB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 139.3 Get:24 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 cpp-13 arm64 13.3.0-6ubuntu2~24.04.1 [1038 B]
+#9 139.5 Get:25 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 cpp-aarch64-linux-gnu arm64 4:13.2.0-7ubuntu1 [5316 B]
+#9 139.7 Get:26 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 cpp arm64 4:13.2.0-7ubuntu1 [22.4 kB]
+#9 140.0 Get:27 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 fonts-dejavu-mono all 2.37-8 [502 kB]
+#9 141.1 Get:28 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 fonts-dejavu-core all 2.37-8 [835 kB]
+#9 142.4 Get:29 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 fontconfig-config arm64 2.15.0-1.1ubuntu2 [37.4 kB]
+#9 142.7 Get:30 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libcc1-0 arm64 14.2.0-4ubuntu2~24.04.1 [49.7 kB]
+#9 142.9 Get:31 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgomp1 arm64 14.2.0-4ubuntu2~24.04.1 [145 kB]
+#9 143.3 Get:32 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libitm1 arm64 14.2.0-4ubuntu2~24.04.1 [28.2 kB]
+#9 143.5 Get:33 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libatomic1 arm64 14.2.0-4ubuntu2~24.04.1 [11.6 kB]
+#9 143.8 Get:34 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libasan8 arm64 14.2.0-4ubuntu2~24.04.1 [2928 kB]
+#9 148.4 Get:35 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 liblsan0 arm64 14.2.0-4ubuntu2~24.04.1 [1289 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 140.0 Get:120 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libunwind8 arm64 1.6.2-3build1.1 [53.6 kB]
+#10 140.1 Get:121 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libcap2-bin arm64 1:2.66-5ubuntu2.4 [33.5 kB]
+#10 140.1 Get:122 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgstreamer1.0-0 arm64 1.24.2-1ubuntu0.1 [1147 kB]
+#10 143.3 Get:123 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 liborc-0.4-0t64 arm64 1:0.4.38-1ubuntu0.1 [205 kB]
+#10 143.7 Get:124 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 iso-codes all 4.16.0-1 [3492 kB]
+#10 149.0 Get:125 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgstreamer-plugins-base1.0-0 arm64 1.24.2-1ubuntu0.5 [830 kB]
+#10 149.8 Get:126 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libharfbuzz0b arm64 8.3.0-2build2 [463 kB]
+#10 150.2 Get:127 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libharfbuzz-icu0 arm64 8.3.0-2build2 [13.2 kB]
+#10 150.2 Get:128 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libhunspell-1.7-0 arm64 1.7.2+really1.7.2-10build3 [274 kB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 150.3 Get:36 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libtsan2 arm64 14.2.0-4ubuntu2~24.04.1 [2697 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 150.5 Get:129 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libhyphen0 arm64 2.8.8-7build3 [26.4 kB]
+#10 150.5 Get:130 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 x11-common all 1:7.7+23ubuntu3 [21.7 kB]
+#10 150.5 Get:131 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libice6 arm64 2:1.0.10-1build3 [41.1 kB]
+#10 150.5 Get:132 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libjpeg-turbo8 arm64 2.1.5-2ubuntu2 [163 kB]
+#10 150.7 Get:133 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libjpeg8 arm64 8c-2ubuntu11 [2148 B]
+#10 150.7 Get:134 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 liblcms2-2 arm64 2.14-2ubuntu0.1 [161 kB]
+#10 151.1 Get:135 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libmythes-1.2-0 arm64 2:1.2.5-1build1 [8518 B]
+#10 151.1 Get:136 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libnspr4 arm64 2:4.35-1.1build1 [114 kB]
+#10 151.1 Get:137 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libnss3 arm64 2:3.98-1ubuntu0.2 [1406 kB]
+#10 160.8 Get:138 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libopenjp2-7 arm64 2.5.0-2ubuntu0.5 [171 kB]
+#10 161.6 Get:139 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libboost-iostreams1.83.0 arm64 1.83.0-2.1ubuntu3.2 [258 kB]
+#10 162.8 Get:140 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 liborcus-parser-0.18-0 arm64 0.19.2-3build3 [110 kB]
+#10 163.2 Get:141 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 liborcus-0.18-0 arm64 0.19.2-3build3 [412 kB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 163.9 Get:37 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libubsan1 arm64 14.2.0-4ubuntu2~24.04.1 [1157 kB]
+#9 167.3 Get:38 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libhwasan0 arm64 14.2.0-4ubuntu2~24.04.1 [1605 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 164.7 Get:142 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libcurl3t64-gnutls arm64 8.5.0-2ubuntu10.15 [330 kB]
+#10 165.7 Get:143 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libdeflate0 arm64 1.19-1build1.1 [43.5 kB]
+#10 165.8 Get:144 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libjbig0 arm64 2.1-6.1ubuntu2 [29.3 kB]
+#10 165.9 Get:145 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 liblerc4 arm64 4.0.0+ds-4ubuntu2 [154 kB]
+#10 166.3 Get:146 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libsharpyuv0 arm64 1.3.2-0.4build3 [14.5 kB]
+#10 166.4 Get:147 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libwebp7 arm64 1.3.2-0.4build3 [191 kB]
+#10 166.9 Get:148 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libtiff6 arm64 4.5.1+git230720-4ubuntu2.5 [192 kB]
+#10 167.3 Get:149 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libpoppler134 arm64 24.02.0-1ubuntu9.9 [1073 kB]
+#10 169.5 Get:150 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libxslt1.1 arm64 1.1.39-0exp1ubuntu0.24.04.3 [167 kB]
+#10 169.9 Get:151 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libyajl2 arm64 2.1.0-5build1 [19.7 kB]
+#10 169.9 Get:152 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libraptor2-0 arm64 2.0.16-3ubuntu0.1 [164 kB]
+#10 170.2 Get:153 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libltdl7 arm64 2.4.7-7build1 [40.4 kB]
+#10 170.3 Get:154 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libmhash2 arm64 0.9.9.9-9build3 [101 kB]
+#10 170.4 Get:155 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 librasqal3t64 arm64 0.9.33-2.1build1 [187 kB]
+#10 170.7 Get:156 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 librdf0t64 arm64 1.0.17-3.1ubuntu3 [101 kB]
+#10 171.0 Get:157 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 librevenge-0.0-0 arm64 0.0.5-3build1 [202 kB]
+#10 171.3 Get:158 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libsm6 arm64 2:1.2.3-1build3 [15.6 kB]
+#10 171.3 Get:159 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libx11-xcb1 arm64 2:1.8.7-1build1 [7870 B]
+#10 171.3 Get:160 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxinerama1 arm64 2:1.1.4-3build1 [6394 B]
+#10 171.5 Get:161 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxmlsec1t64 arm64 1.2.39-5build2 [143 kB]
+#10 171.5 Get:162 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxmlsec1t64-nss arm64 1.2.39-5build2 [58.4 kB]
+#10 171.5 Get:163 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxrandr2 arm64 2:1.5.2-2build1 [19.6 kB]
+#10 171.6 Get:164 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libreoffice-core arm64 4:24.2.7-0ubuntu0.24.04.6 [41.1 MB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 170.4 Get:39 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgcc-13-dev arm64 13.3.0-6ubuntu2~24.04.1 [2473 kB]
+#9 174.1 Get:40 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gcc-13-aarch64-linux-gnu arm64 13.3.0-6ubuntu2~24.04.1 [18.7 MB]
+#9 208.5 Get:41 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gcc-13 arm64 13.3.0-6ubuntu2~24.04.1 [484 kB]
+#9 209.1 Get:42 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 gcc-aarch64-linux-gnu arm64 4:13.2.0-7ubuntu1 [1198 B]
+#9 209.3 Get:43 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 gcc arm64 4:13.2.0-7ubuntu1 [5018 B]
+#9 209.5 Get:44 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libaom3 arm64 3.8.2-2ubuntu0.2 [1620 kB]
+#9 211.1 Get:45 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libbrotli1 arm64 1.1.0-2build2 [339 kB]
+#9 211.5 Get:46 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libc-dev-bin arm64 2.39-0ubuntu8.9 [19.7 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 211.7 Get:165 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libpython3.12t64 arm64 3.12.3-1ubuntu0.17 [2280 kB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 211.7 Get:47 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libfreetype6 arm64 2.13.2+dfsg-1ubuntu0.1 [394 kB]
+#9 212.2 Get:48 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libfontconfig1 arm64 2.15.0-1.1ubuntu2 [142 kB]
+#9 212.5 Get:49 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libsharpyuv0 arm64 1.3.2-0.4build3 [14.5 kB]
+#9 212.9 Get:50 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libheif-plugin-aomdec arm64 1.17.6-1ubuntu4.8 [11.3 kB]
+#9 213.1 Get:51 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libheif1 arm64 1.17.6-1ubuntu4.8 [260 kB]
+#9 217.9 Get:52 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libjpeg-turbo8 arm64 2.1.5-2ubuntu2 [163 kB]
+#9 219.5 Get:53 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libjpeg8 arm64 8c-2ubuntu11 [2148 B]
+#9 219.7 Get:54 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libdeflate0 arm64 1.19-1build1.1 [43.5 kB]
+#9 220.2 Get:55 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libjbig0 arm64 2.1-6.1ubuntu2 [29.3 kB]
+#9 220.6 Get:56 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 liblerc4 arm64 4.0.0+ds-4ubuntu2 [154 kB]
+#9 222.4 Get:57 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libwebp7 arm64 1.3.2-0.4build3 [191 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 223.5 Get:166 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 python3-uno arm64 4:24.2.7-0ubuntu0.24.04.6 [142 kB]
+#10 224.0 Get:167 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 openssl arm64 3.0.13-0ubuntu3.15 [985 kB]
+#10 227.0 Get:168 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 ca-certificates all 20260601~24.04.1 [139 kB]
+#10 227.4 Get:169 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 dbus-bin arm64 1.14.10-4ubuntu4.1 [38.8 kB]
+#10 227.4 Get:170 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 dbus-session-bus-common all 1.14.10-4ubuntu4.1 [80.5 kB]
+#10 227.6 Get:171 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 dbus-daemon arm64 1.14.10-4ubuntu4.1 [115 kB]
+#10 228.0 Get:172 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 dbus-system-bus-common all 1.14.10-4ubuntu4.1 [81.6 kB]
+#10 228.1 Get:173 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 dbus arm64 1.14.10-4ubuntu4.1 [23.9 kB]
+#10 228.2 Get:174 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libpam-systemd arm64 255.4-1ubuntu8.17 [232 kB]
+#10 228.6 Get:175 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 dbus-user-session arm64 1.14.10-4ubuntu4.1 [9968 B]
+#10 228.6 Get:176 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 dmsetup arm64 2:1.02.185-3ubuntu3.2 [74.7 kB]
+#10 228.7 Get:177 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gir1.2-glib-2.0 arm64 2.80.0-6ubuntu3.9 [182 kB]
+#10 229.3 Get:178 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libgirepository-1.0-1 arm64 1.80.1-1 [81.2 kB]
+#10 229.3 Get:179 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 gir1.2-girepository-2.0 arm64 1.80.1-1 [24.5 kB]
+#10 229.3 Get:180 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 krb5-locales all 1.20.1-6ubuntu2.10 [15.3 kB]
+#10 229.3 Get:181 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 less arm64 590-2ubuntu2.1 [142 kB]
+#10 229.4 Get:182 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libfribidi0 arm64 1.0.13-3build1 [26.5 kB]
+#10 229.7 Get:183 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libglib2.0-data all 2.80.0-6ubuntu3.9 [50.1 kB]
+#10 229.8 Get:184 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libnss-systemd arm64 255.4-1ubuntu8.17 [155 kB]
+#10 229.8 Get:185 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libpam-cap arm64 1:2.66-5ubuntu2.4 [12.5 kB]
+#10 229.8 Get:186 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libtext-iconv-perl arm64 1.7-8build3 [13.1 kB]
+#10 229.8 Get:187 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 python3-dbus arm64 1.3.2-5build3 [99.5 kB]
+#10 229.9 Get:188 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 python3-gi arm64 3.48.2-1 [233 kB]
+#10 230.1 Get:189 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 networkd-dispatcher all 2.2.4-1 [15.5 kB]
+#10 230.2 Get:190 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 python3-pkg-resources all 68.1.2-2ubuntu1.2 [168 kB]
+#10 230.3 Get:191 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 shared-mime-info arm64 2.4-4 [472 kB]
+#10 230.9 Get:192 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 sudo arm64 1.9.15p5-3ubuntu5.24.04.3 [930 kB]
+#10 231.9 Get:193 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 systemd-resolved arm64 255.4-1ubuntu8.17 [291 kB]
+#10 232.4 Get:194 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 systemd-timesyncd arm64 255.4-1ubuntu8.17 [34.8 kB]
+#10 232.4 Get:195 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 xdg-user-dirs arm64 0.18-1build1 [18.4 kB]
+#10 232.4 Get:196 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 xkb-data all 2.41-2ubuntu1.1 [397 kB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 224.0 Get:58 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libtiff6 arm64 4.5.1+git230720-4ubuntu2.5 [192 kB]
+#9 225.0 Get:59 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libxpm4 arm64 1:3.5.17-1ubuntu0.24.04.1 [35.3 kB]
+#9 225.4 Get:60 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libgd3 arm64 2.3.3-9ubuntu5 [122 kB]
+#9 226.7 Get:61 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libc-devtools arm64 2.39-0ubuntu8.9 [27.8 kB]
+#9 226.9 Get:62 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 linux-libc-dev arm64 6.8.0-142.142 [1503 kB]
+#9 230.9 Get:63 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libcrypt-dev arm64 1:4.4.36-4build1 [118 kB]
+#9 231.3 Get:64 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 rpcsvc-proto arm64 1.4.2-0ubuntu7 [64.8 kB]
+#9 231.7 Get:65 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libc6-dev arm64 2.39-0ubuntu8.9 [1596 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 235.1 Get:197 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 apparmor arm64 4.0.1really4.0.1-0ubuntu0.24.04.8 [624 kB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 235.4 Get:66 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libheif-plugin-aomenc arm64 1.17.6-1ubuntu4.8 [13.7 kB]
+#9 235.6 Get:67 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 manpages-dev all 6.7-2 [2013 kB]
+#9 ...
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 243.2 Get:198 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libcbor0.10 arm64 0.10.2-1.2ubuntu2 [26.0 kB]
+#10 243.7 Get:199 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libedit2 arm64 3.1-20230828-1build1 [97.5 kB]
+#10 245.4 Get:200 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libfido2-1 arm64 1.14.0-1build3 [82.5 kB]
+#10 246.5 Get:201 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libjansson4 arm64 2.14-2build2 [34.4 kB]
+#10 247.3 Get:202 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libsensors-config all 1:3.6.0-9build1 [5546 B]
+#10 247.5 Get:203 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libsensors5 arm64 1:3.6.0-9build1 [27.0 kB]
+#10 248.0 Get:204 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libuv1t64 arm64 1.48.0-1.1build1 [95.3 kB]
+#10 249.1 Get:205 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxkbcommon0 arm64 1.6.0-1build1 [122 kB]
+#10 250.5 Get:206 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxmuu1 arm64 2:1.1.3-3build2 [9140 B]
+#10 250.7 Get:207 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 manpages all 6.7-2 [1384 kB]
+#10 ...
+
+#9 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+#9 255.6 debconf: delaying package configuration, since apt-utils is not installed
+#9 255.6 Fetched 60.6 MB in 3min 22s (300 kB/s)
+#9 255.6 Selecting previously unselected package libbsd0:arm64.
+#9 255.6 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 4376 files and directories currently installed.)
+#9 255.7 Preparing to unpack .../00-libbsd0_0.12.1-1build1.1_arm64.deb ...
+#9 255.7 Unpacking libbsd0:arm64 (0.12.1-1build1.1) ...
+#9 255.7 Selecting previously unselected package libexpat1:arm64.
+#9 255.7 Preparing to unpack .../01-libexpat1_2.6.1-2ubuntu0.6_arm64.deb ...
+#9 255.7 Unpacking libexpat1:arm64 (2.6.1-2ubuntu0.6) ...
+#9 255.7 Selecting previously unselected package libjansson4:arm64.
+#9 255.7 Preparing to unpack .../02-libjansson4_2.14-2build2_arm64.deb ...
+#9 255.7 Unpacking libjansson4:arm64 (2.14-2build2) ...
+#9 255.7 Selecting previously unselected package libpng16-16t64:arm64.
+#9 255.7 Preparing to unpack .../03-libpng16-16t64_1.6.43-5ubuntu0.6_arm64.deb ...
+#9 255.7 Unpacking libpng16-16t64:arm64 (1.6.43-5ubuntu0.6) ...
+#9 255.8 Selecting previously unselected package libxau6:arm64.
+#9 255.8 Preparing to unpack .../04-libxau6_1%3a1.0.9-1build6_arm64.deb ...
+#9 255.8 Unpacking libxau6:arm64 (1:1.0.9-1build6) ...
+#9 255.8 Selecting previously unselected package libxdmcp6:arm64.
+#9 255.8 Preparing to unpack .../05-libxdmcp6_1%3a1.1.3-0ubuntu6_arm64.deb ...
+#9 255.8 Unpacking libxdmcp6:arm64 (1:1.1.3-0ubuntu6) ...
+#9 255.8 Selecting previously unselected package libxcb1:arm64.
+#9 255.8 Preparing to unpack .../06-libxcb1_1.15-1ubuntu2_arm64.deb ...
+#9 255.8 Unpacking libxcb1:arm64 (1.15-1ubuntu2) ...
+#9 255.8 Selecting previously unselected package libx11-data.
+#9 255.8 Preparing to unpack .../07-libx11-data_2%3a1.8.7-1build1_all.deb ...
+#9 255.8 Unpacking libx11-data (2:1.8.7-1build1) ...
+#9 255.9 Selecting previously unselected package libx11-6:arm64.
+#9 255.9 Preparing to unpack .../08-libx11-6_2%3a1.8.7-1build1_arm64.deb ...
+#9 255.9 Unpacking libx11-6:arm64 (2:1.8.7-1build1) ...
+#9 255.9 Selecting previously unselected package manpages.
+#9 255.9 Preparing to unpack .../09-manpages_6.7-2_all.deb ...
+#9 255.9 Unpacking manpages (6.7-2) ...
+#9 255.9 Selecting previously unselected package binutils-common:arm64.
+#9 255.9 Preparing to unpack .../10-binutils-common_2.42-4ubuntu2.10_arm64.deb ...
+#9 255.9 Unpacking binutils-common:arm64 (2.42-4ubuntu2.10) ...
+#9 255.9 Selecting previously unselected package libsframe1:arm64.
+#9 255.9 Preparing to unpack .../11-libsframe1_2.42-4ubuntu2.10_arm64.deb ...
+#9 255.9 Unpacking libsframe1:arm64 (2.42-4ubuntu2.10) ...
+#9 255.9 Selecting previously unselected package libbinutils:arm64.
+#9 255.9 Preparing to unpack .../12-libbinutils_2.42-4ubuntu2.10_arm64.deb ...
+#9 255.9 Unpacking libbinutils:arm64 (2.42-4ubuntu2.10) ...
+#9 256.0 Selecting previously unselected package libctf-nobfd0:arm64.
+#9 256.0 Preparing to unpack .../13-libctf-nobfd0_2.42-4ubuntu2.10_arm64.deb ...
+#9 256.0 Unpacking libctf-nobfd0:arm64 (2.42-4ubuntu2.10) ...
+#9 256.0 Selecting previously unselected package libctf0:arm64.
+#9 256.0 Preparing to unpack .../14-libctf0_2.42-4ubuntu2.10_arm64.deb ...
+#9 256.0 Unpacking libctf0:arm64 (2.42-4ubuntu2.10) ...
+#9 256.0 Selecting previously unselected package libgprofng0:arm64.
+#9 256.0 Preparing to unpack .../15-libgprofng0_2.42-4ubuntu2.10_arm64.deb ...
+#9 256.0 Unpacking libgprofng0:arm64 (2.42-4ubuntu2.10) ...
+#9 256.0 Selecting previously unselected package binutils-aarch64-linux-gnu.
+#9 256.0 Preparing to unpack .../16-binutils-aarch64-linux-gnu_2.42-4ubuntu2.10_arm64.deb ...
+#9 256.0 Unpacking binutils-aarch64-linux-gnu (2.42-4ubuntu2.10) ...
+#9 256.1 Selecting previously unselected package binutils.
+#9 256.1 Preparing to unpack .../17-binutils_2.42-4ubuntu2.10_arm64.deb ...
+#9 256.1 Unpacking binutils (2.42-4ubuntu2.10) ...
+#9 256.1 Selecting previously unselected package gcc-13-base:arm64.
+#9 256.1 Preparing to unpack .../18-gcc-13-base_13.3.0-6ubuntu2~24.04.1_arm64.deb ...
+#9 256.1 Unpacking gcc-13-base:arm64 (13.3.0-6ubuntu2~24.04.1) ...
+#9 256.2 Selecting previously unselected package libisl23:arm64.
+#9 256.2 Preparing to unpack .../19-libisl23_0.26-3build1.1_arm64.deb ...
+#9 256.2 Unpacking libisl23:arm64 (0.26-3build1.1) ...
+#9 256.2 Selecting previously unselected package libmpfr6:arm64.
+#9 256.2 Preparing to unpack .../20-libmpfr6_4.2.1-1build1.1_arm64.deb ...
+#9 256.2 Unpacking libmpfr6:arm64 (4.2.1-1build1.1) ...
+#9 256.2 Selecting previously unselected package libmpc3:arm64.
+#9 256.2 Preparing to unpack .../21-libmpc3_1.3.1-1build1.1_arm64.deb ...
+#9 256.2 Unpacking libmpc3:arm64 (1.3.1-1build1.1) ...
+#9 256.3 Selecting previously unselected package cpp-13-aarch64-linux-gnu.
+#9 256.3 Preparing to unpack .../22-cpp-13-aarch64-linux-gnu_13.3.0-6ubuntu2~24.04.1_arm64.deb ...
+#9 256.3 Unpacking cpp-13-aarch64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+#9 256.4 Selecting previously unselected package cpp-13.
+#9 256.4 Preparing to unpack .../23-cpp-13_13.3.0-6ubuntu2~24.04.1_arm64.deb ...
+#9 256.4 Unpacking cpp-13 (13.3.0-6ubuntu2~24.04.1) ...
+#9 256.5 Selecting previously unselected package cpp-aarch64-linux-gnu.
+#9 256.5 Preparing to unpack .../24-cpp-aarch64-linux-gnu_4%3a13.2.0-7ubuntu1_arm64.deb ...
+#9 256.5 Unpacking cpp-aarch64-linux-gnu (4:13.2.0-7ubuntu1) ...
+#9 256.5 Selecting previously unselected package cpp.
+#9 256.5 Preparing to unpack .../25-cpp_4%3a13.2.0-7ubuntu1_arm64.deb ...
+#9 256.5 Unpacking cpp (4:13.2.0-7ubuntu1) ...
+#9 256.6 Selecting previously unselected package fonts-dejavu-mono.
+#9 256.6 Preparing to unpack .../26-fonts-dejavu-mono_2.37-8_all.deb ...
+#9 256.6 Unpacking fonts-dejavu-mono (2.37-8) ...
+#9 256.6 Selecting previously unselected package fonts-dejavu-core.
+#9 256.6 Preparing to unpack .../27-fonts-dejavu-core_2.37-8_all.deb ...
+#9 256.6 Unpacking fonts-dejavu-core (2.37-8) ...
+#9 256.6 Selecting previously unselected package fontconfig-config.
+#9 256.6 Preparing to unpack .../28-fontconfig-config_2.15.0-1.1ubuntu2_arm64.deb ...
+#9 256.7 Unpacking fontconfig-config (2.15.0-1.1ubuntu2) ...
+#9 256.7 Selecting previously unselected package libcc1-0:arm64.
+#9 256.7 Preparing to unpack .../29-libcc1-0_14.2.0-4ubuntu2~24.04.1_arm64.deb ...
+#9 256.7 Unpacking libcc1-0:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 256.7 Selecting previously unselected package libgomp1:arm64.
+#9 256.7 Preparing to unpack .../30-libgomp1_14.2.0-4ubuntu2~24.04.1_arm64.deb ...
+#9 256.8 Unpacking libgomp1:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 256.8 Selecting previously unselected package libitm1:arm64.
+#9 256.8 Preparing to unpack .../31-libitm1_14.2.0-4ubuntu2~24.04.1_arm64.deb ...
+#9 256.8 Unpacking libitm1:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 256.8 Selecting previously unselected package libatomic1:arm64.
+#9 256.8 Preparing to unpack .../32-libatomic1_14.2.0-4ubuntu2~24.04.1_arm64.deb ...
+#9 256.8 Unpacking libatomic1:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 256.8 Selecting previously unselected package libasan8:arm64.
+#9 256.8 Preparing to unpack .../33-libasan8_14.2.0-4ubuntu2~24.04.1_arm64.deb ...
+#9 256.8 Unpacking libasan8:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 256.9 Selecting previously unselected package liblsan0:arm64.
+#9 256.9 Preparing to unpack .../34-liblsan0_14.2.0-4ubuntu2~24.04.1_arm64.deb ...
+#9 256.9 Unpacking liblsan0:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 256.9 Selecting previously unselected package libtsan2:arm64.
+#9 256.9 Preparing to unpack .../35-libtsan2_14.2.0-4ubuntu2~24.04.1_arm64.deb ...
+#9 256.9 Unpacking libtsan2:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 257.0 Selecting previously unselected package libubsan1:arm64.
+#9 257.0 Preparing to unpack .../36-libubsan1_14.2.0-4ubuntu2~24.04.1_arm64.deb ...
+#9 257.0 Unpacking libubsan1:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 257.0 Selecting previously unselected package libhwasan0:arm64.
+#9 257.0 Preparing to unpack .../37-libhwasan0_14.2.0-4ubuntu2~24.04.1_arm64.deb ...
+#9 257.0 Unpacking libhwasan0:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 257.1 Selecting previously unselected package libgcc-13-dev:arm64.
+#9 257.1 Preparing to unpack .../38-libgcc-13-dev_13.3.0-6ubuntu2~24.04.1_arm64.deb ...
+#9 257.1 Unpacking libgcc-13-dev:arm64 (13.3.0-6ubuntu2~24.04.1) ...
+#9 257.1 Selecting previously unselected package gcc-13-aarch64-linux-gnu.
+#9 257.1 Preparing to unpack .../39-gcc-13-aarch64-linux-gnu_13.3.0-6ubuntu2~24.04.1_arm64.deb ...
+#9 257.1 Unpacking gcc-13-aarch64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+#9 257.4 Selecting previously unselected package gcc-13.
+#9 257.4 Preparing to unpack .../40-gcc-13_13.3.0-6ubuntu2~24.04.1_arm64.deb ...
+#9 257.4 Unpacking gcc-13 (13.3.0-6ubuntu2~24.04.1) ...
+#9 257.4 Selecting previously unselected package gcc-aarch64-linux-gnu.
+#9 257.4 Preparing to unpack .../41-gcc-aarch64-linux-gnu_4%3a13.2.0-7ubuntu1_arm64.deb ...
+#9 257.4 Unpacking gcc-aarch64-linux-gnu (4:13.2.0-7ubuntu1) ...
+#9 257.4 Selecting previously unselected package gcc.
+#9 257.4 Preparing to unpack .../42-gcc_4%3a13.2.0-7ubuntu1_arm64.deb ...
+#9 257.4 Unpacking gcc (4:13.2.0-7ubuntu1) ...
+#9 257.4 Selecting previously unselected package libaom3:arm64.
+#9 257.4 Preparing to unpack .../43-libaom3_3.8.2-2ubuntu0.2_arm64.deb ...
+#9 257.4 Unpacking libaom3:arm64 (3.8.2-2ubuntu0.2) ...
+#9 257.5 Selecting previously unselected package libbrotli1:arm64.
+#9 257.5 Preparing to unpack .../44-libbrotli1_1.1.0-2build2_arm64.deb ...
+#9 257.5 Unpacking libbrotli1:arm64 (1.1.0-2build2) ...
+#9 257.5 Selecting previously unselected package libc-dev-bin.
+#9 257.5 Preparing to unpack .../45-libc-dev-bin_2.39-0ubuntu8.9_arm64.deb ...
+#9 257.5 Unpacking libc-dev-bin (2.39-0ubuntu8.9) ...
+#9 257.5 Selecting previously unselected package libfreetype6:arm64.
+#9 257.5 Preparing to unpack .../46-libfreetype6_2.13.2+dfsg-1ubuntu0.1_arm64.deb ...
+#9 257.5 Unpacking libfreetype6:arm64 (2.13.2+dfsg-1ubuntu0.1) ...
+#9 257.5 Selecting previously unselected package libfontconfig1:arm64.
+#9 257.5 Preparing to unpack .../47-libfontconfig1_2.15.0-1.1ubuntu2_arm64.deb ...
+#9 257.5 Unpacking libfontconfig1:arm64 (2.15.0-1.1ubuntu2) ...
+#9 257.6 Selecting previously unselected package libsharpyuv0:arm64.
+#9 257.6 Preparing to unpack .../48-libsharpyuv0_1.3.2-0.4build3_arm64.deb ...
+#9 257.6 Unpacking libsharpyuv0:arm64 (1.3.2-0.4build3) ...
+#9 257.6 Selecting previously unselected package libheif-plugin-aomdec:arm64.
+#9 257.6 Preparing to unpack .../49-libheif-plugin-aomdec_1.17.6-1ubuntu4.8_arm64.deb ...
+#9 257.6 Unpacking libheif-plugin-aomdec:arm64 (1.17.6-1ubuntu4.8) ...
+#9 257.6 Selecting previously unselected package libheif1:arm64.
+#9 257.6 Preparing to unpack .../50-libheif1_1.17.6-1ubuntu4.8_arm64.deb ...
+#9 257.6 Unpacking libheif1:arm64 (1.17.6-1ubuntu4.8) ...
+#9 257.6 Selecting previously unselected package libjpeg-turbo8:arm64.
+#9 257.6 Preparing to unpack .../51-libjpeg-turbo8_2.1.5-2ubuntu2_arm64.deb ...
+#9 257.6 Unpacking libjpeg-turbo8:arm64 (2.1.5-2ubuntu2) ...
+#9 257.7 Selecting previously unselected package libjpeg8:arm64.
+#9 257.7 Preparing to unpack .../52-libjpeg8_8c-2ubuntu11_arm64.deb ...
+#9 257.7 Unpacking libjpeg8:arm64 (8c-2ubuntu11) ...
+#9 257.7 Selecting previously unselected package libdeflate0:arm64.
+#9 257.7 Preparing to unpack .../53-libdeflate0_1.19-1build1.1_arm64.deb ...
+#9 257.7 Unpacking libdeflate0:arm64 (1.19-1build1.1) ...
+#9 257.7 Selecting previously unselected package libjbig0:arm64.
+#9 257.7 Preparing to unpack .../54-libjbig0_2.1-6.1ubuntu2_arm64.deb ...
+#9 257.7 Unpacking libjbig0:arm64 (2.1-6.1ubuntu2) ...
+#9 257.7 Selecting previously unselected package liblerc4:arm64.
+#9 257.7 Preparing to unpack .../55-liblerc4_4.0.0+ds-4ubuntu2_arm64.deb ...
+#9 257.7 Unpacking liblerc4:arm64 (4.0.0+ds-4ubuntu2) ...
+#9 257.7 Selecting previously unselected package libwebp7:arm64.
+#9 257.7 Preparing to unpack .../56-libwebp7_1.3.2-0.4build3_arm64.deb ...
+#9 257.7 Unpacking libwebp7:arm64 (1.3.2-0.4build3) ...
+#9 257.8 Selecting previously unselected package libtiff6:arm64.
+#9 257.8 Preparing to unpack .../57-libtiff6_4.5.1+git230720-4ubuntu2.5_arm64.deb ...
+#9 257.8 Unpacking libtiff6:arm64 (4.5.1+git230720-4ubuntu2.5) ...
+#9 257.8 Selecting previously unselected package libxpm4:arm64.
+#9 257.8 Preparing to unpack .../58-libxpm4_1%3a3.5.17-1ubuntu0.24.04.1_arm64.deb ...
+#9 257.8 Unpacking libxpm4:arm64 (1:3.5.17-1ubuntu0.24.04.1) ...
+#9 257.8 Selecting previously unselected package libgd3:arm64.
+#9 257.8 Preparing to unpack .../59-libgd3_2.3.3-9ubuntu5_arm64.deb ...
+#9 257.8 Unpacking libgd3:arm64 (2.3.3-9ubuntu5) ...
+#9 257.8 Selecting previously unselected package libc-devtools.
+#9 257.8 Preparing to unpack .../60-libc-devtools_2.39-0ubuntu8.9_arm64.deb ...
+#9 257.8 Unpacking libc-devtools (2.39-0ubuntu8.9) ...
+#9 257.8 Selecting previously unselected package linux-libc-dev:arm64.
+#9 257.8 Preparing to unpack .../61-linux-libc-dev_6.8.0-142.142_arm64.deb ...
+#9 257.8 Unpacking linux-libc-dev:arm64 (6.8.0-142.142) ...
+#9 257.9 Selecting previously unselected package libcrypt-dev:arm64.
+#9 257.9 Preparing to unpack .../62-libcrypt-dev_1%3a4.4.36-4build1_arm64.deb ...
+#9 257.9 Unpacking libcrypt-dev:arm64 (1:4.4.36-4build1) ...
+#9 257.9 Selecting previously unselected package rpcsvc-proto.
+#9 257.9 Preparing to unpack .../63-rpcsvc-proto_1.4.2-0ubuntu7_arm64.deb ...
+#9 258.0 Unpacking rpcsvc-proto (1.4.2-0ubuntu7) ...
+#9 258.0 Selecting previously unselected package libc6-dev:arm64.
+#9 258.0 Preparing to unpack .../64-libc6-dev_2.39-0ubuntu8.9_arm64.deb ...
+#9 258.0 Unpacking libc6-dev:arm64 (2.39-0ubuntu8.9) ...
+#9 259.5 Selecting previously unselected package libheif-plugin-aomenc:arm64.
+#9 259.5 Preparing to unpack .../65-libheif-plugin-aomenc_1.17.6-1ubuntu4.8_arm64.deb ...
+#9 259.5 Unpacking libheif-plugin-aomenc:arm64 (1.17.6-1ubuntu4.8) ...
+#9 259.5 Selecting previously unselected package manpages-dev.
+#9 259.5 Preparing to unpack .../66-manpages-dev_6.7-2_all.deb ...
+#9 259.6 Unpacking manpages-dev (6.7-2) ...
+#9 259.6 Setting up libexpat1:arm64 (2.6.1-2ubuntu0.6) ...
+#9 259.6 Setting up libsharpyuv0:arm64 (1.3.2-0.4build3) ...
+#9 259.6 Setting up libaom3:arm64 (3.8.2-2ubuntu0.2) ...
+#9 259.6 Setting up libxau6:arm64 (1:1.0.9-1build6) ...
+#9 259.7 Setting up liblerc4:arm64 (4.0.0+ds-4ubuntu2) ...
+#9 259.7 Setting up manpages (6.7-2) ...
+#9 259.7 Setting up libbrotli1:arm64 (1.1.0-2build2) ...
+#9 259.7 Setting up binutils-common:arm64 (2.42-4ubuntu2.10) ...
+#9 259.7 Setting up libdeflate0:arm64 (1.19-1build1.1) ...
+#9 259.7 Setting up linux-libc-dev:arm64 (6.8.0-142.142) ...
+#9 259.7 Setting up libctf-nobfd0:arm64 (2.42-4ubuntu2.10) ...
+#9 259.7 Setting up libgomp1:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 259.7 Setting up libjbig0:arm64 (2.1-6.1ubuntu2) ...
+#9 259.7 Setting up libsframe1:arm64 (2.42-4ubuntu2.10) ...
+#9 259.7 Setting up libjansson4:arm64 (2.14-2build2) ...
+#9 259.7 Setting up rpcsvc-proto (1.4.2-0ubuntu7) ...
+#9 259.7 Setting up gcc-13-base:arm64 (13.3.0-6ubuntu2~24.04.1) ...
+#9 259.7 Setting up libx11-data (2:1.8.7-1build1) ...
+#9 259.8 Setting up libmpfr6:arm64 (4.2.1-1build1.1) ...
+#9 259.8 Setting up fonts-dejavu-mono (2.37-8) ...
+#9 259.8 Setting up libpng16-16t64:arm64 (1.6.43-5ubuntu0.6) ...
+#9 259.8 Setting up libmpc3:arm64 (1.3.1-1build1.1) ...
+#9 259.8 Setting up libatomic1:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 259.8 Setting up fonts-dejavu-core (2.37-8) ...
+#9 259.8 Setting up libjpeg-turbo8:arm64 (2.1.5-2ubuntu2) ...
+#9 259.8 Setting up libwebp7:arm64 (1.3.2-0.4build3) ...
+#9 259.8 Setting up libubsan1:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 259.9 Setting up libhwasan0:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 259.9 Setting up libcrypt-dev:arm64 (1:4.4.36-4build1) ...
+#9 259.9 Setting up libasan8:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 259.9 Setting up libtsan2:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 259.9 Setting up libbinutils:arm64 (2.42-4ubuntu2.10) ...
+#9 259.9 Setting up libisl23:arm64 (0.26-3build1.1) ...
+#9 260.0 Setting up libc-dev-bin (2.39-0ubuntu8.9) ...
+#9 260.0 Setting up libbsd0:arm64 (0.12.1-1build1.1) ...
+#9 260.0 Setting up libcc1-0:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 260.0 Setting up liblsan0:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 260.0 Setting up libitm1:arm64 (14.2.0-4ubuntu2~24.04.1) ...
+#9 260.0 Setting up libctf0:arm64 (2.42-4ubuntu2.10) ...
+#9 260.0 Setting up libjpeg8:arm64 (8c-2ubuntu11) ...
+#9 260.0 Setting up manpages-dev (6.7-2) ...
+#9 260.0 Setting up libxdmcp6:arm64 (1:1.1.3-0ubuntu6) ...
+#9 260.0 Setting up libxcb1:arm64 (1.15-1ubuntu2) ...
+#9 260.0 Setting up cpp-13-aarch64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+#9 260.0 Setting up fontconfig-config (2.15.0-1.1ubuntu2) ...
+#9 260.1 Setting up cpp-aarch64-linux-gnu (4:13.2.0-7ubuntu1) ...
+#9 260.1 Setting up libgprofng0:arm64 (2.42-4ubuntu2.10) ...
+#9 260.1 Setting up libfreetype6:arm64 (2.13.2+dfsg-1ubuntu0.1) ...
+#9 260.1 Setting up libgcc-13-dev:arm64 (13.3.0-6ubuntu2~24.04.1) ...
+#9 260.1 Setting up libtiff6:arm64 (4.5.1+git230720-4ubuntu2.5) ...
+#9 260.1 Setting up libc6-dev:arm64 (2.39-0ubuntu8.9) ...
+#9 260.1 Setting up libx11-6:arm64 (2:1.8.7-1build1) ...
+#9 260.1 Setting up libfontconfig1:arm64 (2.15.0-1.1ubuntu2) ...
+#9 260.1 Setting up libxpm4:arm64 (1:3.5.17-1ubuntu0.24.04.1) ...
+#9 260.1 Setting up cpp-13 (13.3.0-6ubuntu2~24.04.1) ...
+#9 260.1 Setting up binutils-aarch64-linux-gnu (2.42-4ubuntu2.10) ...
+#9 260.1 Setting up binutils (2.42-4ubuntu2.10) ...
+#9 260.1 Setting up gcc-13-aarch64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+#9 260.1 Setting up gcc-13 (13.3.0-6ubuntu2~24.04.1) ...
+#9 260.1 Setting up cpp (4:13.2.0-7ubuntu1) ...
+#9 260.1 Setting up gcc-aarch64-linux-gnu (4:13.2.0-7ubuntu1) ...
+#9 260.2 Setting up gcc (4:13.2.0-7ubuntu1) ...
+#9 260.2 Setting up libheif-plugin-aomdec:arm64 (1.17.6-1ubuntu4.8) ...
+#9 260.2 Setting up libheif1:arm64 (1.17.6-1ubuntu4.8) ...
+#9 260.2 Setting up libgd3:arm64 (2.3.3-9ubuntu5) ...
+#9 260.2 Setting up libc-devtools (2.39-0ubuntu8.9) ...
+#9 260.2 Setting up libheif-plugin-aomenc:arm64 (1.17.6-1ubuntu4.8) ...
+#9 260.2 Processing triggers for libc-bin (2.39-0ubuntu8.9) ...
+#9 DONE 260.4s
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 ...
+
+#11 [build 3/4] COPY mcp-server/wrapper.c /tmp/wrapper.c
+#11 DONE 0.0s
+
+#12 [build 4/4] RUN gcc -o /tmp/mcp-server-run /tmp/wrapper.c
+#12 DONE 0.1s
+
+#10 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+#10 264.6 Get:208 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 openssh-client arm64 1:9.6p1-3ubuntu13.19 [890 kB]
+#10 267.8 Get:209 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 publicsuffix all 20231001.0357-0.1 [129 kB]
+#10 268.4 Get:210 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 xauth arm64 1:1.1.2-1build1 [25.3 kB]
+#10 268.6 Get:211 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 xz-utils arm64 5.6.1+really5.4.5-1ubuntu0.3 [268 kB]
+#10 269.5 Get:212 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgdk-pixbuf2.0-common all 2.42.10+dfsg-3ubuntu3.3 [8302 B]
+#10 269.8 Get:213 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgdk-pixbuf-2.0-0 arm64 2.42.10+dfsg-3ubuntu3.3 [146 kB]
+#10 270.3 Get:214 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gtk-update-icon-cache arm64 3.24.41-4ubuntu1.3 [52.2 kB]
+#10 270.7 Get:215 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 hicolor-icon-theme all 0.17-2 [9976 B]
+#10 270.9 Get:216 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 humanity-icon-theme all 0.6.16 [1282 kB]
+#10 280.9 Get:217 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 ubuntu-mono all 24.04-0ubuntu1 [151 kB]
+#10 281.9 Get:218 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 adwaita-icon-theme all 46.0-1 [723 kB]
+#10 284.9 Get:219 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 alsa-topology-conf all 1.2.5.1-2 [15.5 kB]
+#10 285.2 Get:220 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libasound2-data all 1.2.11-1ubuntu0.3 [21.4 kB]
+#10 285.5 Get:221 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libasound2t64 arm64 1.2.11-1ubuntu0.3 [387 kB]
+#10 286.7 Get:222 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 alsa-ucm-conf all 1.2.10-1ubuntu5.14 [70.2 kB]
+#10 287.7 Get:223 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 at-spi2-common all 2.52.0-1build1 [8674 B]
+#10 288.4 Get:224 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxi6 arm64 2:1.8.1-1build1 [31.9 kB]
+#10 288.7 Get:225 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libatspi2.0-0t64 arm64 2.52.0-1build1 [80.9 kB]
+#10 289.0 Get:226 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxtst6 arm64 2:1.2.3-1.1build1 [13.0 kB]
+#10 289.3 Get:227 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 dconf-service arm64 0.40.0-4ubuntu0.1 [27.0 kB]
+#10 289.5 Get:228 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 dconf-gsettings-backend arm64 0.40.0-4ubuntu0.1 [22.0 kB]
+#10 289.8 Get:229 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 session-migration arm64 0.3.9build1 [8958 B]
+#10 290.0 Get:230 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gsettings-desktop-schemas all 46.1-0ubuntu1 [35.6 kB]
+#10 290.6 Get:231 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 at-spi2-core arm64 2.52.0-1build1 [55.8 kB]
+#10 291.0 Get:232 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 binutils-common arm64 2.42-4ubuntu2.10 [240 kB]
+#10 291.9 Get:233 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libsframe1 arm64 2.42-4ubuntu2.10 [15.4 kB]
+#10 292.2 Get:234 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libbinutils arm64 2.42-4ubuntu2.10 [766 kB]
+#10 294.5 Get:235 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libctf-nobfd0 arm64 2.42-4ubuntu2.10 [101 kB]
+#10 294.9 Get:236 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libctf0 arm64 2.42-4ubuntu2.10 [95.7 kB]
+#10 295.5 Get:237 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgprofng0 arm64 2.42-4ubuntu2.10 [776 kB]
+#10 297.8 Get:238 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 binutils-aarch64-linux-gnu arm64 2.42-4ubuntu2.10 [3304 kB]
+#10 310.6 Get:239 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 binutils arm64 2.42-4ubuntu2.10 [18.1 kB]
+#10 311.1 Get:240 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libc-dev-bin arm64 2.39-0ubuntu8.9 [19.7 kB]
+#10 311.5 Get:241 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 linux-libc-dev arm64 6.8.0-142.142 [1503 kB]
+#10 324.3 Get:242 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libcrypt-dev arm64 1:4.4.36-4build1 [118 kB]
+#10 325.1 Get:243 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 rpcsvc-proto arm64 1.4.2-0ubuntu7 [64.8 kB]
+#10 325.6 Get:244 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libc6-dev arm64 2.39-0ubuntu8.9 [1596 kB]
+#10 330.7 Get:245 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gcc-13-base arm64 13.3.0-6ubuntu2~24.04.1 [51.6 kB]
+#10 331.2 Get:246 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libisl23 arm64 0.26-3build1.1 [669 kB]
+#10 337.7 Get:247 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libmpfr6 arm64 4.2.1-1build1.1 [329 kB]
+#10 340.4 Get:248 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libmpc3 arm64 1.3.1-1build1.1 [56.4 kB]
+#10 341.0 Get:249 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 cpp-13-aarch64-linux-gnu arm64 13.3.0-6ubuntu2~24.04.1 [9560 kB]
+#10 358.7 Get:250 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 cpp-13 arm64 13.3.0-6ubuntu2~24.04.1 [1038 B]
+#10 358.9 Get:251 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 cpp-aarch64-linux-gnu arm64 4:13.2.0-7ubuntu1 [5316 B]
+#10 359.2 Get:252 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 cpp arm64 4:13.2.0-7ubuntu1 [22.4 kB]
+#10 359.5 Get:253 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libcc1-0 arm64 14.2.0-4ubuntu2~24.04.1 [49.7 kB]
+#10 362.3 Get:254 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgomp1 arm64 14.2.0-4ubuntu2~24.04.1 [145 kB]
+#10 365.0 Get:255 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libitm1 arm64 14.2.0-4ubuntu2~24.04.1 [28.2 kB]
+#10 365.3 Get:256 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libatomic1 arm64 14.2.0-4ubuntu2~24.04.1 [11.6 kB]
+#10 365.6 Get:257 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libasan8 arm64 14.2.0-4ubuntu2~24.04.1 [2928 kB]
+#10 377.8 Get:258 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 liblsan0 arm64 14.2.0-4ubuntu2~24.04.1 [1289 kB]
+#10 380.2 Get:259 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libtsan2 arm64 14.2.0-4ubuntu2~24.04.1 [2697 kB]
+#10 383.8 Get:260 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libubsan1 arm64 14.2.0-4ubuntu2~24.04.1 [1157 kB]
+#10 391.8 Get:261 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libhwasan0 arm64 14.2.0-4ubuntu2~24.04.1 [1605 kB]
+#10 400.7 Get:262 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgcc-13-dev arm64 13.3.0-6ubuntu2~24.04.1 [2473 kB]
+#10 404.8 Get:263 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gcc-13-aarch64-linux-gnu arm64 13.3.0-6ubuntu2~24.04.1 [18.7 MB]
+#10 414.9 Get:264 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 gcc-13 arm64 13.3.0-6ubuntu2~24.04.1 [484 kB]
+#10 416.8 Get:265 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 gcc-aarch64-linux-gnu arm64 4:13.2.0-7ubuntu1 [1198 B]
+#10 416.9 Get:266 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 gcc arm64 4:13.2.0-7ubuntu1 [5018 B]
+#10 417.2 Get:267 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libstdc++-13-dev arm64 13.3.0-6ubuntu2~24.04.1 [2397 kB]
+#10 418.2 Get:268 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 g++-13-aarch64-linux-gnu arm64 13.3.0-6ubuntu2~24.04.1 [10.9 MB]
+#10 432.6 Get:269 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 g++-13 arm64 13.3.0-6ubuntu2~24.04.1 [16.0 kB]
+#10 432.9 Get:270 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 g++-aarch64-linux-gnu arm64 4:13.2.0-7ubuntu1 [962 B]
+#10 433.0 Get:271 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 g++ arm64 4:13.2.0-7ubuntu1 [1082 B]
+#10 433.2 Get:272 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 make arm64 4.3-4.1build2 [178 kB]
+#10 433.6 Get:273 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libdpkg-perl all 1.22.6ubuntu6.6 [268 kB]
+#10 434.1 Get:274 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 bzip2 arm64 1.0.8-5.1ubuntu0.1 [34.0 kB]
+#10 434.3 Get:275 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 patch arm64 2.7.6-7build3 [101 kB]
+#10 434.6 Get:276 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 lto-disabled-list all 47 [12.4 kB]
+#10 434.8 Get:277 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 dpkg-dev all 1.22.6ubuntu6.6 [1074 kB]
+#10 437.6 Get:278 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 build-essential arm64 12.10ubuntu1 [4932 B]
+#10 437.9 Get:279 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 ca-certificates-java all 20240118 [11.6 kB]
+#10 438.0 Get:280 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 curl arm64 8.5.0-2ubuntu10.15 [222 kB]
+#10 438.5 Get:281 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 java-common all 0.75+exp1 [6798 B]
+#10 438.7 Get:282 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libpcsclite1 arm64 2.0.3-1build1 [21.8 kB]
+#10 438.9 Get:283 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 openjdk-21-jre-headless arm64 21.0.12.1+1-1~24.04.4 [45.8 MB]
+#10 466.1 Get:284 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 default-jre-headless arm64 2:1.21-75+exp1 [3096 B]
+#10 466.5 Get:285 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libatk1.0-0t64 arm64 2.52.0-1build1 [55.1 kB]
+#10 466.6 Get:286 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libatk-bridge2.0-0t64 arm64 2.52.0-1build1 [66.3 kB]
+#10 466.8 Get:287 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libcairo-gobject2 arm64 1.18.0-3build1 [127 kB]
+#10 467.1 Get:288 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libcolord2 arm64 1.4.7-1build2 [149 kB]
+#10 467.4 Get:289 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libthai-data all 0.1.29-2build1 [158 kB]
+#10 469.4 Get:290 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libdatrie1 arm64 0.2.13-3build1 [19.2 kB]
+#10 469.7 Get:291 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libthai0 arm64 0.1.29-2build1 [18.2 kB]
+#10 470.1 Get:292 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libpango-1.0-0 arm64 1.52.1+ds-1build1 [228 kB]
+#10 471.8 Get:293 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libpangoft2-1.0-0 arm64 1.52.1+ds-1build1 [42.0 kB]
+#10 472.2 Get:294 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libpangocairo-1.0-0 arm64 1.52.1+ds-1build1 [27.4 kB]
+#10 472.5 Get:295 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libwayland-client0 arm64 1.22.0-2.1build1 [25.9 kB]
+#10 472.9 Get:296 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libwayland-cursor0 arm64 1.22.0-2.1build1 [10.3 kB]
+#10 473.1 Get:297 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libwayland-egl1 arm64 1.22.0-2.1build1 [5622 B]
+#10 473.3 Get:298 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxcomposite1 arm64 1:0.4.5-1build3 [6336 B]
+#10 473.5 Get:299 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxfixes3 arm64 1:6.0.0-2build1 [11.2 kB]
+#10 473.8 Get:300 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxcursor1 arm64 1:1.2.1-1build1 [21.1 kB]
+#10 474.0 Get:301 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxdamage1 arm64 1:1.1.6-1build1 [6236 B]
+#10 474.1 Get:302 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgtk-3-common all 3.24.41-4ubuntu1.3 [1426 kB]
+#10 479.2 Get:303 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgtk-3-0t64 arm64 3.24.41-4ubuntu1.3 [2881 kB]
+#10 482.4 Get:304 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libglvnd0 arm64 1.7.0-1build1 [60.6 kB]
+#10 482.7 Get:305 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxcb-dri3-0 arm64 1.15-1ubuntu2 [7196 B]
+#10 482.8 Get:306 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxcb-glx0 arm64 1.15-1ubuntu2 [25.5 kB]
+#10 483.0 Get:307 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxcb-present0 arm64 1.15-1ubuntu2 [5866 B]
+#10 483.2 Get:308 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxcb-xfixes0 arm64 1.15-1ubuntu2 [10.6 kB]
+#10 483.4 Get:309 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxxf86vm1 arm64 1:1.1.4-1build4 [9130 B]
+#10 483.5 Get:310 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libdrm-amdgpu1 arm64 2.4.125-1ubuntu0.1~24.04.2 [21.9 kB]
+#10 483.9 Get:311 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libllvm20 arm64 1:20.1.2-0ubuntu1~24.04.3 [29.3 MB]
+#10 504.2 Get:312 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxcb-randr0 arm64 1.15-1ubuntu2 [18.4 kB]
+#10 504.4 Get:313 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxcb-sync1 arm64 1.15-1ubuntu2 [9682 B]
+#10 504.5 Get:314 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxshmfence1 arm64 1.3-1build5 [4938 B]
+#10 504.7 Get:315 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 mesa-libgallium arm64 25.2.8-0ubuntu0.24.04.2 [12.1 MB]
+#10 507.4 Get:316 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgbm1 arm64 25.2.8-0ubuntu0.24.04.2 [35.0 kB]
+#10 507.6 Get:317 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libvulkan1 arm64 1.3.275.0-1build1 [150 kB]
+#10 507.9 Get:318 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgl1-mesa-dri arm64 25.2.8-0ubuntu0.24.04.2 [36.6 kB]
+#10 508.0 Get:319 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libglx-mesa0 arm64 25.2.8-0ubuntu0.24.04.2 [111 kB]
+#10 508.2 Get:320 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libglx0 arm64 1.7.0-1build1 [33.2 kB]
+#10 508.4 Get:321 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libgl1 arm64 1.7.0-1build1 [106 kB]
+#10 508.5 Get:322 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libgif7 arm64 5.2.2-1ubuntu1.2 [36.1 kB]
+#10 508.8 Get:323 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 openjdk-21-jre arm64 21.0.12.1+1-1~24.04.4 [232 kB]
+#10 509.2 Get:324 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 default-jre arm64 2:1.21-75+exp1 [922 B]
+#10 509.4 Get:325 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 emacsen-common all 3.0.5 [12.1 kB]
+#10 509.7 Get:326 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 dictionaries-common all 1.29.7 [188 kB]
+#10 509.9 Get:327 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-fast-deep-equal all 3.1.3-3 [5844 B]
+#10 510.1 Get:328 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-json-schema-traverse all 1.0.0-3 [6338 B]
+#10 510.3 Get:329 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-jsonify all 0.0.1-1 [6724 B]
+#10 510.5 Get:330 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-json-stable-stringify all 1.0.2+repack1+~cs1.0.34-2 [7270 B]
+#10 510.6 Get:331 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-punycode all 2.2.3-2 [10.0 kB]
+#10 510.8 Get:332 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-uri-js all 4.4.0+dfsg-8 [52.5 kB]
+#10 511.0 Get:333 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libcares2 arm64 1.27.0-1.0ubuntu1 [74.1 kB]
+#10 511.2 Get:334 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-xtend all 4.0.2-3 [3902 B]
+#10 511.3 Get:335 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-acorn all 8.8.1+ds+~cs25.17.7-2 [115 kB]
+#10 511.5 Get:336 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-cjs-module-lexer all 1.2.3+dfsg-1 [32.1 kB]
+#10 511.9 Get:337 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-busboy all 1.6.0+~cs2.6.0-2 [17.3 kB]
+#10 512.1 Get:338 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-undici all 5.26.3+dfsg1+~cs23.10.12-2 [325 kB]
+#10 512.3 Get:339 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 libnode109 arm64 18.19.1+dfsg-6ubuntu5 [11.2 MB]
+#10 529.2 Get:340 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 nodejs arm64 18.19.1+dfsg-6ubuntu5 [306 kB]
+#10 529.7 Get:341 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-ajv all 8.12.0~ds+~2.1.1-4 [185 kB]
+#10 530.1 Get:342 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 libjs-inherits all 2.0.4-6 [3412 B]
+#10 530.2 Get:343 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-inherits all 2.0.4-6 [3004 B]
+#10 530.4 Get:344 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-core-util-is all 1.0.3-1 [4066 B]
+#10 530.6 Get:345 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-safe-buffer all 5.2.1+~cs2.1.2-3 [15.8 kB]
+#10 530.7 Get:346 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-string-decoder all 1.3.0-6 [7044 B]
+#10 530.9 Get:347 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-process-nextick-args all 2.0.1-3 [3804 B]
+#10 531.1 Get:348 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-util-deprecate all 1.0.2-3 [4202 B]
+#10 531.3 Get:349 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-isarray all 2.0.5-4 [4024 B]
+#10 531.4 Get:350 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-readable-stream all 3.6.0+~cs3.0.0-4build1 [32.4 kB]
+#10 531.6 Get:351 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-typedarray all 0.0.7-1 [9584 B]
+#10 531.8 Get:352 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-concat-stream all 2.0.0+~2.0.0-2 [6424 B]
+#10 532.0 Get:353 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-ms all 2.1.3+~cs0.7.31-3 [5738 B]
+#10 532.1 Get:354 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-debug all 4.3.4+~cs4.1.7-1 [17.7 kB]
+#10 532.3 Get:355 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-esutils all 2.0.3+~2.0.0-1 [13.0 kB]
+#10 532.5 Get:356 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-doctrine all 3.0.0-4 [18.3 kB]
+#10 532.7 Get:357 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-eslint-visitor-keys all 3.3.0+~1.0.0-1 [14.4 kB]
+#10 532.8 Get:358 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-estraverse all 5.3.0+ds+~5.1.1-1 [11.9 kB]
+#10 533.0 Get:359 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-object-assign all 4.1.1-7 [4686 B]
+#10 533.2 Get:360 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-esrecurse all 4.3.0-2 [6136 B]
+#10 533.5 Get:361 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-eslint-scope all 7.1.1+~3.7.4-1 [31.5 kB]
+#10 534.1 Get:362 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-espree all 9.4.1~dfsg-2 [21.0 kB]
+#10 534.4 Get:363 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-esquery all 1.4.2~ds-1 [26.0 kB]
+#10 534.8 Get:364 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-eslint-utils all 3.0.0-3 [15.8 kB]
+#10 535.1 Get:365 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-flatted all 3.2.7~ds-1 [10.0 kB]
+#10 535.3 Get:366 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-fs.realpath all 1.0.0-3 [6176 B]
+#10 535.6 Get:367 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-wrappy all 1.0.2-3 [3732 B]
+#10 535.8 Get:368 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-once all 1.4.1-1 [4664 B]
+#10 536.0 Get:369 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-inflight all 1.0.6-2 [3940 B]
+#10 536.2 Get:370 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-balanced-match all 2.0.0-1 [4910 B]
+#10 536.4 Get:371 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-brace-expansion all 2.0.1+~1.1.0-1 [8072 B]
+#10 536.7 Get:372 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-minimatch all 9.0.3-4build5 [51.1 kB]
+#10 537.4 Get:373 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-glob all 8.1.0+~cs8.5.15-1 [137 kB]
+#10 538.9 Get:374 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-rimraf all 3.0.2-2 [10.4 kB]
+#10 539.2 Get:375 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-write all 2.0.0~6.0.1+~3.0.4+~2.0.0+~1.0.0+~2.0.1-1 [16.0 kB]
+#10 539.5 Get:376 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-flat-cache all 3.0.4~6.0.1+~3.0.4+~2.0.0+~1.0.0+~2.0.1-1 [9050 B]
+#10 539.7 Get:377 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-file-entry-cache all 6.0.1+~3.0.4+~2.0.0+~1.0.0+~2.0.1-1 [12.2 kB]
+#10 540.2 Get:378 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-functional-red-black-tree all 1.0.1+20181105-7 [14.3 kB]
+#10 542.0 Get:379 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 node-is-extglob all 2.1.1-5 [4624 B]
+failed to receive status: rpc error: code = Unavailable desc = error reading from server: EOF
+
+. Stderr: None. 

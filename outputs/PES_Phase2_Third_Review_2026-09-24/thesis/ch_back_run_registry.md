@@ -310,7 +310,7 @@ scores are from `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md`.
 | E2 replacement | native harness | as above | — | — | CORE-Bench | 809 | — | 45/45 capsule setups, 0 graded — `AMENDMENT_ACCEPTED_LAUNCH_PENDING` |
 | E3 SDAB | — | as above | — | — | SDAB (private bundle) | 809 | — | no local or paid path — `CLOSED_EXTERNAL` |
 | E4 BankerToolBench | Tinker→Modal bridge | as above | — | — | BankerToolBench | 809 | — | 1/100 tasks, recovery 0.3115 — `CLOSED_PARTIAL` |
-| E4 base-model rerun | Modal `/v1/responses` | base model, zero-init LoRA | — | — | BankerToolBench | 809 | 0 | 100/100 trials, mean reward 0.0, $15.07 of $55.91 cap; measures tool-dialogue collapse |
+| E4 base-model rerun | Modal `/v1/responses` | base model, zero-init LoRA | — | — | BankerToolBench | 809 | 0 | 100/100 trials, mean reward 0.0, $15.07 of $55.91 cap; zero traced to bridge passing no stop sequences (§9.5) |
 | E5 APEX-Agents | native harness | as above | — | — | APEX-Agents | 809 | — | 7/480 native-scored; prefix mean 0.050505 |
 | E5 replacement (successor27) | native harness | as above | — | — | Tau3 | 809 | — | 20/97 = 20.62% cleaned — `REBUILD_READY_LAUNCH_PENDING` |
 | E6 WebArena | AWS-hosted | as above | — | — | WebArena | 809 | — | 0/812 run; 65 files, IDs 0–811 inventory-verified — `PENDING_QUOTA` |

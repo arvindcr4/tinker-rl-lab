@@ -1,0 +1,6 @@
+{
+ "single_stream_tok_per_s": 97.6,
+ "concurrent16_aggregate_tok_per_s": 403.9,
+ "concurrent16_tokens": 4096,
+ "concurrent16_seconds": 10.1
+}

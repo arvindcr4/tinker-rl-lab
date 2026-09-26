@@ -1,0 +1,27 @@
+{
+    "task": {
+        "path": "code/tasks_modal_envfix/dnsmasq-backdoor-detect-execvp-obfuscated",
+        "source": "tasks_modal_envfix"
+    },
+    "trial_name": "dnsmasq-backdoor-detect-execvp-o__Z79oiMf",
+    "trials_dir": "raw/jobs/e7_envfix_rerun2",
+    "agent": {
+        "name": "terminus-2",
+        "model_name": "openai/Qwen/Qwen3.6-35B-A3B",
+        "kwargs": {
+            "api_base": "http://127.0.0.1:8767/v1",
+            "temperature": 0,
+            "max_turns": 25,
+            "model_info": {
+                "max_input_tokens": 32768,
+                "max_output_tokens": 4096,
+                "input_cost_per_token": 0,
+                "output_cost_per_token": 0
+            }
+        }
+    },
+    "environment": {
+        "type": "modal"
+    },
+    "job_id": "d8b434d0-ecf7-4e66-8947-7a003639d287"
+}

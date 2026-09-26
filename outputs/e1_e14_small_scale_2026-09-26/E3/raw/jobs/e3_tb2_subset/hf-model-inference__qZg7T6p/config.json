@@ -1,0 +1,27 @@
+{
+    "task": {
+        "path": "code/tb2/terminal-bench/hf-model-inference",
+        "source": "terminal-bench"
+    },
+    "trial_name": "hf-model-inference__qZg7T6p",
+    "trials_dir": "raw/jobs/e3_tb2_subset",
+    "agent": {
+        "name": "terminus-2",
+        "model_name": "openai/Qwen/Qwen3.6-35B-A3B",
+        "kwargs": {
+            "api_base": "http://127.0.0.1:8763/v1",
+            "temperature": 0,
+            "max_turns": 25,
+            "model_info": {
+                "max_input_tokens": 32768,
+                "max_output_tokens": 4096,
+                "input_cost_per_token": 0,
+                "output_cost_per_token": 0
+            }
+        }
+    },
+    "environment": {
+        "type": "modal"
+    },
+    "job_id": "6c550012-2e0a-4f01-b921-98f4454f4936"
+}

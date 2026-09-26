@@ -1,0 +1,30 @@
+{
+ "raw": "1 | PASS | `src/app/register/page.tsx` implements registration form with role selection and profile creation.\n2 | PASS | `src/app/register/page.tsx` includes a role selector for 'patient' or 'pharmacist' and persists it.\n3 | PASS | `src/app/login/page.tsx` implements login form using Supabase auth signInWithPassword.\n4 | PASS | `src/components/Navbar.tsx` implements logout functionality via supabase.auth.signOut.\n5 | PASS | `supabase_schema.sql` defines tables for users, meds, orders, items, and messages with RLS.\n6 | PASS | `src/app/medications/page.tsx` allows browsing, searching, and filtering active medications.\n7 | PASS | `src/app/medications/page.tsx` implements cart state and 'Add to Cart' button logic.\n8 | PASS | `src/app/medications/page.tsx` implements checkout creating orders and order items in DB.\n9 | PASS | `src/app/orders/page.tsx` fetches and displays user's order history with items.\n10 | PASS | `src/app/orders/page.tsx` displays order status badges (pending, processing, etc.).\n11 | PASS | `src/app/pharmacist/dashboard/page.tsx` provides dashboard for orders and inventory.\n12 | PASS | `src/app/pharmacist/dashboard/page.tsx` allows updating order status via API call.\n13 | PASS | `src/app/pharmacist/dashboard/page.tsx` allows viewing and editing inventory stock levels.\n14 | PASS | `src/app/pharmacist/dashboard/page.tsx` filters and displays low stock items (<10).\n15 | PASS | `src/app/pharmacist/dashboard/page.tsx` allows toggling `is_active` to mark out of stock.\n16 | PASS | `supabase_schema.sql` and API routes ensure all data is persisted in PostgreSQL.\n17 | PASS | `src/app/pharmacist/messages/page.tsx` restricts access to pharmacists and shows chat UI.\n18 | PASS | `src/app/pharmacist/messages/page.tsx` lists other pharmacists for selection.\n19 | PASS | `src/app/pharmacist/messages/page.tsx` uses Supabase Realtime subscription for live updates.\n20 | PASS | `src/app/pharmacist/messages/page.tsx` displays sender name and timestamp for each message.\n21 | PASS | `src/app/pharmacist/messages/page.tsx` fetches full history on selection and appends new.\n22 | PASS | `src/app/api/orders/update-status/route.ts` calls `sendOrderStatusEmail` on status change.\n23 | PASS | `src/lib/email.ts` includes order ID, items, and status change in email body.\n24 | PASS | `src/app/api/orders/update-status/route.ts` sends email synchronously after DB update.\n25 | PASS | `src/lib/email.ts` sets a clear subject line and sender address in the email.",
+ "rubric": {
+  "1": "Application implements user registration functionality.",
+  "2": "Application implements user registration supporting patient and pharmacist roles.",
+  "3": "Application implements user login functionality.",
+  "4": "Application implements user logout functionality.",
+  "5": "Application persists all medications, inventory levels, orders, and user accounts using durable, database-backed storage.",
+  "6": "Application allows patients to browse available medications with search and filter capabilities.",
+  "7": "Application allows patients to add selected medications to a shopping cart.",
+  "8": "Application allows patients to place prescription orders from the contents of their cart.",
+  "9": "Application allows patients to view a complete history of their past orders.",
+  "10": "Application displays real-time order status for patients, including states such as pending, processing, ready for pickup, and completed.",
+  "11": "Application provides a pharmacist dashboard for reviewing and managing incoming orders.",
+  "12": "Application allows pharmacists to update the status of each order.",
+  "13": "Application allows pharmacists to view and manage current inventory levels for all medications.",
+  "14": "Application generates low-stock alerts for pharmacists when inventory levels fall below defined thresholds.",
+  "15": "Application allows pharmacists to mark specific items as out of stock so patients cannot order them.",
+  "16": "Application persists all order, inventory, and status data in the database to ensure full durability across sessions.",
+  "17": "Application provides a private messaging interface that is accessible only to authenticated pharmacists.",
+  "18": "Application allows pharmacists to search for and select another pharmacist to start a private conversation.",
+  "19": "Application ensures pharmacist-to-pharmacist messages are delivered and displayed in real time to both parties without requiring a page refresh.",
+  "20": "Application displays clear sender attribution, including name and role, along with timestamps for each message in every private conversation.",
+  "21": "Application maintains a conversation history for each private pharmacist thread so prior messages can be reviewed.",
+  "22": "Application sends an automatic email notification to the patient whenever their prescription order status changes.",
+  "23": "Application includes key details in each notification email, such as order identifier, medication summary, previous status, and new status.",
+  "24": "Application ensures that notification emails are sent reliably and promptly immediately after each order status update is saved in the system.",
+  "25": "Application follows basic email best practices for all notifications, including a clear subject line indicating the update and appropriate sender information."
+ }
+}

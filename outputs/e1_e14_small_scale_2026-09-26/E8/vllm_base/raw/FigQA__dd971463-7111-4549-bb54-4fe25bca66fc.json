@@ -1,0 +1,10 @@
+{
+ "task_id": "FigQA/dd971463-7111-4549-bb54-4fe25bca66fc",
+ "category": "FigQA",
+ "prompt_sha256": "741d7d1b60e9ccd65096abc60c71383f62c8fef9e4e2f4abed2c93ff3b883e77",
+ "raw_text": "Looking at panel **l** (not panel i \u2014 likely a typo in the question, as panel i is immunofluorescence images and does not contain pathway enrichment data), we see a bar chart titled \u201cLPS LD-high vs LD-low pathway enrichment\u201d.\n\nThe top bar corresponds to:  \n**\u201cNegative regulation of protein metabolic process\u201d**\n\nAbove this bar, there is an orange dot aligned with the x-axis value of **6**, and above that, the label \u201cNo. of genes\u201d indicates that the number of genes for each pathway is shown by the position of the orange dot along the top axis.\n\nFor \u201cNegative regulation of protein metabolic process\u201d, the orange dot is at **6** on the \u201cNo. of genes\u201d scale.\n\nThus, the number of differentially expressed genes involved in this pathway is **6**.\n\n[ANSWER]F[/ANSWER]",
+ "prompt_tokens": 16461,
+ "completion_tokens": 182,
+ "stop_reason": "stop",
+ "error": null
+}

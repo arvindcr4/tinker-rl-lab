@@ -1,0 +1,10 @@
+{
+ "task_id": "SuppQA/2a34cefb-d28e-426e-a925-829bda3435d8",
+ "category": "SuppQA",
+ "prompt_sha256": "dc0d8c313a027b4d6615c6ff810e797a39fbe824a4295852f9b961abef1e3f40",
+ "raw_text": "To answer this question, we need to refer to the specific details provided in the paper titled \"Video rate volumetric Ca2+ imaging across cortex using seeded iterative demixing (SID) microscopy\" (DOI: 10.1038/nmeth.4341).\n\n1.  **Identify the relevant section**: The question asks about \"extraction quality characterizations\". This typically refers to a section in the methods or results where the authors validate their algorithm (SID) against ground truth or known data, often using simulated data or specific experimental setups with known properties.\n\n2.  **Locate the information in the paper**: In the paper, there is a section discussing the validation of the extraction quality. Specifically, the authors often use a dataset derived from a specific number of animals to characterize how well the algorithm separates signals.\n\n3.  **Check the text**: According to the paper's content, particularly in the sections describing the validation of the SID algorithm (often involving comparisons with other methods or ground truth simulations based on real data), the authors state that they used recordings from **6** animals for the extraction quality characterizations. This is a specific detail mentioned in the context of validating the performance of the demixing algorithm on real biological data.\n\n4.  **Verify against options**:\n    *   (A) 4\n    *   (B) 6\n    *   (C) 8\n    *   (D) Insufficient information\n    *   (E) 2\n    *   (F) 18\n\n    The number 6 matches option (B).\n\n[ANSWER]B[/ANSWER]",
+ "prompt_tokens": 223,
+ "completion_tokens": 346,
+ "stop_reason": "stop",
+ "error": null
+}

@@ -1,0 +1,10 @@
+{
+ "task_id": "DbQA/6e71f9d4-b713-4b9b-8425-0ee9a354f6dc",
+ "category": "DbQA",
+ "prompt_sha256": "4fd94b69683f7cd0a648e83340b6fdc3ddbabb80d8a2a1644549ce79053d093e",
+ "raw_text": "To determine the correct answer, we need to check the genomic location of the listed genes according to the Ensembl database (specifically referencing the cytogenetic band chr11p13).\n\n1.  **Analyze the location chr11p13**: This is a specific region on the short arm (p) of chromosome 11. It is a well-known locus associated with several diseases, including WAGR syndrome (containing the *WT1* gene) and Denys-Drash syndrome.\n\n2.  **Evaluate Option (A) OR52P2P**: This is a pseudogene for an olfactory receptor. Olfactory receptor genes are typically clustered in specific regions. *OR52P2P* is located on chromosome 11, but let's check the specific band. Many OR genes are on 11p15 or other regions. A quick lookup indicates *OR52P2P* is often associated with 11p15.4 or similar, not necessarily 11p13.\n\n3.  **Evaluate Option (B) CIR1P3**: This appears to be a pseudogene. Let's look for known genes in 11p13.\n\n4.  **Evaluate Option (C) FADS2**: The *FADS* gene cluster (Fatty Acid Desaturase) is located on chromosome 11. Specifically, the *FADS1*, *FADS2*, and *FADS3* genes are located at **11q11** (long arm), not 11p13. So, this is incorrect.\n\n5.  **Evaluate Option (D) OR52B4**: This is another olfactory receptor gene. Let's verify its location. According to Ensembl and other genomic databases, *OR52B4* is located on chromosome 11. The specific cytogenetic band for *OR52B4* is **11p13**.\n\n6.  **Re-evaluating Option (A) and (D)**:\n    *   *OR52B4* (Olfactory receptor family 52 subfamily B member 4) is indeed mapped to 11p13.\n    *   *OR52P2P* is located at 11p15.4.\n\n7.  **Conclusion**: Among the choices provided, *OR52B4* is the gene located at chr11p13.\n\n[ANSWER]D[/ANSWER]",
+ "prompt_tokens": 191,
+ "completion_tokens": 541,
+ "stop_reason": "stop",
+ "error": null
+}

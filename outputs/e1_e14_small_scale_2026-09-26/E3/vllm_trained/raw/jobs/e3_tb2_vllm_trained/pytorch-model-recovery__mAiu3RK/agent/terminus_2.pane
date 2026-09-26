@@ -1,0 +1,439 @@
+[?2004hroot@modal:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@modal:/app# clear
+[?2004l[H[J[3J[?2004hroot@modal:/app# ls -la /app/
+[?2004ltotal 5118
+drwxr-xr-x 1 root root      71 Aug 22  2025 .
+drwxr-xr-x 1 root root     200 Sep 26 15:05 ..
+-rw-r--r-- 1 root root  206629 Aug 11  2025 dataset.pt
+-rw-r--r-- 1 root root 5032882 Aug 11  2025 weights.pt
+[?2004hroot@modal:/app# python3 -c "
+[?2004l[?2004h> import torch
+[?2004l[?2004h> weights = torch.load('/app/weights.pt', map_location='cpu')
+[?2004l[?2004h> print('=== State Dict Keys ===')
+[?2004l[?2004h> for k, v in weights.items():
+[?2004l[?2004h>     print(f'{k}: shape={v.shape}, dtype={v.dtype}')
+[?2004l[?2004h> "
+[?2004lpython3 -c "
+/usr/local/lib/python3.13/site-packages/torch/_subclasses/functional_tensor.py:276: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:81.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+=== State Dict Keys ===
+embedding.weight: shape=torch.Size([128, 64]), dtype=torch.float32
+embedding.bias: shape=torch.Size([128]), dtype=torch.float32
+pos_encoder.pe: shape=torch.Size([1, 5000, 128]), dtype=torch.float32
+transformer_encoder.layers.0.self_attn.in_proj_weight: shape=torch.Size([384, 128]), dtype=torch.float32
+transformer_encoder.layers.0.self_attn.in_proj_bias: shape=torch.Size([384]), dtype=torch.float32
+transformer_encoder.layers.0.self_attn.out_proj.weight: shape=torch.Size([128, 128]), dtype=torch.float32
+transformer_encoder.layers.0.self_attn.out_proj.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.0.linear1.weight: shape=torch.Size([256, 128]), dtype=torch.float32
+transformer_encoder.layers.0.linear1.bias: shape=torch.Size([256]), dtype=torch.float32
+transformer_encoder.layers.0.linear2.weight: shape=torch.Size([128, 256]), dtype=torch.float32
+transformer_encoder.layers.0.linear2.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.0.norm1.weight: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.0.norm1.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.0.norm2.weight: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.0.norm2.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.1.self_attn.in_proj_weight: shape=torch.Size([384, 128]), dtype=torch.float32
+transformer_encoder.layers.1.self_attn.in_proj_bias: shape=torch.Size([384]), dtype=torch.float32
+transformer_encoder.layers.1.self_attn.out_proj.weight: shape=torch.Size([128, 128]), dtype=torch.float32
+transformer_encoder.layers.1.self_attn.out_proj.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.1.linear1.weight: shape=torch.Size([256, 128]), dtype=torch.float32
+transformer_encoder.layers.1.linear1.bias: shape=torch.Size([256]), dtype=torch.float32
+transformer_encoder.layers.1.linear2.weight: shape=torch.Size([128, 256]), dtype=torch.float32
+transformer_encoder.layers.1.linear2.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.1.norm1.weight: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.1.norm1.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.1.norm2.weight: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.1.norm2.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.2.self_attn.in_proj_weight: shape=torch.Size([384, 128]), dtype=torch.float32
+transformer_encoder.layers.2.self_attn.in_proj_bias: shape=torch.Size([384]), dtype=torch.float32
+transformer_encoder.layers.2.self_attn.out_proj.weight: shape=torch.Size([128, 128]), dtype=torch.float32
+transformer_encoder.layers.2.self_attn.out_proj.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.2.linear1.weight: shape=torch.Size([256, 128]), dtype=torch.float32
+transformer_encoder.layers.2.linear1.bias: shape=torch.Size([256]), dtype=torch.float32
+transformer_encoder.layers.2.linear2.weight: shape=torch.Size([128, 256]), dtype=torch.float32
+transformer_encoder.layers.2.linear2.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.2.norm1.weight: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.2.norm1.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.2.norm2.weight: shape=torch.Size([128]), dtype=torch.float32
+transformer_encoder.layers.2.norm2.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_decoder.layers.0.self_attn.in_proj_weight: shape=torch.Size([384, 128]), dtype=torch.float32
+transformer_decoder.layers.0.self_attn.in_proj_bias: shape=torch.Size([384]), dtype=torch.float32
+transformer_decoder.layers.0.self_attn.out_proj.weight: shape=torch.Size([128, 128]), dtype=torch.float32
+transformer_decoder.layers.0.self_attn.out_proj.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_decoder.layers.0.multihead_attn.in_proj_weight: shape=torch.Size([384, 128]), dtype=torch.float32
+transformer_decoder.layers.0.multihead_attn.in_proj_bias: shape=torch.Size([384]), dtype=torch.float32
+transformer_decoder.layers.0.multihead_attn.out_proj.weight: shape=torch.Size([128, 128]), dtype=torch.float32
+transformer_decoder.layers.0.multihead_attn.out_proj.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_decoder.layers.0.linear1.weight: shape=torch.Size([256, 128]), dtype=torch.float32
+transformer_decoder.layers.0.linear1.bias: shape=torch.Size([256]), dtype=torch.float32
+transformer_decoder.layers.0.linear2.weight: shape=torch.Size([128, 256]), dtype=torch.float32
+transformer_decoder.layers.0.linear2.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_decoder.layers.0.norm1.weight: shape=torch.Size([128]), dtype=torch.float32
+transformer_decoder.layers.0.norm1.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_decoder.layers.0.norm2.weight: shape=torch.Size([128]), dtype=torch.float32
+transformer_decoder.layers.0.norm2.bias: shape=torch.Size([128]), dtype=torch.float32
+transformer_decoder.layers.0.norm3.weight: shape=torch.Size([128]), dtype=torch.float32
+transformer_decoder.layers.0.norm3.bias: shape=torch.Size([128]), dtype=torch.float32
+output_layer.weight: shape=torch.Size([64, 128]), dtype=torch.float32
+output_layer.bias: shape=torch.Size([64]), dtype=torch.float32
+[?2004hroot@modal:/app# python3 -c "
+[?2004l[?2004h> import torch
+[?2004l[?2004h> data = torch.load('/app/dataset.pt', map_location='cpu')
+[?2004l[?2004h> print('=== Dataset Keys ===')
+[?2004l[?2004h> for k, v in data.items():
+[?2004l[?2004h>     print(f'{k}: shape={v.shape}, dtype={v.dtype}')
+[?2004l[?2004h> "
+[?2004l/usr/local/lib/python3.13/site-packages/torch/_subclasses/functional_tensor.py:276: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:81.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+=== Dataset Keys ===
+src_sequences: shape=torch.Size([20, 20, 64]), dtype=torch.float32
+tgt_sequences: shape=torch.Size([20, 20, 64]), dtype=torch.float32
+[?2004hroot@modal:/app# cat > /app/solve.py << 'PYEOF'
+[?2004l[?2004h> import torch
+[?2004l[?2004h> import torch.nn as nn
+[?2004l[?2004h> import torch.optim as optim
+[?2004l[?2004h> from torch.nn.functional import mse_loss
+[?2004l[?2004h> 
+[?2004l[?2004h> class PositionalEncoding(nn.Module):
+[?2004l[?2004h>     def __init__(self, d_model, max_len=5000):
+[?2004l[?2004h>         super().__init__()
+[?2004l[?2004h>         pe = torch.zeros(1, max_len, d_model)
+[?2004l[?2004h>         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+[?2004l[?2004h>         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-torch.log(torch.tensor(10000.0)) / d_model))
+[?2004l[?2004h>         pe[0, :, 0::2] = torch.sin(position * div_term)
+[?2004l[?2004h>         pe[0, :, 1::2] = torch.cos(position * div_term)
+[?2004l[?2004h>         self.register_buffer('pe', pe)
+[?2004l[?2004h> 
+[?2004l[?2004h>     def forward(self, x):
+[?2004l[?2004h>         return x + self.pe[:, :x.size(1), :]
+[?2004l[?2004h> 
+[?2004l[?2004h> class RecoveredModel(nn.Module):
+[?2004l[?2004h>     def __init__(self):
+[?2004l[?2004h>         super().__init__()
+[?2004l[?2004h>         self.embedding = nn.Linear(64, 128)
+[?2004l[?2004h>         self.pos_encoder = PositionalEncoding(128, max_len=5000)
+[?2004l[?2004h>         
+[?2004l[?2004h>         encoder_layer = nn.TransformerEncoderLayer(
+[?2004l[?2004h>             d_model=128, nhead=4, dim_feedforward=256,
+[?2004l[?2004h>             batch_first=True, activation='gelu'
+[?2004l[?2004h>         )
+[?2004l[?2004h>         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=3)
+[?2004l[?2004h>         
+[?2004l[?2004h>         decoder_layer = nn.TransformerDecoderLayer(
+[?2004l[?2004h>             d_model=128, nhead=4, dim_feedforward=256,
+[?2004l[?2004h>             batch_first=True, activation='gelu'
+[?2004l[?2004h>         )
+[?2004l[?2004h>         self.transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=1)
+[?2004l[?2004h>         
+[?2004l[?2004h>         self.output_layer = nn.Linear(128, 64)
+[?2004l[?2004h>     
+[?2004l[?2004h>     def forward(self, src, tgt):
+[?2004l[?2004h>         x = self.embedding(src)
+[?2004l[?2004h>         x = self.pos_encoder(x)
+[?2004l[?2004h>         encoded = self.transformer_encoder(x)
+[?2004l[?2004h>         x = self.transformer_decoder(tgt, encoded)
+[?2004l[?2004h>         out = self.output_layer(x)
+[?2004l[?2004h>         return out
+[?2004l[?2004h> 
+[?2004l[?2004h> # Load weights and dataset
+[?2004l[?2004h> weights = torch.load('/app/weights.pt', map_location='cpu')
+[?2004l[?2004h> data = torch.load('/app/dataset.pt', map_location='cpu')
+[?2004l[?2004h> src = data['src_sequences']
+[?2004l[?2004h> tgt = data['tgt_sequences']
+[?2004l[?2004h> 
+[?2004l[?2004h> print(f"src shape: {src.shape}")
+[?2004l[?2004h> print(f"tgt shape: {tgt.shape}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Create model and load weights
+[?2004l[?2004h> model = RecoveredModel()
+[?2004l[?2004h> model.load_state_dict(weights)
+[?2004l[?2004h> model.eval()
+[?2004l[?2004h> 
+[?2004l[?2004h> # Compute original MSE
+[?2004l[?2004h> with torch.no_grad():
+[?2004l[?2004h>     original_output = model(src, tgt)
+[?2004l[?2004h>     original_mse = mse_loss(original_output, tgt)
+[?2004l[?2004h> print(f"Original MSE: {original_mse.item()}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Now tune only output_layer
+[?2004l[?2004h> model.train()
+[?2004l[?2004h> for name, param in model.named_parameters():
+[?2004l[?2004h>     if not name.startswith('output_layer'):
+[?2004l[?2004h>         param.requires_grad = False
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         param.requires_grad = True
+[?2004l[?2004h> 
+[?2004l[?2004h> optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.01)
+[?2004l[?2004h> 
+[?2004l[?2004h> for epoch in range(500):
+[?2004l[?2004h>     optimizer.zero_grad()
+[?2004l[?2004h>     output = model(src, tgt)
+[?2004l[?2004h>     loss = mse_loss(output, tgt)
+[?2004l[?2004h>     loss.backward()
+[?2004l[?2004h>     optimizer.step()
+[?2004l[?2004h>     if epoch % 50 == 0:
+[?2004l[?2004h>         print(f"Epoch {epoch}, Loss: {loss.item()}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Compute final MSE
+[?2004l[?2004h> model.eval()
+[?2004l[?2004h> with torch.no_grad():
+[?2004l[?2004h>     final_output = model(src, tgt)
+[?2004l[?2004h>     final_mse = mse_loss(final_output, tgt)
+[?2004l[?2004h> print(f"Final MSE: {final_mse.item()}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Verify only output_layer changed
+[?2004l[?2004h> state_dict = model.state_dict()
+[?2004l[?2004h> for k in weights:
+[?2004l[?2004h>     if k != 'output_layer.weight' and k != 'output_layer.bias':
+[?2004l[?2004h>         assert torch.allclose(weights[k], state_dict[k]), f"Mismatch in {k}"
+[?2004l[?2004h> print("Verification passed: only output_layer changed")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Save as TorchScript
+[?2004l[?2004h> traced = torch.jit.script(model)
+[?2004l[?2004h> traced.save('/app/model.pt')
+[?2004l[?2004h> print("Model saved to /app/model.pt")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Verify loading
+[?2004l[?2004h> loaded = torch.jit.load('/app/model.pt')
+[?2004l[?2004h> with torch.no_grad():
+[?2004l[?2004h>     loaded_output = loaded(src, tgt)
+[?2004l[?2004h>     loaded_mse = mse_loss(loaded_output, tgt)
+[?2004l[?2004h> print(f"Loaded model MSE: {loaded_mse.item()}")
+[?2004l[?2004h> PYEOF
+[?2004l[?2004hroot@modal:/app# python3 /app/solve.py
+[?2004l/usr/local/lib/python3.13/site-packages/torch/_subclasses/functional_tensor.py:276: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:81.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+src shape: torch.Size([20, 20, 64])
+tgt shape: torch.Size([20, 20, 64])
+Traceback (most recent call last):
+  File [35m"/app/solve.py"[0m, line [35m63[0m, in [35m<module>[0m
+    original_output = model(src, tgt)
+  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/module.py"[0m, line [35m1751[0m, in [35m_wrapped_call_impl[0m
+    return [31mself._call_impl[0m[1;31m(*args, **kwargs)[0m
+           [31m~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^[0m
+  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/module.py"[0m, line [35m1762[0m, in [35m_call_impl[0m
+    return forward_call(*args, **kwargs)
+  File [35m"/app/solve.py"[0m, line [35m43[0m, in [35mforward[0m
+    x = self.transformer_decoder(tgt, encoded)
+  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/module.py"[0m, line [35m1751[0m, in [35m_wrapped_call_impl[0m
+    return [31mself._call_impl[0m[1;31m(*args, **kwargs)[0m
+           [31m~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^[0m
+  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/module.py"[0m, line [35m1762[0m, in [35m_call_impl[0m
+    return forward_call(*args, **kwargs)
+  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/transformer.py"[0m, line [35m610[0m, in [35mforward[0m
+    output = mod(
+        output,
+    ...<6 lines>...
+        memory_is_causal=memory_is_causal,
+    )
+  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/module.py"[0m, line [35m1751[0m, in [35m_wrapped_call_impl[0m
+    return [31mself._call_impl[0m[1;31m(*args, **kwargs)[0m
+           [31m~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^[0m
+  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/module.py"[0m, line [35m1762[0m, in [35m_call_impl[0m
+    return forward_call(*args, **kwargs)
+  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/transformer.py"[0m, line [35m1099[0m, in [35mforward[0m
+    x + [31mself._sa_block[0m[1;31m(x, tgt_mask, tgt_key_padding_mask, tgt_is_causal)[0m
+        [31m~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/transformer.py"[0m, line [35m1119[0m, in [35m_sa_block[0m
+    x = [31mself.self_attn[0m[1;31m([0m
+        [31m~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mx,[0m
+        [1;31m^^[0m
+    ...<5 lines>...
+        [1;31mneed_weights=False,[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m[0]
+    [1;31m^[0m
+  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/module.py"[0m, line [35m1751[0m, in [35m_wrapped_call_impl[0m
+    return [31mself._call_impl[0m[1;31m(*args, **kwargs)[0m
+           [31m~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^[0m
+  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/module.py"[0m, line [35m1762[0m, in [35m_call_impl[0m
+    return forward_call(*args, **kwargs)
+  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/activation.py"[0m, line [35m1313[0m, in [35mforward[0m
+    return [31mtorch._native_multi_head_attention[0m[1;31m([0m
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mquery,[0m
+        [1;31m^^^^^^[0m
+    ...<11 lines>...
+        [1;31mmask_type,[0m
+        [1;31m^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+[1;35mRuntimeError[0m: [35mpassed-in embed_dim 128 didn't match last dim of query 64[0m
+[?2004hroot@modal:/app# cat > /app/solve.py << 'PYEOF'
+[?2004l[?2004h> import torch
+[?2004l[?2004h> import torch.nn as nn
+[?2004l[?2004h> import torch.optim as optim
+[?2004l[?2004h> from torch.nn.functional import mse_loss
+[?2004l[?2004h> 
+[?2004l[?2004h> class PositionalEncoding(nn.Module):
+[?2004l[?2004h>     def __init__(self, d_model, max_len=5000):
+[?2004l[?2004h>         super().__init__()
+[?2004l[?2004h>         pe = torch.zeros(1, max_len, d_model)
+[?2004l[?2004h>         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+[?2004l[?2004h>         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-torch.log(torch.tensor(10000.0)) / d_model))
+[?2004l[?2004h>         pe[0, :, 0::2] = torch.sin(position * div_term)
+[?2004l[?2004h>         pe[0, :, 1::2] = torch.cos(position * div_term)
+[?2004l[?2004h>         self.register_buffer('pe', pe)
+[?2004l[?2004h> 
+[?2004l[?2004h>     def forward(self, x):
+[?2004l[?2004h>         return x + self.pe[:, :x.size(1), :]
+[?2004l[?2004h> 
+[?2004l[?2004h> class RecoveredModel(nn.Module):
+[?2004l[?2004h>     def __init__(self):
+[?2004l[?2004h>         super().__init__()
+[?2004l[?2004h>         self.embedding = nn.Linear(64, 128)
+[?2004l[?2004h>         self.pos_encoder = PositionalEncoding(128, max_len=5000)
+[?2004l[?2004h>         
+[?2004l[?2004h>         encoder_layer = nn.TransformerEncoderLayer(
+[?2004l[?2004h>             d_model=128, nhead=4, dim_feedforward=256,
+[?2004l[?2004h>             batch_first=True, activation='gelu'
+[?2004l[?2004h>         )
+[?2004l[?2004h>         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=3)
+[?2004l[?2004h>         
+[?2004l[?2004h>         decoder_layer = nn.TransformerDecoderLayer(
+[?2004l[?2004h>             d_model=128, nhead=4, dim_feedforward=256,
+[?2004l[?2004h>             batch_first=True, activation='gelu'
+[?2004l[?2004h>         )
+[?2004l[?2004h>         self.transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=1)
+[?2004l[?2004h>         
+[?2004l[?2004h>         self.output_layer = nn.Linear(128, 64)
+[?2004l[?2004h>     
+[?2004l[?2004h>     def forward(self, src, tgt):
+[?2004l[?2004h>         x = self.embedding(src)
+[?2004l[?2004h>         x = self.pos_encoder(x)
+[?2004l[?2004h>         encoded = self.transformer_encoder(x)
+[?2004l[?2004h>         # Embed and encode target as well
+[?2004l[?2004h>         tgt_emb = self.embedding(tgt)
+[?2004l[?2004h>         tgt_emb = self.pos_encoder(tgt_emb)
+[?2004l[?2004h>         x = self.transformer_decoder(tgt_emb, encoded)
+[?2004l[?2004h>         out = self.output_layer(x)
+[?2004l[?2004h>         return out
+[?2004l[?2004h> 
+[?2004l[?2004h> # Load weights and dataset
+[?2004l[?2004h> weights = torch.load('/app/weights.pt', map_location='cpu')
+[?2004l[?2004h> data = torch.load('/app/dataset.pt', map_location='cpu')
+[?2004l[?2004h> src = data['src_sequences']
+[?2004l[?2004h> tgt = data['tgt_sequences']
+[?2004l[?2004h> 
+[?2004l[?2004h> print(f"src shape: {src.shape}")
+[?2004l[?2004h> print(f"tgt shape: {tgt.shape}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Create model and load weights
+[?2004l[?2004h> model = RecoveredModel()
+[?2004l[?2004h> model.load_state_dict(weights)
+[?2004l[?2004h> model.eval()
+[?2004l[?2004h> 
+[?2004l[?2004h> # Compute original MSE
+[?2004l[?2004h> with torch.no_grad():
+[?2004l[?2004h>     original_output = model(src, tgt)
+[?2004l[?2004h>     original_mse = mse_loss(original_output, tgt)
+[?2004l[?2004h> print(f"Original MSE: {original_mse.item()}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Now tune only output_layer
+[?2004l[?2004h> model.train()
+[?2004l[?2004h> for name, param in model.named_parameters():
+[?2004l[?2004h>     if not name.startswith('output_layer'):
+[?2004l[?2004h>         param.requires_grad = False
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         param.requires_grad = True
+[?2004l[?2004h> 
+[?2004l[?2004h> optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.01)
+[?2004l[?2004h> 
+[?2004l[?2004h> for epoch in range(500):
+[?2004l[?2004h>     optimizer.zero_grad()
+[?2004l[?2004h>     output = model(src, tgt)
+[?2004l[?2004h>     loss = mse_loss(output, tgt)
+[?2004l[?2004h>     loss.backward()
+[?2004l[?2004h>     optimizer.step()
+[?2004l[?2004h>     if epoch % 50 == 0:
+[?2004l[?2004h>         print(f"Epoch {epoch}, Loss: {loss.item()}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Compute final MSE
+[?2004l[?2004h> model.eval()
+[?2004l[?2004h> with torch.no_grad():
+[?2004l[?2004h>     final_output = model(src, tgt)
+[?2004l[?2004h>     final_mse = mse_loss(final_output, tgt)
+[?2004l[?2004h> print(f"Final MSE: {final_mse.item()}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Verify only output_layer changed
+[?2004l[?2004h> state_dict = model.state_dict()
+[?2004l[?2004h> for k in weights:
+[?2004l[?2004h>     if k != 'output_layer.weight' and k != 'output_layer.bias':
+[?2004l[?2004h>         assert torch.allclose(weights[k], state_dict[k]), f"Mismatch in {k}"
+[?2004l[?2004h> print("Verification passed: only output_layer changed")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Save as TorchScript
+[?2004l[?2004h> traced = torch.jit.script(model)
+[?2004l[?2004h> traced.save('/app/model.pt')
+[?2004l[?2004h> print("Model saved to /app/model.pt")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Verify loading
+[?2004l[?2004h> loaded = torch.jit.load('/app/model.pt')
+[?2004l[?2004h> with torch.no_grad():
+[?2004l[?2004h>     loaded_output = loaded(src, tgt)
+[?2004l[?2004h>     loaded_mse = mse_loss(loaded_output, tgt)
+[?2004l[?2004h> print(f"Loaded model MSE: {loaded_mse.item()}")
+[?2004l[?2004h> PYEOF
+[?2004l[?2004hroot@modal:/app# python3 /app/solve.py
+[?2004l/usr/local/lib/python3.13/site-packages/torch/_subclasses/functional_tensor.py:276: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:81.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+src shape: torch.Size([20, 20, 64])
+tgt shape: torch.Size([20, 20, 64])
+Original MSE: 1.5522271394729614
+Epoch 0, Loss: 1.5532652139663696
+Epoch 50, Loss: 0.12451329082250595
+Epoch 100, Loss: 0.09556753933429718
+Epoch 150, Loss: 0.08856064081192017
+Epoch 200, Loss: 0.08935555815696716
+Epoch 250, Loss: 0.08892875909805298
+Epoch 300, Loss: 0.08878114074468613
+Epoch 350, Loss: 0.08960229903459549
+Epoch 400, Loss: 0.08685458451509476
+Epoch 450, Loss: 0.08873935043811798
+Final MSE: 0.03271644935011864
+Verification passed: only output_layer changed
+Model saved to /app/model.pt
+Loaded model MSE: 0.03271644935011864
+[?2004hroot@modal:/app# python3 -c "
+[?2004l[?2004h> import torch
+[?2004l[?2004h> from torch.nn.functional import mse_loss
+[?2004l[?2004h> 
+[?2004l[?2004h> # Verify weights.pt is unchanged
+[?2004l[?2004h> weights = torch.load('/app/weights.pt', map_location='cpu')
+[?2004l[?2004h> print('weights.pt keys:', len(weights))
+[?2004l[?2004h> 
+[?2004l[?2004h> # Load saved model
+[?2004l[?2004h> loaded = torch.jit.load('/app/model.pt')
+[?2004l[?2004h> state = loaded.state_dict()
+[?2004l[?2004h> print('model.pt keys:', len(state))
+[?2004l[?2004h> 
+[?2004l[?2004h> # Check only output_layer differs
+[?2004l[?2004h> for k in weights:
+[?2004l[?2004h>     if k in state:
+[?2004l[?2004h>         if not torch.allclose(weights[k], state[k]):
+[?2004l[?2004h>             print(f'Changed: {k}')
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         print(f'Missing in model.pt: {k}')
+[?2004l[?2004h> 
+[?2004l[?2004h> # Verify MSE improvement
+[?2004l[?2004h> data = torch.load('/app/dataset.pt', map_location='cpu')
+[?2004l[?2004h> src = data['src_sequences']
+[?2004l[?2004h> tgt = data['tgt_sequences']
+[?2004l[?2004h> with torch.no_grad():
+[?2004l[?2004h>     out = loaded(src, tgt)
+[?2004l[?2004h>     mse = mse_loss(out, tgt)
+[?2004l[?2004h> print(f'Final MSE: {mse.item()}')
+[?2004l[?2004h> print('All checks passed!')
+[?2004l[?2004h> "
+[?2004l/usr/local/lib/python3.13/site-packages/torch/_subclasses/functional_tensor.py:276: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:81.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+weights.pt keys: 59
+model.pt keys: 59
+Changed: output_layer.weight
+Changed: output_layer.bias
+Final MSE: 0.03271644935011864
+All checks passed!
+[?2004hroot@modal:/app# 

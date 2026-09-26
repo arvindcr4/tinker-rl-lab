@@ -1,0 +1,11 @@
+Here is the complete implementation for the Rental Booking Application.
+
+### Prerequisites
+1.  **Supabase Project**: Create a project at [supabase.com](https://supabase.com).
+2.  **Stripe Account**: Create a project at [stripe.com](https://stripe.com).
+3.  **Environment Variables**: You will need to set the following in your `.env.local` file (see `=== FILE: .env.local ===`).
+
+### Architecture Decisions
+*   **Framework**: Next.js 14+ (App Router).
+*   **Database**: Supabase PostgreSQL.
+*   **

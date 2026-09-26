@@ -1,0 +1,57 @@
+{
+ "lane": "E3",
+ "original_benchmark": "SDAB (private; externally blocked)",
+ "benchmark_run": "Terminal-Bench v2.0, same 8 seeded tasks as E3/result.json (Tinker-base arm)",
+ "scope": "substitute",
+ "substitute_gap": "Generic terminal tasks, not SDAB DevOps categories or stateful grading.",
+ "thinking": false,
+ "temperature": 0,
+ "max_tokens": 4096,
+ "metric": "task success rate (native TB2 verifier reward==1), pass@1",
+ "grader": "native",
+ "commands": [
+  "E3/code/start_paired_shim.sh E3 <arm> <port> 3000000",
+  "E3/code/run_e3_<arm>.sh",
+  "python3 E3/code/paired_finalize.py E3 '<overrides>'"
+ ],
+ "caveats": [
+  "Paired vLLM arm; never difference against the Tinker-base arm.",
+  "Identical to the Tinker run (tasks, terminus-2, max_turns=25, 32k ctx, T=0) except endpoint/model id and Harbor -n 3 instead of 4 (endpoint concurrency cap).",
+  "Shim ledger includes 1 warm-up call (17x23) per arm.",
+  "n=8: very low power."
+ ],
+ "actor": "qwen36-base-bf16 @ https://arvindcr4--pavlov-trained-actor-e1e14-basectl-serve.modal.run (vLLM 0.28.0, BF16, one H200)",
+ "n_selected": 8,
+ "n_scored": 8,
+ "n_errors": 0,
+ "item_ids": [
+  "build-cython-ext",
+  "build-pmars",
+  "cobol-modernization",
+  "count-dataset-tokens",
+  "hf-model-inference",
+  "largest-eigenval",
+  "pytorch-model-recovery",
+  "query-optimize"
+ ],
+ "value": 0.375,
+ "numerator": 3,
+ "denominator": 8,
+ "wilson95": [
+  0.1368,
+  0.6943
+ ],
+ "compute_route": "Modal vLLM H200; prompts via local shim E3/code/tinker_shim.py SHIM_BACKEND=vllm (/v1/completions with identical templated token ids); terminus-2 on host; task containers on Modal sandboxes",
+ "cost": {
+  "tinker_tokens": 0,
+  "vllm_tokens": 1689447,
+  "vllm_calls": 147,
+  "colab_units": 0.0,
+  "modal_usd": null,
+  "modal_usd_note": "shared GPU bill reconciled by lead"
+ },
+ "wall_time_s": 1367,
+ "started_utc": "2026-09-26T15:04:51Z",
+ "finished_utc": "2026-09-26T15:27:38Z",
+ "raw_dir": "E3/vllm_base/raw/"
+}

@@ -1,0 +1,216 @@
+{
+ "lane": "E13",
+ "benchmark_run": "BALROG (balrog-ai/BALROG@b7afe79) small subset: BabyAI, TextWorld, BabaIsAI, MiniHack, Crafter(capped); NetHack skipped",
+ "engine": "Modal vLLM H200 (both arms)",
+ "trained": {
+  "endpoint": "https://arvindcr4--pavlov-trained-actor-e1e14-serve.modal.run",
+  "model": "pavlov-public-portfolio-bf16"
+ },
+ "base": {
+  "endpoint": "https://arvindcr4--pavlov-trained-actor-e1e14-basectl-serve.modal.run",
+  "model": "qwen36-base-bf16"
+ },
+ "n_items": 26,
+ "item_type": "continuous (native BALROG progression in [0,1])",
+ "metric": "BALROG native progression %: mean over envs of per-env mean episode progression (x100), 5 envs equal-weighted",
+ "trained_value": 25.51,
+ "base_value": 23.63,
+ "difference": 1.875,
+ "difference_bootstrap95": [
+  -2.727,
+  7.091
+ ],
+ "per_env": {
+  "babyai": {
+   "trained": 70.0,
+   "base": 60.0,
+   "n": 10
+  },
+  "textworld": {
+   "trained": 9.8,
+   "base": 5.88,
+   "n": 6
+  },
+  "babaisai": {
+   "trained": 0.0,
+   "base": 0.0,
+   "n": 4
+  },
+  "minihack": {
+   "trained": 25.0,
+   "base": 25.0,
+   "n": 4
+  },
+  "crafter": {
+   "trained": 22.73,
+   "base": 27.27,
+   "n": 2
+  }
+ },
+ "mean_item_difference": 0.044,
+ "mean_item_difference_bootstrap95": [
+  -0.01,
+  0.128
+ ],
+ "bootstrap": {
+  "resamples": 10000,
+  "seed": 20260926,
+  "scheme": "episodes resampled with replacement within each env (paired)"
+ },
+ "secondary_full_success_mcnemar": {
+  "trained_only_b": 1,
+  "base_only_c": 0,
+  "exact_p": 1.0
+ },
+ "n_items_identical_progression": 22,
+ "cost": {
+  "trained": {
+   "wall_time_s": 1024,
+   "vllm_tokens": 4126637,
+   "calls": 1871
+  },
+  "base": {
+   "wall_time_s": 1077,
+   "vllm_tokens": 4893356,
+   "calls": 2150
+  }
+ },
+ "items": [
+  {
+   "id": "babyai/BabyAI-MixedTrainLocal-v0/goto/run_00",
+   "trained": 1.0,
+   "base": 1.0
+  },
+  {
+   "id": "babyai/BabyAI-MixedTrainLocal-v0/goto/run_01",
+   "trained": 1.0,
+   "base": 1.0
+  },
+  {
+   "id": "babyai/BabyAI-MixedTrainLocal-v0/pickup/run_00",
+   "trained": 1.0,
+   "base": 1.0
+  },
+  {
+   "id": "babyai/BabyAI-MixedTrainLocal-v0/pickup/run_01",
+   "trained": 1.0,
+   "base": 1.0
+  },
+  {
+   "id": "babyai/BabyAI-MixedTrainLocal-v0/open/run_00",
+   "trained": 1.0,
+   "base": 1.0
+  },
+  {
+   "id": "babyai/BabyAI-MixedTrainLocal-v0/open/run_01",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "babyai/BabyAI-MixedTrainLocal-v0/putnext/run_00",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "babyai/BabyAI-MixedTrainLocal-v0/putnext/run_01",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "babyai/BabyAI-MixedTrainLocal-v0/pick_up_seq_go_to/run_00",
+   "trained": 1.0,
+   "base": 1.0
+  },
+  {
+   "id": "babyai/BabyAI-MixedTrainLocal-v0/pick_up_seq_go_to/run_01",
+   "trained": 1.0,
+   "base": 0.0
+  },
+  {
+   "id": "textworld/treasure_hunter/run_00",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "textworld/treasure_hunter/run_01",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "textworld/the_cooking_game/run_00",
+   "trained": 0.35294117647058826,
+   "base": 0.35294117647058826
+  },
+  {
+   "id": "textworld/the_cooking_game/run_01",
+   "trained": 0.23529411764705882,
+   "base": 0.0
+  },
+  {
+   "id": "textworld/coin_collector/run_00",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "textworld/coin_collector/run_01",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "babaisai/env/goto_win-distr_obj_rule/run_00",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "babaisai/env/goto_win/run_00",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "babaisai/env/goto_win-distr_rule/run_00",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "babaisai/env/two_room-make_you/run_00",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "minihack/MiniHack-Boxoban-Medium-v0/run_00",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "minihack/MiniHack-MazeWalk-15x15-v0/run_00",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "minihack/MiniHack-Corridor-R3-v0/run_00",
+   "trained": 1.0,
+   "base": 1.0
+  },
+  {
+   "id": "minihack/MiniHack-Quest-Easy-v0/run_00",
+   "trained": 0.0,
+   "base": 0.0
+  },
+  {
+   "id": "crafter/default/run_00",
+   "trained": 0.18181818181818182,
+   "base": 0.3181818181818182
+  },
+  {
+   "id": "crafter/default/run_01",
+   "trained": 0.2727272727272727,
+   "base": 0.22727272727272727
+  }
+ ],
+ "caveats": [
+  "Same engine for both arms; never differenced against the Tinker-base arm (E13/result.json).",
+  "Small n (26 episodes, 2-10 per env); the CI is the claim, nothing stronger.",
+  "Arms ran concurrently on separate H200 containers, each shim capped at 4 in-flight requests."
+ ],
+ "built_utc": "2026-09-26T15:11:53Z"
+}

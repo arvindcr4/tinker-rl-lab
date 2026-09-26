@@ -1,0 +1,444 @@
+[?2004hroot@modal:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@modal:/app# clear
+[?2004l[H[J[3J[?2004hroot@modal:/app# apt-cache search pmars
+[?2004lpmars - Portable MARS, Core War simulator
+[?2004hroot@modal:/app# apt-cache showsrc pmars 2>/dev/null || apt-cache showsrc pMARS 2>/dev/null || apt-cache showsrc pmars-0.9 2>/dev/null
+[?2004l[?2004hroot@modal:/app# cat /etc/apt/sources.list 2>/dev/null; ls /etc/apt/sources.list.d/ 2>/dev/null
+[?2004ldebian.sources
+[?2004hroot@modal:/app# apt-get update 2>&1 | tail -5
+[?2004lGet:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages.diff/Index [4995 B]
+Ign:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages.diff/Index
+Get:7 http://deb.debian.org/debian trixie-updates/main amd64 Packages [4412 B]
+Fetched 10.2 MB in 1s (11.5 MB/s)
+Reading package lists...
+[?2004hroot@modal:/app# cat /etc/apt/sources.list.d/debian.sources
+[?2004lTypes: deb
+# http://snapshot.debian.org/archive/debian/20250811T000000Z
+URIs: http://deb.debian.org/debian
+Suites: trixie trixie-updates
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+# http://snapshot.debian.org/archive/debian-security/20250811T000000Z
+URIs: http://deb.debian.org/debian-security
+Suites: trixie-security
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+[?2004hroot@modal:/app# sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/debian.sources
+[?2004l[?2004hroot@modal:/app# cat /etc/apt/sources.list.d/debian.sources
+[?2004lTypes: deb deb-src
+# http://snapshot.debian.org/archive/debian/20250811T000000Z
+URIs: http://deb.debian.org/debian
+Suites: trixie trixie-updates
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb deb-src
+# http://snapshot.debian.org/archive/debian-security/20250811T000000Z
+URIs: http://deb.debian.org/debian-security
+Suites: trixie-security
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+[?2004hroot@modal:/app# apt-get update 2>&1 | tail -5
+[?2004lGet:4 http://deb.debian.org/debian trixie/main Sources [10.5 MB]
+Get:5 http://deb.debian.org/debian trixie-updates/main Sources [1840 B]
+Get:6 http://deb.debian.org/debian-security trixie-security/main Sources [230 kB]
+Fetched 10.8 MB in 1s (11.5 MB/s)
+Reading package lists...
+[?2004hroot@modal:/app# cd /app && apt-get source pmars 2>&1
+[?2004lReading package lists... 0%Reading package lists... 0%Reading package lists... 0%Reading package lists... 96%Reading package lists... 96%Reading package lists... 96%Reading package lists... 96%Reading package lists... 99%Reading package lists... 99%Reading package lists... Done
+NOTICE: 'pmars' packaging is maintained in the 'Git' version control system at:
+https://salsa.debian.org/games-team/pmars.git
+Please use:
+git clone https://salsa.debian.org/games-team/pmars.git
+to retrieve the latest (possibly unreleased) updates to the package.
+Need to get 142 kB of source archives.
+0% [Working]            Get:1 http://deb.debian.org/debian trixie/main pmars 0.9.4-1 (dsc) [1891 B]
+0% [1 pmars 0 B/1891 B 0%]                          8% [Waiting for headers]                        Get:2 http://deb.debian.org/debian trixie/main pmars 0.9.4-1 (tar) [136 kB]
+31% [2 pmars 42.1 kB/136 kB 31%]                                91% [Waiting for headers]                         Get:3 http://deb.debian.org/debian trixie/main pmars 0.9.4-1 (diff) [4100 B]
+                         100% [Working]              Fetched 142 kB in 0s (6491 kB/s)
+sh: 1: dpkg-source: not found
+W: Download is performed unsandboxed as root as file 'pmars_0.9.4-1.dsc' couldn't be accessed by user '_apt'. - pkgAcquire::Run (13: Permission denied)
+E: Unpack command 'dpkg-source --no-check -x pmars_0.9.4-1.dsc' failed.
+N: Check if the 'dpkg-dev' package is installed.
+[?2004hroot@modal:/app# apt-get install -y dpkg-dev 2>&1 | tail -5
+[?2004lls /app/
+Setting up gcc (4:14.2.0-1) ...
+Setting up g++ (4:14.2.0-1) ...
+update-alternatives: using /usr/bin/g++ to provide /usr/bin/c++ (c++) in auto mode
+Setting up build-essential (12.12) ...
+Processing triggers for libc-bin (2.41-12+deb13u4) ...
+[?2004hroot@modal:/app# ls -la /app/
+[?2004ltotal 143
+drwxr-xr-x 1 root root    100 Sep 26 15:10 .
+drwxr-xr-x 1 root root    220 Sep 26 15:11 ..
+-rw-r--r-- 1 root root   1094 Sep 13  2025 flashpaper.red
+-rw-r--r-- 1 root root   4100 Mar 21  2024 pmars_0.9.4-1.debian.tar.xz
+-rw-r--r-- 1 root root   1891 Mar 21  2024 pmars_0.9.4-1.dsc
+-rw-r--r-- 1 root root 136288 Mar 21  2024 pmars_0.9.4.orig.tar.xz
+-rw-r--r-- 1 root root    784 Sep 13  2025 rave.red
+[?2004hroot@modal:/app# tar xf pmars_0.9.4.orig.tar.xz -C /app/
+[?2004l[?2004hroot@modal:/app# ls -la /app/
+[?2004ltotal 143
+drwxr-xr-x 1 root root    120 Sep 26 15:11 .
+drwxr-xr-x 1 root root    220 Sep 26 15:11 ..
+-rw-r--r-- 1 root root   1094 Sep 13  2025 flashpaper.red
+drwxr-xr-x 1 root root    220 Jul  8  2022 pmars-0.9.4
+-rw-r--r-- 1 root root   4100 Mar 21  2024 pmars_0.9.4-1.debian.tar.xz
+-rw-r--r-- 1 root root   1891 Mar 21  2024 pmars_0.9.4-1.dsc
+-rw-r--r-- 1 root root 136288 Mar 21  2024 pmars_0.9.4.orig.tar.xz
+-rw-r--r-- 1 root root    784 Sep 13  2025 rave.red
+[?2004hroot@modal:/app# ls -la /app/pmars-0.9.4/
+[?2004ltotal 31
+drwxr-xr-x 1 root root   220 Jul  8  2022 .
+drwxr-xr-x 1 root root   120 Sep 26 15:11 ..
+-rw-r--r-- 1 root root   763 Jul  8  2022 AUTHORS
+-rw-r--r-- 1 root root  1919 Aug 18  2000 CONTRIB
+-rw-r--r-- 1 root root 17997 Aug 19  2000 COPYING
+-rw-r--r-- 1 root root  1245 Jul  8  2022 ChangeLog
+-rw-r--r-- 1 root root  8290 Aug 31  2000 README
+drwxr-xr-x 1 root root   360 Jul 17  2022 config
+drwxr-xr-x 1 root root   240 Aug 18  2022 doc
+drwxr-xr-x 1 root root   620 Jul  4  2022 src
+drwxr-xr-x 1 root root   160 Jul  7  2022 warriors
+[?2004hroot@modal:/app# cat /app/pmars-0.9.4/Makefile
+[?2004lcat: /app/pmars-0.9.4/Makefile: No such file or directory
+[?2004hroot@modal:/app# ls -la /app/pmars-0.9.4/config/
+[?2004ltotal 14
+drwxr-xr-x 1 root root  360 Jul 17  2022 .
+drwxr-xr-x 1 root root  220 Jul  8  2022 ..
+-rw-rw-r-- 1 root root  233 Sep 22  2008 88.opt
+-rw-rw-r-- 1 root root  195 Sep 22  2008 94.opt
+-rw-rw-r-- 1 root root  192 Sep 22  2008 94b.opt
+-rw-rw-r-- 1 root root  231 Sep 22  2008 94m.opt
+-rw-rw-r-- 1 root root  243 Sep 22  2008 94nop.opt
+-rw-rw-r-- 1 root root  189 Sep 22  2008 94t.opt
+-rw-rw-r-- 1 root root  197 Sep 22  2008 94x.opt
+-rw-rw-r-- 1 root root  212 Sep 22  2008 94xm.opt
+-rw-rw-r-- 1 root root  250 Sep 22  2008 icws.opt
+-rw-rw-r-- 1 root root  195 Sep 22  2008 lp.opt
+-rw-rw-r-- 1 root root  235 Jun 17  2015 mp.opt
+-rw-r--r-- 1 root root  644 Aug 18  2000 mw.mac
+-rw-rw-r-- 1 root root  184 Sep 22  2008 nano.opt
+-rw-r--r-- 1 root root 6089 Aug 18  2000 pmars.mac
+-rw-rw-r-- 1 root root  184 Sep 22  2008 tiny.opt
+-rw-rw-r-- 1 root root  191 Sep 22  2008 tinylp.opt
+[?2004hroot@modal:/app# ls -la /app/pmars-0.9.4/src/
+[?2004ltotal 417
+drwxr-xr-x 1 root root   620 Jul  4  2022 .
+drwxr-xr-x 1 root root   220 Jul  8  2022 ..
+-rw-r--r-- 1 root root  2011 Jun 17  2022 Makefile
+-rw-r--r-- 1 root root  1405 Dec 24  2000 Makefile.djg
+-rw-r--r-- 1 root root  1453 Dec 24  2000 Makefile.wat
+-rw-r--r-- 1 root root  2583 Aug 20  2000 alldisp.c
+-rw-r--r-- 1 root root 60868 Jun 27  2022 asm.c
+-rw-r--r-- 1 root root  1875 Aug 20  2000 asm.h
+-rw-r--r-- 1 root root 74981 Jun 17  2022 cdb.c
+-rw-r--r-- 1 root root 19782 Jun 17  2022 clparse.c
+-rw-r--r-- 1 root root 11773 Aug 20  2000 config.h
+-rw-r--r-- 1 root root 15035 Dec 24  2000 curdisp.c
+-rw-r--r-- 1 root root  3633 Jun 17  2022 disasm.c
+-rw-r--r-- 1 root root 11494 Jun 18  2022 eval.c
+-rw-r--r-- 1 root root  3085 Jun 17  2022 global.c
+-rw-r--r-- 1 root root 14307 Jul  4  2022 global.h
+-rw-r--r-- 1 root root 11378 Aug 20  2000 grxdisp.c
+-rw-r--r-- 1 root root 12181 Aug 20  2000 gtdisp.c
+-rw-r--r-- 1 root root 26486 Aug 20  2000 lnxdisp.c
+-rw-r--r-- 1 root root  4211 Aug 20  2000 lnxdisp.h
+-rw-r--r-- 1 root root 11168 Jun 17  2022 pmars.c
+-rw-r--r-- 1 root root  3475 Aug 20  2000 pmarsicn.h
+-rw-r--r-- 1 root root  5905 Jun 17  2022 pos.c
+-rw-r--r-- 1 root root 34057 Jun 17  2022 sim.c
+-rw-r--r-- 1 root root  2976 Aug 20  2000 sim.h
+-rw-r--r-- 1 root root 20091 Jun 17  2022 str_eng.c
+-rw-r--r-- 1 root root  5346 Aug 20  2000 token.c
+-rw-r--r-- 1 root root  6036 Aug 20  2000 uidisp.c
+-rw-r--r-- 1 root root  7672 Aug 20  2000 xgraphio.c
+-rw-r--r-- 1 root root 42199 Sep 28  2000 xwindisp.c
+-rw-r--r-- 1 root root  2936 Aug 20  2000 xwindisp.h
+[?2004hroot@modal:/app# head -100 /app/pmars-0.9.4/README
+[?2004lREADME for pMARS version 0.9.0 - portable corewar system with ICWS'94 extensions
+
+____________________
+What is Core War?
+
+    Core War is a game in which two or more virus-like programs fight against
+    each other in a simulated memory space or core. Core War programs are
+    written in an assembly language called Redcode which is interpreted by a
+    Core War simulator or MARS (Memory Array Redcode Simulator). The object of
+    the game is to prevent the other program(s) from executing. For more
+    information about Core War check out the usenet newsgroup rec.games.corewar
+    and its FAQ list ftp://rtfm.mit.edu/pub/usenet/games/corewar-faq
+    or go to http://www.koth.org/.
+
+____________________
+pMARS highlights
+
+    * portable, run it on your Mac at home or VAX at work
+    * free and comes with source
+    * core displays for DOS, Mac and UNIX
+    * implements a new redcode dialect, ICWS'94, while remaining compatible
+      with ICWS'88
+    * powerful redcode extensions: multi-line EQUates, FOR/ROF text repetition
+    * one of the fastest simulators written in a high level language
+    * full-featured, programmable debugger
+    * runs the automated tournament "KotH" at http://www.koth.org and
+      http://www.ecst.csuchico.edu/~pizza/koth/ and the annual ICWS tournaments
+
+____________________
+Documentation
+
+    pmars.6 is the nroff-source for UNIX man pages. You can install it in
+    /usr/man/man6 for use with the UNIX "man" command or format it with nroff
+    -man. pmars.doc contains man pages without control characters that have
+    been formatted for printing.
+
+    doc/primer.94 and doc/primer.cdb contain short introductions to the ICWS'94
+    draft and the cdb debugger respectively. redcode.ref is a quick reference to
+    the redcode syntax supported by pMARS. CONTRIB has guidelines for porting
+    pMARS to new platforms and contributing new display code.
+
+____________________
+Compiling the source
+
+    There are a number of C preprocessor symbols that control which version
+    of pMARS is compiled. To enable an option, include -DSYMBOLNAME in CFLAGS
+    of the makefile or uncomment the relevant section in config.h.
+
+    GRAPHX
+        This option enables a platform-specific graphical core display.
+
+    SERVER
+        Disables the debugger for a non-interactive tournament version. The
+        pMARS program that runs the KotH email tournaments is compiled with
+        SERVER enabled.
+
+    EXT94
+        Enables the experimental opcodes SEQ, SNE and NOP, as well as the
+        A-field relative addressing modes *, {, and }. This option should
+        usually be enabled. EXT94 also enables the P-space extensions LDP,
+        STP and PIN.
+
+    SMALLMEM
+        makes all addresses 16-bit as opposed to the usual 32-bit wide. This
+        limits core size to 65535, but also drastically reduces the memory
+        footprint of the program. We found that SMALLMEM reduces the
+        simulation speed of pMARS on most CPUs, with the exception of those
+        with a very small primary cache.
+
+    There are other compile directives described in config.h, in particular
+    some that fine-tune the UNIX curses display.
+
+    pMARS has been tested with various ANSI and non-ANSI C compilers. If
+    you can't get it to run or you had to change the source extensively,
+    contact the authors with a full description of the problems and
+    diffs to the source if applicable.
+
+____________________
+Platforms
+
+    UNIX
+        A standard UNIX makefile is provided. If you specify the GRAPHX
+        directive, a character-based display using the curses library is
+        built.  On some systems, it may be necessary to remove -ltermcap from
+        the LIB variable in the makefile.
+
+    UNIX/X11
+        If you specify the XWINGRAPHX directive, the X-Windows display
+        version of pMARS is compiled. You also need to change the link
+        library by uncommenting the "LIB = -lX11" line in makefile. X11
+        pMARS has a few new command line options that are described in
+        pmars.doc.
+
+    LINUX
+        The Linux/SVGA version of pMARS has been derived from the DOS
+        graphical version and therefore should behave very much like that
+        one.
+
+        Some notes for compiling the Linux/SVGA version:
+        * You will need the Linux SVGA library (libvga) version 1.12 or above
+[?2004hroot@modal:/app# cat /app/pmars-0.9.4/src/Makefile
+[?2004l# generic UNIX makefile
+CC = gcc			# req. for linux
+#CC = cc				# if you don't have gcc
+# Configuration options:
+#
+# No.   Name            Incompatible with   Description
+# (1)   -DSERVER        2                   disables cdb debugger (koth server 
+#                                           version)
+# (2)   -DGRAPHX        1                   enables platform specific core 
+#                                           graphics
+# (3)   -DKEYPRESS                          only for curses display on SysV:
+#                                           enter cdb upon keypress (use if
+#                                           Ctrl-C doesn't work)
+# (4)   -DEXT94                             ICWS'94 + SEQ,SNE,NOP,*,{,}
+# (5)   -DSMALLMEM                          16-bit addresses, less memory
+# (6)   -DXWINGRAPHX    1                   X-Windows graphics (UNIX)
+# (7)   -DPERMUTATE                         enables -P switch
+# (9)   -DRWLIMIT                           enables read/write limits
+
+CFLAGS = -O -DEXT94 -DXWINGRAPHX -DPERMUTATE -DRWLIMIT 
+LFLAGS = -x
+# LIB = -lcurses -ltermlib		# enable this one for curses display
+# LIB = -lvgagl -lvga			# enable this one for Linux/SVGA
+LIB = -L/usr/X11R6/lib -lX11		# enable this one for X11
+
+.SUFFIXES: .o .c .c~ .man .doc .6
+MAINFILE = pmars
+
+HEADER = global.h config.h asm.h sim.h 
+OBJ1 = pmars.o asm.o eval.o disasm.o cdb.o sim.o pos.o
+OBJ2 = clparse.o global.o token.o 
+OBJ3 = str_eng.o
+
+all: flags $(MAINFILE)
+
+flags:
+	@echo Making $(MAINFILE) with compiler flags $(CFLAGS)
+
+$(MAINFILE): $(OBJ1) $(OBJ2) $(OBJ3)
+	@echo Linking $(MAINFILE)
+	@$(CC) -o $(MAINFILE) $(OBJ1) $(OBJ2) $(OBJ3) $(LIB)
+	@strip $(MAINFILE)
+	@echo done
+
+token.o asm.o disasm.o: asm.h
+
+sim.o cdb.o pos.o disasm.o: sim.h
+
+sim.o: curdisp.c uidisp.c lnxdisp.c xwindisp.c
+
+xwindisp.c: xwindisp.h pmarsicn.h
+
+lnxdisp.c: lnxdisp.h
+
+$(OBJ1) $(OBJ2) $(OBJ3): Makefile config.h global.h
+
+.c.o:
+	@echo Compiling $*.o 
+	@$(CC) $(CFLAGS) -c $*.c
+
+
+clean:
+	rm -f $(OBJ1) $(OBJ2) $(OBJ3) core
+
+[?2004hroot@modal:/app# cd /app/pmars-0.9.4/src
+[?2004l[?2004hroot@modal:/app/pmars-0.9.4/src# cp Makefile Makefile.orig
+[?2004l[?2004hroot@modal:/app/pmars-0.9.4/src# sed -i 's/CFLAGS = -O -DEXT94 -DXWINGRAPHX -DPERMUTATE -DRWLIMIT/CFLAGS = -O -DEXT94 -DPERMUTATE -DRWLIMIT/' Makefile
+[?2004l[?2004hroot@modal:/app/pmars-0.9.4/src# sed -i 's|LIB = -L/usr/X11R6/lib -lX11.*|LIB =|' Makefile
+[?2004l[?2004hroot@modal:/app/pmars-0.9.4/src# sed -i 's/sim.o: curdisp.c uidisp.c lnxdisp.c xwindisp.c/sim.o: curdisp.c uidisp.c lnxdisp.c/' Makefile
+[?2004l[?2004hroot@modal:/app/pmars-0.9.4/src# sed -i '/xwindisp.c: xwindisp.h pmarsicn.h/d' Makefile
+[?2004l[?2004hroot@modal:/app/pmars-0.9.4/src# sed -i '/lnxdisp.c: lnxdisp.h/d' Makefile
+[?2004l[?2004hroot@modal:/app/pmars-0.9.4/src# cat Makefile
+[?2004l# generic UNIX makefile
+CC = gcc			# req. for linux
+#CC = cc				# if you don't have gcc
+# Configuration options:
+#
+# No.   Name            Incompatible with   Description
+# (1)   -DSERVER        2                   disables cdb debugger (koth server 
+#                                           version)
+# (2)   -DGRAPHX        1                   enables platform specific core 
+#                                           graphics
+# (3)   -DKEYPRESS                          only for curses display on SysV:
+#                                           enter cdb upon keypress (use if
+#                                           Ctrl-C doesn't work)
+# (4)   -DEXT94                             ICWS'94 + SEQ,SNE,NOP,*,{,}
+# (5)   -DSMALLMEM                          16-bit addresses, less memory
+# (6)   -DXWINGRAPHX    1                   X-Windows graphics (UNIX)
+# (7)   -DPERMUTATE                         enables -P switch
+# (9)   -DRWLIMIT                           enables read/write limits
+
+CFLAGS = -O -DEXT94 -DPERMUTATE -DRWLIMIT 
+LFLAGS = -x
+# LIB = -lcurses -ltermlib		# enable this one for curses display
+# LIB = -lvgagl -lvga			# enable this one for Linux/SVGA
+LIB =
+
+.SUFFIXES: .o .c .c~ .man .doc .6
+MAINFILE = pmars
+
+HEADER = global.h config.h asm.h sim.h 
+OBJ1 = pmars.o asm.o eval.o disasm.o cdb.o sim.o pos.o
+OBJ2 = clparse.o global.o token.o 
+OBJ3 = str_eng.o
+
+all: flags $(MAINFILE)
+
+flags:
+	@echo Making $(MAINFILE) with compiler flags $(CFLAGS)
+
+$(MAINFILE): $(OBJ1) $(OBJ2) $(OBJ3)
+	@echo Linking $(MAINFILE)
+	@$(CC) -o $(MAINFILE) $(OBJ1) $(OBJ2) $(OBJ3) $(LIB)
+	@strip $(MAINFILE)
+	@echo done
+
+token.o asm.o disasm.o: asm.h
+
+sim.o cdb.o pos.o disasm.o: sim.h
+
+sim.o: curdisp.c uidisp.c lnxdisp.c
+
+
+
+$(OBJ1) $(OBJ2) $(OBJ3): Makefile config.h global.h
+
+.c.o:
+	@echo Compiling $*.o 
+	@$(CC) $(CFLAGS) -c $*.c
+
+
+clean:
+	rm -f $(OBJ1) $(OBJ2) $(OBJ3) core
+
+[?2004hroot@modal:/app/pmars-0.9.4/src# make clean && make 2>&1
+[?2004lrm -f pmars.o asm.o eval.o disasm.o cdb.o sim.o pos.o clparse.o global.o token.o  str_eng.o core
+Making pmars with compiler flags -O -DEXT94 -DPERMUTATE -DRWLIMIT
+Compiling pmars.o
+Compiling asm.o
+Compiling eval.o
+Compiling disasm.o
+In file included from [01m[Kdisasm.c:26[m[K:
+[01m[Ksim.h:92:12:[m[K [01;35m[Kwarning: [m[Kbuilt-in function ‘[01m[Kround[m[K’ declared as non-function [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Warning-Options.html#index-Wbuiltin-declaration-mismatch-Wbuiltin-declaration-mismatch]8;;[m[K]
+   92 | extern int [01;35m[Kround[m[K;
+      |            [01;35m[K^~~~~[m[K
+Compiling cdb.o
+In file included from [01m[Kcdb.c:30[m[K:
+[01m[Ksim.h:92:12:[m[K [01;35m[Kwarning: [m[Kbuilt-in function ‘[01m[Kround[m[K’ declared as non-function [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Warning-Options.html#index-Wbuiltin-declaration-mismatch-Wbuiltin-declaration-mismatch]8;;[m[K]
+   92 | extern int [01;35m[Kround[m[K;
+      |            [01;35m[K^~~~~[m[K
+Compiling sim.o
+In file included from [01m[Ksim.c:29[m[K:
+[01m[Ksim.h:92:12:[m[K [01;35m[Kwarning: [m[Kbuilt-in function ‘[01m[Kround[m[K’ declared as non-function [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Warning-Options.html#index-Wbuiltin-declaration-mismatch-Wbuiltin-declaration-mismatch]8;;[m[K]
+   92 | extern int [01;35m[Kround[m[K;
+      |            [01;35m[K^~~~~[m[K
+Compiling pos.o
+In file included from [01m[Kpos.c:24[m[K:
+[01m[Ksim.h:92:12:[m[K [01;35m[Kwarning: [m[Kbuilt-in function ‘[01m[Kround[m[K’ declared as non-function [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Warning-Options.html#index-Wbuiltin-declaration-mismatch-Wbuiltin-declaration-mismatch]8;;[m[K]
+   92 | extern int [01;35m[Kround[m[K;
+      |            [01;35m[K^~~~~[m[K
+[01m[Kpos.c:[m[K In function ‘[01m[Krc5_schedule[m[K’:
+[01m[Kpos.c:154:12:[m[K [01;35m[Kwarning: [m[Kconversion from ‘[01m[Klong unsigned int[m[K’ to ‘[01m[KU32_T[m[K’ {aka ‘[01m[Kunsigned int[m[K’} changes value from ‘[01m[K8393868501[m[K’ to ‘[01m[K4098901205[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Warning-Options.html#index-Wno-overflow-Woverflow]8;;[m[K]
+  154 | #define _P [01;35m[K0xb7e15163UL[m[K
+      |            [01;35m[K^~~~~~~~~~~~[m[K
+[01m[Kpos.c:219:14:[m[K [01;36m[Knote: [m[Kin expansion of macro ‘[01m[K_P[m[K’
+  219 |   for ( S[2]=[01;36m[K_P[m[K+2*_Q, i=3; i<NKEYS; i++) S[i] = S[i-1]+_Q;
+      |              [01;36m[K^~[m[K
+Compiling clparse.o
+Compiling global.o
+Compiling token.o
+Compiling str_eng.o
+Linking pmars
+done
+[?2004hroot@modal:/app/pmars-0.9.4/src# cp pmars /usr/local/bin/pmars
+[?2004l[?2004hroot@modal:/app/pmars-0.9.4/src# ldd /usr/local/bin/pmars
+[?2004l	linux-vdso.so.1 (0x00002b8b354f3000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00002b8b35563000)
+	/lib64/ld-linux-x86-64.so.2 (0x00005631b2ea7000)
+[?2004hroot@modal:/app/pmars-0.9.4/src# cd /app && pmars -b -r 50 -f flashpaper.red rave.red | tail -n 1
+[?2004lResults: 12 30 8
+[?2004hroot@modal:/app# 

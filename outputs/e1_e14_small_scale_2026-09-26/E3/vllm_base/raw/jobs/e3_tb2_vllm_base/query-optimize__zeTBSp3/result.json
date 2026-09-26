@@ -1,0 +1,140 @@
+{
+    "id": "687f2007-46bf-4cd2-997d-228fd2a0f9b2",
+    "task_name": "query-optimize",
+    "trial_name": "query-optimize__zeTBSp3",
+    "trial_uri": "file:///Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e1_e14_small_scale_2026-09-26/E3/vllm_base/raw/jobs/e3_tb2_vllm_base/query-optimize__zeTBSp3",
+    "task_id": {
+        "path": "code/tb2/terminal-bench/query-optimize"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "7f8deb25dce590b8d6b811bd0fc20ce5c815b109da44ec027a48065df6a81dec",
+    "config": {
+        "task": {
+            "path": "code/tb2/terminal-bench/query-optimize",
+            "git_url": null,
+            "git_commit_id": null,
+            "name": null,
+            "ref": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "query-optimize__zeTBSp3",
+        "trials_dir": "vllm_base/raw/jobs/e3_tb2_vllm_base",
+        "install_only": false,
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "openai/Qwen/Qwen3.6-35B-A3B",
+            "n_concurrent": null,
+            "concurrency_group": null,
+            "skills": [],
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "resume_trajectory": false,
+            "load_trajectory": null,
+            "extra_allowed_hosts": [],
+            "kwargs": {
+                "api_base": "http://127.0.0.1:8772/v1",
+                "temperature": 0,
+                "max_turns": 25,
+                "model_info": {
+                    "max_input_tokens": 32768,
+                    "max_output_tokens": 4096,
+                    "input_cost_per_token": 0,
+                    "output_cost_per_token": 0
+                }
+            },
+            "mcp_servers": []
+        },
+        "environment": {
+            "type": "modal",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "cpu_enforcement_policy": "auto",
+            "memory_enforcement_policy": "auto",
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "override_tpu": null,
+            "mounts": null,
+            "extra_docker_compose": [],
+            "kwargs": {},
+            "extra_allowed_hosts": []
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "extra_instruction_paths": [],
+        "job_id": "c2a09575-567a-4adb-a1f3-01483d58a4d6"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "Qwen/Qwen3.6-35B-A3B",
+            "provider": "openai"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 86899,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 3093,
+        "cost_usd": null,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 12,
+            "api_request_times_msec": [
+                2627.152919769287,
+                2706.2978744506836,
+                2464.462995529175,
+                3564.3389225006104,
+                7153.666734695435,
+                2319.3199634552,
+                1953.1450271606445,
+                1948.4119415283203,
+                5744.935989379883,
+                2504.6982765197754,
+                3394.491195678711,
+                2987.182855606079
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-09-26T15:16:40.732361Z",
+    "finished_at": "2026-09-26T15:19:04.761142Z",
+    "environment_setup": {
+        "started_at": "2026-09-26T15:16:40.733380Z",
+        "finished_at": "2026-09-26T15:16:43.348066Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-09-26T15:16:43.348098Z",
+        "finished_at": "2026-09-26T15:16:59.602991Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-09-26T15:16:59.603100Z",
+        "finished_at": "2026-09-26T15:18:36.331946Z"
+    },
+    "verifier": {
+        "started_at": "2026-09-26T15:18:42.365893Z",
+        "finished_at": "2026-09-26T15:19:03.901124Z"
+    },
+    "step_results": null
+}

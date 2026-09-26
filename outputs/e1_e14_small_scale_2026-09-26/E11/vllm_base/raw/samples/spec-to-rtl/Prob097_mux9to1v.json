@@ -1,0 +1,10 @@
+{
+ "dataset": "spec-to-rtl",
+ "problem_id": "Prob097_mux9to1v",
+ "response": "```verilog\nmodule TopModule(\n    input [15:0] a,\n    input [15:0] b,\n    input [15:0] c,\n    input [15:0] d,\n    input [15:0] e,\n    input [15:0] f,\n    input [15:0] g,\n    input [15:0] h,\n    input [15:0] i,\n    input [3:0] sel,\n    output [15:0] out\n);\n\n    always @(*) begin\n        case (sel)\n            4'd0: out = a;\n            4'd1: out = b;\n            4'd2: out = c;\n            4'd3: out = d;\n            4'd4: out = e;\n            4'd5: out = f;\n            4'd6: out = g;\n            4'd7: out = h;\n            4'd8: out = i;\n            default: out = 16'hFFFF;\n        endcase\n    end\n\nendmodule\n```",
+ "prompt_tokens": 218,
+ "completion_tokens": 265,
+ "stop_reason": "stop",
+ "error": null,
+ "module": "module TopModule(\n    input [15:0] a,\n    input [15:0] b,\n    input [15:0] c,\n    input [15:0] d,\n    input [15:0] e,\n    input [15:0] f,\n    input [15:0] g,\n    input [15:0] h,\n    input [15:0] i,\n    input [3:0] sel,\n    output [15:0] out\n);\n\n    always @(*) begin\n        case (sel)\n            4'd0: out = a;\n            4'd1: out = b;\n            4'd2: out = c;\n            4'd3: out = d;\n            4'd4: out = e;\n            4'd5: out = f;\n            4'd6: out = g;\n            4'd7: out = h;\n            4'd8: out = i;\n            default: out = 16'hFFFF;\n        endcase\n    end\n\nendmodule"
+}

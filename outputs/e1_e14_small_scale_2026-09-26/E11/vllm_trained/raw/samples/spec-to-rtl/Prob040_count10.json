@@ -1,0 +1,10 @@
+{
+ "dataset": "spec-to-rtl",
+ "problem_id": "Prob040_count10",
+ "response": "```verilog\nmodule TopModule (\n    input clk,\n    input reset,\n    output reg [3:0] q\n);\n\n    always @(posedge clk) begin\n        if (reset) begin\n            q <= 4'b0000;\n        end else if (q == 4'd9) begin\n            q <= 4'b0000;\n        end else begin\n            q <= q + 1'b1;\n        end\n    end\n\nendmodule\n```",
+ "prompt_tokens": 121,
+ "completion_tokens": 112,
+ "stop_reason": "stop",
+ "error": null,
+ "module": "module TopModule (\n    input clk,\n    input reset,\n    output reg [3:0] q\n);\n\n    always @(posedge clk) begin\n        if (reset) begin\n            q <= 4'b0000;\n        end else if (q == 4'd9) begin\n            q <= 4'b0000;\n        end else begin\n            q <= q + 1'b1;\n        end\n    end\n\nendmodule"
+}

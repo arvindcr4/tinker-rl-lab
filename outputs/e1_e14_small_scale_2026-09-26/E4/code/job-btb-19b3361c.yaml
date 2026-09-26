@@ -1,0 +1,25 @@
+job_name: e4-small-btb-19b3361c
+datasets:
+  - path: datasets/btb
+    task_names: [btb-19b3361c]
+agents:
+  - name: opencode
+    model_name: "openai/pavlov-qwen36-tinker"
+    env:
+      OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX: "16384"
+    kwargs:
+      prompt_template_path: prompts/system_prompt.j2
+      opencode_config:
+        experimental:
+          continue_loop_on_deny: true
+        provider:
+          openai:
+            models:
+              pavlov-qwen36-tinker:
+                limit:
+                  context: 65536
+                  output: 16384
+environment:
+  type: docker
+artifacts:
+  - /home/agent/workspace

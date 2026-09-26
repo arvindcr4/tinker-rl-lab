@@ -1,0 +1,51 @@
+{
+ "judge": "v2",
+ "per_task": [
+  {
+   "task": "1",
+   "app": "Financial Dashboard",
+   "n_items": 24,
+   "passed": 18,
+   "unparsed_as_fail": 0
+  },
+  {
+   "task": "2",
+   "app": "Hospital Dashboard",
+   "n_items": 33,
+   "passed": 29,
+   "unparsed_as_fail": 0
+  },
+  {
+   "task": "3",
+   "app": "Legal Assistant",
+   "n_items": 22,
+   "passed": 19,
+   "unparsed_as_fail": 0
+  },
+  {
+   "task": "4",
+   "app": "Pharmacy System",
+   "n_items": 25,
+   "passed": 25,
+   "unparsed_as_fail": 0
+  },
+  {
+   "task": "5",
+   "app": "Drawing Game",
+   "n_items": 23,
+   "passed": 16,
+   "unparsed_as_fail": 0
+  },
+  {
+   "task": "6",
+   "app": "Rental Booking",
+   "n_items": 24,
+   "passed": 15,
+   "unparsed_as_fail": 0
+  }
+ ],
+ "passed": 122,
+ "total": 151,
+ "pass_rate": 0.8079470198675497,
+ "tinker_tokens_all_e12_calls": 270566
+}

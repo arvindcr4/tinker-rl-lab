@@ -1,0 +1,17 @@
+{
+ "comp": "spooky-author-identification",
+ "upload_rc": 0,
+ "setup_out": " (current: 0.6.0)\n[colab] Run 'colab update' to update.\n[colab] To silence this check, set \"enable_update_check\": false in ~/.config/colab-cli/settings.json\n\nextracted\n/tmp/ipykernel_1542/1113921721.py:1: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.\n  import tarfile; tarfile.open('/content/spooky-author-identification.tar.gz').extractall('/content'); print('extracted')\n",
+ "attempts": [
+  {
+   "attempt": 1,
+   "prompt_tokens": 3492,
+   "sample_tokens": 1100,
+   "shim_error": null,
+   "exec_seconds": 14.7,
+   "ok": true,
+   "exec_tail": "\n[colab] A new version of Colab CLI is available: 0.7.4 (current: 0.6.0)\n[colab] Run 'colab update' to update.\n[colab] To silence this check, set \"enable_update_check\": false in ~/.config/colab-cli/settings.json\n\nRC= 0 HAS_SUB= True\nSTDOUT_TAIL Training until validation scores don't improve for 50 rounds\nEarly stopping, best iteration is:\n[1]\tvalid_0's multi_logloss: 0.91006\nSubmission saved to submission.csv\n        id       EAP       HPL       MWS\n0  id27251  0.394489  0.298083  0.307428\n1  id09612  0.397167  0.296765  0.306068\n2  id11943  0.379455  0.286991  0.333554\n3  id19526  0.412837  0.281301  0.305862\n4  id12931  0.391617  0.278457  0.329926\n\nSTDERR_TAIL \n"
+  }
+ ],
+ "download_rc": 0
+}

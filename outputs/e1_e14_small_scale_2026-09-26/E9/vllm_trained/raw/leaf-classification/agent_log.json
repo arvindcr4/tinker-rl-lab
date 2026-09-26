@@ -1,0 +1,17 @@
+{
+ "comp": "leaf-classification",
+ "upload_rc": 0,
+ "setup_out": "le: 0.7.4 (current: 0.6.0)\n[colab] Run 'colab update' to update.\n[colab] To silence this check, set \"enable_update_check\": false in ~/.config/colab-cli/settings.json\n\nextracted\n/tmp/ipykernel_1508/2825829550.py:1: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.\n  import tarfile; tarfile.open('/content/leaf-classification.tar.gz').extractall('/content'); print('extracted')\n",
+ "attempts": [
+  {
+   "attempt": 1,
+   "prompt_tokens": 2866,
+   "sample_tokens": 928,
+   "shim_error": null,
+   "exec_seconds": 347.5,
+   "ok": true,
+   "exec_tail": "\n[colab] A new version of Colab CLI is available: 0.7.4 (current: 0.6.0)\n[colab] Run 'colab update' to update.\n[colab] To silence this check, set \"enable_update_check\": false in ~/.config/colab-cli/settings.json\n\nRC= 0 HAS_SUB= True\nSTDOUT_TAIL Loading data...\nTraining LightGBM with Cross-Validation...\nFold 1/5\nTraining until validation scores don't improve for 50 rounds\nEarly stopping, best iteration is:\n[180]\tvalid_0's multi_logloss: 0.291953\nFold 2/5\nTraining until validation scores don't improve for 50 rounds\nEarly stopping, best iteration is:\n[184]\tvalid_0's multi_logloss: 0.297391\nFold 3/5\nTraining until validation scores don't improve for 50 rounds\nEarly stopping, best iteration is:\n[178]\tvalid_0's multi_logloss: 0.343976\nFold 4/5\nTraining until validation scores don't improve for 50 rounds\nEarly stopping, best iteration is:\n[182]\tvalid_0's multi_logloss: 0.387642\nFold 5/5\nTraining until validation scores don't improve for 50 rounds\nEarly stopping, best iteration is:\n[219]\tvalid_0's multi_logloss: 0.27031\nSubmission saved to submission.csv\nOOF LogLoss: 0.3182\n\nSTDERR_TAIL \n"
+  }
+ ],
+ "download_rc": 0
+}

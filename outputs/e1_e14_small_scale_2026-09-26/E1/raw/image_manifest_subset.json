@@ -1,0 +1,81 @@
+{
+  "architecture": "linux/amd64",
+  "count": 10,
+  "images": [
+    {
+      "digest": "sha256:69cf0b3e1037bd113959532dc98724563ccc7f455c83cd26338b2c445f56ab15",
+      "immutable_uri": "jefzda/sweap-images@sha256:69cf0b3e1037bd113959532dc98724563ccc7f455c83cd26338b2c445f56ab15",
+      "instance_id": "instance_internetarchive__openlibrary-111347e9583372e8ef91c82e0612ea437ae3a9c9-v2d9a6c849c60ed19fd0858ce9e40b7cc8e097e59",
+      "tag": "internetarchive.openlibrary-internetarchive__openlibrary-111347e9583372e8ef91c82e0612ea437ae3a9c9-v2d9a6c849c60ed19fd0858ce9e40b",
+      "tag_uri": "jefzda/sweap-images:internetarchive.openlibrary-internetarchive__openlibrary-111347e9583372e8ef91c82e0612ea437ae3a9c9-v2d9a6c849c60ed19fd0858ce9e40b"
+    },
+    {
+      "digest": "sha256:2a6383386331f0ff11070dfea96d3a077099447025b2d13c8121aeb82badf196",
+      "immutable_uri": "jefzda/sweap-images@sha256:2a6383386331f0ff11070dfea96d3a077099447025b2d13c8121aeb82badf196",
+      "instance_id": "instance_ansible__ansible-b748edea457a4576847a10275678127895d2f02f-v1055803c3a812189a1133297f7f5468579283f86",
+      "tag": "ansible.ansible-ansible__ansible-b748edea457a4576847a10275678127895d2f02f-v1055803c3a812189a1133297f7f5468579283f86",
+      "tag_uri": "jefzda/sweap-images:ansible.ansible-ansible__ansible-b748edea457a4576847a10275678127895d2f02f-v1055803c3a812189a1133297f7f5468579283f86"
+    },
+    {
+      "digest": "sha256:f62fcb2510dd9e2134cc73464ac4c08f6bc25d998cbcf7db5ce63397841662b9",
+      "immutable_uri": "jefzda/sweap-images@sha256:f62fcb2510dd9e2134cc73464ac4c08f6bc25d998cbcf7db5ce63397841662b9",
+      "instance_id": "instance_internetarchive__openlibrary-b4f7c185ae5f1824ac7f3a18e8adf6a4b468459c-v08d8e8889ec945ab821fb156c04c7d2e2810debb",
+      "tag": "internetarchive.openlibrary-internetarchive__openlibrary-b4f7c185ae5f1824ac7f3a18e8adf6a4b468459c-v08d8e8889ec945ab821fb156c04c7",
+      "tag_uri": "jefzda/sweap-images:internetarchive.openlibrary-internetarchive__openlibrary-b4f7c185ae5f1824ac7f3a18e8adf6a4b468459c-v08d8e8889ec945ab821fb156c04c7"
+    },
+    {
+      "digest": "sha256:904613e4b837d0f906bd96a66f3ef0eaeac46347b19dcc22f28413dd23fdf3c4",
+      "immutable_uri": "jefzda/sweap-images@sha256:904613e4b837d0f906bd96a66f3ef0eaeac46347b19dcc22f28413dd23fdf3c4",
+      "instance_id": "instance_future-architect__vuls-8d5ea98e50cf616847f4e5a2df300395d1f719e9",
+      "tag": "future-architect.vuls-future-architect__vuls-8d5ea98e50cf616847f4e5a2df300395d1f719e9",
+      "tag_uri": "jefzda/sweap-images:future-architect.vuls-future-architect__vuls-8d5ea98e50cf616847f4e5a2df300395d1f719e9"
+    },
+    {
+      "digest": "sha256:3cbb9b6e09055f04a332b0dc75590d9aa293c2e94944ba7ceda02f40666fc8c0",
+      "immutable_uri": "jefzda/sweap-images@sha256:3cbb9b6e09055f04a332b0dc75590d9aa293c2e94944ba7ceda02f40666fc8c0",
+      "instance_id": "instance_gravitational__teleport-769b4b5eec7286b7b14e179f2cc52e6b15d2d9f3-v626ec2a48416b10a88641359a169d99e935ff037",
+      "tag": "gravitational.teleport-gravitational__teleport-769b4b5eec7286b7b14e179f2cc52e6b15d2d9f3-v626ec2a48416b10a88641359a169d99e935ff03",
+      "tag_uri": "jefzda/sweap-images:gravitational.teleport-gravitational__teleport-769b4b5eec7286b7b14e179f2cc52e6b15d2d9f3-v626ec2a48416b10a88641359a169d99e935ff03"
+    },
+    {
+      "digest": "sha256:8d9e33d923d4543aa3314115fc527726d35b92184339bfa9c478a88f8d897c8c",
+      "immutable_uri": "jefzda/sweap-images@sha256:8d9e33d923d4543aa3314115fc527726d35b92184339bfa9c478a88f8d897c8c",
+      "instance_id": "instance_flipt-io__flipt-967855b429f749c28c112b8cb1b15bc79157f973",
+      "tag": "flipt-io.flipt-flipt-io__flipt-967855b429f749c28c112b8cb1b15bc79157f973",
+      "tag_uri": "jefzda/sweap-images:flipt-io.flipt-flipt-io__flipt-967855b429f749c28c112b8cb1b15bc79157f973"
+    },
+    {
+      "digest": "sha256:0c517e3171fe609948c8e20e9f2f24dc73734efe05f1daa0d2910979082c137e",
+      "immutable_uri": "jefzda/sweap-images@sha256:0c517e3171fe609948c8e20e9f2f24dc73734efe05f1daa0d2910979082c137e",
+      "instance_id": "instance_ansible__ansible-489156378c8e97374a75a544c7c9c2c0dd8146d1-v390e508d27db7a51eece36bb6d9698b63a5b638a",
+      "tag": "ansible.ansible-ansible__ansible-489156378c8e97374a75a544c7c9c2c0dd8146d1-v390e508d27db7a51eece36bb6d9698b63a5b638a",
+      "tag_uri": "jefzda/sweap-images:ansible.ansible-ansible__ansible-489156378c8e97374a75a544c7c9c2c0dd8146d1-v390e508d27db7a51eece36bb6d9698b63a5b638a"
+    },
+    {
+      "digest": "sha256:94d4022c4b8ed9ebeed241f52638776bec98e087f50ca52fb8edad66d29a22b2",
+      "immutable_uri": "jefzda/sweap-images@sha256:94d4022c4b8ed9ebeed241f52638776bec98e087f50ca52fb8edad66d29a22b2",
+      "instance_id": "instance_protonmail__webclients-815695401137dac2975400fc610149a16db8214b",
+      "tag": "protonmail.webclients-protonmail__webclients-815695401137dac2975400fc610149a16db8214b",
+      "tag_uri": "jefzda/sweap-images:protonmail.webclients-protonmail__webclients-815695401137dac2975400fc610149a16db8214b"
+    },
+    {
+      "digest": "sha256:67baaa03803f94d0817b9dc6fff07d69bd087c72bb516d64c53b626cb64c4d2d",
+      "immutable_uri": "jefzda/sweap-images@sha256:67baaa03803f94d0817b9dc6fff07d69bd087c72bb516d64c53b626cb64c4d2d",
+      "instance_id": "instance_protonmail__webclients-e9677f6c46d5ea7d277a4532a4bf90074f125f31",
+      "tag": "protonmail.webclients-protonmail__webclients-e9677f6c46d5ea7d277a4532a4bf90074f125f31",
+      "tag_uri": "jefzda/sweap-images:protonmail.webclients-protonmail__webclients-e9677f6c46d5ea7d277a4532a4bf90074f125f31"
+    },
+    {
+      "digest": "sha256:a29fb85e541c25db4a3f2a1d0e460230c0265df121977cc48ba528e981b22c52",
+      "immutable_uri": "jefzda/sweap-images@sha256:a29fb85e541c25db4a3f2a1d0e460230c0265df121977cc48ba528e981b22c52",
+      "instance_id": "instance_flipt-io__flipt-aebaecd026f752b187f11328b0d464761b15d2ab",
+      "tag": "flipt-io.flipt-flipt-io__flipt-aebaecd026f752b187f11328b0d464761b15d2ab",
+      "tag_uri": "jefzda/sweap-images:flipt-io.flipt-flipt-io__flipt-aebaecd026f752b187f11328b0d464761b15d2ab"
+    }
+  ],
+  "manifest_sha256": "e985f160304fd8cc8d94a1b95803031f265908a441b0650e35fec987779bcbec",
+  "registry": "registry-1.docker.io",
+  "repository": "jefzda/sweap-images",
+  "resolved_at": "2026-08-16T18:08:32.788187Z",
+  "schema_version": "pavlov-e1-image-manifest-v1"
+}

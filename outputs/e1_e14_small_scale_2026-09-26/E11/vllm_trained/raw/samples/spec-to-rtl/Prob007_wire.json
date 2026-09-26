@@ -1,0 +1,10 @@
+{
+ "dataset": "spec-to-rtl",
+ "problem_id": "Prob007_wire",
+ "response": "```verilog\nmodule TopModule(input in, output out);\n    assign out = in;\nendmodule\n```",
+ "prompt_tokens": 60,
+ "completion_tokens": 26,
+ "stop_reason": "stop",
+ "error": null,
+ "module": "module TopModule(input in, output out);\n    assign out = in;\nendmodule"
+}

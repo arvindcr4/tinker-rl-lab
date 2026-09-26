@@ -1,0 +1,38 @@
+{
+ "dnsmasq-backdoor-detect": {
+  "job": "e7_envfix_rerun2",
+  "trial": "dnsmasq-backdoor-detect__nGy5inC",
+  "reward": 0.0,
+  "exception": null
+ },
+ "dnsmasq-backdoor-detect-execvp-obfuscated": {
+  "job": "e7_envfix_rerun2",
+  "trial": "dnsmasq-backdoor-detect-execvp-o__Z79oiMf",
+  "reward": 0.0,
+  "exception": null
+ },
+ "dnsmasq-backdoor-detect-negative": {
+  "job": "e7_binaryaudit_subset",
+  "trial": "dnsmasq-backdoor-detect-negative__TvKExxt",
+  "reward": 0.0,
+  "exception": null
+ },
+ "dnsmasq-backdoor-detect-printf": {
+  "job": "e7_envfix_rerun2",
+  "trial": "dnsmasq-backdoor-detect-printf__jAVAsku",
+  "reward": 0.0,
+  "exception": null
+ },
+ "lighttpd-authentication-harvester-detect": {
+  "job": "e7_binaryaudit_subset",
+  "trial": "lighttpd-authentication-harveste__yhyfoVD",
+  "reward": null,
+  "exception": "ImageBuildError"
+ },
+ "lighttpd-backdoor-detect-negative": {
+  "job": "e7_binaryaudit_subset",
+  "trial": "lighttpd-backdoor-detect-negativ__Z8KGNWE",
+  "reward": 0.0,
+  "exception": null
+ }
+}

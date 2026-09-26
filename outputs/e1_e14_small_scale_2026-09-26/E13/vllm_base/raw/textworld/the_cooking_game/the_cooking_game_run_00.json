@@ -1,0 +1,61 @@
+{
+    "task": "the_cooking_game",
+    "action_frequency": {
+        "take block of cheese": 2,
+        "take raw white tuna": 1,
+        "go south": 2,
+        "open sliding door": 1,
+        "go east": 3,
+        "open front door": 1,
+        "go north": 2,
+        "examine cookbook": 1,
+        "take cookbook": 1,
+        "take red apple": 1,
+        "take red onion": 1,
+        "take yellow onion": 1,
+        "take yellow apple": 1,
+        "take raw purple potato": 1,
+        "take knife": 1,
+        "take white tuna": 1,
+        "take red hot pepper": 1,
+        "chop block of cheese with knife": 1,
+        "fry block of cheese with stove": 1,
+        "cook block of cheese with stove": 1,
+        "chop red apple with knife": 1,
+        "cook red apple with BBQ": 1,
+        "look": 1,
+        "cook red apple with stove": 1
+    },
+    "input_tokens": 44820,
+    "output_tokens": 128,
+    "done": true,
+    "episode_return": 89.0,
+    "num_steps": 29,
+    "failed_candidates": [],
+    "progression": 0.35294117647058826,
+    "process_num": "p0",
+    "seed": 20260926,
+    "agent": {
+        "type": "naive",
+        "remember_cot": true,
+        "max_text_history": 16,
+        "max_image_history": 0,
+        "max_cot_history": 1,
+        "max_icl_history": 1000,
+        "cache_icl": false
+    },
+    "client": {
+        "client_name": "vllm",
+        "model_id": "Qwen/Qwen3.6-35B-A3B",
+        "base_url": "http://127.0.0.1:8775/v1",
+        "generate_kwargs": {
+            "temperature": 0.0,
+            "max_tokens": 128,
+            "thinking_budget": null
+        },
+        "timeout": 60,
+        "max_retries": 5,
+        "delay": 2,
+        "alternate_roles": false
+    }
+}

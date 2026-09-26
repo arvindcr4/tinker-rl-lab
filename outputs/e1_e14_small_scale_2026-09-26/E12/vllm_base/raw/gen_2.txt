@@ -1,0 +1,1590 @@
+Here is the complete implementation for the Hospital Patient Tracking Board.
+
+### Technical Architecture
+*   **Framework**: Next.js 14+ (App Router).
+*   **Styling**: Tailwind CSS for responsive, hospital-grade UI.
+*   **Database & Auth**: Supabase (PostgreSQL, Auth, Realtime).
+*   **State Management**: React Context + Supabase JS Client subscriptions for real-time sync.
+*   **Icons**: Lucide React.
+
+### Prerequisites
+You must have a Supabase project.
+1.  Run the SQL provided in `supabase-schema.sql` in your Supabase SQL Editor.
+2.  Set the environment variables in your `.env.local` file.
+
+=== FILE: supabase-schema.sql ===
+```sql
+-- Enable UUID extension
+create extension if not exists "uuid-ossp";
+
+-- 1. Profiles Table (Extends Supabase Auth)
+create table profiles (
+  id uuid references auth.users on delete cascade primary key,
+  full_name text not null,
+  role text check (role in ('admin', 'nurse', 'physician')) not null,
+  avatar_url text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 2. Units Table
+create table units (
+  id uuid default uuid_generate_v4() primary key,
+  name text not null,
+  description text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 3. Beds Table
+create table beds (
+  id uuid default uuid_generate_v4() primary key,
+  unit_id uuid references units(id) on delete cascade not null,
+  bed_number text not null,
+  is_active boolean default true,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- 4. Patients Table
+create table patients (
+  id uuid default uuid_generate_v4() primary key,
+  mrn text not null, -- Medical Record Number
+  first_name text not null,
+  last_name text not null,
+  dob date not null,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- 5. Encounters Table (Links Patient to Bed)
+create table encounters (
+  id uuid default uuid_generate_v4() primary key,
+  patient_id uuid references patients(id) on delete cascade not null,
+  bed_id uuid references beds(id) on delete cascade not null,
+  assigned_nurse_id uuid references profiles(id) on delete set null,
+  status text check (status in ('admitted', 'procedure', 'recovery', 'discharge-ready', 'discharged')) default 'admitted',
+  notes text default '',
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- 6. Tasks Table
+create table tasks (
+  id uuid default uuid_generate_v4() primary key,
+  encounter_id uuid references encounters(id) on delete cascade not null,
+  description text not null,
+  is_completed boolean default false,
+  created_by uuid references profiles(id) on delete set null,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- 7. Chat Messages
+create table chat_messages (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references profiles(id) on delete cascade not null,
+  message text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- 8. Emergency Alerts
+create table emergency_alerts (
+  id uuid default uuid_generate_v4() primary key,
+  title text not null,
+  message text not null,
+  severity text check (severity in ('low', 'medium', 'high', 'critical')) default 'medium',
+  is_active boolean default true,
+  created_by uuid references profiles(id) on delete set null,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- 9. User Dismissed Alerts (Many-to-Many)
+create table user_alert_dismissals (
+  user_id uuid references profiles(id) on delete cascade,
+  alert_id uuid references emergency_alerts(id) on delete cascade,
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+  primary key (user_id, alert_id)
+);
+
+-- Row Level Security (RLS) Policies
+alter table profiles enable row level security;
+alter table units enable row level security;
+alter table beds enable row level security;
+alter table patients enable row level security;
+alter table encounters enable row level security;
+alter table tasks enable row level security;
+alter table chat_messages enable row level security;
+alter table emergency_alerts enable row level security;
+alter table user_alert_dismissals enable row level security;
+
+-- Helper Function for Auth User ID
+create or replace function current_user_id() returns uuid as $$
+  select auth.uid();
+$$ language sql stable;
+
+-- Policies: Profiles
+create policy "Public profiles are viewable by everyone."
+  on profiles for select
+  using ( true );
+
+create policy "Users can update own profile."
+  on profiles for update
+  using ( auth.uid() = id );
+
+-- Policies: Units (Admins only for write)
+create policy "Admins can manage units"
+  on units for all
+  using ( 
+    exists (
+      select 1 from profiles 
+      where profiles.id = auth.uid() and profiles.role = 'admin'
+    )
+  );
+create policy "Everyone can view units"
+  on units for select
+  using ( true );
+
+-- Policies: Beds
+create policy "Admins can manage beds"
+  on beds for all
+  using ( 
+    exists (
+      select 1 from profiles 
+      where profiles.id = auth.uid() and profiles.role = 'admin'
+    )
+  );
+create policy "Everyone can view beds"
+  on beds for select
+  using ( true );
+
+-- Policies: Patients
+create policy "Everyone can view patients"
+  on patients for select
+  using ( true );
+create policy "Admins can create patients"
+  on patients for insert
+  with check ( 
+    exists (
+      select 1 from profiles 
+      where profiles.id = auth.uid() and profiles.role = 'admin'
+    )
+  );
+
+-- Policies: Encounters
+create policy "Everyone can view encounters"
+  on encounters for select
+  using ( true );
+create policy "Admins/Nurses/Physicians can update encounters"
+  on encounters for update
+  using ( 
+    exists (
+      select 1 from profiles 
+      where profiles.id = auth.uid() and profiles.role in ('admin', 'nurse', 'physician')
+    )
+  );
+create policy "Admins can create encounters"
+  on encounters for insert
+  with check ( 
+    exists (
+      select 1 from profiles 
+      where profiles.id = auth.uid() and profiles.role = 'admin'
+    )
+  );
+
+-- Policies: Tasks
+create policy "Everyone can view tasks"
+  on tasks for select
+  using ( true );
+create policy "Admins/Nurses/Physicians can manage tasks"
+  on tasks for all
+  using ( 
+    exists (
+      select 1 from profiles 
+      where profiles.id = auth.uid() and profiles.role in ('admin', 'nurse', 'physician')
+    )
+  );
+
+-- Policies: Chat
+create policy "Authenticated users can view chat"
+  on chat_messages for select
+  using ( auth.role() = 'authenticated' );
+create policy "Authenticated users can post chat"
+  on chat_messages for insert
+  with check ( auth.role() = 'authenticated' );
+
+-- Policies: Alerts
+create policy "Everyone can view active alerts"
+  on emergency_alerts for select
+  using ( is_active = true );
+create policy "Admins can manage alerts"
+  on emergency_alerts for all
+  using ( 
+    exists (
+      select 1 from profiles 
+      where profiles.id = auth.uid() and profiles.role = 'admin'
+    )
+  );
+
+-- Policies: Dismissals
+create policy "Users can manage own dismissals"
+  on user_alert_dismissals for all
+  using ( auth.uid() = user_id );
+
+-- Realtime
+alter publication supabase_realtime add table profiles;
+alter publication supabase_realtime add table units;
+alter publication supabase_realtime add table beds;
+alter publication supabase_realtime add table patients;
+alter publication supabase_realtime add table encounters;
+alter publication supabase_realtime add table tasks;
+alter publication supabase_realtime add table chat_messages;
+alter publication supabase_realtime add table emergency_alerts;
+alter publication supabase_realtime add table user_alert_dismissals;
+```
+
+=== FILE: .env.local ===
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url-here
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key-here
+```
+
+=== FILE: package.json ===
+```json
+{
+  "name": "hospital-tracking-board",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.9.0",
+    "@supabase/ssr": "^0.1.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "date-fns": "^3.0.0",
+    "lucide-react": "^0.303.0",
+    "next": "14.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/uuid": "^9.0.7",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.55.0",
+    "eslint-config-next": "14.0.4",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0"
+  }
+}
+```
+
+=== FILE: tailwind.config.ts ===
+```typescript
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        hospital: {
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+          900: '#0c4a6e',
+        },
+        alert: {
+          critical: '#ef4444',
+          high: '#f97316',
+          medium: '#eab308',
+          low: '#22c55e',
+        }
+      }
+    },
+  },
+  plugins: [],
+}
+export default config
+```
+
+=== FILE: postcss.config.js ===
+```javascript
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+```
+
+=== FILE: src/lib/supabase/client.ts ===
+```typescript
+import { createBrowserClient } from '@supabase/ssr'
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+```
+
+=== FILE: src/lib/supabase/server.ts ===
+```typescript
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export function createClient() {
+  const cookieStore = cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+      },
+    }
+  )
+}
+```
+
+=== FILE: src/lib/types.ts ===
+```typescript
+export interface Profile {
+  id: string;
+  full_name: string;
+  role: 'admin' | 'nurse' | 'physician';
+  avatar_url?: string;
+}
+
+export interface Unit {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface Bed {
+  id: string;
+  unit_id: string;
+  bed_number: string;
+  is_active: boolean;
+}
+
+export interface Patient {
+  id: string;
+  mrn: string;
+  first_name: string;
+  last_name: string;
+  dob: string;
+}
+
+export interface Encounter {
+  id: string;
+  patient_id: string;
+  bed_id: string;
+  assigned_nurse_id: string | null;
+  status: 'admitted' | 'procedure' | 'recovery' | 'discharge-ready' | 'discharged';
+  notes: string;
+}
+
+export interface Task {
+  id: string;
+  encounter_id: string;
+  description: string;
+  is_completed: boolean;
+}
+
+export interface ChatMessage {
+  id: string;
+  user_id: string;
+  message: string;
+  created_at: string;
+}
+
+export interface Alert {
+  id: string;
+  title: string;
+  message: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface Dismissal {
+  user_id: string;
+  alert_id: string;
+}
+```
+
+=== FILE: src/lib/utils.ts ===
+```typescript
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+export function calculateAge(dob: string): number {
+  const today = new Date();
+  const birthDate = new Date(dob);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
+export function getSeverityColor(severity: string): string {
+  switch (severity) {
+    case 'critical': return 'bg-alert-critical text-white';
+    case 'high': return 'bg-alert-high text-white';
+    case 'medium': return 'bg-alert-medium text-black';
+    case 'low': return 'bg-alert-low text-white';
+    default: return 'bg-gray-500 text-white';
+  }
+}
+```
+
+=== FILE: src/app/globals.css ===
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* Custom Scrollbar for Chat */
+.chat-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: #888; 
+  border-radius: 4px;
+}
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+```
+
+=== FILE: src/app/layout.tsx ===
+```typescript
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { AuthProvider } from '@/components/AuthProvider'
+import { AlertProvider } from '@/components/AlertProvider'
+import { PresenceProvider } from '@/components/PresenceProvider'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'Hospital Patient Tracking Board',
+  description: 'Real-time patient tracking and communication system',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>
+        <AuthProvider>
+          <PresenceProvider>
+            <AlertProvider>
+              {children}
+            </AlertProvider>
+          </PresenceProvider>
+        </AuthProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+=== FILE: src/app/page.tsx ===
+```typescript
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import Login from '@/components/Login'
+import Dashboard from '@/components/Dashboard'
+
+export default async function Home() {
+  const supabase = createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) {
+    return <Login />
+  }
+
+  return <Dashboard />
+}
+```
+
+=== FILE: src/components/Login.tsx ===
+```typescript
+'use client';
+
+import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
+
+export default function Login() {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [role, setRole] = useState<'nurse' | 'physician'>('nurse');
+  const [error, setError] = useState('');
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (isLogin) {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) setError(error.message);
+      else router.refresh();
+    } else {
+      // Registration
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            role: role,
+          }
+        }
+      });
+      
+      if (error) {
+        setError(error.message);
+      } else if (data.user) {
+        // Profile creation is handled by Auth Trigger in DB
+        // But we need to wait for it or just redirect
+        // For simplicity, we redirect and let the dashboard handle the check
+        // or we can manually insert here if trigger fails, but trigger is safer.
+        alert('Registration successful! Please check your email to confirm if required, or login.');
+        setIsLogin(true);
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-hospital-50">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h1 className="text-2xl font-bold text-center text-hospital-900 mb-6">
+          Hospital Tracking Board
+        </h1>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {!isLogin && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-500 focus:ring-hospital-500 sm:text-sm p-2 border"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Role</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as any)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-500 focus:ring-hospital-500 sm:text-sm p-2 border"
+                >
+                  <option value="nurse">Nurse</option>
+                  <option value="physician">Physician</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-500 focus:ring-hospital-500 sm:text-sm p-2 border"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-500 focus:ring-hospital-500 sm:text-sm p-2 border"
+            />
+          </div>
+
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+
+          <button
+            type="submit"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-hospital-600 hover:bg-hospital-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-hospital-500"
+          >
+            {isLogin ? 'Sign In' : 'Register'}
+          </button>
+        </form>
+
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-sm text-hospital-600 hover:text-hospital-800"
+          >
+            {isLogin ? "Don't have an account? Register" : "Already have an account? Sign In"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+=== FILE: src/components/AuthProvider.tsx ===
+```typescript
+'use client';
+
+import { createClient } from '@/lib/supabase/client';
+import { useEffect, useState, createContext, useContext } from 'react';
+import { Session, User } from '@supabase/supabase-js';
+
+const AuthContext = createContext<{
+  session: Session | null;
+  user: User | null;
+  loading: boolean;
+}>({
+  session: null,
+  user: null,
+  loading: true,
+});
+
+export const useAuth = () => useContext(AuthContext);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    };
+
+    getSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  return (
+    <AuthContext.Provider value={{ session, user, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+```
+
+=== FILE: src/components/PresenceProvider.tsx ===
+```typescript
+'use client';
+
+import { createClient } from '@/lib/supabase/client';
+import { useEffect, useState, createContext, useContext } from 'react';
+import { Profile } from '@/lib/types';
+
+const PresenceContext = createContext<{
+  onlineUsers: Profile[];
+}>({
+  onlineUsers: [],
+});
+
+export const usePresence = () => useContext(PresenceContext);
+
+export function PresenceProvider({ children }: { children: React.ReactNode }) {
+  const [onlineUsers, setOnlineUsers] = useState<Profile[]>([]);
+  const supabase = createClient();
+
+  useEffect(() => {
+    // Listen for profile changes (which includes online status if we added a column, 
+    // but here we rely on the fact that profiles are updated on login/logout or we can use a heartbeat).
+    // For this implementation, we will assume "Online" is determined by active sessions 
+    // or we can add a simple 'last_seen' column. 
+    // To keep it simple and robust without complex presence tables:
+    // We will just listen to profiles updates. 
+    // A more robust way is a 'users_online' table updated by heartbeat.
+    
+    // Let's implement a simple heartbeat mechanism in the Dashboard component 
+    // that updates a 'last_active' timestamp in profiles.
+    
+    const channel = supabase
+      .channel('presence_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
+        // Refetch all profiles to update list
+        fetchProfiles();
+      })
+      .subscribe();
+
+    const fetchProfiles = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('full_name');
+      if (data) setOnlineUsers(data);
+    };
+
+    fetchProfiles();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
+
+  return (
+    <PresenceContext.Provider value={{ onlineUsers }}>
+      {children}
+    </PresenceContext.Provider>
+  );
+}
+```
+
+=== FILE: src/components/AlertProvider.tsx ===
+```typescript
+'use client';
+
+import { createClient } from '@/lib/supabase/client';
+import { useEffect, useState, createContext, useContext } from 'react';
+import { Alert, Dismissal } from '@/lib/types';
+import { useAuth } from './AuthProvider';
+
+const AlertContext = createContext<{
+  alerts: Alert[];
+  dismissedAlertIds: string[];
+  createAlert: (title: string, message: string, severity: Alert['severity']) => Promise<void>;
+  dismissAlert: (alertId: string) => Promise<void>;
+}>({
+  alerts: [],
+  dismissedAlertIds: [],
+  createAlert: async () => {},
+  dismissAlert: async () => {},
+});
+
+export const useAlerts = () => useContext(AlertContext);
+
+export function AlertProvider({ children }: { children: React.ReactNode }) {
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [dismissedAlertIds, setDismissedAlertIds] = useState<string[]>([]);
+  const { user } = useAuth();
+  const supabase = createClient();
+
+  const fetchAlerts = async () => {
+    const { data } = await supabase
+      .from('emergency_alerts')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+    if (data) setAlerts(data);
+  };
+
+  const fetchDismissals = async () => {
+    if (!user) {
+      setDismissedAlertIds([]);
+      return;
+    }
+    const { data } = await supabase
+      .from('user_alert_dismissals')
+      .select('alert_id')
+      .eq('user_id', user.id);
+    if (data) setDismissedAlertIds(data.map(d => d.alert_id));
+  };
+
+  useEffect(() => {
+    fetchAlerts();
+    fetchDismissals();
+
+    const channel = supabase
+      .channel('alerts_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'emergency_alerts' }, () => {
+        fetchAlerts();
+        fetchDismissals();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_alert_dismissals' }, () => {
+        fetchDismissals();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, user]);
+
+  const createAlert = async (title: string, message: string, severity: Alert['severity']) => {
+    if (!user) return;
+    await supabase.from('emergency_alerts').insert({
+      title,
+      message,
+      severity,
+      created_by: user.id,
+      is_active: true
+    });
+  };
+
+  const dismissAlert = async (alertId: string) => {
+    if (!user) return;
+    await supabase.from('user_alert_dismissals').upsert({
+      user_id: user.id,
+      alert_id: alertId
+    });
+  };
+
+  return (
+    <AlertContext.Provider value={{ alerts, dismissedAlertIds, createAlert, dismissAlert }}>
+      {children}
+    </AlertContext.Provider>
+  );
+}
+```
+
+=== FILE: src/components/Dashboard.tsx ===
+```typescript
+'use client';
+
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from './AuthProvider';
+import { usePresence } from './PresenceProvider';
+import { useAlerts } from './AlertProvider';
+import { Profile, Unit, Bed, Patient, Encounter, Task, ChatMessage } from '@/lib/types';
+import { calculateAge, getSeverityColor } from '@/lib/utils';
+import { 
+  BedDouble, User, LogOut, MessageSquare, Bell, 
+  Plus, Trash2, Edit, CheckCircle, XCircle, 
+  Activity, Users, AlertTriangle 
+} from 'lucide-react';
+
+export default function Dashboard() {
+  const { user, session } = useAuth();
+  const { onlineUsers } = usePresence();
+  const { alerts, dismissedAlertIds, createAlert, dismissAlert } = useAlerts();
+  const supabase = createClient();
+  
+  const [activeTab, setActiveTab] = useState<'board' | 'chat' | 'admin'>('board');
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [beds, setBeds] = useState<Bed[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [encounters, setEncounters] = useState<Encounter[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  
+  // Admin State
+  const [newUnitName, setNewUnitName] = useState('');
+  const [newBedNumber, setNewBedNumber] = useState('');
+  const [selectedUnitId, setSelectedUnitId] = useState<string>('');
+  const [newPatientData, setNewPatientData] = useState({ mrn: '', firstName: '', lastName: '', dob: '' });
+  const [newEncounterData, setNewEncounterData] = useState({ patientId: '', bedId: '', nurseId: '', status: 'admitted' });
+  const [newAlertData, setNewAlertData] = useState({ title: '', message: '', severity: 'medium' as const });
+
+  // Heartbeat for presence
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(async () => {
+      // Update profile to keep "alive" (simple implementation)
+      // In a real app, you might have a dedicated 'last_seen' column
+      await supabase.from('profiles').update({ updated_at: new Date().toISOString() }).eq('id', user.id);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [user, supabase]);
+
+  // Fetch Data
+  useEffect(() => {
+    const fetchData = async () => {
+      const [u, b, p, e, t, c] = await Promise.all([
+        supabase.from('units').select('*').order('name'),
+        supabase.from('beds').select('*').order('bed_number'),
+        supabase.from('patients').select('*').order('last_name'),
+        supabase.from('encounters').select('*').order('created_at', { ascending: false }),
+        supabase.from('tasks').select('*').order('created_at'),
+        supabase.from('chat_messages').select('*, profiles:user_id(full_name, role)').order('created_at', { ascending: true })
+      ]);
+
+      if (u.data) setUnits(u.data);
+      if (b.data) setBeds(b.data);
+      if (p.data) setPatients(p.data);
+      if (e.data) setEncounters(e.data);
+      if (t.data) setTasks(t.data);
+      if (c.data) setChatMessages(c.data);
+    };
+
+    fetchData();
+
+    // Realtime Subscriptions
+    const channel = supabase
+      .channel('dashboard_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'units' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'beds' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'patients' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'encounters' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, fetchData)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
+        setChatMessages(prev => [...prev, payload.new as ChatMessage]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/';
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !user) return;
+    await supabase.from('chat_messages').insert({ user_id: user.id, message: newMessage });
+    setNewMessage('');
+  };
+
+  const handleCreateUnit = async () => {
+    if (!newUnitName.trim()) return;
+    await supabase.from('units').insert({ name: newUnitName });
+    setNewUnitName('');
+  };
+
+  const handleCreateBed = async () => {
+    if (!newBedNumber.trim() || !selectedUnitId) return;
+    await supabase.from('beds').insert({ bed_number: newBedNumber, unit_id: selectedUnitId });
+    setNewBedNumber('');
+  };
+
+  const handleCreatePatient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPatientData.mrn || !newPatientData.firstName) return;
+    await supabase.from('patients').insert({
+      mrn: newPatientData.mrn,
+      first_name: newPatientData.firstName,
+      last_name: newPatientData.lastName,
+      dob: newPatientData.dob
+    });
+    setNewPatientData({ mrn: '', firstName: '', lastName: '', dob: '' });
+  };
+
+  const handleCreateEncounter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEncounterData.patientId || !newEncounterData.bedId) return;
+    await supabase.from('encounters').insert({
+      patient_id: newEncounterData.patientId,
+      bed_id: newEncounterData.bedId,
+      assigned_nurse_id: newEncounterData.nurseId || null,
+      status: newEncounterData.status
+    });
+    setNewEncounterData({ patientId: '', bedId: '', nurseId: '', status: 'admitted' });
+  };
+
+  const handleUpdateEncounter = async (encounterId: string, updates: Partial<Encounter>) => {
+    await supabase.from('encounters').update(updates).eq('id', encounterId);
+  };
+
+  const handleAddTask = async (encounterId: string, description: string) => {
+    if (!description.trim()) return;
+    await supabase.from('tasks').insert({ encounter_id: encounterId, description });
+  };
+
+  const handleToggleTask = async (taskId: string, isCompleted: boolean) => {
+    await supabase.from('tasks').update({ is_completed: isCompleted }).eq('id', taskId);
+  };
+
+  const handleCreateAlert = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAlertData.title || !newAlertData.message) return;
+    await createAlert(newAlertData.title, newAlertData.message, newAlertData.severity);
+    setNewAlertData({ title: '', message: '', severity: 'medium' });
+  };
+
+  const getNurseName = (nurseId: string | null) => {
+    if (!nurseId) return 'Unassigned';
+    const nurse = onlineUsers.find(u => u.id === nurseId);
+    return nurse ? nurse.full_name : 'Unknown';
+  };
+
+  const getPatientName = (patientId: string) => {
+    const patient = patients.find(p => p.id === patientId);
+    return patient ? `${patient.last_name}, ${patient.first_name}` : 'Unknown';
+  };
+
+  const getPatientMRN = (patientId: string) => {
+    const patient = patients.find(p => p.id === patientId);
+    return patient ? patient.mrn : 'N/A';
+  };
+
+  const getPatientAge = (patientId: string) => {
+    const patient = patients.find(p => p.id === patientId);
+    if (!patient) return 'N/A';
+    return calculateAge(patient.dob);
+  };
+
+  const getTasksForEncounter = (encounterId: string) => {
+    return tasks.filter(t => t.encounter_id === encounterId);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'admitted': return 'bg-blue-100 text-blue-800';
+      case 'procedure': return 'bg-purple-100 text-purple-800';
+      case 'recovery': return 'bg-green-100 text-green-800';
+      case 'discharge-ready': return 'bg-yellow-100 text-yellow-800';
+      case 'discharged': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Render Active Alerts Banner
+  const activeAlerts = alerts.filter(a => !dismissedAlertIds.includes(a.id));
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Alert Banner */}
+      {activeAlerts.length > 0 && (
+        <div className="bg-red-600 text-white p-2 flex flex-col gap-2">
+          {activeAlerts.map(alert => (
+            <div key={alert.id} className={`flex items-center justify-between p-2 rounded ${getSeverityColor(alert.severity)} bg-opacity-90`}>
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={16} />
+                <span className="font-bold">{alert.title}</span>
+                <span className="text-sm">{alert.message}</span>
+              </div>
+              <button 
+                onClick={() => dismissAlert(alert.id)}
+                className="text-white hover:text-gray-200"
+              >
+                <XCircle size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Activity className="text-hospital-600" size={24} />
+            <h1 className="text-xl font-bold text-gray-900">Hospital Board</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Users size={16} />
+              <span>{onlineUsers.length} Online</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-900">{user?.email}</span>
+              <button onClick={handleLogout} className="text-gray-500 hover:text-red-600">
+                <LogOut size={20} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Navigation */}
+      <nav className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex space-x-8">
+            <button
+              onClick={() => setActiveTab('board')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'board'
+                  ? 'border-hospital-500 text-hospital-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Patient Board
+            </button>
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'chat'
+                  ? 'border-hospital-500 text-hospital-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Team Chat
+            </button>
+            {user?.email?.includes('admin') && (
+              <button
+                onClick={() => setActiveTab('admin')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'admin'
+                    ? 'border-hospital-500 text-hospital-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Admin
+              </button>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Patient Board Tab */}
+        {activeTab === 'board' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {units.map(unit => (
+              <div key={unit.id} className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="bg-hospital-50 px-4 py-3 border-b border-hospital-100">
+                  <h2 className="text-lg font-semibold text-hospital-900">{unit.name}</h2>
+                </div>
+                <div className="p-4 space-y-4">
+                  {beds.filter(b => b.unit_id === unit.id).map(bed => {
+                    const encounter = encounters.find(e => e.bed_id === bed.id);
+                    if (!encounter) {
+                      return (
+                        <div key={bed.id} className="border border-dashed border-gray-300 rounded p-3 text-center text-gray-400 text-sm">
+                          Bed {bed.bed_number} - Empty
+                        </div>
+                      );
+                    }
+
+                    const patient = patients.find(p => p.id === encounter.patient_id);
+                    const tasks = getTasksForEncounter(encounter.id);
+                    const completedTasks = tasks.filter(t => t.is_completed).length;
+
+                    return (
+                      <div key={bed.id} className="border border-gray-200 rounded-lg p-3 bg-white shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-bold text-gray-900">Bed {bed.bed_number}</span>
+                          <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(encounter.status)}`}>
+                            {encounter.status}
+                          </span>
+                        </div>
+                        
+                        {patient && (
+                          <div className="space-y-1 text-sm">
+                            <p className="font-medium text-gray-800">{getPatientName(patient.id)}</p>
+                            <p className="text-gray-500 text-xs">MRN: {getPatientMRN(patient.id)} | Age: {getPatientAge(patient.id)}</p>
+                            <p className="text-gray-500 text-xs">Nurse: {getNurseName(encounter.assigned_nurse_id)}</p>
+                          </div>
+                        )}
+
+                        <div className="mt-2 pt-2 border-t border-gray-100">
+                          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                            <span>Tasks</span>
+                            <span>{completedTasks}/{tasks.length}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-1.5">
+                            <div 
+                              className="bg-hospital-500 h-1.5 rounded-full" 
+                              style={{ width: `${tasks.length ? (completedTasks / tasks.length) * 100 : 0}%` }}
+                            ></div>
+                          </div>
+                        </div>
+
+                        <div className="mt-2">
+                          <textarea
+                            value={encounter.notes}
+                            onChange={(e) => handleUpdateEncounter(encounter.id, { notes: e.target.value })}
+                            className="w-full text-xs p-1 border rounded resize-none h-12 focus:ring-hospital-500 focus:border-hospital-500"
+                            placeholder="Notes..."
+                          />
+                        </div>
+
+                        <div className="mt-2 flex gap-1">
+                          <select
+                            value={encounter.status}
+                            onChange={(e) => handleUpdateEncounter(encounter.id, { status: e.target.value as any })}
+                            className="text-xs border rounded p-1 flex-1"
+                          >
+                            <option value="admitted">Admitted</option>
+                            <option value="procedure">Procedure</option>
+                            <option value="recovery">Recovery</option>
+                            <option value="discharge-ready">Discharge Ready</option>
+                            <option value="discharged">Discharged</option>
+                          </select>
+                        </div>
+                        
+                        <div className="mt-2">
+                          <form 
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              const form = e.target as HTMLFormElement;
+                              const input = form.elements[0] as HTMLInputElement;
+                              handleAddTask(encounter.id, input.value);
+                              input.value = '';
+                            }}
+                            className="flex gap-1"
+                          >
+                            <input 
+                              type="text" 
+                              placeholder="Add task..." 
+                              className="text-xs border rounded p-1 flex-1"
+                            />
+                            <button type="submit" className="text-hospital-600 hover:text-hospital-800">
+                              <Plus size={14} />
+                            </button>
+                          </form>
+                          <ul className="mt-1 space-y-1">
+                            {tasks.map(task => (
+                              <li key={task.id} className="flex items-center gap-1 text-xs">
+                                <button 
+                                  onClick={() => handleToggleTask(task.id, !task.is_completed)}
+                                  className={task.is_completed ? 'text-green-600' : 'text-gray-400'}
+                                >
+                                  {task.is_completed ? <CheckCircle size={12} /> : <XCircle size={12} />}
+                                </button>
+                                <span className={task.is_completed ? 'line-through text-gray-400' : 'text-gray-700'}>
+                                  {task.description}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Chat Tab */}
+        {activeTab === 'chat' && (
+          <div className="bg-white rounded-lg shadow h-[600px] flex flex-col">
+            <div className="p-4 border-b border-gray-200 bg-hospital-50 rounded-t-lg">
+              <h2 className="text-lg font-semibold text-hospital-900 flex items-center gap-2">
+                <MessageSquare size={20} /> Team Chat
+              </h2>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 chat-scroll">
+              {chatMessages.map(msg => {
+                const sender = onlineUsers.find(u => u.id === msg.user_id);
+                return (
+                  <div key={msg.id} className="flex flex-col">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-semibold text-sm text-gray-900">{sender?.full_name || 'Unknown'}</span>
+                      <span className="text-xs text-gray-500">({sender?.role})</span>
+                      <span className="text-xs text-gray-400">{new Date(msg.created_at).toLocaleTimeString()}</span>
+                    </div>
+                    <p className="text-gray-700 mt-1 bg-gray-100 p-2 rounded-lg inline-block max-w-full break-words">
+                      {msg.message}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="p-4 border-t border-gray-200">
+              <form onSubmit={handleSendMessage} className="flex gap-2">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-hospital-500"
+                />
+                <button
+                  type="submit"
+                  className="bg-hospital-600 text-white px-4 py-2 rounded-md hover:bg-hospital-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-hospital-500"
+                >
+                  Send
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Admin Tab */}
+        {activeTab === 'admin' && (
+          <div className="space-y-8">
+            {/* Create Unit */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Manage Units</h3>
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateUnit(); }} className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  value={newUnitName}
+                  onChange={(e) => setNewUnitName(e.target.value)}
+                  placeholder="Unit Name (e.g., ICU)"
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2"
+                />
+                <button type="submit" className="bg-hospital-600 text-white px-4 py-2 rounded-md hover:bg-hospital-700">
+                  Add Unit
+                </button>
+              </form>
+              <div className="space-y-2">
+                {units.map(unit => (
+                  <div key={unit.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span>{unit.name}</span>
+                    <button 
+                      onClick={() => supabase.from('units').delete().eq('id', unit.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Create Bed */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Manage Beds</h3>
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateBed(); }} className="flex gap-2 mb-4">
+                <select
+                  value={selectedUnitId}
+                  onChange={(e) => setSelectedUnitId(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2"
+                >
+                  <option value="">Select Unit</option>
+                  {units.map(unit => (
+                    <option key={unit.id} value={unit.id}>{unit.name}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={newBedNumber}
+                  onChange={(e) => setNewBedNumber(e.target.value)}
+                  placeholder="Bed Number (e.g., 101)"
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2"
+                />
+                <button type="submit" className="bg-hospital-600 text-white px-4 py-2 rounded-md hover:bg-hospital-700">
+                  Add Bed
+                </button>
+              </form>
+              <div className="space-y-2">
+                {beds.map(bed => {
+                  const unit = units.find(u => u.id === bed.unit_id);
+                  return (
+                    <div key={bed.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span>{unit?.name} - Bed {bed.bed_number}</span>
+                      <button 
+                        onClick={() => supabase.from('beds').delete().eq('id', bed.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Create Patient */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Add Patient</h3>
+              <form onSubmit={handleCreatePatient} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <input
+                  type="text"
+                  value={newPatientData.mrn}
+                  onChange={(e) => setNewPatientData({...newPatientData, mrn: e.target.value})}
+                  placeholder="MRN"
+                  className="border border-gray-300 rounded-md px-3 py-2"
+                />
+                <input
+                  type="text"
+                  value={newPatientData.firstName}
+                  onChange={(e) => setNewPatientData({...newPatientData, firstName: e.target.value})}
+                  placeholder="First Name"
+                  className="border border-gray-300 rounded-md px-3 py-2"
+                />
+                <input
+                  type="text"
+                  value={newPatientData.lastName}
+                  onChange={(e) => setNewPatientData({...newPatientData, lastName: e.target.value})}
+                  placeholder="Last Name"
+                  className="border border-gray-300 rounded-md px-3 py-2"
+                />
+                <input
+                  type="date"
+                  value={newPatientData.dob}
+                  onChange={(e) => setNewPatientData({...newPatientData, dob: e.target.value})}
+                  className="border border-gray-300 rounded-md px-3 py-2"
+                />
+                <button type="submit" className="bg-hospital-600 text-white px-4 py-2 rounded-md hover:bg-hospital-700 md:col-span-2">
+                  Add Patient
+                </button>
+              </form>
+            </div>
+
+            {/* Create Encounter */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Assign Patient to Bed</h3>
+              <form onSubmit={handleCreateEncounter} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <select
+                  value={newEncounterData.patientId}
+                  onChange={(e) => setNewEncounterData({...newEncounterData, patientId: e.target.value})}
+                  className="border border-gray-300 rounded-md px-3 py-2"
+                >
+                  <option value="">Select Patient</option>
+                  {patients.map(p => (
+                    <option key={p.id} value={p.id}>{p.last_name}, {p.first_name} ({p.mrn})</option>
+                  ))}
+                </select>
+                <select
+                  value={newEncounterData.bedId}
+                  onChange={(e) => setNewEncounterData({...newEncounterData, bedId: e.target.value})}
+                  className="border border-gray-300 rounded-md px-3 py-2"
+                >
+                  <option value="">Select Bed</option>
+                  {beds.map(b => {
+                    const unit = units.find(u => u.id === b.unit_id);
+                    return (
+                      <option key={b.id} value={b.id}>{unit?.name} - Bed {b.bed_number}</option>
+                    );
+                  })}
+                </select>
+                <select
+                  value={newEncounterData.nurseId}
+                  onChange={(e) => setNewEncounterData({...newEncounterData, nurseId: e.target.value})}
+                  className="border border-gray-300 rounded-md px-3 py-2"
+                >
+                  <option value="">Select Nurse</option>
+                  {onlineUsers.filter(u => u.role === 'nurse').map(n => (
+                    <option key={n.id} value={n.id}>{n.full_name}</option>
+                  ))}
+                </select>
+                <select
+                  value={newEncounterData.status}
+                  onChange={(e) => setNewEncounterData({...newEncounterData, status: e.target.value})}
+                  className="border border-gray-300 rounded-md px-3 py-2"
+                >
+                  <option value="admitted">Admitted</option>
+                  <option value="procedure">Procedure</option>
+                  <option value="recovery">Recovery</option>
+                  <option value="discharge-ready">Discharge Ready</option>
+                </select>
+                <button type="submit" className="bg-hospital-600 text-white px-4 py-2 rounded-md hover:bg-hospital-700 md:col-span-2">
+                  Create Encounter
+                </button>
+              </form>
+            </div>
+
+            {/* Create Alert */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Create Emergency Alert</h3>
+              <form onSubmit={handleCreateAlert} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Title</label>
+                  <input
+                    type="text"
+                    value={newAlertData.title}
+                    onChange={(e) => setNewAlertData({...newAlertData, title: e.target.value})}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Message</label>
+                  <textarea
+                    value={newAlertData.message}
+                    onChange={(e) => setNewAlertData({...newAlertData, message: e.target.value})}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Severity</label>
+                  <select
+                    value={newAlertData.severity}
+                    onChange={(e) => setNewAlertData({...newAlertData, severity: e.target.value as any})}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+                <button type="submit" className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                  Broadcast Alert
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+```

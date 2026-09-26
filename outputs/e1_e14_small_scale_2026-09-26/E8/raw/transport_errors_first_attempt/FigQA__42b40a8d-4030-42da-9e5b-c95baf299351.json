@@ -1,0 +1,7 @@
+{
+ "task_id": "FigQA/42b40a8d-4030-42da-9e5b-c95baf299351",
+ "category": "FigQA",
+ "prompt_sha256": "d5abcdfc1575a10117d889cb1ba00631851a9eeba5b1e48984895dea3ef60ed8",
+ "raw_text": null,
+ "error": "BadRequestError: Error code: 400 - {'detail': 'Asset is too large: 2112466 bytes, max allowed is 2097152 bytes'}"
+}

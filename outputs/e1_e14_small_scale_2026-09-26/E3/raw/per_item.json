@@ -1,0 +1,50 @@
+{
+ "build-cython-ext": {
+  "job": "e3_tb2_subset",
+  "trial": "build-cython-ext__nahbBYK",
+  "reward": 0.0,
+  "exception": null
+ },
+ "build-pmars": {
+  "job": "e3_tb2_subset",
+  "trial": "build-pmars__2sx2ui7",
+  "reward": 1.0,
+  "exception": null
+ },
+ "cobol-modernization": {
+  "job": "e3_tb2_subset",
+  "trial": "cobol-modernization__uBu2AcD",
+  "reward": 1.0,
+  "exception": null
+ },
+ "count-dataset-tokens": {
+  "job": "e3_tb2_subset",
+  "trial": "count-dataset-tokens__t3KXVd7",
+  "reward": 0.0,
+  "exception": null
+ },
+ "hf-model-inference": {
+  "job": "e3_tb2_subset",
+  "trial": "hf-model-inference__qZg7T6p",
+  "reward": 1.0,
+  "exception": null
+ },
+ "largest-eigenval": {
+  "job": "e3_tb2_subset",
+  "trial": "largest-eigenval__w7tRaGn",
+  "reward": 0.0,
+  "exception": null
+ },
+ "pytorch-model-recovery": {
+  "job": "e3_tb2_subset",
+  "trial": "pytorch-model-recovery__Y7onReZ",
+  "reward": 1.0,
+  "exception": null
+ },
+ "query-optimize": {
+  "job": "e3_tb2_subset",
+  "trial": "query-optimize__utiChTa",
+  "reward": 0.0,
+  "exception": null
+ }
+}

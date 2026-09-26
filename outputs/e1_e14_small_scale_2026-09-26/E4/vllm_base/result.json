@@ -1,0 +1,66 @@
+{
+  "lane": "E4",
+  "original_benchmark": "BankerToolBench (btb, official repo ff6db552, 100 tasks)",
+  "benchmark_run": "BankerToolBench official Harbor tasks + native rubric verifier (6-task seeded subset)",
+  "scope": "original-public-subset",
+  "substitute_gap": null,
+  "actor": "qwen36-base-bf16 (base weights) @ https://arvindcr4--pavlov-trained-actor-e1e14-basectl-serve.modal.run, vLLM 0.28, /v1/completions with the same chat-templated prompt ids as the Tinker arm",
+  "thinking": false,
+  "temperature": 0,
+  "max_tokens": 8192,
+  "n_selected": 6,
+  "n_scored": 6,
+  "n_errors": 1,
+  "item_ids": [
+    "btb-19b3361c",
+    "btb-11e08646",
+    "btb-07727295",
+    "btb-bc55d3e8",
+    "btb-507a3d72",
+    "btb-990cf5d7"
+  ],
+  "per_item_reward": {
+    "btb-19b3361c": 0.557,
+    "btb-11e08646": 0.0,
+    "btb-07727295": 0.0,
+    "btb-bc55d3e8": 0.0,
+    "btb-507a3d72": 0.0,
+    "btb-990cf5d7": 0.0
+  },
+  "metric": "mean native verifier reward (rubric raw_score/max_score, 0-1) per task; errors/no-deliverable = 0",
+  "value": 0.0928,
+  "numerator": 0.557,
+  "denominator": 6,
+  "wilson95": [
+    0.0107,
+    0.4929
+  ],
+  "grader": "native (BTB gandalf rubric verifier, judge gemini/gemini-3-flash-preview per task grader.toml)",
+  "compute_route": "Modal vLLM H200",
+  "cost": {
+    "tinker_tokens": 0,
+    "vllm_tokens": 2483084,
+    "n_requests": 153,
+    "n_cap_refusals": 3,
+    "colab_units": 0.0,
+    "modal_usd": null,
+    "modal_note": "shared H200 endpoints; lead reconciles the bill"
+  },
+  "started_utc": "2026-09-26T14:15:57Z",
+  "finished_utc": "2026-09-26T15:10:37Z",
+  "commands": [
+    "E4/code/shim_run.sh b4 18752 E4/vllm_base/raw/shim_ledger.jsonl E4/vllm_base/raw/cap.json --backend vllm --vllm-url https://arvindcr4--pavlov-trained-actor-e1e14-basectl-serve.modal.run --vllm-model qwen36-base-bf16 --context 32768 --max-inflight 1",
+    "E4/code/e4_loop_arm.sh vllm_base 18752 btb-19b3361c btb-11e08646 btb-07727295 btb-bc55d3e8 btb-507a3d72 btb-990cf5d7",
+    "python E4/code/compute_result.py --raw E4/vllm_base/raw --prefix e4-vllm_base btb-19b3361c btb-11e08646 btb-07727295 btb-bc55d3e8 btb-507a3d72 btb-990cf5d7"
+  ],
+  "raw_dir": "E4/vllm_base/raw/",
+  "selection": "random.Random(20260926).sample(sorted(btb-* task dirs), 10); first 6 run (token budget)",
+  "caveats": [
+    "Same 6 items, opencode harness, native verifier, greedy non-thinking decoding and 500k-token/task cap as the Tinker arm; only the actor endpoint differs between the two vLLM arms.",
+    "Context 32768 / output 8192 (vLLM max-model-len 32768) in both vLLM arms vs 65536/16384 in the Tinker arm; never difference against the Tinker arm.",
+    "Errors (cap-exhaustion agent exits, no verifier) score 0.",
+    "Only btb-19b3361c scored above 0.",
+    "n=6; wide uncertainty."
+  ],
+  "wall_time": "17:15:00Z-17:54:24Z (~39 min)"
+}

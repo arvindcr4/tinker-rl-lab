@@ -1,0 +1,9 @@
+Here is the complete implementation for the AI Legal Assistant.
+
+### Technical Architecture Decisions
+1.  **Framework**: Next.js 14+ (App Router) with TypeScript.
+2.  **Database & Auth**: Supabase (PostgreSQL + Auth).
+3.  **Vector Database**: ChromaDB (Self-hosted via Docker Compose).
+4.  **AI Model**: OpenAI (GPT-4o-mini for generation, text-embedding-3-small for embeddings).
+5.  **Search**: Tavily API (optimized for RAG).
+6.  **Voice**: Web Speech

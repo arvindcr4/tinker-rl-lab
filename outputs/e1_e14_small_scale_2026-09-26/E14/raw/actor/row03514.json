@@ -1,0 +1,15 @@
+{
+ "row_index": 3514,
+ "domain": [
+  "Mathematics -> Applied Mathematics -> Math Word Problems"
+ ],
+ "difficulty": 1.5,
+ "source": "pascal",
+ "problem": "Owen spends $\\$ 1.20$ per litre on gasoline. He uses an average of 1 L of gasoline to drive 12.5 km. How much will Owen spend on gasoline to drive 50 km?",
+ "answer": "\\$ 4.80",
+ "model_generation": "To determine how much Owen will spend on gasoline to drive 50 km, we can break the problem down into two logical steps: first, calculating the amount of gasoline needed, and second, calculating the cost of that gasoline.\n\n### Step 1: Calculate the amount of gasoline required\n\nWe know the following:\n*   Owen's fuel efficiency is $12.5$ km per $1$ liter.\n*   The total distance to be driven is $50$ km.\n\nTo find the liters of gasoline needed, we divide the total distance by the distance traveled per liter:\n\n$$ \\text{Liters needed} = \\frac{\\text{Total Distance}}{\\text{Distance per Liter}} $$\n\n$$ \\text{Liters needed} = \\frac{50 \\text{ km}}{12.5 \\text{ km/L}} $$\n\n$$ \\text{Liters needed} = 4 \\text{ liters} $$\n\n### Step 2: Calculate the total cost\n\nWe know the following:\n*   The cost of gasoline is $\\$1.20$ per liter.\n*   Owen needs $4$ liters.\n\nTo find the total cost, we multiply the number of liters by the price per liter:\n\n$$ \\text{Total Cost} = \\text{Liters needed} \\times \\text{Price per Liter} $$\n\n$$ \\text{Total Cost} = 4 \\times \\$1.20 $$\n\n$$ \\text{Total Cost} = \\$4.80 $$\n\n### Conclusion\n\nOwen will spend **$\\$4.80$** on gasoline to drive 50 km.",
+ "prompt_tokens": 80,
+ "completion_tokens": 348,
+ "stop_reason": "stop",
+ "error": null
+}

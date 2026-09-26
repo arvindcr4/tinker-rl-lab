@@ -1,0 +1,156 @@
+{
+    "id": "0084b1c4-fa24-47e4-b2a2-87d83bcf58dc",
+    "task_name": "dnsmasq-backdoor-detect-execvp-obfuscated",
+    "trial_name": "dnsmasq-backdoor-detect-execvp-o__Z79oiMf",
+    "trial_uri": "file:///Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e1_e14_small_scale_2026-09-26/E7/raw/jobs/e7_envfix_rerun2/dnsmasq-backdoor-detect-execvp-o__Z79oiMf",
+    "task_id": {
+        "path": "code/tasks_modal_envfix/dnsmasq-backdoor-detect-execvp-obfuscated"
+    },
+    "source": "tasks_modal_envfix",
+    "task_checksum": "919d2052b6e4b246a77701073b856162347bd70f10adf647de4c771f33a18417",
+    "config": {
+        "task": {
+            "path": "code/tasks_modal_envfix/dnsmasq-backdoor-detect-execvp-obfuscated",
+            "git_url": null,
+            "git_commit_id": null,
+            "name": null,
+            "ref": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": "tasks_modal_envfix"
+        },
+        "trial_name": "dnsmasq-backdoor-detect-execvp-o__Z79oiMf",
+        "trials_dir": "raw/jobs/e7_envfix_rerun2",
+        "install_only": false,
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "openai/Qwen/Qwen3.6-35B-A3B",
+            "n_concurrent": null,
+            "concurrency_group": null,
+            "skills": [],
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "resume_trajectory": false,
+            "load_trajectory": null,
+            "extra_allowed_hosts": [],
+            "kwargs": {
+                "api_base": "http://127.0.0.1:8767/v1",
+                "temperature": 0,
+                "max_turns": 25,
+                "model_info": {
+                    "max_input_tokens": 32768,
+                    "max_output_tokens": 4096,
+                    "input_cost_per_token": 0,
+                    "output_cost_per_token": 0
+                }
+            },
+            "mcp_servers": []
+        },
+        "environment": {
+            "type": "modal",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "cpu_enforcement_policy": "auto",
+            "memory_enforcement_policy": "auto",
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "override_tpu": null,
+            "mounts": null,
+            "extra_docker_compose": [],
+            "kwargs": {},
+            "extra_allowed_hosts": []
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "extra_instruction_paths": [],
+        "job_id": "d8b434d0-ecf7-4e66-8947-7a003639d287"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "Qwen/Qwen3.6-35B-A3B",
+            "provider": "openai"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 402770,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 6723,
+        "cost_usd": null,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 25,
+            "api_request_times_msec": [
+                2431.225061416626,
+                2471.883773803711,
+                2015.8886909484863,
+                2076.9400596618652,
+                2096.790075302124,
+                3385.140895843506,
+                1997.4520206451416,
+                2185.070753097534,
+                2152.5259017944336,
+                2542.725086212158,
+                1957.3581218719482,
+                2157.473087310791,
+                1606.3499450683594,
+                2370.8720207214355,
+                1928.4882545471191,
+                2419.804096221924,
+                1847.6800918579102,
+                2209.362268447876,
+                4245.38516998291,
+                2166.965961456299,
+                4046.926975250244,
+                2243.407964706421,
+                1897.7253437042236,
+                2034.5871448516846,
+                2052.5381565093994,
+                2369.235038757324,
+                2339.5960330963135,
+                2082.9577445983887
+            ],
+            "summarization_count": 1
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-09-26T14:46:53.136398Z",
+    "finished_at": "2026-09-26T14:50:24.997138Z",
+    "environment_setup": {
+        "started_at": "2026-09-26T14:46:53.137949Z",
+        "finished_at": "2026-09-26T14:46:57.483071Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-09-26T14:46:57.483093Z",
+        "finished_at": "2026-09-26T14:47:03.384507Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-09-26T14:47:03.384551Z",
+        "finished_at": "2026-09-26T14:50:10.439172Z"
+    },
+    "verifier": {
+        "started_at": "2026-09-26T14:50:18.304002Z",
+        "finished_at": "2026-09-26T14:50:24.375896Z"
+    },
+    "step_results": null
+}

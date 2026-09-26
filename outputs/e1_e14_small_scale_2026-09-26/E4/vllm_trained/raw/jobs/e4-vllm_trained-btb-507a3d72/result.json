@@ -1,0 +1,43 @@
+{
+    "id": "430e190a-464f-45f5-8090-dbddadb44f97",
+    "started_at": "2026-09-26T22:23:42.090645",
+    "updated_at": "2026-09-26T22:37:38.875619",
+    "finished_at": "2026-09-26T22:37:38.875619",
+    "n_total_trials": 1,
+    "stats": {
+        "n_completed_trials": 1,
+        "n_errored_trials": 1,
+        "n_running_trials": 0,
+        "n_pending_trials": 0,
+        "n_cancelled_trials": 0,
+        "n_retries": 0,
+        "evals": {
+            "opencode__pavlov-qwen36-tinker__btb": {
+                "n_trials": 1,
+                "n_errors": 1,
+                "metrics": [
+                    {
+                        "mean": 0.0
+                    }
+                ],
+                "pass_at_k": {},
+                "reward_stats": {
+                    "reward": {
+                        "0.0": [
+                            "btb-507a3d72__5V73A8D"
+                        ]
+                    }
+                },
+                "exception_stats": {
+                    "NonZeroAgentExitCodeError": [
+                        "btb-507a3d72__5V73A8D"
+                    ]
+                }
+            }
+        },
+        "n_input_tokens": 370810,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 102315,
+        "cost_usd": null
+    }
+}

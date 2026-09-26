@@ -1,0 +1,25 @@
+{
+    "progression_percentage": 5.882352941176471,
+    "standard_error": 5.369828995148688,
+    "average_steps": 71.5,
+    "episodes_played": 6,
+    "tasks": {
+        "coin_collector": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 2
+        },
+        "the_cooking_game": {
+            "progression_percentage": 17.647058823529413,
+            "standard_error": 12.478354962115544,
+            "episodes_played": 2
+        },
+        "treasure_hunter": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 2
+        }
+    },
+    "input_tokens": 670697,
+    "output_tokens": 1281
+}

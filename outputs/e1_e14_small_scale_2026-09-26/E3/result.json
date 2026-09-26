@@ -1,0 +1,57 @@
+{
+ "lane": "E3",
+ "original_benchmark": "SDAB (stateful DevOps agent benchmark; private data, externally blocked)",
+ "benchmark_run": "Terminal-Bench v2.0 (terminal-bench@2.0 via Harbor 0.20.0), 8-task seeded subset",
+ "scope": "substitute",
+ "substitute_gap": "Generic terminal tasks with native per-task test verifiers, not SDAB's DevOps categories or stateful grading.",
+ "actor": "Qwen/Qwen3.6-35B-A3B base (no adapter), Tinker",
+ "thinking": false,
+ "temperature": 0,
+ "max_tokens": 4096,
+ "n_selected": 8,
+ "n_scored": 8,
+ "n_errors": 0,
+ "item_ids": [
+  "build-cython-ext",
+  "build-pmars",
+  "cobol-modernization",
+  "count-dataset-tokens",
+  "hf-model-inference",
+  "largest-eigenval",
+  "pytorch-model-recovery",
+  "query-optimize"
+ ],
+ "metric": "task success rate (native TB2 verifier reward==1), pass@1",
+ "value": 0.5,
+ "numerator": 4,
+ "denominator": 8,
+ "wilson95": [
+  0.2152,
+  0.7848
+ ],
+ "grader": "native",
+ "compute_route": "Tinker sampling via local OpenAI-compatible shim (E3/code/tinker_shim.py, 127.0.0.1:8763); Harbor terminus-2 agent on host; task containers on Modal sandboxes (TB2 images are amd64-only)",
+ "cost": {
+  "tinker_tokens": 1455114,
+  "colab_units": 0.0,
+  "modal_usd": null
+ },
+ "started_utc": "2026-09-26T14:13:24Z",
+ "finished_utc": "2026-09-26T14:29:30Z",
+ "commands": [
+  "set -a; source .env; set +a; SHIM_LOG=E3/raw/shim_calls.jsonl SHIM_BUDGET=2600000 PORT=8763 /Users/arvind/.local/share/uv/tools/tinker/bin/python E3/code/tinker_shim.py",
+  "harbor datasets download terminal-bench@2.0 -o E3/code/tb2",
+  "python3 (inline, see README) -> E3/raw/eligibility.json, E3/raw/selection.json",
+  "E3/code/run_e3.sh",
+  "python3 E3/code/finalize.py E3 '<overrides>'"
+ ],
+ "raw_dir": "E3/raw/",
+ "caveats": [
+  "New base-model arm; never pool with or present as the original SDAB/seed809 lane score.",
+  "Eligibility filter before seeded sampling: difficulty != hard, agent timeout <= 900 s, 1 CPU, 2 GB (35/89 tasks); the 8-task subset is easier than the full TB2 distribution, so this is not comparable to TB2 leaderboard numbers.",
+  "terminus-2 capped at max_turns=25 and a 32k-token context window (shim truncates head+tail beyond that); temperature forced to 0 in the shim.",
+  "n=8: Wilson 95% CI is wide.",
+  "Modal cost not separable: all Harbor Modal sandboxes bill to one shared '__harbor__' app (see E7 README for the combined figure)."
+ ],
+ "modal_usd_note": "Harbor bills all Modal sandboxes to one shared app '__harbor__': $0.711 for 2026-09-26 14:00-15:00Z, covering E3 + E7 (and any other Harbor-on-Modal lane in that hour); upper bound for E3+E7 combined."
+}

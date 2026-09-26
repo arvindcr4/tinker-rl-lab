@@ -1,0 +1,65 @@
+Traceback (most recent call last):
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/trial/trial.py", line 351, in run
+    await self._prepare()
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/trial/trial.py", line 385, in _prepare
+    await self._setup_agent_environment()
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/trial/trial.py", line 1148, in _setup_agent_environment
+    await self._start_agent_environment()
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/trial/trial.py", line 1154, in _start_agent_environment
+    await asyncio.wait_for(
+  File "/Users/arvind/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 520, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/environments/modal.py", line 1448, in start
+    return await self._strategy.start(force_build)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/environments/modal.py", line 298, in start
+    env._sandbox = await env._create_sandbox(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/tenacity/asyncio/__init__.py", line 193, in async_wrapped
+    return await copy(fn, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/tenacity/asyncio/__init__.py", line 112, in __call__
+    do = await self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/tenacity/asyncio/__init__.py", line 157, in iter
+    result = await action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/tenacity/_utils.py", line 111, in inner
+    return call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/tenacity/asyncio/__init__.py", line 116, in __call__
+    result = await fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/environments/modal.py", line 1188, in _create_sandbox
+    return await create_fn(
+           ^^^^^^^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/modal/sandbox.py", line 723, in create
+    return await _Sandbox._create(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/modal/sandbox.py", line 856, in _create
+    await resolver.load(obj, load_context)
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/modal/sandbox.py", line 472, in _load
+    dep_timings = await _gather_load_with_timings(dep_tasks) if dep_tasks else []
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/modal/sandbox.py", line 97, in _gather_load_with_timings
+    await asyncio.gather(*(timed(c) for c in load_coros))
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/modal/sandbox.py", line 94, in timed
+    obj = await coro
+          ^^^^^^^^^^
+  File "/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/modal/_image.py", line 774, in _load
+    raise ImageBuildError(msg, image_id)
+modal.exception.ImageBuildError: Image build for im-PkptggGbyViZPNQgrhUBLZ failed.
+View the build logs:
+  modal image logs im-PkptggGbyViZPNQgrhUBLZ

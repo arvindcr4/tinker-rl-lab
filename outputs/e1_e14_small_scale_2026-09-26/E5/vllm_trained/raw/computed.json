@@ -1,0 +1,37 @@
+{
+  "per_item": {
+    "airline/8": 1,
+    "airline/6": 1,
+    "airline/2": 1,
+    "airline/22": 0,
+    "airline/18": 1,
+    "retail/18": 0,
+    "retail/12": 1,
+    "retail/9": 0,
+    "retail/45": 0,
+    "retail/90": 0
+  },
+  "termination": {
+    "airline/8": "user_stop",
+    "airline/6": "user_stop",
+    "airline/2": "user_stop",
+    "airline/22": "user_stop",
+    "airline/18": "user_stop",
+    "retail/18": "too_many_errors",
+    "retail/12": "user_stop",
+    "retail/9": "user_stop",
+    "retail/45": "user_stop",
+    "retail/90": "user_stop"
+  },
+  "numerator": 5,
+  "denominator": 10,
+  "value": 0.5,
+  "n_errors": 0,
+  "wilson95": [
+    0.2366,
+    0.7634
+  ],
+  "tokens_by_tag": {
+    "agent": 1041801
+  }
+}

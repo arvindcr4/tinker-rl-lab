@@ -1,0 +1,55 @@
+{
+ "lane": "E7",
+ "original_benchmark": "BinaryAudit (QuesmaOrg/BinaryAudit, public Harbor tasks)",
+ "benchmark_run": "BinaryAudit cbd86c7, same 6 seeded primary_eval tasks as E7/result.json, native test.sh",
+ "scope": "original-public-subset",
+ "substitute_gap": null,
+ "thinking": false,
+ "temperature": 0,
+ "max_tokens": 4096,
+ "metric": "task success rate (native test.sh reward==1), pass@1",
+ "grader": "native",
+ "commands": [
+  "E3/code/start_paired_shim.sh E7 <arm> <port> 3500000",
+  "E7/code/run_e7_<arm>.sh",
+  "python3 E3/code/paired_finalize.py E7 '<overrides>'"
+ ],
+ "caveats": [
+  "Paired vLLM arm; never difference against the Tinker-base arm (0/6).",
+  "Same tasks, terminus-2 max_turns=25, 32k ctx, T=0 as the Tinker arm; only endpoint/model id differ. Single job per arm (snapshot fix applied up front), Harbor -n 3.",
+  "lighttpd-authentication-harvester-detect fails to build on Modal (needs binfmt) in both arms: counted as failure (n_errors=1).",
+  "n=6: very low power."
+ ],
+ "actor": "pavlov-public-portfolio-bf16 @ https://arvindcr4--pavlov-trained-actor-e1e14-serve.modal.run (vLLM 0.28.0, BF16, one H200)",
+ "n_selected": 6,
+ "n_scored": 5,
+ "n_errors": 1,
+ "item_ids": [
+  "dnsmasq-backdoor-detect",
+  "dnsmasq-backdoor-detect-execvp-obfuscated",
+  "dnsmasq-backdoor-detect-negative",
+  "dnsmasq-backdoor-detect-printf",
+  "lighttpd-authentication-harvester-detect",
+  "lighttpd-backdoor-detect-negative"
+ ],
+ "value": 0.1667,
+ "numerator": 1,
+ "denominator": 6,
+ "wilson95": [
+  0.0301,
+  0.5635
+ ],
+ "compute_route": "Modal vLLM H200; prompts via local shim E3/code/tinker_shim.py SHIM_BACKEND=vllm; terminus-2 on host; environments on Modal from E7/code/tasks_modal_paired (base stage inlined + debian:11 snapshot fix for all dnsmasq tasks)",
+ "cost": {
+  "tinker_tokens": 0,
+  "vllm_tokens": 2033284,
+  "vllm_calls": 141,
+  "colab_units": 0.0,
+  "modal_usd": null,
+  "modal_usd_note": "shared GPU bill reconciled by lead"
+ },
+ "wall_time_s": 853,
+ "started_utc": "2026-09-26T15:34:12Z",
+ "finished_utc": "2026-09-26T15:48:25Z",
+ "raw_dir": "E7/vllm_trained/raw/"
+}

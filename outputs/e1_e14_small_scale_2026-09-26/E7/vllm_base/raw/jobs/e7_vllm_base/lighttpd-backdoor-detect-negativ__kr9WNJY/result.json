@@ -1,0 +1,156 @@
+{
+    "id": "1ca770a5-4eb0-43ba-a856-357893b68c70",
+    "task_name": "lighttpd-backdoor-detect-negative",
+    "trial_name": "lighttpd-backdoor-detect-negativ__kr9WNJY",
+    "trial_uri": "file:///Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e1_e14_small_scale_2026-09-26/E7/vllm_base/raw/jobs/e7_vllm_base/lighttpd-backdoor-detect-negativ__kr9WNJY",
+    "task_id": {
+        "path": "code/tasks_modal_paired/lighttpd-backdoor-detect-negative"
+    },
+    "source": "tasks_modal_paired",
+    "task_checksum": "bb8d01db66b95afe666f1d9470c0021c35a717c9c117e0eb82478c9b316ddeb8",
+    "config": {
+        "task": {
+            "path": "code/tasks_modal_paired/lighttpd-backdoor-detect-negative",
+            "git_url": null,
+            "git_commit_id": null,
+            "name": null,
+            "ref": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": "tasks_modal_paired"
+        },
+        "trial_name": "lighttpd-backdoor-detect-negativ__kr9WNJY",
+        "trials_dir": "vllm_base/raw/jobs/e7_vllm_base",
+        "install_only": false,
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "openai/Qwen/Qwen3.6-35B-A3B",
+            "n_concurrent": null,
+            "concurrency_group": null,
+            "skills": [],
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "resume_trajectory": false,
+            "load_trajectory": null,
+            "extra_allowed_hosts": [],
+            "kwargs": {
+                "api_base": "http://127.0.0.1:18934/v1",
+                "temperature": 0,
+                "max_turns": 25,
+                "model_info": {
+                    "max_input_tokens": 32768,
+                    "max_output_tokens": 4096,
+                    "input_cost_per_token": 0,
+                    "output_cost_per_token": 0
+                }
+            },
+            "mcp_servers": []
+        },
+        "environment": {
+            "type": "modal",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "cpu_enforcement_policy": "auto",
+            "memory_enforcement_policy": "auto",
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "override_tpu": null,
+            "mounts": null,
+            "extra_docker_compose": [],
+            "kwargs": {},
+            "extra_allowed_hosts": []
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "extra_instruction_paths": [],
+        "job_id": "af7f4597-c7d3-4ecc-83d0-c77af4789a1f"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "Qwen/Qwen3.6-35B-A3B",
+            "provider": "openai"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 343955,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 9798,
+        "cost_usd": null,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 25,
+            "api_request_times_msec": [
+                2495.8291053771973,
+                4837.435007095337,
+                4624.299764633179,
+                5243.433952331543,
+                3910.3548526763916,
+                4608.983993530273,
+                6296.276807785034,
+                8240.751028060913,
+                4693.711042404175,
+                7165.524005889893,
+                7598.939895629883,
+                5294.114112854004,
+                4514.142990112305,
+                6223.702669143677,
+                4294.111967086792,
+                3063.877820968628,
+                3959.6259593963623,
+                3101.814031600952,
+                3570.6498622894287,
+                3428.849935531616,
+                2564.433813095093,
+                2580.332040786743,
+                2374.699831008911,
+                3458.3208560943604,
+                3105.2258014678955,
+                4020.5891132354736,
+                3594.533920288086,
+                4126.704216003418
+            ],
+            "summarization_count": 1
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-09-26T15:29:37.316805Z",
+    "finished_at": "2026-09-26T15:35:28.310949Z",
+    "environment_setup": {
+        "started_at": "2026-09-26T15:29:37.318669Z",
+        "finished_at": "2026-09-26T15:29:42.005409Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-09-26T15:29:42.005430Z",
+        "finished_at": "2026-09-26T15:29:49.664202Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-09-26T15:29:49.664290Z",
+        "finished_at": "2026-09-26T15:35:07.883958Z"
+    },
+    "verifier": {
+        "started_at": "2026-09-26T15:35:19.199792Z",
+        "finished_at": "2026-09-26T15:35:27.723747Z"
+    },
+    "step_results": null
+}

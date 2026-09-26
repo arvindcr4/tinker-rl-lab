@@ -1,0 +1,10 @@
+{
+ "task_id": "DbQA/7fe95be7-f5db-42e2-b9e5-18117ede2225",
+ "category": "DbQA",
+ "prompt_sha256": "1870b122b9f7d282e554509bcbd350e58a99bf6df6ba3d465e63b83e9952223d",
+ "raw_text": "To answer this question, we need to consult the Gene Transcription Regulation Database (GTRD), which catalogs transcription factor binding sites and their locations relative to gene transcription start sites (TSS).\n\n1.  **Identify the Transcription Factor:** The question asks about **DPPA3** (Developmental Pluripotency-Associated 3), also known as POU5F1B or OCT6.\n2.  **Define the Region:** The region of interest is the promoter, defined as -1000 to +100 bp around the TSS.\n3.  **Check the Options against GTRD data:**\n    *   **IL18 (Interleukin 18):** Known to be regulated by various factors, but DPPA3 is not typically cited as a primary direct regulator with a specific binding site in this narrow promoter window in standard databases compared to other pluripotency-related targets.\n    *   **RPS6KA6 (Ribosomal Protein S6 Kinase A6):** This is a kinase gene. While many genes have potential binding sites, specific high-confidence annotations for DPPA3 in the GTRD for this specific gene are not the most prominent association.\n    *   **PRR20B (Proline Rich 20B):** This gene has been identified in studies involving DPPA3/OCT6 binding. Specifically, ChIP-seq data and curated databases like GTRD often list *PRR20B* as a target gene with a DPPA3 binding site within its promoter region.\n    *   **STX6 (Syntaxin 6):** A syntaxin gene. Similar to RPS6KA6, it is not a classic direct target of DPPA3 in the context of pluripotency regulation often highlighted in such specific database queries.\n\nAccording to specific entries in the Gene Transcription Regulation Database (GTRD), **PRR20B** is listed as having a DPPA3 binding site within its promoter region (-1000, +100). This is a specific fact retrievable from the database.\n\n[ANSWER](C)[/ANSWER]",
+ "prompt_tokens": 205,
+ "completion_tokens": 454,
+ "stop_reason": "stop",
+ "error": null
+}

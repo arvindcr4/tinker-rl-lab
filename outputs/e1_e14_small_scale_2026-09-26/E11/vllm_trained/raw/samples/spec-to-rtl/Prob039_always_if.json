@@ -1,0 +1,10 @@
+{
+ "dataset": "spec-to-rtl",
+ "problem_id": "Prob039_always_if",
+ "response": "```verilog\nmodule TopModule(\n    input a,\n    input b,\n    input sel_b1,\n    input sel_b2,\n    output out_assign,\n    output out_always\n);\n\n    // Using assign statement (continuous assignment)\n    // Choose b if both sel_b1 and sel_b2 are true, otherwise choose a\n    assign out_assign = (sel_b1 && sel_b2) ? b : a;\n\n    // Using procedural if statement\n    reg out_always;\n    always @(*) begin\n        if (sel_b1 && sel_b2) begin\n            out_always = b;\n        end else begin\n            out_always = a;\n        end\n    end\n\nendmodule\n```",
+ "prompt_tokens": 135,
+ "completion_tokens": 162,
+ "stop_reason": "stop",
+ "error": null,
+ "module": "module TopModule(\n    input a,\n    input b,\n    input sel_b1,\n    input sel_b2,\n    output out_assign,\n    output out_always\n);\n\n    // Using assign statement (continuous assignment)\n    // Choose b if both sel_b1 and sel_b2 are true, otherwise choose a\n    assign out_assign = (sel_b1 && sel_b2) ? b : a;\n\n    // Using procedural if statement\n    reg out_always;\n    always @(*) begin\n        if (sel_b1 && sel_b2) begin\n            out_always = b;\n        end else begin\n            out_always = a;\n        end\n    end\n\nendmodule"
+}

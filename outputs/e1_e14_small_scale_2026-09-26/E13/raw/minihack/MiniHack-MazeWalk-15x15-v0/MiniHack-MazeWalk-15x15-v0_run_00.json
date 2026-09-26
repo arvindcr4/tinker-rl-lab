@@ -1,0 +1,41 @@
+{
+    "task": "MiniHack-MazeWalk-15x15-v0",
+    "action_frequency": {
+        "east": 1,
+        "south": 50,
+        "north": 49
+    },
+    "input_tokens": 317252,
+    "output_tokens": 200,
+    "done": true,
+    "episode_return": -0.01,
+    "num_steps": 100,
+    "failed_candidates": [],
+    "progression": 0.0,
+    "end_reason": -1,
+    "process_num": "p0",
+    "seed": 20260926,
+    "agent": {
+        "type": "naive",
+        "remember_cot": true,
+        "max_text_history": 16,
+        "max_image_history": 0,
+        "max_cot_history": 1,
+        "max_icl_history": 1000,
+        "cache_icl": false
+    },
+    "client": {
+        "client_name": "vllm",
+        "model_id": "Qwen/Qwen3.6-35B-A3B",
+        "base_url": "http://127.0.0.1:8773/v1",
+        "generate_kwargs": {
+            "temperature": 0.0,
+            "max_tokens": 128,
+            "thinking_budget": null
+        },
+        "timeout": 60,
+        "max_retries": 5,
+        "delay": 2,
+        "alternate_roles": false
+    }
+}

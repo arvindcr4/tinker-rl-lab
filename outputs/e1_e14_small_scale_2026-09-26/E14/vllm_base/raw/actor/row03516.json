@@ -1,0 +1,16 @@
+{
+ "row_index": 3516,
+ "domain": [
+  "Mathematics -> Algebra -> Prealgebra -> Percentages -> Other",
+  "Mathematics -> Applied Mathematics -> Math Word Problems"
+ ],
+ "difficulty": 1.5,
+ "source": "cayley",
+ "problem": "Meg started with the number 100. She increased this number by $20\\%$ and then increased the resulting number by $50\\%$. What was her final result?",
+ "answer": "180",
+ "model_generation": "To find Meg's final result, we will calculate the changes step-by-step.\n\n### Step 1: Increase 100 by 20%\n\nFirst, we calculate $20\\%$ of the starting number, 100.\n$$ 20\\% \\text{ of } 100 = 0.20 \\times 100 = 20 $$\n\nNext, we add this increase to the original number:\n$$ 100 + 20 = 120 $$\n\nSo, after the first increase, the number is **120**.\n\n### Step 2: Increase the result (120) by 50%\n\nNow, we take the new number, 120, and increase it by $50\\%$.\n$$ 50\\% \\text{ of } 120 = 0.50 \\times 120 = 60 $$\n\nNext, we add this increase to the current number:\n$$ 120 + 60 = 180 $$\n\n### Alternative Method: Using Multipliers\n\nWe can also solve this by multiplying the original number by the growth factors for each step.\n*   Increasing by $20\\%$ is equivalent to multiplying by $1 + 0.20 = 1.2$.\n*   Increasing by $50\\%$ is equivalent to multiplying by $1 + 0.50 = 1.5$.\n\n$$ 100 \\times 1.2 \\times 1.5 $$\n$$ 100 \\times 1.2 = 120 $$\n$$ 120 \\times 1.5 = 180 $$\n\n### Conclusion\n\nMeg's final result was **180**.",
+ "prompt_tokens": 71,
+ "completion_tokens": 391,
+ "stop_reason": "stop",
+ "error": null
+}

@@ -1,0 +1,137 @@
+{
+    "id": "615fd11c-29e8-4940-880f-f228e78171a8",
+    "task_name": "btb-507a3d72",
+    "trial_name": "btb-507a3d72__LnBR3Dj",
+    "trial_uri": "file:///Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e1_e14_small_scale_2026-09-26/E4/raw/jobs/e4-small-btb-507a3d72/btb-507a3d72__LnBR3Dj",
+    "task_id": {
+        "path": "datasets/btb/btb-507a3d72"
+    },
+    "source": "btb",
+    "task_checksum": "6659cd819dfc3f4ffc4f3b4719a0f2fbad40338528750523ef26e440ec485352",
+    "config": {
+        "task": {
+            "path": "datasets/btb/btb-507a3d72",
+            "git_url": null,
+            "git_commit_id": null,
+            "name": null,
+            "ref": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": "btb"
+        },
+        "trial_name": "btb-507a3d72__LnBR3Dj",
+        "trials_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e1_e14_small_scale_2026-09-26/E4/raw/jobs/e4-small-btb-507a3d72",
+        "install_only": false,
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "opencode",
+            "import_path": null,
+            "model_name": "openai/pavlov-qwen36-tinker",
+            "n_concurrent": null,
+            "concurrency_group": null,
+            "skills": [],
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "resume_trajectory": false,
+            "load_trajectory": null,
+            "extra_allowed_hosts": [],
+            "kwargs": {
+                "prompt_template_path": "prompts/system_prompt.j2",
+                "opencode_config": {
+                    "experimental": {
+                        "continue_loop_on_deny": true
+                    },
+                    "provider": {
+                        "openai": {
+                            "models": {
+                                "pavlov-qwen36-tinker": {
+                                    "limit": {
+                                        "context": 65536,
+                                        "output": [REDACTED]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "env": {
+                "OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX": "****"
+            },
+            "mcp_servers": []
+        },
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "cpu_enforcement_policy": "auto",
+            "memory_enforcement_policy": "auto",
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "override_tpu": null,
+            "mounts": null,
+            "extra_docker_compose": [],
+            "kwargs": {},
+            "extra_allowed_hosts": []
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [
+            "/home/agent/workspace"
+        ],
+        "extra_instruction_paths": [],
+        "job_id": "a1736e98-d3b2-46c5-9275-8643ce679c25"
+    },
+    "agent_info": {
+        "name": "opencode",
+        "version": "1.18.32",
+        "model_info": {
+            "name": "pavlov-qwen36-tinker",
+            "provider": "openai"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 42999,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 8521,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-09-26T15:04:07.641146Z",
+    "finished_at": "2026-09-26T15:06:51.263742Z",
+    "environment_setup": {
+        "started_at": "2026-09-26T15:04:07.663902Z",
+        "finished_at": "2026-09-26T15:04:26.784936Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-09-26T15:04:26.785055Z",
+        "finished_at": "2026-09-26T15:06:09.415622Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-09-26T15:06:09.416077Z",
+        "finished_at": "2026-09-26T15:06:38.337542Z"
+    },
+    "verifier": {
+        "started_at": "2026-09-26T15:06:38.895138Z",
+        "finished_at": "2026-09-26T15:06:39.156356Z"
+    },
+    "step_results": null
+}

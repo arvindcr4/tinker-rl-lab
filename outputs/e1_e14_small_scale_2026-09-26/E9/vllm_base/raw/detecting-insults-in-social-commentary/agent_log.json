@@ -1,0 +1,17 @@
+{
+ "comp": "detecting-insults-in-social-commentary",
+ "upload_rc": 0,
+ "setup_out": " 0.6.0)\n[colab] Run 'colab update' to update.\n[colab] To silence this check, set \"enable_update_check\": false in ~/.config/colab-cli/settings.json\n\nextracted\n/tmp/ipykernel_2029/1375208746.py:1: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.\n  import tarfile; tarfile.open('/content/detecting-insults-in-social-commentary.tar.gz').extractall('/content'); print('extracted')\n",
+ "attempts": [
+  {
+   "attempt": 1,
+   "prompt_tokens": 2743,
+   "sample_tokens": 1062,
+   "shim_error": null,
+   "exec_seconds": 23.2,
+   "ok": true,
+   "exec_tail": "\n[colab] A new version of Colab CLI is available: 0.7.4 (current: 0.6.0)\n[colab] Run 'colab update' to update.\n[colab] To silence this check, set \"enable_update_check\": false in ~/.config/colab-cli/settings.json\n\nRC= 0 HAS_SUB= True\nSTDOUT_TAIL Loading data...\nCleaning data...\nExtracting TF-IDF features...\nTF-IDF shape: (3947, 19171)\nTraining LightGBM model...\nTraining fold 1/5...\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's binary_logloss: 0.373439\nEarly stopping, best iteration is:\n[100]\tvalid_0's binary_logloss: 0.373439\nTraining fold 2/5...\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's binary_logloss: 0.373693\nEarly stopping, best iteration is:\n[89]\tvalid_0's binary_logloss: 0.369907\nTraining fold 3/5...\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's binary_logloss: 0.388494\nEarly stopping, best iteration is:\n[94]\tvalid_0's binary_logloss: 0.386747\nTraining fold 4/5...\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's binary_logloss: 0.420477\nEarly stopping, best iteration is:\n[80]\tvalid_0's binary_logloss: 0.414666\nTraining fold 5/5...\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's binary_logloss: 0.424874\nEarly stopping, best iteration is:\n[78]\tvalid_0's binary_logloss: 0.41973\nOut-of-Fold Log Loss: 0.3929\nCreating submission...\nSubmission saved to submission.csv\n\nSTDERR_TAIL \n"
+  }
+ ],
+ "download_rc": 0
+}

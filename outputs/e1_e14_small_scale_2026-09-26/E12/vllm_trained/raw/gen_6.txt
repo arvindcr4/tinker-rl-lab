@@ -1,0 +1,1832 @@
+Here is the complete implementation for the Rental Booking Application.
+
+### Prerequisites
+1.  **Supabase Project**: Create a project at [supabase.com](https://supabase.com).
+2.  **Stripe Account**: Create a project at [stripe.com](https://stripe.com).
+3.  **Environment Variables**: You will need to set the following in your `.env.local` file (see the `.env.example` content below):
+    *   `NEXT_PUBLIC_SUPABASE_URL`
+    *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+    *   `SUPABASE_SERVICE_ROLE_KEY` (For server-side DB operations)
+    *   `STRIPE_SECRET_KEY`
+    *   `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+    *   `STRIPE_WEBHOOK_SECRET`
+
+### 1. Database Schema (Supabase SQL)
+Run this in your Supabase SQL Editor.
+
+=== FILE: supabase_schema.sql ===
+```sql
+-- Enable UUID extension
+create extension if not exists "uuid-ossp";
+
+-- Profiles table (extends auth.users)
+create table profiles (
+  id uuid references auth.users not null primary key,
+  email text,
+  full_name text,
+  avatar_url text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table profiles enable row level security;
+
+create policy "Public profiles are viewable by everyone."
+  on profiles for select
+  using ( true );
+
+create policy "Users can insert their own profile."
+  on profiles for insert
+  with check ( auth.uid() = id );
+
+create policy "Users can update own profile."
+  on profiles for update
+  using ( auth.uid() = id );
+
+-- Trigger to create profile on signup
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, email, full_name)
+  values (new.id, new.email, new.raw_user_meta_data->>'full_name');
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- Listings table
+create table listings (
+  id uuid default uuid_generate_v4() primary key,
+  owner_id uuid references profiles(id) not null,
+  title text not null,
+  description text not null,
+  price_per_night numeric(10,2) not null,
+  location text not null,
+  property_type text not null,
+  max_guests integer not null,
+  amenities text[] default '{}',
+  images text[] default '{}',
+  video_url text,
+  is_active boolean default true,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table listings enable row level security;
+
+create policy "Listings are viewable by everyone."
+  on listings for select
+  using ( true );
+
+create policy "Owners can insert their own listings."
+  on listings for insert
+  with check ( auth.uid() = owner_id );
+
+create policy "Owners can update their own listings."
+  on listings for update
+  using ( auth.uid() = owner_id );
+
+create policy "Owners can delete their own listings."
+  on listings for delete
+  using ( auth.uid() = owner_id );
+
+-- Bookings table
+create table bookings (
+  id uuid default uuid_generate_v4() primary key,
+  listing_id uuid references listings(id) on delete cascade not null,
+  guest_id uuid references profiles(id) not null,
+  start_date date not null,
+  end_date date not null,
+  total_price numeric(10,2) not null,
+  status text default 'pending' check (status in ('pending', 'confirmed', 'cancelled', 'completed')),
+  stripe_payment_intent_id text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table bookings enable row level security;
+
+create policy "Users can view their own bookings."
+  on bookings for select
+  using ( auth.uid() = guest_id );
+
+create policy "Users can insert their own bookings."
+  on bookings for insert
+  with check ( auth.uid() = guest_id );
+
+-- Transactions table (for payment history)
+create table transactions (
+  id uuid default uuid_generate_v4() primary key,
+  booking_id uuid references bookings(id) on delete cascade,
+  amount numeric(10,2) not null,
+  currency text default 'usd',
+  status text not null check (status in ('pending', 'succeeded', 'failed', 'refunded')),
+  stripe_payment_intent_id text unique,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table transactions enable row level security;
+
+create policy "Transactions viewable by booking owner."
+  on transactions for select
+  using (
+    exists (
+      select 1 from bookings
+      where bookings.id = transactions.booking_id
+      and bookings.guest_id = auth.uid()
+    )
+  );
+
+-- Function to check availability
+create or replace function check_availability(
+  listing_id_param uuid,
+  start_date_param date,
+  end_date_param date
+)
+returns boolean as $$
+declare
+  conflict_count integer;
+begin
+  select count(*) into conflict_count
+  from bookings
+  where listing_id = listing_id_param
+  and status in ('confirmed', 'pending')
+  and (
+    (start_date_param >= start_date and start_date_param < end_date) or
+    (end_date_param > start_date and end_date_param <= end_date) or
+    (start_date_param <= start_date and end_date_param >= end_date)
+  );
+  return conflict_count = 0;
+end;
+$$ language plpgsql security definer;
+```
+
+### 2. Environment Configuration
+
+=== FILE: .env.example ===
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+STRIPE_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+=== FILE: .env.local ===
+```env
+# Copy contents from .env.example and fill in values
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+STRIPE_SECRET_KEY=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_WEBHOOK_SECRET=
+```
+
+=== FILE: next.config.js ===
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'supabase.co',
+      },
+    ],
+  },
+};
+
+module.exports = nextConfig;
+```
+
+=== FILE: tsconfig.json ===
+```json
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+```
+
+=== FILE: package.json ===
+```json
+{
+  "name": "rental-booking-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@stripe/stripe-js": "^2.2.0",
+    "@supabase/auth-helpers-nextjs": "^0.8.1",
+    "@supabase/ssr": "^0.0.10",
+    "@supabase/supabase-js": "^2.39.0",
+    "@types/node": "20.6.2",
+    "@types/react": "18.2.22",
+    "@types/react-dom": "18.2.7",
+    "autoprefixer": "10.4.15",
+    "date-fns": "^2.30.0",
+    "eslint": "8.49.0",
+    "eslint-config-next": "13.5.1",
+    "next": "13.5.1",
+    "postcss": "8.4.29",
+    "react": "18.2.0",
+    "react-day-picker": "^8.8.2",
+    "react-dom": "18.2.0",
+    "stripe": "^13.6.0",
+    "tailwindcss": "3.3.3",
+    "typescript": "5.2.2"
+  }
+}
+```
+
+=== FILE: tailwind.config.ts ===
+```typescript
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: [
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        'airbnb-red': '#FF385C',
+        'airbnb-dark': '#222222',
+      }
+    },
+  },
+  plugins: [],
+}
+export default config
+```
+
+=== FILE: postcss.config.js ===
+```javascript
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+```
+
+=== FILE: src/types/index.ts ===
+```typescript
+export interface Profile {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
+export interface Listing {
+  id: string;
+  owner_id: string;
+  title: string;
+  description: string;
+  price_per_night: number;
+  location: string;
+  property_type: string;
+  max_guests: number;
+  amenities: string[];
+  images: string[];
+  video_url: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Booking {
+  id: string;
+  listing_id: string;
+  guest_id: string;
+  start_date: string;
+  end_date: string;
+  total_price: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  stripe_payment_intent_id: string | null;
+  created_at: string;
+}
+
+export interface Transaction {
+  id: string;
+  booking_id: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'succeeded' | 'failed' | 'refunded';
+  stripe_payment_intent_id: string;
+  created_at: string;
+}
+```
+
+=== FILE: src/lib/supabase/server.ts ===
+```typescript
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export function createClient() {
+  const cookieStore = cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch (error) {
+            // Handle cookie setting errors
+          }
+        },
+        remove(name: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch (error) {
+            // Handle cookie removal errors
+          }
+        },
+      },
+    }
+  )
+}
+```
+
+=== FILE: src/lib/supabase/client.ts ===
+```typescript
+import { createBrowserClient } from '@supabase/ssr'
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+```
+
+=== FILE: src/lib/stripe.ts ===
+```typescript
+import Stripe from 'stripe';
+
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2023-10-16',
+  typescript: true,
+});
+```
+
+=== FILE: src/lib/utils.ts ===
+```typescript
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+export function calculateNights(start: string, end: string): number {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+}
+```
+
+=== FILE: src/components/ui/Button.tsx ===
+```typescript
+import { ButtonHTMLAttributes, forwardRef } from 'react';
+import { cn } from '@/lib/utils';
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  isLoading?: boolean;
+}
+
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = 'primary', size = 'md', isLoading, children, ...props }, ref) => {
+    const baseStyles = 'inline-flex items-center justify-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
+    
+    const variants = {
+      primary: 'bg-airbnb-red text-white hover:bg-red-600 focus:ring-airbnb-red',
+      secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500',
+      outline: 'border border-gray-300 bg-transparent hover:bg-gray-50 focus:ring-gray-500',
+      danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+    };
+
+    const sizes = {
+      sm: 'h-8 px-3 text-xs',
+      md: 'h-10 px-4 py-2 text-sm',
+      lg: 'h-12 px-6 text-base',
+    };
+
+    return (
+      <button
+        ref={ref}
+        className={cn(baseStyles, variants[variant], sizes[size], className)}
+        disabled={isLoading || props.disabled}
+        {...props}
+      >
+        {isLoading ? (
+          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        ) : null}
+        {children}
+      </button>
+    );
+  }
+);
+
+Button.displayName = 'Button';
+
+export { Button };
+```
+
+=== FILE: src/components/ui/Input.tsx ===
+```typescript
+import { InputHTMLAttributes, forwardRef } from 'react';
+import { cn } from '@/lib/utils';
+
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  error?: string;
+}
+
+const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ className, label, error, id, ...props }, ref) => {
+    return (
+      <div className="w-full">
+        {label && (
+          <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+            {label}
+          </label>
+        )}
+        <input
+          id={id}
+          ref={ref}
+          className={cn(
+            'flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-airbnb-red focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50',
+            error && 'border-red-500 focus:ring-red-500',
+            className
+          )}
+          {...props}
+        />
+        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      </div>
+    );
+  }
+);
+
+Input.displayName = 'Input';
+
+export { Input };
+```
+
+=== FILE: src/components/ui/Modal.tsx ===
+```typescript
+import { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+}
+
+export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="p-4">
+          {children}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+```
+
+=== FILE: src/components/Navbar.tsx ===
+```typescript
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { useEffect, useState } from 'react';
+import { Profile } from '@/types';
+
+export default function Navbar() {
+  const [user, setUser] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        setUser(data);
+      }
+      setLoading(false);
+    };
+    fetchUser();
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = '/';
+  };
+
+  if (loading) return null;
+
+  return (
+    <nav className="border-b sticky top-0 bg-white z-40">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16 items-center">
+          <Link href="/" className="flex items-center">
+            <span className="text-2xl font-bold text-airbnb-red">airbnb-clone</span>
+          </Link>
+
+          <div className="flex items-center space-x-4">
+            <Link href="/listings/new" className="text-sm font-medium text-gray-700 hover:text-airbnb-red hidden sm:block">
+              Become a Host
+            </Link>
+            
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <Link href="/dashboard" className="text-sm font-medium text-gray-700 hover:text-airbnb-red">
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-sm font-medium text-gray-700 hover:text-airbnb-red"
+                >
+                  Log out
+                </button>
+                <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+                  {user.full_name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Link href="/login" className="text-sm font-medium text-gray-700 hover:text-airbnb-red">
+                  Log in
+                </Link>
+                <Link href="/signup" className="bg-airbnb-red text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-red-600">
+                  Sign up
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+}
+```
+
+=== FILE: src/components/ListingCard.tsx ===
+```typescript
+import Link from 'next/link';
+import { Listing } from '@/types';
+import Image from 'next/image';
+
+interface ListingCardProps {
+  listing: Listing;
+}
+
+export default function ListingCard({ listing }: ListingCardProps) {
+  const imageUrl = listing.images[0] || 'https://placehold.co/600x400?text=No+Image';
+
+  return (
+    <Link href={`/listings/${listing.id}`}>
+      <div className="group cursor-pointer">
+        <div className="aspect-square overflow-hidden rounded-xl bg-gray-200 relative">
+          <Image
+            src={imageUrl}
+            alt={listing.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        </div>
+        <div className="mt-2">
+          <h3 className="font-semibold text-gray-900 truncate">{listing.location}</h3>
+          <p className="text-sm text-gray-500">{listing.property_type}</p>
+          <p className="mt-1">
+            <span className="font-semibold">${listing.price_per_night}</span> <span className="text-gray-500">night</span>
+          </p>
+        </div>
+      </div>
+    </Link>
+  );
+}
+```
+
+=== FILE: src/components/SearchBar.tsx ===
+```typescript
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+export default function SearchBar() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const [location, setLocation] = useState(searchParams.get('location') || '');
+  const [checkIn, setCheckIn] = useState(searchParams.get('checkIn') || '');
+  const [checkOut, setCheckOut] = useState(searchParams.get('checkOut') || '');
+  const [guests, setGuests] = useState(searchParams.get('guests') || '1');
+
+  useEffect(() => {
+    setLocation(searchParams.get('location') || '');
+    setCheckIn(searchParams.get('checkIn') || '');
+    setCheckOut(searchParams.get('checkOut') || '');
+    setGuests(searchParams.get('guests') || '1');
+  }, [searchParams]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (location) params.set('location', location);
+    if (checkIn) params.set('checkIn', checkIn);
+    if (checkOut) params.set('checkOut', checkOut);
+    if (guests) params.set('guests', guests);
+    
+    router.push(`/listings?${params.toString()}`);
+  };
+
+  return (
+    <form onSubmit={handleSearch} className="w-full max-w-4xl mx-auto bg-white rounded-full shadow-lg border p-2 flex flex-col md:flex-row items-center divide-y md:divide-y-0 md:divide-x divide-gray-200">
+      <div className="flex-1 px-4 py-2 w-full">
+        <label className="block text-xs font-bold text-gray-800 uppercase">Location</label>
+        <input
+          type="text"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="Where are you going?"
+          className="w-full text-sm text-gray-600 bg-transparent border-none focus:ring-0 p-0"
+        />
+      </div>
+      
+      <div className="flex-1 px-4 py-2 w-full">
+        <label className="block text-xs font-bold text-gray-800 uppercase">Check in</label>
+        <input
+          type="date"
+          value={checkIn}
+          onChange={(e) => setCheckIn(e.target.value)}
+          className="w-full text-sm text-gray-600 bg-transparent border-none focus:ring-0 p-0"
+        />
+      </div>
+
+      <div className="flex-1 px-4 py-2 w-full">
+        <label className="block text-xs font-bold text-gray-800 uppercase">Check out</label>
+        <input
+          type="date"
+          value={checkOut}
+          onChange={(e) => setCheckOut(e.target.value)}
+          className="w-full text-sm text-gray-600 bg-transparent border-none focus:ring-0 p-0"
+        />
+      </div>
+
+      <div className="flex-1 px-4 py-2 w-full">
+        <label className="block text-xs font-bold text-gray-800 uppercase">Guests</label>
+        <input
+          type="number"
+          min="1"
+          value={guests}
+          onChange={(e) => setGuests(e.target.value)}
+          className="w-full text-sm text-gray-600 bg-transparent border-none focus:ring-0 p-0"
+        />
+      </div>
+
+      <div className="p-2 w-full md:w-auto">
+        <button type="submit" className="bg-airbnb-red text-white p-3 rounded-full hover:bg-red-600 transition-colors">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
+      </div>
+    </form>
+  );
+}
+```
+
+=== FILE: src/app/(auth)/login/page.tsx ===
+```typescript
+'use client';
+
+import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
+    } else {
+      router.push('/');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="email-address" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="email-address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-airbnb-red focus:border-airbnb-red focus:z-10 sm:text-sm"
+                placeholder="Email address"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-airbnb-red focus:border-airbnb-red focus:z-10 sm:text-sm"
+                placeholder="Password"
+              />
+            </div>
+          </div>
+
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-airbnb-red hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-airbnb-red disabled:opacity-50"
+            >
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </div>
+        </form>
+        <div className="text-center">
+          <Link href="/signup" className="font-medium text-airbnb-red hover:text-red-600">
+            Don't have an account? Sign up
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+=== FILE: src/app/(auth)/signup/page.tsx ===
+```typescript
+'use client';
+
+import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
+export default function SignupPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
+    });
+
+    if (error) {
+      setError(error.message);
+    } else {
+      router.push('/');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Create your account
+          </h2>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSignup}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="full-name" className="sr-only">
+                Full Name
+              </label>
+              <input
+                id="full-name"
+                name="full_name"
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-airbnb-red focus:border-airbnb-red focus:z-10 sm:text-sm"
+                placeholder="Full Name"
+              />
+            </div>
+            <div>
+              <label htmlFor="email-address" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="email-address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-airbnb-red focus:border-airbnb-red focus:z-10 sm:text-sm"
+                placeholder="Email address"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-airbnb-red focus:border-airbnb-red focus:z-10 sm:text-sm"
+                placeholder="Password"
+              />
+            </div>
+          </div>
+
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-airbnb-red hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-airbnb-red disabled:opacity-50"
+            >
+              {loading ? 'Creating account...' : 'Sign up'}
+            </button>
+          </div>
+        </form>
+        <div className="text-center">
+          <Link href="/login" className="font-medium text-airbnb-red hover:text-red-600">
+            Already have an account? Log in
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+=== FILE: src/app/listings/page.tsx ===
+```typescript
+import { createClient } from '@/lib/supabase/server';
+import SearchBar from '@/components/SearchBar';
+import ListingCard from '@/components/ListingCard';
+import { Listing } from '@/types';
+
+export default async function ListingsPage({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
+  const supabase = createClient();
+  
+  let query = supabase
+    .from('listings')
+    .select('*')
+    .eq('is_active', true);
+
+  if (searchParams.location) {
+    query = query.ilike('location', `%${searchParams.location}%`);
+  }
+  
+  if (searchParams.property_type) {
+    query = query.eq('property_type', searchParams.property_type);
+  }
+
+  const { data: listings, error } = await query;
+
+  if (error) {
+    return <div>Error loading listings</div>;
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8">
+        <SearchBar />
+      </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {listings?.map((listing: Listing) => (
+          <ListingCard key={listing.id} listing={listing} />
+        ))}
+      </div>
+      
+      {listings?.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">No listings found matching your criteria.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+=== FILE: src/app/listings/new/page.tsx ===
+```typescript
+'use client';
+
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+
+export default function NewListingPage() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [images, setImages] = useState<string[]>([]);
+  const [videoUrl, setVideoUrl] = useState('');
+  const router = useRouter();
+
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    price_per_night: '',
+    location: '',
+    property_type: 'Entire home',
+    max_guests: '2',
+    amenities: [] as string[],
+  });
+
+  const amenitiesList = ['Wifi', 'Kitchen', 'Washer', 'Dryer', 'Air conditioning', 'Heating', 'Dedicated workspace', 'TV', 'Hair dryer', 'Iron'];
+
+  const handleAmenityToggle = (amenity: string) => {
+    setFormData(prev => ({
+      ...prev,
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter(a => a !== amenity)
+        : [...prev.amenities, amenity]
+    }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+    
+    const supabase = createClient();
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `listings/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('listings')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      setError(uploadError.message);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('listings')
+      .getPublicUrl(filePath);
+
+    setImages(prev => [...prev, publicUrl]);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    const { error } = await supabase.from('listings').insert({
+      owner_id: user.id,
+      title: formData.title,
+      description: formData.description,
+      price_per_night: parseFloat(formData.price_per_night),
+      location: formData.location,
+      property_type: formData.property_type,
+      max_guests: parseInt(formData.max_guests),
+      amenities: formData.amenities,
+      images: images,
+      video_url: videoUrl,
+    });
+
+    if (error) {
+      setError(error.message);
+    } else {
+      router.push('/dashboard');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Create a new listing</h1>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4">
+          <Input
+            label="Title"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            placeholder="e.g., Cozy Apartment in City Center"
+            required
+          />
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="flex h-32 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-airbnb-red focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Price per night ($)"
+              type="number"
+              value={formData.price_per_night}
+              onChange={(e) => setFormData({ ...formData, price_per_night: e.target.value })}
+              required
+            />
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+              <select
+                value={formData.property_type}
+                onChange={(e) => setFormData({ ...formData, property_type: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-airbnb-red focus:border-transparent"
+              >
+                <option>Entire home</option>
+                <option>Private room</option>
+                <option>Shared room</option>
+              </select>
+            </div>
+          </div>
+
+          <Input
+            label="Location"
+            value={formData.location}
+            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+            placeholder="e.g., New York, NY"
+            required
+          />
+
+          <Input
+            label="Max Guests"
+            type="number"
+            value={formData.max_guests}
+            onChange={(e) => setFormData({ ...formData, max_guests: e.target.value })}
+            required
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
+            <div className="grid grid-cols-2 gap-2">
+              {amenitiesList.map(amenity => (
+                <label key={amenity} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.amenities.includes(amenity)}
+                    onChange={() => handleAmenityToggle(amenity)}
+                    className="rounded border-gray-300 text-airbnb-red focus:ring-airbnb-red"
+                  />
+                  <span className="text-sm text-gray-700">{amenity}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Photos</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageUpload}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-airbnb-red file:text-white hover:file:bg-red-600"
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
+              {images.map((img, idx) => (
+                <div key={idx} className="relative w-20 h-20">
+                  <img src={img} alt="Preview" className="w-full h-full object-cover rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <Input
+            label="Video URL (YouTube/Vimeo)"
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+            placeholder="https://..."
+          />
+        </div>
+
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+
+        <Button type="submit" isLoading={loading} className="w-full">
+          Create Listing
+        </Button>
+      </form>
+    </div>
+  );
+}
+```
+
+=== FILE: src/app/listings/[id]/page.tsx ===
+```typescript
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { Listing, Booking } from '@/types';
+import { Button } from '@/components/ui/Button';
+import { calculateNights } from '@/lib/utils';
+import { loadStripe } from '@stripe/stripe-js';
+import Image from 'next/image';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
+export default function ListingDetailPage() {
+  const { id } = useParams();
+  const router = useRouter();
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [guests, setGuests] = useState(1);
+  const [error, setError] = useState('');
+  const [bookingLoading, setBookingLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchListing = async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        setError('Listing not found');
+      } else {
+        setListing(data);
+      }
+      setLoading(false);
+    };
+    fetchListing();
+  }, [id]);
+
+  const handleBooking = async () => {
+    if (!startDate || !endDate) {
+      setError('Please select check-in and check-out dates');
+      return;
+    }
+    if (new Date(startDate) >= new Date(endDate)) {
+      setError('Check-out date must be after check-in date');
+      return;
+    }
+
+    setBookingLoading(true);
+    setError('');
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    // Check availability
+    const { data: isAvailable } = await supabase.rpc('check_availability', {
+      listing_id_param: id,
+      start_date_param: startDate,
+      end_date_param: endDate,
+    });
+
+    if (!isAvailable) {
+      setError('This property is not available for the selected dates.');
+      setBookingLoading(false);
+      return;
+    }
+
+    // Create booking record
+    const nights = calculateNights(startDate, endDate);
+    const totalPrice = nights * listing!.price_per_night;
+
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings')
+      .insert({
+        listing_id: id,
+        guest_id: user.id,
+        start_date: startDate,
+        end_date: endDate,
+        total_price: totalPrice,
+        status: 'pending',
+      })
+      .select()
+      .single();
+
+    if (bookingError) {
+      setError(bookingError.message);
+      setBookingLoading(false);
+      return;
+    }
+
+    // Create Stripe Checkout Session
+    const response = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        bookingId: booking.id,
+        listingId: id,
+        amount: totalPrice,
+        startDate,
+        endDate,
+      }),
+    });
+
+    const session = await response.json();
+
+    if (session.error) {
+      setError(session.error);
+      setBookingLoading(false);
+      return;
+    }
+
+    const stripe = await stripePromise;
+    if (stripe) {
+      const { error: stripeError } = await stripe.redirectToCheckout({
+        sessionId: session.id,
+      });
+      if (stripeError) {
+        setError(stripeError.message);
+      }
+    }
+    setBookingLoading(false);
+  };
+
+  if (loading) return <div className="p-8 text-center">Loading...</div>;
+  if (!listing) return <div className="p-8 text-center text-red-500">{error}</div>;
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-4">{listing.title}</h1>
+      <p className="text-gray-500 mb-6">{listing.location} · {listing.property_type} · {listing.max_guests} guests</p>
+
+      {/* Image Gallery */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 rounded-xl overflow-hidden">
+        {listing.images.length > 0 ? (
+          <>
+            <div className="aspect-video relative">
+              <Image src={listing.images[0]} alt="Main" fill className="object-cover" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {listing.images.slice(1, 5).map((img, idx) => (
+                <div key={idx} className="aspect-square relative">
+                  <Image src={img} alt={`Gallery ${idx}`} fill className="object-cover" />
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="col-span-2 aspect-video bg-gray-200 flex items-center justify-center text-gray-500">
+            No images available
+          </div>
+        )}
+      </div>
+
+      {/* Video */}
+      {listing.video_url && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-2">Video Tour</h2>
+          <div className="aspect-video bg-black rounded-xl overflow-hidden">
+            <iframe
+              src={listing.video_url}
+              title="Video Tour"
+              className="w-full h-full"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="md:col-span-2">
+          <h2 className="text-xl font-semibold mb-4">About this place</h2>
+          <p className="text-gray-700 whitespace-pre-wrap mb-6">{listing.description}</p>
+          
+          <h2 className="text-xl font-semibold mb-4">Amenities</h2>
+          <ul className="grid grid-cols-2 gap-2">
+            {listing.amenities.map((amenity, idx) => (
+              <li key={idx} className="flex items-center text-gray-600">
+                <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {amenity}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Booking Card */}
+        <div className="md:col-span-1">
+          <div className="border rounded-xl p-6 shadow-lg sticky top-24">
+            <div className="flex justify-between items-baseline mb-4">
+              <span className="text-2xl font-bold">${listing.price_per_night}</span>
+              <span className="text-gray-500">night</span>
+            </div>
+
+            <div className="border rounded-lg mb-4">
+              <div className="grid grid-cols-2 border-b">
+                <div className="p-3 border-r">
+                  <label className="block text-xs font-bold text-gray-800 uppercase">Check-in</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full text-sm text-gray-600 bg-transparent border-none focus:ring-0 p-0"
+                  />
+                </div>
+                <div className="p-3">
+                  <label className="block text-xs font-bold text-gray-800 uppercase">Check-out</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    min={startDate || new Date().toISOString().split('T')[0]}
+                    className="w-full text-sm text-gray-600 bg-transparent border-none focus:ring-0 p-0"
+                  />
+                </div>
+              </div>
+              <div className="p-3">
+                <label className="block text-xs font-bold text-gray-800 uppercase">Guests</label>
+                <select
+                  value={guests}
+                  onChange={(e) => setGuests(parseInt(e.target.value))}
+                  className="w-full text-sm text-gray-600 bg-transparent border-none focus:ring-0 p-0"
+                >
+                  {Array.from({ length: listing.max_guests }, (_, i) => i + 1).map(n => (
+                    <option key={n} value={n}>{n} guest{n > 1 ? 's' : ''}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
+            <Button
+              onClick={handleBooking}
+              isLoading={bookingLoading}
+              className="w-full mb-4"
+            >
+              Reserve
+            </Button>
+
+            <p className="text-center text-sm text-gray-500 mb-4">You won't be charged yet</p>
+
+            <div className="space-y-3 text-gray-600">
+              <div className="flex justify-between">
+                <span>${listing.price_per_night} x {calculateNights(startDate, endDate) || 0} nights</span>
+                <span>${listing.price_per_night * (calculateNights(startDate, endDate) || 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Service fee</span>
+                <span>$0</span>
+              </div>
+              <div className="border-t pt-3 flex justify-between font-bold text-lg">
+                <span>Total before taxes</span>
+                <span>${listing.price_per_night * (calculateNights(startDate, endDate) || 0)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+=== FILE: src/app/dashboard/page.tsx ===
+```typescript
+'use client';
+
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { Booking, Listing } from '@/types';
+import Link from 'next/link';
+
+export default function DashboardPage() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const [bookingsRes, listingsRes] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('*')
+          .eq('guest_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('listings')
+          .select('*')
+          .eq('owner_id', user.id)
+          .order('created_at', { ascending: false }),
+      ]);
+
+      setBookings(bookingsRes.data || []);
+      setListings(listingsRes.data || []);
+      setLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) return <div className="p-8 text-center">Loading...</div>;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* My Listings */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4">My Listings</h2>
+          <div className="space-y-4">
+            {listings.map(listing => (
+              <div key={listing.id} className="border rounded-lg p-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">{listing.title}</h3>
+                  <p className="text-sm text-gray-500">{listing.location}</p>
+                  <p className="text-sm text-gray-500">Status: {listing.is_active ? 'Active' : 'Inactive'}</p>
+                </div>
+                <Link href={`/listings/${listing.id}/edit`} className="text-airbnb-red hover:underline">
+                  Edit
+                </Link>
+              </div>
+            ))}
+            {listings.length === 0 && <p className="text-gray-500">No listings yet.</p>}
+          </div>
+        </div>
+
+        {/* My Bookings */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4">My Trips</h2>
+          <div className="space-y-4">
+            {bookings.map(booking => (
+              <div key={booking.id} className="border rounded-lg p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="font-medium">Booking #{booking.id.slice(0, 8)}</h3>
+                    <p className="text-sm text-gray-500">
+                      {new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                    booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {booking.status}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600">Total: ${booking.total_price}</p>
+              </div>
+            ))}
+            {bookings.length === 0 && <p className="text-gray-500">No bookings yet.</p>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+=== FILE: src/app/api/create-checkout-session/route.ts ===
+```typescript
+import { stripe } from '@/lib/stripe';
+import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { bookingId, listingId, amount, startDate, endDate } = body;
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Create Stripe Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `Booking for Listing ${listingId}`,
+              description: `Check-in: ${startDate}, Check-out: ${endDate}`,
+            },
+            unit_amount: Math.round(amount * 100), // Stripe expects cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/listings/${listingId}?canceled=true`,
+      metadata: {
+        bookingId,
+        listingId,
+        userId: user.id,
+      },
+    });
+
+    return NextResponse.json({ id: session.id });
+  } catch (error: any) {
+    console.error('Error creating checkout session:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+```
+
+=== FILE: src/app/api/webhooks/stripe/route.ts ===
+```typescript
+import { stripe } from '@/lib/stripe';
+import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+  const body = await req.text();
+  const signature = req.headers.get('stripe-signature') as string;
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
+  } catch (err: any) {
+    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  }
+
+  const supabase = createClient();
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as any;
+    const { bookingId, listingId, userId } = session.metadata;
+
+    // Update booking status to confirmed
+    await supabase
+      .from('bookings')
+      .update({
+        status: 'confirmed',
+        stripe_payment_intent_id: session.payment_intent,
+      })
+      .eq('id', bookingId);
+
+    // Create transaction record
+    await supabase.from('transactions').insert({
+      booking_id: bookingId,
+      amount: session.amount_total / 100,
+      currency: session.currency,
+      status: 'succeeded',
+      stripe_payment_intent_id: session.payment_intent,
+    });
+  }
+
+  if (event.type === 'payment_intent.payment_failed') {
+    const paymentIntent = event.data.object as any;
+    
+    // Find booking by payment intent ID if possible, or update status to failed
+    // Note: In a real app, you might want to link this back to the booking more robustly
+    // For now, we just log it or update if we have the ID
+    console.log('Payment failed:', paymentIntent.id);
+  }
+
+  return NextResponse.json({ received: true });
+}
+```
+
+=== FILE: src/app/globals.css ===
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  color: #222222;
+  background: #ffffff;
+  font-family: Arial, Helvetica, sans-serif;
+}
+```
+
+=== FILE: src/app/layout.tsx ===
+```typescript
+import './globals.css';
+import type { Metadata } from 'next';
+import Navbar from '@/components/Navbar';
+
+export const metadata: Metadata = {
+  title: 'Rental Booking App',
+  description: 'Book unique homes and experiences',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <Navbar />
+        <main className="min-h-screen">
+          {children}
+        </main>
+        <footer className="bg-gray-100 border-t mt-12 py-8">
+          <div className="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
+            © 2023 Rental Booking App. All rights reserved.
+          </div>
+        </footer>
+      </body>
+    </html>
+  );
+}
+```
+
+=== FILE: src/app/page.tsx ===
+```typescript
+import SearchBar from '@/components/SearchBar';
+import ListingCard from '@/components/ListingCard';
+import { createClient } from '@/lib/supabase/server';
+import { Listing } from '@/types';
+
+export default async function Home() {
+  const supabase = createClient();
+  const { data: listings } = await supabase
+    .from('listings')
+    .select('*')
+    .eq('is_active', true)
+    .limit(8);
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-12 text-center">
+        <h1 className="text-4xl font-bold mb-4">Find your next stay</h1>
+        <p className="text-gray-500 mb-8">Search lower prices on stays in amazing places</p>
+        <SearchBar />
+      </div>
+
+      <h2 className="text-2xl font-semibold mb-6">Explore nearby</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {listings?.map((listing: Listing) => (
+          <ListingCard key={listing.id} listing={listing} />
+        ))}
+      </div>
+    </div>
+  );
+}
+```

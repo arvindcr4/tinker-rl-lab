@@ -1,0 +1,62 @@
+{
+ "per_task": [
+  {
+   "task": "1",
+   "app": "Financial Dashboard",
+   "n_items": 24,
+   "passed": 15,
+   "unparsed_as_fail": 0,
+   "gen_chars": 31142,
+   "n_files": 18
+  },
+  {
+   "task": "2",
+   "app": "Hospital Dashboard",
+   "n_items": 33,
+   "passed": 27,
+   "unparsed_as_fail": 0,
+   "gen_chars": 58538,
+   "n_files": 21
+  },
+  {
+   "task": "3",
+   "app": "Legal Assistant",
+   "n_items": 22,
+   "passed": 19,
+   "unparsed_as_fail": 0,
+   "gen_chars": 55738,
+   "n_files": 35
+  },
+  {
+   "task": "4",
+   "app": "Pharmacy System",
+   "n_items": 25,
+   "passed": 0,
+   "unparsed_as_fail": 0,
+   "gen_chars": 49845,
+   "n_files": 23
+  },
+  {
+   "task": "5",
+   "app": "Drawing Game",
+   "n_items": 23,
+   "passed": 20,
+   "unparsed_as_fail": 0,
+   "gen_chars": 43716,
+   "n_files": 19
+  },
+  {
+   "task": "6",
+   "app": "Rental Booking",
+   "n_items": 24,
+   "passed": 0,
+   "unparsed_as_fail": 0,
+   "gen_chars": 61070,
+   "n_files": 26
+  }
+ ],
+ "passed": 81,
+ "total": 151,
+ "pass_rate": 0.5364238410596026,
+ "tinker_tokens": 176835
+}

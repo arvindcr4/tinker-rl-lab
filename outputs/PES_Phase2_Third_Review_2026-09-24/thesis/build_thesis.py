@@ -170,8 +170,9 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
         ("fig_e4_diagnostic",
          "The E4 rerun diagnostic. Across 100 trials agents terminate at a "
          "median of roughly six steps without producing deliverables, and more "
-         "than a quarter end in role-token degeneration. The 0.0 mean reward "
-         "therefore measures tool-dialogue collapse, not finance reasoning.",
+         "than a quarter end in role-token degeneration, consistent with generation "
+         "running past the end-of-turn token because the serving bridge passed no "
+         "stop sequences. The 0.0 is not a measurement of finance reasoning.",
          "fig:e4", ["BankerToolBench", "E4", "rerun"]),
     ],
     "ch10_synthesis_conclusions.md": [

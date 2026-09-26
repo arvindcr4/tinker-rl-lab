@@ -1,0 +1,431 @@
+{
+ "lane": "E14",
+ "metric": "accuracy (native Omni-Judge 'Equivalence Judgement' == TRUE; unparsed judge output = incorrect)",
+ "n_items": 100,
+ "trained_value": 0.43,
+ "base_value": 0.44,
+ "difference": -0.01,
+ "discordant_b_trained_only": 5,
+ "discordant_c_base_only": 6,
+ "mcnemar_exact_p": 1.0,
+ "per_item": {
+  "row00068": {
+   "trained": true,
+   "base": true
+  },
+  "row00108": {
+   "trained": false,
+   "base": false
+  },
+  "row00110": {
+   "trained": true,
+   "base": true
+  },
+  "row00129": {
+   "trained": false,
+   "base": false
+  },
+  "row00177": {
+   "trained": false,
+   "base": false
+  },
+  "row00198": {
+   "trained": false,
+   "base": false
+  },
+  "row00264": {
+   "trained": true,
+   "base": true
+  },
+  "row00269": {
+   "trained": false,
+   "base": false
+  },
+  "row00295": {
+   "trained": false,
+   "base": false
+  },
+  "row00319": {
+   "trained": true,
+   "base": true
+  },
+  "row00332": {
+   "trained": false,
+   "base": false
+  },
+  "row00379": {
+   "trained": false,
+   "base": false
+  },
+  "row00424": {
+   "trained": true,
+   "base": false
+  },
+  "row00430": {
+   "trained": true,
+   "base": true
+  },
+  "row00487": {
+   "trained": false,
+   "base": false
+  },
+  "row00497": {
+   "trained": false,
+   "base": false
+  },
+  "row00597": {
+   "trained": true,
+   "base": true
+  },
+  "row00610": {
+   "trained": false,
+   "base": false
+  },
+  "row00666": {
+   "trained": true,
+   "base": true
+  },
+  "row00723": {
+   "trained": false,
+   "base": false
+  },
+  "row00731": {
+   "trained": false,
+   "base": false
+  },
+  "row00842": {
+   "trained": true,
+   "base": true
+  },
+  "row00879": {
+   "trained": true,
+   "base": true
+  },
+  "row00893": {
+   "trained": true,
+   "base": true
+  },
+  "row00943": {
+   "trained": true,
+   "base": true
+  },
+  "row00963": {
+   "trained": true,
+   "base": false
+  },
+  "row01021": {
+   "trained": false,
+   "base": false
+  },
+  "row01032": {
+   "trained": false,
+   "base": false
+  },
+  "row01041": {
+   "trained": false,
+   "base": false
+  },
+  "row01053": {
+   "trained": false,
+   "base": false
+  },
+  "row01146": {
+   "trained": false,
+   "base": false
+  },
+  "row01216": {
+   "trained": false,
+   "base": false
+  },
+  "row01226": {
+   "trained": false,
+   "base": true
+  },
+  "row01270": {
+   "trained": true,
+   "base": true
+  },
+  "row01284": {
+   "trained": false,
+   "base": false
+  },
+  "row01336": {
+   "trained": false,
+   "base": true
+  },
+  "row01385": {
+   "trained": false,
+   "base": true
+  },
+  "row01399": {
+   "trained": true,
+   "base": true
+  },
+  "row01432": {
+   "trained": false,
+   "base": false
+  },
+  "row01436": {
+   "trained": true,
+   "base": false
+  },
+  "row01463": {
+   "trained": false,
+   "base": false
+  },
+  "row01510": {
+   "trained": true,
+   "base": true
+  },
+  "row01514": {
+   "trained": false,
+   "base": false
+  },
+  "row01562": {
+   "trained": false,
+   "base": false
+  },
+  "row01583": {
+   "trained": false,
+   "base": false
+  },
+  "row01647": {
+   "trained": false,
+   "base": false
+  },
+  "row01787": {
+   "trained": false,
+   "base": true
+  },
+  "row01814": {
+   "trained": true,
+   "base": true
+  },
+  "row01848": {
+   "trained": true,
+   "base": true
+  },
+  "row01876": {
+   "trained": true,
+   "base": true
+  },
+  "row01902": {
+   "trained": false,
+   "base": false
+  },
+  "row01956": {
+   "trained": false,
+   "base": false
+  },
+  "row01994": {
+   "trained": false,
+   "base": false
+  },
+  "row02012": {
+   "trained": false,
+   "base": false
+  },
+  "row02020": {
+   "trained": false,
+   "base": true
+  },
+  "row02053": {
+   "trained": false,
+   "base": false
+  },
+  "row02056": {
+   "trained": true,
+   "base": true
+  },
+  "row02093": {
+   "trained": false,
+   "base": false
+  },
+  "row02221": {
+   "trained": false,
+   "base": false
+  },
+  "row02454": {
+   "trained": false,
+   "base": true
+  },
+  "row02456": {
+   "trained": true,
+   "base": false
+  },
+  "row02509": {
+   "trained": false,
+   "base": false
+  },
+  "row02538": {
+   "trained": false,
+   "base": false
+  },
+  "row02554": {
+   "trained": false,
+   "base": false
+  },
+  "row02646": {
+   "trained": false,
+   "base": false
+  },
+  "row02753": {
+   "trained": true,
+   "base": true
+  },
+  "row02771": {
+   "trained": true,
+   "base": true
+  },
+  "row02826": {
+   "trained": true,
+   "base": true
+  },
+  "row02868": {
+   "trained": false,
+   "base": false
+  },
+  "row02883": {
+   "trained": true,
+   "base": true
+  },
+  "row02928": {
+   "trained": true,
+   "base": true
+  },
+  "row03005": {
+   "trained": true,
+   "base": true
+  },
+  "row03042": {
+   "trained": true,
+   "base": true
+  },
+  "row03080": {
+   "trained": false,
+   "base": false
+  },
+  "row03087": {
+   "trained": true,
+   "base": true
+  },
+  "row03245": {
+   "trained": false,
+   "base": false
+  },
+  "row03255": {
+   "trained": false,
+   "base": false
+  },
+  "row03274": {
+   "trained": true,
+   "base": true
+  },
+  "row03349": {
+   "trained": true,
+   "base": true
+  },
+  "row03362": {
+   "trained": false,
+   "base": false
+  },
+  "row03382": {
+   "trained": false,
+   "base": false
+  },
+  "row03468": {
+   "trained": true,
+   "base": true
+  },
+  "row03482": {
+   "trained": false,
+   "base": false
+  },
+  "row03514": {
+   "trained": true,
+   "base": true
+  },
+  "row03516": {
+   "trained": true,
+   "base": true
+  },
+  "row03695": {
+   "trained": true,
+   "base": true
+  },
+  "row03729": {
+   "trained": true,
+   "base": true
+  },
+  "row03787": {
+   "trained": false,
+   "base": false
+  },
+  "row03801": {
+   "trained": true,
+   "base": true
+  },
+  "row03822": {
+   "trained": false,
+   "base": false
+  },
+  "row03945": {
+   "trained": false,
+   "base": false
+  },
+  "row03961": {
+   "trained": true,
+   "base": true
+  },
+  "row03994": {
+   "trained": false,
+   "base": false
+  },
+  "row04031": {
+   "trained": true,
+   "base": true
+  },
+  "row04057": {
+   "trained": false,
+   "base": false
+  },
+  "row04141": {
+   "trained": true,
+   "base": false
+  },
+  "row04216": {
+   "trained": true,
+   "base": true
+  },
+  "row04247": {
+   "trained": false,
+   "base": false
+  },
+  "row04294": {
+   "trained": false,
+   "base": false
+  },
+  "row04362": {
+   "trained": true,
+   "base": true
+  }
+ },
+ "cost": {
+  "trained": {
+   "tinker_tokens": 0,
+   "vllm_tokens": 188389,
+   "colab_units": 0.0,
+   "modal_usd": 0.0642,
+   "wall_seconds": 526,
+   "note": "actor GPU bill is shared and reconciled by the lead"
+  },
+  "base": {
+   "tinker_tokens": 0,
+   "vllm_tokens": 188928,
+   "colab_units": 0.0,
+   "modal_usd": 0.062,
+   "wall_seconds": 567,
+   "note": "actor GPU bill is shared and reconciled by the lead"
+  }
+ }
+}

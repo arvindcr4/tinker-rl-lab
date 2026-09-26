@@ -1,0 +1,122 @@
+{
+    "id": "baf90f97-dd17-4893-9a85-94f523024042",
+    "task_name": "btb-07727295",
+    "trial_name": "btb-07727295__mMPLgBp",
+    "trial_uri": "file:///Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e1_e14_small_scale_2026-09-26/E4/raw/jobs/e4-small-btb-07727295/btb-07727295__mMPLgBp",
+    "task_id": {
+        "path": "datasets/btb/btb-07727295"
+    },
+    "source": "btb",
+    "task_checksum": "02388bb232f03eea17c7104313f10af8a0d79a0b62459acd7e3c16eff08816fe",
+    "config": {
+        "task": {
+            "path": "datasets/btb/btb-07727295",
+            "git_url": null,
+            "git_commit_id": null,
+            "name": null,
+            "ref": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": "btb"
+        },
+        "trial_name": "btb-07727295__mMPLgBp",
+        "trials_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e1_e14_small_scale_2026-09-26/E4/raw/jobs/e4-small-btb-07727295",
+        "install_only": false,
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "opencode",
+            "import_path": null,
+            "model_name": "openai/pavlov-qwen36-tinker",
+            "n_concurrent": null,
+            "concurrency_group": null,
+            "skills": [],
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "resume_trajectory": false,
+            "load_trajectory": null,
+            "extra_allowed_hosts": [],
+            "kwargs": {
+                "prompt_template_path": "prompts/system_prompt.j2",
+                "opencode_config": {
+                    "experimental": {
+                        "continue_loop_on_deny": true
+                    },
+                    "provider": {
+                        "openai": {
+                            "models": {
+                                "pavlov-qwen36-tinker": {
+                                    "limit": {
+                                        "context": 65536,
+                                        "output": [REDACTED]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "env": {
+                "OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX": "****"
+            },
+            "mcp_servers": []
+        },
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "cpu_enforcement_policy": "auto",
+            "memory_enforcement_policy": "auto",
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "override_tpu": null,
+            "mounts": null,
+            "extra_docker_compose": [],
+            "kwargs": {},
+            "extra_allowed_hosts": []
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [
+            "/home/agent/workspace"
+        ],
+        "extra_instruction_paths": [],
+        "job_id": "4318c0ef-0cbd-46d9-b514-dc62191658a4"
+    },
+    "agent_info": {
+        "name": "opencode",
+        "version": "unknown",
+        "model_info": {
+            "name": "pavlov-qwen36-tinker",
+            "provider": "openai"
+        }
+    },
+    "agent_result": null,
+    "verifier_result": null,
+    "exception_info": {
+        "exception_type": "RuntimeError",
+        "exception_message": "Docker compose command failed for environment btb-07727295. Command: docker compose --project-name btb-07727295__mmplgbp__env --project-directory /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/datasets/btb/btb-07727295/environment -f /private/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/tmpb9e174hf/btb-07727295__mMPLgBp__env-docker-compose-resources.json -f /Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/environments/docker/docker-compose-build.yaml -f /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/datasets/btb/btb-07727295/environment/docker-compose.yaml -f /private/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/tmpkla8pv0p/docker-compose-environment.json -f /private/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/tmpklu1_esy/docker-compose-mounts.json build. Return code: 1. Stdout:  Image btb-07727295__mmplgbp__env-main Building \n#1 [internal] load local bake definitions\n#1 reading from stdin 762B done\n#1 DONE 0.0s\n\n#2 [internal] load build definition from Dockerfile\n#2 transferring dockerfile: 5.23kB done\n#2 DONE 0.0s\n\n#3 [internal] load metadata for docker.io/library/ubuntu:24.04\n#3 DONE 0.7s\n\n#4 [internal] load metadata for ghcr.io/astral-sh/uv:latest\n#4 DONE 0.7s\n\n#5 [internal] load .dockerignore\n#5 transferring context: 85B done\n#5 DONE 0.0s\n\n#6 FROM ghcr.io/astral-sh/uv:latest@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea90c8573340950a0ac2d1aef424\n#6 resolve ghcr.io/astral-sh/uv:latest@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea90c8573340950a0ac2d1aef424 done\n#6 DONE 0.0s\n\n#7 [build 1/4] FROM docker.io/library/ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3\n#7 resolve docker.io/library/ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 done\n#7 DONE 0.0s\n\n#8 [internal] load build context\n#8 transferring context: 22.06kB done\n#8 DONE 0.0s\n\n#9 [stage-1 22/24] COPY --chown=agent:agent input/ /home/agent/workspace/\n#9 CACHED\n\n#10 [stage-1 16/24] RUN UV_TOOL_DIR=/opt/uv-tools UV_TOOL_BIN_DIR=/usr/local/bin     UV_PYTHON_INSTALL_DIR=/opt/uv-python     uv tool install 'gandalf-the-grader[pinned]==1.0.0' &&     chmod -R a+rX /opt/uv-tools &&     ([ -d /opt/uv-python ] && chmod -R a+rX /opt/uv-python || true)\n#10 CACHED\n\n#11 [stage-1 13/24] RUN chmod 700 /opt/mcp-server\n#11 CACHED\n\n#12 [stage-1 15/24] RUN chown environment:environment /usr/bin/mcp-server &&     chmod u+s /usr/bin/mcp-server\n#12 CACHED\n\n#13 [build 3/4] COPY mcp-server/wrapper.c /tmp/wrapper.c\n#13 CACHED\n\n#14 [stage-1 14/24] COPY --from=build /tmp/mcp-server-run /usr/bin/mcp-server\n#14 CACHED\n\n#15 [stage-1 17/24] COPY agent-python-requirements.txt /tmp/judge-runtime-packages.txt\n#15 CACHED\n\n#16 [stage-1  8/24] RUN mkdir -p /home/verifier/workspace && chown -R verifier:verifier /home/verifier &&     usermod -aG verifier environment &&     chmod 2775 /home/verifier/workspace &&     echo \"umask 002\" >> /home/verifier/.bashrc &&     echo \"umask 002\" >> /home/verifier/.profile\n#16 CACHED\n\n#17 [stage-1 11/24] COPY --chown=environment:environment mcp-server /opt/mcp-server\n#17 CACHED\n\n#18 [build 4/4] RUN gcc -o /tmp/mcp-server-run /tmp/wrapper.c\n#18 CACHED\n\n#19 [stage-1 10/24] RUN mkdir /oracle && chown -R agent:agent /oracle && chmod -R a+rw /oracle\n#19 CACHED\n\n#20 [stage-1  7/24] RUN mkdir -p /home/agent/workspace && chown -R agent:agent /home/agent &&     chmod 2775 /home/agent/workspace &&     echo \"umask 002\" >> /home/agent/.bashrc &&     echo \"umask 002\" >> /home/agent/.profile\n#20 CACHED\n\n#21 [stage-1 12/24] RUN cd /opt/mcp-server && uv sync\n#21 CACHED\n\n#22 [stage-1 19/24] RUN npm install -g opencode-ai@latest\n#22 CACHED\n\n#23 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*\n#23 CACHED\n\n#24 [stage-1 21/24] RUN UV_PYTHON_INSTALL_DIR=/opt/uv-python     uv venv /opt/agent-python --python 3.14 &&     VIRTUAL_ENV=/opt/agent-python uv pip install -r /tmp/agent-python-requirements.txt &&     chmod -R a+rX /opt/agent-python\n#24 CACHED\n\n#25 [stage-1 20/24] COPY agent-python-requirements.txt /tmp/agent-python-requirements.txt\n#25 CACHED\n\n#26 [stage-1 23/24] RUN chmod 2775 /home/agent/workspace\n#26 CACHED\n\n#27 [stage-1  4/24] COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/\n#27 CACHED\n\n#28 [stage-1  6/24] RUN echo \"verifier ALL=(sandbox) NOPASSWD: ALL\" >> /etc/sudoers.d/verifier &&     chmod 440 /etc/sudoers.d/verifier\n#28 CACHED\n\n#29 [stage-1  3/24] RUN echo \"Defaults !requiretty\" > /etc/sudoers.d/00-no-requiretty && chmod 440 /etc/sudoers.d/00-no-requiretty\n#29 CACHED\n\n#30 [stage-1  9/24] RUN mkdir /installed-agent && chown -R agent:agent /installed-agent && chmod -R a+rw /installed-agent\n#30 CACHED\n\n#31 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*\n#31 CACHED\n\n#32 [stage-1  5/24] RUN useradd -m -u 10000 -d /home/environment -s /bin/bash environment &&     useradd -m -u 10001 -d /home/agent -s /bin/bash agent &&     useradd -m -u 10002 -d /home/verifier -s /bin/bash verifier &&     useradd -m -u 10003 -d /home/sandbox -s /bin/bash sandbox &&     usermod -aG agent environment &&     usermod -aG agent verifier &&     usermod -aG verifier sandbox\n#32 CACHED\n\n#33 [stage-1 18/24] RUN UV_TOOL_DIR=/opt/uv-tools UV_PYTHON_INSTALL_DIR=/opt/uv-python     uv pip install --python /opt/uv-tools/gandalf-the-grader/bin/python     -r /tmp/judge-runtime-packages.txt &&     rm /tmp/judge-runtime-packages.txt &&     chmod -R a+rX /opt/uv-tools &&     ([ -d /opt/uv-python ] && chmod -R a+rX /opt/uv-python || true)\n#33 CACHED\n\n#34 [stage-1 24/24] WORKDIR /home/agent/workspace\n#34 CACHED\n\n#35 exporting to image\n#35 exporting layers done\n#35 exporting manifest sha256:04d8912dccd0552fae8dd3f81ee6020a50ce5794383c1ed4e42dcecef6fcf53e 0.0s done\n#35 exporting config sha256:1d9302d82afe3d7d6b91c05150b6c656c4723ad66fe3e25dff3d9df22d5ea97d done\n#35 exporting attestation manifest sha256:454fd769cef785033e9ef8e848b8b8d57ccfcf3a7c346c8de01e81746c7211cd done\n#35 exporting manifest list sha256:9a57ddeef53509b4c2c82371a09829b8e76422d451c68f546a7c8f63d1940c11 done\n#35 naming to docker.io/library/btb-07727295__mmplgbp__env-main:latest done\n#35 unpacking to docker.io/library/btb-07727295__mmplgbp__env-main:latest\n#35 unpacking to docker.io/library/btb-07727295__mmplgbp__env-main:latest 5.0s done\n#35 ERROR: failed to extract layer sha256:9ba470f74153183240d15252eebc73b3f5b41dae9849eaa2e246fa6f1c6fbfce: write /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/851/fs/usr/share/fonts/truetype/noto/NotoSansGeorgian-ExtraBold.ttf: input/output error\n------\n > exporting to image:\n------\nfailed to solve: failed to extract layer sha256:9ba470f74153183240d15252eebc73b3f5b41dae9849eaa2e246fa6f1c6fbfce: write /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/851/fs/usr/share/fonts/truetype/noto/NotoSansGeorgian-ExtraBold.ttf: input/output error\n\n. Stderr: None. ",
+        "exception_traceback": "Traceback (most recent call last):\n  File \"/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/trial/trial.py\", line 351, in run\n    await self._prepare()\n  File \"/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/trial/trial.py\", line 385, in _prepare\n    await self._setup_agent_environment()\n  File \"/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/trial/trial.py\", line 1148, in _setup_agent_environment\n    await self._start_agent_environment()\n  File \"/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/trial/trial.py\", line 1154, in _start_agent_environment\n    await asyncio.wait_for(\n  File \"/Users/arvind/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/asyncio/tasks.py\", line 520, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/environments/docker/docker.py\", line 891, in start\n    await self._run_docker_compose_command([\"build\"])\n  File \"/Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/environments/docker/docker.py\", line 656, in _run_docker_compose_command\n    raise RuntimeError(\nRuntimeError: Docker compose command failed for environment btb-07727295. Command: docker compose --project-name btb-07727295__mmplgbp__env --project-directory /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/datasets/btb/btb-07727295/environment -f /private/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/tmpb9e174hf/btb-07727295__mMPLgBp__env-docker-compose-resources.json -f /Users/arvind/.local/share/uv/tools/harbor/lib/python3.12/site-packages/harbor/environments/docker/docker-compose-build.yaml -f /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/datasets/btb/btb-07727295/environment/docker-compose.yaml -f /private/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/tmpkla8pv0p/docker-compose-environment.json -f /private/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/tmpklu1_esy/docker-compose-mounts.json build. Return code: 1. Stdout:  Image btb-07727295__mmplgbp__env-main Building \n#1 [internal] load local bake definitions\n#1 reading from stdin 762B done\n#1 DONE 0.0s\n\n#2 [internal] load build definition from Dockerfile\n#2 transferring dockerfile: 5.23kB done\n#2 DONE 0.0s\n\n#3 [internal] load metadata for docker.io/library/ubuntu:24.04\n#3 DONE 0.7s\n\n#4 [internal] load metadata for ghcr.io/astral-sh/uv:latest\n#4 DONE 0.7s\n\n#5 [internal] load .dockerignore\n#5 transferring context: 85B done\n#5 DONE 0.0s\n\n#6 FROM ghcr.io/astral-sh/uv:latest@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea90c8573340950a0ac2d1aef424\n#6 resolve ghcr.io/astral-sh/uv:latest@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea90c8573340950a0ac2d1aef424 done\n#6 DONE 0.0s\n\n#7 [build 1/4] FROM docker.io/library/ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3\n#7 resolve docker.io/library/ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 done\n#7 DONE 0.0s\n\n#8 [internal] load build context\n#8 transferring context: 22.06kB done\n#8 DONE 0.0s\n\n#9 [stage-1 22/24] COPY --chown=agent:agent input/ /home/agent/workspace/\n#9 CACHED\n\n#10 [stage-1 16/24] RUN UV_TOOL_DIR=/opt/uv-tools UV_TOOL_BIN_DIR=/usr/local/bin     UV_PYTHON_INSTALL_DIR=/opt/uv-python     uv tool install 'gandalf-the-grader[pinned]==1.0.0' &&     chmod -R a+rX /opt/uv-tools &&     ([ -d /opt/uv-python ] && chmod -R a+rX /opt/uv-python || true)\n#10 CACHED\n\n#11 [stage-1 13/24] RUN chmod 700 /opt/mcp-server\n#11 CACHED\n\n#12 [stage-1 15/24] RUN chown environment:environment /usr/bin/mcp-server &&     chmod u+s /usr/bin/mcp-server\n#12 CACHED\n\n#13 [build 3/4] COPY mcp-server/wrapper.c /tmp/wrapper.c\n#13 CACHED\n\n#14 [stage-1 14/24] COPY --from=build /tmp/mcp-server-run /usr/bin/mcp-server\n#14 CACHED\n\n#15 [stage-1 17/24] COPY agent-python-requirements.txt /tmp/judge-runtime-packages.txt\n#15 CACHED\n\n#16 [stage-1  8/24] RUN mkdir -p /home/verifier/workspace && chown -R verifier:verifier /home/verifier &&     usermod -aG verifier environment &&     chmod 2775 /home/verifier/workspace &&     echo \"umask 002\" >> /home/verifier/.bashrc &&     echo \"umask 002\" >> /home/verifier/.profile\n#16 CACHED\n\n#17 [stage-1 11/24] COPY --chown=environment:environment mcp-server /opt/mcp-server\n#17 CACHED\n\n#18 [build 4/4] RUN gcc -o /tmp/mcp-server-run /tmp/wrapper.c\n#18 CACHED\n\n#19 [stage-1 10/24] RUN mkdir /oracle && chown -R agent:agent /oracle && chmod -R a+rw /oracle\n#19 CACHED\n\n#20 [stage-1  7/24] RUN mkdir -p /home/agent/workspace && chown -R agent:agent /home/agent &&     chmod 2775 /home/agent/workspace &&     echo \"umask 002\" >> /home/agent/.bashrc &&     echo \"umask 002\" >> /home/agent/.profile\n#20 CACHED\n\n#21 [stage-1 12/24] RUN cd /opt/mcp-server && uv sync\n#21 CACHED\n\n#22 [stage-1 19/24] RUN npm install -g opencode-ai@latest\n#22 CACHED\n\n#23 [stage-1  2/24] RUN apt-get update &&     apt-get install -y bash curl git nodejs npm sudo bzip2 libxcb1 libgomp1 libreoffice tmux unzip poppler-utils &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*\n#23 CACHED\n\n#24 [stage-1 21/24] RUN UV_PYTHON_INSTALL_DIR=/opt/uv-python     uv venv /opt/agent-python --python 3.14 &&     VIRTUAL_ENV=/opt/agent-python uv pip install -r /tmp/agent-python-requirements.txt &&     chmod -R a+rX /opt/agent-python\n#24 CACHED\n\n#25 [stage-1 20/24] COPY agent-python-requirements.txt /tmp/agent-python-requirements.txt\n#25 CACHED\n\n#26 [stage-1 23/24] RUN chmod 2775 /home/agent/workspace\n#26 CACHED\n\n#27 [stage-1  4/24] COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/\n#27 CACHED\n\n#28 [stage-1  6/24] RUN echo \"verifier ALL=(sandbox) NOPASSWD: ALL\" >> /etc/sudoers.d/verifier &&     chmod 440 /etc/sudoers.d/verifier\n#28 CACHED\n\n#29 [stage-1  3/24] RUN echo \"Defaults !requiretty\" > /etc/sudoers.d/00-no-requiretty && chmod 440 /etc/sudoers.d/00-no-requiretty\n#29 CACHED\n\n#30 [stage-1  9/24] RUN mkdir /installed-agent && chown -R agent:agent /installed-agent && chmod -R a+rw /installed-agent\n#30 CACHED\n\n#31 [build 2/4] RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*\n#31 CACHED\n\n#32 [stage-1  5/24] RUN useradd -m -u 10000 -d /home/environment -s /bin/bash environment &&     useradd -m -u 10001 -d /home/agent -s /bin/bash agent &&     useradd -m -u 10002 -d /home/verifier -s /bin/bash verifier &&     useradd -m -u 10003 -d /home/sandbox -s /bin/bash sandbox &&     usermod -aG agent environment &&     usermod -aG agent verifier &&     usermod -aG verifier sandbox\n#32 CACHED\n\n#33 [stage-1 18/24] RUN UV_TOOL_DIR=/opt/uv-tools UV_PYTHON_INSTALL_DIR=/opt/uv-python     uv pip install --python /opt/uv-tools/gandalf-the-grader/bin/python     -r /tmp/judge-runtime-packages.txt &&     rm /tmp/judge-runtime-packages.txt &&     chmod -R a+rX /opt/uv-tools &&     ([ -d /opt/uv-python ] && chmod -R a+rX /opt/uv-python || true)\n#33 CACHED\n\n#34 [stage-1 24/24] WORKDIR /home/agent/workspace\n#34 CACHED\n\n#35 exporting to image\n#35 exporting layers done\n#35 exporting manifest sha256:04d8912dccd0552fae8dd3f81ee6020a50ce5794383c1ed4e42dcecef6fcf53e 0.0s done\n#35 exporting config sha256:1d9302d82afe3d7d6b91c05150b6c656c4723ad66fe3e25dff3d9df22d5ea97d done\n#35 exporting attestation manifest sha256:454fd769cef785033e9ef8e848b8b8d57ccfcf3a7c346c8de01e81746c7211cd done\n#35 exporting manifest list sha256:9a57ddeef53509b4c2c82371a09829b8e76422d451c68f546a7c8f63d1940c11 done\n#35 naming to docker.io/library/btb-07727295__mmplgbp__env-main:latest done\n#35 unpacking to docker.io/library/btb-07727295__mmplgbp__env-main:latest\n#35 unpacking to docker.io/library/btb-07727295__mmplgbp__env-main:latest 5.0s done\n#35 ERROR: failed to extract layer sha256:9ba470f74153183240d15252eebc73b3f5b41dae9849eaa2e246fa6f1c6fbfce: write /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/851/fs/usr/share/fonts/truetype/noto/NotoSansGeorgian-ExtraBold.ttf: input/output error\n------\n > exporting to image:\n------\nfailed to solve: failed to extract layer sha256:9ba470f74153183240d15252eebc73b3f5b41dae9849eaa2e246fa6f1c6fbfce: write /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/851/fs/usr/share/fonts/truetype/noto/NotoSansGeorgian-ExtraBold.ttf: input/output error\n\n. Stderr: None. \n",
+        "occurred_at": "2026-09-26T20:22:48.445630"
+    },
+    "started_at": "2026-09-26T14:52:42.200182Z",
+    "finished_at": "2026-09-26T14:52:49.034044Z",
+    "environment_setup": {
+        "started_at": "2026-09-26T14:52:42.222821Z",
+        "finished_at": "2026-09-26T14:52:48.441892Z"
+    },
+    "agent_setup": null,
+    "agent_execution": null,
+    "verifier": null,
+    "step_results": null
+}

@@ -1,0 +1,10 @@
+{
+ "task_id": "FigQA/80b86c3e-bee1-4347-83b5-65064903d7d3",
+ "category": "FigQA",
+ "prompt_sha256": "dc332e7628686aaccaf67ede9c64a92b23dc8f8094fecb87fd2fee24d14c8ab6",
+ "raw_text": "To determine which group reached 75% survival at 35 days, we need to examine graph **b**, as it contains the groups listed in the options (EV untargeted, spr-4;spr3 RNAi untargeted, EV neuronal, spr-4;spr3 RNAi neuronal, sid-1 control).\n\nLet's look at the x-axis for \"Time (days)\" = 35.\nNow, let's trace up to the y-axis value of \"Survival (%)\" = 75.\n\n1.  **sid-1(pk3321) EV neuronal RNAi control (purple inverted triangles):** At day 35, survival is 0%.\n2.  **spr-4;spr3 (RNAi) neuronal (cyan diamonds):** At day 35, survival is approximately 50%.\n3.  **spr-4;spr3 (RNAi) untargeted (red triangles):** At day 35, survival is approximately 75%. The red triangle data point at day 35 is right around the 75% mark on the y-axis.\n4.  **EV neuronal (green squares):** At day 35, survival is approximately 90%.\n5.  **EV untargeted (blue circles):** At day 35, survival is approximately 90%.\n\nThe group that matches the condition of having ~75% survival at 35 days is **spr-4;spr3 (RNAi) untargeted**.\n\nThis corresponds to option (D).\n\n[ANSWER]D[/ANSWER]",
+ "prompt_tokens": 6055,
+ "completion_tokens": 342,
+ "stop_reason": "stop",
+ "error": null
+}

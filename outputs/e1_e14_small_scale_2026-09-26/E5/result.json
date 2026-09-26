@@ -1,0 +1,94 @@
+{
+  "lane": "E5",
+  "original_benchmark": "APEX-Agents (mercor/apex-agents @92c86856, 480 tasks, Archipelago native grader)",
+  "benchmark_run": "tau2-bench (sierra-research/tau2-bench @a2c02472) airline + retail, test split, native evaluator, pass^1",
+  "scope": "substitute",
+  "substitute_gap": "tau2 customer-service tool dialogues (airline/retail) replace APEX-Agents professional-services file/office tasks; the user simulator is the same Tinker base model instead of the official gpt-4.1 simulator; NL-assertion judge is gemini-2.5-flash instead of gpt-4.1 (OpenAI account has no credits).",
+  "actor": "Qwen/Qwen3.6-35B-A3B base (no adapter), Tinker",
+  "thinking": false,
+  "temperature": 0,
+  "max_tokens": 4096,
+  "n_selected": 10,
+  "n_scored": 10,
+  "n_errors": 1,
+  "item_ids": [
+    "airline/8",
+    "airline/6",
+    "airline/2",
+    "airline/22",
+    "airline/18",
+    "retail/18",
+    "retail/12",
+    "retail/9",
+    "retail/45",
+    "retail/90"
+  ],
+  "per_item_pass": {
+    "airline/8": 1,
+    "airline/6": 1,
+    "airline/2": 1,
+    "airline/22": 0,
+    "airline/18": 0,
+    "retail/18": 0,
+    "retail/12": 0,
+    "retail/9": 0,
+    "retail/45": 0,
+    "retail/90": 0
+  },
+  "termination": {
+    "airline/8": "user_stop",
+    "airline/6": "user_stop",
+    "airline/2": "user_stop",
+    "airline/22": "user_stop",
+    "airline/18": "user_stop",
+    "retail/18": "user_stop",
+    "retail/12": "user_stop",
+    "retail/9": "user_stop",
+    "retail/45": "infrastructure_error",
+    "retail/90": "user_stop"
+  },
+  "metric": "pass^1 (native tau2 reward == 1, one trial); infra errors = fail",
+  "value": 0.3,
+  "numerator": 3,
+  "denominator": 10,
+  "wilson95": [
+    0.1078,
+    0.6032
+  ],
+  "per_domain": {
+    "airline": "3/5",
+    "retail": "0/5 (1 infra error: task 45)"
+  },
+  "grader": "native (tau2 evaluator: DB + COMMUNICATE / DB + NL_ASSERTION; NL judge gemini/gemini-2.5-flash)",
+  "compute_route": "Tinker sampling via local OpenAI-compatible shim (E4/code/tinker_shim.py) for agent and user simulator; tau2 CLI local",
+  "cost": {
+    "tinker_tokens": 2045425,
+    "tinker_tokens_by_role": {
+      "user": 170282,
+      "agent": 1875143,
+      "untagged": 0
+    },
+    "tinker_tokens_apex_attempt_unscored": 2333828,
+    "colab_units": 0.0,
+    "modal_usd": null,
+    "modal_note": "APEX attempt used Modal Sandboxes (4 CPU/8 GiB, ~6 sandboxes, ~45 min total wall); bill not itemised here"
+  },
+  "started_utc": "2026-09-26T16:16:40Z",
+  "finished_utc": "2026-09-26T16:24:47Z",
+  "commands": [
+    "E4/code/shim_run.sh e5tinker 18743 E5/raw/shim_ledger_tinker.jsonl E5/raw/cap_tinker.json",
+    "E5/code/run_tau2.sh base 18743 airline 8 6 2 22 18",
+    "E5/code/run_tau2.sh base 18743 retail 18 12 9 45 90 [--auto-resume]",
+    "python E5/code/compute_tau2.py E5/raw e5_base E5/raw/shim_ledger_tinker.jsonl"
+  ],
+  "raw_dir": "E5/raw/",
+  "selection": "random.Random(20260926).sample(test split ids, 10) per domain (raw/selection.json); first 5 per domain run (token cap)",
+  "caveats": [
+    "n=10, not the requested 20: the E4+E5 6M Tinker-token cap was exhausted (E4 1.56M, abandoned APEX attempt 2.33M, tau2 2.05M).",
+    "Retail task 45 is an infra error (NL-assertion judge unavailable: first gpt-4.1 with no OpenAI credits, then Gemini returned non-bare JSON); tau2 retried the whole simulation 3x per attempt, burning ~0.5M tokens; counted as fail.",
+    "Tau2 sources patched in scratch only for the NL judge model/JSON mode (config.py); agent/user/evaluator logic unchanged.",
+    "User simulator = Tinker base model (not gpt-4.1); weaker simulators change task difficulty, so not comparable to published tau2 scores.",
+    "APEX-Agents attempt (1 native-scored task at 0.667, others cap-limited/infra) abandoned by lead decision; kept unscored in raw/apex_attempt_unscored/.",
+    "New arm; never pool with the original 7/480 prefix mean 0.0505 or Tau3 20/97."
+  ]
+}

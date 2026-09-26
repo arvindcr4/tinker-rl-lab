@@ -1,0 +1,15 @@
+{
+ "row_index": 3468,
+ "domain": [
+  "Mathematics -> Applied Mathematics -> Math Word Problems"
+ ],
+ "difficulty": 1.5,
+ "source": "pascal",
+ "problem": "Six friends ate at a restaurant and agreed to share the bill equally. Because Luxmi forgot her money, each of her five friends paid an extra \\$3 to cover her portion of the total bill. What was the total bill?",
+ "answer": "\\$90",
+ "model_generation": "To find the total bill, we can break this problem down into logical steps using algebra.\n\n### Step 1: Define the Variables\nLet $T$ be the total bill.\nLet $n$ be the number of friends, which is 6.\n\n### Step 2: Determine the Original Share\nIf the bill were shared equally among all 6 friends, each person would pay:\n$$ \\text{Original Share} = \\frac{T}{6} $$\n\n### Step 3: Determine the New Share\nSince Luxmi did not pay, the remaining 5 friends had to cover the entire bill. Therefore, each of these 5 friends paid:\n$$ \\text{New Share} = \\frac{T}{5} $$\n\n### Step 4: Set Up the Equation\nThe problem states that each of the 5 friends paid an extra \\$3 compared to the original share. We can express this relationship as:\n$$ \\text{New Share} - \\text{Original Share} = 3 $$\n\nSubstituting the expressions from Steps 2 and 3:\n$$ \\frac{T}{5} - \\frac{T}{6} = 3 $$\n\n### Step 5: Solve for $T$\nTo solve for $T$, we need to find a common denominator for the fractions, which is 30.\n\n$$ \\frac{6T}{30} - \\frac{5T}{30} = 3 $$\n\nCombine the numerators:\n$$ \\frac{6T - 5T}{30} = 3 $$\n\n$$ \\frac{T}{30} = 3 $$\n\nMultiply both sides by 30 to isolate $T$:\n$$ T = 3 \\times 30 $$\n$$ T = 90 $$\n\n### Verification\n1.  **Total Bill**: \\$90\n2.  **Original Share**: $\\$90 / 6 = \\$15$ per person.\n3.  **New Share**: $\\$90 / 5 = \\$18$ per person.\n4.  **Difference**: $\\$18 - \\$15 = \\$3$.\n\nThis matches the condition that each friend paid an extra \\$3.\n\n### Conclusion\nThe total bill was **\\$90**.",
+ "prompt_tokens": 77,
+ "completion_tokens": 482,
+ "stop_reason": "stop",
+ "error": null
+}

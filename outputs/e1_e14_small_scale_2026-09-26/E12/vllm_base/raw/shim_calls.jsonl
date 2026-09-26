@@ -1,0 +1,6 @@
+{"t": 1790435177.27211, "dt": 104.32, "prompt_tokens": 751, "orig_prompt_tokens": 751, "completion_tokens": 9061, "temperature": 0.0, "max_tokens": 16384, "backend": "vllm"}
+{"t": 1790435285.997864, "dt": 158.12, "prompt_tokens": 1008, "orig_prompt_tokens": 1008, "completion_tokens": 14626, "temperature": 0.0, "max_tokens": 16384, "backend": "vllm"}
+{"t": 1790435448.5032032, "dt": 77.71, "prompt_tokens": 787, "orig_prompt_tokens": 787, "completion_tokens": 10770, "temperature": 0.0, "max_tokens": 16384, "backend": "vllm"}
+{"t": 1790435529.345691, "dt": 91.56, "prompt_tokens": 808, "orig_prompt_tokens": 808, "completion_tokens": 12892, "temperature": 0.0, "max_tokens": 16384, "backend": "vllm"}
+{"t": 1790435624.180867, "dt": 69.34, "prompt_tokens": 807, "orig_prompt_tokens": 807, "completion_tokens": 9485, "temperature": 0.0, "max_tokens": 16384, "backend": "vllm"}
+{"t": 1790435697.6165981, "dt": 116.34, "prompt_tokens": 758, "orig_prompt_tokens": 758, "completion_tokens": 15857, "temperature": 0.0, "max_tokens": 16384, "backend": "vllm"}

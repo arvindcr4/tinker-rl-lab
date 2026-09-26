@@ -1,0 +1,26 @@
+{
+ "comp": "random-acts-of-pizza",
+ "upload_rc": 0,
+ "setup_out": "e: 0.7.4 (current: 0.6.0)\n[colab] Run 'colab update' to update.\n[colab] To silence this check, set \"enable_update_check\": false in ~/.config/colab-cli/settings.json\n\nextracted\n/tmp/ipykernel_2029/4023624480.py:1: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.\n  import tarfile; tarfile.open('/content/random-acts-of-pizza.tar.gz').extractall('/content'); print('extracted')\n",
+ "attempts": [
+  {
+   "attempt": 1,
+   "prompt_tokens": 3609,
+   "sample_tokens": 3192,
+   "shim_error": null,
+   "exec_seconds": 25.8,
+   "ok": false,
+   "exec_tail": "\n[colab] A new version of Colab CLI is available: 0.7.4 (current: 0.6.0)\n[colab] Run 'colab update' to update.\n[colab] To silence this check, set \"enable_update_check\": false in ~/.config/colab-cli/settings.json\n\nRC= 1 HAS_SUB= False\nSTDOUT_TAIL Loading data...\nCommon numeric columns: 12\nExtracting text features...\nNumber of features: 906\nTraining set shape: (2878, 906)\nTest set shape: (1162, 906)\nTraining LightGBM with cross-validation...\n\nSTDERR_TAIL Traceback (most recent call last):\n  File \"/content/random-acts-of-pizza/solution.py\", line 176, in <module>\n    model = lgb.train(\n        params,\n    ...<3 lines>...\n        callbacks=[lgb.early_stopping(stopping_rounds=50), lgb.log_evaluation(period=100)]\n    )\n  File \"/usr/local/lib/python3.13/dist-packages/lightgbm/engine.py\", line 297, in train\n    booster = Booster(params=params, train_set=train_set)\n  File \"/usr/local/lib/python3.13/dist-packages/lightgbm/basic.py\", line 3656, in __init__\n    train_set.construct()\n    ~~~~~~~~~~~~~~~~~~~^^\n  File \"/usr/local/lib/python3.13/dist-packages/lightgbm/basic.py\", line 2590, in construct\n    self._lazy_init(\n    ~~~~~~~~~~~~~~~^\n        data=self.data,\n        ^^^^^^^^^^^^^^^\n    ...<9 lines>...\n        position=self.position,\n        ^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"/usr/local/lib/python3.13/dist-packages/lightgbm/basic.py\", line 2123, in _lazy_init\n    data, feature_name, categorical_feature, self.pandas_categorical = _data_from_pandas(\n                                                                       ~~~~~~~~~~~~~~~~~^\n        data=data,\n        ^^^^^^^^^^\n    ...<2 lines>...\n        pandas_categorical=self.pandas_categorical,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"/usr/local/lib/python3.13/dist-packages/lightgbm/basic.py\", line 868, in _data_from_pandas\n    _pandas_to_numpy(data, target_dtype=target_dtype),\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.13/dist-packages/lightgbm/basic.py\", line 814, in _pandas_to_numpy\n    _check_for_bad_pandas_dtypes(data.dtypes)\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.13/dist-packages/lightgbm/basic.py\", line 805, in _check_for_bad_pandas_dtypes\n    raise ValueError(\n        f\"pandas dtypes must be int, float or bool.\\nFields with bad pandas dtypes: {', '.join(bad_pandas_dtypes)}\"\n    )\nValueError: pandas dtypes must be int, float or bool.\nFields with bad pandas dtypes: requester_username: object\n\n"
+  },
+  {
+   "attempt": 2,
+   "prompt_tokens": 7574,
+   "sample_tokens": 3265,
+   "shim_error": null,
+   "exec_seconds": 21.2,
+   "ok": true,
+   "exec_tail": "\n[colab] A new version of Colab CLI is available: 0.7.4 (current: 0.6.0)\n[colab] Run 'colab update' to update.\n[colab] To silence this check, set \"enable_update_check\": false in ~/.config/colab-cli/settings.json\n\nRC= 0 HAS_SUB= True\nSTDOUT_TAIL Loading data...\nCommon numeric columns: 11\nExtracting text features...\nNumber of features: 905\nTraining set shape: (2878, 905)\nTest set shape: (1162, 905)\nTraining LightGBM with cross-validation...\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's auc: 0.680793\nEarly stopping, best iteration is:\n[89]\tvalid_0's auc: 0.684136\nFold 1 AUC: 0.6841\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's auc: 0.65366\n[200]\tvalid_0's auc: 0.66075\n[300]\tvalid_0's auc: 0.667711\n[400]\tvalid_0's auc: 0.670909\nEarly stopping, best iteration is:\n[384]\tvalid_0's auc: 0.673913\nFold 2 AUC: 0.6739\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's auc: 0.714853\nEarly stopping, best iteration is:\n[81]\tvalid_0's auc: 0.720732\nFold 3 AUC: 0.7207\nTraining until validation scores don't improve for 50 rounds\nEarly stopping, best iteration is:\n[28]\tvalid_0's auc: 0.650447\nFold 4 AUC: 0.6504\nTraining until validation scores don't improve for 50 rounds\n[100]\tvalid_0's auc: 0.697876\nEarly stopping, best iteration is:\n[120]\tvalid_0's auc: 0.705873\nFold 5 AUC: 0.7059\nOverall OOF AUC: 0.6791\nSubmission saved to submission.csv\n  request_id  requester_received_pizza\n0  t3_1aw5zf                  0.210583\n1   t3_roiuw                  0.192704\n2   t3_mjnbq                  0.376962\n3   t3_t8wd1                  0.186450\n4  t3_1m4zxu                  0.080443\n\nSTDERR_TAIL \n"
+  }
+ ],
+ "download_rc": 0
+}

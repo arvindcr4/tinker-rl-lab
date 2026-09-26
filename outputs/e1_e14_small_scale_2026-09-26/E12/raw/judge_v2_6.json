@@ -1,0 +1,29 @@
+{
+ "raw": "1 | PASS | `src/app/(auth)/register/page.tsx` implements user registration with Supabase Auth and profile creation.\n2 | PASS | `src/app/(auth)/login/page.tsx` implements user login with Supabase Auth and session management.\n3 | PASS | `src/components/Navbar.tsx` implements user logout functionality via `supabase.auth.signOut()`.\n4 | PASS | `supabase_schema.sql` defines durable tables for users, listings, bookings, and payments with RLS.\n5 | PASS | `src/app/search/page.tsx` and `src/components/ListingCard.tsx` provide a structured browsing interface.\n6 | FAIL | `src/app/search/page.tsx` implements location filtering but lacks server-side logic for date, price, and property type filters.\n7 | PASS | `src/app/list/[id]/page.tsx` displays detailed property pages with descriptions, amenities, and host info.\n8 | PASS | `src/app/list/[id]/BookingForm.tsx` includes date pickers, guest count selection, and price calculation logic.\n9 | PASS | `src/app/list/[id]/BookingForm.tsx` inserts booking data into the database upon successful payment.\n10 | PASS | `src/app/list/new/page.tsx` provides a multi-step form for hosts to post new rental properties.\n11 | FAIL | `src/app/list/new/page.tsx` allows creation but no UI or API routes exist for editing, archiving, or deleting existing listings.\n12 | PASS | `src/app/dashboard/page.tsx` displays guest bookings and host listings, fulfilling the dashboard requirement.\n13 | FAIL | No real-time availability updates or double-booking prevention logic (e.g., database constraints or subscriptions) are implemented.\n14 | PASS | `supabase_schema.sql` ensures durable persistence of bookings and metadata with appropriate constraints and triggers.\n15 | PASS | `src/lib/stripe.ts` and `src/app/list/[id]/BookingForm.tsx` integrate Stripe for payment processing.\n16 | FAIL | `src/app/list/[id]/BookingForm.tsx` calls a missing `/api/payments/create-intent` route; the API route file is not provided.\n17 | FAIL | `src/app/list/[id]/BookingForm.tsx` updates booking status but does not create or update payment records in the `payments` table.\n18 | FAIL | `src/app/dashboard/page.tsx` does not query or display payment transaction details or statuses to the user.\n19 | FAIL | `src/app/list/[id]/BookingForm.tsx` shows generic errors but lacks specific UI for retrying or switching payment methods.\n20 | PASS | `src/app/list/new/page.tsx` allows uploading multiple photos via `handleFileUpload` and stores them in Supabase Storage.\n21 | PASS | `src/app/list/new/page.tsx` includes a file input for videos and stores them in the `listing_media` table.\n22 | FAIL | `src/app/list/new/page.tsx` allows adding/removing media but lacks UI controls for previewing (beyond basic img) or reordering.\n23 | PASS | `src/components/ListingGallery.tsx` displays photos in a carousel with navigation controls on the detail page.\n24 | FAIL | `src/components/ListingGallery.tsx` only shows a \"Watch video\" button; it does not embed or play the video on the detail page.",
+ "rubric": {
+  "1": "Application implements user registration functionality.",
+  "2": "Application implements user login functionality.",
+  "3": "Application implements user logout functionality.",
+  "4": "Application stores all users, listings, bookings, and associated metadata in a durable database.",
+  "5": "Application allows users to browse available properties in a structured, visually clear interface.",
+  "6": "Application provides property search with filters for location, dates, price, and property type.",
+  "7": "Application displays detailed property pages that include descriptions and essential listing information.",
+  "8": "Application implements a booking flow that includes a date picker, guest count selection, and accurate price calculation.",
+  "9": "Application allows users to book a property and ensures all booking data is stored in the database.",
+  "10": "Application allows users to post new rental properties for others to book.",
+  "11": "Application provides full listing management, including the ability to edit, archive, and delete properties.",
+  "12": "Application provides each user with a dashboard that displays their trip history and their hosting activity.",
+  "13": "Application delivers real-time availability updates to ensure that no property can be double-booked.",
+  "14": "Application persists all bookings and listing metadata in the database in a durable and consistent manner.",
+  "15": "Application integrates with a secure modern payment provider to process end-to-end payments.",
+  "16": "Application captures payment details during the booking flow and charges the guest upon booking confirmation or according to the selected payment model.",
+  "17": "Application records all payment transactions in the database with statuses such as pending, succeeded, failed, or refunded.",
+  "18": "Application provides user-facing views that display payment-related information such as total cost and payment status.",
+  "19": "Application handles payment errors gracefully by surfacing clear messages and allowing users to retry or switch payment methods.",
+  "20": "Application allows hosts to upload multiple photos for each listing as part of the creation and editing flow.",
+  "21": "Application allows hosts to upload at least one video for each listing.",
+  "22": "Application provides clear UI controls for adding, previewing, reordering, and removing uploaded photos and videos.",
+  "23": "Application displays uploaded photos prominently on the property detail page using a gallery or carousel.",
+  "24": "Application displays uploaded videos prominently on the property detail page using an embedded video player."
+ }
+}

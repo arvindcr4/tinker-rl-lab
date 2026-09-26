@@ -1,0 +1,11 @@
+{
+ "n": 100,
+ "correct": 43,
+ "unparsed": 0,
+ "correct_among_truncated": 18,
+ "truncated": 72,
+ "judge": "KbsdJames/Omni-Judge@de5bdca15ff3c366b90718c4b4be555d25c655b0",
+ "judge_prompt_tokens": 264682,
+ "judge_modal_usd": 0.0642,
+ "judge_modal_app": "ap-9kNHyWQLd5Y5FO4jnMZ5AX"
+}

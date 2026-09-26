@@ -1,0 +1,30 @@
+{
+ "raw": "1 | FAIL | No code provided for registration UI or API logic; only prerequisites listed.\n2 | FAIL | No code provided for role selection or storage in registration flow.\n3 | FAIL | No code provided for login UI or authentication API implementation.\n4 | FAIL | No code provided for logout functionality or session clearing logic.\n5 | FAIL | No database schema, models, or persistence logic code is present in the submission.\n6 | FAIL | No code provided for medication browsing, search, or filtering UI or logic.\n7 | FAIL | No code provided for shopping cart state management or add-to-cart UI.\n8 | FAIL | No code provided for order placement logic or checkout flow implementation.\n9 | FAIL | No code provided for patient order history view or data fetching logic.\n10 | FAIL | No code provided for real-time order status display or state management.\n11 | FAIL | No code provided for pharmacist dashboard UI or order management interface.\n12 | FAIL | No code provided for pharmacist order status update logic or UI controls.\n13 | FAIL | No code provided for inventory viewing or management UI for pharmacists.\n14 | FAIL | No code provided for low-stock alert logic or threshold checking implementation.\n15 | FAIL | No code provided for marking items as out of stock or updating inventory status.\n16 | FAIL | No code provided for database persistence logic ensuring data durability.\n17 | FAIL | No code provided for private messaging interface or pharmacist-only access control.\n18 | FAIL | No code provided for pharmacist search functionality or conversation initiation logic.\n19 | FAIL | No code provided for real-time messaging delivery or WebSocket/SSE implementation.\n20 | FAIL | No code provided for message display components showing sender attribution and timestamps.\n21 | FAIL | No code provided for conversation history retrieval or thread management logic.\n22 | FAIL | No code provided for email notification triggers or service integration code.\n23 | FAIL | No code provided for email template construction with order details and status changes.\n24 | FAIL | No code provided for email sending logic or integration with order status updates.\n25 | FAIL | No code provided for email formatting, subject lines, or sender information configuration.",
+ "rubric": {
+  "1": "Application implements user registration functionality.",
+  "2": "Application implements user registration supporting patient and pharmacist roles.",
+  "3": "Application implements user login functionality.",
+  "4": "Application implements user logout functionality.",
+  "5": "Application persists all medications, inventory levels, orders, and user accounts using durable, database-backed storage.",
+  "6": "Application allows patients to browse available medications with search and filter capabilities.",
+  "7": "Application allows patients to add selected medications to a shopping cart.",
+  "8": "Application allows patients to place prescription orders from the contents of their cart.",
+  "9": "Application allows patients to view a complete history of their past orders.",
+  "10": "Application displays real-time order status for patients, including states such as pending, processing, ready for pickup, and completed.",
+  "11": "Application provides a pharmacist dashboard for reviewing and managing incoming orders.",
+  "12": "Application allows pharmacists to update the status of each order.",
+  "13": "Application allows pharmacists to view and manage current inventory levels for all medications.",
+  "14": "Application generates low-stock alerts for pharmacists when inventory levels fall below defined thresholds.",
+  "15": "Application allows pharmacists to mark specific items as out of stock so patients cannot order them.",
+  "16": "Application persists all order, inventory, and status data in the database to ensure full durability across sessions.",
+  "17": "Application provides a private messaging interface that is accessible only to authenticated pharmacists.",
+  "18": "Application allows pharmacists to search for and select another pharmacist to start a private conversation.",
+  "19": "Application ensures pharmacist-to-pharmacist messages are delivered and displayed in real time to both parties without requiring a page refresh.",
+  "20": "Application displays clear sender attribution, including name and role, along with timestamps for each message in every private conversation.",
+  "21": "Application maintains a conversation history for each private pharmacist thread so prior messages can be reviewed.",
+  "22": "Application sends an automatic email notification to the patient whenever their prescription order status changes.",
+  "23": "Application includes key details in each notification email, such as order identifier, medication summary, previous status, and new status.",
+  "24": "Application ensures that notification emails are sent reliably and promptly immediately after each order status update is saved in the system.",
+  "25": "Application follows basic email best practices for all notifications, including a clear subject line indicating the update and appropriate sender information."
+ }
+}

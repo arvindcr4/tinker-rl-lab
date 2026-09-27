@@ -1,0 +1,77 @@
+{
+ "note": "Reconstructed 2026-09-27 from full97.log 'Retry 3/3' lines. The original results.json recorded these 24 as termination=infrastructure_error (13 ContextWindowExceeded @65536, 11 empty AssistantMessage); an accidental tau2 --auto-resume at 05:04Z (10:34 IST) rewrote results.json and dropped them before it was killed. Per-sim LLM logs remain under artifacts/. They score as failures (lane rule).",
+ "infrastructure_error_tasks": {
+  "task_020": [
+   "empty_assistant_message"
+  ],
+  "task_018": [
+   "empty_assistant_message"
+  ],
+  "task_027": [
+   "empty_assistant_message"
+  ],
+  "task_026": [
+   "empty_assistant_message"
+  ],
+  "task_022": [
+   "empty_assistant_message"
+  ],
+  "task_028": [
+   "empty_assistant_message"
+  ],
+  "task_029": [
+   "empty_assistant_message"
+  ],
+  "task_058": [
+   "context_window_exceeded"
+  ],
+  "task_059": [
+   "context_window_exceeded"
+  ],
+  "task_062": [
+   "context_window_exceeded"
+  ],
+  "task_063": [
+   "context_window_exceeded"
+  ],
+  "task_064": [
+   "context_window_exceeded"
+  ],
+  "task_065": [
+   "context_window_exceeded"
+  ],
+  "task_066": [
+   "context_window_exceeded"
+  ],
+  "task_068": [
+   "context_window_exceeded"
+  ],
+  "task_069": [
+   "context_window_exceeded"
+  ],
+  "task_071": [
+   "context_window_exceeded"
+  ],
+  "task_073": [
+   "context_window_exceeded"
+  ],
+  "task_074": [
+   "empty_assistant_message"
+  ],
+  "task_090": [
+   "empty_assistant_message"
+  ],
+  "task_091": [
+   "context_window_exceeded"
+  ],
+  "task_092": [
+   "empty_assistant_message"
+  ],
+  "task_094": [
+   "empty_assistant_message"
+  ],
+  "task_096": [
+   "context_window_exceeded"
+  ]
+ }
+}

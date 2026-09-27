@@ -1,0 +1,17 @@
+{
+ "spend_usd": 0.0,
+ "spend_basis": "Games ran locally on macOS (no cloud resources created). Actor GPU time is billed to the shared_trained_actor_endpoint cap, not E13 (see tokens.proxy_calls; ~3.3 h of active E13 traffic 01:02-04:20 UTC plus ~0.2 h on the 08:55 UTC resume, at <=4 in flight on a GPU shared with other lanes).",
+ "authorization": "outputs/finish_pending_2026-09-27/AUTHORIZATION.json (lead directive 'finish all pending lanes', E13 cap $20)",
+ "deviations": [
+  "Non-thinking chat template (chat_template_kwargs.enable_thinking=false) added by code/actor_proxy.py; the 2026-09-12 original run evidently ran with thinking on. Cost-driven.",
+  "NetHack capped at 2000 agent steps via native eval.max_steps_per_episode (lead decision 2026-09-27 01:40 UTC). Native protocol: max_episode_steps=100000 + no_progress_timeout=150. 3 NLE episodes had already ended naturally (214/306/599 steps) before the cap; the 2 run under the cap (265 and 909 steps) also ended naturally with done=True, so the cap never bound.",
+  "macOS arm64 instead of the Linux x86 image (same pinned sources: BALROG b7afe79, minihack 3ecb6da, TextWorld 1d56f47, Minigrid cf73dd1, baba-is-ai 33c2ca1, balrog-nle 0.9.0); dynamics not bit-verified. The venv was rebuilt with identical pins for the final 5 episodes after the original scratchpad was wiped.",
+  "Restarts: 1 uncapped NLE episode (~818 steps) and the babaisai episodes in flight at the 01:40 UTC stop were killed and rerun from scratch with new native seeds; 5 episodes whose workers hung mid-episode (proxy BrokenPipe / stuck client request, no JSON written) were killed and rerun from scratch with new native seeds on the 08:55 UTC resume. All logged in raw/attempts.jsonl as killed_for_restart; only the completed rerun counts."
+ ],
+ "caveats": [
+  "Replacement scope only; never pooled with the original-contract 13-episode babyai receipt (E13-native-20260912-01).",
+  "Single run per episode at temperature 1.0 with native random seeds; per-env n is small for crafter (10) and nle (5).",
+  "Overall score is the BALROG convention (mean of 6 per-env means), not an episode-weighted mean.",
+  "Killed/hung episodes were rerun with fresh seeds, which is a mild selection risk if hangs correlate with episode difficulty; 11 restarts (1 NLE + 5 babaisai at the 01:40 stop, 5 hung workers) out of 255."
+ ]
+}

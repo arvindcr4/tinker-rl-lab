@@ -1,18 +1,28 @@
 {
-    "progression_percentage": 40.54054054054054,
-    "standard_error": 5.707414128741432,
-    "average_steps": 74.66216216216216,
-    "episodes_played": 74,
+    "progression_percentage": 25.0,
+    "standard_error": 3.9528470752104736,
+    "average_steps": 84.375,
+    "episodes_played": 120,
     "tasks": {
+        "env/two_room-make_you-make_win": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 3
+        },
         "env/two_room-goto_win-distr_obj_rule": {
             "progression_percentage": 66.66666666666666,
             "standard_error": 27.216552697590867,
             "episodes_played": 3
         },
+        "env/two_room-make_win-distr_obj-irrelevant_rule": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 3
+        },
         "env/two_room-break_stop-goto_win": {
             "progression_percentage": 0.0,
             "standard_error": 0.0,
-            "episodes_played": 2
+            "episodes_played": 3
         },
         "env/goto_win-distr_obj": {
             "progression_percentage": 66.66666666666666,
@@ -37,20 +47,60 @@
         "env/two_room-break_stop-goto_win-distr_obj_rule": {
             "progression_percentage": 0.0,
             "standard_error": 0.0,
-            "episodes_played": 2
+            "episodes_played": 3
+        },
+        "env/two_room-make_you": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 3
         },
         "env/two_room-break_stop-goto_win-distr_rule": {
             "progression_percentage": 0.0,
             "standard_error": 0.0,
-            "episodes_played": 2
+            "episodes_played": 3
+        },
+        "env/two_room-break_stop-make_win": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 3
+        },
+        "env/two_room-make_win-distr_obj": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 3
+        },
+        "env/two_room-break_stop-make_win-distr_rule": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 3
         },
         "env/make_win-distr_obj_rule": {
             "progression_percentage": 0.0,
             "standard_error": 0.0,
             "episodes_played": 3
         },
+        "env/two_room-break_stop-make_win-distr_obj-irrelevant_rule": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 3
+        },
+        "env/two_room-break_stop-make_win-distr_obj": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 3
+        },
         "env/two_room-goto_win": {
             "progression_percentage": 100.0,
+            "standard_error": 0.0,
+            "episodes_played": 3
+        },
+        "env/two_room-make_win-distr_obj_rule": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 3
+        },
+        "env/two_room-make_win-distr_win_rule": {
+            "progression_percentage": 0.0,
             "standard_error": 0.0,
             "episodes_played": 3
         },
@@ -74,9 +124,19 @@
             "standard_error": 27.216552697590867,
             "episodes_played": 3
         },
+        "env/two_room-break_stop-make_win-distr_obj_rule": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 3
+        },
         "env/two_room-maybe_break_stop-goto_win-distr_obj_rule": {
             "progression_percentage": 66.66666666666666,
             "standard_error": 27.216552697590867,
+            "episodes_played": 3
+        },
+        "env/two_room-make_win": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
             "episodes_played": 3
         },
         "env/two_room-goto_win-distr_rule": {
@@ -104,6 +164,11 @@
             "standard_error": 27.216552697590867,
             "episodes_played": 3
         },
+        "env/two_room-make_win-distr_rule": {
+            "progression_percentage": 0.0,
+            "standard_error": 0.0,
+            "episodes_played": 3
+        },
         "env/two_room-goto_win-distr_obj-irrelevant_rule": {
             "progression_percentage": 0.0,
             "standard_error": 0.0,
@@ -115,9 +180,14 @@
             "episodes_played": 3
         },
         "env/two_room-maybe_break_stop-goto_win-distr_obj-irrelevant_rule": {
-            "progression_percentage": 100.0,
+            "progression_percentage": 66.66666666666666,
+            "standard_error": 27.216552697590867,
+            "episodes_played": 3
+        },
+        "env/two_room-make_wall_win": {
+            "progression_percentage": 0.0,
             "standard_error": 0.0,
-            "episodes_played": 2
+            "episodes_played": 3
         },
         "env/goto_win-distr_rule": {
             "progression_percentage": 66.66666666666666,
@@ -135,6 +205,6 @@
             "episodes_played": 3
         }
     },
-    "input_tokens": 19505381,
-    "output_tokens": 11050
+    "input_tokens": 40091192,
+    "output_tokens": 20250
 }

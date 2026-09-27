@@ -30,7 +30,7 @@ for it in items:
     if p.exists():
         d = json.loads(p.read_text())
         v = float(d.get("progression", 0.0))
-        if not d.get("done"):
+        if not d.get("done") and it["env"] == "nle":
             truncated.append({"id": it["id"], "steps": d.get("num_steps"), "progression": v})
         steps[it["env"]].append(d.get("num_steps", 0))
         toks["in"] += d.get("input_tokens", 0); toks["out"] += d.get("output_tokens", 0)
@@ -82,13 +82,15 @@ res = {
              "never pooled with the original-contract E13-native-20260912-01 13-episode receipt",
     "actor": "pavlov-public-portfolio-bf16 (Qwen3.6-35B-A3B + seed809 LoRA merged, bf16) via shared Modal vLLM endpoint",
     "protocol": {"temperature": 1.0, "max_tokens": 8192, "agent": "naive, max_text_history 16", "seeds": "native get_unique_seed (logged per episode)",
-                 "enable_thinking": False, "step_caps": "native config.yaml (nle native 100000 + no_progress_timeout 150 BUT deviation cap 2000 agent steps via eval.max_steps_per_episode for the 2 NLE episodes run after 01:40 UTC, crafter 2000, minihack 100, textworld 80, babyai/babaisai native)"},
-    "n_planned": len(items), "n_attempted": len({a["id"] for a in attempts}), "n_graded": len(items) - len(missing),
+                 "enable_thinking": False, "step_caps": "native config.yaml (nle native 100000 + no_progress_timeout 150 BUT deviation cap 2000 agent steps via eval.max_steps_per_episode for the 2 NLE episodes run after 01:40 UTC (cap did not bind), crafter 2000, minihack 100, textworld 80, babyai/babaisai native)"},
+    "n_planned": len(items), "n_attempted": len({a["id"] for a in attempts} & {i["id"] for i in items}),
+    "n_attempt_records": len(attempts), "n_killed_for_restart_records": sum(1 for a in attempts if a["status"] == "killed_for_restart"), "n_graded": len(items) - len(missing),
     "n_missing_scored_0": len(missing), "missing_ids": missing,
     "truncated_episodes": truncated,
     "truncation_note": "Episodes with no done=True hit the deviation step cap (NLE 2000 agent steps via native "
                        "eval.max_steps_per_episode); scored at native progression-at-truncation and labelled here. "
-                       "Native env time limits set done=True and are not listed.",
+                       "Only NLE is checked (the cap applies only to NLE); other envs' episodes that end at their native step limit "
+                       "(e.g. babaisai 100) without done=True are native outcomes, not truncations.",
     "metric": "BALROG native progression % (mean of per-env means)",
     "score": round(overall, 2), "se": round(overall_se, 2), "ci95": [round(overall - 1.96 * overall_se, 2), round(overall + 1.96 * overall_se, 2)],
     "ci95_bootstrap": [pct(boot_all, 0.025), pct(boot_all, 0.975)],

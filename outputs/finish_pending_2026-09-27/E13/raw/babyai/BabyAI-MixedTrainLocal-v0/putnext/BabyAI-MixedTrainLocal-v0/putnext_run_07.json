@@ -1,0 +1,44 @@
+{
+    "task": "BabyAI-MixedTrainLocal-v0/putnext",
+    "action_frequency": {
+        "turn right": 25,
+        "turn left": 18,
+        "go forward": 57,
+        "pick up": 2,
+        "drop": 25,
+        "toggle": 1
+    },
+    "input_tokens": 99115,
+    "output_tokens": 358,
+    "done": true,
+    "episode_return": 0.0,
+    "num_steps": 128,
+    "failed_candidates": [],
+    "mission": "put the blue ball next to the yellow ball",
+    "progression": 0.0,
+    "process_num": "w16090",
+    "seed": 908876488,
+    "agent": {
+        "type": "naive",
+        "remember_cot": true,
+        "max_text_history": 16,
+        "max_image_history": 0,
+        "max_cot_history": 1,
+        "max_icl_history": 1000,
+        "cache_icl": false
+    },
+    "client": {
+        "client_name": "vllm",
+        "model_id": "pavlov-public-portfolio-bf16",
+        "base_url": "http://127.0.0.1:8793/babyai/v1",
+        "generate_kwargs": {
+            "temperature": 1.0,
+            "max_tokens": 8192,
+            "thinking_budget": null
+        },
+        "timeout": 60,
+        "max_retries": 5,
+        "delay": 2,
+        "alternate_roles": false
+    }
+}

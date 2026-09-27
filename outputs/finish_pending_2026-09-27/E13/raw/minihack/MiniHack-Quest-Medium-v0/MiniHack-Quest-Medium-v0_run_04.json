@@ -1,0 +1,45 @@
+{
+    "task": "MiniHack-Quest-Medium-v0",
+    "action_frequency": {
+        "east": 16,
+        "pickup": 1,
+        "search": 1,
+        "northeast": 2,
+        "south": 9,
+        "north": 9,
+        "west": 6
+    },
+    "input_tokens": 168016,
+    "output_tokens": 90,
+    "done": true,
+    "episode_return": -0.16,
+    "num_steps": 44,
+    "failed_candidates": [],
+    "progression": 0.0,
+    "end_reason": 1,
+    "process_num": "w15194",
+    "seed": 1520515210,
+    "agent": {
+        "type": "naive",
+        "remember_cot": true,
+        "max_text_history": 16,
+        "max_image_history": 0,
+        "max_cot_history": 1,
+        "max_icl_history": 1000,
+        "cache_icl": false
+    },
+    "client": {
+        "client_name": "vllm",
+        "model_id": "pavlov-public-portfolio-bf16",
+        "base_url": "http://127.0.0.1:8793/minihack/v1",
+        "generate_kwargs": {
+            "temperature": 1.0,
+            "max_tokens": 8192,
+            "thinking_budget": null
+        },
+        "timeout": 60,
+        "max_retries": 5,
+        "delay": 2,
+        "alternate_roles": false
+    }
+}

@@ -1,15 +1,15 @@
 {
     "progression_percentage": 0.0,
     "standard_error": 0.0,
-    "average_steps": 373.0,
-    "episodes_played": 3,
+    "average_steps": 458.6,
+    "episodes_played": 5,
     "tasks": {
         "NetHackChallenge-v0": {
             "progression_percentage": 0.0,
             "standard_error": 0.0,
-            "episodes_played": 3
+            "episodes_played": 5
         }
     },
-    "input_tokens": 5958207,
-    "output_tokens": 2791
+    "input_tokens": 12236644,
+    "output_tokens": 5796
 }

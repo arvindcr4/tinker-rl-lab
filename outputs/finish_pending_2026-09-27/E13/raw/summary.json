@@ -1,25 +1,40 @@
 {
-    "average_progress": 21.08927108927109,
-    "standard_error": 2.441514925939006,
+    "average_progress": 26.098336304218655,
+    "standard_error": 1.7674445418259508,
     "environments": {
         "babaisai": {
-            "progression_percentage": 40.54054054054054,
-            "standard_error": 5.707414128741432,
-            "episodes_played": 74
+            "progression_percentage": 25.0,
+            "standard_error": 3.9528470752104736,
+            "episodes_played": 120
+        },
+        "textworld": {
+            "progression_percentage": 16.862745098039213,
+            "standard_error": 4.8723287387247645,
+            "episodes_played": 30
+        },
+        "minihack": {
+            "progression_percentage": 10.0,
+            "standard_error": 4.7434164902525655,
+            "episodes_played": 40
         },
         "nle": {
             "progression_percentage": 0.0,
             "standard_error": 0.0,
-            "episodes_played": 3
+            "episodes_played": 5
         },
         "crafter": {
             "progression_percentage": 22.727272727272723,
             "standard_error": 4.590684062891852,
             "episodes_played": 10
+        },
+        "babyai": {
+            "progression_percentage": 82.0,
+            "standard_error": 5.433231082882449,
+            "episodes_played": 50
         }
     },
-    "total_input_tokens": 28673652,
-    "total_output_tokens": 19084,
+    "total_input_tokens": 73459546,
+    "total_output_tokens": 50541,
     "client": {
         "client_name": "vllm",
         "model_id": "pavlov-public-portfolio-bf16",

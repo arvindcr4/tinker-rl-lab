@@ -1,6 +1,12 @@
 # E13 — BALROG replacement scope (255 native episodes)
 
-Status: RUNNING (final numbers go in result.json; this file is updated at the end).
+Status: DONE (2026-09-27 ~09:00 UTC). All 255 planned episodes graded by the native BALROG progression metric.
+
+**Score: 26.10% native progression** (mean of 6 per-env means; SE 1.77; 95% CI 22.64-29.56 normal, 22.71-29.53
+stratified bootstrap). Per env: BabyAI 82.0 (n=50), BabaIsAI 25.0 (n=120), Crafter 22.73 (n=10), TextWorld 16.86
+(n=30), MiniHack 10.0 (n=40), NetHack 0.0 (n=5). 0 missing, 0 errored. Lane spend $0 (local compute; actor GPU is
+billed to the shared endpoint cap). 22,587 actor calls (6 proxy errors, all absorbed by native retries).
+Details: result.json; native aggregation: raw/native_summary.json. The proxy and runner are stopped.
 
 ## Setup
 - BALROG balrog-ai/BALROG@b7afe79, native `Evaluator.run_episode`, `NaiveAgent`, native `vllm` OpenAI client, native
@@ -26,7 +32,13 @@ Status: RUNNING (final numbers go in result.json; this file is updated at the en
    The cap does not bind for any of them, so they stand as native.
    The in-flight uncapped episode-01 (~818 steps, not finished) was killed and rerun from scratch with a new native
    seed. The babaisai episodes in flight at the stop were rerun too. Both events are logged in raw/attempts.jsonl as
-   `killed_for_restart`.
+   `killed_for_restart`. The two NLE episodes run under the cap ended naturally (265 and 909 steps, done=True), so the
+   cap never bound.
+4. Five episodes (babyai putnext ep07, 3 babaisai two_room-break_stop-goto_win*, minihack Quest-Medium ep04) hung
+   mid-episode in their workers (no JSON written; likely a stuck client request, cf. BrokenPipe in raw/proxy.out). The
+   runner died with the lead session ~07:44 UTC. On resume (08:50 UTC) they were logged `killed_for_restart` and rerun
+   from scratch with new native seeds. The venv was rebuilt with identical pins because the old scratchpad was wiped
+   (code/env.sh).
 3. macOS arm64 instead of the Linux x86 image (same pinned sources; dynamics not bit-verified).
 
 ## Evidence rules

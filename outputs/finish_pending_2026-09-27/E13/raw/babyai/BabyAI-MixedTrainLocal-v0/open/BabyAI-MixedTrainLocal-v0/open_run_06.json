@@ -1,0 +1,43 @@
+{
+    "task": "BabyAI-MixedTrainLocal-v0/open",
+    "action_frequency": {
+        "turn right": 8,
+        "go forward": 31,
+        "turn left": 12,
+        "toggle": 13,
+        "pick up": 3
+    },
+    "input_tokens": 47267,
+    "output_tokens": 188,
+    "done": true,
+    "episode_return": 0.5289062499999999,
+    "num_steps": 67,
+    "failed_candidates": [],
+    "mission": "open the green door",
+    "progression": 1.0,
+    "process_num": "w88303",
+    "seed": 3456455584,
+    "agent": {
+        "type": "naive",
+        "remember_cot": true,
+        "max_text_history": 16,
+        "max_image_history": 0,
+        "max_cot_history": 1,
+        "max_icl_history": 1000,
+        "cache_icl": false
+    },
+    "client": {
+        "client_name": "vllm",
+        "model_id": "pavlov-public-portfolio-bf16",
+        "base_url": "http://127.0.0.1:8793/babyai/v1",
+        "generate_kwargs": {
+            "temperature": 1.0,
+            "max_tokens": 8192,
+            "thinking_budget": null
+        },
+        "timeout": 60,
+        "max_retries": 5,
+        "delay": 2,
+        "alternate_roles": false
+    }
+}

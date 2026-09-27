@@ -37,6 +37,7 @@
       xcard/.style={warnbox, text width=4.15cm, font=\footnotesize, inner ysep=3pt,
                     draw=red!55!black, thick},
       state/.style={warnbox, text width=4.5cm, font=\scriptsize, inner ysep=3pt},
+      okstate/.style={oklbox, text width=4.5cm, font=\scriptsize, inner ysep=3pt},
       panel/.style={fill=black!4, draw=black!35, dashed, rounded corners=3pt, inner sep=4pt},
       legendbox/.style={rectangle, rounded corners=2pt, draw=black!40, dashed,
                         fill=black!2, text width=10.5cm, align=left, font=\scriptsize,
@@ -45,45 +46,53 @@
 
     % ============================== Column 1: authorisation gate ==================
     \node[gate] (gA) at (0,0) {\textbf{GATE 1: AUTHORISATION}\\[1pt]
-      {\normalfont\scriptsize\color{bad}CLOSED}\ {\normalfont\scriptsize\color{black!70}-- lead receipt or hold}};
+      {\normalfont\scriptsize\color{good!80!black}CLEARED 27 Sep}\ {\normalfont\scriptsize\color{black!70}-- lead receipt issued}};
 
     \node[card, below=7mm of gA] (a1)
       {\textbf{E1 wave-10 -- \$16 (Modal)}\\[1pt]
-       held: no W\&B login; v12 hold absent; no actor endpoint.};
+       held: no W\&B login; v12 hold absent; no actor endpoint.\\[1pt]
+       \textcolor{good!60!black}{run: wave-10 + 174 unattempted; 1/190; \$1.87.}};
     \node[card, below=2mm of a1] (a2)
       {\textbf{E5 successor27 -- \$80}\\[1pt]
-       held: no bound authorisation receipt; no runtime adapter.};
+       held: no bound authorisation receipt; no runtime adapter.\\[1pt]
+       \textcolor{good!60!black}{run: thin runner, all 97; 8/97; \$18.42.}};
     \node[card, below=2mm of a2] (a3)
       {\textbf{E2 CORE-Bench -- $\sim$\$4 (GCP)}\\[1pt]
-       held: no owner IAM binding; v14 unsealed; holds pending.};
+       held: no owner IAM binding; v14 unsealed; holds pending.\\[1pt]
+       \textcolor{good!60!black}{run: per-task VMs, all 45; 27/45; \$8.83.}};
     \node[card, below=2mm of a3] (a4)
       {\textbf{E13 BALROG -- \$8 (Modal)}\\[1pt]
-       held: v11 unsealed; re-proof, route gate, supervisor pending.};
+       held: v11 unsealed; re-proof, route gate, supervisor pending.\\[1pt]
+       \textcolor{good!60!black}{run: local, all 255 ep.; 26.1\%; \$0.}};
 
-    \node[state, below=5mm of a4] (sA)
-      {\textbf{STATE 21 Sep:} 4 \mbox{prepared}, 0 launched; \$108 asked.};
+    \node[okstate, below=5mm of a4] (sA)
+      {\textbf{STATE 27 Sep:} 4 launched and scored; \$29.12 of \$150 in lane caps.};
 
     \node[legendbox, below=6mm of sA, xshift=2.75cm, anchor=north, text width=10.05cm]
       {\textbf{Reading the figure.} Each column is a gate; each card's colour repeats its group
        (blue = lead action, orange = provider capacity, red = third party).
        \textbf{held} states the blocking condition, \textbf{quota} the capacity refused,
        \textbf{asked} the access route already sent and \textbf{reopens} its reopen condition.
-       Every stack exits through a stop bar: no lane clears its gate.};
+       On 21 Sep every stack ended in a stop bar. The lead's receipt of 27 Sep
+       (\texttt{AUTHORIZATION.json}) cleared gate 1, and moving compute from AWS to GCP cleared gate 2;
+       gate 3 is unchanged. Green lines give what each lane then ran, its score and its spend.};
 
     % ============================== Column 2: quota gate ==========================
     \node[gate] (gB) at (5.5,0) {\textbf{GATE 2: CLOUD QUOTA}\\[1pt]
-      {\normalfont\scriptsize\color{bad}CLOSED}\ {\normalfont\scriptsize\color{black!70}-- provider capacity}};
+      {\normalfont\scriptsize\color{good!80!black}CLEARED 27 Sep}\ {\normalfont\scriptsize\color{black!70}-- moved to GCP}};
 
     \node[qcard, below=7mm of gB] (b1)
-      {\textbf{E6 WebArena (0/812)}\\[1pt]
-       quota: AWS NO-GO both regions; case 178921342800925 open.};
+      {\textbf{E6 WebArena}\\[1pt]
+       quota: AWS NO-GO both regions; case 178921342800925 open.\\[1pt]
+       \textcolor{good!60!black}{run: GCP VM, all 812; 90/812 (lower bd.); \$13.46.}};
     \node[qcard, below=2mm of b1] (b2)
-      {\textbf{E9 MLDevBench (0/34)}\\[1pt]
+      {\textbf{E9 MLDevBench}\\[1pt]
        quota: AWS 1 vCPU, 4 needed; case 178982528000009 open. local build
-       \mbox{deferred}: recipe not \mbox{rebuilt} (31 GiB free).};
+       \mbox{deferred}: recipe not \mbox{rebuilt} (31 GiB free).\\[1pt]
+       \textcolor{good!60!black}{run: GCP VM, all 34; 10/34; \$1.67.}};
 
-    \node[state, below=5mm of b2] (sB)
-      {\textbf{STATE 21 Sep:} NO-GO both regions; 2 AWS cases open.};
+    \node[okstate, below=5mm of b2] (sB)
+      {\textbf{STATE 27 Sep:} both run on GCP; AWS cases moot.};
 
     % ============================== Column 3: third-party gate ====================
     \node[gate] (gC) at (11.0,0) {\textbf{GATE 3: THIRD-PARTY}\\[1pt]
@@ -122,18 +131,14 @@
     \end{scope}
 
     % gate -> held stack
-    \draw[-{Latex[length=2.4mm]}, very thick, draw=bad] (gA.south) -- (pA.north);
-    \draw[-{Latex[length=2.4mm]}, very thick, draw=bad] (gB.south) -- (pB.north);
+    \draw[-{Latex[length=2.4mm]}, very thick, draw=good!70!black] (gA.south) -- (pA.north);
+    \draw[-{Latex[length=2.4mm]}, very thick, draw=good!70!black] (gB.south) -- (pB.north);
     \draw[-{Latex[length=2.4mm]}, very thick, draw=bad] (gC.south) -- (pC.north);
 
     % held stack -> blocked exit (stop bar)
     \draw[ar] (pA.south) -- (sA.north);
-    \coordinate (mA) at ($(pA.south)!0.5!(sA.north)$);
-    \draw[very thick, draw=bad] ($(mA)+(-2.6mm,0)$) -- ($(mA)+(2.6mm,0)$);
 
     \draw[ar] (pB.south) -- (sB.north);
-    \coordinate (mB) at ($(pB.south)!0.5!(sB.north)$);
-    \draw[very thick, draw=bad] ($(mB)+(-2.6mm,0)$) -- ($(mB)+(2.6mm,0)$);
 
     \draw[ar] (pC.south) -- (sC.north);
     \coordinate (mC) at ($(pC.south)!0.5!(sC.north)$);
@@ -142,9 +147,10 @@
     % ============================== provenance note ===============================
     \path (sC.south) node[below=9mm, xshift=-5.5cm, anchor=north, align=center,
         text width=15.6cm, font=\scriptsize, text=black!65]
-      {Gates re-checked live 21 Sep 2026. Every arrow ends in a stop bar: no lane clears its gate.
-       Source: \texttt{outputs/UNBLOCK\_CARRYOUT\_2026-09-21.md} and
-       \texttt{outputs/E1\_E14\_FINAL\_RESULTS\_2026-09-19.md} sec.~5.
+      {Held states re-checked live 21 Sep 2026; gates 1--2 cleared 27 Sep 2026, gate 3 still closed.
+       Sources: \texttt{outputs/UNBLOCK\_CARRYOUT\_2026-09-21.md},
+       \texttt{outputs/E1\_E14\_FINAL\_RESULTS\_2026-09-19.md} sec.~5 and
+       \texttt{outputs/finish\_pending\_2026-09-27/<lane>/result.json}. Actor GPU time is billed to a shared \$150 endpoint cap, not to the lanes.
        The three access e-mails left through a local postfix queue, so remote delivery is
        unverified and a reply may still be outstanding.};
 

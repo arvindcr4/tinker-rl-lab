@@ -152,7 +152,10 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "Figures and terminal states come from the 2026-09-19 ledger "
          "(\\texttt{E1\\_E14\\_FINAL\\_RESULTS\\_2026-09-19.md} and "
          "\\texttt{finish/Pending\\_Experiments.md}; 11/11 deterministic checks "
-         "pass). E14's $2271/4428 = 51.29\\%$ counts the 2 unjudged rows as "
+         "pass), updated with the six replacement scopes scored on 2026-09-27 "
+         "($\\star$; \\texttt{finish\\_pending\\_2026-09-27/<lane>/result.json}), "
+         "which are separate receipts and are never pooled with a lane's "
+         "original-contract figure. E14's $2271/4428 = 51.29\\%$ counts the 2 unjudged rows as "
          "failures; the official scorer reports $51.31\\% = 2271/4426$ on the "
          "judged rows.",
          "fig:campaign", ["Campaign", "Methodology"]),
@@ -173,10 +176,11 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "precondition cannot be satisfied the lane records \\textsc{blocked} "
          "rather than substituting an adjacent benchmark. Outcomes and the lane "
          "tally are taken from the 2026-09-19 ledger of record "
-         "(\\texttt{Pending\\_Experiments.md}). Outcome A separates "
+         "(\\texttt{Pending\\_Experiments.md}), updated with the six "
+         "replacement scopes scored on 2026-09-27. Outcome A separates "
          "original-contract scores from replacement-scope results and gives "
          "coverage and score separately; Outcome B lists original-scope suites "
-         "that are closed external, then lanes whose scope is not yet settled. "
+         "that are closed external, then the one lane whose scope is not settled. "
          "E14 is reported as $2271/4428 = 51.29\\%$ with the two unjudged rows "
          "counted as failures (the official scorer reports 51.31\\% over 4426 "
          "judged rows).",
@@ -278,8 +282,9 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
     ],
     "ch09_results_campaign.md": [
         ("fig_lane_status",
-         "Terminal status of all fourteen E1--E14 lanes, from the 2026-09-19 "
-         "ledger of record. Each cell names the suite whose scope the state "
+         "Terminal status of all fourteen E1--E14 lanes: the 2026-09-19 "
+         "ledger of record, updated with the six replacement scopes scored on "
+         "2026-09-27 (double border, $\\star$). Each cell names the suite whose scope the state "
          "refers to, and status is carried by glyph, word, border style and "
          "hatching as well as colour. Cells show the replacement scope where one "
          "exists (E1 SWE-bench Multilingual, E2 CORE-Bench, E5 Tau3, E6 WebArena, "
@@ -317,7 +322,9 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "recorded as blocked rather than absorbed into a percentage, and "
          "original-contract and replacement-scope numbers are never pooled. The "
          "completion gate's \\texttt{PARTIAL\\_EXACT}/\\texttt{PARTIAL\\_RECOVERY} "
-         "labels are a separate evidence-class vocabulary (Chapter~5).",
+         "labels are a separate evidence-class vocabulary (Chapter~5). Lane "
+         "assignments are those of 2026-09-19; the six lanes in the three "
+         "pending leaves were all run and scored on 2026-09-27 (Chapter~9).",
          "fig:taxonomy", ["Terminal", "blocked lanes", "externally blocked"]),
         ("fig_e4_diagnostic",
          "The E4 rerun diagnostic. Across 100 trials agents terminate at a "
@@ -333,6 +340,21 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "2026-09-21, all 100 trial directories under "
          "\\texttt{outputs/e4\\_banker\\_toolbench/}.",
          "fig:e4", ["BankerToolBench", "E4", "rerun"]),
+        ("fig_replacement_results",
+         "The six replacement-scope results scored on 2026-09-27, each with its "
+         "95\\% confidence interval. (a) Rates over all attempted items, with "
+         "errors, timeouts and ungraded items counted as failures (Wilson "
+         "intervals). For E6 WebArena the filled point is the lower bound "
+         "$90/812$; the square is the rate over the 704 judged tasks and the "
+         "triangle the value if all 108 unjudged tasks had passed. (b) E13 BALROG "
+         "reports native progression, not a success rate: per-environment means "
+         "with percentile-bootstrap intervals ($B = 10{,}000$), and the BALROG "
+         "overall score, the unweighted mean of the six environment means, with "
+         "its normal-approximation interval. Each row is a different suite with "
+         "its own metric and denominator, so no cross-lane average is drawn, and "
+         "none of these values is pooled with an original-contract figure. "
+         "Source: \\texttt{outputs/finish\\_pending\\_2026-09-27/<lane>/result.json}.",
+         "fig:replacement", ["Replacement-scope lanes completed", "Replacement-scope"]),
     ],
     "ch10_synthesis_conclusions.md": [
         ("fig_threats",

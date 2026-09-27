@@ -105,7 +105,10 @@
    \quad E8 LAB-Bench: $1967/1967$ graded, by category\\
    \quad E10 AgentDojo: $97/97$ run; utility $88/97$\\
    \quad E14 Omni-MATH: $4428/4428$ dispositions;\\
-   \quad\quad $2271/4428 = 51.29\%$ (unjudged rows = fail)};
+   \quad\quad $2271/4428 = 51.29\%$ (unjudged rows = fail)\\[2pt]
+   \textit{Replacement scope, scored 2026-09-27:}\\
+   \quad E1 $1/190$ $\cdot$ E2 $27/45$ $\cdot$ E5 $8/97$ $\cdot$ E9 $10/34$\\
+   \quad E6 $90/812$ (lower bound) $\cdot$ E13 $26.1\%$ (255 ep.)};
 \draw[ar, draw=complete] (l5) -- (oa);
 
 \node[warnbox, outcome, anchor=north] (ob) at (splitR |- oa.north)
@@ -113,10 +116,10 @@
    \textit{Original scope, no local or paid path}\\
    \textit{(closed external, 7 lanes):}\\
    \quad E3 $\cdot$ E7 $\cdot$ E8 $\cdot$ E10 $\cdot$ E12 $\cdot$ E13 $\cdot$ E14\\[2pt]
-   \textit{Replacement or original scope not settled:}\\
-   \quad AWS quota gate: E6, E9\\
-   \quad launch pending: E1, E2, E5, E13\\
-   \quad closed partial: E4 (1/100 tasks)};
+   \textit{Original scope not settled:}\\
+   \quad closed partial: E4 (1/100 tasks)\\[2pt]
+   \textit{(AWS quota gate E6, E9 and launch-pending}\\
+   \textit{E1, E2, E5, E13 cleared on 2026-09-27.)}};
 \draw[ar, draw=blocked] (r5) -- (ob);
 
 
@@ -127,8 +130,8 @@
    Unknown states fail closed rather than defaulting to a classification.\\
    No partial, recovery, public, harness, readiness or package-validation\\
    evidence becomes a suite score, and no cross-suite average is formed.\\[3pt]
-   All 14 lanes, ledger of 2026-09-19 (one terminal state per lane, as in the Chapter 9 lane grid):\\
-   \textbf{4} complete $\cdot$ \textbf{5} pending or partial $\cdot$ \textbf{5} blocked.};
+   All 14 lanes, ledger of 2026-09-19 updated 2026-09-27 (one state per lane, as in the Chapter 9 lane grid):\\
+   \textbf{4} complete $\cdot$ \textbf{6} replacement scope scored $\cdot$ \textbf{1} partial $\cdot$ \textbf{3} blocked.};
 
 \end{tikzpicture}
 \end{document}

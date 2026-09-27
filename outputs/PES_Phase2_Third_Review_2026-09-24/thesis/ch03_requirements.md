@@ -100,7 +100,7 @@ The test cases below are the concrete checks attached to the requirements. TC-1 
 | FR-10 Registry query | `platform_hybrid/registry/schema.json`, `query.py`, `entries/` | TC-10 |
 | FR-11 Variant deltas, stack-diff | `platform_hybrid/registry/provenance/` | TC-10 |
 | FR-12 Adaptive controller | `platform_hybrid/experiments/results/p5p8/controller_cf_summary.json` | TC-4 |
-| FR-13 Lane harness | `zvf-program/e1_wave10/`, `zvf-program/e5_successor27/`, `zvf-program/e2_core/`, `zvf-program/e13_balrog/`, `zvf-program/e6e9/check_quota_status.py` | TC-9 |
+| FR-13 Lane harness | `zvf-program/e1_wave10/`, `zvf-program/e5_successor27/`, `zvf-program/e2_core/`, `zvf-program/e13_balrog/`, `zvf-program/e6e9/check_quota_status.py`; runners actually used on 2026-09-27: `outputs/finish_pending_2026-09-27/<lane>/code/` | TC-9 |
 | FR-14 Completion gate | `zvf-program/flagship/e1_e14_completion_gate.py` | TC-9 |
 | FR-15 Scope separation | `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md` | TC-6, TC-9 |
 | FR-16 Blind-review packaging | `platform_local/run_all_audits.py`, `export_guard_audit.py` | TC-6, TC-8 |

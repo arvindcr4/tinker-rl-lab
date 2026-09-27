@@ -108,16 +108,16 @@
 
 \node[leafp] (L4) at (-4.95,-8.55)
   {\textbf{\texttt{PENDING\_QUOTA}}\\[2pt]
-   E6, E9\\[2pt]
-   \gl{gate: AWS quota only; no amendment needed}};
+   E6, E9 (19 Sep)\\[1pt]
+   \gl{gate: AWS quota only; no amendment needed. Both scored on GCP, 27 Sep}};
 \node[leafp] (L5) at (-1.6,-8.55)
   {\textbf{\texttt{AMENDMENT\_}\allowbreak\texttt{ACCEPTED\_}\allowbreak\texttt{LAUNCH\_}\allowbreak\texttt{PENDING}}\\[2pt]
-   E2, E13\\[2pt]
-   \gl{amendment accepted; launch awaits technical chain and preflight}};
+   E2, E13 (19 Sep)\\[1pt]
+   \gl{amendment accepted; launch awaits technical chain and preflight. Both scored 27 Sep}};
 \node[leafp] (L6) at (1.75,-8.55)
   {\textbf{\texttt{REBUILD\_}\allowbreak\texttt{READY\_}\allowbreak\texttt{LAUNCH\_}\allowbreak\texttt{PENDING}}\\[2pt]
-   E1 wave10, E5 successor27\\[2pt]
-   \gl{chain rebuild in flight; launch follows}};
+   E1 wave10, E5 successor27 (19 Sep)\\[1pt]
+   \gl{chain rebuild in flight; launch follows. Both scored 27 Sep}};
 \node[leafp, solid] (L7) at (5.1,-8.55)
   {\textbf{\texttt{CLOSED\_PARTIAL}}\\[2pt]
    E4\\[2pt]
@@ -127,7 +127,9 @@
 \node[anchor=north west, align=left, text width=13.6cm, font=\scriptsize, text=black!80]
   at (-6.5,-11.3)
   {{\itshape Source:} \texttt{finish/Pending\_Experiments.md}, ``Terminal-state vocabulary'',
-   19 Sep 2026 --- the seven states shown are that table's full documented vocabulary.};
+   19 Sep 2026 --- the seven states shown are that table's full documented vocabulary, with the
+   lane assignments of that date. The six lanes in the three pending leaves were all run and scored
+   on 27 Sep 2026 under the lead's receipt (Chapter 9); the vocabulary itself is unchanged.};
 
 \end{tikzpicture}
 \end{document}

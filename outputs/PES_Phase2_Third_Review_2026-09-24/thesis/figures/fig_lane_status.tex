@@ -35,6 +35,7 @@
   lcellC/.style={lcell, draw=complete!75!black, fill=complete!10},
   lcellP/.style={lcell, draw=partial!75!black,  fill=partial!10},
   lcellQ/.style={lcell, draw=partial!75!black,  fill=partial!10, dashed},
+  lcellM/.style={lcell, draw=complete!75!black, fill=white, double, double distance=0.6pt},
   lcellB/.style={lcell, draw=blocked!75!black,  fill=blocked!10,
                  pattern color=blocked!22, postaction={pattern=north east lines, pattern color=blocked!18}},
   leg/.style={anchor=west, font=\footnotesize, text=black!85, align=left, text width=150mm},
@@ -44,45 +45,48 @@
 \def\stC#1{\textcolor{complete!75!black}{\mbox{$\bullet$\,#1}}}
 \def\stQ#1{\textcolor{partial!75!black}{\mbox{$\circ$\,#1}}}
 \def\stP#1{\textcolor{partial!75!black}{\mbox{$\triangle$\,#1}}}
+\def\stM#1{\textcolor{complete!75!black}{\mbox{$\star$\,#1}}}
 \def\stB#1{\textcolor{blocked!75!black}{\mbox{$\times$\,#1}}}
 
 % grid left edge = -10.9 mm
 \node[anchor=south west, font=\small\bfseries, text=pesblue] at (-10.9,13.5)
-  {Lane terminal state, E1--E14 (ledger of 2026-09-19)};
+  {Lane terminal state, E1--E14 (ledger of 2026-09-19, updated with the runs of 2026-09-27)};
 
 % ================= row 1 : E1--E7 =================
-\cell{lcellQ}{0,0}{E1}{SWE-bench\\Multilingual}{\stQ{LAUNCH}\\PENDING}
-\cell{lcellQ}{22.6,0}{E2}{CORE-Bench\\\phantom{Xg}}{\stQ{LAUNCH}\\PENDING}
+\cell{lcellM}{0,0}{E1}{SWE-bench\\Multilingual}{\stM{SCORED}\\1/190$^{\dagger}$}
+\cell{lcellM}{22.6,0}{E2}{CORE-Bench\\(hard)}{\stM{SCORED}\\27/45}
 \cell{lcellB}{45.2,0}{E3}{SDAB\\\phantom{Xg}}{\stB{CLOSED}\\EXTERNAL}
 \cell{lcellP}{67.8,0}{E4}{Banker-\\ToolBench}{\stP{CLOSED}\\PARTIAL}
-\cell{lcellQ}{90.4,0}{E5}{Tau3\\\phantom{Xg}}{\stQ{LAUNCH}\\PENDING}
-\cell{lcellB}{113,0}{E6}{WebArena\\\phantom{Xg}}{\stB{AWS}\\QUOTA}
+\cell{lcellM}{90.4,0}{E5}{Tau3\\\phantom{Xg}}{\stM{SCORED}\\8/97}
+\cell{lcellM}{113,0}{E6}{WebArena\\\phantom{Xg}}{\stM{SCORED}\\90/812$^{\ddagger}$}
 \cell{lcellB}{135.6,0}{E7}{BinaryAudit\\\phantom{Xg}}{\stB{CLOSED}\\EXTERNAL}
 
 % ================= row 2 : E8--E14 =================
 \cell{lcellC}{0,-25}{E8}{LAB-Bench\\(public split)}{\stC{COMPLETE}\\\phantom{Xg}}
-\cell{lcellB}{22.6,-25}{E9}{MLDevBench\\\phantom{Xg}}{\stB{AWS}\\QUOTA}
+\cell{lcellM}{22.6,-25}{E9}{MLDevBench\\\phantom{Xg}}{\stM{SCORED}\\10/34}
 \cell{lcellC}{45.2,-25}{E10}{AgentDojo\\(benign)}{\stC{COMPLETE}\\\phantom{Xg}}
 \cell{lcellC}{67.8,-25}{E11}{VerilogEval\\(native)}{\stC{COMPLETE}\\\phantom{Xg}}
 \cell{lcellB}{90.4,-25}{E12}{AppBench\\\phantom{Xg}}{\stB{CLOSED}\\EXTERNAL}
-\cell{lcellQ}{113,-25}{E13}{BALROG\\\phantom{Xg}}{\stQ{LAUNCH}\\PENDING}
+\cell{lcellM}{113,-25}{E13}{BALROG\\\phantom{Xg}}{\stM{SCORED}\\26.1\% (255 ep.)}
 \cell{lcellC}{135.6,-25}{E14}{Omni-MATH*\\(replacement)}{\stC{COMPLETE}\\\phantom{Xg}}
 
 % ================= legend: mark + word + class membership =================
 \node[leg] (lg1) at (-10.9,-42)
   {\textcolor{complete!75!black}{$\bullet$\ \textbf{COMPLETE} (4)} --- full coverage, no open gate: E8, E10, E11; E14* terminal-complete};
 \node[leg] (lg2) at (-10.9,-46.5)
-  {\textcolor{partial!75!black}{$\circ$\ \textbf{PENDING} (4)} --- dashed: next launch pending, counts so far are partial: E1, E2, E5, E13};
+  {\textcolor{complete!75!black}{$\star$\ \textbf{SCORED} (6)} --- double border: replacement scope scored on 2026-09-27: E1, E2, E5, E6, E9, E13};
 \node[leg] (lg3) at (-10.9,-51)
   {\textcolor{partial!75!black}{$\triangle$\ \textbf{PARTIAL} (1)} --- closed with partial evidence: E4 (1/100 tasks)};
 \node[leg] (lg4) at (-10.9,-55.5)
-  {\textcolor{blocked!75!black}{$\times$\ \textbf{BLOCKED} (5)} --- hatched: external closure (E3, E7, E12) or AWS quota (E6, E9)};
+  {\textcolor{blocked!75!black}{$\times$\ \textbf{BLOCKED} (3)} --- hatched: external closure, no provider response: E3, E7, E12};
 
 % ================= footnote =================
 \node[anchor=north west, align=left, font=\footnotesize, text=black!80, text width=150mm]
   at (-10.9,-58.5)
   {\textit{Source:} \texttt{finish/Pending\_Experiments.md} terminal-state table;
-   \texttt{E1\_E14\_FINAL\_RESULTS\_2026-09-19.md}.};
+   \texttt{E1\_E14\_FINAL\_RESULTS\_2026-09-19.md}; \texttt{finish\_pending\_2026-09-27/<lane>/result.json}.\\
+   $^{\dagger}$\,This run's 190 tasks; the earlier 110 (4 resolved) are a separate contract and are not pooled.\\
+   $^{\ddagger}$\,Lower bound: 108 tasks could not be judged and count as failures.};
 
 \end{tikzpicture}
 \end{document}

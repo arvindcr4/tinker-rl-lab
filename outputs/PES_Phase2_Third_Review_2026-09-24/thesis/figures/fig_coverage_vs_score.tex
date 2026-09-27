@@ -1,6 +1,7 @@
 \documentclass[border=6pt]{standalone}
 \usepackage{tikz}
 \usepackage{pgfplots}
+\usepackage{amssymb}
 \pgfplotsset{compat=1.18}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,decorations.pathreplacing,patterns,pgfplots.groupplots}
 \tikzset{
@@ -47,7 +48,14 @@
 %         split_manifest.json -> 1 attempted of 46 constructed rows
 %       outputs/public_portfolio_2026-09-05/canonical_before_report_v15/results.json
 %         -> E8 1967, E10 97, E11 312, E6 0/812
-%   E13 provenance note: "13/255 episodes" is ledger text; its named source
+%   2026-09-27 update: E6 WebArena and E13 BALROG (whose ledger scope is the
+%   replacement scope) now carry native scores and move to the upper band; the
+%   replacement scopes of E1/E2/E5/E9 are added as a separate diamond series.
+%   Source: outputs/finish_pending_2026-09-27/<lane>/result.json. Coverage =
+%   n_graded / declared scope: E13 255/255, E2 45/45, E9 34/34, E6 704/812,
+%   E5 72/97 (25 infra errors), E1 57/190 (this run's scope; 133 patch-apply/
+%   eval errors or empty patches).
+%   Historical E13 provenance note (2026-09-19 point, now superseded): "13/255 episodes" is ledger text; its named source
 %   (outputs/PES_Phase2_Review_2026-09-12/finish/e13_continuation/decision_v11/
 %   DECISION.md) records 13 completed episodes among 29 started exclusions with
 %   full-255 scoring disabled, while the 2026-09-05 v15 portfolio records
@@ -57,11 +65,11 @@
 \begin{document}
 \begin{tikzpicture}
 \begin{axis}[
-  width=14.8cm, height=9.4cm,
-  xmin=-4, xmax=106, ymin=-0.85, ymax=1.85,
+  width=14.8cm, height=11.6cm,
+  xmin=-4, xmax=106, ymin=-0.85, ymax=3.05,
   xtick={0,25,50,75,100},
   xticklabel={\pgfmathprintnumber{\tick}\%},
-  ytick={-0.125,1.225},
+  ytick={-0.125,1.825},
   yticklabels={no native score, native score exists},
   ytick style={draw=none},
   every y tick label/.style={font=\scriptsize, align=right, text=black!75},
@@ -74,11 +82,11 @@
 
 % ---------- regime bands: y encodes only whether a verdict exists ----------
 \fill[red!6]  (axis cs:-4,-0.85) rectangle (axis cs:106,0.60);
-\fill[green!7] (axis cs:-4,0.60)  rectangle (axis cs:106,1.85);
+\fill[green!7] (axis cs:-4,0.60)  rectangle (axis cs:106,3.05);
 \draw[black!35, thick] (axis cs:-4,0.60) -- (axis cs:106,0.60);
 
 % half-the-suite reference
-\draw[dashed, black!45] (axis cs:50,-0.85) -- (axis cs:50,1.85);
+\draw[dashed, black!45] (axis cs:50,-0.85) -- (axis cs:50,3.05);
 \node[lbl, anchor=south west, font=\scriptsize] at (axis cs:51.2,-0.80)
   {half the declared suite};
 
@@ -99,6 +107,23 @@
 \node[font=\scriptsize, anchor=east, color=complete] at (axis cs:95.5,0.86)
   {E4 BankerToolBench: $100/100$, mean reward $0.0$};
 
+% ---- replacement scopes scored 2026-09-27 (never pooled with the orig points) ----
+\draw[black!30] (axis cs:-4,1.93) -- (axis cs:106,1.93);
+\addplot[only marks, mark=diamond*, mark size=3.6pt, color=pesblue]
+  coordinates {(100,2.90) (100,2.72) (100,2.54) (86.70,2.36) (74.23,2.18) (30.00,2.00)};
+\node[font=\scriptsize, anchor=east, color=pesblue] at (axis cs:95.5,2.90)
+  {E13 BALROG: $255/255$ episodes, $26.1\%$ progression};
+\node[font=\scriptsize, anchor=east, color=pesblue] at (axis cs:95.5,2.72)
+  {E2 CORE-Bench (hard): $45/45$, $27/45 = 0.600$};
+\node[font=\scriptsize, anchor=east, color=pesblue] at (axis cs:95.5,2.54)
+  {E9 MLDevBench: $34/34$, $10/34 = 0.294$};
+\node[font=\scriptsize, anchor=east, color=pesblue] at (axis cs:82.5,2.36)
+  {E6 WebArena: $704/812$ judged, $90/812 = 0.111$ (lower bound)};
+\node[font=\scriptsize, anchor=east, color=pesblue] at (axis cs:70.0,2.18)
+  {E5 Tau3: $72/97$ graded, $8/97 = 0.0825$};
+\node[font=\scriptsize, anchor=west, color=pesblue] at (axis cs:33.0,2.00)
+  {E1 SWE-bench Multilingual: $57/190$ graded, $1/190$};
+
 % ---- restricted scope only: a score, but over part of the suite ----
 \addplot[only marks, mark=o, mark size=3.4pt, line width=0.9pt, color=partial]
   coordinates {(5.88,1.42) (1.46,0.68)};
@@ -109,17 +134,13 @@
 
 % ================= BAND: no native verdict =================
 \addplot[only marks, mark=square*, mark size=2.9pt, color=blocked]
-  coordinates {(0,0.10) (0,-0.08) (0,-0.26) (2.17,-0.44) (5.10,-0.62) (53.33,0.42)};
+  coordinates {(0,0.10) (0,-0.08) (2.17,-0.26) (53.33,0.42)};
 \node[font=\scriptsize, anchor=west, color=blocked] at (axis cs:2.6,0.10)
   {E3 SDAB --- private bundle, $0$ graded};
 \node[font=\scriptsize, anchor=west, color=blocked] at (axis cs:2.6,-0.08)
-  {E6 WebArena --- $0/812$ graded, cloud quota};
-\node[font=\scriptsize, anchor=west, color=blocked] at (axis cs:2.6,-0.26)
   {E12 AppBench --- deployment blocked};
-\node[font=\scriptsize, anchor=west, color=blocked] at (axis cs:5.2,-0.44)
+\node[font=\scriptsize, anchor=west, color=blocked] at (axis cs:4.6,-0.26)
   {E7 BinaryAudit --- $1/46$ attempted};
-\node[font=\scriptsize, anchor=west, color=blocked] at (axis cs:8.2,-0.62)
-  {E13 BALROG --- $13/255$ episodes, no native score};
 \node[font=\scriptsize, anchor=west, align=left, color=blocked, text width=5.6cm]
   at (axis cs:57.0,0.42)
   {E9 MLE-bench: $40/75$ competitions graded\\ ($53.3\%$ of the suite), suite score \textbf{null}};
@@ -132,11 +153,13 @@
   {the highest coverage in this band, and still no quotable number};
 
 % ================= legend =================
-\node[font=\scriptsize, anchor=south west, text=black!80] at (axis description cs:0.02,1.015)
-  {\textcolor{complete}{$\bullet$}\ full declared scope closed};
-\node[font=\scriptsize, anchor=south west, text=black!80] at (axis description cs:0.40,1.015)
-  {\textcolor{partial}{$\circ$}\ restricted scope ($n$ of $N$)};
-\node[font=\scriptsize, anchor=south west, text=black!80] at (axis description cs:0.72,1.015)
+\node[font=\scriptsize, anchor=south west, text=black!80] at (axis description cs:0.0,1.015)
+  {\textcolor{pesblue}{$\blacklozenge$}\ replacement scope, 2026-09-27};
+\node[font=\scriptsize, anchor=south west, text=black!80] at (axis description cs:0.335,1.015)
+  {\textcolor{complete}{$\bullet$}\ full scope closed (ledger)};
+\node[font=\scriptsize, anchor=south west, text=black!80] at (axis description cs:0.605,1.015)
+  {\textcolor{partial}{$\circ$}\ restricted ($n$ of $N$)};
+\node[font=\scriptsize, anchor=south west, text=black!80] at (axis description cs:0.815,1.015)
   {\textcolor{blocked}{\rule[0.15ex]{3.4pt}{3.4pt}}\ no native verdict};
 
 % ================= reading note =================
@@ -146,10 +169,11 @@
    separate fact.} The two are not ordered. E9 has graded $40$ of $75$ MLE-bench competitions
    ($53.3\%$ of its suite) and still carries no score, because the suite's own aggregate is not
    defined over a subset --- while E2 at $5.9\%$ and E5 at $1.5\%$ graded do return a
-   restricted-scope number. More coverage produced strictly less to report. Conversely, E6 holds a
-   fully verified inventory of $812$ episodes and zero gradings, because its blocking condition is
-   a cloud quota, not the model. Restricted-scope lanes (E2, E5) are marked hollow: a number
-   exists, but not over the declared denominator.};
+   restricted-scope number. More coverage produced strictly less to report. Restricted-scope lanes
+   (E2, E5) are marked hollow: a number exists, but not over the declared denominator. Diamonds are
+   the replacement scopes run on 2026-09-27; each is a separate suite and receipt and is never pooled
+   with the same lane's circle or dot. E6 and E13, which had no verdict in the 2026-09-19 ledger
+   (a cloud quota and an unexecuted launch), now sit in the upper band.};
 
 \end{axis}
 \end{tikzpicture}

@@ -311,33 +311,33 @@ recorded in the local W&B run directory for run `bsv8vx04` and the run receipt
 (Chapter 9 §9.1.1). Those are properties of the single actor rather than of
 any lane, so they are shown as "—" in the table rather than repeated. Terminal states are from the ledger of record,
 `outputs/PES_Phase2_Review_2026-09-12/finish/Pending_Experiments.md`; all
-scores are from `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md`.
+scores are from `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md`, except the six rows marked "finish 2026-09-27", which are from `outputs/finish_pending_2026-09-27/<lane>/result.json`.
 
 **Table A.7 — E1–E14 campaign lanes.**
 
 | Lane / run identifier | Stack / platform | Model / actor | Algo | G | Dataset / suite | Seed | Steps | Outcome / terminal state |
 |---|---|---|---|---|---|---|---|---|
 | E1 SWE-bench Pro | native harness, Tinker actor | Qwen3.6-35B-A3B + adapter | — | — | SWE-bench Pro | 809 | — | 2/731 = 0.274% pass@1 (97.54% coverage, 713/731 native evals); originals retained |
-| E1 replacement (wave10) | native harness | as above | — | — | SWE-bench Multilingual | 809 | — | 35/300 graded; wave10 v6 sealed then source lost — `REBUILD_READY_LAUNCH_PENDING` |
+| E1 replacement (finish 2026-09-27) | native swebench 5.0.2, Modal sandboxes | as above | — | — | SWE-bench Multilingual | 809 | — | 1/190 resolved (57 graded); earlier waves 4/110 kept separate — `COMPLETE` |
 | E2 FrontierSWE | native harness | as above | — | — | FrontierSWE | 809 | — | 1/17 tasks; replay normalized 0.8628 |
-| E2 replacement | native harness | as above | — | — | CORE-Bench | 809 | — | 45/45 capsule setups, 0 graded — `AMENDMENT_ACCEPTED_LAUNCH_PENDING` |
+| E2 replacement (finish 2026-09-27) | native grader, GCP VM per capsule | as above | — | — | CORE-Bench hard | 809 | — | 27/45 = 0.600 task accuracy — `COMPLETE` |
 | E3 SDAB | — | as above | — | — | SDAB (private bundle) | 809 | — | no local or paid path — `CLOSED_EXTERNAL` |
 | E4 BankerToolBench | Tinker→Modal bridge | as above | — | — | BankerToolBench | 809 | — | 1/100 tasks, recovery 0.3115 — `CLOSED_PARTIAL` |
 | E4 base-model rerun | Modal `/v1/responses` | base model, zero-init LoRA | — | — | BankerToolBench | 809 | 0 | 100/100 trials, mean reward 0.0, $15.07 of $55.91 cap; zero traced to bridge passing no stop sequences (§9.5) |
 | E5 APEX-Agents | native harness | as above | — | — | APEX-Agents | 809 | — | 7/480 native-scored; prefix mean 0.050505 |
-| E5 replacement (successor27) | native harness | as above | — | — | Tau3 | 809 | — | 20/97 = 20.62% cleaned — `REBUILD_READY_LAUNCH_PENDING` |
-| E6 WebArena | AWS-hosted | as above | — | — | WebArena | 809 | — | 0/812 run; 65 files, IDs 0–811 inventory-verified — `PENDING_QUOTA` |
+| E5 replacement (finish 2026-09-27) | native tau2, Modal 65k actor | as above | — | — | Tau3 banking_knowledge | 809 | — | 8/97 = 0.082 pass^1 (25 infra errors counted as failures) — `COMPLETE` |
+| E6 WebArena (finish 2026-09-27) | native evaluator, GCP VM | as above | — | — | WebArena | 809 | — | 90/812 = 0.111, lower bound; 108 ungraded (judge unavailable) — `COMPLETE` |
 | E7 BinaryAudit | native harness | as above | — | — | BinaryAudit (private payload) | 809 | — | 1/46 attempted, verifier reward 0.0, no grade — `CLOSED_EXTERNAL` |
 | E8 LAB-Bench (public) | native harness | as above | — | — | LAB-Bench public, 8 categories | 809 | — | **1967/1967 COMPLETE** |
 | E8 LifeSciBench (original) | — | as above | — | — | LifeSciBench private | 809 | — | `CLOSED_EXTERNAL` |
 | E9 MLE-bench | Modal streaming arm | as above | — | — | MLE-bench | 809 | — | 40/75 natively graded (53.33%); suite score null |
-| E9 replacement | AWS runtime builder | as above | — | — | MLDevBench | 809 | — | 0/34 graded; image incomplete — `PENDING_QUOTA` |
+| E9 replacement (finish 2026-09-27) | OpenHands CodeActAgent, GCP VM | as above | — | — | ML-Dev-Bench | 809 | — | 10/34 = 0.294 task success — `COMPLETE` |
 | E10 AgentDojo (benign) | native harness | as above | — | — | AgentDojo benign utility | 809 | — | **97/97 COMPLETE** |
 | E10 AgentHarm (original) | — | as above | — | — | AgentHarm private | 809 | — | `CLOSED_EXTERNAL` |
 | E11 VerilogEval | native harness | as above | — | — | VerilogEval (both framings) | 809 | — | **312/312 = 129/312 pass@1 (41.35%)**; 67/156 completion + 62/156 spec-to-RTL |
 | E12 AppBench | — | as above | — | — | AppBench deployment | 809 | — | `CLOSED_EXTERNAL` |
-| E13 BALROG | hosted supervisor | as above | — | — | BALROG | 809 | — | 13/255 episodes; 21 never-started candidates — `AMENDMENT_ACCEPTED_LAUNCH_PENDING` |
-| E13 OpenReward (original) | — | as above | — | — | OpenReward held-out games | 809 | — | `CLOSED_EXTERNAL` |
+| E13 BALROG (finish 2026-09-27) | native BALROG evaluator, local | as above | — | — | BALROG | 809 | — | 255/255 episodes; 26.1% progression — `COMPLETE` |
+| E13 OpenReward (original) | — | as above | — | — | OpenReward held-out games | 809 | — | externally blocked, no closure record |
 | E14 Omni-MATH | native scorer | as above | — | — | Omni-MATH | 809 | — | 4426/4428 accepted (99.95%); accuracy 2271/4428 = 51.29% (official scorer 51.31% on 4426 judged rows) — `COMPLETE_TERMINAL_NOTE` |
 | E14 FrontierMath (original) | — | as above | — | — | FrontierMath hosted | 809 | — | `CLOSED_EXTERNAL` |
 

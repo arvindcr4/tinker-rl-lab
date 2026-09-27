@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/crates/nu-command/src/filters/split/column.rs b/crates/nu-command/src/filters/split/column.rs\nindex 273737373737..123456789012 100644\n--- a/crates/nu-command/src/filters/split/column.rs\n+++ b/crates/nu-command/src/filters/split/column.rs\n@@ -1,6 +1,7 @@\n use nu_engine::command_prelude::*;\n use nu_protocol::ast::Call;\n use nu_protocol::engine::{Command, EngineState, Stack};\n+use regex::Regex;\n \n #[derive(Clone)]\n pub struct SplitColumn;\n@@ -10,6 +11,7 @@ impl Command for SplitColumn {\n         \"split column\"\n     }\n \n+    #[allow(clippy::too_many_lines)]\n     fn signature(&self) -> Signature {\n         Signature::build(self.name())\n             .input_output_types(vec![(Type::String, Type::Table)])\n@@ -17,6 +19,10 @@ impl Command for SplitColumn {\n             .switch(\"rest\", \"put the rest of the columns in the last column\", Some('r'))\n             .switch(\n                 \"no-headers\",\n+                \"don't treat the first row as headers\",\n+                Some('n'),\n+            )\n+            .switch(\n+                \"number\",\n                 \"don't treat the first row as headers\",\n                 Some('n'),\n             )",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472683,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-982cb1ebd89cfc11",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 346,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 25452,
+    "prompt_tokens_details": null,
+    "total_tokens": 25798
+  }
+}

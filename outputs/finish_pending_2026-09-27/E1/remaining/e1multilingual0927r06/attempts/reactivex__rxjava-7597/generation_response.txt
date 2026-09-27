@@ -1,0 +1,16 @@
+diff --git a/src/main/java/io/reactivex/rxjava3/internal/operators/observable/ObservableSwitchMap.java b/src/main/java/io/reactivex/rxjava3/internal/operators/observable/ObservableSwitchMap.java
+index 1563333333..a1b2c3d4e5 100644
+--- a/src/main/java/io/reactivex/rxjava3/internal/operators/observable/ObservableSwitchMap.java
++++ b/src/main/java/io/reactivex/rxjava3/internal/operators/observable/ObservableSwitchMap.java
+@@ -100,6 +100,10 @@ final class ObservableSwitchMap<T, U> extends AbstractObservableWithUpstream<T,
+             }
+ 
+             @Override
++            public void onSubscribe(Disposable d) {
++                // No-op, subscription is managed by the outer observer
++            }
++
++            @Override
+             public void onNext(T t) {
+                 if (done) {
+                     return;

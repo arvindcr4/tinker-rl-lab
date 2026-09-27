@@ -1,0 +1,61 @@
+diff --git a/src/commands.json b/src/commands.json
+index 5a0a0a0a0a..b0b0b0b0b0 100644
+--- a/src/commands.json
++++ b/src/commands.json
+@@ -1,6 +1,6 @@
+ {
+     "fcall": {
+-        "summary": "Call a function.",
++        "summary": "Call a function, optionally with a given number of keys.",
+         "complexity": "O(N) where N is the number of commands executed.",
+         "arguments": [
+             {
+diff --git a/src/functions.c b/src/functions.c
+index 1234567890..abcdef1234 100644
+--- a/src/functions.c
++++ b/src/functions.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2021, Redis Ltd.
++ * Copyright (c) 2021-2022, Redis Ltd.
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -1,10 +1,10 @@
+ #include "server.h"
+ #include "functions.h"
+ #include "script.h"
++#include "module.h"
+ 
+-/* Forward declarations */
+-static void call(client *c, struct redisCommand *cmd, int flags);
+-
+ /*
+  * This is the main entry point for the Lua scripting engine.
+  * It is used to execute Lua scripts.
+@@ -1,20 +1,20 @@
+ static int luaRedisGenericCommand(lua_State *L, int raise_error) {
+     /* ... existing code ... */
+ }
+ 
++/*
++ * Execute a function.
++ */
+ void callFunction(client *c, int flags) {
+     struct redisFunction *func;
+     struct redisFunctionLib *lib;
+     int retval;
+     int argc = c->argc;
+     robj **argv = c->argv;
+ 
+     /* ... existing code ... */
+ 
+-    /*
+-     * We need to call the function.
+-     */
+-    call(c, func->command, flags);
++    /*
++     * We need to call the function.
++     */
++    call(c, func->command, flags | CMD_CALL_SLOWLOG | CMD_CALL_NO_MONITOR);
+ }

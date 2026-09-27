@@ -1,0 +1,98 @@
+{
+ "Id": "sha256:3e71073803b72aee0bf5576cbf2cd5d785249229f1c49fb73a5f3e5494f3e6ce",
+ "RepoTags": [
+  "swebench/sweb.eval.x86_64.jordansissel_1776_fpm-1829:latest"
+ ],
+ "RepoDigests": [
+  "swebench/sweb.eval.x86_64.jordansissel_1776_fpm-1829@sha256:f73540fa735bf91a72a254644a8a36cd0f0964d753b60b8235ab209bd2aec29b"
+ ],
+ "Parent": "",
+ "Comment": "buildkit.dockerfile.v0",
+ "Created": "2026-08-13T16:30:22.392524775Z",
+ "Container": "",
+ "ContainerConfig": {
+  "Hostname": "",
+  "Domainname": "",
+  "User": "",
+  "AttachStdin": false,
+  "AttachStdout": false,
+  "AttachStderr": false,
+  "Tty": false,
+  "OpenStdin": false,
+  "StdinOnce": false,
+  "Env": null,
+  "Cmd": null,
+  "Image": "",
+  "Volumes": null,
+  "WorkingDir": "",
+  "Entrypoint": null,
+  "OnBuild": null,
+  "Labels": null
+ },
+ "DockerVersion": "",
+ "Author": "",
+ "Config": {
+  "Hostname": "",
+  "Domainname": "",
+  "User": "",
+  "AttachStdin": false,
+  "AttachStdout": false,
+  "AttachStderr": false,
+  "Tty": false,
+  "OpenStdin": false,
+  "StdinOnce": false,
+  "Env": [
+   "PATH=/usr/local/bundle/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+   "LANG=C.UTF-8",
+   "RUBY_VERSION=3.1.7",
+   "RUBY_DOWNLOAD_URL=https://cache.ruby-lang.org/pub/ruby/3.1/ruby-3.1.7.tar.xz",
+   "RUBY_DOWNLOAD_SHA256=658acc455b6bda87ac6cc1380e86552b9c1af87055e7a127589c5bf7ed80b035",
+   "GEM_HOME=/usr/local/bundle",
+   "BUNDLE_SILENCE_ROOT_WARNING=1",
+   "BUNDLE_APP_CONFIG=/usr/local/bundle",
+   "TZ=Etc/UTC"
+  ],
+  "Cmd": [
+   "irb"
+  ],
+  "Image": "",
+  "Volumes": null,
+  "WorkingDir": "/testbed",
+  "Entrypoint": null,
+  "OnBuild": null,
+  "Labels": null
+ },
+ "Architecture": "amd64",
+ "Os": "linux",
+ "Size": 1075968467,
+ "VirtualSize": 1075968467,
+ "GraphDriver": {
+  "Data": {
+   "LowerDir": "/var/lib/docker/overlay2/3bd6ccdaa27ae30520b2f19b4835e2931647ca2630273b397c0e02ad69bb7ef8/diff:/var/lib/docker/overlay2/e1ad6559f3144f33c8b5742358e5b21696846da5a41d6e77d300a838998e8e87/diff:/var/lib/docker/overlay2/d1e0d2d4a255b63c9d6c466a83ad9a2d370cb25245b23eb5e94d0a7a86e49ac4/diff:/var/lib/docker/overlay2/7fb1823fcec4570e236a1a5aab544c10952ad63a5e8230b534f60318b500a72f/diff:/var/lib/docker/overlay2/15cbd1768eab2f5626eeb1cddd1213be6d7fb50deeb4a3d1052e132dafbfbcfd/diff:/var/lib/docker/overlay2/0cf3289aaaa7e5e1030f0db4f7ba95e895f5f056f45fd1b33220cee20844e30a/diff:/var/lib/docker/overlay2/c2156d1f062a966d18bfe719b671c114625a1f94999a90e086981553b4304cd3/diff:/var/lib/docker/overlay2/989ee605cb5046291a2aba89b2c142ef30ed6be3f3821ef2a82d19f76af78818/diff:/var/lib/docker/overlay2/8e360b7293f08af6e24c019b13951ce7bb0962b2af6cdacffe9afd8f78f6d44c/diff:/var/lib/docker/overlay2/bcf24b80ca35f594e7ce050ede2a7c90e82b3503dd96c7de9e0b093be226f58e/diff:/var/lib/docker/overlay2/2cf71855d70536599430e17f09dad9eed2bc41852feb0cf62a94d3ab059d0119/diff",
+   "MergedDir": "/var/lib/docker/overlay2/eea2f70cad92a1f7c48359f06f91cedb0a873785296fd80131363f2ac62db2b6/merged",
+   "UpperDir": "/var/lib/docker/overlay2/eea2f70cad92a1f7c48359f06f91cedb0a873785296fd80131363f2ac62db2b6/diff",
+   "WorkDir": "/var/lib/docker/overlay2/eea2f70cad92a1f7c48359f06f91cedb0a873785296fd80131363f2ac62db2b6/work"
+  },
+  "Name": "overlay2"
+ },
+ "RootFS": {
+  "Type": "layers",
+  "Layers": [
+   "sha256:53babe930602419c46727120034c3748ae023bef28f10edb018fbcfbcedbc0e8",
+   "sha256:d2f7abddd607612ee919b0d3fffe9f156b3165b215b1dae105b4b2be4888a285",
+   "sha256:2ed6a19677f5e5d6bc7ca58dc86e0c9e54c894bdfff537014736c168d82a856d",
+   "sha256:4c13ea2c0b021f7e71473290da414fe79371abf7b4de411c0a70fd2fc88916d5",
+   "sha256:78e86b673349f1d54ea008d01c28883fae187b701e32ddc1f6b1d0e5d776ec48",
+   "sha256:6147783d729beac7af208863bb88bf135f4f99acc8fe92f439cebdb3c233aca6",
+   "sha256:ea9177fb7786dbf8930508cd73d74ef23be4b2931334c28cd673d6174b18195e",
+   "sha256:6fd1b3251b3e2437f775afffa1a96797b341a5083bc8fcbd301f4e94374fd1c3",
+   "sha256:71ec403a4897e079f310179018481e131a03fb19dc8d1fadddbaba17e6953c27",
+   "sha256:81cf3890ed9ab09510ef80938b2b99b55d7b2838955a8c16b3dcd6b6441265c8",
+   "sha256:1bca9e288f236d45718e8f1fd8f9741a00331d2ffd2b3b8ab48716a11638ee4c",
+   "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+  ]
+ },
+ "Metadata": {
+  "LastTagTime": "0001-01-01T00:00:00Z"
+ }
+}

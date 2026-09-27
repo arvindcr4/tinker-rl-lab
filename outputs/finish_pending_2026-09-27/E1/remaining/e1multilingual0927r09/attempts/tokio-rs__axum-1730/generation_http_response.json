@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/axum/src/routing/method_router.rs b/axum/src/routing/method_router.rs\nindex 5c0d777..8b0a123 100644\n--- a/axum/src/routing/method_router.rs\n+++ b/axum/src/routing/method_router.rs\n@@ -1,6 +1,7 @@\n use super::{\n     into_make_service::IntoMakeServiceWithConnectInfo,\n     route::{self, Route},\n+    Future,\n };\n use crate::{\n     extract::{rejection::MethodNotAccepted, FromRequestParts, State},",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790475233,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-b7f3f29b80a57ce3",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 137,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 28742,
+    "prompt_tokens_details": null,
+    "total_tokens": 28879
+  }
+}

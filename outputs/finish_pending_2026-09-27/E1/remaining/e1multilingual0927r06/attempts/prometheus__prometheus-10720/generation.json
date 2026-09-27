@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "4a268f72ffadec477884da16f15c61d8ff0f11e7171008979b0af22455da97a0",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790473065.052039,
+  "instance_id": "prometheus__prometheus-10720",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/promql/functions.go b/promql/functions.go\nindex 2230000000..8888888888 100644\n--- a/promql/functions.go\n+++ b/promql/functions.go\n@@ -100,6 +100,7 @@ var Functions = map[string]Function{\n \t\"day_of_month\":   {Name: \"day_of_month\", Type: TypeTimestamp, Arity: 1},\n \t\"day_of_week\":    {Name: \"day_of_week\", Type: TypeTimestamp, Arity: 1},\n \t\"days_in_month\":  {Name: \"days_in_month\", Type: TypeTimestamp, Arity: 1},\n+\t\"day_of_year\":    {Name: \"day_of_year\", Type: TypeTimestamp, Arity: 1},\n \t\"hour\":           {Name: \"hour\", Type: TypeTimestamp, Arity: 1},\n \t\"minute\":         {Name: \"minute\", Type: TypeTimestamp, Arity: 1},\n \t\"month\":          {Name: \"month\", Type: TypeTimestamp, Arity: 1},\n@@ -300,6 +301,15 @@ func functionDaysInMonth(_ FunctionArgs) OpFunc {\n \treturn opFunc\n }\n \n+// functionDayOfYear returns the day of the year for the given timestamp.\n+func functionDayOfYear(_ FunctionArgs) OpFunc {\n+\treturn func(vals []parser.Value, _ context.Context) (parser.Value, error) {\n+\t\tv := vals[0].(Vector)\n+\t\tfor i, sample := range v {\n+\t\t\tv[i].V = float64(sample.Ts/1000) / 86400 + 1\n+\t\t}\n+\t\treturn v, nil\n+\t}\n+}\n+\n // functionHour returns the hour of the day for the given timestamp.\n func functionHour(_ FunctionArgs) OpFunc {\n \treturn func(vals []parser.Value, _ context.Context) (parser.Value, error) {\ndiff --git a/promql/functions_test.go b/promql/functions_test.go\nindex 1111111111..2222222222 100644\n--- a/promql/functions_test.go\n+++ b/promql/functions_test.go\n@@ -100,6 +100,15 @@ func TestFunctions(t *testing.T) {\n \t\t\t},\n \t\t},\n \t\t{\n+\t\t\tname: \"day_of_year\",\n+\t\t\tin:   \"day_of_year(1648704000)\",\n+\t\t\twant: \"1648704000{__name__=\\\"day_of_year\\\"} 46\",\n+\t\t},\n+\t\t{\n+\t\t\tname: \"day_of_year_leap_year\",\n+\t\t\tin:   \"day_of_year(1640995200)\",\n+\t\t\twant: \"1640995200{__name__=\\\"day_of_year\\\"} 1\",\n+\t\t},\n+\t\t{\n \t\t\tname: \"hour\",\n \t\t\tin:   \"hour(1648704000)\",\n \t\t\twant: \"1648704000{__name__=\\\"hour\\\"} 0\",",
+  "patch_sha256": "d23dc9c123aaec35ac3eb0b3bfb280c45c82cc61a77914da8317bf335abaa91b",
+  "request_sha256": "03ffb37047ab18e9389ac4a36460c6693c9adedfe6aaf8049e463b373c83a35c",
+  "response_sha256": "d23dc9c123aaec35ac3eb0b3bfb280c45c82cc61a77914da8317bf335abaa91b",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "e2449eb98d40c213a3604dbd7b2f8334939858ebbbe731ecd05f3e62ac6a4e99",
+  "started_at": 1790473050.335348,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 770,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 27796,
+    "prompt_tokens_details": null,
+    "total_tokens": 28566
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

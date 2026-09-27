@@ -1,0 +1,132 @@
+diff --git a/src/clap_app.rs b/src/clap_app.rs
+index 1563233..8333333 100644
+--- a/src/clap_app.rs
++++ b/src/clap_app.rs
+@@ -1,4 +1,4 @@
+-use clap::{App as ClapApp, AppSettings, Arg, ArgGroup, SubCommand};
++use clap::{App as ClapApp, AppSettings, Arg, ArgGroup};
+ use std::path::Path;
+ 
+ pub fn build_app(interactive_output: bool) -> ClapApp<'static, 'static> {
+@@ -10,7 +10,6 @@ pub fn build_app(interactive_output: bool) -> ClapApp<'static, 'static> {
+         .global_setting(AppSettings::DeriveDisplayOrder)
+         .global_setting(AppSettings::UnifiedHelpMessage)
+         .global_setting(AppSettings::HidePossibleValuesInHelp)
+-        .setting(AppSettings::InferSubcommands)
+         .setting(AppSettings::ArgsNegateSubcommands)
+         .setting(AppSettings::DisableHelpSubcommand)
+         .setting(AppSettings::VersionlessSubcommands)
+@@ -19,7 +18,7 @@ pub fn build_app(interactive_output: bool) -> ClapApp<'static, 'static> {
+             "A cat(1) clone with wings.\n\n\
+              Use '--help' instead of '-h' to see a more detailed version of the help text.",
+         )
+-        .long_about("A cat(1) clone with syntax highlighting and Git integration.")
++        .long_about("A cat(1) clone with syntax highlighting and Git integration.")
+         .arg(
+             Arg::with_name("FILE")
+                 .help("File(s) to print / concatenate. Use '-' for standard input.")
+@@ -200,33 +199,6 @@ pub fn build_app(interactive_output: bool) -> ClapApp<'static, 'static> {
+                 .help("Show bat's cache directory."),
+         )
+         .subcommand(
+-            SubCommand::with_name("cache")
+-                .about("Modify the syntax-definition and theme cache")
+-                .arg(
+-                    Arg::with_name("build")
+-                        .long("build")
+-                        .short("b")
+-                        .help(
+-                            "Initialize (or update) the syntax/theme cache by loading from \
+-                             the source directory (default: the configuration directory).",
+-                        ),
+-                )
+-                .arg(
+-                    Arg::with_name("clear")
+-                        .long("clear")
+-                        .short("c")
+-                        .help("Remove the cached syntax definitions and themes."),
+-                )
+-                .group(
+-                    ArgGroup::with_name("cache-actions")
+-                        .args(&["build", "clear"])
+-                        .required(arg_group_required),
+-                )
+-                .arg(
+-                    Arg::with_name("source")
+-                        .long("source")
+-                        .requires("build")
+-                        .takes_value(true)
+-                        .value_name("dir")
+-                        .help("Use a different directory to load syntaxes and themes from."),
+-                )
+-                .arg(
+-                    Arg::with_name("target")
+-                        .long("target")
+-                        .requires("build")
+-                        .takes_value(true)
+-                        .value_name("dir")
+-                        .help(
+-                            "Use a different directory to store the cached syntax and theme set.",
+-                        ),
+-                )
+-                .arg(Arg::with_name("blank").long("blank").requires("build").help(
+-                    "Create completely new syntax and theme sets \
+-                     (instead of appending to the default sets).",
+-                )),
++            SubCommand::with_name("cache")
++                .about("Modify the syntax-definition and theme cache")
++                .arg(
++                    Arg::with_name("build")
++                        .long("build")
++                        .short("b")
++                        .help(
++                            "Initialize (or update) the syntax/theme cache by loading from \
++                             the source directory (default: the configuration directory).",
++                        ),
++                )
++                .arg(
++                    Arg::with_name("clear")
++                        .long("clear")
++                        .short("c")
++                        .help("Remove the cached syntax definitions and themes."),
++                )
++                .group(
++                    ArgGroup::with_name("cache-actions")
++                        .args(&["build", "clear"])
++                        .required(arg_group_required),
++                )
++                .arg(
++                    Arg::with_name("source")
++                        .long("source")
++                        .requires("build")
++                        .takes_value(true)
++                        .value_name("dir")
++                        .help("Use a different directory to load syntaxes and themes from."),
++                )
++                .arg(
++                    Arg::with_name("target")
++                        .long("target")
++                        .requires("build")
++                        .takes_value(true)
++                        .value_name("dir")
++                        .help(
++                            "Use a different directory to store the cached syntax and theme set.",
++                        ),
++                )
++                .arg(Arg::with_name("blank").long("blank").requires("build").help(
++                    "Create completely new syntax and theme sets \
++                     (instead of appending to the default sets).",
++                )),
+         )
+         .help_message("Print this help message.")
+         .version_message("Show version information.")
+diff --git a/src/main.rs b/src/main.rs
+index 1563233..8333333 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -1,4 +1,4 @@
+-// `error_chain!` can recurse deeply
++// `error_chain!` can recurse deeply
+ #![recursion_limit = "1024"]
+ 
+ #[macro_use]

@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/stream.c b/src/stream.c\nindex 1111111..2222222 100644\n--- a/src/stream.c\n+++ b/src/stream.c\n@@ -1345,7 +1345,7 @@ static int streamCompareIDs(streamID *a, streamID *b) {\n     return 0;\n }\n \n-/* Trim the stream to a maximum of `count` entries. */\n+/* Trim the stream to a maximum of `count` entries or minimum ID `threshold`. */\n static long long streamTrim(stream *s, long long count, streamID *threshold, int threshold_set) {\n     listIter li;\n     listNode *ln;",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790473538,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-b73c33383b48d94e",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 165,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 26314,
+    "prompt_tokens_details": null,
+    "total_tokens": 26479
+  }
+}

@@ -1,0 +1,11 @@
+diff --git a/src/commands/substr.json b/src/commands/substr.json
+index 8b9bd5c..a1b2c3d 100644
+--- a/src/commands/substr.json
++++ b/src/commands/substr.json
+@@ -1,5 +1,5 @@
+ {
+-    "SUBSTR": {
++    "GETRANGE": {
+         "summary": "Returns a substring from a string value.",
+         "complexity": "O(N) where N is the length of the returned string. The complexity is ultimately determined by the returned length, but because creating a substring from an existing string is very cheap, it can be considered O(1) for small strings.",
+         "group": "string",

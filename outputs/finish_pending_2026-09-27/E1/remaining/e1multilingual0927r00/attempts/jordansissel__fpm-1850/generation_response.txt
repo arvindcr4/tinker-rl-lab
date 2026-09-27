@@ -1,0 +1,15 @@
+diff --git a/lib/fpm/package/empty.rb b/lib/fpm/package/empty.rb
+index 5b7d7c6..a0c7b8e 100644
+--- a/lib/fpm/package/empty.rb
++++ b/lib/fpm/package/empty.rb
+@@ -1,6 +1,10 @@
+ class FPM::Package::Empty < FPM::Package
+   def initialize(*args)
+     super(*args)
++    # Empty packages have no files, so they are not architecture specific.
++    # Default to 'all' to indicate they are valid for any architecture.
++    if self.architecture.nil?
++      self.architecture = "all"
++    end
+   end
+ end

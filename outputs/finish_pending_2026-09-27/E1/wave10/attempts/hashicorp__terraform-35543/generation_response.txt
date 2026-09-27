@@ -1,0 +1,34 @@
+diff --git a/internal/configs/parser_config_dir.go b/internal/configs/parser_config_dir.go
+index 1d0330000000..8b1111111111 100644
+--- a/internal/configs/parser_config_dir.go
++++ b/internal/configs/parser_config_dir.go
+@@ -10,6 +10,7 @@ import (
+ 	"path/filepath"
+ 	"sort"
+ 	"strings"
++	"sync"
+ 
+ 	"github.com/hashicorp/hcl/v2"
+ 	"github.com/hashicorp/hcl/v2/hclparse"
+@@ -23,6 +24,10 @@ type Parser struct {
+ 	parser *hclparse.Parser
+ }
+ 
++var (
++	validateOnce sync.Once
++)
++
+ // NewParser creates a new configuration parser.
+ func NewParser() *Parser {
+ 	return &Parser{
+@@ -30,6 +35,10 @@ func NewParser() *Parser {
+ 	}
+ }
+ 
++func init() {
++	validateOnce.Do(func() {})
++}
++
+ // LoadDir reads all of the files in a given directory and returns a Config
+ // struct representing the combined configuration of all of them.
+ func (p *Parser) LoadDir(dir string) (*Config, hcl.Diagnostics) {

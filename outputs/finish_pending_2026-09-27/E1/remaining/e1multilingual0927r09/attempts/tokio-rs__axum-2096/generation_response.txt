@@ -1,0 +1,15 @@
+diff --git a/axum/src/routing/mod.rs b/axum/src/routing/mod.rs
+index 87676767..12345678 100644
+--- a/axum/src/routing/mod.rs
++++ b/axum/src/routing/mod.rs
+@@ -1000,6 +1000,10 @@ impl Router {
+     pub fn merge(mut self, other: impl Into<Router>) -> Self {
+         let other = other.into();
+ 
++        // If the current router has a fallback, we need to preserve it.
++        // When merging, the other router's routes are added, but if the other router
++        // doesn't have a fallback, we should keep the current one.
++        // However, the flattening logic in `routes` might drop it if not handled correctly.
+         self.routes.extend(other.routes);
+         self.fallback = other.fallback.or(self.fallback);
+         self

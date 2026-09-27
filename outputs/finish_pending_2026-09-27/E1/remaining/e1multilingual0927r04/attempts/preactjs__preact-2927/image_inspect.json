@@ -1,0 +1,95 @@
+{
+ "Id": "sha256:4476776c79e85ad6b9bd95c23252cdf92924046a578ea2493f32e9dc6d3de5a3",
+ "RepoTags": [
+  "swebench/sweb.eval.x86_64.preactjs_1776_preact-2927:latest"
+ ],
+ "RepoDigests": [
+  "swebench/sweb.eval.x86_64.preactjs_1776_preact-2927@sha256:351126e9fc2d80d463faf409cc7fd9e007deef44c9246cd52b95d1096626308c"
+ ],
+ "Parent": "",
+ "Comment": "buildkit.dockerfile.v0",
+ "Created": "2026-08-13T17:06:42.928957936Z",
+ "Container": "",
+ "ContainerConfig": {
+  "Hostname": "",
+  "Domainname": "",
+  "User": "",
+  "AttachStdin": false,
+  "AttachStdout": false,
+  "AttachStderr": false,
+  "Tty": false,
+  "OpenStdin": false,
+  "StdinOnce": false,
+  "Env": null,
+  "Cmd": null,
+  "Image": "",
+  "Volumes": null,
+  "WorkingDir": "",
+  "Entrypoint": null,
+  "OnBuild": null,
+  "Labels": null
+ },
+ "DockerVersion": "",
+ "Author": "",
+ "Config": {
+  "Hostname": "",
+  "Domainname": "",
+  "User": "",
+  "AttachStdin": false,
+  "AttachStdout": false,
+  "AttachStderr": false,
+  "Tty": false,
+  "OpenStdin": false,
+  "StdinOnce": false,
+  "Env": [
+   "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+   "TZ=Etc/UTC",
+   "CHROME_BIN=/usr/bin/google-chrome",
+   "CHROME_PATH=/usr/bin/google-chrome"
+  ],
+  "Cmd": [
+   "/bin/bash"
+  ],
+  "Image": "",
+  "Volumes": null,
+  "WorkingDir": "/testbed",
+  "Entrypoint": null,
+  "OnBuild": null,
+  "Labels": {
+   "org.opencontainers.image.version": "22.04"
+  }
+ },
+ "Architecture": "amd64",
+ "Os": "linux",
+ "Size": 1901251250,
+ "VirtualSize": 1901251250,
+ "GraphDriver": {
+  "Data": {
+   "LowerDir": "/var/lib/docker/overlay2/41f9ea29c5b90fca24076d683dddb9bfdd9aee36d09bf7be14d837cb7e84a478/diff:/var/lib/docker/overlay2/8db877a3443d1204f9572ae047fc4a1094a2360d9474765c3ccaa150f1497809/diff:/var/lib/docker/overlay2/442fc7f461f68bd9b3d3021b5c16318c2a05aa6f69d01525443be7a15815b5d2/diff:/var/lib/docker/overlay2/32ee6b3f6542d5c8e2555f9cbf8368eaacd176e522f4ab14d38df8d49d31a5ce/diff:/var/lib/docker/overlay2/69b90445ed176fe627453143a02acc645789941fb26d3dfda1a59fc2cc320e63/diff:/var/lib/docker/overlay2/018931d7ece6c8ddd21a1fe43c951a9d9707e45737b74970ee7fe5c24519cc98/diff:/var/lib/docker/overlay2/5b62eb1f2eae57f9cb2582914a78b2caf8b81724100869cdbaaef00018141783/diff:/var/lib/docker/overlay2/a64a1aa83b14612f46d1be57b6b55787aa60a6d7232d34f4c2b7a78138bef8a3/diff:/var/lib/docker/overlay2/b16ab3282ecb5c33801e5fd5920d08d6daa759ef6719829ad0a6e971ab1591f8/diff:/var/lib/docker/overlay2/a3c4779ddb91a35300a8b5dc7d3e45ef58b322f5a11429e7fd24d533bed1e481/diff:/var/lib/docker/overlay2/2bd8dd5b43f1c6a608739c5015f4035fd8e8fcd51d5050a05bd4001240b8eaf4/diff",
+   "MergedDir": "/var/lib/docker/overlay2/51ce831a3921430156ab9bd38387884c58aafcf3c8b36101ccd5c789446e7ef6/merged",
+   "UpperDir": "/var/lib/docker/overlay2/51ce831a3921430156ab9bd38387884c58aafcf3c8b36101ccd5c789446e7ef6/diff",
+   "WorkDir": "/var/lib/docker/overlay2/51ce831a3921430156ab9bd38387884c58aafcf3c8b36101ccd5c789446e7ef6/work"
+  },
+  "Name": "overlay2"
+ },
+ "RootFS": {
+  "Type": "layers",
+  "Layers": [
+   "sha256:beb59027b96ddbf30ac9c80b527668fe7011f4f553fe83f5e59199e9a84fb5ca",
+   "sha256:bba8a7617fc3bb6ae4db27dcdf3d0c7959bae5dcdee52799408a548325efa7b3",
+   "sha256:e4e3bfc5aa279bbcec7b110a3089844265d3f975c5e363b9ca3a9dd9564c54e0",
+   "sha256:89dd60031195e8a45996b7013ca089396daf253bfcbb4f291d254d26a8465491",
+   "sha256:e5851619090c6c873f5c4b12c296417f42298c0d64f032def71884652908f950",
+   "sha256:6fadf0ebb9300a17b33043b2a0fabd14a32df921930b04097298bbdf4f7b769d",
+   "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+   "sha256:43299412f307dd54f839cdae2d2e0c5316baabdc8e5683a9f1b1b19b7938e2c7",
+   "sha256:658894ce10e09511dd33675f357f6ddef677b065d785f483813e5ca7ad9b65a4",
+   "sha256:ef33e5b5c47b4811e0af9f88407a7c6b763286dfad570ef51288d6b366c322b9",
+   "sha256:ef55144bc9c5c08d3b7af610c0f41f27eeebe8ebf46e8997e6feb254479e050f",
+   "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+  ]
+ },
+ "Metadata": {
+  "LastTagTime": "0001-01-01T00:00:00Z"
+ }
+}

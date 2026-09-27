@@ -1,0 +1,15 @@
+diff --git a/src/acl.c b/src/acl.c
+index 1111111..2222222 100644
+--- a/src/acl.c
++++ b/src/acl.c
+@@ -3000,6 +3000,10 @@ void ACLLoadUsersFromDisk(void) {
+         }
+     }
+ 
++    if (server.repl_slave) {
++        return;
++    }
++
+     /* If we are here, we are the master. */
+     if (server.acl_filename == NULL) {
+         return;

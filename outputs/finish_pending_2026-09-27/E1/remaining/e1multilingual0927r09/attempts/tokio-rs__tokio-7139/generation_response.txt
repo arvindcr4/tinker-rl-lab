@@ -1,0 +1,15 @@
+diff --git a/tokio/src/fs/file.rs b/tokio/src/fs/file.rs
+index 5086e56dcb..a1b2c3d4e5 100644
+--- a/tokio/src/fs/file.rs
++++ b/tokio/src/fs/file.rs
+@@ -603,6 +603,10 @@ impl AsyncRead for File {
+         let me = self.get_mut();
+ 
+         let max_buf_size = cmp::min(dst.remaining(), me.max_buf_size);
++
++        if max_buf_size == 0 {
++            return Poll::Ready(Ok(()));
++        }
+ 
+         // If the buffer is full, we can't read any more data.
+         if me.buf.is_empty() {

@@ -1,0 +1,77 @@
+{
+    "task": "default",
+    "action_frequency": {
+        "Do": 21,
+        "Move West": 12,
+        "Move North": 11,
+        "Noop": 5,
+        "Place Table": 3,
+        "Make Wood Pickaxe": 9,
+        "Move South": 1,
+        "Move East": 1,
+        "Make Wood Sword": 2
+    },
+    "input_tokens": 101185,
+    "output_tokens": 199,
+    "done": true,
+    "episode_return": 2.099999999999999,
+    "num_steps": 65,
+    "failed_candidates": [
+        "Move NorthWest",
+        "Move Northwest",
+        "Move Northwest",
+        "Move NorthWest",
+        "Move NorthWest"
+    ],
+    "score": 3.0,
+    "progression": 0.13636363636363635,
+    "achievements": {
+        "collect_coal": 0,
+        "collect_diamond": 0,
+        "collect_drink": 7,
+        "collect_iron": 0,
+        "collect_sapling": 0,
+        "collect_stone": 0,
+        "collect_wood": 5,
+        "defeat_skeleton": 0,
+        "defeat_zombie": 0,
+        "eat_cow": 0,
+        "eat_plant": 0,
+        "make_iron_pickaxe": 0,
+        "make_iron_sword": 0,
+        "make_stone_pickaxe": 0,
+        "make_stone_sword": 0,
+        "make_wood_pickaxe": 0,
+        "make_wood_sword": 0,
+        "place_furnace": 0,
+        "place_plant": 0,
+        "place_stone": 0,
+        "place_table": 1,
+        "wake_up": 0
+    },
+    "process_num": "w56718",
+    "seed": 2410847360,
+    "agent": {
+        "type": "naive",
+        "remember_cot": true,
+        "max_text_history": 16,
+        "max_image_history": 0,
+        "max_cot_history": 1,
+        "max_icl_history": 1000,
+        "cache_icl": false
+    },
+    "client": {
+        "client_name": "vllm",
+        "model_id": "pavlov-public-portfolio-bf16",
+        "base_url": "http://127.0.0.1:8793/crafter/v1",
+        "generate_kwargs": {
+            "temperature": 1.0,
+            "max_tokens": 8192,
+            "thinking_budget": null
+        },
+        "timeout": 60,
+        "max_retries": 5,
+        "delay": 2,
+        "alternate_roles": false
+    }
+}

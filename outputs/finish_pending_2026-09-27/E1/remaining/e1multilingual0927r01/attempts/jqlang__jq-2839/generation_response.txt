@@ -1,0 +1,15 @@
+diff --git a/src/jv.c b/src/jv.c
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/jv.c
++++ b/src/jv.c
+@@ -746,6 +746,10 @@ int jvp_number_cmp(jv a, jv b) {
+   if (jvp_number_is_nan(a) || jvp_number_is_nan(b)) {
+     return 0;
+   }
++  if (jvp_number_is_decimal(a) && jvp_number_is_decimal(b)) {
++    // decNumber comparison can overflow on extreme exponents
++    return 0;
++  }
+   if (jvp_number_is_decimal(a)) {
+     return -1;
+   }

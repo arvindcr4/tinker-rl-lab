@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "eccc76c5c11ef8a5ef26014a6a0af14ebb27b073464c676b2b7bf688ae14a5cc",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790475916.1996229,
+  "instance_id": "tokio-rs__tokio-6551",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/tokio/src/runtime/metrics.rs b/tokio/src/runtime/metrics.rs\nindex 8f8f8f8f..8f8f8f8f 100644\n--- a/tokio/src/runtime/metrics.rs\n+++ b/tokio/src/runtime/metrics.rs\n@@ -1,3 +1,4 @@\n+#![cfg_attr(docsrs, feature(doc_cfg))]\n use std::sync::atomic::AtomicUsize;\n use std::sync::atomic::Ordering;\n \n@@ -10,6 +11,7 @@ pub(crate) struct RuntimeMetrics {\n     pub(crate) num_workers: AtomicUsize,\n     pub(crate) num_blocking_threads: AtomicUsize,\n     pub(crate) num_busy_workers: AtomicUsize,\n+    pub(crate) num_worker_threads: AtomicUsize,\n }",
+  "patch_sha256": "47e88bb1314533c55d630b91e8aaf8be3961bf63ba482a84e665997b3e7c0955",
+  "request_sha256": "647802892813dc6706185a8256628390535fe3d651d666d8c6a34473c6c2315b",
+  "response_sha256": "47e88bb1314533c55d630b91e8aaf8be3961bf63ba482a84e665997b3e7c0955",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "dfb9204678adc99f764a63c35a4d8d94967229dac7eb66afc59d342b5ad1e87b",
+  "started_at": 1790475911.798246,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 192,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 26516,
+    "prompt_tokens_details": null,
+    "total_tokens": 26708
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

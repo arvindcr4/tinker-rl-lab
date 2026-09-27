@@ -1,0 +1,13 @@
+diff --git a/src/Illuminate/Cache/ArrayStore.php b/src/Illuminate/Cache/ArrayStore.php
+index 5777777777..1111111111 100644
+--- a/src/Illuminate/Cache/ArrayStore.php
++++ b/src/Illuminate/Cache/ArrayStore.php
+@@ -103,7 +103,7 @@ public function get($key)
+ 
+         $expiresAt = $this->getExpiresAt($key);
+ 
+-        if ($expiresAt !== 0 && $this->currentTime() >= $expiresAt) {
++        if ($expiresAt !== 0 && $this->currentTime() > $expiresAt) {
+             $this->forget($key);
+ 
+             return null;

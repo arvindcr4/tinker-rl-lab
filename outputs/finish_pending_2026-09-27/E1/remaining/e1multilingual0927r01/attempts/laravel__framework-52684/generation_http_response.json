@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/Illuminate/Collections/Traits/EnumeratesValues.php b/src/Illuminate/Collections/Traits/EnumeratesValues.php\nindex 9a0f7d0c00..0c0f7d0c00 100644\n--- a/src/Illuminate/Collections/Traits/EnumeratesValues.php\n+++ b/src/Illuminate/Collections/Traits/EnumeratesValues.php\n@@ -1000,7 +1000,7 @@ public function trim($characters = null)\n      */\n     public function trim($characters = null)\n     {\n-        return $this->map(fn ($value) => preg_replace('~^[\\s\\x{FEFF}\\x{200B}\\x{200E}]+|[\\s\\x{FEFF}\\x{200B}\\x{200E}]+$~u', '', $value));\n+        return $this->map(fn ($value) => preg_replace('~^[\\s\\x{FEFF}\\x{200B}\\x{200E}\\x00]+|[\\s\\x{FEFF}\\x{200B}\\x{200E}\\x00]+$~u', '', $value));\n     }",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471613,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-8b77828754810efa",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 279,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 26926,
+    "prompt_tokens_details": null,
+    "total_tokens": 27205
+  }
+}

@@ -1,0 +1,15 @@
+diff --git a/src/core/lombok/transformers/UtilityClassTransformer.java b/src/core/lombok/transformers/UtilityClassTransformer.java
+index 17e7303..03e7303 100644
+--- a/src/core/lombok/transformers/UtilityClassTransformer.java
++++ b/src/core/lombok/transformers/UtilityClassTransformer.java
+@@ -136,6 +136,10 @@ public class UtilityClassTransformer extends Transformer {
+ 		}
+ 		for (JCTree def : classDef.defs) {
+ 			if (def instanceof JCMethodDecl) {
++				JCMethodDecl method = (JCMethodDecl) def;
++				if (method.typarams != null) {
++					method.typarams = null;
++				}
+ 				if (method.mods.flags == Flags.STATIC) {
+ 					method.mods.flags &= ~Flags.STATIC;
+ 					method.mods.flags |= Flags.FINAL;

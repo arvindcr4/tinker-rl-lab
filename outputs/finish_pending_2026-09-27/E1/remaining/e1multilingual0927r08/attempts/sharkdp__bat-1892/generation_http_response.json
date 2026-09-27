@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/assets/completions/_bat.ps1.in b/assets/completions/_bat.ps1.in\nindex 8a8c0d0..1b2e3f5 100644\n--- a/assets/completions/_bat.ps1.in\n+++ b/assets/completions/_bat.ps1.in\n@@ -1,6 +1,6 @@\n #region PowerShell completion for {{PROJECT_EXECUTABLE}}\n \n-#region bat\n+#region bat\n #region bat\n #region bat\n #region bat\n@@ -10,6 +10,7 @@\n     '--color=auto',\n     '--color=always',\n     '--color=never',\n+    '--ignored-suffix',\n     '--line-range',\n     '--literal',\n     '--map-syntax',\ndiff --git a/assets/completions/bat.bash.in b/assets/completions/bat.bash.in\nindex 8a8c0d0..1b2e3f5 100644\n--- a/assets/completions/bat.bash.in\n+++ b/assets/completions/bat.bash.in\n@@ -1,6 +1,6 @@\n #region bat\n #region bat\n #region bat\n #region bat\n #region bat\n #region bat\n@@ -10,6 +10,7 @@\n     --color=auto\n     --color=always\n     --color=never\n+    --ignored-suffix\n     --line-range\n     --literal\n     --map-syntax\ndiff --git a/assets/completions/bat.fish.in b/assets/completions/bat.fish.in\nindex 8a8c0d0..1b2e3f5 100644\n--- a/assets/completions/bat.fish.in\n+++ b/assets/completions/bat.fish.in\n@@ -1,6 +1,6 @@\n #region bat\n #region bat\n #region bat\n #region bat\n #region bat\n #region bat\n@@ -10,6 +10,7 @@\n     --color=auto\n     --color=always\n     --color=never\n+    --ignored-suffix\n     --line-range\n     --literal\n     --map-syntax\ndiff --git a/assets/completions/bat.zsh.in b/assets/completions/bat.zsh.in\nindex 8a8c0d0..1b2e3f5 100644\n--- a/assets/completions/bat.zsh.in\n+++ b/assets/completions/bat.zsh.in\n@@ -1,6 +1,6 @@\n #region bat\n #region bat\n #region bat\n #region bat\n #region bat\n #region bat\n@@ -10,6 +10,7 @@\n     --color=auto\n     --color=always\n     --color=never\n+    --ignored-suffix\n     --line-range\n     --literal\n     --map-syntax\ndiff --git a/assets/manual/bat.1.in b/assets/manual/bat.1.in\nindex 8a8c0d0..1b2e3f5 100644\n--- a/assets/manual/bat.1.in\n+++ b/assets/manual/bat.1.in\n@@ -1,6 +1,6 @@\n .TH BAT 1\n .TH BAT 1\n .TH BAT 1\n .TH BAT 1\n .TH BAT 1\n .TH BAT 1\n@@ -10,6 +10,7 @@\n .IP \"\\fB\\-\\-color\\fR=\\fIWHEN\\fR\"\n     Control whether the colorization is shown.\n .IP \"\\fB\\-\\-file\\-name\\fR=\\fIFILE\\fR\"\n+    Specify the file name to display.\n .IP \"\\fB\\-\\-force\\-colorization\\fR\"\n     Force colorization (disabled for Windows PowerShell).\n .IP \"\\fB\\-\\-paging\\fR=\\fIWHEN\\fR\"\n@@ -20,6 +21,7 @@\n     Control whether paging is used.\n .IP \"\\fB\\-\\-plain\\fR\"\n     Show plain output (no color, no syntax highlighting).\n+.IP \"\\fB\\-\\-ignored\\-suffix\\fR=\\fISUFFIX\\fR\"\n+    Ignore files with the given suffix.\n .IP \"\\fB\\-\\-line\\-range\\fR=\\fIRANGE\\fR\"\n     Only print the lines in the given range.\n .IP \"\\fB\\-\\-literal\\fR\"\ndiff --git a/src/app.rs b/src/app.rs\nindex 8a8c0d0..1b2e3f5 100644\n--- a/src/app.rs\n+++ b/src/app.rs\n@@ -1,6 +1,6 @@\n use clap::{App, Arg, ArgMatches};\n use std::path::Path;\n \n use crate::config::Config;\n use crate::error::*;\n \n@@ -10,6 +10,7 @@ pub fn build_app() -> App<'static> {\n         .arg(\n             Arg::with_name(\"color\")\n                 .long(\"color\")\n+                .takes_value(true)\n                 .possible_values(&[\"auto\", \"always\", \"never\"])\n                 .default_value(\"auto\")\n                 .help(\"Control whether color is used\"),\n@@ -20,6 +21,15 @@ pub fn build_app() -> App<'static> {\n                 .help(\"Show plain output (no color, no syntax highlighting)\"),\n         )\n         .arg(\n+            Arg::with_name(\"ignored-suffix\")\n+                .long(\"ignored-suffix\")\n+                .takes_value(true)\n+                .multiple(true)\n+                .help(\"Ignore files with the given suffix\")\n+                .number_of_values(1)\n+                .min_values(0)\n+                .max_values(1)\n+        )\n+        .arg(\n             Arg::with_name(\"file-name\")\n                 .long(\"file-name\")\n                 .takes_value(true)\ndiff --git a/src/config.rs b/src/config.rs\nindex 8a8c0d0..1b2e3f5 100644\n--- a/src/config.rs\n+++ b/src/config.rs\n@@ -1,6 +1,6 @@\n use std::path::Path;\n \n use crate::app;\n use crate::error::*;\n \n@@ -10,6 +10,7 @@ pub struct Config {\n     pub color: Option<String>,\n     pub force_colorization: bool,\n     pub paging: Option<String>,\n+    pub ignored_suffix: Vec<String>,\n }\n \n impl Config {\n@@ -20,6 +21,7 @@ impl Config {\n             color: None,\n             force_colorization: false,\n             paging: None,\n+            ignored_suffix: vec![],\n         }\n     }\n }\ndiff --git a/src/main.rs b/src/main.rs\nindex 8a8c0d0..1b2e3f5 100644\n--- a/src/main.rs\n+++ b/src/main.rs\n@@ -1,6 +1,6 @@\n use std::path::Path;\n \n use crate::app;\n use crate::config::Config;\n use crate::error::*;\n \n@@ -10,6 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {\n     let mut config = Config::default();\n \n     if let Some(color) = matches.value_of(\"color\") {\n         config.color = Some(color.to_string());\n     }\n+    if let Some(suffixes) = matches.values_of(\"ignored-suffix\") {\n+        config.ignored_suffix = suffixes.map(|s| s.to_string()).collect();\n+    }\n \n     let files = matches\n         .values_of(\"file\")",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790473876,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-8ac4a4ad09cbd8da",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 1770,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1261,
+    "prompt_tokens_details": null,
+    "total_tokens": 3031
+  }
+}

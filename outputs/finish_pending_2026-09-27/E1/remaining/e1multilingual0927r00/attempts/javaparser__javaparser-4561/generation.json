@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "68233fb0434a32e29e80b41d2500ab85d0b6fb7001f9cac61ae5b5ff4e045eb7",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790471384.8776,
+  "instance_id": "javaparser__javaparser-4561",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/javaparser-symbol-solver-core/src/main/java/com/github/javaparser/symbolsolver/javaparsermodel/expressions/JavaParserTypeSolver.java b/javaparser-symbol-solver-core/src/main/java/com/github/javaparser/symbolsolver/javaparsermodel/expressions/JavaParserTypeSolver.java\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/javaparser-symbol-solver-core/src/main/java/com/github/javaparser/symbolsolver/javaparsermodel/expressions/JavaParserTypeSolver.java\n+++ b/javaparser-symbol-solver-core/src/main/java/com/github/javaparser/symbolsolver/javaparsermodel/expressions/JavaParserTypeSolver.java\n@@ -17,6 +17,7 @@\n \n package com.github.javaparser.symbolsolver.javaparsermodel.expressions;\n \n+import com.github.javaparser.ast.expr.StringLiteralExpr;\n import com.github.javaparser.ast.expr.TextBlockLiteralExpr;\n import com.github.javaparser.ast.expr.Expression;\n import com.github.javaparser.ast.expr.LiteralExpr;\n@@ -34,6 +35,7 @@\n import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;\n import com.github.javaparser.symbolsolver.utils.LambdaUtils;\n \n+import java.util.Arrays;\n import java.util.List;\n import java.util.Optional;\n \n@@ -100,7 +102,11 @@ public Optional<ResolvedType> solve(Expression expression) {\n             return Optional.of(new ResolvedReferenceTypeDeclaration(new ReflectionTypeSolver().solveType(String.class.getName())));\n         }\n         if (expression instanceof TextBlockLiteralExpr) {\n-            throw new UnsupportedOperationException(expression.getClass().getName());\n+            return Optional.of(new ResolvedReferenceTypeDeclaration(\n+                    new ReflectionTypeSolver().solveType(String.class.getName())\n+            ));\n         }\n         if (expression instanceof LiteralExpr) {\n             LiteralExpr literalExpr = (LiteralExpr) expression;",
+  "patch_sha256": "5f83b00cee9c585983b9065045bb1744fcb0e2017bfc295515756bc7792633db",
+  "request_sha256": "2b1bbaf05bee9a5c74eaf235c9c3814d40174515a8470fe13d193ccc7c17c730",
+  "response_sha256": "5f83b00cee9c585983b9065045bb1744fcb0e2017bfc295515756bc7792633db",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "41a0054b4d75c5cc60626157e4ba8ed0b7eea210ff0ef3b8bc6caed41301be25",
+  "started_at": 1790471377.951751,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 450,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 24241,
+    "prompt_tokens_details": null,
+    "total_tokens": 24691
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

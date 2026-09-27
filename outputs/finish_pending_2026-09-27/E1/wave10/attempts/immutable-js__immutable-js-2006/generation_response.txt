@@ -1,0 +1,15 @@
+diff --git a/src/Seq.js b/src/Seq.js
+index 1563373..0563373 100644
+--- a/src/Seq.js
++++ b/src/Seq.js
+@@ -100,6 +100,10 @@ export class SliceSequence extends CollectionProto {
+   }
+ 
+   _iterate() {
++    if (this._begin < 0) {
++      this._collection = this._collection.slice(this._begin);
++      this._begin = 0;
++    }
+     const collection = this._collection;
+     let i = this._begin;
+     const isBegin = i < 0 ? 0 : i;

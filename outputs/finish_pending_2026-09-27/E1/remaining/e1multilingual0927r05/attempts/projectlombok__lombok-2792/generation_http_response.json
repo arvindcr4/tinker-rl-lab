@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/core/lombok/transform/val/ValTransformer.java b/src/core/lombok/transform/val/ValTransformer.java\nindex 1735555555..1234567890 100644\n--- a/src/core/lombok/transform/val/ValTransformer.java\n+++ b/src/core/lombok/transform/val/ValTransformer.java\n@@ -100,7 +100,11 @@ public class ValTransformer extends Transformer<Val> {\n \t\t}\n \t\t// If the initializer is a lambda, we can't determine the type.\n \t\tif (initializer instanceof JCNewClass) {\n-\t\t\treturn;\n+\t\t\tJCNewClass newClass = (JCNewClass) initializer;\n+\t\t\tif (newClass.clazz != null && newClass.clazz.type != null) {\n+\t\t\t\tinitializer = newClass.clazz;\n+\t\t\t}\n+\t\t\t// If we still can't determine the type, fall through to the error.\n \t\t}\n \t\tif (initializer instanceof JCLambda) {\n \t\t\tinitializer = null;",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472648,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-8556826ee6663ec6",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 251,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 29509,
+    "prompt_tokens_details": null,
+    "total_tokens": 29760
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/PhpSpreadsheet/Style/Style.php b/src/PhpSpreadsheet/Style/Style.php\nindex 0720703..3333333 100644\n--- a/src/PhpSpreadsheet/Style/Style.php\n+++ b/src/PhpSpreadsheet/Style/Style.php\n@@ -215,6 +215,10 @@ class Style extends Supervisor implements IComparable\n         // Is this a \"normal\" style or a conditional style?\n         if ($this->parent !== null) {\n             // Normal style\n+            // Strip worksheet name from range if present, as coordinateFromString expects just the cell reference\n+            if (false !== ($worksheetNameMarker = strrpos($pRange, '!'))) {\n+                $pRange = substr($pRange, $worksheetNameMarker + 1);\n+            }\n             $pRange = Coordinate::coordinateFromString($pRange);\n \n             foreach ($pRange as $key => $value) {",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472135,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-9eed66be8384ddd7",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 225,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 28041,
+    "prompt_tokens_details": null,
+    "total_tokens": 28266
+  }
+}

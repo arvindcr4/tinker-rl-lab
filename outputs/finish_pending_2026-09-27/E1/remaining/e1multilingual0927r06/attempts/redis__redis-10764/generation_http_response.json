@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/t_zset.c b/src/t_zset.c\nindex 1234567..abcdefg 100644\n--- a/src/t_zset.c\n+++ b/src/t_zset.c\n@@ -4041,7 +4041,7 @@ void blockingGenericZpopCommand(client *c, robj **keys, int numkeys, int where,\n     }\n \n     /* If we are here, there is no data to return, so we need to block. */\n-    if (blockingGenericZpopCommand(c, keys, numkeys, where, timeout_idx, count, use_nested_array, reply_nil_when_empty)) {\n+    if (blockingGenericZpopCommand(c, keys, numkeys, where, timeout_idx, count, use_nested_array, reply_nil_when_empty, 1)) {\n         return;\n     }",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790473602,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-9e4bf725d452391e",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 195,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 21147,
+    "prompt_tokens_details": null,
+    "total_tokens": 21342
+  }
+}

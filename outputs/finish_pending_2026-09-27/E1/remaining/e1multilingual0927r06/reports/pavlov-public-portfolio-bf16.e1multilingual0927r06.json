@@ -1,0 +1,68 @@
+{
+    "total_instances": 16,
+    "submitted_instances": 16,
+    "completed_instances": 6,
+    "resolved_instances": 0,
+    "unresolved_instances": 6,
+    "infra_failure_instances": 0,
+    "ambiguous_failure_instances": 0,
+    "empty_patch_instances": 1,
+    "error_instances": 9,
+    "completed_ids": [
+        "prometheus__prometheus-10633",
+        "prometheus__prometheus-13845",
+        "prometheus__prometheus-14861",
+        "prometheus__prometheus-15142",
+        "redis__redis-10095",
+        "redis__redis-11279"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [
+        "prometheus__prometheus-11859"
+    ],
+    "submitted_ids": [
+        "projectlombok__lombok-3602",
+        "projectlombok__lombok-3674",
+        "projectlombok__lombok-3697",
+        "prometheus__prometheus-10633",
+        "prometheus__prometheus-10720",
+        "prometheus__prometheus-11859",
+        "prometheus__prometheus-12874",
+        "prometheus__prometheus-13845",
+        "prometheus__prometheus-14861",
+        "prometheus__prometheus-15142",
+        "prometheus__prometheus-9248",
+        "reactivex__rxjava-7597",
+        "redis__redis-10068",
+        "redis__redis-10095",
+        "redis__redis-10764",
+        "redis__redis-11279"
+    ],
+    "resolved_ids": [],
+    "unresolved_ids": [
+        "prometheus__prometheus-10633",
+        "prometheus__prometheus-13845",
+        "prometheus__prometheus-14861",
+        "prometheus__prometheus-15142",
+        "redis__redis-10095",
+        "redis__redis-11279"
+    ],
+    "infra_failure_ids": [],
+    "ambiguous_failure_ids": [],
+    "failure_reasons": {},
+    "error_ids": [
+        "projectlombok__lombok-3602",
+        "projectlombok__lombok-3674",
+        "projectlombok__lombok-3697",
+        "prometheus__prometheus-10720",
+        "prometheus__prometheus-12874",
+        "prometheus__prometheus-9248",
+        "reactivex__rxjava-7597",
+        "redis__redis-10068",
+        "redis__redis-10764"
+    ],
+    "schema_version": 2,
+    "unstopped_instances": 0,
+    "unstopped_containers": [],
+    "unremoved_images": []
+}

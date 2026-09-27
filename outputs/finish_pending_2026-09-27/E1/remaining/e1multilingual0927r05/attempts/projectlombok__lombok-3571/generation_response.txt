@@ -1,0 +1,11 @@
+diff --git a/src/core/lombok/experimental/Builder.java b/src/core/lombok/experimental/Builder.java
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/core/lombok/experimental/Builder.java
++++ b/src/core/lombok/experimental/Builder.java
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (C) 2013-2018 The Project Lombok Authors.
++ * Copyright (C) 2013-2023 The Project Lombok Authors.
+  * 
+  * Permission is hereby granted, free of charge, to any person obtaining a copy
+  * of this software and associated documentation files (the "Software"), to deal

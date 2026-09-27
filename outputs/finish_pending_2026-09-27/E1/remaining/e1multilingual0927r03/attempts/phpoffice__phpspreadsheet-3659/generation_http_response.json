@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/PhpOffice/PhpSpreadsheet/Calculation/Engine/Operands/StructuredReference.php b/src/PhpOffice/PhpSpreadsheet/Calculation/Engine/Operands/StructuredReference.php\nindex 2230303..6330303 100644\n--- a/src/PhpOffice/PhpSpreadsheet/Calculation/Engine/Operands/StructuredReference.php\n+++ b/src/PhpOffice/PhpSpreadsheet/Calculation/Engine/Operands/StructuredReference.php\n@@ -10,6 +10,7 @@\n \n namespace PhpOffice\\PhpSpreadsheet\\Calculation\\Engine\\Operands;\n \n+use PhpOffice\\PhpSpreadsheet\\Calculation\\Calculation;\n use PhpOffice\\PhpSpreadsheet\\Cell\\Cell;\n use PhpOffice\\PhpSpreadsheet\\Worksheet\\Table;\n \n@@ -100,4 +101,14 @@ public function getTable(): Table\n     {\n         return $this->table;\n     }\n+\n+    /**\n+     * String conversion.\n+     */\n+    public function __toString(): string\n+    {\n+        $cell = $this->cell;\n+\n+        return $cell !== null ? $cell->getCalculatedValue() : '';\n+    }\n }",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472223,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-a6f09d99aca97a0e",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 292,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 26902,
+    "prompt_tokens_details": null,
+    "total_tokens": 27194
+  }
+}

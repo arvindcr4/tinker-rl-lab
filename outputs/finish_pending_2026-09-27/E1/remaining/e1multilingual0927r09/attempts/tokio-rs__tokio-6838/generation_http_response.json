@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/tokio/src/net/unix/listener.rs b/tokio/src/net/unix/listener.rs\nindex 7a0f7a0f..b0b0b0b0 100644\n--- a/tokio/src/net/unix/listener.rs\n+++ b/tokio/src/net/unix/listener.rs\n@@ -80,8 +80,8 @@ impl UnixListener {\n     pub fn bind(path: impl AsRef<UdsPath>) -> io::Result<UnixListener> {\n         let path = path.as_ref();\n \n-        let socket = if path.is_abstract() {\n-            StdSocketAddr::from_abstract_name(path.as_abstract_name().unwrap())\n+        let socket = if path.is_abstract() {\n+            StdSocketAddr::from_abstract_name(path.as_abstract_name().unwrap().strip_prefix('\\0').unwrap())\n         } else {\n             StdSocketAddr::from_pathname(path.as_pathname().unwrap())\n         };\ndiff --git a/tokio/src/net/unix/stream.rs b/tokio/src/net/unix/stream.rs\nindex c0c0c0c0..d0d0d0d0 100644\n--- a/tokio/src/net/unix/stream.rs\n+++ b/tokio/src/net/unix/stream.rs\n@@ -76,8 +76,8 @@ impl UnixStream {\n     pub fn connect(path: impl AsRef<UdsPath>) -> Connect<'_> {\n         let path = path.as_ref();\n \n-        let socket = if path.is_abstract() {\n-            StdSocketAddr::from_abstract_name(path.as_abstract_name().unwrap())\n+        let socket = if path.is_abstract() {\n+            StdSocketAddr::from_abstract_name(path.as_abstract_name().unwrap().strip_prefix('\\0').unwrap())\n         } else {\n             StdSocketAddr::from_pathname(path.as_pathname().unwrap())\n         };",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790476185,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-86748d481d02567c",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 427,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 20782,
+    "prompt_tokens_details": null,
+    "total_tokens": 21209
+  }
+}

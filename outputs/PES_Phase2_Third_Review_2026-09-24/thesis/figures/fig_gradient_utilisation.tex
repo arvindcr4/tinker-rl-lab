@@ -69,10 +69,10 @@
 \pgfplotsset{
   myaxis/.style={
     width=7.3cm, height=5.7cm,
-    tick label style={font=\scriptsize},
+    tick label style={font=\footnotesize},
     label style={font=\footnotesize},
     title style={font=\footnotesize\bfseries, yshift=-1.5mm},
-    legend style={font=\tiny, draw=black!30, fill=white, fill opacity=0.92,
+    legend style={font=\scriptsize, draw=black!30, fill=white, fill opacity=0.92,
                   text opacity=1, inner sep=2pt, row sep=1pt, cells={anchor=west}},
     grid=major, grid style={draw=black!12},
     axis line style={draw=black!60},
@@ -87,14 +87,16 @@
 ]
 
 % ================== (a) gradient utilisation vs G =======================
+% Error bars: 95% t-interval over n=3 seed means (t_{0.975,2}=4.303 x SE).
+% SD over seeds: G=2 0.0126, G=4 0.0157, G=8 0.0118, G=16 0.0083.
 \nextgroupplot[
   title={(a) Utilisation rises with $G$},
   xlabel={Group size $G$ (log$_2$ scale)},
   ylabel={Gradient utilisation $1-\mathrm{ZVF}$},
   xmode=log, log basis x=2,
-  xtick={2,4,8,16,32}, xticklabels={2,4,8,16,32},
+  xtick={2,4,8,16,32}, xticklabels={2,4,8,16,32\rlap{$^\ast$}},
   xmin=1.75, xmax=44,
-  ymin=0, ymax=0.46, ytick={0,0.1,0.2,0.3,0.4},
+  ymin=0, ymax=0.62, ytick={0,0.1,0.2,0.3,0.4,0.5,0.6},
   legend pos=north west,
 ]
 % dotted continuation of the fit beyond the last trained cell
@@ -103,54 +105,50 @@
 % power-law fit over the measured cells only (solid)
 \addplot[complete, thick, domain=2:16, samples=120]
   {1 - 0.9217*pow(x,-0.1371)};
-\addlegendentry{power-law fit, $R^2{=}0.9996$}
-% measured points, error bars = SE over n = 3 seeds
-\addplot[only marks, mark=*, mark size=2.5pt, draw=pesblue, fill=pesblue,
-         error bars/.cd, y dir=both, y explicit]
+\addlegendentry{power-law fit (2 param.)}
+% individual seeds (raw observations), GU = 1 - per-seed mean ZVF
+\addplot[only marks, mark=o, mark size=1.6pt, draw=black!55, thin]
   coordinates {
-    (2,0.1620)  +- (0,0.0073)
-    (4,0.2365)  +- (0,0.0090)
-    (8,0.3094)  +- (0,0.0068)
-    (16,0.3688) +- (0,0.0048)
+    (2,0.1734) (2,0.1484) (2,0.1641)
+    (4,0.2422) (4,0.2188) (4,0.2484)
+    (8,0.2984) (8,0.3078) (8,0.3219)
+    (16,0.3781) (16,0.3656) (16,0.3625)
   };
-\addlegendentry{measured, $n{=}3$ seeds}
-% honesty note: the full-utilisation ceiling is nowhere near
-\node[font=\tiny, text=black!62, align=right, anchor=south east]
-  at (axis cs:43,0.012)
-  {$\mathrm{GU}{=}1$ (fully contrastive) is far off scale:\\
-   at $G{=}16$, $\mathrm{GU}{=}0.369$---$63\%$ of groups\\
-   stay variance-dead. Dotted $=G{=}32$ extrapolation.};
+\addlegendentry{single seed}
+% seed means, error bars = 95% t-interval (df = 2)
+\addplot[only marks, mark=square*, mark size=1.9pt, draw=pesblue, fill=pesblue,
+         error bars/.cd, y dir=both, y explicit,
+         error bar style={thick, draw=pesblue}, error mark options={rotate=90, mark size=3pt, thick}]
+  coordinates {
+    (2,0.1620)  +- (0,0.0314)
+    (4,0.2365)  +- (0,0.0389)
+    (8,0.3094)  +- (0,0.0293)
+    (16,0.3688) +- (0,0.0205)
+  };
+\addlegendentry{mean $\pm$ 95\% CI, $n{=}3$}
 
 % ============ (b) marginal return per doubling of G =====================
 \nextgroupplot[
-  title={(b) Gain per doubling declines},
+  title={(b) Relative gain per doubling},
   xlabel={Doubling interval in $G$},
-  ylabel={Relative gain in GU (\% of previous level)},
-  ybar, /pgf/bar width=13pt,
+  ylabel={Gain in GU (\% of previous level)},
+  ybar, /pgf/bar width=15pt,
   symbolic x coords={2 to 4, 4 to 8, 8 to 16},
   xtick=data,
-  x tick label style={font=\scriptsize},
+  x tick label style={font=\footnotesize},
   ymin=0, ymax=58, ytick={0,10,20,30,40,50},
   point meta=explicit symbolic,
   nodes near coords,
-  every node near coord/.append style={font=\tiny, black!75, yshift=3pt},
+  every node near coord/.append style={font=\scriptsize, black!80, yshift=2pt, align=center},
   enlarge x limits=0.30,
 ]
-% label = relative gain (primary); absolute increment in parentheses
+% label = relative gain (primary); absolute increment below it
 \addplot[fill=partial!40, draw=black!60, line width=0.4pt]
   coordinates {
-    (2 to 4,46.0)  [$46\%\ (+0.074)$]
-    (4 to 8,30.8)  [$31\%\ (+0.073)$]
-    (8 to 16,19.2) [$19\%\ (+0.059)$]
+    (2 to 4,46.0)  [{$46\%$\\$(+0.074)$}]
+    (4 to 8,30.8)  [{$31\%$\\$(+0.073)$}]
+    (8 to 16,19.2) [{$19\%$\\$(+0.059)$}]
   };
-% trend of the bar tops
-\draw[dashed, draw=blocked!75, thick]
-  (axis cs:2 to 4,46.0) -- (axis cs:4 to 8,30.8) -- (axis cs:8 to 16,19.2);
-\node[font=\tiny, text=black!62, align=left, anchor=west]
-  at (rel axis cs:0.03,0.97)
-  {dashed $=$ trend of bar tops:\\
-   relative gain per doubling\\
-   falls $46\%\to31\%\to19\%$};
 
 \end{groupplot}
 \end{tikzpicture}

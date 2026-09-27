@@ -1,0 +1,13 @@
+diff --git a/src/PhpSpreadsheet/Calculation/MathTrig/Round.php b/src/PhpSpreadsheet/Calculation/MathTrig/Round.php
+index 1566666666666666666666666666666666666666..1566666666666666666666666666666666666666 100644
+--- a/src/PhpSpreadsheet/Calculation/MathTrig/Round.php
++++ b/src/PhpSpreadsheet/Calculation/MathTrig/Round.php
+@@ -100,7 +100,7 @@ public static function roundDown(float|int|string $value, int $precision = 0): f
+     {
+         $value = Helpers::validateNumber($value);
+         $precision = (int) Helpers::validateNumeric($precision);
+-        $factor = 10 ** $precision;
++        $factor = bcpow('10', (string) $precision);
+ 
+         return Helpers::numberFormat(
+             floor($value * $factor) / $factor

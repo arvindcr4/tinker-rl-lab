@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/extmod/modthread.c b/extmod/modthread.c\nindex 6777777..1111111 100644\n--- a/extmod/modthread.c\n+++ b/extmod/modthread.c\n@@ -100,11 +100,13 @@ STATIC mp_obj_t thread_start_new_thread(mp_obj_t func, mp_obj_t args) {\n     }\n     mp_thread_t thread = mp_thread_create(thread_start_wrapper, &thread_args);\n     if (thread == NULL) {\n-        mp_raise_msg(&mp_type_MemoryError, MP_ERROR_TEXT(\"can't create new thread\"));\n+        mp_raise_msg(&mp_type_MemoryError, MP_ERROR_TEXT(\"can't create new thread\"));\n+        return MP_OBJ_NULL;\n     }\n     thread_args.thread = thread;\n     mp_thread_start(thread);\n     thread_args.thread = NULL;\n+    return MP_OBJ_NEW_SMALL_INT((mp_int_t)thread);\n }\n STATIC MP_DEFINE_CONST_FUN_OBJ_2(thread_start_new_thread_obj, thread_start_new_thread);",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471349,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-b7f962cf7af181a5",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 241,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 25833,
+    "prompt_tokens_details": null,
+    "total_tokens": 26074
+  }
+}

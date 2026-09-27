@@ -51,7 +51,7 @@
 \node[ctxt, anchor=north] (c_b) at ([yshift=-4pt]c_h.south)
   {\textbf{Model} Qwen/Qwen3-8B $\cdot$ \textbf{task} GSM8K, verified reward
    $\cdot$ GRPO $\cdot$ 30 steps \\[1pt]
-   \textbf{Group} $G=8$ $\cdot$ batch $2\times8$ $\cdot$ lr $10^{-6}$ $\cdot$
+   \textbf{Group} $G=8$ $\cdot$ batch $2\times8$ $\cdot$ lr \texttt{1e-6} $\cdot$
    LoRA $r=16$, $\alpha=32$, all-linear \\[1pt]
    \textbf{GRPO} $\beta=0.0$ $\cdot$ $\varepsilon=0.2$ $\cdot$ max 1024 tokens
    $\cdot$ seed 211};
@@ -67,7 +67,7 @@
    \texttt{--backend} the site. \\[1pt]
    \textbf{Adapter layer} --- \texttt{Backend.plan()} $\to$ \texttt{LaunchPlan},
    returned unexecuted. \\[1pt]
-   \textbf{Dispatch matrix} --- 5 framework $\times$ 6 compute backends,
+   \textbf{Dispatch matrix} --- 5 frameworks $\times$ 6 compute backends,
    validated with no GPU or key.};
 \begin{scope}[on background layer]
   \node[cardb, fit=(a_h)(a_b)] (C2) {};
@@ -77,7 +77,7 @@
 \coordinate (bus1) at ([yshift=-0.35cm]C2.south);
 \coordinate (rowtop) at ([yshift=-0.25cm]bus1);
 \draw[ar] (C2.south) -- (bus1);
-\node[lbl, anchor=east] at ($(C2.south)!0.5!(bus1)+(-0.12,0)$) {one backend per run};
+\node[lbl, anchor=east] at ($(C2.south)!0.5!(bus1)+(-0.12,0)$) {one framework per run};
 \draw[busline] (-5.65,0 |- bus1) -- (5.65,0 |- bus1);
 \foreach \x in {-5.65,-3.39,-1.13,1.13,3.39,5.65}
   \draw[ar] (\x,0 |- bus1) -- (\x,0 |- rowtop);
@@ -110,13 +110,13 @@
 \draw[busline] (brow.west |- bus2) -- (brow.east |- bus2);
 
 \node[telb, anchor=north west] (TEL) at (brow.west |- bandtop)
-  {\footnotesize\textbf{Per-step telemetry, uniform across all six backends}\\[2pt]
+  {\footnotesize\textbf{Per-step telemetry, same schema for every framework}\\[2pt]
    \scriptsize reward $\cdot$ ZVF $\cdot$ gradient utilisation ($1-\mathrm{ZVF}$)\\[1pt]
    \scriptsize all-correct / all-wrong counts $\cdot$ entropy $\cdot$ completion length\\[1pt]
    \scriptsize KL $\rightarrow$ JSONL, W\&B, and the raw per-group reward tensors};
 \node[stdb, anchor=north west] (STD) at ([xshift=1.03cm]TEL.north east)
   {\footnotesize\textbf{8 studies P1--P8}\\[2pt]
-   \scriptsize differences track the stack, not the spec};
+   \scriptsize stack reported\\ with every result};
 \draw[ar] (TEL.east) -- (STD.west |- TEL.east);
 \node[lbl, fill=white, inner sep=1pt] at ($(TEL.east)!0.5!(STD.west |- TEL.east)$) {feeds};
 \draw[ar] (TEL.north |- bus2) -- (TEL.north);
@@ -125,7 +125,8 @@
 \node[phantom, fit=(TEL)(STD)] (band) {};
 \coordinate (notetop) at ([yshift=-0.22cm]band.south);
 \node[note, anchor=north west, text width=13.40cm] at (brow.west |- notetop)
-  {Box outline: green solid = completed run; red = dry-run placeholder; grey dashed = not executed.\\[1pt]
+  {Six RL frameworks, five of them in the dispatch matrix; \textbf{two executed} (Tinker, TRL).\\[1pt]
+   Box outline: green solid = completed run; red = dry-run placeholder; grey dashed = not executed.\\[1pt]
    Status and reward figures: \texttt{framework\_comparison.json}, last-10 mean training reward, Qwen/Qwen3-8B.\\[1pt]
    The two dry-run rows are launch-plan artefacts, not measurements, and are excluded from pooling.};
 

@@ -1,0 +1,14 @@
+diff --git a/src/Illuminate/Database/DatabaseManager.php b/src/Illuminate/Database/DatabaseManager.php
+index 1563777..3333333 100644
+--- a/src/Illuminate/Database/DatabaseManager.php
++++ b/src/Illuminate/Database/DatabaseManager.php
+@@ -197,6 +197,10 @@ class DatabaseManager implements FactoryContract
+     {
+         $name = $name ?? $this->getDefaultConnection();
+ 
++        if (! isset($this->connections[$name])) {
++            $this->connections[$name] = $this->makeConnection($name);
++        }
++
+         return $this->connections[$name];
+     }

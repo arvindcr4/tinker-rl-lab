@@ -3,6 +3,10 @@
 % abstract, contents, list of figures, list of tables.
 %=====================================================================
 \begin{titlepage}
+\begin{tikzpicture}[remember picture,overlay]
+  \draw[line width=2.5pt] ([xshift=0.6in,yshift=-0.6in]current page.north west)
+    rectangle ([xshift=-0.6in,yshift=0.6in]current page.south east);
+\end{tikzpicture}
 \centering
 \thispagestyle{empty}
 \begin{spacing}{1.0}
@@ -12,13 +16,10 @@
 \vspace{0.2in}
 {\large\itshape Dissertation on\par}
 \vspace{0.5em}
-{\Large\bfseries Tinker RL Lab:\\[0.35em]
-A Multi-Framework Benchmark and Study of\\[0.25em]
-GRPO-Style Reinforcement-Learning\\[0.25em]
-Post-Training of Large Language Models\par}
-\vspace{0.6em}
-{\normalsize Cross-library attribution, signal-starvation diagnostics, and\\[0.15em]
-a fourteen-suite held-out evaluation campaign\par}
+{\Large\bfseries ``Tinker RL Lab:\\[0.35em]
+Post-Training of Large Language Models''\par}
+\vspace{0.4em}
+{\normalsize A multi-framework training harness and studies of GRPO signal starvation\par}
 
 \vfill
 
@@ -44,7 +45,7 @@ a fourteen-suite held-out evaluation campaign\par}
 {\large\bfseries Ramesh Prakash Guledgudd\par}
 
 \vspace{0.6em}
-{\normalsize May 2026 -- October 2026\par}
+{\normalsize\bfseries\color{pesmaroon} May 2026 -- October 2026\par}
 
 \vfill
 
@@ -70,8 +71,8 @@ Electronic City, Hosur Road, Bengaluru -- 560 100, Karnataka, India\par}
 \vspace{0.5in}
 \begin{spacing}{1.4}
 \noindent This is to certify that the project report entitled
-\textbf{``Tinker RL Lab: A Multi-Framework Benchmark and Study of GRPO-Style
-Reinforcement-Learning Post-Training of Large Language Models''} is a
+\textbf{``Tinker RL Lab: Post-Training of Large Language Models --- A
+multi-framework training harness and studies of GRPO signal starvation''} is a
 bonafide record of the project work carried out by
 \textbf{Arvind C R} (SRN: \textbf{PES2PGE24DS140}), in partial fulfilment of
 the requirements for the award of the degree of Master of Technology in
@@ -115,7 +116,7 @@ Semester-3 project group, of which I was a member, and are inherited here as
 the shared foundation. The research direction, the experimental expansion, the
 statistical analyses, the P1--P8 paper series, the reporting and registry
 artefacts, the adaptive group-size controller, the applied fraud study, and the
-E1--E14 held-out evaluation campaign reported in this document are my
+E1--E14 evaluation campaign reported in this document are my
 individual contribution, carried out under the guidance of my project guide.
 
 Every quantitative result in this report is bound to an evidence file in the
@@ -131,6 +132,45 @@ work/PROVENANCE.md}.
 \textbf{Arvind C R} \\
 SRN: PES2PGE24DS140 \\
 \end{tabular}
+
+%---------------------------------------------------------------------
+% NEEDS AUTHOR CONFIRMATION: drafted from the tools recorded in the repository
+% (git Co-Authored-By trailers, frontier_synthesis_*.tex, curriculum_opening/
+% FINDINGS.md, zvf-program/jev_lab/, thesis_review_2026-09-27/). Confirm the
+% list is complete and matches PES policy wording before submission.
+\chapter*{Declaration on the Use of AI Tools}
+\addcontentsline{toc}{chapter}{Declaration on the Use of AI Tools}
+\thispagestyle{plain}
+
+The following AI tools were used in this work, as recorded in the project
+repository.
+
+\begin{itemize}
+\item \textbf{Coding and writing assistants.} Anthropic Claude models and
+OpenAI Codex were used to write and revise code, analysis scripts and
+documents, including drafts of this report. Commits they contributed carry a
+\texttt{Co-Authored-By} trailer in the git history.
+\item \textbf{Frontier-model synthesis.} ChatGPT Pro Extended and Gemini Deep
+Think produced proposed derivations and reasoning recorded in
+\texttt{platform\_hybrid/paper/sections/frontier\_synthesis\_*.tex}, which those
+documents mark as not being experiments. Where this report uses such a result,
+it states its own derivation (Chapter 6 \S6.3.3).
+\item \textbf{Independent verification.} An LLM verification pass (Kimi,
+6 July 2026) reviewed two single-seed results and flagged both as
+\textsc{suspect}; both were then re-tested and reported as nulls (Chapter 6
+\S6.4.3).
+\item \textbf{Evaluation triage.} The Jev (TypeSafe) judgment harness was used
+in the E1--E14 ledger only for classification, faithfulness and value
+ordering, never for arithmetic (Chapter 4 \S4.5).
+\item \textbf{Review.} The pre-defence self-review of 27 September 2026 and the
+revision of this report that followed it were AI-assisted.
+\end{itemize}
+
+No AI assistant generated experimental data: every reported measurement comes
+from an executed run or evaluation recorded in the repository, and simulated
+values are labelled as simulations. The research direction,
+the experimental design, the choice of claims and their final wording are the
+author's responsibility.
 
 %---------------------------------------------------------------------
 \chapter*{Acknowledgement}
@@ -159,18 +199,22 @@ number does \emph{not} establish has improved the work materially.
 \addcontentsline{toc}{chapter}{Abstract}
 \thispagestyle{plain}
 
-This report presents a multi-framework benchmark for group-relative
-reinforcement-learning post-training of large language models, a study of that
-post-training's behaviour across libraries, scales, group sizes and datasets,
-and a held-out evaluation of a single trained actor against fourteen agentic
-and reasoning benchmark suites.
+This report presents a multi-framework training harness for group-relative
+reinforcement-learning post-training of large language models, studies of GRPO
+signal starvation and of that post-training's behaviour across libraries,
+scales, group sizes and datasets, and an evaluation of a single trained actor
+against fourteen agentic and reasoning benchmark suites that were not part of
+its training data.
 
-The benchmark is multi-framework by construction: a shared task, reward and
+The harness is multi-framework by construction: a shared task, reward and
 decoding configuration is dispatched through thin adapters onto each backend's
 own interface, so the same experiment is runnable on any of them without
-re-implementing the grader. That design property is distinct from completed-run
-parity, and this report does not conflate the two. Of the cross-launcher roster,
-only Tinker and TRL produced completed runs in this release; the veRL and
+re-implementing the grader. That design property is distinct from a completed
+multi-framework benchmark, which this report does not claim. Of the
+cross-launcher roster, only Tinker and TRL produced completed runs in this
+release, and those two used different base checkpoints (Qwen3-8B-Base on
+Tinker, the instruction-tuned Qwen3-8B on TRL), so no framework comparison is
+drawn from them; the veRL and
 OpenRLHF entries in the comparison artefact are dry-run placeholders that
 resolve a launch plan without executing it, and are never pooled with real
 results or read as framework-comparison evidence (Chapter 3 \S3.8; Chapter 5
@@ -188,39 +232,59 @@ study, a minimum reporting standard for stack-conditioned results, a
 machine-readable stack registry, an adaptive group-size controller derived from
 the ZVF diagnostic, and an applied credit-card fraud case study.
 
-The principal results are deliberately conservative. Across more than seventy
-runs spanning roughly 2.4 orders of magnitude in model scale, \textbf{no
-reliable scaling law is recovered from reward curves}. A same-stack
-comparison of PPO and GRPO (Qwen2.5-0.5B, five paired seeds) finds the two
-estimators \textbf{statistically indistinguishable} (paired
-$\Delta = -0.002$, $p = 0.374$). A three-seed group-size sweep
-($G \in \{2, 4, 8, 16\}$) finds its arms statistically indistinguishable and
-does \textbf{not} establish an optimum. A roster-level flag marks four of
+The principal results are deliberately conservative. Across the twelve fitted anchors of a
+70+-run roster, spanning roughly 2.4 orders of magnitude in model scale,
+\textbf{no reliable scaling law is recovered from reward curves}. On a saturated
+Qwen2.5-0.5B two-digit addition task, a same-stack comparison of PPO and GRPO
+over five paired seeds finds \textbf{no detectable difference} (evaluation
+accuracy 0.992 against 0.990, paired $\Delta = -0.002$, $p = 0.374$, on fresh
+draws from the training generator rather than a disjoint split). At that
+ceiling the null cannot separate no effect from no headroom, and it does not
+establish equivalence (TOST at $\pm 0.005$, $p = 0.10$). The
+Zero-Variance Fraction's association with final held-out accuracy is not
+distinguishable from zero ($\rho = 0.27$, 95\% CI $[-0.37, 0.88]$, $n = 23$),
+so it is reported as a descriptive diagnostic, not a predictor. A three-seed group-size sweep
+($G \in \{2, 4, 8, 16\}$) on the same saturated task (evaluation accuracy
+0.978--0.990) finds its arms statistically indistinguishable and does
+\textbf{not} establish an optimum. A roster-level flag marks four of
 eleven GRPO runs as peaking before 65\% of training and then decaying, but its
 thresholds are post hoc and it is not specific to length, so it is
 \textbf{not} evidence of length bias; in the controlled sixteen-run comparison
-neither GRPO nor Dr.\ GRPO shows the pattern, and completion length drifts
-shorter rather than longer.
+the same rule fires on both GRPO and Dr.\ GRPO (five of six GSM8K-CoT runs),
+no run shows length growing, and completion length drifts shorter rather than
+longer.
 
 The E1--E14 campaign evaluates one Tinker-trained actor
 (\texttt{Qwen/Qwen3.6-35B-A3B} with the
 \texttt{pavlov-portfolio-qwen36-seed809-stepfinal} adapter) using each suite's
-own native evaluator at a pinned revision, with no per-lane tuning. Three
-replacement scopes are strictly complete: LAB-Bench public split
+own native evaluator at a pinned revision, with no per-lane tuning. The actor
+received 40 steps of critic-free policy-gradient training (group-normalised
+REINFORCE, no KL, no clipping) on API-Bank and SWE-Gym, so the campaign is
+reported as an evaluation-governance exercise, not as evidence about GRPO.
+Three
+scopes are strictly complete: the replacement scopes LAB-Bench public split
 (1{,}967/1{,}967 questions, micro accuracy 0.2288), AgentDojo benign utility
-(97/97, utility 0.9072), and VerilogEval (312/312, $129/312 = 41.35\%$
-pass@1). Omni-MATH is terminal-complete under its native protocol (all
-4{,}428 dispositions recorded, 4{,}426 accepted; official accuracy
-$2{,}271/4{,}428 = 51.31\%$ reproduced). Two carry full verified scores under their original contracts:
-SWE-bench Pro ($2/731 = 0.274\%$ pass@1, with all eighteen non-native outcomes
-retained in the denominator) and VerilogEval. The remaining lanes are reported
+(97/97 episodes, utility $88/97 = 0.9072$), and the original-contract suite
+VerilogEval (312/312, $129/312 = 41.35\%$ pass@1, Wilson 95\% CI
+$[36.0, 46.9]\%$). Omni-MATH is terminal-complete under its native protocol (all
+4{,}428 dispositions recorded, 4{,}426 accepted; accuracy
+$2{,}271/4{,}428 = 51.29\%$ with the two unjudged rows counted as failures, against the official
+scorer's $51.31\%$ over the 4{,}426 judged rows). Original-contract full-coverage scores exist for SWE-bench Pro
+($2/731 = 0.274\%$ pass@1, with all eighteen non-native outcomes retained in the
+denominator) and, as above, VerilogEval. The LAB-Bench and VerilogEval figures
+are end-to-end harness scores: 1{,}259 of 1{,}967 and 150 of 312 responses
+yielded no gradable answer. The remaining lanes are reported
 as partial, quota-blocked, or externally blocked, each with an explicit
 terminal state and a named reopen condition.
 
 Original-contract and replacement-scope benchmark results are never pooled, no
 cross-suite aggregate is computed, and no claim of improvement over a baseline
-is made anywhere in this work. All structural claims were re-verified by
-deterministic code checks on 19 September 2026 (11/11 PASS).
+is made anywhere in this work: the one paired trained-versus-base comparison,
+a small-scale rerun of all fourteen lanes on 5--151 identical items each, finds
+no significant difference in any lane, which at those sizes is inconclusive. Eleven named deterministic ledger checks
+(exact divisions, receipt presence, hash equality and lost-source probes)
+passed on 19 September 2026; they cover the arithmetic of the headline lanes,
+not every figure in the report.
 
 \vspace{0.25in}
 \noindent\textbf{Keywords:} GRPO, RLVR, zero-variance fraction, signal

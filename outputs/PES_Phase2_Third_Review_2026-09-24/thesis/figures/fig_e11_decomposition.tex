@@ -29,78 +29,47 @@
 \begin{document}
 \begin{tikzpicture}
 \begin{axis}[
-  width=148mm, height=56mm,
+  width=100mm, height=50mm,
   xbar stacked,
-  bar width=8mm,
-  xmin=0, xmax=362,
-  ymin=-0.62, ymax=2.62,
-  ytick={0,1,2},
-  yticklabels={Spec-to-RTL (n = 156), Code completion (n = 156), Combined (n = 312)},
-  yticklabel style={font=\scriptsize, align=right},
+  bar width=6.5mm,
+  xmin=0, xmax=312,
+  ymin=-0.6, ymax=2.75,
+  ytick={0,1,2.15},
+  yticklabels={Spec-to-RTL (n = 156), Code completion (n = 156), {Total of both (n = 312)}},
+  yticklabel style={font=\footnotesize, align=right},
   xtick={0,50,100,150,200,250,300},
-  xticklabel style={font=\scriptsize},
-  xlabel={\scriptsize VerilogEval task evaluations (native count)},
-  xlabel style={yshift=-1pt},
+  xticklabel style={font=\footnotesize},
+  xlabel={VerilogEval task evaluations (native count)},
+  xlabel style={font=\footnotesize, yshift=1pt},
   xmajorgrids=true,
   grid style={draw=black!10},
   axis lines=left,
   axis line style={draw=black!60},
   clip=false,
-  legend style={at={(0.5,-0.29)}, anchor=north, legend columns=2, font=\scriptsize,
-                draw=black!40, fill=white, inner sep=3pt, column sep=7pt},
+  legend style={at={(0.5,1.03)}, anchor=south, legend columns=3, font=\footnotesize,
+                draw=black!40, fill=white, inner sep=2pt, column sep=6pt},
+  legend cell align=left,
 ]
-% ---- passing evaluations: the two framings, then their sum (real receipt counts) ----
-\addplot[fill=complete!55, draw=complete!80!black, thick] coordinates {
-  (129,2)
-  (67,1)
-  (62,0)
-};
-% ---- evaluations that did not pass: the remainder of each denominator ----
-\addplot[fill=black!13, draw=black!45, thick] coordinates {
-  (183,2)
-  (89,1)
-  (94,0)
-};
-\legend{pass@1, not passing}
+% ---- passing evaluations per framing (receipt counts) ----
+\addplot[fill=complete!55, draw=complete!80!black, thick] coordinates {(67,1) (62,0)};
+\addplot[fill=black!10, draw=black!45, thick] coordinates {(89,1) (94,0)};
+\addlegendimage{area legend, fill=white, draw=complete!80!black, thick, dashed,
+  postaction={pattern=north east lines, pattern color=complete!60}}
+\legend{pass@1, not passing, total of the two rows (sum)}
 
-% ---- counts printed on the bar segments (brief requirement) ----
-% combined row (y = 2): green centre 129/2, grey centre 129 + 183/2
-\node[font=\scriptsize, text=complete!35!black] at (axis cs:64.5,2)  {\textbf{129 / 312}};
-\node[font=\scriptsize, text=black!70]         at (axis cs:220.5,2) {183};
-% code-completion row (y = 1)
-\node[font=\scriptsize, text=complete!35!black] at (axis cs:33.5,1)  {\textbf{67 / 156}};
-\node[font=\scriptsize, text=black!70]         at (axis cs:111.5,1) {89};
-% spec-to-RTL row (y = 0)
-\node[font=\scriptsize, text=complete!35!black] at (axis cs:31,0)    {\textbf{62 / 156}};
-\node[font=\scriptsize, text=black!70]         at (axis cs:109,0)   {94};
+\draw[black!35, densely dotted] (axis cs:0,1.6) -- (axis cs:312,1.6);
+% ---- the total, styled as a sum (outline + hatch), not a third measurement ----
+\draw[draw=complete!80!black, thick, dashed, pattern=north east lines, pattern color=complete!60]
+  (axis cs:0,1.93) rectangle (axis cs:129,2.37);
+\draw[draw=black!45, thick, dashed] (axis cs:129,1.93) rectangle (axis cs:312,2.37);
 
-% ---- pass@1 rate at each bar end ----
-\node[font=\scriptsize, text=blocked, anchor=west] at (axis cs:318,2) {\textbf{41.35\%}};
-\node[font=\scriptsize, text=blocked, anchor=west] at (axis cs:161,1) {\textbf{42.95\%}};
-\node[font=\scriptsize, text=blocked, anchor=west] at (axis cs:161,0) {\textbf{39.74\%}};
-
-% ---- the decomposition arithmetic, in the free lower-right region ----
-\node[draw=black!30, rounded corners=2pt, fill=white, font=\scriptsize,
-      align=left, inner sep=4pt, anchor=west, text width=42mm]
-  at (axis cs:207,0.5) {%
-    $67 + 62 = 129$ passes;\\
-    $89 + 94 = 183$ not passing.\\
-    Both framings present the same 156 tasks and are graded separately, so
-    $156 \times 2 = 312$ is the canonical denominator. Bold percentages at
-    bar ends are pass@1.};
+% ---- labels at bar ends ----
+\node[font=\footnotesize, anchor=west] at (axis cs:158,1)
+  {$67/156 = \mathbf{42.95\%}$};
+\node[font=\footnotesize, anchor=west] at (axis cs:158,0)
+  {$62/156 = \mathbf{39.74\%}$};
+\node[font=\footnotesize, anchor=west] at (axis cs:314,2.15)
+  {$129/312 = \mathbf{41.35\%}$};
 \end{axis}
-
-% ---- provenance: canonical figure vs. the non-canonical sensitivity ----
-\node[draw=black!35, fill=black!3, rounded corners=2pt, font=\scriptsize,
-      align=left, inner sep=3pt, text width=148mm, anchor=north west]
-  at ($(current bounding box.south west)+(0,-2mm)$)
-  {\textbf{Reported figure: $129/312 = 41.35\%$ pass@1}, the raw canonical value
-   (receipt \texttt{e11\_full\_receipt.json}, \texttt{pass\_at\_1.raw}, denominator 312).
-   The $129/311 = 41.48\%$ corrected value is retained \emph{non-canonically} only, because its
-   single-prompt exclusion (\texttt{Prob099\_m2014\_q6c}) lacks immutable benchmark-level
-   justification and must not be quoted as the result. Both framings were graded by the suite's
-   native \texttt{sv-iv-test} harness at \texttt{iverilog} 12.0; no scores are pooled with any
-   other lane.};
-
 \end{tikzpicture}
 \end{document}

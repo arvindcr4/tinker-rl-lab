@@ -23,8 +23,8 @@ MD_OUT = os.path.join(HERE, BASE + ".md")
 DOCX_OUT = os.path.join(HERE, BASE + ".docx")
 HTML_OUT = os.path.join(HERE, BASE + ".html")
 
-TITLE = ("Tinker RL Lab — A Multi-Framework Benchmark and Study of "
-         "GRPO-Style Reinforcement-Learning Post-Training of Large Language Models")
+TITLE = ("Tinker RL Lab: Post-Training of Large Language Models — "
+         "A multi-framework training harness and studies of GRPO signal starvation")
 
 FRONT_MATTER = f"""---
 title: "{TITLE}"
@@ -66,11 +66,13 @@ The boundary between inherited and individual work is stated precisely in
 
 ## Abstract
 
-This report presents a multi-framework benchmark for group-relative
-reinforcement-learning post-training of large language models, together with a
-study of that post-training's behaviour across libraries, scales, group sizes
-and datasets, and a held-out evaluation of a single trained actor against
-fourteen agentic and reasoning benchmark suites.
+This report presents a multi-framework training harness for group-relative
+reinforcement-learning post-training of large language models, together with
+studies of GRPO signal starvation and of that post-training's behaviour across
+libraries, scales, group sizes and datasets, and an evaluation of a single
+trained actor against fourteen agentic and reasoning benchmark suites that were
+not part of its training data. Only Tinker and TRL produced completed training
+runs, on different base checkpoints, so no framework comparison is claimed.
 
 The central methodological commitment is attribution: every comparative claim
 is made with the entire training stack held fixed except the one factor under
@@ -84,8 +86,9 @@ case study.
 
 The principal results are deliberately conservative. Across 70+ runs spanning
 roughly 2.4 orders of magnitude in model scale, no reliable scaling law is
-recovered from reward curves. A matched same-stack comparison of PPO and GRPO
-finds the two estimators statistically indistinguishable (Welch p = 0.7605). A
+recovered from reward curves. On a saturated Qwen2.5-0.5B arithmetic task (evaluation accuracy about 0.99),
+a same-stack comparison of PPO and GRPO finds no detectable difference (paired
+p = 0.374), which cannot separate no effect from no headroom. A
 single-seed group-size sweep does not establish an optimum, and trainability is
 non-monotone in group size. Four of eleven GRPO runs peak before 65% of
 training and then decay, consistent with length bias rather than capability
@@ -93,13 +96,13 @@ gain.
 
 The E1–E14 campaign evaluates one Tinker-trained actor
 (`Qwen/Qwen3.6-35B-A3B` with the `pavlov-portfolio-qwen36-seed809-stepfinal`
-adapter) using each suite's own native evaluator at a pinned revision. Four
-suites carry strictly complete graded scopes: LAB-Bench public (1,967/1,967),
-AgentDojo benign utility (97/97), VerilogEval (312/312, 129/312 = 41.35%
-pass@1), and Omni-MATH (all 4,428 dispositions recorded, official accuracy
-2,271/4,428 = 51.31% reproduced). Two carry full verified scores under their
-original contracts: SWE-bench Pro (2/731 = 0.274% pass@1, with all eighteen
-non-native outcomes retained in the denominator) and VerilogEval. The remaining
+adapter) using each suite's own native evaluator at a pinned revision. Three
+scopes are strictly complete: the replacement scopes LAB-Bench public
+(1,967/1,967) and AgentDojo benign utility (97/97), and the original-contract
+suite VerilogEval (312/312, 129/312 = 41.35% pass@1); Omni-MATH is
+terminal-complete (all 4,428 dispositions recorded). SWE-bench Pro carries a
+full original-contract score (2/731 = 0.274% pass@1, with all eighteen
+non-native outcomes retained in the denominator). The remaining
 lanes are reported as partial, quota-blocked, or externally blocked, each with
 an explicit terminal state and a named reopen condition.
 

@@ -1,0 +1,17 @@
+diff --git a/lib/fpm/package/deb.rb b/lib/fpm/package/deb.rb
+index 7a3f3b1..8c3d3e2 100644
+--- a/lib/fpm/package/deb.rb
++++ b/lib/fpm/package/deb.rb
+@@ -100,6 +100,12 @@ class FPM::Package::Deb < FPM::Package
+     :attribute_name => :replaces
+ 
+   option "--config-files", "CONFIG_FILES",
++    "Mark a file in the package as being a config file. This uses 'conffiles'" \
++    " in debs and %config in rpm. If you have multiple files to mark as " \
++    "configuration files, specify this flag multiple times.  If argument is " \
++    "directory all files inside it will be recursively marked as config files.",
++    :multivalued => true, :attribute_name => :config_files
++  option "--directories", "DIRECTORIES", "Recursively mark a directory as being owned " \
+     "by the package. Use this flag multiple times if you have multiple directories " \
+     "and they are not under the same parent directory ", :multivalued => true,
+     :attribute_name => :directories

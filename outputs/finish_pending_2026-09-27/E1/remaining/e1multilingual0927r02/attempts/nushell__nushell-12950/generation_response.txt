@@ -1,0 +1,57 @@
+diff --git a/crates/nu-command/src/system/core_extensions.rs b/crates/nu-command/src/system/core_extensions.rs
+index 0c5a67f4e5..8a1b2c3d4e 100644
+--- a/crates/nu-command/src/system/core_extensions.rs
++++ b/crates/nu-command/src/system/core_extensions.rs
+@@ -1,6 +1,7 @@
+ use std::path::Path;
+ 
+ use nu_engine::command_prelude::*;
++use nu_path::expand_path_with;
+ 
+ #[derive(Clone)]
+ pub struct CoreExtensions;
+@@ -10,7 +11,7 @@ pub struct CoreExtensions {
+     fn name(&self) -> &str {
+         "core extensions"
+     }
+-
++    
+     fn signature(&self) -> Signature {
+         Signature::build("core extensions")
+             .input_output_types(vec![(Type::Nothing, Type::Table(vec![]))])
+@@ -20,7 +21,7 @@ pub struct CoreExtensions {
+     fn usage(&self) -> &str {
+         "List all core extensions."
+     }
+-
++    
+     fn extra_usage(&self) -> &str {
+         r#"
+         This command lists all the core extensions that are currently loaded.
+@@ -30,7 +31,7 @@ pub struct CoreExtensions {
+     fn run(
+         &self,
+         _engine_state: &EngineState,
+-        _stack: &mut Stack,
++        _stack: &mut Stack,
+         _call: &Call,
+         _input: PipelineData,
+     ) -> Result<PipelineData, ShellError> {
+@@ -40,7 +41,7 @@ pub struct CoreExtensions {
+             .iter()
+             .map(|x| {
+                 let mut record = Record::new();
+-                record.push("name", Value::string(x.identity().name(), Span::test_data()));
++                record.push("name", Value::string(x.identity().name(), Span::test_data()));
+                 record.push(
+                     "path",
+                     Value::string(
+@@ -50,7 +51,7 @@ pub struct CoreExtensions {
+                     ),
+                 );
+                 record.push(
+-                    "version",
++                    "version",
+                     Value::string(x.identity().version(), Span::test_data()),
+                 );
+                 record.push(

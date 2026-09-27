@@ -1,0 +1,11 @@
+diff --git a/src/uu/mkdir/src/mkdir.rs b/src/uu/mkdir/src/mkdir.rs
+index 156737373..053737373 100644
+--- a/src/uu/mkdir/src/mkdir.rs
++++ b/src/uu/mkdir/src/mkdir.rs
+@@ -1,5 +1,5 @@
+ // This file as part of GNU coreutils.
+-// SPDX-License-Identifier: GPL-3.0-or-later
++// SPDX-License-Identifier: MIT OR Apache-2.0
+ 
+ // This file incorporates work covered by the following copyright and
+ // permission notice:

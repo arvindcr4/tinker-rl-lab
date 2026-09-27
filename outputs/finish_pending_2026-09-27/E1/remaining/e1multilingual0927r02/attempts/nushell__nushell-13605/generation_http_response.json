@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/crates/nu-command/src/filesystem/ls.rs b/crates/nu-command/src/filesystem/ls.rs\nindex 2662303030..8888888888 100644\n--- a/crates/nu-command/src/filesystem/ls.rs\n+++ b/crates/nu-command/src/filesystem/ls.rs\n@@ -1,6 +1,7 @@\n use super::util::try_consume_fd;\n use crate::filesystem::util::determine_metadata;\n use crate::work_stream::WorkStream;\n+use nu_path::canonicalize_with;\n use nu_protocol::{\n     ast::Call,\n     engine::{Command, EngineState, Stack},\n@@ -10,6 +11,7 @@ use nu_protocol::{\n     Record, ShellError, Span, Type, Value,\n };\n use nu_system::CaseInsensitively;\n+use std::io;\n use std::path::Path;\n use std::sync::atomic::{AtomicBool, Ordering};\n use std::sync::Arc;\n@@ -100,6 +102,7 @@ pub struct Ls;\n             .switch(\"short-name\", \"Do not show symlinks\", Some('s'))\n             .switch(\n                 \"full-paths\",\n+                // full-paths is also used for the target column of symlinks\n                 \"display paths as absolute paths\",\n                 Some('f'),\n             )\n@@ -330,6 +333,14 @@ fn build_record(\n             }\n         }\n         FileType::Symlink => {\n+            if full_paths {\n+                if let Ok(target) = fs::read_link(&path) {\n+                    if let Ok((canonicalized, _)) = canonicalize_with(&target, &path.parent().unwrap_or(&path)) {\n+                        target_value = Value::string(canonicalized.to_string_lossy().to_string(), span);\n+                    }\n+                }\n+            }\n+\n             target_value = Value::string(\n                 fs::read_link(&path)\n                     .map(|p| p.to_string_lossy().to_string())",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472576,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-9a1fc39215eedefd",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 487,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 26527,
+    "prompt_tokens_details": null,
+    "total_tokens": 27014
+  }
+}

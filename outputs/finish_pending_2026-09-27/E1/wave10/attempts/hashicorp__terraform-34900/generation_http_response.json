@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/internal/states/statefile/write_read.go b/internal/states/statefile/write_read.go\nindex 0730073007..3333333333 100644\n--- a/internal/states/statefile/write_read.go\n+++ b/internal/states/statefile/write_read.go\n@@ -106,6 +106,10 @@ func writeStateFileWithDiagnostics(state *State, w io.Writer, addr addrs.Module\n \t}\n \n \t// Write the sensitive attributes\n+\tif state.SensitiveAttributes == nil {\n+\t\t// Ensure we always write an empty array instead of null to maintain\n+\t\t// compatibility with older versions and prevent spurious diffs.\n+\t\tstate.SensitiveAttributes = []cty.Path{}\n+\t}\n \tif err := json.NewEncoder(w).Encode(state.SensitiveAttributes); err != nil {\n \t\treturn diags.Append(err)\n \t}",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471350,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-a88b702a3286a8da",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 214,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 25812,
+    "prompt_tokens_details": null,
+    "total_tokens": 26026
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "sandbox": "sb-oKIwPsXtgaLjC8nPDbyXLu",
+  "images": {
+    "google__gson-1014": {
+      "pinned": "swebench/sweb.eval.x86_64.google_1776_gson-1014@sha256:9b55799af8b572ea3ff853a5b4528e9a4b8564beeeb9bd99da5ec307ab8e2083",
+      "used": "swebench/sweb.eval.x86_64.google_1776_gson-1014@sha256:9b55799af8b572ea3ff853a5b4528e9a4b8564beeeb9bd99da5ec307ab8e2083",
+      "exact": true
+    },
+    "google__gson-1093": {
+      "pinned": "swebench/sweb.eval.x86_64.google_1776_gson-1093@sha256:9b31cb0dac1f89ce4485e0b156cec60c05bef9c6c5c29f028f0cf0eca17ccdd7",
+      "used": "swebench/sweb.eval.x86_64.google_1776_gson-1093@sha256:9b31cb0dac1f89ce4485e0b156cec60c05bef9c6c5c29f028f0cf0eca17ccdd7",
+      "exact": true
+    },
+    "google__gson-1100": {
+      "pinned": "swebench/sweb.eval.x86_64.google_1776_gson-1100@sha256:0f0e627b58a780f3a069bb7475eeb5ef3031b15b60e0ef517e58aea869b890f6",
+      "used": "swebench/sweb.eval.x86_64.google_1776_gson-1100@sha256:0f0e627b58a780f3a069bb7475eeb5ef3031b15b60e0ef517e58aea869b890f6",
+      "exact": true
+    },
+    "google__gson-2024": {
+      "pinned": "swebench/sweb.eval.x86_64.google_1776_gson-2024@sha256:df1b872da86c0271b4b16463915117bba3a13e825c1f1dbe052750a834ece287",
+      "used": "swebench/sweb.eval.x86_64.google_1776_gson-2024@sha256:df1b872da86c0271b4b16463915117bba3a13e825c1f1dbe052750a834ece287",
+      "exact": true
+    },
+    "google__gson-2061": {
+      "pinned": "swebench/sweb.eval.x86_64.google_1776_gson-2061@sha256:4596b3add8f60fb69bb4b8759bc7d156f2839c4e8d5b1f2f3906433277375efc",
+      "used": "swebench/sweb.eval.x86_64.google_1776_gson-2061@sha256:4596b3add8f60fb69bb4b8759bc7d156f2839c4e8d5b1f2f3906433277375efc",
+      "exact": true
+    },
+    "google__gson-2134": {
+      "pinned": "swebench/sweb.eval.x86_64.google_1776_gson-2134@sha256:ab17c8e0271d153d17479e40723d627136cba631d9549a9a6889f0d96214cbf6",
+      "used": "swebench/sweb.eval.x86_64.google_1776_gson-2134@sha256:ab17c8e0271d153d17479e40723d627136cba631d9549a9a6889f0d96214cbf6",
+      "exact": true
+    },
+    "google__gson-2158": {
+      "pinned": "swebench/sweb.eval.x86_64.google_1776_gson-2158@sha256:acbf12ce514b53b421cafe55707366d592474c23903069e49329359493dff490",
+      "used": "swebench/sweb.eval.x86_64.google_1776_gson-2158@sha256:acbf12ce514b53b421cafe55707366d592474c23903069e49329359493dff490",
+      "exact": true
+    },
+    "google__gson-2311": {
+      "pinned": "swebench/sweb.eval.x86_64.google_1776_gson-2311@sha256:b7bf8f0f6f02ff1d6ba54b929b000ae8423396ed05d43a5adab3c05546abb6cd",
+      "used": "swebench/sweb.eval.x86_64.google_1776_gson-2311@sha256:b7bf8f0f6f02ff1d6ba54b929b000ae8423396ed05d43a5adab3c05546abb6cd",
+      "exact": true
+    },
+    "google__gson-2479": {
+      "pinned": "swebench/sweb.eval.x86_64.google_1776_gson-2479@sha256:fc905632c9e56c19301e040e75bb3dc7f3c59909db8cf7e84a20a6aa77f38026",
+      "used": "swebench/sweb.eval.x86_64.google_1776_gson-2479@sha256:fc905632c9e56c19301e040e75bb3dc7f3c59909db8cf7e84a20a6aa77f38026",
+      "exact": true
+    },
+    "hashicorp__terraform-34580": {
+      "pinned": "swebench/sweb.eval.x86_64.hashicorp_1776_terraform-34580@sha256:0180a97fd96c956ed14db41bcc9fb579236fa27b49abb17f14664fe5469b24cb",
+      "used": "swebench/sweb.eval.x86_64.hashicorp_1776_terraform-34580@sha256:0180a97fd96c956ed14db41bcc9fb579236fa27b49abb17f14664fe5469b24cb",
+      "exact": true
+    },
+    "hashicorp__terraform-34814": {
+      "pinned": "swebench/sweb.eval.x86_64.hashicorp_1776_terraform-34814@sha256:7a4580ee66b4d7c72a4b9f80a45a780c0a4169435116bebff597e10328e2c123",
+      "used": "swebench/sweb.eval.x86_64.hashicorp_1776_terraform-34814@sha256:7a4580ee66b4d7c72a4b9f80a45a780c0a4169435116bebff597e10328e2c123",
+      "exact": true
+    },
+    "hashicorp__terraform-34900": {
+      "pinned": "swebench/sweb.eval.x86_64.hashicorp_1776_terraform-34900@sha256:f7e3c65a9c2e3fcad17134754004f5679b1eff122fdf4dbcd6fa15e5f4fcaa5e",
+      "used": "swebench/sweb.eval.x86_64.hashicorp_1776_terraform-34900@sha256:f7e3c65a9c2e3fcad17134754004f5679b1eff122fdf4dbcd6fa15e5f4fcaa5e",
+      "exact": true
+    },
+    "hashicorp__terraform-35543": {
+      "pinned": "swebench/sweb.eval.x86_64.hashicorp_1776_terraform-35543@sha256:57ddad71c2bc85a20fb9e353e0012aec6ef747fd4e1744a30f20804b70acf1b6",
+      "used": "swebench/sweb.eval.x86_64.hashicorp_1776_terraform-35543@sha256:57ddad71c2bc85a20fb9e353e0012aec6ef747fd4e1744a30f20804b70acf1b6",
+      "exact": true
+    },
+    "hashicorp__terraform-35611": {
+      "pinned": "swebench/sweb.eval.x86_64.hashicorp_1776_terraform-35611@sha256:44d15830bf89db25e8d86afad7b19333f92ac35294aef9e5948d5c02a095fd7d",
+      "used": "swebench/sweb.eval.x86_64.hashicorp_1776_terraform-35611@sha256:44d15830bf89db25e8d86afad7b19333f92ac35294aef9e5948d5c02a095fd7d",
+      "exact": true
+    },
+    "immutable-js__immutable-js-2005": {
+      "pinned": "swebench/sweb.eval.x86_64.immutable-js_1776_immutable-js-2005@sha256:2f1811a80bd93e1dfd40883a565ccf5933e69fd6a93b88fd4fbbd9cac439647f",
+      "used": "swebench/sweb.eval.x86_64.immutable-js_1776_immutable-js-2005@sha256:2f1811a80bd93e1dfd40883a565ccf5933e69fd6a93b88fd4fbbd9cac439647f",
+      "exact": true
+    },
+    "immutable-js__immutable-js-2006": {
+      "pinned": "swebench/sweb.eval.x86_64.immutable-js_1776_immutable-js-2006@sha256:1ac139875abc24e7660edf19827b8071492f9f26b37f559ff6bd67566f09602a",
+      "used": "swebench/sweb.eval.x86_64.immutable-js_1776_immutable-js-2006@sha256:1ac139875abc24e7660edf19827b8071492f9f26b37f559ff6bd67566f09602a",
+      "exact": true
+    }
+  },
+  "terminated_at": 1790471642.769453
+}

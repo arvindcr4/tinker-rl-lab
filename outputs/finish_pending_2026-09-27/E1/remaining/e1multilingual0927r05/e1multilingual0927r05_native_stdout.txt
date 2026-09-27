@@ -1,0 +1,181 @@
+Running 16 instances...
+Error in evaluation for preactjs__preact-4436: >>>>> Patch Apply Failed:
+patching file src/diff/children.js
+Hunk #1 FAILED at 1.
+Hunk #2 succeeded at 10 with fuzz 3.
+patch: **** malformed patch at line 30: @@ -100,6 +102,11 @@ export function diffChildren(
+
+
+Check (logs/run_evaluation/e1multilingual0927r05/pavlov-public-portfolio-bf16/preactjs__preact-4436/run_instance.log) for more information.
+Error in evaluation for projectlombok__lombok-2792: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/core/lombok/transform/val/ValTransformer.java b/src/core/lombok/transform/val/ValTransformer.java
+|index 1735555555..1234567890 100644
+|--- a/src/core/lombok/transform/val/ValTransformer.java
+|+++ b/src/core/lombok/transform/val/ValTransformer.java
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+1 out of 1 hunk ignored
+
+Check (logs/run_evaluation/e1multilingual0927r05/pavlov-public-portfolio-bf16/projectlombok__lombok-2792/run_instance.log) for more information.
+Error in evaluation for projectlombok__lombok-3042: >>>>> Patch Apply Failed:
+patching file src/core/lombok/javac/handlers/JavacHandlerUtil.java
+patch unexpectedly ends in middle of line
+Hunk #1 FAILED at 1818.
+1 out of 1 hunk FAILED -- saving rejects to file src/core/lombok/javac/handlers/JavacHandlerUtil.java.rej
+
+Check (logs/run_evaluation/e1multilingual0927r05/pavlov-public-portfolio-bf16/projectlombok__lombok-3042/run_instance.log) for more information.
+Error in evaluation for projectlombok__lombok-3052: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/core/lombok/transformations/builder/Builder.java b/src/core/lombok/transformations/builder/Builder.java
+|index 1732333333333333333333333333333333333333..1732333333333333333333333333333333333333 100644
+|--- a/src/core/lombok/transformations/builder/Builder.java
+|+++ b/src/core/lombok/transformations/builder/Builder.java
+--------------------------
+No file to patch.  Skipping patch.
+patch: **** malformed patch at line 19: @@ -1,7 +1,8 @@
+
+
+Check (logs/run_evaluation/e1multilingual0927r05/pavlov-public-portfolio-bf16/projectlombok__lombok-3052/run_instance.log) for more information.
+Error in evaluation for projectlombok__lombok-3215: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/core/lombok/transformers/data/SuperBuilderTransformer.java b/src/core/lombok/transformers/data/SuperBuilderTransformer.java
+|index 1733333333..1111111111 100644
+|--- a/src/core/lombok/transformers/data/SuperBuilderTransformer.java
+|+++ b/src/core/lombok/transformers/data/SuperBuilderTransformer.java
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+1 out of 1 hunk ignored
+
+Check (logs/run_evaluation/e1multilingual0927r05/pavlov-public-portfolio-bf16/projectlombok__lombok-3215/run_instance.log) for more information.
+Error in evaluation for projectlombok__lombok-3312: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/core/lombok/transform/ExtensionMethodTransformer.java b/src/core/lombok/transform/ExtensionMethodTransformer.java
+|index 167306300..063063000 100644
+|--- a/src/core/lombok/transform/ExtensionMethodTransformer.java
+|+++ b/src/core/lombok/transform/ExtensionMethodTransformer.java
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+1 out of 1 hunk ignored
+
+Check (logs/run_evaluation/e1multilingual0927r05/pavlov-public-portfolio-bf16/projectlombok__lombok-3312/run_instance.log) for more information.
+Error in evaluation for projectlombok__lombok-3326: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/core/lombok/transformers/UtilityClassTransformer.java b/src/core/lombok/transformers/UtilityClassTransformer.java
+|index 17e7303..03e7303 100644
+|--- a/src/core/lombok/transformers/UtilityClassTransformer.java
+|+++ b/src/core/lombok/transformers/UtilityClassTransformer.java
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+1 out of 1 hunk ignored
+
+Check (logs/run_evaluation/e1multilingual0927r05/pavlov-public-portfolio-bf16/projectlombok__lombok-3326/run_instance.log) for more information.
+Error in evaluation for projectlombok__lombok-3350: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/core/lombok/transform/handlers/Builder.java b/src/core/lombok/transform/handlers/Builder.java
+|index 0560555555..1234567890 100644
+|--- a/src/core/lombok/transform/handlers/Builder.java
+|+++ b/src/core/lombok/transform/handlers/Builder.java
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+2 out of 2 hunks ignored
+
+Check (logs/run_evaluation/e1multilingual0927r05/pavlov-public-portfolio-bf16/projectlombok__lombok-3350/run_instance.log) for more information.
+Error in evaluation for projectlombok__lombok-3371: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/core/lombok/handlers/HandleConstructor.java b/src/core/lombok/handlers/HandleConstructor.java
+|index 1563273..8901234 100644
+|--- a/src/core/lombok/handlers/HandleConstructor.java
+|+++ b/src/core/lombok/handlers/HandleConstructor.java
+--------------------------
+No file to patch.  Skipping patch.
+patch: **** malformed patch at line 19: @@ -1,7 +1,8 @@
+
+
+Check (logs/run_evaluation/e1multilingual0927r05/pavlov-public-portfolio-bf16/projectlombok__lombok-3371/run_instance.log) for more information.
+Error in evaluation for projectlombok__lombok-3422: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/core/lombok/transform/HandleHelper.java b/src/core/lombok/transform/HandleHelper.java
+|index 15635735..87635735 100644
+|--- a/src/core/lombok/transform/HandleHelper.java
+|+++ b/src/core/lombok/transform/HandleHelper.java
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+1 out of 1 hunk ignored
+
+Check (logs/run_evaluation/e1multilingual0927r05/pavlov-public-portfolio-bf16/projectlombok__lombok-3422/run_instance.log) for more information.
+Error in evaluation for projectlombok__lombok-3486: >>>>> Patch Apply Failed:
+patching file src/core/lombok/eclipse/handlers/HandleSuperBuilder.java
+Hunk #1 FAILED at 1.
+Hunk #2 succeeded at 80 (offset 79 lines).
+Hunk #3 succeeded at 96 with fuzz 2 (offset 94 lines).
+patch: **** malformed patch at line 40: @@ -1,12 +1,13 @@
+
+
+Check (logs/run_evaluation/e1multilingual0927r05/pavlov-public-portfolio-bf16/projectlombok__lombok-3486/run_instance.log) for more information.
+Error in evaluation for projectlombok__lombok-3571: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/core/lombok/experimental/Builder.java b/src/core/lombok/experimental/Builder.java
+|index 1a2b3c4d5e..6f7g8h9i0j 100644
+|--- a/src/core/lombok/experimental/Builder.java
+|+++ b/src/core/lombok/experimental/Builder.java
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+1 out of 1 hunk ignored
+
+Check (logs/run_evaluation/e1multilingual0927r05/pavlov-public-portfolio-bf16/projectlombok__lombok-3571/run_instance.log) for more information.
+Error in evaluation for projectlombok__lombok-3594: >>>>> Patch Apply Failed:
+patching file src/core/lombok/experimental/SuperBuilder.java
+patch unexpectedly ends in middle of line
+Hunk #1 FAILED at 1.
+1 out of 1 hunk FAILED -- saving rejects to file src/core/lombok/experimental/SuperBuilder.java.rej
+
+Check (logs/run_evaluation/e1multilingual0927r05/pavlov-public-portfolio-bf16/projectlombok__lombok-3594/run_instance.log) for more information.
+All instances run.
+Total instances: 16
+Instances submitted: 16
+Instances completed: 3
+Instances incomplete: 0
+Instances resolved: 0
+Instances unresolved: 3
+Instances with likely infrastructure failures: 0
+Instances with ambiguous failures: 0
+Instances with empty patches: 0
+Instances with errors: 13
+Unstopped containers: 0
+Unremoved images: 0
+Report written to /e1/reports/pavlov-public-portfolio-bf16.e1multilingual0927r05.json

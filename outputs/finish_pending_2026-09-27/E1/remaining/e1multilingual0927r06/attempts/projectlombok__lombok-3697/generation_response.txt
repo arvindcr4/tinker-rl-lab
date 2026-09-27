@@ -1,0 +1,92 @@
+diff --git a/src/core/lombok/external/superbuilder/SuperBuilderTransformer.java b/src/core/lombok/external/superbuilder/SuperBuilderTransformer.java
+index 1733333333..1111111111 100644
+--- a/src/core/lombok/external/superbuilder/SuperBuilderTransformer.java
++++ b/src/core/lombok/external/superbuilder/SuperBuilderTransformer.java
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (C) 2012-2023 The Project Lombok Authors.
++ * Copyright (C) 2012-2024 The Project Lombok Authors.
+  *
+  * Permission is hereby granted, free of charge, to any person obtaining a copy
+  * of this software and associated documentation files (the "Software"), to deal
+@@ -1,6 +1,7 @@
+ package lombok.external.superbuilder;
+ 
++import static lombok.core.util.ListUtil.list;
+ import static lombok.core.util.StringUtil.capitalize;
+ import static lombok.core.util.StringUtil.uncapitalize;
+ import static lombok.core.util.StringUtil.uncapitalizeFirstChar;
+@@ -1,7 +1,9 @@
+ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.Collection;
++import java.util.Collections;
+ import java.util.HashSet;
++import java.util.List;
+ import java.util.Set;
+ 
+ import javax.lang.model.element.Element;
+@@ -1,8 +1,10 @@
+ import lombok.core.LombokNode;
+ import lombok.core.configuration.CheckerFrameworkStyle;
+ import lombok.core.configuration.NullAnnotationMetadata;
++import lombok.core.util.ListUtil;
+ import lombok.core.util.StringUtil;
+ import lombok.experimental.SuperBuilder;
++import lombok.experimental.SuperBuilder.Builder;
+ import lombok.experimental.SuperBuilder.LombokBuilder;
+ import lombok.experimental.SuperBuilder.SuperBuilderAnnotationProcessor;
+ import lombok.launch.ShadowClassLoader;
+@@ -1,9 +1,11 @@
+ import com.sun.tools.javac.code.Symbol;
+ import com.sun.tools.javac.code.Symbol.ClassSymbol;
+ import com.sun.tools.javac.code.Symbol.TypeVariableSymbol;
++import com.sun.tools.javac.code.Type;
+ import com.sun.tools.javac.code.TypeTag;
+ import com.sun.tools.javac.code.Types;
+ import com.sun.tools.javac.tree.JCTree;
++import com.sun.tools.javac.tree.JCTree.JCAnnotation;
+ import com.sun.tools.javac.tree.JCTree.JCClassDecl;
+ import com.sun.tools.javac.tree.JCTree.JCExpression;
+ import com.sun.tools.javac.tree.JCTree.JCFieldAccess;
+@@ -1,10 +1,12 @@
+ import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
+ import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
+ import com.sun.tools.javac.tree.JCTree.JCNewClass;
++import com.sun.tools.javac.tree.JCTree.JCTypeApply;
+ import com.sun.tools.javac.tree.JCTree.JCTypeParameter;
+ import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
+ import com.sun.tools.javac.tree.TreeMaker;
+ import com.sun.tools.javac.tree.TreeScanner;
++import com.sun.tools.javac.util.List;
+ import com.sun.tools.javac.util.Name;
+ import com.sun.tools.javac.util.Names;
+ 
+@@ -1,11 +1,13 @@
+ import lombok.core.AST;
+ import lombok.core.AnnotationProcessor;
+ import lombok.core.HandlerPriority;
++import lombok.core.util.ListUtil;
+ import lombok.core.util.StringUtil;
+ import lombok.experimental.SuperBuilder;
+ import lombok.experimental.SuperBuilder.Builder;
+ import lombok.experimental.SuperBuilder.LombokBuilder;
+ import lombok.launch.ShadowClassLoader;
++import lombok.launch.ShadowClassLoader.ShadowedClass;
+ 
+ public class SuperBuilderTransformer extends AnnotationProcessor {
+ 	private static final String BUILDER_CLASS_NAME = "Builder";
+@@ -1,12 +1,14 @@
+ 	private static final String BUILDER_ANNOTATION = "lombok.experimental.SuperBuilder$Builder";
+ 	private static final String BUILDER_ANNOTATION_2 = "lombok.experimental.SuperBuilder$Builder$Builder";
+ 	private static final String BUILDER_ANNOTATION_3 = "lombok.experimental.SuperBuilder$Builder$Builder$Builder";
++	private static final String BUILDER_ANNOTATION_4 = "lombok.experimental.SuperBuilder$Builder$Builder$Builder$Builder";
+ 
+ 	@Override public void handle(AST<?, ?, ?> ast) {
+ 		if (!(ast.getNode() instanceof JCClassDecl)) return;
+ 		JCClassDecl classDecl = (JCClassDecl) ast.getNode();
+ 		if (classDecl.getModifiers().getFlags().contains(Modifier.ABSTRACT)) return;
+-		if (classDecl.getModifiers().getFlags().contains(Modifier.STATIC)) return;
++		if (classDecl.getModifiers().getFlags().contains(Modifier.STATIC)) return;
+ 		SuperBuilder annotation = findSuperBuilderAnnotation(classDecl);
+ 		if (annotation == null) return;

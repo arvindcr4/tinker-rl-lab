@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "9fc1dc899680d69f2219f363a9bea3f694270fc7949182289b7dc93bac057499",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790471347.975747,
+  "instance_id": "javaparser__javaparser-4538",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/javaparser-core/src/main/java/com/github/javaparser/ast/Node.java b/javaparser-core/src/main/java/com/github/javaparser/ast/Node.java\nindex 1157..1123 100644\n--- a/javaparser-core/src/main/java/com/github/javaparser/ast/Node.java\n+++ b/javaparser-core/src/main/java/com/github/javaparser/ast/Node.java\n@@ -1154,6 +1154,9 @@ public abstract class Node implements Serializable, Cloneable, Comparable<Node>\n         @Override\n         public Node next() {\n             if (stack.isEmpty()) {\n+                if (currentNode == null) {\n+                    throw new NoSuchElementException();\n+                }\n                 Node node = currentNode;\n                 currentNode = null;\n                 return node;",
+  "patch_sha256": "b5d09919442955d1e3765662c232db801020028724f73d3b86496614ebe4bf9b",
+  "request_sha256": "087e5a740de636e5d7732de34b2eef649f3a00e774208f946d9e690750be1065",
+  "response_sha256": "b5d09919442955d1e3765662c232db801020028724f73d3b86496614ebe4bf9b",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "7ff629a4fd53a0e2810c27b7a21ad8f2516e914a4754ab949bf3e68649a75275",
+  "started_at": 1790471344.0736132,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 188,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 25328,
+    "prompt_tokens_details": null,
+    "total_tokens": 25516
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

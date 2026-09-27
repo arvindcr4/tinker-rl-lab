@@ -1,0 +1,13 @@
+diff --git a/src/PhpSpreadsheet/Writer/Xlsx/FunctionPrefix.php b/src/PhpSpreadsheet/Writer/Xlsx/FunctionPrefix.php
+index 0373073..8373073 100644
+--- a/src/PhpSpreadsheet/Writer/Xlsx/FunctionPrefix.php
++++ b/src/PhpSpreadsheet/Writer/Xlsx/FunctionPrefix.php
+@@ -130,7 +130,7 @@ class FunctionPrefix
+     private const RELEASED_IN_EXCEL_2019 = [
+         'ACOT',
+         'ACOTH',
+-        'SUMIFS',
++        'SUMIFS', // Removed: SUMIFS was introduced in Excel 2007, not 2019
+         'AVERAGEIFS',
+         'COUNTIFS',
+         'COT',

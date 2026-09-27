@@ -1,0 +1,63 @@
+{
+    "total_instances": 16,
+    "submitted_instances": 16,
+    "completed_instances": 2,
+    "resolved_instances": 0,
+    "unresolved_instances": 2,
+    "infra_failure_instances": 0,
+    "ambiguous_failure_instances": 0,
+    "empty_patch_instances": 0,
+    "error_instances": 14,
+    "completed_ids": [
+        "tokio-rs__axum-2096",
+        "tokio-rs__tokio-7139"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "tokio-rs__axum-1119",
+        "tokio-rs__axum-1730",
+        "tokio-rs__axum-1934",
+        "tokio-rs__axum-2096",
+        "tokio-rs__axum-682",
+        "tokio-rs__axum-691",
+        "tokio-rs__axum-734",
+        "tokio-rs__tokio-4384",
+        "tokio-rs__tokio-4867",
+        "tokio-rs__tokio-4898",
+        "tokio-rs__tokio-6551",
+        "tokio-rs__tokio-6603",
+        "tokio-rs__tokio-6724",
+        "tokio-rs__tokio-6752",
+        "tokio-rs__tokio-6838",
+        "tokio-rs__tokio-7139"
+    ],
+    "resolved_ids": [],
+    "unresolved_ids": [
+        "tokio-rs__axum-2096",
+        "tokio-rs__tokio-7139"
+    ],
+    "infra_failure_ids": [],
+    "ambiguous_failure_ids": [],
+    "failure_reasons": {},
+    "error_ids": [
+        "tokio-rs__axum-1119",
+        "tokio-rs__axum-1730",
+        "tokio-rs__axum-1934",
+        "tokio-rs__axum-682",
+        "tokio-rs__axum-691",
+        "tokio-rs__axum-734",
+        "tokio-rs__tokio-4384",
+        "tokio-rs__tokio-4867",
+        "tokio-rs__tokio-4898",
+        "tokio-rs__tokio-6551",
+        "tokio-rs__tokio-6603",
+        "tokio-rs__tokio-6724",
+        "tokio-rs__tokio-6752",
+        "tokio-rs__tokio-6838"
+    ],
+    "schema_version": 2,
+    "unstopped_instances": 0,
+    "unstopped_containers": [],
+    "unremoved_images": []
+}

@@ -1,0 +1,116 @@
+{
+  "lane": "E1",
+  "benchmark": "SWE-bench Multilingual (300 tasks, test split)",
+  "scope": "this lane: wave10 (16 sealed v6 recovery tasks) + the 174 tasks never attempted in the 2026-09-12 waves 01-09 = 190 tasks",
+  "actor": "pavlov-public-portfolio-bf16 (Qwen3.6-35B-A3B + seed809 LoRA merged) on shared Modal app pavlov-trained-actor-e1e14; temp 0.0, top_p 0.95, seed 809, non-thinking, max_tokens<=8192 capped to 32768 - prompt_tokens",
+  "grader": "native swebench 5.0.2 CLI (`swebench eval`) in Modal dockerd sandboxes, pinned instance images",
+  "metric": "resolved / attempted (errors, patch-apply failures, empty patches, provider errors and context overflows count as failures)",
+  "n_attempted": 190,
+  "n_graded": 57,
+  "n_resolved": 1,
+  "score": 0.0053,
+  "ci95_wilson": [
+    0.0009,
+    0.0292
+  ],
+  "secondary_resolved_over_graded": {
+    "score": 0.0175,
+    "ci95_wilson": [
+      0.0031,
+      0.0929
+    ]
+  },
+  "resolved_ids": [
+    "phpoffice__phpspreadsheet-3463"
+  ],
+  "breakdown": {
+    "wave10": {
+      "attempted": 16,
+      "graded": 3,
+      "resolved": 0,
+      "errors_patch_apply_or_eval": 13,
+      "empty_patch": 0,
+      "resolved_over_graded": 0.0,
+      "resolved_over_graded_ci95": [
+        0,
+        0.5615
+      ],
+      "resolved_over_attempted": 0.0,
+      "resolved_over_attempted_ci95": [
+        0,
+        0.1936
+      ],
+      "resolved_ids": []
+    },
+    "remaining174": {
+      "attempted": 174,
+      "graded": 54,
+      "resolved": 1,
+      "errors_patch_apply_or_eval": 107,
+      "empty_patch": 13,
+      "resolved_over_graded": 0.0185,
+      "resolved_over_graded_ci95": [
+        0.0033,
+        0.0977
+      ],
+      "resolved_over_attempted": 0.0057,
+      "resolved_over_attempted_ci95": [
+        0.001,
+        0.0318
+      ],
+      "resolved_ids": [
+        "phpoffice__phpspreadsheet-3463"
+      ]
+    }
+  },
+  "outcome_counts": {
+    "errors_patch_apply_or_eval": 120,
+    "empty_patch": 13
+  },
+  "not_attempted_of_300": [],
+  "prior_waves_separate_not_pooled": {
+    "attempted": 110,
+    "graded": 35,
+    "resolved": 4,
+    "errors_patch_apply_or_eval": 74,
+    "empty_patch": 1,
+    "resolved_over_graded": 0.1143,
+    "resolved_over_graded_ci95": [
+      0.0454,
+      0.2595
+    ],
+    "resolved_over_attempted": 0.0364,
+    "resolved_over_attempted_ci95": [
+      0.0142,
+      0.0898
+    ],
+    "resolved_ids": [
+      "fmtlib__fmt-1683",
+      "fmtlib__fmt-3272",
+      "fmtlib__fmt-3901",
+      "gin-gonic__gin-2121"
+    ],
+    "source": "outputs/PES_Phase2_Review_2026-09-12/finish/e1_completion",
+    "pooling_verdict": "NOT POOLED. Verified same task universe (inventory sha256 765d75f9...), same actor weights (base 995ad96e + adapter 64444133) and same native grader family, but the contract is not identical: 2026-09-12 actor served max-model-len 65536 vs 32768 here (different max_tokens caps and overflow behaviour), and this lane's source-context collector is a re-implementation (original metadata_wave08.py lost), validated byte-identical on only 3 recorded tasks. combined_300 in score_breakdown.json is informational only and not a headline."
+  },
+  "spend_usd": 1.87,
+  "spend_basis": "Modal CPU sandboxes ~4.7 sandbox-hours x $0.32/h x 1.25 margin (estimate); actor GPU time is billed to shared_trained_actor_endpoint cap, not E1",
+  "deviations": [
+    "Actor served at max-model-len 32768 (2026-09-12: 65536); max_tokens capped per task to fit",
+    "Source-context collector re-implemented (e1_runtime.collect_sources) from Pro flagship helpers",
+    "Native eval in Modal dockerd sandboxes (same shape as 2026-09-12 runtime0X), thin runner run_remaining.py bypassing fail-closed paperwork gates per AUTHORIZATION.json",
+    "Batches r06/r07: driver killed during native eval; eval completed in the orphaned sandboxes and reports/logs were harvested (code/harvest_orphans.py); exec stdout/returncode lost",
+    "Driver relaunched twice (agent kills); completed generations reused, never resampled",
+    "Context-overflow short-circuit added on 2nd relaunch (no retry when prompt alone fills context)"
+  ],
+  "caveats": [
+    "Context-overflow task ids (prompt >= 32768 tokens; scored as failures): ['mrdoob__three.js-25687', 'mrdoob__three.js-26589', 'mrdoob__three.js-27395', 'preactjs__preact-4182', 'prometheus__prometheus-11859', 'sharkdp__bat-2201', 'sharkdp__bat-2260', 'sharkdp__bat-2650', 'sharkdp__bat-2835', 'vuejs__core-11589', 'vuejs__core-11739', 'vuejs__core-11899', 'vuejs__core-11915']",
+    "Non-generated (provider error) ids scored as failures: {\"sharkdp__bat-2201\": \"CONTEXT_OVERFLOW\", \"sharkdp__bat-2260\": \"CONTEXT_OVERFLOW\", \"sharkdp__bat-2650\": \"CONTEXT_OVERFLOW\", \"sharkdp__bat-2835\": \"CONTEXT_OVERFLOW\", \"prometheus__prometheus-11859\": \"PROVIDER_ERROR\", \"preactjs__preact-4182\": \"PROVIDER_ERROR\", \"mrdoob__three.js-25687\": \"PROVIDER_ERROR\", \"mrdoob__three.js-26589\": \"PROVIDER_ERROR\", \"mrdoob__three.js-27395\": \"PROVIDER_ERROR\", \"vuejs__core-11589\": \"CONTEXT_OVERFLOW\", \"vuejs__core-11739\": \"CONTEXT_OVERFLOW\", \"vuejs__core-11899\": \"CONTEXT_OVERFLOW\", \"vuejs__core-11915\": \"CONTEXT_OVERFLOW\"}",
+    "High patch-apply/eval error rate: most failures are malformed or non-applying patches, not test failures",
+    "Single sample per task at temperature 0; no pass@k",
+    "Task order is manifest order, not random; wave10 is a sealed recovery selection (gson/terraform/immutable-js)"
+  ],
+  "wandb": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/e1-finish0927-multilingual",
+  "authorization": "outputs/finish_pending_2026-09-27/AUTHORIZATION.json (E1 cap $30)",
+  "generated_at": "2026-09-27T02:54:05Z"
+}

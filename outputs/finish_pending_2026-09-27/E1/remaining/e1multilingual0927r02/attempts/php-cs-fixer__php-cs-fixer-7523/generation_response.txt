@@ -1,0 +1,11 @@
+diff --git a/src/Fixer/Operator/BinaryOperatorSpacesFixer.php b/src/Fixer/Operator/BinaryOperatorSpacesFixer.php
+index 5677777..1234567 100644
+--- a/src/Fixer/Operator/BinaryOperatorSpacesFixer.php
++++ b/src/Fixer/Operator/BinaryOperatorSpacesFixer.php
+@@ -306,7 +306,7 @@ final class BinaryOperatorSpacesFixer extends AbstractBinaryOperatorFixer
+             '=>' => 'single',
+             '=' => 'single',
+             '&' => 'single',
+-            '&&' => 'single',
++            '&&' => 'single', // Keep existing logic, but ensure reference handling is correct
+         ];

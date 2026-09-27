@@ -1,0 +1,16 @@
+- task=full_train_workflow_setup_test
+- agent=openhands
+- agent.model_name=openai/pavlov-public-portfolio-bf16
+- +agent.max_iterations=50
+- +agent.model_config.base_url=http://127.0.0.1:18019/v1
+- +agent.model_config.api_key=local-relay
+- +agent.model_config.temperature=0.0
+- +agent.model_config.top_p=1.0
+- +agent.model_config.max_input_tokens=28000
+- +agent.model_config.max_output_tokens=4096
+- +agent.model_config.num_retries=4
+- +agent.model_config.timeout=1200
+- +agent.model_config.native_tool_calling=true
+- output_dir=/opt/e9/runs/full_train_workflow_setup_test/results
+- clone_workspace_to=/opt/e9/runs/full_train_workflow_setup_test/workspace
+- +env_file=/opt/e9/runs/full_train_workflow_setup_test/no-env-file

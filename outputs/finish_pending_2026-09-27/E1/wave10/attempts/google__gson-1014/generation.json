@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "32a198dacd0dd0046f45b8a32787e7b49b0662bddb6db031d5edd0b7556bcae4",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790471243.7080529,
+  "instance_id": "google__gson-1014",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/gson/src/main/java/com/google/gson/internal/bind/JsonTreeReader.java b/gson/src/main/java/com/google/gson/internal/bind/JsonTreeReader.java\nindex 0a0f0a0..b0a0f0a 100644\n--- a/gson/src/main/java/com/google/gson/internal/bind/JsonTreeReader.java\n+++ b/gson/src/main/java/com/google/gson/internal/bind/JsonTreeReader.java\n@@ -258,7 +258,7 @@ final class JsonTreeReader extends JsonReader {\n     }\n \n     private void popStack() {\n-      stackSize--;\n+      stackSize--;\n       if (stackSize == 0) {\n         throw new IllegalStateException(\"JsonReader is closed.\");\n       }",
+  "patch_sha256": "fabc9aee557b7f0172fcb7a17865dd0ad50014b65e668052962279afc142db12",
+  "request_sha256": "450b6052e682688e6c6b438e4c9ca15950cd76c4e0510dc40d793d49bf429766",
+  "response_sha256": "fabc9aee557b7f0172fcb7a17865dd0ad50014b65e668052962279afc142db12",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "6607f66b297edb9988dd699733667611bde36243bd4d34e66657ccf9399ada94",
+  "started_at": 1790471240.364019,
+  "status": "GENERATED",
+  "task_inventory_sha256": "765d75f9384450871730901fb73933d9e68ef9415f6badcb603e116aa0829e2f",
+  "usage": {
+    "completion_tokens": 174,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 27373,
+    "prompt_tokens_details": null,
+    "total_tokens": 27547
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

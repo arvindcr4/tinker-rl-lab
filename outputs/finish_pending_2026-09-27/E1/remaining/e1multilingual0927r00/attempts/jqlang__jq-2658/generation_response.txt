@@ -1,0 +1,15 @@
+diff --git a/src/main.c b/src/main.c
+index 1573377..0555555 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -100,6 +100,10 @@ static void parse_args(jq_state *jq, int argc, char* argv[], struct input* input
+       break;
+     }
+ 
++    case ARG_JSONARGS: {
++      input->jsonargs = true;
++      break;
++    }
+     case ARG_FROM_FILE: {
+       input->from_file = true;
+       input->filename = optarg;

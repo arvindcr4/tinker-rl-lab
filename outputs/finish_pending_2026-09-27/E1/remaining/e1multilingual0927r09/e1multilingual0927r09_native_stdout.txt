@@ -1,0 +1,254 @@
+Running 16 instances...
+Error in evaluation for tokio-rs__axum-1934: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/extract/matched_path.rs b/src/extract/matched_path.rs
+|index 5a0f773..1b0f773 100644
+|--- a/src/extract/matched_path.rs
+|+++ b/src/extract/matched_path.rs
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+1 out of 1 hunk ignored
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__axum-1934/run_instance.log) for more information.
+Error in evaluation for tokio-rs__axum-1119: >>>>> Patch Apply Failed:
+patching file axum/src/routing/method_routing.rs
+Hunk #1 FAILED at 1.
+Hunk #2 succeeded at 10 with fuzz 3.
+Hunk #3 succeeded at 21 with fuzz 3.
+Hunk #4 succeeded at 102 with fuzz 3.
+Hunk #5 succeeded at 116 with fuzz 3.
+Hunk #6 succeeded at 130 with fuzz 3.
+Hunk #7 succeeded at 144 with fuzz 3.
+Hunk #8 succeeded at 158 with fuzz 3.
+Hunk #9 succeeded at 172 with fuzz 3.
+Hunk #10 succeeded at 186 with fuzz 3.
+Hunk #11 succeeded at 200 with fuzz 3.
+Hunk #12 succeeded at 214 with fuzz 3.
+Hunk #13 succeeded at 228 with fuzz 3.
+Hunk #14 succeeded at 242 with fuzz 3.
+Hunk #15 succeeded at 256 with fuzz 3.
+Hunk #16 succeeded at 270 with fuzz 3.
+Hunk #17 succeeded at 284 with fuzz 3.
+Hunk #18 succeeded at 298 with fuzz 3.
+Hunk #19 succeeded at 312 with fuzz 3.
+Hunk #20 succeeded at 326 with fuzz 3.
+Hunk #21 succeeded at 340 with fuzz 3.
+Hunk #22 succeeded at 354 with fuzz 3.
+Hunk #23 succeeded at 368 with fuzz 3.
+Hunk #24 succeeded at 382 with fuzz 3.
+Hunk #25 succeeded at 396 with fuzz 3.
+Hunk #26 succeeded at 410 with fuzz 3.
+Hunk #27 succeeded at 424 with fuzz 3.
+Hunk #28 succeeded at 438 with fuzz 3.
+Hunk #29 succeeded at 452 with fuzz 3.
+Hunk #30 succeeded at 466 with fuzz 3.
+Hunk #31 succeeded at 480 with fuzz 3.
+Hunk #32 succeeded at 494 with fuzz 3.
+Hunk #33 succeeded at 508 with fuzz 3.
+Hunk #34 succeeded at 522 with fuzz 3.
+Hunk #35 succeeded at 536 with fuzz 3.
+Hunk #36 succeeded at 550 with fuzz 3.
+Hunk #37 succeeded at 564 with fuzz 3.
+Hunk #38 succeeded at 578 with fuzz 3.
+Hunk #39 succeeded at 592 with fuzz 3.
+Hunk #40 succeeded at 606 with fuzz 3.
+Hunk #41 succeeded at 620 with fuzz 3.
+Hunk #42 succeeded at 634 with fuzz 3.
+Hunk #43 succeeded at 648 with fuzz 3.
+Hunk #44 succeeded at 662 with fuzz 3.
+Hunk #45 succeeded at 676 with fuzz 3.
+patch: **** unexpected end of file in patch
+Hunk #46 succeeded at 690 with fuzz 3.
+Hunk #47 succeeded at 704 with fuzz 3.
+Hunk #48 succeeded at 718 with fuzz 3.
+Hunk #49 succeeded at 732 with fuzz 3.
+Hunk #50 succeeded at 746 with fuzz 3.
+Hunk #51 succeeded at 760 with fuzz 3.
+Hunk #52 succeeded at 774 with fuzz 3.
+patch unexpectedly ends in middle of line
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__axum-1119/run_instance.log) for more information.
+Error in evaluation for tokio-rs__axum-1730: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/axum/src/routing/method_router.rs b/axum/src/routing/method_router.rs
+|index 5c0d777..8b0a123 100644
+|--- a/axum/src/routing/method_router.rs
+|+++ b/axum/src/routing/method_router.rs
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+1 out of 1 hunk ignored
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__axum-1730/run_instance.log) for more information.
+Error in evaluation for tokio-rs__axum-682: >>>>> Patch Apply Failed:
+patching file axum/src/routing/method_routing.rs
+patch unexpectedly ends in middle of line
+Hunk #1 FAILED at 1006.
+1 out of 1 hunk FAILED -- saving rejects to file axum/src/routing/method_routing.rs.rej
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__axum-682/run_instance.log) for more information.
+Error in evaluation for tokio-rs__axum-691: >>>>> Patch Apply Failed:
+patching file axum/src/routing/mod.rs
+Hunk #1 FAILED at 1.
+Hunk #2 succeeded at 10 with fuzz 3.
+patch unexpectedly ends in middle of line
+Hunk #3 FAILED at 101.
+Not deleting file axum/src/routing/mod.rs as content differs from patch
+2 out of 3 hunks FAILED -- saving rejects to file axum/src/routing/mod.rs.rej
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__axum-691/run_instance.log) for more information.
+Error in evaluation for tokio-rs__axum-734: >>>>> Patch Apply Failed:
+patching file axum/src/response/mod.rs
+Hunk #1 succeeded at 1 with fuzz 3.
+Hunk #2 succeeded at 11 with fuzz 3.
+patch: **** malformed patch at line 32:  /// Trait for generating responses.
+
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__axum-734/run_instance.log) for more information.
+Error in evaluation for tokio-rs__tokio-4384: >>>>> Patch Apply Failed:
+patching file tokio/src/net/udp.rs
+patch unexpectedly ends in middle of line
+patch: **** malformed patch at line 21:  
+
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__tokio-4384/run_instance.log) for more information.
+Error in evaluation for tokio-rs__tokio-4867: >>>>> Patch Apply Failed:
+patch: **** malformed patch at line 13:  
+
+patching file tokio/src/sync/broadcast.rs
+patch unexpectedly ends in middle of line
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__tokio-4867/run_instance.log) for more information.
+Error in evaluation for tokio-rs__tokio-4898: >>>>> Patch Apply Failed:
+patching file tokio/src/signal/unix/driver.rs
+Hunk #1 FAILED at 76.
+patch unexpectedly ends in middle of line
+1 out of 1 hunk FAILED -- saving rejects to file tokio/src/signal/unix/driver.rs.rej
+patch unexpectedly ends in middle of line
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__tokio-4898/run_instance.log) for more information.
+Error in evaluation for tokio-rs__tokio-6551: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/tokio/src/runtime/metrics.rs b/tokio/src/runtime/metrics.rs
+|index 8f8f8f8f..8f8f8f8f 100644
+|--- a/tokio/src/runtime/metrics.rs
+|+++ b/tokio/src/runtime/metrics.rs
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+2 out of 2 hunks ignored
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__tokio-6551/run_instance.log) for more information.
+Error in evaluation for tokio-rs__tokio-6603: >>>>> Patch Apply Failed:
+patching file tokio/src/sync/mpsc/block.rs
+patch unexpectedly ends in middle of line
+Hunk #1 FAILED at 1.
+Not deleting file tokio/src/sync/mpsc/block.rs as content differs from patch
+1 out of 1 hunk FAILED -- saving rejects to file tokio/src/sync/mpsc/block.rs.rej
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__tokio-6603/run_instance.log) for more information.
+Error in evaluation for tokio-rs__tokio-6752: >>>>> Patch Apply Failed:
+patching file tokio-util/src/time/delay_queue.rs
+Hunk #1 succeeded at 1 with fuzz 3.
+Hunk #2 succeeded at 15 with fuzz 3.
+Hunk #3 succeeded at 24 with fuzz 3.
+Hunk #4 succeeded at 33 with fuzz 3.
+Hunk #5 succeeded at 42 with fuzz 3.
+Hunk #6 succeeded at 51 with fuzz 3.
+Hunk #7 succeeded at 60 with fuzz 3.
+Hunk #8 succeeded at 69 with fuzz 3.
+Hunk #9 succeeded at 78 with fuzz 3.
+Hunk #10 succeeded at 87 with fuzz 3.
+Hunk #11 succeeded at 96 with fuzz 3.
+Hunk #12 succeeded at 105 with fuzz 3.
+Hunk #13 succeeded at 114 with fuzz 3.
+Hunk #14 succeeded at 123 with fuzz 3.
+Hunk #15 succeeded at 132 with fuzz 3.
+Hunk #16 succeeded at 141 with fuzz 3.
+Hunk #17 succeeded at 150 with fuzz 3.
+Hunk #18 succeeded at 159 with fuzz 3.
+Hunk #19 succeeded at 168 with fuzz 3.
+Hunk #20 succeeded at 177 with fuzz 3.
+Hunk #21 succeeded at 186 with fuzz 3.
+Hunk #22 succeeded at 195 with fuzz 3.
+Hunk #23 succeeded at 204 with fuzz 3.
+Hunk #24 succeeded at 213 with fuzz 3.
+Hunk #25 succeeded at 222 with fuzz 3.
+Hunk #26 succeeded at 231 with fuzz 3.
+Hunk #27 succeeded at 240 with fuzz 3.
+Hunk #28 succeeded at 249 with fuzz 3.
+Hunk #29 succeeded at 258 with fuzz 3.
+Hunk #30 succeeded at 267 with fuzz 3.
+Hunk #31 succeeded at 276 with fuzz 3.
+Hunk #32 succeeded at 285 with fuzz 3.
+Hunk #33 succeeded at 294 with fuzz 3.
+Hunk #34 succeeded at 303 with fuzz 3.
+Hunk #35 succeeded at 312 with fuzz 3.
+Hunk #36 succeeded at 321 with fuzz 3.
+Hunk #37 succeeded at 330 with fuzz 3.
+Hunk #38 succeeded at 339 with fuzz 3.
+Hunk #39 succeeded at 348 with fuzz 3.
+Hunk #40 succeeded at 357 with fuzz 3.
+Hunk #41 succeeded at 366 with fuzz 3.
+Hunk #42 succeeded at 375 with fuzz 3.
+Hunk #43 succeeded at 384 with fuzz 3.
+Hunk #44 succeeded at 393 with fuzz 3.
+Hunk #45 succeeded at 402 with fuzz 3.
+Hunk #46 succeeded at 411 with fuzz 3.
+Hunk #47 succeeded at 420 with fuzz 3.
+Hunk #48 succeeded at 429 with fuzz 3.
+Hunk #49 succeeded at 438 with fuzz 3.
+Hunk #50 succeeded at 447 with fuzz 3.
+Hunk #51 succeeded at 456 with fuzz 3.
+Hunk #52 succeeded at 465 with fuzz 3.
+Hunk #53 succeeded at 474 with fuzz 3.
+Hunk #54 succeeded at 483 with fuzz 3.
+Hunk #55 succeeded at 492 with fuzz 3.
+Hunk #56 succeeded at 501 with fuzz 3.
+patch: **** unexpected end of file in patch
+Hunk #57 succeeded at 510 with fuzz 3.
+Hunk #58 succeeded at 519 with fuzz 3.
+patch unexpectedly ends in middle of line
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__tokio-6752/run_instance.log) for more information.
+Error in evaluation for tokio-rs__tokio-6724: >>>>> Patch Apply Failed:
+patch: **** malformed patch at line 32: +
+
+patching file tokio/src/io/util/write_all_buf.rs
+Hunk #1 succeeded at 1 with fuzz 3.
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__tokio-6724/run_instance.log) for more information.
+Error in evaluation for tokio-rs__tokio-6838: >>>>> Patch Apply Failed:
+patching file tokio/src/net/unix/listener.rs
+Hunk #1 FAILED at 80.
+1 out of 1 hunk FAILED -- saving rejects to file tokio/src/net/unix/listener.rs.rej
+patching file tokio/src/net/unix/stream.rs
+patch unexpectedly ends in middle of line
+Hunk #1 FAILED at 76.
+1 out of 1 hunk FAILED -- saving rejects to file tokio/src/net/unix/stream.rs.rej
+
+Check (logs/run_evaluation/e1multilingual0927r09/pavlov-public-portfolio-bf16/tokio-rs__tokio-6838/run_instance.log) for more information.
+All instances run.
+Total instances: 16
+Instances submitted: 16
+Instances completed: 2
+Instances incomplete: 0
+Instances resolved: 0
+Instances unresolved: 2
+Instances with likely infrastructure failures: 0
+Instances with ambiguous failures: 0
+Instances with empty patches: 0
+Instances with errors: 14
+Unstopped containers: 0
+Unremoved images: 0
+Report written to /e1/reports/pavlov-public-portfolio-bf16.e1multilingual0927r09.json

@@ -1,0 +1,13 @@
+diff --git a/lib/jekyll/filters.rb b/lib/jekyll/filters.rb
+index 8766666..1234567 100644
+--- a/lib/jekyll/filters.rb
++++ b/lib/jekyll/filters.rb
+@@ -1000,7 +1000,7 @@ module Jekyll
+       def where_exp(collection, var, expression)
+         expression = expression.strip
+         return collection if expression.empty?
+-        return collection if expression.length < 10
++        return collection if expression.length < 10 || expression.include?(" or ") || expression.include?(" and ")
+ 
+         collection.select do |item|
+           item[var] = item

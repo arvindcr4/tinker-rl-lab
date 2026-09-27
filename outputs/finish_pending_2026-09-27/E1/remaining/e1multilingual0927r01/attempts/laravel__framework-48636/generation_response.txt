@@ -1,0 +1,14 @@
+diff --git a/src/Illuminate/Database/Eloquent/Concerns/HasAttributes.php b/src/Illuminate/Database/Eloquent/Concerns/HasAttributes.php
+index 5a0f7d0d0d..0c0f7d0d0d 100644
+--- a/src/Illuminate/Database/Eloquent/Concerns/HasAttributes.php
++++ b/src/Illuminate/Database/Eloquent/Concerns/HasAttributes.php
+@@ -1633,6 +1633,10 @@ public function replicate(array $except = null)
+     {
+         $attributes = Arr::except(
+             $this->getAttributes(),
++            array_merge(
++                $this->getUniqueIds(),
++                $this->getKeyName() === null ? [] : [$this->getKeyName()]
++            ),
+             is_null($except) ? array_merge($this->getDates(), ['created_at', 'updated_at']) : $except
+         );

@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/PhpSpreadsheet/Spreadsheet.php b/src/PhpSpreadsheet/Spreadsheet.php\nindex 1566666666666666666666666666666666666666..1566666666666666666666666666666666666666 100644\n--- a/src/PhpSpreadsheet/Spreadsheet.php\n+++ b/src/PhpSpreadsheet/Spreadsheet/Spreadsheet.php\n@@ -100,6 +100,10 @@ public function __construct(IReadSettings $readSettings = null)\n     {\n         $this->readSettings = $readSettings;\n         $this->addSheet(new Worksheet($this, 'Worksheet'), 0);\n+        // Ensure there is always at least one sheet to avoid index out of bounds errors\n+        // when removing the last sheet or when accessing sheets by index.\n+        if ($this->sheetCount === 0) {\n+            $this->addSheet(new Worksheet($this, 'Worksheet'), 0);\n+        }\n     }",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472343,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-890477b09e9bc5f0",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 279,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 26575,
+    "prompt_tokens_details": null,
+    "total_tokens": 26854
+  }
+}

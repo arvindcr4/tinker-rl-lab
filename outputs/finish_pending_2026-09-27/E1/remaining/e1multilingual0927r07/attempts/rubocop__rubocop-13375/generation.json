@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "710dd011569e2918a4f3c25bb5018a54265ee0518726deb18512b601fde7337b",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790473422.982193,
+  "instance_id": "rubocop__rubocop-13375",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/lib/rubocop/cli/command/execute_runner.rb b/lib/rubocop/cli/command/execute_runner.rb\nindex 5555555555..6666666666 100644\n--- a/lib/rubocop/cli/command/execute_runner.rb\n+++ b/lib/rubocop/cli/command/execute_runner.rb\n@@ -30,7 +30,7 @@ def execute_runner(paths)\n             all_passed || @options[:auto_gen_config]\n           end\n \n-          maybe_print_corrected_source\n+          maybe_print_corrected_source if @options[:display_only_correctable]\n \n           if runner.aborting?\n             STATUS_INTERRUPTED",
+  "patch_sha256": "ad1c18bc920a111afcf88ff3a24444f7fec158d92f5b8d6a3cd769d7634a35e4",
+  "request_sha256": "b4863c86b770a68545cb77317004325466bb301e0d35fd837b657e3b6e74234b",
+  "response_sha256": "ad1c18bc920a111afcf88ff3a24444f7fec158d92f5b8d6a3cd769d7634a35e4",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "8ffd62200aa250c1b57af4309cb79e54675a84af71044d1db16281354713209a",
+  "started_at": 1790473419.086157,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 154,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 20837,
+    "prompt_tokens_details": null,
+    "total_tokens": 20991
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

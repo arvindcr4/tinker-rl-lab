@@ -1,0 +1,149 @@
+Running 16 instances...
+Error in evaluation for google__gson-2024: >>>>> Patch Apply Failed:
+patching file gson/src/main/java/com/google/gson/FieldNamingPolicy.java
+patch: **** malformed patch at line 28: +
+
+
+Check (logs/run_evaluation/e1multilingual0927wave10/pavlov-public-portfolio-bf16/google__gson-2024/run_instance.log) for more information.
+Error in evaluation for google__gson-1100: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/gson/src/main/java/com/google/gson/internal/bind/DefaultDateTypeAdapter.java b/gson/src/main/java/com/google/gson/internal/bind/DefaultDateTypeAdapter.java
+|index 0777777..1111111 100644
+|--- a/gson/src/main/java/com/google/gson/internal/bind/DefaultDateTypeAdapter.java
+|+++ b/gson/src/main/java/com/google/gson/internal/bind/DefaultDateTypeAdapter.java
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+patch: **** malformed patch at line 14:  
+
+
+Check (logs/run_evaluation/e1multilingual0927wave10/pavlov-public-portfolio-bf16/google__gson-1100/run_instance.log) for more information.
+Error in evaluation for google__gson-1014: >>>>> Patch Apply Failed:
+patching file gson/src/main/java/com/google/gson/internal/bind/JsonTreeReader.java
+patch unexpectedly ends in middle of line
+Hunk #1 FAILED at 258.
+1 out of 1 hunk FAILED -- saving rejects to file gson/src/main/java/com/google/gson/internal/bind/JsonTreeReader.java.rej
+
+Check (logs/run_evaluation/e1multilingual0927wave10/pavlov-public-portfolio-bf16/google__gson-1014/run_instance.log) for more information.
+Error in evaluation for google__gson-1093: >>>>> Patch Apply Failed:
+patching file gson/src/main/java/com/google/gson/stream/JsonWriter.java
+patch unexpectedly ends in middle of line
+patch: **** malformed patch at line 14:  
+
+
+Check (logs/run_evaluation/e1multilingual0927wave10/pavlov-public-portfolio-bf16/google__gson-1093/run_instance.log) for more information.
+Error in evaluation for google__gson-2061: >>>>> Patch Apply Failed:
+patching file gson/src/main/java/com/google/gson/stream/JsonReader.java
+patch unexpectedly ends in middle of line
+Hunk #1 FAILED at 1000.
+1 out of 1 hunk FAILED -- saving rejects to file gson/src/main/java/com/google/gson/stream/JsonReader.java.rej
+
+Check (logs/run_evaluation/e1multilingual0927wave10/pavlov-public-portfolio-bf16/google__gson-2061/run_instance.log) for more information.
+Error in evaluation for google__gson-2134: >>>>> Patch Apply Failed:
+patching file gson/src/main/java/com/google/gson/internal/bind/util/ISO8601Utils.java
+Hunk #1 succeeded at 1 with fuzz 3.
+Hunk #2 succeeded at 14 with fuzz 3.
+patch: **** malformed patch at line 31: +      calendar.set(Calendar.HOUR_OF_DAY, hour);
+
+
+Check (logs/run_evaluation/e1multilingual0927wave10/pavlov-public-portfolio-bf16/google__gson-2134/run_instance.log) for more information.
+Error in evaluation for google__gson-2311: >>>>> Patch Apply Failed:
+patching file gson/src/main/java/com/google/gson/JsonPrimitive.java
+Hunk #1 succeeded at 13 with fuzz 3.
+patch unexpectedly ends in middle of line
+patch: **** malformed patch at line 27:  
+
+
+Check (logs/run_evaluation/e1multilingual0927wave10/pavlov-public-portfolio-bf16/google__gson-2311/run_instance.log) for more information.
+Error in evaluation for google__gson-2479: >>>>> Patch Apply Failed:
+patching file gson/src/main/java/com/google/gson/GsonBuilder.java
+Reversed (or previously applied) patch detected!  Skipping patch.
+patch: **** malformed patch at line 58:     * Specifies serialization behavior for ExclusionStrategies.
+
+
+Check (logs/run_evaluation/e1multilingual0927wave10/pavlov-public-portfolio-bf16/google__gson-2479/run_instance.log) for more information.
+Error in evaluation for hashicorp__terraform-34580: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git internal/command/fmt_command.go internal/command/fmt_command.go
+|index 1a2b3c4d..5e6f7a8b 100644
+|--- internal/command/fmt_command.go
+|+++ internal/command/fmt_command.go
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+2 out of 2 hunks ignored
+
+Check (logs/run_evaluation/e1multilingual0927wave10/pavlov-public-portfolio-bf16/hashicorp__terraform-34580/run_instance.log) for more information.
+Error in evaluation for hashicorp__terraform-34814: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/internal/provisioners/remote-exec/ssh.go b/internal/provisioners/remote-exec/ssh.go
+|index 8667777777..1234567890 100644
+|--- a/internal/provisioners/remote-exec/ssh.go
+|+++ b/internal/provisioners/remote-exec/ssh.go
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+1 out of 1 hunk ignored
+
+Check (logs/run_evaluation/e1multilingual0927wave10/pavlov-public-portfolio-bf16/hashicorp__terraform-34814/run_instance.log) for more information.
+Error in evaluation for hashicorp__terraform-34900: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/internal/states/statefile/write_read.go b/internal/states/statefile/write_read.go
+|index 0730073007..3333333333 100644
+|--- a/internal/states/statefile/write_read.go
+|+++ b/internal/states/statefile/write_read.go
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+patch: **** malformed patch at line 15:  
+
+
+Check (logs/run_evaluation/e1multilingual0927wave10/pavlov-public-portfolio-bf16/hashicorp__terraform-34900/run_instance.log) for more information.
+Error in evaluation for immutable-js__immutable-js-2005: >>>>> Patch Apply Failed:
+patching file src/OrderedSet.js
+Reversed (or previously applied) patch detected!  Skipping patch.
+patch unexpectedly ends in middle of line
+2 out of 2 hunks ignored -- saving rejects to file src/OrderedSet.js.rej
+
+Check (logs/run_evaluation/e1multilingual0927wave10/pavlov-public-portfolio-bf16/immutable-js__immutable-js-2005/run_instance.log) for more information.
+Error in evaluation for hashicorp__terraform-35611: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/internal/terraform/transform_removed.go b/internal/terraform/transform_removed.go
+|index 0777777777..1111111111 100644
+|--- a/internal/terraform/transform_removed.go
+|+++ b/internal/terraform/transform_removed.go
+--------------------------
+No file to patch.  Skipping patch.
+patch: **** malformed patch at line 29:  		// Find the resource in the state
+
+
+Check (logs/run_evaluation/e1multilingual0927wave10/pavlov-public-portfolio-bf16/hashicorp__terraform-35611/run_instance.log) for more information.
+All instances run.
+Total instances: 16
+Instances submitted: 16
+Instances completed: 3
+Instances incomplete: 0
+Instances resolved: 0
+Instances unresolved: 3
+Instances with likely infrastructure failures: 0
+Instances with ambiguous failures: 0
+Instances with empty patches: 0
+Instances with errors: 13
+Unstopped containers: 0
+Unremoved images: 0
+Report written to /e1/reports/pavlov-public-portfolio-bf16.e1multilingual0927wave10.json

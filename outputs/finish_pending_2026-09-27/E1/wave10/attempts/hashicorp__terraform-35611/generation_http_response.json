@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/internal/terraform/transform_removed.go b/internal/terraform/transform_removed.go\nindex 0777777777..1111111111 100644\n--- a/internal/terraform/transform_removed.go\n+++ b/internal/terraform/transform_removed.go\n@@ -10,6 +10,7 @@ import (\n \t\"github.com/hashicorp/terraform/internal/configs\"\n \t\"github.com/hashicorp/terraform/internal/graph\"\n \t\"github.com/hashicorp/terraform/internal/states\"\n+\t\"github.com/hashicorp/terraform/internal/addrs\"\n )\n \n // RemovedResourceTransformer is a GraphTransformer that adds nodes for\n@@ -28,10 +29,14 @@ func (t *RemovedResourceTransformer) Transform(g *graph.Graph) error {\n \tfor _, r := range t.Config.Removed {\n \t\t// We need to resolve the module path for the removed resource\n \t\t// to find the actual resource instance in the state.\n-\t\taddr, diags := addrs.ParseResourceInstanceAddr(r.From)\n+\t\taddr, diags := addrs.ParseResourceInstanceAddr(r.From)\n \t\tif diags.HasErrors() {\n \t\t\treturn diags.Err()\n \t\t}\n+\n+\t\t// If the address is not fully qualified (e.g. missing module path),\n+\t\t// we cannot reliably find the resource in the state if it is inside a module.\n+\t\tif addr.Module.String() == \"\" {\n+\t\t\tcontinue\n+\t\t}\n \n \t\t// Find the resource in the state\n \t\tstateResource := t.State.ResourceInstance(addr)",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471363,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-836045a0806fa014",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 368,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 26791,
+    "prompt_tokens_details": null,
+    "total_tokens": 27159
+  }
+}

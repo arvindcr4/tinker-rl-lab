@@ -1,0 +1,15 @@
+diff --git a/discovery/puppetdb/resources.go b/discovery/puppetdb/resources.go
+index 2777777..1111111 100644
+--- a/discovery/puppetdb/resources.go
++++ b/discovery/puppetdb/resources.go
+@@ -39,6 +39,10 @@ func (p *Parameters) toLabels() model.LabelSet {
+ 		case bool:
+ 			labelValue = strconv.FormatBool(value)
+ 		case []string:
++			labelValue = separator + strings.Join(value, separator) + separator
++		case int:
++			labelValue = strconv.FormatInt(int64(value), 10)
++		case float64:
+ 			labelValue = separator + strings.Join(value, separator) + separator
+ 		case []interface{}:
+ 			if len(value) == 0 {

@@ -1,0 +1,63 @@
+{
+    "total_instances": 14,
+    "submitted_instances": 14,
+    "completed_instances": 5,
+    "resolved_instances": 0,
+    "unresolved_instances": 5,
+    "infra_failure_instances": 0,
+    "ambiguous_failure_instances": 0,
+    "empty_patch_instances": 4,
+    "error_instances": 5,
+    "completed_ids": [
+        "uutils__coreutils-6575",
+        "uutils__coreutils-6690",
+        "valkey-io__valkey-1842",
+        "valkey-io__valkey-790",
+        "valkey-io__valkey-928"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [
+        "vuejs__core-11589",
+        "vuejs__core-11739",
+        "vuejs__core-11899",
+        "vuejs__core-11915"
+    ],
+    "submitted_ids": [
+        "uutils__coreutils-6377",
+        "uutils__coreutils-6575",
+        "uutils__coreutils-6682",
+        "uutils__coreutils-6690",
+        "uutils__coreutils-6731",
+        "valkey-io__valkey-1499",
+        "valkey-io__valkey-1842",
+        "valkey-io__valkey-790",
+        "valkey-io__valkey-928",
+        "vuejs__core-11589",
+        "vuejs__core-11739",
+        "vuejs__core-11870",
+        "vuejs__core-11899",
+        "vuejs__core-11915"
+    ],
+    "resolved_ids": [],
+    "unresolved_ids": [
+        "uutils__coreutils-6575",
+        "uutils__coreutils-6690",
+        "valkey-io__valkey-1842",
+        "valkey-io__valkey-790",
+        "valkey-io__valkey-928"
+    ],
+    "infra_failure_ids": [],
+    "ambiguous_failure_ids": [],
+    "failure_reasons": {},
+    "error_ids": [
+        "uutils__coreutils-6377",
+        "uutils__coreutils-6682",
+        "uutils__coreutils-6731",
+        "valkey-io__valkey-1499",
+        "vuejs__core-11870"
+    ],
+    "schema_version": 2,
+    "unstopped_instances": 0,
+    "unstopped_containers": [],
+    "unremoved_images": []
+}

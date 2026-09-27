@@ -1,0 +1,333 @@
+diff --git a/src/uu/env/src/env.rs b/src/uu/env/src/env.rs
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/uu/env/src/env.rs
++++ b/src/uu/env/src/env.rs
+@@ -18,6 +18,7 @@ use clap::builder::ValueParser;
+ use clap::{crate_name, crate_version, Arg, ArgAction, Command};
+ use ini::Ini;
+ use native_int_str::{
++    from_native_int_representation_owned, Convert, NCvt, NativeIntStr, NativeIntString, NativeStr,
+ };
+ #[cfg(unix)]
+ use nix::sys::signal::{raise, sigaction, SaFlags, SigAction, SigHandler, SigSet, Signal};
+@@ -26,6 +27,10 @@ use std::env;
+ use std::ffi::{OsStr, OsString};
+ use std::io::{self, Write};
+ use std::ops::Deref;
++
++#[cfg(unix)]
++use nix::sys::signal::{sigaction, SaFlags, SigAction, SigHandler, SigSet, Signal};
++
+ #[cfg(unix)]
+ use std::os::unix::process::{CommandExt, ExitStatusExt};
+ use std::process::{self};
+@@ -43,6 +48,7 @@ const ABOUT: &str = help_about!("env.md");
+ const AFTER_HELP: &str = help_section!("after help", "env.md");
+ 
+ const ERROR_MSG_S_SHEBANG: &str = "use -[v]S to pass options in shebang lines";
++const IGNORE_SIGNAL_HELP: &str = "set handling of SIG signal(s) to do nothing";
+ 
+ struct Options<'a> {
+     ignore_env: bool,
+@@ -50,6 +56,7 @@ struct Options<'a> {
+     running_directory: Option<&'a OsStr>,
+     files: Vec<&'a OsStr>,
+     unsets: Vec<&'a OsStr>,
++    ignore_signals: Vec<Signal>,
+     sets: Vec<(Cow<'a, OsStr>, Cow<'a, OsStr>)>,
+     program: Vec<&'a OsStr>,
+     argv0: Option<&'a OsStr>,
+@@ -100,6 +107,10 @@ fn print_env(line_ending: LineEnding) {
+     }
+ }
+ 
++#[cfg(unix)]
++fn set_ignore_signal(signal: Signal) {
++    let _ = unsafe { sigaction(signal, &SigAction::new(SigHandler::SigIgn, SaFlags::empty(), SigSet::all())) };
++}
+ 
+ fn make_options(matches: &clap::ArgMatches) -> UResult<Options<'_>> {
+     let ignore_env = matches.get_flag("ignore-environment");
+@@ -107,6 +118,10 @@ fn make_options(matches: &clap::ArgMatches) -> UResult<Options<'_>> {
+     let running_directory = matches.get_one::<OsString>("chdir").map(|s| s.as_os_str());
+     let files = match matches.get_many::<OsString>("file") {
+         Some(v) => v.map(|s| s.as_os_str()).collect(),
++        None => Vec::with_capacity(0),
++    };
++    let ignore_signals: Vec<Signal> = if let Some(signals) = matches.get_many::<String>("ignore-signal") {
++        signals
++            .map(|s| {
++                uucore::signals::signal_by_name_or_value(s)
++                    .map(Signal::try_from)
++                    .transpose()
++                    .map_err(|e| USimpleError::new(1, format!("invalid signal: {}", e)))
++            })
++            .collect::<Result<Vec<_>, _>>()?
++    } else {
++        Vec::new()
++    };
++    let unsets = match matches.get_many::<OsString>("unset") {
++        Some(v) => v.map(|s| s.as_os_str()).collect(),
++        None => Vec::with_capacity(0),
++    };
++    let sets = match matches.get_many::<OsString>("replace") {
++        Some(v) => v
++            .map(|s| {
++                let parts: Vec<&str> = s.splitn(2, '=').collect();
++                if parts.len() != 2 {
++                    return Err(USimpleError::new(
++                        1,
++                        format!("invalid environment assignment: {}", s.quote()),
++                    ));
++                }
++                Ok((
++                    Cow::Borrowed(OsStr::new(parts[0])),
++                    Cow::Borrowed(OsStr::new(parts[1])),
++                ))
++            })
++            .collect::<Result<Vec<_>, _>>()?
++    } else {
++        Vec::new()
++    };
++    let program = match matches.get_many::<OsString>("") {
++        Some(v) => v.map(|s| s.as_os_str()).collect(),
++        None => Vec::with_capacity(0),
++    };
++    let argv0 = matches.get_one::<OsString>("argv0").map(|s| s.as_os_str());
++
++    Ok(Options {
++        ignore_env,
++        line_ending,
++        running_directory,
++        files,
++        unsets,
++        ignore_signals,
++        sets,
++        program,
++        argv0,
++    })
++}
++
++#[uucore::main]
++pub fn uumain(args: impl uucore::Args) -> UResult<()> {
++    let matches = uu_app().try_get_matches_from(args)?;
++    let opts = make_options(&matches)?;
++
++    // Apply ignore signals
++    #[cfg(unix)]
++    for signal in &opts.ignore_signals {
++        set_ignore_signal(*signal);
++    }
++
++    apply_removal_of_all_env_vars(&opts);
++    apply_unset(&opts);
++    apply_set(&opts);
++    apply_files(&opts);
++
++    if opts.program.is_empty() {
++        print_env(opts.line_ending);
++        return Ok(());
++    }
++
++    let do_debug_printing = matches.get_flag("verbose");
++    let mut arg0 = Cow::Borrowed(opts.program[0]);
++
++    let mut cmd = process::Command::new(&*arg0);
++    cmd.args(&opts.program[1..]);
++
++    if let Some(_argv0) = opts.argv0 {
++        #[cfg(unix)]
++        {
++            cmd.arg0(_argv0);
++            arg0 = Cow::Borrowed(_argv0);
++            if do_debug_printing {
++                eprintln!("argv0:     {}", arg0.quote());
++            }
++        }
++
++        #[cfg(not(unix))]
++        return Err(USimpleError::new(
++            2,
++            "--argv0 is currently not supported on this platform",
++        ));
++    }
++
++    if do_debug_printing {
++        eprintln!("executing: {}", arg0.maybe_quote());
++        let arg_prefix = "   arg";
++        eprintln!("{}[{}]= {}", arg_prefix, 0, arg0.quote());
++        for (i, arg) in opts.program.iter().enumerate().skip(1) {
++            eprintln!("{}[{}]= {}", arg_prefix, i, arg.quote());
++        }
++    }
++
++    match cmd.status() {
++        Ok(exit) if !exit.success() => {
++            #[cfg(unix)]
++            if let Some(exit_code) = exit.code() {
++                return Err(exit_code.into());
++            } else {
++                // `exit.code()` returns `None` on Unix when the process is terminated by a signal.
++                // See std::os::unix::process::ExitStatusExt for more information. This prints out
++                // the interrupted process and the signal it received.
++                let signal_code = exit.signal().unwrap();
++                let signal = Signal::try_from(signal_code).unwrap();
++
++                // We have to disable any handler that's installed by default.
++                // This ensures that we exit on this signal.
++                // For example, `SIGSEGV` and `SIGBUS` have default handlers installed in Rust.
++                // We ignore the errors because there is not much we can do if that fails anyway.
++                // SAFETY: The function is unsafe because installing functions is unsafe, but we are
++                // just defaulting to default behavior and not installing a function. Hence, the call
++                // is safe.
++                let _ = unsafe {
++                    sigaction(
++                        signal,
++                        &SigAction::new(SigHandler::SigDfl, SaFlags::empty(), SigSet::all()),
++                    )
++                };
++
++                let _ = raise(signal);
++            }
++            return Err(exit.code().unwrap().into());
++        }
++        Err(ref err)
++            if (err.kind() == io::ErrorKind::NotFound)
++                || (err.kind() == io::ErrorKind::InvalidInput) =>
++        {
++            return Err(make_error_no_such_file_or_dir(arg0.deref()));
++        }
++        Err(e) => {
++            uucore::show_error!("unknown error: {:?}", e);
++            return Err(126.into());
++        }
++        Ok(_) => (),
++    }
++    Ok(())
++}
++
++fn apply_removal_of_all_env_vars(opts: &Options<'_>) {
++    // remove all env vars if told to ignore presets
++    if opts.ignore_env {
++        for (ref name, _) in env::vars_os() {
++            env::remove_var(name);
++        }
++    }
++}
++
++fn apply_unset(opts: &Options<'_>) {
++    for name in &opts.unsets {
++        env::remove_var(name);
++    }
++}
++
++fn apply_set(opts: &Options<'_>) {
++    for (name, value) in &opts.sets {
++        env::set_var(name, value);
++    }
++}
++
++fn apply_files(opts: &Options<'_>) {
++    for file in &opts.files {
++        let ini = Ini::load_from_file(file)
++            .map_err(|e| USimpleError::new(1, format!("cannot read {:?}: {}", file.quote(), e)))
++            .unwrap_or_else(|e| {
++                uucore::show_error!("{}", e);
++                std::process::exit(1);
++            });
++        for (section, props) in ini.sections() {
++            for (key, value) in props.iter() {
++                if section.is_none() || section.as_ref().unwrap().is_empty() {
++                    env::set_var(key, value);
++                }
++            }
++        }
++    }
++}
++
++fn make_error_no_such_file_or_dir(prog: &OsStr) -> Box<dyn UError> {
++    USimpleError::new(127, format!("{}: No such file or directory", prog.quote())).into()
++}
++
++pub fn uu_app() -> Command {
++    Command::new(uucore::util_name())
++        .version(crate_version!())
++        .about(ABOUT)
++        .override_usage(format_usage(USAGE))
++        .infer_long_args(true)
++        .arg(
++            Arg::new("ignore-environment")
++                .short('i')
++                .long("ignore-environment")
++                .help("start with an empty environment")
++                .action(ArgAction::SetTrue),
++        )
++        .arg(
++            Arg::new("chdir")
++                .short('C')
++                .long("chdir")
++                .value_name("DIR")
++                .help("change working directory to DIR")
++                .value_parser(ValueParser::os_string()),
++        )
++        .arg(
++            Arg::new("file")
++                .short('f')
++                .long("file")
++                .value_name("FILE")
++                .help("read and set variables from FILE")
++                .action(ArgAction::Append)
++                .value_parser(ValueParser::os_string()),
++        )
++        .arg(
++            Arg::new("unset")
++                .short('u')
++                .long("unset")
++                .value_name("NAME")
++                .help("remove variable from the environment")
++                .action(ArgAction::Append)
++                .value_parser(ValueParser::os_string()),
++        )
++        .arg(
++            Arg::new("ignore-signal")
++                .long("ignore-signal")
++                .value_name("SIG")
++                .help(IGNORE_SIGNAL_HELP)
++                .action(ArgAction::Append),
++        )
++        .arg(
++            Arg::new("verbose")
++                .short('v')
++                .long("verbose")
++                .help("print the environment before running the command")
++                .action(ArgAction::SetTrue),
++        )
++        .arg(
++            Arg::new("replace")
++                .short('r')
++                .long("replace")
++                .value_name("NAME=VALUE")
++                .help("replace NAME=VALUE in the environment")
++                .action(ArgAction::Append),
++        )
++        .arg(
++            Arg::new("argv0")
++                .short('S')
++                .long("argv0")
++                .value_name("NAME")
++                .help("pass NAME as the zero argument to COMMAND")
++                .value_parser(ValueParser::os_string()),
++        )
++        .arg(
++            Arg::new("")
++                .hide(true)
++                .action(ArgAction::Append),
++        )
++        .arg(
++            Arg::new("null")
++                .short('0')
++                .long("null")
++                .help("end each output line with NUL, not newline")
++                .action(ArgAction::SetTrue),
++        )
++}

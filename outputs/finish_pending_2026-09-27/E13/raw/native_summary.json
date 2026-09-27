@@ -1,0 +1,46 @@
+{
+ "average_progress": 21.08927108927109,
+ "standard_error": 2.441514925939006,
+ "environments": {
+  "babaisai": {
+   "progression_percentage": 40.54054054054054,
+   "standard_error": 5.707414128741432,
+   "episodes_played": 74
+  },
+  "nle": {
+   "progression_percentage": 0.0,
+   "standard_error": 0.0,
+   "episodes_played": 3
+  },
+  "crafter": {
+   "progression_percentage": 22.727272727272723,
+   "standard_error": 4.590684062891852,
+   "episodes_played": 10
+  }
+ },
+ "total_input_tokens": 28673652,
+ "total_output_tokens": 19084,
+ "client": {
+  "client_name": "vllm",
+  "model_id": "pavlov-public-portfolio-bf16",
+  "base_url": "http://127.0.0.1:8793/babaisai/v1",
+  "generate_kwargs": {
+   "temperature": 1.0,
+   "max_tokens": 8192,
+   "thinking_budget": null
+  },
+  "timeout": 60,
+  "max_retries": 5,
+  "delay": 2,
+  "alternate_roles": false
+ },
+ "agent": {
+  "type": "naive",
+  "remember_cot": true,
+  "max_text_history": 16,
+  "max_image_history": 0,
+  "max_cot_history": 1,
+  "max_icl_history": 1000,
+  "cache_icl": false
+ }
+}

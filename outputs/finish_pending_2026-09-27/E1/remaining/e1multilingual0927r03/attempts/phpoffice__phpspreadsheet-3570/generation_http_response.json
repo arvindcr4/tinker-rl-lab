@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/PhpSpreadsheet/Calculation/LookupRef/LookupBase.php b/src/PhpSpreadsheet/Calculation/LookupRef/LookupBase.php\nindex 1567777..8888888 100644\n--- a/src/PhpSpreadsheet/Calculation/LookupRef/LookupBase.php\n+++ b/src/PhpSpreadsheet/Calculation/LookupRef/LookupBase.php\n@@ -100,7 +100,11 @@ class LookupBase\n     {\n         $indexNumber = Functions::flattenSingleValue($indexNumber);\n \n-        if (!is_numeric($indexNumber) || $indexNumber < 1) {\n+        if (is_array($indexNumber)) {\n+            $indexNumber = $indexNumber[0];\n+        }\n+\n+        if (!is_numeric($indexNumber) || $indexNumber < 1 || $indexNumber > $columnCount) {\n             return Functions::VALUE();\n         }",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472180,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-b09813117a458d7d",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 232,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 26461,
+    "prompt_tokens_details": null,
+    "total_tokens": 26693
+  }
+}

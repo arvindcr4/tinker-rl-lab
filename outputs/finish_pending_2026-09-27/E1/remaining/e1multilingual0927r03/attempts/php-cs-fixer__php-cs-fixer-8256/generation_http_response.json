@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/Fixer/Basic/NoExtraBlankLineFixer.php b/src/Fixer/Basic/NoExtraBlankLineFixer.php\nindex 1663777..8537777 100644\n--- a/src/Fixer/Basic/NoExtraBlankLineFixer.php\n+++ b/src/Fixer/Basic/NoExtraBlankLineFixer.php\n@@ -106,6 +106,7 @@ final class NoExtraBlankLineFixer extends AbstractFixer implements ConfigurableF\n             'curly_brace_position',\n             'include_use_no_declaration_statement',\n             'no_extra_blank_docblock',\n+            'no_extra_blank_line_after_php_tag',\n             'no_multiple_statements_per_line',\n             'no_space_around_offset',\n             'no_whitespace_in_blank_line',",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472017,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-b6ecf992222df934",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 187,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 9749,
+    "prompt_tokens_details": null,
+    "total_tokens": 9936
+  }
+}

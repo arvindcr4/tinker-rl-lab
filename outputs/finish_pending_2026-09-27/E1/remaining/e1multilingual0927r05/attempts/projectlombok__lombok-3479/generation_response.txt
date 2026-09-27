@@ -1,0 +1,16 @@
+diff --git a/src/core/lombok/eclipse/handlers/HandleExtensionMethod.java b/src/core/lombok/eclipse/handlers/HandleExtensionMethod.java
+index 5c0f0f0..8b0a0a0 100644
+--- a/src/core/lombok/eclipse/handlers/HandleExtensionMethod.java
++++ b/src/core/lombok/eclipse/handlers/HandleExtensionMethod.java
+@@ -36,10 +36,10 @@ public class HandleExtensionMethod extends EclipseAnnotationHandler<ExtensionMeth
+ 		int modifiers = typeDecl == null ? 0 : typeDecl.modifiers;
+ 		
+ 		boolean notAClass = (modifiers &
+-				(ClassFileConstants.AccAnnotation)) != 0;
++				(ClassFileConstants.AccAnnotation | ClassFileConstants.AccInterface)) != 0;
+ 		
+ 		if (typeDecl == null || notAClass) {
+-			annotationNode.addError("@ExtensionMethod is legal only on classes and enums and interfaces.");
++			annotationNode.addError("@ExtensionMethod is legal only on classes, enums, interfaces, and records.");
+ 			return;
+ 		}

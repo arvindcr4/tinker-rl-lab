@@ -1,0 +1,33 @@
+diff --git a/src/uu/cp/src/cp.rs b/src/uu/cp/src/cp.rs
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/uu/cp/src/cp.rs
++++ b/src/uu/cp/src/cp.rs
+@@ -1,6 +1,6 @@
+ // This file is part of the uutils coreutils package.
+ //
+-// For the full copyright and license information, please view the LICENSE
++// For the full copyright and license information, please view the LICENSE
+ // file that was distributed with this source code.
+ 
+ // spell-checker:ignore (ToDO)
+@@ -10,6 +10,7 @@
+ use clap::{builder::PossibleValue, crate_version, Arg, ArgAction, ArgMatches, Command};
+ use filetime::FileTime;
+ use std::borrow::Cow;
++use std::ffi::OsString;
+ use std::fs;
+ use std::io;
+ use std::path::{Path, PathBuf};
+@@ -123,6 +124,12 @@ pub fn uu_app() -> Command {
+             .long("no-clobber")
+             .action(ArgAction::SetTrue),
+     )
++    .arg(
++        Arg::new("target_directory")
++            .short('t')
++            .long("target-directory")
++            .value_hint(clap::ValueHint::DirPath),
++    )
+     .arg(
+         Arg::new("update")
+             .short('u')

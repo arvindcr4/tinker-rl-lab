@@ -1,0 +1,67 @@
+{
+    "total_instances": 16,
+    "submitted_instances": 16,
+    "completed_instances": 5,
+    "resolved_instances": 0,
+    "unresolved_instances": 5,
+    "infra_failure_instances": 0,
+    "ambiguous_failure_instances": 0,
+    "empty_patch_instances": 1,
+    "error_instances": 10,
+    "completed_ids": [
+        "preactjs__preact-2757",
+        "preactjs__preact-3062",
+        "preactjs__preact-3562",
+        "preactjs__preact-3689",
+        "preactjs__preact-4245"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [
+        "preactjs__preact-4182"
+    ],
+    "submitted_ids": [
+        "phpoffice__phpspreadsheet-4313",
+        "preactjs__preact-2757",
+        "preactjs__preact-2896",
+        "preactjs__preact-2927",
+        "preactjs__preact-3010",
+        "preactjs__preact-3062",
+        "preactjs__preact-3345",
+        "preactjs__preact-3454",
+        "preactjs__preact-3562",
+        "preactjs__preact-3567",
+        "preactjs__preact-3689",
+        "preactjs__preact-3739",
+        "preactjs__preact-3763",
+        "preactjs__preact-4152",
+        "preactjs__preact-4182",
+        "preactjs__preact-4245"
+    ],
+    "resolved_ids": [],
+    "unresolved_ids": [
+        "preactjs__preact-2757",
+        "preactjs__preact-3062",
+        "preactjs__preact-3562",
+        "preactjs__preact-3689",
+        "preactjs__preact-4245"
+    ],
+    "infra_failure_ids": [],
+    "ambiguous_failure_ids": [],
+    "failure_reasons": {},
+    "error_ids": [
+        "phpoffice__phpspreadsheet-4313",
+        "preactjs__preact-2896",
+        "preactjs__preact-2927",
+        "preactjs__preact-3010",
+        "preactjs__preact-3345",
+        "preactjs__preact-3454",
+        "preactjs__preact-3567",
+        "preactjs__preact-3739",
+        "preactjs__preact-3763",
+        "preactjs__preact-4152"
+    ],
+    "schema_version": 2,
+    "unstopped_instances": 0,
+    "unstopped_containers": [],
+    "unremoved_images": []
+}

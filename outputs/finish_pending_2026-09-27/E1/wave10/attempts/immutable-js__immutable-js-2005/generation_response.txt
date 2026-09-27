@@ -1,0 +1,22 @@
+diff --git a/src/OrderedSet.js b/src/OrderedSet.js
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/OrderedSet.js
++++ b/src/OrderedSet.js
+@@ -1,5 +1,6 @@
+ import { SetCollection, KeyedCollection } from './Collection';
+ import { IS_ORDERED_SYMBOL } from './predicates/isOrdered';
++import { isOrderedSet } from './predicates/isOrderedSet';
+ import { IndexedCollectionPrototype } from './CollectionImpl';
+ import { Set } from './Set';
+ import { emptyOrderedMap } from './OrderedMap';
+@@ -10,6 +11,10 @@ export class OrderedSet extends Set {
+   // @pragma Construction
+ 
+   constructor(value) {
++    if (isOrderedSet(value)) {
++      return value;
++    }
++
+     // eslint-disable-next-line no-constructor-return
+     return value === undefined || value === null
+       ? emptyOrderedSet()

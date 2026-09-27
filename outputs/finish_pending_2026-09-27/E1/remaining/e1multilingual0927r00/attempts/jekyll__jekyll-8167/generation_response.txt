@@ -1,0 +1,13 @@
+diff --git a/lib/jekyll/utils.rb b/lib/jekyll/utils.rb
+index 7a7f7f7..b8b8b8b 100644
+--- a/lib/jekyll/utils.rb
++++ b/lib/jekyll/utils.rb
+@@ -100,7 +100,7 @@ module Jekyll
+     #
+     # @return [String]
+     def replace_character_sequence_with_hyphen(string)
+-      string.gsub(/[^[:alnum:]._~!$&'()+,;=@]+/, "-")
++      string.gsub(/[^\p{M}\p{L}\p{Nd}._~!$&'()+,;=@]+/, "-")
+     end
+ 
+     #

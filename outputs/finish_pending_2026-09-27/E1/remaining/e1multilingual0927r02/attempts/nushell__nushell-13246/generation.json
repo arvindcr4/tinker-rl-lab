@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "2cf613a7b49f83c74fd5345a3ca0e7df1370a53e7d7679e9d11443909ca333fd",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790472471.688839,
+  "instance_id": "nushell__nushell-13246",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/crates/nu-command/src/filters/find.rs b/crates/nu-command/src/filters/find.rs\nindex 0732733..0732733 100644\n--- a/crates/nu-command/src/filters/find.rs\n+++ b/crates/nu-command/src/filters/find.rs\n@@ -1,5 +1,5 @@\n use nu_engine::command_prelude::*;\n-use nu_utils::match_case::{MatchCase, Matcher};\n+use nu_utils::match_case::{MatchCase, Matcher, MatchCaseInsensitive};\n use std::fmt::Write;\n \n #[derive(Clone)]\n@@ -10,7 +10,7 @@ pub struct Find;\n \n impl Command for Find {\n     fn name(&self) -> &str {\n-        \"find\"\n+        \"find\"\n     }\n \n     fn signature(&self) -> Signature {\n@@ -18,7 +18,7 @@ impl Command for Find {\n             .input_output_types(vec![\n                 (Type::Table, Type::Table),\n                 (Type::ListTable, Type::ListTable),\n-                (Type::String, Type::String),\n+                (Type::String, Type::String),\n             ])\n             .allow_variants_without_examples(true)\n             .switch(",
+  "patch_sha256": "b53bd774b25b0167304325ce73176b01704598da9c592552e9283e439bbf0463",
+  "request_sha256": "6edd652f2159ca0f2766613988d3704cdc4ebba847612d180d1bbf149a503c90",
+  "response_sha256": "b53bd774b25b0167304325ce73176b01704598da9c592552e9283e439bbf0463",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "62c3d8d48793c7d959cad5d19742acffef89e076b352bbff71f524c3e92d83a5",
+  "started_at": 1790472466.9117382,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 296,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 23544,
+    "prompt_tokens_details": null,
+    "total_tokens": 23840
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

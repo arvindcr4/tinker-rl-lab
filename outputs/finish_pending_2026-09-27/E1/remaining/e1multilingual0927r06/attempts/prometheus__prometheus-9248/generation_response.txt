@@ -1,0 +1,16 @@
+diff --git a/promql/functions.go b/promql/functions.go
+index 0930773..0930773 100644
+--- a/promql/functions.go
++++ b/promql/functions.go
+@@ -100,6 +100,10 @@ var functions = map[string]Function{
+ 	"atan": {
+ 		Args:      []ValueType{ValueTypeVector},
+ 	},
++	"atan2": {
++		Args: []ValueType{
++			ValueTypeVector, ValueTypeVector,
++		},
++	},
+ 	"ceil": {
+ 		Args:      []ValueType{ValueTypeVector},
+ 	},

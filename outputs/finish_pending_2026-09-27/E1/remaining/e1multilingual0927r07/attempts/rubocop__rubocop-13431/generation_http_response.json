@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/lib/rubocop/cop/layout/empty_lines_around_method_body.rb b/lib/rubocop/cop/layout/empty_lines_around_method_body.rb\nindex 0730303..0303030 100644\n--- a/lib/rubocop/cop/layout/empty_lines_around_method_body.rb\n+++ b/lib/rubocop/cop/layout/empty_lines_around_method_body.rb\n@@ -103,7 +103,7 @@ module RuboCop\n       private\n \n       def method_body(node)\n-        node.body\n+        node.body || node.arguments\n       end\n \n       def empty_lines_before_body(node)",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790473584,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-919b9a4b5ff63629",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 147,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 20556,
+    "prompt_tokens_details": null,
+    "total_tokens": 20703
+  }
+}

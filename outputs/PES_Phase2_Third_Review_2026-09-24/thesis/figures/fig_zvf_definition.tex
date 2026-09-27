@@ -38,16 +38,16 @@
   pnlb/.style={pnl, draw=blocked!85!black, fill=blocked!5},
   prmpt/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=blue!6,
                 font=\footnotesize, inner sep=3.5pt, text width=6.4cm, align=center},
-  cnt/.style={font=\scriptsize\itshape, text=black!65, align=center},
+  cnt/.style={font=\footnotesize\itshape, text=black!65, align=center},
   comp/.style={rectangle, rounded corners=1pt, draw=black!55, thick, fill=black!4,
                minimum width=5.4mm, minimum height=5.0mm, inner sep=0pt,
-               font=\scriptsize, align=center},
+               font=\footnotesize, align=center},
   chip/.style={rectangle, rounded corners=1pt, thick, minimum width=5.4mm,
-               minimum height=5.0mm, inner sep=0pt, font=\scriptsize, align=center},
+               minimum height=5.0mm, inner sep=0pt, font=\footnotesize, align=center},
   chipgood/.style={chip, draw=good, fill=good!16},
   chipbad/.style={chip, draw=bad, fill=bad!13},
   stat/.style={rectangle, rounded corners=2pt, draw=black!55, thick, fill=white,
-               font=\scriptsize, inner sep=4pt, text width=6.1cm, align=center},
+               font=\footnotesize, inner sep=4pt, text width=6.1cm, align=center},
   verd/.style={rectangle, rounded corners=2pt, thick, font=\footnotesize,
                inner sep=4pt, text width=6.3cm, align=left},
   verdg/.style={verd, draw=complete!85!black, fill=complete!10},
@@ -74,8 +74,9 @@
   % 8 columns; each completion carries its own scalar reward directly beneath it
   \node[comp, below=2.5mm of capA, xshift=-2.17cm] (cA0) {$y_1$};
   \foreach \k in {1,2,3,4,5,6,7}{
-    \pgfmathsetmacro{\km}{\k-1}
-    \node[comp, right=0.8mm of cA\km] (cA\k) {$y_{\k+1}$};
+    \pgfmathtruncatemacro{\km}{\k-1}
+    \pgfmathtruncatemacro{\kp}{\k+1}
+    \node[comp, right=0.8mm of cA\km] (cA\k) {$y_{\kp}$};
   }
   \foreach \k/\v in {0/1,1/0,2/1,3/1,4/0,5/1,6/0,7/0}{
     \ifnum\v=1 \node[chipgood, below=2.5mm of cA\k] (rA\k) {\v}; \fi
@@ -121,8 +122,9 @@
 
   \node[comp, below=2.5mm of capB, xshift=-2.17cm] (cB0) {$y_1$};
   \foreach \k in {1,2,3,4,5,6,7}{
-    \pgfmathsetmacro{\km}{\k-1}
-    \node[comp, right=0.8mm of cB\km] (cB\k) {$y_{\k+1}$};
+    \pgfmathtruncatemacro{\km}{\k-1}
+    \pgfmathtruncatemacro{\kp}{\k+1}
+    \node[comp, right=0.8mm of cB\km] (cB\k) {$y_{\kp}$};
   }
   \foreach \k in {0,1,2,3,4,5,6,7}{
     \node[chipbad, below=2.5mm of cB\k] (rB\k) {0};
@@ -192,23 +194,23 @@
   \fill[good!35, draw=good, thick] (0,-2.30) rectangle (\sA,-1.68);
   \fill[bad!30, draw=bad, thick]   (\sA,-2.30) rectangle (\xB,-1.68);
   \fill[pesblue!12, draw=pesblue, thick] (\xB,-2.30) rectangle (\xEnd,-1.68);
-  % hatch overlay: a redundant, non-colour encoding of the two ZVF segments
+  % hatch overlay: vertical (all-correct) vs cross-hatch (all-wrong), distinct in greyscale
   \fill[pattern=hatchv, pattern color=good!85!black] (0,-2.30) rectangle (\sA,-1.68);
-  \fill[pattern=hatchv, pattern color=bad!85!black]  (\sA,-2.30) rectangle (\xB,-1.68);
+  \fill[pattern=crosshatch, pattern color=bad!85!black]  (\sA,-2.30) rectangle (\xB,-1.68);
 
   % segment labels (leader line for the narrow all-wrong segment)
-  \node[font=\scriptsize, text=black!80, anchor=north, align=center] at (0.91,-2.44)
+  \node[font=\footnotesize, text=black!80, anchor=north, align=center] at (0.91,-2.44)
     {all-correct\\ $12.7\%$};
   \draw[black!60, thin] (\xB,-1.99) -- (2.62,-1.99);
-  \node[font=\scriptsize, text=black!80, anchor=west] at (2.68,-1.99)
+  \node[font=\footnotesize, text=black!80, anchor=west] at (2.68,-1.99)
     {all-wrong $3.2\%$};
-  \node[font=\scriptsize, text=black!80, anchor=north, align=center] at (8.35,-2.44)
+  \node[font=\footnotesize, text=black!80, anchor=north, align=center] at (8.35,-2.44)
     {mixed --- contrast present, so counted in $\mathrm{GU}$: $84.1\%$};
 
   % brace marking the ZVF portion of the bar
   \draw[decorate, decoration={brace, amplitude=3pt, mirror}, thick, draw=blocked!80!black]
     (0,-1.56) -- (\xB,-1.56);
-  \node[font=\scriptsize, text=blocked!80!black, anchor=south west] at (0,-1.48)
+  \node[font=\footnotesize, text=blocked!80!black, anchor=south west] at (0,-1.48)
     {$\mathrm{ZVF}=12.7\%+3.2\%=0.16$};
 \end{scope}
 

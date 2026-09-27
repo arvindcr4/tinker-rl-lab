@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/diff/children.js b/src/diff/children.js\nindex 0720000..8000000 100644\n--- a/src/diff/children.js\n+++ b/src/diff/children.js\n@@ -1,6 +1,6 @@\n import { assign } from './util';\n import { Fragment } from '../create_element';\n-import { diff, setRef } from './index';\n+import { diff, setRef, unmount } from './index';\n import { EMPTY_OBJ, EMPTY_ARR } from '../constants';\n import { Component } from '../component';\n import { createVNode } from '../create_element';\n@@ -10,6 +10,7 @@ import { Component } from '../component';\n  * @param {import('../internal').VNode} newParentVNode\n  * @param {Array<import('../internal').VNode>} [newChildren]\n  * @param {boolean} [isHydrating] Whether or not we are hydrating\n+ * @param {import('../internal').Component} [prevComponent]\n  * @returns {Array<import('../internal').VNode>}\n  */\n export function diffChildren(\n@@ -17,7 +18,8 @@ export function diffChildren(\n \tnewParentVNode,\n \tnewChildren,\n-\tisHydrating\n+\tisHydrating,\n+\tprevComponent\n ) {\n \tlet i,\n \t\toldChild,\n@@ -100,6 +102,11 @@ export function diffChildren(\n \t\t\t}\n \n \t\t\tif (oldChild._dom != null) dom = oldChild._dom;\n+\n+\t\t\t// If the old child had a ref callback, call it with null to clean it up\n+\t\t\tif (typeof oldChild.props.ref == 'function') {\n+\t\t\t\toldChild.props.ref(null);\n+\t\t\t}\n \t\t}\n \n \t\t// If we are replacing a child, we need to replace it in the parent's children array",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472596,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-8dcc634baad7d6d3",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 455,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 28746,
+    "prompt_tokens_details": null,
+    "total_tokens": 29201
+  }
+}

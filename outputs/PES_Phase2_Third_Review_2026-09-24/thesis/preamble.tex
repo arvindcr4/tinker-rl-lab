@@ -1,7 +1,7 @@
 %=====================================================================
 % PES University --- M.Tech (Data Science and Machine Learning)
 % Project Phase-2 Report / Thesis
-% Tinker RL Lab --- Multi-Framework GRPO Post-Training Study
+% Tinker RL Lab --- Post-Training of Large Language Models
 % Author: Arvind C R (SRN PES2PGE24DS140)   Guide: Ramesh Prakash Guledgudd
 % Built with tectonic:  cd <dir> && tectonic thesis_master.tex
 %=====================================================================
@@ -13,6 +13,8 @@
 \onehalfspacing
 
 \usepackage{amsmath,amssymb}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext,newtxmath}   % Times, per PES front-page sample
 \usepackage{graphicx}
 \usepackage{array}
 \usepackage{booktabs}
@@ -20,10 +22,11 @@
 \usepackage{calc}          % required by pandoc's table column-width arithmetic
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \usepackage{xcolor}
+\definecolor{pesmaroon}{RGB}{150,30,40}
 \usepackage{enumitem}
 \usepackage[hidelinks]{hyperref}
 \hypersetup{
-  pdftitle={Tinker RL Lab: A Multi-Framework Benchmark and Study of GRPO-Style Reinforcement-Learning Post-Training of Large Language Models},
+  pdftitle={Tinker RL Lab: Post-Training of Large Language Models --- A multi-framework training harness and studies of GRPO signal starvation},
   pdfauthor={Arvind C R},
   pdfsubject={M.Tech Project Phase-2 Report, PES University},
   pdfkeywords={GRPO, RLVR, zero-variance fraction, reproducibility, telemetry, benchmark evaluation}

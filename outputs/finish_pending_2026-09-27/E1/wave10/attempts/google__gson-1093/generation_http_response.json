@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/gson/src/main/java/com/google/gson/stream/JsonWriter.java b/gson/src/main/java/com/google/gson/stream/JsonWriter.java\n--- a/gson/src/main/java/com/google/gson/stream/JsonWriter.java\n+++ b/gson/src/main/java/com/google/gson/stream/JsonWriter.java\n@@ -566,7 +566,11 @@ public final class JsonWriter implements Closeable, Flushable {\n    * @throws IOException if this writer is closed.\n    */\n   public JsonWriter value(double value) throws IOException {\n-    if (Double.isNaN(value) || Double.isInfinite(value)) {\n+    if (lenient) {\n+      string(value == Double.NEGATIVE_INFINITY ? \"-Infinity\"\n+          : value == Double.POSITIVE_INFINITY ? \"Infinity\" : \"NaN\");\n+    } else if (Double.isNaN(value) || Double.isInfinite(value)) {\n       throw new IllegalArgumentException(\"Numeric values must be finite, but was \" + value);\n     }\n     return value(Long.toString((long) value));",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471247,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-9ff08656138d6a35",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 235,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 25212,
+    "prompt_tokens_details": null,
+    "total_tokens": 25447
+  }
+}

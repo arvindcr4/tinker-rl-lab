@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/acl.c b/src/acl.c\nindex 1155555555..2266666666 100644\n--- a/src/acl.c\n+++ b/src/acl.c\n@@ -2850,6 +2850,10 @@ static void aclSetUserAddCommand(aclUser *user, int idx, const char *cmd) {\n         }\n     }\n \n+    /* If we are adding a command, remove any specific channel restrictions\n+     * for that command to avoid confusion in the ACL list output. */\n+    aclRemoveUserCommandChannels(user, idx);\n+\n     /* Add the command to the list */\n     user->commands[idx].cmd = cmd;\n     user->commands[idx].idx = cmdidx;",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790473204,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-b4c9146f21686902",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 186,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 31037,
+    "prompt_tokens_details": null,
+    "total_tokens": 31223
+  }
+}

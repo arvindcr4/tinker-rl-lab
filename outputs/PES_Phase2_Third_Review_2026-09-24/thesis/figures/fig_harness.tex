@@ -27,98 +27,108 @@
 \definecolor{partial}{RGB}{176,106,0}
 \definecolor{blocked}{RGB}{166,43,43}
 \begin{document}
-\begin{tikzpicture}[x=1cm,y=1cm]
+% Canvas is ~140 mm wide so that it prints at ~97% of natural size
+% (0.94\linewidth = 390 pt); smallest text is \scriptsize (7 pt -> ~6.8 pt).
+\begin{tikzpicture}[x=1mm,y=1mm]
 
-% ---- local sizing: every box is exactly two lines tall --------------
 \tikzset{
-  stage/.style={text width=48mm, minimum height=9mm, inner sep=3pt},
-  outcome/.style={text width=54mm, minimum height=9mm, inner sep=3.5pt,
-                  font=\fontsize{7}{8.3}\selectfont},
-  gbox/.style={proc, text width=76mm, minimum height=9mm, inner sep=3pt},
+  stage/.style={text width=54mm, minimum height=9mm, inner sep=2.5pt,
+                align=center, font=\small},
+  outcome/.style={text width=66mm, inner sep=3pt, align=left,
+                  font=\footnotesize},
+  gbox/.style={proc, text width=80mm, minimum height=9mm, inner sep=3pt},
 }
 
 % ================= declared inputs =================
-\node[io, text width=150mm, minimum height=8.5mm, inner sep=3pt] (spec) at (0,0)
+\node[io, text width=134mm, inner sep=3pt] (spec) at (0,0)
   {\textbf{Declared lane inputs --- the five preconditions}\\[2pt]
-   \scriptsize immutable task bundle $\cdot$ applicable licence $\cdot$ pinned native runtime
+   \footnotesize immutable task bundle $\cdot$ applicable licence $\cdot$ pinned native runtime
    $\cdot$ native grader $\cdot$ sufficient budget};
 
 % ================= precondition gate =================
-\node[gbox, below=7mm of spec] (g)
+\node[gbox, below=6mm of spec] (g)
   {\textbf{Precondition gate}\\[1pt]
-   \scriptsize all five verified for the declared suite?};
-
+   \footnotesize all five verified for the declared suite?};
 \draw[ar] (spec) -- (g);
 
-% ================= split into the two outcomes =================
-\draw[thick] (g.south) -- ++(0,-9mm) coordinate (mid);
-\coordinate (xL) at (-5.8,0);
-\coordinate (xR) at ( 5.8,0);
-\coordinate (splitL) at (xL |- mid);
-\coordinate (splitR) at (xR |- mid);
-
-\node[lbl, text=complete, anchor=south] at ($(mid)!0.62!(splitL)+(0,1mm)$)
+% ================= split =================
+\draw[thick] (g.south) -- ++(0,-8) coordinate (mid);
+\coordinate (splitL) at (-36,0 |- mid);
+\coordinate (splitR) at ( 36,0 |- mid);
+\node[lbl, text=complete!80!black, anchor=south] at ($(mid)!0.55!(splitL)+(0,0.8)$)
   {yes --- dispatch};
-\node[lbl, text=blocked, anchor=south] at ($(mid)!0.62!(splitR)+(0,1mm)$)
-  {no, or unknown state $\Rightarrow$ fail closed};
+\node[lbl, text=blocked, anchor=south] at ($(mid)!0.55!(splitR)+(0,0.8)$)
+  {no, or unknown $\Rightarrow$ fail closed};
 
 % ================= LEFT: preconditions satisfied =================
-\node[blk, stage] (l1) [below=6mm of splitL]
-  {\textbf{1\,\textperiodcentered\,Task manifest}\\[1pt] \scriptsize hash-pinned task/split IDs};
-\node[blk, stage, below=4mm of l1] (l2)
-  {\textbf{2\,\textperiodcentered\,Execution sandbox}\\[1pt] \scriptsize pinned native runtime};
-\node[blk, stage, below=4mm of l2] (l3)
-  {\textbf{3\,\textperiodcentered\,Native verifier}\\[1pt] \scriptsize official native grader};
-\node[blk, stage, below=4mm of l3] (l4)
-  {\textbf{4\,\textperiodcentered\,Artifact capture}\\[1pt] \scriptsize attempts and receipts};
-\node[blk, stage, below=4mm of l4] (l5)
-  {\textbf{5\,\textperiodcentered\,Report}\\[1pt] \scriptsize score recorded only if exact};
-
+\node[blk, stage, below=5mm of splitL] (l1)
+  {\textbf{1\,\textperiodcentered\,Task manifest}\\[1pt] \footnotesize hash-pinned task/split IDs};
+\node[blk, stage, below=3.5mm of l1] (l2)
+  {\textbf{2\,\textperiodcentered\,Execution sandbox}\\[1pt] \footnotesize pinned native runtime};
+\node[blk, stage, below=3.5mm of l2] (l3)
+  {\textbf{3\,\textperiodcentered\,Native verifier}\\[1pt] \footnotesize official native grader};
+\node[blk, stage, below=3.5mm of l3] (l4)
+  {\textbf{4\,\textperiodcentered\,Artifact capture}\\[1pt] \footnotesize attempts and receipts};
+\node[blk, stage, below=3.5mm of l4] (l5)
+  {\textbf{5\,\textperiodcentered\,Report}\\[1pt] \footnotesize score recorded only if exact};
 \foreach \a/\b in {l1/l2, l2/l3, l3/l4, l4/l5} {\draw[ar] (\a) -- (\b);}
 \draw[ar, draw=complete] (mid) -| (l1);
 
 % ================= RIGHT: fail-closed branch =================
-\node[warnbox, stage, right=62mm of l1] (r1)
-  {\textbf{Gate refuses dispatch}\\[1pt] \scriptsize no adapter invoked};
-\node[warnbox, stage, right=62mm of l2] (r2)
-  {\textbf{Records BLOCKED}\\[1pt] \scriptsize declared suite unsettled};
-\node[warnbox, stage, right=62mm of l3] (r3)
-  {\textbf{score := null, not 0}\\[1pt] \scriptsize partial evidence stays partial};
-\node[stage, draw=blocked!75, dashed, fill=blocked!4, text=black!65, right=62mm of l4] (r4)
-  {\textbf{Adjacent benchmark}\\[1pt] \scriptsize NEVER substituted};
-\node[stage, draw=black!40, fill=black!4, text=black!70, right=62mm of l5] (r5)
-  {\textbf{Provider request logged}\\[1pt] \scriptsize sent; none answered};
-
+\node[warnbox, stage, anchor=center] (r1) at (splitR |- l1)
+  {\textbf{Gate refuses dispatch}\\[1pt] \footnotesize no adapter invoked};
+\node[warnbox, stage] (r2) at (splitR |- l2)
+  {\textbf{Records BLOCKED}\\[1pt] \footnotesize declared suite unsettled};
+\node[warnbox, stage] (r3) at (splitR |- l3)
+  {\textbf{score := null, not 0}\\[1pt] \footnotesize partial evidence stays partial};
+\node[stage, rectangle, rounded corners=2pt, thick, draw=blocked!75, dashed,
+      fill=blocked!4, text=black!75] (r4) at (splitR |- l4)
+  {\textbf{Adjacent benchmark}\\[1pt] \footnotesize NEVER substituted};
+\node[stage, rectangle, rounded corners=2pt, thick, draw=black!45, fill=black!4,
+      text=black!80] (r5) at (splitR |- l5)
+  {\textbf{Provider request logged}\\[1pt] \footnotesize sent; none answered};
 \foreach \a/\b in {r1/r2, r2/r3, r3/r4, r4/r5} {\draw[ar, draw=blocked] (\a) -- (\b);}
 \draw[ar, draw=blocked] (mid) -| (r1);
 
 % cross marking the refusal to substitute an adjacent benchmark
-\coordinate (xk) at ($(r4.west)+(-0.45,0)$);
-\draw[blocked, very thick, line cap=round] ($(xk)+(-0.16,0.16)$) -- ($(xk)+(0.16,-0.16)$);
-\draw[blocked, very thick, line cap=round] ($(xk)+(-0.16,-0.16)$) -- ($(xk)+(0.16,0.16)$);
+\coordinate (xk) at ($(r4.west)+(-3.2,0)$);
+\draw[blocked, very thick, line cap=round] ($(xk)+(-1.4,1.4)$) -- ($(xk)+(1.4,-1.4)$);
+\draw[blocked, very thick, line cap=round] ($(xk)+(-1.4,-1.4)$) -- ($(xk)+(1.4,1.4)$);
 
-% ================= the two outcomes, side by side =================
-\node[oklbox, outcome, below=9mm of l5] (oa)
-  {\textbf{Outcome A --- suite settled}\\[2pt]
-   E1 $2/731 = 0.274\%$ $\cdot$ E11 $129/312 = 41.35\%$\\[1pt]
-   replacement scopes, never pooled:\\[1pt]
-   E8 $1967/1967$ $\cdot$ E10 $97/97$ $\cdot$ E14 $2271/4428$};
+% ================= the two outcomes =================
+\node[oklbox, outcome, below=7mm of l5, anchor=north] (oa)
+  {\textbf{\small Outcome A --- suite settled}\\[2pt]
+   \textit{Original contract, full-suite score:}\\
+   \quad E1 SWE-bench Pro: $2/731 = 0.274\%$ pass@1\\
+   \quad E11 VerilogEval: $129/312 = 41.35\%$ pass@1\\[2pt]
+   \textit{Replacement scope, complete (coverage; score):}\\
+   \quad E8 LAB-Bench: $1967/1967$ graded, by category\\
+   \quad E10 AgentDojo: $97/97$ run; utility $88/97$\\
+   \quad E14 Omni-MATH: $4428/4428$ dispositions;\\
+   \quad\quad $2271/4428 = 51.29\%$ (unjudged rows = fail)};
 \draw[ar, draw=complete] (l5) -- (oa);
 
-\node[warnbox, outcome, below=9mm of r5] (ob)
-  {\textbf{Outcome B --- gap reported}\\[2pt]
-   7 of 14 lanes have no local or paid path:\\[1pt]
-   E3 $\cdot$ E6 $\cdot$ E8 $\cdot$ E10 $\cdot$ E12 $\cdot$ E13 $\cdot$ E14\\[1pt]
-   (original scope) --- score left \texttt{null}};
+\node[warnbox, outcome, anchor=north] (ob) at (splitR |- oa.north)
+  {\textbf{\small Outcome B --- gap reported, score \texttt{null}}\\[2pt]
+   \textit{Original scope, no local or paid path}\\
+   \textit{(closed external, 7 lanes):}\\
+   \quad E3 $\cdot$ E7 $\cdot$ E8 $\cdot$ E10 $\cdot$ E12 $\cdot$ E13 $\cdot$ E14\\[2pt]
+   \textit{Replacement or original scope not settled:}\\
+   \quad AWS quota gate: E6, E9\\
+   \quad launch pending: E1, E2, E5, E13\\
+   \quad closed partial: E4 (1/100 tasks)};
 \draw[ar, draw=blocked] (r5) -- (ob);
 
+
 % ================= closing rule strip =================
-\node[blk, text width=152mm, inner sep=3.5pt, below=12mm of oa]
-  {\textbf{Fail-closed rule}\\[2pt]
-   \scriptsize Unknown states fail closed rather than defaulting to a classification. The gate invokes no adapter and\\[1pt]
-   \scriptsize accepts no package as a result: no partial, recovery, public, harness, readiness or package-validation\\[1pt]
-   \scriptsize evidence is converted into a suite score, and no cross-suite average is formed at any point.\\[3pt]
-   \scriptsize All 14 lanes, terminal status 2026-08-29: \textbf{2} scored exact $\cdot$ \textbf{5} partial (never pooled) $\cdot$ \textbf{7} blocked externally.};
+\node[blk, text width=134mm, inner sep=3pt, anchor=north, font=\footnotesize]
+  at ([yshift=-6mm] 0, 0 |- oa.south)
+  {\textbf{\small Fail-closed rule}\\[2pt]
+   Unknown states fail closed rather than defaulting to a classification.\\
+   No partial, recovery, public, harness, readiness or package-validation\\
+   evidence becomes a suite score, and no cross-suite average is formed.\\[3pt]
+   All 14 lanes, ledger of 2026-09-19 (one terminal state per lane, as in the Chapter 9 lane grid):\\
+   \textbf{4} complete $\cdot$ \textbf{5} pending or partial $\cdot$ \textbf{5} blocked.};
 
 \end{tikzpicture}
 \end{document}

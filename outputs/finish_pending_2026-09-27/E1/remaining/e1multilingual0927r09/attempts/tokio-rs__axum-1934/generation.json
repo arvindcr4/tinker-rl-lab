@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "e71b370f6de6d181a90e496197ba16911fd3c3417fe6b9a615e81dea3c93b241",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790475291.286998,
+  "instance_id": "tokio-rs__axum-1934",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/src/extract/matched_path.rs b/src/extract/matched_path.rs\nindex 5a0f773..1b0f773 100644\n--- a/src/extract/matched_path.rs\n+++ b/src/extract/matched_path.rs\n@@ -143,7 +143,7 @@ impl MatchedPath {\n     pub(crate) fn clear(&self) {\n         // If the matched path is `None` then it means the request was handled by a service that\n         // doesn't support `MatchedPath`.\n-        assert!(self.0.extensions_mut().remove::<MatchedPath>().is_none());\n+        let _ = self.0.extensions_mut().remove::<MatchedPath>();\n     }\n }",
+  "patch_sha256": "a8d696974a3653f4c8f185e66819211defc8478f55178118204885944f71e4dd",
+  "request_sha256": "1fe2347b11c4c76cfecfd6e36d9d0324caac32e75c0010e3621aae448062672a",
+  "response_sha256": "a8d696974a3653f4c8f185e66819211defc8478f55178118204885944f71e4dd",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "955ea0e7220609db5121665965d66ae0bf3cfa1744e3ea51138b8be7db8ab84b",
+  "started_at": 1790475287.57438,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 172,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 27980,
+    "prompt_tokens_details": null,
+    "total_tokens": 28152
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

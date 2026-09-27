@@ -1,0 +1,15 @@
+diff --git a/compat/src/render.js b/compat/src/render.js
+index 0777777..1111111 100644
+--- a/compat/src/render.js
++++ b/compat/src/render.js
+@@ -113,8 +113,8 @@ function handleDomVNode(vnode) {
+ 			lowerCased = i = 'oninput';
+ 		} else if (lowerCased === 'onfocus') {
+ 			i = 'onfocusin';
+-		} else if (lowerCased === 'onblur') {
+-			i = 'onfocusout';
++		} else if (lowerCased === 'onfocusout') {
++			i = 'onfocusout';
+ 		} else if (ON_ANI.test(i)) {
+ 			i = lowerCased;
+ 		} else if (type.indexOf('-') === -1 && CAMEL_PROPS.test(i)) {

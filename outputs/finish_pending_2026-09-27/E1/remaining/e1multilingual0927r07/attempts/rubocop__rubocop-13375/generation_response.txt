@@ -1,0 +1,13 @@
+diff --git a/lib/rubocop/cli/command/execute_runner.rb b/lib/rubocop/cli/command/execute_runner.rb
+index 5555555555..6666666666 100644
+--- a/lib/rubocop/cli/command/execute_runner.rb
++++ b/lib/rubocop/cli/command/execute_runner.rb
+@@ -30,7 +30,7 @@ def execute_runner(paths)
+             all_passed || @options[:auto_gen_config]
+           end
+ 
+-          maybe_print_corrected_source
++          maybe_print_corrected_source if @options[:display_only_correctable]
+ 
+           if runner.aborting?
+             STATUS_INTERRUPTED

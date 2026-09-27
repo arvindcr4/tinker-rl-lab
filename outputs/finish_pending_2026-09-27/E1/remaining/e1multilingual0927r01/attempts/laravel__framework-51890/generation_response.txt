@@ -1,0 +1,11 @@
+diff --git a/src/Illuminate/Validation/Concerns/FormatsMessages.php b/src/Illuminate/Validation/Concerns/FormatsMessages.php
+index 1466666666666666666666666666666666666666..1466666666666666666666666666666666666667 100644
+--- a/src/Illuminate/Validation/Concerns/FormatsMessages.php
++++ b/src/Illuminate/Validation/Concerns/FormatsMessages.php
+@@ -100,7 +100,7 @@ protected function replaceAttributeInMessage($message, $attribute)
+     {
+         $replacements = $this->extractReplacements($attribute);
+ 
+-        return str_replace([':attribute', ':attributes'], array_values($replacements), $message);
++        return str_replace([':attribute', ':attributes'], array_values($replacements) + ['validation.attributes'], $message);
+     }

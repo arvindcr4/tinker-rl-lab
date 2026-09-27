@@ -8,7 +8,7 @@ group size, dataset, seed, steps, and terminal status. Where a claim cannot be
 traced through this appendix to a run, the project's evidence rules require it
 to be withdrawn rather than stated.
 
-**The registry covers 1,708 runs: 1,662 in the machine-readable ledger and 46
+Table A.9 at the end of this appendix reconciles every run total quoted in the report. **The registry covers 1,708 runs: 1,662 in the machine-readable ledger and 46
 more recorded only in the Semester-4 opening artefacts of §A.3.1.** The ledger,
 `platform_hybrid/experiments/results/experiment_ledger.tsv`, holds one row per
 run with the columns `source, project, run_id, model, task, algo, G, steps,
@@ -58,7 +58,10 @@ timestamp, the two eras separate mechanically rather than by assertion:
 
 : Registry composition by logging project, with temporal split and distinct base models.
 
-Runs span 8 January to 4 July 2026. The split is not clean with respect to
+The ledger snapshot covers runs created from 8 January to 4 July 2026. Runs
+after that cut-off, including the August 2026 training run of the E1–E14 actor
+and every campaign evaluation, are not in the 1,662 ledger rows; they are
+indexed by their own receipts (§A.4). The split is not clean with respect to
 authorship — a single Tinker account was used throughout, with 387 Tinker rows
 before the boundary and 457 after — which is why the inherited-versus-individual
 statement in Appendix B rests on commit history rather than run counts.
@@ -113,16 +116,22 @@ recorded in the artefact and is therefore shown as "—".
 : Semester-3 Modal campaign runs.
 
 **Table A.4 — Group-size sweep, shared-harness runs.** Source:
-`platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv`. Model
-`Qwen/Qwen3-8B` on GSM8K, 3 seeds per group size (12 runs). Held-out accuracy
-is the mean over seeds; `mean ZVF` is the mean zero-variance fraction.
+`platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv` (per-run data in
+`groupsize_zvf_sweep.json`). Model `Qwen/Qwen2.5-0.5B` on a synthetic
+arithmetic-correctness task, 3 seeds per group size (42, 123, 456; 12 runs),
+40 steps, 16 prompts per step, one NVIDIA A10 on Modal, with held-out
+accuracy on 200 fresh problems per run. An earlier version of this table
+labelled these runs Qwen3-8B / Tinker / GSM8K. The raw per-run records
+contradict that label, and the held-out figures below match the raw records
+exactly. Held-out accuracy is the mean ± SE over seeds; `mean ZVF` is the
+mean zero-variance fraction.
 
 | Run identifier | Stack / platform | Model | Algo | G | Dataset | Seed | Steps | Outcome / status |
 |---|---|---|---|---|---|---|---|---|
-| `groupsize_g2` | Tinker | Qwen/Qwen3-8B | GRPO | 2 | GSM8K held-out | 3 seeds | — | held-out acc 0.9817 ± 0.0044; mean ZVF 0.8380 |
-| `groupsize_g4` | Tinker | Qwen/Qwen3-8B | GRPO | 4 | GSM8K held-out | 3 seeds | — | held-out acc 0.9883 ± 0.0017; mean ZVF 0.7635 |
-| `groupsize_g8` | Tinker | Qwen/Qwen3-8B | GRPO | 8 | GSM8K held-out | 3 seeds | — | held-out acc 0.9900 ± 0.0029; mean ZVF 0.6906 |
-| `groupsize_g16` | Tinker | Qwen/Qwen3-8B | GRPO | 16 | GSM8K held-out | 3 seeds | — | held-out acc 0.9783 ± 0.0060; mean ZVF 0.6312 |
+| `groupsize_g2` | Modal A10 (shared harness) | Qwen/Qwen2.5-0.5B | GRPO | 2 | arithmetic, 200 held-out | 3 seeds | 40 | held-out acc 0.9817 ± 0.0044; mean ZVF 0.8380 |
+| `groupsize_g4` | Modal A10 (shared harness) | Qwen/Qwen2.5-0.5B | GRPO | 4 | arithmetic, 200 held-out | 3 seeds | 40 | held-out acc 0.9883 ± 0.0017; mean ZVF 0.7635 |
+| `groupsize_g8` | Modal A10 (shared harness) | Qwen/Qwen2.5-0.5B | GRPO | 8 | arithmetic, 200 held-out | 3 seeds | 40 | held-out acc 0.9900 ± 0.0029; mean ZVF 0.6906 |
+| `groupsize_g16` | Modal A10 (shared harness) | Qwen/Qwen2.5-0.5B | GRPO | 16 | arithmetic, 200 held-out | 3 seeds | 40 | held-out acc 0.9783 ± 0.0060; mean ZVF 0.6312 |
 
 : Semester-3 group-size sweep runs.
 
@@ -200,7 +209,9 @@ prompt/tokenizer family (`llama3`, `qwen3_instruct`, `gpt_oss_low_reasoning`,
 **not** the Semester-3 sweep of Table A.4: it is a different project
 (`rlvr-openings`), a different model (Qwen3.5-4B), and it reports deltas of
 0.0000 rather than held-out accuracies near 0.99. The two share a group-size
-grid and nothing else.
+grid and nothing else. Chapters 4 and 6 cite the Table A.4 sweep (Qwen2.5-0.5B)
+whenever they give the 0.838 → 0.631 ZVF decline or the 0.98–0.99 held-out
+figures. They do not cite P3-C1.
 
 The extension ledger added in August 2026 carries five rows besides P11:
 P10-C1 is Tier R (an algebraic identity, not an empirical result), P10-C2 and
@@ -212,7 +223,7 @@ evidence bar: 40 arm–seed units at
 `local:zvf-program/audit/results/full/{grpo,dapo,gspo,drgrpo,aero}-seed-{11,23,37,53,71,89,107,131}.json`,
 five arms × eight seeds on one stack (Qwen3-8B, GSM8K, 30 steps, Colab A100,
 held-out n = 500). Its headline contrast, DAPO versus GRPO, is Δ = +0.001,
-CI [−0.0045, +0.00675], MDE₈₀ = 0.01012, all raw p > 0.21, with
+percentile-bootstrap CI [−0.0045, +0.00675] (paired-t 95% CI [−0.0063, +0.0083], n = 8 seeds; the bootstrap undercovers at this n), MDE₈₀ = 0.01012, all raw p > 0.21, with
 Benjamini–Hochberg rejecting nothing. The mechanism is visible in the
 diagnostic: DAPO's mean ZVF is 0.000 against GRPO's 0.693, bought with 3.61×
 the rollouts (1,734 versus 480) and 1.44× the wall clock. It is the only place
@@ -286,17 +297,19 @@ superseded by the multi-seed blocks above: the curriculum opening's +0.05
 — the campaign's G4 seed-0 baseline gains 0.0000, not 0.125, and that sweep
 file retains only two of its twelve entries, so the W&B group is its record.
 
-## A.4 E1–E14 held-out campaign lanes
+## A.4 E1–E14 evaluation campaign lanes
 
 The fourteen evaluation lanes are not training runs; they are evaluations of a
 single frozen actor, and they carry the registry's strictest receipt
 discipline. The actor is base `Qwen/Qwen3.6-35B-A3B` (commit `995ad96e…`) with
 adapter `arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1…`
 (commit `64444133…`), bfloat16, trained on Tinker, run seed 809 taken from the
-adapter name. The training step count behind that adapter survives in no
-artefact and is shown as "—"; group size and algorithm are properties of the
-single actor rather than of any lane, and are shown as "—" rather than
-repeated. Terminal states are from the ledger of record,
+adapter name. The adapter was trained for 40 steps at G = 4 and learning rate
+1 × 10⁻⁵ by REINFORCE with a group-mean baseline (no KL, no clipping), as
+recorded in the local W&B run directory for run `bsv8vx04` and the run receipt
+`checkpoints/grpo/pavlov_portfolio_api_swegym_qwen36_20260809_seed809.json`
+(Chapter 9 §9.1.1). Those are properties of the single actor rather than of
+any lane, so they are shown as "—" in the table rather than repeated. Terminal states are from the ledger of record,
 `outputs/PES_Phase2_Review_2026-09-12/finish/Pending_Experiments.md`; all
 scores are from `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md`.
 
@@ -325,10 +338,10 @@ scores are from `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md`.
 | E12 AppBench | — | as above | — | — | AppBench deployment | 809 | — | `CLOSED_EXTERNAL` |
 | E13 BALROG | hosted supervisor | as above | — | — | BALROG | 809 | — | 13/255 episodes; 21 never-started candidates — `AMENDMENT_ACCEPTED_LAUNCH_PENDING` |
 | E13 OpenReward (original) | — | as above | — | — | OpenReward held-out games | 809 | — | `CLOSED_EXTERNAL` |
-| E14 Omni-MATH | native scorer | as above | — | — | Omni-MATH | 809 | — | 4426/4428 accepted (99.95%); official accuracy 2271/4428 = 51.31% — `COMPLETE_TERMINAL_NOTE` |
+| E14 Omni-MATH | native scorer | as above | — | — | Omni-MATH | 809 | — | 4426/4428 accepted (99.95%); accuracy 2271/4428 = 51.29% (official scorer 51.31% on 4426 judged rows) — `COMPLETE_TERMINAL_NOTE` |
 | E14 FrontierMath (original) | — | as above | — | — | FrontierMath hosted | 809 | — | `CLOSED_EXTERNAL` |
 
-: E1-E14 held-out campaign lanes with their run identifiers, stacks, platforms, models, algorithms and group sizes.
+: E1-E14 evaluation campaign lanes with their run identifiers, stacks, platforms, models, algorithms and group sizes.
 
 Two source documents disagree on two lanes, and both observations are retained
 rather than resolved into one, because the disagreement is itself evidence: the
@@ -402,3 +415,21 @@ identity, shows that the run population is far larger than the reported
 claims, and shows that those claims rest on a small, explicitly tiered subset
 — one Tier A block, a majority Tier C, and four Tier X rows that must not be
 cited as evidence.
+
+The run totals that appear in different chapters count different corpora. Table A.9 reconciles them.
+
+**Table A.9 — Run totals quoted in this report, reconciled.** Each total is a
+different corpus, not a different count of the same one.
+
+| Corpus | Count | What it is | Used in |
+|---|---|---|---|
+| Registry total | 1,708 | 1,662 ledger rows plus 46 opening runs recorded only in their own artefacts (§A.3.1) | Appendix A |
+| Experiment ledger | 1,662 | 844 Tinker-service runs and 818 W&B runs, snapshot through 4 July 2026 | Appendix A |
+| P1 cross-scale roster | 70+ | Runs across seven RL libraries and five model families; 12 of them are the fitted anchors | Chapter 6 §6.2 |
+| Instrumented roster (P8 workshop source) | 79 | The instrumented roster of `paper_P8_workshop.tex`, 0.6B to ~671B | Chapter 4 §4.1 |
+| `zvf-audit` W&B project | 368 | Logged runs in one W&B project, a subset of the ledger's W&B half (Table A.1) | Chapter 4 §4.3; Chapter 7 |
+| P5 audit corpus | 790 | The corpus from which the 368-run audit is drawn (`p5_stack.tex`); its relation to the ledger is not recorded | Chapter 7 §7.1 |
+| Mega-campaign cells | 98 | Sampling-only cells of `mega_20260704` | Chapter 7 §7.1 |
+| E1–E14 actor training | 1 | The 40-step `pavlov_portfolio` run of August 2026, after the ledger cut-off | Chapter 9 §9.1.1 |
+
+: Run totals quoted in this report and the corpus each one counts.

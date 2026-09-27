@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/gson/src/main/java/com/google/gson/internal/bind/util/ISO8601Utils.java b/gson/src/main/java/com/google/gson/internal/bind/util/ISO8601Utils.java\nindex 1777777..1234567 100644\n--- a/gson/src/main/java/com/google/gson/internal/bind/util/ISO8601Utils.java\n+++ b/gson/src/main/java/com/google/gson/internal/bind/util/ISO8601Utils.java\n@@ -1,5 +1,6 @@\n package com.google.gson.internal.bind.util;\n \n+import java.text.ParseException;\n import java.util.Calendar;\n import java.util.Date;\n import java.util.GregorianCalendar;\n@@ -13,6 +14,7 @@ import java.util.TimeZone;\n  * @author Jackson\n  */\n public final class ISO8601Utils {\n+  private static final int INVALID_DATE = -1;\n \n   /**\n    * Format date into yyyy-MM-dd'T'HH:mm:ss[.SSS][Z|[+-]HH:mm]\n@@ -100,6 +102,10 @@ public final class ISO8601Utils {\n       TimeZone timezone = TimeZone.getTimeZone(timezoneId);\n       if (!timezone.getID().equals(timezoneId)) {\n         throw new IndexOutOfBoundsException(\"Invalid time zone indicator \" + timezoneIndicator);\n+      }\n+\n+      Calendar calendar = new GregorianCalendar(timezone);\n+      calendar.setLenient(false);\n+      calendar.set(Calendar.YEAR, year);\n+      calendar.set(Calendar.MONTH, month - 1);\n+      calendar.set(Calendar.DAY_OF_MONTH, day);\n+      calendar.set(Calendar.HOUR_OF_DAY, hour);\n+      calendar.set(Calendar.MINUTE, minutes);\n+      calendar.set(Calendar.SECOND, seconds);\n+      calendar.set(Calendar.MILLISECOND, milliseconds);\n+\n+      pos.setIndex(offset);\n+      return calendar.getTime();\n+      // If we get a ParseException it'll already have the right message/offset.\n+      // Other exception types can convert here.\n+    } catch (IndexOutOfBoundsException e) {\n+      fail = e;\n+    } catch (NumberFormatException e) {\n+      fail = e;\n+    } catch (IllegalArgumentException e) {\n+      fail = e;\n+    }\n+    String input = (date == null) ? null : (\"'\" + date + \"'\");\n+    throw new ParseException(\"Failed to parse date [\" + input + \"]: \" + fail.getMessage(), pos.getIndex());\n   }",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471270,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-a4f3d572ff6e7589",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 574,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 24603,
+    "prompt_tokens_details": null,
+    "total_tokens": 25177
+  }
+}

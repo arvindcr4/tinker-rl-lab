@@ -1,0 +1,15 @@
+{
+    "progression_percentage": 22.727272727272723,
+    "standard_error": 4.590684062891852,
+    "average_steps": 182.5,
+    "episodes_played": 10,
+    "tasks": {
+        "default": {
+            "progression_percentage": 22.727272727272723,
+            "standard_error": 4.590684062891852,
+            "episodes_played": 10
+        }
+    },
+    "input_tokens": 3210064,
+    "output_tokens": 5243
+}

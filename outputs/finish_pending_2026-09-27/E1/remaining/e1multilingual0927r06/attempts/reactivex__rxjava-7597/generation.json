@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "3fa6f48d99e1b1739ea41fcbeaa881dee253f10679e2c68b697ea4e4131669ab",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790473501.9460192,
+  "instance_id": "reactivex__rxjava-7597",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/src/main/java/io/reactivex/rxjava3/internal/operators/observable/ObservableSwitchMap.java b/src/main/java/io/reactivex/rxjava3/internal/operators/observable/ObservableSwitchMap.java\nindex 1563333333..a1b2c3d4e5 100644\n--- a/src/main/java/io/reactivex/rxjava3/internal/operators/observable/ObservableSwitchMap.java\n+++ b/src/main/java/io/reactivex/rxjava3/internal/operators/observable/ObservableSwitchMap.java\n@@ -100,6 +100,10 @@ final class ObservableSwitchMap<T, U> extends AbstractObservableWithUpstream<T,\n             }\n \n             @Override\n+            public void onSubscribe(Disposable d) {\n+                // No-op, subscription is managed by the outer observer\n+            }\n+\n+            @Override\n             public void onNext(T t) {\n                 if (done) {\n                     return;",
+  "patch_sha256": "e829efe42254c9d5cf4c06ae2c1ecec079733f9973a320bd2d976a491be5ab5a",
+  "request_sha256": "25d37da98fe6df65b93ca4703cc3256639788076e08c5794f2ff598a97380056",
+  "response_sha256": "e829efe42254c9d5cf4c06ae2c1ecec079733f9973a320bd2d976a491be5ab5a",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "fc1696a199ae45db7334c4c77e71bd39868475dc0b56e3dfceee10ce32c59b87",
+  "started_at": 1790473497.653182,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 217,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 24362,
+    "prompt_tokens_details": null,
+    "total_tokens": 24579
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

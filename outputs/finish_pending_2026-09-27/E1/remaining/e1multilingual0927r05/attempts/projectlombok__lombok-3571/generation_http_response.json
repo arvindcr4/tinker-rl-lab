@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/core/lombok/experimental/Builder.java b/src/core/lombok/experimental/Builder.java\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/src/core/lombok/experimental/Builder.java\n+++ b/src/core/lombok/experimental/Builder.java\n@@ -1,5 +1,5 @@\n /*\n- * Copyright (C) 2013-2018 The Project Lombok Authors.\n+ * Copyright (C) 2013-2023 The Project Lombok Authors.\n  * \n  * Permission is hereby granted, free of charge, to any person obtaining a copy\n  * of this software and associated documentation files (the \"Software\"), to deal",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790473269,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-b8761eca8a129d1d",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 174,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 24164,
+    "prompt_tokens_details": null,
+    "total_tokens": 24338
+  }
+}

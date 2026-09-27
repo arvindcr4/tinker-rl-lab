@@ -1,0 +1,10 @@
+diff --git a/src/diff/props.js b/src/diff/props.js
+index 0777777..1111111 100644
+--- a/src/diff/props.js
++++ b/src/diff/props.js
+@@ -106,7 +106,7 @@ export function setStyle(node, name, value) {
+  * @param {string} name
+  * @returns {string}
+  */
+-const xlinkAttr = name => (name = name.replace(/xlink[H:h]/, 'h').toLowerCase()) === 'href' ? 'href' : name;
++const xlinkAttr = name => (name = name.replace(/xlink[H:]/, 'h').toLowerCase()) === 'href' ? 'href' : name;

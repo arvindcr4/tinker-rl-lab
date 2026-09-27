@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/tokio/src/fs/file.rs b/tokio/src/fs/file.rs\nindex 5086e56dcb..a1b2c3d4e5 100644\n--- a/tokio/src/fs/file.rs\n+++ b/tokio/src/fs/file.rs\n@@ -603,6 +603,10 @@ impl AsyncRead for File {\n         let me = self.get_mut();\n \n         let max_buf_size = cmp::min(dst.remaining(), me.max_buf_size);\n+\n+        if max_buf_size == 0 {\n+            return Poll::Ready(Ok(()));\n+        }\n \n         // If the buffer is full, we can't read any more data.\n         if me.buf.is_empty() {",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790476240,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-964f7d84ea2ee974",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 175,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 26538,
+    "prompt_tokens_details": null,
+    "total_tokens": 26713
+  }
+}

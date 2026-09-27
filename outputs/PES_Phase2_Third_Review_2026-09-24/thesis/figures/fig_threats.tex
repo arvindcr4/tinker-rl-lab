@@ -30,10 +30,10 @@
 \tikzset{
   colhead/.style={rectangle, rounded corners=2pt, draw=pesblue, very thick,
                   fill=pesblue, text=white, align=center, inner sep=3.5pt,
-                  text width=4.6cm, font=\small\bfseries},
-  threat/.style={warnbox, text width=4.3cm, align=left, inner sep=3pt,
+                  text width=4.45cm, font=\small\bfseries},
+  threat/.style={warnbox, text width=4.22cm, align=left, inner sep=2.5pt,
                  font=\scriptsize, minimum height=0pt},
-  mit/.style={oklbox, text width=4.3cm, align=left, inner sep=3pt,
+  mit/.style={oklbox, text width=4.22cm, align=left, inner sep=2.5pt,
               font=\scriptsize, minimum height=0pt},
   pairrule/.style={draw=black!45, thick, line cap=round},
   chip/.style={rectangle, rounded corners=1.5pt, draw=black!60, thick,
@@ -47,9 +47,9 @@
 % ================= group headers =================
 \node[colhead] (h1) at (0,0)
   {Internal validity\\[1pt]{\scriptsize\mdseries single-seed runs $\cdot$ short horizons $\cdot$ lost archive}};
-\node[colhead] (h2) at (5.4,0)
+\node[colhead] (h2) at (5.18,0)
   {Construct validity\\[1pt]{\scriptsize\mdseries denominators $\cdot$ no aggregate $\cdot$ scope $\cdot$ sampler}};
-\node[colhead] (h3) at (10.8,0)
+\node[colhead] (h3) at (10.36,0)
   {External validity\\[1pt]{\scriptsize\mdseries closed platform $\cdot$ withheld third-party access}};
 
 % ================= INTERNAL =================
@@ -82,7 +82,7 @@
 \node[mit, below=1mm of t3, anchor=north] (m3)
   {\textbf{$\rightarrow$ Mitigation.} The surviving 0.3115 is reported as a
    receipt-only verifier recovery metric on one of 100 tasks, labelled
-   \texttt{CLOSED\_PARTIAL}, never as a suite score or as the fraction 37/128.};
+   \texttt{CLOSED\_PARTIAL}, never as a suite score or as the raw count of 37 of 128 verifier criteria met ($0.289$).};
 
 % ================= CONSTRUCT =================
 \node[threat, below=0.30cm of h2, anchor=north] (t4)
@@ -164,23 +164,11 @@
 }
 
 % ================= legend =================
-\node[chip, draw=red!60!black, fill=red!7, anchor=west] (c1) at (-2.4,1.15)
+\node[chip, draw=red!60!black, fill=red!7, anchor=west] (c1) at (-2.3,1.15)
   {threat to validity};
 \node[chip, draw=green!45!black, fill=green!8, anchor=west] (c2)
   at ([xshift=2.5mm]c1.east)
   {applied mitigation, paired by the rule at left};
-
-% ================= closing notes (placed in column slack) =================
-\node[note, below=7mm of m3, anchor=north] (n1)
-  {\textbf{Each threat above is paired with the mitigation actually applied},
-   and the pairing is mostly a reduction in what is claimed rather than a
-   repair of the evidence: where the evidence is partial the claim is narrowed
-   to what it supports, not extended to what a reader might prefer.};
-
-\node[note, below=7mm of m9, anchor=north] (n2)
-  {$\dagger$ marks figures and summary statistics drawn from Tinker data only;
-   independent replication of them requires Tinker API access
-   (\texttt{LIMITATIONS\_AND\_IMPACT.md}, Sec.~6.3).};
 
 \end{tikzpicture}
 \end{document}

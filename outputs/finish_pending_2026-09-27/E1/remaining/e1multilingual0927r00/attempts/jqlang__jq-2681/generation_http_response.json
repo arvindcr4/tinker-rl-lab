@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/parser.y b/src/parser.y\nindex 1234567..abcdefg 100644\n--- a/src/parser.y\n+++ b/src/parser.y\n@@ -1,6 +1,7 @@\n %token IDENT FIELD LITERAL FORMAT REC SETMOD\n %token EQ NEQ DEFINEDOR AS DEF MODULE IMPORT INCLUDE\n %token IF THEN ELSE ELSE_IF REDUCE FOREACH END AND OR TRY CATCH\n+%token LABEL BREAK\n %token LOC\n %token SETPIPE SETPLUS SETMINUS SETMULT SETDIV SETDEFINEDOR\n %token LESSEQ GREATEREQ ALTERNATION",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471905,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-b8443316591243a0",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 135,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 27583,
+    "prompt_tokens_details": null,
+    "total_tokens": 27718
+  }
+}

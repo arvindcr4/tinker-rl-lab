@@ -1,0 +1,149 @@
+Running 16 instances...
+Error in evaluation for php-cs-fixer__php-cs-fixer-8075: >>>>> Patch Apply Failed:
+patching file src/Fixer/PhpUnit/PhpUnitAttributesFixer.php
+patch unexpectedly ends in middle of line
+Hunk #1 FAILED at 312.
+1 out of 1 hunk FAILED -- saving rejects to file src/Fixer/PhpUnit/PhpUnitAttributesFixer.php.rej
+
+Check (logs/run_evaluation/e1multilingual0927r03/pavlov-public-portfolio-bf16/php-cs-fixer__php-cs-fixer-8075/run_instance.log) for more information.
+Error in evaluation for php-cs-fixer__php-cs-fixer-7875: >>>>> Patch Apply Failed:
+patch: **** malformed patch at line 7:  
+
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/Fixer/Basic/StatementIndentationFixer.php b/src/Fixer/Basic/StatementIndentationFixer.php
+|index 1677777777777777777777777777777777777777..1677777777777777777777777777777777777777 100644
+|--- a/src/Fixer/Basic/StatementIndentationFixer.php
+|+++ b/src/Fixer/Basic/StatementIndentationFixer.php
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+
+Check (logs/run_evaluation/e1multilingual0927r03/pavlov-public-portfolio-bf16/php-cs-fixer__php-cs-fixer-7875/run_instance.log) for more information.
+Error in evaluation for php-cs-fixer__php-cs-fixer-7998: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/RuleSet/Sets/PERCSSetDefinition.php b/src/RuleSet/Sets/PERCSSetDefinition.php
+|index 0730777..0730777 100644
+|--- a/src/RuleSet/Sets/PERCSSetDefinition.php
+|+++ b/src/RuleSet/Sets/PERCSSetDefinition.php
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+3 out of 3 hunks ignored
+
+Check (logs/run_evaluation/e1multilingual0927r03/pavlov-public-portfolio-bf16/php-cs-fixer__php-cs-fixer-7998/run_instance.log) for more information.
+Error in evaluation for php-cs-fixer__php-cs-fixer-8064: >>>>> Patch Apply Failed:
+patching file src/Fixer/StringNotation/SimpleToComplexStringVariableFixer.php
+patch: **** malformed patch at line 14:          $nextToken = $tokens[$nextIndex];
+
+
+Check (logs/run_evaluation/e1multilingual0927r03/pavlov-public-portfolio-bf16/php-cs-fixer__php-cs-fixer-8064/run_instance.log) for more information.
+Error in evaluation for php-cs-fixer__php-cs-fixer-8256: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/Fixer/Basic/NoExtraBlankLineFixer.php b/src/Fixer/Basic/NoExtraBlankLineFixer.php
+|index 1663777..8537777 100644
+|--- a/src/Fixer/Basic/NoExtraBlankLineFixer.php
+|+++ b/src/Fixer/Basic/NoExtraBlankLineFixer.php
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+1 out of 1 hunk ignored
+
+Check (logs/run_evaluation/e1multilingual0927r03/pavlov-public-portfolio-bf16/php-cs-fixer__php-cs-fixer-8256/run_instance.log) for more information.
+Error in evaluation for php-cs-fixer__php-cs-fixer-8331: >>>>> Patch Apply Failed:
+patching file src/Fixer/FunctionNotation/NullableTypeDeclarationForDefaultNullValueFixer.php
+Hunk #1 succeeded at 1 with fuzz 3.
+can't find file to patch at input line 14
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/Fixer/FunctionNotation/NullableTypeDeclarationFixer.php b/src/Fixer/FunctionNotation/NullableTypeDeclarationFixer.php
+|index 1676767676767676767676767676767676767676..1676767676767676767676767676767676767676 100644
+|--- a/src/Fixer/FunctionNotation/NullableTypeDeclarationFixer.php
+|+++ b/src/Fixer/FunctionNotation/NullableTypeDeclarationFixer.php
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+1 out of 1 hunk ignored
+
+Check (logs/run_evaluation/e1multilingual0927r03/pavlov-public-portfolio-bf16/php-cs-fixer__php-cs-fixer-8331/run_instance.log) for more information.
+Error in evaluation for php-cs-fixer__php-cs-fixer-8367: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/Fixer/ClassNotation/FullyQualifiedStrictTypesFixer.php b/src/Fixer/ClassNotation/FullyQualifiedStrictTypesFixer.php
+|index 1666666666..1111111111 100644
+|--- a/src/Fixer/ClassNotation/FullyQualifiedStrictTypesFixer.php
+|+++ b/src/Fixer/ClassNotation/FullyQualifiedStrictTypesFixer.php
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+4 out of 4 hunks ignored
+
+Check (logs/run_evaluation/e1multilingual0927r03/pavlov-public-portfolio-bf16/php-cs-fixer__php-cs-fixer-8367/run_instance.log) for more information.
+Error in evaluation for phpoffice__phpspreadsheet-3570: >>>>> Patch Apply Failed:
+patching file src/PhpSpreadsheet/Calculation/LookupRef/LookupBase.php
+patch unexpectedly ends in middle of line
+Hunk #1 FAILED at 100.
+1 out of 1 hunk FAILED -- saving rejects to file src/PhpSpreadsheet/Calculation/LookupRef/LookupBase.php.rej
+
+Check (logs/run_evaluation/e1multilingual0927r03/pavlov-public-portfolio-bf16/phpoffice__phpspreadsheet-3570/run_instance.log) for more information.
+Error in evaluation for phpoffice__phpspreadsheet-3659: >>>>> Patch Apply Failed:
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/PhpOffice/PhpSpreadsheet/Calculation/Engine/Operands/StructuredReference.php b/src/PhpOffice/PhpSpreadsheet/Calculation/Engine/Operands/StructuredReference.php
+|index 2230303..6330303 100644
+|--- a/src/PhpOffice/PhpSpreadsheet/Calculation/Engine/Operands/StructuredReference.php
+|+++ b/src/PhpOffice/PhpSpreadsheet/Calculation/Engine/Operands/StructuredReference.php
+--------------------------
+No file to patch.  Skipping patch.
+patch unexpectedly ends in middle of line
+2 out of 2 hunks ignored
+
+Check (logs/run_evaluation/e1multilingual0927r03/pavlov-public-portfolio-bf16/phpoffice__phpspreadsheet-3659/run_instance.log) for more information.
+Error in evaluation for phpoffice__phpspreadsheet-4114: >>>>> Patch Apply Failed:
+patch: **** malformed patch at line 13:  
+
+patching file src/PhpSpreadsheet/Spreadsheet.php
+patch unexpectedly ends in middle of line
+
+Check (logs/run_evaluation/e1multilingual0927r03/pavlov-public-portfolio-bf16/phpoffice__phpspreadsheet-4114/run_instance.log) for more information.
+Error in evaluation for phpoffice__phpspreadsheet-4186: >>>>> Patch Apply Failed:
+patching file src/PhpSpreadsheet/Writer/Xlsx/FunctionPrefix.php
+patch unexpectedly ends in middle of line
+Hunk #1 FAILED at 130.
+1 out of 1 hunk FAILED -- saving rejects to file src/PhpSpreadsheet/Writer/Xlsx/FunctionPrefix.php.rej
+
+Check (logs/run_evaluation/e1multilingual0927r03/pavlov-public-portfolio-bf16/phpoffice__phpspreadsheet-4186/run_instance.log) for more information.
+Error in evaluation for phpoffice__phpspreadsheet-4214: >>>>> Patch Apply Failed:
+patching file src/PhpSpreadsheet/Calculation/MathTrig/Round.php
+patch unexpectedly ends in middle of line
+Hunk #1 FAILED at 100.
+1 out of 1 hunk FAILED -- saving rejects to file src/PhpSpreadsheet/Calculation/MathTrig/Round.php.rej
+
+Check (logs/run_evaluation/e1multilingual0927r03/pavlov-public-portfolio-bf16/phpoffice__phpspreadsheet-4214/run_instance.log) for more information.
+All instances run.
+Total instances: 16
+Instances submitted: 16
+Instances completed: 4
+Instances incomplete: 0
+Instances resolved: 1
+Instances unresolved: 3
+Instances with likely infrastructure failures: 0
+Instances with ambiguous failures: 0
+Instances with empty patches: 0
+Instances with errors: 12
+Unstopped containers: 0
+Unremoved images: 0
+Report written to /e1/reports/pavlov-public-portfolio-bf16.e1multilingual0927r03.json

@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/diff/props.js b/src/diff/props.js\nindex 27777777..11111111 100644\n--- a/src/diff/props.js\n+++ b/src/diff/props.js\n@@ -103,7 +103,7 @@ export function setProperty(vnode, name, old, value, isSvg) {\n \t\t}\n \t} else if (name[0] == 'o' && name[1] == 'n') {\n \t\t/* istanbul ignore if */\n-\t\tif (\n+\t\tif (\n \t\t\t(!isSvg &&\n \t\t\t\tname !== 'onFocusOut' &&\n \t\t\t\tname !== 'onFocusIn' &&",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472164,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-afad52d6cda5a763",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 171,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 29669,
+    "prompt_tokens_details": null,
+    "total_tokens": 29840
+  }
+}

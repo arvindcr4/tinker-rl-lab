@@ -1,0 +1,30 @@
+diff --git a/internal/terraform/transform_removed.go b/internal/terraform/transform_removed.go
+index 0777777777..1111111111 100644
+--- a/internal/terraform/transform_removed.go
++++ b/internal/terraform/transform_removed.go
+@@ -10,6 +10,7 @@ import (
+ 	"github.com/hashicorp/terraform/internal/configs"
+ 	"github.com/hashicorp/terraform/internal/graph"
+ 	"github.com/hashicorp/terraform/internal/states"
++	"github.com/hashicorp/terraform/internal/addrs"
+ )
+ 
+ // RemovedResourceTransformer is a GraphTransformer that adds nodes for
+@@ -28,10 +29,14 @@ func (t *RemovedResourceTransformer) Transform(g *graph.Graph) error {
+ 	for _, r := range t.Config.Removed {
+ 		// We need to resolve the module path for the removed resource
+ 		// to find the actual resource instance in the state.
+-		addr, diags := addrs.ParseResourceInstanceAddr(r.From)
++		addr, diags := addrs.ParseResourceInstanceAddr(r.From)
+ 		if diags.HasErrors() {
+ 			return diags.Err()
+ 		}
++
++		// If the address is not fully qualified (e.g. missing module path),
++		// we cannot reliably find the resource in the state if it is inside a module.
++		if addr.Module.String() == "" {
++			continue
++		}
+ 
+ 		// Find the resource in the state
+ 		stateResource := t.State.ResourceInstance(addr)

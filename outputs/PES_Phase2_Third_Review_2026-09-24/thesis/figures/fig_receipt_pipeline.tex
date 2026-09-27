@@ -28,53 +28,67 @@
 \definecolor{blocked}{RGB}{166,43,43}
 % --- figure-local styles -------------------------------------------------
 \tikzset{
-  stage/.style={text width=19mm, minimum height=14mm, inner sep=2pt},
-  minibox/.style={text width=19mm, minimum height=12mm, inner sep=2pt, font=\scriptsize},
-  linklbl/.style={font=\scriptsize\itshape, text=black!60, align=center, text width=22mm},
+  stage/.style={text width=20mm, minimum height=17mm, inner sep=2pt, font=\footnotesize, align=center},
+  minibox/.style={text width=20mm, minimum height=12mm, inner sep=2pt, font=\footnotesize, align=center},
+  linklbl/.style={font=\footnotesize\itshape, text=black!60, align=center, text width=22mm},
   notrun/.style={rectangle, rounded corners=2pt, draw=black!35, dashed, fill=black!4,
-                 text=black!55, align=center, font=\scriptsize,
-                 text width=19mm, minimum height=12mm, inner sep=2pt},
+                 text=black!60, align=center, font=\footnotesize,
+                 text width=20mm, minimum height=12mm, inner sep=2pt},
 }
 \begin{document}
 \begin{tikzpicture}
 
   % ============ the chain: one sealed request to one reported number ============
   \node[blk, stage] (s1)
-    {\textbf{Sealed request}\\[-1pt]{\scriptsize write-once;\\ SHA-256 pinned}};
-  \node[proc, stage, right=6mm of s1] (s2)
-    {\textbf{Execution}\\[-1pt]{\scriptsize under a bound\\ authorisation receipt}};
-  \node[proc, stage, right=6mm of s2] (s3)
-    {\textbf{Native grader}\\[-1pt]{\scriptsize the suite's own\\ evaluator and\\ denominator}};
-  \node[io, stage, right=6mm of s3] (s4)
-    {\textbf{Receipt file}\\[-1pt]{\scriptsize durable JSON;\\ write-once}};
-  \node[proc, stage, right=6mm of s4] (s5)
-    {\textbf{Ledger\\ check}\\[-1pt]{\scriptsize deterministic;\\ recomputes the\\ arithmetic}};  \node[io, stage, right=6mm of s5] (s6)
-    {\textbf{Reported figure}\\[-1pt]{\scriptsize enters a\\ results table}};
+    {\textbf{Sealed request}\\{write-once;\\ SHA-256 pinned}};
+  \node[proc, stage, right=4mm of s1] (s2)
+    {\textbf{Execution}\\{under a bound\\ authorisation receipt}};
+  \node[proc, stage, right=4mm of s2] (s3)
+    {\textbf{Native grader}\\{the suite's own\\ evaluator and\\ denominator}};
+  \node[io, stage, right=4mm of s3] (s4)
+    {\textbf{Receipt file}\\{durable JSON;\\ write-once}};
+  \node[proc, stage, right=4mm of s4] (s5)
+    {\textbf{Ledger check}\\{deterministic;\\ recomputes the\\ arithmetic}};  \node[io, stage, right=4mm of s5] (s6)
+    {\textbf{Reported figure}\\{enters a\\ results table}};
 
   \draw[ar] (s1) -- (s2)
-    node[lbl, linklbl, midway, above=10mm] {hash-bound\\ request};
+    coordinate[midway] (ms1)
+    node[lbl, linklbl, midway, above=10mm] (Ls1) {hash-bound\\ request};
+  \draw[densely dotted, black!45] (Ls1.south) -- (ms1);
   \draw[ar] (s2) -- (s3)
-    node[lbl, linklbl, midway, above=10mm] {graded\\ rows};
+    coordinate[midway] (ms2)
+    node[lbl, linklbl, midway, above=10mm] (Ls2) {graded\\ rows};
+  \draw[densely dotted, black!45] (Ls2.south) -- (ms2);
   \draw[ar] (s3) -- (s4)
-    node[lbl, linklbl, midway, above=10mm] {write-once\\ receipt};
+    coordinate[midway] (ms3)
+    node[lbl, linklbl, midway, above=10mm] (Ls3) {write-once\\ receipt};
+  \draw[densely dotted, black!45] (Ls3.south) -- (ms3);
   \draw[ar] (s4) -- (s5)
-    node[lbl, linklbl, midway, above=10mm] {presence +\\ hash equality};
+    coordinate[midway] (ms4)
+    node[lbl, linklbl, midway, above=10mm] (Ls4) {presence +\\ hash equality};
+  \draw[densely dotted, black!45] (Ls4.south) -- (ms4);
   \draw[ar] (s5) -- (s6)
-    node[lbl, linklbl, midway, above=10mm] {11/11 PASS};
+    coordinate[midway] (ms5)
+    node[lbl, linklbl, midway, above=10mm] (Ls5) {checked\\ figure};
+  \draw[densely dotted, black!45] (Ls5.south) -- (ms5);
+
+  \node[font=\footnotesize\bfseries, text=complete!85!black, draw=complete!70!black, fill=complete!8,
+        rounded corners=1.5pt, inner sep=1.5pt, anchor=north] (pass) at ([yshift=-1.5mm]s5.south)
+    {11/11 PASS};
 
   % ============ one broken link: E1 wave-10 ============
-  \node[oklbox, minibox, below=20mm of s1] (b1)
-    {\textbf{sealed request}\\ survives\\ {\scriptsize SHA-256\\ \texttt{7adc6e26\ldots}}};
+  \node[oklbox, minibox, below=17mm of s1] (b1)
+    {\textbf{sealed request}\\ survives\\ {SHA-256\\ \texttt{7adc6e26\ldots}}};
   \node[warnbox, minibox] (b2) at (b1 -| s2)
-    {\textbf{execution\\ source}\\[-1pt]{\scriptsize\textcolor{bad}{$\times$ lost}}};
+    {\textbf{execution\\ source}\\{\textcolor{bad}{$\times$ lost}}};
   \node[notrun] (b3) at (b1 -| s3)
-    {grader\\[-1pt]{\scriptsize not reached}};
+    {grader\\{not reached}};
   \node[notrun] (b4) at (b1 -| s4)
-    {receipt\\[-1pt]{\scriptsize none written}};
+    {receipt\\{none written}};
   \node[notrun] (b5) at (b1 -| s5)
-    {ledger check\\[-1pt]{\scriptsize not reached}};
+    {ledger check\\{not reached}};
   \node[warnbox, minibox] (b6) at (b1 -| s6)
-    {\textbf{\textcolor{bad}{no number}}\\[-1pt]{\scriptsize for this lane}};
+    {\textbf{\textcolor{bad}{no number}}\\{for this lane}};
 
   \draw[ar] (b1) -- (b2);
   \draw[arl, draw=bad!80] (b2) -- (b3);
@@ -86,12 +100,12 @@
   \coordinate (brk) at ($(b2.east)!0.5!(b3.west)$);
   \draw[bad, very thick] ($(brk)+(-2.2mm,2.2mm)$) -- ($(brk)+(2.2mm,-2.2mm)$);
   \draw[bad, very thick] ($(brk)+(-2.2mm,-2.2mm)$) -- ($(brk)+(2.2mm,2.2mm)$);
-  \node[font=\scriptsize\bfseries, text=bad, anchor=north, align=center]
+  \node[font=\footnotesize\bfseries, text=bad, anchor=north, align=center]
     at ($(brk)+(0,-7mm)$) {chain stops here ---\\ no number downstream};
 
   % what the break was
-  \node[lbl, anchor=north west, align=left, text width=100mm] (cause)
-    at ($(b1.south west)+(0,-15mm)$)
+  \node[lbl, font=\footnotesize\itshape, anchor=north west, align=left, text width=146mm] (cause)
+    at ($(b1.south west)+(0,-13mm)$)
     {Example lane: the E1 wave-10 recovery (16 tasks, \$16) was sealed and
      locally validated, then the \texttt{.codex-run/} deletion removed its
      execution source --- so no number is reported for that lane.};
@@ -99,8 +113,8 @@
   \coordinate (fcN) at (cause.south -| cx);
 
   % ============ fail-closed rule ============
-  \node[warnbox, anchor=north, align=left, text width=148mm, inner sep=3pt] (fc)
-    at ($(fcN)+(0,-7mm)$)
+  \node[warnbox, anchor=north, align=left, text width=146mm, inner sep=3pt] (fc)
+    at ($(fcN)+(0,-4mm)$)
     {\raggedright\textbf{Fail-closed.} A break at any link means the lane reports
      \textbf{no number}: the chain\\
      is never repaired by inference, and the gap is carried in the ledger of
@@ -119,7 +133,7 @@
 
   \node[lbl, anchor=north, align=center]
     at ($(fc.south)+(0,-1.5mm)$)
-    {\scriptsize checks: \texttt{LEDGER\_CODE\_CHECK\_2026-09-19.json}
+    {\footnotesize checks: \texttt{LEDGER\_CODE\_CHECK\_2026-09-19.json}
      (11 of 11 PASS, 0 failed, schema \texttt{ledger-code-check-v1})};
 
 \end{tikzpicture}

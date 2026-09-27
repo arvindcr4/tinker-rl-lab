@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/tokio/src/signal/unix/driver.rs b/tokio/src/signal/unix/driver.rs\nindex 0f0f0f0..1a1a1a1 100644\n--- a/tokio/src/signal/unix/driver.rs\n+++ b/tokio/src/signal/unix/driver.rs\n@@ -76,7 +76,7 @@ impl Driver {\n         // Register the signal driver socket with the reactor.\n         let socket = self.socket();\n         self.reactor\n-            .registration()\n+            .registration()\n             .register_with(\n                 &socket,\n-                Interest::READABLE | Interest::WRITABLE,\n+                Interest::READABLE,\n             )",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790475855,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-973d18c6e5a0142d",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 170,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 22173,
+    "prompt_tokens_details": null,
+    "total_tokens": 22343
+  }
+}

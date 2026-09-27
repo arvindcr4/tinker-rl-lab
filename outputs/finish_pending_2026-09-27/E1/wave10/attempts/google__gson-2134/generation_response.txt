@@ -1,0 +1,49 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/bind/util/ISO8601Utils.java b/gson/src/main/java/com/google/gson/internal/bind/util/ISO8601Utils.java
+index 1777777..1234567 100644
+--- a/gson/src/main/java/com/google/gson/internal/bind/util/ISO8601Utils.java
++++ b/gson/src/main/java/com/google/gson/internal/bind/util/ISO8601Utils.java
+@@ -1,5 +1,6 @@
+ package com.google.gson.internal.bind.util;
+ 
++import java.text.ParseException;
+ import java.util.Calendar;
+ import java.util.Date;
+ import java.util.GregorianCalendar;
+@@ -13,6 +14,7 @@ import java.util.TimeZone;
+  * @author Jackson
+  */
+ public final class ISO8601Utils {
++  private static final int INVALID_DATE = -1;
+ 
+   /**
+    * Format date into yyyy-MM-dd'T'HH:mm:ss[.SSS][Z|[+-]HH:mm]
+@@ -100,6 +102,10 @@ public final class ISO8601Utils {
+       TimeZone timezone = TimeZone.getTimeZone(timezoneId);
+       if (!timezone.getID().equals(timezoneId)) {
+         throw new IndexOutOfBoundsException("Invalid time zone indicator " + timezoneIndicator);
++      }
++
++      Calendar calendar = new GregorianCalendar(timezone);
++      calendar.setLenient(false);
++      calendar.set(Calendar.YEAR, year);
++      calendar.set(Calendar.MONTH, month - 1);
++      calendar.set(Calendar.DAY_OF_MONTH, day);
++      calendar.set(Calendar.HOUR_OF_DAY, hour);
++      calendar.set(Calendar.MINUTE, minutes);
++      calendar.set(Calendar.SECOND, seconds);
++      calendar.set(Calendar.MILLISECOND, milliseconds);
++
++      pos.setIndex(offset);
++      return calendar.getTime();
++      // If we get a ParseException it'll already have the right message/offset.
++      // Other exception types can convert here.
++    } catch (IndexOutOfBoundsException e) {
++      fail = e;
++    } catch (NumberFormatException e) {
++      fail = e;
++    } catch (IllegalArgumentException e) {
++      fail = e;
++    }
++    String input = (date == null) ? null : ("'" + date + "'");
++    throw new ParseException("Failed to parse date [" + input + "]: " + fail.getMessage(), pos.getIndex());
+   }

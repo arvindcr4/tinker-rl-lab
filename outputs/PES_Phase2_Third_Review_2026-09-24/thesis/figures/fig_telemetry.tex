@@ -28,104 +28,104 @@
 \definecolor{partial}{RGB}{176,106,0}
 \definecolor{blocked}{RGB}{166,43,43}
 % --- figure-local styles -------------------------------------------------
+% Canvas is ~14 cm wide so that it is included at ~0.98 scale: \scriptsize
+% (7 pt) text prints at >= 6.8 pt.
 \tikzset{
   stage/.style={rectangle, rounded corners=2pt, draw=black!65, thick, fill=blue!6,
-                font=\scriptsize, align=center, inner sep=3.5pt, minimum height=7.5mm},
+                font=\scriptsize, align=center, inner sep=3.5pt, minimum height=9mm,
+                text width=2.7cm},
   pill/.style={rectangle, rounded corners=2pt, draw=black!40, fill=white,
-               font=\tiny, align=center, inner sep=2.0pt, minimum height=5.0mm},
-  pilld/.style={rectangle, rounded corners=2pt, draw=complete!70!black, thick,
-                fill=complete!9, font=\tiny, align=center, inner sep=2.0pt,
-                minimum height=5.0mm},
-  rrowlab/.style={font=\tiny\bfseries, text=black!65, anchor=west, align=left},
+               font=\scriptsize, align=center, inner sep=2.0pt, minimum height=6.4mm},
+  pilld/.style={pill, draw=complete!70!black, thick, fill=complete!9},
+  rrowlab/.style={font=\scriptsize\bfseries, text=black!70, anchor=west, align=left,
+                  text width=1.9cm},
   sink/.style={rectangle, rounded corners=2pt, draw=black!55, thick, fill=black!6,
-               font=\tiny, align=left, inner sep=3.5pt, text width=3.0cm},
+               font=\scriptsize, align=left, inner sep=4pt, text width=4.05cm,
+               anchor=north, minimum height=15mm},
   consumer/.style={rectangle, rounded corners=2pt, draw=black!50, thick, fill=orange!7,
-                   font=\tiny, align=left, inner sep=4pt, text width=4.05cm},
+                   font=\scriptsize, align=left, inner sep=4pt, text width=4.05cm,
+                   anchor=north, minimum height=24mm},
 }
 \begin{document}
 \begin{tikzpicture}
 
 % ===================== 1. what one step produces =========================
-\node[stage, text width=2.6cm] (s1) at (-5.3,0) {\textbf{GRPO step $t$}\\rollout batch started};
-\node[stage, text width=3.3cm] (s2) at (-1.5,0) {\textbf{$G$ completions per prompt}\\each graded $\rightarrow r_{g,j}$};
-\node[stage, text width=2.9cm] (s3) at (2.1,0) {\textbf{group statistics}\\$\mu_g,\sigma_g \rightarrow A_i$};
-\node[stage, text width=2.7cm] (s4) at (5.6,0) {\textbf{policy update}\\one LoRA optimiser step};
+\node[stage] (s1) at (-5.25,0) {\textbf{GRPO step $t$}\\rollout batch started};
+\node[stage] (s2) at (-1.75,0) {\textbf{$G$ completions per prompt}, each graded $\rightarrow r_{g,j}$};
+\node[stage] (s3) at (1.75,0) {\textbf{group statistics}\\$\mu_g,\sigma_g \rightarrow A_{g,j}$};
+\node[stage] (s4) at (5.25,0) {\textbf{policy update}\\one LoRA\\optimiser step};
 \draw[ar] (s1) -- (s2);
 \draw[ar] (s2) -- (s3);
 \draw[ar] (s3) -- (s4);
 
 % ===================== 2. the record itself ==============================
-\fill[black!2, rounded corners=3pt] (-6.60,-2.35) rectangle (3.72,-7.68);
-\draw[black!55, thick, rounded corners=3pt] (-6.60,-2.35) rectangle (3.72,-7.68);
-\fill[pesblue, rounded corners=3pt] (-6.60,-2.35) rectangle (3.72,-2.92);
-\fill[pesblue] (-6.60,-2.80) rectangle (3.72,-2.92);
-\node[white, font=\scriptsize\bfseries, anchor=west] at (-6.42,-2.635)
+\fill[black!2, rounded corners=3pt] (-7.0,-1.60) rectangle (7.0,-7.00);
+\draw[black!55, thick, rounded corners=3pt] (-7.0,-1.60) rectangle (7.0,-7.00);
+\fill[pesblue, rounded corners=3pt] (-7.0,-1.60) rectangle (7.0,-2.17);
+\fill[pesblue] (-7.0,-2.05) rectangle (7.0,-2.17);
+\node[white, font=\footnotesize\bfseries, anchor=west] at (-6.85,-1.885)
   {One telemetry record per step, written before the step can count};
 
-\draw[ar] (-1.5,-0.44) -- (-1.5,-2.30);
-\node[font=\tiny, text=black!60, anchor=east, align=right] at (-1.62,-1.32)
-  {every step emits\\one record};
+\draw[ar] (s2.south) -- (-1.75,-1.58);
+\node[font=\scriptsize\itshape, text=black!60, anchor=west] at (-1.62,-1.05)
+  {every step emits one record};
 
-% ---- field rows (pitch: 5 / 4 / 3 / 6 pills) ----------------------------
-\node[rrowlab] at (-6.44,-3.36) {step scalars};
-\foreach \j/\t in {0/{reward},1/{loss},2/{entropy},3/{KL to ref\\policy},4/{grad norm}}
-  \node[pill, text width=1.44cm] at (-3.86+1.624*\j,-3.36) {\t};
+% ---- field rows: pills fill x = -4.80 ... 6.85 --------------------------
+\node[rrowlab] at (-6.85,-2.70) {step scalars};
+\foreach \j/\t in {0/{reward},1/{loss},2/{entropy},3/{KL to ref.\ policy},4/{grad norm}}
+  \node[pill, text width=2.05cm] at (-3.635+2.33*\j,-2.70) {\t};
 
-\node[rrowlab] at (-6.44,-4.16) {group\\diagnostics};
-\foreach \j/\t in {0/{ZVF},1/{gradient\\utilisation $1-\mathrm{ZVF}$},2/{all-correct\\fraction},3/{all-wrong\\fraction}}
-  \node[pilld, text width=1.83cm] at (-3.605+2.03*\j,-4.16) {\t};
+\node[rrowlab] at (-6.85,-3.55) {group\\diagnostics};
+\foreach \j/\t in {0/{ZVF},1/{gradient utilisation\\$1-\mathrm{ZVF}$},2/{all-correct\\fraction},3/{all-wrong\\fraction}}
+  \node[pilld, text width=2.60cm] at (-3.344+2.9125*\j,-3.55) {\t};
 
-\node[rrowlab] at (-6.44,-4.96) {behaviour};
-\foreach \j/\t in {0/{mean completion\\length},1/{clip fraction},2/{learning rate\\(and schedule)}}
-  \node[pill, text width=2.48cm] at (-3.267+2.707*\j,-4.96) {\t};
+\node[rrowlab] at (-6.85,-4.40) {behaviour};
+\foreach \j/\t in {0/{mean completion length},1/{clip fraction},2/{learning rate (and schedule)}}
+  \node[pill, text width=3.50cm] at (-2.858+3.883*\j,-4.40) {\t};
 
-\node[rrowlab] at (-6.44,-5.70) {provenance};
+\node[rrowlab] at (-6.85,-5.25) {provenance};
 \foreach \j/\t in {0/{step},1/{seed},2/{config\\hash},3/{commit\\SHA},4/{framework\\id},5/{grader\\id}}
-  \node[pill, text width=1.16cm] at (-3.943+1.353*\j,-5.70) {\t};
+  \node[pill, text width=1.65cm] at (-3.829+1.9417*\j,-5.25) {\t};
 
 % ---- the retained tensor sub-box ---------------------------------------
 \draw[complete!70!black, thick, rounded corners=2pt, fill=complete!9]
-  (-6.44,-6.26) rectangle (3.56,-7.50);
-\node[font=\tiny, align=left, anchor=north west, text width=9.7cm] at (-6.32,-6.36)
+  (-6.85,-5.78) rectangle (6.85,-6.86);
+\node[font=\scriptsize, align=left, anchor=north west, text width=13.4cm] at (-6.75,-5.86)
   {\textbf{\textcolor{complete!60!black}{Raw per-group reward tensor
    $\mathbf{r}$, of shape $|B_t|\times G$, is retained, not discarded.}}
    The scalar ZVF above is only a summary: the tensor behind it is kept, so the
-   collapse split can be recomputed and re-audited after the run has ended.};
+   all-correct / all-wrong split can be recomputed and re-audited after the run has ended.};
 
 % ===================== 3. where the record goes ==========================
-\node[sink] (k1) at (6.05,-3.60)
-  {\textbf{Local JSONL}\\one record per step, append-only\\and offline-analysable once the\\run has finished};
-\node[sink] (k2) at (6.05,-5.15)
-  {\textbf{Weights \& Biases}\\the same record mirrored, for live\\monitoring and for review by\\someone who was not on the run};
-\node[sink] (k3) at (6.05,-6.60)
-  {\textbf{Checkpoint $\rightarrow$ Hugging Face}\\published with its revision URL\\and paired with the records that\\produced it};
-\draw[ar] (3.74,-3.60) -- (k1.west);
-\draw[ar] (3.74,-5.15) -- (k2.west);
-\draw[ar] (3.74,-6.60) -- (k3.west);
+\node[sink] (k1) at (-4.67,-7.75)
+  {\textbf{Local JSONL}\\one record per step, append-only; analysable offline after the run};
+\node[sink] (k2) at (0,-7.75)
+  {\textbf{Weights \& Biases}\\the same record mirrored for live\\monitoring and external review};
+\node[sink] (k3) at (4.67,-7.75)
+  {\textbf{Checkpoint $\rightarrow$ Hugging Face}\\published with its revision URL,\\paired with the records behind it};
+\foreach \k in {k1,k2,k3} \draw[ar] (\k.north |- 0,-7.02) -- node[right, font=\scriptsize\itshape, text=black!60]{written to} (\k.north);
 
 % ===================== 4. who reads it ==================================
-% anchored by its own south edge, well clear of c1.north (which sits at about
-% y=-8.31 for this box's text): an anchor=west label here is crossed by the border
-\node[font=\scriptsize\bfseries, text=black!70, anchor=south west] at (-6.60,-8.08)
-  {Consumers of the record};
+\path let \p1=(k1.south) in node[font=\footnotesize\bfseries, text=black!70, anchor=west]
+  (chdr) at (-7.0,\y1-0.35cm) {Consumers of the record};
 
-\node[consumer] (c1) at (-4.42,-9.21)
-  {\textbf{\textcolor{pesblue}{Recomputation.}} \texttt{p2\_collapse\_analysis.py} reruns ZVF and the
-   all-correct / all-wrong split straight from the retained tensors. The published P2
-   values ($0.130$, $0.190$, $0.155$; pooled $0.1583$) come from this path, not from
-   the live training loop.};
-\node[consumer] (c2) at (0.00,-9.21)
-  {\textbf{\textcolor{pesblue}{Normalisation.}} One ZVF definition, applied unchanged
-   across nine library back-ends, so that a ZVF number reported for one framework means
-   the same thing as a ZVF number reported for another.};
-\node[consumer] (c3) at (4.42,-9.21)
-  {\textbf{\textcolor{pesblue}{Receipt and ledger.}} Freeze-before-paid-work: the record is
-   the artefact that shows what a run actually did, and it is what the seven-state lane
+\node[consumer] (c1) at ([yshift=-0.25cm]chdr.south -| k1.south)
+  {\textbf{\textcolor{pesblue}{Recomputation.}} \texttt{p2\_collapse\_analysis.py}
+   reruns ZVF and the all-correct / all-wrong split from the retained tensors. The
+   published P2 values ($0.130$, $0.190$, $0.155$; pooled $0.1583$) come from this
+   path, not from the live training loop.};
+\node[consumer] (c2) at ([yshift=-0.25cm]chdr.south -| k2.south)
+  {\textbf{\textcolor{pesblue}{Normalisation.}} One ZVF definition. A normaliser
+   maps the reward and mask fields of four frameworks (TRL, Tinker, OpenRLHF, veRL)
+   onto it, so a ZVF reported for one of them means the same as for another.};
+\node[consumer] (c3) at ([yshift=-0.25cm]chdr.south -| k3.south)
+  {\textbf{\textcolor{pesblue}{Receipt and ledger.}} Freeze-before-paid-work: the
+   record shows what a run actually did, and it is what the seven-state lane
    taxonomy and the audit suite are scored against.};
 
 \node[rectangle, rounded corners=2pt, draw=blocked!75!black, thick, fill=blocked!6,
       font=\scriptsize, align=center, inner sep=4pt, text width=13.6cm, anchor=north]
-  at (-1.44,-10.38)
+  at ([yshift=-0.35cm]c2.south)
   {\textbf{\textcolor{blocked!75!black}{Fail closed.}} A step that cannot write its record
    halts the run. Telemetry is a precondition of progress, not a post-hoc summary written
    from memory --- which is also why ZVF is defined on the reward \emph{spread} rather than on

@@ -1,0 +1,75 @@
+{
+    "task": "default",
+    "action_frequency": {
+        "Move North": 50,
+        "Move East": 19,
+        "Do": 57,
+        "Place Table": 2,
+        "Make Wood Pickaxe": 25,
+        "Move South": 21,
+        "Make Wood Sword": 1,
+        "Move West": 27,
+        "Sleep": 14,
+        "Noop": 2
+    },
+    "input_tokens": 317811,
+    "output_tokens": 634,
+    "done": true,
+    "episode_return": 5.099999999999998,
+    "num_steps": 218,
+    "failed_candidates": [
+        "Wake Up",
+        "Wake Up"
+    ],
+    "score": 6.0,
+    "progression": 0.2727272727272727,
+    "achievements": {
+        "collect_coal": 0,
+        "collect_diamond": 0,
+        "collect_drink": 17,
+        "collect_iron": 0,
+        "collect_sapling": 0,
+        "collect_stone": 0,
+        "collect_wood": 4,
+        "defeat_skeleton": 0,
+        "defeat_zombie": 1,
+        "eat_cow": 2,
+        "eat_plant": 0,
+        "make_iron_pickaxe": 0,
+        "make_iron_sword": 0,
+        "make_stone_pickaxe": 0,
+        "make_stone_sword": 0,
+        "make_wood_pickaxe": 2,
+        "make_wood_sword": 0,
+        "place_furnace": 0,
+        "place_plant": 0,
+        "place_stone": 0,
+        "place_table": 1,
+        "wake_up": 0
+    },
+    "process_num": "w47193",
+    "seed": 4024437013,
+    "agent": {
+        "type": "naive",
+        "remember_cot": true,
+        "max_text_history": 16,
+        "max_image_history": 0,
+        "max_cot_history": 1,
+        "max_icl_history": 1000,
+        "cache_icl": false
+    },
+    "client": {
+        "client_name": "vllm",
+        "model_id": "pavlov-public-portfolio-bf16",
+        "base_url": "http://127.0.0.1:8793/crafter/v1",
+        "generate_kwargs": {
+            "temperature": 1.0,
+            "max_tokens": 8192,
+            "thinking_budget": null
+        },
+        "timeout": 60,
+        "max_retries": 5,
+        "delay": 2,
+        "alternate_roles": false
+    }
+}

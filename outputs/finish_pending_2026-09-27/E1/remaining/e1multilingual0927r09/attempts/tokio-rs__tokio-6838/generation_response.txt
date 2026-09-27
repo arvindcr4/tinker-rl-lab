@@ -1,0 +1,30 @@
+diff --git a/tokio/src/net/unix/listener.rs b/tokio/src/net/unix/listener.rs
+index 7a0f7a0f..b0b0b0b0 100644
+--- a/tokio/src/net/unix/listener.rs
++++ b/tokio/src/net/unix/listener.rs
+@@ -80,8 +80,8 @@ impl UnixListener {
+     pub fn bind(path: impl AsRef<UdsPath>) -> io::Result<UnixListener> {
+         let path = path.as_ref();
+ 
+-        let socket = if path.is_abstract() {
+-            StdSocketAddr::from_abstract_name(path.as_abstract_name().unwrap())
++        let socket = if path.is_abstract() {
++            StdSocketAddr::from_abstract_name(path.as_abstract_name().unwrap().strip_prefix('\0').unwrap())
+         } else {
+             StdSocketAddr::from_pathname(path.as_pathname().unwrap())
+         };
+diff --git a/tokio/src/net/unix/stream.rs b/tokio/src/net/unix/stream.rs
+index c0c0c0c0..d0d0d0d0 100644
+--- a/tokio/src/net/unix/stream.rs
++++ b/tokio/src/net/unix/stream.rs
+@@ -76,8 +76,8 @@ impl UnixStream {
+     pub fn connect(path: impl AsRef<UdsPath>) -> Connect<'_> {
+         let path = path.as_ref();
+ 
+-        let socket = if path.is_abstract() {
+-            StdSocketAddr::from_abstract_name(path.as_abstract_name().unwrap())
++        let socket = if path.is_abstract() {
++            StdSocketAddr::from_abstract_name(path.as_abstract_name().unwrap().strip_prefix('\0').unwrap())
+         } else {
+             StdSocketAddr::from_pathname(path.as_pathname().unwrap())
+         };

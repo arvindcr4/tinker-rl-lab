@@ -1,0 +1,16 @@
+diff --git a/tsdb/head_append.go b/tsdb/head_append.go
+index 5e0f7d0f6..a1b2c3d4e 100644
+--- a/tsdb/head_append.go
++++ b/tsdb/head_append.go
+@@ -1282,6 +1282,10 @@ func (c *chunkDiskMapper) writeChunkSeriesToChunkWriter(series chunks.Series, wri
+ 		}
+ 
+ 		if c.maxBytes > 0 && c.bytesWritten >= c.maxBytes {
++			// If we are at the chunk size limit, we need to check if the current sample
++			// is a duplicate of the last sample in the chunk to avoid creating overlapping chunks.
++			if c.maxTime >= t {
++				return c, false, false
++			}
+ 			// We have reached the chunk size limit, so we need to close the current chunk.
+ 			if err := w.WriteChunk(c.currChunk, c.minTime, c.maxTime); err != nil {
+ 				return c, false, err

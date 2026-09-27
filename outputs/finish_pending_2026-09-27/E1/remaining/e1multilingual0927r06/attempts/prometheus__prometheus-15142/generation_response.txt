@@ -1,0 +1,15 @@
+diff --git a/tsdb/head_append.go b/tsdb/head_append.go
+index 16bba78f15..a0c0c0c0c0 100644
+--- a/tsdb/head_append.go
++++ b/tsdb/head_append.go
+@@ -665,6 +665,10 @@ func (a *headAppender) AppendHistogram(ref storage.SeriesRef, lset labels.Labels
+ 	}
+ 
+ 	s := a.head.series.getByID(ref)
++	if s == nil {
++		// The series might have been garbage collected between the check above and now.
++		return 0, ErrNotFound
++	}
+ 
+ 	// If the series is not found, we need to create a new one.
+ 	if s == nil {

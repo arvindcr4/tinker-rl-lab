@@ -1,0 +1,13 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/bind/JsonTreeReader.java b/gson/src/main/java/com/google/gson/internal/bind/JsonTreeReader.java
+index 0a0f0a0..b0a0f0a 100644
+--- a/gson/src/main/java/com/google/gson/internal/bind/JsonTreeReader.java
++++ b/gson/src/main/java/com/google/gson/internal/bind/JsonTreeReader.java
+@@ -258,7 +258,7 @@ final class JsonTreeReader extends JsonReader {
+     }
+ 
+     private void popStack() {
+-      stackSize--;
++      stackSize--;
+       if (stackSize == 0) {
+         throw new IllegalStateException("JsonReader is closed.");
+       }

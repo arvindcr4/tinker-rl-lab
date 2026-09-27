@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/commands.json b/src/commands.json\nindex 5a0a0a0a0a..b0b0b0b0b0 100644\n--- a/src/commands.json\n+++ b/src/commands.json\n@@ -1,6 +1,6 @@\n {\n     \"fcall\": {\n-        \"summary\": \"Call a function.\",\n+        \"summary\": \"Call a function, optionally with a given number of keys.\",\n         \"complexity\": \"O(N) where N is the number of commands executed.\",\n         \"arguments\": [\n             {\ndiff --git a/src/functions.c b/src/functions.c\nindex 1234567890..abcdef1234 100644\n--- a/src/functions.c\n+++ b/src/functions.c\n@@ -1,5 +1,5 @@\n /*\n- * Copyright (c) 2021, Redis Ltd.\n+ * Copyright (c) 2021-2022, Redis Ltd.\n  * All rights reserved.\n  *\n  * Redistribution and use in source and binary forms, with or without\n@@ -1,10 +1,10 @@\n #include \"server.h\"\n #include \"functions.h\"\n #include \"script.h\"\n+#include \"module.h\"\n \n-/* Forward declarations */\n-static void call(client *c, struct redisCommand *cmd, int flags);\n-\n /*\n  * This is the main entry point for the Lua scripting engine.\n  * It is used to execute Lua scripts.\n@@ -1,20 +1,20 @@\n static int luaRedisGenericCommand(lua_State *L, int raise_error) {\n     /* ... existing code ... */\n }\n \n+/*\n+ * Execute a function.\n+ */\n void callFunction(client *c, int flags) {\n     struct redisFunction *func;\n     struct redisFunctionLib *lib;\n     int retval;\n     int argc = c->argc;\n     robj **argv = c->argv;\n \n     /* ... existing code ... */\n \n-    /*\n-     * We need to call the function.\n-     */\n-    call(c, func->command, flags);\n+    /*\n+     * We need to call the function.\n+     */\n+    call(c, func->command, flags | CMD_CALL_SLOWLOG | CMD_CALL_NO_MONITOR);\n }",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790473069,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-91ca860a7abafadc",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 550,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 27025,
+    "prompt_tokens_details": null,
+    "total_tokens": 27575
+  }
+}

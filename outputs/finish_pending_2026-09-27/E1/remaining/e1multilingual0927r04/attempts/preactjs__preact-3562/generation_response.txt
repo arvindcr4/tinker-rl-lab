@@ -1,0 +1,13 @@
+diff --git a/compat/src/render.js b/compat/src/render.js
+index 0b9a927..5a6c8b1 100644
+--- a/compat/src/render.js
++++ b/compat/src/render.js
+@@ -140,7 +140,7 @@ options.vnode = vnode => {
+ 			} else if (/ondoubleclick/i.test(i)) {
+ 				i = 'ondblclick';
+ 			} else if (
+-				/^onchange(textarea|input)/i.test(i + type) &&
++				/^onchange$/i.test(i) &&
+ 				!onChangeInputType(props.type)
+ 			) {
+ 				i = 'oninput';

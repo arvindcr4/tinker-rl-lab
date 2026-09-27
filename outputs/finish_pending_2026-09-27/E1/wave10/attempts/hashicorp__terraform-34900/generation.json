@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "da295e2bb6efad503a923a2e02883a0a42794bdd41b0719886329645f39715c6",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790471353.3363268,
+  "instance_id": "hashicorp__terraform-34900",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/internal/states/statefile/write_read.go b/internal/states/statefile/write_read.go\nindex 0730073007..3333333333 100644\n--- a/internal/states/statefile/write_read.go\n+++ b/internal/states/statefile/write_read.go\n@@ -106,6 +106,10 @@ func writeStateFileWithDiagnostics(state *State, w io.Writer, addr addrs.Module\n \t}\n \n \t// Write the sensitive attributes\n+\tif state.SensitiveAttributes == nil {\n+\t\t// Ensure we always write an empty array instead of null to maintain\n+\t\t// compatibility with older versions and prevent spurious diffs.\n+\t\tstate.SensitiveAttributes = []cty.Path{}\n+\t}\n \tif err := json.NewEncoder(w).Encode(state.SensitiveAttributes); err != nil {\n \t\treturn diags.Append(err)\n \t}",
+  "patch_sha256": "582b5669882f4fa09a5515f92d12d9e9a2d92fee4c7770fabce6936737e0d362",
+  "request_sha256": "a74b71e4344b273637b266e89cd5ea2dc1029f1694e7a9965d5bc500e7eae439",
+  "response_sha256": "582b5669882f4fa09a5515f92d12d9e9a2d92fee4c7770fabce6936737e0d362",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "220d2b51563f7f6b2084647bcff635057e64cbb252d63cd034b852df20702d43",
+  "started_at": 1790471348.5905101,
+  "status": "GENERATED",
+  "task_inventory_sha256": "765d75f9384450871730901fb73933d9e68ef9415f6badcb603e116aa0829e2f",
+  "usage": {
+    "completion_tokens": 214,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 25812,
+    "prompt_tokens_details": null,
+    "total_tokens": 26026
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

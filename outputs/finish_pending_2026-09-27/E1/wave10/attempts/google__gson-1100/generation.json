@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "76ffd15e9762f89e791c522e329a977a36aff042599d380255f3e63d67671a11",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790471255.33265,
+  "instance_id": "google__gson-1100",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/gson/src/main/java/com/google/gson/internal/bind/DefaultDateTypeAdapter.java b/gson/src/main/java/com/google/gson/internal/bind/DefaultDateTypeAdapter.java\nindex 0777777..1111111 100644\n--- a/gson/src/main/java/com/google/gson/internal/bind/DefaultDateTypeAdapter.java\n+++ b/gson/src/main/java/com/google/gson/internal/bind/DefaultDateTypeAdapter.java\n@@ -85,6 +85,9 @@ final class DefaultDateTypeAdapter extends TypeAdapter<Date> {\n   @Override public void write(JsonWriter out, Date value) throws IOException {\n     if (value == null) {\n       out.nullValue();\n+      return;\n+    }\n+    if (value.getTime() < 0) {\n+      out.nullValue();\n     } else {\n       String dateFormatAsString = sdf.format(value);\n       out.value(dateFormatAsString);",
+  "patch_sha256": "1511ca58897fb03c66321df3ddd7bacd77e1f67bcdc9e76fc837d940ce7e26fd",
+  "request_sha256": "b162e9d8bace535bcb333f4a44b06d8f1aa9e24f513a84fb5a0a2b2907543274",
+  "response_sha256": "1511ca58897fb03c66321df3ddd7bacd77e1f67bcdc9e76fc837d940ce7e26fd",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "75f4799689254077e813da8faf4fcdbe613a90b352ab91bf9da0fe3aa33a92f9",
+  "started_at": 1790471251.6302788,
+  "status": "GENERATED",
+  "task_inventory_sha256": "765d75f9384450871730901fb73933d9e68ef9415f6badcb603e116aa0829e2f",
+  "usage": {
+    "completion_tokens": 214,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 25503,
+    "prompt_tokens_details": null,
+    "total_tokens": 25717
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

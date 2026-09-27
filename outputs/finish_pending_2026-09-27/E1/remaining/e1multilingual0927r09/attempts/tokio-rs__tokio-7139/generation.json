@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "dd741effe717ac4a0a796f0f326da2458b0c10c4b02cf4c928bdabc29f5f6705",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790476243.229921,
+  "instance_id": "tokio-rs__tokio-7139",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/tokio/src/fs/file.rs b/tokio/src/fs/file.rs\nindex 5086e56dcb..a1b2c3d4e5 100644\n--- a/tokio/src/fs/file.rs\n+++ b/tokio/src/fs/file.rs\n@@ -603,6 +603,10 @@ impl AsyncRead for File {\n         let me = self.get_mut();\n \n         let max_buf_size = cmp::min(dst.remaining(), me.max_buf_size);\n+\n+        if max_buf_size == 0 {\n+            return Poll::Ready(Ok(()));\n+        }\n \n         // If the buffer is full, we can't read any more data.\n         if me.buf.is_empty() {",
+  "patch_sha256": "864233d8936597324f8ff9cb17860e613fd727bdc8e8583e8c562482742e9055",
+  "request_sha256": "4b2056e4bd1a1465558948497a2280cea0df1655cbbe692d9cfd8764e68b4b75",
+  "response_sha256": "864233d8936597324f8ff9cb17860e613fd727bdc8e8583e8c562482742e9055",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "3b30d279b60b1bdc5ce6927063d1c76b74aba42425bf9947f2f4c29b53611df5",
+  "started_at": 1790476238.965665,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 175,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 26538,
+    "prompt_tokens_details": null,
+    "total_tokens": 26713
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

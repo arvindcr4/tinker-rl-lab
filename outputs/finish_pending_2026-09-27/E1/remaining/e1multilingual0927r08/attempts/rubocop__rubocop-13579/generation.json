@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "d56c5dd3764d5fab5f29fdb1fbd091e9eabf40bb6e5f4e17987cac16b8a78095",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790473489.624198,
+  "instance_id": "rubocop__rubocop-13579",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/lib/rubocop/cop/layout/line_continuation_spacing.rb b/lib/rubocop/cop/layout/line_continuation_spacing.rb\nindex 070220000000..888888888888 100644\n--- a/lib/rubocop/cop/layout/line_continuation_spacing.rb\n+++ b/lib/rubocop/cop/layout/line_continuation_spacing.rb\n@@ -10,6 +10,10 @@ module RuboCop\n     #   if 2 + 2\\\n     #     == 4\n     #   end\n+    #\n+    #   /multiline\\\n+    #   regexp/\n     class LineContinuationSpacing < Base\n       include MatchRange\n       include ConfigurableEnforcedStyle\n@@ -28,6 +32,10 @@ module RuboCop\n         return if node.type == :heredoc\n         return if node.type == :regexp\n \n+        # Line continuations inside regexp literals are part of the pattern\n+        # and should not be modified.\n+        return if node.type == :regexp\n+\n         range = node.source_range\n         return unless range.source.include?('\\\\')\n \ndiff --git a/spec/rubocop/cop/layout/line_continuation_spacing_spec.rb b/spec/rubocop/cop/layout/line_continuation_spacing_spec.rb\nindex 070220000000..888888888888 100644\n--- a/spec/rubocop/cop/layout/line_continuation_spacing_spec.rb\n+++ b/spec/rubocop/cop/layout/line_continuation_spacing_spec.rb\n@@ -10,6 +10,20 @@ RSpec.describe RuboCop::Cop::Layout::LineContinuationSpacing, :config do\n       end\n     end\n \n+    it 'registers no offense when there is no space in a regexp' do\n+      expect_no_offenses(<<~'RUBY')\n+        /multiline\\\n+        regexp/\n+      RUBY\n+    end\n+\n+    it 'registers no offense when there is a space in a regexp' do\n+      expect_no_offenses(<<~'RUBY')\n+        /multiline \\\n+        regexp/\n+      RUBY\n+    end\n+\n     it 'registers an offense when too much space in front of backslash in array literals' do\n       expect_offense(<<~'RUBY')\n         [",
+  "patch_sha256": "e8396bfc36e1d651e9243c4cfc8e67f4e35a4043543609650fbaaf2505f29f8d",
+  "request_sha256": "ed05c302742542484acf10c2f67b4f5e5a15dd66aaa8387ba7a3312306bd8823",
+  "response_sha256": "e8396bfc36e1d651e9243c4cfc8e67f4e35a4043543609650fbaaf2505f29f8d",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "298c7249ee97a6863a062c25e91b04df3e4298f7745713bb1c8f6642c301e6ec",
+  "started_at": 1790473480.668628,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 552,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 26262,
+    "prompt_tokens_details": null,
+    "total_tokens": 26814
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

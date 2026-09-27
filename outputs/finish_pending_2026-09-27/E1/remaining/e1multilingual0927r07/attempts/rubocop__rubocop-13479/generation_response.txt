@@ -1,0 +1,56 @@
+diff --git a/lib/rubocop/cop/layout/leading_comment_space.rb b/lib/rubocop/cop/layout/leading_comment_space.rb
+index 1234567890..abcdef1234 100644
+--- a/lib/rubocop/cop/layout/leading_comment_space.rb
++++ b/lib/rubocop/cop/layout/leading_comment_space.rb
+@@ -100,7 +100,7 @@ module RuboCop
+         def on_new_investigation # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+           processed_source.comments.each do |comment|
+             next unless /\A(?!#\+\+|#--)(#+[^#\s=])/.match?(comment.text)
+-            next if comment.loc.line == 1 && allowed_on_first_line?(comment)
++            next if allowed_on_first_line?(comment)
+             next if doxygen_comment_style?(comment)
+             next if gemfile_ruby_comment?(comment)
+             next if rbs_inline_annotation?(comment)
+@@ -113,7 +113,7 @@ module RuboCop
+         private
+ 
+         def allowed_on_first_line?(comment)
+-          shebang?(comment) || (rackup_config_file? && rackup_options?(comment))
++          shebang?(comment) || (rackup_config_file? && rackup_options?(comment)) || leading_shebang_line?(comment)
+         end
+ 
+         def shebang?(comment)
+@@ -121,6 +121,11 @@ module RuboCop
+           comment.text.start_with?('#!')
+         end
+ 
++        def leading_shebang_line?(comment)
++          comment.loc.line == 1 &&
++            processed_source.comments.any? { |c| c.loc.line == 1 && c.text.start_with?('#!') }
++        end
++
+         def rackup_options?(comment)
+           comment.text.start_with?('#\\')
+         end
+diff --git a/spec/rubocop/cop/layout/leading_comment_space_spec.rb b/spec/rubocop/cop/layout/leading_comment_space_spec.rb
+index 1234567890..abcdef1234 100644
+--- a/spec/rubocop/cop/layout/leading_comment_space_spec.rb
++++ b/spec/rubocop/cop/layout/leading_comment_space_spec.rb
+@@ -43,6 +43,17 @@ RSpec.describe RuboCop::Cop::Layout::LeadingCommentSpace, :config do
+     RUBY
+   end
+ 
++  it 'does not register an offense for multiline shebangs' do
++    expect_no_offenses(<<~RUBY)
++      #!/usr/bin/env nix-shell
++      #! nix-shell -i ruby --pure
++      #! nix-shell -p ruby gh git
++      #! nix-shell -I nixpkgs=https://github.com/NixOS/nixpkgs/archive/aebe249544837ce42588aa4b2e7972222ba12e8f.tar.gz
++
++      puts "Hello world"
++    RUBY
++  end
++
+   it 'registers an offense and corrects #! after the first line' do
+     expect_offense(<<~RUBY)
+       test

@@ -1,0 +1,50 @@
+diff --git a/lib/rubocop/cop/layout/line_continuation_spacing.rb b/lib/rubocop/cop/layout/line_continuation_spacing.rb
+index 070220000000..888888888888 100644
+--- a/lib/rubocop/cop/layout/line_continuation_spacing.rb
++++ b/lib/rubocop/cop/layout/line_continuation_spacing.rb
+@@ -10,6 +10,10 @@ module RuboCop
+     #   if 2 + 2\
+     #     == 4
+     #   end
++    #
++    #   /multiline\
++    #   regexp/
+     class LineContinuationSpacing < Base
+       include MatchRange
+       include ConfigurableEnforcedStyle
+@@ -28,6 +32,10 @@ module RuboCop
+         return if node.type == :heredoc
+         return if node.type == :regexp
+ 
++        # Line continuations inside regexp literals are part of the pattern
++        # and should not be modified.
++        return if node.type == :regexp
++
+         range = node.source_range
+         return unless range.source.include?('\\')
+ 
+diff --git a/spec/rubocop/cop/layout/line_continuation_spacing_spec.rb b/spec/rubocop/cop/layout/line_continuation_spacing_spec.rb
+index 070220000000..888888888888 100644
+--- a/spec/rubocop/cop/layout/line_continuation_spacing_spec.rb
++++ b/spec/rubocop/cop/layout/line_continuation_spacing_spec.rb
+@@ -10,6 +10,20 @@ RSpec.describe RuboCop::Cop::Layout::LineContinuationSpacing, :config do
+       end
+     end
+ 
++    it 'registers no offense when there is no space in a regexp' do
++      expect_no_offenses(<<~'RUBY')
++        /multiline\
++        regexp/
++      RUBY
++    end
++
++    it 'registers no offense when there is a space in a regexp' do
++      expect_no_offenses(<<~'RUBY')
++        /multiline \
++        regexp/
++      RUBY
++    end
++
+     it 'registers an offense when too much space in front of backslash in array literals' do
+       expect_offense(<<~'RUBY')
+         [

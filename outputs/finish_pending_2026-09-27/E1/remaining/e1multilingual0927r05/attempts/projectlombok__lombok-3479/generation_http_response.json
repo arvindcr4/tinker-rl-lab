@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/core/lombok/eclipse/handlers/HandleExtensionMethod.java b/src/core/lombok/eclipse/handlers/HandleExtensionMethod.java\nindex 5c0f0f0..8b0a0a0 100644\n--- a/src/core/lombok/eclipse/handlers/HandleExtensionMethod.java\n+++ b/src/core/lombok/eclipse/handlers/HandleExtensionMethod.java\n@@ -36,10 +36,10 @@ public class HandleExtensionMethod extends EclipseAnnotationHandler<ExtensionMeth\n \t\tint modifiers = typeDecl == null ? 0 : typeDecl.modifiers;\n \t\t\n \t\tboolean notAClass = (modifiers &\n-\t\t\t\t(ClassFileConstants.AccAnnotation)) != 0;\n+\t\t\t\t(ClassFileConstants.AccAnnotation | ClassFileConstants.AccInterface)) != 0;\n \t\t\n \t\tif (typeDecl == null || notAClass) {\n-\t\t\tannotationNode.addError(\"@ExtensionMethod is legal only on classes and enums and interfaces.\");\n+\t\t\tannotationNode.addError(\"@ExtensionMethod is legal only on classes, enums, interfaces, and records.\");\n \t\t\treturn;\n \t\t}",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790473085,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-9f9f73142535ebaf",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 252,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 24403,
+    "prompt_tokens_details": null,
+    "total_tokens": 24655
+  }
+}

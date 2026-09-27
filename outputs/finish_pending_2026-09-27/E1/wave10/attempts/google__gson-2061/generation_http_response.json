@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/gson/src/main/java/com/google/gson/stream/JsonReader.java b/gson/src/main/java/com/google/gson/stream/JsonReader.java\nindex 1a2b3c4..5d6e7f8 100644\n--- a/gson/src/main/java/com/google/gson/stream/JsonReader.java\n+++ b/gson/src/main/java/com/google/gson/stream/JsonReader.java\n@@ -1000,7 +1000,7 @@ public final class JsonReader implements Closeable {\n    * @return true if there are more tokens in the stream.\n    */\n   public boolean hasNext() throws IOException {\n-    return peekStack != null;\n+    return peekStack != null && peek() != JsonToken.END_DOCUMENT;\n   }",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471265,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-adbfe4388260db58",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 175,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 24256,
+    "prompt_tokens_details": null,
+    "total_tokens": 24431
+  }
+}

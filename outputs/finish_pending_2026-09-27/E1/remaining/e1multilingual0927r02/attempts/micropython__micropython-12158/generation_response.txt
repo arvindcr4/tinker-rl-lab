@@ -1,0 +1,18 @@
+diff --git a/extmod/modthread.c b/extmod/modthread.c
+index 6777777..1111111 100644
+--- a/extmod/modthread.c
++++ b/extmod/modthread.c
+@@ -100,11 +100,13 @@ STATIC mp_obj_t thread_start_new_thread(mp_obj_t func, mp_obj_t args) {
+     }
+     mp_thread_t thread = mp_thread_create(thread_start_wrapper, &thread_args);
+     if (thread == NULL) {
+-        mp_raise_msg(&mp_type_MemoryError, MP_ERROR_TEXT("can't create new thread"));
++        mp_raise_msg(&mp_type_MemoryError, MP_ERROR_TEXT("can't create new thread"));
++        return MP_OBJ_NULL;
+     }
+     thread_args.thread = thread;
+     mp_thread_start(thread);
+     thread_args.thread = NULL;
++    return MP_OBJ_NEW_SMALL_INT((mp_int_t)thread);
+ }
+ STATIC MP_DEFINE_CONST_FUN_OBJ_2(thread_start_new_thread_obj, thread_start_new_thread);

@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/stream.c b/src/stream.c\nindex 1111111..2222222 100644\n--- a/src/stream.c\n+++ b/src/stream.c\n@@ -2800,6 +2800,10 @@ static void streamReplyWithGroupInfo(client *c, stream *s, streamCG *group, int\n         }\n     }\n \n+    /* If the group's read counter is invalid, the lag is not available. */\n+    if (group->entries_read == 0) {\n+        addReplyNull(c);\n+        return;\n+    }\n+\n     /* Calculate the lag. */\n     if (group->entries_read == 0) {\n         /* The group has never read any entries, so the lag is the total\n@@ -2810,10 +2814,6 @@ static void streamReplyWithGroupInfo(client *c, stream *s, streamCG *group, int\n         }\n     }\n \n-    /* If the group's read counter is invalid, the lag is not available. */\n-    if (group->entries_read == 0) {\n-        addReplyNull(c);\n-        return;\n-    }\n-\n     /* Calculate the lag. */\n     if (group->entries_read == 0) {\n         /* The group has never read any entries, so the lag is the total",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790473279,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-8c410805d0e8ddd4",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 323,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 31366,
+    "prompt_tokens_details": null,
+    "total_tokens": 31689
+  }
+}

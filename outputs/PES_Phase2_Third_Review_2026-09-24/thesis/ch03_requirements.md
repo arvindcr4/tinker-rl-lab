@@ -1,6 +1,6 @@
 # 3. System Requirements Specification
 
-This chapter states what the Tinker RL Lab system must do, what qualities it must hold while doing it, and how each requirement is verified. It inherits the specification of the Phase-1 report and extends it across the Semester-4 additions: the multi-framework benchmark rosters, the Zero-Variance Fraction (ZVF) diagnostic and the adaptive group-size controller derived from it, the minimum reporting standard and the machine-readable GRPO stack registry, and the E1–E14 held-out evaluation campaign with its fail-closed completion gate. It is written as a specification rather than as a retrospective description, but every requirement below corresponds to a component that exists in the repository, and every functional requirement is paired with the concrete test that checks it. Where a requirement is not satisfied — the cloud capacity for two evaluation lanes, the white-box gradient path at the largest model scale — the shortfall is named in §3.6 and §3.8 rather than written around.
+This chapter states what the Tinker RL Lab system must do, what qualities it must hold while doing it, and how each requirement is verified. It inherits the specification of the Phase-1 report and extends it across the Semester-4 additions: the multi-framework benchmark rosters, the Zero-Variance Fraction (ZVF) diagnostic and the adaptive group-size controller derived from it, the minimum reporting standard and the machine-readable GRPO stack registry, and the E1–E14 evaluation campaign with its fail-closed completion gate. It is written as a specification rather than as a retrospective description, but every requirement below corresponds to a component that exists in the repository, and every functional requirement is paired with the concrete test that checks it. Where a requirement is not satisfied — the cloud capacity for two evaluation lanes, the white-box gradient path at the largest model scale — the shortfall is named in §3.6 and §3.8 rather than written around.
 
 ## 3.1 Overview and Actors
 
@@ -20,59 +20,45 @@ A fifth party, the **external access holder**, is an actor only in the negative 
 
 ## 3.2 Functional Requirements
 
-**FR-1 — Single configuration object.** One declarative file shall fully determine a run: model, dataset, reward function, decoding parameters, group size, learning rate, KL coefficient, seed and output location. No framework-specific parameters may be required from the experimenter to obtain a valid run on any supported back-end (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
+Table 3.1 lists the functional requirements. Each row states the requirement and names the source that defines it; §3.5 maps each to the artefact that implements it and the test that verifies it.
 
-**FR-2 — Back-end-agnostic execution through thin adapters.** A configuration shall be executable on multiple frameworks through adapters that map the shared configuration onto each framework's own interface, while sharing the reward grader and the decoding configuration rather than re-implementing them. Two framework rosters are in scope and must not be conflated. The cross-RL-library roster contains TRL, Stable-Baselines3, CleanRL, Tianshou, PufferLib, rl_games and d3rlpy; the cross-launcher LLM-RL roster contains Tinker, TRL, SkyRL, veRL, OpenRLHF, Atropos and the Hugging Face reference launchers (source: platform_hybrid/paper/sections/_shared_methods.tex). Completed-run parity across the second roster is a requirement the system does **not** yet meet: of its seven entries, only Tinker and TRL produced completed runs in this release, and the veRL and OpenRLHF entries in the comparison artefact are dry-run placeholders (source: platform_hybrid/paper/sections/_shared_methods.tex; source: platform_hybrid/experiments/results/framework_comparison.json).
+| ID | Requirement | Source |
+|---|---|---|
+| FR-1 | One declarative file fully determines a run (model, dataset, reward, decoding, G, learning rate, KL coefficient, seed, output); no framework-specific parameters are needed on any supported back-end | Phase-1 report |
+| FR-2 | A configuration is executable on multiple frameworks through thin adapters that share the reward grader and decoding configuration. Two rosters are in scope and are kept apart: the cross-RL-library roster (TRL, Stable-Baselines3, CleanRL, Tianshou, PufferLib, rl_games, d3rlpy) and the cross-launcher LLM-RL roster (Tinker, TRL, SkyRL, veRL, OpenRLHF, Atropos, HF reference launchers). Completed-run parity is **not** met: only Tinker and TRL produced completed runs; the veRL and OpenRLHF entries are dry-run placeholders | `_shared_methods.tex`; `framework_comparison.json` |
+| FR-3 | Every step computes ZVF and its all-correct / all-wrong decomposition from the reward tensors | Phase-1 report |
+| FR-4 | Every step emits a structured telemetry record (reward, ZVF, gradient utilisation, collapse counts, entropy, completion length, KL) to a log and to the tracker; the controller work adds a per-step counterfactual against a matched fixed-G control | Phase-1 report; `controller_cf_per_step.tsv` |
+| FR-5 | Raw per-group reward tensors are persisted for every run, so diagnostics can be recomputed | Phase-1 report |
+| FR-6 | Sweeps over G, seed and baseline-versus-intervention arms run under a fixed wall-clock or token budget | Phase-1 report |
+| FR-7 | For single-GPU models, per-layer LoRA gradient norms are recorded; not required at managed scale, where they are not exposed | Phase-1 report |
+| FR-8 | Every run emits a provenance record binding configuration, grader version and rollout hashes; a campaign lane additionally declares its provider package and grant documents against published schema versions, each with a 64-character hash | Phase-1 report; `e1_e14_completion_gate.py` |
+| FR-9 | A stack-conditioned result carries the seven manifest fields of the eight-item standard (loss form, reference KL, sampler/backend with base-checkpoint revision and hash, telemetry, group-size schedule, held-out split, decontamination) plus its eighth, evaluation item (held-out pass@k); a 0–100 badge is emitted, and an unreported field is distinguished from one reported as absent | `paper_P6_registry.tex`; `minreport_audit_summary.json` |
+| FR-10 | The stack registry is queryable by stack, field or status | `registry/schema.json`; `registry/query.py` |
+| FR-11 | Each named variant stores an explicit delta against the GRPO reference, and `stackdiff` returns an R0–R5 flip-risk verdict for same-label entries | `paper_P6_registry.tex`; `registry/provenance/` |
+| FR-12 | An adaptive group-size controller with escalation asymmetry and hysteresis records its counterfactual against the best static recipe at matched and unequal rollout counts; it measures the trade and does not claim a win | `paper_P7_zvf_controller.tex`; `controller_cf_summary.json` |
+| FR-13 | Each lane records results against a declared evidence class (exact complete, partial exact, partial recovery, externally blocked, local-setup-ready-provider-input-required) tied to the source status | `e1_e14_completion_gate.py` |
+| FR-14 | The completion gate validates, and never executes, a lane package; a valid package proves only that its inputs are consistent and available; signatures are checked against provider trust roots, and the gate refuses rather than warns | `e1_e14_completion_gate.py` |
+| FR-15 | Original-contract and replacement-scope results are never pooled, no cross-suite aggregate is computed, and every accuracy carries its denominator | `E1_E14_FINAL_RESULTS_2026-09-19.md` |
+| FR-16 | The export path builds an anonymised review package whose build runs the audit suite, and refuses a package built with audits skipped | `run_all_audits.py`; `export_guard_audit.py` |
 
-**FR-3 — Per-step signal-starvation measurement.** The training loop shall compute, at every step, the fraction of prompt-groups whose within-group reward variance is zero, together with the decomposition of that fraction into all-correct and all-wrong groups. These are the ZVF and the collapse decomposition, and they are derived quantities of the reward tensors rather than proxies (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
-
-**FR-4 — Per-step telemetry.** Each step shall emit a structured record carrying reward, ZVF, gradient utilisation, the all-correct and all-wrong collapse counts, policy entropy, completion length and KL divergence, written both to a machine-readable log and to the experiment tracker (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex). Semester-4 controller work extends this record with the per-step counterfactual comparison between the adaptive schedule and its matched fixed-group-size control (source: platform_hybrid/experiments/results/p5p8/controller_cf_per_step.tsv).
-
-**FR-5 — Raw tensor persistence.** The system shall persist the raw per-group reward tensors for every run, so that any derived diagnostic can be recomputed deterministically after the fact rather than trusted from a logged value (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
-
-**FR-6 — Sweeps under a fixed budget.** The runner shall support sweeps over group size, seed and baseline-versus-intervention arms, executed under a fixed wall-clock or token budget so that arms are comparable in compute rather than in step count (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
-
-**FR-7 — White-box gradient path.** For models small enough to train on a single GPU, the system shall record per-layer LoRA gradient norms alongside the usual telemetry, so that the relationship between reward spread and gradient magnitude can be examined directly rather than inferred. This path is scoped to the small-model configurations and is not a requirement at the large managed scale, where per-layer gradients are not exposed (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
-
-**FR-8 — Per-run provenance record.** Every run shall emit a machine-readable provenance record binding the configuration, the grader or verifier version, and the rollout hashes, so that a published number can be tied to the exact inputs that produced it (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex). In the campaign, the equivalent obligation is stronger: a lane declares its provider package and grant documents against published schema versions, each carrying a 64-character hash, and the declared inputs must be internally consistent and available locally before the lane is admissible (source: zvf-program/flagship/e1_e14_completion_gate.py).
-
-**FR-9 — Minimum-reporting manifest and audit.** A run submitted as a stack-conditioned result shall carry the seven-field minimum-report manifest — loss form, reference KL, sampler backend including base-checkpoint revision and hash, telemetry, group-size schedule, held-out split, and decontamination — plus the eighth evaluation item, a held-out pass@$k$ report; the resource shall emit a completeness badge on a 0–100 scale and shall distinguish an unreported field from a field reported as absent (source: platform_hybrid/paper/paper_P6_registry.tex; source: platform_hybrid/experiments/results/p5p8/minreport_audit_summary.json).
-
-**FR-10 — Registry query surface.** The stack registry shall be queryable: a schema plus a set of entry documents and a query interface that returns entries by stack, field or status, so that a reader can ask what a given labelled method actually did rather than what its name implies (source: platform_hybrid/registry/schema.json; source: platform_hybrid/registry/query.py).
-
-**FR-11 — Variant-delta records and stack-diff.** For each named method variant the registry shall store an explicit delta against the GRPO reference — for example DAPO's asymmetric clipping, dynamic sampling, token-level loss, overlong-reward shaping and removed KL term; Dr. GRPO's removal of the length and standard-deviation normalisations; GSPO's sequence-level ratio — and the stack-diff procedure shall return a flip-risk verdict on the 0–5 scale when two entries differ in label but not in substance (source: platform_hybrid/paper/paper_P6_registry.tex; source: platform_hybrid/registry/provenance/).
-
-**FR-12 — Adaptive group-size controller.** The system shall implement a controller that adjusts group size in response to the measured signal, with an escalation asymmetry, hysteresis to prevent oscillation, and a callback that diverts degenerate groups away from the fixed schedule, and it shall record the counterfactual comparison against the best static recipe at matched and at unequal rollout counts (source: platform_hybrid/paper/paper_P7_zvf_controller.tex; source: platform_hybrid/experiments/results/p5p8/controller_cf_summary.json). The controller is specified as a training-time policy, not as a promotion mechanism: the requirement is to measure the trade, not to claim a win.
-
-**FR-13 — Lane harness with evidence classes.** Each evaluation lane shall be driven by a harness that records per-lane results against a declared evidence class — exact complete, partial exact, partial recovery, externally blocked, or local-setup-ready-provider-input-required — and shall keep the class assignment tied to the source status rather than to the operator's optimism (source: zvf-program/flagship/e1_e14_completion_gate.py).
-
-**FR-14 — Fail-closed completion gate.** A declared lane package shall be validated, not executed, by the completion gate. A valid package proves only that the declared immutable inputs are internally consistent and available locally; accepting a package as a benchmark result is explicitly out of scope for the gate. Signature verification against provider trust roots shall be performed, and the gate shall refuse rather than warn (source: zvf-program/flagship/e1_e14_completion_gate.py).
-
-**FR-15 — Scope-separation contract in reporting.** Original-contract and replacement-scope results shall never be pooled, no cross-suite aggregate shall be computed, and every reported accuracy shall carry its coverage denominator. This is a requirement on the outputs, not only on the analysis code (source: outputs/E1_E14_FINAL_RESULTS_2026-09-19.md).
-
-**FR-16 — Blind-review packaging with an unskippable audit guard.** The export path shall produce an anonymised review package whose build runs the audit suite, and the guard shall detect and refuse a package built with the audits skipped (source: platform_local/run_all_audits.py; source: platform_local/export_guard_audit.py).
+: Functional requirements. Sources: the Phase-1 report is `platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex`; other files are under `platform_hybrid/`, `platform_local/` or `zvf-program/flagship/`.
 
 ## 3.3 Non-Functional Requirements
 
-**NFR-1 — Attribution.** Every comparative claim shall be made with the whole stack held fixed except the factor under test, and framework, algorithm, model family and scale shall be reported as confounded where they are confounded (source: platform_hybrid/paper/sections/_shared_methods.tex).
+| ID | Requirement | Source |
+|---|---|---|
+| NFR-1 Attribution | Comparative claims hold the stack fixed except the factor under test; confounded factors are reported as confounded | `_shared_methods.tex` |
+| NFR-2 Reproducibility | Multi-arm claims rest on at least three seeds; single-seed results are descriptive only | Phase-1 report |
+| NFR-3 Recomputability | Every derived diagnostic is reproducible from stored raw artefacts, independent of logged summaries | Phase-1 report |
+| NFR-4 Denominator discipline | Held-out figures carry their n; negative, null and underpowered results are reported as such | `main_eai_body.tex` |
+| NFR-5 Isolation | Concurrent experiments run in separate processes, not threads (after the tracker thread-safety defect) | Phase-1 report |
+| NFR-6 Budget | Spend is recorded per run against a declared envelope; per-run bounds and lead-issued authorisation receipts apply even under an unlimited total | `Pending_Experiments.md` |
+| NFR-7 Fail-closed | Validation defaults to refusal; an unverifiable package is not scored | `e1_e14_completion_gate.py` |
+| NFR-8 Least privilege | Evidence records hold no key material; credential checks record only liveness and scope | `Pending_Experiments.md` |
+| NFR-9 Lost-source auditability | Execution sources for sealed artefacts live in tracked paths; sealed requests and receipts suffice to pin a faithful re-implementation | `E1_E14_FINAL_RESULTS_2026-09-19.md` |
+| NFR-10 External traceability | External payloads are bound by hash and validated against trust roots and schema versions; an unreported field is null, not zero or false | `e1_e14_completion_gate.py`; `paper_P6_registry.tex` |
 
-**NFR-2 — Reproducibility.** Multi-arm claims shall rest on at least three seeds; single-seed results shall be labelled descriptive or exploratory and shall not be used to support a directional claim (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
-
-**NFR-3 — Recomputability.** Every published derived diagnostic shall be reproducible from stored raw artefacts by a documented procedure, with no dependence on a logged summary value (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
-
-**NFR-4 — Honesty and denominator discipline.** Held-out figures shall be reported with their denominator $n$; negative and null results shall be reported as such; where an analysis was underpowered, that shall be stated rather than left implicit (source: platform_hybrid/paper/main_eai_body.tex).
-
-**NFR-5 — Isolation.** Concurrent experiments shall run in separate processes rather than threads, following a tracker thread-safety defect observed in Phase 1 (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
-
-**NFR-6 — Budget.** Managed-compute spend shall be recorded per run and counted against a declared envelope; even where the standing authorization removes the cumulative cap and sets the total to unlimited, per-run resource and timeout bounds remain in force and paid launches remain bound to a lead-issued authorization receipt (source: outputs/PES_Phase2_Review_2026-09-12/finish/Pending_Experiments.md).
-
-**NFR-7 — Fail-closed behaviour.** A validation boundary shall default to refusal. The gate neither invokes an adapter nor accepts a package as a result, and a package that cannot be verified is not scored (source: zvf-program/flagship/e1_e14_completion_gate.py).
-
-**NFR-8 — Least privilege and no credential retention.** The system shall hold no key material in its evidence records: credential checks record only liveness and scope, and the resulting receipts state explicitly that no key material is stored (source: outputs/PES_Phase2_Review_2026-09-12/finish/Pending_Experiments.md).
-
-**NFR-9 — Auditability under lost-source conditions.** Execution sources for anything declared sealed shall live in tracked paths, so that a lost working directory cannot orphan a sealed artefact; where loss nonetheless occurs, the sealed requests and receipts shall remain sufficient to pin a faithful re-implementation (source: outputs/E1_E14_FINAL_RESULTS_2026-09-19.md).
-
-**NFR-10 — Traceability of external artefacts.** Externally supplied payloads and hosted results shall be bound by hash equality and validated against published trust roots and schema versions, and an unreported field shall be represented as a null rather than as a zero or a false value (source: zvf-program/flagship/e1_e14_completion_gate.py; source: platform_hybrid/paper/paper_P6_registry.tex).
+: Non-functional requirements.
 
 ## 3.4 Test-Case Specification
 
@@ -121,7 +107,7 @@ The test cases below are the concrete checks attached to the requirements. TC-1 
 | NFR-1 Attribution | Method sections and comparison artefacts | TC-3, TC-10 |
 | NFR-2 Reproducibility | Seed management in the runner | TC-3 |
 | NFR-3 Recomputability | Documented analysis procedures | TC-1, TC-2, TC-4 |
-| NFR-4 Honesty | Caveat and claim-strength checks | TC-6, TC-7 |
+| NFR-4 Denominator discipline | Caveat and claim-strength checks | TC-6, TC-7 |
 | NFR-5 Isolation | Process-level execution | Operationally checked; not in the audit suite |
 | NFR-6 Budget | Spend receipts | TC-9 |
 | NFR-7 Fail-closed behaviour | Gate constants and suite exit status | TC-6, TC-9 |
@@ -135,11 +121,17 @@ Two rows deserve comment. FR-7 has no automated check because the white-box grad
 
 ## 3.6 Hardware Requirements
 
-The system requires four compute surfaces. The **managed training back-end** executes GRPO at the scale of the campaign actor, a mixture-of-experts model of roughly 35 billion total parameters with about 3 billion active per token, evaluated in bfloat16 with a LoRA adapter at a pinned revision (source: outputs/E1_E14_FINAL_RESULTS_2026-09-19.md). The requirement here is not a particular accelerator but the service contract: the back-end exposes sampling, training and checkpointing, and does **not** expose per-layer gradients, which is why FR-7 is scoped to the small-model path (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
+| Compute surface | Requirement | Status |
+|---|---|---|
+| Managed training back-end (Tinker) | Sampling, training and checkpointing for the ~35B-total, ~3B-active MoE actor in bfloat16 with a pinned LoRA; per-layer gradients are not exposed, which is why FR-7 is scoped to small models | Met |
+| White-box GPU | One CUDA device with at least 24 GB (an L4-class cloud notebook), enough for the 1.5B configuration and a reduced-length 3B re-test | Met |
+| Serverless GPU (Modal) | Large scoring sweeps and the hosted sampler bridge; the bridge is a precondition for the lanes that use it | Met |
+| Evaluation-lane cloud capacity | E9 needs a documented minimum of 4 vCPUs (8 requested) and E6 needs 16, against a live quota of 1 in each region, with increase requests open; a local E9 container build needs at least 30 GiB of free disk against 31 GiB available; E2 needs a GCP binding that only the project owner can create | Not met at 2026-09-21 |
+| Orchestration workstation | Orchestration, analysis, figures, the audit suite and the report toolchain | Met |
 
-The **white-box GPU** requirement is a single CUDA device with at least 24 GB of memory, met in Phase 1 by a cloud notebook instance with an L4-class GPU, sufficient for the 1.5-billion-parameter configuration and for a scaled re-test at 3 billion parameters on reduced sequence lengths (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex). The **batch scoring and held-out evaluation** surface is a serverless GPU path used for large scoring sweeps and for the hosted sampler bridge that the tool-use lane depends on; that bridge is a required component, and its availability is a precondition for that lane rather than an assumption (source: outputs/UNBLOCK_CARRYOUT_2026-09-21.md).
+: Hardware requirements and their status.
 
-The **evaluation-lane compute** is the Semester-4 addition with the sharpest unmet requirement. Two lanes are gated on cloud capacity that is currently below the required level: one has requested eight standard on-demand vCPUs in its region (a documented minimum of four, for a single four-vCPU builder instance) against a live quota of one, and the other needs sixteen against a live quota of one, with quota increase requests filed and still open (source: outputs/E1_E14_FINAL_RESULTS_2026-09-19.md; source: outputs/PES_Phase2_Review_2026-09-12/finish/Pending_Experiments.md; source: outputs/PES_Phase2_Review_2026-09-12/finish/e9_completion/status_2026-09-19.json). A third lane requires a local container build for which the recipe reconstruction needs at least 30 GiB of free disk against 31 GiB available, which is marginal rather than comfortable (source: outputs/UNBLOCK_CARRYOUT_2026-09-21.md). A fourth lane requires Cloud project resources whose binding must be minted by the project owner; that binding is a hard prerequisite the system cannot satisfy on its own (source: outputs/UNBLOCK_CARRYOUT_2026-09-21.md). The **orchestration workspace** is an ordinary developer workstation used for orchestration, analysis and figure generation, and carries the audit suite and the report toolchain.
+(sources: outputs/E1_E14_FINAL_RESULTS_2026-09-19.md; platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex; outputs/UNBLOCK_CARRYOUT_2026-09-21.md; outputs/PES_Phase2_Review_2026-09-12/finish/Pending_Experiments.md; outputs/PES_Phase2_Review_2026-09-12/finish/e9_completion/status_2026-09-19.json)
 
 ## 3.7 Software Requirements
 
@@ -151,7 +143,7 @@ Semester 4 adds five software components to the requirement set. First, the audi
 
 **Rewards are binary and verifiable.** The specification assumes a programmatic checker — exact match for the mathematics tasks and unit tests for the code subset. Nothing in the requirement set addresses learned reward models, and none of the diagnostics should be read as applying to them (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
 
-**Held-out sets are small.** Several evaluation sets have $n$ between 8 and 20, with the consequence that learning-gain magnitudes are noise-limited by construction. This is a constraint on what the results can mean, not a defect of the analysis: the small-$n$ figures are reported with their denominators and are not used to support comparative claims (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
+**Held-out sets are small.** Several Phase-1 evaluation sets have $n$ between 8 and 20, and the controlled Semester-4 comparisons use 200 to 500 items (Table 1.1 gives the n behind each headline), with the consequence that learning-gain magnitudes are noise-limited by construction. This is a constraint on what the results can mean, not a defect of the analysis: the small-$n$ figures are reported with their denominators and are not used to support comparative claims (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
 
 **The managed back-end is a black box at the layer level.** Per-layer gradients are not exposed on the managed path, so claims about the relationship between reward spread and gradient magnitude are confined to the small-model white-box configuration and are directional only (source: platform_hybrid/paper/paper_P7_zvf_controller.tex).
 

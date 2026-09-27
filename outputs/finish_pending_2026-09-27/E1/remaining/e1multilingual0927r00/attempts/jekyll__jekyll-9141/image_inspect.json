@@ -1,0 +1,98 @@
+{
+ "Id": "sha256:3d1cdd4be1304b4cd06701d28e851ef2f1c1035390c33590361ec195176d60d3",
+ "RepoTags": [
+  "swebench/sweb.eval.x86_64.jekyll_1776_jekyll-9141:latest"
+ ],
+ "RepoDigests": [
+  "swebench/sweb.eval.x86_64.jekyll_1776_jekyll-9141@sha256:9ab0bc09ee554387af9121fbf81eb99ccd229664506af46793d8e2703bd0d253"
+ ],
+ "Parent": "",
+ "Comment": "buildkit.dockerfile.v0",
+ "Created": "2026-08-13T16:29:56.890995375Z",
+ "Container": "",
+ "ContainerConfig": {
+  "Hostname": "",
+  "Domainname": "",
+  "User": "",
+  "AttachStdin": false,
+  "AttachStdout": false,
+  "AttachStderr": false,
+  "Tty": false,
+  "OpenStdin": false,
+  "StdinOnce": false,
+  "Env": null,
+  "Cmd": null,
+  "Image": "",
+  "Volumes": null,
+  "WorkingDir": "",
+  "Entrypoint": null,
+  "OnBuild": null,
+  "Labels": null
+ },
+ "DockerVersion": "",
+ "Author": "",
+ "Config": {
+  "Hostname": "",
+  "Domainname": "",
+  "User": "",
+  "AttachStdin": false,
+  "AttachStdout": false,
+  "AttachStderr": false,
+  "Tty": false,
+  "OpenStdin": false,
+  "StdinOnce": false,
+  "Env": [
+   "PATH=/usr/local/bundle/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+   "LANG=C.UTF-8",
+   "RUBY_VERSION=3.3.8",
+   "RUBY_DOWNLOAD_URL=https://cache.ruby-lang.org/pub/ruby/3.3/ruby-3.3.8.tar.xz",
+   "RUBY_DOWNLOAD_SHA256=44ae70fee043da3ce48289b7a52618ebe32dc083253993d486211c7e445c8642",
+   "GEM_HOME=/usr/local/bundle",
+   "BUNDLE_SILENCE_ROOT_WARNING=1",
+   "BUNDLE_APP_CONFIG=/usr/local/bundle",
+   "TZ=Etc/UTC"
+  ],
+  "Cmd": [
+   "irb"
+  ],
+  "Image": "",
+  "Volumes": null,
+  "WorkingDir": "/testbed",
+  "Entrypoint": null,
+  "OnBuild": null,
+  "Labels": null
+ },
+ "Architecture": "amd64",
+ "Os": "linux",
+ "Size": 1196614287,
+ "VirtualSize": 1196614287,
+ "GraphDriver": {
+  "Data": {
+   "LowerDir": "/var/lib/docker/overlay2/c0a14f08962197eeaf86b36397b38458cbd4457a75f79e415a5fef323a19ec65/diff:/var/lib/docker/overlay2/715c2d6adb1a0dda6535efa872b2ce4c0b303cbae02dc2cfd0def72e414d44e6/diff:/var/lib/docker/overlay2/24ed05c9a73f29ecc35935d66a7fdae962ce3b3da6979b34b524155da89fa6c5/diff:/var/lib/docker/overlay2/73042a4f4fb832ea3e5405a639226b3fa3a8e7a877c3b4888854e74d5079ab9b/diff:/var/lib/docker/overlay2/58a889d443fbfe87563408dabb04c1093dc49ddb5bd081846f1aa70a1f3980ac/diff:/var/lib/docker/overlay2/98e5f7a121d9d8f1ac1da9aba8ea07eaa0b37e03b14cfc747ab07e8bfabd917f/diff:/var/lib/docker/overlay2/4500b4384e95bb59279e222ffb7c75fb06315f681eced58cdbdb635a8b097380/diff:/var/lib/docker/overlay2/f8da5f07d049ac2bf3aec705dca7fb1597630eed81c867f962553a4ce0f18e14/diff:/var/lib/docker/overlay2/f6ca5d7dd1ef3cebab4ba64aecf2244becd02b3899b97ae22daaac12bd496366/diff:/var/lib/docker/overlay2/248a10c216a368723a25ff39e43b859f81dadf8568eb587dd6ee8ed1f9ca8789/diff:/var/lib/docker/overlay2/91b82f1af3f565d5db4260f314ba5d5c93c1ff0346dbefec2e0435d36e027426/diff",
+   "MergedDir": "/var/lib/docker/overlay2/2e0a4f69eab33090b8c676fadfd84c79ffed390e41f50a5fe6c49bd656df6c05/merged",
+   "UpperDir": "/var/lib/docker/overlay2/2e0a4f69eab33090b8c676fadfd84c79ffed390e41f50a5fe6c49bd656df6c05/diff",
+   "WorkDir": "/var/lib/docker/overlay2/2e0a4f69eab33090b8c676fadfd84c79ffed390e41f50a5fe6c49bd656df6c05/work"
+  },
+  "Name": "overlay2"
+ },
+ "RootFS": {
+  "Type": "layers",
+  "Layers": [
+   "sha256:175a198361755136c75d537bc9057c9c8e1b7a20eb771374a8339eaadfef29e9",
+   "sha256:20c8aca2133815a3376afc0bd1ba1a4e93b82f22d80e21f7da955a15daad62c8",
+   "sha256:a9b908787288c1175777d74ddae2fc23855c6ca88a4df3936e47eb26285b0372",
+   "sha256:1b90aaaeb596009f84acae5557eecdfc5936b2942d428ba71e3fcd084e9afbdd",
+   "sha256:9cf866f3d6dc41699de4e7a6a14837eee06da86e4c54df35dd1ed4417f371575",
+   "sha256:1626b08319468a5305df29c3584e4e644f985587f057f9f2698e415d4b04e158",
+   "sha256:a75f48b593714281bf5b77c6744cd4505afb786904fd01151344b7134d075f8c",
+   "sha256:425bfb8dfbc8b4cd633e5b0e1b6170e1f96038475f352d669daff117bdd90bc0",
+   "sha256:aeae43a2fdfa8d6bec4a7e9ecea284a27dd3e6a99e5384c8a026907cde932bdc",
+   "sha256:773d6b3619d1ff183295bfae8aa83870c71c4a3be32e4df00ac3237056b96bff",
+   "sha256:40daec8c9399e6697cb152dd9c6d87d12cbb52ae8c0925837c7e83c1c696797c",
+   "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+  ]
+ },
+ "Metadata": {
+  "LastTagTime": "0001-01-01T00:00:00Z"
+ }
+}

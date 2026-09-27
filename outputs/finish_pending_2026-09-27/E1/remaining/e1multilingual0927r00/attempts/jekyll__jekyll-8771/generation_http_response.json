@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/lib/jekyll/site.rb b/lib/jekyll/site.rb\nindex 8767666..0767666 100644\n--- a/lib/jekyll/site.rb\n+++ b/lib/jekyll/site.rb\n@@ -506,6 +506,10 @@ module Jekyll\n       end\n \n       def files_to_write\n+        return [] if incremental?\n+\n+        return [] if @files_to_write\n+\n         @files_to_write ||= begin\n           files = []\n           files.concat(regenerated)",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471556,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-b6d5128345c2307e",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 127,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 13464,
+    "prompt_tokens_details": null,
+    "total_tokens": 13591
+  }
+}

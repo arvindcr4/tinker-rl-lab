@@ -1,0 +1,11 @@
+diff --git a/src/core/lombok/experimental/SuperBuilder.java b/src/core/lombok/experimental/SuperBuilder.java
+index 1563373..0563373 100644
+--- a/src/core/lombok/experimental/SuperBuilder.java
++++ b/src/core/lombok/experimental/SuperBuilder.java
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (C) 2010-2021 The Project Lombok Authors.
++ * Copyright (C) 2010-2024 The Project Lombok Authors.
+  * 
+  * Permission is hereby granted, free of charge, to any person obtaining a copy
+  * of this software and associated documentation files (the "Software"), to deal

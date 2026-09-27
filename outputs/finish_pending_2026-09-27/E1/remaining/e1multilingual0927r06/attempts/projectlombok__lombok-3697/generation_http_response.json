@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/core/lombok/external/superbuilder/SuperBuilderTransformer.java b/src/core/lombok/external/superbuilder/SuperBuilderTransformer.java\nindex 1733333333..1111111111 100644\n--- a/src/core/lombok/external/superbuilder/SuperBuilderTransformer.java\n+++ b/src/core/lombok/external/superbuilder/SuperBuilderTransformer.java\n@@ -1,5 +1,5 @@\n /*\n- * Copyright (C) 2012-2023 The Project Lombok Authors.\n+ * Copyright (C) 2012-2024 The Project Lombok Authors.\n  *\n  * Permission is hereby granted, free of charge, to any person obtaining a copy\n  * of this software and associated documentation files (the \"Software\"), to deal\n@@ -1,6 +1,7 @@\n package lombok.external.superbuilder;\n \n+import static lombok.core.util.ListUtil.list;\n import static lombok.core.util.StringUtil.capitalize;\n import static lombok.core.util.StringUtil.uncapitalize;\n import static lombok.core.util.StringUtil.uncapitalizeFirstChar;\n@@ -1,7 +1,9 @@\n import java.util.ArrayList;\n import java.util.Arrays;\n import java.util.Collection;\n+import java.util.Collections;\n import java.util.HashSet;\n+import java.util.List;\n import java.util.Set;\n \n import javax.lang.model.element.Element;\n@@ -1,8 +1,10 @@\n import lombok.core.LombokNode;\n import lombok.core.configuration.CheckerFrameworkStyle;\n import lombok.core.configuration.NullAnnotationMetadata;\n+import lombok.core.util.ListUtil;\n import lombok.core.util.StringUtil;\n import lombok.experimental.SuperBuilder;\n+import lombok.experimental.SuperBuilder.Builder;\n import lombok.experimental.SuperBuilder.LombokBuilder;\n import lombok.experimental.SuperBuilder.SuperBuilderAnnotationProcessor;\n import lombok.launch.ShadowClassLoader;\n@@ -1,9 +1,11 @@\n import com.sun.tools.javac.code.Symbol;\n import com.sun.tools.javac.code.Symbol.ClassSymbol;\n import com.sun.tools.javac.code.Symbol.TypeVariableSymbol;\n+import com.sun.tools.javac.code.Type;\n import com.sun.tools.javac.code.TypeTag;\n import com.sun.tools.javac.code.Types;\n import com.sun.tools.javac.tree.JCTree;\n+import com.sun.tools.javac.tree.JCTree.JCAnnotation;\n import com.sun.tools.javac.tree.JCTree.JCClassDecl;\n import com.sun.tools.javac.tree.JCTree.JCExpression;\n import com.sun.tools.javac.tree.JCTree.JCFieldAccess;\n@@ -1,10 +1,12 @@\n import com.sun.tools.javac.tree.JCTree.JCMethodDecl;\n import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;\n import com.sun.tools.javac.tree.JCTree.JCNewClass;\n+import com.sun.tools.javac.tree.JCTree.JCTypeApply;\n import com.sun.tools.javac.tree.JCTree.JCTypeParameter;\n import com.sun.tools.javac.tree.JCTree.JCVariableDecl;\n import com.sun.tools.javac.tree.TreeMaker;\n import com.sun.tools.javac.tree.TreeScanner;\n+import com.sun.tools.javac.util.List;\n import com.sun.tools.javac.util.Name;\n import com.sun.tools.javac.util.Names;\n \n@@ -1,11 +1,13 @@\n import lombok.core.AST;\n import lombok.core.AnnotationProcessor;\n import lombok.core.HandlerPriority;\n+import lombok.core.util.ListUtil;\n import lombok.core.util.StringUtil;\n import lombok.experimental.SuperBuilder;\n import lombok.experimental.SuperBuilder.Builder;\n import lombok.experimental.SuperBuilder.LombokBuilder;\n import lombok.launch.ShadowClassLoader;\n+import lombok.launch.ShadowClassLoader.ShadowedClass;\n \n public class SuperBuilderTransformer extends AnnotationProcessor {\n \tprivate static final String BUILDER_CLASS_NAME = \"Builder\";\n@@ -1,12 +1,14 @@\n \tprivate static final String BUILDER_ANNOTATION = \"lombok.experimental.SuperBuilder$Builder\";\n \tprivate static final String BUILDER_ANNOTATION_2 = \"lombok.experimental.SuperBuilder$Builder$Builder\";\n \tprivate static final String BUILDER_ANNOTATION_3 = \"lombok.experimental.SuperBuilder$Builder$Builder$Builder\";\n+\tprivate static final String BUILDER_ANNOTATION_4 = \"lombok.experimental.SuperBuilder$Builder$Builder$Builder$Builder\";\n \n \t@Override public void handle(AST<?, ?, ?> ast) {\n \t\tif (!(ast.getNode() instanceof JCClassDecl)) return;\n \t\tJCClassDecl classDecl = (JCClassDecl) ast.getNode();\n \t\tif (classDecl.getModifiers().getFlags().contains(Modifier.ABSTRACT)) return;\n-\t\tif (classDecl.getModifiers().getFlags().contains(Modifier.STATIC)) return;\n+\t\tif (classDecl.getModifiers().getFlags().contains(Modifier.STATIC)) return;\n \t\tSuperBuilder annotation = findSuperBuilderAnnotation(classDecl);\n \t\tif (annotation == null) return;",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472964,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-8405755e295f00ed",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 1124,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 14742,
+    "prompt_tokens_details": null,
+    "total_tokens": 15866
+  }
+}

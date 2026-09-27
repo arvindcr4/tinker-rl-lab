@@ -1,0 +1,185 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java b/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java
+index 5a0f77e..3b0c6a8 100644
+--- a/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java
++++ b/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java
+@@ -18,6 +18,7 @@ package com.google.gson.internal.bind;
+ 
+ import com.google.gson.Gson;
+ import com.google.gson.JsonElement;
++import com.google.gson.JsonSyntaxException;
+ import com.google.gson.TypeAdapter;
+ import com.google.gson.TypeAdapterFactory;
+ import com.google.gson.internal.$Gson$Types;
+@@ -30,6 +31,7 @@ import com.google.gson.stream.JsonWriter;
+ import java.io.IOException;
+ import java.math.BigDecimal;
+ import java.math.BigInteger;
++import java.util.Arrays;
+ import java.util.List;
+ 
+ /**
+@@ -100,6 +102,10 @@ final class TypeAdapters {
+     private static final List<Class<?>> PRIMITIVE_TYPES =
+         Arrays.asList(boolean.class, byte.class, short.class, int.class, long.class, char.class,
+             float.class, double.class);
++    private static final Class<?>[] PRIMITIVE_CLASSES = {
++        boolean.class, byte.class, short.class, int.class, long.class, char.class,
++        float.class, double.class
++    };
+ 
+     @Override public TypeAdapter<Boolean> create(Gson gson, TypeToken<Boolean> type) {
+       return BooleanTypeAdapter.INSTANCE;
+@@ -110,6 +116,10 @@ final class TypeAdapters {
+       return ByteTypeAdapter.INSTANCE;
+     }
+ 
++    @Override public TypeAdapter<Byte> create(Gson gson, TypeToken<Byte> type) {
++      return ByteTypeAdapter.INSTANCE;
++    }
++
+     @Override public TypeAdapter<Short> create(Gson gson, TypeToken<Short> type) {
+       return ShortTypeAdapter.INSTANCE;
+     }
+@@ -120,6 +130,10 @@ final class TypeAdapters {
+       return LongTypeAdapter.INSTANCE;
+     }
+ 
++    @Override public TypeAdapter<Long> create(Gson gson, TypeToken<Long> type) {
++      return LongTypeAdapter.INSTANCE;
++    }
++
+     @Override public TypeAdapter<Character> create(Gson gson, TypeToken<Character> type) {
+       return CharacterTypeAdapter.INSTANCE;
+     }
+@@ -130,6 +144,10 @@ final class TypeAdapters {
+       return FloatTypeAdapter.INSTANCE;
+     }
+ 
++    @Override public TypeAdapter<Float> create(Gson gson, TypeToken<Float> type) {
++      return FloatTypeAdapter.INSTANCE;
++    }
++
+     @Override public TypeAdapter<Double> create(Gson gson, TypeToken<Double> type) {
+       return DoubleTypeAdapter.INSTANCE;
+     }
+@@ -137,6 +155,10 @@ final class TypeAdapters {
+     @Override public TypeAdapter<Number> create(Gson gson, TypeToken<Number> type) {
+       return NumberTypeAdapter.INSTANCE;
+     }
++
++    @Override public TypeAdapter<Class<?>> create(Gson gson, TypeToken<Class<?>> type) {
++      return ClassTypeAdapter.INSTANCE;
++    }
+   };
+ 
+   /**
+@@ -146,6 +168,10 @@ final class TypeAdapters {
+     private static final TypeAdapter<Boolean> INSTANCE = new TypeAdapter<Boolean>() {
+       @Override public Boolean read(JsonReader in) throws IOException {
+         if (in.peek() == JsonToken.NULL) {
++          if (in.nextNull() == null) {
++            return null;
++          }
++          return null;
+         }
+         return in.nextBoolean();
+       }
+@@ -155,6 +181,10 @@ final class TypeAdapters {
+     private static final TypeAdapter<Byte> INSTANCE = new TypeAdapter<Byte>() {
+       @Override public Byte read(JsonReader in) throws IOException {
+         if (in.peek() == JsonToken.NULL) {
++          if (in.nextNull() == null) {
++            return null;
++          }
++          return null;
+         }
+         return (byte) in.nextInt();
+       }
+@@ -164,6 +194,10 @@ final class TypeAdapters {
+     private static final TypeAdapter<Short> INSTANCE = new TypeAdapter<Short>() {
+       @Override public Short read(JsonReader in) throws IOException {
+         if (in.peek() == JsonToken.NULL) {
++          if (in.nextNull() == null) {
++            return null;
++          }
++          return null;
+         }
+         return (short) in.nextInt();
+       }
+@@ -173,6 +207,10 @@ final class TypeAdapters {
+     private static final TypeAdapter<Integer> INSTANCE = new TypeAdapter<Integer>() {
+       @Override public Integer read(JsonReader in) throws IOException {
+         if (in.peek() == JsonToken.NULL) {
++          if (in.nextNull() == null) {
++            return null;
++          }
++          return null;
+         }
+         return in.nextInt();
+       }
+@@ -182,6 +220,10 @@ final class TypeAdapters {
+     private static final TypeAdapter<Long> INSTANCE = new TypeAdapter<Long>() {
+       @Override public Long read(JsonReader in) throws IOException {
+         if (in.peek() == JsonToken.NULL) {
++          if (in.nextNull() == null) {
++            return null;
++          }
++          return null;
+         }
+         return in.nextLong();
+       }
+@@ -191,6 +233,10 @@ final class TypeAdapters {
+     private static final TypeAdapter<Character> INSTANCE = new TypeAdapter<Character>() {
+       @Override public Character read(JsonReader in) throws IOException {
+         if (in.peek() == JsonToken.NULL) {
++          if (in.nextNull() == null) {
++            return null;
++          }
++          return null;
+         }
+         String string = in.nextString();
+         if (string.length() != 1) {
+@@ -203,6 +249,10 @@ final class TypeAdapters {
+     private static final TypeAdapter<Float> INSTANCE = new TypeAdapter<Float>() {
+       @Override public Float read(JsonReader in) throws IOException {
+         if (in.peek() == JsonToken.NULL) {
++          if (in.nextNull() == null) {
++            return null;
++          }
++          return null;
+         }
+         float f = (float) in.nextDouble();
+         if (Float.isInfinite(f) && !in.isLenient()) {
+@@ -215,6 +265,10 @@ final class TypeAdapters {
+     private static final TypeAdapter<Double> INSTANCE = new TypeAdapter<Double>() {
+       @Override public Double read(JsonReader in) throws IOException {
+         if (in.peek() == JsonToken.NULL) {
++          if (in.nextNull() == null) {
++            return null;
++          }
++          return null;
+         }
+         return in.nextDouble();
+       }
+@@ -223,6 +277,10 @@ final class TypeAdapters {
+     private static final TypeAdapter<Number> INSTANCE = new TypeAdapter<Number>() {
+       @Override public Number read(JsonReader in) throws IOException {
+         if (in.peek() == JsonToken.NULL) {
++          if (in.nextNull() == null) {
++            return null;
++          }
++          return null;
+         }
+         return Streams.parse(in);
+       }
+@@ -231,6 +289,10 @@ final class TypeAdapters {
+     private static final TypeAdapter<Class<?>> INSTANCE = new TypeAdapter<Class<?>>() {
+       @Override public Class<?> read(JsonReader in) throws IOException {
+         if (in.peek() == JsonToken.NULL) {
++          if (in.nextNull() == null) {
++            return null;
++          }
++          return null;
+         }
+         return Class.forName(in.nextString());
+       }

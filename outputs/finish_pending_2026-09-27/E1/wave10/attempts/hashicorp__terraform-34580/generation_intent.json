@@ -1,0 +1,13 @@
+{
+  "at": 1790471336.835094,
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "endpoint": "https://arvindcr4--pavlov-trained-actor-e1e14-serve.modal.run/v1/chat/completions",
+  "replay_forbidden": true,
+  "request_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/wave10/attempts/hashicorp__terraform-34580/generation_request.json",
+    "sha256": "d8a947d679131f61f34516efe037ea26a4d72e6be9cfc65c868340b7f1bce52d"
+  }
+}

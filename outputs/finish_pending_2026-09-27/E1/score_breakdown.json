@@ -1,0 +1,128 @@
+{
+  "prior_waves01_09_2026_09_12": {
+    "attempted": 110,
+    "graded": 35,
+    "resolved": 4,
+    "errors_patch_apply_or_eval": 74,
+    "empty_patch": 1,
+    "resolved_over_graded": 0.1143,
+    "resolved_over_graded_ci95": [
+      0.0454,
+      0.2595
+    ],
+    "resolved_over_attempted": 0.0364,
+    "resolved_over_attempted_ci95": [
+      0.0142,
+      0.0898
+    ],
+    "resolved_ids": [
+      "fmtlib__fmt-1683",
+      "fmtlib__fmt-3272",
+      "fmtlib__fmt-3901",
+      "gin-gonic__gin-2121"
+    ]
+  },
+  "this_lane_wave10": {
+    "attempted": 16,
+    "graded": 3,
+    "resolved": 0,
+    "errors_patch_apply_or_eval": 13,
+    "empty_patch": 0,
+    "resolved_over_graded": 0.0,
+    "resolved_over_graded_ci95": [
+      0,
+      0.5615
+    ],
+    "resolved_over_attempted": 0.0,
+    "resolved_over_attempted_ci95": [
+      0,
+      0.1936
+    ],
+    "resolved_ids": []
+  },
+  "this_lane_remaining": {
+    "attempted": 174,
+    "graded": 54,
+    "resolved": 1,
+    "errors_patch_apply_or_eval": 107,
+    "empty_patch": 13,
+    "resolved_over_graded": 0.0185,
+    "resolved_over_graded_ci95": [
+      0.0033,
+      0.0977
+    ],
+    "resolved_over_attempted": 0.0057,
+    "resolved_over_attempted_ci95": [
+      0.001,
+      0.0318
+    ],
+    "resolved_ids": [
+      "phpoffice__phpspreadsheet-3463"
+    ]
+  },
+  "this_lane_total": {
+    "attempted": 190,
+    "graded": 57,
+    "resolved": 1,
+    "errors_patch_apply_or_eval": 120,
+    "empty_patch": 13,
+    "resolved_over_graded": 0.0175,
+    "resolved_over_graded_ci95": [
+      0.0031,
+      0.0929
+    ],
+    "resolved_over_attempted": 0.0053,
+    "resolved_over_attempted_ci95": [
+      0.0009,
+      0.0292
+    ],
+    "resolved_ids": [
+      "phpoffice__phpspreadsheet-3463"
+    ]
+  },
+  "combined_300": {
+    "attempted": 300,
+    "graded": 92,
+    "resolved": 5,
+    "errors_patch_apply_or_eval": 194,
+    "empty_patch": 14,
+    "resolved_over_graded": 0.0543,
+    "resolved_over_graded_ci95": [
+      0.0234,
+      0.121
+    ],
+    "resolved_over_attempted": 0.0167,
+    "resolved_over_attempted_ci95": [
+      0.0071,
+      0.0384
+    ],
+    "resolved_ids": [
+      "fmtlib__fmt-1683",
+      "fmtlib__fmt-3272",
+      "fmtlib__fmt-3901",
+      "gin-gonic__gin-2121",
+      "phpoffice__phpspreadsheet-3463"
+    ],
+    "resolved_over_300": 0.0167,
+    "resolved_over_300_ci95": [
+      0.0071,
+      0.0384
+    ]
+  },
+  "not_attempted": [],
+  "this_lane_non_generated": {
+    "sharkdp__bat-2201": "CONTEXT_OVERFLOW",
+    "sharkdp__bat-2260": "CONTEXT_OVERFLOW",
+    "sharkdp__bat-2650": "CONTEXT_OVERFLOW",
+    "sharkdp__bat-2835": "CONTEXT_OVERFLOW",
+    "prometheus__prometheus-11859": "PROVIDER_ERROR",
+    "preactjs__preact-4182": "PROVIDER_ERROR",
+    "mrdoob__three.js-25687": "PROVIDER_ERROR",
+    "mrdoob__three.js-26589": "PROVIDER_ERROR",
+    "mrdoob__three.js-27395": "PROVIDER_ERROR",
+    "vuejs__core-11589": "CONTEXT_OVERFLOW",
+    "vuejs__core-11739": "CONTEXT_OVERFLOW",
+    "vuejs__core-11899": "CONTEXT_OVERFLOW",
+    "vuejs__core-11915": "CONTEXT_OVERFLOW"
+  }
+}

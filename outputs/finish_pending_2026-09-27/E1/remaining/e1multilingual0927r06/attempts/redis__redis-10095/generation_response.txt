@@ -1,0 +1,13 @@
+diff --git a/src/t_list.c b/src/t_list.c
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/t_list.c
++++ b/src/t_list.c
+@@ -100,7 +100,7 @@ void popGenericCommand(client *c, int where) {
+     }
+ 
+     robj *o = lookupKeyWriteOrReply(c, c->argv[1], shared.null[c->resp]);
+-    if (o == NULL || checkType(c, o, OBJ_LIST))
++    if (o == NULL || checkType(c, o, OBJ_LIST))
+         return;
+ 
+     if (hascount && !count) {

@@ -1,0 +1,11 @@
+diff --git a/src/Illuminate/Collections/Traits/EnumeratesValues.php b/src/Illuminate/Collections/Traits/EnumeratesValues.php
+index 9a0f7d0c00..0c0f7d0c00 100644
+--- a/src/Illuminate/Collections/Traits/EnumeratesValues.php
++++ b/src/Illuminate/Collections/Traits/EnumeratesValues.php
+@@ -1000,7 +1000,7 @@ public function trim($characters = null)
+      */
+     public function trim($characters = null)
+     {
+-        return $this->map(fn ($value) => preg_replace('~^[\s\x{FEFF}\x{200B}\x{200E}]+|[\s\x{FEFF}\x{200B}\x{200E}]+$~u', '', $value));
++        return $this->map(fn ($value) => preg_replace('~^[\s\x{FEFF}\x{200B}\x{200E}\x00]+|[\s\x{FEFF}\x{200B}\x{200E}\x00]+$~u', '', $value));
+     }

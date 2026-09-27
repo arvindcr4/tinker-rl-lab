@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "9e0f4436fcc12d8e95003f208923b834998b17c0e55750a3c86710048952bc04",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790475511.117654,
+  "instance_id": "valkey-io__valkey-928",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/src/cluster.c b/src/cluster.c\nindex 11a2b3c..f8e9d0a 100644\n--- a/src/cluster.c\n+++ b/src/cluster.c\n@@ -1050,6 +1050,10 @@ static int clusterManagerMoveSlot(clusterNode *src, clusterNode *dst, int slot)\n     }\n \n     /* Check if the destination node has good replicas. */\n+    if (server.cluster_allow_replica_migration == 0) {\n+        /* If replica migration is disabled, we cannot ensure the destination\n+         * has good replicas, so we skip this check to allow rebalancing. */\n+    } else if (clusterNodeGetGoodReplicas(dst) == 0) {\n         clusterManagerLogWarn(\"clusterManagerMoveSlot: NOREPLICAS Not enough good replicas to write.\\n\");\n         return C_ERR;\n     }",
+  "patch_sha256": "c80e0e0adf379d11aa6d74af4051e47135b0f092d6ed4d0d9b9cf4005654aeb9",
+  "request_sha256": "257c6fd01d323def32205b37ceae13298a62df50383160f0c5959dc2756c3d34",
+  "response_sha256": "c80e0e0adf379d11aa6d74af4051e47135b0f092d6ed4d0d9b9cf4005654aeb9",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "17fcfda5d3a0d2b2856d3b90c359dfbcbe93ab45974d21f38ba605d75fa1b30f",
+  "started_at": 1790475506.2972522,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 212,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 29445,
+    "prompt_tokens_details": null,
+    "total_tokens": 29657
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

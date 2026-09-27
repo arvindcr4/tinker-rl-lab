@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "3d7e64ea2c321b57f2bf87425c7c57f45ee0e2b4a2bfe9f7084b2fc6ed9feb14",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790475759.118516,
+  "instance_id": "tokio-rs__tokio-4384",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/tokio/src/net/udp.rs b/tokio/src/net/udp.rs\nindex 1234567..abcdefg 100644\n--- a/tokio/src/net/udp.rs\n+++ b/tokio/src/net/udp.rs\n@@ -1,6 +1,7 @@\n use crate::io::{Interest, PollEvented, ReadBuf, Ready};\n use crate::net::{to_socket_addrs, ToSocketAddrs};\n \n+use std::panic::{RefUnwindSafe, UnwindSafe};\n use std::convert::TryFrom;\n use std::fmt;\n use std::io;\n@@ -10,6 +11,10 @@ cfg_net! {\n     }\n }\n \n+impl RefUnwindSafe for UdpSocket {}\n+impl UnwindSafe for UdpSocket {}\n+\n impl UdpSocket {\n     /// This function will create a new UDP socket and attempt to bind it to\n     /// the `addr` provided.",
+  "patch_sha256": "b4dd2291b4624678c5dbbe4adc16fe8aa4d6da65526f8eabb7c031ef14440452",
+  "request_sha256": "dd52c09290701f806cbca3096258a004bb696be49782685d4fb33c510f3b51aa",
+  "response_sha256": "b4dd2291b4624678c5dbbe4adc16fe8aa4d6da65526f8eabb7c031ef14440452",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "e823e2caa7baffae33344699163602819f053f2e1687e700f9f79d0e83dee561",
+  "started_at": 1790475752.9367528,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 227,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 27149,
+    "prompt_tokens_details": null,
+    "total_tokens": 27376
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

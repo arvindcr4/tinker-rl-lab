@@ -1,0 +1,31 @@
+{
+ "capsule_id": "capsule-9660931",
+ "vm": "e2cb-9660931-75428",
+ "gpu_catalog": true,
+ "provisioning": "SPOT",
+ "started": 1790475428.474141,
+ "zone": "us-central1-a",
+ "machine": "n1-highmem-4",
+ "pro_attach": "{\"_doc\": \"Content provided in json response is currently considered Experimental and may change\", \"_schema_version\": \"0.1\", \"account\": {\"created_at\": \"2026-09-27T01:48:37+00:00\", \"external_account_ids\": [{\"IDs\": [\"358208640342\"], \"origin\": \"GCP\"}], \"id\": \"aBviHSn4j5W059eC03A7eprxxl5Ipcdu_CcGxWZ-C2Yk",
+ "gpu_setup": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.\n\nGPU 0: Tesla T4 (UUID: GPU-038cec28-c7e4-0ded-be59-e1693ef4d682)\n",
+ "prep": {
+  "uses_gpu": true,
+  "registry_link": "registry.codeocean.com/published/ab4394c9-5e14-43aa-a086-cc0264f90b4f:v1",
+  "gt_result_files": [
+   "HCR-Net-I.h5",
+   "HCR-Net-II.h5",
+   "HCR-Net.html",
+   "output"
+  ]
+ },
+ "agent": {
+  "end": "finish",
+  "turns": 47,
+  "agent_seconds": 1905.7,
+  "prompt_tokens": 574132,
+  "completion_tokens": 4134,
+  "calls": 47
+ },
+ "status": "completed",
+ "finished": 1790477606.063024
+}

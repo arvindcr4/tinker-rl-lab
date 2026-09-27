@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/internal/configs/parser_config_dir.go b/internal/configs/parser_config_dir.go\nindex 1d0330000000..8b1111111111 100644\n--- a/internal/configs/parser_config_dir.go\n+++ b/internal/configs/parser_config_dir.go\n@@ -10,6 +10,7 @@ import (\n \t\"path/filepath\"\n \t\"sort\"\n \t\"strings\"\n+\t\"sync\"\n \n \t\"github.com/hashicorp/hcl/v2\"\n \t\"github.com/hashicorp/hcl/v2/hclparse\"\n@@ -23,6 +24,10 @@ type Parser struct {\n \tparser *hclparse.Parser\n }\n \n+var (\n+\tvalidateOnce sync.Once\n+)\n+\n // NewParser creates a new configuration parser.\n func NewParser() *Parser {\n \treturn &Parser{\n@@ -30,6 +35,10 @@ func NewParser() *Parser {\n \t}\n }\n \n+func init() {\n+\tvalidateOnce.Do(func() {})\n+}\n+\n // LoadDir reads all of the files in a given directory and returns a Config\n // struct representing the combined configuration of all of them.\n func (p *Parser) LoadDir(dir string) (*Config, hcl.Diagnostics) {",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471356,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-b8b9a68b055a5a1f",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 307,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 25037,
+    "prompt_tokens_details": null,
+    "total_tokens": 25344
+  }
+}

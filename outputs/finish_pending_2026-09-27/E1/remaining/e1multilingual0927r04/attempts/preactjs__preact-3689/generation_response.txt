@@ -1,0 +1,13 @@
+diff --git a/hooks/src/index.js b/hooks/src/index.js
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/hooks/src/index.js
++++ b/hooks/src/index.js
+@@ -380,7 +380,7 @@ export function useErrorBoundary(cb) {
+ 	const errState = useState();
+ 	state._value = cb;
+ 	if (!currentComponent.componentDidCatch) {
+-		currentComponent.componentDidCatch = err => {
++		currentComponent.componentDidCatch = (err, errorInfo) => {
+ 			if (state._value) state._value(err);
+ 			errState[1](err);
+ 		};

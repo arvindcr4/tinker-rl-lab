@@ -16,9 +16,9 @@ This appendix records the symbols and abbreviations used across this report and 
 | $h_G(p)$ | $p^G + (1-p)^G$ | Bernoulli null for ZVF |
 | $\mathrm{ZVF}_t$, $\mathrm{GU}_t$ | Zero-Variance Fraction: share of identical-reward groups; Gradient Utilization $1-\mathrm{ZVF}_t$ | Principal diagnostic and its complement |
 | $A_i$ | Advantage of completion $i$ | Unnormalised $R_i-\hat{p}$; normalised $(r_i-\mu_g)/(\sigma_g+\varepsilon)$; clipped Dr.GRPO |
-| $\mu_g$, $\sigma_g$ | Group mean and standard deviation of reward | $\mu_g = \frac{1}{G}\sum_j r_j$, population form |
+| $\mu_g$, $\sigma_g$ | Group mean and standard deviation of reward | $\mu_g = \frac{1}{G}\sum_j r_j$; $\sigma_g$ in population form ($1/G$) throughout, as every GRPO-style runner computes it (§4.2) |
 | $\pi_\theta$, $\pi_{\theta_{\mathrm{old}}}$, $\pi_{\mathrm{ref}}$ | Trained, sampling and frozen reference policy; per-token importance ratio $\rho_{i,t}$ | Ratio against the sampling policy; KL penalty against the reference |
-| $\mathcal{L}(\theta)$ | Clipped surrogate plus KL penalty | Main runner omits ratio, clip and reference policy |
+| $\mathcal{L}(\theta)$ | Policy loss | Original GRPO: clipped surrogate plus KL penalty. In this project no runner has a KL term; the Tinker runners are REINFORCE with a group-mean baseline (Table 4.2) |
 | $\beta$ | KL coefficient; **separately**, a regression slope | TRL and veRL 0.04; OpenRLHF 0.02; Tinker managed; also a slope in M1/M2 |
 | $\varepsilon$ | Three distinct meanings — see §C.3 | Clip range 0.2; ZVF tolerance $10^{-6}$; Adam term $10^{-8}$ |
 | $\gamma$, $\lambda$, $T$ | Discount factor; GAE parameter; sampling temperature | $0.99$; $0.95$; canonical $0.8$ |
@@ -52,7 +52,7 @@ Finally, ZVF is expanded two ways in the sources. The formal definition and the 
 | CoT | Chain-of-thought; spelled out in prose, written "GSM8K CoT" for the variant |
 | ZVF, GU | Zero-Variance Fraction; Gradient Utilization |
 | PCD, SI, PTD | Pairwise-contrast density; stability index; peak-to-tail drift |
-| Dr.GRPO | The advantage-clipping variant |
+| Dr.GRPO | GRPO with the per-response length normalisation and the division by the group standard deviation removed |
 | GAE | Generalised advantage estimation; $\lambda = 0.95$ |
 | MoE | Mixture-of-experts |
 | BF16 | bfloat16, the serving precision for the LAB-Bench, AgentDojo and Omni-MATH lanes |
@@ -73,25 +73,27 @@ Finally, ZVF is expanded two ways in the sources. The formal definition and the 
 
 : Abbreviations and their expansions, with names that no source expands recorded as identities rather than glossed.
 
-## C.5 The E1–E14 lane identifiers
+## C.5 The E1–E14 lane identifiers, scopes and statuses
 
-Each lane's short code names one original benchmark contract and is not a rank or a score. Lanes E8, E10 and E14 each hold two states at once — a completed replacement scope and a `CLOSED_EXTERNAL` contract not released — so the code alone does not say which scope a figure comes from; the terminal state and scope name do.
+Each lane's short code names one original benchmark contract and is not a rank or a score. Several lanes hold two states at once — an original contract and a replacement scope — so the code alone does not say which scope a figure comes from. Table C.3 is the single record of lane scope, headline figure, terminal state and receipt; the chapters point here rather than restating it. "orig" is the original contract and "repl" a declared replacement scope. Terminal states are from `outputs/PES_Phase2_Review_2026-09-12/finish/Pending_Experiments.md`; states for the E1, E2, E5, E6, E9 and E13 replacement scopes are as of 2026-09-21 and those lanes are being rerun. Receipt paths are relative to `outputs/`.
 
-| Lane | Original contract | Replacement scope | Terminal state |
-|---|---|---|---|
-| E1 | SWE-bench Pro | SWE-bench Multilingual | REBUILD_READY_LAUNCH_PENDING |
-| E2 | FrontierSWE | CORE-Bench | AMENDMENT_ACCEPTED_LAUNCH_PENDING |
-| E3 | SDAB (private bundle) | — | CLOSED_EXTERNAL |
-| E4 | BankerToolBench | — | CLOSED_PARTIAL |
-| E5 | APEX-Agents | Tau3 | REBUILD_READY_LAUNCH_PENDING |
-| E6 | WebBench | WebArena | PENDING_QUOTA |
-| E7 | BinaryAudit | — | CLOSED_EXTERNAL |
-| E8 | LifeSciBench | LAB-Bench (public split) | COMPLETE (public) |
-| E9 | MLE-bench | MLDevBench | PENDING_QUOTA |
-| E10 | AgentHarm | AgentDojo (benign utility) | COMPLETE (benign) |
-| E11 | VerilogEval | two native framings (no replacement) | COMPLETE |
-| E12 | AppBench | — | CLOSED_EXTERNAL |
-| E13 | OpenReward Games | BALROG | AMENDMENT_ACCEPTED_LAUNCH_PENDING |
-| E14 | FrontierMath | Omni-MATH | COMPLETE_TERMINAL_NOTE |
+| Lane | Original contract | Replacement scope | Headline figure (scope) | Terminal state | Receipt |
+|---|---|---|---|---|---|
+| E1 | SWE-bench Pro | SWE-bench Multilingual | 2/731 = 0.274% pass@1 (orig, full suite); 35/300 graded (repl) | orig: complete, no ledger label; repl: `REBUILD_READY_LAUNCH_PENDING` | `modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/receipt.json` |
+| E2 | FrontierSWE | CORE-Bench | 1/17 tasks, replay 0.8628 (orig, partial); 0/45 graded (repl) | `AMENDMENT_ACCEPTED_LAUNCH_PENDING` | `e2_frontier_swe/e2_terminal_attempt_receipt_2026-08-22.json` |
+| E3 | SDAB (private bundle) | — | none | `CLOSED_EXTERNAL` | `PES_Phase2_Review_2026-09-12/finish/external_closures_2026-09-19/E3_sdab.json` |
+| E4 | BankerToolBench | — | 1/100 tasks, recovery metric 0.3115 (orig, partial) | `CLOSED_PARTIAL` | `modal_e1_e14/2026-08-16/e4_recovery_pass16_receipt.json` |
+| E5 | APEX-Agents | Tau3 | 7/480 natively scored (orig, partial); 20/97 cleaned (repl) | `REBUILD_READY_LAUNCH_PENDING` | `e5_apex_agents/e5_exact_sequential_prefix_aggregate_2026-08-22.json` |
+| E6 | WebBench | WebArena | 0/812 (repl) | `PENDING_QUOTA` | `PES_Phase2_Review_2026-09-12/finish/e6_continuation/status_2026-09-19.json` |
+| E7 | BinaryAudit (private payload) | — | 1/46 attempted, verifier reward 0.0, no grade (orig) | `CLOSED_EXTERNAL` | `e7_binaryaudit/2026-08-22_e7_paid_attempt_receipt.json` |
+| E8 | LifeSciBench (private package) | LAB-Bench public split | 450/1,967 = 0.2288 (repl, complete; end-to-end harness score) | repl: `COMPLETE`; orig: `CLOSED_EXTERNAL` | `public_portfolio_2026-09-05/labbench_native_receipt.json` |
+| E9 | MLE-bench | MLDevBench | 40/75 competitions graded, suite score null (orig, partial); 0/34 graded (repl) | `PENDING_QUOTA` | `e9_mle_bench/modal_streaming/`; `PES_Phase2_Review_2026-09-12/finish/e9_completion/status_2026-09-19.json` |
+| E10 | AgentHarm (private tasks) | AgentDojo benign utility | 88/97 = 0.9072 utility, 97/97 completed (repl, complete) | repl: `COMPLETE`; orig: `CLOSED_EXTERNAL` | `public_portfolio_2026-09-05/agentdojo_native_receipt.json` |
+| E11 | VerilogEval | none (two native framings) | 129/312 = 41.35% pass@1 (orig, complete; end-to-end harness score) | `COMPLETE` | `modal_e1_e14/2026-08-16/e11_full_receipt.json` |
+| E12 | AppBench (deployment) | — | none | `CLOSED_EXTERNAL` | `PES_Phase2_Review_2026-09-12/finish/external_closures_2026-09-19/E12_appbench.json` |
+| E13 | OpenReward Games (held-out games) | BALROG | 13/255 episodes (repl, partial) | repl: `AMENDMENT_ACCEPTED_LAUNCH_PENDING`; orig: externally blocked, no closure record | `PES_Phase2_Review_2026-09-12/finish/e13_control/E13-native-20260912-01-completed13-native-score.json` |
+| E14 | FrontierMath (hosted) | Omni-MATH | 2,271 correct of 4,428 dispositions (repl, terminal-complete; §9.2) | repl: `COMPLETE_TERMINAL_NOTE`; orig: `CLOSED_EXTERNAL` | `public_portfolio_2026-09-05/native_finish_v5/e14_official_collector/official_result01/native_score.json` |
 
-: The E1-E14 lane identifiers, their original contracts, replacement scopes and terminal states.
+: The E1–E14 lanes: original contract, replacement scope, headline figure, terminal state and receipt.
+
+Counted from this table: three scopes are strictly complete (E8 and E10 replacement scopes, E11 original contract), E14 is terminal-complete, and six original contracts are `CLOSED_EXTERNAL` with written closure records (E3, E7, E8-original, E10-original, E12, E14-original). E13's original contract is also blocked on external access but carries no closure record, because the lane continues through its replacement scope. Original-contract full-coverage scores exist for E1 and E11.

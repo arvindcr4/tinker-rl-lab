@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/OrderedSet.js b/src/OrderedSet.js\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/src/OrderedSet.js\n+++ b/src/OrderedSet.js\n@@ -1,5 +1,6 @@\n import { SetCollection, KeyedCollection } from './Collection';\n import { IS_ORDERED_SYMBOL } from './predicates/isOrdered';\n+import { isOrderedSet } from './predicates/isOrderedSet';\n import { IndexedCollectionPrototype } from './CollectionImpl';\n import { Set } from './Set';\n import { emptyOrderedMap } from './OrderedMap';\n@@ -10,6 +11,10 @@ export class OrderedSet extends Set {\n   // @pragma Construction\n \n   constructor(value) {\n+    if (isOrderedSet(value)) {\n+      return value;\n+    }\n+\n     // eslint-disable-next-line no-constructor-return\n     return value === undefined || value === null\n       ? emptyOrderedSet()",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471371,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-842bfcb40fe064b8",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 232,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 29815,
+    "prompt_tokens_details": null,
+    "total_tokens": 30047
+  }
+}

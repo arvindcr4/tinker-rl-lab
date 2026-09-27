@@ -1,0 +1,12 @@
+diff --git a/src/extract/matched_path.rs b/src/extract/matched_path.rs
+index 5a0f773..1b0f773 100644
+--- a/src/extract/matched_path.rs
++++ b/src/extract/matched_path.rs
+@@ -143,7 +143,7 @@ impl MatchedPath {
+     pub(crate) fn clear(&self) {
+         // If the matched path is `None` then it means the request was handled by a service that
+         // doesn't support `MatchedPath`.
+-        assert!(self.0.extensions_mut().remove::<MatchedPath>().is_none());
++        let _ = self.0.extensions_mut().remove::<MatchedPath>();
+     }
+ }

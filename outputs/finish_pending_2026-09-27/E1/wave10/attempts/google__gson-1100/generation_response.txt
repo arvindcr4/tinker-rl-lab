@@ -1,0 +1,15 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/bind/DefaultDateTypeAdapter.java b/gson/src/main/java/com/google/gson/internal/bind/DefaultDateTypeAdapter.java
+index 0777777..1111111 100644
+--- a/gson/src/main/java/com/google/gson/internal/bind/DefaultDateTypeAdapter.java
++++ b/gson/src/main/java/com/google/gson/internal/bind/DefaultDateTypeAdapter.java
+@@ -85,6 +85,9 @@ final class DefaultDateTypeAdapter extends TypeAdapter<Date> {
+   @Override public void write(JsonWriter out, Date value) throws IOException {
+     if (value == null) {
+       out.nullValue();
++      return;
++    }
++    if (value.getTime() < 0) {
++      out.nullValue();
+     } else {
+       String dateFormatAsString = sdf.format(value);
+       out.value(dateFormatAsString);

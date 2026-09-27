@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/lib/jekyll/utils.rb b/lib/jekyll/utils.rb\nindex 7a7f7f7..b8b8b8b 100644\n--- a/lib/jekyll/utils.rb\n+++ b/lib/jekyll/utils.rb\n@@ -100,7 +100,7 @@ module Jekyll\n     #\n     # @return [String]\n     def replace_character_sequence_with_hyphen(string)\n-      string.gsub(/[^[:alnum:]._~!$&'()+,;=@]+/, \"-\")\n+      string.gsub(/[^\\p{M}\\p{L}\\p{Nd}._~!$&'()+,;=@]+/, \"-\")\n     end\n \n     #",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471474,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-aceeb1bf26aaf251",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 161,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 16093,
+    "prompt_tokens_details": null,
+    "total_tokens": 16254
+  }
+}

@@ -1,0 +1,20 @@
+diff --git a/changelog/fix_fix_false_positive_for_style_redundant_freeze_with_variable_interpolation.md b/changelog/fix_fix_false_positive_for_style_redundant_freeze_with_variable_interpolation.md
+new file mode 100644
+index 000000000000..831537777777
+--- /dev/null
++++ b/changelog/fix_fix_false_positive_for_style_redundant_freeze_with_variable_interpolation.md
+@@ -0,0 +1,2 @@
++* [#13320](https://github.com/rubocop/rubocop/issues/13320): Fix a false positive for `Style/RedundantFreeze` when using implicit instance variable interpolation. ([@earlopain][])
+diff --git a/lib/rubocop/cop/style/redundant_freeze.rb b/lib/rubocop/cop/style/redundant_freeze.rb
+index 0c2333333333..111111111111 100644
+--- a/lib/rubocop/cop/style/redundant_freeze.rb
++++ b/lib/rubocop/cop/style/redundant_freeze.rb
+@@ -33,7 +33,7 @@ module RuboCop
+       #   @example
+       #     # bad
+       #     s = "foo".freeze
+-      #     s = "foo#@bar".freeze
++      #     s = "foo#@bar".freeze # frozen? is false
+       #     s = "foo#{bar}".freeze
+       #
+       #     # good

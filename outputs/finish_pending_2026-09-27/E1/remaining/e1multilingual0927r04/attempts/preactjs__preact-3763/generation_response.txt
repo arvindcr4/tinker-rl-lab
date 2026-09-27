@@ -1,0 +1,13 @@
+diff --git a/src/component.js b/src/component.js
+index 5727777..0377777 100644
+--- a/src/component.js
++++ b/src/component.js
+@@ -100,7 +100,7 @@ export function Component(props, context) {
+ 	}
+ 
+ 	if (options._render) options._render(vnode);
+-	if (vnode._component._vnode === vnode) {
++	if (vnode._component && vnode._component._vnode === vnode) {
+ 		commitQueue.push(vnode._component);
+ 	}
+ }

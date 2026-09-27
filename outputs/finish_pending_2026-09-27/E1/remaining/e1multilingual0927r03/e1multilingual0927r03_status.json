@@ -1,0 +1,88 @@
+{
+  "tag": "e1multilingual0927r03",
+  "sandbox": "sb-mYlUMWXlkQfLAjVhmznUMe",
+  "started_at": 1790471897.852591,
+  "tasks": {
+    "php-cs-fixer__php-cs-fixer-7875": {
+      "image": "swebench/sweb.eval.x86_64.php-cs-fixer_1776_php-cs-fixer-7875@sha256:54da027c5c101d82bdad11d596dd34f608f81f83fd0d40e1ed860e4b34ba5b78",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "php-cs-fixer__php-cs-fixer-7998": {
+      "image": "swebench/sweb.eval.x86_64.php-cs-fixer_1776_php-cs-fixer-7998@sha256:1660fee17b0f847a5ec124f1e8267c366766eff78a6efbacb791e699d33b3e2d",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "php-cs-fixer__php-cs-fixer-8064": {
+      "image": "swebench/sweb.eval.x86_64.php-cs-fixer_1776_php-cs-fixer-8064@sha256:2f02327c5ae169d358d0de6bd472820795315651220c02adef2de515e7e82269",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "php-cs-fixer__php-cs-fixer-8075": {
+      "image": "swebench/sweb.eval.x86_64.php-cs-fixer_1776_php-cs-fixer-8075@sha256:cf439e05f9bc9427577db94a45d007ac0f7fd714c819601ae766793ad87aae26",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "php-cs-fixer__php-cs-fixer-8256": {
+      "image": "swebench/sweb.eval.x86_64.php-cs-fixer_1776_php-cs-fixer-8256@sha256:999a0908269829696a3fb54e74729d29d35d3463e9e9dac2e40bb095e4912d0a",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "php-cs-fixer__php-cs-fixer-8331": {
+      "image": "swebench/sweb.eval.x86_64.php-cs-fixer_1776_php-cs-fixer-8331@sha256:0caeee93e1317d214b87f11e4f42a78ce4147dc8dd52dfdbc06e65f790675d24",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "php-cs-fixer__php-cs-fixer-8367": {
+      "image": "swebench/sweb.eval.x86_64.php-cs-fixer_1776_php-cs-fixer-8367@sha256:3bebe3cd2b1e1aa2aa3cd642707f6d3216b7fab7813a2b3563ebff82df87cff6",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "phpoffice__phpspreadsheet-3463": {
+      "image": "swebench/sweb.eval.x86_64.phpoffice_1776_phpspreadsheet-3463@sha256:a61e5569180527a3b18bd80b17414836f004fae8dc35df554bbffc8837252d8d",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "phpoffice__phpspreadsheet-3469": {
+      "image": "swebench/sweb.eval.x86_64.phpoffice_1776_phpspreadsheet-3469@sha256:13e015efe86e9c6cb16131df323affd981bea89b426f53b1a39d17e0fdfce973",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "phpoffice__phpspreadsheet-3570": {
+      "image": "swebench/sweb.eval.x86_64.phpoffice_1776_phpspreadsheet-3570@sha256:755f9080e8bc46ae35f60fda82af17c87587c388d7d274efd4c2810a9dfa58cc",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "phpoffice__phpspreadsheet-3659": {
+      "image": "swebench/sweb.eval.x86_64.phpoffice_1776_phpspreadsheet-3659@sha256:9bc3119cb805f67324d688bfe9627257e5176137061ad2f2d7e42d5d8531a329",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "phpoffice__phpspreadsheet-3903": {
+      "image": "swebench/sweb.eval.x86_64.phpoffice_1776_phpspreadsheet-3903@sha256:e13124276a0504dc4cfd01b2187e84e8c4d2fa2adf9c68613e33978a155e8616",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "phpoffice__phpspreadsheet-3940": {
+      "image": "swebench/sweb.eval.x86_64.phpoffice_1776_phpspreadsheet-3940@sha256:517aa0fab1b6df9d8b9b0a52b4bcd1d98a6eecbf66c188b3ea66a8d3be00cdfe",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "phpoffice__phpspreadsheet-4114": {
+      "image": "swebench/sweb.eval.x86_64.phpoffice_1776_phpspreadsheet-4114@sha256:26cb97bd3ff653215a7d59db6511cc524da19bd4b92b355cb0ed8cb9c7ace1c1",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "phpoffice__phpspreadsheet-4186": {
+      "image": "swebench/sweb.eval.x86_64.phpoffice_1776_phpspreadsheet-4186@sha256:b2351147f601e33c41a07384fde2bbe494e03032484c21dff45a04dae7d2f592",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "phpoffice__phpspreadsheet-4214": {
+      "image": "swebench/sweb.eval.x86_64.phpoffice_1776_phpspreadsheet-4214@sha256:1b3d1f4706ad2b7af009250ed5680e5286520fe77fbfa2346c1a9f8a745fa35c",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    }
+  },
+  "finished_at": 1790472507.050588
+}

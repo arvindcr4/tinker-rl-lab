@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "22e82fdebef8c01a39d6f4999b6a8c2c3b5fc8b510083bd74c22f65d88e9dc84",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790472512.321275,
+  "instance_id": "preactjs__preact-3567",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/hooks/src/index.js b/hooks/src/index.js\nindex 8722777..0372277 100644\n--- a/hooks/src/index.js\n+++ b/hooks/src/index.js\n@@ -103,7 +103,7 @@ export function useEffect(create, inputs) {\n \t}\n \n \tconst cb = create();\n-\tif (typeof cb == 'function') component._cleanup.push(cb);\n+\tif (typeof cb == 'function' && component._dirty) component._cleanup.push(cb);\n }",
+  "patch_sha256": "8dc9699a29f1776c47fe206f672f8c04dfc9ea2f7a17004839d113c126446758",
+  "request_sha256": "fbf2c1f840fcf625424e8ed76b5176a266ed4d5c098c91251228c10a9831a963",
+  "response_sha256": "8dc9699a29f1776c47fe206f672f8c04dfc9ea2f7a17004839d113c126446758",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "a09c39748023cc0447dfcc7466f9a21c2ba2005aff840869c7f52090fe4d62b9",
+  "started_at": 1790472509.147691,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 127,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 28101,
+    "prompt_tokens_details": null,
+    "total_tokens": 28228
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

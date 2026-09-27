@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/axum/src/routing/mod.rs b/axum/src/routing/mod.rs\nindex 87676767..12345678 100644\n--- a/axum/src/routing/mod.rs\n+++ b/axum/src/routing/mod.rs\n@@ -1000,6 +1000,10 @@ impl Router {\n     pub fn merge(mut self, other: impl Into<Router>) -> Self {\n         let other = other.into();\n \n+        // If the current router has a fallback, we need to preserve it.\n+        // When merging, the other router's routes are added, but if the other router\n+        // doesn't have a fallback, we should keep the current one.\n+        // However, the flattening logic in `routes` might drop it if not handled correctly.\n         self.routes.extend(other.routes);\n         self.fallback = other.fallback.or(self.fallback);\n         self",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790475344,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-9e4235d138e46dc1",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 221,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 28252,
+    "prompt_tokens_details": null,
+    "total_tokens": 28473
+  }
+}

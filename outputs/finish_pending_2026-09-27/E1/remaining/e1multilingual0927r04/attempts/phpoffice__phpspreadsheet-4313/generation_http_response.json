@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/PhpSpreadsheet/Reader/Ods/FormulaTranslator.php b/src/PhpSpreadsheet/Reader/Ods/FormulaTranslator.php\nindex 16c7503..8333333 100644\n--- a/src/PhpSpreadsheet/Reader/Ods/FormulaTranslator.php\n+++ b/src/PhpSpreadsheet/Reader/Ods/FormulaTranslator.php\n@@ -13,7 +13,7 @@\n     private const ODS_TO_EXCEL = [\n         // Sheet names with special characters are quoted with single quotes in ODS\n         // e.g. 'Sheet Name'.A1 -> 'Sheet Name'!A1\n-        '/\\'([^\\']+)\\'\\./' => \"'$1'!\",\n+        '/\\'([^\\']+)\\'\\./' => \"'$1'!\",\n         // ODS uses . for multiplication, Excel uses *\n         '/\\./' => '*',\n         // ODS uses , for decimal separator in some locales, but Excel uses .",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472110,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-aa173f94f6fcc18d",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 224,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 25405,
+    "prompt_tokens_details": null,
+    "total_tokens": 25629
+  }
+}

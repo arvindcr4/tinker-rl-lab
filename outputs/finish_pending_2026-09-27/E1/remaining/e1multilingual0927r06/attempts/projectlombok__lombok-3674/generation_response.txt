@@ -1,0 +1,24 @@
+diff --git a/src/core/lombok/transform/handlers/StandardException.java b/src/core/lombok/transform/handlers/StandardException.java
+index 166330300..333333333 100644
+--- a/src/core/lombok/transform/handlers/StandardException.java
++++ b/src/core/lombok/transform/handlers/StandardException.java
+@@ -100,6 +100,10 @@ public class StandardException extends AbstractAnnotationHandler<StandardExcepti
+ 		}
+ 	}
+ 
++	private boolean isStandardExceptionField(JCVariableDecl field) {
++		return field.name.contentEquals("message") || field.name.contentEquals("cause");
++	}
++
+ 	private void addStandardExceptionFields(JCClassDecl classDecl) {
+ 		ListBuffer<JCVariableDecl> fieldsToAdd = new ListBuffer<>();
+ 		ListBuffer<JCStatement> constructorBodies = new ListBuffer<>();
+@@ -110,7 +114,7 @@ public class StandardException extends AbstractAnnotationHandler<StandardExcepti
+ 		}
+ 
+ 		for (JCVariableDecl field : classDecl.defs) {
+-			if (field instanceof JCVariableDecl && !field.mods.flags.toString().contains("STATIC")) {
++			if (field instanceof JCVariableDecl && !field.mods.flags.toString().contains("STATIC") && !isStandardExceptionField(field)) {
+ 				// We don't want to add standard exception fields to the all-args constructor.
+ 				// We also don't want to add them to the toString, equals, hashCode, etc.
+ 				// So we just skip them here.

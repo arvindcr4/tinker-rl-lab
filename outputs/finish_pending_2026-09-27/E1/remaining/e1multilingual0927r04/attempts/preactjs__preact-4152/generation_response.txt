@@ -1,0 +1,13 @@
+diff --git a/src/diff/children.js b/src/diff/children.js
+index 1477777..8888888 100644
+--- a/src/diff/children.js
++++ b/src/diff/children.js
+@@ -10,7 +10,7 @@ import { assign } from '../util';
+  * @param {VNode} newParentVNode
+  * @param {VNode[] | NodeListOf<Node>} newChildren
+  */
+-export function diffChildren(parentVNode, newChildren, isHydrating) {
++export function diffChildren(parentVNode, newChildren, isHydrating, parentDom) {
+ 	let i,
+ 		oldChild,
+ 		newChild,

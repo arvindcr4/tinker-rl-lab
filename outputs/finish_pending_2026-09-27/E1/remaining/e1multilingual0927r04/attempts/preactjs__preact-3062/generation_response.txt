@@ -1,0 +1,12 @@
+diff --git a/src/diff/props.js b/src/diff/props.js
+index 1470063..0333333 100644
+--- a/src/diff/props.js
++++ b/src/diff/props.js
+@@ -10,6 +10,7 @@ const IS_NON_DIMINISHING = /animation|transition/;
+  * @param {boolean} isSvg
+  */
+ export function setStyle(element, name, value, isSvg) {
++	let clear = name === 'tabindex' ? (value === undefined) : (value == null);
+ 	if (name === 'style') {
+ 		setStyleObject(name, value, element.style);
+ 	}

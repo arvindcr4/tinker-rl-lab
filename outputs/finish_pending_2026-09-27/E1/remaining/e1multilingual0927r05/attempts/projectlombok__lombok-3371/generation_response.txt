@@ -1,0 +1,143 @@
+diff --git a/src/core/lombok/handlers/HandleConstructor.java b/src/core/lombok/handlers/HandleConstructor.java
+index 1563273..8901234 100644
+--- a/src/core/lombok/handlers/HandleConstructor.java
++++ b/src/core/lombok/handlers/HandleConstructor.java
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (C) 2009-2022 The Project Lombok Authors.
++ * Copyright (C) 2009-2024 The Project Lombok Authors.
+  * 
+  * Permission is hereby granted, free of charge, to any person obtaining a copy
+  * of this software and associated documentation files (the "Software"), to deal
+@@ -1,6 +1,7 @@
+ package lombok.handlers;
+ 
++import static lombok.core.handlers.HandlerUtil.*;
+ import static lombok.handlers.HandleConstructor.*;
+ 
+ import java.util.ArrayList;
+@@ -1,7 +1,8 @@
+ import lombok.ConfigurationKeys;
+ import lombok.Getter;
+ import lombok.NonNull;
++import lombok.RequiredArgsConstructor;
+ import lombok.core.AST;
+ import lombok.core.AnnotationValues;
+ import lombok.core.HandlerPriority;
+@@ -1,8 +1,9 @@
+ import lombok.core.LombokNode;
+ import lombok.core.configuration.NullCheckExceptionType;
+ import lombok.core.handlers.HandlerUtil;
++import lombok.core.handlers.HandlerUtil.FieldAccess;
+ import lombok.core.handlers.InclusionExclusionUtils;
+ import lombok.core.handlers.InclusionExclusionUtils.Included;
+ import lombok.core.handlers.InclusionExclusionUtils.InclusionExclusionUtilsResult;
+@@ -1,9 +1,10 @@
+ import lombok.experimental.NonFinal;
+ import lombok.experimental.Tolerate;
+ import lombok.spi.Provides;
+ 
+ import javac.lombok.handlers.HandleConstructor;
+ 
++import lombok.core.handlers.HandlerUtil;
++import lombok.core.handlers.HandlerUtil.FieldAccess;
++
+ import com.sun.source.tree.Tree;
+ import com.sun.source.tree.Tree.Kind;
+ import com.sun.source.tree.VariableTree;
+@@ -1,10 +1,11 @@
+ import com.sun.tools.javac.code.Flags;
+ import com.sun.tools.javac.code.Symbol;
+ import com.sun.tools.javac.code.Type;
++import com.sun.tools.javac.code.TypeTag;
+ import com.sun.tools.javac.tree.JCTree;
+ import com.sun.tools.javac.tree.JCTree.JCAnnotation;
+ import com.sun.tools.javac.tree.JCTree.JCBlock;
+ import com.sun.tools.javac.tree.JCTree.JCExpression;
+@@ -1,11 +1,12 @@
+ import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
+ import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
+ import com.sun.tools.javac.tree.JCTree.JCNewClass;
+ import com.sun.tools.javac.tree.JCTree.JCStatement;
+ import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
+ import com.sun.tools.javac.tree.TreeMaker;
+ import com.sun.tools.javac.tree.TreeScanner;
+ import com.sun.tools.javac.util.Context;
+ import com.sun.tools.javac.util.Name;
+ import com.sun.tools.javac.util.Names;
+@@ -1,12 +1,13 @@
+ 
+ public class HandleConstructor {
+ 	private static final String NULLABLE_ANNOTATION = "lombok.Nullable";
+ 	private static final String NONNULL_ANNOTATION = "lombok.NonNull";
++	private static final String NONNULL_ANNOTATION_FQN = "lombok.NonNull";
+ 
+ 	@Provides
+ 	@HandlerPriority(1000)
+ 	public static class ConstructorHandler extends ASTTransformationVisitor.JavacASTTransformation<Constructor> {
+ 		@Override
+ 		public void perform(AnnotationValues<Constructor> annotation, JCAnnotation ast, Constructor annotationAnnotation, AST<?, ?, ?> astNode) {
+@@ -1,13 +1,14 @@
+ 			}
+ 		}
+ 	}
+ 
+ 	@Provides
+ 	@HandlerPriority(1000)
+ 	public static class RequiredArgsConstructorHandler extends ASTTransformationVisitor.JavacASTTransformation<RequiredArgsConstructor> {
+ 		@Override
+ 		public void perform(AnnotationValues<RequiredArgsConstructor> annotation, JCAnnotation ast, RequiredArgsConstructor annotationAnnotation, AST<?, ?, ?> astNode) {
+ 			performRequiredArgsConstructor(annotation, ast, annotationAnnotation, astNode);
+ 		}
+ 	}
+@@ -1,14 +1,15 @@
+ 
+ 	private static void performRequiredArgsConstructor(AnnotationValues<RequiredArgsConstructor> annotation, JCAnnotation ast, RequiredArgsConstructor annotationAnnotation, AST<?, ?, ?> astNode) {
+ 		// ... existing code ...
+ 	}
+ 
+ 	private static void generateNullCheck(JCVariableDecl param, TreeMaker maker, Names names, ListBuffer<JCStatement> statements, boolean isRecordComponent) {
+ 		// Check for @NonNull annotation
+ 		if (hasNonNullAnnotation(param)) {
+ 			JCExpression nullCheck = maker.Apply(
+ 				List.<JCExpression>nil(),
+-				maker.Select(maker.Ident(names.fromString("java.lang")), names.fromString("Objects")),
++				maker.Select(maker.Ident(names.fromString("java")), names.fromString("lang")),
+ 				maker.Ident(names.fromString("requireNonNull"))
+ 			);
+ 			// ... existing code ...
+ 		}
+ 	}
+ 
++	private static boolean hasNonNullAnnotation(JCVariableDecl param) {
++		for (JCAnnotation ann : param.getModifiers().getAnnotations()) {
++			if (ann.getAnnotationType() instanceof JCFieldAccess) {
++				JCFieldAccess fa = (JCFieldAccess) ann.getAnnotationType();
++				if (fa.selected instanceof JCIdent && ((JCIdent) fa.selected).name.contentEquals("lombok") && fa.member.contentEquals("NonNull")) {
++					return true;
++				}
++			}
++			// Check for other non-null annotations
++			if (isNonNullAnnotation(ann)) {
++				return true;
++			}
++		}
++		return false;
++	}
++
++	private static boolean isNonNullAnnotation(JCAnnotation ann) {
++		// Simplified check for common non-null annotations
++		String annName = ann.getAnnotationType().toString();
++		return annName.equals("lombok.NonNull") ||
++		       annName.equals("javax.annotation.Nonnull") ||
++		       annName.equals("org.jetbrains.annotations.NotNull") ||
++		       annName.equals("org.eclipse.jdt.annotation.NonNull");
++	}
++
++	private static boolean isPrimitiveArrayType(Type type) {
++		return type != null && type.getKind() == TypeTag.ARRAY && type.hasTag(TypeTag.BYTE) ||
++		       type.hasTag(TypeTag.SHORT) || type.hasTag(TypeTag.INT) || type.hasTag(TypeTag.LONG) ||
++		       type.hasTag(TypeTag.FLOAT) || type.hasTag(TypeTag.DOUBLE) || type.hasTag(TypeTag.CHAR) ||
++		       type.hasTag(TypeTag.BOOLEAN);
++	}
+ }

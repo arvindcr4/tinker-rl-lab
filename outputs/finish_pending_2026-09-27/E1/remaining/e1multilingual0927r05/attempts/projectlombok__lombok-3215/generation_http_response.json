@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/core/lombok/transformers/data/SuperBuilderTransformer.java b/src/core/lombok/transformers/data/SuperBuilderTransformer.java\nindex 1733333333..1111111111 100644\n--- a/src/core/lombok/transformers/data/SuperBuilderTransformer.java\n+++ b/src/core/lombok/transformers/data/SuperBuilderTransformer.java\n@@ -1,5 +1,5 @@\n /*\n- * Copyright (C) 2010-2021 The Project Lombok Authors.\n+ * Copyright (C) 2010-2023 The Project Lombok Authors.\n  * \n  * Permission is hereby granted, free of charge, to any person obtaining a copy\n  * of this software and associated documentation files (the \"Software\"), to deal",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472843,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-b1b4253b5bb39705",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 190,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 14740,
+    "prompt_tokens_details": null,
+    "total_tokens": 14930
+  }
+}

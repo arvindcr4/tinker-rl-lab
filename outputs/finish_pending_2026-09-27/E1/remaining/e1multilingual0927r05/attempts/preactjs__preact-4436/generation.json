@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "d9303a60b379dc9f2ab2f1fd01b326bb81dd5ea656fe6471b56a64ec247058f4",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790472602.641901,
+  "instance_id": "preactjs__preact-4436",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/src/diff/children.js b/src/diff/children.js\nindex 0720000..8000000 100644\n--- a/src/diff/children.js\n+++ b/src/diff/children.js\n@@ -1,6 +1,6 @@\n import { assign } from './util';\n import { Fragment } from '../create_element';\n-import { diff, setRef } from './index';\n+import { diff, setRef, unmount } from './index';\n import { EMPTY_OBJ, EMPTY_ARR } from '../constants';\n import { Component } from '../component';\n import { createVNode } from '../create_element';\n@@ -10,6 +10,7 @@ import { Component } from '../component';\n  * @param {import('../internal').VNode} newParentVNode\n  * @param {Array<import('../internal').VNode>} [newChildren]\n  * @param {boolean} [isHydrating] Whether or not we are hydrating\n+ * @param {import('../internal').Component} [prevComponent]\n  * @returns {Array<import('../internal').VNode>}\n  */\n export function diffChildren(\n@@ -17,7 +18,8 @@ export function diffChildren(\n \tnewParentVNode,\n \tnewChildren,\n-\tisHydrating\n+\tisHydrating,\n+\tprevComponent\n ) {\n \tlet i,\n \t\toldChild,\n@@ -100,6 +102,11 @@ export function diffChildren(\n \t\t\t}\n \n \t\t\tif (oldChild._dom != null) dom = oldChild._dom;\n+\n+\t\t\t// If the old child had a ref callback, call it with null to clean it up\n+\t\t\tif (typeof oldChild.props.ref == 'function') {\n+\t\t\t\toldChild.props.ref(null);\n+\t\t\t}\n \t\t}\n \n \t\t// If we are replacing a child, we need to replace it in the parent's children array",
+  "patch_sha256": "7a2e2189230b4e7dea8f6c9df2da646849ed37e39138d3ca7f9a660f5a4c12ca",
+  "request_sha256": "dffbe643f94a84c8712a73b9ab4acde046ba6bdcc81ba48eaf107feacd706331",
+  "response_sha256": "7a2e2189230b4e7dea8f6c9df2da646849ed37e39138d3ca7f9a660f5a4c12ca",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "9ad200f4da48bf5f3d68a9f69aa3b0a81610fdcf38ab125f95ba0420a4217a74",
+  "started_at": 1790472595.361095,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 455,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 28746,
+    "prompt_tokens_details": null,
+    "total_tokens": 29201
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

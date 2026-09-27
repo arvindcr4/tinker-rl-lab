@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "0968417d2fc7b3f5afcb58841da0e4cba7b68e5156228ac1536c3c195d11aeed",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790471466.8566191,
+  "instance_id": "micropython__micropython-15898",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/py/mpz.c b/py/mpz.c\nindex 1732373..8b0737a 100644\n--- a/py/mpz.c\n+++ b/py/mpz.c\n@@ -1711,13 +1711,13 @@ STATIC void mpz_format_base_n(mp_int_t *z, int base, char *buf, size_t buf_len,\n         }\n     }\n \n-    // Add thousands separators\n-    if (thousands_sep != '\\0') {\n-        size_t pos = 0;\n-        for (size_t i = 0; i < len; ++i) {\n-            if (i > 0 && (len - i) % 3 == 0) {\n-                buf[pos++] = thousands_sep;\n-            }\n+    // Add thousands separators before the done-checking loop\n+    if (thousands_sep != '\\0') {\n+        for (size_t i = 0; i < len; ++i) {\n+            if (i > 0 && (len - i) % 3 == 0) {\n+                buf[i] = thousands_sep;\n+            }\n+            buf[i + 1] = buf[i];\n+        }\n+        len += (len - 1) / 3;\n+    }\n+\n+    // Done-checking loop\n+    for (size_t i = 0; i < len; ++i) {\n+        if (buf[i] == thousands_sep) {\n+            continue;\n+        }\n+        if (buf[i] == '0' && i == 0 && !leading_zero) {\n+            continue;\n+        }\n+        leading_zero = false;\n+        buf[pos++] = buf[i];\n+    }",
+  "patch_sha256": "51284bc17f90154825f0ccc9bee78fb33cdde2c2779727b891d7b592b83db466",
+  "request_sha256": "be153d9696e201df3ba833d898532003e4b6ec367796cc198e5bb036e062b095",
+  "response_sha256": "51284bc17f90154825f0ccc9bee78fb33cdde2c2779727b891d7b592b83db466",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "a37c14b68179308a7198fff23abeb025e37034dd3c5d67e4fa372afe7a06d1cd",
+  "started_at": 1790471460.2747579,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 415,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 23454,
+    "prompt_tokens_details": null,
+    "total_tokens": 23869
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

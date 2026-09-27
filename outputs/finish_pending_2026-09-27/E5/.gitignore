@@ -1,0 +1,4 @@
+raw/**/data/
+*.pkl
+.env*
+secrets*

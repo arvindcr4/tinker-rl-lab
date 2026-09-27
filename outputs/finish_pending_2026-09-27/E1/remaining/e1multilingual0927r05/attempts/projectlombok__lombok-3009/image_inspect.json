@@ -1,0 +1,112 @@
+{
+ "Id": "sha256:fdacde01a10be3872b7707b35b90c8d2a6a13fd8314e5fad69c292b28ad369a7",
+ "RepoTags": [
+  "swebench/sweb.eval.x86_64.projectlombok_1776_lombok-3009:latest"
+ ],
+ "RepoDigests": [
+  "swebench/sweb.eval.x86_64.projectlombok_1776_lombok-3009@sha256:215648a37cb40082c73be2fb165d4bfe1c21dd6d07fcc69b98df25e5c32412ee"
+ ],
+ "Parent": "",
+ "Comment": "buildkit.dockerfile.v0",
+ "Created": "2026-08-13T17:12:52.613300615Z",
+ "Container": "",
+ "ContainerConfig": {
+  "Hostname": "",
+  "Domainname": "",
+  "User": "",
+  "AttachStdin": false,
+  "AttachStdout": false,
+  "AttachStderr": false,
+  "Tty": false,
+  "OpenStdin": false,
+  "StdinOnce": false,
+  "Env": null,
+  "Cmd": null,
+  "Image": "",
+  "Volumes": null,
+  "WorkingDir": "",
+  "Entrypoint": null,
+  "OnBuild": null,
+  "Labels": null
+ },
+ "DockerVersion": "",
+ "Author": "",
+ "Config": {
+  "Hostname": "",
+  "Domainname": "",
+  "User": "",
+  "AttachStdin": false,
+  "AttachStdout": false,
+  "AttachStderr": false,
+  "Tty": false,
+  "OpenStdin": false,
+  "StdinOnce": false,
+  "Env": [
+   "PATH=/usr/local/mvnd/bin:/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+   "JAVA_HOME=/opt/java/openjdk",
+   "LANG=en_US.UTF-8",
+   "LANGUAGE=en_US:en",
+   "LC_ALL=en_US.UTF-8",
+   "JAVA_VERSION=jdk-17.0.18+8",
+   "MAVEN_HOME=/usr/share/maven",
+   "MAVEN_CONFIG=/root/.m2",
+   "TZ=Etc/UTC",
+   "MVND_HOME=/usr/local/mvnd"
+  ],
+  "Cmd": [
+   "mvn"
+  ],
+  "Image": "",
+  "Volumes": null,
+  "WorkingDir": "/testbed",
+  "Entrypoint": [
+   "/usr/local/bin/mvn-entrypoint.sh"
+  ],
+  "OnBuild": null,
+  "Labels": {
+   "org.opencontainers.image.description": "Apache Maven is a software project management and comprehension tool. Based on the concept of a project object model (POM), Maven can manage a project's build, reporting and documentation from a central piece of information.",
+   "org.opencontainers.image.ref.name": "ubuntu",
+   "org.opencontainers.image.source": "https://github.com/carlossg/docker-maven",
+   "org.opencontainers.image.title": "Apache Maven",
+   "org.opencontainers.image.url": "https://github.com/carlossg/docker-maven",
+   "org.opencontainers.image.version": "24.04"
+  }
+ },
+ "Architecture": "amd64",
+ "Os": "linux",
+ "Size": 1347026126,
+ "VirtualSize": 1347026126,
+ "GraphDriver": {
+  "Data": {
+   "LowerDir": "/var/lib/docker/overlay2/559dde7c7dfe3e1de181a84db76dd70a0b64e3ee6b59cb1c45961b07e6056f5b/diff:/var/lib/docker/overlay2/af904ef0b1a5bd7389b2f2a808c18b5fe1436dbbaf0ebe52a9148671769199e1/diff:/var/lib/docker/overlay2/a16e8785dbacc4642cd583383342265ac6f084251d0c0339581c62ae04ebc630/diff:/var/lib/docker/overlay2/9f10f06b1891720640a81bf2cec29212c7ff1abf7659c24258f166c6abc8519a/diff:/var/lib/docker/overlay2/a2859520d7865eb0ee1107e1737d3ed8af3919f4d5db721083e641bf073c5b23/diff:/var/lib/docker/overlay2/3328b5f09c53de880ee5128a1b6c524efc064143f02f4ab1968c05bced1e45fb/diff:/var/lib/docker/overlay2/1d39bcbf13991902d9e255939472cbb6809a65049ae8be76d8fd5de3de7e44f8/diff:/var/lib/docker/overlay2/5d78993e99ca0448d4a552b23bf2535708fa2813425e9856859e883489a0faa8/diff:/var/lib/docker/overlay2/cd6ffd14f086997e5d15f0e13f16a65ca9e87afeae6382c5656098c01b0c6e1c/diff:/var/lib/docker/overlay2/d57c001e182e02e446995f093fe7d37264eebb5b17b71765987657462b7383c5/diff:/var/lib/docker/overlay2/a14f5952f3915e697ac2fe3e4ac155c90858358996bffa3f369f0f870e5415d3/diff:/var/lib/docker/overlay2/35346dd0079af169d9168a3a3285c139e750ac1306a33c9b82f35896b06c4e05/diff:/var/lib/docker/overlay2/b1c9377cc5a1b85ed58fc711d81d4c56e1e4b50b36c53f760bc1118e2661d3ef/diff:/var/lib/docker/overlay2/3b784bffc77dedface705fcaa07bf57aa507007868eb3f46cce15fb35b1cdd35/diff:/var/lib/docker/overlay2/645e89c3ab2226bd3e3c01cbb38cf0263a05f73dbd1a032ad5e4872804ed76dd/diff",
+   "MergedDir": "/var/lib/docker/overlay2/3ed188b4e9942cd4b70875168cf2f9b60e97864867635ced194fb97ebe8e1652/merged",
+   "UpperDir": "/var/lib/docker/overlay2/3ed188b4e9942cd4b70875168cf2f9b60e97864867635ced194fb97ebe8e1652/diff",
+   "WorkDir": "/var/lib/docker/overlay2/3ed188b4e9942cd4b70875168cf2f9b60e97864867635ced194fb97ebe8e1652/work"
+  },
+  "Name": "overlay2"
+ },
+ "RootFS": {
+  "Type": "layers",
+  "Layers": [
+   "sha256:efafae78d70c98626c521c246827389128e7d7ea442db31bc433934647f0c791",
+   "sha256:e7803267e980a94d272215c6d6a67d74874ce1a4980a068a9e0395293deb6f2c",
+   "sha256:08369db8d73ace7235d3d91faf0e1e20a9d400dbde3b4bccf61dff7e301f9c1c",
+   "sha256:0b3165bb5e1efdaecda61f6e3e4cc4995a1e042189480e0f94f2eb7eb954418f",
+   "sha256:f63e9357877c6f4a3745cbc7e37b5126adfc13e1790cc74f58af0d73ce46fa9c",
+   "sha256:b2f16aa4f646936233a4a74b1d4f29bba5775d02c39e9c79c42f9e36d1d27e18",
+   "sha256:55a77be1ed9d4a5a2e4dfd6004b20e23617f0d8dbf9c52ebe9642531bd3776e9",
+   "sha256:ae1e783d61ec02a2c8a4ac842d54fea3b11403af193f258500ff3a3f949b1c46",
+   "sha256:5170d716c01e2432d059d3c0f30d9030d411ab79c2fa7e4e9f232c8f12cf1cd5",
+   "sha256:87e872737dd5d6ed79034bc33d3f504910e2044cf93f5b7feef3b1cdb2016a1c",
+   "sha256:567c466c091a51d17ae68990c7a75af4843b904683ee1dfce1fb3f17b57123d1",
+   "sha256:380a2225c4ef60954252a73fec18fcd80941c7af7e306408179b8b321e227236",
+   "sha256:be775e5989a2e47b3e9d7b2605bf1eb3254c8f5ad87f5eac2993a40b5b9c1f2b",
+   "sha256:635f78b816e50b23ae22a8a815d5a64a27122515be048271c2782ce2b2287e1d",
+   "sha256:bd761a06f9049fe3a49d6f45e0d7dccfbc10fff66b5471c262451c9e5573435e",
+   "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+  ]
+ },
+ "Metadata": {
+  "LastTagTime": "0001-01-01T00:00:00Z"
+ }
+}

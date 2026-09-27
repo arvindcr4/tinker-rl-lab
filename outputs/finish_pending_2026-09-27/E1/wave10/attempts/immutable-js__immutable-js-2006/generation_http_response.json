@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/Seq.js b/src/Seq.js\nindex 1563373..0563373 100644\n--- a/src/Seq.js\n+++ b/src/Seq.js\n@@ -100,6 +100,10 @@ export class SliceSequence extends CollectionProto {\n   }\n \n   _iterate() {\n+    if (this._begin < 0) {\n+      this._collection = this._collection.slice(this._begin);\n+      this._begin = 0;\n+    }\n     const collection = this._collection;\n     let i = this._begin;\n     const isBegin = i < 0 ? 0 : i;",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471378,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-8df1559e926cd007",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 163,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 32093,
+    "prompt_tokens_details": null,
+    "total_tokens": 32256
+  }
+}

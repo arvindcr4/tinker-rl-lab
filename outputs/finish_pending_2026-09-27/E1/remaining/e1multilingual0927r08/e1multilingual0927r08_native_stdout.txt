@@ -1,0 +1,88 @@
+Running 12 instances...
+Error in evaluation for rubocop__rubocop-13653: >>>>> Patch Apply Failed:
+patching file config/default.yml
+Hunk #1 FAILED at 3000.
+1 out of 1 hunk FAILED -- saving rejects to file config/default.yml.rej
+patching file lib/rubocop/cop/style/access_modifier_declarations.rb
+patch unexpectedly ends in middle of line
+Hunk #1 succeeded at 10 with fuzz 3.
+
+Check (logs/run_evaluation/e1multilingual0927r08/pavlov-public-portfolio-bf16/rubocop__rubocop-13653/run_instance.log) for more information.
+Error in evaluation for rubocop__rubocop-13560: >>>>> Patch Apply Failed:
+patching file lib/rubocop/cop/style/file_null.rb
+Hunk #1 succeeded at 28 with fuzz 3 (offset -5 lines).
+Hunk #2 FAILED at 52.
+1 out of 2 hunks FAILED -- saving rejects to file lib/rubocop/cop/style/file_null.rb.rej
+patching file spec/rubocop/cop/style/file_null_spec.rb
+Hunk #1 succeeded at 1 with fuzz 2.
+patch unexpectedly ends in middle of line
+patch unexpectedly ends in middle of line
+
+Check (logs/run_evaluation/e1multilingual0927r08/pavlov-public-portfolio-bf16/rubocop__rubocop-13560/run_instance.log) for more information.
+Error in evaluation for rubocop__rubocop-13579: >>>>> Patch Apply Failed:
+patching file lib/rubocop/cop/layout/line_continuation_spacing.rb
+patch: **** malformed patch at line 15: @@ -28,6 +32,10 @@ module RuboCop
+
+
+Check (logs/run_evaluation/e1multilingual0927r08/pavlov-public-portfolio-bf16/rubocop__rubocop-13579/run_instance.log) for more information.
+Error in evaluation for rubocop__rubocop-13687: >>>>> Patch Apply Failed:
+patching file lib/rubocop/cop/lint/safe_navigation_chain.rb
+patch unexpectedly ends in middle of line
+Hunk #1 succeeded at 10 with fuzz 3.
+Not deleting file lib/rubocop/cop/lint/safe_navigation_chain.rb as content differs from patch
+
+Check (logs/run_evaluation/e1multilingual0927r08/pavlov-public-portfolio-bf16/rubocop__rubocop-13687/run_instance.log) for more information.
+Error in evaluation for sharkdp__bat-1892: >>>>> Patch Apply Failed:
+patching file assets/completions/_bat.ps1.in
+Hunk #1 FAILED at 1.
+Hunk #2 succeeded at 10 with fuzz 3.
+1 out of 2 hunks FAILED -- saving rejects to file assets/completions/_bat.ps1.in.rej
+patching file assets/completions/bat.bash.in
+patch: **** malformed patch at line 31:  #region bat
+
+
+Check (logs/run_evaluation/e1multilingual0927r08/pavlov-public-portfolio-bf16/sharkdp__bat-1892/run_instance.log) for more information.
+Error in evaluation for sharkdp__bat-2393: >>>>> Patch Apply Failed:
+patch: **** malformed patch at line 45:  
+
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/src/commands/cache.rs b/src/commands/cache.rs
+|index 1567666..8888888 100644
+|--- a/src/commands/cache.rs
+|+++ b/src/commands/cache.rs
+--------------------------
+No file to patch.  Skipping patch.
+
+Check (logs/run_evaluation/e1multilingual0927r08/pavlov-public-portfolio-bf16/sharkdp__bat-2393/run_instance.log) for more information.
+Error in evaluation for sharkdp__bat-3108: >>>>> Patch Apply Failed:
+patching file src/output.rs
+patch unexpectedly ends in middle of line
+Hunk #1 FAILED at 103.
+1 out of 1 hunk FAILED -- saving rejects to file src/output.rs.rej
+
+Check (logs/run_evaluation/e1multilingual0927r08/pavlov-public-portfolio-bf16/sharkdp__bat-3108/run_instance.log) for more information.
+Error in evaluation for sharkdp__bat-562: >>>>> Patch Apply Failed:
+patching file src/clap_app.rs
+Hunk #2 succeeded at 18 (offset 8 lines).
+Hunk #3 succeeded at 26 (offset 8 lines).
+patch: **** malformed patch at line 62: -                .arg(
+
+
+Check (logs/run_evaluation/e1multilingual0927r08/pavlov-public-portfolio-bf16/sharkdp__bat-562/run_instance.log) for more information.
+All instances run.
+Total instances: 16
+Instances submitted: 16
+Instances completed: 4
+Instances incomplete: 0
+Instances resolved: 0
+Instances unresolved: 4
+Instances with likely infrastructure failures: 0
+Instances with ambiguous failures: 0
+Instances with empty patches: 4
+Instances with errors: 8
+Unstopped containers: 0
+Unremoved images: 0
+Report written to /e1/reports/pavlov-public-portfolio-bf16.e1multilingual0927r08.json

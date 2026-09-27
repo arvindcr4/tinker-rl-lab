@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "70da8249b1a6956b2db8ed9b63567678ed68e816df3295625279574b9de2023c",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790473397.361731,
+  "instance_id": "prometheus__prometheus-14861",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/promql/engine.go b/promql/engine.go\nindex 2732732732..1234567890 100644\n--- a/promql/engine.go\n+++ b/promql/engine.go\n@@ -435,6 +435,9 @@ func (e *Engine) Close() error {\n \tif e.activeQueryLog != nil {\n \t\te.activeQueryLog.Close()\n \t}\n+\tif e.queryLogger != nil {\n+\t\treturn e.queryLogger.Close()\n+\t}\n \treturn nil\n }",
+  "patch_sha256": "4b572ca70bfa8e568a6b13be05b779a8f0fd98e56a5539401c2e121a6ceb1321",
+  "request_sha256": "b390e14382b921ab88320a7a08601ad892e66797e09c5674dd1c11eb3b4599a4",
+  "response_sha256": "4b572ca70bfa8e568a6b13be05b779a8f0fd98e56a5539401c2e121a6ceb1321",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "b5caf50d540a3d2b2b0ceb8713f34eca76e21f46c16643a6ae64af3444f3cb2d",
+  "started_at": 1790473393.6346931,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 134,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 29107,
+    "prompt_tokens_details": null,
+    "total_tokens": 29241
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

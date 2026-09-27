@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/javaparser-symbol-solver-core/src/main/java/com/github/javaparser/symbolsolver/javaparsermodel/expressions/JavaParserTypeSolver.java b/javaparser-symbol-solver-core/src/main/java/com/github/javaparser/symbolsolver/javaparsermodel/expressions/JavaParserTypeSolver.java\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/javaparser-symbol-solver-core/src/main/java/com/github/javaparser/symbolsolver/javaparsermodel/expressions/JavaParserTypeSolver.java\n+++ b/javaparser-symbol-solver-core/src/main/java/com/github/javaparser/symbolsolver/javaparsermodel/expressions/JavaParserTypeSolver.java\n@@ -17,6 +17,7 @@\n \n package com.github.javaparser.symbolsolver.javaparsermodel.expressions;\n \n+import com.github.javaparser.ast.expr.StringLiteralExpr;\n import com.github.javaparser.ast.expr.TextBlockLiteralExpr;\n import com.github.javaparser.ast.expr.Expression;\n import com.github.javaparser.ast.expr.LiteralExpr;\n@@ -34,6 +35,7 @@\n import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;\n import com.github.javaparser.symbolsolver.utils.LambdaUtils;\n \n+import java.util.Arrays;\n import java.util.List;\n import java.util.Optional;\n \n@@ -100,7 +102,11 @@ public Optional<ResolvedType> solve(Expression expression) {\n             return Optional.of(new ResolvedReferenceTypeDeclaration(new ReflectionTypeSolver().solveType(String.class.getName())));\n         }\n         if (expression instanceof TextBlockLiteralExpr) {\n-            throw new UnsupportedOperationException(expression.getClass().getName());\n+            return Optional.of(new ResolvedReferenceTypeDeclaration(\n+                    new ReflectionTypeSolver().solveType(String.class.getName())\n+            ));\n         }\n         if (expression instanceof LiteralExpr) {\n             LiteralExpr literalExpr = (LiteralExpr) expression;",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471379,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-8b674cd3f69dc83f",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 450,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 24241,
+    "prompt_tokens_details": null,
+    "total_tokens": 24691
+  }
+}

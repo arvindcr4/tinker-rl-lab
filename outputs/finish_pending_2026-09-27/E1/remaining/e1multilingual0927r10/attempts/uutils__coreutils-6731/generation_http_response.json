@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/uu/tr/src/tr.rs b/src/uu/tr/src/tr.rs\nindex 1666666..1111111 100644\n--- a/src/uu/tr/src/tr.rs\n+++ b/src/uu/tr/src/tr.rs\n@@ -1,6 +1,6 @@\n // This file is part of the uutils coreutils package.\n //\n-// For the full copyright and license information, please view the LICENSE\n+// For the full copyright and license information, please view the LICENSE\n // file that was distributed with this source code.\n \n // spell-checker:ignore (To search) alnum\n@@ -10,6 +10,7 @@\n use std::io::{stdin, stdout, BufWriter, Read, Write};\n use std::process;\n \n+use uucore::error::UResult;\n use uucore::display::Quotable;\n use uucore::error::{UError, UResult};\n use uucore::parse_size::{parse_size_u64, ParseSizeError};\n@@ -17,7 +18,6 @@ use uucore::sum::DigestAlgorithm;\n use uucore::translate::translate;\n \n use crate::characterset::CharacterSet;\n-use uucore::error::UResult;\n \n const VERSION: &str = \"version\";\n const HELP: &str = \"help\";\n@@ -100,7 +100,7 @@ fn parse_set(\n     }\n \n     let mut chars = s.chars();\n-    let mut escaped = s.ends_with('\\\\');\n+    let mut escaped = s.ends_with('\\\\') && s.len() % 2 == 0;\n \n     while let Some(c) = chars.next() {\n         if escaped {",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790475362,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-9dbfefd26971d595",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 401,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1613,
+    "prompt_tokens_details": null,
+    "total_tokens": 2014
+  }
+}

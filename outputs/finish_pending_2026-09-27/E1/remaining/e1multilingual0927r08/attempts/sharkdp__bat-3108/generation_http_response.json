@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/output.rs b/src/output.rs\nindex 1473273..0333333 100644\n--- a/src/output.rs\n+++ b/src/output.rs\n@@ -103,7 +103,7 @@ pub fn handle_paging(\n     let should_page = match paging_mode {\n         PagingMode::QuitIfOneScreen => {\n             // Only page if the output is larger than the terminal size\n-            !plain && !stdout_is_plain()\n+            !plain\n         }\n         PagingMode::Never => false,\n         PagingMode::Always => true,",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790475278,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-9dbe71cbab454a05",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 142,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 5564,
+    "prompt_tokens_details": null,
+    "total_tokens": 5706
+  }
+}

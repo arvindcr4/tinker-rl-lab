@@ -1,0 +1,24 @@
+{
+  "command": [
+    "/native/.venv/bin/swebench",
+    "eval",
+    "/e1/e1multilingual0927r02_native_dataset.jsonl",
+    "-p",
+    "/e1/e1multilingual0927r02_predictions.jsonl",
+    "--run-id",
+    "e1multilingual0927r02",
+    "--split",
+    "test",
+    "-j",
+    "4",
+    "--timeout",
+    "1800",
+    "--report-dir",
+    "/e1/reports"
+  ],
+  "returncode": 0,
+  "started_at": 1790472758.415004,
+  "finished_at": 1790472831.284826,
+  "sandbox": "sb-D6tlsAQF8jZCbrs9I0maJW",
+  "receipts_tgz": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/remaining/e1multilingual0927r02/e1multilingual0927r02_native_receipts.tgz"
+}

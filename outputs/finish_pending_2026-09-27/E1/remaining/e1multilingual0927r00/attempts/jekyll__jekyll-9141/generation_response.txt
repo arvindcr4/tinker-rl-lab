@@ -1,0 +1,13 @@
+diff --git a/lib/jekyll/site.rb b/lib/jekyll/site.rb
+index 3573333333..1234567890 100644
+--- a/lib/jekyll/site.rb
++++ b/lib/jekyll/site.rb
+@@ -330,7 +330,7 @@ module Jekyll
+       def check_for_dest_conflicts
+         dests = {}
+         all_items.each do |item|
+-          dest = item.destination(config)
++          dest = item.destination(config).to_s
+           if dests[dest]
+             dests[dest] << item
+           else

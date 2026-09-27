@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/commands/cache.rs b/src/commands/cache.rs\nindex 1567666..8888888 100644\n--- a/src/commands/cache.rs\n+++ b/src/commands/cache.rs\n@@ -1,6 +1,6 @@\n use std::fs;\n use std::path::PathBuf;\n-use std::env;\n+use std::path::Path;\n \n use crate::error::*;\n use crate::assets::HighlightingAssets;\n@@ -10,7 +10,7 @@ use crate::directories::PROJECT_DIRS;\n \n pub fn build(target: Option<PathBuf>) -> Result<()> {\n     let target = target.unwrap_or_else(|| {\n-        env::var(\"BAT_CACHE_PATH\")\n+        std::env::var(\"BAT_CACHE_PATH\")\n             .ok()\n             .map(PathBuf::from)\n             .unwrap_or_else(|| PROJECT_DIRS.cache_dir().to_path_buf())\n@@ -20,14 +20,14 @@ pub fn build(target: Option<PathBuf>) -> Result<()> {\n }\n \n pub fn clear(target: Option<PathBuf>) -> Result<()> {\n-    let target = env::var(\"BAT_CACHE_PATH\")\n+    let target = target.unwrap_or_else(|| {\n+        std::env::var(\"BAT_CACHE_PATH\")\n+            .ok()\n+            .map(PathBuf::from)\n+            .unwrap_or_else(|| PROJECT_DIRS.cache_dir().to_path_buf())\n+    });\n+\n+    let target_path = Path::new(&target);\n+    if target_path.exists() {\n-        .ok()\n-        .map(PathBuf::from)\n-        .unwrap_or_else(|| PROJECT_DIRS.cache_dir().to_path_buf());\n-\n-    let target_path = Path::new(&target);\n-    if target_path.exists() {\n-        fs::remove_dir_all(target_path)?;\n+        fs::remove_dir_all(target_path)?;\n     }\n \n     Ok(())",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790475207,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-b058657355a263d4",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 452,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 30049,
+    "prompt_tokens_details": null,
+    "total_tokens": 30501
+  }
+}

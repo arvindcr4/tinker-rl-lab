@@ -1,0 +1,15 @@
+diff --git a/src/Fixer/Basic/StatementIndentationFixer.php b/src/Fixer/Basic/StatementIndentationFixer.php
+index 1666666..1111111 100644
+--- a/src/Fixer/Basic/StatementIndentationFixer.php
++++ b/src/Fixer/Basic/StatementIndentationFixer.php
+@@ -134,6 +134,10 @@ final class StatementIndentationFixer extends AbstractFixer implements Configura
+                 $bodyStart = $this->findStatementStart($tokens, $index);
+                 $bodyEnd = $tokens->findBlockEnd(Token::BLOCK_TYPE_CURLY_BRACE, $index);
+             } elseif ($tokens[$index]->isGivenKind(T_WHILE)) {
++                // Handle while loops without curly braces (alternative syntax)
++                if (!$tokens[$index + 1]->isGivenKind(T_OPEN_TAG) && !$tokens[$index + 1]->isGivenKind(T_WHITESPACE)) {
++                    $index = $tokens->getNextTokenOfKind($index, ['{', ';', [T_ENCAPSED_AND_WHITESPACE], [T_INLINE_HTML]]);
++                }
+                 $bodyStart = $this->findStatementStart($tokens, $index);
+                 $bodyEnd = $tokens->findBlockEnd(Token::BLOCK_TYPE_CURLY_BRACE, $index);
+             } elseif ($tokens[$index]->isGivenKind(T_DO)) {

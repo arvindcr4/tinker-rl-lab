@@ -1,0 +1,11 @@
+diff --git a/gson/src/main/java/com/google/gson/stream/JsonReader.java b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+index 1a2b3c4..5d6e7f8 100644
+--- a/gson/src/main/java/com/google/gson/stream/JsonReader.java
++++ b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+@@ -1000,7 +1000,7 @@ public final class JsonReader implements Closeable {
+    * @return true if there are more tokens in the stream.
+    */
+   public boolean hasNext() throws IOException {
+-    return peekStack != null;
++    return peekStack != null && peek() != JsonToken.END_DOCUMENT;
+   }

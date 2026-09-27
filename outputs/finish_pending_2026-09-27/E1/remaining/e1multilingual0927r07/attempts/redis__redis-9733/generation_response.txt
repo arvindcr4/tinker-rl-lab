@@ -1,0 +1,15 @@
+diff --git a/src/command.c b/src/command.c
+index 1111111..2222222 100644
+--- a/src/command.c
++++ b/src/command.c
+@@ -1234,6 +1234,10 @@ int getKeysFromCommand(struct redisCommand *cmd, const robj **argv, int argc, in
+         }
+     }
+ 
++    /* If no keys were found, return 0. This is valid for commands like EVAL
++     * with 0 keys (e.g., `eval "return 1" 0`). */
++    if (*numkeys == 0) return 0;
++
+     /* If we reached here, we need to return the keys. */
+     return 1;
+ }

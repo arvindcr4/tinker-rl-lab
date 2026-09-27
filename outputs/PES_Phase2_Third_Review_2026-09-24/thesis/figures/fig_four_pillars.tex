@@ -48,38 +48,34 @@
 \begin{tikzpicture}
 
 % ============================ four pillars ==============================
-\foreach \i/\hdr/\vary/\fix/\res in {%
-1/{Pillar 1 $\cdot$ Factor isolated: the advantage estimator}%
- /{\textbf{VARY} --- the advantage estimator only. PPO and GRPO are run on one and the same stack, so the estimator is the single difference between the two arms.}%
- /{\textbf{FIX} --- model checkpoint, dataset slice, decoding path, reward grader, framework, schedule and seed set.}%
- /{Paired $\Delta = -0.002$, $p = 0.374$: the estimator effect is small and not statistically significant.},%
-2/{Pillar 2 $\cdot$ Factor isolated: signal starvation}%
- /{\textbf{VARY} --- the internal signal state of the batch: per-step Zero-Variance Fraction and its collapse decomposition, logged at every step rather than summarised after the run.}%
- /{\textbf{FIX} --- the training stack is untouched; the diagnostic observes, it does not intervene.}%
- /{Portable across nine library back-ends; $0.16$ mean ZVF on Qwen3-8B / GSM8K at $G=8$.},%
-3/{Pillar 3 $\cdot$ Factor isolated: group size}%
- /{\textbf{VARY} --- the group size $G \in \{2,4,8,16\}$ across seeds, holding model, data, reward and schedule fixed.}%
- /{\textbf{FIX} --- model, data, reward grader, learning-rate schedule and evaluation split.}%
- /{Mean ZVF falls $0.838 \to 0.631$ ($G=2 \to 16$); held-out retention is $\approx 1.00$.},%
-4/{Pillar 4 $\cdot$ Factor isolated: held-out behaviour}%
- /{\textbf{VARY} --- the method, Dr.~GRPO versus GRPO, compared pre-RL against post-RL on data the training loop never saw.}%
- /{\textbf{FIX} --- the pre-RL checkpoint and the held-out split, evaluated side by side under frozen sampling.}%
- /{Held-out gain small and not significant; length drifts $194.4 \to 183.5$ tokens under the cap.}%
-}
-{
-  \pgfmathsetmacro{\px}{mod(\i-1,2)*7.6}
-  \pgfmathsetmacro{\py}{-int((\i-1)/2)*5.9}
-  \node[phdr, anchor=north] (h\i) at (\px,\py) {\hdr};
-  \node[pvary, below=2.0mm of h\i] (v\i) {\vary};
-  \node[pfix, below=1.6mm of v\i]   (f\i) {\fix};
-  \node[pres, below=1.6mm of f\i]   (r\i) {\textbf{Measured outcome.} \res};
-}
+% row 2 is placed under the deeper of the two row-1 pillars (no fixed pitch)
+\node[phdr, anchor=north] (h1) at (0,0) {Pillar 1 $\cdot$ advantage estimator};
+\node[pvary, below=2.0mm of h1] (v1) {\textbf{VARY} --- the advantage estimator only. PPO and GRPO are run on one and the same stack, so the estimator is the single difference between the two arms.};
+\node[pfix, below=1.6mm of v1]   (f1) {\textbf{FIX} --- model checkpoint, dataset slice, decoding path, reward grader, framework, schedule and seed set.};
+\node[pres, below=1.6mm of f1]   (r1) {\textbf{Measured outcome.} Paired $\Delta = -0.002$, $p = 0.374$: the estimator effect is small and not statistically significant.};
 
+\node[phdr, anchor=north] (h2) at (7.6,0) {Pillar 2 $\cdot$ signal starvation};
+\node[pvary, below=2.0mm of h2] (v2) {\textbf{VARY} --- the internal signal state of the batch: per-step Zero-Variance Fraction and its collapse decomposition, logged at every step rather than summarised after the run.};
+\node[pfix, below=1.6mm of v2]   (f2) {\textbf{FIX} --- the training stack is untouched; the diagnostic observes, it does not intervene.};
+\node[pres, below=1.6mm of f2]   (r2) {\textbf{Measured outcome.} $0.16$ mean ZVF on Qwen3-8B / GSM8K at $G=8$. In the nine-row method panel only vanilla GRPO is measured; the eight variance-mitigation rows are a declared simulation projection.};
+
+\path let \p1=(r1.south), \p2=(r2.south) in coordinate (row2) at (0,{min(\y1,\y2)-0.55cm});
+\node[phdr, anchor=north] (h3) at (row2) {Pillar 3 $\cdot$ group size};
+\node[pvary, below=2.0mm of h3] (v3) {\textbf{VARY} --- the group size $G \in \{2,4,8,16\}$ across seeds, holding model, data, reward and schedule fixed.};
+\node[pfix, below=1.6mm of v3]   (f3) {\textbf{FIX} --- model, data, reward grader, learning-rate schedule and evaluation split.};
+\node[pres, below=1.6mm of f3]   (r3) {\textbf{Measured outcome.} Mean ZVF falls $0.838 \to 0.631$ ($G=2 \to 16$); held-out retention is $\approx 1.00$.};
+
+\node[phdr, anchor=north] (h4) at (row2 -| 7.6,0) {Pillar 4 $\cdot$ held-out behaviour};
+\node[pvary, below=2.0mm of h4] (v4) {\textbf{VARY} --- the method, Dr.~GRPO versus GRPO, compared pre-RL against post-RL on data the training loop never saw.};
+\node[pfix, below=1.6mm of v4]   (f4) {\textbf{FIX} --- the pre-RL checkpoint and the held-out split, evaluated side by side under frozen sampling.};
+\node[pres, below=1.6mm of f4]   (r4) {\textbf{Measured outcome.} Held-out gain small and not significant; length drifts $194.4 \to 183.5$ tokens under the cap.};
+
+\path let \p1=(r3.south), \p2=(r4.south) in coordinate (row3) at (3.8,{min(\y1,\y2)-0.55cm});
 % ============================ spine banner =============================
-\node[anchor=north, font=\small\bfseries, text=pesblue] at (3.8,-11.5)
+\node[anchor=north, font=\small\bfseries, text=pesblue] (spine) at (row3)
   {Vary exactly one factor; hold every other factor fixed.};
 \node[anchor=north, font=\scriptsize, text=black!70, text width=15.0cm, align=center]
-  at (3.8,-12.05)
+  at ([yshift=-1mm]spine.south)
   {\textbf{Held fixed throughout the programme:} LoRA rank $32$; Adam with
    $\beta_1=0.9$, $\beta_2=0.95$; learning rate $1\times10^{-4}$; seeds
    $\{42,123,456,789,1024\}$; one shared reward grader and one shared decoding

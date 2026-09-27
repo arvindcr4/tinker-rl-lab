@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "26a1f328dc7b3a52610e92819dfae198ce3204e76ddadcc2f0379ae4c0d20022",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790472976.558651,
+  "instance_id": "projectlombok__lombok-3697",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/src/core/lombok/external/superbuilder/SuperBuilderTransformer.java b/src/core/lombok/external/superbuilder/SuperBuilderTransformer.java\nindex 1733333333..1111111111 100644\n--- a/src/core/lombok/external/superbuilder/SuperBuilderTransformer.java\n+++ b/src/core/lombok/external/superbuilder/SuperBuilderTransformer.java\n@@ -1,5 +1,5 @@\n /*\n- * Copyright (C) 2012-2023 The Project Lombok Authors.\n+ * Copyright (C) 2012-2024 The Project Lombok Authors.\n  *\n  * Permission is hereby granted, free of charge, to any person obtaining a copy\n  * of this software and associated documentation files (the \"Software\"), to deal\n@@ -1,6 +1,7 @@\n package lombok.external.superbuilder;\n \n+import static lombok.core.util.ListUtil.list;\n import static lombok.core.util.StringUtil.capitalize;\n import static lombok.core.util.StringUtil.uncapitalize;\n import static lombok.core.util.StringUtil.uncapitalizeFirstChar;\n@@ -1,7 +1,9 @@\n import java.util.ArrayList;\n import java.util.Arrays;\n import java.util.Collection;\n+import java.util.Collections;\n import java.util.HashSet;\n+import java.util.List;\n import java.util.Set;\n \n import javax.lang.model.element.Element;\n@@ -1,8 +1,10 @@\n import lombok.core.LombokNode;\n import lombok.core.configuration.CheckerFrameworkStyle;\n import lombok.core.configuration.NullAnnotationMetadata;\n+import lombok.core.util.ListUtil;\n import lombok.core.util.StringUtil;\n import lombok.experimental.SuperBuilder;\n+import lombok.experimental.SuperBuilder.Builder;\n import lombok.experimental.SuperBuilder.LombokBuilder;\n import lombok.experimental.SuperBuilder.SuperBuilderAnnotationProcessor;\n import lombok.launch.ShadowClassLoader;\n@@ -1,9 +1,11 @@\n import com.sun.tools.javac.code.Symbol;\n import com.sun.tools.javac.code.Symbol.ClassSymbol;\n import com.sun.tools.javac.code.Symbol.TypeVariableSymbol;\n+import com.sun.tools.javac.code.Type;\n import com.sun.tools.javac.code.TypeTag;\n import com.sun.tools.javac.code.Types;\n import com.sun.tools.javac.tree.JCTree;\n+import com.sun.tools.javac.tree.JCTree.JCAnnotation;\n import com.sun.tools.javac.tree.JCTree.JCClassDecl;\n import com.sun.tools.javac.tree.JCTree.JCExpression;\n import com.sun.tools.javac.tree.JCTree.JCFieldAccess;\n@@ -1,10 +1,12 @@\n import com.sun.tools.javac.tree.JCTree.JCMethodDecl;\n import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;\n import com.sun.tools.javac.tree.JCTree.JCNewClass;\n+import com.sun.tools.javac.tree.JCTree.JCTypeApply;\n import com.sun.tools.javac.tree.JCTree.JCTypeParameter;\n import com.sun.tools.javac.tree.JCTree.JCVariableDecl;\n import com.sun.tools.javac.tree.TreeMaker;\n import com.sun.tools.javac.tree.TreeScanner;\n+import com.sun.tools.javac.util.List;\n import com.sun.tools.javac.util.Name;\n import com.sun.tools.javac.util.Names;\n \n@@ -1,11 +1,13 @@\n import lombok.core.AST;\n import lombok.core.AnnotationProcessor;\n import lombok.core.HandlerPriority;\n+import lombok.core.util.ListUtil;\n import lombok.core.util.StringUtil;\n import lombok.experimental.SuperBuilder;\n import lombok.experimental.SuperBuilder.Builder;\n import lombok.experimental.SuperBuilder.LombokBuilder;\n import lombok.launch.ShadowClassLoader;\n+import lombok.launch.ShadowClassLoader.ShadowedClass;\n \n public class SuperBuilderTransformer extends AnnotationProcessor {\n \tprivate static final String BUILDER_CLASS_NAME = \"Builder\";\n@@ -1,12 +1,14 @@\n \tprivate static final String BUILDER_ANNOTATION = \"lombok.experimental.SuperBuilder$Builder\";\n \tprivate static final String BUILDER_ANNOTATION_2 = \"lombok.experimental.SuperBuilder$Builder$Builder\";\n \tprivate static final String BUILDER_ANNOTATION_3 = \"lombok.experimental.SuperBuilder$Builder$Builder$Builder\";\n+\tprivate static final String BUILDER_ANNOTATION_4 = \"lombok.experimental.SuperBuilder$Builder$Builder$Builder$Builder\";\n \n \t@Override public void handle(AST<?, ?, ?> ast) {\n \t\tif (!(ast.getNode() instanceof JCClassDecl)) return;\n \t\tJCClassDecl classDecl = (JCClassDecl) ast.getNode();\n \t\tif (classDecl.getModifiers().getFlags().contains(Modifier.ABSTRACT)) return;\n-\t\tif (classDecl.getModifiers().getFlags().contains(Modifier.STATIC)) return;\n+\t\tif (classDecl.getModifiers().getFlags().contains(Modifier.STATIC)) return;\n \t\tSuperBuilder annotation = findSuperBuilderAnnotation(classDecl);\n \t\tif (annotation == null) return;",
+  "patch_sha256": "01a4336c5b6c0a2a66711765a7bcc1bad75789b010621aefab6fe620befbceb4",
+  "request_sha256": "c72ebf0cb80fec8ca1cad92a294bc4e6ca6014b4be7947834210d4aacff74f44",
+  "response_sha256": "01a4336c5b6c0a2a66711765a7bcc1bad75789b010621aefab6fe620befbceb4",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "723f1c9de97e9dc1b7bac659c0ff0d69e36950d0606a45569d3c009338672388",
+  "started_at": 1790472963.389623,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 1124,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 14742,
+    "prompt_tokens_details": null,
+    "total_tokens": 15866
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "ca3dadc546f59c2b8c1aa5d5c30586d44dc067bfecf9ef6939f01afa4fe02bcf",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790476194.133963,
+  "instance_id": "tokio-rs__tokio-6838",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/tokio/src/net/unix/listener.rs b/tokio/src/net/unix/listener.rs\nindex 7a0f7a0f..b0b0b0b0 100644\n--- a/tokio/src/net/unix/listener.rs\n+++ b/tokio/src/net/unix/listener.rs\n@@ -80,8 +80,8 @@ impl UnixListener {\n     pub fn bind(path: impl AsRef<UdsPath>) -> io::Result<UnixListener> {\n         let path = path.as_ref();\n \n-        let socket = if path.is_abstract() {\n-            StdSocketAddr::from_abstract_name(path.as_abstract_name().unwrap())\n+        let socket = if path.is_abstract() {\n+            StdSocketAddr::from_abstract_name(path.as_abstract_name().unwrap().strip_prefix('\\0').unwrap())\n         } else {\n             StdSocketAddr::from_pathname(path.as_pathname().unwrap())\n         };\ndiff --git a/tokio/src/net/unix/stream.rs b/tokio/src/net/unix/stream.rs\nindex c0c0c0c0..d0d0d0d0 100644\n--- a/tokio/src/net/unix/stream.rs\n+++ b/tokio/src/net/unix/stream.rs\n@@ -76,8 +76,8 @@ impl UnixStream {\n     pub fn connect(path: impl AsRef<UdsPath>) -> Connect<'_> {\n         let path = path.as_ref();\n \n-        let socket = if path.is_abstract() {\n-            StdSocketAddr::from_abstract_name(path.as_abstract_name().unwrap())\n+        let socket = if path.is_abstract() {\n+            StdSocketAddr::from_abstract_name(path.as_abstract_name().unwrap().strip_prefix('\\0').unwrap())\n         } else {\n             StdSocketAddr::from_pathname(path.as_pathname().unwrap())\n         };",
+  "patch_sha256": "fbcca92971637601b0619dcc085087e96b1a840cc196945a7bba8f6cbbf5c184",
+  "request_sha256": "2fe20d4cfdf3fe44b7aed15a33e928ae1332d03533856fda8b570612689c28f3",
+  "response_sha256": "fbcca92971637601b0619dcc085087e96b1a840cc196945a7bba8f6cbbf5c184",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "48903f70e1d9f6077000d3d9169af799a91598a7c695db72d21c9d3dd86348c9",
+  "started_at": 1790476184.706723,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 427,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 20782,
+    "prompt_tokens_details": null,
+    "total_tokens": 21209
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

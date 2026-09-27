@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/crates/nu-command/src/filters/find.rs b/crates/nu-command/src/filters/find.rs\nindex 0732733..0732733 100644\n--- a/crates/nu-command/src/filters/find.rs\n+++ b/crates/nu-command/src/filters/find.rs\n@@ -1,5 +1,5 @@\n use nu_engine::command_prelude::*;\n-use nu_utils::match_case::{MatchCase, Matcher};\n+use nu_utils::match_case::{MatchCase, Matcher, MatchCaseInsensitive};\n use std::fmt::Write;\n \n #[derive(Clone)]\n@@ -10,7 +10,7 @@ pub struct Find;\n \n impl Command for Find {\n     fn name(&self) -> &str {\n-        \"find\"\n+        \"find\"\n     }\n \n     fn signature(&self) -> Signature {\n@@ -18,7 +18,7 @@ impl Command for Find {\n             .input_output_types(vec![\n                 (Type::Table, Type::Table),\n                 (Type::ListTable, Type::ListTable),\n-                (Type::String, Type::String),\n+                (Type::String, Type::String),\n             ])\n             .allow_variants_without_examples(true)\n             .switch(",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472468,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-8b2eabe830b8da16",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 296,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 23544,
+    "prompt_tokens_details": null,
+    "total_tokens": 23840
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "f39c409e20eb79413417a58805700a2255f27ee33acfecbcc5bfb4a5c5297231",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790471346.417444,
+  "instance_id": "hashicorp__terraform-34814",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/internal/provisioners/remote-exec/ssh.go b/internal/provisioners/remote-exec/ssh.go\nindex 8667777777..1234567890 100644\n--- a/internal/provisioners/remote-exec/ssh.go\n+++ b/internal/provisioners/remote-exec/ssh.go\n@@ -106,6 +106,10 @@ func (p *Provisioner) Run(ctx context.Context, config *configs.ProvisionerConfig\n \t\t}\n \t}\n \n+\tif err := conn.Close(); err != nil {\n+\t\tlog.Printf(\"[WARN] Failed to close SSH connection: %s\", err)\n+\t}\n+\n \treturn nil\n }",
+  "patch_sha256": "625569c69d252bdfa0bad4df9e0e6eb2026b4d912cc7b877bfe37bee90dce193",
+  "request_sha256": "609ff0a87d15e05871dc284d442de5e0ec4b574fa054e6f192eac54c8a70c370",
+  "response_sha256": "625569c69d252bdfa0bad4df9e0e6eb2026b4d912cc7b877bfe37bee90dce193",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "4969730d74cead42ccd7d58984ef38ec0c2cf4cdd03193a27ef64670e0918064",
+  "started_at": 1790471341.8006048,
+  "status": "GENERATED",
+  "task_inventory_sha256": "765d75f9384450871730901fb73933d9e68ef9415f6badcb603e116aa0829e2f",
+  "usage": {
+    "completion_tokens": 171,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 26277,
+    "prompt_tokens_details": null,
+    "total_tokens": 26448
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

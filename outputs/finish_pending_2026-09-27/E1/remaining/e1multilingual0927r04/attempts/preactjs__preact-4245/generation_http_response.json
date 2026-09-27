@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/compat/src/index.js b/compat/src/index.js\nindex 1777777777777777777777777777777777777777..1777777777777777777777777777777777777777 100644\n--- a/compat/src/index.js\n+++ b/compat/src/index.js\n@@ -1,3 +1,4 @@\n+import { options } from 'preact';\n import {\n \tComponent,\n \tcreateElement,",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472951,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-9f425b41f9f3f449",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 158,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 21319,
+    "prompt_tokens_details": null,
+    "total_tokens": 21477
+  }
+}

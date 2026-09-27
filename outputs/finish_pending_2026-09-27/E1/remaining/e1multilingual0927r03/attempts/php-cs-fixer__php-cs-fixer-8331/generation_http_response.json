@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/Fixer/FunctionNotation/NullableTypeDeclarationForDefaultNullValueFixer.php b/src/Fixer/FunctionNotation/NullableTypeDeclarationForDefaultNullValueFixer.php\nindex 1676767676767676767676767676767676767676..1676767676767676767676767676767676767676 100644\n--- a/src/Fixer/FunctionNotation/NullableTypeDeclarationForDefaultNullValueFixer.php\n+++ b/src/Fixer/FunctionNotation/NullableTypeDeclarationForDefaultNullValueFixer.php\n@@ -1,3 +1,4 @@\n+<?php declare(strict_types=1);\n \n /*\n  * This file is part of PHP CS Fixer.\ndiff --git a/src/Fixer/FunctionNotation/NullableTypeDeclarationFixer.php b/src/Fixer/FunctionNotation/NullableTypeDeclarationFixer.php\nindex 1676767676767676767676767676767676767676..1676767676767676767676767676767676767676 100644\n--- a/src/Fixer/FunctionNotation/NullableTypeDeclarationFixer.php\n+++ b/src/Fixer/FunctionNotation/NullableTypeDeclarationFixer.php\n@@ -1,3 +1,4 @@\n+<?php declare(strict_types=1);\n \n /*\n  * This file is part of PHP CS Fixer.",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472034,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-81d9a36e1c7aca51",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 408,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 10789,
+    "prompt_tokens_details": null,
+    "total_tokens": 11197
+  }
+}

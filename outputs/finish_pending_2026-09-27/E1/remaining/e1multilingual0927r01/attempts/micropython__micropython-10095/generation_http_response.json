@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/py/objfun.c b/py/objfun.c\nindex 1234567..abcdefg 100644\n--- a/py/objfun.c\n+++ b/py/objfun.c\n@@ -300,6 +300,12 @@ STATIC void mp_obj_fun_builtin_var_call(mp_obj_t self_in, size_t n_args, size_t\n                 }\n             }\n \n+            // Check for duplicate keyword arguments\n+            for (size_t k = 0; k < kw_args->map.alloc; ++k) {\n+                if (kw_args->map.table[k].key != MP_OBJ_NULL) {\n+                    mp_map_lookup(kw_args, kw_args->map.table[k].key, MP_MAP_LOOKUP_ADD_IF_NOT_FOUND);\n+                }\n+            }\n+\n             // Unpack keyword arguments into the locals tuple\n             for (size_t k = 0; k < kw_args->map.alloc; ++k) {\n                 if (kw_args->map.table[k].key != MP_OBJ_NULL) {",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471799,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-9a4a384e66feb217",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 237,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 28003,
+    "prompt_tokens_details": null,
+    "total_tokens": 28240
+  }
+}

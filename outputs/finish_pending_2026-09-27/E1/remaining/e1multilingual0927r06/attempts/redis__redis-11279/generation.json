@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "bc5738080441fa27e1c6ab9e2be22677e3c106026fc159ac86179baf00574388",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790473635.460182,
+  "instance_id": "redis__redis-11279",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/src/acl.c b/src/acl.c\nindex 1111111..2222222 100644\n--- a/src/acl.c\n+++ b/src/acl.c\n@@ -1000,6 +1000,10 @@ static void aclInitUser(aclUser *user) {\n     user->channels = NULL;\n     user->pubsub_channels = NULL;\n     user->commands = NULL;\n+    user->flags &= ~(ACL_FLAG_SANITIZE_PAYLOAD);\n+    if (server.sanitize_dump_enabled == ACL_SANITIZE_DUMP_CLIENTS) {\n+        user->flags |= ACL_FLAG_SANITIZE_PAYLOAD;\n+    }\n }",
+  "patch_sha256": "75e291c9784fc74516983e61eab80acb6b1d848770fa5b8b25b6d42b11b32e8a",
+  "request_sha256": "423cb1b1f178af7e1979bc0c717b44481cef9f959d094d41eff61248f14970f7",
+  "response_sha256": "75e291c9784fc74516983e61eab80acb6b1d848770fa5b8b25b6d42b11b32e8a",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "880aa5dcb1b5b75250767a4032ac96bb4f6476a96d67a9c050292803cf28beb4",
+  "started_at": 1790473629.849431,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 158,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 27438,
+    "prompt_tokens_details": null,
+    "total_tokens": 27596
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

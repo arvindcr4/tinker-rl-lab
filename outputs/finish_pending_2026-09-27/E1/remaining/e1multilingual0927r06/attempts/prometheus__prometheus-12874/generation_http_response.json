@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/tsdb/head_append.go b/tsdb/head_append.go\nindex 5e0f7d0f6..a1b2c3d4e 100644\n--- a/tsdb/head_append.go\n+++ b/tsdb/head_append.go\n@@ -1282,6 +1282,10 @@ func (c *chunkDiskMapper) writeChunkSeriesToChunkWriter(series chunks.Series, wri\n \t\t}\n \n \t\tif c.maxBytes > 0 && c.bytesWritten >= c.maxBytes {\n+\t\t\t// If we are at the chunk size limit, we need to check if the current sample\n+\t\t\t// is a duplicate of the last sample in the chunk to avoid creating overlapping chunks.\n+\t\t\tif c.maxTime >= t {\n+\t\t\t\treturn c, false, false\n+\t\t\t}\n \t\t\t// We have reached the chunk size limit, so we need to close the current chunk.\n \t\t\tif err := w.WriteChunk(c.currChunk, c.minTime, c.maxTime); err != nil {\n \t\t\t\treturn c, false, err",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790473312,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-ac31a8abcf994ff0",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 242,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 29499,
+    "prompt_tokens_details": null,
+    "total_tokens": 29741
+  }
+}

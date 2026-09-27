@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "d15c8d8b60e850b710047f2612211a14b2978144a73ebfb59155395f82b9c5f9",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790471276.273001,
+  "instance_id": "google__gson-2134",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/gson/src/main/java/com/google/gson/internal/bind/util/ISO8601Utils.java b/gson/src/main/java/com/google/gson/internal/bind/util/ISO8601Utils.java\nindex 1777777..1234567 100644\n--- a/gson/src/main/java/com/google/gson/internal/bind/util/ISO8601Utils.java\n+++ b/gson/src/main/java/com/google/gson/internal/bind/util/ISO8601Utils.java\n@@ -1,5 +1,6 @@\n package com.google.gson.internal.bind.util;\n \n+import java.text.ParseException;\n import java.util.Calendar;\n import java.util.Date;\n import java.util.GregorianCalendar;\n@@ -13,6 +14,7 @@ import java.util.TimeZone;\n  * @author Jackson\n  */\n public final class ISO8601Utils {\n+  private static final int INVALID_DATE = -1;\n \n   /**\n    * Format date into yyyy-MM-dd'T'HH:mm:ss[.SSS][Z|[+-]HH:mm]\n@@ -100,6 +102,10 @@ public final class ISO8601Utils {\n       TimeZone timezone = TimeZone.getTimeZone(timezoneId);\n       if (!timezone.getID().equals(timezoneId)) {\n         throw new IndexOutOfBoundsException(\"Invalid time zone indicator \" + timezoneIndicator);\n+      }\n+\n+      Calendar calendar = new GregorianCalendar(timezone);\n+      calendar.setLenient(false);\n+      calendar.set(Calendar.YEAR, year);\n+      calendar.set(Calendar.MONTH, month - 1);\n+      calendar.set(Calendar.DAY_OF_MONTH, day);\n+      calendar.set(Calendar.HOUR_OF_DAY, hour);\n+      calendar.set(Calendar.MINUTE, minutes);\n+      calendar.set(Calendar.SECOND, seconds);\n+      calendar.set(Calendar.MILLISECOND, milliseconds);\n+\n+      pos.setIndex(offset);\n+      return calendar.getTime();\n+      // If we get a ParseException it'll already have the right message/offset.\n+      // Other exception types can convert here.\n+    } catch (IndexOutOfBoundsException e) {\n+      fail = e;\n+    } catch (NumberFormatException e) {\n+      fail = e;\n+    } catch (IllegalArgumentException e) {\n+      fail = e;\n+    }\n+    String input = (date == null) ? null : (\"'\" + date + \"'\");\n+    throw new ParseException(\"Failed to parse date [\" + input + \"]: \" + fail.getMessage(), pos.getIndex());\n   }",
+  "patch_sha256": "5c094ba1565ae387eb8f0280842750ca70d685c927d0e466b1b3ba587b806227",
+  "request_sha256": "99d41f53317cbfcec3c0e5e4a9559560a113d34277d5f01c25cc06448689e12a",
+  "response_sha256": "5c094ba1565ae387eb8f0280842750ca70d685c927d0e466b1b3ba587b806227",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "dd825e14ade0f021e5f59ec4c1e52132e8bdc7f99c72c4d37596f4968a8c95b0",
+  "started_at": 1790471269.72501,
+  "status": "GENERATED",
+  "task_inventory_sha256": "765d75f9384450871730901fb73933d9e68ef9415f6badcb603e116aa0829e2f",
+  "usage": {
+    "completion_tokens": 574,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 24603,
+    "prompt_tokens_details": null,
+    "total_tokens": 25177
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

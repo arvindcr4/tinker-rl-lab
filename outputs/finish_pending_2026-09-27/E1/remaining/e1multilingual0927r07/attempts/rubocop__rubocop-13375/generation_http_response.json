@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/lib/rubocop/cli/command/execute_runner.rb b/lib/rubocop/cli/command/execute_runner.rb\nindex 5555555555..6666666666 100644\n--- a/lib/rubocop/cli/command/execute_runner.rb\n+++ b/lib/rubocop/cli/command/execute_runner.rb\n@@ -30,7 +30,7 @@ def execute_runner(paths)\n             all_passed || @options[:auto_gen_config]\n           end\n \n-          maybe_print_corrected_source\n+          maybe_print_corrected_source if @options[:display_only_correctable]\n \n           if runner.aborting?\n             STATUS_INTERRUPTED",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790473420,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-928ff3eac860157d",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 154,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 20837,
+    "prompt_tokens_details": null,
+    "total_tokens": 20991
+  }
+}

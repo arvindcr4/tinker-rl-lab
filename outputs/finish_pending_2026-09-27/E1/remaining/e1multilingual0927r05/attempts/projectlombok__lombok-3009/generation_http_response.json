@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/core/lombok/experimental/FieldDefaults.java b/src/core/lombok/experimental/FieldDefaults.java\nindex 5a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b..1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b 100644\n--- a/src/core/lombok/experimental/FieldDefaults.java\n+++ b/src/core/lombok/experimental/FieldDefaults.java\n@@ -1,5 +1,5 @@\n /*\n- * Copyright (C) 2012-2017 The Project Lombok Authors.\n+ * Copyright (C) 2012-2023 The Project Lombok Authors.\n  * \n  * Permission is hereby granted, free of charge, to any person obtaining a copy\n  * of this software and associated documentation files (the \"Software\"), to deal\n@@ -36,6 +36,10 @@ import java.lang.annotation.Target;\n  * <p>\n  * Complete documentation is found at <a href=\"https://projectlombok.org/features/FieldDefaults\">the project lombok features page for &#64;FieldDefaults</a>.\n  * \n+ * <p>\n+ * Note that this annotation is not supported on records. If you want to apply field defaults to records, use the\n+ * {@code lombok.fieldDefaults.defaultPrivate} and {@code lombok.fieldDefaults.defaultFinal} configuration keys instead.\n+ * \n  * @see lombok.experimental.Accessors\n  */\n @Target(ElementType.TYPE)",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472700,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-a2c2c17687758f25",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 382,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 24638,
+    "prompt_tokens_details": null,
+    "total_tokens": 25020
+  }
+}

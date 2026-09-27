@@ -1,0 +1,66 @@
+{
+    "total_instances": 16,
+    "submitted_instances": 16,
+    "completed_instances": 4,
+    "resolved_instances": 1,
+    "unresolved_instances": 3,
+    "infra_failure_instances": 0,
+    "ambiguous_failure_instances": 0,
+    "empty_patch_instances": 0,
+    "error_instances": 12,
+    "completed_ids": [
+        "phpoffice__phpspreadsheet-3463",
+        "phpoffice__phpspreadsheet-3469",
+        "phpoffice__phpspreadsheet-3903",
+        "phpoffice__phpspreadsheet-3940"
+    ],
+    "incomplete_ids": [],
+    "empty_patch_ids": [],
+    "submitted_ids": [
+        "php-cs-fixer__php-cs-fixer-7875",
+        "php-cs-fixer__php-cs-fixer-7998",
+        "php-cs-fixer__php-cs-fixer-8064",
+        "php-cs-fixer__php-cs-fixer-8075",
+        "php-cs-fixer__php-cs-fixer-8256",
+        "php-cs-fixer__php-cs-fixer-8331",
+        "php-cs-fixer__php-cs-fixer-8367",
+        "phpoffice__phpspreadsheet-3463",
+        "phpoffice__phpspreadsheet-3469",
+        "phpoffice__phpspreadsheet-3570",
+        "phpoffice__phpspreadsheet-3659",
+        "phpoffice__phpspreadsheet-3903",
+        "phpoffice__phpspreadsheet-3940",
+        "phpoffice__phpspreadsheet-4114",
+        "phpoffice__phpspreadsheet-4186",
+        "phpoffice__phpspreadsheet-4214"
+    ],
+    "resolved_ids": [
+        "phpoffice__phpspreadsheet-3463"
+    ],
+    "unresolved_ids": [
+        "phpoffice__phpspreadsheet-3469",
+        "phpoffice__phpspreadsheet-3903",
+        "phpoffice__phpspreadsheet-3940"
+    ],
+    "infra_failure_ids": [],
+    "ambiguous_failure_ids": [],
+    "failure_reasons": {},
+    "error_ids": [
+        "php-cs-fixer__php-cs-fixer-7875",
+        "php-cs-fixer__php-cs-fixer-7998",
+        "php-cs-fixer__php-cs-fixer-8064",
+        "php-cs-fixer__php-cs-fixer-8075",
+        "php-cs-fixer__php-cs-fixer-8256",
+        "php-cs-fixer__php-cs-fixer-8331",
+        "php-cs-fixer__php-cs-fixer-8367",
+        "phpoffice__phpspreadsheet-3570",
+        "phpoffice__phpspreadsheet-3659",
+        "phpoffice__phpspreadsheet-4114",
+        "phpoffice__phpspreadsheet-4186",
+        "phpoffice__phpspreadsheet-4214"
+    ],
+    "schema_version": 2,
+    "unstopped_instances": 0,
+    "unstopped_containers": [],
+    "unremoved_images": []
+}

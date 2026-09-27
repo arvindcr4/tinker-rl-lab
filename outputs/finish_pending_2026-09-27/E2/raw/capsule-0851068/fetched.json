@@ -1,0 +1,8 @@
+{
+ "report_path": "/home/crab/environment/report.json",
+ "report": {
+  "Report the final AUC after training.": 0.9157952669235003
+ },
+ "report_raw": "{\"Report the final AUC after training.\": 0.9157952669235003}\n",
+ "result_files": []
+}

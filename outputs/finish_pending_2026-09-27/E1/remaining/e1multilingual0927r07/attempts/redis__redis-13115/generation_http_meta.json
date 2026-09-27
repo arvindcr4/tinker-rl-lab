@@ -1,0 +1,36 @@
+{
+  "elapsed_seconds": 9.57083535194397,
+  "headers": [
+    [
+      "Alt-Svc",
+      "h3=\":443\"; ma=2592000"
+    ],
+    [
+      "Content-Length",
+      "2420"
+    ],
+    [
+      "Content-Type",
+      "application/json"
+    ],
+    [
+      "Date",
+      "Sun, 27 Sep 2026 01:40:40 GMT"
+    ],
+    [
+      "Modal-Function-Call-Id",
+      "fc-01M3G8B047XMGHJNMPETCEP5VB"
+    ],
+    [
+      "Vary",
+      "accept-encoding"
+    ],
+    [
+      "Connection",
+      "close"
+    ]
+  ],
+  "id": "chatcmpl-912aa0e6fbb86833",
+  "reason": "OK",
+  "status": 200
+}

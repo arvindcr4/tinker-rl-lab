@@ -1,0 +1,51 @@
+{
+    "task": "treasure_hunter",
+    "action_frequency": {
+        "look": 14,
+        "go east": 8,
+        "go north": 7,
+        "go west": 7,
+        "take key": 1,
+        "go south": 9,
+        "open passageway": 3,
+        "unlock passageway with key": 1,
+        "take Hendersons limited edition key": 1,
+        "take plate": 1,
+        "unlock passageway with Hendersons limited edition key": 1,
+        "open balsam door": 1,
+        "take display": 1,
+        "take passkey": 1
+    },
+    "input_tokens": 81411,
+    "output_tokens": 179,
+    "done": true,
+    "episode_return": 0.0,
+    "num_steps": 56,
+    "failed_candidates": [],
+    "progression": 0.0,
+    "process_num": "w78386",
+    "seed": 2578777482,
+    "agent": {
+        "type": "naive",
+        "remember_cot": true,
+        "max_text_history": 16,
+        "max_image_history": 0,
+        "max_cot_history": 1,
+        "max_icl_history": 1000,
+        "cache_icl": false
+    },
+    "client": {
+        "client_name": "vllm",
+        "model_id": "pavlov-public-portfolio-bf16",
+        "base_url": "http://127.0.0.1:8793/textworld/v1",
+        "generate_kwargs": {
+            "temperature": 1.0,
+            "max_tokens": 8192,
+            "thinking_budget": null
+        },
+        "timeout": 60,
+        "max_retries": 5,
+        "delay": 2,
+        "alternate_roles": false
+    }
+}

@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/Illuminate/Validation/Concerns/FormatsMessages.php b/src/Illuminate/Validation/Concerns/FormatsMessages.php\nindex 1476666666666666666666666666666666666666..1476666666666666666666666666666666666667 100644\n--- a/src/Illuminate/Validation/Concerns/FormatsMessages.php\n+++ b/src/Illuminate/Validation/Concerns/FormatsMessages.php\n@@ -100,6 +100,10 @@ protected function getCustomMessageFromTranslator($message)\n     protected function getCustomMessage($attribute, $rule, $attributeText)\n     {\n         $inlineMessage = $this->getInlineMessage($attribute, $rule);\n+\n+        if ($inlineMessage !== null) {\n+            return $inlineMessage;\n+        }\n \n         return $this->getLangLineFromCustomArray($attribute, $rule)\n             ?? $this->getLangLineFromCustomArray($attribute, $rule)\n@@ -110,6 +114,10 @@ protected function getCustomMessage($attribute, $rule, $attributeText)\n     protected function getInlineMessage($attribute, $rule)\n     {\n         $inlineMessage = $this->messages->get($attribute.'.'.$rule);\n+\n+        if ($inlineMessage !== null) {\n+            return $inlineMessage;\n+        }\n \n         return $this->messages->get($attribute);\n     }",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471553,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-be808fab2cd47c47",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 383,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 21455,
+    "prompt_tokens_details": null,
+    "total_tokens": 21838
+  }
+}

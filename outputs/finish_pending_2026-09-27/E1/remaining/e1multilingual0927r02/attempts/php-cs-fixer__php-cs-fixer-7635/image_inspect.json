@@ -1,0 +1,108 @@
+{
+ "Id": "sha256:0e43b8665788055f566cf2688c524acda109009e1b4f665fdbcf90cf2f148f9a",
+ "RepoTags": [
+  "swebench/sweb.eval.x86_64.php-cs-fixer_1776_php-cs-fixer-7635:latest"
+ ],
+ "RepoDigests": [
+  "swebench/sweb.eval.x86_64.php-cs-fixer_1776_php-cs-fixer-7635@sha256:ad46a9caab4f4d32f1f67c6cbe4b2477c3208c72748aae4c89984e6660cd72aa"
+ ],
+ "Parent": "",
+ "Comment": "buildkit.dockerfile.v0",
+ "Created": "2026-08-13T16:57:52.368933653Z",
+ "Container": "",
+ "ContainerConfig": {
+  "Hostname": "",
+  "Domainname": "",
+  "User": "",
+  "AttachStdin": false,
+  "AttachStdout": false,
+  "AttachStderr": false,
+  "Tty": false,
+  "OpenStdin": false,
+  "StdinOnce": false,
+  "Env": null,
+  "Cmd": null,
+  "Image": "",
+  "Volumes": null,
+  "WorkingDir": "",
+  "Entrypoint": null,
+  "OnBuild": null,
+  "Labels": null
+ },
+ "DockerVersion": "",
+ "Author": "",
+ "Config": {
+  "Hostname": "",
+  "Domainname": "",
+  "User": "",
+  "AttachStdin": false,
+  "AttachStdout": false,
+  "AttachStderr": false,
+  "Tty": false,
+  "OpenStdin": false,
+  "StdinOnce": false,
+  "Env": [
+   "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+   "PHPIZE_DEPS=autoconf \t\tdpkg-dev \t\tfile \t\tg++ \t\tgcc \t\tlibc-dev \t\tmake \t\tpkg-config \t\tre2c",
+   "PHP_INI_DIR=/usr/local/etc/php",
+   "PHP_CFLAGS=-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64",
+   "PHP_CPPFLAGS=-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64",
+   "PHP_LDFLAGS=-Wl,-O1 -pie",
+   "GPG_KEYS=1198C0117593497A5EC5C199286AF1F9897469DC C28D937575603EB4ABB725861C0779DC5C0A9DE4 AFD8691FDAEDF03BDF6E460563F15A9B715376CA",
+   "PHP_VERSION=8.3.16",
+   "PHP_URL=https://www.php.net/distributions/php-8.3.16.tar.xz",
+   "PHP_ASC_URL=https://www.php.net/distributions/php-8.3.16.tar.xz.asc",
+   "PHP_SHA256=40d3b4e6cac33d3bcefe096d75a28d4fb4e3a9615eb20a4de55ba139fbfacdd5",
+   "TZ=Etc/UTC"
+  ],
+  "Cmd": [
+   "php",
+   "-a"
+  ],
+  "Image": "",
+  "Volumes": null,
+  "WorkingDir": "/testbed",
+  "Entrypoint": [
+   "docker-php-entrypoint"
+  ],
+  "OnBuild": null,
+  "Labels": null
+ },
+ "Architecture": "amd64",
+ "Os": "linux",
+ "Size": 781295323,
+ "VirtualSize": 781295323,
+ "GraphDriver": {
+  "Data": {
+   "LowerDir": "/var/lib/docker/overlay2/6b1cb9b3d6ccd75472aeb27245fd45505dcfbb37fb3f2fc9883f5a69a3349423/diff:/var/lib/docker/overlay2/06b9e8001e4d4ef1f21bc978ce3691ed6b4637eb8ef82e4b8cbc1dc1f5499c1c/diff:/var/lib/docker/overlay2/d2ed6ca08ad6516f34dc32ab9ca754970cde689c298601f190a43740b0e25a4c/diff:/var/lib/docker/overlay2/d13adb875d1ac3f8e4e6488e49a5d845ec35901cc20a9423f85b21d27c2f27b5/diff:/var/lib/docker/overlay2/de3bedf59275f25565dde536c4734a807bf585f3279fc7c0ec4293e5b60b39b0/diff:/var/lib/docker/overlay2/cca175a3315b6450367272a0636e342822e4df1282733fd75e54bf85e781e6ea/diff:/var/lib/docker/overlay2/faba978aa02616a2031894da52a8a70f0668510d9801817b9e91ef6e912eba06/diff:/var/lib/docker/overlay2/639bd3b69316642c9080a9c092b603599e049fdb5cd4d9ee0a2769ad18d882d0/diff:/var/lib/docker/overlay2/9e11bf40d62678d0399307752650c1e57826d80ac545160cb0df6ea80095b0f7/diff:/var/lib/docker/overlay2/286245e703fc1d2e52a9ee4c43fc58d3ece00677e71f1296807f52fab503ecc1/diff:/var/lib/docker/overlay2/3f60d0adf9d87ced66217d58670b11b15c16071b93c64144b85e6dc8df09afa6/diff:/var/lib/docker/overlay2/65cfe380d296bb053846842986ea564d734d25a5fab3c937218a27c74eafdfaf/diff:/var/lib/docker/overlay2/074d9d6c40352b3cff9de40c7756cf9544bb538a9a62d477b739d79390316bdd/diff:/var/lib/docker/overlay2/13e8a8397776659e2dcb5490c4d71df057f4aef7ad8a4a6c78a1d6b5615f4a5c/diff:/var/lib/docker/overlay2/8bcd7ac09ad5468cc42fad8bc09952d1180e973f05738d286f8e69793951154c/diff",
+   "MergedDir": "/var/lib/docker/overlay2/a77a0008130ca0aa1b8349a4b9e01d86cbac21d4a9988d86b6753175dcc258c7/merged",
+   "UpperDir": "/var/lib/docker/overlay2/a77a0008130ca0aa1b8349a4b9e01d86cbac21d4a9988d86b6753175dcc258c7/diff",
+   "WorkDir": "/var/lib/docker/overlay2/a77a0008130ca0aa1b8349a4b9e01d86cbac21d4a9988d86b6753175dcc258c7/work"
+  },
+  "Name": "overlay2"
+ },
+ "RootFS": {
+  "Type": "layers",
+  "Layers": [
+   "sha256:7914c8f600f532b7adbd0b003888e3aa921687d62dbe2f1f829d0ab6234a158a",
+   "sha256:5166768118f51ab9ecee67aae970a8cc9077f67f78577fe7ce86de1b4a1b8079",
+   "sha256:260d2c7ab64ca8712ef551ef71d29e129ca4cb2048fb4d2593d400037a58c3ce",
+   "sha256:391893fe26a5a365cb5346f389dfc60289c273a375a8a4e12b3d0411b700e650",
+   "sha256:1ad6818c54fc08e96d6bc0dce0885d36de1bffb9bbe23328bcc3d6c36c37e408",
+   "sha256:f8b800c422fae2221dea183347aadd93d430b78c7ab2aca67ddfa2d118b256db",
+   "sha256:9890f5763b2456004f011509c3c7d5e56a0337d3bc3294a7a1ddc098bd71a221",
+   "sha256:3fe08465df4310aef654977d48324da0e94795858a0f56ded19a5abf6dc4cbae",
+   "sha256:9109663e8a252d113f7d68882c0368733b82a468e497fbcbd97da073d7e26e9d",
+   "sha256:35dfb2b639644396103b7763d520c47a03e34f62f171e84e488fff515d9ea474",
+   "sha256:a6a8f34ddbc3b220d523eec7855902fa8344483713056d757fb229f7f3fd78ed",
+   "sha256:92a71a86a87c81de43b6b25cf9d2eab73914fcbb6e81f3bef214e8d6f2b2eaf2",
+   "sha256:afb97ee11dd313badf2f4a6f8882ba047578292f9104d2bbc920b5c876bd28a4",
+   "sha256:3e1006b0c7c39bec7467a4beea2b492597e0cb0809874865d49f936cc7ed2824",
+   "sha256:cdaae835f4ebd95e13c14ae957871a31b55848e19e85857513a9cbb4b939319d",
+   "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+  ]
+ },
+ "Metadata": {
+  "LastTagTime": "0001-01-01T00:00:00Z"
+ }
+}

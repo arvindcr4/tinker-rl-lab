@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/Fixer/ClassNotation/FullyQualifiedStrictTypesFixer.php b/src/Fixer/ClassNotation/FullyQualifiedStrictTypesFixer.php\nindex 1666666666..1111111111 100644\n--- a/src/Fixer/ClassNotation/FullyQualifiedStrictTypesFixer.php\n+++ b/src/Fixer/ClassNotation/FullyQualifiedStrictTypesFixer.php\n@@ -15,6 +15,7 @@\n \n use PhpCsFixer\\CustomRulesets\\Fixers\\ClassNotation\\ImportSymbol;\n use PhpCsFixer\\Fixer\\AbstractFixer;\n+use PhpCsFixer\\Fixer\\ConfigurableFixerInterface;\n use PhpCsFixer\\Fixer\\ConfigurableFixerInterface;\n use PhpCsFixer\\FixerConfiguration\\FixerConfigurationResolver;\n use PhpCsFixer\\FixerConfiguration\\FixerConfigurationResolverInterface;\n@@ -24,6 +25,7 @@\n use PhpCsFixer\\FixerConfiguration\\FixerOptionInterface;\n use PhpCsFixer\\FixerDefinition\\CodeSample;\n use PhpCsFixer\\FixerDefinition\\FixerDefinition;\n+use PhpCsFixer\\FixerDefinition\\FixerDefinitionInterface;\n use PhpCsFixer\\FixerDefinition\\FixerDefinitionInterface;\n use PhpCsFixer\\FixerDefinition\\VersionSpecification;\n use PhpCsFixer\\FixerDefinition\\VersionSpecificCodeSample;\n@@ -33,6 +35,7 @@\n use PhpCsFixer\\Tokenizer\\Analyzer\\Analysis\\NamespaceUseAnalysis;\n use PhpCsFixer\\Tokenizer\\Analyzer\\FunctionsAnalyzer;\n use PhpCsFixer\\Tokenizer\\Analyzer\\WhitespacesCommentAnalyze;\n+use PhpCsFixer\\Tokenizer\\CT;\n use PhpCsFixer\\Tokenizer\\CT;\n use PhpCsFixer\\Tokenizer\\Processor\\ImportProcessor;\n use PhpCsFixer\\Tokenizer\\Token;\n@@ -41,6 +44,7 @@\n use PhpCsFixer\\Tokenizer\\Tokens;\n use PhpCsFixer\\Tokenizer\\TokensAnalyzer;\n \n+use function count;\n use function count;\n use function is_array;\n use function is_int;",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472053,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-8ab2a56b9e25e232",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 488,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 6203,
+    "prompt_tokens_details": null,
+    "total_tokens": 6691
+  }
+}

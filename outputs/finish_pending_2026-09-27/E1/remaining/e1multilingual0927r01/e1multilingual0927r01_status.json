@@ -1,0 +1,88 @@
+{
+  "tag": "e1multilingual0927r01",
+  "sandbox": "sb-ZjlUOZyLTo8EF95JN0SxNg",
+  "started_at": 1790471301.48258,
+  "tasks": {
+    "jqlang__jq-2839": {
+      "image": "swebench/sweb.eval.x86_64.jqlang_1776_jq-2839@sha256:60bdec21b016e20c5dcc82e82dcbe404aba0075cf9f2b4dd124fb7b1eea1a484",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "jqlang__jq-2919": {
+      "image": "swebench/sweb.eval.x86_64.jqlang_1776_jq-2919@sha256:d51ae0380271440dab8d0bbecf97043396a3ae9d94f63f351b584e7bf55ce35a",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "laravel__framework-46234": {
+      "image": "swebench/sweb.eval.x86_64.laravel_1776_framework-46234@sha256:e5cfaa0e45b6236a3703ee609d899775c3cf9b65a78440810a43c35744496da7",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "laravel__framework-48573": {
+      "image": "swebench/sweb.eval.x86_64.laravel_1776_framework-48573@sha256:d4897e4e3918265d91d09c0c6293c7245d5ed5539240d42cae33aeaaf04645cc",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "laravel__framework-48636": {
+      "image": "swebench/sweb.eval.x86_64.laravel_1776_framework-48636@sha256:e9d2fb0bcabdef6b3033a6842834c153e95cf36f804a1b6a304bfa4d68b1ef3d",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "laravel__framework-51195": {
+      "image": "swebench/sweb.eval.x86_64.laravel_1776_framework-51195@sha256:6ce3f587541394cec28a7bf4795a4661e4617aaf96fcb70d4dfca06183b0b868",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "laravel__framework-51890": {
+      "image": "swebench/sweb.eval.x86_64.laravel_1776_framework-51890@sha256:3ea01844fd27742cc01225b1a280f43243e1a575ffdeae945d39434eef2d01b5",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "laravel__framework-52451": {
+      "image": "swebench/sweb.eval.x86_64.laravel_1776_framework-52451@sha256:91b7031365ab8d5351ecb239a5ebed8799cc66b323ff5a8b1753a1da79a4181c",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "laravel__framework-52680": {
+      "image": "swebench/sweb.eval.x86_64.laravel_1776_framework-52680@sha256:06bb5b1b83c1a82c1a8f223640aef6954597a1dfc9e556da5ed339b4d735b223",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "laravel__framework-52684": {
+      "image": "swebench/sweb.eval.x86_64.laravel_1776_framework-52684@sha256:906cc03d71f519abae176c51bdcd3143e73e27c4a181bc806a32c29a62983776",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "laravel__framework-52866": {
+      "image": "swebench/sweb.eval.x86_64.laravel_1776_framework-52866@sha256:6a040c511034f4832228f4b60bc6d8642f369818aa7531d13630d23f71c64386",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "laravel__framework-53206": {
+      "image": "swebench/sweb.eval.x86_64.laravel_1776_framework-53206@sha256:f069992d9e4370473a90ffb0a9a633dd9d5198f00aed03661b8dd8da8380f142",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "laravel__framework-53696": {
+      "image": "swebench/sweb.eval.x86_64.laravel_1776_framework-53696@sha256:37079c144d1e4f4685c0a19aebf77b83bc759ad7ccae6c81f7723bd8bd17bad2",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "laravel__framework-53914": {
+      "image": "swebench/sweb.eval.x86_64.laravel_1776_framework-53914@sha256:a2600f3ac7219e983f18e6ae292daea5ced7052457f3e9bdb817441e401ac8b5",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "laravel__framework-53949": {
+      "image": "swebench/sweb.eval.x86_64.laravel_1776_framework-53949@sha256:2267064be85c79bc18af8ceb4c5753c8abc0efce7ead2bc596b4970ca59edd07",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    },
+    "micropython__micropython-10095": {
+      "image": "swebench/sweb.eval.x86_64.micropython_1776_micropython-10095@sha256:dd10fe204f98e3531611249035bbe393c4a0d3cddeaa31aa9ddac940281a9c65",
+      "generation": "GENERATED",
+      "finish_reason": "stop"
+    }
+  },
+  "finished_at": 1790471894.683528
+}

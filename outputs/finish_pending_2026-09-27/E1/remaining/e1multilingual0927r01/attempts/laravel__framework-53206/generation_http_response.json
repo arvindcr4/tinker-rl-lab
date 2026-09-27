@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/Illuminate/Support/Js.php b/src/Illuminate/Support/Js.php\nindex 1567777777777777777777777777777777777777..1567777777777777777777777777777777777778 100644\n--- a/src/Illuminate/Support/Js.php\n+++ b/src/Illuminate/Support/Js.php\n@@ -10,6 +10,7 @@\n \n use Illuminate\\Contracts\\Support\\Arrayable;\n use Illuminate\\Contracts\\Support\\Jsonable;\n+use Illuminate\\Support\\Collection;\n use Illuminate\\Support\\Enumerable;\n use Illuminate\\Support\\Str;\n use JsonSerializable;\n@@ -38,7 +39,11 @@ public static function from(mixed $value): static\n     {\n         return new static(\n             json_encode(\n-                $value instanceof Enumerable ? $value->all() : $value,\n+                $value instanceof Enumerable\n+                    ? ($value instanceof Collection\n+                        ? $value->all()\n+                        : $value)\n+                    : $value,\n                 JSON_THROW_ON_ERROR\n             )\n         );",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790471673,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-9e5c8e981681da6d",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 296,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 20884,
+    "prompt_tokens_details": null,
+    "total_tokens": 21180
+  }
+}

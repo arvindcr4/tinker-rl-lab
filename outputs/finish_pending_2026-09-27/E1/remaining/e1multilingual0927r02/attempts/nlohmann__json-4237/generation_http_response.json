@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/include/nlohmann/detail/conversions.hpp b/include/nlohmann/detail/conversions.hpp\nindex 1234567..abcdefg 100644\n--- a/include/nlohmann/detail/conversions.hpp\n+++ b/include/nlohmann/detail/conversions.hpp\n@@ -1,5 +1,5 @@\n #include <nlohmann/detail/meta/type_traits.hpp>\n-#include <nlohmann/detail/value_t.hpp>\n+#include <nlohmann/detail/value_t.hpp>\n #include <nlohmann/json_fwd.hpp>",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472237,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-a345496b435896a8",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 124,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 18790,
+    "prompt_tokens_details": null,
+    "total_tokens": 18914
+  }
+}

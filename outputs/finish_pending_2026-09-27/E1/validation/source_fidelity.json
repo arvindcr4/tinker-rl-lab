@@ -1,0 +1,52 @@
+{
+  "google__gson-1014": {
+    "digest": "swebench/sweb.eval.x86_64.google_1776_gson-1014@sha256:82e3083379322ce9f13e662f9c951897f37f53d4799ee2f72caf8cfabb087f76",
+    "pull_s": 13.2,
+    "exact_match": true,
+    "same_file_set": true,
+    "differing_paths": [],
+    "terms": [
+      "JsonReader",
+      "JsonTreeReader",
+      "ArrayIndexOutOfBoundsException",
+      "stackSize",
+      "skipValue",
+      "testSkipValue_JsonReader",
+      "StringReader",
+      "testSkipValue_JsonTreeReader",
+      "JsonObject",
+      "popStack",
+      "JSON",
+      "IOException"
+    ]
+  },
+  "briannesbitt__carbon-2665": {
+    "digest": "swebench/sweb.eval.x86_64.briannesbitt_1776_carbon-2665@sha256:31ff1b5af40d4d715483e7085ba7e237546bff8622c84f7d3c347e1ae821cba0",
+    "pull_s": 9.8,
+    "exact_match": true,
+    "same_file_set": true,
+    "differing_paths": [],
+    "terms": [
+      "floorYear",
+      "precisely",
+      "issue",
+      "create",
+      "endOfYear",
+      "copy",
+      "floorSecond",
+      "phpversion",
+      "REMOVE"
+    ]
+  },
+  "fmtlib__fmt-3901": {
+    "digest": "swebench/sweb.eval.x86_64.fmtlib_1776_fmt-3901@sha256:2d5b5cc81b66a252f4c8c5a2f0a374d7b0544b52fae7adb58e49e708d6f58d9f",
+    "pull_s": 12.6,
+    "exact_match": true,
+    "same_file_set": true,
+    "differing_paths": [],
+    "terms": [
+      "group_digits",
+      "vjzrM48bb"
+    ]
+  }
+}

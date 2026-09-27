@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/core/lombok/transform/handlers/StandardException.java b/src/core/lombok/transform/handlers/StandardException.java\nindex 166330300..333333333 100644\n--- a/src/core/lombok/transform/handlers/StandardException.java\n+++ b/src/core/lombok/transform/handlers/StandardException.java\n@@ -100,6 +100,10 @@ public class StandardException extends AbstractAnnotationHandler<StandardExcepti\n \t\t}\n \t}\n \n+\tprivate boolean isStandardExceptionField(JCVariableDecl field) {\n+\t\treturn field.name.contentEquals(\"message\") || field.name.contentEquals(\"cause\");\n+\t}\n+\n \tprivate void addStandardExceptionFields(JCClassDecl classDecl) {\n \t\tListBuffer<JCVariableDecl> fieldsToAdd = new ListBuffer<>();\n \t\tListBuffer<JCStatement> constructorBodies = new ListBuffer<>();\n@@ -110,7 +114,7 @@ public class StandardException extends AbstractAnnotationHandler<StandardExcepti\n \t\t}\n \n \t\tfor (JCVariableDecl field : classDecl.defs) {\n-\t\t\tif (field instanceof JCVariableDecl && !field.mods.flags.toString().contains(\"STATIC\")) {\n+\t\t\tif (field instanceof JCVariableDecl && !field.mods.flags.toString().contains(\"STATIC\") && !isStandardExceptionField(field)) {\n \t\t\t\t// We don't want to add standard exception fields to the all-args constructor.\n \t\t\t\t// We also don't want to add them to the toString, equals, hashCode, etc.\n \t\t\t\t// So we just skip them here.",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472920,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-8af9962cb493b087",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 372,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 29822,
+    "prompt_tokens_details": null,
+    "total_tokens": 30194
+  }
+}

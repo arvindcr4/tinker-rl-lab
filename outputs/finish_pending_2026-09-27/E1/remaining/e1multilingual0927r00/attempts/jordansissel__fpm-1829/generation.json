@@ -1,0 +1,33 @@
+{
+  "actor_task_sha256": "474b09a9035e4e5703763e4d38cd4dcc7423513b55652f28ea21730bb47634fb",
+  "deployment_ref": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/finish_pending_2026-09-27/E1/actor_deployment_0927.json",
+    "sha256": "6f30261bf0e585214ceb7c9d543704bea2c64fb72852d0e5ccabf59f4b2187dd"
+  },
+  "extraction_reason": "valid unified diff",
+  "finish_reason": "stop",
+  "finished_at": 1790471640.074435,
+  "instance_id": "jordansissel__fpm-1829",
+  "model_identity_sha256": "cb1376b3f79d45736bcdef92b4c9e96aea05fb0befc9702c085285d8d78aaeed",
+  "patch": "diff --git a/lib/fpm/package/deb.rb b/lib/fpm/package/deb.rb\nindex 7a3f3b1..8c3d3e2 100644\n--- a/lib/fpm/package/deb.rb\n+++ b/lib/fpm/package/deb.rb\n@@ -100,6 +100,12 @@ class FPM::Package::Deb < FPM::Package\n     :attribute_name => :replaces\n \n   option \"--config-files\", \"CONFIG_FILES\",\n+    \"Mark a file in the package as being a config file. This uses 'conffiles'\" \\\n+    \" in debs and %config in rpm. If you have multiple files to mark as \" \\\n+    \"configuration files, specify this flag multiple times.  If argument is \" \\\n+    \"directory all files inside it will be recursively marked as config files.\",\n+    :multivalued => true, :attribute_name => :config_files\n+  option \"--directories\", \"DIRECTORIES\", \"Recursively mark a directory as being owned \" \\\n     \"by the package. Use this flag multiple times if you have multiple directories \" \\\n     \"and they are not under the same parent directory \", :multivalued => true,\n     :attribute_name => :directories",
+  "patch_sha256": "7f1578ce7e9ed96af68d27fefad898892e9f77ad8564f247e38f0088e4749ce6",
+  "request_sha256": "7082013698159a6243bf3738500dbdadaf12db2c58d74557543c2517c013e47e",
+  "response_sha256": "7f1578ce7e9ed96af68d27fefad898892e9f77ad8564f247e38f0088e4749ce6",
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "fb1a3405ee747af7e2451e01efd18829f44afbd2f6a29240fe369fad7fdcc051",
+  "started_at": 1790471634.633763,
+  "status": "GENERATED",
+  "task_inventory_sha256": "672e781d912e55e7a2da4be7dacceb0135cd0d3d398bf807e2cdd7bbd1f60dbb",
+  "usage": {
+    "completion_tokens": 282,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 26423,
+    "prompt_tokens_details": null,
+    "total_tokens": 26705
+  },
+  "wandb_mode": "online",
+  "wandb_run_id": "e1-finish0927-multilingual"
+}

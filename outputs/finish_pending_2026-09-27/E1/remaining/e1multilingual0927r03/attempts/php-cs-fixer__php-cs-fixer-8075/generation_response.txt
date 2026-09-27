@@ -1,0 +1,11 @@
+diff --git a/src/Fixer/PhpUnit/PhpUnitAttributesFixer.php b/src/Fixer/PhpUnit/PhpUnitAttributesFixer.php
+index 1666666666..7777777777 100644
+--- a/src/Fixer/PhpUnit/PhpUnitAttributesFixer.php
++++ b/src/Fixer/PhpUnit/PhpUnitAttributesFixer.php
+@@ -312,7 +312,7 @@ private function fixGroups(
+             $tokens->insertSolutions($index, $solutions);
+         }
+ 
+-        $tokens->clearTokenAndMergeSurroundingWhitespace($index);
++        $tokens->clearTokenAndMergeSurroundingWhitespace($index, $index + $count - 1);
+     }

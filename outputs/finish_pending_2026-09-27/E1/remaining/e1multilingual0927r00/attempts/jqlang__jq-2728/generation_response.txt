@@ -1,0 +1,12 @@
+diff --git a/src/jq.c b/src/jq.c
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/jq.c
++++ b/src/jq.c
+@@ -1,6 +1,7 @@
+ #include "jq.h"
+ #include "jv.h"
+ #include "util.h"
++#include <stdlib.h>
+ 
+ #include <getopt.h>
+ #include <stdio.h>

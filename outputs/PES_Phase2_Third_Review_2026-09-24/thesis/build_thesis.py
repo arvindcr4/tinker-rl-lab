@@ -50,29 +50,58 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
         ("fig_confounding",
          "The confounding problem this work addresses. A single reported reward "
          "figure sits on top of an unstated stack; without fixing and reporting "
-         "that stack the number is not attributable to the method under test.",
+         "that stack the number is not attributable to the method under test. "
+         "Top right: of the four frameworks in the nominal configuration only "
+         "Tinker and TRL were run; veRL and OpenRLHF were not installed in the "
+         "sandbox and have no measurement. The $17\\times$ gap between the two "
+         "measured stacks is an under-specification exhibit, not a clean "
+         "back-end-only effect, because the managed stack also pinned a different "
+         "base checkpoint (Qwen3-8B-Base vs.\\ Qwen3-8B). Bottom left: one-way "
+         "$\\eta^2$ shares over 42 reported experiments; they are confounded with "
+         "one another and with back-end, reward implementation, hardware and "
+         "task, so they do not sum to one. Bottom right: Cohen's $d$ with 95\\% "
+         "CIs from the Phase-1 statistical summary; the Qwen arms did not share a "
+         "back-end (GRPO on the managed API, PPO on a Modal H100 cluster), so no "
+         "directional Qwen algorithm claim is made.",
          "fig:confounding", ["Motivating", "Problem Statement", "Introduction"]),
         ("fig_grpo_loop",
          "The GRPO training loop. A prompt is sampled $G$ times, each completion "
          "is scored by a reward function, advantages are formed relative to the "
          "group, and the policy is updated. When all $G$ rewards coincide the "
-         "group-relative advantage collapses to zero and no gradient flows.",
+         "group-relative advantage collapses to zero and no reward-relative "
+         "gradient flows, although the rollouts are still paid for. Number line: "
+         "the Phase-1 P2 batch ZVF of 0.72--0.77 (four methods, 40 steps, "
+         "16 prompts $\\times$ 8 samples, GSM8K, seed 0, Qwen3.5-4B) and the "
+         "group-size sweep on Qwen3-8B/GSM8K over three seeds, where mean ZVF "
+         "falls from 0.838 at $G=2$ to 0.631 at $G=16$ (a fall of 0.207).",
          "fig:grpoloop", ["Background", "Introduction"]),
         ("fig_contribution_map",
          "Boundary between the inherited Semester-3 group infrastructure and the "
-         "individual Semester-4 contribution reported in this document.",
+         "individual Semester-4 contribution reported in this document. Both "
+         "columns are drawn from the repository's own provenance record (the "
+         "Semester-3 tag and boundary commit, the post-boundary commit and file "
+         "counts, the solo-authorship commit, and the Semester-4 README with its "
+         "paper-to-evidence map); where the record does not settle a claim, the "
+         "claim is left out rather than inferred.",
          "fig:contribution", ["Contribution", "Scope"]),
     ],
     "ch02_literature.md": [
         ("fig_lineage",
-         "Algorithmic lineage from RLHF through PPO and DPO to GRPO and its "
-         "variants. Each transition removes a component or substitutes a "
+         "Algorithmic lineage from RLHF through PPO to GRPO, with DPO as an "
+         "orthogonal branch. Each transition removes a component or substitutes a "
          "cheaper estimator; GRPO removes the critic and replaces it with a "
-         "group-relative baseline.",
+         "group-relative baseline. DPO (dashed frame) removes the on-policy loop "
+         "and the reward model rather than simplifying the critic, trading online "
+         "exploration for stability. Dates are first publication or first use at "
+         "scale. GRPO variants (DAPO, Dr.~GRPO and others) are discussed in the "
+         "text and not drawn.",
          "fig:lineage", ["RLHF and PPO to Group-Relative", "Direct Preference Optimisation"]),
         ("fig_research_questions",
          "The eight studies P1--P8 grouped by theme, with the question each one "
-         "addresses.",
+         "addresses and the state of its evidence. Every question is answered from "
+         "the repository's own record; two of the eight answer with a declared "
+         "null, and a study whose scope narrowed between the group semester and "
+         "this one is marked partial rather than complete.",
          "fig:questions", ["Positioning", "Literature"]),
     ],
     "ch04_methodology.md": [
@@ -85,12 +114,24 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "Definition of the Zero-Variance Fraction. One prompt produces $G$ "
          "completions with scalar rewards; when the within-group reward standard "
          "deviation is zero the advantage is identically zero and the sample "
-         "contributes no gradient. ZVF is the fraction of such groups.",
+         "contributes no gradient. ZVF is the fraction of such groups. The "
+         "composition bar is measured on Qwen3-8B, held-out GSM8K slice, $G=8$, "
+         "$T=1.0$, 200 problems $\\times$ 3 seeds; all-correct (vertical hatch) "
+         "and all-wrong (cross-hatch) together make up the ZVF.",
          "fig:zvfdef", ["Zero-Variance", "Formalis", "Methodology"]),
         ("fig_gradient_utilisation",
          "Gradient utilisation, $1-\\zvf$, as a function of group size $G$. "
-         "Increasing $G$ reduces the zero-variance fraction with saturating "
-         "benefit, which is why larger groups are not uniformly better.",
+         "Qwen2.5-0.5B, arithmetic-correctness task, 40 steps, 16 prompts, "
+         "$G\\in\\{2,4,8,16\\}$, seeds 42/123/456 ($n=3$ per $G$; "
+         "\\texttt{groupsize\\_zvf\\_sweep.json}). (a) Open circles are single "
+         "seeds; squares are seed means with 95\\% $t$-intervals ($df=2$). The "
+         "line is a two-parameter power law, $\\zvf = 0.922\\,G^{-0.137}$, fitted "
+         "to the four means (2 residual degrees of freedom), so it is descriptive "
+         "rather than a validated law; $G=32^{\\ast}$ was not trained and the "
+         "dotted segment is extrapolation. (b) The absolute gain per doubling is "
+         "nearly constant ($+0.074$, $+0.073$, $+0.059$), so the diminishing "
+         "return is relative: $46\\%\\to31\\%\\to19\\%$ of the previous "
+         "level. Utilisation stays below 0.37 at $G=16$.",
          "fig:gu", ["Zero-Variance", "Methodology"]),
         ("fig_telemetry",
          "Per-step telemetry recorded by the unified harness, and the "
@@ -98,87 +139,213 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "fig:telemetry", ["Telemetry", "Methodology"]),
         ("fig_four_pillars",
          "The four de-confound pillars. Each holds the whole stack fixed and "
-         "varies exactly one factor.",
+         "varies exactly one factor. In Pillar~2 the nine-row method panel "
+         "measures vanilla GRPO only; its eight variance-mitigation rows are a "
+         "declared simulation projection (Chapter~6).",
          "fig:pillars", ["Methodology", "Portfolio"]),
         ("fig_campaign_design",
-         "Design of the E1--E14 held-out evaluation campaign: one frozen actor, "
-         "each suite graded by its own native evaluator at a pinned revision, "
-         "with original-contract and replacement-scope results kept separate.",
+         "Design of the E1--E14 held-out evaluation campaign. One frozen actor "
+         "serves all fourteen lanes, and each suite is graded by its own native "
+         "evaluator at a pinned revision. Each lane lists its original-contract "
+         "suite and, where one exists, its replacement scope side by side; "
+         "Figure~\\ref{fig:lanes} names the replacement scope where one exists. "
+         "Figures and terminal states come from the 2026-09-19 ledger "
+         "(\\texttt{E1\\_E14\\_FINAL\\_RESULTS\\_2026-09-19.md} and "
+         "\\texttt{finish/Pending\\_Experiments.md}; 11/11 deterministic checks "
+         "pass). E14's $2271/4428 = 51.29\\%$ counts the 2 unjudged rows as "
+         "failures; the official scorer reports $51.31\\% = 2271/4426$ on the "
+         "judged rows.",
          "fig:campaign", ["Campaign", "Methodology"]),
     ],
     "ch05_implementation.md": [
         ("fig_architecture",
-         "Six reinforcement-learning backends behind one Tinker-style API. A "
-         "single task, reward and decoding configuration drives any backend, so "
-         "differences in outcome are attributable to the stack.",
+         "Six RL frameworks behind one Tinker-style API. Five of the six are in "
+         "the dispatch matrix (5 frameworks $\\times$ 6 compute backends); only two "
+         "executed (Tinker, TRL: last-10 mean training reward on Qwen/Qwen3-8B "
+         "GSM8K, from \\texttt{framework\\_comparison.json}), two are dry-run "
+         "launch plans and two were not executed. One configuration drives every "
+         "framework, but the executed comparison bundled a different base "
+         "checkpoint (Chapter~7), so outcome differences are reported with the "
+         "stack rather than attributed to it.",
          "fig:arch", ["Architecture", "Implementation"]),
         ("fig_harness",
          "Evaluation harness internals. The harness is fail-closed: when a "
          "precondition cannot be satisfied the lane records \\textsc{blocked} "
-         "rather than substituting an adjacent benchmark.",
+         "rather than substituting an adjacent benchmark. Outcomes and the lane "
+         "tally are taken from the 2026-09-19 ledger of record "
+         "(\\texttt{Pending\\_Experiments.md}). Outcome A separates "
+         "original-contract scores from replacement-scope results and gives "
+         "coverage and score separately; Outcome B lists original-scope suites "
+         "that are closed external, then lanes whose scope is not yet settled. "
+         "E14 is reported as $2271/4428 = 51.29\\%$ with the two unjudged rows "
+         "counted as failures (the official scorer reports 51.31\\% over 4426 "
+         "judged rows).",
          "fig:harness", ["Harness", "Implementation"]),
         ("fig_receipt_pipeline",
          "The evidence chain from sealed request through execution and native "
          "grading to a deterministic ledger check. A break anywhere in the "
-         "chain means no number is reported for that lane.",
+         "chain means no number is reported for that lane. Upper row: the chain; "
+         "the 11/11 PASS badge is the 2026-09-19 deterministic ledger check "
+         "(\\texttt{LEDGER\\_CODE\\_CHECK\\_2026-09-19.json}). Lower row: the E1 "
+         "wave-10 recovery, where the lost execution source stops the chain.",
          "fig:receipts", ["Receipt", "Implementation"]),
     ],
     "ch06_results_core.md": [
         ("fig_zvf_by_library",
-         "Mean Zero-Variance Fraction by backend library. Signal starvation is "
-         "large and varies across stacks, which is the empirical case for "
-         "reporting the stack alongside any reward figure.",
+         "Mean Zero-Variance Fraction by method in a simulation projection "
+         "(a) and by measured experiment family (b); neither panel compares "
+         "backend libraries. (a) Nine variance-mitigation methods in a "
+         "simulation projection ($G=8$, math-verifiable task, 5 seeds each; "
+         "hatched bars mark projected, not model-training, values): bar $=$ "
+         "mean of per-seed mean ZVF, whisker $=\\pm1$~SD across seeds "
+         "($\\le 0.008$). The projection ranks no methods; GRPO (cross-hatched) "
+         "is the reference at 0.481, and in 3 of its 5 seeds the per-step "
+         "collapse flag fires. (b) Measured runs: gsm8k $=$ Qwen3-8B, three "
+         "seeds of 200 GSM8K prompts at $G=8$ (mean $\\pm1$~SD); drgrpo $=$ "
+         "Qwen2.5-0.5B arithmetic, GRPO and Dr.\\ GRPO, 5 seeds each (10 runs, "
+         "mean $\\pm1$~SD); gsize $=$ Qwen2.5-0.5B group-size sweep, mean over "
+         "$G\\in\\{2,4,8,16\\}$ with a dashed whisker spanning the per-$G$ "
+         "values (a range over $G$, not seed dispersion); tool-32B (Qwen3-32B) "
+         "and tool-8B (Llama-3.1-8B-Instruct) are single runs (open diamonds, "
+         "no interval) in which every group has zero reward variance. Source: "
+         "platform\\_hybrid/experiments/results/zvf\\_by\\_library.tsv and the "
+         "per-seed files it cites.",
          "fig:zvflib", ["Zero-Variance", "P2", "Results"]),
         ("fig_group_size",
-         "Held-out accuracy as a function of group size $G$ over three seeds. "
-         "The point estimates peak at $G=8$, but at $n=3$ seeds the arms are "
-         "statistically indistinguishable, so no optimum is established.",
+         "Group size $G$: one single-seed sweep, one three-seed sweep and one "
+         "reconstruction. (a) Qwen3-8B on GSM8K through Tinker, one seed, 30 "
+         "steps: peak and last-10 in-training reward (not held-out); $G=8$ is "
+         "highest, but with no seed replication no optimum can be established. "
+         "(b) Qwen2.5-0.5B on arithmetic, 3 seeds, 40 steps: held-out accuracy "
+         "and mean train reward, bars $\\pm1.96$~SE (approximate 95\\% CI). The "
+         "held-out apex at $G=8$ (0.990) overlaps $G=4$ (0.988) and $G=16$ "
+         "(0.978); overlap is descriptive, not a test, and the arms are "
+         "statistically indistinguishable. (c) Mean zero-variance fraction on "
+         "the same sweep, falling by 0.207 from $G=2$ to $G=16$. (d) "
+         "Reconstructed retention of $G=4$ relative to $G=32$ against token "
+         "budget (dashed line and open markers: reconstructed values, not "
+         "matched-budget training runs; bars are the file's conditional "
+         "reconstruction intervals). The point estimate reaches the Wu et al.\\ "
+         "0.976 retention level at 1 of 4 budgets ($T=1$M), but the equivalence "
+         "test at that margin is not passed at any budget. Sources: "
+         "paper/expected\\_results.json (a); "
+         "experiments/results/group\\_size\\_effect.tsv (b--d).",
          "fig:groupsize", ["Group Size", "P3", "Results"]),
         ("fig_length_bias",
-         "Roster-level reward trajectories. Four of eleven GRPO runs carry the "
-         "post-hoc verbosity-trap flag (peak before 65\\% of training, terminal "
-         "reward below 90\\% of peak). The flag tests in-training reward, not "
-         "length, so it is a description of the roster and not evidence of "
-         "length bias; the controlled sixteen-run comparison shows no flags.",
+         "The post-hoc peak-then-decay rule (peak before 65\\% of logged steps "
+         "and terminal reward below $0.90\\times$ peak) on the roster and on the "
+         "controlled comparison. (a) The four of eleven roster GRPO runs that "
+         "carry the flag (single seed each; legend gives peak$\\rightarrow$"
+         "terminal reward and t/p $=$ terminal$\\div$peak; stars mark peaks). "
+         "(b)--(d) The controlled sixteen-run comparison, seed mean (line) and "
+         "min--max across seeds (band); dashed vertical line at 65\\%, dotted "
+         "horizontal line at the arm's last-10 mean. (b) Arithmetic, "
+         "Qwen2.5-0.5B, 40 steps, 5 seeds per arm: every seed peaks at 1.0 and "
+         "stays there, so the rule fires on 0 of 10 runs. (c, d) GSM8K-CoT, "
+         "Qwen2.5-1.5B-Instruct, 30 steps, 3 seeds per arm: seed peaks "
+         "(stars $=$ flagged, open circle $=$ not flagged) fall at 33--63\\% of "
+         "training and the last-10 mean (0.26 GRPO, 0.25 Dr.\\ GRPO) is far "
+         "below every peak, so the rule fires on 3 of 3 GRPO and 2 of 3 Dr.\\ "
+         "GRPO runs. Completion length falls in all sixteen runs, so the "
+         "pillar's length-bias flag (length rising while reward stays flat or "
+         "falls) is zero everywhere: the peak-then-decay rule marks noisy "
+         "reward in both algorithms, not length inflation. Flags recomputed "
+         "from the per-step logs in drgrpo\\_vs\\_grpo.json and "
+         "drgrpo\\_gsm8k\\_cot\\_full.json.",
          "fig:lengthbias", ["Length Bias", "P4", "Results"]),
         ("fig_scaling_null",
-         "Cross-scale behaviour of reward across the studied model range. No "
-         "reliable monotone scaling trend is recovered; the conservative "
-         "negative is the result.",
+         "Cross-scale behaviour of reward across the studied model range: no "
+         "reliable monotone scaling trend is recovered. (a) Twelve GRPO anchors "
+         "from 4B to 1T parameters, one seed each, listed in the key with their "
+         "number of logged steps. $\\bar R$ is the mean over a run's logged "
+         "steps of the per-step training reward (the fraction of rollouts "
+         "rewarded, on a 0--1 scale; no further normalisation). Whiskers are "
+         "$\\pm1$~SD of the per-step reward within the run, clipped to "
+         "$[0,1]$; they describe step-to-step noise, not a confidence interval. "
+         "Open markers have fewer than ten logged steps. The dashed line and "
+         "grey band are the constant model selected by AICc (pooled mean "
+         "0.641) and the $\\pm\\sigma_{\\mathrm{step}}$ noise floor (0.096). OLS "
+         "slope $+0.081\\pm0.129$ per decade ($R^2=0.038$, permutation "
+         "$p=0.54$); Spearman $\\rho(\\log_{10}N,\\bar R)=+0.149$ ($p=0.64$). "
+         "(b) OLS slope per decade of $N$ for seven summary metrics, with "
+         "95\\% CIs ($\\pm1.96$~SE) and permutation $p$ over the twelve anchors. "
+         "Each slope is in its own metric's units (reward, squared reward or "
+         "probability), so slopes are not comparable across rows; every "
+         "interval includes zero. Sources: "
+         "experiments/results/scaling\\_law\\_extended\\_frontier.tsv and "
+         "scaling\\_law\\_power\\_law.tsv.",
          "fig:scaling", ["Scaling", "P1", "Results"]),
     ],
     "ch09_results_campaign.md": [
         ("fig_lane_status",
-         "Terminal status of all fourteen E1--E14 lanes. Each cell names the "
-         "suite and its state, so status is legible without relying on colour "
-         "alone.",
+         "Terminal status of all fourteen E1--E14 lanes, from the 2026-09-19 "
+         "ledger of record. Each cell names the suite whose scope the state "
+         "refers to, and status is carried by glyph, word, border style and "
+         "hatching as well as colour. Cells show the replacement scope where one "
+         "exists (E1 SWE-bench Multilingual, E2 CORE-Bench, E5 Tau3, E6 WebArena, "
+         "E8 LAB-Bench public, E9 MLDevBench, E10 AgentDojo benign, E13 BALROG, "
+         "E14 Omni-MATH) and the original contract otherwise; the original-contract "
+         "suites and their results (e.g.\\ E1 SWE-bench Pro $2/731$, E2 FrontierSWE, "
+         "E5 APEX-Agents, E9 MLE-bench) are shown in the campaign-design figure "
+         "(Chapter~4) and are never pooled with replacement-scope numbers. "
+         "*E14 closes terminal-complete: $2271/4428 = 51.29\\%$ with the two "
+         "unjudged rows counted as failures (official scorer: 51.31\\% over 4426 "
+         "judged rows).",
          "fig:lanes", ["Campaign", "Results"]),
         ("fig_e8_categories",
          "LAB-Bench public split, per-category accuracy, all 1{,}967 questions "
-         "graded across eight categories. Accuracy is strongly "
-         "category-dependent; no pooled cross-category average is claimed.",
+         "graded across eight categories. Each bar is correct/total for one "
+         "category (labels give the counts). Accuracy is strongly "
+         "category-dependent, so no pooled cross-category average is drawn or "
+         "claimed. CloningScenarios is a measured zero (0/33), not a missing value.",
          "fig:e8", ["LAB-Bench", "E8", "complete scopes"]),
         ("fig_e11_decomposition",
          "VerilogEval decomposition: two native framings of 156 tasks, "
          "67/156 code-completion and 62/156 spec-to-RTL, summing to "
-         "$129/312 = 41.35\\%$ pass@1.",
+         "$129/312 = 41.35\\%$ pass@1. The dashed top bar is the sum of the two "
+         "rows, not a third measurement. Graded by the suite's native harness "
+         "(receipt \\texttt{e11\\_full\\_receipt.json}); the $129/311 = 41.48\\%$ "
+         "value that excludes \\texttt{Prob099\\_m2014\\_q6c} is a non-canonical "
+         "sensitivity only.",
          "fig:e11", ["VerilogEval", "E11", "complete scopes"]),
         ("fig_terminal_taxonomy",
          "Terminal-state taxonomy used to close every lane. Each state has a "
-         "defined meaning and a named reopen condition where one exists.",
+         "defined meaning and a named reopen condition where one exists. The "
+         "seven states are the ledger's full vocabulary; 17 lane-states cover 14 "
+         "lanes because E8, E10 and E14 carry separate original and replacement "
+         "rows. States classify lanes, not results: an unrecognised state is "
+         "recorded as blocked rather than absorbed into a percentage, and "
+         "original-contract and replacement-scope numbers are never pooled. The "
+         "completion gate's \\texttt{PARTIAL\\_EXACT}/\\texttt{PARTIAL\\_RECOVERY} "
+         "labels are a separate evidence-class vocabulary (Chapter~5).",
          "fig:taxonomy", ["Terminal", "blocked lanes", "externally blocked"]),
         ("fig_e4_diagnostic",
          "The E4 rerun diagnostic. Across 100 trials agents terminate at a "
          "median of roughly six steps without producing deliverables, and more "
          "than a quarter end in role-token degeneration, consistent with generation "
          "running past the end-of-turn token because the serving bridge passed no "
-         "stop sequences. The 0.0 is not a measurement of finance reasoning.",
+         "stop sequences. The 0.0 is not a measurement of finance reasoning. "
+         "Left: per-trajectory step counts (\\texttt{final\\_metrics.total\\_steps}), "
+         "stacked by whether the final agent message carries at least two "
+         "concatenated role tokens (29/100; the ledger records ``27+''). Right: "
+         "where the verifier chain stopped (\\texttt{verifier/test-stdout.txt}, "
+         "\\texttt{reward.json}), all bars on one scale. Base-model rerun of "
+         "2026-09-21, all 100 trial directories under "
+         "\\texttt{outputs/e4\\_banker\\_toolbench/}.",
          "fig:e4", ["BankerToolBench", "E4", "rerun"]),
     ],
     "ch10_synthesis_conclusions.md": [
         ("fig_threats",
          "Threats to validity grouped as internal, construct and external, each "
-         "with the mitigation applied in this work.",
+         "with the mitigation applied in this work. The pairing is mostly a "
+         "reduction in what is claimed rather than a repair of the evidence: "
+         "where the evidence is partial the claim is narrowed to what it "
+         "supports. $\\dagger$ marks figures and summary statistics drawn from "
+         "Tinker data only; independent replication of them requires Tinker API "
+         "access (\\texttt{LIMITATIONS\\_AND\\_IMPACT.md}, Sec.~6.3). In T3, "
+         "37/128 is the number of verifier criteria met on the single E4 task; "
+         "the reported 0.3115 is the verifier's own recovery metric, not that "
+         "fraction.",
          "fig:threats", ["Threats", "Validity", "Synthesis"]),
     ],
 }

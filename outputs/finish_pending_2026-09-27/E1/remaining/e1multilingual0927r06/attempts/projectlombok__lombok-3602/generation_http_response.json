@@ -1,0 +1,42 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "diff --git a/src/core/lombok/transform/transformers/SneakyThrowsTransformer.java b/src/core/lombok/transform/transformers/SneakyThrowsTransformer.java\nindex 1763333333..1234567890 100644\n--- a/src/core/lombok/transform/transformers/SneakyThrowsTransformer.java\n+++ b/src/core/lombok/transform/transformers/SneakyThrowsTransformer.java\n@@ -1,5 +1,6 @@\n package lombok.transform.transformers;\n \n+import lombok.core.configuration.CheckerFrameworkFlavor;\n import lombok.core.AST;\n import lombok.core.configuration.CheckerFrameworkFlavor;\n import lombok.core.handlers.HandlerUtil;\n@@ -10,6 +11,7 @@\n import lombok.core.handlers.HandlerUtil;\n import lombok.core.handlers.HandlerUtil;\n import lombok.core.handlers.HandlerUtil;\n+import lombok.core.handlers.HandlerUtil;\n import lombok.core.handlers.HandlerUtil;\n import lombok.core.handlers.HandlerUtil;\n import lombok.core.handlers.HandlerUtil;",
+        "function_call": null,
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "routed_experts": null,
+      "stop_reason": null,
+      "token_ids": null
+    }
+  ],
+  "created": 1790472884,
+  "ec_transfer_params": null,
+  "id": "chatcmpl-a8e6eb35f98eae02",
+  "kv_transfer_params": null,
+  "metrics": null,
+  "model": "pavlov-public-portfolio-bf16",
+  "object": "chat.completion",
+  "prompt_logprobs": null,
+  "prompt_text": null,
+  "prompt_token_ids": null,
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-dd54441c",
+  "usage": {
+    "completion_tokens": 230,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 21462,
+    "prompt_tokens_details": null,
+    "total_tokens": 21692
+  }
+}

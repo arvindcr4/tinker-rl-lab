@@ -1,6 +1,6 @@
 """E6: aggregate raw/<split>/results.jsonl into result.json fields. Errors/timeouts = failures (score 0).
 judge_pending records (no judge credit) are reported separately: bounds + score over judged."""
-import json, math, sys, glob, collections
+import json, math, sys, glob, collections, re
 from pathlib import Path
 
 def wilson(k, n, z=1.959964):
@@ -15,14 +15,14 @@ recs = {}
 for f in sorted(raw.glob("*/results.jsonl")):
     for l in f.read_text().splitlines():
         if l.strip():
-            r = json.loads(l); r["split"] = f.parent.name; recs[r["task_id"]] = r
+            r = json.loads(l); r["split"] = re.sub(r"_s\d+$", "", f.parent.name); recs[r["task_id"]] = r
 R = list(recs.values())
 n = len(R)
 pend = [r for r in R if r.get("judge_pending")]
 graded = [r for r in R if not r.get("judge_pending")]
 k = sum(1 for r in graded if (r["score"] or 0) >= 1.0)
 errs = sum(1 for r in R if r.get("error"))
-tmo = sum(1 for r in R if r.get("error") and "timeout" in r["error"].lower())
+tmo = sum(1 for r in R if r.get("error") and "TaskTimeout" in r["error"])
 judge_cost = sum((r.get("usage") or {}).get("judge_cost", 0) for r in R)
 ap = sum((r.get("usage") or {}).get("actor_prompt", 0) for r in R)
 ac = sum((r.get("usage") or {}).get("actor_completion", 0) for r in R)
@@ -33,6 +33,7 @@ for r in R:
     elif (r["score"] or 0) >= 1: b[1] += 1
 out = {
     "n_attempted": n, "n_graded": len(graded), "n_judge_pending": len(pend), "n_success": k,
+    "n_resolved_without_judge": sum(1 for r in R if r.get("resolved_without_judge")),
     "n_errors": errs, "n_timeouts": tmo,
     "score_over_graded": round(k / len(graded), 4) if graded else None, "ci95_wilson_over_graded": wilson(k, len(graded)),
     "score_lower_bound_pending_as_fail": round(k / n, 4) if n else None, "ci95_wilson_lower_bound": wilson(k, n),

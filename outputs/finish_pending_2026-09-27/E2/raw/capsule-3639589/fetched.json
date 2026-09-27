@@ -1,0 +1,13 @@
+{
+ "report_path": "/home/crab/environment/report.json",
+ "report": {
+  "fig Report the color of the line with the highest maximum activation for target memory activation, DM.": "blue"
+ },
+ "report_raw": "{\"fig Report the color of the line with the highest maximum activation for target memory activation, DM.\": \"blue\"}\n",
+ "result_files": [
+  "dm-input-gate-uncertainty.png",
+  "dm-memory-activation-uncertainty.png",
+  "memory-activation.png",
+  "event-prediction-performance.png"
+ ]
+}

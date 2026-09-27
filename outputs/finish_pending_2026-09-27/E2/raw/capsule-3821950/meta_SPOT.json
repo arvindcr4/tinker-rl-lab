@@ -1,0 +1,36 @@
+{
+ "capsule_id": "capsule-3821950",
+ "vm": "e2cb-3821950-99096",
+ "gpu_catalog": false,
+ "provisioning": "SPOT",
+ "started": 1790499096.947548,
+ "zone": "us-central1-a",
+ "machine": "e2-highmem-2",
+ "pro_attach": "{\"_doc\": \"Content provided in json response is currently considered Experimental and may change\", \"_schema_version\": \"0.1\", \"account\": {\"created_at\": \"2026-09-27T01:48:37+00:00\", \"external_account_ids\": [{\"IDs\": [\"358208640342\"], \"origin\": \"GCP\"}], \"id\": \"aBviHSn4j5W059eC03A7eprxxl5Ipcdu_CcGxWZ-C2Yk",
+ "prep": {
+  "uses_gpu": false,
+  "registry_link": "registry.codeocean.com/published/0c427240-6e28-417d-ba1a-777c8c4e485a:v1",
+  "gt_result_files": [
+   "Output",
+   "SetupLog",
+   "ktc_11_paper.html",
+   "plotofcalibrateddates-1.png",
+   "artefactsplot-1.png",
+   "agemodelplot-1.png",
+   "denroelements-1.png",
+   "sedimentsstratplot-2.png",
+   "stratiplotwithdates-1.png",
+   "sedimentsstratplot-1.png"
+  ]
+ },
+ "agent": {
+  "end": "max_turns",
+  "turns": 150,
+  "agent_seconds": 3012.7,
+  "prompt_tokens": 2999673,
+  "completion_tokens": 12749,
+  "calls": 150
+ },
+ "status": "completed",
+ "finished": 1790502248.403502
+}

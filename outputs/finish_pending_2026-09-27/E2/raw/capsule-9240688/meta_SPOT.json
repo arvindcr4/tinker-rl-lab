@@ -1,0 +1,53 @@
+{
+ "capsule_id": "capsule-9240688",
+ "vm": "e2cb-9240688-5016",
+ "gpu_catalog": false,
+ "provisioning": "SPOT",
+ "started": 1790505016.814069,
+ "zone": "us-central1-a",
+ "machine": "e2-highmem-2",
+ "pro_attach": "{\"_doc\": \"Content provided in json response is currently considered Experimental and may change\", \"_schema_version\": \"0.1\", \"account\": {\"created_at\": \"2026-09-27T01:48:37+00:00\", \"external_account_ids\": [{\"IDs\": [\"358208640342\"], \"origin\": \"GCP\"}], \"id\": \"aBviHSn4j5W059eC03A7eprxxl5Ipcdu_CcGxWZ-C2Yk",
+ "prep": {
+  "uses_gpu": false,
+  "registry_link": "registry.codeocean.com/published/e2926ea2-c83c-407d-bd70-0a8559651999:v1",
+  "gt_result_files": [
+   "appendix-table7.html",
+   "appendix-table6.html",
+   "appendix-table3.html",
+   "figure6.pdf",
+   "figure1.pdf",
+   "appendix-figure1.pdf",
+   "appendix-table2.html",
+   "appendix-figure6.pdf",
+   "appendix-table4.html",
+   "figure3.pdf",
+   "appendix-table10.html",
+   "appendix-table11.html",
+   "figure4.pdf",
+   "appendix-table8.html",
+   "appendix-figure5.pdf",
+   "table1.html",
+   "appendix-table5.html",
+   "figure2.pdf",
+   "appendix-figure2.pdf",
+   "appendix-figure3.pdf",
+   "appendix-figure4.pdf",
+   "appendix-figure7.pdf",
+   "appendix-table12.html",
+   "appendix-table1.html",
+   "output",
+   "figure5.pdf",
+   "appendix-table9.html"
+  ]
+ },
+ "agent": {
+  "end": "max_turns",
+  "turns": 150,
+  "agent_seconds": 3537.4,
+  "prompt_tokens": 2644124,
+  "completion_tokens": 25332,
+  "calls": 150
+ },
+ "status": "completed",
+ "finished": 1790508699.517607
+}

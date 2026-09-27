@@ -1,0 +1,31 @@
+{
+ "capsule_id": "capsule-3639589",
+ "vm": "e2cb-3639589-3267",
+ "gpu_catalog": false,
+ "provisioning": "SPOT",
+ "started": 1790503267.745901,
+ "zone": "us-central1-a",
+ "machine": "e2-highmem-2",
+ "pro_attach": "{\"_doc\": \"Content provided in json response is currently considered Experimental and may change\", \"_schema_version\": \"0.1\", \"account\": {\"created_at\": \"2026-09-27T01:48:37+00:00\", \"external_account_ids\": [{\"IDs\": [\"358208640342\"], \"origin\": \"GCP\"}], \"id\": \"aBviHSn4j5W059eC03A7eprxxl5Ipcdu_CcGxWZ-C2Yk",
+ "prep": {
+  "uses_gpu": false,
+  "registry_link": "registry.codeocean.com/published/7e4bca71-28df-438b-82ef-cec55ae4d120:v3",
+  "gt_result_files": [
+   "dm-input-gate-uncertainty.png",
+   "dm-memory-activation-uncertainty.png",
+   "memory-activation.png",
+   "event-prediction-performance.png",
+   "output"
+  ]
+ },
+ "agent": {
+  "end": "finish",
+  "turns": 47,
+  "agent_seconds": 1133.8,
+  "prompt_tokens": 673994,
+  "completion_tokens": 5439,
+  "calls": 47
+ },
+ "status": "completed",
+ "finished": 1790504548.388855
+}

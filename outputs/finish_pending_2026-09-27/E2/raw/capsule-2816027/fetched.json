@@ -1,0 +1,21 @@
+{
+ "report_path": "/home/crab/environment/report.json",
+ "report": {
+  "fig For CTCF Signature Enrichment, report the name of the group with the highest median GSVA score.": "MCF7_D538G"
+ },
+ "report_raw": "{\"fig For CTCF Signature Enrichment, report the name of the group with the highest median GSVA score.\": \"MCF7_D538G\"}\n",
+ "result_files": [
+  "Figure 1C.png",
+  "Figure 6E.png",
+  "WCRC_Input.gct",
+  "DFCI_Input.gct",
+  "DFCI_score.gct",
+  "Figure 5E.png",
+  "Figure 1F.png",
+  "Figure 1D.png",
+  "Figure 1E.png",
+  "Figure 4A.png",
+  "WCRC_score.gct",
+  "Figure 5F.png"
+ ]
+}

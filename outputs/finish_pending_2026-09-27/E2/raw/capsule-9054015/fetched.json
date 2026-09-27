@@ -1,0 +1,25 @@
+{
+ "report_path": "/home/crab/environment/report.json",
+ "report": {
+  "fig Report the percentage sensitivity for cancers A and B that has the highest number of cancers detected per 1,000 women for a 1.0% prevalance of cancer B.": "90",
+  "Report the 5-year probability of diagnosis for breast tissue origin and age 50.": "1.24"
+ },
+ "report_raw": "{\n  \"fig Report the percentage sensitivity for cancers A and B that has the highest number of cancers detected per 1,000 women for a 1.0% prevalance of cancer B.\": \"90\",\n  \"Report the 5-year probability of diagnosis for breast tissue origin and age 50.\": \"1.24\"\n}\n",
+ "result_files": [
+  "supplemental_table1_2021-05-15.csv",
+  "figure3_2021-05-15.pdf",
+  "hypothetical_euc_prevalence_2021-05-15.png",
+  "figureS2_2021-05-15.png",
+  "table2_2021-05-15.csv",
+  "supplemental_table2_2021-05-15.csv",
+  "figure2_2021-05-15.pdf",
+  "supplemental_table3_2021-05-15.csv",
+  "table1_2021-05-15.csv",
+  "figureS4_2021-05-15.png",
+  "hypothetical_euc_localization_2021-05-15.png",
+  "table3_2021-05-15.csv",
+  "figureS3_2021-05-15.png",
+  "hypothetical_euc_sensitivity_2021-05-15.png",
+  "hypothetical_cd_2021-05-15.png"
+ ]
+}

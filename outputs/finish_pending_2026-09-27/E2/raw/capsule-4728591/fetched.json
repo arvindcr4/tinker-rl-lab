@@ -1,0 +1,24 @@
+{
+ "report_path": "/home/crab/environment/report.json",
+ "report": {
+  "From Table 2.1: Perceived Similarity Across Researcher Findings (Main), report the percieved similarity between researcher 2 and researcher 1.": "0.93",
+  "From Table 2.1: Perceived Similarity Across Researcher Findings (Main), report the percieved similarity between researcher 4 and researcher 5.": "0.64"
+ },
+ "report_raw": "{\n  \"From Table 2.1: Perceived Similarity Across Researcher Findings (Main), report the percieved similarity between researcher 2 and researcher 1.\": \"0.93\",\n  \"From Table 2.1: Perceived Similarity Across Researcher Findings (Main), report the percieved similarity between researcher 4 and researcher 5.\": \"0.64\"\n}\n",
+ "result_files": [
+  "netlit-replication.html",
+  "vignette-IR.html",
+  "experiment_results1-1.png",
+  "experiment_results4-1.png",
+  "experiment_results2-1.png",
+  "experiment_results5-1.png",
+  "experiment_results3-1.png",
+  "ggraph-subset-2.png",
+  "ggraph-betweenness-2.png",
+  "ggraph-betweenness-1.png",
+  "ggraph-edge-betweenness-1.png",
+  "ggraph-degree-total-1.png",
+  "ggraph-subset-1.png",
+  "ggraph-1.png"
+ ]
+}

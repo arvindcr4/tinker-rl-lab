@@ -1,0 +1,21 @@
+{
+ "capsule_id": "capsule-2804717",
+ "vm": "e2cb-2804717-93385",
+ "gpu_catalog": false,
+ "provisioning": "SPOT",
+ "started": 1790493385.02763,
+ "zone": "us-central1-a",
+ "machine": "e2-highmem-2",
+ "pro_attach": "",
+ "prep": {
+  "uses_gpu": false,
+  "registry_link": "registry.codeocean.com/published/cfee629b-a330-4421-aa18-54a43b3e259a:v1",
+  "gt_result_files": [
+   "ResultReproducibilityNotebook.nb.html",
+   "output"
+  ]
+ },
+ "status": "preempted",
+ "error": "e2cb-2804717-93385 status GONE",
+ "finished": 1790494121.172516
+}

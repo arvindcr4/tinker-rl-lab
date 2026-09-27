@@ -1,0 +1,10 @@
+{
+ "report_path": "/home/crab/environment/report.json",
+ "report": {
+  "fig Report the name of the patient group with the greater median concentricity.": "SCZ"
+ },
+ "report_raw": "{\"fig Report the name of the patient group with the greater median concentricity.\": \"SCZ\"}\n",
+ "result_files": [
+  "figure-2-3-4.pdf"
+ ]
+}

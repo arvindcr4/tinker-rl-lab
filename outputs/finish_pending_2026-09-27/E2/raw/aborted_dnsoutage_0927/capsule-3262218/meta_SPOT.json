@@ -1,0 +1,22 @@
+{
+ "capsule_id": "capsule-3262218",
+ "vm": "e2cb-3262218-78557",
+ "gpu_catalog": false,
+ "provisioning": "SPOT",
+ "started": 1790478557.1023731,
+ "zone": "us-central1-a",
+ "machine": "e2-highmem-2",
+ "pro_attach": "{\"_doc\": \"Content provided in json response is currently considered Experimental and may change\", \"_schema_version\": \"0.1\", \"account\": {\"created_at\": \"2026-09-27T01:48:37+00:00\", \"external_account_ids\": [{\"IDs\": [\"358208640342\"], \"origin\": \"GCP\"}], \"id\": \"aBviHSn4j5W059eC03A7eprxxl5Ipcdu_CcGxWZ-C2Yk",
+ "prep": {
+  "uses_gpu": false,
+  "registry_link": "registry.codeocean.com/published/809de649-ccef-439d-a867-562e5be6c687:v3",
+  "gt_result_files": [
+   "manuscript.pdf",
+   "manuscript.tex",
+   "output"
+  ]
+ },
+ "status": "preempted",
+ "error": "e2cb-3262218-78557 status GONE",
+ "finished": 1790479481.702776
+}

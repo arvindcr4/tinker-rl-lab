@@ -1,0 +1,30 @@
+{
+ "capsule_id": "capsule-1900704",
+ "vm": "e2cb-1900704-3509",
+ "gpu_catalog": false,
+ "provisioning": "SPOT",
+ "started": 1790503509.449749,
+ "zone": "us-central1-a",
+ "machine": "e2-highmem-2",
+ "pro_attach": "{\"_doc\": \"Content provided in json response is currently considered Experimental and may change\", \"_schema_version\": \"0.1\", \"account\": {\"created_at\": \"2026-09-27T01:48:37+00:00\", \"external_account_ids\": [{\"IDs\": [\"358208640342\"], \"origin\": \"GCP\"}], \"id\": \"aBviHSn4j5W059eC03A7eprxxl5Ipcdu_CcGxWZ-C2Yk",
+ "prep": {
+  "uses_gpu": false,
+  "registry_link": "registry.codeocean.com/published/4c71ff7e-1583-48ac-9364-4d100d56d8bb:v3",
+  "gt_result_files": [
+   "feature_set_selection_loss.png",
+   "feature_set_selection_acc.png",
+   "roc_curve.png",
+   "output"
+  ]
+ },
+ "agent": {
+  "end": "finish",
+  "turns": 34,
+  "agent_seconds": 480.6,
+  "prompt_tokens": 489880,
+  "completion_tokens": 4213,
+  "calls": 34
+ },
+ "status": "completed",
+ "finished": 1790504139.7174861
+}

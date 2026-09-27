@@ -1,0 +1,8 @@
+{
+ "report_path": "/home/crab/environment/report.json",
+ "report": {
+  "fig Report the name of the mutually exclusive model with the highest exclusivity score.": "MYC GRIN2A"
+ },
+ "report_raw": "{\"fig Report the name of the mutually exclusive model with the highest exclusivity score.\": \"MYC GRIN2A\"}\n",
+ "result_files": []
+}

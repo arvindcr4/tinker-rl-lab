@@ -1,0 +1,32 @@
+{
+ "capsule_id": "capsule-2816027",
+ "vm": "e2cb-2816027-77315",
+ "gpu_catalog": false,
+ "provisioning": "SPOT",
+ "started": 1790477315.059822,
+ "zone": "us-central1-a",
+ "machine": "e2-highmem-2",
+ "pro_attach": "{\"_doc\": \"Content provided in json response is currently considered Experimental and may change\", \"_schema_version\": \"0.1\", \"account\": {\"created_at\": \"2026-09-27T01:48:37+00:00\", \"external_account_ids\": [{\"IDs\": [\"358208640342\"], \"origin\": \"GCP\"}], \"id\": \"aBviHSn4j5W059eC03A7eprxxl5Ipcdu_CcGxWZ-C2Yk",
+ "prep": {
+  "uses_gpu": false,
+  "registry_link": "registry.codeocean.com/published/e122362d-9f1a-4b67-b14b-8e517269cfbd:v1",
+  "gt_result_files": [
+   "Figure 1C.png",
+   "Figure 6E.png",
+   "WCRC_Input.gct",
+   "DFCI_Input.gct",
+   "DFCI_score.gct",
+   "Figure 5E.png",
+   "Figure 1F.png",
+   "Figure 1D.png",
+   "Figure 1E.png",
+   "Figure 4A.png",
+   "WCRC_score.gct",
+   "Figure 5F.png",
+   "output"
+  ]
+ },
+ "status": "preempted",
+ "error": "e2cb-2816027-77315 status GONE",
+ "finished": 1790479619.9345129
+}

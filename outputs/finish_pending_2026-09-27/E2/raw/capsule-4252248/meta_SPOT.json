@@ -1,0 +1,43 @@
+{
+ "capsule_id": "capsule-4252248",
+ "vm": "e2cb-4252248-7893",
+ "gpu_catalog": false,
+ "provisioning": "SPOT",
+ "started": 1790507893.1649332,
+ "zone": "us-central1-a",
+ "machine": "e2-highmem-2",
+ "pro_attach": "{\"_doc\": \"Content provided in json response is currently considered Experimental and may change\", \"_schema_version\": \"0.1\", \"account\": {\"created_at\": \"2026-09-27T01:48:37+00:00\", \"external_account_ids\": [{\"IDs\": [\"358208640342\"], \"origin\": \"GCP\"}], \"id\": \"aBviHSn4j5W059eC03A7eprxxl5Ipcdu_CcGxWZ-C2Yk",
+ "prep": {
+  "uses_gpu": false,
+  "registry_link": "registry.codeocean.com/published/0012b3fb-3cf2-41fa-9b8d-6cc055b53ca2:v1",
+  "gt_result_files": [
+   "plot_network_ctrpv2_targchembl_exemp.pdf",
+   "ROC_ctrpv2_lincs_drug-target.pdf",
+   "clusterListRefined_combi_ctrpv2.csv",
+   "ROC_nci60_lincs_ATC(CHEMBL)-Zscore.pdf",
+   "communities_combi_nci60.csv",
+   "clusterListRefined_combi_nci60.csv",
+   "NEW_PR_ctrpv2_lincs_ATC(CHEMBL).pdf",
+   "gmt_targ_chembl.RData",
+   "Output",
+   "communities_combi_ctrpv2.csv",
+   "ROC_nci60_lincs_drug-target(UNIPROT).pdf",
+   "gmt_targ_uniprot.RData",
+   "gmt_targ_ctrpv.RData",
+   "ROC_ctrpv2_lincs_ATC(CHEMBL).pdf",
+   "NEW_PR_nci60_lincs_ATC(CHEMBL)-Zscore.pdf",
+   "NEW_PR_ctrpv2_lincs_drug-target.pdf",
+   "NEW_PR_nci60_lincs_drug-target(UNIPROT).pdf"
+  ]
+ },
+ "agent": {
+  "end": "finish",
+  "turns": 112,
+  "agent_seconds": 6127.7,
+  "prompt_tokens": 2148292,
+  "completion_tokens": 10454,
+  "calls": 112
+ },
+ "status": "completed",
+ "finished": 1790514162.107627
+}

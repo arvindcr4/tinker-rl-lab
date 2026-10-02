@@ -1,0 +1,8 @@
+claim	statistic	point_estimate	ci_low	ci_high	p_value	n
+H1_spearman_badge_vs_|dR|	spearman_rho	0.0	0.0	0.0		48
+H3_spearman_hamming_vs_|dR|	spearman_rho	0.2514				2000
+H3_spearman_hamming_vs_|dZVF|	spearman_rho	0.4073				2000
+H3_spearman_hamming_vs_|dPCD|	spearman_rho	0.3361				2000
+H3_close_vs_far_|dR|	mean_diff	-0.051865			0.0026	2000
+H3_close_vs_far_|dZVF|	mean_diff	-0.112523			0.0002	2000
+H3_close_vs_far_|dPCD|	mean_diff	-0.010924			0.0002	2000

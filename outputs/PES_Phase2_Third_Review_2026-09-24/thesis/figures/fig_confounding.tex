@@ -164,32 +164,19 @@
 \draw[panel] (0.2,-5.65) rectangle (8.4,-10.50);
 \node[ptitle] at (4.3,-5.95) {Same contrast, opposite answer};
 \node[psub, text width=7.70cm] at (4.3,-6.45)
-  {PPO vs.\ GRPO, ten runs per arm, one nominal configuration per family; whiskers are 95\% CIs};
+  {PPO vs.\ GRPO, one run per arm per family; descriptive only, no inferential statistic};
 
 \node[nte, text width=7.70cm, anchor=north west] at (0.40,-6.75)
-  {\textbf{Qwen2.5-0.5B}: $d{=}{-0.14}$, CI $[-1.02,\,0.74]$, $p{=}0.76$};
-\draw[dashed, draw=black!45, thick] (2.24,-7.25) -- (2.24,-7.55);
-\draw[thick] (1.91,-7.40) -- (2.48,-7.40);
-\draw[thick] (1.91,-7.33) -- (1.91,-7.47);
-\draw[thick] (2.48,-7.33) -- (2.48,-7.47);
-\filldraw[blocked] (2.20,-7.40) circle (2.4pt);
-
-\node[nte, text width=7.70cm, anchor=north west] at (0.40,-7.75)
-  {\textbf{Llama-3.1-8B-Instruct}: $d{=}12.75$, CI $[8.49,\,17.00]$, $p{<}0.001$};
-\draw[dashed, draw=black!45, thick] (2.24,-8.25) -- (2.24,-8.55);
-\draw[thick] (4.96,-8.40) -- (7.68,-8.40);
-\draw[thick] (4.96,-8.33) -- (4.96,-8.47);
-\draw[thick] (7.68,-8.33) -- (7.68,-8.47);
-\filldraw[complete] (6.32,-8.40) circle (2.4pt);
-
-\draw[thick] (1.60,-8.90) -- (8.00,-8.90);
-\foreach \vv/\xx in {0/2.24, 6/4.16, 12/6.08, 18/8.00}{
-  \draw[thick] (\xx,-8.86) -- (\xx,-8.94);
-  \node[font=\footnotesize, text=black!65] at (\xx,-9.14) {\vv};
-}
-\node[font=\footnotesize] at (4.3,-9.50) {Cohen's $d$ vs.\ GRPO (dashed $=$ no effect)};
-\node[nte, text width=7.70cm, anchor=north west] at (0.40,-9.72)
-  {Qwen: power $0.06$, MDE $1.25$; the only one of twenty tests not surviving Benjamini--Hochberg.};
+  {\textbf{Qwen3-8B (provenance conflict)}: the historical Welch $p{=}0.76$ is over the last ten
+   autocorrelated steps of one run per arm; the methods note marks the row
+   \emph{not estimable}, so no effect size is drawn. The arms also ran on
+   different back-ends (GRPO managed, PPO on Modal H100).};
+\node[nte, text width=7.70cm, anchor=north west] at (0.40,-8.70)
+  {\textbf{Llama-3.1-8B-Instruct}: the same table reports the contrast in the
+   opposite direction, again from one run per arm.};
+\node[nte, text width=7.70cm, anchor=north west] at (0.40,-9.85)
+  {The direction is not stable across model families, and neither row
+   supports an algorithm claim.};
 
 \end{tikzpicture}
 \end{document}

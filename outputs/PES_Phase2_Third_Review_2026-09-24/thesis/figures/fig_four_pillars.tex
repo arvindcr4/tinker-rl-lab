@@ -57,13 +57,13 @@
 \node[phdr, anchor=north] (h2) at (7.6,0) {Pillar 2 $\cdot$ signal starvation};
 \node[pvary, below=2.0mm of h2] (v2) {\textbf{VARY} --- the internal signal state of the batch: per-step Zero-Variance Fraction and its collapse decomposition, logged at every step rather than summarised after the run.};
 \node[pfix, below=1.6mm of v2]   (f2) {\textbf{FIX} --- the training stack is untouched; the diagnostic observes, it does not intervene.};
-\node[pres, below=1.6mm of f2]   (r2) {\textbf{Measured outcome.} $0.16$ mean ZVF on Qwen3-8B / GSM8K at $G=8$. In the nine-row method panel only vanilla GRPO is measured; the eight variance-mitigation rows are a declared simulation projection.};
+\node[pres, below=1.6mm of f2]   (r2) {\textbf{Measured outcome.} $0.16$ mean ZVF on Qwen3-8B / GSM8K at $G=8$. All nine rows of the method panel, vanilla GRPO included, are a declared simulation projection.};
 
 \path let \p1=(r1.south), \p2=(r2.south) in coordinate (row2) at (0,{min(\y1,\y2)-0.55cm});
 \node[phdr, anchor=north] (h3) at (row2) {Pillar 3 $\cdot$ group size};
 \node[pvary, below=2.0mm of h3] (v3) {\textbf{VARY} --- the group size $G \in \{2,4,8,16\}$ across seeds, holding model, data, reward and schedule fixed.};
 \node[pfix, below=1.6mm of v3]   (f3) {\textbf{FIX} --- model, data, reward grader, learning-rate schedule and evaluation split.};
-\node[pres, below=1.6mm of f3]   (r3) {\textbf{Measured outcome.} Mean ZVF falls $0.838 \to 0.631$ ($G=2 \to 16$); held-out retention is $\approx 1.00$.};
+\node[pres, below=1.6mm of f3]   (r3) {\textbf{Measured outcome.} Mean ZVF falls $0.838 \to 0.631$ ($G=2 \to 16$); the training-reward ratio to $G=2$ is $\approx 1.00$, equivalent up to $G=8$ but not established at $G=16$.};
 
 \node[phdr, anchor=north] (h4) at (row2 -| 7.6,0) {Pillar 4 $\cdot$ held-out behaviour};
 \node[pvary, below=2.0mm of h4] (v4) {\textbf{VARY} --- the method, Dr.~GRPO versus GRPO, compared pre-RL against post-RL on data the training loop never saw.};
@@ -81,7 +81,7 @@
    $\{42,123,456,789,1024\}$; one shared reward grader and one shared decoding
    path across back-ends; Welch / Mann--Whitney, Cohen's $d$ with Hedges--Olkin
    intervals, $95\%$ bootstrap CIs ($10{,}000$ resamples) and a declared
-   multiple-comparison family, all fixed in advance of the comparisons they support.};
+   multiple-comparison family, declared but not pre-registered.};
 
 \end{tikzpicture}
 \end{document}

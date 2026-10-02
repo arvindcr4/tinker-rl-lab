@@ -66,7 +66,7 @@
 \node[rqchip] at (1.67,3.78) {P3};
 \node[rqt] at (2.10,3.78) {Group size, contrast, DPO bridge};
 \node[rqq, text width=6.60cm] at (1.43,3.50) {How do collapse, reward, held-out gain and token cost move with group size $G$ --- and what does $G$ buy?};
-\node[stc, text width=6.50cm] at (1.43,1.36) {\textbf{complete} $\cdot$ under saturation, retention $G{=}2$ vs.\ $G{=}16$ is $1.00$; SNR is $52\%$ of the $\sqrt{G}$ ideal};
+\node[stc, text width=6.50cm] at (1.43,1.36) {\textbf{complete} $\cdot$ under saturation, training-reward ratio $\approx 1.00$ across $G$ (equivalence to $G{=}8$ only); SNR is $52\%$ of the $\sqrt{G}$ ideal};
 \fill[black!2] (-8.4,0.92) rectangle (8.4,-2.18);
 \fill[pesblue!8] (-8.4,0.92) rectangle (-6.2,-2.18);
 \draw[black!35, thick] (-8.4,0.92) rectangle (8.4,-2.18);
@@ -134,17 +134,17 @@
 \node[pnote, text width=5.20cm] at (-8.20,-13.70)
   {\textbf{Established}\\[3pt]
    $\bullet$ The ZVF is measurable from stored reward tensors and reproduces: $0.130$, $0.190$, $0.155$.\\[2pt]
-   $\bullet$ Under saturation, retention is flat in $G$: $G{=}2$ and $G{=}16$ retain identically.\\[2pt]
-   $\bullet$ A seven-field manifest alone is enough to flag a label-flip risk.};
+   $\bullet$ Under saturation, the training-reward ratio is equivalent to $G{=}2$ up to $G{=}8$; equivalence is not established at $G{=}16$ ($p{=}0.056$).\\[2pt]
+   $\bullet$ A seven-field manifest suffices to flag label-flip risk.};
 \node[pnote, text width=5.20cm] at (-2.65,-13.70)
   {\textbf{Declared null}\\[3pt]
    $\bullet$ P1 recovers no reliable cross-scale slope and no identifiable saturation exponent.\\[2pt]
    $\bullet$ P4 finds GRPO and Dr.\ GRPO held-out gains indistinguishable.\\[2pt]
-   $\bullet$ Its error-bar audit returns three null verdicts and four decisive, none suggestive.};
+   $\bullet$ Its error-bar audit, re-graded, returns no decisive verdict and one suggestive.};
 \node[pnote, text width=5.20cm] at (2.90,-13.70)
   {\textbf{Not claimed}\\[3pt]
    $\bullet$ P7's controller is audited but not joined to P5's attribution programme.\\[2pt]
    $\bullet$ P8's two AUCs are not a like-for-like ranking: the splits differ by construction.\\[2pt]
-   $\bullet$ P2's diagnostic-to-outcome association is real but weak.};
+   $\bullet$ P2's diagnostic-to-outcome association is not distinguishable from zero ($\rho{=}0.27$, CI $[-0.37,\,0.88]$).};
 \end{tikzpicture}
 \end{document}

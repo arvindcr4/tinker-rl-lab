@@ -34,7 +34,7 @@ The output contract is uniform. `AuditResult.metric_line()` emits `METRIC <name>
 
 ## B.6 The deterministic ledger check
 
-Where the suite above audits the submission package's internal consistency, a second instrument audits the campaign's reported figures. `outputs/verification/LEDGER_CODE_CHECK_2026-09-19.json`, under schema `ledger-code-check-v1`, records eleven checks of which eleven passed and none failed. Each recomputes a claim from the underlying evidence rather than trusting a summary of it, and the four classes of check prove four different things.
+Where the suite above audits the submission package's internal consistency, a second instrument audits the campaign's reported figures. `outputs/verification/LEDGER_CODE_CHECK_2026-09-19.json`, under schema `ledger-code-check-v1`, records eleven checks of which eleven passed and none failed. They cover E1, E8 coverage, E9, E11 and E14 counts and hashes and the lost-source probes; they do not cover the E10 score, E8 accuracy, the E2, E4, E5 and E7 lanes or anything recorded after 19 September, and the E14 check confirmed the official scorer's 4,426-row denominator rather than the 4,428-row denominator this report uses. Each recomputes a claim from the underlying evidence rather than trusting a summary of it, and the four classes of check prove four different things.
 
 | Class of check | Specific checks | What it proves |
 |---|---|---|

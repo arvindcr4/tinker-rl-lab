@@ -20,7 +20,7 @@
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{calc}          % required by pandoc's table column-width arithmetic
-\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash\hspace{0pt}}p{#1}}
 \usepackage{xcolor}
 \definecolor{pesmaroon}{RGB}{150,30,40}
 \usepackage{enumitem}
@@ -451,29 +451,30 @@ label-flip risk between two runs from their records alone.
 
 \textbf{(3) Calibrated negative results.} No reliable scaling law is recovered
 from reward curves across twelve fitted anchors. A same-stack PPO/GRPO
-contrast (0.992 against 0.990, $p = 0.374$, five seeds) and a group-size sweep
-find no detectable difference, but both run on a saturated task and establish
-neither equivalence nor an optimum. ZVF does not predict held-out accuracy
+contrast (0.992 against 0.990, $p = 0.374$, five seeds) and a group-size sweep find no detectable difference, but both run on a saturated task and establish
+neither equivalence nor an optimum. On an unsaturated GSM8K rerun, GRPO beats an
+untuned-critic PPO by 5.0 points (95\% CI $[1.5, 8.5]$); $G = 2$ and $G = 8$
+stay indistinguishable. ZVF does not predict held-out accuracy
 ($\rho = 0.27$, 95\% CI $[-0.37, 0.88]$). An adaptive group-size controller
 derived from ZVF saves no prompts in counterfactual simulation, because 92\% of its escalations fall on
 groups that are already all-correct.
 
 \textbf{(4) An evaluation-governance protocol.} One lightly trained actor
 (Qwen3.6-35B-A3B with a LoRA adapter, 40 training steps) is evaluated on
-fourteen held-out suites under native graders at pinned revisions, with
+fourteen suites outside its training data under native graders at pinned revisions, with
 receipts, a no-pooling rule and a per-lane serving audit that traced a
 zero score to a serving defect. Complete scopes include VerilogEval
 ($129/312 = 41.35\%$), LAB-Bench ($0.2288$) and AgentDojo benign utility
 ($88/97$); six replacement scopes completed on 27 September 2026
 (Chapter~8, Table~8.C); seven original contracts remain externally blocked. A
 paired trained-versus-base rerun on 5--151 identical items per lane finds no
-significant difference in any lane, which at those sizes is inconclusive. No
+significant difference in any lane (inconclusive at those sizes). No
 claim of improvement over any baseline is made.
 
 \vspace{0.25in}
 \noindent\textbf{Keywords:} GRPO, RLVR, zero-variance fraction, signal
 starvation, stack-conditioned results, benchmark evaluation, reproducibility,
-held-out evaluation, attribution.
+evaluation governance, attribution.
 
 %---------------------------------------------------------------------
 \tableofcontents
@@ -634,7 +635,7 @@ against the ZVF of its own regime (Figure~\ref{fig:confounding}).
 
 \fig{fig_confounding}
 {The confounding problem this work addresses}
-{The confounding problem this work addresses. A single reported reward figure sits on top of an unstated stack; without fixing and reporting that stack the number is not attributable to the method under test. Top right: of the four frameworks in the nominal configuration only Tinker and TRL were run; veRL and OpenRLHF were not installed in the sandbox and have no measurement. The $17\times$ gap between the two measured stacks is an under-specification exhibit, not a clean back-end-only effect, because the managed stack also pinned a different base checkpoint (Qwen3-8B-Base vs.\ Qwen3-8B). Bottom left: one-way $\eta^2$ shares over 42 reported experiments; they are confounded with one another and with back-end, reward implementation, hardware and task, so they do not sum to one. Bottom right: Cohen's $d$ with 95\% CIs from the Phase-1 statistical summary; the Qwen arms did not share a back-end (GRPO on the managed API, PPO on a Modal H100 cluster), so no directional Qwen algorithm claim is made.}
+{The confounding problem this work addresses. A single reported reward figure sits on top of an unstated stack; without fixing and reporting that stack the number is not attributable to the method under test. Top right: of the four frameworks in the nominal configuration only Tinker and TRL were run; veRL and OpenRLHF were not installed in the sandbox and have no measurement. The $17\times$ gap between the two measured stacks is an under-specification exhibit, not a clean back-end-only effect, because the managed stack also pinned a different base checkpoint (Qwen3-8B-Base vs.\ Qwen3-8B). Bottom left: one-way $\eta^2$ shares over 42 reported experiments; they are confounded with one another and with back-end, reward implementation, hardware and task, so they do not sum to one. Bottom right: the PPO-versus-GRPO rows of the Phase-1 table, one run per arm, shown without inferential statistics; the Qwen arms did not share a back-end (GRPO on the managed API, PPO on a Modal H100 cluster), so no directional Qwen algorithm claim is made.}
 {fig:confounding}
 
 
@@ -684,8 +685,12 @@ generator used in training rather than a disjoint split. At that ceiling
 a null cannot separate ``no effect'' from ``no headroom'', so the result
 is that no difference was detectable on a saturated task, not that the
 estimators are equivalent; a paired TOST at a ±0.005 margin gives p =
-0.10 (Table 4.2 gives the exact loss form of both arms). The variant
-audit (not to be confused with campaign lane E1) takes four GRPO-family
+0.10 (Table 4.2 gives the exact loss form of both arms). Rerun on the
+unsaturated Qwen2.5-1.5B GSM8K-CoT configuration with a disjoint test
+split, the same contrast does separate: GRPO gains +4.5 points and a
+minimal learned-critic PPO does not train, a post-training gap of +0.050
+{[}+0.015, +0.085{]} over five paired seeds (§6.5.5). The variant audit
+(not to be confused with campaign lane E1) takes four GRPO-family
 variants (DAPO, GSPO, Dr.~GRPO, AERO) plus the GRPO reference, runs five
 arms across eight paired seeds for 40 units at a frozen stack
 fingerprint, and evaluates on 500 held-out GSM8K examples per unit.
@@ -855,7 +860,9 @@ one-line answer to each.
   group-size and arithmetic GRPO/Dr.~GRPO contrasts were all run on a
   saturated task at evaluation accuracy near 0.99, and the two
   unsaturated GRPO/Dr.~GRPO comparisons (§1.2, §6.5.4) are inconclusive
-  and establish no equivalence (§9.3).
+  and establish no equivalence (§9.3). A same-stack rerun on an
+  unsaturated task (§6.5.5) separates GRPO from a minimal learned-critic
+  PPO but not G = 2 from G = 8.
 \item
   \textbf{RQ3.} Can a machine-readable stack manifest flag label-flip
   risk between two runs from their records alone? Answered by §7.2
@@ -863,7 +870,7 @@ one-line answer to each.
 \item
   \textbf{RQ4.} What does a governance-first evaluation of one trained
   actor yield, and what can it not establish? Answered by Table C.3 and
-  Tables 9.A and 9.B.
+  Tables 8.A and 8.B.
 \end{itemize}
 
 \textbf{Contributions.} Measured against these objectives, the thesis
@@ -888,17 +895,18 @@ for one of them.
 \item
   \textbf{Calibrated negative results.} No reliable scaling law is
   recovered from reward curves; the same-stack PPO/GRPO and group-size
-  contrasts are nulls on a saturated task; ZVF does not predict held-out
-  accuracy; and the ZVF-derived controller saves no prompts in
-  counterfactual simulation. Each is reported with the power limitation
-  that bounds it (Chapters 6--7).
+  contrasts are nulls on a saturated task, and on an unsaturated rerun
+  only the PPO/GRPO gap appears, from an untuned critic; ZVF does not
+  predict held-out accuracy; and the ZVF-derived controller saves no
+  prompts in counterfactual simulation. Each is reported with the power
+  limitation that bounds it (Chapters 6--7).
 \item
   \textbf{An evaluation-governance protocol.} Native graders at pinned
   revisions, per-lane receipts, a no-pooling rule, a per-lane serving
   audit and a paired same-engine trained-versus-base design, exercised
-  on one lightly trained actor across fourteen held-out suites (Chapter
-  8). The contribution is the protocol and the record it produces, not
-  the actor's scores.
+  on one lightly trained actor across fourteen suites outside its
+  training data (Chapter 8). The contribution is the protocol and the
+  record it produces, not the actor's scores.
 \end{enumerate}
 
 \section{Scope and Non-Goals}\label{scope-and-non-goals}
@@ -1096,11 +1104,11 @@ figures are kept in Table C.3.
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}@{}}
 \caption{Canonical numbers. ``results/'' is
 \protect\longtok{platform\_hybrid/experiments/results/}; ``sections/'',
 ``archive/'' and ``neurips\_\allowbreak{}2026\_\allowbreak{}variants/'' are under
@@ -1163,6 +1171,12 @@ Same-stack PPO vs GRPO & GRPO 0.990, PPO 0.992; paired Δ = −0.002, p =
 0.374 & Qwen2.5-0.5B, two-digit addition, G = 8 (PPO: 128 prompts per
 step) & 5 paired seeds × 200 fresh draws from the training generator &
 results/samestack\_\allowbreak{}ppo\_\allowbreak{}grpo.json \\
+Same-stack GRPO vs PPO, unsaturated & post-training accuracy GRPO (G =
+8) 0.245, GRPO (G = 2) 0.250, PPO 0.195; GRPO G8 − PPO +0.050 {[}+0.015,
++0.085{]}, p = 0.016; G8 − G2 −0.005 {[}−0.038, +0.028{]} &
+Qwen2.5-1.5B-Instruct, GSM8K-CoT, 200-token cap, 64 generations per
+step, 30 steps & 5 paired seeds × 200 GSM8K test items &
+results/samestack\_\allowbreak{}gsm8k\_\allowbreak{}cot.json \\
 Group-size sweep, evaluation accuracy & 0.982 / 0.988 / 0.990 / 0.978 at
 G = 2 / 4 / 8 / 16 & Qwen2.5-0.5B, two-digit addition & 3 seeds × 200
 fresh draws & results/groupsize\_\allowbreak{}zvf\_\allowbreak{}sweep.tsv \\
@@ -1470,13 +1484,13 @@ audit that counts all logged runs and is therefore a superset of the
 benchmark's 70+ core training runs. Because \(h_G(p)\) is symmetric
 under \(p \leftrightarrow 1-p\), ZVF assigns the same value to a
 mastered prompt and to a hopeless one, producing the U-shape measured
-across seven models; and because ZVF is an existence statistic, adding
-reward jitter of order 10⁻⁴ drives measured ZVF to zero while shifting
-the measured within-group contrast by less than 10⁻⁶. The
-pairwise-contrast density is proposed as the magnitude-aware
-replacement, and the toy-scale validation reports a gradient-norm
-correlation of corr = +0.71, marked directional only. The word
-\emph{controller} in that work names the implemented policy, not an
+across six model labels in a 368-run audit; and because ZVF is an
+existence statistic, adding reward jitter of order 10⁻⁴ drives measured
+ZVF to zero while shifting the measured within-group contrast by less
+than 10⁻⁶. The pairwise-contrast density is proposed as the
+magnitude-aware replacement, and the toy-scale validation reports a
+gradient-norm correlation of corr = +0.71, marked directional only. The
+word \emph{controller} in that work names the implemented policy, not an
 established improvement: the decisive static-G = 16 matched-token
 bakeoff remains unrun.
 
@@ -1792,9 +1806,9 @@ evidence (Figure~\ref{fig:questions}).
 \textbf{Positioning of the P1--P8 studies against closest prior art.}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
 \caption{Positioning of the eight portfolio studies (P1--P8) against
 closest prior art and the narrowed axis each claims.}\tabularnewline
 \toprule\noalign{}
@@ -1866,12 +1880,12 @@ discontinued in July 2025.
 The Semester 4 evaluation campaign extends this positioning from method
 comparison to benchmark practice. Rather than adding one more
 leaderboard number, it evaluates a single trained actor against fourteen
-held-out agentic and reasoning suites, each through its own native
-grader at a pinned revision, under receipt, budget and decontamination
-controls, and it reports every lane's terminal state rather than a
-cross-suite aggregate. Its results are in Chapter 8; Table C.3 gives
-each lane's scope and status. One finding bears directly on the
-benchmark-practice literature: E4's mean reward of 0.0 across 100
+agentic and reasoning suites outside its training data, each through its
+own native grader at a pinned revision, under receipt, budget and
+decontamination controls, and it reports every lane's terminal state
+rather than a cross-suite aggregate. Its results are in Chapter 8; Table
+C.3 gives each lane's scope and status. One finding bears directly on
+the benchmark-practice literature: E4's mean reward of 0.0 across 100
 base-model trials was caused not by the model but by a serving bridge
 that passed no stop sequences (Section 8.5), which is exactly the kind
 of unreported stack detail this positioning argues must be recorded.
@@ -1984,9 +1998,9 @@ artefact that implements it and the test that verifies it.
 \textbf{Functional requirements.}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
 \caption{Functional requirements. Sources: the Phase-1 report is
 \protect\longtok{platform\_tinker/reports/esa\_phase1/Phase1\_\allowbreak{}Project\_\allowbreak{}Report\_\allowbreak{}ZVF.tex};
 other files are under \protect\longtok{platform\_hybrid/},
@@ -2087,9 +2101,9 @@ runs the audit suite, and refuses a package built with audits skipped &
 \textbf{Non-functional requirements.}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
 \caption{Non-functional requirements.}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
@@ -2243,9 +2257,9 @@ Matrix}\label{requirements-traceability-matrix}
 \textbf{Requirements traceability matrix.}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
 \caption{Requirements traceability matrix: each functional requirement
 mapped to the artefacts that implement it and the audit check that
 verifies it.}\tabularnewline
@@ -2345,9 +2359,9 @@ any post-hoc artefact.
 \textbf{Hardware requirements and their status.}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
 \caption{Hardware requirements and their status.}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
@@ -2515,7 +2529,7 @@ recorded as blocked rather than written around (Figure~\ref{fig:pillars}).
 
 \fig{fig_four_pillars}
 {The four de-confound pillars}
-{The four de-confound pillars. Each holds the whole stack fixed and varies exactly one factor. In Pillar~2 the nine-row method panel measures vanilla GRPO only; its eight variance-mitigation rows are a declared simulation projection (Chapter~6).}
+{The four de-confound pillars. Each holds the whole stack fixed and varies exactly one factor. In Pillar~2 all nine rows of the method panel, vanilla GRPO included, are a declared simulation projection (Chapter~6).}
 {fig:pillars}
 
 
@@ -2570,9 +2584,9 @@ stack fixed while varying one factor:
 \textbf{The four de-confound pillars.}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
 \caption{The four de-confound pillars, the single factor each isolates,
 and the design that holds the remainder fixed.}\tabularnewline
 \toprule\noalign{}
@@ -2812,17 +2826,17 @@ therefore applies to none of the measured configurations (Figures~\ref{fig:zvfde
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 22\tabcolsep) * \real{0.0909}}@{}}
 \caption{Loss form by study, read from the runner code. M =
 \protect\longtok{platform\_hybrid/experiments/modal/}, T =
 \protect\longtok{platform\_hybrid/experiments/tinker-runs/}, C =
@@ -3151,8 +3165,8 @@ active P8 slot in the current report roster is an exploratory workshop
 artifact. No result from P8 is used anywhere in this thesis to support
 an RL claim.
 
-\section{The Design of the E1--E14 Held-Out Evaluation
-Campaign}\label{the-design-of-the-e1e14-held-out-evaluation-campaign}
+\section{The Design of the E1--E14 Evaluation
+Campaign}\label{the-design-of-the-e1e14-evaluation-campaign}
 
 The evaluation campaign is the applied half of the programme and is
 deliberately narrow in a way that makes its results interpretable: it
@@ -3178,7 +3192,7 @@ model-comparison claims at all, and it makes none (Figure~\ref{fig:campaign}).
 
 \fig{fig_campaign_design}
 {Design of the E1--E14 native-benchmark evaluation campaign}
-{Design of the E1--E14 native-benchmark evaluation campaign. One frozen actor serves all fourteen lanes, and each suite is graded by its own native evaluator at a pinned revision. Each lane lists its original-contract suite and, where one exists, its replacement scope side by side; Figure~\ref{fig:lanes} names the replacement scope where one exists. Figures and terminal states come from the 2026-09-19 ledger (\longtok{E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md} and \texttt{finish/Pending\_Experiments.md}; 11/11 deterministic checks pass), updated with the six replacement scopes scored on 2026-09-27 ($\star$; \longtok{finish\_\allowbreak{}pending\_\allowbreak{}2026-09-27/<lane>/result.json}), which are separate receipts and are never pooled with a lane's original-contract figure. E14's $2271/4428 = 51.29\%$ counts the 2 unjudged rows as failures; the official scorer reports $51.31\% = 2271/4426$ on the judged rows.}
+{Design of the E1--E14 native-benchmark evaluation campaign. One frozen actor serves all fourteen lanes, and each suite is graded by its own native evaluator at a pinned revision. Each lane lists its original-contract suite and, where one exists, its replacement scope side by side; Figure~\ref{fig:lanes} names the replacement scope where one exists. Figures and terminal states come from the 2026-09-19 ledger (\longtok{E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md} and \texttt{finish/Pending\_Experiments.md}; eleven named deterministic checks pass, scope in App.~B), updated with the six replacement scopes scored on 2026-09-27 ($\star$; \longtok{finish\_\allowbreak{}pending\_\allowbreak{}2026-09-27/<lane>/result.json}), which are separate receipts and are never pooled with a lane's original-contract figure. E14's $2271/4428 = 51.29\%$ counts the 2 unjudged rows as failures; the official scorer reports $51.31\% = 2271/4426$ on the judged rows.}
 {fig:campaign}
 
 
@@ -3412,7 +3426,7 @@ final phase of the project (Figure~\ref{fig:receipts}).
 
 \fig{fig_receipt_pipeline}
 {The evidence chain from sealed request through execution and native grading to a deterministic ledger check}
-{The evidence chain from sealed request through execution and native grading to a deterministic ledger check. A break anywhere in the chain means no number is reported for that lane. Upper row: the chain; the 11/11 PASS badge is the 2026-09-19 deterministic ledger check (\longtok{LEDGER\_\allowbreak{}CODE\_\allowbreak{}CHECK\_\allowbreak{}2026-09-19.json}). Lower row: the E1 wave-10 recovery, where the lost execution source stops the chain.}
+{The evidence chain from sealed request through execution and native grading to a deterministic ledger check. A break anywhere in the chain means no number is reported for that lane. Upper row: the chain; the 11/11 PASS badge is the 2026-09-19 deterministic ledger check of eleven named claims, not of every figure (\longtok{LEDGER\_\allowbreak{}CODE\_\allowbreak{}CHECK\_\allowbreak{}2026-09-19.json}). Lower row: the E1 wave-10 recovery, where the lost execution source stops the chain.}
 {fig:receipts}
 
 
@@ -3795,8 +3809,8 @@ adapter nor accepts a package as a benchmark result (Figure~\ref{fig:harness}).
 
 The results the gate classifies are recorded in
 \longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md}, verified by
-eleven of eleven deterministic checks on 2026-09-19 and bound to
-surviving receipts. The single Tinker-trained actor is base
+eleven named deterministic checks on 2026-09-19 (scope in Appendix B)
+and bound to surviving receipts. The single Tinker-trained actor is base
 \texttt{Qwen/Qwen3.6-35B-A3B} at commit \texttt{995ad96e…} with adapter
 \longtok{arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1…}
 at commit \texttt{64444133…}, in bfloat16. The document's opening
@@ -3882,11 +3896,11 @@ value is that their safety properties are testable offline.
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}@{}}
 \caption{The four recovery re-implementations. Schedule offsets, hashes,
 reservation identifiers and HMAC domain strings are recorded in the
 cited source files rather than repeated here.}\tabularnewline
@@ -4140,18 +4154,21 @@ Three cross-scale statistics were computed against log₁₀ N: the slope of
 the mean reward, the slope of the peak reward, and the slope of the
 reward variance. None is distinguishable from zero. The mean-reward
 slope is −0.024 per decade with a bootstrap mean of −0.117 and a 95\%
-interval of {[}−0.796, +0.313{]}, Spearman ρ = −0.07; the peak-reward
-slope is +0.037 with a bootstrap mean of −0.010 and an interval of
-{[}−0.623, +0.197{]}, ρ = +0.22; the variance slope is −0.002 with an
-interval of {[}−0.063, +0.027{]}, ρ = −0.14. A residual-resampling
-bootstrap with 1,000 draws applied to the Nemotron anchor returns R̄\_max
-= 0.310, λ̄ = 3.26, P(λ ≥ 9.5) = 0.277 and a t₈₀ of 17.87 steps with an
-interval of {[}0.16, 161.4{]} --- an interval wide enough to contain
-almost any behavioural claim. A 70/30 anchor holdout returned slope
-estimates of +0.0000, +0.0000, −0.0000, −0.0000 and +0.0016 across the
-five holdout configurations. Fitting a power law over the full
-twelve-anchor set from 4B to 1T returns p ≥ 0.46 for every exponent
-tested.
+interval of {[}−0.796, +0.313{]}, Spearman ρ = −0.07 (a later
+statistical audit,
+\longtok{results/berkeley/adding\_\allowbreak{}error\_\allowbreak{}bars\_\allowbreak{}summary.json},
+re-bootstraps the same anchors to a slope of −0.023 and {[}−0.796,
++0.323{]}; neither interval excludes zero); the peak-reward slope is
++0.037 with a bootstrap mean of −0.010 and an interval of {[}−0.623,
++0.197{]}, ρ = +0.22; the variance slope is −0.002 with an interval of
+{[}−0.063, +0.027{]}, ρ = −0.14. A residual-resampling bootstrap with
+1,000 draws applied to the Nemotron anchor returns R̄\_max = 0.310, λ̄ =
+3.26, P(λ ≥ 9.5) = 0.277 and a t₈₀ of 17.87 steps with an interval of
+{[}0.16, 161.4{]} --- an interval wide enough to contain almost any
+behavioural claim. A 70/30 anchor holdout returned slope estimates of
++0.0000, +0.0000, −0.0000, −0.0000 and +0.0016 across the five holdout
+configurations. Fitting a power law over the full twelve-anchor set from
+4B to 1T returns p ≥ 0.46 for every exponent tested.
 
 Two model-selection checks were run to see whether the saturation story
 was at least the best available description of the traces. Fitting
@@ -5012,6 +5029,99 @@ single-benchmark held-out evaluation, a single-seed top-10-checkpoint
 frontier comparison, weak length identifiability, and marginal paired
 tests.
 
+\subsection{Same-stack rerun on the unsaturated
+configuration}\label{same-stack-rerun-on-the-unsaturated-configuration}
+
+The same-stack PPO/GRPO and group-size nulls of §6.2.3 and §6.4.1 sit at
+evaluation accuracy near 0.99, where a null cannot separate no effect
+from no headroom. To test the contrasts where headroom exists, they were
+rerun on 2 October 2026 on the configuration of §6.5.4:
+Qwen2.5-1.5B-Instruct, GSM8K with a boxed-answer correctness reward and
+a 200-token chain-of-thought cap, LoRA rank 16 on the attention
+projections, learning rate 1 × 10⁻⁵, 30 steps, two inner epochs of the
+clipped surrogate with per-response length normalisation, on one A10G
+per run. Three arms share that stack and a fixed budget of 64
+generations per step and differ only in how the advantage is formed:
+GRPO with G = 8 (8 prompts × 8 completions), GRPO with G = 2 (32 × 2),
+and PPO with a learned value head on the prompt-end hidden state (64 ×
+1, value loss 0.5 × MSE, batch-normalised advantage). Each run evaluates
+the same 200 GSM8K \emph{test} items greedily before and after training,
+so the evaluation set is disjoint from the training split. Five paired
+seeds were run per arm; the unit is the seed, and the analysis,
+including a ±2-point equivalence margin, was fixed in the script before
+launch.
+
+\textbf{Same-stack rerun on Qwen2.5-1.5B-Instruct GSM8K-CoT, five paired
+seeds, 200 test items.}
+
+\begingroup\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}@{}}
+\caption{Same-stack rerun on Qwen2.5-1.5B-Instruct GSM8K-CoT;
+paired-\(t\) intervals over five seeds. Pre-training accuracy is
+identical across seeds because evaluation is greedy on a fixed item
+set.}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Arm
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Accuracy before → after
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Change (95\% CI)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Last-10 training reward
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Arm
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Accuracy before → after
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Change (95\% CI)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Last-10 training reward
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+GRPO, G = 8 & 0.200 → 0.245 & +0.045 {[}+0.033, +0.057{]} & 0.270 \\
+GRPO, G = 2 & 0.200 → 0.250 & +0.050 {[}+0.026, +0.074{]} & 0.275 \\
+PPO, learned value head & 0.200 → 0.195 & −0.005 {[}−0.033, +0.023{]} &
+0.196 \\
+\end{longtable}
+\endgroup
+
+Both GRPO arms improve on every seed, which reproduces the +6.2-point
+GRPO gain of §6.5.4 at a similar size. The PPO arm does not improve: its
+training reward drifts down and its post-training accuracy is
+indistinguishable from the starting point. After training, GRPO at G = 8
+exceeds PPO by +0.050 {[}+0.015, +0.085{]} (paired \(t\), p = 0.016),
+and the difference is positive for all five seeds, which puts the exact
+two-sided sign-flip p at its n = 5 floor of 0.0625. GRPO at G = 8 and at
+G = 2 differ by −0.005 {[}−0.038, +0.028{]} (p = 0.69); that interval is
+wider than the ±0.02 margin, so equivalence is not established either
+(TOST p = 0.13).
+
+The PPO result has a narrow reading. The PPO arm is the minimal one that
+matches the GRPO arms' stack: a linear value head trained from zero for
+30 steps at the policy's learning rate, with no critic warm-up, no
+generalised advantage estimation and no tuning. Its advantage is
+therefore close to batch-centred reward with a noisy baseline, so what
+the contrast shows is that on this fixed stack and budget the
+group-relative baseline trained the policy and this learned-critic
+baseline did not. It is a single-configuration result with five seeds,
+not a verdict on PPO with a tuned critic, and the 64-prompt PPO batch
+also sees eight times as many distinct prompts per step as GRPO at G =
+8. For group size, the rerun removes the saturation objection and still
+finds no detectable effect between G = 2 and G = 8 at this budget,
+without establishing that none exists.
+
 \section{Cross-Pillar Observations and
 Limitations}\label{cross-pillar-observations-and-limitations}
 
@@ -5039,10 +5149,12 @@ empirical conclusion is therefore conditional on saturation: on a 0.5B
 arithmetic task at evaluation accuracy near 0.99, no algorithm-label
 effect was detectable, which cannot distinguish ``no effect'' from ``no
 headroom''; the sampling configuration is the more plausible lever but
-was not shown to matter at this seed budget. The unsaturated
-Qwen2.5-1.5B GSM8K-CoT configuration, where pre-to-post gains of 5 to 6
-points were measured, is where these contrasts would need to be rerun
-(§9.4).
+was not shown to matter at this seed budget. Rerun on the unsaturated
+Qwen2.5-1.5B GSM8K-CoT configuration (§6.5.5), the picture changes for
+one contrast: GRPO at G = 8 exceeds a minimal learned-critic PPO by
++0.050 {[}+0.015, +0.085{]}, because that PPO arm does not train at all
+on this budget, while G = 2 and G = 8 remain indistinguishable without
+being shown equivalent.
 
 Second, the diagnostics and interventions are less prescriptive than
 their motivating literature suggests, and the project says so. ZVF
@@ -5084,10 +5196,10 @@ availability and sampling configuration are the more plausible levers,
 although they were not shown to be significant at the seed budgets used,
 and whose most widely repeated specific failure mode --- length
 inflation --- is absent in the regimes where it was tested directly and
-present in only a minority of the roster runs where it was measured
-descriptively. That is a narrower and more cautious set of conclusions
-than the P1--P4 internal reports set out to establish, and the chapter
-reports it as such.
+is not established by the roster flag, which is not specific to length.
+That is a narrower and more cautious set of conclusions than the P1--P4
+internal reports set out to establish, and the chapter reports it as
+such.
 
 
 
@@ -5250,15 +5362,22 @@ with 5.3\% seed residual and an algorithm term of zero by construction.
 The schema is not the binding constraint; the corpus is. On the live
 corpus the fingerprint over the seven manifest fields carries 11.4 bits
 in total, four fields carry exactly zero, and Hamming distance over the
-fingerprint predicts the absolute difference in ZVF (Spearman ρ =
-+0.529, p ≤ 10⁻³), PCD (ρ = +0.541, p ≤ 10⁻³) and mean reward (ρ =
-+0.251, p = 0.003), while the badge itself is constant across cells and
-cannot discriminate seed-pair dispersion (ρ = +0.000, n = 48 pairs). The
-unit of these Hamming-distance correlations is the pair of cells. Pairs
-that share a cell are not independent, so the naive p-values overstate
-the evidence. A Mantel-type permutation test over cell labels would be
-needed, and none was run, so the ρ values are reported descriptively and
-their p-values are not relied on.
+fingerprint is associated with the absolute difference in ZVF (Spearman
+ρ = +0.44), PCD (ρ = +0.39) and mean reward (ρ = +0.28) across all 4,753
+cell pairs, while the badge itself is constant across cells and cannot
+discriminate seed-pair dispersion (ρ = +0.000, n = 48 pairs). Because
+pairs that share a cell are not independent, significance comes from a
+Mantel test that permutes cell labels jointly on the distance matrix
+(9,999 permutations): p \textless{} 10⁻³ for all three outcomes, and the
+association holds when seed replicates are averaged into 50
+configurations (ρ = +0.47, +0.43, +0.33). The Hamming distance takes
+only four values and is in effect a function of group size and task, so
+the test shows that cells differing on those fields differ in outcome,
+not that the fingerprint adds information beyond them. The source
+paper's ZVF and PCD values (ρ = +0.529 and +0.541) could not be
+reproduced: its own analysis script gives +0.407 and +0.336 on a
+2,000-pair sample, and the full-matrix values are those above
+(corrected; see Table E.1).
 
 \section{The GRPO-Registry (P6)}\label{the-grpo-registry-p6}
 
@@ -5326,12 +5445,12 @@ makes every field reportable. Reproducibility supplements of the kind
 commonly shipped with RL papers do not automatically satisfy MIN-REPORT.
 
 The health audit is the registry's own evidence that it works. Every
-shipped record parses: 31 of 31 pass, comprising 20 stack records and 11
-variant-delta records, with zero broken delta pointers. The delta-mix
-table is the sharpest single result in P6: the label ``DAPO'' is claimed
-by ten entries, of which four implement a delta, one records a
-surrogate, three record it as absent and two record it as unknown ---
-the same label covering four distinct implementations (Table
+record shipped with P6 parses: 31 of 31 pass, comprising 20 stack
+records and 11 variant-delta records, with zero broken delta pointers.
+The delta-mix table is the sharpest single result in P6: the label
+``DAPO'' is claimed by ten entries, of which four implement a delta, one
+records a surrogate, three record it as absent and two record it as
+unknown --- the same label covering four distinct implementations (Table
 \texttt{tab:p6-delta-mix}). Per-item coverage on the twenty stack
 records is 100\% for the held-out split (40/40), 95\% for
 sampler/backend (76/80), 90\% for telemetry (54/60), 68\% for the
@@ -5369,11 +5488,16 @@ prompts per step --- with the full per-prompt reward tensor logged at
 every step, produces reward deltas of magnitude ≤ 2 percentage points.
 Two of the three show within-run intervals that exclude zero on the side
 of a \emph{decrease} (AERO at −0.014 {[}−0.023, −0.005{]} and AREAL at
-−0.020 {[}−0.032, −0.008{]}). Those intervals resample prompt-steps
-within a single seed-0 run per method, so they carry no seed variance
-and are not replication, and the three contrasts are uncorrected for
-multiplicity. The magnitude thesis survives. Whether any difference
-exceeds seed-to-seed noise was not tested, so neither the claim that all
+−0.020 {[}−0.032, −0.008{]}). Those intervals are paired bootstrap
+intervals over the last 10 of 40 steps of a single seed-0 run per
+method, so they carry no seed variance and are not replication. GIFT's
+delta is +0.016 {[}−0.007, +0.040{]}. Exact sign-flip tests over the
+same 10 paired steps, Holm-adjusted across the three contrasts, give p =
+0.047 for AERO, 0.047 for AREAL and 0.23 for GIFT; when prompt-level
+variation is included (160 paired prompt-steps), the AERO decrease is no
+longer distinguishable from zero (Holm p = 0.20) (corrected; see Table
+E.1). The magnitude thesis survives. Whether any difference exceeds
+seed-to-seed noise was not tested, so neither the claim that all
 differences are within noise nor its negation is established. The
 largest same-stack effects are not on reward at all: AERO and AREAL
 lengthen completions by approximately 31 tokens and tighten the length
@@ -5634,8 +5758,8 @@ rather than a demonstrated benefit.
 
 
 
-\chapter{The E1--E14 Held-Out Evaluation
-Campaign}\label{the-e1e14-held-out-evaluation-campaign}
+\chapter{The E1--E14 Evaluation
+Campaign}\label{the-e1e14-evaluation-campaign}
 
 This chapter reports the evaluation of a single Tinker-trained actor
 against fourteen benchmark suites that were not part of its training
@@ -5681,7 +5805,9 @@ terminal-state ledger is
 and the arithmetic of the ledger was re-verified by deterministic code
 checks recorded in
 \longtok{outputs/verification/LEDGER\_\allowbreak{}CODE\_\allowbreak{}CHECK\_\allowbreak{}2026-09-19.json},
-which reports eleven of eleven checks passing with zero failures.
+which reports eleven of eleven named checks passing with zero failures
+(Appendix B lists their scope; they do not cover every figure in this
+chapter).
 
 \section{The evaluated actor and the one-actor
 design}\label{the-evaluated-actor-and-the-one-actor-design}
@@ -5725,9 +5851,9 @@ recorded in Appendix D. Table 8.1 gives every field they record.
 artefacts.
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
 \caption{Training record of the E1--E14 actor, from the surviving run
 artefacts.}\tabularnewline
 \toprule\noalign{}
@@ -5840,14 +5966,14 @@ file.
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.1250}}@{}}
 \caption{Serving conditions of the original campaign runs, by
 lane.}\tabularnewline
 \toprule\noalign{}
@@ -6039,10 +6165,10 @@ scope accepted 4,426 of 4,428 rows and reproduced the official scorer's
 output of 0.5131, which is 2,271/4,426: the scorer omits the two
 unjudged rows from its denominator. Under the campaign evidence rule
 those rows count as failures, so the reported accuracy is 2,271/4,428 =
-51.29 per cent, a difference of 0.02 percentage points. For both rows
-the Omni-Judge output is truncated before any verdict, so the official
-scorer's omission is correct behaviour rather than a parser defect, and
-no re-judge was performed.
+51.29 per cent (Wilson 95\% CI {[}0.498, 0.528{]}), a difference of 0.02
+percentage points. For both rows the Omni-Judge output is truncated
+before any verdict, so the official scorer's omission is correct
+behaviour rather than a parser defect, and no re-judge was performed.
 
 \section{Original-contract results}\label{original-contract-results}
 
@@ -6137,14 +6263,14 @@ score is the mean of six per-environment means.
 {\def\LTcaptype{none} % do not increment counter
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.0526}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.2763}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.0921}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.0789}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1447}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1447}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1447}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.0658}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.0526}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.2763}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.0921}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.0789}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.1447}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.1447}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.1447}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 16\tabcolsep) * \real{0.0658}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Lane
@@ -6197,9 +6323,9 @@ the full text is in that file.
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.0385}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.8077}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1538}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.0385}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.8077}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.1538}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Lane
@@ -6356,12 +6482,12 @@ comparison would confound the adapter with the engine, and none is made.
 {\def\LTcaptype{none} % do not increment counter
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Lane
@@ -6419,12 +6545,12 @@ items.
 {\def\LTcaptype{none} % do not increment counter
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Lane
@@ -6601,17 +6727,18 @@ with a 95\% bootstrap interval of {[}0.00082, 0.00270{]} --- positive,
 small, and explicitly cohort- and objective-conditional. P7 models
 usable signal per prompt as \(S = p(1-p)(1-h_G(p))\) with
 \(h_G(p) = p^G + (1-p)^G\), derives three falsifiable consequences, and
-checks them: a 368-run Weights \& Biases audit across seven models
-reproduces the predicted U-shape in accuracy, with ZVF 0.95--0.97 at the
-low-reward extreme and 0.87--0.96 at the high-reward extreme and
-0.25--0.29 at mid-range rewards of 0.35--0.50; a model × G grid confirms
-the monotone effect at interior accuracy, Qwen3-32B moving 0.33 → 0.18 →
-0.08 across G = 4/8/16; and a toy-scale open-backward-pass experiment
-finds corr(‖∇‖, p(1−p)) = +0.71 on a 0.5B model, which the P7 report
-labels directional only. Where P3's sweep could not find an optimum, P7
-supplies a mechanism under which a shallow one should exist. That is a
-reconciliation, not a resolution: the mechanism is checked in telemetry,
-and its causal link to the gradient remains toy-scale.
+checks them: a 368-run Weights \& Biases audit across six model labels
+(Appendix A, row P7-C1) reproduces the predicted U-shape in accuracy,
+with ZVF 0.95--0.97 at the low-reward extreme and 0.87--0.96 at the
+high-reward extreme and 0.25--0.29 at mid-range rewards of 0.35--0.50; a
+model × G grid confirms the monotone effect at interior accuracy,
+Qwen3-32B moving 0.33 → 0.18 → 0.08 across G = 4/8/16; and a toy-scale
+open-backward-pass experiment finds corr(‖∇‖, p(1−p)) = +0.71 on a 0.5B
+model, which the P7 report labels directional only. Where P3's sweep
+could not find an optimum, P7 supplies a mechanism under which a shallow
+one should exist. That is a reconciliation, not a resolution: the
+mechanism is checked in telemetry, and its causal link to the gradient
+remains toy-scale.
 
 The same report is clear about the control it does not have. A
 micro-jitter falsification collapses batch ZVF from 0.158 to 0.000 while
@@ -6708,30 +6835,93 @@ outputs/e1\_\allowbreak{}e14\_\allowbreak{}small\_\allowbreak{}scale\_\allowbrea
 It measures the harness, not the model.
 
 What governance bought is visible in the ledger itself: eleven of eleven
-deterministic checks passing on 2026-09-19, and a historical snapshot
-recording E7 as ``1/28 errored'' sitting visibly beside the superseding
-table's ``1/46 attempted'' rather than being quietly reconciled.
+named deterministic checks passing on 2026-09-19 (scope in Appendix B),
+and a historical snapshot recording E7 as ``1/28 errored'' sitting
+visibly beside the superseding table's ``1/46 attempted'' rather than
+being quietly reconciled.
 
 \section{Rigour and Threats to
 Validity}\label{rigour-and-threats-to-validity}
 
 \textbf{What rigour was exercised.} Diagnostics are recomputable from
 stored raw tensors, and headline structural claims were re-verified by
-deterministic code checks on 2026-09-19, 11/11 PASS, covering exact
-divisions, receipt presence, sealed-artifact hash equality and
-lost-source absence probes. Held-out \emph{n} is reported alongside
-every gain, and failed runs are counted rather than hidden:
+eleven named deterministic code checks on 2026-09-19, all passing,
+covering exact divisions, receipt presence, sealed-artifact hash
+equality and lost-source absence probes. Held-out \emph{n} is reported
+alongside every gain, and failed runs are counted rather than hidden:
 approximately \$30--35 of Tinker spend went to failed runs, disclosed
 because concealing it would understate reproduction cost by roughly
-25\% (Figure~\ref{fig:threats}).
+25\%.
 
+Table 9.1 lists the threats discussed below, grouped as internal,
+construct and external, with the mitigation applied to each. Most
+mitigations narrow what is claimed rather than repair the evidence.
 
-\fig{fig_threats}
-{Threats to validity grouped as internal, construct and external, each with the mitigation applied in this work}
-{Threats to validity grouped as internal, construct and external, each with the mitigation applied in this work. The pairing is mostly a reduction in what is claimed rather than a repair of the evidence: where the evidence is partial the claim is narrowed to what it supports. $\dagger$ marks figures and summary statistics drawn from Tinker data only; independent replication of them requires Tinker API access (\longtok{LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md}, Sec.~6.3). In T3, 37/128 is the number of verifier criteria met on the single E4 task; the reported 0.3115 is the verifier's own recovery metric, not that fraction.}
-{fig:threats}
+\textbf{Threats to validity and the mitigation applied to each.}
 
-
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+\caption{Threats to validity and the mitigation applied to each. † marks
+figures drawn from Tinker data only; replicating them requires Tinker
+API access (\protect\longtok{LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md}
+§6.3).}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Type
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Threat
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Mitigation
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Type
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Threat
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Mitigation
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Internal & T1. Most Tinker configurations ran once, so those runs carry
+no variance estimate or significance test; no result family reaches the
+ten seeds Henderson et al.~(2018) recommend & Quantitative conclusions
+rest on multi-seed runs (three to eight seeds, listed below);
+single-seed Tinker figures are descriptive and marked † \\
+Internal & T2. Horizons of 30--50 steps are early-training snapshots &
+Every claim is scoped to the observed horizon; no asymptotic or
+``converges to'' claim is made \\
+Internal & T3. The E4 pass3/pass16 per-task archive is lost; only
+\longtok{TINKER\_BRIDGE.json} survives & 0.3115 is reported as a
+receipt-only verifier recovery metric on 1 of 100 tasks
+(\longtok{CLOSED\_PARTIAL}), not as a suite score and not as the 37 of
+128 verifier criteria met \\
+Construct & T4. Each lane uses its own native denominator (2/731,
+90/812, 4,428 \ldots) & No pooling within or across lanes; no comparison
+or ranking across denominators \\
+Construct & T5. No cross-suite aggregate exists & Deliberate: an
+aggregate over native denominators has no referent \\
+Construct & T6. E10's completed scope measures benign utility only & The
+benign scope is named at every reference; no adversarial-robustness
+claim \\
+Construct & T7. The retained E11 result came through the purged Tinker
+sampler & The lane is receipt-bound to its sampler path; no
+backend-parity claim \\
+External & T8. Tinker's server-side loss, normalisation, batching and
+hardware are closed, and the SDK version moved (0.16.1 to 0.30.0) & The
+stack and SDK version are reported with each result; no numerical-parity
+claim \\
+External & T9. Six original contracts lack third-party access (E3, E7,
+E8, E10, E12, E14) & Each lane has a terminal close-out record with a
+reopen condition; replacement scopes are reported under their own
+names \\
+\end{longtable}
 
 \textbf{Statistical power: single-seed Tinker experiments.} Most Tinker
 configurations ran once, because cost precluded repetition, and those
@@ -6944,8 +7134,13 @@ following answers.
   GRPO/Dr.~GRPO comparisons (Qwen2.5-1.5B GSM8K-CoT; the eight-seed
   variant audit of §1.2) are inconclusive and establish no equivalence
   either (§6.2.3, §6.4, §6.5; Table 1.1). The same-stack rerun on the
-  Qwen2.5-1.5B GSM8K-CoT configuration set out in §9.4 is what would
-  answer it.
+  unsaturated Qwen2.5-1.5B GSM8K-CoT configuration answers part of it:
+  GRPO at G = 8 exceeds a minimal learned-critic PPO by +0.050
+  {[}+0.015, +0.085{]} (five paired seeds, p = 0.016), a gap that comes
+  from the PPO arm failing to train at this budget rather than from a
+  tuned-critic comparison, and G = 2 versus G = 8 is −0.005 {[}−0.038,
+  +0.028{]}, neither different nor equivalent at a ±0.02 margin
+  (§6.5.5).
 \item
   \textbf{RQ3 (manifest-level flip risk).} Yes, for the one pair tested:
   \texttt{stackdiff} flags the open-versus-closed ``DAPO'' pair as R5
@@ -7102,12 +7297,11 @@ length-confounded regime, with the completion cap lifted and longer
 horizons, in which a Dr.~GRPO length advantage would be expected to
 appear if it exists. The second is the head-to-head protocol between ZVF
 and the pairwise-contrast density, to test whether PCD meets its target
-association. The third is a harder, unsaturated task on which algorithm
-and group-size effects could be detected at all: rerunning the
-same-stack PPO/GRPO contrast and G ∈ \{2, 8\} on the Qwen2.5-1.5B
-GSM8K-CoT configuration, with five paired seeds and a disjoint
-evaluation split, and reporting the difference with its interval against
-a stated equivalence margin in accuracy points.
+association. The third extends the unsaturated same-stack rerun of
+§6.5.5: a PPO arm with a warmed-up, tuned critic and generalised
+advantage estimation, so that the GRPO--PPO gap can be separated from
+critic quality, and enough seeds or evaluation items to resolve the G =
+2 versus G = 8 contrast at a ±0.02 margin.
 
 \textbf{Testing the methodological tools.} Three extensions come from
 the Semester-4 work:
@@ -7203,15 +7397,15 @@ than by assertion: \textbf{806 runs were created before 2026-04-23} and
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1200}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1600}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.0600}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1400}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.0600}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1600}}@{}}
 \caption{Registry composition by logging project, with temporal split
 and distinct base models.}\tabularnewline
 \toprule\noalign{}
@@ -7276,12 +7470,12 @@ WebArena & logged \\
 & --- & smoke \\
 \longtok{huggingface} & W\&B & 3 & Semester 3 & --- & --- & 16 & --- &
 logged \\
-\longtok{skyrl-tinker} & W\&B & 3 & Semester 3 & Qwen/Qwen3-8B & grpo & 8
+\longtok{skyrl-tinker} & W\&B & 3 & Semester 3 & Qwen/\allowbreak{}Qwen3-8B & grpo & 8
 & --- & logged \\
 \longtok{tinker-rl-zvf-counterfactual} & W\&B & 9 & 3 S3 / 6 S4 & --- &
 --- & --- & --- & logged \\
-\longtok{zvf-audit} & W\&B & 368 & Semester 4 & 3 & --- & 4, 8 & llama3,
-qwen3\_instruct & logged \\
+\longtok{zvf-audit} & W\&B & 368 & Semester 4 & 3 & --- & 4, 8 &
+\texttt{llama3}, \longtok{qwen3\_instruct} & logged \\
 \longtok{zvf-colab-experiments} & Colab → W\&B & 16 & Semester 4 & --- &
 --- & --- & --- & logged \\
 \longtok{tinker-new-research} & W\&B & 9 & Semester 4 & --- & --- & --- &
@@ -7319,15 +7513,15 @@ generated by \longtok{aggregate\_\allowbreak{}framework\_\allowbreak{}comparison
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}@{}}
 \caption{Semester-3 cross-framework shared benchmark
 runs.}\tabularnewline
 \toprule\noalign{}
@@ -7376,15 +7570,15 @@ Outcome / status
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\longtok{campaign\_\allowbreak{}v2\_\allowbreak{}w1\_\allowbreak{}qwen3-8b-base} & Tinker & Qwen/Qwen3-8B-Base &
+\longtok{campaign\_\allowbreak{}v2\_\allowbreak{}w1\_\allowbreak{}qwen3-8b-base} & Tinker & Qwen/\allowbreak{}Qwen3-8B-Base &
 GRPO & 8 & gsm8k-500 & 42 & 30 & last10 = 0.85625 --- \textbf{real
 run} \\
-\longtok{modal\_\allowbreak{}trl\_\allowbreak{}trl\_\allowbreak{}qwen3\_\allowbreak{}8b} & TRL on Modal H100 & Qwen/Qwen3-8B
+\longtok{modal\_\allowbreak{}trl\_\allowbreak{}trl\_\allowbreak{}qwen3\_\allowbreak{}8b} & TRL on Modal H100 & Qwen/\allowbreak{}Qwen3-8B
 & GRPO & 8 & gsm8k-500 & 42 & 30 & last10 = 0.05, 735.7 s ---
 \textbf{real run} \\
-\longtok{verl-dryrun} & verl & Qwen/Qwen3-8B & GRPO & 8 & gsm8k-500 & 42
+\longtok{verl-dryrun} & verl & Qwen/\allowbreak{}Qwen3-8B & GRPO & 8 & gsm8k-500 & 42
 & 30 & last10 = 0.5528 --- \textbf{seeded dryrun, not a training run} \\
-\longtok{openrlhf-dryrun} & OpenRLHF & Qwen/Qwen3-8B & GRPO & 8 &
+\longtok{openrlhf-dryrun} & OpenRLHF & Qwen/\allowbreak{}Qwen3-8B & GRPO & 8 &
 gsm8k-500 & 42 & 30 & last10 = 0.4785 --- \textbf{seeded dryrun, not a
 training run} \\
 \end{longtable}
@@ -7409,15 +7603,15 @@ shown as ``---''.
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}@{}}
 \caption{Semester-3 Modal campaign runs.}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
@@ -7465,17 +7659,17 @@ Outcome / status
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\longtok{trl\_\allowbreak{}grpo\_\allowbreak{}math} & TRL / Modal L4 & Qwen/Qwen2.5-0.5B & GRPO &
+\longtok{trl\_\allowbreak{}grpo\_\allowbreak{}math} & TRL / Modal L4 & Qwen/\allowbreak{}Qwen2.5-0.5B & GRPO &
 --- & math & 42, 123, 456, 789, 1024 & 125 & final acc 0.735 / 0.810 /
 0.620 / 0.740 / 0.765; 139.8--183.7 s \\
 \longtok{sb3\_\allowbreak{}ppo\_\allowbreak{}math} & Stable-Baselines3 / Modal L4 &
-Qwen/Qwen2.5-0.5B & PPO & --- & math & 42, 123, 456, 789, 1024 & 125 &
+Qwen/\allowbreak{}Qwen2.5-0.5B & PPO & --- & math & 42, 123, 456, 789, 1024 & 125 &
 final acc 0.003 / 0.014 / 0.011 / 0.012 / 0.010; \longtok{steps\_\allowbreak{}to\_\allowbreak{}95}
 null for all five \\
-\longtok{cleanrl\_\allowbreak{}ppo\_\allowbreak{}math} & CleanRL / Modal L4 & Qwen/Qwen2.5-0.5B &
+\longtok{cleanrl\_\allowbreak{}ppo\_\allowbreak{}math} & CleanRL / Modal L4 & Qwen/\allowbreak{}Qwen2.5-0.5B &
 PPO & --- & math & 42, 123, 456, 789, 1024 & 125 & final acc 0.010 /
 0.008 / 0.014 / 0.009 / 0.004; 25.4--32.4 s \\
-\longtok{tianshou\_\allowbreak{}ppo\_\allowbreak{}math} & Tianshou / Modal L4 & Qwen/Qwen2.5-0.5B &
+\longtok{tianshou\_\allowbreak{}ppo\_\allowbreak{}math} & Tianshou / Modal L4 & Qwen/\allowbreak{}Qwen2.5-0.5B &
 PPO & --- & math & 42, 123, 456, 789, 1024 & 125 & final acc 0.011 /
 0.002 / 0.005 / 0.002 / 0.009; 1.67--3.30 s \\
 \end{longtable}
@@ -7495,15 +7689,15 @@ mean zero-variance fraction.
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}@{}}
 \caption{Semester-3 group-size sweep runs.}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
@@ -7551,16 +7745,16 @@ Outcome / status
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\longtok{groupsize\_g2} & Modal A10 (shared harness) & Qwen/Qwen2.5-0.5B
+\longtok{groupsize\_g2} & Modal A10 (shared harness) & Qwen/\allowbreak{}Qwen2.5-0.5B
 & GRPO & 2 & arithmetic, 200 held-out & 3 seeds & 40 & held-out acc
 0.9817 ± 0.0044; mean ZVF 0.8380 \\
-\longtok{groupsize\_g4} & Modal A10 (shared harness) & Qwen/Qwen2.5-0.5B
+\longtok{groupsize\_g4} & Modal A10 (shared harness) & Qwen/\allowbreak{}Qwen2.5-0.5B
 & GRPO & 4 & arithmetic, 200 held-out & 3 seeds & 40 & held-out acc
 0.9883 ± 0.0017; mean ZVF 0.7635 \\
-\longtok{groupsize\_g8} & Modal A10 (shared harness) & Qwen/Qwen2.5-0.5B
+\longtok{groupsize\_g8} & Modal A10 (shared harness) & Qwen/\allowbreak{}Qwen2.5-0.5B
 & GRPO & 8 & arithmetic, 200 held-out & 3 seeds & 40 & held-out acc
 0.9900 ± 0.0029; mean ZVF 0.6906 \\
-\longtok{groupsize\_g16} & Modal A10 (shared harness) & Qwen/Qwen2.5-0.5B
+\longtok{groupsize\_g16} & Modal A10 (shared harness) & Qwen/\allowbreak{}Qwen2.5-0.5B
 & GRPO & 16 & arithmetic, 200 held-out & 3 seeds & 40 & held-out acc
 0.9783 ± 0.0060; mean ZVF 0.6312 \\
 \end{longtable}
@@ -7597,16 +7791,16 @@ or provenance-conflicted.
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.1000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.1000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.1000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.1000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.1000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.1000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.1000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.1000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.1000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.1000}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 20\tabcolsep) * \real{0.0600}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 20\tabcolsep) * \real{0.1100}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 20\tabcolsep) * \real{0.1000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 20\tabcolsep) * \real{0.1300}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 20\tabcolsep) * \real{0.1100}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 20\tabcolsep) * \real{0.0500}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 20\tabcolsep) * \real{0.0900}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 20\tabcolsep) * \real{0.1000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 20\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 20\tabcolsep) * \real{0.0500}}@{}}
 \caption{Semester-4 P1-P8 study runs: each claim mapped to its linked
 runs, stack, model and algorithm.}\tabularnewline
 \toprule\noalign{}
@@ -7678,7 +7872,7 @@ P2-C2 & 80 (as P2-C1) & as P2-C1 & as P2-C1 & --- & --- & GSM8K & as
 P2-C1 & Spearman ρ = 0.27, bootstrap 95\% CI {[}−0.37, 0.88{]} (n = 23)
 & C \\
 P3-C1 & 12 --- \longtok{wandb:rlvr-openings/l22x3tca} & W\&B-managed open
-trainer; no Tinker identity & Qwen/Qwen3.5-4B & --- & 2, 4, 8, 16 & ---
+trainer; no Tinker identity & Qwen/\allowbreak{}Qwen3.5-4B & --- & 2, 4, 8, 16 & ---
 (saturated arithmetic regime; dataset not recorded) & 3 per G (seeds 0,
 1, 2) / 8 & Mean held-out Δ: G=2 +0.0000, G=4 +0.0000, G=8 −0.0625, G=16
 +0.0000; evaluation size not logged & C \\
@@ -7687,13 +7881,13 @@ P3-C2 & 5 --- \longtok{wandb:zvf-audit-v2/6snvz1qd} & W\&B, sampling only
 matched G = 4/G = 32 training replication; the comparison cannot be
 executed & X \\
 P4-C1 & 6 --- \longtok{local:drgrpo\_\allowbreak{}gsm8k\_\allowbreak{}cot:grpo:seed42} & Local &
-Qwen/Qwen2.5-1.5B-Instruct as mapped (abstract says Qwen3-8B) ---
+Qwen/\allowbreak{}Qwen2.5-1.5B-Instruct as mapped (abstract says Qwen3-8B) ---
 conflict & GRPO / Dr.GRPO & --- & GSM8K CoT & 3 per arm (42, 123, 456) /
 30 & GRPO 0.2017→0.2633 (Δ +0.0617); Dr.GRPO 0.2050→0.2550 (Δ +0.0500);
 n = 200/seed & X \\
 P5-C1 & 2 --- \longtok{wandb:tinker-rl-lab-world-class/xmot42ot},
 \longtok{…/w83mv3ok} & Tinker-managed versus TRL backend &
-Qwen/Qwen3-8B-Base versus Qwen/Qwen3-8B --- confounded & GRPO / TRL-GRPO
+Qwen/\allowbreak{}Qwen3-8B-Base versus Qwen/\allowbreak{}Qwen3-8B --- confounded & GRPO / TRL-GRPO
 & 8 & GSM8K & 1 per backend (seed 42) / 30 & Final/last-10 training
 reward 0.050→0.856; no held-out metric & X \\
 P5-C2 & 2 --- \longtok{zvf-colab-experiments/6c7p198f},
@@ -7703,11 +7897,14 @@ exhibit) & DAPO label versus asymmetric-clip surrogate & --- & --- & 2
 open versus 3 managed / not logged (open), 15 (managed) & Mean ZVF 0.00
 versus 0.58; no comparable held-out metric & C \\
 P5-C3 & 1 --- \longtok{zvf-colab-experiments/l5m9lqij} & Managed summary
-& Qwen/Qwen3.5-4B & Four algorithm labels & --- & --- & 3 per arm (42,
+& Qwen/\allowbreak{}Qwen3.5-4B & Four algorithm labels & --- & --- & 3 per arm (42,
 123, 456) / 15 & Last-10 reward band 0.710--0.744 (width 0.034); no
 held-out metric & C \\
 P6-C1 & 48 registry entries & Registry (schema validation) & N/A & N/A &
-N/A & N/A & N/A & 44/48 entries pass schema validation & R \\
+N/A & N/A & N/A & 44/48 entries pass schema validation in the later
+claim-to-run snapshot (\longtok{claim\_\allowbreak{}to\_\allowbreak{}run\_\allowbreak{}table.tsv}, which adds
+amendment entries); the 31/31 of §7.2 is the 31 records shipped with P6
+& R \\
 P6-C2 (new audit) & 82 --- \longtok{tinker:0dfee749…} & Tinker ↔ W\&B ↔
 HF, three-way & N/A (identity audit) & N/A & N/A & N/A & as logged per
 underlying run & 33/41 exact IDs model-consistent; 5 HF-arbitrated
@@ -7715,15 +7912,16 @@ mislinks; 3 unresolved & R \\
 P7-C1 & 368 --- \longtok{wandb:zvf-audit/fzforbvg} & W\&B only (0 exact
 Tinker IDs) & Qwen3-4B-Instruct-2507 (113), Llama-3.2-3B (112),
 Llama-3.2-1B (107), 3 further models (36) & --- & 4, 8, 16 (also 6) &
---- (prompt/tokenizer families \texttt{llama3}, \longtok{qwen3\_instruct}
-recorded, not datasets) & 10 logged labels (0--9) / 2--12 & ZVF U-shape
-reproduced; no held-out metric in the W\&B summaries & C \\
+--- (prompt and tokenizer families \texttt{llama3},
+\longtok{qwen3\_instruct} recorded, not datasets) & 10 logged labels
+(0--9) / 2--12 & ZVF U-shape reproduced; no held-out metric in the W\&B
+summaries & C \\
 P7-C2 & 1 --- \longtok{zvf-colab-experiments/ds83rymc} & W\&B (Colab) &
-Qwen/Qwen2.5-0.5B-Instruct & --- & --- & --- & 3 (0, 1, 2) in one
+Qwen/\allowbreak{}Qwen2.5-0.5B-Instruct & --- & --- & --- & 3 (0, 1, 2) in one
 aggregate / 30 & Gradient magnitude versus p(1−p): Pearson r = +0.71 &
 C \\
 P7-C3 & 1 --- \longtok{zvf-colab-experiments/6c7p198f} & W\&B (Colab) &
-Qwen/Qwen2.5-0.5B-Instruct & Adaptive-G versus fixed recipes & --- & ---
+Qwen/\allowbreak{}Qwen2.5-0.5B-Instruct & Adaptive-G versus fixed recipes & --- & ---
 & 1 per arm / not logged & Adaptive-G held-out Δ +0.575; mean ZVF 0.23;
 186 rollouts & C \\
 P8-C1 & 1 --- \longtok{local:qp8\_fraud:xgboost:seed42} & Local (XGBoost)
@@ -7732,7 +7930,7 @@ Synthetic card-fraud: 50,000 rows; 10,000-row held-out split &
 random\_state 42 / 200 estimators & AUC 0.7955 on the 10,000-row
 held-out split & C \\
 P8-C2 & 1 --- \longtok{wandb:tinker-new-research/ek1b2cxn} & Tinker
-(managed SFT) & Qwen/Qwen3.5-4B & SFT row serialisation (no KL, no
+(managed SFT) & Qwen/\allowbreak{}Qwen3.5-4B & SFT row serialisation (no KL, no
 reference policy) & N/A & Row-to-text serialisations; 500-row
 positive-enriched held-out subset & 1 (seed 0) / 63 minibatches & AUC
 0.482675, accuracy 0.792 (n = 500) --- near chance & C \\
@@ -7832,15 +8030,15 @@ accuracy.
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1400}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1300}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1500}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1100}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.0600}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.0500}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.0700}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1900}}@{}}
 \caption{Semester-4 opening and null-result runs: the curriculum,
 token-budget, hard-prompt, loss-formulation and layer-freeze
 blocks.}\tabularnewline
@@ -7891,64 +8089,64 @@ Outcome / status
 \bottomrule\noalign{}
 \endlastfoot
 \longtok{campaign/baseline-G4-s0…s5} & Tinker → W\&B
-\longtok{rlvr-openings} (\texttt{campaign}) & Qwen/Qwen3.5-4B & GRPO & 4
+\longtok{rlvr-openings} (\texttt{campaign}) & Qwen/\allowbreak{}Qwen3.5-4B & GRPO & 4
 & GSM8K & 0--5 & 8 & 6 runs; mean Δ +0.0111 (0.0000--0.0333) \\
 \longtok{campaign/curriculum-G4-s0…s5} & Tinker → W\&B
-\longtok{rlvr-openings} (\texttt{campaign}) & Qwen/Qwen3.5-4B & GRPO +
+\longtok{rlvr-openings} (\texttt{campaign}) & Qwen/\allowbreak{}Qwen3.5-4B & GRPO +
 curriculum filter & 4 & GSM8K & 0--5 & 8 & 6 runs; mean Δ +0.0167
 (−0.0667 to +0.0667); oversample 3.3--7.2×; zero-loss fraction 0.0 \\
 \longtok{campaign/baseline-G2-s0} & Tinker → W\&B \longtok{rlvr-openings}
-(\texttt{campaign}) & Qwen/Qwen3.5-4B & GRPO & 2 & GSM8K & 0 & 8 & 1
+(\texttt{campaign}) & Qwen/\allowbreak{}Qwen3.5-4B & GRPO & 2 & GSM8K & 0 & 8 & 1
 run; Δ 0.0000; zero-loss fraction 0.7 \\
 \longtok{campaign/baseline-G8-s0} & Tinker → W\&B \longtok{rlvr-openings}
-(\texttt{campaign}) & Qwen/Qwen3.5-4B & GRPO & 8 & GSM8K & 0 & 8 & 1
+(\texttt{campaign}) & Qwen/\allowbreak{}Qwen3.5-4B & GRPO & 8 & GSM8K & 0 & 8 & 1
 run; Δ −0.1333 \\
 \longtok{campaign/baseline-G16-s0} & Tinker → W\&B \longtok{rlvr-openings}
-(\texttt{campaign}) & Qwen/Qwen3.5-4B & GRPO & 16 & GSM8K & 0 & 8 & 1
+(\texttt{campaign}) & Qwen/\allowbreak{}Qwen3.5-4B & GRPO & 16 & GSM8K & 0 & 8 & 1
 run; Δ +0.0333 \\
 \longtok{curriculum\_opening/baseline} & Tinker → W\&B
-\longtok{rlvr-openings} (ungrouped) & Qwen/Qwen3.5-4B & GRPO & 4
+\longtok{rlvr-openings} (ungrouped) & Qwen/\allowbreak{}Qwen3.5-4B & GRPO & 4
 \emph{default} & GSM8K & 0 & 8 & 1 run; Δ +0.0500; held-out 20;
 zero-loss fraction 0.50 \\
 \longtok{curriculum\_opening/curriculum} & Tinker → W\&B
-\longtok{rlvr-openings} (ungrouped) & Qwen/Qwen3.5-4B & GRPO + curriculum
+\longtok{rlvr-openings} (ungrouped) & Qwen/\allowbreak{}Qwen3.5-4B & GRPO + curriculum
 filter & 4 \emph{default} & GSM8K & 0 & 8 & 1 run; Δ +0.0500; held-out
 20; oversample 4.81×; zero-loss fraction 0.00; superseded, see below \\
 \longtok{token\_budget/baseline-b30000-s0…s2} & Tinker → W\&B
-\longtok{rlvr-openings} (\longtok{token-budget}) & Qwen/Qwen3.5-4B & GRPO
+\longtok{rlvr-openings} (\longtok{token-budget}) & Qwen/\allowbreak{}Qwen3.5-4B & GRPO
 & 4 \emph{default} & GSM8K & 0--2 & 30k-token budget & 3 runs; mean Δ
 +0.0278; no groups skipped \\
 \longtok{token\_budget/curriculum-b30000-s0…s2} & Tinker → W\&B
-\longtok{rlvr-openings} (\longtok{token-budget}) & Qwen/Qwen3.5-4B & GRPO
+\longtok{rlvr-openings} (\longtok{token-budget}) & Qwen/\allowbreak{}Qwen3.5-4B & GRPO
 + curriculum filter & 4 \emph{default} & GSM8K & 0--2 & 30k-token budget
 & 3 runs; mean Δ +0.0278; 11--20 groups skipped per seed \\
 \longtok{hard\_curriculum/baseline-hard-s0…s2} & Tinker → W\&B
-\longtok{rlvr-openings} (\longtok{hard-curriculum}) & Qwen/Qwen3.5-4B &
+\longtok{rlvr-openings} (\longtok{hard-curriculum}) & Qwen/\allowbreak{}Qwen3.5-4B &
 GRPO & 6 \emph{default} & GSM8K hard-learnable pool (40 of 300 probed) &
 0--2 & 10 & 3 runs; mean Δ +0.0278; zero-loss fraction 0.1--0.2 \\
 \longtok{hard\_curriculum/curriculum-hard-s0…s2} & Tinker → W\&B
-\longtok{rlvr-openings} (\longtok{hard-curriculum}) & Qwen/Qwen3.5-4B &
+\longtok{rlvr-openings} (\longtok{hard-curriculum}) & Qwen/\allowbreak{}Qwen3.5-4B &
 GRPO + curriculum filter & 6 \emph{default} & GSM8K hard-learnable pool
 (40 of 300 probed) & 0--2 & 10 & 3 runs; mean Δ 0.0000; zero-loss
 fraction 0.0 \\
 \longtok{p4\_surprise/\{sum,mean,surprise\}-s0…s1} & Tinker → W\&B
-\longtok{rlvr-openings} (\longtok{p4-surprise}) & Qwen/Qwen3.5-4B & GRPO,
+\longtok{rlvr-openings} (\longtok{p4-surprise}) & Qwen/\allowbreak{}Qwen3.5-4B & GRPO,
 loss variant & 4 \emph{default} & GSM8K & 0--1 & 8 & 6 runs; mean Δ
 +0.1250 (sum) / 0.0000 (mean) / +0.0417 (surprise) \\
 \longtok{p1\_layerfreeze/result.json} & Colab L4 &
-Qwen/Qwen2.5-1.5B-Instruct & --- (gradient probe, no optimizer steps) &
+Qwen/\allowbreak{}Qwen2.5-1.5B-Instruct & --- (gradient probe, no optimizer steps) &
 --- & --- & --- & 5 & 1 run; step-1 predicts final top-layer set at
 overlap 1.0; top-25\% concentration 0.476 \\
 \longtok{p1\_layerfreeze/scaled\_\allowbreak{}4seed\_\allowbreak{}result.json} & Colab L4 &
-Qwen/Qwen2.5-3B-Instruct & GRPO & 4 & GSM8K (24 problems) & 0--3 & 10 &
+Qwen/\allowbreak{}Qwen2.5-3B-Instruct & GRPO & 4 & GSM8K (24 problems) & 0--3 & 10 &
 4 runs; overlap 0.0833 ± 0.0481 --- approximately chance; concentration
 0.3908 \\
 \longtok{p1\_layerfreeze/freeze\_\allowbreak{}flop\_\allowbreak{}result.json} & Colab L4 &
-Qwen/Qwen2.5-1.5B-Instruct & GRPO (step-1-frozen arm) & --- & --- & 0--1
+Qwen/\allowbreak{}Qwen2.5-1.5B-Instruct & GRPO (step-1-frozen arm) & --- & --- & 0--1
 & --- & 4 runs, full and frozen arms; frozen arm gains 0.0000 against
 0.0625 at 60.7\% of the parameter count \\
 \longtok{p1\_layerfreeze/emergence\_result.json} & Colab L4 &
-Qwen/Qwen2.5-1.5B-Instruct & GRPO (step-1 layer selection) & --- & --- &
+Qwen/\allowbreak{}Qwen2.5-1.5B-Instruct & GRPO (step-1 layer selection) & --- & --- &
 0--1 & --- & 2 runs; mean step-1 overlap 0.643 \\
 \end{longtable}
 \endgroup
@@ -7975,6 +8173,89 @@ and a single-seed G = 4 gain of +0.125 in
 baseline gains 0.0000, not 0.125, and that sweep file retains only two
 of its twelve entries, so the W\&B group is its record.
 
+\subsection{Same-stack rerun on the unsaturated
+configuration}\label{same-stack-rerun-on-the-unsaturated-configuration}
+
+The rerun of §6.5.5 was executed on Modal on 2 October 2026 by
+\longtok{platform\_hybrid/experiments/modal/modal\_\allowbreak{}samestack\_\allowbreak{}gsm8k\_\allowbreak{}cot.py}:
+15 runs, one A10G each, about 14 minutes of training per run. Per-run
+results, including per-item pre- and post-training correctness and step
+logs, are in
+\longtok{platform\_hybrid/experiments/results/samestack\_\allowbreak{}gsm8k\_\allowbreak{}cot\_\allowbreak{}full.json};
+adapters are on the \texttt{tinkerrl-results} Modal volume under
+\texttt{samestack\_gsm8k/adapters/}. No W\&B run was logged.
+
+\begingroup\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}@{}}
+\caption{Same-stack rerun on the unsaturated configuration
+(§6.5.5).}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Run identifier
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Stack / platform
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Model
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Algo
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+G
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Dataset
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Seed
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Steps
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Outcome / status
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Run identifier
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Stack / platform
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Model
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Algo
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+G
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Dataset
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Seed
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Steps
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Outcome / status
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\longtok{samestack\_gsm8k/grpo\_\allowbreak{}g8\_\allowbreak{}s\{42,123,456,789,1024\}} & Modal
+A10G, local trainer & Qwen/\allowbreak{}Qwen2.5-1.5B-Instruct & GRPO & 8 & GSM8K
+(test 200) & 5 seeds & 30 & post 0.230--0.255, mean 0.245 \\
+\longtok{samestack\_gsm8k/grpo\_\allowbreak{}g2\_\allowbreak{}s\{…\}} & Modal A10G, local trainer &
+Qwen/\allowbreak{}Qwen2.5-1.5B-Instruct & GRPO & 2 & GSM8K (test 200) & 5 seeds & 30
+& post 0.230--0.280, mean 0.250 \\
+\longtok{samestack\_gsm8k/ppo\_s\{…\}} & Modal A10G, local trainer &
+Qwen/\allowbreak{}Qwen2.5-1.5B-Instruct & PPO, value head & --- & GSM8K (test 200) &
+5 seeds & 30 & post 0.160--0.215, mean 0.195 \\
+\end{longtable}
+\endgroup
+
 \section{E1--E14 evaluation campaign
 lanes}\label{e1e14-evaluation-campaign-lanes}
 
@@ -7990,8 +8271,9 @@ KL, no clipping), as recorded in the local W\&B run directory for run
 \texttt{bsv8vx04} and the run receipt
 \longtok{checkpoints/grpo/pavlov\_\allowbreak{}portfolio\_\allowbreak{}api\_\allowbreak{}swegym\_\allowbreak{}qwen36\_\allowbreak{}20260809\_\allowbreak{}seed809.json}
 (Chapter 8 §8.1.1). Those are properties of the single actor rather than
-of any lane, so they are shown as ``---'' in the table rather than
-repeated. Terminal states are from the ledger of record,
+of any lane, and every lane carries the same run seed (809), so
+algorithm, group size, seed and step columns are omitted from Table A.7.
+Terminal states are from the ledger of record,
 \longtok{outputs/PES\_\allowbreak{}Phase2\_\allowbreak{}Review\_\allowbreak{}2026-09-12/finish/Pending\_Experiments.md};
 all scores are from
 \longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md}, except the six
@@ -8002,17 +8284,13 @@ rows marked ``finish 2026-09-27'', which are from
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 18\tabcolsep) * \real{0.1111}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}@{}}
 \caption{E1-E14 evaluation campaign lanes with their run identifiers,
-stacks, platforms, models, algorithms and group sizes.}\tabularnewline
+stacks and platforms, models, suites and outcomes.}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Lane / run identifier
@@ -8021,15 +8299,7 @@ Stack / platform
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Model / actor
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Algo
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-G
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Dataset / suite
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Seed
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Steps
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Outcome / terminal state
 \end{minipage} \\
@@ -8043,15 +8313,7 @@ Stack / platform
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Model / actor
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Algo
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-G
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Dataset / suite
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Seed
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Steps
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Outcome / terminal state
 \end{minipage} \\
@@ -8060,67 +8322,64 @@ Outcome / terminal state
 \bottomrule\noalign{}
 \endlastfoot
 E1 SWE-bench Pro & native harness, Tinker actor & Qwen3.6-35B-A3B +
-adapter & --- & --- & SWE-bench Pro & 809 & --- & 2/731 = 0.274\% pass@1
-(97.54\% coverage, 713/731 native evals); originals retained \\
+adapter & SWE-bench Pro & 2/731 = 0.274\% pass@1 (97.54\% coverage,
+713/731 native evals); originals retained \\
 E1 replacement (finish 2026-09-27) & native swebench 5.0.2, Modal
-sandboxes & as above & --- & --- & SWE-bench Multilingual & 809 & --- &
-1/190 resolved (57 graded); earlier waves 4/110 kept separate ---
-\texttt{COMPLETE} \\
-E2 FrontierSWE & native harness & as above & --- & --- & FrontierSWE &
-809 & --- & 1/17 tasks; replay normalized 0.8628 \\
+sandboxes & as above & SWE-bench Multilingual & 1/190 resolved (57
+graded); earlier waves 4/110 kept separate --- \texttt{COMPLETE} \\
+E2 FrontierSWE & native harness & as above & FrontierSWE & 1/17 tasks;
+replay normalized 0.8628 \\
 E2 replacement (finish 2026-09-27) & native grader, GCP VM per capsule &
-as above & --- & --- & CORE-Bench hard & 809 & --- & 27/45 = 0.600 task
-accuracy --- \texttt{COMPLETE} \\
-E3 SDAB & --- & as above & --- & --- & SDAB (private bundle) & 809 & ---
-& no local or paid path --- \longtok{CLOSED\_EXTERNAL} \\
-E4 BankerToolBench & Tinker→Modal bridge & as above & --- & --- &
-BankerToolBench & 809 & --- & 1/100 tasks, recovery 0.3115 ---
-\longtok{CLOSED\_PARTIAL} \\
+as above & CORE-Bench hard & 27/45 = 0.600 task accuracy ---
+\texttt{COMPLETE} \\
+E3 SDAB & --- & as above & SDAB (private bundle) & no local or paid path
+--- \longtok{CLOSED\_EXTERNAL} \\
+E4 BankerToolBench & Tinker→Modal bridge & as above & BankerToolBench &
+1/100 tasks, recovery 0.3115 --- \longtok{CLOSED\_PARTIAL} \\
 E4 base-model rerun & Modal \longtok{/v1/responses} & base model,
-zero-init LoRA & --- & --- & BankerToolBench & 809 & 0 & 100/100 trials,
+zero-init LoRA (0 training steps) & BankerToolBench & 100/100 trials,
 mean reward 0.0, \$15.07 of \$55.91 cap; zero traced to bridge passing
 no stop sequences (§8.5) \\
-E5 APEX-Agents & native harness & as above & --- & --- & APEX-Agents &
-809 & --- & 7/480 native-scored; prefix mean 0.050505 \\
+E5 APEX-Agents & native harness & as above & APEX-Agents & 7/480
+native-scored; prefix mean 0.050505 \\
 E5 replacement (finish 2026-09-27) & native tau2, Modal 65k actor & as
-above & --- & --- & Tau3 banking\_knowledge & 809 & --- & 8/97 = 0.082
-pass\^{}1 (25 infra errors counted as failures) --- \texttt{COMPLETE} \\
+above & Tau3 banking\_knowledge & 8/97 = 0.082 pass\^{}1 (25 infra
+errors counted as failures) --- \texttt{COMPLETE} \\
 E6 WebArena (finish 2026-09-27) & native evaluator, GCP VM & as above &
---- & --- & WebArena & 809 & --- & 90/812 = 0.111, lower bound; 108
-ungraded (judge unavailable) --- \texttt{COMPLETE} \\
-E7 BinaryAudit & native harness & as above & --- & --- & BinaryAudit
-(private payload) & 809 & --- & 1/46 attempted, verifier reward 0.0, no
-grade --- \longtok{CLOSED\_EXTERNAL} \\
-E8 LAB-Bench (public) & native harness & as above & --- & --- &
-LAB-Bench public, 8 categories & 809 & --- & \textbf{1967/1967
-COMPLETE} \\
-E8 LifeSciBench (original) & --- & as above & --- & --- & LifeSciBench
-private & 809 & --- & \longtok{CLOSED\_EXTERNAL} \\
-E9 MLE-bench & Modal streaming arm & as above & --- & --- & MLE-bench &
-809 & --- & 40/75 natively graded (53.33\%); suite score null \\
+WebArena & 90/812 = 0.111, lower bound; 108 ungraded (judge unavailable)
+--- \texttt{COMPLETE} \\
+E7 BinaryAudit & native harness & as above & BinaryAudit (private
+payload) & 1/46 attempted, verifier reward 0.0, no grade ---
+\longtok{CLOSED\_EXTERNAL} \\
+E8 LAB-Bench (public) & native harness & as above & LAB-Bench public, 8
+categories & \textbf{1967/1967 COMPLETE} \\
+E8 LifeSciBench (original) & --- & as above & LifeSciBench private &
+\longtok{CLOSED\_EXTERNAL} \\
+E9 MLE-bench & Modal streaming arm & as above & MLE-bench & 40/75
+natively graded (53.33\%); suite score null \\
 E9 replacement (finish 2026-09-27) & OpenHands CodeActAgent, GCP VM & as
-above & --- & --- & ML-Dev-Bench & 809 & --- & 10/34 = 0.294 task
-success --- \texttt{COMPLETE} \\
-E10 AgentDojo (benign) & native harness & as above & --- & --- &
-AgentDojo benign utility & 809 & --- & \textbf{97/97 COMPLETE} \\
-E10 AgentHarm (original) & --- & as above & --- & --- & AgentHarm
-private & 809 & --- & \longtok{CLOSED\_EXTERNAL} \\
-E11 VerilogEval & native harness & as above & --- & --- & VerilogEval
-(both framings) & 809 & --- & \textbf{312/312 = 129/312 pass@1
-(41.35\%)}; 67/156 completion + 62/156 spec-to-RTL \\
-E12 AppBench & --- & as above & --- & --- & AppBench deployment & 809 &
---- & \longtok{CLOSED\_EXTERNAL} \\
+above & ML-Dev-Bench & 10/34 = 0.294 task success ---
+\texttt{COMPLETE} \\
+E10 AgentDojo (benign) & native harness & as above & AgentDojo benign
+utility & 97/97 tasks completed, utility 88/97 = 0.907 ---
+\texttt{COMPLETE} \\
+E10 AgentHarm (original) & --- & as above & AgentHarm private &
+\longtok{CLOSED\_EXTERNAL} \\
+E11 VerilogEval & native harness & as above & VerilogEval (both
+framings) & \textbf{312/312 = 129/312 pass@1 (41.35\%)}; 67/156
+completion + 62/156 spec-to-RTL \\
+E12 AppBench & --- & as above & AppBench deployment &
+\longtok{CLOSED\_EXTERNAL} \\
 E13 BALROG (finish 2026-09-27) & native BALROG evaluator, local & as
-above & --- & --- & BALROG & 809 & --- & 255/255 episodes; 26.1\%
-progression --- \texttt{COMPLETE} \\
-E13 OpenReward (original) & --- & as above & --- & --- & OpenReward
-held-out games & 809 & --- & externally blocked, no closure record \\
-E14 Omni-MATH & native scorer & as above & --- & --- & Omni-MATH & 809 &
---- & 4426/4428 accepted (99.95\%); accuracy 2271/4428 = 51.29\%
-(official scorer 51.31\% on 4426 judged rows) ---
-\longtok{COMPLETE\_\allowbreak{}TERMINAL\_\allowbreak{}NOTE} \\
-E14 FrontierMath (original) & --- & as above & --- & --- & FrontierMath
-hosted & 809 & --- & \longtok{CLOSED\_EXTERNAL} \\
+above & BALROG & 255/255 episodes; 26.1\% progression ---
+\texttt{COMPLETE} \\
+E13 OpenReward (original) & --- & as above & OpenReward held-out games &
+externally blocked, no closure record \\
+E14 Omni-MATH & native scorer & as above & Omni-MATH & 4426/4428
+accepted (99.95\%); accuracy 2271/4428 = 51.29\% (official scorer
+51.31\% on 4426 judged rows) --- \longtok{COMPLETE\_\allowbreak{}TERMINAL\_\allowbreak{}NOTE} \\
+E14 FrontierMath (original) & --- & as above & FrontierMath hosted &
+\longtok{CLOSED\_EXTERNAL} \\
 \end{longtable}
 \endgroup
 
@@ -8145,10 +8404,10 @@ this table:
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}@{}}
 \caption{Field coverage across the 1,662-run ledger: rows carrying a
 value against rows blank or UNKNOWN.}\tabularnewline
 \toprule\noalign{}
@@ -8253,10 +8512,10 @@ different corpus, not a different count of the same one.
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}@{}}
 \caption{Run totals quoted in this report and the corpus each one
 counts.}\tabularnewline
 \toprule\noalign{}
@@ -8304,6 +8563,9 @@ Mega-campaign cells & 98 & Sampling-only cells of
 \longtok{mega\_20260704} & Chapter 7 §7.1 \\
 E1--E14 actor training & 1 & The 40-step \longtok{pavlov\_portfolio} run
 of August 2026, after the ledger cut-off & Chapter 8 §8.1.1 \\
+Unsaturated same-stack rerun & 15 & Three arms × five seeds on Modal, 2
+October 2026, after the ledger cut-off and outside the 1,708 (§A.3.2) &
+Chapter 6 §6.5.5 \\
 \end{longtable}
 \endgroup
 
@@ -8485,14 +8747,19 @@ Where the suite above audits the submission package's internal
 consistency, a second instrument audits the campaign's reported figures.
 \longtok{outputs/verification/LEDGER\_\allowbreak{}CODE\_\allowbreak{}CHECK\_\allowbreak{}2026-09-19.json},
 under schema \texttt{ledger-code-check-v1}, records eleven checks of
-which eleven passed and none failed. Each recomputes a claim from the
-underlying evidence rather than trusting a summary of it, and the four
-classes of check prove four different things.
+which eleven passed and none failed. They cover E1, E8 coverage, E9, E11
+and E14 counts and hashes and the lost-source probes; they do not cover
+the E10 score, E8 accuracy, the E2, E4, E5 and E7 lanes or anything
+recorded after 19 September, and the E14 check confirmed the official
+scorer's 4,426-row denominator rather than the 4,428-row denominator
+this report uses. Each recomputes a claim from the underlying evidence
+rather than trusting a summary of it, and the four classes of check
+prove four different things.
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
 \caption{The deterministic ledger check by class, listing each specific
 check and what it establishes.}\tabularnewline
 \toprule\noalign{}
@@ -8718,9 +8985,9 @@ misread a figure.
 \section{Symbols}\label{symbols}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
 \caption{Notation: symbols used in this report, their meaning, and any
 divergence in how the underlying sources use them.}\tabularnewline
 \toprule\noalign{}
@@ -8815,8 +9082,8 @@ variant is noted only so that a reader meeting it is not misled.
 \section{Abbreviations}\label{abbreviations}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.5000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.5000}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 4\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 4\tabcolsep) * \real{0.5000}}@{}}
 \caption{Abbreviations and their expansions, with names that no source
 expands recorded as identities rather than glossed.}\tabularnewline
 \toprule\noalign{}
@@ -8904,12 +9171,12 @@ themselves carry no state field. Receipt paths are relative to
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 12\tabcolsep) * \real{0.1667}}@{}}
 \caption{The E1--E14 lanes: original contract, replacement scope,
 headline figure, terminal state and receipt.}\tabularnewline
 \toprule\noalign{}
@@ -9463,14 +9730,14 @@ delivery of the direct requests could not be confirmed from the sending
 side.
 
 Two further items complete the terminal record. First, verification: the
-deterministic checks of 19 September passed 11 of 11 with zero failures,
-covering exact divisions, receipt presence, sealed-artifact hash
-equality and absence probes for the lost execution sources. Second, the
-judgment layer: a model-based triage harness was used only for
-classification and value ordering, never for arithmetic; it became
-unreliable during a service degradation on 19 September, so the per-lane
-blocker column in the terminal ledger rests on document evidence rather
-than on model judgment.
+deterministic checks of 19 September passed 11 of 11 named checks with
+zero failures (scope in Appendix B), covering exact divisions, receipt
+presence, sealed-artifact hash equality and absence probes for the lost
+execution sources. Second, the judgment layer: a model-based triage
+harness was used only for classification and value ordering, never for
+arithmetic; it became unreliable during a service degradation on 19
+September, so the per-lane blocker column in the terminal ledger rests
+on document evidence rather than on model judgment.
 
 \section{Small-scale reruns: detail and per-lane
 caveats}\label{small-scale-reruns-detail-and-per-lane-caveats}
@@ -9580,11 +9847,11 @@ relative to the repository root; ``sections/'' is
 
 \begingroup\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.1200}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.1800}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2200}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2600}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.2200}}@{}}
 \caption{Corrections applied to internal source documents. Each row's
 corrected value is the one used in the chapter named in the first
 column.}\tabularnewline
@@ -9627,117 +9894,144 @@ DAPO \(+0.00100\), \([-0.00632, +0.00832]\) (also in Table 1.1) & A
 percentile bootstrap undercovers at \(n = 8\); recomputed from
 \longtok{zvf-program/audit/results/full/*.json} \\
 §4.1, §6.2.3 (same-stack PPO vs GRPO) &
-sections/frontier\_\allowbreak{}synthesis\_\allowbreak{}scaling.tex & Reports paired Δ = −0.002, p
-= 0.374 without naming the model or task & \longtok{Qwen/Qwen2.5-0.5B},
-two-digit addition, 40 steps, five paired seeds, 200 fresh draws per
-seed & results/samestack\_\allowbreak{}ppo\_\allowbreak{}grpo.json;
+\longtok{sections/frontier\_\allowbreak{}synthesis\_\allowbreak{}scaling.tex} & Reports paired Δ =
+−0.002, p = 0.374 without naming the model or task &
+\longtok{Qwen/Qwen2.5-0.5B}, two-digit addition, 40 steps, five paired
+seeds, 200 fresh draws per seed &
+\longtok{results/samestack\_\allowbreak{}ppo\_\allowbreak{}grpo.json};
 \longtok{platform\_hybrid/experiments/modal/modal\_\allowbreak{}samestack\_\allowbreak{}ppo\_\allowbreak{}grpo.py} \\
-§6.3.2 (60-run ZVF ranges) & sections/p2\_\allowbreak{}results\_\allowbreak{}intro.tex & The 60
-runs behind the late-phase and early-phase ZVF ranges and the lag-1
-autocorrelation of ≈ 0.94 are ``measured'' & 45 of the 60 are five-seed
-variance-mitigation projection rows; only the remainder, which includes
-the 12-run group-size sweep, is measured & The nine-row panel comes from
-the dry-run file \longtok{experiments/results/variance\_mitigation.tsv}
-(results/zvf\_\allowbreak{}by\_\allowbreak{}library.tsv) \\
-§6.3.3 (ZVF against the Bernoulli null) & sections/group\_size.tex &
-Closed form evaluated at each arm's held-out accuracy (0.964, 0.954,
-0.923 and 0.704 at G = 2, 4, 8, 16), giving negative residuals &
-Per-step-average null 0.828, 0.709, 0.597, 0.522 against measured 0.838,
-0.764, 0.691, 0.631; residuals +0.010, +0.055, +0.094, +0.109, positive
-at every G & ZVF is a training-batch quantity and held-out accuracy is
-not; recomputed from results/groupsize\_\allowbreak{}zvf\_\allowbreak{}sweep.json; the
-per-step-average baseline is the one named in
-sections/appendix\_\allowbreak{}zvf\_\allowbreak{}formalization.tex \\
-§6.3.4 (naive ZVF--accuracy correlation) & sections/zvf.tex & r = 0.22
-over n = 23 pooled rows, bootstrap 95\% CI {[}−0.29, 0.94{]} & n = 17
-per-experiment rows; Fisher-z 95\% CI {[}−0.29, +0.63{]} & The residual
-table on disk, results/zvf\_\allowbreak{}iter26\_\allowbreak{}residual.tsv, holds 17 rows; a
-bootstrap upper bound near +0.95 at this n indicates an unstable
-bootstrap \\
-§6.3.4 (residualised ZVF) & sections/zvf.tex & After regressing out mean
-reward, residualised ZVF remains positively associated with last-10
-accuracy, r = +0.80, 95\% CI {[}+0.54, +1.00{]} & That slice is the n =
-9 variance-mitigation rows, a simulation projection; the measured pooled
-residual is r = +0.205, Fisher 95\% CI {[}−0.31, +0.62{]}, p = 0.43, n =
-17 & results/zvf\_\allowbreak{}iter26\_\allowbreak{}residual.tsv; projection status in §6.3.2 \\
-§6.4.1 (group-size TOST) & sections/group\_\allowbreak{}size\_\allowbreak{}iter27.tex & TOST
-p-values against G = 2 of p \textless{} 10⁻⁹ at G = 4 and G = 8 and p
-\textless{} 10⁻⁴ at G = 16, with accompanying intervals & Seed-level
+§6.3.2 (60-run ZVF ranges) & \longtok{sections/p2\_\allowbreak{}results\_\allowbreak{}intro.tex} &
+The 60 runs behind the late-phase and early-phase ZVF ranges and the
+lag-1 autocorrelation of ≈ 0.94 are ``measured'' & 45 of the 60 are
+five-seed variance-mitigation projection rows; only the remainder, which
+includes the 12-run group-size sweep, is measured & The nine-row panel
+comes from the dry-run file
+\longtok{experiments/results/variance\_mitigation.tsv}
+(\longtok{results/zvf\_\allowbreak{}by\_\allowbreak{}library.tsv}) \\
+§6.3.3 (ZVF against the Bernoulli null) &
+\longtok{sections/group\_size.tex} & Closed form evaluated at each arm's
+held-out accuracy (0.964, 0.954, 0.923 and 0.704 at G = 2, 4, 8, 16),
+giving negative residuals & Per-step-average null 0.828, 0.709, 0.597,
+0.522 against measured 0.838, 0.764, 0.691, 0.631; residuals +0.010,
++0.055, +0.094, +0.109, positive at every G & ZVF is a training-batch
+quantity and held-out accuracy is not; recomputed from
+\longtok{results/groupsize\_\allowbreak{}zvf\_\allowbreak{}sweep.json}; the per-step-average
+baseline is the one named in
+\longtok{sections/appendix\_\allowbreak{}zvf\_\allowbreak{}formalization.tex} \\
+§6.3.4 (naive ZVF--accuracy correlation) & \longtok{sections/zvf.tex} & r
+= 0.22 over n = 23 pooled rows, bootstrap 95\% CI {[}−0.29, 0.94{]} & n
+= 17 per-experiment rows; Fisher-z 95\% CI {[}−0.29, +0.63{]} & The
+residual table on disk, \longtok{results/zvf\_\allowbreak{}iter26\_\allowbreak{}residual.tsv},
+holds 17 rows; a bootstrap upper bound near +0.95 at this n indicates an
+unstable bootstrap \\
+§6.3.4 (residualised ZVF) & \longtok{sections/zvf.tex} & After regressing
+out mean reward, residualised ZVF remains positively associated with
+last-10 accuracy, r = +0.80, 95\% CI {[}+0.54, +1.00{]} & That slice is
+the n = 9 variance-mitigation rows, a simulation projection; the
+measured pooled residual is r = +0.205, Fisher 95\% CI {[}−0.31,
++0.62{]}, p = 0.43, n = 17 & \longtok{results/zvf\_\allowbreak{}iter26\_\allowbreak{}residual.tsv};
+projection status in §6.3.2 \\
+§6.4.1 (group-size TOST) & \longtok{sections/group\_\allowbreak{}size\_\allowbreak{}iter27.tex} &
+TOST p-values against G = 2 of p \textless{} 10⁻⁹ at G = 4 and G = 8 and
+p \textless{} 10⁻⁴ at G = 16, with accompanying intervals & Seed-level
 paired TOST (margin ±0.02, n = 3): p = 0.012 (G = 4), 0.043 (G = 8),
 0.056 (G = 16); equivalence not established at G = 16; the source
 intervals are withdrawn & p-values that small cannot come from three
 paired seeds, so the source does not use the seed as the unit;
 recomputed per seed \\
-§6.4.1 (retention asymptote) & sections/group\_\allowbreak{}size\_\allowbreak{}iter27.tex &
-Asymptote interval {[}0.712, 0.745{]} for
+§6.4.1 (retention asymptote) & \longtok{sections/group\_\allowbreak{}size\_\allowbreak{}iter27.tex}
+& Asymptote interval {[}0.712, 0.745{]} for
 \(R(T) = 0.729 + 0.247\,e^{-T/5.76\mathrm{M}}\) & No confidence
 interval; the fit is illustrative only & A three-parameter curve through
 four reconstructed points leaves one residual degree of freedom \\
 §6.4.2 (algorithm axis of the factorization audit) &
-results/berkeley/unpacking\_\allowbreak{}dpo\_\allowbreak{}ppo\_\allowbreak{}factorization.json & ``DECISIVE''
-equivalence of GRPO and PPO & Equivalence not established; paired \(t\)
-\(p = 0.374\) is the primary test, exact sign-flip \(p = 0.625\) & A
-failure to reject is not equivalence; paired TOST at ±0.005 gives
-\(p = 0.104\) (§6.2.3) \\
+\longtok{results/berkeley/unpacking\_\allowbreak{}dpo\_\allowbreak{}ppo\_\allowbreak{}factorization.json} &
+``DECISIVE'' equivalence of GRPO and PPO & Equivalence not established;
+paired \(t\) \(p = 0.374\) is the primary test, exact sign-flip
+\(p = 0.625\) & A failure to reject is not equivalence; paired TOST at
+±0.005 gives \(p = 0.104\) (§6.2.3) \\
 §6.4.2 (H1, gradient-utilisation ratio) &
-results/berkeley/adding\_\allowbreak{}error\_\allowbreak{}bars\_\allowbreak{}summary.json;
-sections/p3\_conclusion.tex & Graded DECISIVE, with interval {[}4.16,
-4.82{]} & Held at hypothesis-generator status; point estimate 5.03, no
-interval reported & The interval excludes its own point estimate; it is
-taken over n = 4 budgets around their mean of 4.456, and the audit's own
-note says ``n=4 budgets \ldots{} cannot support CI on the ratio'' \\
+\longtok{results/berkeley/adding\_\allowbreak{}error\_\allowbreak{}bars\_\allowbreak{}summary.json};
+\longtok{sections/p3\_conclusion.tex} & Graded DECISIVE, with interval
+{[}4.16, 4.82{]} & Held at hypothesis-generator status; point estimate
+5.03, no interval reported & The interval excludes its own point
+estimate; it is taken over n = 4 budgets around their mean of 4.456, and
+the audit's own note says ``n=4 budgets \ldots{} cannot support CI on
+the ratio'' \\
 §6.4.2 (H2, retention-versus-token slope) &
-results/berkeley/adding\_\allowbreak{}error\_\allowbreak{}bars\_\allowbreak{}summary.json;
-sections/p3\_conclusion.tex & Graded DECISIVE, with interval {[}−0.237,
-−0.038{]} & Held at hypothesis-generator status & The slope is fitted to
-the four reconstructed budgets of the token-budget grid, not to trained
-arms \\
-§6.5.3 (sliding-window trap rate) & P4 source, sections/length\_bias.tex
-& The 6/16 (37.5\%) sliding-window rate is an upper bound on trap
-prevalence in the controlled data & A point estimate; Wilson 95\% CIs
-{[}5.7\%, 51\%{]} (2/10), {[}30\%, 90\%{]} (4/6), {[}18.5\%, 61\%{]}
-(6/16) & A point estimate is not a bound \\
-§6.5.3 (iteration-20 mechanism regression) & sections/length\_bias.tex &
-Arithmetic OLS slope ``reduced by 0.43'' with 95\% CI {[}−0.58,
-−0.28{]}, paired p = 0.036; Theil--Sen ``reduced by 1.11'' with CI
-{[}−1.59, −0.63{]}, p = 0.047 & Dr.~GRPO minus GRPO, paired by seed, n =
-5: OLS +0.43 {[}+0.18, +0.68{]}, paired \(t\) \(p = 0.009\); Theil--Sen
-+1.11 {[}+0.33, +1.88{]}, \(p = 0.017\); permutation \(p = 0.0625\) for
-both & With mean OLS slopes of −3.65 (GRPO) and −3.22 (Dr.~GRPO),
-Dr.~GRPO minus GRPO is positive, so the printed intervals have the wrong
-sign, and the source's CIs and p-values do not come from the same test;
-recomputed from results/length\_\allowbreak{}bias\_\allowbreak{}mechanism\_\allowbreak{}per\_\allowbreak{}run.tsv \\
-§6.5.4 (GSM8K-CoT pre-to-post gains) & sections/p4\_\allowbreak{}results\_\allowbreak{}intro.tex &
-McNemar exact \(p = 1.1 \times 10^{-4}\) (GRPO) and
-\(7.6 \times 10^{-4}\) (Dr.~GRPO), pooled over seeds & Seed-level
-one-sample \(t\) on the three per-seed deltas: \(p = 0.0051\) (GRPO),
-\(p = 0.0099\) (Dr.~GRPO) & The pooled test treats the 600 seed-item
-pairs as independent, but the same 200 items recur across seeds;
-recomputed from results/drgrpo\_\allowbreak{}gsm8k\_\allowbreak{}cot.json \\
+\longtok{results/berkeley/adding\_\allowbreak{}error\_\allowbreak{}bars\_\allowbreak{}summary.json};
+\longtok{sections/p3\_conclusion.tex} & Graded DECISIVE, with interval
+{[}−0.237, −0.038{]} & Held at hypothesis-generator status & The slope
+is fitted to the four reconstructed budgets of the token-budget grid,
+not to trained arms \\
+§6.5.3 (sliding-window trap rate) & P4 source,
+\longtok{sections/length\_bias.tex} & The 6/16 (37.5\%) sliding-window
+rate is an upper bound on trap prevalence in the controlled data & A
+point estimate; Wilson 95\% CIs {[}5.7\%, 51\%{]} (2/10), {[}30\%,
+90\%{]} (4/6), {[}18.5\%, 61\%{]} (6/16) & A point estimate is not a
+bound \\
+§6.5.3 (iteration-20 mechanism regression) &
+\longtok{sections/length\_bias.tex} & Arithmetic OLS slope ``reduced by
+0.43'' with 95\% CI {[}−0.58, −0.28{]}, paired p = 0.036; Theil--Sen
+``reduced by 1.11'' with CI {[}−1.59, −0.63{]}, p = 0.047 & Dr.~GRPO
+minus GRPO, paired by seed, n = 5: OLS +0.43 {[}+0.18, +0.68{]}, paired
+\(t\) \(p = 0.009\); Theil--Sen +1.11 {[}+0.33, +1.88{]}, \(p = 0.017\);
+permutation \(p = 0.0625\) for both & With mean OLS slopes of −3.65
+(GRPO) and −3.22 (Dr.~GRPO), Dr.~GRPO minus GRPO is positive, so the
+printed intervals have the wrong sign, and the source's CIs and p-values
+do not come from the same test; recomputed from
+\longtok{results/length\_\allowbreak{}bias\_\allowbreak{}mechanism\_\allowbreak{}per\_\allowbreak{}run.tsv} \\
+§6.5.4 (GSM8K-CoT pre-to-post gains) &
+\longtok{sections/p4\_\allowbreak{}results\_\allowbreak{}intro.tex} & McNemar exact
+\(p = 1.1 \times 10^{-4}\) (GRPO) and \(7.6 \times 10^{-4}\) (Dr.~GRPO),
+pooled over seeds & Seed-level one-sample \(t\) on the three per-seed
+deltas: \(p = 0.0051\) (GRPO), \(p = 0.0099\) (Dr.~GRPO) & The pooled
+test treats the 600 seed-item pairs as independent, but the same 200
+items recur across seeds; recomputed from
+\longtok{results/drgrpo\_\allowbreak{}gsm8k\_\allowbreak{}cot.json} \\
 §6.5.4 (iteration-136 late-efficiency contrast) &
-results/berkeley/adding\_\allowbreak{}error\_\allowbreak{}bars\_\allowbreak{}summary.json;
-sections/p4\_conclusion.tex & Graded DECISIVE, with ``one-sided
+\longtok{results/berkeley/adding\_\allowbreak{}error\_\allowbreak{}bars\_\allowbreak{}summary.json};
+\longtok{sections/p4\_conclusion.tex} & Graded DECISIVE, with ``one-sided
 parametric p = 0.031'' & Suggestive: \(p = 0.031\) is an exact one-sided
 Wilcoxon signed-rank p at its \(n = 5\) floor (1/32); paired
 \(t(4) = 5.96\), two-sided \(p = 0.004\); two-sided sign-flip
 \(p = 0.0625\); Holm across the eight-hypothesis family gives 0.25 &
 Recomputed from \longtok{length\_\allowbreak{}bias\_\allowbreak{}iter136\_\allowbreak{}step\_\allowbreak{}coupling.tsv} \\
 §7.1 (variance decomposition, group-size axis) &
-sections/p5\_evidence.tex & η² = 1.0000 for the group-size axis, and
-group-size-to-algorithm ratios of 22× (ZVF) and 133× (reward) & No
-group-size η² and no ratio reported & Computed on
+\longtok{sections/p5\_evidence.tex} & η² = 1.0000 for the group-size
+axis, and group-size-to-algorithm ratios of 22× (ZVF) and 133× (reward)
+& No group-size η² and no ratio reported & Computed on
 \longtok{groupsize\_\allowbreak{}zvf\_\allowbreak{}sweep.tsv}, which holds one row per G level (4
 cells, df = 0 within), so η² = 1 by construction \\
-§7.1 (98-cell decomposition) & sections/p5\_evidence.tex & Stack-to-seed
-variance ratios of 503× to 96,128× & Not quoted as effect sizes & The
-seed axis rounds to 0.000, so the ratios divide by a near-zero
-quantity \\
-§7.3 (hindsight-optimal shrink rule) & sections/p7\_controller.tex & The
-0.797 cost ratio of the per-prompt hindsight optimum is a ceiling on
-rollout spend & The best cost ratio under a
-no-shrinking-of-saturated-prompts constraint, not a lower bound on cost
-for any adaptive rule & Dualformer-Auto's observed 0.66 to 0.68 on the
-four-bin rule is cheaper \\
+§7.1 (98-cell decomposition) & \longtok{sections/p5\_evidence.tex} &
+Stack-to-seed variance ratios of 503× to 96,128× & Not quoted as effect
+sizes & The seed axis rounds to 0.000, so the ratios divide by a
+near-zero quantity \\
+§7.1 (manifest--outcome coupling) & \longtok{sections/p5\_stack.tex},
+§Live-Corpus Coupling & Hamming distance predicts
+\textbar ΔZVF\textbar{} with Spearman ρ = +0.529 and
+\textbar ΔPCD\textbar{} with ρ = +0.541, p ≤ 10⁻³ & ρ = +0.44 (ZVF),
++0.39 (PCD), +0.28 (reward) over all 4,753 pairs of the 98 cells; Mantel
+permutation p \textless{} 10⁻³ for each & The source script
+\longtok{platform\_modal/scripts/p5p8/p5\_\allowbreak{}manifest\_\allowbreak{}outcome\_\allowbreak{}coupling.py}
+and its committed output give +0.407 and +0.336 on a 2,000-pair sample;
+no variant reproduces +0.529 or +0.541; pair-level p-values are invalid
+because pairs share cells; recomputed in
+\longtok{thesis\_\allowbreak{}review\_\allowbreak{}2026-09-27/stats\_followup/m18\_\allowbreak{}mantel\_\allowbreak{}summary.json} \\
+§7.2 (same-stack method deltas) &
+\longtok{sections/p6\_\allowbreak{}measured\_\allowbreak{}evidence.tex} & AERO and AREAL reward
+decreases with intervals excluding zero, read as resampling
+prompt-steps, uncorrected & Intervals resample the last 10 of 40 steps;
+exact sign-flip Holm p = 0.047 (AERO), 0.047 (AREAL), 0.23 (GIFT); at
+prompt level the AERO interval includes zero & Recomputed from
+\longtok{n2\_\allowbreak{}reward\_\allowbreak{}tensor\_\allowbreak{}resume/*\_s0\_tensors.jsonl};
+\longtok{thesis\_\allowbreak{}review\_\allowbreak{}2026-09-27/stats\_followup/m16\_summary.json} \\
+§7.3 (hindsight-optimal shrink rule) &
+\longtok{sections/p7\_controller.tex} & The 0.797 cost ratio of the
+per-prompt hindsight optimum is a ceiling on rollout spend & The best
+cost ratio under a no-shrinking-of-saturated-prompts constraint, not a
+lower bound on cost for any adaptive rule & Dualformer-Auto's observed
+0.66 to 0.68 on the four-bin rule is cheaper \\
 \end{longtable}
 \endgroup
 
@@ -9774,9 +10068,9 @@ anonymised feature shape, and none of the temporal drift, verification
 latency or adversarial adaptation of real card-fraud data.
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
 \caption{The two arms of P8.}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
@@ -9879,9 +10173,9 @@ Four operational arguments hold even at AUC parity:
 \section{Supporting measurements}\label{supporting-measurements}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
 \caption{Supporting P8 measurements. Bracketed ranges are
 paired-bootstrap 95\% intervals as reported by the source. Source files
 are under \protect\longtok{platform\_hybrid/experiments/results/} and
@@ -10016,11 +10310,11 @@ group-relative estimator}
 \begin{itemize}
 \tightlist
 \item
-  platform\_hybrid/sem 4 work/EXPERIMENTS.md
+  \texttt{platform\_hybrid/sem} 4 \texttt{work/EXPERIMENTS.md}
 \item
-  platform\_hybrid/sem 4 work/README.md
+  \texttt{platform\_hybrid/sem} 4 \texttt{work/README.md}
 \item
-  platform\_hybrid/sem 4 work/PROVENANCE.md
+  \texttt{platform\_hybrid/sem} 4 \texttt{work/PROVENANCE.md}
 \item
   \longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md}
 \item
@@ -10257,20 +10551,20 @@ Methodology}\label{chapter-4-proposed-methodology}
 \item
   \longtok{platform\_tinker/reports/esa\_phase1/Phase1\_\allowbreak{}Project\_\allowbreak{}Report\_\allowbreak{}ZVF.tex}
 \item
-  platform\_hybrid/sem 4
-  work/submissions/mtech-final-review/build\_\allowbreak{}review\_\allowbreak{}pptx.py
-\item
+  \texttt{platform\_hybrid/sem} 4
+  \longtok{work/submissions/mtech-final-review/build\_\allowbreak{}review\_\allowbreak{}pptx.py},
   slide 7
 \item
   \longtok{platform\_hybrid/experiments/results/samestack\_\allowbreak{}ppo\_\allowbreak{}grpo.json}
 \item
-  \longtok{platform\_hybrid/paper/sections/\_shared\_methods.tex}
-\item
-  its status is recorded in §6.2.3
+  \longtok{platform\_hybrid/paper/sections/\_shared\_methods.tex}, its
+  status is recorded in §6.2.3
 \item
   \longtok{platform\_hybrid/paper/neurips\_\allowbreak{}2026\_\allowbreak{}variants/paper\_\allowbreak{}P8\_\allowbreak{}workshop.tex}
 \item
-  §6.1
+  \longtok{platform\_hybrid/paper/sections/\_shared\_methods.tex}
+\item
+  \longtok{platform\_hybrid/paper/sections/\_shared\_methods.tex}, §6.1
 \end{itemize}
 
 \textbf{4.2 Per-Step Telemetry}
@@ -10296,15 +10590,15 @@ Methodology}\label{chapter-4-proposed-methodology}
 \item
   \longtok{platform\_hybrid/paper/sections/p2\_abstract.tex}
 \item
+  \longtok{platform\_hybrid/paper/sections/appendix\_\allowbreak{}zvf\_\allowbreak{}formalization.tex},
   results in Chapter 6 §6.3.3
 \item
   \longtok{platform\_hybrid/paper/sections/p7\_abstract.tex}
 \item
-  results in Chapter 6 §6.3.4
+  \longtok{platform\_hybrid/paper/sections/p2\_abstract.tex}, results in
+  Chapter 6 §6.3.4
 \item
-  \longtok{platform\_hybrid/paper/sections/zvf.tex}
-\item
-  §6.3.2
+  \longtok{platform\_hybrid/paper/sections/zvf.tex}, §6.3.2
 \end{itemize}
 
 \textbf{4.4 The Eight-Study Portfolio}
@@ -10312,7 +10606,7 @@ Methodology}\label{chapter-4-proposed-methodology}
 \begin{itemize}
 \tightlist
 \item
-  platform\_hybrid/sem 4 work/README.md
+  \texttt{platform\_hybrid/sem} 4 \texttt{work/README.md}
 \item
   \longtok{platform\_hybrid/paper/sections/p1\_abstract.tex}
 \item
@@ -10328,14 +10622,15 @@ Methodology}\label{chapter-4-proposed-methodology}
 \item
   \longtok{platform\_hybrid/paper/sections/p7\_abstract.tex}
 \item
-  platform\_hybrid/sem 4 work/submissions/mtech-final-review/README.md
+  \texttt{platform\_hybrid/sem} 4
+  \longtok{work/submissions/mtech-final-review/README.md}
 \item
   \longtok{platform\_hybrid/paper/archive/absorbed/P08\_fraud/sections/p8\_abstract.tex}
 \item
   \longtok{platform\_hybrid/paper/PAPERS\_README.md}
 \end{itemize}
 
-\textbf{4.5 The Design of the E1--E14 Held-Out Evaluation Campaign}
+\textbf{4.5 The Design of the E1--E14 Evaluation Campaign}
 
 \begin{itemize}
 \tightlist
@@ -10395,8 +10690,7 @@ Details}\label{chapter-5-implementation-details}
 \item
   \longtok{platform\_tinker/reports/esa\_phase1/Phase1\_\allowbreak{}Project\_\allowbreak{}Report\_\allowbreak{}ZVF.tex}
 \item
-  \longtok{platform\_tinker/tinkerrl/grpo.py}
-\item
+  \longtok{platform\_tinker/tinkerrl/grpo.py},
   \longtok{make\_\allowbreak{}grpo\_\allowbreak{}loss\_\allowbreak{}fn}
 \item
   \longtok{platform\_tinker/tinkerrl/grpo\_cli.py}
@@ -10516,8 +10810,7 @@ Details}\label{chapter-5-implementation-details}
 \item
   \longtok{platform\_hybrid/paper/sections/p1\_abstract.tex}
 \item
-  \longtok{platform\_hybrid/paper/sections/\_shared\_methods.tex}
-\item
+  \longtok{platform\_hybrid/paper/sections/\_shared\_methods.tex},
   Chapter 1 §1.2
 \end{itemize}
 
@@ -10529,9 +10822,10 @@ Details}\label{chapter-5-implementation-details}
   \longtok{platform\_hybrid/paper/sections/scaling\_laws.tex}
 \item
   provenance in
-  autoresearch/deli-neurips-tmlr-260802/state/nemotron\_\allowbreak{}architecture\_\allowbreak{}resolution.md
+  \longtok{autoresearch/deli-neurips-tmlr-260802/state/nemotron\_\allowbreak{}architecture\_\allowbreak{}resolution.md}
 \item
-  Table \texttt{tab:scaling-iter17-kappa}
+  \longtok{platform\_hybrid/paper/sections/scaling\_laws.tex}, Table
+  \texttt{tab:scaling-iter17-kappa}
 \end{itemize}
 
 \textbf{6.3.1 Definition and measurement}
@@ -10577,11 +10871,8 @@ Details}\label{chapter-5-implementation-details}
 \begin{itemize}
 \tightlist
 \item
-  \longtok{platform\_hybrid/experiments/results/zvf\_\allowbreak{}iter26\_\allowbreak{}residual.tsv}
-\item
-  corrected
-\item
-  see Table E.1
+  \longtok{platform\_hybrid/experiments/results/zvf\_\allowbreak{}iter26\_\allowbreak{}residual.tsv},
+  corrected, see Table E.1
 \item
   \longtok{platform\_hybrid/paper/sections/zvf.tex}
 \item
@@ -10589,11 +10880,8 @@ Details}\label{chapter-5-implementation-details}
 \item
   \longtok{platform\_hybrid/paper/sections/appendix\_\allowbreak{}zvf\_\allowbreak{}formalization.tex}
 \item
-  \longtok{platform\_hybrid/paper/sections/p2\_\allowbreak{}results\_\allowbreak{}intro.tex}
-\item
-  Appendix A
-\item
-  claim P2-C2
+  \longtok{platform\_hybrid/paper/sections/p2\_\allowbreak{}results\_\allowbreak{}intro.tex},
+  Appendix A, claim P2-C2
 \item
   \longtok{platform\_modal/scripts/zvf\_\allowbreak{}diagnostic\_\allowbreak{}iter130.py}
 \item
@@ -10624,7 +10912,8 @@ budgets}
 \item
   \longtok{platform\_hybrid/experiments/results/berkeley/unpacking\_\allowbreak{}dpo\_\allowbreak{}ppo\_\allowbreak{}factorization.json}
 \item
-  as summarised in platform\_hybrid/paper/sections/p3\_conclusion.tex
+  as summarised in
+  \longtok{platform\_hybrid/paper/sections/p3\_conclusion.tex}
 \item
   \longtok{platform\_hybrid/experiments/results/berkeley/adding\_\allowbreak{}error\_\allowbreak{}bars\_\allowbreak{}summary.json}
 \item
@@ -10647,7 +10936,7 @@ budgets}
   \longtok{platform\_hybrid/experiments/results/curriculum\_opening/FINDINGS.md}
 \item
   as summarised in
-  platform\_hybrid/paper/sections/robustness\_\allowbreak{}smallscale\_\allowbreak{}nulls.tex
+  \longtok{platform\_hybrid/paper/sections/robustness\_\allowbreak{}smallscale\_\allowbreak{}nulls.tex}
 \item
   \longtok{platform\_hybrid/paper/sections/robustness\_\allowbreak{}smallscale\_\allowbreak{}nulls.tex}
 \item
@@ -10678,8 +10967,7 @@ budgets}
   \longtok{platform\_hybrid/paper/archive/absorbed/U01\_\allowbreak{}main\_\allowbreak{}compendium/main.tex}
 \item
   the same rates appear in
-  platform\_tinker/reports/combined/combined\_capstone.tex
-\item
+  \longtok{platform\_tinker/reports/combined/combined\_capstone.tex},
   where the trap rates are given as GRPO 36\% and PPO 71\%
 \item
   \longtok{platform\_tinker/reports/combined/combined\_capstone.tex}
@@ -10715,6 +11003,16 @@ budgets}
   \longtok{platform\_hybrid/paper/sections/p4\_conclusion.tex}
 \end{itemize}
 
+\textbf{6.5.5 Same-stack rerun on the unsaturated configuration}
+
+\begin{itemize}
+\tightlist
+\item
+  \longtok{platform\_hybrid/experiments/modal/modal\_\allowbreak{}samestack\_\allowbreak{}gsm8k\_\allowbreak{}cot.py}
+\item
+  \longtok{platform\_hybrid/experiments/results/samestack\_\allowbreak{}gsm8k\_\allowbreak{}cot.json}
+\end{itemize}
+
 \section{Chapter 7: Results II: Reporting, Registry and Controller
 (P5--P7)}\label{chapter-7-results-ii-reporting-registry-and-controller-p5p7}
 
@@ -10726,49 +11024,56 @@ budgets}
 \item
   \longtok{platform\_hybrid/paper/sections/p5\_intro.tex}
 \item
-  \longtok{platform\_hybrid/paper/sections/p5\_evidence.tex}
+  \longtok{platform\_hybrid/paper/sections/p5\_evidence.tex}, Table
+  \texttt{tab:p5-h2h}
 \item
-  Table \texttt{tab:p5-h2h}
-\item
-  \longtok{platform\_hybrid/paper/sections/p5\_stack.tex}
-\item
-  §Item 3
+  \longtok{platform\_hybrid/paper/sections/p5\_stack.tex}, §Item 3
 \item
   \longtok{platform\_hybrid/paper/sections/p5\_abstract.tex}
 \item
-  Exhibits 5 and 7
+  \longtok{platform\_hybrid/paper/sections/p5\_evidence.tex}, Exhibits 5
+  and 7
 \item
   \longtok{platform\_hybrid/experiments/results/groupsize\_\allowbreak{}zvf\_\allowbreak{}sweep.tsv}
 \item
-  Table \texttt{tab:p5-minreport}
+  \longtok{platform\_hybrid/paper/sections/p5\_stack.tex}, Table
+  \texttt{tab:p5-minreport}
 \item
-  Table \texttt{tab:p5-ushape}
+  \longtok{platform\_hybrid/paper/sections/p5\_stack.tex}, Table
+  \texttt{tab:p5-ushape}
 \item
-  Table \texttt{tab:p5-gsize}
+  \longtok{platform\_hybrid/paper/sections/p5\_stack.tex}, Table
+  \texttt{tab:p5-gsize}
 \item
-  §Item 7
+  \longtok{platform\_hybrid/paper/sections/p5\_stack.tex}, §Item 7
 \item
-  §Item 8
+  \longtok{platform\_hybrid/paper/sections/p5\_stack.tex}, §Item 8
 \item
-  Exhibit 8
+  \longtok{platform\_hybrid/paper/sections/p5\_evidence.tex}, Exhibit 8
 \item
-  Exhibits 6 and 18
+  \longtok{platform\_hybrid/paper/sections/p5\_evidence.tex}, Exhibits 6
+  and 18
 \item
-  \longtok{platform\_hybrid/paper/sections/p6\_\allowbreak{}registry\_\allowbreak{}health.tex}
+  \longtok{platform\_hybrid/paper/sections/p6\_\allowbreak{}registry\_\allowbreak{}health.tex},
+  Table \texttt{tab:p6-minreport-subfield}, reported for the same corpus
 \item
-  Table \texttt{tab:p6-minreport-subfield}
+  \longtok{platform\_hybrid/paper/sections/p5\_evidence.tex}, Table
+  \longtok{tab:p5-discriminative-entropy}
 \item
-  reported for the same corpus
+  \longtok{platform\_hybrid/paper/sections/p5\_evidence.tex}, Table
+  \texttt{tab:p5-field-suff}
 \item
-  Table \longtok{tab:p5-discriminative-entropy}
+  \longtok{platform\_hybrid/paper/sections/p5\_evidence.tex}, Table
+  \texttt{tab:p5-manifest-self-suff}
 \item
-  Table \texttt{tab:p5-field-suff}
-\item
-  Table \texttt{tab:p5-manifest-self-suff}
-\item
+  \longtok{platform\_hybrid/paper/sections/p5\_stack.tex},
   §Placebo-Replacement Bound
 \item
-  §Live-Corpus Coupling
+  \longtok{platform\_hybrid/paper/sections/p5\_stack.tex}, §Live-Corpus
+  Coupling
+\item
+  recomputed in
+  \longtok{outputs/PES\_\allowbreak{}Phase2\_\allowbreak{}Third\_\allowbreak{}Review\_\allowbreak{}2026-09-24/thesis\_\allowbreak{}review\_\allowbreak{}2026-09-27/stats\_followup/m18\_\allowbreak{}mantel\_\allowbreak{}summary.json}
 \end{itemize}
 
 \textbf{7.2 The GRPO-Registry (P6)}
@@ -10786,15 +11091,18 @@ budgets}
 \item
   \longtok{platform\_hybrid/paper/sections/p6\_\allowbreak{}registry\_\allowbreak{}health.tex}
 \item
-  platform\_hybrid/experiments/results/p5p8/registry\_\allowbreak{}stress\_\allowbreak{}per\_\allowbreak{}run.tsv
+  \longtok{platform\_hybrid/experiments/results/p5p8/registry\_\allowbreak{}stress\_\allowbreak{}per\_\allowbreak{}run.tsv}
   and registry\_\allowbreak{}stress\_\allowbreak{}summary.json
 \item
+  \longtok{platform\_hybrid/paper/sections/p6\_\allowbreak{}registry\_\allowbreak{}health.tex},
   §Stress Test
 \item
-  \longtok{platform\_hybrid/paper/sections/p6\_\allowbreak{}measured\_\allowbreak{}evidence.tex}
+  \longtok{outputs/PES\_\allowbreak{}Phase2\_\allowbreak{}Third\_\allowbreak{}Review\_\allowbreak{}2026-09-24/thesis\_\allowbreak{}review\_\allowbreak{}2026-09-27/stats\_followup/m16\_summary.json}
 \item
+  \longtok{platform\_hybrid/paper/sections/p6\_\allowbreak{}measured\_\allowbreak{}evidence.tex},
   Table \texttt{tab:p6-measured-deltas}
 \item
+  \longtok{platform\_hybrid/paper/sections/p6\_\allowbreak{}registry\_\allowbreak{}health.tex},
   §Contrastive Yield and Anti-Herding
 \item
   \longtok{platform\_hybrid/paper/sections/p6\_\allowbreak{}query\_\allowbreak{}auditor.tex}
@@ -10809,36 +11117,39 @@ budgets}
 \item
   \longtok{platform\_hybrid/paper/sections/p7\_theory.tex}
 \item
-  Tables \texttt{tab:p7-modelG} and \texttt{tab:p7-gsweep}
+  \longtok{platform\_hybrid/paper/sections/p7\_theory.tex}, Tables
+  \texttt{tab:p7-modelG} and \texttt{tab:p7-gsweep}
 \item
-  \longtok{platform\_hybrid/paper/sections/p7\_controller.tex}
+  \longtok{platform\_hybrid/paper/sections/p7\_controller.tex}, Table
+  \texttt{tab:p7-e3}
 \item
-  Table \texttt{tab:p7-e3}
+  \longtok{platform\_hybrid/paper/sections/p7\_controller.tex}, Tables
+  \texttt{tab:p7-cf-sweep} and \texttt{tab:p7-cf-granularity}
 \item
-  Tables \texttt{tab:p7-cf-sweep} and \texttt{tab:p7-cf-granularity}
+  \longtok{platform\_hybrid/paper/sections/p7\_controller.tex}, §Bayesian
+  Refinement
 \item
-  §Bayesian Refinement
-\item
+  \longtok{platform\_hybrid/paper/sections/p7\_controller.tex},
   §Posterior-Predictive Contrast Restoration and §Statistically
   Validated Pareto Frontier
 \item
-  §Exact Finite-Pool Correction
+  \longtok{platform\_hybrid/paper/sections/p7\_controller.tex}, §Exact
+  Finite-Pool Correction
 \item
   \longtok{platform\_hybrid/paper/sections/p7\_\allowbreak{}design\_\allowbreak{}rules.tex}
 \end{itemize}
 
-\section{Chapter 8: The E1--E14 Held-Out Evaluation
-Campaign}\label{chapter-8-the-e1e14-held-out-evaluation-campaign}
+\section{Chapter 8: The E1--E14 Evaluation
+Campaign}\label{chapter-8-the-e1e14-evaluation-campaign}
 
 \textbf{8.1 The evaluated actor and the one-actor design}
 
 \begin{itemize}
 \tightlist
 \item
-  \longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md}
-\item
-  the same identity pair is recorded independently in the E10 native
-  receipt and in the E11 full receipt
+  \longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md}, the same
+  identity pair is recorded independently in the E10 native receipt and
+  in the E11 full receipt
 \item
   which also preserves the training sampler path
   \longtok{tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler\_weights/seed809\_final}:
@@ -10856,8 +11167,7 @@ Campaign}\label{chapter-8-the-e1e14-held-out-evaluation-campaign}
 \begin{itemize}
 \tightlist
 \item
-  \longtok{outputs/verification/LEDGER\_\allowbreak{}CODE\_\allowbreak{}CHECK\_\allowbreak{}2026-09-19.json}
-\item
+  \longtok{outputs/verification/LEDGER\_\allowbreak{}CODE\_\allowbreak{}CHECK\_\allowbreak{}2026-09-19.json},
   check \longtok{strict\_\allowbreak{}completed\_\allowbreak{}suites\_\allowbreak{}are\_\allowbreak{}E8\_\allowbreak{}E10\_\allowbreak{}E11}
 \item
   \longtok{outputs/public\_\allowbreak{}portfolio\_\allowbreak{}2026-09-05/labbench\_\allowbreak{}final\_\allowbreak{}diagnostics.json}
@@ -10947,6 +11257,8 @@ Work}\label{chapter-9-cross-study-synthesis-threats-to-validity-conclusions-and-
 \item
   \longtok{platform\_hybrid/experiments/results/berkeley/adding\_\allowbreak{}error\_\allowbreak{}bars\_\allowbreak{}summary.json}
 \item
+  \longtok{platform\_hybrid/paper/sections/p3\_abstract.tex}
+\item
   \longtok{platform\_hybrid/paper/sections/p7\_abstract.tex}
 \item
   \longtok{platform\_hybrid/paper/sections/p5\_abstract.tex}
@@ -10971,11 +11283,11 @@ Work}\label{chapter-9-cross-study-synthesis-threats-to-validity-conclusions-and-
 \item
   LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md §3
 \item
-  LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md §7.1
-\item
-  Table 1.1
+  LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md §7.1, Table 1.1
 \item
   LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md §6.2
+\item
+  LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md §7.1
 \item
   LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md §6.1
 \item
@@ -10987,25 +11299,21 @@ Work}\label{chapter-9-cross-study-synthesis-threats-to-validity-conclusions-and-
 \item
   \longtok{outputs/PES\_\allowbreak{}Phase2\_\allowbreak{}Review\_\allowbreak{}2026-09-12/finish/Pending\_Experiments.md}
 \item
-  LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md §2.2
-\item
-  §2.3
+  LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md §2.2, §2.3
 \item
   \longtok{platform\_hybrid/paper/archive/absorbed/U01\_\allowbreak{}main\_\allowbreak{}compendium/main.tex}
 \item
   \longtok{outputs/modal\_\allowbreak{}e1\_\allowbreak{}e14/2026-08-16/e11\_\allowbreak{}full\_\allowbreak{}receipt.json}
 \item
-  outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md §6
+  \longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md} §6
 \item
-  outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md §9.5
+  \longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md} §9.5
 \item
-  outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md §8
+  \longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md} §8
 \item
-  LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md §7.2
+  LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md §7.2, §7.3
 \item
-  §7.3
-\item
-  §4
+  LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md §3, §4
 \end{itemize}
 
 \textbf{9.3 Conclusions}
@@ -11029,11 +11337,11 @@ Work}\label{chapter-9-cross-study-synthesis-threats-to-validity-conclusions-and-
 \item
   \longtok{outputs/finish\_\allowbreak{}pending\_\allowbreak{}2026-09-27/E6/result.json}
 \item
-  outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md §5
+  \longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md} §5
 \item
   \longtok{outputs/PES\_\allowbreak{}Phase2\_\allowbreak{}Review\_\allowbreak{}2026-09-12/finish/Pending\_Experiments.md}
 \item
-  outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md §9.7
+  \longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md} §9.7
 \item
   \longtok{outputs/TINKER\_\allowbreak{}SAMPLER\_\allowbreak{}STATUS\_\allowbreak{}2026-09-20.json}
 \item
@@ -11084,8 +11392,7 @@ Detail}\label{appendix-d-campaign-lane-detail}
 \item
   \longtok{outputs/e11\_\allowbreak{}verilog\_\allowbreak{}eval/lane\_\allowbreak{}status\_\allowbreak{}2026-08-09.md}
 \item
-  \longtok{outputs/verification/LEDGER\_\allowbreak{}CODE\_\allowbreak{}CHECK\_\allowbreak{}2026-09-19.json}
-\item
+  \longtok{outputs/verification/LEDGER\_\allowbreak{}CODE\_\allowbreak{}CHECK\_\allowbreak{}2026-09-19.json},
   check \longtok{E11\_\allowbreak{}component\_\allowbreak{}split\_\allowbreak{}sums\_\allowbreak{}67\_\allowbreak{}plus\_\allowbreak{}62\_\allowbreak{}equals\_\allowbreak{}129}
 \item
   \longtok{outputs/PES\_\allowbreak{}Phase2\_\allowbreak{}Review\_\allowbreak{}2026-09-12/finish/e14\_\allowbreak{}terminal\_\allowbreak{}note\_\allowbreak{}2026-09-19.json}

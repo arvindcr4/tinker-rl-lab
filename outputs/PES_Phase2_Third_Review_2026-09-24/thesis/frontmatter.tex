@@ -216,29 +216,30 @@ label-flip risk between two runs from their records alone.
 
 \textbf{(3) Calibrated negative results.} No reliable scaling law is recovered
 from reward curves across twelve fitted anchors. A same-stack PPO/GRPO
-contrast (0.992 against 0.990, $p = 0.374$, five seeds) and a group-size sweep
-find no detectable difference, but both run on a saturated task and establish
-neither equivalence nor an optimum. ZVF does not predict held-out accuracy
+contrast (0.992 against 0.990, $p = 0.374$, five seeds) and a group-size sweep find no detectable difference, but both run on a saturated task and establish
+neither equivalence nor an optimum. On an unsaturated GSM8K rerun, GRPO beats an
+untuned-critic PPO by 5.0 points (95\% CI $[1.5, 8.5]$); $G = 2$ and $G = 8$
+stay indistinguishable. ZVF does not predict held-out accuracy
 ($\rho = 0.27$, 95\% CI $[-0.37, 0.88]$). An adaptive group-size controller
 derived from ZVF saves no prompts in counterfactual simulation, because 92\% of its escalations fall on
 groups that are already all-correct.
 
 \textbf{(4) An evaluation-governance protocol.} One lightly trained actor
 (Qwen3.6-35B-A3B with a LoRA adapter, 40 training steps) is evaluated on
-fourteen held-out suites under native graders at pinned revisions, with
+fourteen suites outside its training data under native graders at pinned revisions, with
 receipts, a no-pooling rule and a per-lane serving audit that traced a
 zero score to a serving defect. Complete scopes include VerilogEval
 ($129/312 = 41.35\%$), LAB-Bench ($0.2288$) and AgentDojo benign utility
 ($88/97$); six replacement scopes completed on 27 September 2026
 (Chapter~8, Table~8.C); seven original contracts remain externally blocked. A
 paired trained-versus-base rerun on 5--151 identical items per lane finds no
-significant difference in any lane, which at those sizes is inconclusive. No
+significant difference in any lane (inconclusive at those sizes). No
 claim of improvement over any baseline is made.
 
 \vspace{0.25in}
 \noindent\textbf{Keywords:} GRPO, RLVR, zero-variance fraction, signal
 starvation, stack-conditioned results, benchmark evaluation, reproducibility,
-held-out evaluation, attribution.
+evaluation governance, attribution.
 
 %---------------------------------------------------------------------
 \tableofcontents

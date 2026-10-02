@@ -1,0 +1,141 @@
+{
+  "n_cells": 98,
+  "n_pairs_full": 4753,
+  "n_permutations": 9999,
+  "seed": 20261002,
+  "statistic": "Spearman rho between upper-triangle Hamming and |delta outcome|; cell labels permuted jointly on rows+cols of the Hamming matrix",
+  "hamming_value_counts": {
+    "1": 317,
+    "2": 1492,
+    "3": 1184,
+    "4": 1760
+  },
+  "original_script_rerun_2000_sampled_pairs": {
+    "claim": "Joint manifest fingerprint (Hamming) -> |delta_telemetry|.",
+    "spearman_hamming_vs_d_reward": 0.2514,
+    "spearman_hamming_vs_d_zvf": 0.4073,
+    "spearman_hamming_vs_d_pcd": 0.3361,
+    "close_vs_far_mean_diff_reward": -0.051865,
+    "close_vs_far_p_value_reward": 0.0026,
+    "close_vs_far_mean_diff_zvf": -0.112523,
+    "close_vs_far_p_value_zvf": 0.0002,
+    "close_vs_far_mean_diff_pcd": -0.010924,
+    "close_vs_far_p_value_pcd": 0.0002,
+    "per_item_outcome_perm": [
+      {
+        "item": "loss_form",
+        "n_unique": 1,
+        "p_value_mean_reward": NaN,
+        "p_value_zvf": NaN,
+        "p_value_pcd": NaN,
+        "note": "placebo (<=1 unique value on live corpus)"
+      },
+      {
+        "item": "ref_policy_kl",
+        "n_unique": 1,
+        "p_value_mean_reward": NaN,
+        "p_value_zvf": NaN,
+        "p_value_pcd": NaN,
+        "note": "placebo (<=1 unique value on live corpus)"
+      },
+      {
+        "item": "sampler_backend_precision",
+        "n_unique": 1,
+        "p_value_mean_reward": NaN,
+        "p_value_zvf": NaN,
+        "p_value_pcd": NaN,
+        "note": "placebo (<=1 unique value on live corpus)"
+      },
+      {
+        "item": "per_step_zvf_path",
+        "n_unique": 98,
+        "p_value_mean_reward": 1.0,
+        "p_value_zvf": 1.0,
+        "p_value_pcd": 1.0,
+        "note": ""
+      },
+      {
+        "item": "group_size_schedule",
+        "n_unique": 5,
+        "p_value_mean_reward": 0.5642,
+        "p_value_zvf": 0.0005,
+        "p_value_pcd": 0.0005,
+        "note": ""
+      },
+      {
+        "item": "heldout_split",
+        "n_unique": 3,
+        "p_value_mean_reward": 0.0005,
+        "p_value_zvf": 0.0005,
+        "p_value_pcd": 0.0005,
+        "note": ""
+      },
+      {
+        "item": "decontamination_notes",
+        "n_unique": 2,
+        "p_value_mean_reward": 0.0005,
+        "p_value_zvf": 0.0005,
+        "p_value_pcd": 0.0005,
+        "note": ""
+      }
+    ]
+  },
+  "reported_in_thesis": {
+    "zvf": 0.529,
+    "pcd": 0.541,
+    "mean_reward": 0.251
+  },
+  "mantel": {
+    "zvf": {
+      "rho_full_4753_pairs": 0.4358,
+      "mantel_p_one_sided": 0.0001,
+      "mantel_p_two_sided": 0.0001,
+      "null_mean": 0.0001,
+      "null_q975": 0.0446,
+      "null_max": 0.1536
+    },
+    "pcd": {
+      "rho_full_4753_pairs": 0.3859,
+      "mantel_p_one_sided": 0.0001,
+      "mantel_p_two_sided": 0.0001,
+      "null_mean": -0.0001,
+      "null_q975": 0.0464,
+      "null_max": 0.1216
+    },
+    "mean_reward": {
+      "rho_full_4753_pairs": 0.275,
+      "mantel_p_one_sided": 0.0001,
+      "mantel_p_two_sided": 0.0001,
+      "null_mean": -0.0,
+      "null_q975": 0.0495,
+      "null_max": 0.1234
+    }
+  },
+  "sensitivity_seed_collapsed": {
+    "n_config_units": 50,
+    "n_pairs": 1225,
+    "mantel": {
+      "zvf": {
+        "rho": 0.4692,
+        "mantel_p_one_sided": 0.0001,
+        "mantel_p_two_sided": 0.0001
+      },
+      "pcd": {
+        "rho": 0.4301,
+        "mantel_p_one_sided": 0.0001,
+        "mantel_p_two_sided": 0.0001
+      },
+      "mean_reward": {
+        "rho": 0.3246,
+        "mantel_p_one_sided": 0.0001,
+        "mantel_p_two_sided": 0.0001
+      }
+    }
+  },
+  "files": {
+    "cells": "platform_hybrid/experiments/results/mega_20260704/cells.tsv (first 98 data rows)",
+    "manifests": "platform_hybrid/experiments/results/mega_20260704/manifests/<cell_id>.json",
+    "original_script": "platform_modal/scripts/p5p8/p5_manifest_outcome_coupling.py",
+    "original_summary": "platform_hybrid/experiments/results/p5p8/p5_manifest_outcome_coupling_summary.json"
+  }
+}

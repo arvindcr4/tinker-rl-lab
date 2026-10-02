@@ -41,7 +41,7 @@ timestamp, the two eras separate mechanically rather than by assertion:
 **Table A.1 — Registry composition by logging project.**
 
 | Project | Source | Runs | Era | Distinct base models | Algorithm | G | Dataset | Status |
-|---|---|---|---|---|---|---|---|---|
+|------------|----------------|------|----------|--------------|----------|------|----------|----------------|
 | `tinker` (training-service inventory) | Tinker API | 844 | 387 S3 / 457 S4 | 31 | — | — | — | all terminal at snapshot |
 | `tinker-rl-lab-world-class` | W&B | 174 | Semester 3 | 14 | GRPO | — | gsm8k | logged |
 | `tinker-rl-scaling` | W&B | 88 | Semester 3 | — | — | — | — | logged |
@@ -52,7 +52,7 @@ timestamp, the two eras separate mechanically rather than by assertion:
 | `huggingface` | W&B | 3 | Semester 3 | — | — | 16 | — | logged |
 | `skyrl-tinker` | W&B | 3 | Semester 3 | Qwen/Qwen3-8B | grpo | 8 | — | logged |
 | `tinker-rl-zvf-counterfactual` | W&B | 9 | 3 S3 / 6 S4 | — | — | — | — | logged |
-| `zvf-audit` | W&B | 368 | Semester 4 | 3 | — | 4, 8 | llama3, qwen3_instruct | logged |
+| `zvf-audit` | W&B | 368 | Semester 4 | 3 | — | 4, 8 | `llama3`, `qwen3_instruct` | logged |
 | `zvf-colab-experiments` | Colab → W&B | 16 | Semester 4 | — | — | — | — | logged |
 | `tinker-new-research` | W&B | 9 | Semester 4 | — | — | — | — | logged |
 
@@ -162,7 +162,7 @@ deterministic resource or schema claim; X = unlinked, contradicted, or
 provenance-conflicted.
 
 | Claim | Linked runs (representative) | Stack | Model | Algo | G | Dataset | Seeds / steps | Outcome | Tier |
-|---|---|---|---|---|---|---|---|---|---|
+|------|-----------|----------|-------------|-----------|-----|---------|----------|--------------------|-----|
 | P1-C1 | 20 — `tinker:51a8ef9e…` | Tinker (managed) + W&B | 5 GSM8K anchors: Qwen3.5-4B, Qwen3-8B, Llama-3.1-8B-Instruct, Nemotron-120B, DeepSeek-V3.1 | — | — | GSM8K | 1 per anchor (seed 42) / 20–30 | No held-out metric on the exact-linked runs; the claim rests on training-reward traces | C |
 | P1-C2 | 1 — `tinker:657a920a…` (HF-arbitrated) | Tinker (managed) + HF adapter | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16` (MoE, A12B active) | — | — | `frontier_gsm8k` | 1 (seed 42) / 20 | Peak 0.875, last-10 0.1625, zero-reward step fraction 0.55 (11/20); no held-out metric | C |
 | P2-C1 | 80 local rows pooled to 23 cells | Local analysis pool (no W&B) | Heterogeneous; Qwen3-8B at G = 8 among the listed rows | — | — | GSM8K | up to 3 per source row / 30–600 | Mean ZVF versus collapse: Spearman 0.56, point-biserial 0.62 (n = 23) | C |
@@ -173,9 +173,9 @@ provenance-conflicted.
 | P5-C1 | 2 — `wandb:tinker-rl-lab-world-class/xmot42ot`, `…/w83mv3ok` | Tinker-managed versus TRL backend | Qwen/Qwen3-8B-Base versus Qwen/Qwen3-8B — confounded | GRPO / TRL-GRPO | 8 | GSM8K | 1 per backend (seed 42) / 30 | Final/last-10 training reward 0.050→0.856; no held-out metric | X |
 | P5-C2 | 2 — `zvf-colab-experiments/6c7p198f`, `…/l5m9lqij` | Open trainer versus managed stack | Qwen2.5-0.5B-Instruct versus Qwen3.5-4B (declared non-consistent exhibit) | DAPO label versus asymmetric-clip surrogate | — | — | 2 open versus 3 managed / not logged (open), 15 (managed) | Mean ZVF 0.00 versus 0.58; no comparable held-out metric | C |
 | P5-C3 | 1 — `zvf-colab-experiments/l5m9lqij` | Managed summary | Qwen/Qwen3.5-4B | Four algorithm labels | — | — | 3 per arm (42, 123, 456) / 15 | Last-10 reward band 0.710–0.744 (width 0.034); no held-out metric | C |
-| P6-C1 | 48 registry entries | Registry (schema validation) | N/A | N/A | N/A | N/A | N/A | 44/48 entries pass schema validation | R |
+| P6-C1 | 48 registry entries | Registry (schema validation) | N/A | N/A | N/A | N/A | N/A | 44/48 entries pass schema validation in the later claim-to-run snapshot (`claim_to_run_table.tsv`, which adds amendment entries); the 31/31 of §7.2 is the 31 records shipped with P6 | R |
 | P6-C2 (new audit) | 82 — `tinker:0dfee749…` | Tinker ↔ W&B ↔ HF, three-way | N/A (identity audit) | N/A | N/A | N/A | as logged per underlying run | 33/41 exact IDs model-consistent; 5 HF-arbitrated mislinks; 3 unresolved | R |
-| P7-C1 | 368 — `wandb:zvf-audit/fzforbvg` | W&B only (0 exact Tinker IDs) | Qwen3-4B-Instruct-2507 (113), Llama-3.2-3B (112), Llama-3.2-1B (107), 3 further models (36) | — | 4, 8, 16 (also 6) | — (prompt/tokenizer families `llama3`, `qwen3_instruct` recorded, not datasets) | 10 logged labels (0–9) / 2–12 | ZVF U-shape reproduced; no held-out metric in the W&B summaries | C |
+| P7-C1 | 368 — `wandb:zvf-audit/fzforbvg` | W&B only (0 exact Tinker IDs) | Qwen3-4B-Instruct-2507 (113), Llama-3.2-3B (112), Llama-3.2-1B (107), 3 further models (36) | — | 4, 8, 16 (also 6) | — (prompt and tokenizer families `llama3`, `qwen3_instruct` recorded, not datasets) | 10 logged labels (0–9) / 2–12 | ZVF U-shape reproduced; no held-out metric in the W&B summaries | C |
 | P7-C2 | 1 — `zvf-colab-experiments/ds83rymc` | W&B (Colab) | Qwen/Qwen2.5-0.5B-Instruct | — | — | — | 3 (0, 1, 2) in one aggregate / 30 | Gradient magnitude versus p(1−p): Pearson r = +0.71 | C |
 | P7-C3 | 1 — `zvf-colab-experiments/6c7p198f` | W&B (Colab) | Qwen/Qwen2.5-0.5B-Instruct | Adaptive-G versus fixed recipes | — | — | 1 per arm / not logged | Adaptive-G held-out Δ +0.575; mean ZVF 0.23; 186 rollouts | C |
 | P8-C1 | 1 — `local:qp8_fraud:xgboost:seed42` | Local (XGBoost) | Gradient-boosted trees (200 estimators, depth 6) | — | N/A | Synthetic card-fraud: 50,000 rows; 10,000-row held-out split | random_state 42 / 200 estimators | AUC 0.7955 on the 10,000-row held-out split | C |
@@ -258,7 +258,7 @@ of the scripts in `platform_hybrid/experiments/openings/`; only the campaign
 artefact records a group size per run. Δ is the change in held-out accuracy.
 
 | Run identifier | Stack / platform | Model | Algo | G | Dataset | Seed | Steps | Outcome / status |
-|---|---|---|---|---|---|---|---|---|
+|--------------|-------------|---------------|-----------|------|----------|-----|-------|-------------------|
 | `campaign/baseline-G4-s0…s5` | Tinker → W&B `rlvr-openings` (`campaign`) | Qwen/Qwen3.5-4B | GRPO | 4 | GSM8K | 0–5 | 8 | 6 runs; mean Δ +0.0111 (0.0000–0.0333) |
 | `campaign/curriculum-G4-s0…s5` | Tinker → W&B `rlvr-openings` (`campaign`) | Qwen/Qwen3.5-4B | GRPO + curriculum filter | 4 | GSM8K | 0–5 | 8 | 6 runs; mean Δ +0.0167 (−0.0667 to +0.0667); oversample 3.3–7.2×; zero-loss fraction 0.0 |
 | `campaign/baseline-G2-s0` | Tinker → W&B `rlvr-openings` (`campaign`) | Qwen/Qwen3.5-4B | GRPO | 2 | GSM8K | 0 | 8 | 1 run; Δ 0.0000; zero-loss fraction 0.7 |
@@ -297,6 +297,24 @@ superseded by the multi-seed blocks above: the curriculum opening's +0.05
 — the campaign's G4 seed-0 baseline gains 0.0000, not 0.125, and that sweep
 file retains only two of its twelve entries, so the W&B group is its record.
 
+### A.3.2 Same-stack rerun on the unsaturated configuration
+
+The rerun of §6.5.5 was executed on Modal on 2 October 2026 by
+`platform_hybrid/experiments/modal/modal_samestack_gsm8k_cot.py`: 15 runs, one
+A10G each, about 14 minutes of training per run. Per-run results, including
+per-item pre- and post-training correctness and step logs, are in
+`platform_hybrid/experiments/results/samestack_gsm8k_cot_full.json`; adapters
+are on the `tinkerrl-results` Modal volume under `samestack_gsm8k/adapters/`.
+No W&B run was logged.
+
+| Run identifier | Stack / platform | Model | Algo | G | Dataset | Seed | Steps | Outcome / status |
+|---|---|---|---|---|---|---|---|---|
+| `samestack_gsm8k/grpo_g8_s{42,123,456,789,1024}` | Modal A10G, local trainer | Qwen/Qwen2.5-1.5B-Instruct | GRPO | 8 | GSM8K (test 200) | 5 seeds | 30 | post 0.230–0.255, mean 0.245 |
+| `samestack_gsm8k/grpo_g2_s{…}` | Modal A10G, local trainer | Qwen/Qwen2.5-1.5B-Instruct | GRPO | 2 | GSM8K (test 200) | 5 seeds | 30 | post 0.230–0.280, mean 0.250 |
+| `samestack_gsm8k/ppo_s{…}` | Modal A10G, local trainer | Qwen/Qwen2.5-1.5B-Instruct | PPO, value head | — | GSM8K (test 200) | 5 seeds | 30 | post 0.160–0.215, mean 0.195 |
+
+: Same-stack rerun on the unsaturated configuration (§6.5.5).
+
 ## A.4 E1–E14 evaluation campaign lanes
 
 The fourteen evaluation lanes are not training runs; they are evaluations of a
@@ -309,39 +327,39 @@ adapter name. The adapter was trained for 40 steps at G = 4 and learning rate
 recorded in the local W&B run directory for run `bsv8vx04` and the run receipt
 `checkpoints/grpo/pavlov_portfolio_api_swegym_qwen36_20260809_seed809.json`
 (Chapter 8 §8.1.1). Those are properties of the single actor rather than of
-any lane, so they are shown as "—" in the table rather than repeated. Terminal states are from the ledger of record,
+any lane, and every lane carries the same run seed (809), so algorithm, group size, seed and step columns are omitted from Table A.7. Terminal states are from the ledger of record,
 `outputs/PES_Phase2_Review_2026-09-12/finish/Pending_Experiments.md`; all
 scores are from `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md`, except the six rows marked "finish 2026-09-27", which are from `outputs/finish_pending_2026-09-27/<lane>/result.json`.
 
 **Table A.7 — E1–E14 campaign lanes.**
 
-| Lane / run identifier | Stack / platform | Model / actor | Algo | G | Dataset / suite | Seed | Steps | Outcome / terminal state |
-|---|---|---|---|---|---|---|---|---|
-| E1 SWE-bench Pro | native harness, Tinker actor | Qwen3.6-35B-A3B + adapter | — | — | SWE-bench Pro | 809 | — | 2/731 = 0.274% pass@1 (97.54% coverage, 713/731 native evals); originals retained |
-| E1 replacement (finish 2026-09-27) | native swebench 5.0.2, Modal sandboxes | as above | — | — | SWE-bench Multilingual | 809 | — | 1/190 resolved (57 graded); earlier waves 4/110 kept separate — `COMPLETE` |
-| E2 FrontierSWE | native harness | as above | — | — | FrontierSWE | 809 | — | 1/17 tasks; replay normalized 0.8628 |
-| E2 replacement (finish 2026-09-27) | native grader, GCP VM per capsule | as above | — | — | CORE-Bench hard | 809 | — | 27/45 = 0.600 task accuracy — `COMPLETE` |
-| E3 SDAB | — | as above | — | — | SDAB (private bundle) | 809 | — | no local or paid path — `CLOSED_EXTERNAL` |
-| E4 BankerToolBench | Tinker→Modal bridge | as above | — | — | BankerToolBench | 809 | — | 1/100 tasks, recovery 0.3115 — `CLOSED_PARTIAL` |
-| E4 base-model rerun | Modal `/v1/responses` | base model, zero-init LoRA | — | — | BankerToolBench | 809 | 0 | 100/100 trials, mean reward 0.0, $15.07 of $55.91 cap; zero traced to bridge passing no stop sequences (§8.5) |
-| E5 APEX-Agents | native harness | as above | — | — | APEX-Agents | 809 | — | 7/480 native-scored; prefix mean 0.050505 |
-| E5 replacement (finish 2026-09-27) | native tau2, Modal 65k actor | as above | — | — | Tau3 banking_knowledge | 809 | — | 8/97 = 0.082 pass^1 (25 infra errors counted as failures) — `COMPLETE` |
-| E6 WebArena (finish 2026-09-27) | native evaluator, GCP VM | as above | — | — | WebArena | 809 | — | 90/812 = 0.111, lower bound; 108 ungraded (judge unavailable) — `COMPLETE` |
-| E7 BinaryAudit | native harness | as above | — | — | BinaryAudit (private payload) | 809 | — | 1/46 attempted, verifier reward 0.0, no grade — `CLOSED_EXTERNAL` |
-| E8 LAB-Bench (public) | native harness | as above | — | — | LAB-Bench public, 8 categories | 809 | — | **1967/1967 COMPLETE** |
-| E8 LifeSciBench (original) | — | as above | — | — | LifeSciBench private | 809 | — | `CLOSED_EXTERNAL` |
-| E9 MLE-bench | Modal streaming arm | as above | — | — | MLE-bench | 809 | — | 40/75 natively graded (53.33%); suite score null |
-| E9 replacement (finish 2026-09-27) | OpenHands CodeActAgent, GCP VM | as above | — | — | ML-Dev-Bench | 809 | — | 10/34 = 0.294 task success — `COMPLETE` |
-| E10 AgentDojo (benign) | native harness | as above | — | — | AgentDojo benign utility | 809 | — | **97/97 COMPLETE** |
-| E10 AgentHarm (original) | — | as above | — | — | AgentHarm private | 809 | — | `CLOSED_EXTERNAL` |
-| E11 VerilogEval | native harness | as above | — | — | VerilogEval (both framings) | 809 | — | **312/312 = 129/312 pass@1 (41.35%)**; 67/156 completion + 62/156 spec-to-RTL |
-| E12 AppBench | — | as above | — | — | AppBench deployment | 809 | — | `CLOSED_EXTERNAL` |
-| E13 BALROG (finish 2026-09-27) | native BALROG evaluator, local | as above | — | — | BALROG | 809 | — | 255/255 episodes; 26.1% progression — `COMPLETE` |
-| E13 OpenReward (original) | — | as above | — | — | OpenReward held-out games | 809 | — | externally blocked, no closure record |
-| E14 Omni-MATH | native scorer | as above | — | — | Omni-MATH | 809 | — | 4426/4428 accepted (99.95%); accuracy 2271/4428 = 51.29% (official scorer 51.31% on 4426 judged rows) — `COMPLETE_TERMINAL_NOTE` |
-| E14 FrontierMath (original) | — | as above | — | — | FrontierMath hosted | 809 | — | `CLOSED_EXTERNAL` |
+| Lane / run identifier | Stack / platform | Model / actor | Dataset / suite | Outcome / terminal state |
+|---|---|---|---|---|
+| E1 SWE-bench Pro | native harness, Tinker actor | Qwen3.6-35B-A3B + adapter | SWE-bench Pro | 2/731 = 0.274% pass@1 (97.54% coverage, 713/731 native evals); originals retained |
+| E1 replacement (finish 2026-09-27) | native swebench 5.0.2, Modal sandboxes | as above | SWE-bench Multilingual | 1/190 resolved (57 graded); earlier waves 4/110 kept separate — `COMPLETE` |
+| E2 FrontierSWE | native harness | as above | FrontierSWE | 1/17 tasks; replay normalized 0.8628 |
+| E2 replacement (finish 2026-09-27) | native grader, GCP VM per capsule | as above | CORE-Bench hard | 27/45 = 0.600 task accuracy — `COMPLETE` |
+| E3 SDAB | — | as above | SDAB (private bundle) | no local or paid path — `CLOSED_EXTERNAL` |
+| E4 BankerToolBench | Tinker→Modal bridge | as above | BankerToolBench | 1/100 tasks, recovery 0.3115 — `CLOSED_PARTIAL` |
+| E4 base-model rerun | Modal `/v1/responses` | base model, zero-init LoRA (0 training steps) | BankerToolBench | 100/100 trials, mean reward 0.0, $15.07 of $55.91 cap; zero traced to bridge passing no stop sequences (§8.5) |
+| E5 APEX-Agents | native harness | as above | APEX-Agents | 7/480 native-scored; prefix mean 0.050505 |
+| E5 replacement (finish 2026-09-27) | native tau2, Modal 65k actor | as above | Tau3 banking_knowledge | 8/97 = 0.082 pass^1 (25 infra errors counted as failures) — `COMPLETE` |
+| E6 WebArena (finish 2026-09-27) | native evaluator, GCP VM | as above | WebArena | 90/812 = 0.111, lower bound; 108 ungraded (judge unavailable) — `COMPLETE` |
+| E7 BinaryAudit | native harness | as above | BinaryAudit (private payload) | 1/46 attempted, verifier reward 0.0, no grade — `CLOSED_EXTERNAL` |
+| E8 LAB-Bench (public) | native harness | as above | LAB-Bench public, 8 categories | **1967/1967 COMPLETE** |
+| E8 LifeSciBench (original) | — | as above | LifeSciBench private | `CLOSED_EXTERNAL` |
+| E9 MLE-bench | Modal streaming arm | as above | MLE-bench | 40/75 natively graded (53.33%); suite score null |
+| E9 replacement (finish 2026-09-27) | OpenHands CodeActAgent, GCP VM | as above | ML-Dev-Bench | 10/34 = 0.294 task success — `COMPLETE` |
+| E10 AgentDojo (benign) | native harness | as above | AgentDojo benign utility | 97/97 tasks completed, utility 88/97 = 0.907 — `COMPLETE` |
+| E10 AgentHarm (original) | — | as above | AgentHarm private | `CLOSED_EXTERNAL` |
+| E11 VerilogEval | native harness | as above | VerilogEval (both framings) | **312/312 = 129/312 pass@1 (41.35%)**; 67/156 completion + 62/156 spec-to-RTL |
+| E12 AppBench | — | as above | AppBench deployment | `CLOSED_EXTERNAL` |
+| E13 BALROG (finish 2026-09-27) | native BALROG evaluator, local | as above | BALROG | 255/255 episodes; 26.1% progression — `COMPLETE` |
+| E13 OpenReward (original) | — | as above | OpenReward held-out games | externally blocked, no closure record |
+| E14 Omni-MATH | native scorer | as above | Omni-MATH | 4426/4428 accepted (99.95%); accuracy 2271/4428 = 51.29% (official scorer 51.31% on 4426 judged rows) — `COMPLETE_TERMINAL_NOTE` |
+| E14 FrontierMath (original) | — | as above | FrontierMath hosted | `CLOSED_EXTERNAL` |
 
-: E1-E14 evaluation campaign lanes with their run identifiers, stacks, platforms, models, algorithms and group sizes.
+: E1-E14 evaluation campaign lanes with their run identifiers, stacks and platforms, models, suites and outcomes.
 
 Two source documents disagree on two lanes, and both observations are retained
 rather than resolved into one, because the disagreement is itself evidence: the
@@ -431,5 +449,6 @@ different corpus, not a different count of the same one.
 | P5 audit corpus | 790 | The corpus from which the 368-run audit is drawn (`p5_stack.tex`); its relation to the ledger is not recorded | Chapter 7 §7.1 |
 | Mega-campaign cells | 98 | Sampling-only cells of `mega_20260704` | Chapter 7 §7.1 |
 | E1–E14 actor training | 1 | The 40-step `pavlov_portfolio` run of August 2026, after the ledger cut-off | Chapter 8 §8.1.1 |
+| Unsaturated same-stack rerun | 15 | Three arms × five seeds on Modal, 2 October 2026, after the ledger cut-off and outside the 1,708 (§A.3.2) | Chapter 6 §6.5.5 |
 
 : Run totals quoted in this report and the corpus each one counts.

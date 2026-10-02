@@ -65,8 +65,8 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "base checkpoint (Qwen3-8B-Base vs.\\ Qwen3-8B). Bottom left: one-way "
          "$\\eta^2$ shares over 42 reported experiments; they are confounded with "
          "one another and with back-end, reward implementation, hardware and "
-         "task, so they do not sum to one. Bottom right: Cohen's $d$ with 95\\% "
-         "CIs from the Phase-1 statistical summary; the Qwen arms did not share a "
+         "task, so they do not sum to one. Bottom right: the PPO-versus-GRPO rows of the Phase-1 table, "
+         "one run per arm, shown without inferential statistics; the Qwen arms did not share a "
          "back-end (GRPO on the managed API, PPO on a Modal H100 cluster), so no "
          "directional Qwen algorithm claim is made.",
          "fig:confounding", ["Motivating", "Problem Statement", "Introduction"]),
@@ -145,8 +145,8 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "fig:telemetry", ["Telemetry", "Methodology"]),
         ("fig_four_pillars",
          "The four de-confound pillars. Each holds the whole stack fixed and "
-         "varies exactly one factor. In Pillar~2 the nine-row method panel "
-         "measures vanilla GRPO only; its eight variance-mitigation rows are a "
+         "varies exactly one factor. In Pillar~2 all nine rows of the method "
+         "panel, vanilla GRPO included, are a "
          "declared simulation projection (Chapter~6).",
          "fig:pillars", ["Methodology", "Portfolio"]),
         ("fig_campaign_design",
@@ -157,8 +157,8 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "Figure~\\ref{fig:lanes} names the replacement scope where one exists. "
          "Figures and terminal states come from the 2026-09-19 ledger "
          "(\\texttt{E1\\_E14\\_FINAL\\_RESULTS\\_2026-09-19.md} and "
-         "\\texttt{finish/Pending\\_Experiments.md}; 11/11 deterministic checks "
-         "pass), updated with the six replacement scopes scored on 2026-09-27 "
+         "\\texttt{finish/Pending\\_Experiments.md}; eleven named deterministic checks "
+         "pass, scope in App.~B), updated with the six replacement scopes scored on 2026-09-27 "
          "($\\star$; \\texttt{finish\\_pending\\_2026-09-27/<lane>/result.json}), "
          "which are separate receipts and are never pooled with a lane's "
          "original-contract figure. E14's $2271/4428 = 51.29\\%$ counts the 2 unjudged rows as "
@@ -195,7 +195,7 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "The evidence chain from sealed request through execution and native "
          "grading to a deterministic ledger check. A break anywhere in the "
          "chain means no number is reported for that lane. Upper row: the chain; "
-         "the 11/11 PASS badge is the 2026-09-19 deterministic ledger check "
+         "the 11/11 PASS badge is the 2026-09-19 deterministic ledger check of eleven named claims, not of every figure "
          "(\\texttt{LEDGER\\_CODE\\_CHECK\\_2026-09-19.json}). Lower row: the E1 "
          "wave-10 recovery, where the lost execution source stops the chain.",
          "fig:receipts", ["Receipt", "Implementation"]),
@@ -362,20 +362,7 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "Source: \\texttt{outputs/finish\\_pending\\_2026-09-27/<lane>/result.json}.",
          "fig:replacement", ["Replacement-scope lanes completed", "Replacement-scope"]),
     ],
-    "ch10_synthesis_conclusions.md": [
-        ("fig_threats",
-         "Threats to validity grouped as internal, construct and external, each "
-         "with the mitigation applied in this work. The pairing is mostly a "
-         "reduction in what is claimed rather than a repair of the evidence: "
-         "where the evidence is partial the claim is narrowed to what it "
-         "supports. $\\dagger$ marks figures and summary statistics drawn from "
-         "Tinker data only; independent replication of them requires Tinker API "
-         "access (\\texttt{LIMITATIONS\\_AND\\_IMPACT.md}, Sec.~6.3). In T3, "
-         "37/128 is the number of verifier criteria met on the single E4 task; "
-         "the reported 0.3115 is the verifier's own recovery metric, not that "
-         "fraction.",
-         "fig:threats", ["Threats", "Validity", "Synthesis"]),
-    ],
+    # ch10: the threats figure (fig_threats) was replaced by Table 9.1
 }
 
 
@@ -494,6 +481,9 @@ def _table_leadins(md_text: str) -> str:
     return "\n".join(lines)
 
 
+_PATHLIKE = re.compile(r"/|\.(?:md|tex|json|tsv|py|csv|ya?ml|txt|jsonl|pdf|bib|pptx|ipynb)\b")
+
+
 def write_evidence_map(path: str) -> int:
     """Write the evidence-map appendix from the collected source notes."""
     out = ["# Appendix G. Evidence Map", "",
@@ -517,8 +507,23 @@ def write_evidence_map(path: str) -> int:
         clean = []
         for p in parts:
             p = re.sub(r"^\s*(?:and\s+)?(?:sources?:\s*)?", "", p).strip().rstrip(".").strip()
-            if p:
-                clean.append(p if p.startswith("`") else f"`{p}`" if re.search(r"[/_]", p) and " " not in p else p)
+            if not p:
+                continue
+            # a qualifier split off its path ("x.tex, Table y", "x.json, corrected")
+            # is not a source of its own: keep it on the preceding item
+            if not _PATHLIKE.search(p):
+                if clean:
+                    clean[-1] += f", {p}"
+                continue
+            if p.startswith("`"):
+                clean.append(p)
+            elif " " not in p:
+                clean.append(f"`{p}`" if re.search(r"[/_]", p) else p)
+            else:  # a path inside a phrase: code-format the path so it can break
+                parts = re.split(r"(`[^`]*`)", p)
+                clean.append("".join(x if x.startswith("`") else
+                                     re.sub(r"(?<![\w`])([\w.\-]+/[\w./\-]*\w)", r"`\1`", x)
+                                     for x in parts))
         return clean
 
     n, chapter_head, emitted_head = 0, None, None
@@ -942,6 +947,15 @@ def main() -> int:
     print(f"long-token pass: rewrote {n_longtok} \\texttt argument(s) to \\longtok")
 
     master, n_tables = fix_table_widths(master)
+    # "Qwen/Qwen3.5-4B" has no break point before its hyphen; allow one after
+    # the org slash in plain text (not inside \longtok/\texttt arguments)
+    # TeX never breaks the first word of a paragraph, so a long first token in
+    # a narrow cell overflows into the next column; zero glue lifts that.
+    master = master.replace(r">{\raggedright\arraybackslash}p{",
+                            r">{\raggedright\arraybackslash\hspace{0pt}}p{")
+    org = re.compile(r"(?<![{\w/])((?:Qwen|meta-llama|nvidia|deepseek-ai|mistralai|google)/)(?=\w)")
+    master = re.sub(r"\\begin\{longtable\}.*?\\end\{longtable\}",
+                    lambda m: org.sub(r"\1\\allowbreak{}", m.group(0)), master, flags=re.S)
     print(f"table-width pass: corrected {n_tables} longtable column spec(s)")
 
     master, n_wide = fix_wide_tables(master)

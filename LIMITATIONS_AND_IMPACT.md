@@ -46,7 +46,8 @@ from GSM8K to chemistry olympiad problems, cryptographic key recovery, or
 financial fraud. We judge the *marginal* uplift from our release to be
 small because:
 
-- Base‑model control for Qwen3‑8B on GSM8K already scores 82.0% held‑out.
+- The pre‑RL Qwen3‑8B‑Instruct checkpoint (the same checkpoint, not a
+  separate base model) already scores 82.0% held‑out on GSM8K.
   Full GRPO adds **only +1.3 points** (83.3%; *p*=0.26, not significant).
   The model's capability is overwhelmingly pre‑existing.
 - Public implementations of GRPO already exist (DeepSeekMath, OpenRLHF,
@@ -280,10 +281,11 @@ It does **not** expose:
 
 Tinker results measure the **platform's** implementation of GRPO, not an
 abstract algorithmic specification. A reader asking "why does Tinker GRPO
-score 99.9% on GSM8K while open‑source TRL GRPO scores 73.4% on the same
-task" cannot fully answer that from our data — we can rule out a handful
-of candidate explanations (seed variance, model‑size confound via the
-same‑model Qwen3‑8B comparison) but **not the implementation itself**.
+reach a pooled last‑10 GSM8K training reward of 99.9% (4B–235B models)
+while open‑source TRL GRPO reaches 73.4% (Qwen2.5‑0.5B)" cannot answer
+that from our data — these are training rewards, not held‑out accuracy,
+and model size and implementation are confounded; seed variance is the
+only candidate explanation we can rule out.
 
 We therefore:
 
@@ -398,8 +400,9 @@ region‑average, not marginal; reported CO₂ is order‑of‑magnitude.
 - **Platform‑dependent variance as a first‑class variable.** By running
   identical configurations on a closed API (Tinker) and an open cloud
   (Modal H100 + veRL), we surface implementation‑framework effects
-  quantitatively (TRL 73.4% vs. Tinker 99.9% on the same task,
-  *p*=0.0014).
+  quantitatively (pooled last‑10 training reward: TRL 73.4% on
+  Qwen2.5‑0.5B vs. Tinker 99.9% on 4B–235B models, *p*=0.0014; model
+  size is confounded with framework).
 
 ---
 

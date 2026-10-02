@@ -16,3 +16,8 @@ tokens stripped, so generation is not cut at the end-of-turn token `<|im_end|>`.
 **Consequence.** The 09-21 zero is best read as a defect of the serving bridge, not as a measurement of the base
 model's tool use or of finance reasoning. It stays in the record as an infrastructure finding. The two runs are not
 pooled: they differ in serving path, task count and caps.
+
+**Scope.** The contrast rests on one task (`btb-19b3361c`) under the shim against 100 trials through the bridge, so
+it shows the defect can zero a run, not how much of the 09-21 zero it explains. It says nothing about lanes that did
+not use the bridge: E1 was served by the Tinker sampler and Modal vLLM directly, and its responses show no role-token
+lines (thesis Table 8.2). For other bridge-served lanes the defect is possible, not demonstrated.

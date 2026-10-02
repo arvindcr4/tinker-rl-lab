@@ -1,156 +1,372 @@
 #!/usr/bin/env python3
-"""A1 (frontier backlog): PCD/LARQ vs ZVF head-to-head.
+"""Recompute PCD, exact-tie ZVF, and tolerance-based ZVF from stored rewards.
 
-Tests the frontier cross-examination claim (Pillar 2) that ZVF's weak outcome
-correlation (Spearman rho=0.2687 on mean_zvf vs last10_avg; zvf_failure_correlation.tsv)
-is because ZVF measures only the *existence* of contrast, not its *magnitude* or *sign*.
-Proposed replacements:
-  PCD  = mean within-group reward variance  = E_x[p_x(1-p_x)]   (magnitude of contrast)
-  LARQ = E_x[ p_hat + beta*4*p_hat(1-p_hat) ]                   (sign-resolving quality)
+No training or external services are used. PCD remains the population variance
+(ddof=0); canonical tolerance-based ZVF uses sample variance (ddof=1) <= 1e-6,
+as specified in paper/sections/zvf_pipeline_spec.tex. The historical ``zvf_ind``
+and output keys without a qualifier retain their exact-zero definitions.
 
-This script runs the parts that need NO new training, on data already in the repo:
-  1. Mastery-incapacity aliasing         (raw GSM8K per-group reward tensors)
-  2. ZVF U-shape vs PCD parabola in p_x  (same tensors)
-  3. Micro-jitter falsification          (same tensors; the frontier's sharpest sub-test)
-  4. Cross-run predictive check          (zvf_summary.tsv): reproduce rho(ZVF,outcome)
-     and compare against LARQ's sign-resolving first term (mean_reward), the piece of
-     LARQ that is reconstructable from the existing per-run summary.
+The seeded micro-jitter probe tests exact-zero brittleness. It does NOT falsify
+tolerance-based ZVF: both definitions are now reported, with an epsilon sweep.
+The cross-run comparison still uses logged summaries; it is not a recomputed
+PCD-vs-ZVF predictive comparison or evidence of learning benefit.
 
-Full PCD-vs-ZVF predictive horse race (frontier target rho>=0.45) needs per-group reward
-tensors logged for ALL anchors; only the GSM8K runs carry them, so #4 tests the
-sign-resolution claim with the available proxy and flags the data gap. Stdlib only.
+The historical pcd_vs_zvf_summary.tsv is read for provenance and never rewritten;
+fresh summary values are written to pcd_vs_zvf_recomputed_summary.tsv instead.
+
+Run from the repository root with Python 3; only the standard library is used.
 """
-import json, glob, math, os, random
+
+import argparse
+import csv
+import hashlib
+import json
+import math
+import random
+from pathlib import Path
+
 
 RES = "platform_hybrid/experiments/results"
-random.seed(0)
+DEFAULT_EPSILON = 1e-6
+DEFAULT_EPSILON_GRID = (0.0, 1e-12, 1e-10, 1e-9, 1e-8, 1e-6, 1e-4, 1e-2)
 
-# ---------- helpers (no numpy/scipy dependency) ----------
+
 def pvar(xs):
-    """population variance"""
-    n = len(xs); m = sum(xs)/n
-    return sum((x-m)**2 for x in xs)/n
+    """Population variance, preserving the historical PCD computation."""
+    if not xs:
+        raise ValueError("variance needs at least one reward")
+    n = len(xs)
+    mean = sum(xs) / n
+    return sum((x - mean) ** 2 for x in xs) / n
+
+
+def svar(xs):
+    """Sample variance, matching rewards.var(axis=-1, ddof=1)."""
+    if len(xs) < 2:
+        raise ValueError("sample variance needs at least two rewards")
+    return pvar(xs) * len(xs) / (len(xs) - 1)
+
+
+def zvf_exact_ind(group):
+    """Historical exact-zero population-variance indicator (epsilon=0)."""
+    return float(pvar(group) == 0.0)
+
+
+def zvf_ind(group):
+    """Backward-compatible exact-zero indicator; NOT canonical tolerance ZVF."""
+    return zvf_exact_ind(group)
+
+
+def _validate_nonnegative(value, name):
+    if not math.isfinite(value) or value < 0:
+        raise ValueError(f"{name} must be finite and nonnegative")
+
+
+def zvf_tolerance_ind(group, epsilon=DEFAULT_EPSILON):
+    """Canonical sample-variance threshold indicator (inclusive boundary)."""
+    _validate_nonnegative(epsilon, "epsilon")
+    return float(svar(group) <= epsilon)
+
+
+def pcd(group):
+    return pvar(group)
+
+
+def phat(group):
+    return sum(group) / len(group)
+
 
 def rankdata(xs):
-    """average ranks, ties shared"""
+    """Average ranks, ties shared."""
     order = sorted(range(len(xs)), key=lambda i: xs[i])
-    ranks = [0.0]*len(xs)
+    ranks = [0.0] * len(xs)
     i = 0
     while i < len(xs):
         j = i
-        while j+1 < len(xs) and xs[order[j+1]] == xs[order[i]]:
+        while j + 1 < len(xs) and xs[order[j + 1]] == xs[order[i]]:
             j += 1
-        avg = (i+j)/2.0 + 1.0
-        for k in range(i, j+1):
+        avg = (i + j) / 2.0 + 1.0
+        for k in range(i, j + 1):
             ranks[order[k]] = avg
-        i = j+1
+        i = j + 1
     return ranks
 
+
 def pearson(xs, ys):
-    n = len(xs); mx = sum(xs)/n; my = sum(ys)/n
-    sx = sum((x-mx)**2 for x in xs); sy = sum((y-my)**2 for y in ys)
-    if sx == 0 or sy == 0: return float('nan')
-    cov = sum((xs[i]-mx)*(ys[i]-my) for i in range(n))
-    return cov/math.sqrt(sx*sy)
+    n = len(xs)
+    if n < 2 or len(ys) != n:
+        return float("nan")
+    mx, my = sum(xs) / n, sum(ys) / n
+    sx = sum((x - mx) ** 2 for x in xs)
+    sy = sum((y - my) ** 2 for y in ys)
+    if sx == 0 or sy == 0:
+        return float("nan")
+    cov = sum((xs[i] - mx) * (ys[i] - my) for i in range(n))
+    return cov / math.sqrt(sx * sy)
+
 
 def spearman(xs, ys):
     return pearson(rankdata(xs), rankdata(ys))
 
-# ---------- load raw per-group reward tensors (GSM8K, 3 seeds, G=8) ----------
-groups = []   # each: list of 0/1 rewards for one prompt-group
-for f in sorted(glob.glob(f"{RES}/tinker_gsm8k_zvf_s*.json")):
-    d = json.load(open(f))
-    if "per_problem" not in d: continue
-    for pp in d["per_problem"]:
-        groups.append([float(r) for r in pp["rewards"]])
-G = len(groups[0])
-print(f"# Loaded {len(groups)} prompt-groups (G={G}) from GSM8K reward tensors\n")
 
-def zvf_ind(g):  return 1.0 if pvar(g) == 0.0 else 0.0
-def pcd(g):      return pvar(g)                       # = p_hat(1-p_hat)
-def phat(g):     return sum(g)/len(g)
+def load_groups(results_dir):
+    """Load raw binary GSM8K groups in the historical lexicographic file order."""
+    groups, sources = [], []
+    for path in sorted(Path(results_dir).glob("tinker_gsm8k_zvf_s*.json")):
+        raw = path.read_bytes()
+        data = json.loads(raw)
+        if "per_problem" not in data:
+            continue  # The glob also matches the per-seed summary file.
+        start = len(groups)
+        for pp in data["per_problem"]:
+            group = [float(reward) for reward in pp["rewards"]]
+            if len(group) < 2 or any(reward not in (0.0, 1.0) for reward in group):
+                raise ValueError(f"{path}: expected binary groups with at least two rewards")
+            groups.append(group)
+        sources.append({
+            "file": path.name,
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "seed": data.get("seed"),
+            "group_start": start,
+            "n_groups": len(groups) - start,
+        })
+    if not groups:
+        raise ValueError(f"no raw GSM8K reward groups found in {results_dir}")
+    if len({len(group) for group in groups}) != 1:
+        raise ValueError("GSM8K groups must all have the same group size")
+    return groups, sources
 
-# ---------- 1. mastery-incapacity aliasing ----------
-mastered  = [g for g in groups if phat(g) == 1.0]
-incapable = [g for g in groups if phat(g) == 0.0]
-frontier  = [g for g in groups if 0.0 < phat(g) < 1.0]
-print("## 1. Mastery-incapacity aliasing (ZVF cannot tell them apart)")
-print(f"   mastered (p=1):   n={len(mastered):4d}  mean ZVF-ind={sum(map(zvf_ind,mastered))/max(1,len(mastered)):.3f}  "
-      f"mean PCD={sum(map(pcd,mastered))/max(1,len(mastered)):.4f}  LARQ term1 (p_hat)=1.000")
-print(f"   incapable (p=0):  n={len(incapable):4d}  mean ZVF-ind={sum(map(zvf_ind,incapable))/max(1,len(incapable)):.3f}  "
-      f"mean PCD={sum(map(pcd,incapable))/max(1,len(incapable)):.4f}  LARQ term1 (p_hat)=0.000")
-print(f"   frontier (0<p<1): n={len(frontier):4d}  mean ZVF-ind={sum(map(zvf_ind,frontier))/max(1,len(frontier)):.3f}  "
-      f"mean PCD={sum(map(pcd,frontier))/max(1,len(frontier)):.4f}")
-print("   -> ZVF-ind=1 for BOTH mastered and incapable (aliased); LARQ term1 separates them 1.0 vs 0.0.\n")
 
-# ---------- 2. ZVF U-shape vs PCD parabola across p_x ----------
-print("## 2. Shape across success rate p_x = k/G  (ZVF U-shaped; PCD single-peaked at 0.5)")
-print("   k/G   n     mean_ZVF_ind   mean_PCD")
-rows2 = []
-for k in range(G+1):
-    bucket = [g for g in groups if abs(phat(g)-k/G) < 1e-9]
-    if not bucket: continue
-    z = sum(map(zvf_ind,bucket))/len(bucket); p = sum(map(pcd,bucket))/len(bucket)
-    rows2.append((k/G, len(bucket), z, p))
-    print(f"   {k}/{G}  {len(bucket):4d}   {z:.3f}          {p:.4f}")
-print()
+def analyze_jitter(groups, seed=0, amplitude=1e-4, epsilon=DEFAULT_EPSILON,
+                   epsilon_grid=DEFAULT_EPSILON_GRID):
+    """Compute both definitions using one shared, deterministic jitter draw.
 
-# ---------- 3. micro-jitter falsification ----------
-EPS = 1e-4
-def jitter(g): return [r + random.uniform(0, EPS) for r in g]
-zvf_before = sum(map(zvf_ind, groups))/len(groups)
-pcd_before = sum(map(pcd, groups))/len(groups)
-jg = [jitter(g) for g in groups]
-zvf_after = sum(map(zvf_ind, jg))/len(jg)
-pcd_after = sum(map(pcd, jg))/len(jg)
-print("## 3. Micro-jitter falsification (add eps~U(0,1e-4), e.g. a length penalty)")
-print(f"   batch ZVF:  {zvf_before:.4f}  ->  {zvf_after:.4f}   (collapses: falsely reports a 'healthy' all-mixed batch)")
-print(f"   batch PCD:  {pcd_before:.6f}  ->  {pcd_after:.6f}   (invariant: delta={abs(pcd_after-pcd_before):.2e})")
-print(f"   -> a real diagnostic must be jitter-invariant; ZVF is not, PCD is.\n")
+    Rewards are neither clipped nor renormalized, retaining the original probe.
+    A local Random instance leaves the caller's global RNG state untouched.
+    """
+    _validate_nonnegative(amplitude, "amplitude")
+    _validate_nonnegative(epsilon, "epsilon")
+    if not groups or any(len(group) < 2 for group in groups):
+        raise ValueError("need nonempty groups with at least two rewards each")
+    if any(not math.isfinite(reward) for group in groups for reward in group):
+        raise ValueError("rewards must be finite")
+    thresholds = sorted(set(epsilon_grid) | {epsilon})
+    for threshold in thresholds:
+        _validate_nonnegative(threshold, "epsilon")
+    rng = random.Random(seed)
+    jittered = [[r + rng.uniform(0, amplitude) for r in group] for group in groups]
+    n = len(groups)
+    population_before = [pvar(group) for group in groups]
+    population_after = [pvar(group) for group in jittered]
+    sample_before = [svar(group) for group in groups]
+    sample_after = [svar(group) for group in jittered]
+    exact_before = [value == 0.0 for value in population_before]
+    exact_after = [value == 0.0 for value in population_after]
+    sensitivity = []
+    for threshold in thresholds:
+        before = [value <= threshold for value in sample_before]
+        after = [value <= threshold for value in sample_after]
+        sensitivity.append({
+            "epsilon": threshold,
+            "variance_ddof": 1,
+            "n_groups": n,
+            "before_count": sum(before),
+            "after_count": sum(after),
+            "before_fraction": sum(before) / n,
+            "after_fraction": sum(after) / n,
+            "changed_count": sum(a != b for a, b in zip(before, after)),
+        })
+    canonical = next(row for row in sensitivity if row["epsilon"] == epsilon)
+    pcd_before, pcd_after = sum(population_before) / n, sum(population_after) / n
+    summary = {
+        "n_groups": n,
+        "group_sizes": sorted({len(group) for group in groups}),
+        "jitter_seed": seed,
+        "jitter_amplitude": amplitude,
+        "jitter_distribution": "independent random.Random(seed).uniform(0, amplitude)",
+        "jitter_transform": "reward + jitter; no clipping or rescaling",
+        "exact_zero_definition": "population variance (ddof=0) == 0; historical exact-tie proxy",
+        "tolerance_definition": "sample variance (ddof=1) <= epsilon",
+        "tolerance_epsilon": epsilon,
+        "pcd_definition": "mean population variance (ddof=0)",
+        "exact_zero_before_count": sum(exact_before),
+        "exact_zero_after_count": sum(exact_after),
+        "exact_zero_before_fraction": sum(exact_before) / n,
+        "exact_zero_after_fraction": sum(exact_after) / n,
+        "tolerance_before_count": canonical["before_count"],
+        "tolerance_after_count": canonical["after_count"],
+        "tolerance_before_fraction": canonical["before_fraction"],
+        "tolerance_after_fraction": canonical["after_fraction"],
+        "tolerance_changed_count": canonical["changed_count"],
+        "pcd_before": pcd_before,
+        "pcd_after": pcd_after,
+        "pcd_delta": pcd_after - pcd_before,
+        "epsilon_sensitivity": sensitivity,
+        "claim_boundary": (
+            "Exact-zero brittleness does not establish failure of tolerance-based ZVF. "
+            "This stored-group perturbation is not a training or controller comparison; "
+            "it does not establish that jitter supplies useful learning signal or that "
+            "PCD improves learning. PCD changes slightly rather than being invariant."
+        ),
+        "legacy_output_aliases": {
+            "zvf_batch_before_jitter": "exact_zero_before_fraction",
+            "zvf_batch_after_jitter": "exact_zero_after_fraction",
+            "mean_zvf_ind": "exact-zero population-variance indicator",
+        },
+    }
+    details = [{
+        "group_index": index,
+        "population_variance_before": population_before[index],
+        "population_variance_after": population_after[index],
+        "sample_variance_before": sample_before[index],
+        "sample_variance_after": sample_after[index],
+        "exact_zero_before": int(exact_before[index]),
+        "exact_zero_after": int(exact_after[index]),
+        "tolerance_before": int(sample_before[index] <= epsilon),
+        "tolerance_after": int(sample_after[index] <= epsilon),
+    } for index in range(n)]
+    return summary, details
 
-# ---------- 4. cross-run predictive check on zvf_summary.tsv ----------
-print("## 4. Cross-run predictive check (zvf_summary.tsv): reproduce rho(ZVF,outcome),")
-print("##    compare LARQ's sign-resolving first term (mean_reward). Full PCD needs per-group")
-print("##    tensors for every anchor (only GSM8K has them) -> flagged as a logging gap.")
-rows = []
-hdr = None
-for line in open(f"{RES}/zvf_summary.tsv"):
-    if line.startswith("#"): continue
-    parts = line.rstrip("\n").split("\t")
-    if hdr is None: hdr = parts; continue
-    rows.append(dict(zip(hdr, parts)))
-def col(r, k):
-    try: return float(r[k])
-    except: return float('nan')
-# use rows with a valid outcome (last10_avg) and diagnostics
-use = [r for r in rows if r.get("last10_avg","") not in ("","nan") and r.get("mean_zvf","") not in ("","nan")]
-zvf  = [col(r,"mean_zvf")    for r in use]
-mr   = [col(r,"mean_reward") for r in use]
-out  = [col(r,"last10_avg")  for r in use]
-# collapse label (binary)
-iscol = [1.0 if r.get("failure_label","")=="collapse" else 0.0 for r in use]
-print(f"   n_runs={len(use)}")
-print(f"   Spearman(mean_zvf, last10_avg)      = {spearman(zvf,out):+.4f}   [baseline ~0.27]")
-print(f"   Spearman(mean_reward, last10_avg)   = {spearman(mr,out):+.4f}   [LARQ term1: resolves mastery sign]")
-print(f"   |improvement from sign resolution|  = {abs(spearman(mr,out))-abs(spearman(zvf,out)):+.4f}")
-print(f"   Spearman(mean_zvf, is_collapse)     = {spearman(zvf,iscol):+.4f}")
-print(f"   Spearman(mean_reward, is_collapse)  = {spearman(mr,iscol):+.4f}")
 
-# ---------- write machine-readable outputs ----------
-os.makedirs(RES, exist_ok=True)
-with open(f"{RES}/pcd_vs_zvf_shape.tsv","w") as f:
-    f.write("p_x\tn\tmean_zvf_ind\tmean_pcd\n")
-    for a,b,c,d in rows2: f.write(f"{a:.4f}\t{b}\t{c:.4f}\t{d:.4f}\n")
-with open(f"{RES}/pcd_vs_zvf_summary.tsv","w") as f:
-    f.write("metric\tvalue\n")
-    f.write(f"n_groups\t{len(groups)}\n")
-    f.write(f"zvf_batch_before_jitter\t{zvf_before:.4f}\n")
-    f.write(f"zvf_batch_after_jitter\t{zvf_after:.4f}\n")
-    f.write(f"pcd_batch_before_jitter\t{pcd_before:.6f}\n")
-    f.write(f"pcd_batch_after_jitter\t{pcd_after:.6f}\n")
-    f.write(f"n_runs_crossrun\t{len(use)}\n")
-    f.write(f"spearman_zvf_outcome\t{spearman(zvf,out):.4f}\n")
-    f.write(f"spearman_meanreward_outcome\t{spearman(mr,out):.4f}\n")
-    f.write(f"spearman_zvf_collapse\t{spearman(zvf,iscol):.4f}\n")
-    f.write(f"spearman_meanreward_collapse\t{spearman(mr,iscol):.4f}\n")
-print(f"\n# wrote {RES}/pcd_vs_zvf_shape.tsv and {RES}/pcd_vs_zvf_summary.tsv")
+def cross_run_metrics(path):
+    """Preserve the historical logged-summary comparison and output names."""
+    with Path(path).open() as handle:
+        rows = list(csv.DictReader((line for line in handle if not line.startswith("#")),
+                                   delimiter="\t"))
+    use = [r for r in rows if r.get("last10_avg", "") not in ("", "nan")
+           and r.get("mean_zvf", "") not in ("", "nan")]
+
+    def col(row, key):
+        try:
+            return float(row[key])
+        except (KeyError, ValueError, TypeError):
+            return float("nan")
+
+    zvf = [col(r, "mean_zvf") for r in use]
+    reward = [col(r, "mean_reward") for r in use]
+    outcome = [col(r, "last10_avg") for r in use]
+    collapse = [float(r.get("failure_label", "") == "collapse") for r in use]
+    return {
+        "n_runs_crossrun": len(use),
+        "spearman_zvf_outcome": spearman(zvf, outcome),
+        "spearman_meanreward_outcome": spearman(reward, outcome),
+        "spearman_zvf_collapse": spearman(zvf, collapse),
+        "spearman_meanreward_collapse": spearman(reward, collapse),
+    }
+
+
+def write_tsv(path, rows):
+    with Path(path).open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), delimiter="\t",
+                                lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--results-dir", type=Path, default=Path(RES))
+    parser.add_argument("--output-dir", type=Path,
+                        help="defaults to results-dir; input reward tensors are never modified")
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--jitter-amplitude", type=float, default=1e-4)
+    parser.add_argument("--variance-epsilon", type=float, default=DEFAULT_EPSILON)
+    parser.add_argument("--epsilon-grid", type=float, nargs="+", default=DEFAULT_EPSILON_GRID)
+    args = parser.parse_args(argv)
+    groups, sources = load_groups(args.results_dir)
+    analysis, details = analyze_jitter(groups, args.seed, args.jitter_amplitude,
+                                      args.variance_epsilon, args.epsilon_grid)
+    analysis["sources"] = sources
+    analysis["source_order"] = "lexicographic filenames, then original per_problem order"
+    analysis["schema_version"] = 1
+    for source in sources:
+        subset = details[source["group_start"]:source["group_start"] + source["n_groups"]]
+        source["exact_zero_before_count"] = sum(row["exact_zero_before"] for row in subset)
+        source["exact_zero_after_count"] = sum(row["exact_zero_after"] for row in subset)
+        source["tolerance_before_count"] = sum(row["tolerance_before"] for row in subset)
+        source["tolerance_after_count"] = sum(row["tolerance_after"] for row in subset)
+        for index, row in enumerate(subset):
+            row["source_file"] = source["file"]
+            row["source_group_index"] = index
+
+    mastered = sum(phat(group) == 1.0 for group in groups)
+    incapable = sum(phat(group) == 0.0 for group in groups)
+    analysis["mastered_count"] = mastered
+    analysis["incapable_count"] = incapable
+    analysis["mixed_count"] = len(groups) - mastered - incapable
+    group_size = len(groups[0])
+    shape = []
+    for k in range(group_size + 1):
+        bucket = [group for group in groups if abs(phat(group) - k / group_size) < 1e-9]
+        if bucket:
+            shape.append({
+                "p_x": f"{k / group_size:.4f}", "n": len(bucket),
+                "mean_zvf_ind": f"{sum(map(zvf_ind, bucket)) / len(bucket):.4f}",
+                "mean_pcd": f"{sum(map(pcd, bucket)) / len(bucket):.4f}",
+            })
+
+    cross_run_path = args.results_dir / "zvf_summary.tsv"
+    cross_run = cross_run_metrics(cross_run_path)
+    analysis["cross_run_provenance"] = {
+        "source_file": cross_run_path.name,
+        "source_sha256": hashlib.sha256(cross_run_path.read_bytes()).hexdigest(),
+        "current_input_recomputation": cross_run,
+        "scope": "Provenance check only; historical cross-run artifact is retained unchanged.",
+    }
+    historical_path = args.results_dir / "pcd_vs_zvf_summary.tsv"
+    analysis["historical_summary"] = {
+        "file": historical_path.name,
+        "sha256": hashlib.sha256(historical_path.read_bytes()).hexdigest(),
+        "status": (
+            "Preserved unchanged. Superseded for unqualified jitter/ZVF interpretation only: "
+            "its before/after jitter ZVF fields denote exact-zero variance, not tolerance ZVF. "
+            "Historical cross-run correlations are not revised by this tolerance audit."
+        ),
+    }
+    metrics = {
+        "n_groups": len(groups),
+        # Retain historical names and precision in the NEW summary, with explicit aliases.
+        "zvf_batch_before_jitter": f"{analysis['exact_zero_before_fraction']:.4f}",
+        "zvf_batch_after_jitter": f"{analysis['exact_zero_after_fraction']:.4f}",
+        "pcd_batch_before_jitter": f"{analysis['pcd_before']:.6f}",
+        "pcd_batch_after_jitter": f"{analysis['pcd_after']:.6f}",
+        **{key: value if isinstance(value, int) else f"{value:.4f}"
+           for key, value in cross_run.items()},
+        "zvf_exact_batch_before_jitter": analysis["exact_zero_before_fraction"],
+        "zvf_exact_batch_after_jitter": analysis["exact_zero_after_fraction"],
+        "zvf_tolerance_batch_before_jitter": analysis["tolerance_before_fraction"],
+        "zvf_tolerance_batch_after_jitter": analysis["tolerance_after_fraction"],
+        "zvf_tolerance_variance_ddof": 1,
+        "zvf_tolerance_epsilon": args.variance_epsilon,
+        "pcd_batch_delta": analysis["pcd_delta"],
+        "jitter_seed": args.seed,
+        "jitter_amplitude": args.jitter_amplitude,
+    }
+    output_dir = args.output_dir or args.results_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    write_tsv(output_dir / "pcd_vs_zvf_shape.tsv", shape)
+    write_tsv(output_dir / "pcd_vs_zvf_recomputed_summary.tsv",
+              [{"metric": key, "value": value} for key, value in metrics.items()])
+    write_tsv(output_dir / "pcd_vs_zvf_epsilon_sensitivity.tsv", analysis["epsilon_sensitivity"])
+    write_tsv(output_dir / "pcd_vs_zvf_jitter_groups.tsv", details)
+    (output_dir / "pcd_vs_zvf_tolerance_analysis.json").write_text(
+        json.dumps(analysis, indent=2, allow_nan=False) + "\n")
+
+    print(f"Loaded {len(groups)} groups (G={group_size}); all-correct={mastered}, "
+          f"all-wrong={incapable}, mixed={analysis['mixed_count']}")
+    print("Exact-zero ZVF (historical alias): "
+          f"{analysis['exact_zero_before_count']}/{len(groups)} -> "
+          f"{analysis['exact_zero_after_count']}/{len(groups)}")
+    print(f"Tolerance ZVF (sample variance <= {args.variance_epsilon:g}): "
+          f"{analysis['tolerance_before_count']}/{len(groups)} -> "
+          f"{analysis['tolerance_after_count']}/{len(groups)}")
+    print(f"PCD: {analysis['pcd_before']:.12f} -> {analysis['pcd_after']:.12f}; "
+          f"delta={analysis['pcd_delta']:+.6g}")
+    print(analysis["claim_boundary"])
+    print(f"Logged-summary cross-run comparison: {cross_run}")
+    print(f"Wrote analysis artifacts to {output_dir}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

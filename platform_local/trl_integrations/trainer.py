@@ -4,18 +4,6 @@ TRL Trainer for tinker-rl-lab
 Unified interface for HuggingFace TRL (GRPO, PPO, DPO training).
 """
 
-import atexit
-
-try:
-    from codecarbon import EmissionsTracker
-
-    _tracker = EmissionsTracker()
-    _tracker.start()
-    atexit.register(_tracker.stop)
-except ImportError:
-    pass
-
-
 import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List

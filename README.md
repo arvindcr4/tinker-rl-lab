@@ -1,6 +1,8 @@
 # Tinker RL Lab
 
-> **Academic reviewers / professors:** start at [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) for the semester boundary and ownership, then review [`platform_hybrid/sem 3 work/`](sem%203%20work/) (Group 6 capstone) and [`platform_hybrid/sem 4 work/`](sem%204%20work/) (solo continuation). Everything else in this repository is shared research infrastructure and evidence.
+> **Current Phase 2 submission:** start at [`SUBMISSION.md`](SUBMISSION.md) for the latest thesis, evidence checks, build commands, and remaining human approvals. Older papers and submission bundles below are historical.
+
+> **Academic reviewers / professors:** start at [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) for the semester boundary and ownership, then review [`platform_hybrid/sem 3 work/`](platform_hybrid/sem%203%20work/) (Group 6 capstone) and [`platform_hybrid/sem 4 work/`](platform_hybrid/sem%204%20work/) (solo continuation). Everything else in this repository is shared research infrastructure and evidence.
 
 A consolidated research repository for Reinforcement Learning experiments with Large Language Models, integrating multiple RL frameworks and compute backends.
 
@@ -12,8 +14,8 @@ This repository consolidates multiple research projects, spanning several RL fra
 
 This codebase spans two academic phases. They share infrastructure, but their deliverables and authorship are separated:
 
-- [`platform_hybrid/sem 3 work/`](sem%203%20work/) — frozen six-student Group 6 report, capstone artifacts, and the NeurIPS main-track submission.
-- [`platform_hybrid/sem 4 work/`](sem%204%20work/) — Arvind C R's solo continuation under project guide Ramesh Prakash Guledgudd, including the NeurIPS workshop submission, eight freshly compiled papers, and an experiment/evidence map.
+- [`platform_hybrid/sem 3 work/`](platform_hybrid/sem%203%20work/) — frozen six-student Group 6 report, capstone artifacts, and the NeurIPS main-track submission.
+- [`platform_hybrid/sem 4 work/`](platform_hybrid/sem%204%20work/) — Arvind C R's solo continuation under project guide Ramesh Prakash Guledgudd, including the NeurIPS workshop submission, eight freshly compiled papers, and an experiment/evidence map.
 - [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) — exact boundary, ownership explanation, and rationale for retaining one reproducible codebase.
 
 ## Repository Structure
@@ -286,7 +288,7 @@ This repository consolidates all PES LLM Research projects:
 - Arvind C R (PES University) — student researcher and author
 - Ramesh Prakash Guledgudd (PES University) — project guide
 
-The current P1–P8 paper series belongs to this phase. See [`platform_hybrid/sem 4 work/`](sem%204%20work/) and the shared author source in [`paper/sections/_shared_author.tex`](paper/sections/_shared_author.tex).
+The current P1–P8 paper series belongs to this phase. See [`platform_hybrid/sem 4 work/`](platform_hybrid/sem%204%20work/) and the shared author source in [`paper/sections/_shared_author.tex`](platform_hybrid/paper/sections/_shared_author.tex).
 
 ### Semester 3 — Group 6
 
@@ -301,7 +303,7 @@ The current P1–P8 paper series belongs to this phase. See [`platform_hybrid/se
 
 Corresponding author: Arvind C R &lt;arvindcr4@gmail.com&gt;. Equal contribution denotes equal
 technical and writing contribution; author order among the student team is alphabetical by given name after the two equal-contribution leads.
-The root [`CITATION.cff`](CITATION.cff) is the canonical citation record for the Semester 3 group release; a frozen copy is retained in [`platform_hybrid/sem 3 work/CITATION.cff`](sem%203%20work/CITATION.cff).
+The root [`CITATION.cff`](CITATION.cff) is the canonical citation record for the Semester 3 group release; a frozen copy is retained in [`platform_hybrid/sem 3 work/CITATION.cff`](platform_hybrid/sem%203%20work/CITATION.cff).
 
 ## License
 

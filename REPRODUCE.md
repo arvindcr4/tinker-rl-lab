@@ -5,7 +5,7 @@ commands to reproduce every result reported in the NeurIPS 2026 submission
 (`platform_hybrid/paper/main.tex`) and the capstone final report (`platform_tinker/reports/final/capstone_final_report.md`).
 
 > **Scope:** this reproduces the Semester 3 headline result on shared infrastructure.
-> The Semester 4 (P1–P8) paper-to-evidence map is [`platform_hybrid/sem 4 work/EXPERIMENTS.md`](sem%204%20work/EXPERIMENTS.md).
+> The Semester 4 (P1–P8) paper-to-evidence map is [`platform_hybrid/sem 4 work/EXPERIMENTS.md`](platform_hybrid/sem%204%20work/EXPERIMENTS.md).
 
 The **headline result** reviewers should verify is:
 

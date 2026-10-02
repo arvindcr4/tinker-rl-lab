@@ -60,7 +60,7 @@ The project pursues eight objectives. They are stated as they were pursued, not 
 
 **O7 — Build and exercise an evaluation-governance protocol on one trained actor.** Run a single trained checkpoint against fourteen agentic and reasoning suites that were not part of its training data, each with its own native evaluator at a pinned revision, under receipt, budget and decontamination controls, and record every lane's terminal state. The contribution is the governance protocol and the receipt-bound record it produces. The campaign is not evidence about GRPO: the actor's training run was short (40 steps, Chapter 8 §8.1.1), and the only trained-versus-base comparison is the small-sample Table 8.B.
 
-**O8 — Report under a deliberate asymmetry.** Where the evidence supports a structural or descriptive claim, state it; where it does not, withhold it. No cross-suite aggregate, no pooling of original-contract and replacement-scope numbers, and no claim of improvement over any baseline anywhere in the work. Baseline comparisons are reported where they exist, and none is claimed as an improvement. They are the paired trained-versus-base small-scale comparison of Chapter 8 (Table 8.B), which finds no significant difference in any lane, and the pre-to-post held-out comparisons of the controlled studies in Chapter 6.
+**O8 — Report under a deliberate asymmetry.** Where the evidence supports a structural or descriptive claim, state it; where it does not, withhold it. No cross-suite aggregate, no pooling of original-contract and replacement-scope numbers, and no claim of improvement over the base model in the E1–E14 campaign. Its paired trained-versus-base comparison (Chapter 8, Table 8.B) is inconclusive in every lane. The controlled studies in Chapter 6 separately report pre-to-post gains and the M1b GRPO–PPO contrast, limited to the tested stack and an untuned critic; five seeds give an exact sign-flip p-value of 0.0625 despite the paired t-test p-value of 0.016.
 
 The objectives are what the project set out to build. The results chapters answer four research questions that the objectives make testable. Each is mapped to the table that answers it, and §9.3 gives a one-line answer to each.
 
@@ -71,9 +71,9 @@ The objectives are what the project set out to build. The results chapters answe
 
 **Contributions.** Measured against these objectives, the thesis makes four contributions. Everything else in it is supporting evidence for one of them.
 
-1. **A recomputable signal-starvation diagnostic and a loss-form audit.** ZVF is logged per step and recomputed from stored reward tensors against a closed-form Bernoulli null (§4.3, §6.3). Reading the runner code rather than the internal reports shows that the "GRPO" runners used here are REINFORCE with a group-mean baseline, without KL or clipping (Table 4.2).
+1. **A recomputable signal-starvation diagnostic and a loss-form audit.** ZVF is logged per step and recomputed from stored reward tensors against a closed-form Bernoulli null (§4.3, §6.3). Reading the runner code rather than the internal reports shows that the custom-loss Tinker "GRPO" runners are REINFORCE with a group-mean baseline, without KL or clipping; the controlled Modal runners use clipped ratios (Table 4.2).
 2. **Stack-conditioned reporting.** A minimum reporting standard (P5) and a machine-readable stack registry with `stackdiff`, which flags label-flip risk between two runs from their records alone (Chapter 7).
-3. **Calibrated negative results.** No reliable scaling law is recovered from reward curves; the same-stack PPO/GRPO and group-size contrasts are nulls on a saturated task, and on an unsaturated rerun only the PPO/GRPO gap appears, from an untuned critic; ZVF does not predict held-out accuracy; and the ZVF-derived controller saves no prompts in counterfactual simulation. Each is reported with the power limitation that bounds it (Chapters 6–7).
+3. **Calibrated negative results.** No reliable scaling law is recovered from reward curves; the same-stack PPO/GRPO and group-size contrasts are nulls on a saturated task, and on an unsaturated rerun only the PPO/GRPO gap appears, from an untuned critic; ZVF has no detectable association with held-out accuracy in the measured sample; and the ZVF-derived controller saves no prompts in counterfactual simulation. Each is reported with the power limitation that bounds it (Chapters 6–7).
 4. **An evaluation-governance protocol.** Native graders at pinned revisions, per-lane receipts, a no-pooling rule, a per-lane serving audit and a paired same-engine trained-versus-base design, exercised on one lightly trained actor across fourteen suites outside its training data (Chapter 8). The contribution is the protocol and the record it produces, not the actor's scores.
 
 ## 1.5 Scope and Non-Goals
@@ -118,26 +118,26 @@ Several quantities in this report were measured more than once, in different reg
 
 | Quantity | Value | Model / task / G | n | Source |
 |---|---|---|---|---|
-| Phase-1 batch ZVF | 0.72–0.77 (all-correct 0.65–0.71) | Qwen3.5-4B, GSM8K, G = 8; four methods × 40 steps, 16 prompts per step | 1 seed | Phase1_Project_Report_ZVF.tex |
+| Phase-1 batch ZVF | 0.72–0.77 (all-correct 0.65–0.71) | Qwen3.5-4B, GSM8K, G = 8; four methods × 40 steps, 16 prompts per step | 1 seed | `Phase1_Project_Report_ZVF.tex` |
 | ZVF, sampling only (P2 recomputation) | 0.130 / 0.190 / 0.155; pooled 0.158 | Qwen3-8B, GSM8K test problems, G = 8, T = 1.0, no training | 3 seeds × 200 problems | results/tinker_gsm8k_zvf_s{42,123,456}.json |
-| ZVF by group size | 0.838 / 0.764 / 0.691 / 0.631 at G = 2 / 4 / 8 / 16 (fall of 0.207) | Qwen2.5-0.5B, two-digit addition | 3 seeds × 40 steps per G | results/groupsize_zvf_sweep.tsv |
-| ZVF, nine-row mitigation panel ("vanilla GRPO" 0.481) | declared simulation projection, not a measurement | synthetic, K = 8 | — | sections/zvf.tex |
-| ZVF vs final held-out outcome | ρ ≈ 0.27, 95% CI [−0.37, 0.88] | pooled local analysis cells, GSM8K | n = 23 cells | sections/p2_abstract.tex; Table A.5 (P2-C2) |
-| ZVF vs performance, pooled across task types | r = −0.769 (confounded by task type) | 5 model families, tool-use and GSM8K | N = 15 experiments | neurips_2026_variants/paper_P8_workshop.tex |
-| ZVF vs final accuracy | r ≈ 0.09 | instrumented runs | n = 12 | sections/appendix_zvf_formalization.tex |
-| Same-stack PPO vs GRPO | GRPO 0.990, PPO 0.992; paired Δ = −0.002, p = 0.374 | Qwen2.5-0.5B, two-digit addition, G = 8 (PPO: 128 prompts per step) | 5 paired seeds × 200 fresh draws from the training generator | results/samestack_ppo_grpo.json |
-| Same-stack GRPO vs PPO, unsaturated | post-training accuracy GRPO (G = 8) 0.245, GRPO (G = 2) 0.250, PPO 0.195; GRPO G8 − PPO +0.050 [+0.015, +0.085], p = 0.016; G8 − G2 −0.005 [−0.038, +0.028] | Qwen2.5-1.5B-Instruct, GSM8K-CoT, 200-token cap, 64 generations per step, 30 steps | 5 paired seeds × 200 GSM8K test items | results/samestack_gsm8k_cot.json |
-| Group-size sweep, evaluation accuracy | 0.982 / 0.988 / 0.990 / 0.978 at G = 2 / 4 / 8 / 16 | Qwen2.5-0.5B, two-digit addition | 3 seeds × 200 fresh draws | results/groupsize_zvf_sweep.tsv |
-| GRPO vs Dr. GRPO, arithmetic | 0.987 vs 0.992, p = 0.35; completions 4.7 tokens | Qwen2.5-0.5B, G = 8, 40 steps | 5 seeds × 200 | results/drgrpo_vs_grpo.json |
-| GRPO / Dr. GRPO pre → post | 0.202 → 0.263 / 0.205 → 0.255 | Qwen2.5-1.5B-Instruct, GSM8K-CoT, 200-token cap, G = 8 | 3 seeds × 200 | results/drgrpo_gsm8k_cot.json |
-| Qwen3-8B pre → post (GRPO) | 82.0% → 83.3%, p = 0.26 | Qwen3-8B-Instruct, GSM8K; 82.0% is the same checkpoint before RL | 5 seeds | archive/absorbed/U01_main_compendium/main.tex |
-| Variant audit, DAPO − GRPO | Δ = +0.001, paired-t 95% CI [−0.00632, +0.00832]; no BH rejection | Qwen3-8B, GSM8K, five arms | 8 seeds × 500 | zvf-program/audit/results/full/; statistical_refutation.md |
-| Tinker vs TRL, Qwen3-8B GSM8K | last-10 training reward 0.856 (Tinker, Qwen3-8B-Base) vs 0.050 (TRL, Qwen3-8B Instruct) | GSM8K-500, G = 8, 30 steps | 1 seed each | results/framework_comparison.json |
-| Qwen3-8B GSM8K GRPO, reproduction headline | last-10 training reward 34.4%, peak 62.5% | Qwen3-8B, LoRA 32, G = 8, 30 steps | seed 42 | REPRODUCE.md |
-| Qwen3-8B GSM8K GRPO, P1 anchor fit | mean training reward 0.285, peak 0.625 | Qwen3-8B, GSM8K | 1 seed | sections/scaling_laws.tex |
-| Pooled Tinker vs TRL training reward | 99.9% vs 73.4% | Tinker runs pooled over 4B–235B models vs TRL on Qwen2.5-0.5B | pooled | LIMITATIONS_AND_IMPACT.md §6.2 |
-| Layer-freeze held-out gain | +0.0625 (full) vs +0.000 (frozen) | Qwen2.5-1.5B-Instruct | 2 seeds × 8 items | results/p1_layerfreeze/FREEZE_FINDINGS.md |
-| Curriculum opening held-out gain | +0.05 in both arms | Qwen3.5-4B, GSM8K, G = 4 | 1 seed × 20 items | results/curriculum_opening/FINDINGS.md |
-| E1–E14 lane figures | see Table C.3 | Qwen3.6-35B-A3B + seed809 adapter | per-lane native denominators | outputs/E1_E14_FINAL_RESULTS_2026-09-19.md |
+| ZVF by group size | 0.838 / 0.764 / 0.691 / 0.631 at G = 2 / 4 / 8 / 16 (fall of 0.207) | Qwen2.5-0.5B, two-digit addition | 3 seeds × 40 steps per G | `results/groupsize_zvf_sweep.tsv` |
+| ZVF, nine-row mitigation panel ("vanilla GRPO" 0.481) | declared simulation projection, not a measurement | synthetic, K = 8 | — | `sections/zvf.tex` |
+| ZVF vs final held-out outcome | ρ ≈ 0.27, 95% CI [−0.37, 0.88] | pooled local analysis cells, GSM8K | n = 23 cells | `sections/p2_abstract.tex`; Table A.5 (P2-C2) |
+| ZVF vs performance, pooled across task types | r = −0.769 (confounded by task type) | 5 model families, tool-use and GSM8K | N = 15 experiments | `neurips_2026_variants/paper_P8_workshop.tex` |
+| ZVF vs final accuracy | r ≈ 0.09 | instrumented runs | n = 12 | `sections/appendix_zvf_formalization.tex` |
+| Same-stack PPO vs GRPO | GRPO 0.990, PPO 0.992; paired Δ = −0.002, p = 0.374 | Qwen2.5-0.5B, two-digit addition, G = 8 (PPO: 128 prompts per step) | 5 paired seeds × 200 fresh draws from the training generator | `results/samestack_ppo_grpo.json` |
+| Same-stack GRPO vs PPO, unsaturated | post-training accuracy GRPO (G = 8) 0.245, GRPO (G = 2) 0.250, PPO 0.195; GRPO G8 − PPO +0.050 [+0.015, +0.085], p = 0.016; G8 − G2 −0.005 [−0.038, +0.028] | Qwen2.5-1.5B-Instruct, GSM8K-CoT, 200-token cap, 64 generations per step, 30 steps | 5 paired seeds × 200 GSM8K test items | `results/samestack_gsm8k_cot.json` |
+| Group-size sweep, evaluation accuracy | 0.982 / 0.988 / 0.990 / 0.978 at G = 2 / 4 / 8 / 16 | Qwen2.5-0.5B, two-digit addition | 3 seeds × 200 fresh draws | `results/groupsize_zvf_sweep.tsv` |
+| GRPO vs Dr. GRPO, arithmetic | 0.987 vs 0.992, p = 0.35; completions 4.7 tokens | Qwen2.5-0.5B, G = 8, 40 steps | 5 seeds × 200 | `results/drgrpo_vs_grpo.json` |
+| GRPO / Dr. GRPO pre → post | 0.202 → 0.263 / 0.205 → 0.255 | Qwen2.5-1.5B-Instruct, GSM8K-CoT, 200-token cap, G = 8 | 3 seeds × 200 | `results/drgrpo_gsm8k_cot.json` |
+| Qwen3-8B pre → post (GRPO) | 82.0% → 83.3%, p = 0.26 | Qwen3-8B-Instruct, GSM8K; 82.0% is the same checkpoint before RL | 5 seeds | `archive/absorbed/U01_main_compendium/main.tex` |
+| Variant audit, DAPO − GRPO | Δ = +0.001, paired-t 95% CI [−0.00632, +0.00832]; no BH rejection | Qwen3-8B, GSM8K, five arms | 8 seeds × 500 | `zvf-program/audit/results/full/`; `statistical_refutation.md` |
+| Tinker vs TRL, Qwen3-8B GSM8K | last-10 training reward 0.856 (Tinker, Qwen3-8B-Base) vs 0.050 (TRL, Qwen3-8B Instruct) | GSM8K-500, G = 8, 30 steps | 1 seed each | `results/framework_comparison.json` |
+| Qwen3-8B GSM8K GRPO, reproduction headline | last-10 training reward 34.4%, peak 62.5% | Qwen3-8B, LoRA 32, G = 8, 30 steps | seed 42 | `REPRODUCE.md` |
+| Qwen3-8B GSM8K GRPO, P1 anchor fit | mean training reward 0.285, peak 0.625 | Qwen3-8B, GSM8K | 1 seed | `sections/scaling_laws.tex` |
+| Pooled Tinker vs TRL training reward | 99.9% vs 73.4% | Tinker runs pooled over 4B–235B models vs TRL on Qwen2.5-0.5B | pooled | `LIMITATIONS_AND_IMPACT.md` §6.2 |
+| Layer-freeze held-out gain | +0.0625 (full) vs +0.000 (frozen) | Qwen2.5-1.5B-Instruct | 2 seeds × 8 items | `results/p1_layerfreeze/FREEZE_FINDINGS.md` |
+| Curriculum opening held-out gain | +0.05 in both arms | Qwen3.5-4B, GSM8K, G = 4 | 1 seed × 20 items | `results/curriculum_opening/FINDINGS.md` |
+| E1–E14 lane figures | see Table C.3 | Qwen3.6-35B-A3B + seed809 adapter | per-lane native denominators | `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md` |
 
 : Canonical numbers. "results/" is `platform_hybrid/experiments/results/`; "sections/", "archive/" and "neurips_2026_variants/" are under `platform_hybrid/paper/`. The Qwen3-8B GSM8K GRPO training-reward rows use different summaries (last-10 mean, trace mean, pooled) and the sources do not establish that they come from the same run, so they are not interchangeable.

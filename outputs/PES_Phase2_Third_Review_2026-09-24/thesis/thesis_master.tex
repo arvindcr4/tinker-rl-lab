@@ -399,6 +399,11 @@ in the E1--E14 ledger only for classification, faithfulness and value
 ordering, never for arithmetic (Chapter 4 \S4.5).
 \item \textbf{Review.} The pre-defence self-review of 27 September 2026 and the
 revision of this report that followed it were AI-assisted.
+\item \textbf{Submission preparation.} An AI coding assistant helped revise
+reporting language, harden build and test scripts, check stored arithmetic,
+and inspect the final PDF. Gemini 3.1 Pro reviewed the build and verification
+code through the \texttt{agy} command-line tool. This preparation ran no new
+training or benchmark evaluations and changed no stored experimental results.
 \end{itemize}
 
 No AI assistant generated experimental data: every reported measurement comes
@@ -442,8 +447,9 @@ factor under test. It makes four contributions.
 \textbf{(1) A recomputable signal-starvation diagnostic and a loss-form
 audit.} The Zero-Variance Fraction (ZVF) is logged per step and recomputed
 from stored reward tensors, with a closed-form Bernoulli null. Reading the
-runners' code rather than the internal reports shows that the ``GRPO'' runners
-used here are REINFORCE with a group-mean baseline, without KL or clipping.
+runners' code rather than the internal reports shows that the custom-loss
+Tinker ``GRPO'' runners are REINFORCE with a group-mean baseline, without KL
+or clipping; the controlled Modal runners use clipped ratios (Table~4.2).
 
 \textbf{(2) Stack-conditioned reporting.} A minimum reporting standard and a
 machine-readable stack registry with a \texttt{stackdiff} tool that flags
@@ -451,10 +457,13 @@ label-flip risk between two runs from their records alone.
 
 \textbf{(3) Calibrated negative results.} No reliable scaling law is recovered
 from reward curves across twelve fitted anchors. A same-stack PPO/GRPO
-contrast (0.992 against 0.990, $p = 0.374$, five seeds) and a group-size sweep find no detectable difference, but both run on a saturated task and establish
-neither equivalence nor an optimum. On an unsaturated GSM8K rerun, GRPO beats an
-untuned-critic PPO by 5.0 points (95\% CI $[1.5, 8.5]$); $G = 2$ and $G = 8$
-stay indistinguishable. ZVF does not predict held-out accuracy
+contrast (0.992 against 0.990, $p = 0.374$, five seeds) and a group-size sweep
+find no detectable difference on saturated, in-distribution arithmetic draws;
+neither establishes equivalence or an optimum. On an unsaturated GSM8K rerun, GRPO beats an
+untuned-critic PPO by 5.0 points (95\% CI $[1.5, 8.5]$; paired $t$-test
+$p=0.016$, exact sign-flip $p=0.0625$ at five seeds); $G = 2$ and $G = 8$
+show no detectable difference, without establishing equivalence. ZVF has no
+detectable association with held-out accuracy in this sample
 ($\rho = 0.27$, 95\% CI $[-0.37, 0.88]$). An adaptive group-size controller
 derived from ZVF saves no prompts in counterfactual simulation, because 92\% of its escalations fall on
 groups that are already all-correct.
@@ -469,7 +478,7 @@ zero score to a serving defect. Complete scopes include VerilogEval
 (Chapter~8, Table~8.C); seven original contracts remain externally blocked. A
 paired trained-versus-base rerun on 5--151 identical items per lane finds no
 significant difference in any lane (inconclusive at those sizes). No
-claim of improvement over any baseline is made.
+claim of campaign-level improvement over the base model is made.
 
 \vspace{0.25in}
 \noindent\textbf{Keywords:} GRPO, RLVR, zero-variance fraction, signal
@@ -833,12 +842,13 @@ trained-versus-base comparison is the small-sample Table 8.B.
 \textbf{O8 --- Report under a deliberate asymmetry.} Where the evidence
 supports a structural or descriptive claim, state it; where it does not,
 withhold it. No cross-suite aggregate, no pooling of original-contract
-and replacement-scope numbers, and no claim of improvement over any
-baseline anywhere in the work. Baseline comparisons are reported where
-they exist, and none is claimed as an improvement. They are the paired
-trained-versus-base small-scale comparison of Chapter 8 (Table 8.B),
-which finds no significant difference in any lane, and the pre-to-post
-held-out comparisons of the controlled studies in Chapter 6.
+and replacement-scope numbers, and no claim of improvement over the base
+model in the E1--E14 campaign. Its paired trained-versus-base comparison
+(Chapter 8, Table 8.B) is inconclusive in every lane. The controlled
+studies in Chapter 6 separately report pre-to-post gains and the M1b
+GRPO--PPO contrast, limited to the tested stack and an untuned critic;
+five seeds give an exact sign-flip p-value of 0.0625 despite the paired
+t-test p-value of 0.016.
 
 The objectives are what the project set out to build. The results
 chapters answer four research questions that the objectives make
@@ -884,9 +894,10 @@ for one of them.
   \textbf{A recomputable signal-starvation diagnostic and a loss-form
   audit.} ZVF is logged per step and recomputed from stored reward
   tensors against a closed-form Bernoulli null (§4.3, §6.3). Reading the
-  runner code rather than the internal reports shows that the ``GRPO''
-  runners used here are REINFORCE with a group-mean baseline, without KL
-  or clipping (Table 4.2).
+  runner code rather than the internal reports shows that the
+  custom-loss Tinker ``GRPO'' runners are REINFORCE with a group-mean
+  baseline, without KL or clipping; the controlled Modal runners use
+  clipped ratios (Table 4.2).
 \item
   \textbf{Stack-conditioned reporting.} A minimum reporting standard
   (P5) and a machine-readable stack registry with \texttt{stackdiff},
@@ -896,10 +907,11 @@ for one of them.
   \textbf{Calibrated negative results.} No reliable scaling law is
   recovered from reward curves; the same-stack PPO/GRPO and group-size
   contrasts are nulls on a saturated task, and on an unsaturated rerun
-  only the PPO/GRPO gap appears, from an untuned critic; ZVF does not
-  predict held-out accuracy; and the ZVF-derived controller saves no
-  prompts in counterfactual simulation. Each is reported with the power
-  limitation that bounds it (Chapters 6--7).
+  only the PPO/GRPO gap appears, from an untuned critic; ZVF has no
+  detectable association with held-out accuracy in the measured sample;
+  and the ZVF-derived controller saves no prompts in counterfactual
+  simulation. Each is reported with the power limitation that bounds it
+  (Chapters 6--7).
 \item
   \textbf{An evaluation-governance protocol.} Native graders at pinned
   revisions, per-lane receipts, a no-pooling rule, a per-lane serving
@@ -1148,70 +1160,72 @@ Source
 \endlastfoot
 Phase-1 batch ZVF & 0.72--0.77 (all-correct 0.65--0.71) & Qwen3.5-4B,
 GSM8K, G = 8; four methods × 40 steps, 16 prompts per step & 1 seed &
-Phase1\_\allowbreak{}Project\_\allowbreak{}Report\_\allowbreak{}ZVF.tex \\
+\longtok{Phase1\_\allowbreak{}Project\_\allowbreak{}Report\_\allowbreak{}ZVF.tex} \\
 ZVF, sampling only (P2 recomputation) & 0.130 / 0.190 / 0.155; pooled
 0.158 & Qwen3-8B, GSM8K test problems, G = 8, T = 1.0, no training & 3
 seeds × 200 problems &
 results/tinker\_\allowbreak{}gsm8k\_\allowbreak{}zvf\_\allowbreak{}s\{42,123,456\}.json \\
 ZVF by group size & 0.838 / 0.764 / 0.691 / 0.631 at G = 2 / 4 / 8 / 16
 (fall of 0.207) & Qwen2.5-0.5B, two-digit addition & 3 seeds × 40 steps
-per G & results/groupsize\_\allowbreak{}zvf\_\allowbreak{}sweep.tsv \\
+per G & \longtok{results/groupsize\_\allowbreak{}zvf\_\allowbreak{}sweep.tsv} \\
 ZVF, nine-row mitigation panel (``vanilla GRPO'' 0.481) & declared
 simulation projection, not a measurement & synthetic, K = 8 & --- &
-sections/zvf.tex \\
+\longtok{sections/zvf.tex} \\
 ZVF vs final held-out outcome & ρ ≈ 0.27, 95\% CI {[}−0.37, 0.88{]} &
 pooled local analysis cells, GSM8K & n = 23 cells &
-sections/p2\_abstract.tex; Table A.5 (P2-C2) \\
+\longtok{sections/p2\_abstract.tex}; Table A.5 (P2-C2) \\
 ZVF vs performance, pooled across task types & r = −0.769 (confounded by
 task type) & 5 model families, tool-use and GSM8K & N = 15 experiments &
-neurips\_\allowbreak{}2026\_\allowbreak{}variants/paper\_\allowbreak{}P8\_\allowbreak{}workshop.tex \\
+\longtok{neurips\_\allowbreak{}2026\_\allowbreak{}variants/paper\_\allowbreak{}P8\_\allowbreak{}workshop.tex} \\
 ZVF vs final accuracy & r ≈ 0.09 & instrumented runs & n = 12 &
-sections/appendix\_\allowbreak{}zvf\_\allowbreak{}formalization.tex \\
+\longtok{sections/appendix\_\allowbreak{}zvf\_\allowbreak{}formalization.tex} \\
 Same-stack PPO vs GRPO & GRPO 0.990, PPO 0.992; paired Δ = −0.002, p =
 0.374 & Qwen2.5-0.5B, two-digit addition, G = 8 (PPO: 128 prompts per
 step) & 5 paired seeds × 200 fresh draws from the training generator &
-results/samestack\_\allowbreak{}ppo\_\allowbreak{}grpo.json \\
+\longtok{results/samestack\_\allowbreak{}ppo\_\allowbreak{}grpo.json} \\
 Same-stack GRPO vs PPO, unsaturated & post-training accuracy GRPO (G =
 8) 0.245, GRPO (G = 2) 0.250, PPO 0.195; GRPO G8 − PPO +0.050 {[}+0.015,
 +0.085{]}, p = 0.016; G8 − G2 −0.005 {[}−0.038, +0.028{]} &
 Qwen2.5-1.5B-Instruct, GSM8K-CoT, 200-token cap, 64 generations per
 step, 30 steps & 5 paired seeds × 200 GSM8K test items &
-results/samestack\_\allowbreak{}gsm8k\_\allowbreak{}cot.json \\
+\longtok{results/samestack\_\allowbreak{}gsm8k\_\allowbreak{}cot.json} \\
 Group-size sweep, evaluation accuracy & 0.982 / 0.988 / 0.990 / 0.978 at
 G = 2 / 4 / 8 / 16 & Qwen2.5-0.5B, two-digit addition & 3 seeds × 200
-fresh draws & results/groupsize\_\allowbreak{}zvf\_\allowbreak{}sweep.tsv \\
+fresh draws & \longtok{results/groupsize\_\allowbreak{}zvf\_\allowbreak{}sweep.tsv} \\
 GRPO vs Dr.~GRPO, arithmetic & 0.987 vs 0.992, p = 0.35; completions 4.7
 tokens & Qwen2.5-0.5B, G = 8, 40 steps & 5 seeds × 200 &
-results/drgrpo\_\allowbreak{}vs\_\allowbreak{}grpo.json \\
+\longtok{results/drgrpo\_\allowbreak{}vs\_\allowbreak{}grpo.json} \\
 GRPO / Dr.~GRPO pre → post & 0.202 → 0.263 / 0.205 → 0.255 &
 Qwen2.5-1.5B-Instruct, GSM8K-CoT, 200-token cap, G = 8 & 3 seeds × 200 &
-results/drgrpo\_\allowbreak{}gsm8k\_\allowbreak{}cot.json \\
+\longtok{results/drgrpo\_\allowbreak{}gsm8k\_\allowbreak{}cot.json} \\
 Qwen3-8B pre → post (GRPO) & 82.0\% → 83.3\%, p = 0.26 &
 Qwen3-8B-Instruct, GSM8K; 82.0\% is the same checkpoint before RL & 5
-seeds & archive/absorbed/U01\_\allowbreak{}main\_\allowbreak{}compendium/main.tex \\
+seeds & \longtok{archive/absorbed/U01\_\allowbreak{}main\_\allowbreak{}compendium/main.tex} \\
 Variant audit, DAPO − GRPO & Δ = +0.001, paired-t 95\% CI {[}−0.00632,
 +0.00832{]}; no BH rejection & Qwen3-8B, GSM8K, five arms & 8 seeds ×
-500 & zvf-program/audit/results/full/; statistical\_refutation.md \\
+500 & \longtok{zvf-program/audit/results/full/};
+\longtok{statistical\_refutation.md} \\
 Tinker vs TRL, Qwen3-8B GSM8K & last-10 training reward 0.856 (Tinker,
 Qwen3-8B-Base) vs 0.050 (TRL, Qwen3-8B Instruct) & GSM8K-500, G = 8, 30
-steps & 1 seed each & results/framework\_comparison.json \\
+steps & 1 seed each & \longtok{results/framework\_comparison.json} \\
 Qwen3-8B GSM8K GRPO, reproduction headline & last-10 training reward
 34.4\%, peak 62.5\% & Qwen3-8B, LoRA 32, G = 8, 30 steps & seed 42 &
-REPRODUCE.md \\
+\longtok{REPRODUCE.md} \\
 Qwen3-8B GSM8K GRPO, P1 anchor fit & mean training reward 0.285, peak
-0.625 & Qwen3-8B, GSM8K & 1 seed & sections/scaling\_laws.tex \\
+0.625 & Qwen3-8B, GSM8K & 1 seed &
+\longtok{sections/scaling\_laws.tex} \\
 Pooled Tinker vs TRL training reward & 99.9\% vs 73.4\% & Tinker runs
 pooled over 4B--235B models vs TRL on Qwen2.5-0.5B & pooled &
-LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md §6.2 \\
+\longtok{LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md} §6.2 \\
 Layer-freeze held-out gain & +0.0625 (full) vs +0.000 (frozen) &
 Qwen2.5-1.5B-Instruct & 2 seeds × 8 items &
-results/p1\_layerfreeze/FREEZE\_FINDINGS.md \\
+\longtok{results/p1\_layerfreeze/FREEZE\_FINDINGS.md} \\
 Curriculum opening held-out gain & +0.05 in both arms & Qwen3.5-4B,
 GSM8K, G = 4 & 1 seed × 20 items &
-results/curriculum\_opening/FINDINGS.md \\
+\longtok{results/curriculum\_opening/FINDINGS.md} \\
 E1--E14 lane figures & see Table C.3 & Qwen3.6-35B-A3B + seed809 adapter
 & per-lane native denominators &
-outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md \\
+\longtok{outputs/E1\_\allowbreak{}E14\_\allowbreak{}FINAL\_\allowbreak{}RESULTS\_\allowbreak{}2026-09-19.md} \\
 \end{longtable}
 \endgroup
 
@@ -1372,15 +1386,17 @@ exploits the fact that the RLHF objective with a KL constraint admits a
 closed-form optimal policy, which permits the reward to be
 reparameterised in terms of the policy itself. The result is a simple
 classification loss over a fixed dataset of preference pairs, with no
-reward model, no value model, and no sampling loop. Reported savings are
-40--60\% in both GPU memory and wall-clock time relative to PPO. Four
-limitations are documented in the same source: the training data are
-static and offline, so the implicit reward goes stale as the policy
-drifts; there is no online exploration beyond the dataset's support; the
-loss can lower the absolute likelihood of preferred completions while
-widening their margin over dispreferred ones (likelihood displacement);
-and the method has weaker credit assignment for long-horizon reasoning,
-where correctness of later steps depends on earlier ones.
+reward model, no value model, and no sampling loop. This removes
+components of the PPO training stack; no fixed memory or wall-clock
+saving is asserted here, because it depends on the implementation and
+workload. Four limitations are documented in the same source: the
+training data are static and offline, so the implicit reward goes stale
+as the policy drifts; there is no online exploration beyond the
+dataset's support; the loss can lower the absolute likelihood of
+preferred completions while widening their margin over dispreferred ones
+(likelihood displacement); and the method has weaker credit assignment
+for long-horizon reasoning, where correctness of later steps depends on
+earlier ones.
 
 The contrast is structurally instructive for this project. DPO cannot
 suffer zero-variance collapse, because it never standardises within a
@@ -1460,12 +1476,11 @@ continues with λ-GRPO \citep{wang2025lambdagrpo}, MC-GRPO
 
 One act of bookkeeping in this literature deserves emphasis, because it
 is a claim about what may \emph{not} be inferred. AVSPO
-\citep{he2026avspo}, query recycling, ConSPO, and Goldilocks RL are
-described in the project's own related-work source as prior or
-concurrent interventions, not as evidence for this project's runner, and
-the internal report explicitly claims neither priority nor an
-intervention effect over them. The present thesis inherits that
-disclaimer without qualification.
+\citep{he2026avspo} and other interventions are described in the
+project's own related-work source as prior or concurrent interventions,
+not as evidence for this project's runner, and the internal report
+explicitly claims neither priority nor an intervention effect over them.
+The present thesis inherits that disclaimer without qualification.
 
 Against this background, the project's own contribution to the area is
 deliberately meagre in algorithmic ambition and deliberately demanding
@@ -1626,12 +1641,12 @@ project's run manifest is the RL-for-LLM analogue, replacing
 criteria, and the project draws the explicit lesson that self-attested
 checklists have limits, which motivates an artifact-computed badge
 rather than a declared one. Statistical treatments of evaluation noise
-(Miller \citep{miller2024errorbars}; Zhang et al.) quantify the
-uncertainty floor against which the project's own within-noise findings
-should be read, and the evaluation-stack sensitivity documented by the
-LM Evaluation Harness effort \citep{biderman2024lmeval}, by audits of
-reasoning evaluations \citep{hochlehnert2025sober}, and by contamination
-studies of the data side of the same coin, together establish that RL
+(Miller \citep{miller2024errorbars}) quantify the uncertainty floor
+against which the project's own within-noise findings should be read,
+and the evaluation-stack sensitivity documented by the LM Evaluation
+Harness effort \citep{biderman2024lmeval}, by audits of reasoning
+evaluations \citep{hochlehnert2025sober}, and by contamination studies
+of the data side of the same coin, together establish that RL
 \emph{training} inherits all of this --- the verifier is an evaluator in
 the loop --- plus the additional vectors unique to on-policy
 optimisation.
@@ -1753,8 +1768,8 @@ rewards to multi-domain tasks. Tree-of-thought search
 \citep{yao2023tot}, self-consistency \citep{wang2023selfconsistency},
 and critic-style post-hoc verifiers all either benefit from or
 substitute for process supervision. The same source documents the
-counter-current that matters most here: VerifyBench and ``A Sober Look''
-\citep{hochlehnert2025sober} warn that reward hacking and evaluation
+counter-current that matters most here: ``A Sober Look''
+\citep{hochlehnert2025sober} warns that reward hacking and evaluation
 artefacts can inflate perceived gains on reasoning benchmarks, which is
 the project's stated motivation for insisting on binary verifiable
 rewards in its own mathematics work.
@@ -6609,17 +6624,17 @@ base model itself, so the E12 rates are judge-dependent. For E4, only
 \texttt{btb-19b3361c} scores above zero in either arm (trained 0.397,
 base 0.557; 0.409 in Table 8.A), so no interval is valid. For E13, the
 1.875 difference is the mean of per-environment differences computed
-from unrounded values (recomputed 1.876), not 25.510 − 23.630. For E9,
-the one competition that earned a medal in the Tinker run (nomad2018)
-has a 46.8k-token prompt that exceeds the 32,768-token vLLM limit and
-fails identically in both vLLM arms, so the vLLM medal rates are not
-comparable with Table 8.A. The paired differences are not combined
-across lanes, and none of the seventeen paired tests excludes zero. At
-these sizes that is an inconclusive result, not evidence of no effect:
-with 5 to 10 items, an exact McNemar test needs at least six discordant
-items, all in one direction, to reach p \textless{} 0.05. No equivalence
-test was run. Fuller E12 detail and the principal per-lane caveats from
-each result file are in Appendix D.
+from unrounded per-item values (recomputed 1.8752), not 25.510 − 23.630.
+For E9, the one competition that earned a medal in the Tinker run
+(nomad2018) has a 46.8k-token prompt that exceeds the 32,768-token vLLM
+limit and fails identically in both vLLM arms, so the vLLM medal rates
+are not comparable with Table 8.A. The paired differences are not
+combined across lanes, and none of the seventeen paired tests excludes
+zero. At these sizes that is an inconclusive result, not evidence of no
+effect: with 5 to 10 items, an exact McNemar test needs at least six
+discordant items, all in one direction, to reach p \textless{} 0.05. No
+equivalence test was run. Fuller E12 detail and the principal per-lane
+caveats from each result file are in Appendix D.
 
 \section{Summary of the campaign at the point of
 writing}\label{summary-of-the-campaign-at-the-point-of-writing}
@@ -7206,13 +7221,15 @@ lane, with a named gate and a named reopen condition instead of an
 indefinite pending. Its discipline is negative, which is why it is
 credible: original-contract and replacement-scope numbers are never
 pooled, no cross-suite aggregate is computed, and no claim of
-improvement over a baseline or over the base model is made anywhere in
-this work (the one paired trained-versus-base comparison, Table 8.B, is
-inconclusive in every lane). The strongest complete positive result,
-129/312 = 41.35\% pass@1 on VerilogEval at full 312/312 coverage, is an
-end-to-end harness score (150 of its 183 failures are extraction
-failures) and is reported as a measurement of one actor on one suite,
-with its provenance recorded down to the sampler path.
+improvement over the base model is made for this campaign (the paired
+trained-versus-base comparison, Table 8.B, is inconclusive in every
+lane). The controlled Chapter 6 gains are separate, stack-specific
+findings and are not inferred from these campaign scores. The strongest
+complete positive result, 129/312 = 41.35\% pass@1 on VerilogEval at
+full 312/312 coverage, is an end-to-end harness score (150 of its 183
+failures are extraction failures) and is reported as a measurement of
+one actor on one suite, with its provenance recorded down to the sampler
+path.
 
 The report's overall conclusion is about method rather than algorithms.
 On this compute scale, and with these instruments, the measurements are
@@ -8174,7 +8191,7 @@ baseline gains 0.0000, not 0.125, and that sweep file retains only two
 of its twelve entries, so the W\&B group is its record.
 
 \subsection{Same-stack rerun on the unsaturated
-configuration}\label{same-stack-rerun-on-the-unsaturated-configuration}
+configuration}\label{m1b-run-registry}
 
 The rerun of §6.5.5 was executed on Modal on 2 October 2026 by
 \longtok{platform\_hybrid/experiments/modal/modal\_\allowbreak{}samestack\_\allowbreak{}gsm8k\_\allowbreak{}cot.py}:

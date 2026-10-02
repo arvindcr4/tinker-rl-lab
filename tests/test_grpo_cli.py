@@ -99,9 +99,12 @@ def test_pavlov_preset_carries_complete_campaign_metadata():
 
 def test_pavlov_xlam_dataset_factory_receives_pinned_revision():
     config = build_config(_parse_args(["--preset", "pavlov_xlam"]))
-    factory = patch("platform_tinker.tinkerrl.grpo_cli.DATASET_FACTORIES", {
-        "pavlov_xlam": lambda **kwargs: kwargs,
-    })
+    factory = patch(
+        "platform_tinker.tinkerrl.grpo_cli.DATASET_FACTORIES",
+        {
+            "pavlov_xlam": lambda **kwargs: kwargs,
+        },
+    )
     with factory:
         dataset = _build_dataset(_parse_args(["--preset", "pavlov_xlam"]), config)
 

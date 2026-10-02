@@ -4,6 +4,7 @@ Six backends, each delegating to existing provisioning/drivers:
 local (in-process), modal (H100), colab (A100 notebooks), vast (rented A100),
 gcp (A100 Spot preflight), hfspaces (results demo + fetch).
 """
+
 from __future__ import annotations
 
 from platform_local.unified.backends.base import Backend, LaunchPlan

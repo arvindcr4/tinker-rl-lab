@@ -297,7 +297,7 @@ superseded by the multi-seed blocks above: the curriculum opening's +0.05
 — the campaign's G4 seed-0 baseline gains 0.0000, not 0.125, and that sweep
 file retains only two of its twelve entries, so the W&B group is its record.
 
-### A.3.2 Same-stack rerun on the unsaturated configuration
+### A.3.2 Same-stack rerun on the unsaturated configuration {#m1b-run-registry}
 
 The rerun of §6.5.5 was executed on Modal on 2 October 2026 by
 `platform_hybrid/experiments/modal/modal_samestack_gsm8k_cot.py`: 15 runs, one

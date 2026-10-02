@@ -10,6 +10,7 @@ end-to-end through the CLI ``--dry-run``.
 This is the concrete check that "all frameworks × all backends have experiment run
 code" (slide 06, Infrastructure).
 """
+
 from __future__ import annotations
 
 import json
@@ -110,8 +111,8 @@ def test_each_cell_threads_its_framework(spec, registry):
                     f"{be}/{fw}: framework absent from command ({plan.command}), "
                     f"driver filename ({plan.driver_file}), and driver content"
                 )
-    assert not failures, (
-        "cells that don't dispatch their named framework:\n  " + "\n  ".join(failures)
+    assert not failures, "cells that don't dispatch their named framework:\n  " + "\n  ".join(
+        failures
     )
 
 
@@ -128,7 +129,11 @@ def test_colab_dispatches_in_process_no_recursion(monkeypatch):
     launcher.spec = load_spec()
 
     dispatched = {"count": 0}
-    monkeypatch.setattr(launcher, "dispatch_framework", lambda: dispatched.__setitem__("count", dispatched["count"] + 1))
+    monkeypatch.setattr(
+        launcher,
+        "dispatch_framework",
+        lambda: dispatched.__setitem__("count", dispatched["count"] + 1),
+    )
 
     ColabBackend().run("trl", launcher.spec, dry_run=False, launcher=launcher)
     assert dispatched["count"] == 1, (
@@ -143,9 +148,20 @@ def test_colab_dispatches_in_process_no_recursion(monkeypatch):
 def test_cli_dry_run_resolves_cell(backend, framework):
     """The unified CLI resolves a sample of cells to a LaunchPlan without compute."""
     proc = subprocess.run(
-        [sys.executable, "-m", "platform_local.unified",
-         "--backend", backend, "--framework", framework, "--dry-run"],
-        cwd=REPO, capture_output=True, text=True, timeout=60,
+        [
+            sys.executable,
+            "-m",
+            "platform_local.unified",
+            "--backend",
+            backend,
+            "--framework",
+            framework,
+            "--dry-run",
+        ],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     assert proc.returncode == 0, proc.stderr
     assert f"[{backend}/{framework}]" in proc.stdout, (
@@ -166,7 +182,10 @@ def test_shims_delegate_to_unified():
     for backend, shim in shim_for.items():
         proc = subprocess.run(
             [sys.executable, str(REPO / shim), "--framework", "trl", "--dry-run"],
-            cwd=REPO, capture_output=True, text=True, timeout=60,
+            cwd=REPO,
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
         assert proc.returncode == 0, f"{shim} failed: {proc.stderr}"
         assert f"[{backend}/trl]" in proc.stdout, f"{shim} did not pin backend {backend}"

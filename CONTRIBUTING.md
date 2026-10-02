@@ -13,8 +13,17 @@ make bootstrap
 ```
 
 This installs the development dependencies from `uv.lock` and enables the local
-pre-commit checks. Run the same quality gate used by CI before opening a pull
-request:
+pre-commit checks. The scientific audit also needs either `pdflatex` plus
+`bibtex`, or Tectonic. The Phase 2 thesis build additionally needs Pandoc.
+On macOS: `brew install pandoc tectonic`.
+
+Tectonic audits use its local package cache. On a fresh installation, warm that
+cache by compiling the three historical audit documents into temporary output,
+as the `Warm TeX cache` step in `.github/workflows/ci.yml` does. Missing tools or
+uncached TeX inputs are reported as failures, never silent passes. Audit builds
+must not modify or delete the author's PDFs.
+
+Run the same quality gate used by CI before opening a pull request:
 
 ```bash
 make check

@@ -140,8 +140,10 @@ class UnifiedLauncher:
         total_time = time.time() - start_time
 
         if result is None:
-            print(f"\n[done] {self.backend}/{self.framework} launched "
-                  f"(see driver output for results); {total_time:.1f}s")
+            print(
+                f"\n[done] {self.backend}/{self.framework} launched "
+                f"(see driver output for results); {total_time:.1f}s"
+            )
             return
 
         print("\n" + "=" * 60)
@@ -308,8 +310,12 @@ class UnifiedLauncher:
             from trl_integrations.trainer import generate_trl_train_script  # type: ignore
 
         config = TRLConfig(
-            model={"model_name": self.model or spec.model, "use_peft": self.use_peft,
-                   "peft_method": self.peft_method, "lora_rank": spec.lora_rank},
+            model={
+                "model_name": self.model or spec.model,
+                "use_peft": self.use_peft,
+                "peft_method": self.peft_method,
+                "lora_rank": spec.lora_rank,
+            },
             optimizer={"learning_rate": spec.learning_rate},
             algorithm={"algorithm": self.algorithm},
             data={"train_data": train_data},

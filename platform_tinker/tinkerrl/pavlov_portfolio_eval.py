@@ -214,7 +214,23 @@ def main(argv: list[str] | None = None) -> int:
         run.summary["eval/exact_match_rate"] = exact_rate
         run.summary["eval/count"] = len(records)
         run.finish(exit_code=0)
-        print(json.dumps({k: receipt[k] for k in ("status", "role", "count", "mean_reward", "exact_match_rate", "suites", "wandb")}, indent=2))
+        print(
+            json.dumps(
+                {
+                    k: receipt[k]
+                    for k in (
+                        "status",
+                        "role",
+                        "count",
+                        "mean_reward",
+                        "exact_match_rate",
+                        "suites",
+                        "wandb",
+                    )
+                },
+                indent=2,
+            )
+        )
         return 0
     except Exception:
         run.finish(exit_code=1)

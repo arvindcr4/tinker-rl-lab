@@ -1,5 +1,9 @@
 # FINAL_HANDOFF — Task 13 Integrator (NeurIPS 2026 submission)
 
+> **Historical handoff (April 2026), not the current submission.**
+> Use [SUBMISSION.md](SUBMISSION.md) for the current Phase 2 thesis and package.
+> The commands, paths, checksums, and readiness statement below describe that earlier release.
+
 **Date:** 2026-04-19
 **Branch:** `task-13-integrator` (PR into `main`)
 **Tag:** `v3.0-neurips-submission` (pushed to both remotes)

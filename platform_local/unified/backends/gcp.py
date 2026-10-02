@@ -12,6 +12,7 @@ protocol file. The ``--arm grpo_g8`` cell is baseline canonical GRPO (G=8),
 matching the CanonicalSpec — so GCP runs the same experiment as every other
 backend.
 """
+
 from __future__ import annotations
 
 from platform_local.unified.backends.base import Backend, LaunchPlan

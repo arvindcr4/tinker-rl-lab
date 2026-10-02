@@ -4,9 +4,10 @@ PYTHON ?= $(UV) run --no-sync python
 AUDIT_PATHS := utils/audit_utils.py platform_local/run_all_audits.py platform_local/submission_claim_audit.py platform_local/paper_sync_audit.py platform_local/anonymization_repro_audit.py platform_local/claim_strength_audit.py platform_local/submission_package_audit.py platform_local/submission_workflow_audit.py platform_local/export_guard_audit.py platform_local/reviewer_caveat_audit.py platform_local/scientific_audit.py
 FIGURE_PATHS := platform_hybrid/paper/figure_module.py platform_hybrid/paper/figures/gen_figures.py platform_hybrid/paper/figures/generate_figures.py platform_hybrid/paper/figures/wave6_sensitivity.py platform_hybrid/paper/neurips_2026_variants/figures
 GRPO_PATHS := platform_tinker/tinkerrl platform_tinker/grpo_100_math.py platform_tinker/grpo_100_xlam.py platform_tinker/grpo_exp_a_baseline.py platform_tinker/grpo_gsm8k_base.py platform_tinker/grpo_tooluse_tinker.py
-RUFF_PATHS := platform_local/unified platform_local/trl_integrations $(GRPO_PATHS) platform_hybrid/registry/provenance/minreport.py $(AUDIT_PATHS) $(FIGURE_PATHS) utils tests tools
+SUBMISSION_PATHS := platform_modal/scripts/build_university_submission.py
+RUFF_PATHS := $(SUBMISSION_PATHS) platform_local/unified platform_local/trl_integrations $(GRPO_PATHS) platform_hybrid/registry/provenance/minreport.py $(AUDIT_PATHS) $(FIGURE_PATHS) utils tests tools
 
-.PHONY: bootstrap check lint format format-check test package docs-check
+.PHONY: bootstrap check lint format format-check test package docs-check submission submission-check
 
 bootstrap:
 	$(UV) sync --locked --extra dev
@@ -32,7 +33,15 @@ package:
 	$(UV) build --wheel
 	$(PYTHON) tools/check_wheel.py dist/*.whl
 
+submission:
+	$(PYTHON) platform_modal/scripts/build_university_submission.py
+
+submission-check:
+	$(PYTHON) tools/check_thesis_evidence.py
+	$(PYTHON) submission/demo/run_demo.py --self-test
+
 docs-check:
+	@test -f SUBMISSION.md
 	@test -f README.md
 	@test -f REPRODUCE.md
 	@test -f CONTRIBUTING.md

@@ -9,6 +9,7 @@ equivalence configs live in
 The legacy Layer-A toy scripts (``implementations/trl_grpo_math.py`` etc.) are
 intentionally out of scope.
 """
+
 from __future__ import annotations
 
 import json

@@ -47,8 +47,27 @@ jobs:
           python -m pip install --upgrade pip
           pip install uv==0.10.11
           uv sync --locked --extra dev --python python
+      - name: Install checksum-pinned Tectonic
+        env:
+          TECTONIC_URL: https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-x86_64-unknown-linux-musl.tar.gz
+          TECTONIC_SHA256: 8533d07f9ccbd7a65824b9e0459041bca34af1eb33daba48f59215593753a3b7
+        run: |
+          curl --fail --location --retry 3 "$TECTONIC_URL" -o "$RUNNER_TEMP/tectonic.tar.gz"
+          echo "$TECTONIC_SHA256  $RUNNER_TEMP/tectonic.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/tex-bin"
+          tar -xzf "$RUNNER_TEMP/tectonic.tar.gz" -C "$RUNNER_TEMP/tex-bin" tectonic
+          echo "$RUNNER_TEMP/tex-bin" >> "$GITHUB_PATH"
+      - name: Warm TeX cache without changing author PDFs
+        working-directory: platform_tinker/reports/final
+        run: |
+          mkdir -p "$RUNNER_TEMP/latex-audit"
+          tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" grpo_agentic_llm_paper.tex
+          tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" grpo_agentic_llm_paper_anonymous.tex
+          tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" supplementary_appendix.tex
       - name: Run tests
         run: uv run --no-sync pytest tests/ -v --tb=short
+      - name: Check current thesis evidence and offline demo
+        run: make submission-check
       - name: Test seed utility
         run: uv run --no-sync python -c "from utils.seed import set_global_seed; info = set_global_seed(42); print('Seed set successfully:', info)"
       - name: Test imports

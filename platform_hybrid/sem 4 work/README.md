@@ -14,6 +14,10 @@ The continuation adds a much larger post-capstone evidence base, including 206 r
 
 ## Semester 4 submission
 
+- **Current Phase 2 thesis:** [submission guide](../../SUBMISSION.md) and
+  [latest PDF](../../outputs/PES_Phase2_Third_Review_2026-09-24/thesis/Thesis_Report_ArvindCR.pdf).
+  The Phase 1 and workshop artifacts below are earlier deliverables.
+
 - [`../../platform_tinker/reports/esa_phase1/`](../../platform_tinker/reports/esa_phase1/) — canonical individual M.Tech
   Project Phase-1 report source, build instructions, defense deck pointer, and demo
   runbook for UE20CS971.

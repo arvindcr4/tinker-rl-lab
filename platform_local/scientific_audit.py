@@ -3,10 +3,13 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -249,33 +252,7 @@ def get_issues(ctx):
                 "Saved evaluation results do not record the exact checkpoint/model source used for evaluation.",
             )
 
-    def _run(cmd, cwd: Path):
-        return subprocess.run(
-            cmd, cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
-        )
-
     def check_latex_builds():
-        cleanup = [
-            "grpo_agentic_llm_paper.aux",
-            "grpo_agentic_llm_paper.bbl",
-            "grpo_agentic_llm_paper.blg",
-            "grpo_agentic_llm_paper.log",
-            "grpo_agentic_llm_paper.out",
-            "grpo_agentic_llm_paper.pdf",
-            "grpo_agentic_llm_paper_anonymous.aux",
-            "grpo_agentic_llm_paper_anonymous.log",
-            "grpo_agentic_llm_paper_anonymous.out",
-            "grpo_agentic_llm_paper_anonymous.pdf",
-            "supplementary_appendix.aux",
-            "supplementary_appendix.log",
-            "supplementary_appendix.out",
-            "supplementary_appendix.pdf",
-        ]
-        for name in cleanup:
-            path = ctx.FINAL_DIR / name
-            if path.exists():
-                path.unlink()
-
         steps = [
             (
                 [
@@ -334,23 +311,59 @@ def get_issues(ctx):
             ),
         ]
 
-        try:
+        if not (shutil.which("pdflatex") and shutil.which("bibtex")):
+            # Tectonic runs the required TeX/BibTeX passes itself. Cache warming
+            # is separate so a submission audit never needs network access.
+            steps = [
+                (["tectonic", "--only-cached", "--print", filename], f"latex.{name}.tectonic")
+                for name, filename in (
+                    ("main", "grpo_agentic_llm_paper.tex"),
+                    ("anonymous", "grpo_agentic_llm_paper_anonymous.tex"),
+                    ("supplementary", "supplementary_appendix.tex"),
+                )
+            ]
+
+        # Keep relative source/figure lookup intact without touching author outputs.
+        env = {
+            **os.environ,
+            "BIBINPUTS": f"{ctx.FINAL_DIR}{os.pathsep}{os.environ.get('BIBINPUTS', '')}",
+        }
+        with TemporaryDirectory(prefix="tinkerrl-scientific-audit-") as build_dir:
             for cmd, code in steps:
-                result = _run(cmd, ctx.FINAL_DIR)
+                if cmd[0] == "pdflatex":
+                    build_cmd = [*cmd[:-1], f"-output-directory={build_dir}", cmd[-1]]
+                    cwd = ctx.FINAL_DIR
+                elif cmd[0] == "tectonic":
+                    build_cmd = [*cmd[:-1], "--outdir", build_dir, cmd[-1]]
+                    cwd = ctx.FINAL_DIR
+                else:
+                    build_cmd = cmd
+                    cwd = build_dir
+                try:
+                    result = subprocess.run(
+                        build_cmd,
+                        cwd=str(cwd),
+                        env=env,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        text=True,
+                    )
+                except FileNotFoundError:
+                    add(
+                        ctx.FINAL_DIR / cmd[-1],
+                        f"latex.tool_missing:{cmd[0]}",
+                        f"LaTeX build not run: required executable {cmd[0]!r} was not found.",
+                    )
+                    break
                 if result.returncode != 0:
                     add(ctx.FINAL_DIR / cmd[-1], code, f"LaTeX build step failed: {' '.join(cmd)}")
                     break
-                if code == "latex.main.bibtex" and "Warning--empty journal" in result.stdout:
+                if (cmd[0] in {"bibtex", "tectonic"}) and "Warning--empty journal" in result.stdout:
                     add(
                         ctx.FINAL_DIR / "references.bib",
                         "latex.bibtex.empty_journal",
                         "BibTeX emitted 'empty journal' warnings for cited references, so the bibliography metadata is incomplete.",
                     )
-        finally:
-            for name in cleanup:
-                path = ctx.FINAL_DIR / name
-                if path.exists():
-                    path.unlink()
 
     def check_result_jsons():
         required_config = {

@@ -378,7 +378,9 @@ class TestTrackingFailClosed(unittest.TestCase):
 
         with patch.dict(sys.modules, {"wandb": wandb, "tinker": tinker}, clear=False):
             with self.assertRaisesRegex(RuntimeError, "W&B online initialization failed"):
-                grpo._run_one_seed(self._config(), self._dataset(), ExactMathReward(), tokenizer=None)
+                grpo._run_one_seed(
+                    self._config(), self._dataset(), ExactMathReward(), tokenizer=None
+                )
 
         service_client.assert_not_called()
 
@@ -435,8 +437,12 @@ class TestTrackingFailClosed(unittest.TestCase):
             {"wandb": wandb, "huggingface_hub": hf, "tinker": tinker},
             clear=False,
         ):
-            with self.assertRaisesRegex(RuntimeError, "Hugging Face authentication preflight failed"):
-                grpo._run_one_seed(self._config(), self._dataset(), ExactMathReward(), tokenizer=None)
+            with self.assertRaisesRegex(
+                RuntimeError, "Hugging Face authentication preflight failed"
+            ):
+                grpo._run_one_seed(
+                    self._config(), self._dataset(), ExactMathReward(), tokenizer=None
+                )
 
         service_client.assert_not_called()
         self.assertEqual(run.summary["status"], "failed")
@@ -534,17 +540,17 @@ class TestTrackingFailClosed(unittest.TestCase):
             ],
         )
         api.model_info.assert_called_once_with(repo_id, revision=revision)
-        api.create_repo.assert_called_once_with(
-            repo_id=repo_id, private=False, exist_ok=True
-        )
-        api.create_branch.assert_called_once_with(
-            repo_id=repo_id, branch=revision, exist_ok=True
-        )
+        api.create_repo.assert_called_once_with(repo_id=repo_id, private=False, exist_ok=True)
+        api.create_branch.assert_called_once_with(repo_id=repo_id, branch=revision, exist_ok=True)
         self.assertEqual(receipt["commit_sha"], "a" * 40)
         self.assertEqual(receipt["hf_commit_sha"], "a" * 40)
         self.assertEqual(receipt["revision"], revision)
-        self.assertEqual(receipt["revision_url"], f"https://huggingface.co/{repo_id}/tree/{revision}")
-        self.assertEqual(receipt["commit_url"], f"https://huggingface.co/{repo_id}/commit/{'a' * 40}")
+        self.assertEqual(
+            receipt["revision_url"], f"https://huggingface.co/{repo_id}/tree/{revision}"
+        )
+        self.assertEqual(
+            receipt["commit_url"], f"https://huggingface.co/{repo_id}/commit/{'a' * 40}"
+        )
         self.assertNotIn("TOKEN", repr(command).upper())
 
     def test_hf_revision_verification_failure_propagates(self):
@@ -625,12 +631,8 @@ class TestTrackingFailClosed(unittest.TestCase):
         self.assertEqual(len(result.checkpoint_receipts), 4)
         self.assertEqual(len(result.checkpoint_urls), 4)
         self.assertEqual(len(result.checkpoint_commit_shas), 4)
-        self.assertEqual(
-            len({receipt["repo_id"] for receipt in result.checkpoint_receipts}), 4
-        )
-        self.assertEqual(
-            len({receipt["revision"] for receipt in result.checkpoint_receipts}), 4
-        )
+        self.assertEqual(len({receipt["repo_id"] for receipt in result.checkpoint_receipts}), 4)
+        self.assertEqual(len({receipt["revision"] for receipt in result.checkpoint_receipts}), 4)
         for command, kwargs in commands:
             self.assertEqual(command[0], sys.executable)
             self.assertEqual(command[1:5], ["-m", "tinker.cli", "checkpoint", "push-hf"])
@@ -716,9 +718,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         self.assertEqual(publish_calls, [0, 1])
         self.assertEqual(training_client.forward_count, 1)
         self.assertEqual(training_client.optim_count, 1)
-        self.assertEqual(
-            runtime["events"][-1], ("save_sampler", "step_seed42_1")
-        )
+        self.assertEqual(runtime["events"][-1], ("save_sampler", "step_seed42_1"))
         self.assertEqual(runtime["wandb_run"].summary["status"], "failed")
         runtime["wandb_run"].finish.assert_called_once_with(exit_code=1)
 
@@ -1076,7 +1076,9 @@ class TestPavlovPortfolioDataset(unittest.TestCase):
             for example in dataset.train_examples()
             if example.metadata["reward_kind"] == "tool_call"
         )
-        self.assertEqual(api_example.target, {"tool": "search", "arguments": {"query": "account 7"}})
+        self.assertEqual(
+            api_example.target, {"tool": "search", "arguments": {"query": "account 7"}}
+        )
         self.assertNotIn("Output Format", api_example.prompt)
         self.assertEqual(
             calls[1],
@@ -1120,17 +1122,14 @@ class TestPavlovPortfolioReward(unittest.TestCase):
         )
         self.assertEqual(
             reward.score(
-                '<think>private reasoning</think>\n'
-                '{"tool":"search","arguments":{"query":"right"}}',
+                '<think>private reasoning</think>\n{"tool":"search","arguments":{"query":"right"}}',
                 tool,
             ),
             1.0,
         )
         self.assertEqual(reward.score(patch_text, patch_example), 1.0)
         self.assertEqual(reward.score("not a diff", patch_example), 0.0)
-        self.assertEqual(
-            reward.score("anything", TrainingExample(prompt="q", metadata={})), 0.0
-        )
+        self.assertEqual(reward.score("anything", TrainingExample(prompt="q", metadata={})), 0.0)
 
 
 class TestSyntheticMathDataset(unittest.TestCase):
@@ -1239,18 +1238,12 @@ class TestStrictToolCallReward(unittest.TestCase):
 
     def test_conflicting_tool_aliases_are_rejected(self):
         reward = StrictToolCallReward()
-        response = (
-            '{"tool":"search","name":"lookup",'
-            '"arguments":{"query":"right"}}'
-        )
+        response = '{"tool":"search","name":"lookup","arguments":{"query":"right"}}'
         self.assertEqual(reward.score(response, self._ex("search", {"query": "right"})), 0.0)
 
     def test_conflicting_argument_aliases_are_rejected(self):
         reward = StrictToolCallReward()
-        response = (
-            '{"tool":"search","arguments":{"query":"right"},'
-            '"parameters":{"query":"other"}}'
-        )
+        response = '{"tool":"search","arguments":{"query":"right"},"parameters":{"query":"other"}}'
         self.assertEqual(reward.score(response, self._ex("search", {"query": "right"})), 0.0)
 
     def test_duplicate_keys_are_rejected(self):

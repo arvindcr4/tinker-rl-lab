@@ -247,9 +247,7 @@ class GRPOConfig:
         )
         object.__setattr__(self, "domain_tags", tuple(self.domain_tags or ()))
         object.__setattr__(self, "declared_domains", tuple(self.declared_domains or ()))
-        object.__setattr__(
-            self, "training_domain_union", tuple(self.training_domain_union or ())
-        )
+        object.__setattr__(self, "training_domain_union", tuple(self.training_domain_union or ()))
         object.__setattr__(
             self,
             "primary_evaluation_domain_union",
@@ -297,16 +295,12 @@ class GRPOConfig:
             return
 
         status = self.campaign_status
-        if status is not None and (
-            not isinstance(status, str) or not status.strip()
-        ):
+        if status is not None and (not isinstance(status, str) or not status.strip()):
             raise ValueError("campaign contract status is required when supplied")
         normalized_status = status.strip().lower().replace("_", "-") if status else None
         launchable_statuses = {"ready", "authorized", "approved", "pass"}
         if normalized_status is not None and normalized_status not in launchable_statuses:
-            raise ValueError(
-                f"campaign contract is not launchable: status={normalized_status}"
-            )
+            raise ValueError(f"campaign contract is not launchable: status={normalized_status}")
 
         budget_status = self.budget_status
         if budget_status is not None and (
@@ -314,9 +308,7 @@ class GRPOConfig:
         ):
             raise ValueError("campaign budget status is required when supplied")
         normalized_budget_status = (
-            budget_status.strip().lower().replace("_", "-")
-            if budget_status
-            else None
+            budget_status.strip().lower().replace("_", "-") if budget_status else None
         )
         budget_launchable_statuses = {
             "ready",
@@ -364,13 +356,9 @@ class GRPOConfig:
 
         if self.paid_jobs_may_launch:
             if normalized_status not in launchable_statuses:
-                raise ValueError(
-                    "paid jobs require an explicitly launchable campaign status"
-                )
+                raise ValueError("paid jobs require an explicitly launchable campaign status")
             if self.authorized_budget_usd is None or self.maximum_usd is None:
-                raise ValueError(
-                    "paid jobs require explicit authorized_budget_usd and maximum_usd"
-                )
+                raise ValueError("paid jobs require explicit authorized_budget_usd and maximum_usd")
 
 
 @dataclass(slots=True)
@@ -492,9 +480,7 @@ def _config_fingerprint(config: GRPOConfig, seed: int) -> Dict[str, Any]:
     values["domain_tags"] = list(config.domain_tags)
     values["declared_domains"] = list(config.declared_domains)
     values["training_domain_union"] = list(config.training_domain_union)
-    values["primary_evaluation_domain_union"] = list(
-        config.primary_evaluation_domain_union
-    )
+    values["primary_evaluation_domain_union"] = list(config.primary_evaluation_domain_union)
     return values
 
 
@@ -688,7 +674,9 @@ def _preflight_hf(config: GRPOConfig) -> str:
         except TypeError:
             identity = api.whoami()
     except Exception as exc:
-        raise RuntimeError(f"Hugging Face authentication preflight failed: {_redact_error(exc)}") from exc
+        raise RuntimeError(
+            f"Hugging Face authentication preflight failed: {_redact_error(exc)}"
+        ) from exc
 
     if not isinstance(identity, dict) or not identity:
         raise RuntimeError("Hugging Face authentication preflight returned no identity")
@@ -801,7 +789,9 @@ def _require_checkpoint_receipt(value: Any, *, step: int | str) -> Dict[str, Any
         raise RuntimeError(f"Hugging Face checkpoint receipt step mismatch for step {step}")
     expected_repo_url = f"https://huggingface.co/{value['repo_id']}"
     if value["repo_url"] != expected_repo_url:
-        raise RuntimeError(f"Hugging Face checkpoint receipt has an invalid repo URL for step {step}")
+        raise RuntimeError(
+            f"Hugging Face checkpoint receipt has an invalid repo URL for step {step}"
+        )
     if value["revision_url"] != f"{expected_repo_url}/tree/{value['revision']}":
         raise RuntimeError(
             f"Hugging Face checkpoint receipt has an invalid revision URL for step {step}"
@@ -853,7 +843,9 @@ def _publish_checkpoint(
     try:
         subprocess.run(command, check=True, capture_output=True, text=True)
     except FileNotFoundError as exc:
-        raise RuntimeError("Tinker CLI is unavailable; Hugging Face checkpoint export failed") from exc
+        raise RuntimeError(
+            "Tinker CLI is unavailable; Hugging Face checkpoint export failed"
+        ) from exc
     except subprocess.CalledProcessError as exc:
         raise RuntimeError(
             f"Hugging Face checkpoint export failed for step {step} (exit code {exc.returncode})"
@@ -915,7 +907,7 @@ def _log_wandb_checkpoint(
             "checkpoint/commit_sha": receipt["commit_sha"],
             "checkpoint/hf_revision_url": receipt["revision_url"],
             "checkpoint/hf_commit_sha": receipt["commit_sha"],
-        }
+        },
     )
     summary = _wandb_summary(run)
     detached = [json.loads(json.dumps(item, sort_keys=True)) for item in detached_receipts]
@@ -928,9 +920,7 @@ def _log_campaign_metadata(run: Any, config: GRPOConfig) -> None:
     metadata = _campaign_metadata(config)
     payload = {
         "campaign/training_suite_ids": list(metadata["training_suite_ids"]),
-        "campaign/primary_evaluation_suite_ids": list(
-            metadata["primary_evaluation_suite_ids"]
-        ),
+        "campaign/primary_evaluation_suite_ids": list(metadata["primary_evaluation_suite_ids"]),
         "campaign/domain_tags": list(metadata["domain_tags"]),
         "campaign/declared_domains": list(metadata["declared_domains"]),
         "campaign/training_domain_union": list(metadata["training_domain_union"]),
@@ -951,17 +941,13 @@ def _log_campaign_metadata(run: Any, config: GRPOConfig) -> None:
     _wandb_log(run, payload)
     summary = _wandb_summary(run)
     summary["training_suite_ids"] = list(metadata["training_suite_ids"])
-    summary["primary_evaluation_suite_ids"] = list(
-        metadata["primary_evaluation_suite_ids"]
-    )
+    summary["primary_evaluation_suite_ids"] = list(metadata["primary_evaluation_suite_ids"])
     if metadata["heldout_suite_ids"]:
         summary["heldout_suite_ids"] = list(metadata["heldout_suite_ids"])
     summary["domain_tags"] = list(metadata["domain_tags"])
     summary["declared_domains"] = list(metadata["declared_domains"])
     summary["training_domain_union"] = list(metadata["training_domain_union"])
-    summary["primary_evaluation_domain_union"] = list(
-        metadata["primary_evaluation_domain_union"]
-    )
+    summary["primary_evaluation_domain_union"] = list(metadata["primary_evaluation_domain_union"])
     if config.campaign_status is not None:
         summary["campaign_status"] = config.campaign_status
     if config.budget_status is not None:
@@ -1099,12 +1085,8 @@ def _run_one_seed(
             _require_checkpoint_receipt(item, step=item.get("step", "unknown"))
             for item in (prior or {}).get("checkpoint_receipts", [])
         ]
-        checkpoint_urls: List[str] = [
-            item["revision_url"] for item in checkpoint_receipts
-        ]
-        checkpoint_commit_shas: List[str] = [
-            item["commit_sha"] for item in checkpoint_receipts
-        ]
+        checkpoint_urls: List[str] = [item["revision_url"] for item in checkpoint_receipts]
+        checkpoint_commit_shas: List[str] = [item["commit_sha"] for item in checkpoint_receipts]
         initial_name = (
             config.checkpoint_name_prefix or config.name
         ) + f"_seed{seed}_step_{resume_step}"
@@ -1122,9 +1104,7 @@ def _run_one_seed(
         checkpoint_receipts.append(initial_receipt)
         checkpoint_urls.append(initial_receipt["revision_url"])
         checkpoint_commit_shas.append(initial_receipt["commit_sha"])
-        _log_wandb_checkpoint(
-            wb, receipt=initial_receipt, receipts=checkpoint_receipts
-        )
+        _log_wandb_checkpoint(wb, receipt=initial_receipt, receipts=checkpoint_receipts)
         sc = tc.create_sampling_client(model_path=w0.path)
 
         save_every = config.effective_save_every()
@@ -1155,7 +1135,8 @@ def _run_one_seed(
                 ).result()
 
                 rewards = [
-                    reward.score(_decode_response(tok, resp), example) for resp in responses.sequences
+                    reward.score(_decode_response(tok, resp), example)
+                    for resp in responses.sequences
                 ]
                 advs = normalize_rewards(rewards)
                 batch_rewards.extend(rewards)
@@ -1201,7 +1182,7 @@ def _run_one_seed(
                     "train/loss": loss_val,
                     "train/reward": avg,
                     "train/step": step + 1,
-                }
+                },
             )
 
             if (step + 1) % save_every == 0:
@@ -1216,15 +1197,11 @@ def _run_one_seed(
                     hf_owner=hf_owner,
                     return_receipt=True,
                 )
-                checkpoint_receipt = _require_checkpoint_receipt(
-                    checkpoint_receipt, step=step + 1
-                )
+                checkpoint_receipt = _require_checkpoint_receipt(checkpoint_receipt, step=step + 1)
                 checkpoint_receipts.append(checkpoint_receipt)
                 checkpoint_urls.append(checkpoint_receipt["revision_url"])
                 checkpoint_commit_shas.append(checkpoint_receipt["commit_sha"])
-                _log_wandb_checkpoint(
-                    wb, receipt=checkpoint_receipt, receipts=checkpoint_receipts
-                )
+                _log_wandb_checkpoint(wb, receipt=checkpoint_receipt, receipts=checkpoint_receipts)
                 sc = tc.create_sampling_client(model_path=ckpt.path)
                 _write_checkpoint(
                     checkpoint_path,
@@ -1557,9 +1534,7 @@ def make_gsm8k_dataset(seed: int = 42) -> InMemoryDataset:
     return InMemoryDataset(train=convert("train"), test=convert("test"))
 
 
-def make_xlam_dataset(
-    seed: int = 42, revision: Optional[str] = None
-) -> InMemoryDataset:
+def make_xlam_dataset(seed: int = 42, revision: Optional[str] = None) -> InMemoryDataset:
     """Load xLAM function-calling records through the dataset adapter seam."""
     from datasets import load_dataset
 
@@ -1620,7 +1595,11 @@ def _api_bank_prompt(raw_prompt: str, tool_name: str) -> str:
     if not isinstance(messages, list) or len(messages) != 1 or not isinstance(messages[0], dict):
         raise ValueError("API-Bank prompt must contain exactly one message object")
     content = messages[0].get("content")
-    if not isinstance(content, str) or "**Available Tools**" not in content or "[USER]" not in content:
+    if (
+        not isinstance(content, str)
+        or "**Available Tools**" not in content
+        or "[USER]" not in content
+    ):
         raise ValueError("API-Bank prompt is missing tools or dialogue history")
     tools_section = re.split(
         r"\*\*(?:Steps|Output Format)",
@@ -1674,9 +1653,7 @@ def _swe_gym_prompt(row: Dict[str, Any]) -> str:
         raise ValueError("SWE-Gym task is missing repo, problem statement, or base commit")
     hints = str(row.get("hints_text") or "").strip()
     tests = sorted(
-        str(item)
-        for key in ("FAIL_TO_PASS", "PASS_TO_PASS")
-        for item in (row.get(key) or [])
+        str(item) for key in ("FAIL_TO_PASS", "PASS_TO_PASS") for item in (row.get(key) or [])
     )
     context = [
         f"Repository: {repo}",
@@ -1715,16 +1692,16 @@ def make_pavlov_non_xlam_dataset(
     repo_root = repo_root or Path(__file__).resolve().parents[2]
     e1_path = repo_root / "outputs/e1_swe_bench_pro/hf_dataset/data/test-00000-of-00001.parquet"
     e2_path = repo_root / "outputs/e2_frontier_swe/frontier-swe/tasks"
-    e4_path = repo_root / "outputs/e4_banker_toolbench/official_repo_ff6db552/native-data/tasks.jsonl"
+    e4_path = (
+        repo_root / "outputs/e4_banker_toolbench/official_repo_ff6db552/native-data/tasks.jsonl"
+    )
     for required in (e1_path, e2_path, e4_path):
         if not required.exists():
             raise RuntimeError(f"required decontamination input is missing: {required}")
 
     e1 = load_dataset("parquet", data_files=str(e1_path), split="train")
     e1_ids = {str(value) for value in e1["instance_id"]}
-    e1_pairs = {
-        (str(repo), str(commit)) for repo, commit in zip(e1["repo"], e1["base_commit"])
-    }
+    e1_pairs = {(str(repo), str(commit)) for repo, commit in zip(e1["repo"], e1["base_commit"])}
     e2_ids = {path.name for path in e2_path.iterdir() if path.is_dir()}
 
     swe = load_dataset(
@@ -1957,8 +1934,7 @@ class StrictToolCallReward:
         )
         score += 0.2 * key_f1
         exact_values = sum(
-            _canonical_tool_value(predicted_args.get(key))
-            == _canonical_tool_value(arguments[key])
+            _canonical_tool_value(predicted_args.get(key)) == _canonical_tool_value(arguments[key])
             for key in expected_keys
             if key in predicted_args
         )

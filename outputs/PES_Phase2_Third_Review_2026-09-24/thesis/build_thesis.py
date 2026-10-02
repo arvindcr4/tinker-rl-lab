@@ -18,6 +18,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FIGDIR = os.path.join(HERE, "figures")
@@ -559,35 +560,43 @@ def pandoc_md_to_tex(md_path: str, tex_path: str) -> bool:
     """Convert a chapter markdown file to a LaTeX fragment."""
     if not shutil.which("pandoc"):
         return False
+    tmp = None
     try:
-        raw = open(md_path, encoding="utf-8").read()
-        # keep the H1 as the chapter title (pandoc -> \chapter) with its number
-        # removed too, since \chapter supplies its own.
-        tmp = md_path + ".numbered.md"
+        with open(md_path, encoding="utf-8") as fh:
+            raw = fh.read()
+        # Keep the chapter title; LaTeX supplies its number.
         body, _ = _sources_to_footnotes(raw)
         body = _table_leadins(_strip_heading_numbers(body))
-        with open(tmp, "w", encoding="utf-8") as fh:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".numbered.md", dir=os.path.dirname(md_path),
+            encoding="utf-8", delete=False,
+        ) as fh:
+            tmp = fh.name
             fh.write(body)
-        # --natbib turns [@key] into \citep{key}; the IEEE-style numeric
-        # reference list is produced by bibtex at the end of the document.
+        # --natbib emits citations for the IEEE-style reference list.
         subprocess.run(
             ["pandoc", tmp, "-t", "latex", "--top-level-division=chapter",
              "--natbib", "-o", tex_path],
             check=True, capture_output=True, timeout=120,
         )
-        os.remove(tmp)
         return True
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as exc:
         err = getattr(exc, "stderr", b"") or b""
+        detail = err.decode(errors="replace") if err else str(exc)
         print(f"  pandoc FAILED for {os.path.basename(md_path)}: "
-              f"{err.decode()[:200]}", file=sys.stderr)
+              f"{detail[:200]}", file=sys.stderr)
         return False
+    finally:
+        if tmp is not None:
+            os.remove(tmp)
 
 
 def available_figures() -> set[str]:
     if not os.path.isdir(FIGDIR):
         return set()
-    return {f[:-4] for f in os.listdir(FIGDIR) if f.endswith(".pdf")}
+    return {f[:-4] for f in os.listdir(FIGDIR)
+            if f.endswith(".pdf") and os.path.isfile(os.path.join(FIGDIR, f))
+            and os.path.getsize(os.path.join(FIGDIR, f)) > 0}
 
 
 def inject_figures(tex: str, chapter_md: str, have: set[str]) -> tuple[str, int, list[str]]:
@@ -736,7 +745,7 @@ def breakable_long_tokens(master: str) -> tuple[str, int]:
             out.append(master[j:k + 1])
         elif longest_rendered > thr and not has_space:
             # pure long token (path/hash/URI): seqsplit breaks it anywhere
-            out.append("\\longtok{%s}" % arg)
+            out.append(f"\\longtok{{{arg}}}")
             rewritten += 1
         elif longest > thr and has_space:
             # Spaced content (JSON blob, or a token containing escaped spaces
@@ -750,7 +759,7 @@ def breakable_long_tokens(master: str) -> tuple[str, int]:
                 r'(&quot;|"|,|:|/|\\}|\[|\]|=|-|\+|@|~|%|\\_)(?=[^\s])',
                 lambda mm: mm.group(1) + "\\allowbreak{}",
                 arg)
-            out.append("\\texttt{%s}" % patched)
+            out.append(f"\\texttt{{{patched}}}")
             rewritten += 1
         else:
             out.append(master[j:k + 1])
@@ -790,9 +799,9 @@ def fix_table_widths(master: str) -> tuple[str, int]:
         if used == need:
             return m.group(0)
         new_spec = MULT.sub(
-            lambda mm: "\\linewidth - %d\\tabcolsep" % need, spec)
+            lambda mm: f"\\linewidth - {need}\\tabcolsep", spec)
         fixed += 1
-        return "\\begin{longtable}[]{@{}%s@{}}" % new_spec
+        return "\\begin{longtable}[]{@{}" + new_spec + "@{}}"
 
     return LT.sub(repl, master), fixed
 
@@ -855,8 +864,8 @@ def break_bare_identifiers(master: str) -> tuple[str, int]:
     # Guard (?<![\\{]) so we do not match inside an existing macro name or
     # immediately after a backslash.
     ident = re.compile(
-        r"(?<![\\{])([A-Za-z0-9][A-Za-z0-9]*(?:\\_[A-Za-z0-9]+){%d,})"
-        % (MIN_SEGMENTS - 1))
+        r"(?<![\\{])([A-Za-z0-9][A-Za-z0-9]*(?:\\_[A-Za-z0-9]+){"
+        + str(MIN_SEGMENTS - 1) + r",})")
 
     counter = 0
 
@@ -869,8 +878,34 @@ def break_bare_identifiers(master: str) -> tuple[str, int]:
 
 
 def main() -> int:
-    os.makedirs(BUILD, exist_ok=True)
+    EVIDENCE.clear()
+    missing_tools = [name for name in ("pandoc", "tectonic") if not shutil.which(name)]
+    if missing_tools:
+        print("missing required tools: " + ", ".join(missing_tools), file=sys.stderr)
+        return 1
+
     have = available_figures()
+    chapters = [name for name, _ in CHAPTERS + APPENDICES]
+    required = chapters + ["preamble.tex", "frontmatter.tex", "references.bib",
+                           "figures/pes_logo.png", "figures/signature_arvind.png"]
+    missing = [name for name in required
+               if not os.path.isfile(os.path.join(HERE, name))
+               or os.path.getsize(os.path.join(HERE, name)) == 0]
+    short = [name for name in chapters if name not in missing
+             and os.path.getsize(os.path.join(HERE, name)) < 400]
+    missing_figures = {name for chapter in chapters
+                       for name, *_ in FIGURES.get(chapter, []) if name not in have}
+    if missing:
+        print("missing/empty required inputs: " + ", ".join(missing), file=sys.stderr)
+    if short:
+        print("SUSPICIOUSLY SHORT chapters: " + ", ".join(short), file=sys.stderr)
+    if missing_figures:
+        print("figures referenced but NOT built: " + ", ".join(sorted(missing_figures))
+              + "; run compile_figures.py --force first", file=sys.stderr)
+    if missing or short or missing_figures:
+        return 1
+
+    os.makedirs(BUILD, exist_ok=True)
     print(f"figures available: {len(have)}")
 
     preamble = open(os.path.join(HERE, "preamble.tex"), encoding="utf-8").read()
@@ -961,11 +996,6 @@ def main() -> int:
     master, n_wide = fix_wide_tables(master)
     print(f"wide-table pass: shrank {n_wide} many-column table(s)")
 
-    with open(MASTER, "w", encoding="utf-8") as fh:
-        fh.write(master)
-
-    words = len(re.sub(r"\\[a-zA-Z]+\*?(\[[^\]]*\])?(\{[^}]*\})?", " ", master).split())
-    print(f"wrote {MASTER}  (~{words:,} words, {total_figs} figures injected)")
     if missing_ch:
         print(f"  MISSING/FAILED chapters: {', '.join(missing_ch)}", file=sys.stderr)
     if empty_ch:
@@ -974,28 +1004,41 @@ def main() -> int:
         print(f"  figures referenced but NOT built: {', '.join(sorted(all_missing))}",
               file=sys.stderr)
 
-    if not shutil.which("tectonic"):
-        print("tectonic not found — .tex written but not compiled", file=sys.stderr)
+    if missing_ch or empty_ch or all_missing:
         return 1
 
+    with open(MASTER, "w", encoding="utf-8") as fh:
+        fh.write(master)
+
+    words = len(re.sub(r"\\[a-zA-Z]+\*?(\[[^\]]*\])?(\{[^}]*\})?", " ", master).split())
+    print(f"wrote {MASTER}  (~{words:,} words, {total_figs} figures injected)")
     print("compiling with tectonic ...")
     try:
-        r = subprocess.run(["tectonic", "-X", "compile", MASTER,
-                            "--outdir", BUILD, "--keep-logs"],
-                           capture_output=True, timeout=1200, cwd=HERE)
-        out = (r.stdout + r.stderr).decode(errors="replace")
-        tail = "\n".join(out.strip().splitlines()[-18:])
-        print(tail)
-        built = os.path.join(BUILD, "thesis_master.pdf")
-        if os.path.exists(built):
-            shutil.copy(built, PDF)
-            pages = out.count("Writing")  # rough
-            print(f"OK -> {PDF}  ({os.path.getsize(PDF)/1024:.0f} KB)")
-            return 0
-        print("no PDF produced", file=sys.stderr)
-        return 1
+        # Keep output isolated from old build PDFs, on the publication filesystem.
+        with tempfile.TemporaryDirectory(prefix=".thesis-", dir=os.path.dirname(PDF)) as outdir:
+            r = subprocess.run(["tectonic", "-X", "compile", MASTER,
+                                "--outdir", outdir, "--keep-logs"],
+                               capture_output=True, timeout=1200, cwd=HERE)
+            out = (r.stdout + r.stderr).decode(errors="replace")
+            print("\n".join(out.strip().splitlines()[-18:]))
+            log = os.path.join(outdir, "thesis_master.log")
+            if os.path.isfile(log):
+                shutil.copyfile(log, os.path.join(BUILD, "thesis_master.log"))
+            if r.returncode != 0:
+                print(f"tectonic failed (exit {r.returncode})", file=sys.stderr)
+                return 1
+            built = os.path.join(outdir, "thesis_master.pdf")
+            if not os.path.isfile(built) or os.path.getsize(built) == 0:
+                print("no nonempty PDF produced", file=sys.stderr)
+                return 1
+            os.replace(built, PDF)
+        print(f"OK -> {PDF}  ({os.path.getsize(PDF)/1024:.0f} KB)")
+        return 0
     except subprocess.TimeoutExpired:
         print("tectonic timed out", file=sys.stderr)
+        return 1
+    except OSError as exc:
+        print(f"thesis build failed: {exc}", file=sys.stderr)
         return 1
 
 

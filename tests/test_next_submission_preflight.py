@@ -354,10 +354,46 @@ def test_recovery_mode_reconstructs_completed_receipt_from_request(monkeypatch, 
             load_credentials=lambda: {"HF_TOKEN": "hf", "WANDB_API_KEY": "wandb"},
         ),
     )
-    monkeypatch.setattr(PREFLIGHT, "verify_tracking_credentials", lambda credentials, hf_repo_prefix: {"hf_identity": "arvindcr4", "wandb_identity": "tester"})
-    monkeypatch.setattr(PREFLIGHT, "result_from_log_or_remote", lambda lines, credentials, recovered_request: (result, {"source": "exact-private-hf-commit-and-finished-wandb-run", "reason": "missing marker"}))
-    monkeypatch.setattr(PREFLIGHT, "verify_remote", lambda credentials, recovered_result, recovered_request: (manifest, {"hf_private": True, "hf_repo": recovered_request["hf_repo"], "hf_commit": "e" * 40, "hf_files": ["run_manifest.json", "final/adapter_model.safetensors"], "wandb": {"state": "finished"}}))
-    monkeypatch.setattr(PREFLIGHT.subprocess, "run", lambda *args, **kwargs: SimpleNamespace(returncode=0, stdout="[colab] No active sessions found on server.\n"))
+    monkeypatch.setattr(
+        PREFLIGHT,
+        "verify_tracking_credentials",
+        lambda credentials, hf_repo_prefix: {
+            "hf_identity": "arvindcr4",
+            "wandb_identity": "tester",
+        },
+    )
+    monkeypatch.setattr(
+        PREFLIGHT,
+        "result_from_log_or_remote",
+        lambda lines, credentials, recovered_request: (
+            result,
+            {
+                "source": "exact-private-hf-commit-and-finished-wandb-run",
+                "reason": "missing marker",
+            },
+        ),
+    )
+    monkeypatch.setattr(
+        PREFLIGHT,
+        "verify_remote",
+        lambda credentials, recovered_result, recovered_request: (
+            manifest,
+            {
+                "hf_private": True,
+                "hf_repo": recovered_request["hf_repo"],
+                "hf_commit": "e" * 40,
+                "hf_files": ["run_manifest.json", "final/adapter_model.safetensors"],
+                "wandb": {"state": "finished"},
+            },
+        ),
+    )
+    monkeypatch.setattr(
+        PREFLIGHT.subprocess,
+        "run",
+        lambda *args, **kwargs: SimpleNamespace(
+            returncode=0, stdout="[colab] No active sessions found on server.\n"
+        ),
+    )
 
     args = PREFLIGHT.parse_args(
         ["--recover-request", str(request_path), "--output-dir", str(output_dir)]
@@ -365,7 +401,11 @@ def test_recovery_mode_reconstructs_completed_receipt_from_request(monkeypatch, 
     PREFLIGHT.validate_args(args)
     status = PREFLIGHT.recover_request_artifact(args)
 
-    receipt = json.loads((output_dir / "results" / "gsm8k__contrast_early_stop_g2_to_g8__s211.json").read_text(encoding="utf-8"))
+    receipt = json.loads(
+        (output_dir / "results" / "gsm8k__contrast_early_stop_g2_to_g8__s211.json").read_text(
+            encoding="utf-8"
+        )
+    )
     assert status["status"] == "completed"
     assert receipt["status"] == "completed"
     assert receipt["recovery"]["source"] == "exact-private-hf-commit-and-finished-wandb-run"
@@ -413,8 +453,21 @@ def test_recovery_mode_stops_live_session_and_records_failed_recovery(monkeypatc
             load_credentials=lambda: {"HF_TOKEN": "hf", "WANDB_API_KEY": "wandb"},
         ),
     )
-    monkeypatch.setattr(PREFLIGHT, "verify_tracking_credentials", lambda credentials, hf_repo_prefix: {"hf_identity": "arvindcr4", "wandb_identity": "tester"})
-    monkeypatch.setattr(PREFLIGHT, "result_from_log_or_remote", lambda lines, credentials, recovered_request: (_ for _ in ()).throw(RuntimeError("no remote artifacts found")))
+    monkeypatch.setattr(
+        PREFLIGHT,
+        "verify_tracking_credentials",
+        lambda credentials, hf_repo_prefix: {
+            "hf_identity": "arvindcr4",
+            "wandb_identity": "tester",
+        },
+    )
+    monkeypatch.setattr(
+        PREFLIGHT,
+        "result_from_log_or_remote",
+        lambda lines, credentials, recovered_request: (_ for _ in ()).throw(
+            RuntimeError("no remote artifacts found")
+        ),
+    )
     responses = iter(
         [
             SimpleNamespace(returncode=0, stdout="exact-session A100 BUSY\n"),
@@ -429,7 +482,11 @@ def test_recovery_mode_stops_live_session_and_records_failed_recovery(monkeypatc
     )
     status = PREFLIGHT.recover_request_artifact(args)
 
-    receipt = json.loads((output_dir / "results" / "gsm8k__contrast_early_stop_g2_to_g8__s211.json").read_text(encoding="utf-8"))
+    receipt = json.loads(
+        (output_dir / "results" / "gsm8k__contrast_early_stop_g2_to_g8__s211.json").read_text(
+            encoding="utf-8"
+        )
+    )
     assert status["status"] == "failed"
     assert receipt["status"] == "failed"
     assert receipt["failed_step"] == "recovery"

@@ -16,6 +16,7 @@ This is a deterministic, stateless implementation of AntiVibe's "compact"
 output mode: Overview, Key Components, Concepts & Decisions (what + why),
 and Related Code. The interactive skill lives in .claude/skills/antivibe/.
 """
+
 from __future__ import annotations
 
 import ast
@@ -43,18 +44,28 @@ TS = (
 
 # --- scope -----------------------------------------------------------------
 EXCLUDE_DIR_NAMES = {
-    ".git", ".venv", "node_modules", "wandb", "__pycache__",
-    "tinkerrl.egg-info", ".pytest_cache", ".ruff_cache", ".playwright-mcp",
+    ".git",
+    ".venv",
+    "node_modules",
+    "wandb",
+    "__pycache__",
+    "tinkerrl.egg-info",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".playwright-mcp",
 }
 EXCLUDE_RELPATH_PREFIXES = (".claude/worktrees", "output", "outputs")
 EXCLUDE_FILENAMES = {
-    "uv.lock", "settings.local.json", "modal_results_all.json",
-    "xgboost_results.json", "prompt-decomposition.json",
+    "uv.lock",
+    "settings.local.json",
+    "modal_results_all.json",
+    "xgboost_results.json",
+    "prompt-decomposition.json",
 }
 
 INCLUDE_EXTS = {".py", ".sh", ".yaml", ".yml", ".toml"}
-JSON_MAX_DEPTH = 2          # include *.json only near the repo root
-JSON_MAX_SIZE = 200_000     # skip big data blobs
+JSON_MAX_DEPTH = 2  # include *.json only near the repo root
+JSON_MAX_SIZE = 200_000  # skip big data blobs
 
 
 def is_excluded(rel: Path) -> bool:
@@ -158,7 +169,6 @@ CONCEPTS: dict[str, tuple[str, str, str, str, str]] = {
         "Adds a network dependency and an external account; local-only runs must opt out or "
         "write a local fallback.",
     ),
-
     "pytest": (
         "Automated verification with pytest",
         "`pytest` discovers `test_*.py`/`*_test.py` functions and classes, runs them in "
@@ -231,16 +241,13 @@ CONCEPTS: dict[str, tuple[str, str, str, str, str]] = {
         "Runtime `isinstance` checks need `@runtime_checkable` and are shallow; static "
         "checkers are the real beneficiary.",
     ),
-
-
     "memoization": (
         "Caching / memoization",
         "`functools.cache`/`lru_cache` store results keyed by arguments so repeated calls "
         "with the same input return instantly.",
         "Expensive resolutions (lazy backends, registry lookups, file parsing) are computed "
         "once and reused across the dispatch path.",
-        "Pure functions called repeatedly with the same arguments, where recomputation is "
-        "costly.",
+        "Pure functions called repeatedly with the same arguments, where recomputation is costly.",
         "Caches hold references (memory) and can go stale; never cache across mutable state.",
     ),
     "enum": (
@@ -302,13 +309,10 @@ CONCEPTS: dict[str, tuple[str, str, str, str, str]] = {
         "intent is inspectable and diffable without reading the program.",
         "A single frozen `CanonicalSpec` + preregistration files is the repo's whole "
         "comparability contract -- config-as-data is what makes runs hashable and testable.",
-        "Anywhere parameters should be changeable without editing code, or compared across "
-        "runs.",
+        "Anywhere parameters should be changeable without editing code, or compared across runs.",
         "Config can drift from what the code actually reads; validation (pydantic) is what "
         "catches a key that no longer means what it says.",
     ),
-
-
     "http": (
         "HTTP client calls",
         "`requests`/`httpx`/`aiohttp` issue HTTP requests to APIs -- model hosting, "
@@ -354,8 +358,7 @@ CONCEPTS: dict[str, tuple[str, str, str, str, str]] = {
         "Tabular data with pandas",
         "pandas DataFrames hold labeled, columnar data and offer groupby/merge/agg "
         "one-liners over CSV/JSON exports.",
-        "Experiment logs and result exports aggregate nicely into tables for reporting and "
-        "audits.",
+        "Experiment logs and result exports aggregate nicely into tables for reporting and audits.",
         "When you'd otherwise hand-roll loops over rows of CSV/JSON results.",
         "DataFrames are heavier than raw arrays; overuse for tiny data adds import cost "
         "and ambiguity about index semantics.",
@@ -416,21 +419,46 @@ CONCEPTS: dict[str, tuple[str, str, str, str, str]] = {
 
 # import-module-prefix -> concept key
 LIB_MAP: list[tuple[str, str]] = [
-    ("torch", "torch"), ("transformers", "transformers"), ("peft", "peft"),
-    ("trl", "trl"), ("vllm", "vllm"), ("wandb", "wandb"),
-    ("pytest", "pytest"), ("click", "click"), ("typer", "click"),
-    ("argparse", "argparse"), ("pydantic", "pydantic"),
-    ("dataclasses", "dataclass"), ("abc", "abc"), ("typing", "protocol"),
-    ("functools", "memoization"), ("enum", "enum"), ("asyncio", "asyncio"),
-    ("logging", "logging"), ("subprocess", "subprocess"),
-    ("yaml", "config"), ("json", "config"), ("tomllib", "config"),
-    ("requests", "http"), ("httpx", "http"), ("aiohttp", "http"),
-    ("fastapi", "web"), ("flask", "web"), ("streamlit", "ui"),
-    ("gradio", "ui"), ("numpy", "numpy"), ("pandas", "pandas"),
-    ("matplotlib", "viz"), ("plotly", "viz"),
-    ("concurrent.futures", "parallel"), ("threading", "parallel"),
-    ("multiprocessing", "parallel"), ("re", "regex"), ("csv", "csv"),
-    ("dotenv", "dotenv"), ("pydantic_settings", "dotenv"),
+    ("torch", "torch"),
+    ("transformers", "transformers"),
+    ("peft", "peft"),
+    ("trl", "trl"),
+    ("vllm", "vllm"),
+    ("wandb", "wandb"),
+    ("pytest", "pytest"),
+    ("click", "click"),
+    ("typer", "click"),
+    ("argparse", "argparse"),
+    ("pydantic", "pydantic"),
+    ("dataclasses", "dataclass"),
+    ("abc", "abc"),
+    ("typing", "protocol"),
+    ("functools", "memoization"),
+    ("enum", "enum"),
+    ("asyncio", "asyncio"),
+    ("logging", "logging"),
+    ("subprocess", "subprocess"),
+    ("yaml", "config"),
+    ("json", "config"),
+    ("tomllib", "config"),
+    ("requests", "http"),
+    ("httpx", "http"),
+    ("aiohttp", "http"),
+    ("fastapi", "web"),
+    ("flask", "web"),
+    ("streamlit", "ui"),
+    ("gradio", "ui"),
+    ("numpy", "numpy"),
+    ("pandas", "pandas"),
+    ("matplotlib", "viz"),
+    ("plotly", "viz"),
+    ("concurrent.futures", "parallel"),
+    ("threading", "parallel"),
+    ("multiprocessing", "parallel"),
+    ("re", "regex"),
+    ("csv", "csv"),
+    ("dotenv", "dotenv"),
+    ("pydantic_settings", "dotenv"),
 ]
 
 # role -> (one-line sentence, concept name, concept what)
@@ -443,8 +471,7 @@ ROLES = {
         "dispatch invariants (config validity, dry-run plans, framework threading).",
     ),
     "train": (
-        "a training path that runs gradient-based optimization (GRPO/PPO-style) over "
-        "model weights",
+        "a training path that runs gradient-based optimization (GRPO/PPO-style) over model weights",
         "Gradient-based RL training loop",
         "Rollouts are generated, scored by a reward model, and their feedback is "
         "backpropagated through a policy updated toward higher reward.",
@@ -452,8 +479,7 @@ ROLES = {
     "eval": (
         "an evaluation/measurement script that quantifies outcomes and produces evidence",
         "Measurement as evidence",
-        "It turns raw run outputs into comparable metrics and receipts rather than "
-        "anecdotes.",
+        "It turns raw run outputs into comparable metrics and receipts rather than anecdotes.",
     ),
     "bench": (
         "a benchmarking/sweep driver that runs many configurations and compares them",
@@ -502,37 +528,57 @@ ROLES = {
 
 # role-concept -> (name, what)
 ROLE_CONCEPTS = {
-    "test": ("Why tests here are invariants, not runs",
-             "Each test asserts a fact that must stay true (dispatch threads the right "
-             "framework, plans point at real files) -- the closest CI can get to "
-             "verifying a GPU experiment without one."),
-    "train": ("Why the loop is GRPO and not full RLHF",
-              "GRPO is the reward-model-free-online variant this protocol froze: it "
-              "relies on group-relative advantage, cutting the value critic and memory."),
-    "eval": ("Comparability over raw numbers",
-             "Results only matter relative to a shared frozen protocol; evaluation "
-             "exists to keep every framework measured against the same yardstick."),
-    "bench": ("Abstraction isolating the variable",
-              "A sweep must change one axis at a time so observed differences can be "
-              "attributed -- the opposite of a kitchen-sink config."),
-    "cli": ("One entry, many substrates",
-            "Every backend eventually re-enters the local dispatch, so the CLI is both "
-            "the human interface and the remote-on-box interface."),
-    "experiment": ("Frozen protocol over flexibility",
-                   "Experiments intentionally give up knob freedom in exchange for "
-                   "equivalence -- comparability beats configurability here."),
-    "config": ("Declarative contracts beat code constants",
-               "Encoding settings as data (not literals) makes runs inspectable, "
-               "diffable, and hashable -- prerequisites for the audit trail."),
-    "infra": ("Provision-then-reenter pattern",
-              "Remote backends rent a box, then run the same local dispatch on it -- "
-              "one code path, many substrates."),
-    "lib": ("DRY across drivers",
-            "Shared helper modules stop five framework drivers from each re-solving the "
-            "same problem in five slightly different ways."),
-    "pkg": ("Explicit package boundaries",
-            "An `__init__.py` documents what is public and runs any registry wiring, "
-            "so importers depend on a stable API, not internals."),
+    "test": (
+        "Why tests here are invariants, not runs",
+        "Each test asserts a fact that must stay true (dispatch threads the right "
+        "framework, plans point at real files) -- the closest CI can get to "
+        "verifying a GPU experiment without one.",
+    ),
+    "train": (
+        "Why the loop is GRPO and not full RLHF",
+        "GRPO is the reward-model-free-online variant this protocol froze: it "
+        "relies on group-relative advantage, cutting the value critic and memory.",
+    ),
+    "eval": (
+        "Comparability over raw numbers",
+        "Results only matter relative to a shared frozen protocol; evaluation "
+        "exists to keep every framework measured against the same yardstick.",
+    ),
+    "bench": (
+        "Abstraction isolating the variable",
+        "A sweep must change one axis at a time so observed differences can be "
+        "attributed -- the opposite of a kitchen-sink config.",
+    ),
+    "cli": (
+        "One entry, many substrates",
+        "Every backend eventually re-enters the local dispatch, so the CLI is both "
+        "the human interface and the remote-on-box interface.",
+    ),
+    "experiment": (
+        "Frozen protocol over flexibility",
+        "Experiments intentionally give up knob freedom in exchange for "
+        "equivalence -- comparability beats configurability here.",
+    ),
+    "config": (
+        "Declarative contracts beat code constants",
+        "Encoding settings as data (not literals) makes runs inspectable, "
+        "diffable, and hashable -- prerequisites for the audit trail.",
+    ),
+    "infra": (
+        "Provision-then-reenter pattern",
+        "Remote backends rent a box, then run the same local dispatch on it -- "
+        "one code path, many substrates.",
+    ),
+    "lib": (
+        "DRY across drivers",
+        "Shared helper modules stop five framework drivers from each re-solving the "
+        "same problem in five slightly different ways.",
+    ),
+    "pkg": (
+        "Explicit package boundaries",
+        "An `__init__.py` documents what is public and runs any registry wiring, "
+        "so importers depend on a stable API, not internals.",
+    ),
 }
 
 
@@ -548,10 +594,18 @@ def _fn_info(node) -> dict:
 
 def analyze_python(rel: Path, text: str) -> dict:
     facts = {
-        "kind": "config", "lines": len(text.splitlines()), "imports": [],
-        "libs": set(), "functions": [], "classes": [], "patterns": set(),
-        "docstring": None, "has_main": False, "decorators": [],
-        "keys": [], "kind_note": None,
+        "kind": "config",
+        "lines": len(text.splitlines()),
+        "imports": [],
+        "libs": set(),
+        "functions": [],
+        "classes": [],
+        "patterns": set(),
+        "docstring": None,
+        "has_main": False,
+        "decorators": [],
+        "keys": [],
+        "kind_note": None,
     }
     try:
         tree = ast.parse(text)
@@ -595,8 +649,11 @@ def analyze_python(rel: Path, text: str) -> dict:
                 if isinstance(sub, (ast.Yield,)):
                     facts["patterns"].add("generators")
         elif isinstance(node, ast.ClassDef):
-            methods = [_fn_info(m) for m in node.body
-                       if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef))]
+            methods = [
+                _fn_info(m)
+                for m in node.body
+                if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef))
+            ]
             bases = [ast.unparse(b) for b in node.bases] or []
             bstr = ",".join(bases)
             for d in node.decorator_list:
@@ -606,17 +663,22 @@ def analyze_python(rel: Path, text: str) -> dict:
                 facts["patterns"].add("abc")
             if any("Protocol" in b for b in bases):
                 facts["patterns"].add("protocol")
-            facts["classes"].append({
-                "name": node.name, "bases": bases,
-                "doc": (ast.get_docstring(node) or "").strip().replace("\n", " ")[:140],
-                "methods": methods,
-            })
+            facts["classes"].append(
+                {
+                    "name": node.name,
+                    "bases": bases,
+                    "doc": (ast.get_docstring(node) or "").strip().replace("\n", " ")[:140],
+                    "methods": methods,
+                }
+            )
 
     # main guard
     for node in tree.body:
-        if (isinstance(node, ast.If)
-                and isinstance(node.test, ast.Compare)
-                and "__name__" in ast.unparse(node.test)):
+        if (
+            isinstance(node, ast.If)
+            and isinstance(node.test, ast.Compare)
+            and "__name__" in ast.unparse(node.test)
+        ):
             facts["has_main"] = True
 
     facts["kind"] = "config" if rel.name.lower().startswith(("config", "settings")) else "py"
@@ -625,10 +687,20 @@ def analyze_python(rel: Path, text: str) -> dict:
 
 def analyze_shell(rel: Path, text: str) -> dict:
     facts = {
-        "kind": "sh", "lines": len(text.splitlines()), "imports": [],
-        "libs": set(), "functions": [], "classes": [], "patterns": set(),
-        "docstring": None, "has_main": False, "decorators": [],
-        "keys": [], "kind_note": None, "commands": [], "shebang": None,
+        "kind": "sh",
+        "lines": len(text.splitlines()),
+        "imports": [],
+        "libs": set(),
+        "functions": [],
+        "classes": [],
+        "patterns": set(),
+        "docstring": None,
+        "has_main": False,
+        "decorators": [],
+        "keys": [],
+        "kind_note": None,
+        "commands": [],
+        "shebang": None,
     }
     lines = text.splitlines()
     if lines and lines[0].startswith("#!"):
@@ -646,9 +718,24 @@ def analyze_shell(rel: Path, text: str) -> dict:
         facts["docstring"] = header[0][:200]
     for m in re.finditer(r"^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\(\s*\)\s*\{", text, re.M):
         facts["functions"].append({"name": m.group(1), "decorators": [], "doc": "", "async": False})
-    for cmd in ("docker", "modal", "curl", "wget", "pip", "pip3", "git", "gh",
-                "python", "python3", "uv", "bentoml", "deploy", "wandb",
-                "huggingface", "gcloud"):
+    for cmd in (
+        "docker",
+        "modal",
+        "curl",
+        "wget",
+        "pip",
+        "pip3",
+        "git",
+        "gh",
+        "python",
+        "python3",
+        "uv",
+        "bentoml",
+        "deploy",
+        "wandb",
+        "huggingface",
+        "gcloud",
+    ):
         if re.search(rf"(^|[^a-zA-Z])\b{cmd}\b", text):
             facts["commands"].append(cmd)
     facts["libs"].add("shell")
@@ -657,15 +744,24 @@ def analyze_shell(rel: Path, text: str) -> dict:
 
 def analyze_yaml_toml(rel: Path, text: str) -> dict:
     facts = {
-        "kind": "config", "lines": len(text.splitlines()), "imports": [],
-        "libs": set(), "functions": [], "classes": [], "patterns": set(),
-        "docstring": None, "has_main": False, "decorators": [],
-        "keys": [], "kind_note": None,
+        "kind": "config",
+        "lines": len(text.splitlines()),
+        "imports": [],
+        "libs": set(),
+        "functions": [],
+        "classes": [],
+        "patterns": set(),
+        "docstring": None,
+        "has_main": False,
+        "decorators": [],
+        "keys": [],
+        "kind_note": None,
     }
     data = None
     if rel.suffix in (".yaml", ".yml"):
         try:
             import yaml
+
             data = yaml.safe_load(text)
             facts["libs"].add("yaml")
         except Exception:
@@ -723,10 +819,18 @@ def detect_role(rel: Path, facts: dict) -> str:
 
 def analyze_json(rel: Path, text: str) -> dict:
     facts = {
-        "kind": "config", "lines": len(text.splitlines()), "imports": [],
-        "libs": set(), "functions": [], "classes": [], "patterns": set(),
-        "docstring": None, "has_main": False, "decorators": [],
-        "keys": [], "kind_note": None,
+        "kind": "config",
+        "lines": len(text.splitlines()),
+        "imports": [],
+        "libs": set(),
+        "functions": [],
+        "classes": [],
+        "patterns": set(),
+        "docstring": None,
+        "has_main": False,
+        "decorators": [],
+        "keys": [],
+        "kind_note": None,
     }
     try:
         data = json.loads(text)
@@ -759,8 +863,10 @@ def render_doc(rel: Path, facts: dict, role: str) -> str:
     lines: list[str] = []
     lines.append(f"# Deep Dive: `{rel}`")
     lines.append("")
-    lines.append(f"> AntiVibe &middot; compact mode &middot; {TS} &middot; source: `{rel}` "
-                 f"({facts['lines']} lines)")
+    lines.append(
+        f"> AntiVibe &middot; compact mode &middot; {TS} &middot; source: `{rel}` "
+        f"({facts['lines']} lines)"
+    )
     lines.append("")
 
     # Overview
@@ -774,7 +880,7 @@ def render_doc(rel: Path, facts: dict, role: str) -> str:
     if facts["kind_note"]:
         lines.append(f"*Kind:* {facts['kind_note']}")
     if facts["docstring"]:
-        lines.append(f"*Self-description:* \"{facts['docstring'][:160]}\"")
+        lines.append(f'*Self-description:* "{facts["docstring"][:160]}"')
     if role == "pkg":
         lines.append("As a package init, it defines the *namespace* more than the behavior.")
     lines.append("")
@@ -798,7 +904,7 @@ def render_doc(rel: Path, facts: dict, role: str) -> str:
     if facts.get("shebang"):
         items.append(f"- Shebang: `{facts.get('shebang')}`")
     if facts["has_main"]:
-        items.append("- Has a `if __name__ == \"__main__\"` entry point")
+        items.append('- Has a `if __name__ == "__main__"` entry point')
     lines.extend(items if items else ["- _(no top-level components detected)_"])
     lines.append("")
 
@@ -833,9 +939,11 @@ def render_doc(rel: Path, facts: dict, role: str) -> str:
     lines.extend(rels if rels else ["- Stand-alone: imports nothing else local."])
     lines.append("")
     lines.append("---")
-    lines.append(f"*Generated by AntiVibe per-file pass &middot; {TS} &middot; run "
-                 f"`/antivibe` (or the antivibe skill) on this file for a full-mode "
-                 f"drill-down.*")
+    lines.append(
+        f"*Generated by AntiVibe per-file pass &middot; {TS} &middot; run "
+        f"`/antivibe` (or the antivibe skill) on this file for a full-mode "
+        f"drill-down.*"
+    )
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -947,4 +1055,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

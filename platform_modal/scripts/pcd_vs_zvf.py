@@ -37,7 +37,9 @@ def pvar(xs):
         raise ValueError("variance needs at least one reward")
     n = len(xs)
     mean = sum(xs) / n
-    return sum((x - mean) ** 2 for x in xs) / n
+    # NOTE: x*x, not x**2: libm pow() can differ by 1 ulp across platforms
+    # (macOS vs glibc), breaking byte-exact recomputation. IEEE multiply is exact.
+    return sum((x - mean) * (x - mean) for x in xs) / n
 
 
 def svar(xs):
@@ -97,8 +99,8 @@ def pearson(xs, ys):
     if n < 2 or len(ys) != n:
         return float("nan")
     mx, my = sum(xs) / n, sum(ys) / n
-    sx = sum((x - mx) ** 2 for x in xs)
-    sy = sum((y - my) ** 2 for y in ys)
+    sx = sum((x - mx) * (x - mx) for x in xs)
+    sy = sum((y - my) * (y - my) for y in ys)
     if sx == 0 or sy == 0:
         return float("nan")
     cov = sum((xs[i] - mx) * (ys[i] - my) for i in range(n))

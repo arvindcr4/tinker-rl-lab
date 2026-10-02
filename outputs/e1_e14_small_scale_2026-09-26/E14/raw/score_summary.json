@@ -1,9 +1,0 @@
-{
- "n": 100,
- "correct": 38,
- "unparsed": 0,
- "correct_among_truncated": 15,
- "truncated": 73,
- "judge": "KbsdJames/Omni-Judge@de5bdca15ff3c366b90718c4b4be555d25c655b0",
- "judge_prompt_tokens": 264066
-}

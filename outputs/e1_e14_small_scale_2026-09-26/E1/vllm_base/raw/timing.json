@@ -1,5 +1,0 @@
-{
- "model_id": "qwen36-base-bf16",
- "ready_wait_s": 0.8,
- "sampling_wall_s": 53.9
-}

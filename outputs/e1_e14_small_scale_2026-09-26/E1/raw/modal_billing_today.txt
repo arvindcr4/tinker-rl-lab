@@ -1,2 +1,0 @@
-│ ap-Jp9xtm3vsk… │ pavlov-e1-swe… │ main        │ 2026-09-26T14:… │ 0.01093453 │
-│ ap-VhlFccO5n0… │ swe-bench-pro… │ main        │ 2026-09-26T14:… │ 0.07231831 │

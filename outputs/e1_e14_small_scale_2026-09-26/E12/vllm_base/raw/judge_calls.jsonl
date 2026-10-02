@@ -1,6 +1,0 @@
-{"tag": "judge_v2_1", "t": 1790435281.626153, "dt": 4.4, "prompt_tokens": 10282, "completion_tokens": 647, "hit_max": false}
-{"tag": "judge_v2_2", "t": 1790435444.1382139, "dt": 4.4, "prompt_tokens": 16329, "completion_tokens": 855, "hit_max": false}
-{"tag": "judge_v2_3", "t": 1790435526.2283971, "dt": 3.1, "prompt_tokens": 12010, "completion_tokens": 597, "hit_max": false}
-{"tag": "judge_v2_4", "t": 1790435620.9264839, "dt": 3.3, "prompt_tokens": 14239, "completion_tokens": 683, "hit_max": false}
-{"tag": "judge_v2_5", "t": 1790435693.5308108, "dt": 4.1, "prompt_tokens": 10842, "completion_tokens": 870, "hit_max": false}
-{"tag": "judge_v2_6", "t": 1790435813.978894, "dt": 3.5, "prompt_tokens": 17135, "completion_tokens": 569, "hit_max": false}

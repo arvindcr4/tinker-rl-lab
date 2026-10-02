@@ -1,1 +1,0 @@
-[verifier] No deliverables found in /home/agent/workspace/banker_workspace/deliverables — returning score 0.0

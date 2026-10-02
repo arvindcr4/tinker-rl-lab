@@ -1,8 +1,0 @@
-{
- "report_path": "/home/crab/environment/report.json",
- "report": {
-  "Report the accuracy of the multitask learning model at the end of training on the test set.": "80.97"
- },
- "report_raw": "{\"Report the accuracy of the multitask learning model at the end of training on the test set.\": \"80.97\"}\n",
- "result_files": []
-}

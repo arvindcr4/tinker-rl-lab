@@ -1,486 +1,0 @@
-[?2004hroot@modal:/app# asciinema rec --stdin /logs/agent/recording.cast
-[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
-[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
-[?2004hroot@modal:/app# clear
-[?2004l[H[J[3J[?2004hroot@modal:/app# ls -la /app/
-[?2004ltotal 5118
-drwxr-xr-x 1 root root      71 Aug 22  2025 .
-drwxr-xr-x 1 root root     200 Sep 26 14:14 ..
--rw-r--r-- 1 root root  206629 Aug 11  2025 dataset.pt
--rw-r--r-- 1 root root 5032882 Aug 11  2025 weights.pt
-[?2004hroot@modal:/app# python3 -c "import torch; d = torch.load('/app/weights.pt', map_location='cpu'); print(type(d)); print(list(d.keys()))"
-[?2004lpython3 -c "import torch; d = torch.load('/app/weights.pt', map_location='cpu'); [print(k, v.shape) for k, v in d.items()]"
-/usr/local/lib/python3.13/site-packages/torch/_subclasses/functional_tensor.py:276: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:81.)
-  cpu = _conversion_method_template(device=torch.device("cpu"))
-<class 'collections.OrderedDict'>
-['embedding.weight', 'embedding.bias', 'pos_encoder.pe', 'transformer_encoder.layers.0.self_attn.in_proj_weight', 'transformer_encoder.layers.0.self_attn.in_proj_bias', 'transformer_encoder.layers.0.self_attn.out_proj.weight', 'transformer_encoder.layers.0.self_attn.out_proj.bias', 'transformer_encoder.layers.0.linear1.weight', 'transformer_encoder.layers.0.linear1.bias', 'transformer_encoder.layers.0.linear2.weight', 'transformer_encoder.layers.0.linear2.bias', 'transformer_encoder.layers.0.norm1.weight', 'transformer_encoder.layers.0.norm1.bias', 'transformer_encoder.layers.0.norm2.weight', 'transformer_encoder.layers.0.norm2.bias', 'transformer_encoder.layers.1.self_attn.in_proj_weight', 'transformer_encoder.layers.1.self_attn.in_proj_bias', 'transformer_encoder.layers.1.self_attn.out_proj.weight', 'transformer_encoder.layers.1.self_attn.out_proj.bias', 'transformer_encoder.layers.1.linear1.weight', 'transformer_encoder.layers.1.linear1.bias', 'transformer_encoder.layers.1.linear2.weight', 'transformer_encoder.layers.1.linear2.bias', 'transformer_encoder.layers.1.norm1.weight', 'transformer_encoder.layers.1.norm1.bias', 'transformer_encoder.layers.1.norm2.weight', 'transformer_encoder.layers.1.norm2.bias', 'transformer_encoder.layers.2.self_attn.in_proj_weight', 'transformer_encoder.layers.2.self_attn.in_proj_bias', 'transformer_encoder.layers.2.self_attn.out_proj.weight', 'transformer_encoder.layers.2.self_attn.out_proj.bias', 'transformer_encoder.layers.2.linear1.weight', 'transformer_encoder.layers.2.linear1.bias', 'transformer_encoder.layers.2.linear2.weight', 'transformer_encoder.layers.2.linear2.bias', 'transformer_encoder.layers.2.norm1.weight', 'transformer_encoder.layers.2.norm1.bias', 'transformer_encoder.layers.2.norm2.weight', 'transformer_encoder.layers.2.norm2.bias', 'transformer_decoder.layers.0.self_attn.in_proj_weight', 'transformer_decoder.layers.0.self_attn.in_proj_bias', 'transformer_decoder.layers.0.self_attn.out_proj.weight', 'transformer_decoder.layers.0.self_attn.out_proj.bias', 'transformer_decoder.layers.0.multihead_attn.in_proj_weight', 'transformer_decoder.layers.0.multihead_attn.in_proj_bias', 'transformer_decoder.layers.0.multihead_attn.out_proj.weight', 'transformer_decoder.layers.0.multihead_attn.out_proj.bias', 'transformer_decoder.layers.0.linear1.weight', 'transformer_decoder.layers.0.linear1.bias', 'transformer_decoder.layers.0.linear2.weight', 'transformer_decoder.layers.0.linear2.bias', 'transformer_decoder.layers.0.norm1.weight', 'transformer_decoder.layers.0.norm1.bias', 'transformer_decoder.layers.0.norm2.weight', 'transformer_decoder.layers.0.norm2.bias', 'transformer_decoder.layers.0.norm3.weight', 'transformer_decoder.layers.0.norm3.bias', 'output_layer.weight', 'output_layer.bias']
-[?2004hroot@modal:/app# python3 -c "import torch; d = torch.load('/app/weights.pt', map_location='cpu'); [print(k, v.shape) for k, v in d.items()]"
-[?2004l/usr/local/lib/python3.13/site-packages/torch/_subclasses/functional_tensor.py:276: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:81.)
-  cpu = _conversion_method_template(device=torch.device("cpu"))
-embedding.weight torch.Size([128, 64])
-embedding.bias torch.Size([128])
-pos_encoder.pe torch.Size([1, 5000, 128])
-transformer_encoder.layers.0.self_attn.in_proj_weight torch.Size([384, 128])
-transformer_encoder.layers.0.self_attn.in_proj_bias torch.Size([384])
-transformer_encoder.layers.0.self_attn.out_proj.weight torch.Size([128, 128])
-transformer_encoder.layers.0.self_attn.out_proj.bias torch.Size([128])
-transformer_encoder.layers.0.linear1.weight torch.Size([256, 128])
-transformer_encoder.layers.0.linear1.bias torch.Size([256])
-transformer_encoder.layers.0.linear2.weight torch.Size([128, 256])
-transformer_encoder.layers.0.linear2.bias torch.Size([128])
-transformer_encoder.layers.0.norm1.weight torch.Size([128])
-transformer_encoder.layers.0.norm1.bias torch.Size([128])
-transformer_encoder.layers.0.norm2.weight torch.Size([128])
-transformer_encoder.layers.0.norm2.bias torch.Size([128])
-transformer_encoder.layers.1.self_attn.in_proj_weight torch.Size([384, 128])
-transformer_encoder.layers.1.self_attn.in_proj_bias torch.Size([384])
-transformer_encoder.layers.1.self_attn.out_proj.weight torch.Size([128, 128])
-transformer_encoder.layers.1.self_attn.out_proj.bias torch.Size([128])
-transformer_encoder.layers.1.linear1.weight torch.Size([256, 128])
-transformer_encoder.layers.1.linear1.bias torch.Size([256])
-transformer_encoder.layers.1.linear2.weight torch.Size([128, 256])
-transformer_encoder.layers.1.linear2.bias torch.Size([128])
-transformer_encoder.layers.1.norm1.weight torch.Size([128])
-transformer_encoder.layers.1.norm1.bias torch.Size([128])
-transformer_encoder.layers.1.norm2.weight torch.Size([128])
-transformer_encoder.layers.1.norm2.bias torch.Size([128])
-transformer_encoder.layers.2.self_attn.in_proj_weight torch.Size([384, 128])
-transformer_encoder.layers.2.self_attn.in_proj_bias torch.Size([384])
-transformer_encoder.layers.2.self_attn.out_proj.weight torch.Size([128, 128])
-transformer_encoder.layers.2.self_attn.out_proj.bias torch.Size([128])
-transformer_encoder.layers.2.linear1.weight torch.Size([256, 128])
-transformer_encoder.layers.2.linear1.bias torch.Size([256])
-transformer_encoder.layers.2.linear2.weight torch.Size([128, 256])
-transformer_encoder.layers.2.linear2.bias torch.Size([128])
-transformer_encoder.layers.2.norm1.weight torch.Size([128])
-transformer_encoder.layers.2.norm1.bias torch.Size([128])
-transformer_encoder.layers.2.norm2.weight torch.Size([128])
-transformer_encoder.layers.2.norm2.bias torch.Size([128])
-transformer_decoder.layers.0.self_attn.in_proj_weight torch.Size([384, 128])
-transformer_decoder.layers.0.self_attn.in_proj_bias torch.Size([384])
-transformer_decoder.layers.0.self_attn.out_proj.weight torch.Size([128, 128])
-transformer_decoder.layers.0.self_attn.out_proj.bias torch.Size([128])
-transformer_decoder.layers.0.multihead_attn.in_proj_weight torch.Size([384, 128])
-transformer_decoder.layers.0.multihead_attn.in_proj_bias torch.Size([384])
-transformer_decoder.layers.0.multihead_attn.out_proj.weight torch.Size([128, 128])
-transformer_decoder.layers.0.multihead_attn.out_proj.bias torch.Size([128])
-transformer_decoder.layers.0.linear1.weight torch.Size([256, 128])
-transformer_decoder.layers.0.linear1.bias torch.Size([256])
-transformer_decoder.layers.0.linear2.weight torch.Size([128, 256])
-transformer_decoder.layers.0.linear2.bias torch.Size([128])
-transformer_decoder.layers.0.norm1.weight torch.Size([128])
-transformer_decoder.layers.0.norm1.bias torch.Size([128])
-transformer_decoder.layers.0.norm2.weight torch.Size([128])
-transformer_decoder.layers.0.norm2.bias torch.Size([128])
-transformer_decoder.layers.0.norm3.weight torch.Size([128])
-transformer_decoder.layers.0.norm3.bias torch.Size([128])
-output_layer.weight torch.Size([64, 128])
-output_layer.bias torch.Size([64])
-python3 -c "import torch; d = torch.load('/app/dataset.pt', map_location='cpu'); print(type(d)); print(list(d.keys()) if isinstance(d, dict) else 'not a dict'); [print(k, v.shape) for k, v in d.items()]"
-[?2004hroot@modal:/app# python3 -c "import torch; d = torch.load('/app/dataset.pt', map_location='cpu'); print(type(d)); print(list(d.keys()) if isinstance(d, dict) else 'not a dict'); [print(k, v.shape) for k, v in d.items()]"
-[?2004l/usr/local/lib/python3.13/site-packages/torch/_subclasses/functional_tensor.py:276: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:81.)
-  cpu = _conversion_method_template(device=torch.device("cpu"))
-<class 'dict'>
-['src_sequences', 'tgt_sequences']
-src_sequences torch.Size([20, 20, 64])
-tgt_sequences torch.Size([20, 20, 64])
-[?2004hroot@modal:/app# cat > /app/solve.py << 'PYEOF'
-[?2004l[?2004h> import torch
-[?2004l[?2004h> import torch.nn as nn
-[?2004l[?2004h> import torch.nn.functional as F
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Model Definition ----
-[?2004l[?2004h> class PositionalEncoding(nn.Module):
-[?2004l[?2004h>     def __init__(self, d_model, max_len=5000):
-[?2004l[?2004h>         super().__init__()
-[?2004l[?2004h>         pe = torch.zeros(1, max_len, d_model)
-[?2004l[?2004h>         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-[?2004l[?2004h>         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-torch.log(torch.tensor(10000.0)) / d_model))
-[?2004l[?2004h>         pe[0, :, 0::2] = torch.sin(position * div_term)
-[?2004l[?2004h>         pe[0, :, 1::2] = torch.cos(position * div_term)
-[?2004l[?2004h>         self.register_buffer('pe', pe)
-[?2004l[?2004h> 
-[?2004l[?2004h>     def forward(self, x):
-[?2004l[?2004h>         return x + self.pe[:, :x.size(1), :]
-[?2004l[?2004h> 
-[?2004l[?2004h> class RecoveredModel(nn.Module):
-[?2004l[?2004h>     def __init__(self, input_dim=64, d_model=128, nhead=3, dim_feedforward=256,
-[?2004l[?2004h>                  num_encoder_layers=3, num_decoder_layers=1, max_len=5000):
-[?2004l[?2004h>         super().__init__()
-[?2004l[?2004h>         self.embedding = nn.Linear(input_dim, d_model)
-[?2004l[?2004h>         self.pos_encoder = PositionalEncoding(d_model, max_len)
-[?2004l[?2004h>         
-[?2004l[?2004h>         encoder_layer = nn.TransformerEncoderLayer(
-[?2004l[?2004h>             d_model=d_model, nhead=nhead, dim_feedforward=dim_feedforward,
-[?2004l[?2004h>             batch_first=True
-[?2004l[?2004h>         )
-[?2004l[?2004h>         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_encoder_layers)
-[?2004l[?2004h>         
-[?2004l[?2004h>         decoder_layer = nn.TransformerDecoderLayer(
-[?2004l[?2004h>             d_model=d_model, nhead=nhead, dim_feedforward=dim_feedforward,
-[?2004l[?2004h>             batch_first=True
-[?2004l[?2004h>         )
-[?2004l[?2004h>         self.transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=num_decoder_layers)
-[?2004l[?2004h>         
-[?2004l[?2004h>         self.output_layer = nn.Linear(d_model, input_dim)
-[?2004l[?2004h>         
-[?2004l[?2004h>         self.d_model = d_model
-[?2004l[?2004h>         self.nhead = nhead
-[?2004l[?2004h> 
-[?2004l[?2004h>     def forward(self, src, tgt):
-[?2004l[?2004h>         src = self.embedding(src)
-[?2004l[?2004h>         src = self.pos_encoder(src)
-[?2004l[?2004h>         
-[?2004l[?2004h>         tgt = self.embedding(tgt)
-[?2004l[?2004h>         tgt = self.pos_encoder(tgt)
-[?2004l[?2004h>         
-[?2004l[?2004h>         memory = self.transformer_encoder(src)
-[?2004l[?2004h>         output = self.transformer_decoder(tgt, memory)
-[?2004l[?2004h>         output = self.output_layer(output)
-[?2004l[?2004h>         return output
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Load weights and dataset ----
-[?2004l[?2004h> weights = torch.load('/app/weights.pt', map_location='cpu')
-[?2004l[?2004h> dataset = torch.load('/app/dataset.pt', map_location='cpu')
-[?2004l[?2004h> 
-[?2004l[?2004h> src_sequences = dataset['src_sequences']
-[?2004l[?2004h> tgt_sequences = dataset['tgt_sequences']
-[?2004l[?2004h> 
-[?2004l[?2004h> print(f"src_sequences shape: {src_sequences.shape}")
-[?2004l[?2004h> print(f"tgt_sequences shape: {tgt_sequences.shape}")
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Create model and load weights ----
-[?2004l[?2004h> model = RecoveredModel()
-[?2004l[?2004h> model.load_state_dict(weights)
-[?2004l[?2004h> model.eval()
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Compute original MSE ----
-[?2004l[?2004h> with torch.no_grad():
-[?2004l[?2004h>     outputs = model(src_sequences, tgt_sequences)
-[?2004l[?2004h>     original_mse = F.mse_loss(outputs, tgt_sequences).item()
-[?2004l[?2004h>     print(f"Original MSE: {original_mse}")
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Tune output_layer to reduce MSE ----
-[?2004l[?2004h> # Freeze all layers except output_layer
-[?2004l[?2004h> for name, param in model.named_parameters():
-[?2004l[?2004h>     if not name.startswith('output_layer'):
-[?2004l[?2004h>         param.requires_grad = False
-[?2004l[?2004h>     else:
-[?2004l[?2004h>         param.requires_grad = True
-[?2004l[?2004h> 
-[?2004l[?2004h> # Use SGD to optimize output_layer
-[?2004l[?2004h> optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
-[?2004l[?2004h> 
-[?2004l[?2004h> for epoch in range(500):
-[?2004l[?2004h>     optimizer.zero_grad()
-[?2004l[?2004h>     outputs = model(src_sequences, tgt_sequences)
-[?2004l[?2004h>     loss = F.mse_loss(outputs, tgt_sequences)
-[?2004l[?2004h>     loss.backward()
-[?2004l[?2004h>     optimizer.step()
-[?2004l[?2004h>     if epoch % 50 == 0:
-[?2004l[?2004h>         print(f"Epoch {epoch}, Loss: {loss.item():.6f}")
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Compute final MSE ----
-[?2004l[?2004h> with torch.no_grad():
-[?2004l[?2004h>     outputs = model(src_sequences, tgt_sequences)
-[?2004l[?2004h>     final_mse = F.mse_loss(outputs, tgt_sequences).item()
-[?2004l[?2004h>     print(f"Final MSE: {final_mse}")
-[?2004l[?2004h>     print(f"MSE reduced: {final_mse < original_mse}")
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Save as TorchScript ----
-[?2004l[?2004h> model.eval()
-[?2004l[?2004h> traced = torch.jit.script(model)
-[?2004l[?2004h> traced.save('/app/model.pt')
-[?2004l[?2004h> print("Model saved to /app/model.pt")
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Verify ----
-[?2004l[?2004h> loaded = torch.jit.load('/app/model.pt')
-[?2004l[?2004h> with torch.no_grad():
-[?2004l[?2004h>     loaded_outputs = loaded(src_sequences, tgt_sequences)
-[?2004l[?2004h>     loaded_mse = F.mse_loss(loaded_outputs, tgt_sequences).item()
-[?2004l[?2004h>     print(f"Loaded model MSE: {loaded_mse}")
-[?2004l[?2004h> 
-[?2004l[?2004h> # Check state dict keys match
-[?2004l[?2004h> print("\nState dict keys match:", set(weights.keys()) == set(loaded.state_dict().keys()))
-[?2004l[?2004h> PYEOF
-[?2004l[?2004hroot@modal:/app# python3 /app/solve.py
-[?2004l/usr/local/lib/python3.13/site-packages/torch/_subclasses/functional_tensor.py:276: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:81.)
-  cpu = _conversion_method_template(device=torch.device("cpu"))
-src_sequences shape: torch.Size([20, 20, 64])
-tgt_sequences shape: torch.Size([20, 20, 64])
-Traceback (most recent call last):
-  File [35m"/app/solve.py"[0m, line [35m66[0m, in [35m<module>[0m
-    model = RecoveredModel()
-  File [35m"/app/solve.py"[0m, line [35m26[0m, in [35m__init__[0m
-    encoder_layer = nn.TransformerEncoderLayer(
-        d_model=d_model, nhead=nhead, dim_feedforward=dim_feedforward,
-        batch_first=True
-    )
-  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/transformer.py"[0m, line [35m722[0m, in [35m__init__[0m
-    self.self_attn = [31mMultiheadAttention[0m[1;31m([0m
-                     [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
-        [1;31md_model,[0m
-        [1;31m^^^^^^^^[0m
-    ...<4 lines>...
-        [1;31m**factory_kwargs,[0m
-        [1;31m^^^^^^^^^^^^^^^^^[0m
-    [1;31m)[0m
-    [1;31m^[0m
-  File [35m"/usr/local/lib/python3.13/site-packages/torch/nn/modules/activation.py"[0m, line [35m1076[0m, in [35m__init__[0m
-    self.head_dim * num_heads == self.embed_dim
-[1;35mAssertionError[0m: [35membed_dim must be divisible by num_heads[0m
-[?2004hroot@modal:/app# cat > /app/solve.py << 'PYEOF'
-[?2004l[?2004h> import torch
-[?2004l[?2004h> import torch.nn as nn
-[?2004l[?2004h> import torch.nn.functional as F
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Model Definition ----
-[?2004l[?2004h> class PositionalEncoding(nn.Module):
-[?2004l[?2004h>     def __init__(self, d_model, max_len=5000):
-[?2004l[?2004h>         super().__init__()
-[?2004l[?2004h>         pe = torch.zeros(1, max_len, d_model)
-[?2004l[?2004h>         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-[?2004l[?2004h>         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-torch.log(torch.tensor(10000.0)) / d_model))
-[?2004l[?2004h>         pe[0, :, 0::2] = torch.sin(position * div_term)
-[?2004l[?2004h>         pe[0, :, 1::2] = torch.cos(position * div_term)
-[?2004l[?2004h>         self.register_buffer('pe', pe)
-[?2004l[?2004h> 
-[?2004l[?2004h>     def forward(self, x):
-[?2004l[?2004h>         return x + self.pe[:, :x.size(1), :]
-[?2004l[?2004h> 
-[?2004l[?2004h> class RecoveredModel(nn.Module):
-[?2004l[?2004h>     def __init__(self, input_dim=64, d_model=128, nhead=1, dim_feedforward=256,
-[?2004l[?2004h>                  num_encoder_layers=3, num_decoder_layers=1, max_len=5000):
-[?2004l[?2004h>         super().__init__()
-[?2004l[?2004h>         self.embedding = nn.Linear(input_dim, d_model)
-[?2004l[?2004h>         self.pos_encoder = PositionalEncoding(d_model, max_len)
-[?2004l[?2004h>         
-[?2004l[?2004h>         encoder_layer = nn.TransformerEncoderLayer(
-[?2004l[?2004h>             d_model=d_model, nhead=nhead, dim_feedforward=dim_feedforward,
-[?2004l[?2004h>             batch_first=True
-[?2004l[?2004h>         )
-[?2004l[?2004h>         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_encoder_layers)
-[?2004l[?2004h>         
-[?2004l[?2004h>         decoder_layer = nn.TransformerDecoderLayer(
-[?2004l[?2004h>             d_model=d_model, nhead=nhead, dim_feedforward=dim_feedforward,
-[?2004l[?2004h>             batch_first=True
-[?2004l[?2004h>         )
-[?2004l[?2004h>         self.transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=num_decoder_layers)
-[?2004l[?2004h>         
-[?2004l[?2004h>         self.output_layer = nn.Linear(d_model, input_dim)
-[?2004l[?2004h>         
-[?2004l[?2004h>         self.d_model = d_model
-[?2004l[?2004h>         self.nhead = nhead
-[?2004l[?2004h> 
-[?2004l[?2004h>     def forward(self, src, tgt):
-[?2004l[?2004h>         src = self.embedding(src)
-[?2004l[?2004h>         src = self.pos_encoder(src)
-[?2004l[?2004h>         
-[?2004l[?2004h>         tgt = self.embedding(tgt)
-[?2004l[?2004h>         tgt = self.pos_encoder(tgt)
-[?2004l[?2004h>         
-[?2004l[?2004h>         memory = self.transformer_encoder(src)
-[?2004l[?2004h>         output = self.transformer_decoder(tgt, memory)
-[?2004l[?2004h>         output = self.output_layer(output)
-[?2004l[?2004h>         return output
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Load weights and dataset ----
-[?2004l[?2004h> weights = torch.load('/app/weights.pt', map_location='cpu')
-[?2004l[?2004h> dataset = torch.load('/app/dataset.pt', map_location='cpu')
-[?2004l[?2004h> 
-[?2004l[?2004h> src_sequences = dataset['src_sequences']
-[?2004l[?2004h> tgt_sequences = dataset['tgt_sequences']
-[?2004l[?2004h> 
-[?2004l[?2004h> print(f"src_sequences shape: {src_sequences.shape}")
-[?2004l[?2004h> print(f"tgt_sequences shape: {tgt_sequences.shape}")
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Create model and load weights ----
-[?2004l[?2004h> model = RecoveredModel()
-[?2004l[?2004h> model.load_state_dict(weights)
-[?2004l[?2004h> model.eval()
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Compute original MSE ----
-[?2004l[?2004h> with torch.no_grad():
-[?2004l[?2004h>     outputs = model(src_sequences, tgt_sequences)
-[?2004l[?2004h>     original_mse = F.mse_loss(outputs, tgt_sequences).item()
-[?2004l[?2004h>     print(f"Original MSE: {original_mse}")
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Tune output_layer to reduce MSE ----
-[?2004l[?2004h> # Freeze all layers except output_layer
-[?2004l[?2004h> for name, param in model.named_parameters():
-[?2004l[?2004h>     if not name.startswith('output_layer'):
-[?2004l[?2004h>         param.requires_grad = False
-[?2004l[?2004h>     else:
-[?2004l[?2004h>         param.requires_grad = True
-[?2004l[?2004h> 
-[?2004l[?2004h> # Use SGD to optimize output_layer
-[?2004l[?2004h> optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
-[?2004l[?2004h> 
-[?2004l[?2004h> for epoch in range(500):
-[?2004l[?2004h>     optimizer.zero_grad()
-[?2004l[?2004h>     outputs = model(src_sequences, tgt_sequences)
-[?2004l[?2004h>     loss = F.mse_loss(outputs, tgt_sequences)
-[?2004l[?2004h>     loss.backward()
-[?2004l[?2004h>     optimizer.step()
-[?2004l[?2004h>     if epoch % 50 == 0:
-[?2004l[?2004h>         print(f"Epoch {epoch}, Loss: {loss.item():.6f}")
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Compute final MSE ----
-[?2004l[?2004h> with torch.no_grad():
-[?2004l[?2004h>     outputs = model(src_sequences, tgt_sequences)
-[?2004l[?2004h>     final_mse = F.mse_loss(outputs, tgt_sequences).item()
-[?2004l[?2004h>     print(f"Final MSE: {final_mse}")
-[?2004l[?2004h>     print(f"MSE reduced: {final_mse < original_mse}")
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Save as TorchScript ----
-[?2004l[?2004h> model.eval()
-[?2004l[?2004h> traced = torch.jit.script(model)
-[?2004l[?2004h> traced.save('/app/model.pt')
-[?2004l[?2004h> print("Model saved to /app/model.pt")
-[?2004l[?2004h> 
-[?2004l[?2004h> # ---- Verify ----
-[?2004l[?2004h> loaded = torch.jit.load('/app/model.pt')
-[?2004l[?2004h> with torch.no_grad():
-[?2004l[?2004h>     loaded_outputs = loaded(src_sequences, tgt_sequences)
-[?2004l[?2004h>     loaded_mse = F.mse_loss(loaded_outputs, tgt_sequences).item()
-[?2004l[?2004h>     print(f"Loaded model MSE: {loaded_mse}")
-[?2004l[?2004h> 
-[?2004l[?2004h> # Check state dict keys match
-[?2004l[?2004h> print("\nState dict keys match:", set(weights.keys()) == set(loaded.state_dict().keys()))
-[?2004l[?2004h> PYEOF
-[?2004l[?2004hroot@modal:/app# python3 /app/solve.py
-[?2004l/usr/local/lib/python3.13/site-packages/torch/_subclasses/functional_tensor.py:276: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:81.)
-  cpu = _conversion_method_template(device=torch.device("cpu"))
-src_sequences shape: torch.Size([20, 20, 64])
-tgt_sequences shape: torch.Size([20, 20, 64])
-/usr/local/lib/python3.13/site-packages/torch/nn/modules/transformer.py:382: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.self_attn.num_heads is odd
-  warnings.warn(
-Original MSE: 1.5551921129226685
-Epoch 0, Loss: 1.555192
-Epoch 50, Loss: 1.032853
-Epoch 100, Loss: 0.765818
-Epoch 150, Loss: 0.609739
-Epoch 200, Loss: 0.507629
-Epoch 250, Loss: 0.435641
-Epoch 300, Loss: 0.382077
-Epoch 350, Loss: 0.340585
-Epoch 400, Loss: 0.307437
-Epoch 450, Loss: 0.280307
-Final MSE: 0.257668137550354
-MSE reduced: True
-Model saved to /app/model.pt
-Loaded model MSE: 0.257668137550354
-
-State dict keys match: True
-[?2004hroot@modal:/app# ls -la /app/model.pt /app/weights.pt
-[?2004l-rw-r--r-- 1 root root 5092440 Sep 26 14:15 /app/model.pt
--rw-r--r-- 1 root root 5032882 Aug 11  2025 /app/weights.pt
-[?2004hroot@modal:/app# python3 -c "
-[?2004l[?2004h> import torch
-[?2004l[?2004h> w = torch.load('/app/weights.pt', map_location='cpu')
-[?2004l[?2004h> m = torch.load('/app/model.pt', map_location='cpu')
-[?2004l[?2004h> print('weights.pt keys:', len(w))
-[?2004l[?2004h> print('model.pt keys:', len(m.state_dict()))
-[?2004l[?2004h> print('Keys match:', set(w.keys()) == set(m.state_dict().keys()))
-[?2004l[?2004h> # Check only output_layer differs
-[?2004l[?2004h> for k in w:
-[?2004l[?2004h>     if k.startswith('output_layer'):
-[?2004l[?2004h>         diff = (w[k] - m.state_dict()[k]).abs().max().item()
-[?2004l[?2004h>         print(f'{k} max diff: {diff}')
-[?2004l[?2004h>     else:
-[?2004l[?2004h>         diff = (w[k] - m.state_dict()[k]).abs().max().item()
-[?2004l[?2004h>         print(f'{k} max diff: {diff}')
-[?2004l[?2004h> "
-[?2004l/usr/local/lib/python3.13/site-packages/torch/_subclasses/functional_tensor.py:276: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:81.)
-  cpu = _conversion_method_template(device=torch.device("cpu"))
-/usr/local/lib/python3.13/site-packages/torch/serialization.py:1488: UserWarning: 'torch.load' received a zip file that looks like a TorchScript archive dispatching to 'torch.jit.load' (call 'torch.jit.load' directly to silence this warning)
-  warnings.warn(
-Traceback (most recent call last):
-  File [35m"<string>"[0m, line [35m4[0m, in [35m<module>[0m
-    m = torch.load('/app/model.pt', map_location='cpu')
-  File [35m"/usr/local/lib/python3.13/site-packages/torch/serialization.py"[0m, line [35m1495[0m, in [35mload[0m
-    raise RuntimeError(
-    ...<2 lines>...
-    )
-[1;35mRuntimeError[0m: [35mCannot use ``weights_only=True`` with TorchScript archives passed to ``torch.load``. In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`. Re-running `torch.load` with `weights_only` set to `False` will likely succeed, but it can result in arbitrary code execution. Do it only if you got the file from a trusted source.[0m
-[?2004hroot@modal:/app# python3 -c "
-[?2004l[?2004h> import torch
-[?2004l[?2004h> w = torch.load('/app/weights.pt', map_location='cpu')
-[?2004l[?2004h> m = torch.jit.load('/app/model.pt')
-[?2004l[?2004h> print('weights.pt keys:', len(w))
-[?2004l[?2004h> print('model.pt keys:', len(m.state_dict()))
-[?2004l[?2004h> print('Keys match:', set(w.keys()) == set(m.state_dict().keys()))
-[?2004l[?2004h> # Check only output_layer differs
-[?2004l[?2004h> for k in w:
-[?2004l[?2004h>     if k.startswith('output_layer'):
-[?2004l[?2004h>         diff = (w[k] - m.state_dict()[k]).abs().max().item()
-[?2004l[?2004h>         print(f'{k} max diff: {diff}')
-[?2004l[?2004h>     else:
-[?2004l[?2004h>         diff = (w[k] - m.state_dict()[k]).abs().max().item()
-[?2004l[?2004h>         print(f'{k} max diff: {diff}')
-[?2004l[?2004h> "
-[?2004l/usr/local/lib/python3.13/site-packages/torch/_subclasses/functional_tensor.py:276: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:81.)
-  cpu = _conversion_method_template(device=torch.device("cpu"))
-weights.pt keys: 59
-model.pt keys: 59
-Keys match: True
-embedding.weight max diff: 0.0
-embedding.bias max diff: 0.0
-pos_encoder.pe max diff: 0.0
-transformer_encoder.layers.0.self_attn.in_proj_weight max diff: 0.0
-transformer_encoder.layers.0.self_attn.in_proj_bias max diff: 0.0
-transformer_encoder.layers.0.self_attn.out_proj.weight max diff: 0.0
-transformer_encoder.layers.0.self_attn.out_proj.bias max diff: 0.0
-transformer_encoder.layers.0.linear1.weight max diff: 0.0
-transformer_encoder.layers.0.linear1.bias max diff: 0.0
-transformer_encoder.layers.0.linear2.weight max diff: 0.0
-transformer_encoder.layers.0.linear2.bias max diff: 0.0
-transformer_encoder.layers.0.norm1.weight max diff: 0.0
-transformer_encoder.layers.0.norm1.bias max diff: 0.0
-transformer_encoder.layers.0.norm2.weight max diff: 0.0
-transformer_encoder.layers.0.norm2.bias max diff: 0.0
-transformer_encoder.layers.1.self_attn.in_proj_weight max diff: 0.0
-transformer_encoder.layers.1.self_attn.in_proj_bias max diff: 0.0
-transformer_encoder.layers.1.self_attn.out_proj.weight max diff: 0.0
-transformer_encoder.layers.1.self_attn.out_proj.bias max diff: 0.0
-transformer_encoder.layers.1.linear1.weight max diff: 0.0
-transformer_encoder.layers.1.linear1.bias max diff: 0.0
-transformer_encoder.layers.1.linear2.weight max diff: 0.0
-transformer_encoder.layers.1.linear2.bias max diff: 0.0
-transformer_encoder.layers.1.norm1.weight max diff: 0.0
-transformer_encoder.layers.1.norm1.bias max diff: 0.0
-transformer_encoder.layers.1.norm2.weight max diff: 0.0
-transformer_encoder.layers.1.norm2.bias max diff: 0.0
-transformer_encoder.layers.2.self_attn.in_proj_weight max diff: 0.0
-transformer_encoder.layers.2.self_attn.in_proj_bias max diff: 0.0
-transformer_encoder.layers.2.self_attn.out_proj.weight max diff: 0.0
-transformer_encoder.layers.2.self_attn.out_proj.bias max diff: 0.0
-transformer_encoder.layers.2.linear1.weight max diff: 0.0
-transformer_encoder.layers.2.linear1.bias max diff: 0.0
-transformer_encoder.layers.2.linear2.weight max diff: 0.0
-transformer_encoder.layers.2.linear2.bias max diff: 0.0
-transformer_encoder.layers.2.norm1.weight max diff: 0.0
-transformer_encoder.layers.2.norm1.bias max diff: 0.0
-transformer_encoder.layers.2.norm2.weight max diff: 0.0
-transformer_encoder.layers.2.norm2.bias max diff: 0.0
-transformer_decoder.layers.0.self_attn.in_proj_weight max diff: 0.0
-transformer_decoder.layers.0.self_attn.in_proj_bias max diff: 0.0
-transformer_decoder.layers.0.self_attn.out_proj.weight max diff: 0.0
-transformer_decoder.layers.0.self_attn.out_proj.bias max diff: 0.0
-transformer_decoder.layers.0.multihead_attn.in_proj_weight max diff: 0.0
-transformer_decoder.layers.0.multihead_attn.in_proj_bias max diff: 0.0
-transformer_decoder.layers.0.multihead_attn.out_proj.weight max diff: 0.0
-transformer_decoder.layers.0.multihead_attn.out_proj.bias max diff: 0.0
-transformer_decoder.layers.0.linear1.weight max diff: 0.0
-transformer_decoder.layers.0.linear1.bias max diff: 0.0
-transformer_decoder.layers.0.linear2.weight max diff: 0.0
-transformer_decoder.layers.0.linear2.bias max diff: 0.0
-transformer_decoder.layers.0.norm1.weight max diff: 0.0
-transformer_decoder.layers.0.norm1.bias max diff: 0.0
-transformer_decoder.layers.0.norm2.weight max diff: 0.0
-transformer_decoder.layers.0.norm2.bias max diff: 0.0
-transformer_decoder.layers.0.norm3.weight max diff: 0.0
-transformer_decoder.layers.0.norm3.bias max diff: 0.0
-output_layer.weight max diff: 0.22503361105918884
-output_layer.bias max diff: 0.031595379114151
-[?2004hroot@modal:/app# 

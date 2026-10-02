@@ -1,8 +1,0 @@
-{
- "report_path": "/home/crab/environment/report.json",
- "report": {
-  "fig Report the y-axis label of the convergence curve figure over the 03-adder benchmark.": "Fitness"
- },
- "report_raw": "{\"fig Report the y-axis label of the convergence curve figure over the 03-adder benchmark.\": \"Fitness\"}\n",
- "result_files": []
-}

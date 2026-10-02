@@ -1,7 +1,0 @@
-# vendored benchmark repos / answer-key configs / large trajectories stay out of git
-webarena/
-config_files/
-raw/**/render_*.html
-*.env
-.env*
-__pycache__/

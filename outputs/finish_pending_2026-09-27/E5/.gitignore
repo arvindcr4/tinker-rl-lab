@@ -1,5 +1,0 @@
-raw/**/data/
-*.pkl
-.env*
-secrets*
-raw/*/artifacts/

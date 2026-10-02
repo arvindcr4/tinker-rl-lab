@@ -1,9 +1,0 @@
-diff --git a/compat/src/index.js b/compat/src/index.js
-index 1777777777777777777777777777777777777777..1777777777777777777777777777777777777777 100644
---- a/compat/src/index.js
-+++ b/compat/src/index.js
-@@ -1,3 +1,4 @@
-+import { options } from 'preact';
- import {
- 	Component,
- 	createElement,

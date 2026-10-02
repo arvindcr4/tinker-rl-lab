@@ -1,3 +1,0 @@
-Step,Action,Reasoning,Observation,Reward,Done
-0,go forward,,"a wall 1 step right
-a red box 1 step forward",0.9859375,True

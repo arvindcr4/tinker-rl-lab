@@ -1,8 +1,0 @@
-{
- "report_path": "/home/crab/environment/report.json",
- "report": {
-  "Report the average test accuracy on all the tasks after learning the 4th task.": 0.984
- },
- "report_raw": "{\"Report the average test accuracy on all the tasks after learning the 4th task.\": 0.984}\n",
- "result_files": []
-}

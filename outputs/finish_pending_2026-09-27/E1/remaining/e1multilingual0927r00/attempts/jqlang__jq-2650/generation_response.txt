@@ -1,9 +1,0 @@
-diff --git a/src/jq.c b/src/jq.c
-index 1234567..abcdefg 100644
---- a/src/jq.c
-+++ b/src/jq.c
-@@ -1,3 +1,4 @@
-+#include "jv.h"
- #include "locfile.h"
- #include "compile.h"
- #include "parse.h"

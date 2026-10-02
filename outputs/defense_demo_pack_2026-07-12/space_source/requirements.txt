@@ -1,3 +1,0 @@
-gradio>=5.49.1,<6
-huggingface_hub>=0.34.0,<2
-

@@ -1,9 +1,0 @@
-{
- "report_path": "/home/crab/environment/report.json",
- "report": {
-  "Report the accuracy of the neural network classifier.": 0.8559479553903346,
-  "Report the macro f1 score for the random classifier.": 0.470169381010876
- },
- "report_raw": "{\n  \"Report the accuracy of the neural network classifier.\": 0.8559479553903346,\n  \"Report the macro f1 score for the random classifier.\": 0.470169381010876\n}\n",
- "result_files": []
-}

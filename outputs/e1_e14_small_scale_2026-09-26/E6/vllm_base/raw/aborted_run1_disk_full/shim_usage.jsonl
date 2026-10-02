@@ -1,6 +1,0 @@
-{"tag": "miniwob/click-collapsible-2-v1#0#0", "prompt_tokens": 408, "sample_tokens": 5, "error": null, "latency_s": 1.69}
-{"tag": "miniwob/click-collapsible-2-v1#0#1", "prompt_tokens": 826, "sample_tokens": 5, "error": null, "latency_s": 1.19}
-{"tag": "miniwob/click-collapsible-2-v1#1#0", "prompt_tokens": 408, "sample_tokens": 5, "error": null, "latency_s": 1.24}
-{"tag": "miniwob/click-collapsible-2-v1#1#1", "prompt_tokens": 728, "sample_tokens": 6, "error": null, "latency_s": 1.05}
-{"tag": "miniwob/click-collapsible-2-v1#2#0", "prompt_tokens": 408, "sample_tokens": 5, "error": null, "latency_s": 1.22}
-{"tag": "miniwob/click-collapsible-2-v1#2#1", "prompt_tokens": 694, "sample_tokens": 5, "error": null, "latency_s": 1.1}

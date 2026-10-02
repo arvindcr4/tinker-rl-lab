@@ -1,1 +1,0 @@
-FAIL: backdoor-detected.txt does not exist

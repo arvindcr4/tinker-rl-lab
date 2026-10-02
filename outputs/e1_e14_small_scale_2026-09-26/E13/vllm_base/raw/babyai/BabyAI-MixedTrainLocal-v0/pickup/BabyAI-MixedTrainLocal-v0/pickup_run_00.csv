@@ -1,8 +1,0 @@
-Step,Action,Reasoning,Observation,Reward,Done
-0,go forward,,"a wall 1 step right
-a red box 1 step forward",0,False
-1,go forward,,"a wall 1 step right
-a red box 1 step forward",0,False
-2,pick up,,"You carry a red box
-a wall 5 steps forward
-a wall 1 step right",0.9578125,True

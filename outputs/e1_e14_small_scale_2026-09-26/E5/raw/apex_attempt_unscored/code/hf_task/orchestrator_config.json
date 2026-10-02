@@ -1,7 +1,0 @@
-{
-  "model": "openai/pavlov-qwen36-tinker",
-  "extra_args": {
-    "max_tokens": 4096,
-    "temperature": 0
-  }
-}

@@ -1,8 +1,0 @@
-{
- "report_path": "/home/crab/environment/report.json",
- "report": {
-  "fig Report the name of the mapping with the higher execution time at 44 elements.": "Semantic-based"
- },
- "report_raw": "{\"fig Report the name of the mapping with the higher execution time at 44 elements.\": \"Semantic-based\"}\n",
- "result_files": []
-}

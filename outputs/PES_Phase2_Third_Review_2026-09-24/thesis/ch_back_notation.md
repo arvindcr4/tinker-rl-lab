@@ -75,7 +75,7 @@ Finally, ZVF is expanded two ways in the sources. The formal definition and the 
 
 ## C.5 The E1–E14 lane identifiers, scopes and statuses
 
-Each lane's short code names one original benchmark contract and is not a rank or a score. Several lanes hold two states at once — an original contract and a replacement scope — so the code alone does not say which scope a figure comes from. Table C.3 is the single record of lane scope, headline figure, terminal state and receipt; the chapters point here rather than restating it. "orig" is the original contract and "repl" a declared replacement scope. Terminal states are from `outputs/PES_Phase2_Review_2026-09-12/finish/Pending_Experiments.md`; the E1, E2, E5, E6, E9 and E13 replacement scopes were completed on 2026-09-27, after that ledger, so their states are assigned in this report from each lane's `result.json` (§9.4); the result files themselves carry no state field. Receipt paths are relative to `outputs/`.
+Each lane's short code names one original benchmark contract and is not a rank or a score. Several lanes hold two states at once — an original contract and a replacement scope — so the code alone does not say which scope a figure comes from. Table C.3 is the single record of lane scope, headline figure, terminal state and receipt; the chapters point here rather than restating it. "orig" is the original contract and "repl" a declared replacement scope. Terminal states are from `outputs/PES_Phase2_Review_2026-09-12/finish/Pending_Experiments.md`; the E1, E2, E5, E6, E9 and E13 replacement scopes were completed on 2026-09-27, after that ledger, so their states are assigned in this report from each lane's `result.json` (§8.4); the result files themselves carry no state field. Receipt paths are relative to `outputs/`.
 
 | Lane | Original contract | Replacement scope | Headline figure (scope) | Terminal state | Receipt |
 |---|---|---|---|---|---|
@@ -84,7 +84,7 @@ Each lane's short code names one original benchmark contract and is not a rank o
 | E3 | SDAB (private bundle) | — | none | `CLOSED_EXTERNAL` | `PES_Phase2_Review_2026-09-12/finish/external_closures_2026-09-19/E3_sdab.json` |
 | E4 | BankerToolBench | — | 1/100 tasks, recovery metric 0.3115 (orig, partial) | `CLOSED_PARTIAL` | `modal_e1_e14/2026-08-16/e4_recovery_pass16_receipt.json` |
 | E5 | APEX-Agents | Tau3 | 7/480 natively scored (orig, partial); 8/97 = 0.082 pass^1 (repl, complete) | orig: partial; repl: `COMPLETE` | `e5_apex_agents/e5_exact_sequential_prefix_aggregate_2026-08-22.json`; `finish_pending_2026-09-27/E5/result.json` |
-| E6 | WebBench | WebArena | 90/812 = 0.111 task success, lower bound; 108 judge-dependent tasks ungraded (repl, complete in coverage) | repl: `COMPLETE` on coverage; 108 ungraded | `finish_pending_2026-09-27/E6/result.json` |
+| E6 | WebBench | WebArena | 90/812 = 0.111 task success, lower bound; 108 judge-dependent tasks ungraded (repl, complete in coverage) | orig: no original-contract result (ledger N/A); repl: `COMPLETE` on coverage; 108 ungraded | `finish_pending_2026-09-27/E6/result.json` |
 | E7 | BinaryAudit (private payload) | — | 1/46 attempted, verifier reward 0.0, no grade (orig) | `CLOSED_EXTERNAL` | `e7_binaryaudit/2026-08-22_e7_paid_attempt_receipt.json` |
 | E8 | LifeSciBench (private package) | LAB-Bench public split | 450/1,967 = 0.2288 (repl, complete; end-to-end harness score) | repl: `COMPLETE`; orig: `CLOSED_EXTERNAL` | `public_portfolio_2026-09-05/labbench_native_receipt.json` |
 | E9 | MLE-bench | MLDevBench | 40/75 competitions graded, suite score null (orig, partial); 10/34 = 0.294 task success (repl, complete) | orig: partial; repl: `COMPLETE` | `e9_mle_bench/modal_streaming/`; `finish_pending_2026-09-27/E9/result.json` |
@@ -92,7 +92,7 @@ Each lane's short code names one original benchmark contract and is not a rank o
 | E11 | VerilogEval | none (two native framings) | 129/312 = 41.35% pass@1 (orig, complete; end-to-end harness score) | `COMPLETE` | `modal_e1_e14/2026-08-16/e11_full_receipt.json` |
 | E12 | AppBench (deployment) | — | none | `CLOSED_EXTERNAL` | `PES_Phase2_Review_2026-09-12/finish/external_closures_2026-09-19/E12_appbench.json` |
 | E13 | OpenReward Games (held-out games) | BALROG | 26.1% BALROG progression, 255/255 episodes (repl, complete) | repl: `COMPLETE`; orig: externally blocked, no closure record | `finish_pending_2026-09-27/E13/result.json` |
-| E14 | FrontierMath (hosted) | Omni-MATH | 2,271 correct of 4,428 dispositions (repl, terminal-complete; §9.2) | repl: `COMPLETE_TERMINAL_NOTE`; orig: `CLOSED_EXTERNAL` | `public_portfolio_2026-09-05/native_finish_v5/e14_official_collector/official_result01/native_score.json` |
+| E14 | FrontierMath (hosted) | Omni-MATH | 2,271 correct of 4,428 dispositions (repl, terminal-complete; §8.2) | repl: `COMPLETE_TERMINAL_NOTE`; orig: `CLOSED_EXTERNAL` | `public_portfolio_2026-09-05/native_finish_v5/e14_official_collector/official_result01/native_score.json` |
 
 : The E1–E14 lanes: original contract, replacement scope, headline figure, terminal state and receipt.
 

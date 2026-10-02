@@ -114,7 +114,7 @@ The multi-framework benchmark infrastructure, the baseline framework
 integrations, and the initial GRPO/PPO/DPO experimentation were produced by the
 Semester-3 project group, of which I was a member, and are inherited here as
 the shared foundation. The research direction, the experimental expansion, the
-statistical analyses, the P1--P8 paper series, the reporting and registry
+statistical analyses, the P1--P8 internal reports, the reporting and registry
 artefacts, the adaptive group-size controller, the applied fraud study, and the
 E1--E14 evaluation campaign reported in this document are my
 individual contribution, carried out under the guidance of my project guide.
@@ -199,97 +199,41 @@ number does \emph{not} establish has improved the work materially.
 \addcontentsline{toc}{chapter}{Abstract}
 \thispagestyle{plain}
 
-This report presents a multi-framework training harness for group-relative
-reinforcement-learning post-training of large language models, studies of GRPO
-signal starvation and of that post-training's behaviour across libraries,
-scales, group sizes and datasets, and an evaluation of a single trained actor
-against fourteen agentic and reasoning benchmark suites that were not part of
-its training data.
+This report studies group-relative reinforcement-learning post-training of
+large language models under one methodological commitment: a comparative
+claim is made only when the whole training stack is held fixed except the
+factor under test. It makes four contributions.
 
-The harness is multi-framework by construction: a shared task, reward and
-decoding configuration is dispatched through thin adapters onto each backend's
-own interface, so the same experiment is runnable on any of them without
-re-implementing the grader. That design property is distinct from a completed
-multi-framework benchmark, which this report does not claim. Of the
-cross-launcher roster, only Tinker and TRL produced completed runs in this
-release, and those two used different base checkpoints (Qwen3-8B-Base on
-Tinker, the instruction-tuned Qwen3-8B on TRL), so no framework comparison is
-drawn from them; the veRL and
-OpenRLHF entries in the comparison artefact are dry-run placeholders that
-resolve a launch plan without executing it, and are never pooled with real
-results or read as framework-comparison evidence (Chapter 3 \S3.8; Chapter 5
-\S5.1). Comparative claims in this report are therefore constrained to the
-runs actually recorded, and the diagnostic portability results are stated at
-the strength their own source asserts.
+\textbf{(1) A recomputable signal-starvation diagnostic and a loss-form
+audit.} The Zero-Variance Fraction (ZVF) is logged per step and recomputed
+from stored reward tensors, with a closed-form Bernoulli null. Reading the
+runners' code rather than the internal reports shows that the ``GRPO'' runners
+used here are REINFORCE with a group-mean baseline, without KL or clipping.
 
-The central methodological commitment is \emph{attribution}: every comparative
-claim is made with the entire training stack held fixed except the one factor
-under test. Four de-confound pillars --- a matched same-stack PPO/GRPO
-contrast, the Zero-Variance Fraction as a signal-starvation diagnostic, a
-group-size sweep, and a length-bias and held-out-generalisation study --- are
-reported under that commitment, alongside a cross-library cross-scale scaling
-study, a minimum reporting standard for stack-conditioned results, a
-machine-readable stack registry, an adaptive group-size controller derived from
-the ZVF diagnostic, and an applied credit-card fraud case study.
+\textbf{(2) Stack-conditioned reporting.} A minimum reporting standard and a
+machine-readable stack registry with a \texttt{stackdiff} tool that flags
+label-flip risk between two runs from their records alone.
 
-The principal results are deliberately conservative. Across the twelve fitted anchors of a
-70+-run roster, spanning roughly 2.4 orders of magnitude in model scale,
-\textbf{no reliable scaling law is recovered from reward curves}. On a saturated
-Qwen2.5-0.5B two-digit addition task, a same-stack comparison of PPO and GRPO
-over five paired seeds finds \textbf{no detectable difference} (evaluation
-accuracy 0.992 against 0.990, paired $\Delta = -0.002$, $p = 0.374$, on fresh
-draws from the training generator rather than a disjoint split). At that
-ceiling the null cannot separate no effect from no headroom, and it does not
-establish equivalence (TOST at $\pm 0.005$, $p = 0.10$). The
-Zero-Variance Fraction's association with final held-out accuracy is not
-distinguishable from zero ($\rho = 0.27$, 95\% CI $[-0.37, 0.88]$, $n = 23$),
-so it is reported as a descriptive diagnostic, not a predictor. A three-seed group-size sweep
-($G \in \{2, 4, 8, 16\}$) on the same saturated task (evaluation accuracy
-0.978--0.990) finds its arms statistically indistinguishable and does
-\textbf{not} establish an optimum. A roster-level flag marks four of
-eleven GRPO runs as peaking before 65\% of training and then decaying, but its
-thresholds are post hoc and it is not specific to length, so it is
-\textbf{not} evidence of length bias; in the controlled sixteen-run comparison
-the same rule fires on both GRPO and Dr.\ GRPO (five of six GSM8K-CoT runs),
-no run shows length growing, and completion length drifts shorter rather than
-longer.
+\textbf{(3) Calibrated negative results.} No reliable scaling law is recovered
+from reward curves across twelve fitted anchors. A same-stack PPO/GRPO
+contrast (0.992 against 0.990, $p = 0.374$, five seeds) and a group-size sweep
+find no detectable difference, but both run on a saturated task and establish
+neither equivalence nor an optimum. ZVF does not predict held-out accuracy
+($\rho = 0.27$, 95\% CI $[-0.37, 0.88]$). An adaptive group-size controller
+derived from ZVF saves no prompts in counterfactual simulation, because 92\% of its escalations fall on
+groups that are already all-correct.
 
-The E1--E14 campaign evaluates one Tinker-trained actor
-(\texttt{Qwen/Qwen3.6-35B-A3B} with the
-\texttt{pavlov-portfolio-qwen36-seed809-stepfinal} adapter) using each suite's
-own native evaluator at a pinned revision, with no per-lane tuning. The actor
-received 40 steps of critic-free policy-gradient training (group-normalised
-REINFORCE, no KL, no clipping) on API-Bank and SWE-Gym, so the campaign is
-reported as an evaluation-governance exercise, not as evidence about GRPO.
-Three
-scopes are strictly complete: the replacement scopes LAB-Bench public split
-(1{,}967/1{,}967 questions, micro accuracy 0.2288), AgentDojo benign utility
-(97/97 episodes, utility $88/97 = 0.9072$), and the original-contract suite
-VerilogEval (312/312, $129/312 = 41.35\%$ pass@1, Wilson 95\% CI
-$[36.0, 46.9]\%$). Omni-MATH is terminal-complete under its native protocol (all
-4{,}428 dispositions recorded, 4{,}426 accepted; accuracy
-$2{,}271/4{,}428 = 51.29\%$ with the two unjudged rows counted as failures, against the official
-scorer's $51.31\%$ over the 4{,}426 judged rows). Original-contract full-coverage scores exist for SWE-bench Pro
-($2/731 = 0.274\%$ pass@1, with all eighteen non-native outcomes retained in the
-denominator) and, as above, VerilogEval. The LAB-Bench and VerilogEval figures
-are end-to-end harness scores: 1{,}259 of 1{,}967 and 150 of 312 responses
-yielded no gradable answer. Six further replacement scopes were run in full
-on 27 September 2026, each under its native grader: CORE-Bench hard
-($27/45 = 0.600$), Tau3 ($8/97 = 0.082$), WebArena ($90/812 = 0.111$, a lower
-bound with 108 judge-dependent tasks ungraded), ML-Dev-Bench
-($10/34 = 0.294$), BALROG (26.1\% progression over 255 episodes) and the 190
-SWE-bench Multilingual tasks not attempted earlier ($1/190$). The remaining
-lanes are reported as partial or externally blocked, each with an explicit
-terminal state and a named reopen condition.
-
-Original-contract and replacement-scope benchmark results are never pooled, no
-cross-suite aggregate is computed, and no claim of improvement over a baseline
-is made anywhere in this work: the one paired trained-versus-base comparison,
-a small-scale rerun of all fourteen lanes on 5--151 identical items each, finds
-no significant difference in any lane, which at those sizes is inconclusive. Eleven named deterministic ledger checks
-(exact divisions, receipt presence, hash equality and lost-source probes)
-passed on 19 September 2026; they cover the arithmetic of the headline lanes,
-not every figure in the report.
+\textbf{(4) An evaluation-governance protocol.} One lightly trained actor
+(Qwen3.6-35B-A3B with a LoRA adapter, 40 training steps) is evaluated on
+fourteen held-out suites under native graders at pinned revisions, with
+receipts, a no-pooling rule and a per-lane serving audit that traced a
+zero score to a serving defect. Complete scopes include VerilogEval
+($129/312 = 41.35\%$), LAB-Bench ($0.2288$) and AgentDojo benign utility
+($88/97$); six replacement scopes completed on 27 September 2026
+(Chapter~8, Table~8.C); seven original contracts remain externally blocked. A
+paired trained-versus-base rerun on 5--151 identical items per lane finds no
+significant difference in any lane, which at those sizes is inconclusive. No
+claim of improvement over any baseline is made.
 
 \vspace{0.25in}
 \noindent\textbf{Keywords:} GRPO, RLVR, zero-variance fraction, signal

@@ -2,7 +2,7 @@
 
 This appendix is the auditable index of every training and evaluation run on
 which the claims of this report rest. It does not present results — those live
-in Chapters 6–9 — but makes each claim traceable to the artefacts that
+in Chapters 6–8 — but makes each claim traceable to the artefacts that
 produced it: run identifier, library and platform, base model, algorithm,
 group size, dataset, seed, steps, and terminal status. Where a claim cannot be
 traced through this appendix to a run, the project's evidence rules require it
@@ -308,7 +308,7 @@ adapter name. The adapter was trained for 40 steps at G = 4 and learning rate
 1 × 10⁻⁵ by REINFORCE with a group-mean baseline (no KL, no clipping), as
 recorded in the local W&B run directory for run `bsv8vx04` and the run receipt
 `checkpoints/grpo/pavlov_portfolio_api_swegym_qwen36_20260809_seed809.json`
-(Chapter 9 §9.1.1). Those are properties of the single actor rather than of
+(Chapter 8 §8.1.1). Those are properties of the single actor rather than of
 any lane, so they are shown as "—" in the table rather than repeated. Terminal states are from the ledger of record,
 `outputs/PES_Phase2_Review_2026-09-12/finish/Pending_Experiments.md`; all
 scores are from `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md`, except the six rows marked "finish 2026-09-27", which are from `outputs/finish_pending_2026-09-27/<lane>/result.json`.
@@ -323,7 +323,7 @@ scores are from `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md`, except the six row
 | E2 replacement (finish 2026-09-27) | native grader, GCP VM per capsule | as above | — | — | CORE-Bench hard | 809 | — | 27/45 = 0.600 task accuracy — `COMPLETE` |
 | E3 SDAB | — | as above | — | — | SDAB (private bundle) | 809 | — | no local or paid path — `CLOSED_EXTERNAL` |
 | E4 BankerToolBench | Tinker→Modal bridge | as above | — | — | BankerToolBench | 809 | — | 1/100 tasks, recovery 0.3115 — `CLOSED_PARTIAL` |
-| E4 base-model rerun | Modal `/v1/responses` | base model, zero-init LoRA | — | — | BankerToolBench | 809 | 0 | 100/100 trials, mean reward 0.0, $15.07 of $55.91 cap; zero traced to bridge passing no stop sequences (§9.5) |
+| E4 base-model rerun | Modal `/v1/responses` | base model, zero-init LoRA | — | — | BankerToolBench | 809 | 0 | 100/100 trials, mean reward 0.0, $15.07 of $55.91 cap; zero traced to bridge passing no stop sequences (§8.5) |
 | E5 APEX-Agents | native harness | as above | — | — | APEX-Agents | 809 | — | 7/480 native-scored; prefix mean 0.050505 |
 | E5 replacement (finish 2026-09-27) | native tau2, Modal 65k actor | as above | — | — | Tau3 banking_knowledge | 809 | — | 8/97 = 0.082 pass^1 (25 infra errors counted as failures) — `COMPLETE` |
 | E6 WebArena (finish 2026-09-27) | native evaluator, GCP VM | as above | — | — | WebArena | 809 | — | 90/812 = 0.111, lower bound; 108 ungraded (judge unavailable) — `COMPLETE` |
@@ -408,7 +408,7 @@ Four further limits apply.
    three observations of the same platforms at three times. No reconciliation
    was attempted and none should be inferred.
 
-None of this changes a reported result, because every result in Chapters 6–9
+None of this changes a reported result, because every result in Chapters 6–8
 is bound to named artefacts rather than to the registry as a whole. It does
 bound what the registry can be used for: it establishes provenance and
 identity, shows that the run population is far larger than the reported
@@ -430,6 +430,6 @@ different corpus, not a different count of the same one.
 | `zvf-audit` W&B project | 368 | Logged runs in one W&B project, a subset of the ledger's W&B half (Table A.1) | Chapter 4 §4.3; Chapter 7 |
 | P5 audit corpus | 790 | The corpus from which the 368-run audit is drawn (`p5_stack.tex`); its relation to the ledger is not recorded | Chapter 7 §7.1 |
 | Mega-campaign cells | 98 | Sampling-only cells of `mega_20260704` | Chapter 7 §7.1 |
-| E1–E14 actor training | 1 | The 40-step `pavlov_portfolio` run of August 2026, after the ledger cut-off | Chapter 9 §9.1.1 |
+| E1–E14 actor training | 1 | The 40-step `pavlov_portfolio` run of August 2026, after the ledger cut-off | Chapter 8 §8.1.1 |
 
 : Run totals quoted in this report and the corpus each one counts.

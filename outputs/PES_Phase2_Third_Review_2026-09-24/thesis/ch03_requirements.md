@@ -22,6 +22,8 @@ A fifth party, the **external access holder**, is an actor only in the negative 
 
 Table 3.1 lists the functional requirements. Each row states the requirement and names the source that defines it; §3.5 maps each to the artefact that implements it and the test that verifies it.
 
+**Table 3.1 — Functional requirements.**
+
 | ID | Requirement | Source |
 |---|---|---|
 | FR-1 | One declarative file fully determines a run (model, dataset, reward, decoding, G, learning rate, KL coefficient, seed, output); no framework-specific parameters are needed on any supported back-end | Phase-1 report |
@@ -44,6 +46,8 @@ Table 3.1 lists the functional requirements. Each row states the requirement and
 : Functional requirements. Sources: the Phase-1 report is `platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex`; other files are under `platform_hybrid/`, `platform_local/` or `zvf-program/flagship/`.
 
 ## 3.3 Non-Functional Requirements
+
+**Table 3.2 — Non-functional requirements.**
 
 | ID | Requirement | Source |
 |---|---|---|
@@ -86,6 +90,8 @@ The test cases below are the concrete checks attached to the requirements. TC-1 
 
 ## 3.5 Requirements Traceability Matrix
 
+**Table 3.3 — Requirements traceability matrix.**
+
 | Requirement | Implemented in | Verified by |
 |---|---|---|
 | FR-1 Configuration object | `platform_local/unified/launcher.py`; run configurations under `platform_hybrid/experiments/` | TC-3 |
@@ -120,6 +126,8 @@ The test cases below are the concrete checks attached to the requirements. TC-1 
 Two rows deserve comment. FR-7 has no automated check because the white-box gradient path is a measurement procedure rather than an invariant; its evidence is the result data itself. NFR-5 is likewise checked operationally rather than by the suite, because process isolation is a property of how runs are launched and is not visible in any post-hoc artefact.
 
 ## 3.6 Hardware Requirements
+
+**Table 3.4 — Hardware requirements and their status.**
 
 | Compute surface | Requirement | Status |
 |---|---|---|

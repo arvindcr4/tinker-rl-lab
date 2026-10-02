@@ -33,7 +33,6 @@ CHAPTERS = [
     ("ch05_implementation.md", None),
     ("ch06_results_core.md", "Results"),
     ("ch07_results_infra.md", None),
-    ("ch08_results_fraud.md", None),
     ("ch09_results_campaign.md", None),
     ("ch10_synthesis_conclusions.md", "Synthesis"),
 ]
@@ -42,7 +41,14 @@ APPENDICES = [
     ("ch_back_run_registry.md", "Appendices"),
     ("ch_back_reproducibility.md", None),
     ("ch_back_notation.md", None),
+    ("ch_back_campaign_detail.md", None),
+    ("ch_back_errata.md", None),
+    ("ch08_results_fraud.md", None),
 ]
+
+# the evidence map is generated from the collected source notes and
+# emitted as the last appendix
+EVIDENCE_MAP = os.path.join(BUILD, "ch_back_evidence_map.md")
 
 # figure name -> (caption, label, [anchor substrings tried in order])
 FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
@@ -72,7 +78,7 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "gradient flows, although the rollouts are still paid for. Number line: "
          "the Phase-1 P2 batch ZVF of 0.72--0.77 (four methods, 40 steps, "
          "16 prompts $\\times$ 8 samples, GSM8K, seed 0, Qwen3.5-4B) and the "
-         "group-size sweep on Qwen3-8B/GSM8K over three seeds, where mean ZVF "
+         "group-size sweep on Qwen2.5-0.5B two-digit addition over three seeds, where mean ZVF "
          "falls from 0.838 at $G=2$ to 0.631 at $G=16$ (a fall of 0.207).",
          "fig:grpoloop", ["Background", "Introduction"]),
         ("fig_contribution_map",
@@ -144,7 +150,7 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "declared simulation projection (Chapter~6).",
          "fig:pillars", ["Methodology", "Portfolio"]),
         ("fig_campaign_design",
-         "Design of the E1--E14 held-out evaluation campaign. One frozen actor "
+         "Design of the E1--E14 native-benchmark evaluation campaign. One frozen actor "
          "serves all fourteen lanes, and each suite is graded by its own native "
          "evaluator at a pinned revision. Each lane lists its original-contract "
          "suite and, where one exists, its replacement scope side by side; "
@@ -324,7 +330,7 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "completion gate's \\texttt{PARTIAL\\_EXACT}/\\texttt{PARTIAL\\_RECOVERY} "
          "labels are a separate evidence-class vocabulary (Chapter~5). Lane "
          "assignments are those of 2026-09-19; the six lanes in the three "
-         "pending leaves were all run and scored on 2026-09-27 (Chapter~9).",
+         "pending leaves were all run and scored on 2026-09-27 (Chapter~8).",
          "fig:taxonomy", ["Terminal", "blocked lanes", "externally blocked"]),
         ("fig_e4_diagnostic",
          "The E4 rerun diagnostic. Across 100 trials agents terminate at a "
@@ -396,14 +402,19 @@ def _strip_heading_numbers(md_text: str) -> str:
 
 
 # Inline "(source: path)" / "(sources: a, b)" evidence notes interrupt the
-# prose (~450 of them). Move each into a footnote. Table rows and headings are
-# left alone: footnotes inside longtable cells and \section{} are fragile.
+# prose (~450 of them). Remove them from the running text and collect them,
+# per section, into a generated evidence-map appendix. A note that opens its
+# own paragraph (a table's source line) stays visible under its table. Table
+# rows and headings are left alone.
+EVIDENCE: list[tuple[str, list[str]]] = []   # (heading line, [source bodies])
 _SRC_OPEN = re.compile(r"\s?\((sources?):\s")
 
 
 def _sources_to_footnotes(md_text: str) -> tuple[str, int]:
     out, n = [], 0
     for line in md_text.split("\n"):
+        if line.startswith("#"):
+            EVIDENCE.append((line, []))
         if line.lstrip().startswith(("|", "#")):
             out.append(line)
             continue
@@ -429,11 +440,114 @@ def _sources_to_footnotes(md_text: str) -> tuple[str, int]:
                 break
             label = "Sources" if m.group(1) == "sources" else "Source"
             body = line[m.end():j - 1].strip()
-            buf.append(line[i:m.start()] + f"^[{label}: {body}.]")
+            if m.start() == 0 and not line[:m.start()].strip():
+                # a source note that opens its own paragraph (typically under a
+                # table) has no text to anchor a footnote mark; print it inline
+                buf.append(f"*{label}: {body.rstrip('.')}.*")
+                if line[j:j + 1] == ".":
+                    j += 1
+            else:
+                buf.append(line[i:m.start()])
+                if EVIDENCE:
+                    EVIDENCE[-1][1].append(body)
             n += 1
             i = j
         out.append("".join(buf))
     return "\n".join(out), n
+
+
+_LEADIN = re.compile(r"^\*\*Table ([A-Z0-9]+\.[A-Z0-9]+) [—-]+ (.+?)\*\*(.*)$")
+
+
+def _table_leadins(md_text: str) -> str:
+    """Tables carry a bold "**Table 9.A — Title.** note" lead-in.
+
+    If the table below it also has a pandoc caption (": ..."), LaTeX numbers
+    that caption, so the lead-in keeps its text but drops the number. If not,
+    the lead-in is the table's only caption: keep its number, set it as a
+    caption line and add it to the List of Tables.
+    """
+    lines = md_text.split("\n")
+    for k, line in enumerate(lines):
+        m = _LEADIN.match(line)
+        if not m:
+            continue
+        j = k + 1
+        # the lead-in paragraph may wrap onto further lines
+        while j < len(lines) and lines[j].strip() and not lines[j].lstrip().startswith("|"):
+            j += 1
+        while j < len(lines) and not lines[j].strip():
+            j += 1
+        while j < len(lines) and lines[j].lstrip().startswith("|"):
+            j += 1
+        while j < len(lines) and not lines[j].strip():
+            j += 1
+        num, title, rest = m.group(1), m.group(2).strip(), m.group(3)
+        if j < len(lines) and lines[j].startswith(": "):
+            lines[k] = f"**{title}**{rest}"
+        else:
+            toc = title.rstrip(".").replace("\\", "").replace("`", "")
+            toc = re.sub(r"[$*_]", "", toc)
+            lines[k] = (f"`\\addcontentsline{{lot}}{{table}}{{\\protect\\numberline{{{num}}}{toc}}}`{{=latex}}"
+                        f"**Table {num}.** {title}{rest}")
+            lines[k] = "`\\Needspace{10\\baselineskip}`{=latex}" + lines[k]
+    return "\n".join(lines)
+
+
+def write_evidence_map(path: str) -> int:
+    """Write the evidence-map appendix from the collected source notes."""
+    out = ["# Appendix G. Evidence Map", "",
+           "Every factual claim in the body of this report was written against a "
+           "named source file in the project repository. To keep the running text "
+           "readable those source notes are collected here, section by section, in "
+           "the order the claims appear. Paths are relative to the repository root. "
+           "Table sources are printed under their tables and are not repeated here.",
+           ""]
+    def split_items(body: str) -> list[str]:
+        # split on ";" or "," outside `code`, drop "source(s):" prefixes
+        parts, cur, code = [], "", False
+        for ch in body:
+            if ch == "`":
+                code = not code
+            if ch in ";," and not code:
+                parts.append(cur); cur = ""
+            else:
+                cur += ch
+        parts.append(cur)
+        clean = []
+        for p in parts:
+            p = re.sub(r"^\s*(?:and\s+)?(?:sources?:\s*)?", "", p).strip().rstrip(".").strip()
+            if p:
+                clean.append(p if p.startswith("`") else f"`{p}`" if re.search(r"[/_]", p) and " " not in p else p)
+        return clean
+
+    n, chapter_head, emitted_head = 0, None, None
+    for heading, bodies in EVIDENCE:
+        title = re.sub(r"^#+\s*", "", heading)
+        if heading.startswith("# "):
+            mm = re.match(r"(?:Appendix\s+)?([A-Z]|\d+)\.\s+(.*)", title)
+            if mm:
+                kind = "Appendix" if mm.group(1).isalpha() else "Chapter"
+                title = f"{kind} {mm.group(1)}: {mm.group(2)}"
+            chapter_head = title
+        if not bodies:
+            continue
+        seen, items = set(), []
+        for b in bodies:
+            for part in split_items(b):
+                if part not in seen:
+                    seen.add(part)
+                    items.append(part)
+        if chapter_head != emitted_head:
+            out += [f"## {chapter_head}", ""]
+            emitted_head = chapter_head
+        if not heading.startswith("# "):
+            out += [f"**{title}**", ""]
+        out += [f"- {x}" for x in items] + [""]
+        n += len(items)
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(out))
+    return n
 
 
 def pandoc_md_to_tex(md_path: str, tex_path: str) -> bool:
@@ -445,11 +559,8 @@ def pandoc_md_to_tex(md_path: str, tex_path: str) -> bool:
         # keep the H1 as the chapter title (pandoc -> \chapter) with its number
         # removed too, since \chapter supplies its own.
         tmp = md_path + ".numbered.md"
-        body, _ = _sources_to_footnotes(_strip_heading_numbers(raw))
-        # appendix tables carry a bold "**Table A.1 — Title.**" lead-in on top
-        # of their numbered caption; keep the lead-in text, drop the duplicate
-        # number (LaTeX numbers the caption itself)
-        body = re.sub(r"^\*\*Table [A-Z]\.\d+ [—-]+ ", "**", body, flags=re.M)
+        body, _ = _sources_to_footnotes(raw)
+        body = _table_leadins(_strip_heading_numbers(body))
         with open(tmp, "w", encoding="utf-8") as fh:
             fh.write(body)
         # --natbib turns [@key] into \citep{key}; the IEEE-style numeric
@@ -762,7 +873,7 @@ def main() -> int:
     # before hyperref
     preamble = preamble.replace(
         "\\usepackage[hidelinks]{hyperref}",
-        "\\usepackage[numbers,sort&compress]{natbib}\n\\usepackage[hidelinks]{hyperref}", 1)
+        "\\usepackage{needspace}\n\\usepackage[numbers,sort&compress]{natbib}\n\\usepackage[hidelinks]{hyperref}", 1)
     # \fig{name}{short caption}{caption}{label}
     preamble = re.sub(r"\\newcommand\{\\fig\}\[3\]\{%.*?\\end\{figure\}\}",
                       lambda _: ("\\newcommand{\\fig}[4]{%\n"
@@ -808,6 +919,10 @@ def main() -> int:
     pieces.append("\n\\appendix\n")
     for md_name, part in APPENDICES:
         emit(md_name, part)
+    n_ev = write_evidence_map(EVIDENCE_MAP)
+    EVIDENCE.clear()
+    emit(EVIDENCE_MAP, None)
+    print(f"evidence map: {n_ev} source entries")
 
     pieces.append("\n\\end{document}\n")
     master = "\n".join(pieces)

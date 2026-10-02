@@ -7,7 +7,7 @@ GRPO_PATHS := platform_tinker/tinkerrl platform_tinker/grpo_100_math.py platform
 SUBMISSION_PATHS := platform_modal/scripts/build_university_submission.py
 RUFF_PATHS := $(SUBMISSION_PATHS) platform_local/unified platform_local/trl_integrations $(GRPO_PATHS) platform_hybrid/registry/provenance/minreport.py $(AUDIT_PATHS) $(FIGURE_PATHS) utils tests tools
 
-.PHONY: bootstrap check lint format format-check test package docs-check submission submission-check
+.PHONY: bootstrap check lint lint-ruff format format-check test package docs-check submission submission-check
 
 bootstrap:
 	$(UV) sync --locked --extra dev
@@ -15,9 +15,13 @@ bootstrap:
 
 check: lint format-check test package docs-check
 
-lint:
-	$(RUFF) check $(RUFF_PATHS)
+# Split so pre-commit can reuse the exact same linted file list as CI
+# (`make lint` = `make lint-ruff` + the repository policy gate).
+lint: lint-ruff
 	$(PYTHON) tools/check_repo_policy.py
+
+lint-ruff:
+	$(RUFF) check $(RUFF_PATHS)
 
 format:
 	$(RUFF) format $(RUFF_PATHS)

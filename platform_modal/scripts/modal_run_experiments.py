@@ -19,27 +19,29 @@ results_vol = modal.Volume.from_name("tinkerrl-results", create_if_missing=True)
 llm_image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install(
-        "torch>=2.3.0",
-        "transformers>=4.46.0",
-        "trl>=1.0.0",
-        "datasets>=3.0.0",
-        "accelerate>=1.0.0",
-        "peft>=0.13.0",
-        "safetensors>=0.4.0",
-        "huggingface-hub>=0.26.0",
-        "numpy>=1.26.0,<2.0.0",
-        "scipy>=1.12.0",
+        # Pinned to the uv.lock frozen versions (see requirements.txt).
+        "torch==2.7.1",
+        "transformers==5.5.4",
+        "trl==1.2.0",
+        "datasets==4.8.4",
+        "accelerate==1.13.0",
+        "peft==0.19.1",
+        "safetensors==0.7.0",
+        "huggingface-hub==1.11.0",
+        "numpy==2.2.6",
+        "scipy==1.17.1",
     )
 )
 
 rl_image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install(
-        "torch>=2.3.0",
-        "numpy>=1.26.0,<2.0.0",
-        "scipy>=1.12.0",
-        "gymnasium>=0.29.0",
-        "stable-baselines3>=2.3.0",
+        # Pinned to the uv.lock frozen versions (see requirements.txt).
+        "torch==2.7.1",
+        "numpy==2.2.6",
+        "scipy==1.17.1",
+        "gymnasium==1.2.3",
+        "stable-baselines3==2.8.0",
     )
 )
 

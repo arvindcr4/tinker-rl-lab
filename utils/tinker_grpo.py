@@ -1,28 +1,48 @@
+from __future__ import annotations
+
+import random
+from typing import Any, Callable, Dict, Sequence, Tuple
+
 import torch, tinker, tinker.types as T
 from transformers import AutoTokenizer
-import random
+
+
+def _await_remote(future: Any, what: str) -> Any:
+    """Block on a Tinker remote future, adding context on failure."""
+    try:
+        return future.result()
+    except Exception as exc:
+        raise RuntimeError(f"Tinker remote call failed during {what}: {exc}") from exc
 
 
 def run_grpo_training(
-    exp_name,
-    model_name,
-    rank,
-    steps,
-    lr,
-    group_size,
-    batch_size,
-    save_every,
-    examples,
-    reward_fn,
-    max_tokens=512,
-    temperature=0.8,
-    top_p=0.95,
-):
+    exp_name: str,
+    model_name: str,
+    rank: int,
+    steps: int,
+    lr: float,
+    group_size: int,
+    batch_size: int,
+    save_every: int,
+    examples: Sequence[Tuple[str, str] | Tuple[str, str, Any]],
+    reward_fn: Callable[..., float],
+    max_tokens: int = 512,
+    temperature: float = 0.8,
+    top_p: float = 0.95,
+) -> Dict[str, Any]:
     print(f"[{exp_name}] Connecting to Tinker...")
-    svc = tinker.ServiceClient(base_url=None)
-    tc = svc.create_lora_training_client(base_model=model_name, rank=rank)
-    tok = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    w0 = tc.save_weights_for_sampler(name="s0").result()
+    try:
+        svc = tinker.ServiceClient(base_url=None)
+        tc = svc.create_lora_training_client(base_model=model_name, rank=rank)
+    except Exception as exc:
+        raise RuntimeError(f"[{exp_name}] failed to connect to Tinker: {exc}") from exc
+    try:
+        tok = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+    except Exception as exc:
+        raise RuntimeError(
+            f"[{exp_name}] failed to load tokenizer for {model_name}: {exc}"
+        ) from exc
+    w0 = _await_remote(tc.save_weights_for_sampler(name="s0"), "initial save_weights_for_sampler")
     sc = tc.create_sampling_client(model_path=w0.path)
     print(f"[{exp_name}] Run: {tc.model_id}")
 
@@ -50,9 +70,10 @@ def run_grpo_training(
             if len(pid) > 1024:
                 pid = pid[:1024]
             sp = T.SamplingParams(max_tokens=max_tokens, temperature=temperature, top_p=top_p)
-            resp = sc.sample(
-                T.ModelInput.from_ints(pid), num_samples=group_size, sampling_params=sp
-            ).result()
+            resp = _await_remote(
+                sc.sample(T.ModelInput.from_ints(pid), num_samples=group_size, sampling_params=sp),
+                f"sampling (step {step})",
+            )
 
             rews = []
             for r in resp.sequences:
@@ -87,8 +108,14 @@ def run_grpo_training(
             continue
 
         _adv = all_advs
-        result = tc.forward_backward_custom(data=all_data, loss_fn=loss_fn).result()
-        tc.optim_step(T.AdamParams(learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
+        result = _await_remote(
+            tc.forward_backward_custom(data=all_data, loss_fn=loss_fn),
+            f"forward_backward_custom (step {step})",
+        )
+        _await_remote(
+            tc.optim_step(T.AdamParams(learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8)),
+            f"optim_step (step {step})",
+        )
 
         avg = sum(batch_r) / len(batch_r)
         step_rewards.append(avg)
@@ -104,12 +131,15 @@ def run_grpo_training(
 
         if (step + 1) % save_every == 0:
             tc.save_state(name=f"s{step + 1}")
-            ckpt = tc.save_weights_for_sampler(name=f"s{step + 1}").result()
+            ckpt = _await_remote(
+                tc.save_weights_for_sampler(name=f"s{step + 1}"),
+                f"checkpoint save s{step + 1}",
+            )
             sc = tc.create_sampling_client(model_path=ckpt.path)
             print(f"[{exp_name}]   -> ckpt s{step + 1}")
 
     tc.save_state(name="final")
-    f = tc.save_weights_for_sampler(name="final").result()
+    f = _await_remote(tc.save_weights_for_sampler(name="final"), "final save_weights_for_sampler")
     last10 = step_rewards[-10:]
     avg10 = sum(last10) / len(last10) if last10 else 0
     first5 = step_rewards[:5]
@@ -131,3 +161,20 @@ def run_grpo_training(
     print(f"[{exp_name}] Run ID: {tc.model_id}")
     print(f"[{exp_name}] Sampler: {f.path}")
     print(f"[{exp_name}] Reward trace: {[round(r, 3) for r in step_rewards]}")
+
+    return {
+        "exp_name": exp_name,
+        "model_name": model_name,
+        "rank": rank,
+        "steps": steps,
+        "completed_steps": len(step_rewards),
+        "failed": len(step_rewards) < steps,
+        "first5_avg": avg_first5,
+        "last10_avg": avg10,
+        "peak": max_r,
+        "zero_loss_steps": zero_loss_steps,
+        "zero_reward_steps": zero_reward_steps,
+        "reward_trace": step_rewards,
+        "run_id": tc.model_id,
+        "sampler_path": f.path,
+    }

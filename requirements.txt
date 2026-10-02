@@ -25,12 +25,12 @@ tokenizers>=0.22.0,<0.24.0
 
 # --- RL Libraries ---
 stable-baselines3>=2.3.0,<2.5.0
-gymnasium>=0.29.0,<0.30.0
+gymnasium==1.2.3
 tianshou>=1.1.0,<1.2.0
 d3rlpy>=2.6.0,<2.8.0
 
 # --- Tinker & Atropos ---
-tinker>=0.5.0
+tinker==0.24.1
 tinker-cookbook>=0.2.0
 atroposlib>=0.1.0
 
@@ -47,7 +47,7 @@ scikit-learn>=1.5.0,<1.7.0
 
 # --- Experiment Tracking (E1-locked) ---
 wandb==0.21.0
-codecarbon>=2.0.0
+codecarbon==3.2.8
 
 # --- Web Server (Atropos) ---
 fastapi>=0.115.0,<0.116.0
@@ -62,8 +62,8 @@ pyyaml>=6.0.0,<6.1.0
 jsonlines>=4.0.0,<4.1.0
 
 # --- Evaluation ---
-fschat>=0.2.33
-openai>=1.0.0
+fschat==0.2.36
+openai==2.45.0
 
 # --- Testing ---
 pytest>=8.3.0,<8.4.0

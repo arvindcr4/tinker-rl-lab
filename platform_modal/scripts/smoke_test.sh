@@ -28,9 +28,12 @@
 # =============================================================================
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# NOTE: this script lives in platform_modal/scripts/, two levels below the
+# repo root — keep the `/../..` in sync with that location.
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
+START_TS=$(date +%s)
 SMOKE_LOG="${SMOKE_LOG:-/tmp/tinkerrl_smoke.log}"
 
 : > "$SMOKE_LOG"
@@ -162,12 +165,12 @@ ok "grpo math"
 step 6 "$TOTAL" "Docstring / script surface check"
 "$PY" - <<'PY' 2>&1 | tee -a "$SMOKE_LOG"
 import importlib.util, pathlib
-for p in ["grpo_gsm8k_base.py", "utils/seed.py", "utils/stats.py",
+for p in ["platform_tinker/grpo_gsm8k_base.py", "utils/seed.py", "utils/stats.py",
          "platform_modal/scripts/run_seeds.sh", "REPRODUCE.md", "ARTIFACT.md", "Dockerfile"]:
     assert pathlib.Path(p).exists(), f"missing required artifact file: {p}"
 # Just parse the main experiment script to catch syntax errors
 import ast
-ast.parse(pathlib.Path("grpo_gsm8k_base.py").read_text())
+ast.parse(pathlib.Path("platform_tinker/grpo_gsm8k_base.py").read_text())
 print("  required artifact files present and parseable")
 PY
 ok "surface"
@@ -177,7 +180,7 @@ if [[ -n "${TINKER_API_KEY:-}" ]]; then
     step 7 "$TOTAL" "Tinker wire-protocol (3-step GRPO on Qwen3.5-4B, LoRA r=4)"
     # Tiny run: 3 steps × batch 1 × group 2, LoRA rank 4 — designed to finish
     # in ~3–5 min on Tinker's smallest tier and cost < $0.25.
-    timeout 480 "$PY" grpo_gsm8k_base.py \
+    timeout 480 "$PY" platform_tinker/grpo_gsm8k_base.py \
         --model "Qwen/Qwen3.5-4B" \
         --seed 42 \
         --rank 4 \

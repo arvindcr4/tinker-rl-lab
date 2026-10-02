@@ -41,11 +41,17 @@ def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List
     pattern = os.path.join(results_dir, experiment, "seed_*", "*.jsonl")
     for filepath in sorted(glob.glob(pattern)):
         seed_dir = os.path.basename(os.path.dirname(filepath))
-        seed = int(seed_dir.replace("seed_", ""))
+        try:
+            seed = int(seed_dir.replace("seed_", ""))
+        except ValueError:
+            continue
         metrics = []
         with open(filepath, "r") as f:
             for line in f:
-                data = json.loads(line.strip())
+                line = line.strip()
+                if not line:
+                    continue
+                data = json.loads(line)
                 metrics.append(data)
         seed_results[seed] = metrics
     return seed_results
@@ -69,10 +75,21 @@ def compute_bootstrap_ci(
     Returns:
         (mean, lower_ci, upper_ci)
     """
+    scores = np.asarray(scores, dtype=float).ravel()
+    if scores.size == 0:
+        raise ValueError("compute_bootstrap_ci requires at least one score")
+    if not 0.0 < confidence < 1.0:
+        raise ValueError(f"confidence must be in (0, 1), got {confidence}")
+
     if rng is None:
         rng = np.random.default_rng(42)
 
     n = len(scores)
+    if n == 1:
+        # A single observation carries no sampling spread: the CI collapses
+        # to the observation itself instead of bootstrapping noise.
+        mean = float(scores[0])
+        return mean, mean, mean
     bootstrap_means = np.array(
         [np.mean(rng.choice(scores, size=n, replace=True)) for _ in range(n_bootstrap)]
     )
@@ -94,10 +111,20 @@ def welch_ttest(scores_a: np.ndarray, scores_b: np.ndarray) -> dict:
     """
     from scipy import stats
 
+    scores_a = np.asarray(scores_a, dtype=float).ravel()
+    scores_b = np.asarray(scores_b, dtype=float).ravel()
+    if scores_a.size < 2 or scores_b.size < 2:
+        raise ValueError("welch_ttest requires at least two scores per group")
+    if not np.all(np.isfinite(scores_a)) or not np.all(np.isfinite(scores_b)):
+        raise ValueError("welch_ttest requires finite scores")
+
     t_stat, p_value = stats.ttest_ind(scores_a, scores_b, equal_var=False)
-    effect_size = (np.mean(scores_a) - np.mean(scores_b)) / np.sqrt(
-        (np.var(scores_a) + np.var(scores_b)) / 2
-    )
+    pooled = np.sqrt((np.var(scores_a) + np.var(scores_b)) / 2)
+    if pooled == 0:
+        # Zero pooled variance (constant inputs): no measurable effect.
+        effect_size = 0.0
+    else:
+        effect_size = (np.mean(scores_a) - np.mean(scores_b)) / pooled
 
     return {
         "t_statistic": float(t_stat),
@@ -122,6 +149,11 @@ def mann_whitney_u(scores_a: np.ndarray, scores_b: np.ndarray) -> dict:
     Reference: Colas et al. (2019), Section 4.2
     """
     from scipy import stats
+
+    scores_a = np.asarray(scores_a, dtype=float).ravel()
+    scores_b = np.asarray(scores_b, dtype=float).ravel()
+    if scores_a.size == 0 or scores_b.size == 0:
+        raise ValueError("mann_whitney_u requires at least one score per group")
 
     u_stat, p_value = stats.mannwhitneyu(scores_a, scores_b, alternative="two-sided")
 
@@ -160,12 +192,20 @@ def plot_learning_curves_with_ci(
             curve = [m.get(metric_key, 0) for m in metrics_list]
             all_curves.append(curve)
 
+        if not all_curves:
+            raise ValueError(f"No curves to plot for algorithm {algo_name!r}")
         # Truncate to shortest run
         min_len = min(len(c) for c in all_curves)
+        if min_len == 0:
+            raise ValueError(f"Empty curves for algorithm {algo_name!r}")
         all_curves = np.array([c[:min_len] for c in all_curves])
 
         mean = np.mean(all_curves, axis=0)
-        se = np.std(all_curves, axis=0, ddof=1) / np.sqrt(len(all_curves))
+        if len(all_curves) < 2:
+            # std(ddof=1) is undefined for a single seed: no spread to shade.
+            se = np.zeros_like(mean)
+        else:
+            se = np.std(all_curves, axis=0, ddof=1) / np.sqrt(len(all_curves))
         steps = np.arange(1, min_len + 1)
 
         ax.plot(steps, mean, label=algo_name, color=colors[idx], linewidth=2)
@@ -204,8 +244,13 @@ def generate_results_table(
     """
     rows = []
     for algo_name, scores in results.items():
+        scores = np.asarray(scores, dtype=float).ravel()
         mean, ci_lower, ci_upper = compute_bootstrap_ci(scores)
-        se = np.std(scores, ddof=1) / np.sqrt(len(scores))
+        if len(scores) < 2:
+            # std(ddof=1) is undefined for n < 2: report zero spread.
+            se = 0.0
+        else:
+            se = np.std(scores, ddof=1) / np.sqrt(len(scores))
         rows.append(
             {
                 "Algorithm": algo_name,
@@ -336,7 +381,10 @@ def main():
         if final_scores:
             scores_arr = np.array(final_scores)
             mean, ci_lower, ci_upper = compute_bootstrap_ci(scores_arr)
-            se = np.std(scores_arr, ddof=1) / np.sqrt(len(scores_arr))
+            if len(scores_arr) < 2:
+                se = 0.0
+            else:
+                se = np.std(scores_arr, ddof=1) / np.sqrt(len(scores_arr))
             print(
                 f"  Final score: {mean:.4f} ± {se:.4f} (95% CI: [{ci_lower:.4f}, {ci_upper:.4f}])"
             )

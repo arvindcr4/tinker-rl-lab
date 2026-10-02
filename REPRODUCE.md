@@ -248,7 +248,7 @@ Requires `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET`.
 ```bash
 for exp in platform_hybrid/experiments/implementations/{trl_grpo_math,sb3_ppo_math,\
 cleanrl_ppo_math,tianshou_ppo_math}.py; do
-    ./scripts/run_seeds.sh "python $exp" 42 123 456 789 1024
+    bash platform_modal/scripts/run_seeds.sh "python $exp" 42 123 456 789 1024
 done
 ```
 

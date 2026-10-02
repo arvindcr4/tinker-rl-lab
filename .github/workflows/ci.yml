@@ -34,8 +34,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.11", "3.12"]
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@v7
       - name: Set up Python ${{ matrix.python-version }}
@@ -46,7 +48,42 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install uv==0.10.11
-          uv sync --locked --extra dev --python python
+          timeout 15m uv sync --locked --extra dev --python python
+      - name: Run sharded unit tests
+        run: |
+          # NOTE: pytest-xdist is not a dependency (pyproject/requirements pin
+          # pytest without xdist), so shard by test file over the matrix
+          # instead of `pytest -n auto`. If xdist is ever added to the dev
+          # extra, prefer `pytest -n auto` and drop this splitter.
+          mapfile -t FILES < <(find tests -name 'test_*.py' | sort)
+          TOTAL=2
+          SHARD=${{ matrix.shard }}
+          SELECTED=()
+          for i in "${!FILES[@]}"; do
+            if [ "$((i % TOTAL))" -eq "$((SHARD - 1))" ]; then
+              SELECTED+=("${FILES[$i]}")
+            fi
+          done
+          echo "Shard $SHARD/$TOTAL: ${#SELECTED[@]} files"
+          timeout 20m uv run --no-sync pytest "${SELECTED[@]}" -v --tb=short
+      - name: Check current thesis evidence and offline demo
+        run: timeout 10m make submission-check
+      - name: Test seed utility
+        run: timeout 5m uv run --no-sync python -c "from utils.seed import set_global_seed; info = set_global_seed(42); print('Seed set successfully:', info)"
+      - name: Test imports
+        run: |
+          timeout 5m uv run --no-sync python -c "from utils.seed import set_global_seed, get_seed_from_args"
+          timeout 5m uv run --no-sync python -c "from utils.stats import bootstrap_ci, compute_iqm"
+
+  docs-build:
+    # LaTeX/paper builds live in this job so a doc-toolchain failure never
+    # gates the unit-test jobs above. Previously the Tectonic compiles ran
+    # inside test-core; they now run here, against a scratch outdir, without
+    # changing author PDFs.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
       - name: Install checksum-pinned Tectonic
         env:
           TECTONIC_URL: https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-x86_64-unknown-linux-musl.tar.gz
@@ -57,23 +94,30 @@ jobs:
           mkdir -p "$RUNNER_TEMP/tex-bin"
           tar -xzf "$RUNNER_TEMP/tectonic.tar.gz" -C "$RUNNER_TEMP/tex-bin" tectonic
           echo "$RUNNER_TEMP/tex-bin" >> "$GITHUB_PATH"
-      - name: Warm TeX cache without changing author PDFs
+      - name: Compile papers to a scratch outdir
         working-directory: platform_tinker/reports/final
         run: |
           mkdir -p "$RUNNER_TEMP/latex-audit"
-          tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" grpo_agentic_llm_paper.tex
-          tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" grpo_agentic_llm_paper_anonymous.tex
-          tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" supplementary_appendix.tex
-      - name: Run tests
-        run: uv run --no-sync pytest tests/ -v --tb=short
-      - name: Check current thesis evidence and offline demo
-        run: make submission-check
-      - name: Test seed utility
-        run: uv run --no-sync python -c "from utils.seed import set_global_seed; info = set_global_seed(42); print('Seed set successfully:', info)"
-      - name: Test imports
-        run: |
-          uv run --no-sync python -c "from utils.seed import set_global_seed, get_seed_from_args"
-          uv run --no-sync python -c "from utils.stats import bootstrap_ci, compute_iqm"
+          timeout 10m tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" grpo_agentic_llm_paper.tex
+          timeout 10m tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" grpo_agentic_llm_paper_anonymous.tex
+          timeout 10m tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" supplementary_appendix.tex
+
+  legacy-scripts:
+    # Root one-shot drivers (train_grpo_test.py, train_test_idpo.py,
+    # verify_*.py) import heavy model weights at module scope, so CI must
+    # never import or execute them. This job byte-compiles them only:
+    # no imports run, no weights download. Their bodies are intentionally
+    # untouched; this job config is the entire CI coverage for them.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Compile-check heavy root drivers (no imports, no weights)
+        run: timeout 5m python -m py_compile train_grpo_test.py train_test_idpo.py verify_*.py
 
   package:
     runs-on: ubuntu-latest
@@ -111,7 +155,7 @@ jobs:
           pip install -e "."
       - name: Test ArithmeticEnv (SB3 version)
         run: |
-          python -c "
+          timeout 10m python -c "
           import sys, os
           sys.path.insert(0, '.')
           # Execute the module's top section (up to the first def main)
@@ -145,7 +189,7 @@ jobs:
           pip install numpy torch gymnasium
       - name: Verify seed determinism
         run: |
-          python -c "
+          timeout 5m python -c "
           import sys
           sys.path.insert(0, '.')
           from utils.seed import set_global_seed

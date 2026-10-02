@@ -76,6 +76,11 @@ synthetic reward groups and a separately hash-checked recorded artifact. It
 proves mechanism and internal consistency, not model improvement. The historical
 19 September 11/11 ledger receipt is not a current all-results validation.
 
+**Shared quality gates:** result statistics follow [BASELINES.md](BASELINES.md)
+(10-seed set, mean ± standard error, 95% bootstrap CI, IQM). Reviewer-side
+rerun tolerance is ±5 percentage points on last-10 and ±10 points on peak
+(see [REPRODUCE.md §8](REPRODUCE.md) for justification).
+
 ## Evidence and limits
 
 | Evidence | Location | Interpretation |

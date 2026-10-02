@@ -71,8 +71,10 @@ def set_global_seed(seed: int = 42, deterministic_cudnn: bool = True) -> dict:
                 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
                 try:
                     torch.use_deterministic_algorithms(True)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    raise RuntimeError(
+                        f"Failed to enable deterministic algorithms (seed={seed}): {exc}"
+                    ) from exc
         else:
             torch_info["cuda_available"] = False
     except ImportError:

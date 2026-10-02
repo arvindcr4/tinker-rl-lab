@@ -66,11 +66,28 @@ All results should be reported with:
 
 ```bash
 # Random baseline (built into each experiment)
-python experiments/implementations/sb3_ppo_math.py --seed 42
+python platform_hybrid/experiments/implementations/sb3_ppo_math.py --seed 42
 
 # Run across multiple seeds
-bash scripts/run_seeds.sh experiments/implementations/sb3_ppo_math.py
+bash platform_modal/scripts/run_seeds.sh platform_hybrid/experiments/implementations/sb3_ppo_math.py
 ```
+
+## Quality gates
+
+Baseline claims must pass the same gates as the submission package
+(see `SUBMISSION.md` "Verify without GPU, credentials, or network"):
+
+```bash
+uv run --no-sync pytest tests/
+uv run --no-sync python tools/check_thesis_evidence.py
+uv run --no-sync python submission/demo/run_demo.py --self-test
+```
+
+Statistics follow the methodology above: the 10-seed set
+`{42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768}`, mean ± standard
+error, 95% bootstrap confidence intervals, and IQM. Reviewer-side rerun
+tolerance is ±5 percentage points on last-10 and ±10 points on peak
+(see `REPRODUCE.md` §8 for justification).
 
 ## References
 

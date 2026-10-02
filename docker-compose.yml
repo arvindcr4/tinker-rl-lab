@@ -11,8 +11,9 @@ services:
         GIT_REF: ${GIT_REF:-unknown}
         BUILD_DATE: ${BUILD_DATE:-unknown}
     image: tinker-rl-lab:latest
-    # Use host IPC to avoid shared memory issues with PyTorch DataLoader workers
-    ipc: host
+    # Least privilege: no `ipc: host`. If a PyTorch DataLoader with many
+    # workers ever hits /dev/shm exhaustion, prefer a bounded `shm_size`
+    # (e.g. `shm_size: 256m`) over sharing the host IPC namespace.
     deploy:
       resources:
         reservations:

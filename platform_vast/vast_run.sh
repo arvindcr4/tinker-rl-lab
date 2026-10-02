@@ -10,8 +10,11 @@ nvidia-smi | head -8
 
 # ── 1. Install dependencies ──────────────────────────────────────────────────
 pip install -q "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
-pip install -q 'trl>=0.9.0' 'peft>=0.12.0' 'accelerate>=0.33.0'
-pip install -q math-verify latex2sympy2-extended datasets wandb pyyaml
+# Pinned to the uv.lock frozen versions (see requirements.txt). math-verify
+# and latex2sympy2-extended are intentionally unpinned: they are not in
+# uv.lock, so no frozen version exists to align to.
+pip install -q 'trl==1.2.0' 'peft==0.19.1' 'accelerate==1.13.0'
+pip install -q math-verify latex2sympy2-extended 'datasets==4.8.4' 'wandb==0.21.0' 'pyyaml==6.0.3'
 echo "=== $(date) | deps installed ==="
 
 # ── 2. Clone repo ────────────────────────────────────────────────────────────

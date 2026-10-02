@@ -37,9 +37,9 @@ dependencies = [
     "datasets==4.8.4",
     "huggingface-hub==1.11.0",
     "wandb==0.21.0",
-    "gymnasium>=0.29.0",
-    "tinker>=0.24.0,<0.25.0",
-    "codecarbon>=2.0.0",
+    "gymnasium==1.2.3",
+    "tinker==0.24.1",
+    "codecarbon==3.2.8",
 ]
 
 [project.scripts]
@@ -66,14 +66,14 @@ d3rlpy = [
     "d3rlpy>=2.0.0",
 ]
 eval = [
-    "fschat>=0.2.33",
-    "openai>=1.0.0",
+    "fschat==0.2.36",
+    "openai==2.45.0",
 ]
 all = [
     "accelerate==1.13.0",
     "d3rlpy>=2.0.0",
-    "fschat>=0.2.33",
-    "openai>=1.0.0",
+    "fschat==0.2.36",
+    "openai==2.45.0",
     "peft==0.19.1",
     "stable-baselines3>=2.1.0",
     "tensorboard>=2.14.0",

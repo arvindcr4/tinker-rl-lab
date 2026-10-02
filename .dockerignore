@@ -29,3 +29,9 @@ logs/
 archive/
 blind_review/tinker-rl-lab-anon.tar.gz
 blind_review/tinker-rl-lab-anon/
+
+# Generated data / run outputs (audit item 7): keeps COPY . . lean
+*.csv
+outputs/
+output/
+cache/

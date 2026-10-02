@@ -54,6 +54,8 @@ class VERLTrainer:
         self.loss_history: List[float] = []
         self.start_time: Optional[float] = None
         self.mode: str = "dryrun"  # set to "real" once verl driver is wired
+        self.dryrun_seed: int = 42
+        self.failed_steps: List[int] = []
 
     async def setup(self) -> None:
         """Initialize verl components or the dryrun fallback.
@@ -100,7 +102,8 @@ class VERLTrainer:
             )
 
         reward_val = self._dryrun_reward(step)
-        loss_val = 1.0 / (step + 1) + float(np.random.default_rng(step).normal(0, 0.05))
+        loss_rng = np.random.default_rng(self.dryrun_seed + step)
+        loss_val = 1.0 / (step + 1) + float(loss_rng.normal(0, 0.05))
         self.loss_history.append(loss_val)
         self.reward_history.append(reward_val)
 
@@ -114,8 +117,16 @@ class VERLTrainer:
         print(f"  step={step} loss={loss_val:.4f} reward={reward_val:.4f}")
         return metrics
 
-    async def run(self) -> Dict[str, Any]:
-        """Main training loop (dryrun path for smoke-testing)."""
+    async def run(self, strict: bool = True) -> Dict[str, Any]:
+        """Main training loop (dryrun path for smoke-testing).
+
+        Args:
+            strict: fail fast — re-raise the first per-step exception instead
+                of silently returning a partial trace. When False, the loop
+                still stops at the first failure but the returned dict carries
+                the failure details (see ``failed`` / ``failed_steps``) so a
+                partial trace can never be mistaken for a win.
+        """
         self.start_time = time.time()
         print("\n" + "=" * 60)
         print("Starting verl Training")
@@ -127,12 +138,16 @@ class VERLTrainer:
             print("Use run_verl_training() for real runs; calling run() in dryrun mode.")
             self.mode = "dryrun"
 
+        self.failed_steps = []
         for step in range(self.config.epochs):
             try:
                 await self.train_step(step)
                 self.current_step = step + 1
             except Exception as exc:
                 print(f"Error in step {step}: {exc}")
+                self.failed_steps.append(step)
+                if strict:
+                    raise
                 break
 
         duration = time.time() - self.start_time
@@ -149,6 +164,8 @@ class VERLTrainer:
         return {
             "framework": "verl",
             "mode": self.mode,
+            "failed": bool(self.failed_steps),
+            "failed_steps": list(self.failed_steps),
             "final_step": self.current_step,
             "peak_reward": peak,
             "last10_avg": last10,

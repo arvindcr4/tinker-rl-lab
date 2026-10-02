@@ -162,3 +162,14 @@ outputs/e1_e14_small_scale_2026-09-26/E5/raw/archipelago_output/**/world_*.zip
 outputs/e1_e14_small_scale_2026-09-26/E5/raw/archipelago_output/**/final_snapshot.*
 outputs/e1_e14_small_scale_2026-09-26/E2/raw/effibench_dataset_with_difficulty_and_algorithm.json
 outputs/e1_e14_small_scale_2026-09-26/E7/code/BinaryAudit/
+
+# Generated data / run outputs (audit item 7): never track raw or generated data
+*.csv
+outputs/*
+!outputs/PES_Phase2_Third_Review_2026-09-24/
+output/
+cache/
+outputs/PES_Phase2_Third_Review_2026-09-24/*
+!outputs/PES_Phase2_Third_Review_2026-09-24/thesis/
+outputs/PES_Phase2_Third_Review_2026-09-24/thesis/*
+!outputs/PES_Phase2_Third_Review_2026-09-24/thesis/Thesis_Report_ArvindCR.pdf

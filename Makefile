@@ -52,6 +52,9 @@ public-check:
 	$(PYTHON) -B -m unittest discover -s tests -p 'test_public*.py' -v
 
 docs-check:
+	@test -f PUBLIC_RESEARCH_CHECKS.md
+	@test -f BUILD_PUBLIC_RESEARCH.md
+	@test -f LATEX_AUDIT.md
 	@test -f SUBMISSION.md
 	@test -f README.md
 	@test -f REPRODUCE.md

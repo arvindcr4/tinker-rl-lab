@@ -42,6 +42,10 @@ The dedicated `public-research` CI job runs the same command on Python 3.11,
 3.12 and 3.13. The normal non-LaTeX test suite also discovers these regressions.
 A local pass does not imply that hosted CI has run or passed.
 
+For a native PDF rebuild into new output files, use the separate
+[safe public-document rebuild wrapper](BUILD_PUBLIC_RESEARCH.md). It preserves
+the reviewed snapshot and requires a compatible existing TeX toolchain/cache.
+
 ## Limits
 
 The public records preserve 11/64 frozen events and a separate 3/64 conservative

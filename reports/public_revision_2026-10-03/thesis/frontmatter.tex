@@ -1,0 +1,233 @@
+%=====================================================================
+% Front matter: title page, certificate, declaration, acknowledgement,
+% abstract, contents, list of figures, list of tables.
+%=====================================================================
+\begin{titlepage}
+\begin{tikzpicture}[remember picture,overlay]
+  \draw[line width=2.5pt] ([xshift=0.6in,yshift=-0.6in]current page.north west)
+    rectangle ([xshift=-0.6in,yshift=0.6in]current page.south east);
+\end{tikzpicture}
+\centering
+\thispagestyle{empty}
+\begin{spacing}{1.0}
+\vspace*{0.02in}
+
+\includegraphics[width=1.6in]{figures/pes_logo.png}\par
+\vspace{0.2in}
+{\large\itshape Dissertation on\par}
+\vspace{0.5em}
+{\Large\bfseries ``Tinker RL Lab:\\[0.35em]
+Post-Training of Large Language Models''\par}
+\vspace{0.4em}
+{\normalsize A multi-framework training harness and studies of GRPO signal starvation\par}
+\vspace{0.4em}
+{\small\bfseries DERIVED PUBLIC C1 COVERAGE REVISION\quad 3 October 2026\par}
+
+\vfill
+
+{\normalsize\itshape Submitted in partial fulfilment of the requirements for the award of the degree of\par}
+\vspace{0.6em}
+{\large\bfseries Master of Technology\par}
+\vspace{0.2em}
+{\normalsize\bfseries in\par}
+\vspace{0.2em}
+{\large\bfseries Data Science and Machine Learning\par}
+\vspace{0.2em}
+{\large\bfseries UE20CS972 -- Project Phase -- 2\par}
+
+\vfill
+
+{\normalsize\itshape Submitted by:\par}
+\vspace{0.3em}
+{\large\bfseries Arvind C R\par}
+
+\vspace{0.5em}
+{\normalsize\itshape Under the guidance of\par}
+\vspace{0.2em}
+{\large\bfseries Ramesh Prakash Guledgudd\par}
+
+\vspace{0.6em}
+{\normalsize\bfseries\color{pesmaroon} May 2026 -- October 2026\par}
+
+\vfill
+
+{\normalsize\bfseries DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\par}
+{\normalsize FACULTY OF ENGINEERING\par}
+{\large\bfseries PES UNIVERSITY\par}
+{\footnotesize (Established under Karnataka Act No.\ 16 of 2013)\\
+Electronic City, Hosur Road, Bengaluru -- 560 100, Karnataka, India\par}
+\end{spacing}
+\end{titlepage}
+
+%---------------------------------------------------------------------
+
+
+%---------------------------------------------------------------------
+\chapter*{Public Derivative Revision Record}
+\addcontentsline{toc}{chapter}{Public Derivative Revision Record}
+This derived public revision is based on the 311-page coverage-recovery manuscript dated 3 October 2026. It preserves the scientific findings and their stated limitations while omitting private operational identifiers, account-wide inventories, access correspondence, monetary account details, signature images and student registration data. Private provider exports and original recovery archives are not included. This derivative is not a new institutional certification and does not carry the historical certificate. Historical manuscripts and evidence remain unchanged.
+
+Six original files resolved five named primary-file gaps in the source audit. The public text retains the scientific recovery conclusions and the E14 denominator correction without disclosing the private source inventory. Appendix I explains the publication boundary; the public availability manifest describes what is included and withheld.
+
+The frozen C1 endpoint is 11/64 (17.19\%; Wilson 95\% interval 9.88--28.21\%). Reference errors, material ambiguities and unit mismatches limit its mathematical interpretation. A separate conservative review corroborates three numerical recovery witnesses on the unchanged 64-question denominator. The two counts must be read together; neither is evidence of training improvement.
+
+New material appears in Sections 1.5, 4.6, 7.5, 9.3 and B.13 and Appendix G. Historical V2 results in Section 7.4 remain separate and unpooled. Appendix H is the expanded evidence map. The included case ledger retains classifications, hashes and disagreements. Source descriptions distinguish bundled editable content from evidence retained elsewhere. No frozen source, reference label, selection or primary score was changed. Appendix I reports bounded scientific coverage methods, public-source verification and the remaining limits without private provider inventories. Appendix A corrects historical registry scope and the P11 evidence-tier wording; the reported experimental values are unchanged.
+
+\chapter*{Declaration}
+\addcontentsline{toc}{chapter}{Declaration}
+\thispagestyle{plain}
+
+I declare that this project report is my own work. Where the work of others has
+been used, it is cited and acknowledged. The matter embodied in this report has
+not been submitted, in part or in full, to this or any other university or
+institution for the award of any other degree or diploma.
+
+The multi-framework benchmark infrastructure, the baseline framework
+integrations, and the initial GRPO/PPO/DPO experimentation were produced by the
+Semester-3 project group, of which I was a member, and are inherited here as
+the shared foundation. The research direction, the experimental expansion, the
+statistical analyses, the P1--P8 internal reports, the reporting and registry
+artefacts, the adaptive group-size controller, the applied fraud study, and the
+E1--E14 evaluation campaign reported in this document are my
+individual contribution, carried out under the guidance of my project guide.
+
+Quantitative results are tied to named evidence. Appendix B distinguishes
+recovered primary campaign files, inspectable artefacts and the remaining
+limits on underlying payload verification. Incomplete, blocked and negative
+results are reported rather than omitted. The boundary between inherited and
+individual work is stated precisely in \texttt{platform\_hybrid/sem 4
+work/PROVENANCE.md}.
+
+\vspace{0.3in}
+\noindent\begin{tabular}{@{}p{2.6in}@{}}
+
+\dotfill \\
+\textbf{Arvind C R} \\
+
+\end{tabular}
+
+%---------------------------------------------------------------------
+% NEEDS AUTHOR CONFIRMATION: drafted from the tools recorded in the repository
+% (git Co-Authored-By trailers, frontier_synthesis_*.tex, curriculum_opening/
+% FINDINGS.md, zvf-program/jev_lab/, thesis_review_2026-09-27/). Confirm the
+% list is complete and matches PES policy wording before submission.
+\chapter*{Declaration on the Use of AI Tools}
+\addcontentsline{toc}{chapter}{Declaration on the Use of AI Tools}
+\thispagestyle{plain}
+
+The following AI tools were used in this work, as recorded in the project
+repository.
+
+\begin{itemize}
+\item \textbf{Coding and writing assistants.} Anthropic Claude models and
+OpenAI Codex were used to write and revise code, analysis scripts and
+documents, including drafts of this report. Commits they contributed carry a
+\texttt{Co-Authored-By} trailer in the git history.
+\item \textbf{Frontier-model synthesis.} ChatGPT Pro Extended and Gemini Deep
+Think produced proposed derivations and reasoning recorded in
+\texttt{platform\_hybrid/paper/sections/frontier\_synthesis\_*.tex}, which those
+documents mark as not being experiments. Where this report uses such a result,
+it states its own derivation (Chapter 6 \S6.3.3).
+\item \textbf{Independent verification.} An LLM verification pass (Kimi,
+6 July 2026) reviewed two single-seed results and flagged both as
+\textsc{suspect}; both were then re-tested and reported as nulls (Chapter 6
+\S6.4.3).
+\item \textbf{Evaluation triage.} The Jev (TypeSafe) judgment harness was used
+in the E1--E14 ledger only for classification, faithfulness and value
+ordering, never for arithmetic (Chapter 4 \S4.5).
+\item \textbf{Review.} The pre-defence self-review of 27 September 2026 and the
+revision of this report that followed it were AI-assisted.
+\item \textbf{Submission preparation.} An AI coding assistant helped revise
+reporting language, harden build and test scripts, check stored arithmetic,
+and inspect the final PDF. Gemini 3.1 Pro reviewed the build and verification
+code through the \texttt{agy} command-line tool. This preparation ran no new
+training or benchmark evaluations and changed no stored experimental results.
+\end{itemize}
+
+No AI assistant generated experimental data: every reported measurement comes
+from an executed run or evaluation recorded in the repository, and simulated
+values are labelled as simulations. The research direction,
+the experimental design, the choice of claims and their final wording are the
+author's responsibility.
+
+%---------------------------------------------------------------------
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+\thispagestyle{plain}
+
+I thank my project guide, \textbf{Ramesh Prakash Guledgudd}, for direction and
+sustained feedback throughout this work, and for the freedom to pursue the
+conservative and negative results that form a significant part of it.
+
+I thank the Semester-3 project group for the shared multi-framework benchmark
+and the baseline integrations on which the Semester-4 studies build. I thank
+the maintainers of the benchmark suites used in the E1--E14 campaign, whose
+native evaluators made an independently checkable evaluation possible, and the
+platforms --- Tinker, Modal, and Google Cloud --- on which the experiments ran.
+
+Finally, I thank the reviewers whose questions at earlier reviews shaped the
+reporting discipline this report depends on: the insistence on stating what a
+number does \emph{not} establish has improved the work materially.
+
+\vspace{0.3in}
+\noindent\textbf{Arvind C R}
+
+%---------------------------------------------------------------------
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\thispagestyle{plain}
+
+This report studies group-relative reinforcement-learning post-training of
+large language models under one methodological commitment: a comparative
+claim is made only when the whole training stack is held fixed except the
+factor under test. It makes four contributions.
+
+\textbf{(1) A recomputable signal-starvation diagnostic and a loss-form
+audit.} The Zero-Variance Fraction (ZVF) is logged per step and recomputed
+from stored reward tensors, with a closed-form Bernoulli null. Reading the
+runners' code distinguishes custom REINFORCE group-mean loops from clipped
+surrogates, nonzero-KL configuration records and unknown managed settings.
+
+\textbf{(2) Stack-conditioned reporting.} A minimum reporting standard and a
+machine-readable stack registry with a \texttt{stackdiff} tool that flags
+label-flip risk between two runs from their records alone.
+
+\textbf{(3) Calibrated negative results.} No reliable scaling law is recovered
+from reward curves across twelve fitted anchors. A same-stack PPO/GRPO
+contrast (0.992 against 0.990, $p = 0.374$, five seeds) and a group-size sweep
+find no detectable difference on saturated, in-distribution arithmetic draws;
+neither establishes equivalence or an optimum. On an unsaturated GSM8K rerun, GRPO exceeds an
+untuned-critic PPO by 5.0 points (paired-$t$ 95\% CI $[1.5, 8.5]$;
+$p=0.016$, exact sign-flip $p=0.0625$ at five seeds), a suggestive
+configuration-specific result; $G = 2$ and $G = 8$ show no detectable
+difference, without establishing equivalence. ZVF has no detectable
+association with held-out accuracy in this sample
+($\rho = 0.27$, 95\% CI $[-0.37, 0.88]$). An adaptive group-size controller
+derived from ZVF reports zero rescue under a plug-in counterfactual model;
+92\% of its escalations target observed all-correct groups, without proving
+latent certainty or impossibility of recovery with fresh rollouts.
+
+\textbf{(4) An evaluation-governance protocol.} One lightly trained actor
+(Qwen3.6-35B-A3B with a LoRA adapter, 40 training steps) is evaluated on
+fourteen suites outside its training data under native graders at pinned revisions, with
+receipts, a no-pooling rule and a per-lane serving audit that traced a
+zero score to a serving defect. Complete scopes include VerilogEval
+($129/312 = 41.35\%$), LAB-Bench ($0.2288$) and AgentDojo benign utility
+($88/97$); six replacement scopes completed on 27 September 2026
+(Chapter~8, Table~8.C); seven original contracts remain externally blocked. A
+paired trained-versus-base rerun on 5--151 identical items per lane finds no
+significant difference in any lane (inconclusive at those sizes). No
+claim of campaign-level improvement over the base model is made.
+
+
+\textbf{C1 diagnostic extension.} Benchmark reference errors, ambiguous wording and equivalent units limit the interpretation of a new frozen-policy study on public GSM8K train. The first 64 of 87 eligible questions from 4,096 screened questions received 24 fresh responses after eight valid, uncapped parser-zero responses. The frozen endpoint is 11/64 (17.19\%; Wilson 95\% interval 9.88--28.21\%). Assistant-assisted reconciliation corroborates three numerical witnesses on the same denominator, while preserving convention-dependent and ambiguous cases and one wrong-reference match. This is conditional diagnostic evidence, not a population estimate, reasoning validation or training gain. A separate, undeployed parser candidate preserves 2,025 previously valid parse objects and admits four unambiguous extractions in a predefined future subset of 2,048 outputs. It does not alter C1's frozen parser-v2 score.
+
+\vspace{0.25in}
+\noindent\textbf{Keywords:} GRPO, RLVR, zero-variance fraction, signal
+starvation, stack-conditioned results, benchmark evaluation, reproducibility,
+evaluation governance, attribution.
+
+%---------------------------------------------------------------------
+\tableofcontents
+\listoffigures
+\listoftables

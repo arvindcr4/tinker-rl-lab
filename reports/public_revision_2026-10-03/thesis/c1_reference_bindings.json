@@ -1,0 +1,74 @@
+{
+  "schema": "public-c1-reference-bindings-v1",
+  "version_date": "2026-10-03",
+  "sources": [
+    {
+      "id": "S1",
+      "description": "Frozen C1 automated endpoint",
+      "sha256": "bd47330e73b0a78352d046e4da2e09a83809e75dfc8dc94c37c94e1e2057d139",
+      "bytes": 7657,
+      "availability": "Reference binding only; underlying source not bundled in this document package"
+    },
+    {
+      "id": "S2",
+      "description": "Reconciled scientific evidence",
+      "sha256": "429f2b2fb4c5953b90584c1fb6070c9b77388217863790d1de83e3513fe7cdd9",
+      "bytes": 44784,
+      "availability": "Reference binding only; underlying source not bundled in this document package"
+    },
+    {
+      "id": "S3",
+      "description": "All eleven event records",
+      "sha256": "c380f55acca47ba122482a512029b89782f78adc3322525db662790fbc5e8e66",
+      "bytes": 324294,
+      "availability": "Reference binding only; underlying source not bundled in this document package"
+    },
+    {
+      "id": "S4",
+      "description": "All sixty four reference classifications",
+      "sha256": "dd87e5de0bfd22ee1854162721e16939b79cb6a71ef8e29c49c7b23af23e4349",
+      "bytes": 396885,
+      "availability": "Reference binding only; underlying source not bundled in this document package"
+    },
+    {
+      "id": "S5",
+      "description": "Unit sensitive response review",
+      "sha256": "458158fc02bd5d890e604ac8270416eed25fd241eb6d48bcadbd3b8c901f5340",
+      "bytes": 39181,
+      "availability": "Reference binding only; underlying source not bundled in this document package"
+    },
+    {
+      "id": "S6",
+      "description": "Review source bindings",
+      "sha256": "fe59d1aed4c416608cefd1689221f5e0e43a1c27e20e81bae5ff466791ca7699",
+      "bytes": 9319,
+      "availability": "Reference binding only; underlying source not bundled in this document package"
+    },
+    {
+      "id": "S7",
+      "description": "Final coverage receipt",
+      "sha256": "f186f8a0f01ba43c10253d80c84420de0ef2687b6f852de4c23f30362101618e",
+      "bytes": 54321,
+      "availability": "Reference binding only; underlying source not bundled in this document package"
+    },
+    {
+      "id": "S8",
+      "description": "Prospective parser result",
+      "sha256": "e67fde101f1311017d63abaa4f6744e5f92fcda790857266ba36000c89bbcd5b",
+      "bytes": 12213,
+      "availability": "Reference binding only; underlying source not bundled in this document package"
+    },
+    {
+      "id": "S9",
+      "description": "Independent prospective parser verification",
+      "sha256": "f6d6fe55ea01c488885cd060839c1ae96e83711dbb9dc0f0d660d75af75d8c3b",
+      "bytes": 6013,
+      "availability": "Reference binding only; underlying source not bundled in this document package"
+    }
+  ],
+  "external_bindings": {
+    "parser_candidate_freeze_sha256": "47378e93c2b8c2133386bde501c344859b5d44f333d8fb4220a104d4e2c7a6a4"
+  },
+  "historical_base_pages": 280,
+  "note": "The bundled c1_case_ledger files preserve the original classifications and hashes. References S1-S13 are retained scientific bindings, not a claim that their original payloads are public."
+}

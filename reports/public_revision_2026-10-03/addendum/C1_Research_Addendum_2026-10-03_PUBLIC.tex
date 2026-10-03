@@ -1,0 +1,621 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[a4paper,left=0.95in,right=0.95in,top=0.85in,bottom=0.85in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{newtxtext,newtxmath}
+\usepackage{array,longtable,booktabs,calc,graphicx,xcolor,setspace}
+\usepackage{seqsplit,xurl,needspace}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={C1 frozen policy diagnostic and reference review: PUBLIC revision},pdfauthor={Arvind C R},pdfsubject={Scientific-only public research addendum dated 2026-10-03}}
+\usepackage{newunicodechar}
+\newunicodechar{×}{\ensuremath{\times}}
+\providecommand{\real}[1]{#1}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\providecommand{\pandocbounded}[1]{#1}
+\DeclareRobustCommand{\longtok}[1]{\texttt{\seqsplit{#1}}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\setlength{\emergencystretch}{3em}
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.18}
+\setstretch{1.16}
+\widowpenalty=10000
+\clubpenalty=10000
+\sloppy
+\begin{document}
+{\Large\bfseries C1 frozen policy diagnostic and reference review\par}
+\vspace{0.5em}
+{\large PUBLIC revision\par}
+{\normalsize Scientific-only derivative of the research addendum\par}
+{\normalsize Arvind C R\quad 3 October 2026\par}
+\vspace{1em}
+This is a distinct scientific-only public revision. The frozen results
+and review judgments are unchanged. The public document does not provide
+full execution provenance. Public records include the selected-case
+classifications, event-response checks, scientific content hashes and
+generation settings; they are not sufficient to independently
+reconstruct or authenticate the full execution history. The empirical
+and review claims below must be read with this source-availability
+limitation.
+
+Benchmark reference errors, ambiguous questions and equivalent units
+limit what this diagnostic can establish. Its frozen parser-defined
+result is \textbf{11/64 questions (17.19\%; Wilson 95\% interval
+9.88-28.21\%)}. Assistant-assisted reconciliation corroborates
+\textbf{three numeric recovery witnesses on the same 64-question
+denominator}. This 3/64 count (4.69\%) describes the support found under
+a conservative review rule; it does not replace the frozen endpoint or
+estimate a population recovery rate. The other eight parser events
+include three convention-dependent interpretations, four materially
+ambiguous cases and one match to an incorrect reference answer.
+
+The study contains no training update. It does not measure useful
+reinforcement-learning gradients, reasoning improvement, controller
+superiority, held-out accuracy or general model capability. The prompts
+are public GSM8K training questions and are fresh only to this campaign.
+Historical V2 evidence remains separate and unpooled.
+
+\section{Frozen design and selection}\label{frozen-design-and-selection}
+
+C1 completed 4,096 fixed-order screening questions with eight
+independently seeded responses per question. Eligibility required all
+eight outputs to be parseable, uncapped and assigned zero exact-match
+reward by frozen parser v2. After the full screen, the first 64 of 87
+eligible questions received 24 additional responses each. Selection was
+truncated deterministically; the 23 other eligible questions were not
+followed up. The primary endpoint is whether at least one of the 24
+fresh responses receives parser-defined exact-match reward one. No
+question was removed or relabeled after review.
+
+The new workload contains 32,768 screening responses and 1,536 fresh
+follow-up responses, totaling 34,304 new draws. A disjoint historical
+smoke cohort contributes 1,024 retained draws imported once, giving
+35,328 recorded unique draws. The historical smoke is a separate
+quality-control cohort, not part of the primary denominator. The 512
+initial responses for the selected 64 questions are already included
+within screening, and must not be counted again.
+
+The model and tokenizer were Qwen/Qwen3-8B at revision
+\longtok{b968826d9c46dd6066d109eabc6255188de91218}, with BF16 and
+thinking disabled. The dataset was openai/gsm8k, main configuration,
+train split, revision \longtok{740312add88f781978c0658806c59bc2815b9866}.
+Generation used temperature 0.7, top-p 0.8, top-k 20, min-p 0, a
+1,024-token generation cap and 4,096-token context. The recorded
+execution used one NVIDIA A100-SXM4-80GB, vLLM 0.11.0, PyTorch 2.8.0 and
+Transformers 4.57.1, with eager execution enabled and prefix caching
+disabled. Fixed generation seeds do not imply bitwise reproducibility
+across hardware or execution environments.
+
+The ordering seed was 20261002. Questions were ordered by ascending
+SHA-256 of the seed, the literal \texttt{order} and the SHA-256 of each
+whitespace-normalized question. The seed scheme used affine multiplier
+15485863 modulo 2147483648 and generation-slot offset 262144. Follow-up
+slots use the original screening-cohort index, not the selected
+position. Exact initial and follow-up seed lists for all 64 selected
+cases are provided with the public method record {[}P2{]}.
+
+Screening had 504 parser failures and 19 cap hits among 32,768 outputs.
+By design the selected initial groups had neither. Follow-up had ten
+parser failures and four cap hits among 1,536 outputs. Those quality
+counts do not certify semantic correctness. The primary denominator
+remains 64 regardless of later quality flags. Descriptive prefixes of
+eight, sixteen and twenty-four fresh draws yield 9/64, 10/64 and 11/64
+parser events. They are nested observations, not independent comparisons
+or evidence of an optimal rollout budget.
+
+The Wilson interval uses a question-level binomial working model within
+the selected cohort. It is not design-based or population coverage: both
+outcome-dependent eligibility and fixed-order truncation restrict the
+estimand. The observed 87/4,096 eligibility count similarly describes
+this fixed screen, not benchmark-wide mathematical failure prevalence.
+
+\section{Review design and coverage}\label{review-design-and-coverage}
+
+The first review solved the questions before comparing reference
+answers, then inspected the required model outputs. A second reference
+review was separately masked from the first judgments and model outputs.
+Final reconciliation compared the exact question, reference and
+annotations, retaining disagreements rather than forcing consensus. All
+stages were assistant-assisted. Separate masking and repeat review do
+not provide independent human validation or rule out shared model
+biases.
+
+The first output audit covers all 64 cases, all 512 initial responses
+and 143 required fresh responses: 655 responses in total, including all
+38 primary-success outputs. The final mechanical coverage receipt
+verifies those identities and stored logic; it is not an independent
+mathematical adjudication. Six initially missing reasoning-caveat fields
+were clarified in a separately attributed supplement without altering
+the original fields, scores or verdicts. No coverage or annotation
+defect remains unresolved in the final receipt.
+
+For the eleven event questions, reconciliation read all 88 initial
+outputs and all 38 primary-success fresh outputs in full. All 126
+explicit final-number extractions are faithful and uncapped. Two
+unit-sensitive non-events add sixteen inspected initial outputs. This is
+not a claim to have validated reasoning in every one of the 1,536 fresh
+responses. The first audit identified five frozen-v2 extraction false
+negatives and no extraction false positives within its reviewed set;
+these selected-case observations do not establish population parser
+precision.
+
+The conservative witness rule requires a reference value supported in
+both rounds without material ambiguity, eight faithful uncapped initial
+claims independently judged wrong, and at least one faithful uncapped
+fresh primary-success claim independently judged numerically correct.
+Sound final arithmetic and sound visible reasoning are recorded
+separately. No post-review filtering changes the 64-question
+denominator.
+
+\Needspace{18\baselineskip}
+
+\section{Frozen endpoint and conservative
+interpretation}\label{frozen-endpoint-and-conservative-interpretation}
+
+\Needspace{12\baselineskip}
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3000}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.4000}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3000}}@{}}
+\caption{C1 results and interpretation. The final three rows partition
+the eight events outside the conservative witness count.}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Quantity
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Result
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Interpretation
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Quantity
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Result
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Interpretation
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Eligible in the fixed screen & 87 / 4,096 & Eight parser-zero, valid and
+uncapped outputs \\
+Selected for fresh draws & 64 / 87 & First 64 in frozen order \\
+Frozen primary event & 11 / 64 & 17.19\%; Wilson 95\% 9.88-28.21\% \\
+Conservative numeric witnesses & 3 / 64 & 4.69\%; support count, not a
+replacement endpoint \\
+Convention-dependent event readings & 3 cases & Retained review
+disagreement \\
+Materially ambiguous events & 4 cases & Requested quantity or premises
+unresolved \\
+Wrong-reference event & 1 case & Matching the reference reverses a
+correct initial answer \\
+\end{longtable}
+
+The three corroborated witnesses are Santana presents (C00, source rank
+676), Suzanne bread (C07, rank 912), and Hank reading (C38, rank 2699).
+Santana's supported answer is \((4+7)-3=8\) presents; Suzanne's is
+\(3\times2\times52/12=26\) loaves; Hank's is
+\(5(30+60)+2\times2(30+60)=810\) minutes. Each has eight reviewed,
+genuinely wrong initial final answers and at least one independently
+correct fresh final answer.
+
+Santana also shows why final-answer correctness cannot validate
+reasoning. Its earliest successful fresh response, sample index 12,
+returns eight through an incorrect argument that no first-half birthday
+gifts were needed. Later successful indices 15 and 23 use the valid
+\(11-3\) calculation. Hank's reference final value is supported even
+though its reference explanation mislabels subtotals. These distinctions
+remain visible in the event ledger. All sample and selected indices in
+this addendum are zero-based.
+
+The checkpoint case (C35, rank 2593) gives the opposite result.
+Checkpoints at miles one and twenty-five enclose twenty-four miles
+across three gaps, so the separation is eight miles. All eight initial
+answers of eight are numerically correct. Four fresh outputs match the
+erroneous reference value six by dividing by four. The frozen analysis
+counts the event exactly as specified; semantic review does not call it
+mathematical recovery.
+
+The citations, raft and fundraiser cases have favorable ordinary
+interpretations, but retain first-versus-second review disagreements.
+They are described individually rather than combined with the three
+corroborated witnesses into another adjusted recovery estimate. The
+remaining four cases concern aggregation of walking distance, the
+cake-and-ham probability event, the pet-owner denominator and Reggie's
+missing initial marble count. A gold match does not resolve those
+questions.
+
+\section{Reference quality and units}\label{reference-quality-and-units}
+
+The original second-review categories are retained: sixteen clear
+wrong-reference judgments, nineteen materially ambiguous questions, two
+inconsistent questions, fifteen supported references and twelve
+references supported with conventional assumptions. Refinement separates
+four correct final answers with flawed reference explanations from the
+supported categories, leaving the following mutually exclusive view.
+
+\Needspace{12\baselineskip}
+\begin{longtable}[]{@{}lr@{}}
+\caption{Refined labels preserve the original classifications and
+distinguish final-value errors from explanation defects. They are
+second-review judgments, not a consensus benchmark error
+count.}\tabularnewline
+\toprule\noalign{}
+Refined second-review category & Questions \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+Refined second-review category & Questions \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Clear wrong reference final value & 16 \\
+Materially ambiguous & 19 \\
+Inconsistent question & 2 \\
+Correct final value with flawed reference explanation & 4 \\
+Supported & 12 \\
+Supported with conventional assumptions & 11 \\
+Total & 64 \\
+\end{longtable}
+
+A narrower cross-review analysis corroborates fifteen wrong-final-value
+judgments under the stated or ordinary mathematical model. The towel
+case explicitly assumes equal towel weights. Separately, two
+discrete-count questions have inconsistent premises and erroneous
+reference relations, three correct-final references have corroborated
+text defects, and two materially ambiguous questions contain explicit
+reference faults. These are \textbf{22 disjoint cases with specified
+reference defects, not 22 wrong labels}. The four correct-final cases in
+the refined second review and the three corroborated correct-final
+defects are different sets: a notation defect newly identified for
+Sonia/Joss is not corroborated in both rounds.
+
+Thirteen first/second category disagreements are retained. The coin
+question illustrates the reason: gross deposits total 225 cents and the
+balance after withdrawal is 200 cents. The second review judges the
+recorded 200 wrong for the requested deposits, while the first retains a
+gross-versus-net target ambiguity. It is excluded from the narrower
+fifteen. Ordinary mathematical conventions are not defects merely
+because every physical assumption is unstated; genuinely different
+quantities or plausible readings are described case by case. None of
+these audit counts estimates whole-GSM8K error prevalence because the
+cohort was selected for eight parser-zero outputs and then truncated.
+
+Equivalent representations also matter. For Jackson ingredients (C36),
+all eight initial values 0.24 are equivalent to the reference 24 percent
+under the same conventional independent-selection probability
+interpretation; formal odds would be 6:19. The scalar parser extracted
+0.24 faithfully. For Gunner plugs (C62), 200 pairs equal 400 individual
+plugs. Four initial responses preserve pair units, three remain
+unit-ambiguous and one incorrectly calls 200 the number of individual
+plugs. Neither case supports a claim of eight genuine mathematical
+errors. The frozen scalar references and rewards remain unchanged.
+
+\section{Separate prospective parser
+validation}\label{separate-prospective-parser-validation}
+
+The undeployed parser v3 candidate was frozen at 02:43:30 UTC on 3
+October 2026, before the earliest target batch at 02:59:39 UTC. The
+fixed target was the last 256 screening questions, eight responses each,
+yielding 2,048 future outputs. This was a predefined future subset of an
+ongoing study, not preregistration before the entire C1 campaign.
+Historical candidate tuning is separate. C1's primary score remains
+based on frozen parser v2.
+
+All 2,025 previously valid full parse objects were preserved. Four
+previously rejected outputs at four distinct prompts became accepted:
+one bold answer heading, two display-box blocks and one hash-prefixed
+XML answer block. Two separately blinded, output-only assistant
+annotations agreed on the same unambiguous scalar in all four changed
+cases. No changed acceptance was ambiguous or incorrectly extracted
+under those reviews. Nineteen outputs remained rejected.
+
+This supports only a narrow pass on the four observed extraction
+changes. It does not establish semantic precision for the 2,025
+unchanged outputs, validate the nineteen rejects, measure task
+correctness, or estimate population false-positive rates. The responses
+are clustered within prompts. Four examples do not exhaust their wrapper
+classes or malformed-input behavior. The candidate remains undeployed
+and is not used to recompute C1 recovery.
+
+\section{Conclusion}\label{conclusion}
+
+C1 establishes an auditable frozen scoring result and three conservative
+numerical counterexamples to the idea that eight observed wrong answers
+force all future answers to be wrong under this checkpoint, task and
+decoder. It also demonstrates why selection on exact-match zeros can
+enrich reference faults, ambiguity and representation mismatches. The
+unchanged 11/64 score and the 3/64 corroborated witness count answer
+different questions and must be reported together.
+
+A next experimental step would require a new prospective design with
+independently reviewed references, explicit unit rules, random or fully
+enumerated follow-up selection, multiple seeds and a matched rollout
+budget. Any claim about training utility would additionally require an
+actual training intervention and held-out evaluation. Those experiments
+were not performed here. Historical V2 findings remain preserved as
+separate evidence.
+
+\clearpage
+
+\section{Event ledger}\label{event-ledger}
+
+The following ledger accounts for every frozen primary event. C labels
+use the zero-based selected index. Fresh indices identify all
+parser-success outputs among the 24 fresh draws. Scientific question,
+reference and response hashes and review notes accompany the public
+editable case ledger {[}P1{]}.
+
+\Needspace{12\baselineskip}
+\begingroup\small\setlength{\tabcolsep}{3pt}
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2308}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.3077}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2308}}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 8\tabcolsep) * \real{0.2308}}@{}}
+\caption{Complete accounting of all eleven parser-defined
+events.}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Case and source rank
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Reference
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Fresh success indices
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Interpretation
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Case and source rank
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Reference
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Fresh success indices
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Interpretation
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+C00 Santana presents, 676 & 8 & 12, 15, 23 & Corroborated \\
+C07 Suzanne bread, 912 & 26 & 2, 5, 10, 15, 16, 21 & Corroborated \\
+C08 Citations, 923 & 4 & 0, 1, 3, 15, 23 & Convention / disagreement \\
+C19 Pet owners, 1482 & 100 & 4, 16 & Ambiguous \\
+C20 Raft capacity, 1544 & 17 & 23 & Convention / disagreement \\
+C29 Fundraiser, 2044 & 475 & 2, 4, 7, 13, 21, 22 & Convention /
+disagreement \\
+C35 Checkpoints, 2593 & 6 & 6, 7, 10, 22 & Wrong reference \\
+C37 Walking distance, 2660 & 36 & 0, 22 & Ambiguous \\
+C38 Hank reading, 2699 & 810 & 2 & Corroborated \\
+C47 Cake and ham, 3203 & 12 & 0, 4, 5, 9, 22 & Ambiguous \\
+C50 Reggie marbles, 3255 & 1 & 2, 15, 22 & Ambiguous \\
+\end{longtable}
+\endgroup
+
+\textbf{C00 Santana presents.} Gold 8 is (4 second-half birthdays+7
+Christmas gifts)-3 March gifts. Both reviews support the quantity. Fresh
+12 matches 8 through a false 8-0 argument; fresh 15 and 23 give the
+correct 11-3 calculation.
+
+\textbf{C07 Suzanne bread.} 3 slices per meal × 2 weekend meals × 52
+weeks/12 slices per loaf = 26. Sharing one slice does not require
+knowing the number of daughters. All 8 initial 90/91 claims use seven
+days per week; every fresh 26 uses the correct weekend schedule.
+
+\textbf{C08 Citations.} Other citations most naturally means the
+combined non-parking count: L+L+2(L+L) = 24 gives 4. All initial 6
+claims substitute twice one category. First treats that as material
+ambiguity; second supports 4. Ordinary-reading support is stronger than
+the per-category alternative, but disagreement remains and this is not
+added to the corroborated recovery count.
+
+\textbf{C19 Pet owners.} Half of pet owners plus disjoint exhaustive
+dog/cat ownership gives 100; half of all citizens gives 300 under the
+same partition. Overlap allows other values. The denominator ambiguity
+is material even if ordinary classroom partition assumptions are
+granted.
+
+\textbf{C20 Raft capacity.} The ordinary exact additive-space model
+makes 14 jackets occupy 7 person-spaces; 8 jackets reduce 21 by 4,
+yielding 17. Arbitrary real packing/safety possibilities do not by
+themselves constitute a defect. First conservatively withheld support;
+second accepts the conventional model. Retain that disagreement and
+conditional event support only in the ledger.
+
+\textbf{C29 Fundraiser.} Next 4 days naturally names a single comparison
+period, making 950 the four-day total and shortfall 475 per student.
+Initial 0 answers insert per day before multiplying by 4; the text does
+not say each day. Retain the first alternative-scope objection and
+second conventional support, not a revised recovery estimate.
+
+\textbf{C35 Checkpoints.} Interior route checkpoints at mile 1 and mile
+25 enclose 24 miles and 3 intervening gaps, hence 8 miles. The closing
+2-mile arc is outside those gaps. All 8 initials give 8; all 4 gold
+matches 6 divide by 4 and are wrong. Screen 1 has an internally
+contradictory parenthetical despite its correct final 8.
+
+\textbf{C37 Walking distance.} Summed person-distance is 5 × 3 × 6+12+6
+= 108; shared outings counted once give 36. The aggregate quantity is
+genuinely different. Initial 0-6 are correct under person-mile reading;
+initial 7 incorrectly repeats weekly extras and gets 198. Neither
+gold-matching response proves the 108 answers wrong.
+
+\textbf{C38 Hank reading.} 5 × (30+60)+2 × 2 × (30+60) = 810 minutes.
+Reference final sentence mislabels subtotals but final 810 is correct.
+Initial 630/690/1350 claims are wrong; fresh 2 visibly supplies the
+correct 450+360 calculation.
+
+\textbf{C47 Cake and ham.} Cake-day overlap with any ham day during the
+week has probability 3/5 = 60\%. A specified/randomly sampled test day
+has joint probability 3/25 = 12\%. Both reviewer rounds retain
+sampling-unit ambiguity; all 5 fresh 12 matches use the latter event.
+
+\textbf{C50 Reggie marbles.} With starting Reggie count R and losses
+L,90 = R+10 × (9-2 L), so R = 20 L. His friend's 100 does not set R.
+Multiple feasible starts/losses exist. Gold's net-loss shortcut is
+invalid; all 3 fresh 1 matches have defective justifications. There is
+no uniquely correct loss count.
+
+\section{Complete reference classification
+index}\label{complete-reference-classification-index}
+
+This index preserves all 64 selected questions, including non-events. W
+= second-review wrong final value; A = material ambiguity; I =
+inconsistent premises; R = correct final value with flawed reference
+explanation; S = supported; C = supported with conventional assumptions.
+The category column uses the refined mutually exclusive mapping. An
+asterisk marks a retained first/second category disagreement. E marks a
+frozen parser event; N marks a conservative numeric witness. Neither
+marker changes the reference classification.
+
+\Needspace{12\baselineskip}
+\begingroup\small\setlength{\tabcolsep}{3pt}
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 10\tabcolsep) * \real{0.1429}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1905}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1905}}
+  >{\centering\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2381}}
+  >{\centering\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2381}}@{}}
+\caption{Complete bounded-cohort index. The public JSON and CSV ledgers
+retain scientific case hashes, both review labels and case-specific
+explanations {[}P1{]}.}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Selected case
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Source rank
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Recorded gold
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Category
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Event and witness
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Selected case
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Source rank
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Recorded gold
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Category
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Event and witness
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+C00 & 676 & 8 & S & E N \\
+C01 & 706 & 42 & C & - \\
+C02 & 754 & 200 & W* & - \\
+C03 & 803 & 200 & A & - \\
+C04 & 846 & 40 & A & - \\
+C05 & 855 & 625 & S* & - \\
+C06 & 878 & 480 & W & - \\
+C07 & 912 & 26 & S & E N \\
+C08 & 923 & 4 & S* & E \\
+C09 & 925 & 50 & I & - \\
+C10 & 945 & 1886 & S & - \\
+C11 & 950 & 41 & W & - \\
+C12 & 1078 & 2460 & W & - \\
+C13 & 1139 & 25 & W & - \\
+C14 & 1227 & 95 & C* & - \\
+C15 & 1266 & 49 & W & - \\
+C16 & 1307 & 301 & S* & - \\
+C17 & 1357 & 560 & W & - \\
+C18 & 1377 & 96 & W & - \\
+C19 & 1482 & 100 & A & E \\
+C20 & 1544 & 17 & C* & E \\
+C21 & 1739 & 750 & A & - \\
+C22 & 1743 & 50 & W & - \\
+C23 & 1780 & 3 & A & - \\
+C24 & 1872 & 35 & S & - \\
+C25 & 1897 & 2100 & C* & - \\
+C26 & 1921 & 23 & W & - \\
+C27 & 1932 & 140 & A & - \\
+C28 & 1996 & 99 & R & - \\
+C29 & 2044 & 475 & C* & E \\
+C30 & 2095 & 4 & W & - \\
+C31 & 2142 & 540 & A & - \\
+C32 & 2211 & 42 & A & - \\
+C33 & 2446 & 280 & W & - \\
+C34 & 2514 & 3 & A* & - \\
+C35 & 2593 & 6 & W & E \\
+C36 & 2617 & 24 & C & - \\
+C37 & 2660 & 36 & A & E \\
+C38 & 2699 & 810 & R & E N \\
+C39 & 2748 & 56 & A & - \\
+C40 & 2769 & 40 & C & - \\
+C41 & 2899 & 400 & A & - \\
+C42 & 2989 & 1100 & A & - \\
+C43 & 3021 & 9 & C* & - \\
+C44 & 3089 & 8000 & A & - \\
+C45 & 3118 & 350 & R & - \\
+C46 & 3119 & 163 & S & - \\
+C47 & 3203 & 12 & A & E \\
+C48 & 3209 & 1000 & A & - \\
+C49 & 3216 & 5 & A* & - \\
+C50 & 3255 & 1 & A & E \\
+C51 & 3259 & 983 & I & - \\
+C52 & 3277 & 84 & C & - \\
+C53 & 3299 & 128 & W & - \\
+C54 & 3335 & 30 & W & - \\
+C55 & 3409 & 7 & R* & - \\
+C56 & 3421 & 57 & S & - \\
+C57 & 3464 & 90 & W & - \\
+C58 & 3533 & 25 & C* & - \\
+C59 & 3536 & 6 & S & - \\
+C60 & 3579 & 40 & S & - \\
+C61 & 3581 & 4 & A & - \\
+C62 & 3593 & 400 & S & - \\
+C63 & 3597 & 52 & C & - \\
+\end{longtable}
+\endgroup
+
+\section{Public scientific sources and
+availability}\label{public-scientific-sources-and-availability}
+
+{[}P1{]} \textbf{Public selected-case ledger.}
+\longtok{case\_ledger\_public.json} preserves all 64 question texts,
+their scientific content hashes, reference answers and hashes, both
+reference-review labels, disagreements and reconciliation notes. It also
+preserves all eleven event records and 126 response checks, including
+response-content hashes, numeric verdicts and visible-reasoning caveats.
+\longtok{case\_ledger\_public.csv} is the compact classification view.
+The complete raw response corpus is not included in this derivative. A
+response hash alone does not allow its underlying response to be read or
+its judgment independently reproduced.
+
+{[}P2{]} \textbf{Public method record.}
+\longtok{scientific\_method\_public.json} provides benchmark, model and
+tokenizer revisions, generation settings, ordering and seed parameters,
+and exact initial/follow-up seeds for the selected cases. These
+scientific parameters do not establish bitwise reproducibility across
+systems or authenticate execution.
+
+{[}P3{]} \textbf{Public benchmark and model.} The study uses the GSM8K
+training split (\texttt{openai/gsm8k}, main configuration) and Qwen3-8B
+(\texttt{Qwen/Qwen3-8B}) at the revisions listed above.
+
+This derivative reports the retained scientific analysis but is not a
+complete execution-provenance package or an independent replication.
+Original source labels have been replaced by the public
+scientific-source descriptions above. Hashes in the public ledger
+identify scientific content only; the public publication manifest binds
+the public files themselves. No hash supplies independent validation of
+mathematical correctness.
+
+\end{document}

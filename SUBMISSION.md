@@ -1,6 +1,8 @@
 # Phase 2 submission guide
 
-**Current deliverable:** Arvind C R's M.Tech Project Phase 2 thesis, UE20CS972,
+> This guide describes the preserved historical identified submission package. For the latest scientific corrections and C1 study, use the [3 October public research revision](reports/public_revision_2026-10-03/README.md). The public derivative is not a newly certified institutional submission.
+
+**Historical identified deliverable:** Arvind C R's M.Tech Project Phase 2 thesis, UE20CS972,
 PES University. Guide: Ramesh Prakash Guledgudd. This is an **identified academic
 submission**, not an anonymous conference package.
 

@@ -1,6 +1,8 @@
 # Tinker RL Lab
 
-> **Current Phase 2 submission:** start at [`SUBMISSION.md`](SUBMISSION.md) for the latest thesis, evidence checks, build commands, and remaining human approvals. Older papers and submission bundles below are historical.
+> **Latest public research revision (3 October 2026):** start at [the reviewed public thesis and C1 addendum](reports/public_revision_2026-10-03/README.md), with editable sources, scientific ledgers and the offline analysis toolkit.
+
+> **Historical Phase 2 submission:** [`SUBMISSION.md`](SUBMISSION.md) describes the preserved identified submission package, its build commands and remaining human approvals. It is separate from the newer public research revision.
 
 > **Academic reviewers / professors:** start at [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) for the semester boundary and ownership, then review [`platform_hybrid/sem 3 work/`](platform_hybrid/sem%203%20work/) (Group 6 capstone) and [`platform_hybrid/sem 4 work/`](platform_hybrid/sem%204%20work/) (solo continuation). Everything else in this repository is shared research infrastructure and evidence.
 

@@ -305,3 +305,31 @@ outputs/e1_e14_small_scale_2026-09-26/E3/code/*
 
 # Reviewed scientific C1 case ledger, not a bulk generated-data export.
 !research/public_results/c1_case_ledger.csv
+!reports/public_revision_2026-10-03/addendum/C1_Research_Addendum_2026-10-03_PUBLIC.pdf
+!reports/public_revision_2026-10-03/addendum/case_ledger_public.csv
+!reports/public_revision_2026-10-03/thesis/Thesis_Report_ArvindCR_C1_Coverage_Derived_2026-10-03_PUBLIC.pdf
+!reports/public_revision_2026-10-03/thesis/c1_case_ledger.csv
+!reports/public_revision_2026-10-03/thesis/figures/fig_architecture.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_attribution.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_campaign_design.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_confounding.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_contribution_map.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_e11_decomposition.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_e4_diagnostic.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_e8_categories.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_four_pillars.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_gradient_utilisation.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_group_size.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_grpo_loop.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_harness.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_lane_status.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_length_bias.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_lineage.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_receipt_pipeline.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_replacement_results.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_research_questions.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_scaling_null.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_telemetry.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_terminal_taxonomy.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_zvf_by_library.pdf
+!reports/public_revision_2026-10-03/thesis/figures/fig_zvf_definition.pdf

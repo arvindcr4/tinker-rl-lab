@@ -241,6 +241,12 @@ class TestSuiteReceipts(unittest.TestCase):
             with self.assertRaises(ValueError, msg=suite_id):
                 require_frozen_suite_receipt(suite_id)
 
+    def test_frontier_swe_maps_to_proximal_labs(self):
+        receipt = PAVLOV_SUITE_RECEIPTS["frontier_swe_eval"]
+        self.assertIn("Proximal-Labs/frontier-swe", receipt["source"])
+        self.assertIn("422b9bb95deb8efe436becb0ed3c44be23611e10", receipt["hash"])
+        self.assertNotIn("SWE-bench", receipt["source"])
+
     def test_frozen_suites_pass(self):
         frozen = [s for s, r in PAVLOV_SUITE_RECEIPTS.items() if r["frozen"]]
         self.assertEqual(len(frozen), 10)

@@ -25,13 +25,22 @@ Frozen (split + pin + license + runtime verified):
 
 Still pending (fail-closed via `require_frozen_suite_receipt`):
 - `binaryaudit_eval` — license unpinned (claimed Apache-2.0, no LICENSE
-  file); HEAD-only pin, no tags. Unblocks on upstream LICENSE/tag.
-- `frontier_swe_eval` — suite-ID mapping ambiguous (candidate: SWE-bench
-  Verified). Unblocks on a mapping decision, then the Verified pin applies.
-- `lifescibench_eval` — paper-only benchmark, no public artifact (release
-  restricted). Unblocks on a public release.
-- `sdab_eval` — provider-run, no public paper/repo/dataset. Unblocks on
-  public specs or provider access.
+  file); HEAD-only pin, no tags. Re-verified 2026-10-03: HEAD unchanged,
+  still no tags, API license still null. Unblocks on upstream LICENSE/tag.
+- `frontier_swe_eval` — MAPPING DECIDED 2026-10-03: `Proximal-Labs/
+  frontier-swe`, not SWE-bench Verified. The in-repo eval
+  (`zvf-program/flagship/frontier_swe_eval.py`) speaks only to that repo
+  at `422b9bb` and refuses substitutes; the pinned commit and all 17
+  task IDs were verified live. Stays pending on license (verified
+  absent: no LICENSE/COPYING file, API null, no README statement).
+  Unblocks on an upstream license or explicit maintainer authorization.
+- `lifescibench_eval` — paper-only benchmark (bioRxiv DOI verified via
+  Crossref 2026-10-03; CC-BY-NC preprint). No public artifact: 0 GitHub
+  repos, 0 HF datasets, no data/code links on the paper page.
+  Unblocks on a public release.
+- `sdab_eval` — provider-run, page re-verified live 2026-10-03 (80
+  tasks, Apr 2026, samples upon request). No public paper/repo/dataset/
+  license. Unblocks on public specs or provider access.
 
 Rule: `None` in a record is a verified absence, never a skipped lookup.
 Raw per-field findings with reasons were captured in the research pass;

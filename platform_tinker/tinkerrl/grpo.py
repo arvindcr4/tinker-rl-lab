@@ -161,21 +161,28 @@ _PUBLIC_SUITE_RECEIPTS: Dict[str, Dict[str, Any]] = {
     "binaryaudit_eval": {
         "frozen": False,
         "split": "tasks/ (full suite; 46 task dirs; no named split/version)",
-        "hash": "cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23 (main HEAD 2026-02-27; no tags upstream)",
-        "license": "Apache-2.0 claimed in README; no LICENSE file, GitHub API license=null",
+        "hash": "cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23 (main HEAD "
+        "2026-02-27; re-verified 2026-10-03: HEAD unchanged, still no tags)",
+        "license": "Apache-2.0 claimed in README; no LICENSE file, GitHub "
+        "API license=null (re-verified 2026-10-03)",
         "runtime": "Harbor harness + Docker per-task containers (Ghidra/Radare2)",
         "decontamination": None,
         "source": "https://github.com/QuesmaOrg/BinaryAudit",
     },
     "frontier_swe_eval": {
         "frozen": False,
-        "split": "CANDIDATE mapping: SWE-bench Verified test (500 "
-        "instances) — confirm suite-ID mapping before freezing",
-        "hash": "78f471bf655a3137b2e8a75af1501690ec009ec3 (SWE-bench_Verified HF HEAD @2026-08-16)",
-        "license": "No single dataset license (per-repo OSS); harness MIT",
-        "runtime": "Official swebench harness, Docker eval (v5 CLI)",
-        "decontamination": "Train/eval repos disjoint per Jimenez et al. ICLR 2024",
-        "source": "https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified",
+        "split": "17 tasks @422b9bb (task.toml + instruction.md + job.yaml "
+        "+ tests/test.sh per task; task_id_disjoint; exact eval over named tasks)",
+        "hash": "422b9bb95deb8efe436becb0ed3c44be23611e10 "
+        "(Proximal-Labs/frontier-swe main @2026-08-07; commit + 17/17 task "
+        "IDs verified live 2026-10-03)",
+        "license": "No LICENSE/COPYING file @pinned rev; GitHub API "
+        "license=null; no license statement in README (verified 2026-10-03)",
+        "runtime": "tests/test.sh in published per-task Docker image; "
+        "reward.json scored by scripts/score_from_reward.py (SCORING.md); "
+        "leaderboard frontierswe.com",
+        "decontamination": None,
+        "source": "https://github.com/Proximal-Labs/frontier-swe",
     },
     "lifescibench_eval": {
         "frozen": False,
@@ -185,7 +192,9 @@ _PUBLIC_SUITE_RECEIPTS: Dict[str, Dict[str, Any]] = {
         "license": None,
         "runtime": "Single-turn + browsing; expert-rubric grading; no public harness",
         "decontamination": None,
-        "source": "bioRxiv DOI 10.64898/2026.08.13.744657 v1 (paper-only; release restricted)",
+        "source": "bioRxiv DOI 10.64898/2026.08.13.744657 v1 (paper-only; "
+        "DOI verified via Crossref 2026-10-03; 0 GitHub repos, 0 HF "
+        "datasets, no data/code links on bioRxiv page)",
     },
     "sdab_eval": {
         "frozen": False,
@@ -193,9 +202,10 @@ _PUBLIC_SUITE_RECEIPTS: Dict[str, Dict[str, Any]] = {
         "hash": None,
         "license": None,
         "runtime": "Provider-run (Emulated, Inc.): Docker + cloudboxes; no "
-        "public harness; gated access",
+        "public harness; gated access (samples upon request)",
         "decontamination": None,
-        "source": "https://emulated.so/sdab (80-task SDAB, Apr 2026; no public paper/repo/dataset)",
+        "source": "https://emulated.so/sdab (80-task SDAB, Apr 2026; page "
+        "re-verified live 2026-10-03; no public paper/repo/dataset/license)",
     },
 }
 

@@ -299,8 +299,10 @@ class GRPOConfig:
     # default; per-group path stays byte-identical.
     global_advantage_normalization: bool = False
     global_norm_exclude_truncated: bool = True
-    # VAPO-style NLL auxiliary loss on correct responses.  Disabled and
-    # zero-weighted by default, so the loss is unchanged unless opted in.
+    # VAPO-style NLL auxiliary loss on correct responses (VAPO §4.3
+    # "Positive Example LM Loss", Yue et al. 2025; paper uses μ=0.1).
+    # Disabled and zero-weighted by default, so the loss is unchanged
+    # unless opted in.
     nll_aux_enabled: bool = False
     nll_aux_coef: float = 0.0
     nll_aux_min_reward: float = 1.0
@@ -615,10 +617,11 @@ def make_grpo_loss_fn(
     """Return a Tinker-compatible loss closure bound to ``advantages``.
 
     With ``nll_mask``/``nll_coef`` set, adds a VAPO-style NLL auxiliary term
-    over masked (correct) responses: token-mean NLL averaged over the
-    masked set, ``0`` when the set is empty.  Token-mean (not the GRPO
-    term's token-sum) so responses of different lengths weigh equally.
-    ``nll_mask=None`` or ``nll_coef=0.0`` reproduces the GRPO term exactly.
+    (VAPO §4.3, ``L = L_PPO + μ·L_NLL``) over masked (correct) responses:
+    token-mean NLL averaged over the masked set, ``0`` when the set is
+    empty.  Token-mean (not the GRPO term's token-sum) so responses of
+    different lengths weigh equally.  ``nll_mask=None`` or ``nll_coef=0.0``
+    reproduces the GRPO term exactly.
     """
 
     def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:

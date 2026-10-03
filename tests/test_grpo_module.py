@@ -1218,6 +1218,99 @@ class TestTrackingFailClosed(unittest.TestCase):
         self.assertEqual(full.reward_trace, [1.0, 0.0])
         self.assertEqual(resumed.reward_trace, full.reward_trace)
 
+    def test_critic_save_stamps_step_and_is_atomic(self):
+        import torch
+
+        with tempfile.TemporaryDirectory() as checkpoint_dir:
+            config = GRPOConfig(name="critic-atomic", checkpoint_dir=checkpoint_dir)
+            critic = grpo.PromptValueCritic()
+            opt = torch.optim.Adam(critic.parameters())
+            grpo._save_critic(config, 42, critic, opt, step=2)
+            critic_path = Path(checkpoint_dir) / "critic-atomic_seed42.critic.pt"
+            payload = torch.load(critic_path, map_location="cpu", weights_only=True)
+            self.assertEqual(payload["step"], 2)
+            self.assertIn("optimizer", payload)
+            # A kill mid-save must leave the previous state intact: the
+            # write goes to a temp file first, so a failed save cannot
+            # truncate the committed one.
+            with patch.object(torch, "save", side_effect=RuntimeError("boom")):
+                with self.assertRaises(RuntimeError):
+                    grpo._save_critic(config, 42, critic, opt, step=3)
+            payload = torch.load(critic_path, map_location="cpu", weights_only=True)
+            self.assertEqual(payload["step"], 2)
+
+    def test_critic_save_receives_checkpoint_steps(self):
+        runtime = self._fake_runtime()
+        with _temporary_modules(self._fake_modules(runtime)):
+            with patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt):
+                with tempfile.TemporaryDirectory() as checkpoint_dir:
+                    config = GRPOConfig(
+                        name="critic-steps",
+                        steps=3,
+                        save_every=1,
+                        group_size=2,
+                        batch_size=1,
+                        checkpoint_dir=checkpoint_dir,
+                        critic_enabled=True,
+                    )
+                    real_save = grpo._save_critic
+                    seen: list[int] = []
+
+                    def spy(*args, **kwargs):
+                        seen.append(kwargs["step"])
+                        return real_save(*args, **kwargs)
+
+                    with patch.object(grpo, "_save_critic", spy):
+                        grpo._run_one_seed(
+                            config,
+                            self._dataset(),
+                            ExactMathReward(),
+                            runtime["tokenizer"],
+                            logger=lambda _message: None,
+                        )
+        self.assertEqual(seen, [1, 2, 3, 3])
+
+    def test_critic_pretrain_honors_truncation_mask(self):
+        # The fake sampler returns 2-token responses, so max_response_tokens=2
+        # marks every pretrain response truncated.
+        for masked, want_empty in ((True, True), (False, False)):
+            runtime = self._fake_runtime()
+            with _temporary_modules(self._fake_modules(runtime)):
+                with patch.object(
+                    grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt
+                ):
+                    with tempfile.TemporaryDirectory() as checkpoint_dir:
+                        config = GRPOConfig(
+                            name="critic-premask",
+                            steps=1,
+                            save_every=1,
+                            group_size=2,
+                            batch_size=1,
+                            max_response_tokens=2,
+                            mask_truncated_responses=masked,
+                            checkpoint_dir=checkpoint_dir,
+                            critic_enabled=True,
+                            critic_pretrain_batches=1,
+                        )
+                        real_step = grpo.train_critic_step
+                        calls: list[tuple[list, list]] = []
+
+                        def spy(critic, opt, ids, targets, **kwargs):
+                            calls.append((list(ids), list(targets)))
+                            return real_step(critic, opt, ids, targets, **kwargs)
+
+                        with patch.object(grpo, "train_critic_step", spy):
+                            grpo._run_one_seed(
+                                config,
+                                self._dataset(),
+                                ExactMathReward(),
+                                runtime["tokenizer"],
+                                logger=lambda _message: None,
+                            )
+            # The first critic update is the pretrain batch (policy frozen).
+            self.assertTrue(calls)
+            self.assertEqual(calls[0] == ([], []), want_empty)
+
     def test_gspo_epochs_step_the_optimizer_once_per_epoch(self):
         runtime = self._fake_runtime()
         with _temporary_modules(self._fake_modules(runtime)):

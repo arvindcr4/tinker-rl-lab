@@ -938,14 +938,25 @@ def _save_critic(
     seed: int,
     critic: torch.nn.Module,
     optimizer: Optional[torch.optim.Optimizer] = None,
+    *,
+    step: int,
 ) -> None:
-    """Persist critic weights and Adam state next to the JSON receipt."""
+    """Persist critic weights and Adam state next to the JSON receipt.
+
+    The write is atomic (temp file + ``os.replace``, like
+    :func:`_write_checkpoint`) so a kill mid-save cannot corrupt the
+    previous state.  ``step`` stamps the training step the weights came
+    from; resume keeps loading the latest critic file after a receipt
+    rewind (see ``test_critic_state_resumes_mid_run``).
+    """
     path = _critic_checkpoint_path(config, seed)
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload: Dict[str, Any] = {"model": critic.state_dict()}
+    payload: Dict[str, Any] = {"model": critic.state_dict(), "step": step}
     if optimizer is not None:
         payload["optimizer"] = optimizer.state_dict()
-    torch.save(payload, path)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    torch.save(payload, temporary)
+    os.replace(temporary, path)
 
 
 def _config_fingerprint(config: GRPOConfig, seed: int) -> Dict[str, Any]:
@@ -1666,11 +1677,16 @@ def _run_one_seed(
                 pre_prompts: List[List[int]] = []
                 pre_targets: List[float] = []
                 for example in pre_batch:
-                    prompt_ids, _, rewards, _ = _sample_scored_group(
+                    prompt_ids, _, rewards, lengths = _sample_scored_group(
                         tok, sc, T, config, reward, example
                     )
-                    pre_prompts.extend([prompt_ids] * len(rewards))
-                    pre_targets.extend(rewards)
+                    for length, r in zip(lengths, rewards):
+                        if config.mask_truncated_responses and (
+                            length >= config.max_response_tokens
+                        ):
+                            continue
+                        pre_prompts.append(prompt_ids)
+                        pre_targets.append(r)
                 train_critic_step(
                     critic,
                     critic_opt,
@@ -1914,7 +1930,7 @@ def _run_one_seed(
                     },
                 )
                 if config.critic_enabled:
-                    _save_critic(config, seed, critic, critic_opt)
+                    _save_critic(config, seed, critic, critic_opt, step=step + 1)
                 logger(f"[{config.name}]   -> Checkpoint step_{step + 1}")
 
         tc.save_state(name=f"seed{seed}_final", overwrite=True).result()
@@ -2000,7 +2016,7 @@ def _run_one_seed(
             },
         )
         if config.critic_enabled:
-            _save_critic(config, seed, critic, critic_opt)
+            _save_critic(config, seed, critic, critic_opt, step=config.steps)
         _wandb_summary(wb)["tinker_run_id"] = run_id
         _wandb_summary(wb)["checkpoint_urls"] = list(checkpoint_urls)
         _wandb_summary(wb)["checkpoint_commit_shas"] = list(checkpoint_commit_shas)

@@ -295,6 +295,8 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         "gspo_epsilon_high": "gspo_epsilon_high",
         "critic_lr": "critic_lr",
         "critic_pretrain_batches": "critic_pretrain_batches",
+        "critic_hidden_dim": "critic_hidden_dim",
+        "critic_updates_per_step": "critic_updates_per_step",
     }
     for cfg_key, attr in mapping.items():
         val = getattr(args, attr, None)
@@ -405,6 +407,8 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--critic", dest="critic", action="store_true")
     parser.add_argument("--critic-lr", dest="critic_lr", type=float)
     parser.add_argument("--critic-pretrain-batches", dest="critic_pretrain_batches", type=int)
+    parser.add_argument("--critic-hidden-dim", dest="critic_hidden_dim", type=int)
+    parser.add_argument("--critic-updates-per-step", dest="critic_updates_per_step", type=int)
     parser.add_argument("--checkpoint-dir")
     parser.add_argument("--no-resume", action="store_true")
     parser.add_argument("--wandb-project")

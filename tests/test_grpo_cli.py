@@ -242,12 +242,18 @@ def test_critic_flags_round_trip():
                 "0.01",
                 "--critic-pretrain-batches",
                 "2",
+                "--critic-hidden-dim",
+                "32",
+                "--critic-updates-per-step",
+                "7",
             ]
         )
     )
     assert on.critic_enabled is True
     assert on.critic_lr == 0.01
     assert on.critic_pretrain_batches == 2
+    assert on.critic_hidden_dim == 32
+    assert on.critic_updates_per_step == 7
 
 
 def test_no_wandb_escape_hatch_is_removed():

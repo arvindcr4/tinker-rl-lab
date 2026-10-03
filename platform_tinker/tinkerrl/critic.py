@@ -22,7 +22,9 @@ class PromptValueCritic(torch.nn.Module):
     Mean-pooled hash embedding over prompt token ids plus a normalized
     prompt-length scalar, through a 2-layer Tanh MLP to one value.
     Deterministic under ``torch.manual_seed`` (the training loop seeds
-    before constructing it).  Always runs on CPU.
+    before constructing it).  Runs wherever its parameters live (CPU in
+    the training loop); scratch tensors follow the embedding device so a
+    moved module does not crash on a device mismatch.
     """
 
     def __init__(
@@ -50,8 +52,9 @@ class PromptValueCritic(torch.nn.Module):
         An empty batch returns a length-0 tensor.  An empty prompt is a
         zero-length bag (dummy bucket 0) with a length feature of 0.
         """
+        device = self.embedding.weight.device
         if len(batch_ids) == 0:
-            return torch.zeros(0)
+            return torch.zeros(0, device=device)
         flats: List[int] = []
         offsets = [0]
         lengths = []
@@ -60,10 +63,10 @@ class PromptValueCritic(torch.nn.Module):
             flats.extend(clipped or [0])
             offsets.append(len(flats))
             lengths.append(len(clipped) / self.max_prompt_tokens)
-        indices = torch.tensor(flats, dtype=torch.long)
-        offsets_t = torch.tensor(offsets[:-1], dtype=torch.long)
+        indices = torch.tensor(flats, dtype=torch.long, device=device)
+        offsets_t = torch.tensor(offsets[:-1], dtype=torch.long, device=device)
         pooled = self.embedding(indices, offsets_t)
-        length_feat = torch.tensor(lengths, dtype=torch.float32).unsqueeze(1)
+        length_feat = torch.tensor(lengths, dtype=torch.float32, device=device).unsqueeze(1)
         return self.mlp(torch.cat([pooled, length_feat], dim=1)).squeeze(1)
 
 
@@ -90,7 +93,8 @@ def train_critic_step(
     total = 0.0
     for _ in range(steps):
         optimizer.zero_grad()
-        loss = value_loss_mse(critic(batch_ids), targets_t)
+        pred = critic(batch_ids)
+        loss = value_loss_mse(pred, targets_t.to(pred.device))
         loss.backward()
         optimizer.step()
         total += loss.item()
@@ -102,6 +106,8 @@ def explained_variance(predicted: Sequence[float], targets: Sequence[float]) -> 
 
     Lengths must match.  A shorter prediction used to be zipped and then
     divided by ``len(targets)``, which understated the residual variance.
+    Near-zero variance (below ``1e-12``) also returns ``0.0``: the ratio
+    is float noise there, not signal.
     """
     if len(predicted) != len(targets):
         raise ValueError(
@@ -113,7 +119,7 @@ def explained_variance(predicted: Sequence[float], targets: Sequence[float]) -> 
         return 0.0
     mean_t = sum(targets) / n
     var_t = sum((t - mean_t) ** 2 for t in targets) / n
-    if var_t == 0:
+    if var_t <= 1e-12:
         return 0.0
     residuals = [t - p for t, p in zip(targets, predicted)]
     mean_r = sum(residuals) / n

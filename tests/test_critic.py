@@ -100,6 +100,27 @@ class TestPromptValueCritic(unittest.TestCase):
         self.assertEqual(tuple(out.shape), (1,))
         self.assertTrue(torch.isfinite(out).all())
 
+    def test_moved_module_runs_on_its_own_device(self):
+        device = None
+        if torch.cuda.is_available():
+            device = torch.device("cuda")
+        elif torch.backends.mps.is_available():
+            # No native EmbeddingBag on MPS (torch 2.7), and the CPU
+            # fallback flag is read before pytest imports torch, so a
+            # moved module cannot run there. CUDA still covers this path.
+            self.skipTest("EmbeddingBag is not implemented on MPS")
+        if device is None:
+            self.skipTest("no non-CPU torch device available")
+        torch.manual_seed(0)
+        critic = PromptValueCritic().to(device)
+        opt = torch.optim.Adam(critic.parameters(), lr=1e-2)
+        batch = [[1, 2], [3]]
+        out = critic(batch)
+        self.assertEqual(out.device.type, device.type)
+        loss = train_critic_step(critic, opt, batch, [1.0, 0.0], steps=2)
+        self.assertTrue(math.isfinite(loss))
+        self.assertEqual(critic(batch).device.type, device.type)
+
 
 class TestTrainCriticStep(unittest.TestCase):
     def test_fit_reduces_loss(self):
@@ -187,6 +208,13 @@ class TestExplainedVariance(unittest.TestCase):
 
     def test_constant_target_is_zero(self):
         self.assertEqual(explained_variance([0.5, 0.5], [1.0, 1.0]), 0.0)
+
+    def test_near_zero_variance_is_zero(self):
+        self.assertEqual(explained_variance([1.0, 1.0 + 1e-9], [1.0, 1.0 + 1e-9]), 0.0)
+
+    def test_small_but_real_variance_still_computes(self):
+        ev = explained_variance([0.0, 1e-3], [0.0, 1e-3])
+        self.assertTrue(math.isclose(ev, 1.0))
 
     def test_empty_is_zero(self):
         self.assertEqual(explained_variance([], []), 0.0)

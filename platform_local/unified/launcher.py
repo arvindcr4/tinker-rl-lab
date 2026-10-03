@@ -2,6 +2,26 @@ import sys
 import time
 from dataclasses import dataclass
 
+from platform_local.unified.canonical import BACKENDS as _CANONICAL_BACKENDS
+from platform_local.unified.canonical import FRAMEWORKS as _CANONICAL_FRAMEWORKS
+
+_FRAMEWORK_DESCRIPTIONS = {
+    "skyrl": "SkyRL tx (Local Tinker API)",
+    "tinker": "Tinker Atropos",
+    "verl": "Volcano Engine RL",
+    "openrlhf": "OpenRLHF",
+    "trl": "HuggingFace TRL",
+}
+
+_BACKEND_DESCRIPTIONS = {
+    "local": "Local GPU (in-process)",
+    "modal": "Modal serverless H100",
+    "colab": "Google Colab A100",
+    "vast": "vast.ai rented GPUs",
+    "gcp": "GCP A100 Spot preflight",
+    "hfspaces": "HF Spaces (results demo + fetch)",
+}
+
 
 @dataclass
 class TrainingResult:
@@ -28,23 +48,12 @@ class UnifiedLauncher:
     - trl: HuggingFace TRL
     """
 
-    FRAMEWORKS = {
-        "skyrl": "SkyRL tx (Local Tinker API)",
-        "tinker": "Tinker Atropos",
-        "verl": "Volcano Engine RL",
-        "openrlhf": "OpenRLHF",
-        "trl": "HuggingFace TRL",
-    }
+    # Membership derives from the canonical tuples (single source of truth);
+    # the maps above only carry display descriptions.
+    FRAMEWORKS = {k: _FRAMEWORK_DESCRIPTIONS[k] for k in _CANONICAL_FRAMEWORKS}
 
     # Compute backends (the "where" dimension; framework is the "what").
-    BACKENDS = {
-        "local": "Local GPU (in-process)",
-        "modal": "Modal serverless H100",
-        "colab": "Google Colab A100",
-        "vast": "vast.ai rented GPUs",
-        "gcp": "GCP A100 Spot preflight",
-        "hfspaces": "HF Spaces (results demo + fetch)",
-    }
+    BACKENDS = {k: _BACKEND_DESCRIPTIONS[k] for k in _CANONICAL_BACKENDS}
 
     ALGORITHMS = {
         "grpo": "Group Relative Policy Optimization",

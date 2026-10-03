@@ -548,24 +548,18 @@ class GRPOConfig:
             raise ValueError("paid_jobs_may_launch must be a boolean")
         if self.paid_jobs_may_launch is False:
             raise ValueError("campaign budget gate disables paid jobs")
-        if self.authorized_budget_usd is not None:
+        for field_name in ("authorized_budget_usd", "maximum_usd"):
+            value = getattr(self, field_name)
+            if value is None:
+                continue
             if (
-                isinstance(self.authorized_budget_usd, bool)
-                or not isinstance(self.authorized_budget_usd, (int, float))
-                or not math.isfinite(float(self.authorized_budget_usd))
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not math.isfinite(float(value))
             ):
-                raise ValueError("authorized_budget_usd must be numeric")
-            if self.authorized_budget_usd <= 0:
-                raise ValueError("authorized_budget_usd must be positive")
-        if self.maximum_usd is not None:
-            if (
-                isinstance(self.maximum_usd, bool)
-                or not isinstance(self.maximum_usd, (int, float))
-                or not math.isfinite(float(self.maximum_usd))
-            ):
-                raise ValueError("maximum_usd must be numeric")
-            if self.maximum_usd <= 0:
-                raise ValueError("maximum_usd must be positive")
+                raise ValueError(f"{field_name} must be numeric")
+            if value <= 0:
+                raise ValueError(f"{field_name} must be positive")
         if (
             self.authorized_budget_usd is not None
             and self.maximum_usd is not None
@@ -1063,16 +1057,8 @@ def _config_fingerprint(config: GRPOConfig, seed: int) -> Dict[str, Any]:
     values = asdict(config)
     values["seed"] = seed
     values.pop("resume", None)
-    heldout = tuple(config.heldout_suite_ids or config.held_out_suite_ids)
-    primary_eval = tuple(config.primary_evaluation_suite_ids)
-    values["training_suite_ids"] = list(config.training_suite_ids)
-    values["heldout_suite_ids"] = list(heldout)
-    values["held_out_suite_ids"] = list(heldout)
-    values["primary_evaluation_suite_ids"] = list(primary_eval)
-    values["domain_tags"] = list(config.domain_tags)
-    values["declared_domains"] = list(config.declared_domains)
-    values["training_domain_union"] = list(config.training_domain_union)
-    values["primary_evaluation_domain_union"] = list(config.primary_evaluation_domain_union)
+    values.update(_campaign_metadata(config))
+    values["held_out_suite_ids"] = list(values["heldout_suite_ids"])
     return values
 
 
@@ -1416,18 +1402,15 @@ def _require_checkpoint_receipt(value: Any, *, step: int | str) -> Dict[str, Any
     if "step" not in value or value["step"] != step:
         raise RuntimeError(f"Hugging Face checkpoint receipt step mismatch for step {step}")
     expected_repo_url = f"https://huggingface.co/{value['repo_id']}"
-    if value["repo_url"] != expected_repo_url:
-        raise RuntimeError(
-            f"Hugging Face checkpoint receipt has an invalid repo URL for step {step}"
-        )
-    if value["revision_url"] != f"{expected_repo_url}/tree/{value['revision']}":
-        raise RuntimeError(
-            f"Hugging Face checkpoint receipt has an invalid revision URL for step {step}"
-        )
-    if value["commit_url"] != f"{expected_repo_url}/commit/{value['commit_sha']}":
-        raise RuntimeError(
-            f"Hugging Face checkpoint receipt has an invalid commit URL for step {step}"
-        )
+    for key, expected_url, label in (
+        ("repo_url", expected_repo_url, "repo"),
+        ("revision_url", f"{expected_repo_url}/tree/{value['revision']}", "revision"),
+        ("commit_url", f"{expected_repo_url}/commit/{value['commit_sha']}", "commit"),
+    ):
+        if value[key] != expected_url:
+            raise RuntimeError(
+                f"Hugging Face checkpoint receipt has an invalid {label} URL for step {step}"
+            )
     # A JSON round-trip ensures no mutable object owned by the Hub client or a
     # test double can alter a completed checkpoint's receipt later.
     return json.loads(json.dumps(value, sort_keys=True))
@@ -1601,6 +1584,24 @@ def _tinker_run_id(training_client: Any) -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 
+def _record_receipt(
+    run: Any,
+    checkpoint_receipts: List[Dict[str, Any]],
+    checkpoint_urls: List[str],
+    checkpoint_commit_shas: List[str],
+    receipt: Dict[str, Any],
+    *,
+    step: int | str,
+) -> Dict[str, Any]:
+    """Validate one Hub receipt, append it to the run's lists, and log it to W&B."""
+    receipt = _require_checkpoint_receipt(receipt, step=step)
+    checkpoint_receipts.append(receipt)
+    checkpoint_urls.append(receipt["revision_url"])
+    checkpoint_commit_shas.append(receipt["commit_sha"])
+    _log_wandb_checkpoint(run, receipt=receipt, receipts=checkpoint_receipts)
+    return receipt
+
+
 def _run_one_seed(
     config: GRPOConfig,
     dataset: DatasetAdapter,
@@ -1770,11 +1771,14 @@ def _run_one_seed(
             hf_owner=hf_owner,
             return_receipt=True,
         )
-        initial_receipt = _require_checkpoint_receipt(initial_receipt, step=resume_step)
-        checkpoint_receipts.append(initial_receipt)
-        checkpoint_urls.append(initial_receipt["revision_url"])
-        checkpoint_commit_shas.append(initial_receipt["commit_sha"])
-        _log_wandb_checkpoint(wb, receipt=initial_receipt, receipts=checkpoint_receipts)
+        initial_receipt = _record_receipt(
+            wb,
+            checkpoint_receipts,
+            checkpoint_urls,
+            checkpoint_commit_shas,
+            initial_receipt,
+            step=resume_step,
+        )
         sc = tc.create_sampling_client(model_path=w0.path)
 
         save_every = config.effective_save_every()
@@ -2114,11 +2118,14 @@ def _run_one_seed(
                     hf_owner=hf_owner,
                     return_receipt=True,
                 )
-                checkpoint_receipt = _require_checkpoint_receipt(checkpoint_receipt, step=step + 1)
-                checkpoint_receipts.append(checkpoint_receipt)
-                checkpoint_urls.append(checkpoint_receipt["revision_url"])
-                checkpoint_commit_shas.append(checkpoint_receipt["commit_sha"])
-                _log_wandb_checkpoint(wb, receipt=checkpoint_receipt, receipts=checkpoint_receipts)
+                checkpoint_receipt = _record_receipt(
+                    wb,
+                    checkpoint_receipts,
+                    checkpoint_urls,
+                    checkpoint_commit_shas,
+                    checkpoint_receipt,
+                    step=step + 1,
+                )
                 sc = tc.create_sampling_client(model_path=ckpt.path)
                 _write_checkpoint(
                     checkpoint_path,
@@ -2153,11 +2160,14 @@ def _run_one_seed(
             hf_owner=hf_owner,
             return_receipt=True,
         )
-        final_receipt = _require_checkpoint_receipt(final_receipt, step="final")
-        checkpoint_receipts.append(final_receipt)
-        checkpoint_urls.append(final_receipt["revision_url"])
-        checkpoint_commit_shas.append(final_receipt["commit_sha"])
-        _log_wandb_checkpoint(wb, receipt=final_receipt, receipts=checkpoint_receipts)
+        final_receipt = _record_receipt(
+            wb,
+            checkpoint_receipts,
+            checkpoint_urls,
+            checkpoint_commit_shas,
+            final_receipt,
+            step="final",
+        )
         sc = tc.create_sampling_client(model_path=final.path)
 
         last10 = step_rewards[-10:] if step_rewards else []
@@ -2242,12 +2252,8 @@ def _run_one_seed(
         )
         if config.critic_enabled:
             _save_critic(config, seed, critic, critic_opt, step=config.steps)
-        _wandb_summary(wb)["tinker_run_id"] = run_id
-        _wandb_summary(wb)["checkpoint_urls"] = list(checkpoint_urls)
-        _wandb_summary(wb)["checkpoint_commit_shas"] = list(checkpoint_commit_shas)
-        _wandb_summary(wb)["checkpoint_receipts"] = [
-            json.loads(json.dumps(item, sort_keys=True)) for item in checkpoint_receipts
-        ]
+        # The tinker run ID and checkpoint summary keys were already recorded
+        # by _log_wandb_checkpoint for the final receipt; no re-write needed.
         _finish_wandb(wb, success=True)
         return result
     except Exception as exc:
@@ -2284,6 +2290,15 @@ def run_grpo(
 # ---------------------------------------------------------------------------
 # Built-in adapters
 # ---------------------------------------------------------------------------
+
+
+def _chat_prompt(system: str, user: str) -> str:
+    """Format one system/user turn pair in the shared chat template."""
+    return (
+        f"<|im_start|>system\n{system}<|im_end|>\n"
+        f"<|im_start|>user\n{user}<|im_end|>\n"
+        "<|im_start|>assistant\n"
+    )
 
 
 def make_synthetic_tool_use_dataset(
@@ -2345,11 +2360,7 @@ def make_synthetic_tool_use_dataset(
     ]
 
     def _mkp(q: str) -> str:
-        return (
-            f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
-            f"<|im_start|>user\nAvailable tools:\n{tool_schema}\n\nUser: {q}<|im_end|>\n"
-            f"<|im_start|>assistant\n"
-        )
+        return _chat_prompt(system_prompt, f"Available tools:\n{tool_schema}\n\nUser: {q}")
 
     examples = [
         TrainingExample(prompt=_mkp(q), target={"tool": t, "arguments": a}) for q, t, a in raw
@@ -2427,11 +2438,7 @@ def make_synthetic_math_dataset(
     ]
 
     def _mkp(q: str) -> str:
-        return (
-            f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
-            f"<|im_start|>user\n{q}<|im_end|>\n"
-            f"<|im_start|>assistant\n"
-        )
+        return _chat_prompt(system_prompt, q)
 
     split = int(len(problems) * 0.8)
     train = [TrainingExample(prompt=_mkp(q), target=answer) for q, answer in problems[:split]]
@@ -2454,11 +2461,7 @@ def make_gsm8k_dataset(seed: int = 42) -> InMemoryDataset:
             match = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
             if not match:
                 continue
-            prompt = (
-                f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
-                f"<|im_start|>user\n{row['question']}<|im_end|>\n"
-                "<|im_start|>assistant\n"
-            )
+            prompt = _chat_prompt(system_prompt, row["question"])
             rows.append(
                 TrainingExample(
                     prompt=prompt,
@@ -2505,11 +2508,10 @@ def make_xlam_dataset(seed: int = 42, revision: Optional[str] = None) -> InMemor
                 arguments = json.loads(arguments)
             if not tool:
                 continue
-            prompt = (
-                f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
-                f"<|im_start|>user\nAvailable tools:\n{json.dumps(tools[:8])}\n\n"
-                f"User: {row.get('query', row.get('instruction', ''))}<|im_end|>\n"
-                "<|im_start|>assistant\n"
+            prompt = _chat_prompt(
+                system_prompt,
+                f"Available tools:\n{json.dumps(tools[:8])}\n\n"
+                f"User: {row.get('query', row.get('instruction', ''))}",
             )
             examples.append(
                 TrainingExample(
@@ -2879,6 +2881,24 @@ class StrictToolCallReward:
         return min(score, 1.0)
 
 
+def _boxed_candidates(response: str) -> List[str]:
+    """Return cleaned ``\\boxed{}`` answers from a math response."""
+    return [
+        item.strip().replace(",", "").replace(" ", "")
+        for item in re.findall(r"\\boxed\{([^}]+)\}", response)
+    ]
+
+
+def _numeric_equal(candidate: str, answer: str, *, tolerance: float = 0.01) -> bool:
+    """Return True when two answer strings match exactly or numerically."""
+    if candidate == answer:
+        return True
+    try:
+        return abs(float(candidate) - float(answer)) < tolerance
+    except (ValueError, TypeError):
+        return False
+
+
 class MathReward:
     """Scores math completions: boxed answer > last number > partial credit."""
 
@@ -2886,16 +2906,10 @@ class MathReward:
         answer = str(example.target or "")
         response = response.strip()
 
-        boxed = re.findall(r"\\boxed\{([^}]+)\}", response)
-        for b in boxed:
-            b_clean = b.strip().replace(",", "").replace(" ", "")
-            if b_clean == answer:
+        boxed = _boxed_candidates(response)
+        for b_clean in boxed:
+            if _numeric_equal(b_clean, answer):
                 return 1.0
-            try:
-                if abs(float(b_clean) - float(answer)) < 0.01:
-                    return 1.0
-            except (ValueError, TypeError):
-                pass
         if boxed:
             return 0.3
 
@@ -2922,18 +2936,13 @@ class ExactMathReward:
 
     def score(self, response: str, example: TrainingExample) -> float:
         answer = str(example.target or "")
-        boxed = re.findall(r"\\boxed\{([^}]+)\}", response.strip())
-        candidates = [item.strip().replace(",", "").replace(" ", "") for item in boxed]
+        candidates = _boxed_candidates(response.strip())
         all_numbers = re.findall(r"[-+]?\d[\d,]*\.?\d*", response)
         if all_numbers:
             candidates.append(all_numbers[-1].replace(",", ""))
         for candidate in candidates:
-            try:
-                if abs(float(candidate) - float(answer)) < 0.01:
-                    return 1.0
-            except ValueError:
-                if candidate == answer:
-                    return 1.0
+            if _numeric_equal(candidate, answer):
+                return 1.0
         return 0.0
 
 

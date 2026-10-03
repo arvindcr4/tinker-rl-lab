@@ -10,7 +10,7 @@ omit =
     */__pycache__/*
 
 [report]
-fail_under = 0
+fail_under = 77
 skip_covered = True
 precision = 1
 exclude_also =

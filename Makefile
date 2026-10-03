@@ -7,13 +7,15 @@ GRPO_PATHS := platform_tinker/tinkerrl platform_tinker/grpo_100_math.py platform
 SUBMISSION_PATHS := platform_modal/scripts/build_university_submission.py
 RUFF_PATHS := $(SUBMISSION_PATHS) platform_local/unified platform_local/trl_integrations $(GRPO_PATHS) platform_hybrid/registry/provenance/minreport.py $(AUDIT_PATHS) $(FIGURE_PATHS) utils tests tools
 
-.PHONY: bootstrap check lint lint-ruff format format-check test package docs-check submission submission-check public-check
+.PHONY: bootstrap check lint lint-ruff format format-check typecheck test coverage package lock-check secrets secrets-history docs-check submission submission-check public-check
 
 bootstrap:
 	$(UV) sync --locked --extra dev
 	$(UV) run --no-sync pre-commit install
 
-check: lint format-check test package docs-check public-check
+# `coverage` runs the full test suite with the .coveragerc fail_under gate, so it
+# replaces a plain `test` run here.
+check: lint format-check typecheck coverage package lock-check secrets docs-check public-check
 
 # Split so pre-commit can reuse the exact same linted file list as CI
 # (`make lint` = `make lint-ruff` + the repository policy gate).
@@ -29,13 +31,38 @@ format:
 format-check:
 	$(RUFF) format --check $(RUFF_PATHS)
 
+typecheck:
+	$(UV) run --no-sync mypy
+
 test:
 	$(UV) run --no-sync pytest tests/
+
+coverage:
+	$(UV) run --no-sync pytest tests/ -q --cov --cov-config=.coveragerc --cov-report=term
 
 package:
 	$(UV) lock --check
 	$(UV) build --wheel
 	$(PYTHON) tools/check_wheel.py dist/*.whl
+
+# requirements-lock.txt must be the hashed export of uv.lock (Docker installs it).
+# Regenerate with: $(LOCK_EXPORT) -o requirements-lock.txt
+LOCK_EXPORT = $(UV) export --frozen --no-dev --extra all --extra dev --no-emit-project --format requirements-txt -q
+lock-check:
+	$(UV) lock --check
+	@$(LOCK_EXPORT) --no-header | diff -q - $$(f=$$(mktemp); grep -v '^#' requirements-lock.txt > $$f; echo $$f) > /dev/null \
+		|| { echo "requirements-lock.txt is stale; run: $(LOCK_EXPORT) -o requirements-lock.txt"; exit 1; }
+
+# Secret scan (gitleaks >= 8.30, `brew install gitleaks`; config .gitleaks.toml).
+# `secrets` scans uncommitted changes (fast). `secrets-history` scans every commit
+# and fails until the two leaked Tinker keys are rotated and fingerprinted in
+# .gitleaksignore (see SECURITY notes).
+GITLEAKS ?= gitleaks
+secrets:
+	$(GITLEAKS) git --pre-commit --config .gitleaks.toml --redact --no-banner .
+
+secrets-history:
+	$(GITLEAKS) git --config .gitleaks.toml --redact --no-banner --log-opts=--all .
 
 submission:
 	$(PYTHON) platform_modal/scripts/build_university_submission.py

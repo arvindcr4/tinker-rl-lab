@@ -73,3 +73,26 @@ class Backend(ABC):
         # (model/task/seed) -> shell injection. Plans are plain argv, so tokenize instead.
         subprocess.run(shlex.split(plan.command), check=True)
         return None
+
+
+class InProcessBackend(Backend):
+    """Backend that trains in-process via ``UnifiedLauncher.dispatch_framework()``.
+
+    Delegating to dispatch_framework (not shelling back out to an entry point)
+    is what avoids entry-point self-recursion on box runtimes.
+    """
+
+    def run(
+        self,
+        framework: str,
+        spec: "CanonicalSpec",
+        *,
+        dry_run: bool = False,
+        launcher=None,
+    ):
+        plan = self.plan(framework, spec)
+        print(plan.format())
+        if dry_run or launcher is None:
+            return None
+        # Delegate to the launcher's per-framework dispatch (the _run_* methods).
+        return launcher.dispatch_framework()

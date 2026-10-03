@@ -9,13 +9,13 @@ local backend uses. The canonical .py entry is ``platform_colab/run_canonical.py
 
 from __future__ import annotations
 
-from platform_local.unified.backends.base import Backend, LaunchPlan
+from platform_local.unified.backends.base import InProcessBackend, LaunchPlan
 
 _DRIVER = "platform_colab/run_canonical.py"
 _NOTEBOOK = "platform_colab/advanced_rl_colab.ipynb"
 
 
-class ColabBackend(Backend):
+class ColabBackend(InProcessBackend):
     name = "colab"
 
     def plan(self, framework: str, spec) -> LaunchPlan:
@@ -32,12 +32,4 @@ class ColabBackend(Backend):
             ),
         )
 
-    def run(self, framework: str, spec, *, dry_run: bool = False, launcher=None):
-        plan = self.plan(framework, spec)
-        print(plan.format())
-        if dry_run or launcher is None:
-            return None
-        # In-process on the Colab box — same path as the local backend. Delegating
-        # to dispatch_framework (not shelling back out to run_canonical.py) is what
-        # avoids the entry-point self-recursion.
-        return launcher.dispatch_framework()
+    # run() is inherited from InProcessBackend (in-process dispatch_framework).

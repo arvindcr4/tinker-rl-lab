@@ -8,10 +8,11 @@ gcp (A100 Spot preflight), hfspaces (results demo + fetch).
 from __future__ import annotations
 
 from platform_local.unified.backends.base import Backend, LaunchPlan
+from platform_local.unified.canonical import BACKENDS as _CANONICAL_BACKENDS
 
 __all__ = ["Backend", "LaunchPlan", "BACKENDS", "get_backend", "BACKEND_NAMES"]
 
-BACKEND_NAMES = ("local", "modal", "colab", "vast", "gcp", "hfspaces")
+BACKEND_NAMES = _CANONICAL_BACKENDS
 _BACKENDS: dict[str, Backend] | None = None
 
 

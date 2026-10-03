@@ -31,14 +31,6 @@ class HFSpacesBackend(Backend):
         )
 
     def run(self, framework: str, spec, *, dry_run: bool = False, launcher=None):
-        plan = self.plan(framework, spec)
-        print(plan.format())
-        if dry_run:
-            return None
-        # Execute the fetch (it is safe / read-only); no training result to return.
-        import shlex
-        import subprocess
-
-        # WARNING: was shell=True on a command interpolating spec.task -> shell injection.
-        subprocess.run(shlex.split(plan.command), check=True)
-        return None
+        # The fetch is safe / read-only; the default Backend.run path
+        # (print plan, honor dry_run, tokenized subprocess exec) is exactly this.
+        return super().run(framework, spec, dry_run=dry_run)

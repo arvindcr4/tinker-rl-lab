@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from platform_local.unified.backends.base import Backend, LaunchPlan
+from platform_local.unified.backends.base import InProcessBackend, LaunchPlan
 
 # The repo file that actually executes training per framework (local path).
 _DRIVERS = {
@@ -14,7 +14,7 @@ _DRIVERS = {
 }
 
 
-class LocalBackend(Backend):
+class LocalBackend(InProcessBackend):
     name = "local"
 
     def plan(self, framework: str, spec) -> LaunchPlan:
@@ -31,10 +31,4 @@ class LocalBackend(Backend):
             notes="in-process framework dispatch",
         )
 
-    def run(self, framework: str, spec, *, dry_run: bool = False, launcher=None):
-        plan = self.plan(framework, spec)
-        print(plan.format())
-        if dry_run or launcher is None:
-            return None
-        # Delegate to the launcher's per-framework dispatch (the _run_* methods).
-        return launcher.dispatch_framework()
+    # run() is inherited from InProcessBackend (in-process dispatch_framework).

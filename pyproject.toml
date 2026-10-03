@@ -55,16 +55,16 @@ trl = [
     "accelerate==1.13.0",
 ]
 sb3 = [
-    "stable-baselines3>=2.1.0",
+    "stable-baselines3>=2.8.0,<3.0.0",
 ]
 cleanrl = [
     "tensorboard>=2.14.0",
 ]
 tianshou = [
-    "tianshou>=0.5.0",
+    "tianshou>=2.0.0,<2.1.0",
 ]
 d3rlpy = [
-    "d3rlpy>=2.0.0",
+    "d3rlpy>=2.8.0,<2.9.0",
 ]
 eval = [
     "fschat==0.2.36",
@@ -72,29 +72,30 @@ eval = [
 ]
 all = [
     "accelerate==1.13.0",
-    "d3rlpy>=2.0.0",
+    "d3rlpy>=2.8.0,<2.9.0",
     "fschat==0.2.36",
     "openai==2.45.0",
     "peft==0.19.1",
-    "stable-baselines3>=2.1.0",
+    "stable-baselines3>=2.8.0,<3.0.0",
     "tensorboard>=2.14.0",
-    "tianshou>=0.5.0",
+    "tianshou>=2.0.0,<2.1.0",
     "trl==1.2.0",
 ]
 dev = [
     "build>=1.2",
-    "pytest>=7.0",
+    "pytest>=9.1.0,<10.0.0",
     "pytest-cov>=4.0",
+    "hypothesis>=6.100",  # property tests (tests/test_properties_*.py)
     "ruff>=0.1.0",
-    "mypy>=1.0",
+    "mypy>=2.4,<3",  # match the locked version so `make typecheck` == CI
     "pre-commit>=3.0",
     # Required so `utils.stats` can be imported by the test-core job
     # (utils/stats.py uses pandas / matplotlib / seaborn for the
     # per-experiment analysis tooling).
-    "pandas>=2.0",
-    "matplotlib>=3.7",
-    "scipy>=1.10",
-    "seaborn>=0.13",
+    "pandas>=2.3.0,<2.4.0",
+    "matplotlib>=3.11.0,<4.0.0",
+    "scipy>=1.17.0,<2.0.0",
+    "seaborn>=0.13.0,<0.14.0",
 ]
 
 [project.urls]

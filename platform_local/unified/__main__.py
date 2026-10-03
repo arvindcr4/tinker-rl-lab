@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 
+from platform_local.unified.canonical import BACKENDS, FRAMEWORKS
 from platform_local.unified.launcher import UnifiedLauncher
 
 
@@ -34,7 +35,7 @@ Examples:
         "--framework",
         "-f",
         type=str,
-        choices=["skyrl", "tinker", "verl", "openrlhf", "trl"],
+        choices=list(FRAMEWORKS),
         default="skyrl",
         help="RL framework to use",
     )
@@ -43,7 +44,7 @@ Examples:
         "--backend",
         "-b",
         type=str,
-        choices=["local", "modal", "colab", "vast", "gcp", "hfspaces"],
+        choices=list(BACKENDS),
         default="local",
         help="Compute backend (local runs the framework in-process; others delegate "
         "to their provisioning driver)",

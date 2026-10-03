@@ -38,7 +38,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "numpy>=1.21",
+    "numpy==2.2.6",
 ]
 
 [project.urls]
@@ -50,9 +50,16 @@ Changelog = "https://github.com/arvindcr4/tinker-rl-lab/blob/main/zvf-program/zv
 [project.optional-dependencies]
 # Framework adapters. The core package never imports these at module load time;
 # they are imported lazily only when the corresponding adapter is used.
-trl = ["torch==2.7.1", "transformers==5.5.4", "trl==1.2.0"]
+trl = [
+    "torch==2.7.1",
+    "transformers==5.5.4",
+    "trl==1.2.0",
+    "datasets==4.8.4",
+    "peft==0.19.1",
+    "accelerate==1.13.0",
+]
 wandb = ["wandb==0.21.0"]
-tensorboard = ["tensorboard>=2.12"]
+tensorboard = ["tensorboard>=2.14.0"]
 pydantic = ["pydantic>=2.13.0,<3.0.0"]
 dev = [
     "pytest>=9.1.0,<10.0.0",

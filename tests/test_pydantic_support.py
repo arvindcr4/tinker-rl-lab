@@ -229,3 +229,29 @@ def test_all_subprojects_use_same_pydantic_and_aligned_lib_versions():
         assert expected_pydantic in content, (
             f"{manifest.relative_to(root_dir)} does not contain '{expected_pydantic}'"
         )
+
+    # Check key ML framework version alignment across manifests that declare them
+    core_checks = [
+        ("torch", "torch==2.7.1"),
+        ("transformers", "transformers==5.5.4"),
+        ("datasets", "datasets==4.8.4"),
+        ("peft", "peft==0.19.1"),
+        ("accelerate", "accelerate==1.13.0"),
+        ("trl", "trl==1.2.0"),
+        ("wandb", "wandb==0.21.0"),
+        ("numpy", "numpy==2.2.6"),
+    ]
+
+    for manifest in [
+        root_dir / "pyproject.toml",
+        root_dir / "requirements.txt",
+        root_dir / "platform_tinker" / "atropos" / "requirements_unsloth.txt",
+        root_dir / "zvf-program" / "zvf-triage" / "pyproject.toml",
+        root_dir / "platform_hybrid" / "experiments" / "implementations" / "requirements.txt",
+    ]:
+        content = manifest.read_text(encoding="utf-8")
+        for lib, expected_str in core_checks:
+            if lib in content:
+                assert expected_str in content, (
+                    f"{manifest.relative_to(root_dir)} mentions '{lib}' but does not match expected '{expected_str}'"
+                )

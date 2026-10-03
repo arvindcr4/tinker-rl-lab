@@ -102,6 +102,22 @@ def compute_bootstrap_ci(
     return mean, lower, upper
 
 
+def standard_error(scores: np.ndarray, axis: int = 0):
+    """
+    Standard error of the mean with an n<2 guard.
+
+    ``std(ddof=1)`` is undefined for a single observation, so n<2 reports
+    zero spread instead of NaN. Returns a scalar for 1-D input, an array
+    along ``axis`` otherwise.
+    """
+    arr = np.asarray(scores, dtype=float)
+    n = arr.shape[axis] if arr.ndim > 0 else 0
+    if n < 2:
+        zeros = np.zeros_like(np.mean(arr, axis=axis))
+        return zeros.item() if zeros.ndim == 0 else zeros
+    return np.std(arr, axis=axis, ddof=1) / np.sqrt(n)
+
+
 def welch_ttest(scores_a: np.ndarray, scores_b: np.ndarray) -> dict:
     """
     Welch's t-test for comparing two algorithms.
@@ -201,11 +217,7 @@ def plot_learning_curves_with_ci(
         all_curves = np.array([c[:min_len] for c in all_curves])
 
         mean = np.mean(all_curves, axis=0)
-        if len(all_curves) < 2:
-            # std(ddof=1) is undefined for a single seed: no spread to shade.
-            se = np.zeros_like(mean)
-        else:
-            se = np.std(all_curves, axis=0, ddof=1) / np.sqrt(len(all_curves))
+        se = standard_error(all_curves, axis=0)
         steps = np.arange(1, min_len + 1)
 
         ax.plot(steps, mean, label=algo_name, color=colors[idx], linewidth=2)
@@ -246,11 +258,7 @@ def generate_results_table(
     for algo_name, scores in results.items():
         scores = np.asarray(scores, dtype=float).ravel()
         mean, ci_lower, ci_upper = compute_bootstrap_ci(scores)
-        if len(scores) < 2:
-            # std(ddof=1) is undefined for n < 2: report zero spread.
-            se = 0.0
-        else:
-            se = np.std(scores, ddof=1) / np.sqrt(len(scores))
+        se = standard_error(scores)
         rows.append(
             {
                 "Algorithm": algo_name,
@@ -386,10 +394,7 @@ def main():
             mean, ci_lower, ci_upper = compute_bootstrap_ci(
                 scores_arr, n_bootstrap=args.bootstrap_samples
             )
-            if len(scores_arr) < 2:
-                se = 0.0
-            else:
-                se = np.std(scores_arr, ddof=1) / np.sqrt(len(scores_arr))
+            se = standard_error(scores_arr)
             print(
                 f"  Final score: {mean:.4f} ± {se:.4f} (95% CI: [{ci_lower:.4f}, {ci_upper:.4f}])"
             )

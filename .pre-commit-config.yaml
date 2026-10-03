@@ -29,3 +29,21 @@ repos:
         entry: python3 tools/check_repo_policy.py
         language: system
         pass_filenames: false
+      - id: mypy
+        name: mypy (typed surface in mypy.ini)
+        entry: make typecheck
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: lock-check
+        name: uv.lock / requirements-lock.txt freshness
+        entry: make lock-check
+        language: system
+        pass_filenames: false
+        files: ^(pyproject\.toml|uv\.lock|requirements-lock\.txt)$
+  # Secret scan of staged changes only (fast). Allowlists live in .gitleaks.toml.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+        args: ["--config", ".gitleaks.toml", "--redact"]

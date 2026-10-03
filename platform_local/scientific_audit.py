@@ -253,83 +253,70 @@ def get_issues(ctx):
             )
 
     def check_latex_builds():
-        steps = [
-            (
-                [
-                    "pdflatex",
-                    "-interaction=nonstopmode",
-                    "-halt-on-error",
-                    "grpo_agentic_llm_paper.tex",
-                ],
-                "latex.main.pass1",
-            ),
-            (["bibtex", "grpo_agentic_llm_paper"], "latex.main.bibtex"),
-            (
-                [
-                    "pdflatex",
-                    "-interaction=nonstopmode",
-                    "-halt-on-error",
-                    "grpo_agentic_llm_paper.tex",
-                ],
-                "latex.main.pass2",
-            ),
-            (
-                [
-                    "pdflatex",
-                    "-interaction=nonstopmode",
-                    "-halt-on-error",
-                    "grpo_agentic_llm_paper.tex",
-                ],
-                "latex.main.pass3",
-            ),
-            (
-                [
-                    "pdflatex",
-                    "-interaction=nonstopmode",
-                    "-halt-on-error",
-                    "grpo_agentic_llm_paper_anonymous.tex",
-                ],
-                "latex.anonymous",
-            ),
-            (
-                [
-                    "pdflatex",
-                    "-interaction=nonstopmode",
-                    "-halt-on-error",
-                    "supplementary_appendix.tex",
-                ],
-                "latex.supplementary.pass1",
-            ),
-            (
-                [
-                    "pdflatex",
-                    "-interaction=nonstopmode",
-                    "-halt-on-error",
-                    "supplementary_appendix.tex",
-                ],
-                "latex.supplementary.pass2",
-            ),
-        ]
+        # An installed binary alone does not imply a usable TeX distribution.
+        # Allow a caller with a warmed Tectonic cache to select it explicitly,
+        # without falling back after genuine source compilation failures.
+        engine = os.environ.get("TINKERRL_LATEX_ENGINE", "auto")
+        if engine not in {"auto", "pdflatex", "tectonic"}:
+            add(
+                paper_tex,
+                "latex.invalid_engine",
+                "TINKERRL_LATEX_ENGINE must be auto, pdflatex, or tectonic.",
+            )
+            return
+        if engine == "auto":
+            engine = (
+                "pdflatex" if shutil.which("pdflatex") and shutil.which("bibtex") else "tectonic"
+            )
 
-        if not (shutil.which("pdflatex") and shutil.which("bibtex")):
-            # Tectonic runs the required TeX/BibTeX passes itself. Cache warming
-            # is separate so a submission audit never needs network access.
-            steps = [
-                (["tectonic", "--only-cached", "--print", filename], f"latex.{name}.tectonic")
-                for name, filename in (
-                    ("main", "grpo_agentic_llm_paper.tex"),
-                    ("anonymous", "grpo_agentic_llm_paper_anonymous.tex"),
-                    ("supplementary", "supplementary_appendix.tex"),
+        documents = (
+            ("main", paper_tex.name),
+            ("anonymous", paper_tex_anon.name),
+            ("supplementary", supplementary.name),
+        )
+        steps = []
+        for name, filename in documents:
+            if engine == "tectonic":
+                # Tectonic runs TeX/BibTeX passes itself. Cache warming must be
+                # separate so an audit never requires a network connection.
+                steps.append(
+                    (
+                        ["tectonic", "--only-cached", "--print", "--keep-logs", filename],
+                        f"latex.{name}.tectonic",
+                        True,
+                    )
                 )
-            ]
+                continue
+            command = ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", filename]
+            # All three documents have their own bibliography. Skipping BibTeX
+            # for the anonymous paper or supplement produces citation-free PDFs
+            # with a successful pdflatex exit status.
+            steps.extend(
+                (
+                    (command, f"latex.{name}.pass1", False),
+                    (["bibtex", Path(filename).stem], f"latex.{name}.bibtex", False),
+                    (command, f"latex.{name}.pass2", False),
+                    (command, f"latex.{name}.pass3", True),
+                )
+            )
+
+        def failure_message(command, output):
+            # Preserve bounded compiler diagnostics before deleting scratch logs.
+            # In particular, missing formats/packages are toolchain failures,
+            # and must not be misreported as a defect in the paper's source.
+            if isinstance(output, bytes):
+                output = output.decode("utf-8", errors="replace")
+            tail = "\n".join((output or "").strip().splitlines()[-20:])[-3000:]
+            message = f"LaTeX build step failed: {' '.join(command)}"
+            return f"{message}\n{tail}" if tail else message
 
         # Keep relative source/figure lookup intact without touching author outputs.
-        env = {
-            **os.environ,
-            "BIBINPUTS": f"{ctx.FINAL_DIR}{os.pathsep}{os.environ.get('BIBINPUTS', '')}",
-        }
         with TemporaryDirectory(prefix="tinkerrl-scientific-audit-") as build_dir:
-            for cmd, code in steps:
+            env = {
+                **os.environ,
+                "BIBINPUTS": f"{ctx.FINAL_DIR}{os.pathsep}{os.environ.get('BIBINPUTS', '')}",
+            }
+            for cmd, code, final_pass in steps:
                 if cmd[0] == "pdflatex":
                     build_cmd = [*cmd[:-1], f"-output-directory={build_dir}", cmd[-1]]
                     cwd = ctx.FINAL_DIR
@@ -347,6 +334,7 @@ def get_issues(ctx):
                         stdout=subprocess.PIPE,
                         stderr=subprocess.STDOUT,
                         text=True,
+                        timeout=120,
                     )
                 except FileNotFoundError:
                     add(
@@ -355,8 +343,23 @@ def get_issues(ctx):
                         f"LaTeX build not run: required executable {cmd[0]!r} was not found.",
                     )
                     break
+                except subprocess.TimeoutExpired as exc:
+                    add(
+                        ctx.FINAL_DIR / cmd[-1],
+                        f"{code}.timeout",
+                        f"LaTeX build timed out after 120 seconds. "
+                        f"{failure_message(cmd, exc.stdout)}",
+                    )
+                    break
+                except OSError as exc:
+                    add(
+                        ctx.FINAL_DIR / cmd[-1],
+                        f"latex.tool_start_failed:{cmd[0]}",
+                        f"LaTeX build not run: could not start {cmd[0]!r}: {exc}",
+                    )
+                    break
                 if result.returncode != 0:
-                    add(ctx.FINAL_DIR / cmd[-1], code, f"LaTeX build step failed: {' '.join(cmd)}")
+                    add(ctx.FINAL_DIR / cmd[-1], code, failure_message(cmd, result.stdout))
                     break
                 if (cmd[0] in {"bibtex", "tectonic"}) and "Warning--empty journal" in result.stdout:
                     add(
@@ -364,6 +367,39 @@ def get_issues(ctx):
                         "latex.bibtex.empty_journal",
                         "BibTeX emitted 'empty journal' warnings for cited references, so the bibliography metadata is incomplete.",
                     )
+                log_path = Path(build_dir) / f"{Path(cmd[-1]).stem}.log"
+                # Tectonic stdout includes intermediate passes, which can have
+                # transient unresolved citations. Only the final TeX log counts.
+                final_output = (
+                    log_path.read_text(encoding="utf-8", errors="replace")
+                    if final_pass and log_path.is_file()
+                    else result.stdout
+                )
+                if final_pass and re.search(
+                    r"(?:There were undefined (?:references|citations)|"
+                    r"Citation[^\n]*undefined|Reference[^\n]*undefined)",
+                    final_output,
+                    re.I,
+                ):
+                    add(
+                        ctx.FINAL_DIR / cmd[-1],
+                        f"{code}.unresolved_references",
+                        failure_message(cmd, final_output),
+                    )
+                pdf_path = Path(build_dir) / f"{Path(cmd[-1]).stem}.pdf"
+                if final_pass:
+                    if not pdf_path.is_file():
+                        add(
+                            ctx.FINAL_DIR / cmd[-1],
+                            f"{code}.missing_pdf",
+                            "LaTeX reported success but did not produce the expected PDF in the scratch directory.",
+                        )
+                    elif pdf_path.stat().st_size == 0:
+                        add(
+                            ctx.FINAL_DIR / cmd[-1],
+                            f"{code}.empty_pdf",
+                            "LaTeX reported success but produced an empty PDF in the scratch directory.",
+                        )
 
     def check_result_jsons():
         required_config = {

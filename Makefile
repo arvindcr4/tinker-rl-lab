@@ -7,13 +7,13 @@ GRPO_PATHS := platform_tinker/tinkerrl platform_tinker/grpo_100_math.py platform
 SUBMISSION_PATHS := platform_modal/scripts/build_university_submission.py
 RUFF_PATHS := $(SUBMISSION_PATHS) platform_local/unified platform_local/trl_integrations $(GRPO_PATHS) platform_hybrid/registry/provenance/minreport.py $(AUDIT_PATHS) $(FIGURE_PATHS) utils tests tools
 
-.PHONY: bootstrap check lint lint-ruff format format-check test package docs-check submission submission-check
+.PHONY: bootstrap check lint lint-ruff format format-check test package docs-check submission submission-check public-check
 
 bootstrap:
 	$(UV) sync --locked --extra dev
 	$(UV) run --no-sync pre-commit install
 
-check: lint format-check test package docs-check
+check: lint format-check test package docs-check public-check
 
 # Split so pre-commit can reuse the exact same linted file list as CI
 # (`make lint` = `make lint-ruff` + the repository policy gate).
@@ -43,6 +43,13 @@ submission:
 submission-check:
 	$(PYTHON) tools/check_thesis_evidence.py
 	$(PYTHON) submission/demo/run_demo.py --self-test
+
+# Standard library only: use `make public-check PYTHON=python3` without uv or a GPU.
+# The 2026-10-03 manifest is read-only; this target never refreshes expected hashes.
+public-check:
+	$(PYTHON) -B tools/check_public_release.py
+	$(PYTHON) -B tools/check_public_results.py
+	$(PYTHON) -B -m unittest discover -s tests -p 'test_public*.py' -v
 
 docs-check:
 	@test -f SUBMISSION.md

@@ -55,7 +55,8 @@ def test_audit_runner_collects_results_without_subprocess_or_regex():
 
 @pytest.mark.latex
 def test_repository_audit_suite_currently_passes():
-    assert run_suite().passed
+    result = run_suite()
+    assert result.passed, result.failures
 
 
 def test_repository_suite_registers_every_audit_module():
@@ -91,6 +92,7 @@ def test_scientific_audit_executes_its_grouped_checks(monkeypatch):
         calls.append((args, kwargs))
         return Completed()
 
+    monkeypatch.setenv("TINKERRL_LATEX_ENGINE", "tectonic")
     monkeypatch.setattr(scientific_audit.subprocess, "run", fake_run)
     result = evaluate_audit(
         "scientific_issues",
@@ -102,14 +104,30 @@ def test_scientific_audit_executes_its_grouped_checks(monkeypatch):
     assert calls, "the grouped scientific checks must not silently return without running"
 
 
-@pytest.mark.parametrize("toolchain", ["pdflatex", "tectonic", "pdflatex_only"])
-@pytest.mark.parametrize("outcome", ["success", "build_failure", "missing_tool", "empty_journal"])
+@pytest.mark.parametrize("toolchain", ["pdflatex", "tectonic", "pdflatex_only", "forced_tectonic"])
+@pytest.mark.parametrize(
+    "outcome",
+    [
+        "success",
+        "build_failure",
+        "missing_tool",
+        "empty_journal",
+        "timeout",
+        "missing_pdf",
+        "empty_pdf",
+        "permission_error",
+        "os_error",
+        "unresolved_references",
+        "transient_references",
+    ],
+)
 def test_scientific_builds_preserve_source_artifacts(tmp_path, monkeypatch, toolchain, outcome):
     compiler = "pdflatex" if toolchain == "pdflatex" else "tectonic"
     available_tools = {
         "pdflatex": {"pdflatex", "bibtex"},
         "tectonic": {"tectonic"},
         "pdflatex_only": {"pdflatex", "tectonic"},
+        "forced_tectonic": {"pdflatex", "bibtex", "tectonic"},
     }[toolchain]
     context = AuditContext()
     context.ROOT = tmp_path
@@ -136,6 +154,9 @@ def test_scientific_builds_preserve_source_artifacts(tmp_path, monkeypatch, tool
     calls = []
     output_dirs = []
     monkeypatch.setenv("BIBINPUTS", f"existing-bib-search{os.pathsep}")
+    monkeypatch.setenv(
+        "TINKERRL_LATEX_ENGINE", "tectonic" if toolchain == "forced_tectonic" else "auto"
+    )
     monkeypatch.setattr(
         scientific_audit.shutil,
         "which",
@@ -144,6 +165,7 @@ def test_scientific_builds_preserve_source_artifacts(tmp_path, monkeypatch, tool
 
     def fake_run(command, **kwargs):
         calls.append(command)
+        assert kwargs["timeout"] == 120
         output_dir = Path(kwargs["cwd"])
         if command[0] == "pdflatex":
             for arg in command:
@@ -154,20 +176,34 @@ def test_scientific_builds_preserve_source_artifacts(tmp_path, monkeypatch, tool
             output_dir = Path(command[command.index("--outdir") + 1])
             assert "--only-cached" in command
             assert "--print" in command
+            assert "--keep-logs" in command
             assert Path(kwargs["cwd"]) == context.FINAL_DIR
         else:
             assert kwargs["env"]["BIBINPUTS"] == (
                 f"{context.FINAL_DIR}{os.pathsep}existing-bib-search{os.pathsep}"
             )
         output_dirs.append(output_dir)
-        (output_dir / f"{Path(command[-1]).stem}.pdf").write_bytes(b"audit output")
+        if outcome != "missing_pdf":
+            (output_dir / f"{Path(command[-1]).stem}.pdf").write_bytes(
+                b"" if outcome == "empty_pdf" else b"audit output"
+            )
         if outcome == "missing_tool":
             raise FileNotFoundError(2, "No such file or directory", command[0])
-        stdout = (
-            "Warning--empty journal in example"
-            if outcome == "empty_journal" and command[0] in {"bibtex", "tectonic"}
-            else ""
-        )
+        if outcome == "permission_error":
+            raise PermissionError(13, "Permission denied", command[0])
+        if outcome == "os_error":
+            raise OSError(8, "Exec format error", command[0])
+        if outcome == "timeout":
+            raise subprocess.TimeoutExpired(command, 120, output=b"compiler stopped here")
+        stdout = ""
+        if outcome == "empty_journal" and command[0] in {"bibtex", "tectonic"}:
+            stdout = "Warning--empty journal in example"
+        elif outcome == "build_failure":
+            stdout = "noisy progress\n" * 400 + "I can't find the format file `pdflatex.fmt'!"
+        elif outcome in {"unresolved_references", "transient_references"}:
+            stdout = "LaTeX Warning: There were undefined references."
+        log = stdout if outcome != "transient_references" else "Resolved on final pass"
+        (output_dir / f"{Path(command[-1]).stem}.log").write_text(log)
         return SimpleNamespace(returncode=int(outcome == "build_failure"), stdout=stdout)
 
     monkeypatch.setattr(scientific_audit.subprocess, "run", fake_run)
@@ -177,18 +213,68 @@ def test_scientific_builds_preserve_source_artifacts(tmp_path, monkeypatch, tool
     assert output_dirs and all(path != context.FINAL_DIR for path in output_dirs)
     assert all(not path.exists() for path in output_dirs)
     latex_codes = [issue.code for issue in result.issues if issue.code.startswith("latex.")]
-    if outcome in {"success", "empty_journal"}:
-        assert len(calls) == (7 if compiler == "pdflatex" else 3)
-        warning_count = (1 if compiler == "pdflatex" else 3) if outcome == "empty_journal" else 0
+    first_step = "latex.main.pass1" if compiler == "pdflatex" else "latex.main.tectonic"
+    if outcome in {"success", "empty_journal", "transient_references"}:
+        assert len(calls) == (12 if compiler == "pdflatex" else 3)
+        warning_count = 3 if outcome == "empty_journal" else 0
         assert latex_codes == ["latex.bibtex.empty_journal"] * warning_count
+        if compiler == "pdflatex":
+            for index, stem in enumerate(
+                (
+                    "grpo_agentic_llm_paper",
+                    "grpo_agentic_llm_paper_anonymous",
+                    "supplementary_appendix",
+                )
+            ):
+                assert [command[0] for command in calls[index * 4 : index * 4 + 4]] == [
+                    "pdflatex",
+                    "bibtex",
+                    "pdflatex",
+                    "pdflatex",
+                ]
+                assert calls[index * 4 + 1] == ["bibtex", stem]
     elif outcome == "build_failure":
         assert len(calls) == 1
+        assert latex_codes == [first_step]
+        issue = next(issue for issue in result.issues if issue.code == first_step)
+        assert "I can't find the format file `pdflatex.fmt'!" in issue.message
+        assert len(issue.message) < 3500
+    elif outcome == "timeout":
+        assert len(calls) == 1
+        assert latex_codes == [f"{first_step}.timeout"]
+        issue = next(issue for issue in result.issues if issue.code.endswith(".timeout"))
+        assert "120 seconds" in issue.message
+        assert "compiler stopped here" in issue.message
+    elif outcome in {"missing_pdf", "empty_pdf", "unresolved_references"}:
+        assert len(calls) == (12 if compiler == "pdflatex" else 3)
+        suffix = "pass3" if compiler == "pdflatex" else "tectonic"
         assert latex_codes == [
-            "latex.main.pass1" if compiler == "pdflatex" else "latex.main.tectonic"
+            f"latex.{name}.{suffix}.{outcome}" for name in ("main", "anonymous", "supplementary")
         ]
+    elif outcome in {"permission_error", "os_error"}:
+        assert len(calls) == 1
+        assert latex_codes == [f"latex.tool_start_failed:{compiler}"]
+        issue = next(issue for issue in result.issues if issue.code == latex_codes[0])
+        assert "could not start" in issue.message
+        assert (
+            "Permission denied" if outcome == "permission_error" else "Exec format error"
+        ) in issue.message
     else:
         assert len(calls) == 1
         assert latex_codes == [f"latex.tool_missing:{compiler}"]
+
+
+def test_scientific_audit_rejects_invalid_engine_before_compiling(monkeypatch):
+    monkeypatch.setenv("TINKERRL_LATEX_ENGINE", "unknown")
+
+    def unexpected_run(*args, **kwargs):
+        pytest.fail("An invalid engine setting must not start a compiler")
+
+    monkeypatch.setattr(scientific_audit.subprocess, "run", unexpected_run)
+    result = evaluate_audit("scientific_issues", scientific_audit.get_issues, AuditContext())
+    assert [issue.code for issue in result.issues if issue.code.startswith("latex.")] == [
+        "latex.invalid_engine"
+    ]
 
 
 @pytest.mark.latex

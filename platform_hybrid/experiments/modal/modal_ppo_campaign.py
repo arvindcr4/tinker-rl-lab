@@ -5,8 +5,7 @@ import modal, os, json
 
 app = modal.App("tinker-rl-ppo-campaign")
 
-HF_TOKEN = os.environ["HF_TOKEN"]
-WANDB_KEY = os.environ["WANDB_API_KEY"]
+# WARNING (security): HF/W&B tokens previously were baked into the image via .env()/Secret.from_dict(); they now come from named Modal secrets. Rotate tokens if old images exist.
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
@@ -16,8 +15,6 @@ image = (
         "numpy", "pandas", "wandb", "huggingface_hub",
     )
     .env({
-        "HF_TOKEN": HF_TOKEN,
-        "WANDB_API_KEY": WANDB_KEY,
         "WANDB_PROJECT": "tinker-rl-lab-world-class",
         "WANDB_ENTITY": "arvindcr4-pes-university",
     })
@@ -36,10 +33,7 @@ PPO_EXPERIMENTS = [
     image=image,
     gpu="H100",
     timeout=3600,
-    secrets=[modal.Secret.from_dict({
-        "HF_TOKEN": HF_TOKEN,
-        "WANDB_API_KEY": WANDB_KEY,
-    })],
+    secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")],
 )
 def run_ppo_experiment(tag: str, model_id: str, model_short: str):
     """Run a single PPO experiment on Modal H100."""
@@ -216,8 +210,8 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
     hf_repo_id = f"arvindcr4-pes-university/tinker-rl-{tag}"
     print(f"Pushing model to Hub: {hf_repo_id}")
     try:
-        model.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN"))
-        tokenizer.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN"))
+        model.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN"), private=True)
+        tokenizer.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN"), private=True)
         result["hub_repo"] = hf_repo_id
     except Exception as e:
         print(f"Failed to push to Hub: {e}")

@@ -5,8 +5,7 @@ import modal, os, json
 
 app = modal.App("tinker-rl-trl-grpo")
 
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
-WANDB_KEY = os.environ.get("WANDB_API_KEY", "")
+# WARNING (security): HF/W&B tokens previously were baked into the image via .env()/Secret.from_dict(); they now come from named Modal secrets. Rotate tokens if old images exist.
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
@@ -16,8 +15,6 @@ image = (
         "numpy", "pandas", "wandb", "huggingface_hub",
     )
     .env({
-        "HF_TOKEN": HF_TOKEN,
-        "WANDB_API_KEY": WANDB_KEY,
         "WANDB_PROJECT": "tinker-rl-lab-world-class",
     })
 )
@@ -33,10 +30,7 @@ TRL_EXPERIMENTS = [
     image=image,
     gpu="H100",
     timeout=7200,
-    secrets=[modal.Secret.from_dict({
-        "HF_TOKEN": HF_TOKEN,
-        "WANDB_API_KEY": WANDB_KEY,
-    })],
+    secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")],
 )
 def run_trl_grpo(tag: str, model_id: str, model_short: str):
     """Run TRL GRPOTrainer on Modal H100 for framework comparison."""
@@ -165,6 +159,7 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
         bf16=True,
         gradient_accumulation_steps=1,
         push_to_hub=True,
+        hub_private_repo=True,
         hub_model_id=f"arvindcr4/{tag}-grpo-gsm8k",
         hub_token=os.environ.get("HF_TOKEN"),
         hub_strategy="every_save",

@@ -339,6 +339,9 @@ def main():
     parser.add_argument("--output-dir", type=str, default="paper/figures/")
     parser.add_argument("--format", type=str, choices=["latex", "csv", "both"], default="both")
     parser.add_argument("--rliable", action="store_true", help="Run rliable aggregate analysis")
+    parser.add_argument(
+        "--bootstrap-samples", type=int, default=10000, help="Bootstrap resamples for the CI"
+    )
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -380,7 +383,9 @@ def main():
 
         if final_scores:
             scores_arr = np.array(final_scores)
-            mean, ci_lower, ci_upper = compute_bootstrap_ci(scores_arr)
+            mean, ci_lower, ci_upper = compute_bootstrap_ci(
+                scores_arr, n_bootstrap=args.bootstrap_samples
+            )
             if len(scores_arr) < 2:
                 se = 0.0
             else:

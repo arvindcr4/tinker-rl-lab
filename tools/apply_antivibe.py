@@ -27,6 +27,7 @@ import sys
 import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_ROOT = ROOT / "deep-dive" / "per-file"
@@ -593,7 +594,7 @@ def _fn_info(node) -> dict:
 
 
 def analyze_python(rel: Path, text: str) -> dict:
-    facts = {
+    facts: dict[str, Any] = {
         "kind": "config",
         "lines": len(text.splitlines()),
         "imports": [],
@@ -686,7 +687,7 @@ def analyze_python(rel: Path, text: str) -> dict:
 
 
 def analyze_shell(rel: Path, text: str) -> dict:
-    facts = {
+    facts: dict[str, Any] = {
         "kind": "sh",
         "lines": len(text.splitlines()),
         "imports": [],
@@ -743,7 +744,7 @@ def analyze_shell(rel: Path, text: str) -> dict:
 
 
 def analyze_yaml_toml(rel: Path, text: str) -> dict:
-    facts = {
+    facts: dict[str, Any] = {
         "kind": "config",
         "lines": len(text.splitlines()),
         "imports": [],
@@ -818,7 +819,7 @@ def detect_role(rel: Path, facts: dict) -> str:
 
 
 def analyze_json(rel: Path, text: str) -> dict:
-    facts = {
+    facts: dict[str, Any] = {
         "kind": "config",
         "lines": len(text.splitlines()),
         "imports": [],

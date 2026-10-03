@@ -56,8 +56,12 @@ from collections import defaultdict
 import numpy as np
 from scipy import stats as scs
 
-W = "/home/claude/tinker-rl-lab-minimax"
-RES = os.path.join(W, "experiments", "results")
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+W = str(REPO_ROOT)
+RES = os.path.join(W, "platform_hybrid/experiments", "results")
 B_BOOT = 2000
 N_SURR = 200
 RNG_SEED = 92

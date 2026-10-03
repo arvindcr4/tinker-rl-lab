@@ -26,7 +26,7 @@ ignored files on one machine are not proof that a fresh checkout works.
 **Do not upload the old deck or an older bundle as this submission.**
 `FINAL_HANDOFF.md`, `submission/contents/`, `submission/mtech_phase1/`, and the
 September review slides record earlier deliverables. They are not kept in sync
-with this thesis. A presentation is not included in the current package.
+with this thesis. The submission ZIP does not include slides. The viva deck aligned to the 3 October public thesis is [reports/final_defense_2026-10-03](reports/final_defense_2026-10-03/README.md). Do not present the September review deck.
 
 ## Build the package
 

@@ -41,9 +41,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=C.UTF-8
 
 # --- System deps --------------------------------------------------------------
-# Python 3.12 matches the frozen runtime validated 106/106 (execution-notes.md
-# frozen-runtime record) and the project's requires-python>=3.11. Ubuntu 22.04
-# ships 3.10, so install 3.12 via the deadsnakes PPA.
+# Python 3.12 matches the local .venv (3.12.13), the CI matrix (3.11/3.12),
+# the frozen runtime validated 106/106 (execution-notes.md) and
+# requires-python>=3.11. Ubuntu 22.04's system Python is 3.10, so install 3.12
+# via the deadsnakes PPA; requirements-lock.txt selects 3.12 wheels by marker.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         software-properties-common gnupg \
     && add-apt-repository -y ppa:deadsnakes/ppa \
@@ -63,9 +64,20 @@ RUN update-alternatives --install /usr/bin/python  python  /usr/bin/python3.12 1
 WORKDIR /workspace/tinker-rl-lab
 
 # --- Python deps (cached layer) ----------------------------------------------
-COPY requirements.txt pyproject.toml ./
+# 1) Install the exact tested environment from the hashed uv.lock export
+#    (requirements-lock.txt; same versions CI and .venv use). --no-deps +
+#    --require-hashes means nothing outside the lock is resolved here.
+# 2) Add the research add-ons in requirements.txt that are not in uv.lock
+#    (Atropos, math-verify, ...), constrained to the locked versions so they
+#    cannot move anything installed in step 1. Constraint files may not carry
+#    hashes, so strip them.
+COPY requirements-lock.txt requirements.txt pyproject.toml ./
 RUN python -m pip install --upgrade pip setuptools wheel && \
-    pip install -r requirements.txt
+    pip install --require-hashes --no-deps -r requirements-lock.txt && \
+    sed -e '/^[[:space:]]*--hash=/d' -e 's/[[:space:]]*\\$//' requirements-lock.txt \
+        > /tmp/lock-constraints.txt && \
+    pip install -r requirements.txt -c /tmp/lock-constraints.txt && \
+    pip check
 
 # --- Project sources ----------------------------------------------------------
 COPY . .
@@ -75,9 +87,9 @@ RUN printf 'git_commit=%s\ngit_ref=%s\nbuild_date=%s\n' \
     "${GIT_COMMIT}" "${GIT_REF}" "${BUILD_DATE}" > /workspace/tinker-rl-lab/.build_info && \
     cat /workspace/tinker-rl-lab/.build_info
 
-# Optional editable installs (best-effort — do not fail the build)
-RUN pip install -e . 2>/dev/null || true && \
-    pip install -e atropos/ 2>/dev/null || true
+# Editable install of the project itself; dependencies already come from the
+# lock above, so --no-deps keeps pip from re-resolving pyproject ranges.
+RUN pip install --no-deps -e .
 
 # --- Runtime defaults ---------------------------------------------------------
 ENV SEED=42 \

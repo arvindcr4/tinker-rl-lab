@@ -39,6 +39,30 @@ class TestComputeGaeAdvantages(unittest.TestCase):
         for actual, want in zip(advs, [1.0, 0.0, 0.5]):
             self.assertTrue(math.isclose(actual, want, rel_tol=1e-9))
 
+    def test_gamma_discounts_the_bootstrap(self):
+        advs, rets = compute_gae_advantages(
+            rewards=[1.0, 1.0],
+            values=[0.0, 0.0, 0.0],
+            dones=[False, True],
+            gamma=0.5,
+            lam=0.5,
+        )
+        for actual, want in zip(advs, [1.25, 1.0]):
+            self.assertTrue(math.isclose(actual, want, rel_tol=1e-9))
+        for actual, want in zip(rets, [1.25, 1.0]):
+            self.assertTrue(math.isclose(actual, want, rel_tol=1e-9))
+
+    def test_zero_gamma_ignores_the_bootstrap_value(self):
+        advs, rets = compute_gae_advantages(
+            rewards=[1.0],
+            values=[0.5, 10.0],
+            dones=[False],
+            gamma=0.0,
+            lam=1.0,
+        )
+        self.assertTrue(math.isclose(advs[0], 0.5, abs_tol=1e-9))
+        self.assertTrue(math.isclose(rets[0], 1.0, abs_tol=1e-9))
+
     def test_done_blocks_bootstrapping(self):
         advs, _ = compute_gae_advantages(
             rewards=[0.0, 0.0],
@@ -215,6 +239,11 @@ class TestExplainedVariance(unittest.TestCase):
     def test_small_but_real_variance_still_computes(self):
         ev = explained_variance([0.0, 1e-3], [0.0, 1e-3])
         self.assertTrue(math.isclose(ev, 1.0))
+
+    def test_anti_correlated_prediction_is_negative(self):
+        # Predictions are the reverse of the targets: residual variance is
+        # four times the target variance, so explained variance is -3.
+        self.assertTrue(math.isclose(explained_variance([0.0, 1.0], [1.0, 0.0]), -3.0))
 
     def test_empty_is_zero(self):
         self.assertEqual(explained_variance([], []), 0.0)

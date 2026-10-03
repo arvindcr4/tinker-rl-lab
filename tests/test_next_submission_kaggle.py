@@ -11,7 +11,8 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 PATH = ROOT / "zvf-program/next-submission/run_kaggle_preflight.py"
 SPEC = importlib.util.spec_from_file_location("next_submission_kaggle", PATH)
-assert SPEC is not None and SPEC.loader is not None
+assert SPEC is not None
+assert SPEC.loader is not None
 KAGGLE = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = KAGGLE
 SPEC.loader.exec_module(KAGGLE)

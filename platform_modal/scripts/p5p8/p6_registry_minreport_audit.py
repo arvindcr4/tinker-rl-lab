@@ -37,9 +37,12 @@ import math
 from collections import Counter, defaultdict
 from pathlib import Path
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-REG = ROOT / "registry" / "entries"
-OUT = ROOT / "experiments" / "results" / "p5p8"
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+REG = ROOT / "platform_hybrid/registry" / "entries"
+OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # The 22 sub-fields audited by iter-53 #64 (P5)

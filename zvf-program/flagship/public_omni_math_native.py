@@ -292,6 +292,26 @@ def ingest_responses(setup, prepared, run_dir, kind, input_path):
     return {"status": "INGESTED_NOT_SCORED", "kind": kind, "count": len(seen), "score": None}
 
 
+def cap_status(envelope, max_tokens):
+    """Per-sample finish_reason and budget-cap flag, so cap-driven failures are separable."""
+    choice = envelope["choices"][0]
+    finish_reason = choice.get("finish_reason")
+    completion_tokens = (envelope.get("usage") or {}).get("completion_tokens")
+    capped = finish_reason == "length" or (completion_tokens is not None and completion_tokens >= max_tokens)
+    return {"finish_reason": finish_reason, "completion_tokens": completion_tokens, "max_tokens": max_tokens, "capped": capped}
+
+
+def cap_split(grades):
+    """Accuracy split by actor cap status (stored E14 run predates this field; recount from its dispositions)."""
+    split = {}
+    for label, want in (("capped", True), ("uncapped", False)):
+        subset = [g for g in grades if g["actor"]["capped"] is want]
+        correct = sum(bool(g["correct"]) for g in subset)
+        split[label] = {"n": len(subset), "correct": correct, "accuracy": correct / len(subset) if subset else None}
+    split["judge_capped"] = sum(g["judge"]["capped"] for g in grades)
+    return split
+
+
 def validate_native_reports(rows, scorer):
     """Native parser skips malformed reports; block instead of shrinking 4428."""
     require(len(rows) == EXPECTED_TOTAL, "full native scoring requires all 4428 reports")
@@ -332,7 +352,7 @@ def score(setup, prepared, run_dir, output):
         require(contract == create_contract(manifest, kind, contract["provenance"], contract["wandb"], contract["extra_body"]), "source/model/sampling contract drift")
         contracts[kind] = contract
     scorer, tokenizer = load_scorer(setup), load_tokenizer(setup)
-    rows, blocked, actor_count = [], [], 0
+    rows, blocked, actor_count, caps = [], [], 0, []
     for task in manifest["tasks"]:
         ident = task["task_id"]
         if not (run_dir / "actor/tasks" / ident / "response.json").exists():
@@ -358,6 +378,12 @@ def score(setup, prepared, run_dir, output):
                      "judge_response_sha256": fingerprint(judge_response), "actor_usage": actor_envelope.get("usage"),
                      "judge_usage": judge_envelope.get("usage"), "native_row_sha256": fingerprint(row)}
             write_once(run_dir / "judge/tasks" / ident / "native_grade.json", grade)
+            # Separate file so native_grade.json from earlier runs stays byte-identical.
+            cap = {"task_id": ident, "correct": grade["correct"],
+                   "actor": cap_status(actor_envelope, contracts["actor"]["sampling"]["max_tokens"]),
+                   "judge": cap_status(judge_envelope, contracts["judge"]["sampling"]["max_tokens"])}
+            write_once(run_dir / "judge/tasks" / ident / "cap_status.json", cap)
+            caps.append(cap)
             rows.append(row)
         except (ContractError, OSError, ValueError) as exc:
             blocked.append({"task_id": ident, "reason": str(exc)})
@@ -370,6 +396,7 @@ def score(setup, prepared, run_dir, output):
                "actor_samples": actor_count, "native_judged_samples": len(rows), "score": result,
                "metric": "native Omni-Judge Total Accuracy; all 4428 rows",
                "blocked_tasks": blocked, "manifest_sha256": fingerprint(manifest),
+               "accuracy_by_actor_cap": cap_split(caps),
                "actor_contract_sha256": fingerprint(contracts["actor"]), "judge_contract_sha256": fingerprint(contracts["judge"]),
                "native_scorer_stdout": stdout, "native_judged_rows_sha256": rows_hash,
                "native_scorer_sha256": FILES["native_source/Omni-Judge_eval/get_result.py"],

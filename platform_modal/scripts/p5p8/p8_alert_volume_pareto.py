@@ -47,8 +47,10 @@ import xgboost as xgb
 from sklearn.metrics import precision_score, recall_score, f1_score
 
 # ------------------------------------------------------------------ paths
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-OUT = ROOT / "experiments" / "results" / "p5p8"
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 FIG = OUT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)

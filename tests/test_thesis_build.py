@@ -112,7 +112,7 @@ def test_missing_input_stops_before_native_tools(thesis, missing):
 
 
 @pytest.mark.parametrize(
-    "name,content",
+    ("name", "content"),
     [
         ("chapter.md", b"# Incomplete"),
         ("appendix.md", b""),
@@ -152,7 +152,7 @@ def test_failed_pandoc_cleans_temporary_markdown(thesis, failure):
 
 
 @pytest.mark.parametrize(
-    "exit_code,artifact",
+    ("exit_code", "artifact"),
     [
         (1, None),
         (1, b"partial PDF"),
@@ -240,7 +240,7 @@ def test_force_bypasses_figure_cache_and_publishes_new_pdf(figures, monkeypatch)
 
 
 @pytest.mark.parametrize(
-    "exit_code,artifact",
+    ("exit_code", "artifact"),
     [
         (1, None),
         (1, b"partial PDF"),

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import subprocess
 import sys
 
@@ -213,11 +214,9 @@ def test_ppo_trainer_warns_when_clip_is_decoupled():
     from platform_local.trl_integrations.trainer import create_ppo_trainer
 
     config = TRLConfig(algorithm={"algorithm": "ppo", "epsilon_low": 0.2, "epsilon_high": 0.28})
-    with pytest.warns(UserWarning, match="single clip_eps"):
-        try:
-            create_ppo_trainer(None, None, None, [], config)
-        except ImportError:
-            pass  # trl is not installed in the unit-test env; warning is the point
+    # trl is not installed in the unit-test env; the warning is the point.
+    with pytest.warns(UserWarning, match="single clip_eps"), contextlib.suppress(ImportError):
+        create_ppo_trainer(None, None, None, [], config)
 
 
 def test_ppo_trainer_silent_on_symmetric_clip():

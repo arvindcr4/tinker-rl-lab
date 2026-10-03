@@ -29,9 +29,11 @@ import json
 import pathlib
 import sys
 
-WORKTREE = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-REGISTRY = WORKTREE / "registry"
-RESULTS = WORKTREE / "experiments" / "results" / "p5p8"
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = REPO_ROOT
+REGISTRY = WORKTREE / "platform_hybrid/registry"
+RESULTS = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
 
 PRED_MAP = {
     ">0": lambda x: x > 0,

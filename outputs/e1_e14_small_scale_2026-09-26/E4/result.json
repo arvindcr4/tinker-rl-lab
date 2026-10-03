@@ -1,0 +1,76 @@
+{
+  "lane": "E4",
+  "original_benchmark": "BankerToolBench (btb, official repo ff6db552, 100 tasks)",
+  "benchmark_run": "BankerToolBench official Harbor tasks + native rubric verifier (6-task seeded subset)",
+  "scope": "original-public-subset",
+  "substitute_gap": null,
+  "actor": "Qwen/Qwen3.6-35B-A3B base (no adapter), Tinker",
+  "thinking": false,
+  "temperature": 0,
+  "max_tokens": 16384,
+  "n_selected": 6,
+  "n_scored": 6,
+  "n_errors": 1,
+  "item_ids": [
+    "btb-19b3361c",
+    "btb-11e08646",
+    "btb-07727295",
+    "btb-bc55d3e8",
+    "btb-507a3d72",
+    "btb-990cf5d7"
+  ],
+  "per_item_reward": {
+    "btb-19b3361c": 0.4087,
+    "btb-11e08646": 0.0,
+    "btb-07727295": 0.0,
+    "btb-bc55d3e8": 0.0,
+    "btb-507a3d72": 0.0,
+    "btb-990cf5d7": 0.0
+  },
+  "metric": "mean native verifier reward (rubric raw_score/max_score, 0-1) per task; errors/no-deliverable = 0",
+  "value": 0.0681,
+  "numerator": 0.4087,
+  "denominator": 6,
+  "wilson95": [
+    0.0061,
+    0.4673
+  ],
+  "grader": "native (BTB gandalf rubric verifier, judge gemini/gemini-3-flash-preview per task grader.toml)",
+  "compute_route": "Tinker sampling via local OpenAI-compatible shim (E4/code/tinker_shim.py); Harbor 0.20 + opencode agent in local Docker (colima aarch64)",
+  "cost": {
+    "tinker_tokens": 1562855,
+    "colab_units": 0.0,
+    "modal_usd": 0.0
+  },
+  "started_utc": "2026-09-26T14:15:57Z",
+  "finished_utc": "2026-09-26T15:10:37Z",
+  "commands": [
+    "SHIM_KEY=... E4/code/shim_loop.sh E4 18741   # base-model shim; cap file raw/cap.json",
+    "E4/code/run_e4_task.sh btb-19b3361c   # task 1 (cap 700k, used 115k)",
+    "E4/code/e4_loop.sh btb-11e08646 btb-07727295 btb-bc55d3e8 btb-507a3d72 btb-990cf5d7   # per-task cap 500k tokens",
+    "python E4/code/compute_result.py btb-19b3361c btb-11e08646 btb-07727295 btb-bc55d3e8 btb-507a3d72 btb-990cf5d7"
+  ],
+  "raw_dir": "E4/raw/",
+  "selection": "random.Random(20260926).sample(sorted(btb-* task dirs), 10); first 6 run (token budget)",
+  "prior_base_run": {
+    "source": "outputs/e4_banker_toolbench/official_repo_ff6db552/jobs/btb-banking-tasks-tinker-bridge/result.json",
+    "date": "2026-09-21",
+    "n_trials": 100,
+    "n_errors": 1,
+    "mean_reward": 0.0,
+    "reward_buckets": {
+      "0.0": 100
+    },
+    "verifiable_from_raw": true,
+    "caveat": "Served through the Modal bridge /v1/responses path, which passed no stop tokens (stop=None, decode skip_special_tokens) and whose responses->chat converter drops string message content and prior function_call items. Trajectories show generation running past <|im_end|> into fake 'user/<tool_response>/assistant' turns. The 0.0 most likely measures those bridge defects, not the base model; not comparable to this run."
+  },
+  "caveats": [
+    "Small n=6 of 100; wide interval. Wilson95 computed on summed fractional reward (approximation for a [0,1] score).",
+    "Per-task Tinker budget 500k tokens (task 1 ran under a 700k cap but used 115k). btb-11e08646 and btb-07727295 hit the cap (HTTP 402 -> opencode exit 1) and scored 0; the budget, not only the model, bounds these.",
+    "btb-bc55d3e8 ended in a Harbor CancelledError (external process cancellation, no verifier run); counted as error = 0.",
+    "btb-507a3d72, btb-990cf5d7: agent stopped without writing deliverables -> native verifier returns 0.",
+    "Shim forces enable_thinking=False and temperature=0 although opencode passes --thinking; context 65,536 with opencode compaction at 49,152; 8192-token default output so some long file-writing tool calls truncated (finish=length).",
+    "Two earlier attempts of btb-19b3361c and one of btb-07727295/btb-bc55d3e8 died on Docker daemon loss / host disk-full (raw/infra_failed_attempts/); rerun from scratch, not model outcomes.",
+    "New arm (base weights); never pool with the original 0.3115 recovery metric or seed809 scores."
+  ]
+}

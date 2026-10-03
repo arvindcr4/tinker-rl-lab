@@ -565,9 +565,20 @@ def _e11_load_prompts(dataset: str) -> list[tuple[str, str]]:
     ]
 
 
-def _e11_extract_module(response: str) -> str | None:
+def _e11_extract_module(response: str, *, thinking_enabled: bool = True) -> str | None:
+    """Extract the final ``TopModule`` answer, never a draft from the reasoning.
+
+    With thinking enabled the answer must follow a closing ``</think>``; a
+    response truncated inside an unterminated thinking block yields ``None``
+    (recorded as ``truncated_in_thinking``), not a module grepped out of the
+    reasoning. The stored 2026-08-16 receipt (129/312, 150 extraction
+    failures) was produced by the prior extractor, which fell back to
+    searching the whole response when ``</think>`` was absent.
+    """
     if "</think>" in response:
         response = response.rsplit("</think>", 1)[1]
+    elif thinking_enabled or "<think>" in response:
+        return None
     fence = re.compile(r"```(?:systemverilog|verilog|sv)?\s*\n(.*?)```", re.I | re.S)
     module = re.compile(r"\bmodule\s+TopModule\b.*?\bendmodule\b", re.S)
     for candidate in reversed(fence.findall(response)):
@@ -689,6 +700,23 @@ def _e11_run_harness(build: Path, problem_ids: list[str]) -> dict[str, Any]:
     }
 
 
+def _e11_finish_reason(stop_reason: Any, response_tokens: int, max_tokens: int) -> str:
+    """Normalise Tinker's ``stop_reason`` ("stop" | "length"); infer when absent."""
+    if stop_reason in {"stop", "length"}:
+        return str(stop_reason)
+    return "length" if response_tokens >= max_tokens else "stop"
+
+
+def _e11_headline(score: dict[str, Any]) -> float | None:
+    """Canonical E11 headline is the raw pass@1 over all problems.
+
+    Matches the 2026-08-22 amendment of the stored receipt: no immutable
+    benchmark-level justification exists for excluding Prob099, so the
+    corrected denominator is a sensitivity field only.
+    """
+    return score["raw"]["pass_at_1"]
+
+
 def _e11_score(results: dict[str, bool]) -> dict[str, Any]:
     total = len(results)
     passes = sum(results.values())
@@ -725,9 +753,19 @@ def run_e11_full(
     seed: int = 1816,
     max_tokens: int = 1024,
     temperature: float = 0.2,
+    enable_thinking: bool = True,
     billed_tinker_usd_before: float,
 ) -> dict[str, Any]:
-    """Run one resumable, full, final-checkpoint E11 pass@1 evaluation."""
+    """Run one resumable, full, final-checkpoint E11 pass@1 evaluation.
+
+    ``enable_thinking`` is passed explicitly to the chat template (it was
+    previously implicit: the Qwen template default, thinking on). With thinking
+    on, ``max_tokens`` must leave room to close ``</think>``; at the stored
+    run's 1024 budget the mean response was ~1,002 tokens and 150/312 samples
+    had no extractable module. Each new sample records ``finish_reason`` and
+    the raw ``response_text``; checkpoints resumed from the prior code lack
+    both and report ``finish_reason: null``.
+    """
 
     launch_gate_path = (
         REMOTE_ROOT / "outputs/modal_e1_e14/2026-08-16/e11/launch_preflight_receipt.json"
@@ -757,6 +795,8 @@ def run_e11_full(
         raise RuntimeError("E11 projection would consume the protected Tinker reserve")
 
     run_key = f"final_full_seed{seed}_mt{max_tokens}_t{str(temperature).replace('.', 'p')}"
+    if not enable_thinking:
+        run_key += "_nothink"
     wandb_id_path = _e11_wandb_id_path(run_key)
     wandb_id_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -793,6 +833,7 @@ def run_e11_full(
             "samples_per_problem": 1,
             "retries_per_problem": 0,
             "max_response_tokens": max_tokens,
+            "enable_thinking": enable_thinking,
             "temperature": temperature,
             "seed": seed,
             "problems": projection["problem_count"],
@@ -827,6 +868,8 @@ def run_e11_full(
     total_prompt_tokens = 0
     total_response_tokens = 0
     extraction_failures = 0
+    finish_reasons: dict[str, int] = {}
+    truncated_in_thinking = 0
 
     for dataset, rows in prompts.items():
         sampled_records[dataset] = {}
@@ -840,6 +883,7 @@ def run_e11_full(
                     [{"role": "user", "content": prompt_text}],
                     tokenize=False,
                     add_generation_prompt=True,
+                    enable_thinking=enable_thinking,
                 )
                 prompt_ids = tokenizer.encode(chat, add_special_tokens=False)
                 response = sampler.sample(
@@ -855,7 +899,12 @@ def run_e11_full(
                 sequence = response.sequences[0]
                 response_tokens = list(sequence.tokens)
                 response_text = tokenizer.decode(response_tokens, skip_special_tokens=True)
-                module_source = _e11_extract_module(response_text)
+                finish_reason = _e11_finish_reason(
+                    getattr(sequence, "stop_reason", None), len(response_tokens), max_tokens
+                )
+                module_source = _e11_extract_module(
+                    response_text, thinking_enabled=enable_thinking
+                )
                 estimated_cost = (
                     len(prompt_ids) / 1e6 * USD_PER_M_PREFILL
                     + len(response_tokens) / 1e6 * USD_PER_M_SAMPLE
@@ -865,6 +914,13 @@ def run_e11_full(
                     "problem_id": problem_id,
                     "prompt_sha256": _sha256_bytes(prompt_text.encode("utf-8")),
                     "response_sha256": _sha256_bytes(response_text.encode("utf-8")),
+                    "response_text": response_text,
+                    "finish_reason": finish_reason,
+                    "truncated_in_thinking": (
+                        module_source is None
+                        and enable_thinking
+                        and "</think>" not in response_text
+                    ),
                     "module_source": module_source,
                     "module_sha256": (
                         _sha256_bytes(module_source.encode("utf-8")) if module_source else None
@@ -898,6 +954,9 @@ def run_e11_full(
             total_prompt_tokens += int(record["prompt_tokens"])
             total_response_tokens += int(record["response_tokens"])
             extraction_failures += int(not record["extracted_module"])
+            reason_key = str(record.get("finish_reason"))
+            finish_reasons[reason_key] = finish_reasons.get(reason_key, 0) + 1
+            truncated_in_thinking += int(bool(record.get("truncated_in_thinking")))
         results_volume.commit()
 
     merged_results: dict[str, bool] = {}
@@ -957,14 +1016,18 @@ def run_e11_full(
             "samples_per_problem": 1,
             "retries_per_problem": 0,
             "max_tokens": max_tokens,
+            "enable_thinking": enable_thinking,
             "temperature": temperature,
             "top_p": 0.95,
             "seed": seed,
             "new_samples": new_samples,
             "resumed_samples": resumed_samples,
             "extraction_failures": extraction_failures,
+            "finish_reasons": finish_reasons,
+            "truncated_in_thinking": truncated_in_thinking,
         },
-        "score": score["corrected"]["pass_at_1"],
+        "score": _e11_headline(score),
+        "score_basis": "raw",
         "pass_at_1": score,
         "verifier": {
             "identity": "NVlabs/verilog-eval sv-iv-test",
@@ -1004,6 +1067,8 @@ def run_e11_full(
             "test/passes_raw": score["raw"]["passes"],
             "test/denominator_raw": score["raw"]["denominator"],
             "test/extraction_failures": extraction_failures,
+            "test/truncated_in_thinking": truncated_in_thinking,
+            "test/finish_length": finish_reasons.get("length", 0),
             "cost/estimated_actual_usd": round(actual_estimated_usd, 6),
         },
         step=projection["problem_count"] + 1,
@@ -1032,6 +1097,7 @@ def main(
     seed: int = 1816,
     max_tokens: int = 1024,
     temperature: float = 0.2,
+    enable_thinking: bool = True,
     billed_tinker_usd_before: float = 1.638457,
 ) -> None:
     """Run preflights or E11, with non-E11 preflight as the safe default."""
@@ -1094,6 +1160,7 @@ def main(
             seed=seed,
             max_tokens=max_tokens,
             temperature=temperature,
+            enable_thinking=enable_thinking,
             billed_tinker_usd_before=billed_tinker_usd_before,
         )
         path = _write_local_json(f"{out_root}/e11_full_receipt.json", receipt)

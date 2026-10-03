@@ -18,6 +18,8 @@ We measure FOUR drift/forecast signals purely from per-step aggregates
 
   S2. Sign-flip test: fraction of late-window ρ_w that are >= 0.
       Under H0 (no drift), the fraction should equal 0.50 ± sampling noise.
+      Tested with an exact sign-flip permutation over seeds (the unit);
+      the minimum two-sided p is 0.25 at n=3 seeds and 0.0625 at n=5.
 
   S3. Forecast horizon: linear extrapolation of length vs step — report
       the step t* at which len(t*) returns to len(0) (i.e. predicted
@@ -39,15 +41,15 @@ Outputs (new):
   platform_hybrid/experiments/results/length_bias_iter24_forecast.tsv    (S3: t* predictions)
   platform_hybrid/experiments/results/length_bias_iter24_diffcorr.tsv    (S4: ΔL-ΔR coupling)
   platform_hybrid/experiments/results/length_bias_iter24_summary.tsv     (per-task-algo aggregates)
-  figures/length_bias_iter24.pdf + .png                  (4-panel: windows / sign / forecast / diff)
+  platform_hybrid/paper/figures/length_bias_iter24.pdf + .png  (4-panel: windows / sign / forecast / diff)
 
 Cite: tong2025drgrpo (Liu et al. 2025, arXiv:2503.20783)
 """
 from __future__ import annotations
 
+import itertools
 import json
 import math
-import shutil
 import sys
 from pathlib import Path
 
@@ -58,13 +60,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from scipy import stats
 
-ROOT = Path(__file__).resolve().parent.parent
-RES = ROOT / "experiments" / "results"
-FIGS = ROOT / "figures"
-PAPER_FIGS = ROOT / "paper" / "figures"
-RES.mkdir(parents=True, exist_ok=True)
-FIGS.mkdir(parents=True, exist_ok=True)
-PAPER_FIGS.mkdir(parents=True, exist_ok=True)
+ROOT = Path(__file__).resolve().parents[2]  # repo root
+RES = ROOT / "platform_hybrid" / "experiments" / "results"
+FIGS = ROOT / "platform_hybrid" / "paper" / "figures"
 
 
 # ----------------------------- data loading ---------------------------------
@@ -88,6 +86,20 @@ def load_runs() -> list[dict]:
 
 
 # ----------------------------- metrics --------------------------------------
+
+def signflip_p(x: list[float]) -> float:
+    """Exact two-sided sign-flip permutation p for H0: E[x] = 0.
+
+    Enumerates all 2^n sign assignments. The attainable floor is 2/2^n
+    (0.25 at n=3, 0.0625 at n=5), so n=3 can never reach p < 0.05."""
+    a = np.asarray(x, float)
+    if len(a) < 2:
+        return float("nan")
+    obs = abs(a.mean())
+    hits = [abs((a * np.array(s)).mean()) >= obs - 1e-12
+            for s in itertools.product([1, -1], repeat=len(a))]
+    return float(np.mean(hits))
+
 
 def windowed_spearman(x: list[float], y: list[float], win: int) -> list[float]:
     """Sliding-window Spearman ρ(len, R) for windows of size `win`."""
@@ -188,13 +200,11 @@ def main() -> int:
         late_nonneg = [r["frac_late_nonneg"] for r in sub if not math.isnan(r["frac_late_nonneg"])]
         late_rhos = [r["mean_rho_late"] for r in sub if not math.isnan(r["mean_rho_late"])]
         early_rhos = [r["mean_rho_early"] for r in sub if not math.isnan(r["mean_rho_early"])]
-        # paired sign-flip test: under H0 mean(late_nonneg) = 0.5
-        # one-sample t on (frac_late_nonneg - 0.5)
+        # exact sign-flip permutation test, unit = seed:
+        # H0 E[frac_late_nonneg - 0.5] = 0. (A one-sample t here was
+        # degenerate: three identical per-seed values give t=-inf, p=0.)
         diffs = [v - 0.5 for v in late_nonneg]
-        if len(diffs) >= 2:
-            t_stat, p_two = stats.ttest_1samp(diffs, 0.0)
-        else:
-            t_stat, p_two = float("nan"), float("nan")
+        p_two = signflip_p(diffs)
         # drift = mean(late) - mean(early) per seed
         drift_per_seed = []
         for r in sub:
@@ -202,24 +212,25 @@ def main() -> int:
                 drift_per_seed.append(r["mean_rho_late"] - r["mean_rho_early"])
         if len(drift_per_seed) >= 2:
             mean_drift = float(np.mean(drift_per_seed))
-            # paired t-test that drift != 0
+            # paired t-test that drift != 0, plus exact sign-flip p (unit = seed)
             t_drift, p_drift = stats.ttest_1samp(drift_per_seed, 0.0)
+            p_drift_sf = signflip_p(drift_per_seed)
         else:
             mean_drift = float("nan")
-            t_drift, p_drift = float("nan"), float("nan")
+            t_drift, p_drift, p_drift_sf = float("nan"), float("nan"), float("nan")
         s2_rows.append({
             "task": task,
             "algo": algo,
             "win": w,
             "n_seeds": len(sub),
             "mean_late_nonneg_frac": round(float(np.mean(late_nonneg)), 4) if late_nonneg else float("nan"),
-            "t_vs_half": round(float(t_stat), 4) if not math.isnan(t_stat) else float("nan"),
-            "p_vs_half": round(float(p_two), 4) if not math.isnan(p_two) else float("nan"),
+            "p_vs_half_signflip": round(float(p_two), 4) if not math.isnan(p_two) else float("nan"),
             "mean_rho_early": round(float(np.mean(early_rhos)), 4) if early_rhos else float("nan"),
             "mean_rho_late": round(float(np.mean(late_rhos)), 4) if late_rhos else float("nan"),
             "mean_drift_late_minus_early": round(float(mean_drift), 4) if not math.isnan(mean_drift) else float("nan"),
             "t_drift": round(float(t_drift), 4) if not math.isnan(t_drift) else float("nan"),
             "p_drift": round(float(p_drift), 4) if not math.isnan(p_drift) else float("nan"),
+            "p_drift_signflip": round(float(p_drift_sf), 4) if not math.isnan(p_drift_sf) else float("nan"),
         })
 
     s2_cols = list(s2_rows[0].keys())
@@ -337,7 +348,7 @@ def main() -> int:
     for r in [r for r in s2_rows if r["win"] == 10]:
         print(f"  {r['task']:36s} {r['algo']:8s} "
               f"late_nonneg={r['mean_late_nonneg_frac']:.3f} "
-              f"(H0=0.5, p={r['p_vs_half']:.3f}) "
+              f"(H0=0.5, sign-flip p={r['p_vs_half_signflip']:.3f}, n={r['n_seeds']}) "
               f"drift={r['mean_drift_late_minus_early']:+.3f} "
               f"(p_drift={r['p_drift']:.3f})")
 
@@ -393,7 +404,7 @@ def make_figure(runs, s1_rows, s2_rows, s3_rows, s4_rows):
     for r in s2_w10:
         if (r["task"], r["algo"]) not in keys2:
             continue
-        colors.append("#d62728" if r["p_vs_half"] < 0.05 else "#7f7f7f")
+        colors.append("#d62728" if r["p_vs_half_signflip"] < 0.05 else "#7f7f7f")
     ax.bar(x_pos2, vals[: len(colors)], color=colors[: len(x_pos2)])
     ax.axhline(0.5, color="black", linestyle="--", linewidth=0.8, label="H0: 0.5 (no drift)")
     ax.set_xticks(x_pos2)
@@ -440,13 +451,13 @@ def make_figure(runs, s1_rows, s2_rows, s3_rows, s4_rows):
 
     fig.suptitle("Pillar 4 / Iter 24 — drift & forecast test of the Dr.GRPO verbosity-trap signature", fontsize=11)
     fig.tight_layout(rect=[0, 0, 1, 0.97])
+    FIGS.mkdir(parents=True, exist_ok=True)
     pdf = FIGS / "length_bias_iter24.pdf"
     png = FIGS / "length_bias_iter24.png"
     fig.savefig(pdf)
     fig.savefig(png, dpi=140)
     plt.close(fig)
-    shutil.copyfile(pdf, PAPER_FIGS / "length_bias_iter24.pdf")
-    print(f"wrote {pdf} and {png} (copied to {PAPER_FIGS / 'length_bias_iter24.pdf'})")
+    print(f"wrote {pdf} and {png}")
 
 
 if __name__ == "__main__":

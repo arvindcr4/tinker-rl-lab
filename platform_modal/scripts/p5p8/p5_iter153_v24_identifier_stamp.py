@@ -14,13 +14,16 @@ import os
 import re
 from pathlib import Path
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-BIB = ROOT / "paper" / "references.bib"
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+BIB = ROOT / "platform_hybrid/paper" / "references.bib"
 MANIFEST_DIR = ROOT / "platform_hybrid/experiments/results/mega_20260704/manifests"
 CELLS_TSV = ROOT / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
 OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
-P5_PAPER_FILES = [ROOT / "paper" / f for f in ["paper_P5_minreport.tex"]] + \
-    sorted((ROOT / "paper" / "sections").glob("p5_*.tex"))
+P5_PAPER_FILES = [ROOT / "platform_hybrid/paper" / f for f in ["paper_P5_minreport.tex"]] + \
+    sorted((ROOT / "platform_hybrid/paper" / "sections").glob("p5_*.tex"))
 
 # v2.4 identifier-stamp rule (from iter-149 row 167)
 def v24_pass(entry):

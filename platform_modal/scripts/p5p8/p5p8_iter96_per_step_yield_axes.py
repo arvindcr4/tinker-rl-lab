@@ -38,10 +38,13 @@ import json
 import random
 from pathlib import Path
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-RES = ROOT / "experiments" / "results" / "p5p8"
-TENSORS_DIR = ROOT / "experiments" / "results" / "n2_reward_tensor"
-TENSORS_DIR_RESUME = ROOT / "experiments" / "results" / "n2_reward_tensor_resume"
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+TENSORS_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor"
+TENSORS_DIR_RESUME = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 RES.mkdir(parents=True, exist_ok=True)
 
 SEED = 20260705

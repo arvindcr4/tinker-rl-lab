@@ -162,13 +162,13 @@ class UnifiedLauncher:
         """Inner dispatch on framework (the local backend's training path)."""
         if self.framework == "skyrl":
             return self._run_skyrl()
-        elif self.framework == "tinker":
+        if self.framework == "tinker":
             return self._run_tinker()
-        elif self.framework == "verl":
+        if self.framework == "verl":
             return self._run_verl()
-        elif self.framework == "openrlhf":
+        if self.framework == "openrlhf":
             return self._run_openrlhf()
-        elif self.framework == "trl":
+        if self.framework == "trl":
             return self._run_trl()
         print(f"Unknown framework: {self.framework}")
         print(f"Available: {', '.join(self.FRAMEWORKS.keys())}")
@@ -255,8 +255,10 @@ class UnifiedLauncher:
                 reward_history=[],
                 loss_history=[],
             )
-        except ImportError:
-            raise NotImplementedError("verl is not installed. Install with: pip install verl")
+        except ImportError as exc:
+            raise NotImplementedError(
+                "verl is not installed. Install with: pip install verl"
+            ) from exc
 
     def _run_openrlhf(self) -> TrainingResult:
         """Run OpenRLHF training.
@@ -271,12 +273,12 @@ class UnifiedLauncher:
         print("\n[OPENRLHF] OpenRLHF (Ray + vLLM, group-norm GRPO)")
         try:
             from platform_modal.openrlhf.trainer import run_openrlhf_training  # type: ignore
-        except ImportError:
+        except ImportError as exc:
             raise NotImplementedError(
                 "Local OpenRLHF needs `openrlhf` + Ray + vLLM. Install openrlhf or "
                 "use `--backend modal` (modal_grpo_openrlhf.py). CLI equivalent: "
                 "`python -m openrlhf.cli.train_ppo_ray --advantage_estimator group_norm`."
-            )
+            ) from exc
         run_openrlhf_training({}, output_dir="./checkpoints/openrlhf")
         return TrainingResult("openrlhf", spec.model, self.algorithm, spec.training_steps, [], [])
 

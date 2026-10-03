@@ -41,9 +41,12 @@ import random
 import statistics
 from typing import Iterable
 
-ROOT = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-N2_DIR = ROOT / "experiments" / "results" / "n2_reward_tensor_resume"
-OUT = ROOT / "experiments" / "results" / "p5p8"
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+N2_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
+OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # Stack-conditional constants

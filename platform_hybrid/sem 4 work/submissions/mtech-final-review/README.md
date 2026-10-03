@@ -1,5 +1,9 @@
 # M.Tech Final Thesis Review Deck
 
+> The final defense uses `reports/final_defense_2026-10-03/`. The numbers in this September deck predate the 3 October corrections. Do not present it.
+
+
+
 Reviewer-facing presentation for the **Tinker RL Lab** project — a multi-framework
 benchmark and study of GRPO-style RL post-training of LLMs.
 

@@ -21,8 +21,7 @@ import modal
 
 app = modal.App("tinker-rl-verl-grpo")
 
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
-WANDB_KEY = os.environ.get("WANDB_API_KEY", "")
+# WARNING (security): HF/W&B tokens previously were baked into the image via .env()/Secret.from_dict(); they now come from named Modal secrets. Rotate tokens if old images exist.
 
 image = (
     modal.Image.from_registry(
@@ -50,8 +49,6 @@ image = (
         "huggingface_hub",
     )
     .env({
-        "HF_TOKEN": HF_TOKEN,
-        "WANDB_API_KEY": WANDB_KEY,
         "WANDB_PROJECT": "tinker-rl-lab-world-class",
     })
 )
@@ -62,9 +59,9 @@ image = (
     gpu="H100",
     timeout=7200,
     secrets=[
+        modal.Secret.from_name("huggingface-secret"),
+        modal.Secret.from_name("wandb-secret"),
         modal.Secret.from_dict({
-            "HF_TOKEN": HF_TOKEN,
-            "WANDB_API_KEY": WANDB_KEY,
             "WANDB_PROJECT": "tinker-rl-lab-world-class",
         })
     ],
@@ -212,7 +209,7 @@ def run_verl_qwen3_8b():
     try:
         from huggingface_hub import HfApi
         hf_api = HfApi(token=os.environ.get("HF_TOKEN"))
-        hf_api.create_repo(hf_model_id, exist_ok=True)
+        hf_api.create_repo(hf_model_id, exist_ok=True, private=True)
         hf_api.upload_folder(
             folder_path="/root/verl-run/checkpoints",
             repo_id=hf_model_id,

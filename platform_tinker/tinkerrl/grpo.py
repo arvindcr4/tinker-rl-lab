@@ -1633,7 +1633,9 @@ def _run_one_seed(
 
     critic: Any = None
     critic_opt: Any = None
-    if config.critic_enabled:
+    # A completed receipt already holds the result. Loading the critic
+    # first turns a missing or unreadable sidecar into a failed retry.
+    if config.critic_enabled and not (prior and prior.get("status") == "completed"):
         critic = PromptValueCritic(
             hidden_dim=config.critic_hidden_dim,
             max_prompt_tokens=config.max_prompt_tokens,
@@ -1776,18 +1778,24 @@ def _run_one_seed(
         sc = tc.create_sampling_client(model_path=w0.path)
 
         save_every = config.effective_save_every()
-        # Final receipts nest the trace inside "result"; periodic receipts
-        # carry it top-level.  Fall back so rewound finals resume intact.
         prior_result = (prior or {}).get("result", {}) or {}
-        step_rewards: List[float] = list(
-            (prior or {}).get("reward_trace", prior_result.get("reward_trace", []))
-        )[:resume_step]
-        zero_loss_steps = int(
-            (prior or {}).get("zero_loss_steps", prior_result.get("zero_loss_steps", 0))
-        )
-        zero_reward_steps = int(
-            (prior or {}).get("zero_reward_steps", prior_result.get("zero_reward_steps", 0))
-        )
+        # Periodic receipts store the trace beside counters that match it.
+        # A rewound final nests a longer trace under "result"; cutting that
+        # trace back to resume_step must not keep totals for discarded steps.
+        # Loss is not stored per step, so a cut trace starts its loss count
+        # over instead of copying the full-run total.
+        stored_trace = list((prior or {}).get("reward_trace", prior_result.get("reward_trace", [])))
+        step_rewards: List[float] = stored_trace[:resume_step]
+        if len(stored_trace) > resume_step:
+            zero_reward_steps = sum(1 for reward in step_rewards if reward == 0)
+            zero_loss_steps = 0
+        else:
+            zero_loss_steps = int(
+                (prior or {}).get("zero_loss_steps", prior_result.get("zero_loss_steps", 0))
+            )
+            zero_reward_steps = int(
+                (prior or {}).get("zero_reward_steps", prior_result.get("zero_reward_steps", 0))
+            )
 
         if config.critic_enabled and config.critic_pretrain_batches > 0 and resume_step == 0:
             logger(

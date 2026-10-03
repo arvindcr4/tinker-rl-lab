@@ -18,7 +18,8 @@ def get_issues(ctx):
         issues.append("supplementary_contains_identifying_hf_username")
 
     # Reproducibility language should avoid brittle/local-only paths.
-    if "/tmp/gsm8k_" in ctx.supp or "/tmp/grpo_" in ctx.supp:
+    # S108 false positive: these literals are searched for, not written to.
+    if "/tmp/gsm8k_" in ctx.supp or "/tmp/grpo_" in ctx.supp:  # noqa: S108
         issues.append("supplementary_contains_local_tmp_log_paths")
     if "model checkpoints are hosted on tinker and huggingface hub" in ctx.supp:
         issues.append("supplementary_overstates_checkpoint_hosting_availability")

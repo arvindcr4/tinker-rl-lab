@@ -45,8 +45,11 @@ import xgboost as xgb
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-RES = ROOT / "experiments" / "results" / "p5p8"
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
 SEEDS = [20260706, 20260708, 20260710, 20260712, 20260714]
 K_PCT = 2.0

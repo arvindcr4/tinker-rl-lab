@@ -23,8 +23,7 @@ import json
 import os
 import time
 
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
-WANDB_KEY = os.environ.get("WANDB_API_KEY", "")
+# WARNING (security): HF/W&B tokens previously were baked into the image via .env()/Secret.from_dict(); they now come from named Modal secrets. Rotate tokens if old images exist.
 
 app = modal.App("tinkerrl-drgrpo-gsm8k-cot")
 results_vol = modal.Volume.from_name("tinkerrl-results", create_if_missing=True)
@@ -38,8 +37,6 @@ image = (
         "safetensors>=0.4.0", "huggingface-hub>=0.26.0", "wandb>=0.16.0"
     )
     .env({
-        "HF_TOKEN": HF_TOKEN,
-        "WANDB_API_KEY": WANDB_KEY,
         "WANDB_PROJECT": "tinkerrl-drgrpo-gsm8k-cot",
     })
 )
@@ -61,9 +58,9 @@ CHUNK = 4
 @app.function(
     image=image, gpu="A10G", timeout=7200, volumes={RESULTS_DIR: results_vol}, retries=1,
     secrets=[
+        modal.Secret.from_name("huggingface-secret"),
+        modal.Secret.from_name("wandb-secret"),
         modal.Secret.from_dict({
-            "HF_TOKEN": HF_TOKEN,
-            "WANDB_API_KEY": WANDB_KEY,
             "WANDB_PROJECT": "tinkerrl-drgrpo-gsm8k-cot",
         })
     ]
@@ -234,8 +231,8 @@ def run_arm(algo: str, seed: int) -> dict:
         repo_id = f"drgrpo-gsm8k-cot-{algo}-s{seed}"
         print(f"Pushing adapter to Hub: {repo_id}")
         try:
-            model.push_to_hub(repo_id, token=os.environ["HF_TOKEN"])
-            tok.push_to_hub(repo_id, token=os.environ["HF_TOKEN"])
+            model.push_to_hub(repo_id, token=os.environ["HF_TOKEN"], private=True)
+            tok.push_to_hub(repo_id, token=os.environ["HF_TOKEN"], private=True)
         except Exception as e:
             print(f"Failed to push to hub: {e}")
 

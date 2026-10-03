@@ -25,10 +25,12 @@ import sys
 import urllib.error
 import urllib.request
 
-WORKTREE = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-REGISTRY = WORKTREE / "registry"
-RESULTS = WORKTREE / "experiments" / "results" / "p5p8"
-REF = WORKTREE / "paper" / "references.bib"
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = REPO_ROOT
+REGISTRY = WORKTREE / "platform_hybrid/registry"
+RESULTS = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
+REF = WORKTREE / "platform_hybrid/paper" / "references.bib"
 
 # Canonical (bibkey, arxiv_id, expected short label) for each delta id
 # in the registry. Sourced from paper/references.bib round-3 dedup pass.

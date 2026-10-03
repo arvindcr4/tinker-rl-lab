@@ -17,7 +17,10 @@ Cost model (matches iter 11/14/15):
 import json
 import pathlib
 
-WORKTREE = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = REPO_ROOT
 SUMMARY = WORKTREE / "platform_hybrid/experiments/results/p5p8/p7_postpred_summary.json"
 OUT = WORKTREE / "platform_hybrid/experiments/results/p5p8/p7_postpred_costeff.tsv"
 

@@ -22,7 +22,10 @@ Outputs:
 import json, math, itertools, random, statistics
 from pathlib import Path
 
-WORKTREE = Path("/home/claude/tinker-rl-lab-minimax")
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = REPO_ROOT
 N10_DIR = WORKTREE / "platform_hybrid/experiments/results/n10_seed_expansion"
 OUT = WORKTREE / "platform_hybrid/experiments/results/p5p8"
 OUT.mkdir(parents=True, exist_ok=True)

@@ -14,7 +14,10 @@ import math
 import random
 from pathlib import Path
 
-WORK = Path("/home/claude/tinker-rl-lab-minimax")
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORK = REPO_ROOT
 N10_DIR = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
 OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)

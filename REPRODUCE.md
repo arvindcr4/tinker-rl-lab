@@ -41,17 +41,25 @@ docker run --gpus all --rm \
     -e TINKER_API_KEY -e WANDB_API_KEY -e HF_TOKEN \
     -v $(pwd)/results:/workspace/tinker-rl-lab/results \
     tinker-rl-lab:repro \
-    python grpo_gsm8k_base.py \
+    bash -c 'python platform_tinker/grpo_gsm8k_base.py \
         --model Qwen/Qwen3-8B --seed 42 --rank 32 \
         --steps 30 --group 8 --batch 2 --lr 1e-5 \
-        --tag headline_repro
+        --tag gsm8k_qwen3_8b_s42 2>&1 | tee results/gsm8k_qwen3_8b_s42.log'
+
+# 5. Check the log against the recorded expectations (exit 0 = pass)
+python utils/verify_results.py --results-dir results/ \
+    --expected-results platform_hybrid/paper/expected_results.json
 ```
 
-Expected final line from step 4 (within tolerance):
+Expected per-seed block at the end of the step-4 log (printed by
+`platform_tinker/tinkerrl/grpo_cli.py`; values are fractions, compared at
+±0.05 on `avg_last10` and ±0.10 on `peak_reward`):
 
 ```
-[headline_repro] Last-10 avg accuracy: 34.4%  (tolerance ±5.0 pts)
-[headline_repro] Peak accuracy:        62.5%  (tolerance ±10.0 pts)
+[grpo_cli] Seed 42 done.
+  ...
+  avg_last10    : 0.344
+  peak_reward   : 0.625
 ```
 
 ---
@@ -105,7 +113,7 @@ A template lives in [`.env.example`](./.env.example).
 ## 2. The 10-minute smoke test  (reviewer entry-point)
 
 ```bash
-bash platform_modal/scripts/smoke_test.sh                   # ~2 min — fully offline
+bash platform_modal/scripts/smoke_test.sh                   # ~2 min — offline once GSM8K is cached
 TINKER_API_KEY=... bash platform_modal/scripts/smoke_test.sh # ~8 min — live Tinker wire-protocol
 ```
 
@@ -136,7 +144,7 @@ table; see `ARTIFACT.md §4.3`). The headline single-seed run uses `seed=42`.
 
 ```bash
 for SEED in 42 123 456 789 1024; do
-    python grpo_gsm8k_base.py \
+    python platform_tinker/grpo_gsm8k_base.py \
         --model Qwen/Qwen3-8B \
         --seed  $SEED \
         --rank  32 \
@@ -151,12 +159,18 @@ done
 
 ### 3.3 Expected per-seed output
 
-The last line of each log is of the form:
+Each log ends with a per-seed block of the form (fractions, not percent):
 
 ```
-[gsm8k_qwen3_8b_sSEED] Last-10 avg accuracy: XX.X%
-[gsm8k_qwen3_8b_sSEED] Peak accuracy:        YY.Y%
+[grpo_cli] Seed SEED done.
+  avg_last10    : 0.XXX
+  peak_reward   : 0.YYY
 ```
+
+`utils/verify_results.py` (§8) parses this block. Note that it compares every
+seed against the single headline expectation (`gsm8k_qwen3_8b`: 0.344 / 0.625),
+so seeds whose recorded values in the table below differ by more than the
+tolerance (e.g. seed 456 peak 100 %) are reported as outside tolerance.
 
 | seed | last-10 (paper)* | peak (paper)* | W&B run (reference) |
 |------|------------------|---------------|---------------------|
@@ -177,9 +191,16 @@ row above.
 python utils/stats.py \
     --results-dir results/ \
     --experiment  gsm8k_qwen3_8b \
-    --rliable --bootstrap-samples 10000 \
-    --output analysis/gsm8k_qwen3_8b.json
+    --bootstrap-samples 10000 \
+    --output-dir analysis/
 ```
+
+`utils/stats.py` reads `results/<experiment>/seed_<N>/*.jsonl` (one JSON object
+per line; the last line's `reward/mean`, `accuracy` or `eval/percent_correct` is
+the seed's score) and prints the mean, SE and a percentile-bootstrap 95% CI.
+The trainer does **not** write that layout: it prints the per-seed block above to
+the log. Write one `metrics.jsonl` per seed (e.g. `{"accuracy": <avg_last10>}`)
+before running this step.
 
 ---
 
@@ -189,10 +210,11 @@ python utils/stats.py \
 
 ```bash
 for G in 2 4 8 16; do
-    python grpo_gsm8k_base.py \
+    python platform_tinker/grpo_gsm8k_base.py \
         --model Qwen/Qwen3-8B --seed 42 --rank 32 \
         --steps 30 --group $G --batch 2 --lr 1e-5 \
-        --tag "ablation_group${G}"
+        --tag "gsm8k_qwen3_8b_g${G}" \
+        2>&1 | tee results/gsm8k_qwen3_8b_g${G}.log
 done
 ```
 
@@ -207,41 +229,52 @@ Expected (paper Table 2 Group-Size block):
 
 ### 4.2 Atropos launcher (5-seed, fully parameterized YAML)
 
+Run from `platform_tinker/atropos/` (the `tinker_atropos` package lives there)
+with the Atropos dependencies from `requirements.txt` installed (`atroposlib`,
+`tenacity`, `latex2sympy2-extended`, `math-verify`; the local dev venv lacks them).
+`launch_training.py` has **no `--seed` flag**; seeds are selected through the
+per-seed YAML configs (`gsm8k_qwen_8b_seed{1,2,3}.yaml`, which set
+`data_seed` 137 / 256 / 512 rather than the §3.1 seed list).
+
 ```bash
-# Terminal 1 — Atropos rollout server
+cd platform_tinker/atropos
+pip install -e .   # installs the tinker_atropos package the env server imports
+# Terminal 1 — Atropos rollout server (installed by atroposlib)
 run-api
 # Terminal 2 — environment
-python atropos/tinker_atropos/environments/gsm8k_tinker.py serve \
-       --config atropos/configs/gsm8k_qwen_8b.yaml
-# Terminal 3 — trainer (repeat per seed)
-for SEED in 42 123 456 789 1024; do
-    SEED=$SEED python atropos/launch_training.py \
-        --config atropos/configs/gsm8k_qwen_8b.yaml --seed $SEED
+python tinker_atropos/environments/gsm8k_tinker.py serve \
+       --config configs/gsm8k_qwen_8b.yaml
+# Terminal 3 — trainer (one run per seed config)
+for CFG in gsm8k_qwen_8b gsm8k_qwen_8b_seed1 gsm8k_qwen_8b_seed2 gsm8k_qwen_8b_seed3; do
+    python launch_training.py --config configs/${CFG}.yaml
 done
 ```
 
 ### 4.3 Size ladder (Qwen 0.6B → 30B MoE)
 
+Same environment as §4.2 (run from `platform_tinker/atropos/`). One seed per
+config; there is no seed override flag.
+
 ```bash
+cd platform_tinker/atropos
 for CFG in gsm8k_qwen_0_6b gsm8k_qwen_1_7b gsm8k_qwen_4b \
            gsm8k_qwen_8b   gsm8k_qwen_14b \
            gsm8k_qwen_30b_moe; do
-    for SEED in 42 123 456 789 1024; do
-        SEED=$SEED python atropos/launch_training.py \
-            --config atropos/configs/${CFG}.yaml --seed $SEED
-    done
+    python launch_training.py --config configs/${CFG}.yaml
 done
 ```
 
 ### 4.4 Modal H100 PPO baselines
 
 ```bash
-python scripts/modal_run_experiments.py \
-    --experiment ppo_gsm8k_qwen3_8b \
-    --seeds 42 123 456 789 1024
+modal run platform_modal/scripts/modal_run_experiments.py
 ```
 
-Requires `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET`.
+Requires `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET`. The entrypoint takes no
+arguments: it runs the four arithmetic-env baselines (TRL GRPO on Qwen2.5-0.5B,
+SB3 / CleanRL / Tianshou PPO) over the seeds hard-coded in `SEEDS` and writes
+`modal_results_all.json`. There is no single-experiment `ppo_gsm8k_qwen3_8b`
+selector.
 
 ### 4.5 Cross-library RL baselines (arithmetic env)
 
@@ -257,18 +290,19 @@ done
 ## 5. Figures and tables
 
 ```bash
-# 1. Aggregate JSON + CSV + rliable metrics
-python utils/stats.py --results-dir results/ --rliable \
-       --bootstrap-samples 10000 --output analysis/
+# 1. Per-experiment mean / SE / bootstrap CI over results/<exp>/seed_<N>/*.jsonl
+python utils/stats.py --results-dir results/ \
+       --bootstrap-samples 10000 --output-dir analysis/
 
-# 2. Paper figures (matplotlib, 300 dpi PDFs)
-python scripts/make_paper_figures.py \
-       --results analysis/ --out paper/figures/
-
-# 3. LaTeX tables
-python utils/stats.py --results-dir results/ --latex \
-       --output paper/tables/
+# 2. Paper figures (matplotlib, 300 dpi PDF + PNG). No CLI flags: reads
+#    platform_hybrid/experiments/results/ and writes paper/figures/ relative to
+#    the current directory, so run it from the repository root.
+python platform_modal/scripts/make_paper_figures.py
 ```
+
+`utils/stats.py` accepts `--format {latex,csv,both}` and `--rliable`, but its
+`main()` does not currently act on either; it prints the summary only. LaTeX
+tables come from `generate_results_table()` in the same module when imported.
 
 ---
 
@@ -313,10 +347,17 @@ Exact shas are recorded in [`ARTIFACT.md §3.4`](./ARTIFACT.md).
 ```bash
 python utils/verify_results.py \
     --results-dir results/ \
-    --expected-results paper/expected_results.json \
+    --expected-results platform_hybrid/paper/expected_results.json \
     --last10-tolerance 0.05 \
     --peak-tolerance   0.10
 ```
+
+Exit codes: `0` every matched run is within tolerance; `1` a run is outside
+tolerance **or no result file matched an expected experiment**; `2` the results
+directory or the expectations file is missing. Add `--strict` to also fail when
+any expected experiment has no matching result. Result files are `*.json`
+(`last10_avg`, `peak`) or `*.log` captures of the trainer output; the log's file
+stem is the experiment tag, so name logs as in §3.2 / §4.1.
 
 **Why the tolerances are not tighter.**
 Even with fixed seeds and CuDNN determinism (`utils.seed.set_global_seed`),

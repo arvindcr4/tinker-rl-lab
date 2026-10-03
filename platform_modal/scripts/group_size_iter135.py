@@ -57,9 +57,12 @@ from typing import Iterable
 import numpy as np
 
 
-REPO = Path("/home/claude/tinker-rl-lab-minimax")
-RESULTS = REPO / "experiments" / "results"
-FIGS = REPO / "figures"
+import sys
+sys.path.append(str(Path(__file__).resolve().parent))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+REPO = REPO_ROOT
+RESULTS = REPO / "platform_hybrid/experiments" / "results"
+FIGS = REPO / "platform_hybrid/figures"
 
 
 def load_zvf_sweep() -> dict:
@@ -567,6 +570,7 @@ def main() -> None:
 
     fig.suptitle("Iter 135 -- Pillar 3: G=4 vs G=32, Native Wu, Threshold T*, ZVF link")
     fig.tight_layout()
+    FIGS.mkdir(parents=True, exist_ok=True)
     fig.savefig(FIGS / "group_size_iter135.pdf")
     fig.savefig(FIGS / "group_size_iter135.png", dpi=120)
     plt.close(fig)

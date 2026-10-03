@@ -14,7 +14,8 @@ HERE = ROOT / "zvf-program/next-submission"
 
 def load_module(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path)
-    assert spec is not None and spec.loader is not None
+    assert spec is not None
+    assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
     spec.loader.exec_module(module)
@@ -46,7 +47,8 @@ class FakeTrainer:
         return [[len(str(prompt)), 99] for prompt in prompts], None, {}
 
     def _generate_single_turn(self, prompt_ids, images, fields):
-        assert images is None and fields == {}
+        assert images is None
+        assert fields == {}
         values = self.rounds.popleft()
         assert len(values) == len(prompt_ids)
         self.call_sizes.append(len(prompt_ids))

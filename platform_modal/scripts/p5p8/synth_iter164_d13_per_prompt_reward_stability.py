@@ -29,9 +29,12 @@ import json
 import math
 from pathlib import Path
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-RES = ROOT / "experiments" / "results" / "p5p8"
-TENSOR_DIR = ROOT / "experiments" / "results" / "n2_reward_tensor_resume"
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+TENSOR_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 METHODS = ["grpo", "aero", "gift", "areal"]
 EPSILONS = [0.025, 0.05, 0.10]
 

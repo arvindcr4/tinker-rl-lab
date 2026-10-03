@@ -16,9 +16,11 @@ import json
 import pathlib
 import sys
 
-WORKTREE = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-REGISTRY = WORKTREE / "registry"
-RESULTS = WORKTREE / "experiments" / "results" / "p5p8"
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = REPO_ROOT
+REGISTRY = WORKTREE / "platform_hybrid/registry"
+RESULTS = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
 
 # Frameworks in repo (as listed in the brief) + 9 zvf130 methods.
 FRAMEWORKS = ["tinker", "openrlhf", "verl", "trl",

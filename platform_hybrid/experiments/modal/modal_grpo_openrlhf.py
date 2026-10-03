@@ -25,8 +25,7 @@ import modal
 
 app = modal.App("tinker-rl-openrlhf-grpo")
 
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
-WANDB_KEY = os.environ.get("WANDB_API_KEY", "")
+# WARNING (security): HF/W&B tokens previously were baked into the image via .env()/Secret.from_dict(); they now come from named Modal secrets. Rotate tokens if old images exist.
 
 image = (
     modal.Image.from_registry(
@@ -56,8 +55,6 @@ image = (
         "huggingface_hub",
     )
     .env({
-        "HF_TOKEN": HF_TOKEN,
-        "WANDB_API_KEY": WANDB_KEY,
         "WANDB_PROJECT": "tinker-rl-lab-world-class",
     })
 )
@@ -68,9 +65,9 @@ image = (
     gpu="H100",
     timeout=7200,
     secrets=[
+        modal.Secret.from_name("huggingface-secret"),
+        modal.Secret.from_name("wandb-secret"),
         modal.Secret.from_dict({
-            "HF_TOKEN": HF_TOKEN,
-            "WANDB_API_KEY": WANDB_KEY,
             "WANDB_PROJECT": "tinker-rl-lab-world-class",
         })
     ],
@@ -253,8 +250,8 @@ def run_openrlhf_qwen3_8b():
             print(f"Loading model from {actor_path} for push_to_hub...")
             model = AutoModelForCausalLM.from_pretrained(actor_path, torch_dtype="auto")
             tokenizer = AutoTokenizer.from_pretrained(actor_path)
-            model.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""))
-            tokenizer.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""))
+            model.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""), private=True)
+            tokenizer.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""), private=True)
             print(f"Pushed model to HF: {hf_repo_id}")
     except Exception as e:
         print(f"HF push failed: {e}")

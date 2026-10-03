@@ -45,15 +45,17 @@ from statistics import median, mean, stdev
 
 import sys
 
-WORKTREE = Path("/home/claude/tinker-rl-lab-minimax")
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = REPO_ROOT
 sys.path.insert(0, str(WORKTREE))
 
-OUT_DIR = WORKTREE / "experiments" / "results" / "berkeley"
+OUT_DIR = WORKTREE / "platform_hybrid/experiments" / "results" / "berkeley"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-LENGTH_BIAS = WORKTREE / "experiments" / "results" / "length_bias.tsv"
-BFCLV4 = WORKTREE / "experiments" / "results" / "bfclv4_tool_use.tsv"
-LENGTH_PAIRED = WORKTREE / "experiments" / "results" / "length_bias_iter100_paired.tsv"
+LENGTH_BIAS = WORKTREE / "platform_hybrid/experiments" / "results" / "length_bias.tsv"
+BFCLV4 = WORKTREE / "platform_hybrid/experiments" / "results" / "bfclv4_tool_use.tsv"
+LENGTH_PAIRED = WORKTREE / "platform_hybrid/experiments" / "results" / "length_bias_iter100_paired.tsv"
 
 
 def _read_tsv(path: Path) -> list[dict]:

@@ -10,12 +10,13 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 HERE = ROOT / "zvf-program/next-submission"
 SPEC = importlib.util.spec_from_file_location("next_submission_verifier", HERE / "verify_design.py")
-assert SPEC is not None and SPEC.loader is not None
+assert SPEC is not None
+assert SPEC.loader is not None
 VERIFIER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(VERIFIER)
 
 
-@pytest.fixture()
+@pytest.fixture
 def contract():
     protocol = VERIFIER.load_json(HERE / "preregistration.json")
     claims = VERIFIER.load_json(HERE / "claim_ledger.json")

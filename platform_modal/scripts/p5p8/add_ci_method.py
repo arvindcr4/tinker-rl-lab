@@ -21,9 +21,12 @@ import json
 from pathlib import Path
 import jsonschema
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-SCHEMA = ROOT / "registry/schema.json"
-ENTRIES = sorted(glob.glob(str(ROOT / "registry/entries/*.json")))
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+SCHEMA = ROOT / "platform_hybrid/registry/schema.json"
+ENTRIES = sorted(glob.glob(str(ROOT / "platform_hybrid/registry/entries/*.json")))
 OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 
 # entries whose outcomes came from the N2 same-stack four-method tensors

@@ -79,7 +79,7 @@ class TestMakeGrpoLossFn(unittest.TestCase):
         loss_fn = make_grpo_loss_fn([-1.0])
         logprobs = torch.tensor([-0.5, -0.2, -0.1], requires_grad=True)
         loss, _ = loss_fn(None, [logprobs])
-        expected_loss = -(-1.0) * (-0.8)
+        expected_loss = -1.0 * (-1.0) * (-0.8)  # -advantage * sum(logprobs)
         self.assertTrue(math.isclose(loss.item(), expected_loss, rel_tol=1e-5))
 
     def test_gradients(self):

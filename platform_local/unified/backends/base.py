@@ -8,6 +8,7 @@ spending compute, so ``--dry-run`` and the matrix test work uniformly.
 
 from __future__ import annotations
 
+import shlex
 import subprocess
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -68,5 +69,7 @@ class Backend(ABC):
         return self._execute(plan, spec, launcher=launcher)
 
     def _execute(self, plan: LaunchPlan, spec: "CanonicalSpec", *, launcher=None):
-        subprocess.run(plan.command, shell=True, check=True)
+        # WARNING: was shell=True on an f-string built from CLI-provided spec fields
+        # (model/task/seed) -> shell injection. Plans are plain argv, so tokenize instead.
+        subprocess.run(shlex.split(plan.command), check=True)
         return None

@@ -36,7 +36,7 @@ def _build() -> dict[str, Backend]:
     return {b.name: b for b in instances}
 
 
-def BACKENDS() -> dict[str, Backend]:  # noqa: N802 - registry accessor
+def BACKENDS() -> dict[str, Backend]:
     """Lazily-built backend registry."""
     global _BACKENDS
     if _BACKENDS is None:

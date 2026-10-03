@@ -20,8 +20,9 @@ import modal
 
 app = modal.App("tinker-rl-tinker-grpo")
 
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
-WANDB_KEY = os.environ.get("WANDB_API_KEY", "")
+# WARNING (security): HF/W&B tokens previously were baked into the image via .env()/Secret.from_dict(); they now come from named Modal secrets. Rotate tokens if old images exist.
+# WARNING (security): TINKER_API_KEY is still forwarded from the local env via Secret.from_dict
+# (runtime secret, not an image layer); prefer modal.Secret.from_name("tinker-secret").
 TINKER_KEY = os.environ.get("TINKER_API_KEY", "")
 
 # Repo root: platform_hybrid/experiments/modal/<this file> -> parents[3].
@@ -44,8 +45,6 @@ image = (
         "tinker-cookbook>=0.2.0",
     )
     .env({
-        "HF_TOKEN": HF_TOKEN,
-        "WANDB_API_KEY": WANDB_KEY,
         "WANDB_PROJECT": "tinker-rl-lab-world-class",
     })
     .add_local_dir(
@@ -61,9 +60,9 @@ image = (
     gpu="H100",
     timeout=7200,
     secrets=[
+        modal.Secret.from_name("huggingface-secret"),
+        modal.Secret.from_name("wandb-secret"),
         modal.Secret.from_dict({
-            "HF_TOKEN": HF_TOKEN,
-            "WANDB_API_KEY": WANDB_KEY,
             "TINKER_API_KEY": TINKER_KEY,
         })
     ],

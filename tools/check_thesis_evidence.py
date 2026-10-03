@@ -12,7 +12,9 @@ import json
 import math
 import statistics
 from collections import Counter
+from functools import partial
 from pathlib import Path
+from typing import Any, Callable
 
 M1B = "platform_hybrid/experiments/results/samestack_gsm8k_cot.json"
 M1B_FULL = "platform_hybrid/experiments/results/samestack_gsm8k_cot_full.json"
@@ -134,16 +136,16 @@ def paired_metric(record, trained, base, difference_key, binary=True, staged_rou
 
 def check_m1b(data):
     short, full = data[M1B], data[M1B_FULL]
-    for key in ("config", "summary", "contrasts"):
-        require(short[key] == full[key], f"M1b summary/full {key} mismatch")
+    for section in ("config", "summary", "contrasts"):
+        require(short[section] == full[section], f"M1b summary/full {section} mismatch")
     seeds = [42, 123, 456, 789, 1024]
     arms = {"grpo_g8": 8, "grpo_g2": 2, "ppo": 1}
     require(short["config"]["seeds"] == seeds, "M1b seed set changed")
     require(short["config"]["group"] == arms, "M1b arm set changed")
-    for key, expected in (("n_eval", 200), ("n_steps", 30), ("n_gen", 64)):
-        same(count(short["config"][key]), expected, f"M1b config {key}")
+    for cfg_key, expected in (("n_eval", 200), ("n_steps", 30), ("n_gen", 64)):
+        same(count(short["config"][cfg_key]), expected, f"M1b config {cfg_key}")
     require(len(short["runs"]) == len(full["runs"]) == 15, "M1b requires 15 runs")
-    runs = {}
+    runs: dict[tuple[str, int], dict[str, Any]] = {}
     for small, run in zip(short["runs"], full["runs"]):
         projected = {
             k: v for k, v in run.items() if k not in ("pre_correct", "post_correct", "step_log")
@@ -389,7 +391,7 @@ def check_paired(lane, d):
             envs == set(d["per_env"]) == {"babyai", "textworld", "babaisai", "minihack", "crafter"},
             "E13 paired environment set changed",
         )
-        means = {arm: [] for arm in arm_values}
+        means: dict[str, list[float]] = {arm: [] for arm in arm_values}
         for env in sorted(envs):
             indices = [i for i, ident in enumerate(ids) if ident.split("/")[0] == env]
             same(count(d["per_env"][env]["n"]), len(indices), f"E13 {env} episode count")
@@ -494,21 +496,18 @@ def check_evidence(root: Path):
         except (OSError, ValueError) as exc:
             errors.append(f"{relative}: {exc}")
     if not errors:
-        jobs = [("M1b", lambda: check_m1b(data))]
+        # Data lookups stay inside the job so a missing file is reported as a FAIL row.
+        def replacement_job(lane: str) -> Any:
+            return check_replacement(lane, data[f"{FINISH}/{lane}/result.json"])
+
+        def paired_job(lane: str) -> Any:
+            return check_paired(lane, data[f"{PAIRED}/{lane}/paired.json"])
+
+        jobs: list[tuple[str, Callable[[], Any]]] = [("M1b", partial(check_m1b, data))]
         jobs += [
-            (
-                f"replacement/{lane}",
-                lambda lane=lane: check_replacement(lane, data[f"{FINISH}/{lane}/result.json"]),
-            )
-            for lane in REPLACEMENT_COUNTS
+            (f"replacement/{lane}", partial(replacement_job, lane)) for lane in REPLACEMENT_COUNTS
         ]
-        jobs += [
-            (
-                f"paired/{lane}",
-                lambda lane=lane: check_paired(lane, data[f"{PAIRED}/{lane}/paired.json"]),
-            )
-            for lane in PAIRED_COUNTS
-        ]
+        jobs += [(f"paired/{lane}", partial(paired_job, lane)) for lane in PAIRED_COUNTS]
         for name, check in jobs:
             try:
                 checks.append({"check": name, "detail": check(), "status": "PASS"})

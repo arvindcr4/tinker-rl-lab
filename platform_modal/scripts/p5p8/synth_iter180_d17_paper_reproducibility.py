@@ -53,11 +53,13 @@ from pathlib import Path
 import statistics
 import math
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-RES = ROOT / "experiments" / "results" / "p5p8"
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
 
-PATH_JSONL = ROOT / "experiments" / "results" / "findings_ledger.jsonl"
+PATH_JSONL = ROOT / "platform_hybrid/experiments" / "results" / "findings_ledger.jsonl"
 
 PILLARS = ["P5", "P6", "P7", "P8", "P5P8-SYNTH"]
 

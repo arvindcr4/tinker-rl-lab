@@ -21,7 +21,10 @@ import pathlib
 import random
 import statistics
 
-WORKTREE = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = REPO_ROOT
 TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)

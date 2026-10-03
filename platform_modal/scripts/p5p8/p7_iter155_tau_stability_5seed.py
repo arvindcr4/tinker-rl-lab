@@ -36,7 +36,10 @@ import os
 import random
 from pathlib import Path
 
-REPO = Path("/home/claude/tinker-rl-lab-minimax")
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+REPO = REPO_ROOT
 PANEL = REPO / "platform_hybrid/experiments/results/n10_seed_expansion"
 OUT = REPO / "platform_hybrid/experiments/results/p5p8"
 SEEDS = [42, 179, 316, 453, 590]

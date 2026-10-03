@@ -39,9 +39,11 @@ from pathlib import Path
 from typing import Any
 import numpy as np
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-RES = ROOT / "experiments" / "results"
-TR = ROOT / "experiments" / "tinker-runs" / "results"
+sys.path.append(str(Path(__file__).resolve().parent))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+RES = ROOT / "platform_hybrid/experiments" / "results"
+TR = ROOT / "platform_hybrid/experiments" / "tinker-runs" / "results"
 
 # ------------------------------------------------------------------
 # Anchors: name -> (params_B, family, trace_file)

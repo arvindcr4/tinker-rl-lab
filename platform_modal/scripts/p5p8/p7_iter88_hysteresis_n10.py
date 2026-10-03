@@ -49,10 +49,13 @@ import json
 import random
 from pathlib import Path
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-RES = ROOT / "experiments" / "results" / "p5p8"
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
-N10_DIR = ROOT / "experiments" / "results" / "n10_seed_expansion"
+N10_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n10_seed_expansion"
 
 SEEDS = [42, 179, 316, 453, 590]
 TAUS = [0.40, 0.50, 0.60, 0.70]

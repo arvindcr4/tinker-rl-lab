@@ -38,9 +38,12 @@ from copy import deepcopy
 
 import jsonschema
 
-ROOT = "/home/claude/tinker-rl-lab-minimax"
-SCHEMA = f"{ROOT}/registry/schema.json"
-ENTRIES = f"{ROOT}/registry/entries"
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = str(REPO_ROOT)
+SCHEMA = f"{ROOT}/platform_hybrid/registry/schema.json"
+ENTRIES = f"{ROOT}/platform_hybrid/registry/entries"
 ITER_DATA = f"{ROOT}/platform_hybrid/experiments/results/p5p8/p6_n2_window_deltas.tsv"
 SUMMARY = f"{ROOT}/platform_hybrid/experiments/results/p5p8/p6_window_sensitivity_backfill.json"
 LOG = f"{ROOT}/platform_hybrid/experiments/results/p5p8/p6_window_sensitivity_backfill.log"

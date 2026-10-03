@@ -45,7 +45,7 @@ Pre-registered hypotheses (real on-disk data):
 ALL inputs are real on-disk TinkerRL-Bench artifacts; no fabrication.
 
 Run:
-  cd /home/claude/tinker-rl-lab-minimax
+  cd <repo root>
   python3 platform_modal/scripts/berkeley/hipporag_memory.py
 """
 from __future__ import annotations
@@ -58,9 +58,12 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-WORKTREE = Path("/home/claude/tinker-rl-lab-minimax")
-RESULTS = WORKTREE / "experiments" / "results" / "berkeley"
-DOCS = WORKTREE / "docs" / "berkeley_improvements"
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = REPO_ROOT
+RESULTS = WORKTREE / "platform_hybrid/experiments" / "results" / "berkeley"
+DOCS = WORKTREE / "platform_hybrid/docs" / "berkeley_improvements"
 
 STOP = set("""
 a an the of and or to in for by with from is are be as on at that this these

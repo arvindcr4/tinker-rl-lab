@@ -31,10 +31,10 @@ import random
 import statistics
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-N2 = ROOT / "experiments" / "results" / "n2_reward_tensor_resume" / "n2_metrics.tsv"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+ROOT = Path(__file__).resolve().parents[3]  # repo root
+RES = ROOT / "platform_hybrid" / "experiments" / "results"
+N2 = RES / "n2_reward_tensor_resume" / "n2_metrics.tsv"
+OUT_DIR = RES / "p5p8"
 N_BOOT = 10000
 SEED = 20260704
 
@@ -79,17 +79,13 @@ def bootstrap_eta_squared(
 
     This is a stratified bootstrap: each bootstrap replicate preserves the
     group structure but resamples observations within groups. It produces a
-    CI on eta^2 itself (not on the within-group mean)."""
+    CI on eta^2 itself (not on the within-group mean). Steps are
+    autocorrelated within a run, so this i.i.d. step resample still
+    understates the width; treat the CI as a lower bound on uncertainty."""
     rng = random.Random(seed)
-    sizes = [len(g) for g in groups]
-    pooled = [x for g in groups for x in g]
     boots = []
     for _ in range(B):
-        new_groups = []
-        idx = 0
-        for sz in sizes:
-            new_g = [pooled[rng.randrange(len(pooled))] for _ in range(sz)]
-            new_groups.append(new_g)
+        new_groups = [[g[rng.randrange(len(g))] for _ in range(len(g))] for g in groups]
         boots.append(eta_squared(new_groups))
     boots.sort()
     return (
@@ -132,7 +128,7 @@ def headline_h4_eta_squared_algorithm(by_method: dict) -> list[dict]:
             "ci_lo": round(lo, 4),
             "ci_hi": round(hi, 4),
             "verdict": "DECISIVE" if hi < 0.10 else ("SUGGESTIVE" if hi < 0.30 else "DOMINANT"),
-            "note": "stratified bootstrap within method groups, n=10000",
+            "note": "stratified (within-method) step bootstrap, n=10000; ignores step autocorrelation",
         })
     return out
 
@@ -182,6 +178,7 @@ def headline_h5_method_spread(by_method: dict) -> list[dict]:
 
 
 def main() -> int:
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     by_method = read_n2()
     print(f"loaded N2: methods={sorted(by_method)}, "
           f"steps_per_method={[len(v) for v in by_method.values()]}")

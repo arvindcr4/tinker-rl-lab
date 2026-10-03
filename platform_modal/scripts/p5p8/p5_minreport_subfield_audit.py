@@ -62,10 +62,12 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-CELLS = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
-MANIFESTS = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+CELLS = ROOT / "platform_hybrid" / "experiments" / "results" / "mega_20260704" / "cells.tsv"
+MANIFESTS = ROOT / "platform_hybrid" / "experiments" / "results" / "mega_20260704" / "manifests"
+OUT_DIR = ROOT / "platform_hybrid" / "experiments" / "results" / "p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ----- the 7 MIN-REPORT items and their sub-fields (from sec:p5-stack) -----
@@ -275,7 +277,7 @@ def _resolve_manifest_path(p: str) -> Path:
     p = p.strip()
     if p.startswith("/home/claude/tinker-rl-lab/experiments/"):
         rel = p[len("/home/claude/tinker-rl-lab/experiments/"):]
-        return ROOT / "experiments" / rel
+        return ROOT / "platform_hybrid" / "experiments" / rel
     return Path(p)
 
 

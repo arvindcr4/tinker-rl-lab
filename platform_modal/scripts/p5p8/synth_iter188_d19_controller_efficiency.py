@@ -38,7 +38,10 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments/results/p5p8"
 ITER187_PER_STEP = RES / "p7_iter187_infogain_per_step.tsv"
 ITER187_PER_METHOD = RES / "p7_iter187_infogain_per_method.tsv"

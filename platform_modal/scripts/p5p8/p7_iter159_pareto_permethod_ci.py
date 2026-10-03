@@ -42,7 +42,10 @@ import statistics
 from collections import defaultdict
 from pathlib import Path
 
-WORKTREE = Path("/home/claude/tinker-rl-lab-minimax")
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = REPO_ROOT
 TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 HELDOUT = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
 OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"

@@ -19,8 +19,7 @@ gpu_image = (
     )
 )
 
-WANDB_KEY = os.environ.get("WANDB_API_KEY", "")
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
+# WARNING (security): HF/W&B tokens previously were baked into the image via .env()/Secret.from_dict(); they now come from named Modal secrets. Rotate tokens if old images exist.
 
 
 @app.function(
@@ -29,9 +28,9 @@ HF_TOKEN = os.environ.get("HF_TOKEN", "")
     timeout=3600,
     volumes={"/results": results_vol},
     secrets=[
+        modal.Secret.from_name("huggingface-secret"),
+        modal.Secret.from_name("wandb-secret"),
         modal.Secret.from_dict({
-            "WANDB_API_KEY": WANDB_KEY,
-            "HF_TOKEN": HF_TOKEN,
             "WANDB_PROJECT": "tinker-rl-lab-world-class",
         })
     ],

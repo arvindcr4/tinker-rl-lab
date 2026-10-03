@@ -6,9 +6,13 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-W = "/home/claude/tinker-rl-lab-minimax"
-RES = os.path.join(W, "experiments", "results")
-FIGS = os.path.join(W, "paper", "figures")
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+W = str(REPO_ROOT)
+RES = os.path.join(W, "platform_hybrid/experiments", "results")
+FIGS = os.path.join(W, "platform_hybrid/paper", "figures")
 os.makedirs(FIGS, exist_ok=True)
 
 perrun = []

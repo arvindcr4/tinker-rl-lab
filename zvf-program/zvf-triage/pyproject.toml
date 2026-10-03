@@ -50,12 +50,14 @@ Changelog = "https://github.com/arvindcr4/tinker-rl-lab/blob/main/zvf-program/zv
 [project.optional-dependencies]
 # Framework adapters. The core package never imports these at module load time;
 # they are imported lazily only when the corresponding adapter is used.
-trl = ["torch>=2.0", "transformers>=4.40", "trl>=0.9"]
-wandb = ["wandb>=0.16"]
+trl = ["torch==2.7.1", "transformers==5.5.4", "trl==1.2.0"]
+wandb = ["wandb==0.21.0"]
 tensorboard = ["tensorboard>=2.12"]
+pydantic = ["pydantic>=2.13.0,<3.0.0"]
 dev = [
-    "pytest>=7.0",
-    "numpy>=1.21",
+    "pytest>=9.1.0,<10.0.0",
+    "numpy==2.2.6",
+    "pydantic>=2.13.0,<3.0.0",
 ]
 
 [tool.setuptools.packages.find]

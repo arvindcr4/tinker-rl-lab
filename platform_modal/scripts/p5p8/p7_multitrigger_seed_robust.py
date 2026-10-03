@@ -56,10 +56,13 @@ import pathlib
 import random
 import statistics
 
-WORK = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-N10 = WORK / "experiments" / "results" / "n10_seed_expansion"
-N2 = WORK / "experiments" / "results" / "n2_reward_tensor_resume"
-OUT = WORK / "experiments" / "results" / "p5p8"
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORK = REPO_ROOT
+N10 = WORK / "platform_hybrid/experiments" / "results" / "n10_seed_expansion"
+N2 = WORK / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
+OUT = WORK / "platform_hybrid/experiments" / "results" / "p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # Three trigger axes registered in P7:

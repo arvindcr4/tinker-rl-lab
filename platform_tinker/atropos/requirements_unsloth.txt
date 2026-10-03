@@ -9,13 +9,16 @@
 #   Python 3.11 | CUDA 12.1 | torch 2.3.0 | Colab T4 / A100
 
 # Core ML
-torch>=2.3.0
-transformers>=4.51.0
-accelerate>=0.33.0
-peft>=0.12.0
+torch==2.7.1
+transformers==5.5.4
+accelerate==1.13.0
+peft==0.19.1
 
 # TRL (must be ≥0.9.0 for GRPOTrainer + GRPOConfig)
-trl>=0.9.0
+trl==1.2.0
+
+# Schema validation
+pydantic>=2.13.0,<3.0.0
 
 # Unsloth (install last — overrides some HF kernels)
 # On Colab use the pip extra index:
@@ -24,15 +27,15 @@ trl>=0.9.0
 unsloth>=2024.12.0
 
 # Reward / math verification
-math-verify>=0.5.0
-latex2sympy2-extended>=1.0.0
+math-verify>=0.3.0
+latex2sympy2-extended>=0.1.0
 
 # Dataset
-datasets>=2.20.0
+datasets==4.8.4
 
 # Logging
-wandb>=0.17.0
+wandb==0.21.0
 
 # Config / utils
-pyyaml>=6.0
-numpy>=1.26.0
+pyyaml>=6.0.0,<6.1.0
+numpy==2.2.6

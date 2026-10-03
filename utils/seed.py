@@ -21,6 +21,7 @@ Reference:
 import os
 import random
 import argparse
+from typing import Any
 
 
 def set_global_seed(seed: int = 42, deterministic_cudnn: bool = True) -> dict:
@@ -48,7 +49,7 @@ def set_global_seed(seed: int = 42, deterministic_cudnn: bool = True) -> dict:
         pass
 
     # PyTorch
-    torch_info = {}
+    torch_info: dict[str, Any] = {}
     try:
         import torch
 
@@ -114,7 +115,7 @@ def get_environment_info() -> dict:
     import platform
     import sys
 
-    info = {
+    info: dict[str, Any] = {
         "python_version": sys.version,
         "platform": platform.platform(),
         "architecture": platform.machine(),
@@ -132,7 +133,7 @@ def get_environment_info() -> dict:
             info["gpu_count"] = torch.cuda.device_count()
             for i in range(torch.cuda.device_count()):
                 info[f"gpu_{i}_name"] = torch.cuda.get_device_name(i)
-                mem = torch.cuda.get_device_properties(i).total_mem
+                mem = torch.cuda.get_device_properties(i).total_memory
                 info[f"gpu_{i}_memory_gb"] = round(mem / (1024**3), 1)
     except ImportError:
         info["torch_version"] = "not installed"

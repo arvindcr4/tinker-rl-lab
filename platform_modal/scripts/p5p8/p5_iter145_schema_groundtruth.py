@@ -34,7 +34,9 @@ import re
 import sys
 from pathlib import Path
 
-REPO = Path("/home/claude/tinker-rl-lab-minimax")
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+REPO = REPO_ROOT
 MAN_DIR = REPO / "platform_hybrid/experiments/results/mega_20260704/manifests"
 TENS_DIR = REPO / "platform_hybrid/experiments/results/mega_20260704/group_tensors"
 OUT_TSV = REPO / "platform_hybrid/experiments/results/p5p8/p5_iter145_schema_groundtruth.tsv"

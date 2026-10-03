@@ -41,10 +41,12 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-CELLS_TSV = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
-MANIFEST_DIR = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
-OUT = ROOT / "experiments" / "results" / "p5p8"
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+CELLS_TSV = ROOT / "platform_hybrid/experiments" / "results" / "mega_20260704" / "cells.tsv"
+MANIFEST_DIR = ROOT / "platform_hybrid/experiments" / "results" / "mega_20260704" / "manifests"
+OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # ----- iter-13 auditor's 7-item schema (copied for self-containment) -----

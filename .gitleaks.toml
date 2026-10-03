@@ -1,0 +1,92 @@
+# gitleaks configuration (gitleaks >= 8.25 for [[allowlists]] / targetRules).
+#
+#   working tree : gitleaks dir --config .gitleaks.toml --redact .
+#   staged diff  : gitleaks git --pre-commit --staged --config .gitleaks.toml --redact .
+#   full history : gitleaks git --log-opts=--all --config .gitleaks.toml --redact .
+#
+# Uses the upstream default ruleset; every allowlist below is a reviewed false
+# positive with its reason. Allowlists are scoped to the generic-api-key rule
+# (the only rule that fired) so provider-specific rules (hf_, tml-, sk-, AWS,
+# GitHub, Slack, ...) still fire everywhere.
+#
+# WARNING (security): two real Tinker API keys (tml-...) are in git history
+# (experiments/run_tinker.sh @18e5a445b, reports/final/run_heldout_parallel.sh
+# @eaff8c95a/a721caa02) on a PUBLIC repo. They are deliberately NOT
+# allowlisted: rotate them, then record their fingerprints in .gitleaksignore.
+
+title = "tinker-rl-lab gitleaks config"
+
+[extend]
+useDefault = true
+
+# Identifier-shaped "secrets": snake/kebab/dotted names made only of short
+# segments (metric keys, run keys, column names, "privacy/ethics"). Real
+# credentials always contain a long random run, which this cannot match.
+[[allowlists]]
+description = "identifier-shaped values (every segment <= 12 chars)"
+targetRules = ["generic-api-key"]
+regexTarget = "secret"
+regexes = ['''^[A-Za-z][A-Za-z0-9]{0,11}(?:[_./-][A-Za-z0-9]{1,12})+$''']
+
+# BibTeX keys such as zhang2025scaffgrpo / schulman2017proximal.
+[[allowlists]]
+description = "bibtex citation keys"
+targetRules = ["generic-api-key"]
+regexTarget = "secret"
+regexes = ['''^[a-z]+(?:19|20)\d{2}[a-z]+$''']
+
+# Python type annotations: `private_key: Ed25519PrivateKey | None`.
+[[allowlists]]
+description = "type annotations naming a key class, not a key value"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+regexes = ['''_key:\s*Ed25519PrivateKey\b''']
+
+# Content digests: HF dataset revision pins ("Org/Repo": "<40-hex sha>"),
+# sha256 file/receipt hashes ("x.json": "<64-hex>", *_sha256, PROVENANCE).
+# W&B keys are also 40-hex, so 40-hex is only allowed as an "org/repo" value.
+[[allowlists]]
+description = "git revision pins and sha256 content digests"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+regexes = [
+  '''"[\w.-]+/[\w.-]+"\s*:\s*"[0-9a-f]{40}"''',
+  '''"[\w./-]+"\s*:\s*"[0-9a-f]{64}"''',
+]
+
+# Throwaway Ed25519 seeds used only to sign test trust roots inside the
+# unit tests; their public halves are not pinned anywhere in the repo
+# (verified with git grep on raw/hex/b64 public keys), so they grant nothing.
+[[allowlists]]
+description = "unit-test-only Ed25519 signing seeds"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''^zvf-program/flagship/test_pavlov_[a-z]+_eval_adapter\.py$''']
+regexTarget = "line"
+regexes = ['''_E\d+_TEST_PRIVATE_KEY_B64 = "''']
+
+# Third-party source captured verbatim as SWE-bench task context / model
+# patches (upstream teleport/flipt/openlibrary test fixtures and docs, Docker
+# image GPG_KEYS fingerprints). Not our credentials.
+[[allowlists]]
+description = "vendored SWE-bench task captures and container image metadata"
+paths = [
+  '''^outputs/.*/tasks/[^/]+/(source_context|generation|decontamination_receipt)\.json$''',
+  '''^outputs/.*/tasks/[^/]+/generation_response\.txt$''',
+  '''^outputs/.*/(image_inspect|inventory)\.json$''',
+]
+
+# Benchmark prompt text (agent-safety phishing emails "use the following
+# encryption key: ..."), upstream code echoed in tool transcripts, and Modal
+# web-endpoint 303 redirect attempt tokens (ephemeral, single function call).
+[[allowlists]]
+description = "benchmark prompt content and ephemeral Modal redirect tokens in eval logs"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''^outputs/''']
+regexTarget = "line"
+regexes = [
+  '''use the following encryption key''',
+  '''posthog_client_key = ''',
+  '''__modal_attempt_token=''',
+]

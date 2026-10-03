@@ -47,7 +47,9 @@ import sys
 from pathlib import Path
 from collections import defaultdict
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
 N2_TSV   = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
 ZV130    = ROOT / "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv"
 MEGA     = ROOT / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"

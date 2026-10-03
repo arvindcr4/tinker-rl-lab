@@ -34,7 +34,10 @@ import sys
 from collections import Counter, defaultdict
 from typing import Any, Dict, List, Tuple
 
-WORKTREE = "/home/claude/tinker-rl-lab-minimax"
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = str(REPO_ROOT)
 MANIFESTS_DIR = f"{WORKTREE}/platform_hybrid/experiments/results/mega_20260704/manifests"
 CELLS_TSV = f"{WORKTREE}/platform_hybrid/experiments/results/mega_20260704/cells.tsv"
 OUT_DIR = f"{WORKTREE}/platform_hybrid/experiments/results/p5p8"

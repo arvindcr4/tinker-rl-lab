@@ -5,8 +5,7 @@ import modal, os
 
 app = modal.App("tinker-rl-lab-world-class")
 
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
-WANDB_KEY = os.environ.get("WANDB_API_KEY", "")
+# WARNING (security): HF/W&B tokens previously were baked into the image via .env()/Secret.from_dict(); they now come from named Modal secrets. Rotate tokens if old images exist.
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
@@ -16,8 +15,6 @@ image = (
         "numpy", "pandas", "wandb", "huggingface_hub",
     )
     .env({
-        "HF_TOKEN": HF_TOKEN,
-        "WANDB_API_KEY": WANDB_KEY,
         "WANDB_PROJECT": "tinker-rl-lab-world-class",
     })
 )
@@ -27,9 +24,9 @@ def _upload_hf(exp_tag, model_id, results, method="grpo"):
     import json, os, shutil
     from huggingface_hub import HfApi, create_repo
     try:
-        api = HfApi(token=HF_TOKEN)
+        api = HfApi(token=os.environ.get("HF_TOKEN"))
         repo_id = f"arvindcr4/tinker-rl-bench-{exp_tag}"
-        create_repo(repo_id, repo_type="model", exist_ok=True, token=HF_TOKEN)
+        create_repo(repo_id, repo_type="model", exist_ok=True, private=True, token=os.environ.get("HF_TOKEN"))
         card = f"""---
 tags: [{method}, reinforcement-learning, tinker-rl-bench, modal-h100]
 base_model: {model_id}
@@ -56,7 +53,7 @@ Modal H100 GPU experiment from TinkerRL-Bench world-class suite.
         os.makedirs(tmp, exist_ok=True)
         with open(f"{tmp}/README.md", "w") as f: f.write(card)
         with open(f"{tmp}/results.json", "w") as f: json.dump(results, f, indent=2)
-        api.upload_folder(folder_path=tmp, repo_id=repo_id, repo_type="model", token=HF_TOKEN)
+        api.upload_folder(folder_path=tmp, repo_id=repo_id, repo_type="model", token=os.environ.get("HF_TOKEN"))
         shutil.rmtree(tmp, ignore_errors=True)
         print(f"[HF] ✓ {repo_id}")
         return repo_id
@@ -66,7 +63,8 @@ Modal H100 GPU experiment from TinkerRL-Bench world-class suite.
 
 
 # ── Experiment 1: PPO/REINFORCE baseline on GSM8K ────────────────────────
-@app.function(image=image, gpu="H100", timeout=7200)
+@app.function(image=image, gpu="H100", timeout=7200,
+              secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")])
 def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int = 30):
     import torch, random, re, json, wandb, os
     try:
@@ -183,9 +181,9 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
     repo_id = None
     try:
         repo_id = f"arvindcr4/tinker-rl-bench-{exp}"
-        create_repo(repo_id, repo_type="model", exist_ok=True, token=HF_TOKEN)
-        api = HfApi(token=HF_TOKEN)
-        api.upload_folder(folder_path=adapter_path, repo_id=repo_id, repo_type="model", token=HF_TOKEN)
+        create_repo(repo_id, repo_type="model", exist_ok=True, private=True, token=os.environ.get("HF_TOKEN"))
+        api = HfApi(token=os.environ.get("HF_TOKEN"))
+        api.upload_folder(folder_path=adapter_path, repo_id=repo_id, repo_type="model", token=os.environ.get("HF_TOKEN"))
         print(f"[HF] ✓ Uploaded adapter to {repo_id}")
     except Exception as e:
         print(f"[HF] ✗ {e}")
@@ -207,7 +205,8 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
 
 
 # ── Experiment 2: Full HumanEval evaluation ──────────────────────────────
-@app.function(image=image.pip_install("human-eval"), gpu="H100", timeout=7200)
+@app.function(image=image.pip_install("human-eval"), gpu="H100", timeout=7200,
+              secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")])
 def run_humaneval_eval(model_name: str = "Qwen/Qwen3-8B", num_samples: int = 5):
     import torch, json, wandb, os
     try:
@@ -290,7 +289,8 @@ def run_humaneval_eval(model_name: str = "Qwen/Qwen3-8B", num_samples: int = 5):
 
 
 # ── Experiment 3: KL divergence + entropy tracking ───────────────────────
-@app.function(image=image, gpu="H100", timeout=7200)
+@app.function(image=image, gpu="H100", timeout=7200,
+              secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")])
 def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int = 30):
     import torch, torch.nn.functional as F, random, re, json, wandb, os
     try:
@@ -400,7 +400,8 @@ def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: in
 
 
 # ── Experiment 4: Held-out GSM8K eval for new/larger models ──────────────
-@app.function(image=image, gpu="H100", timeout=7200)
+@app.function(image=image, gpu="H100", timeout=7200,
+              secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")])
 def run_gsm8k_heldout_eval(model_name: str = "Qwen/Qwen3-32B", num_examples: int = 200):
     import torch, re, json, random, wandb, os
     try:

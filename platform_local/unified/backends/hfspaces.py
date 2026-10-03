@@ -36,7 +36,9 @@ class HFSpacesBackend(Backend):
         if dry_run:
             return None
         # Execute the fetch (it is safe / read-only); no training result to return.
+        import shlex
         import subprocess
 
-        subprocess.run(plan.command, shell=True, check=True)
+        # WARNING: was shell=True on a command interpolating spec.task -> shell injection.
+        subprocess.run(shlex.split(plan.command), check=True)
         return None

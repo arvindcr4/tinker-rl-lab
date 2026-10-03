@@ -39,7 +39,11 @@ import os
 import random
 from collections import defaultdict
 
-DATA_DIR = "/home/claude/tinker-rl-lab-minimax"
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+DATA_DIR = str(REPO_ROOT)
 OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8"
 TRAIN = f"{DATA_DIR}/fraud_data.csv"
 TEST = f"{DATA_DIR}/test_data.csv"

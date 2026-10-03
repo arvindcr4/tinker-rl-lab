@@ -10,7 +10,8 @@ NEXT_SUBMISSION = ROOT / "zvf-program/next-submission"
 sys.path.insert(0, str(NEXT_SUBMISSION))
 PATH = NEXT_SUBMISSION / "remote_preflight.py"
 SPEC = importlib.util.spec_from_file_location("next_submission_remote_preflight", PATH)
-assert SPEC is not None and SPEC.loader is not None
+assert SPEC is not None
+assert SPEC.loader is not None
 REMOTE = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = REMOTE
 SPEC.loader.exec_module(REMOTE)

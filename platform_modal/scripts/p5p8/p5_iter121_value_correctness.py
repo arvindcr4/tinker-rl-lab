@@ -53,7 +53,10 @@ import re
 from pathlib import Path
 from collections import defaultdict
 
-WORK = Path("/home/claude/tinker-rl-lab-minimax")
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORK = REPO_ROOT
 MEGA = WORK / "platform_hybrid/experiments/results/mega_20260704"
 MANIFEST_DIR = MEGA / "manifests"
 CELLS_TSV = MEGA / "cells.tsv"
@@ -176,6 +179,7 @@ def check_consistency(cell_id, manifest, cells_row, file_info):
         if '/home/claude/tinker-rl-lab/' in zp:
             rel = zp.split('/home/claude/tinker-rl-lab/', 1)[1]
             candidates.append(str(WORK / rel))
+            candidates.append(str(WORK / "platform_hybrid" / rel))  # experiments/ moved here
     exists = any(os.path.exists(c) for c in candidates)
     results.append(('C10', 'per_step_zvf_path_exists_on_disk', exists,
 f"raw_path={zp!r} resolved={exists}"))

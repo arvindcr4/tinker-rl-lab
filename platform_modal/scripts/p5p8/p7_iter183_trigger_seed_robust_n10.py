@@ -58,7 +58,11 @@ import random
 import statistics
 from itertools import combinations
 
-WORKTREE = "/home/claude/tinker-rl-lab-minimax"
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = str(REPO_ROOT)
 N10_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n10_seed_expansion")
 OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
 os.makedirs(OUT_DIR, exist_ok=True)

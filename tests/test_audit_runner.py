@@ -210,7 +210,8 @@ def test_scientific_builds_preserve_source_artifacts(tmp_path, monkeypatch, tool
     result = evaluate_audit("scientific_issues", scientific_audit.get_issues, context)
 
     assert {path.name: path.read_bytes() for path in context.FINAL_DIR.iterdir()} == before
-    assert output_dirs and all(path != context.FINAL_DIR for path in output_dirs)
+    assert output_dirs
+    assert all(path != context.FINAL_DIR for path in output_dirs)
     assert all(not path.exists() for path in output_dirs)
     latex_codes = [issue.code for issue in result.issues if issue.code.startswith("latex.")]
     first_step = "latex.main.pass1" if compiler == "pdflatex" else "latex.main.tectonic"

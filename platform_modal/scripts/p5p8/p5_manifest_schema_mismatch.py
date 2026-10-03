@@ -40,11 +40,15 @@ Pipeline (≤300 LoC, stdlib only):
 import json, csv, glob, os, math, random, re
 from collections import defaultdict, Counter
 
-ROOT = "/home/claude/tinker-rl-lab-minimax"
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = str(REPO_ROOT)
 MAN_DIR = f"{ROOT}/platform_hybrid/experiments/results/mega_20260704/manifests"
 CELLS = f"{ROOT}/platform_hybrid/experiments/results/mega_20260704/cells.tsv"
 OUT = f"{ROOT}/platform_hybrid/experiments/results/p5p8"
-SCHEMA = f"{ROOT}/registry/schema.json"
+SCHEMA = f"{ROOT}/platform_hybrid/registry/schema.json"
 
 random.seed(20260705)
 

@@ -53,9 +53,12 @@ import pathlib
 import statistics
 import random
 
-WORKTREE = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-N10 = WORKTREE / "experiments" / "results" / "n10_seed_expansion"
-OUT = WORKTREE / "experiments" / "results" / "p5p8"
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = REPO_ROOT
+N10 = WORKTREE / "platform_hybrid/experiments" / "results" / "n10_seed_expansion"
+OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
 THRESHOLDS = (0.50, 0.60, 0.70, 0.80, 0.90)
 N_BOOT = 10000
 SEED = 42

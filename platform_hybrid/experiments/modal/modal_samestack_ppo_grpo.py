@@ -13,6 +13,14 @@ difference is attributable to the algorithm, not the stack.
 
 Multi-seed (5) so a paired test across seeds is valid.
 
+Held-out eval: a fixed set of N_EVAL distinct (a, b) pairs drawn from a
+separate RNG seeded by EVAL_SEED_OFFSET + seed, identical for both arms of a
+seed and excluded from every training draw. NOTE: the stored results
+(experiments/results/samestack_ppo_grpo*.json) were produced by the prior
+code, which drew eval items from the shared global RNG after training, so each
+arm evaluated different items and PPO's eval set overlapped its training draws
+~6x more than GRPO's (~40% vs ~7%). Those numbers are paired by seed only.
+
 Usage:
   modal run experiments/modal/modal_samestack_ppo_grpo.py
 """
@@ -50,6 +58,8 @@ CLIP = 0.2
 MAX_NEW = 10
 EPS = 1e-6
 CHUNK = 8
+N_EVAL = 200
+EVAL_SEED_OFFSET = 10_000
 
 
 @app.function(image=image, gpu="A10G", timeout=3600, volumes={RESULTS_DIR: results_vol}, retries=1, secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")])
@@ -96,8 +106,20 @@ def run_arm(algo: str, seed: int) -> dict:
         nums = re.findall(r"-?\d+", text)
         return int(nums[-1]) if nums else None
 
+    # Fixed, arm-independent eval set from its own RNG; never drawn for training.
+    eval_rng = random.Random(EVAL_SEED_OFFSET + seed)
+    held_set = set()
+    while len(held_set) < N_EVAL:
+        held_set.add((eval_rng.randint(1, 99), eval_rng.randint(1, 99)))
+    held = sorted(held_set)
+
     def sample_batch(n):
-        return [(random.randint(1, 99), random.randint(1, 99)) for _ in range(n)]
+        out = []
+        while len(out) < n:
+            pair = (random.randint(1, 99), random.randint(1, 99))
+            if pair not in held_set:
+                out.append(pair)
+        return out
 
     def forward_logp(full, attn, plen, want_grad, want_value):
         """Chunked: returns (seq_logp[B], value[B] or None, entropy_scalar)."""
@@ -190,8 +212,7 @@ def run_arm(algo: str, seed: int) -> dict:
 
     # measured held-out eval (greedy)
     model.eval()
-    correct, total = 0, 200
-    held = sample_batch(total)
+    correct, total = 0, len(held)
     for i in range(0, total, 32):
         ch = held[i:i + 32]
         e = tok([make_prompt(a, b) for (a, b) in ch], return_tensors="pt", padding=True).to(device)
@@ -206,6 +227,7 @@ def run_arm(algo: str, seed: int) -> dict:
     res = {"experiment": "samestack_ppo_grpo", "algo": algo, "seed": seed, "model": MODEL,
            "n_steps": N_STEPS, "n_gen": N_GEN, "k_epochs": K_EPOCHS,
            "heldout_acc": heldout, "last10_avg": last10,
+           "eval_items": "fixed_disjoint_v2", "eval_seed": EVAL_SEED_OFFSET + seed, "n_eval": total,
            "elapsed_seconds": time.time() - t0, "step_log": step_log}
     os.makedirs(f"{RESULTS_DIR}/samestack", exist_ok=True)
     with open(f"{RESULTS_DIR}/samestack/{algo}_s{seed}.json", "w") as f:
@@ -216,8 +238,8 @@ def run_arm(algo: str, seed: int) -> dict:
     try:
         if "HF_TOKEN" in os.environ:
             repo_id = f"arvindcr4/tinkerrl-samestack-ppo-grpo-{algo}-s{seed}"
-            model.push_to_hub(repo_id, token=os.environ["HF_TOKEN"])
-            tok.push_to_hub(repo_id, token=os.environ["HF_TOKEN"])
+            model.push_to_hub(repo_id, token=os.environ["HF_TOKEN"], private=True)
+            tok.push_to_hub(repo_id, token=os.environ["HF_TOKEN"], private=True)
             print(f"Pushed model to HF Hub: {repo_id}")
         else:
             print("HF_TOKEN not found in environment, skipping push_to_hub")

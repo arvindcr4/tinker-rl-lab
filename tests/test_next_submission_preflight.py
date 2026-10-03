@@ -14,14 +14,16 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 PATH = ROOT / "zvf-program/next-submission/run_preflight.py"
 SPEC = importlib.util.spec_from_file_location("next_submission_preflight", PATH)
-assert SPEC is not None and SPEC.loader is not None
+assert SPEC is not None
+assert SPEC.loader is not None
 PREFLIGHT = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = PREFLIGHT
 SPEC.loader.exec_module(PREFLIGHT)
 
 SECURE_PATH = ROOT / "zvf-program/next-submission/secure_exec_preflight.py"
 SECURE_SPEC = importlib.util.spec_from_file_location("next_submission_secure_exec", SECURE_PATH)
-assert SECURE_SPEC is not None and SECURE_SPEC.loader is not None
+assert SECURE_SPEC is not None
+assert SECURE_SPEC.loader is not None
 SECURE = importlib.util.module_from_spec(SECURE_SPEC)
 sys.modules[SECURE_SPEC.name] = SECURE
 SECURE_SPEC.loader.exec_module(SECURE)
@@ -739,7 +741,8 @@ def test_launcher_and_remote_seam_windows_agree():
     remote_dir = ROOT / "zvf-program/next-submission"
     remote_path = remote_dir / "remote_preflight.py"
     spec = importlib.util.spec_from_file_location("next_submission_remote", remote_path)
-    assert spec is not None and spec.loader is not None
+    assert spec is not None
+    assert spec.loader is not None
     remote = importlib.util.module_from_spec(spec)
     sys.path.insert(0, str(remote_dir))  # remote_preflight imports its siblings
     try:

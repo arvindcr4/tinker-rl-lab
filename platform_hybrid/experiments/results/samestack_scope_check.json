@@ -1,0 +1,28 @@
+{
+  "source": "platform_hybrid/experiments/results/samestack_gsm8k_cot_full.json",
+  "max_new": 200,
+  "arms": {
+    "grpo_g2": {
+      "n_seeds": 5,
+      "mean_train_comp_len": 191.62,
+      "mean_train_comp_len_last10": 190.1,
+      "max_seed_comp_len_last10": 190.87,
+      "fraction_of_cap": 0.958
+    },
+    "grpo_g8": {
+      "n_seeds": 5,
+      "mean_train_comp_len": 190.16,
+      "mean_train_comp_len_last10": 187.71,
+      "max_seed_comp_len_last10": 189.65,
+      "fraction_of_cap": 0.951
+    },
+    "ppo": {
+      "n_seeds": 5,
+      "mean_train_comp_len": 194.16,
+      "mean_train_comp_len_last10": 196.19,
+      "max_seed_comp_len_last10": 197.34,
+      "fraction_of_cap": 0.971
+    }
+  },
+  "note": "Mean generated tokens per completion (mask sum). Per-completion truncation was not logged in this run; see samestack_gsm8k_cot_v2 for it."
+}

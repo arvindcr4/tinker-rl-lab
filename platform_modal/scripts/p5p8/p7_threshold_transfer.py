@@ -35,9 +35,12 @@ import pathlib
 import random
 import statistics
 
-WORKTREE = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-N2 = WORKTREE / "experiments" / "results" / "n2_reward_tensor_resume"
-OUT = WORKTREE / "experiments" / "results" / "p5p8"
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = REPO_ROOT
+N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
+OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
 METHODS = ("grpo", "aero", "gift", "areal")
 THRESHOLDS = (0.50, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90)
 G_BASE = 8

@@ -20,9 +20,12 @@ import csv
 import json
 from pathlib import Path
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-ENTRIES = ROOT / "registry" / "entries"
-RES_OUT = ROOT / "experiments" / "results" / "p5p8"
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+ENTRIES = ROOT / "platform_hybrid/registry" / "entries"
+RES_OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 SEED = 20260705
 N_BOOT = 2000
 TARGETS = ["delta_cppo", "delta_es", "delta_mcgrpo", "delta_ngrpo", "delta_scafgrpo"]
@@ -30,7 +33,7 @@ TARGETS = ["delta_cppo", "delta_es", "delta_mcgrpo", "delta_ngrpo", "delta_scafg
 
 def load_per_seed():
     out = {}  # method -> [mean_zvf per seed]
-    with (ROOT / "experiments" / "results" / "zvf_iter130_risk_index.tsv").open() as f:
+    with (ROOT / "platform_hybrid/experiments" / "results" / "zvf_iter130_risk_index.tsv").open() as f:
         rdr = csv.DictReader(f, delimiter="\t")
         for row in rdr:
             m = row["method"]

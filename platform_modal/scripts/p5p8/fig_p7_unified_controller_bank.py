@@ -8,7 +8,10 @@ import csv
 import json
 import pathlib
 
-ROOT = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
 OUT = ROOT / "platform_hybrid/experiments/results/p5p8/figures"
 OUT.mkdir(parents=True, exist_ok=True)
 

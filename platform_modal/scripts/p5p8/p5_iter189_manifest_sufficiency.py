@@ -76,7 +76,10 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 # ---------- config ----------
-WORKTREE = Path("/home/claude/tinker-rl-lab-minimax")
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = REPO_ROOT
 MANIFEST_DIR = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/manifests"
 CELLS_TSV = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
 OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"

@@ -37,6 +37,8 @@ def run_grpo_training(
     except Exception as exc:
         raise RuntimeError(f"[{exp_name}] failed to connect to Tinker: {exc}") from exc
     try:
+        # WARNING: trust_remote_code=True executes Python shipped in the HF repo for
+        # model_name. Only pass model names from trusted, pinned sources.
         tok = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     except Exception as exc:
         raise RuntimeError(
@@ -47,7 +49,7 @@ def run_grpo_training(
     print(f"[{exp_name}] Run: {tc.model_id}")
 
     # Shared state for custom loss
-    _adv = []
+    _adv: list[float] = []
 
     def loss_fn(data, lp):
         losses = [(-_adv[i] * lp[i].sum()) for i in range(len(lp))]

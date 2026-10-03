@@ -48,12 +48,14 @@ L_CANON = C_INV_CANON * RHO_CANON  # $=100
 C_SENSE = 0.0035    # $/row for LLM sensor
 TAU_DEFAULT = 0.5
 
-OUT_DIR = Path("/home/claude/tinker-rl-lab-minimax/platform_hybrid/experiments/results/p5p8")
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import P5P8_RESULTS_DIR, REPO_ROOT  # noqa: E402
+OUT_DIR = P5P8_RESULTS_DIR
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 def load_data():
-    train = pd.read_csv("/home/claude/tinker-rl-lab-minimax/fraud_data.csv")
-    test = pd.read_csv("/home/claude/tinker-rl-lab-minimax/test_data.csv")
+    train = pd.read_csv(REPO_ROOT / "fraud_data.csv")
+    test = pd.read_csv(REPO_ROOT / "test_data.csv")
     raw_cols = [f"V{i}" for i in range(1, 21)]
     agg_cols = ["V_mean", "V_std", "V_max", "V_min"]
     Xtr_raw = train[raw_cols].values

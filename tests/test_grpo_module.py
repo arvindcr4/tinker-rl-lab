@@ -1609,6 +1609,89 @@ class TestTrackingFailClosed(unittest.TestCase):
                             logger=lambda _message: None,
                         )
 
+    def test_completed_receipt_returns_without_critic_sidecar(self):
+        runtime = self._fake_runtime()
+        with _temporary_modules(self._fake_modules(runtime)):
+            with patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt):
+                with tempfile.TemporaryDirectory() as checkpoint_dir:
+                    config = GRPOConfig(
+                        name="critic-completed",
+                        steps=1,
+                        save_every=1,
+                        group_size=2,
+                        batch_size=1,
+                        checkpoint_dir=checkpoint_dir,
+                        critic_enabled=True,
+                    )
+                    first = grpo._run_one_seed(
+                        config,
+                        self._dataset(),
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=lambda _message: None,
+                    )
+                    sidecar = Path(checkpoint_dir) / "critic-completed_seed42.critic.pt"
+                    self.assertTrue(sidecar.exists())
+                    sidecar.unlink()
+                    second = grpo._run_one_seed(
+                        config,
+                        self._dataset(),
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=lambda _message: None,
+                    )
+        self.assertEqual(second.reward_trace, first.reward_trace)
+        self.assertEqual(second.run_id, first.run_id)
+        self.assertEqual(second.sampler_path, first.sampler_path)
+
+    def test_rewound_final_does_not_restore_discarded_counters(self):
+        dataset = InMemoryDataset(
+            train=[
+                TrainingExample(prompt="easy", target="1"),
+                TrainingExample(prompt="hard", target="0"),
+            ]
+        )
+        runtime = self._fake_runtime()
+        with _temporary_modules(self._fake_modules(runtime)):
+            with patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt):
+                with tempfile.TemporaryDirectory() as checkpoint_dir:
+                    config = GRPOConfig(
+                        name="rewind-counters",
+                        steps=2,
+                        save_every=2,
+                        group_size=2,
+                        batch_size=1,
+                        checkpoint_dir=checkpoint_dir,
+                        seed=42,
+                    )
+                    full = grpo._run_one_seed(
+                        config,
+                        dataset,
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=lambda _message: None,
+                    )
+                    receipt_path = Path(checkpoint_dir) / "rewind-counters_seed42.json"
+                    payload = json.loads(receipt_path.read_text())
+                    payload["status"] = "started"
+                    payload["step"] = 1
+                    payload["result"]["zero_reward_steps"] = 9
+                    payload["result"]["zero_loss_steps"] = 5
+                    receipt_path.write_text(json.dumps(payload))
+                    resumed = grpo._run_one_seed(
+                        config,
+                        dataset,
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=lambda _message: None,
+                    )
+        self.assertEqual(resumed.reward_trace, full.reward_trace)
+        self.assertEqual(
+            resumed.zero_reward_steps,
+            sum(1 for reward in resumed.reward_trace if reward == 0),
+        )
+        self.assertEqual(resumed.zero_loss_steps, 0)
+
 
 class TestTrainingExample(unittest.TestCase):
     def test_defaults(self):
@@ -1813,6 +1896,19 @@ class TestPavlovPortfolioReward(unittest.TestCase):
         self.assertGreater(partial, 0.2)
         self.assertLess(partial, 1.0)
 
+    def test_whitespace_equivalent_diff_is_exact_and_a_missing_header_is_zero(self):
+        expected = "diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-x\n+y"
+        example = TrainingExample(prompt="q", target=expected)
+        reward = PatchReward()
+        padded = "\n" + expected.replace("\n", "  \n") + "\n\n"
+        self.assertEqual(reward.score(padded, example), 1.0)
+        body = "--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-x\n+y"
+        self.assertEqual(reward.score(body, example), 0.0)
+        wrong_file = expected.replace("a.py", "b.py")
+        changed = expected.replace("+y", "+z")
+        self.assertLess(reward.score(wrong_file, example), reward.score(changed, example))
+        self.assertLess(reward.score(changed, example), 1.0)
+
     def test_routes_exact_tool_call_and_patch_rewards(self):
         reward = PavlovNonXLAMReward()
         tool = TrainingExample(
@@ -1839,6 +1935,40 @@ class TestPavlovPortfolioReward(unittest.TestCase):
         self.assertEqual(reward.score(patch_text, patch_example), 1.0)
         self.assertEqual(reward.score("not a diff", patch_example), 0.0)
         self.assertEqual(reward.score("anything", TrainingExample(prompt="q", metadata={})), 0.0)
+        # A closed block is discarded. An unclosed block is not stripped, and
+        # the strict parser still requires the whole answer to be one JSON
+        # object, so a call buried in either case scores 0.
+        self.assertEqual(
+            reward.score(
+                '<think>{"tool":"search","arguments":{"query":"right"}}</think>\nnot a call',
+                tool,
+            ),
+            0.0,
+        )
+        self.assertEqual(
+            reward.score('<think>{"tool":"search","arguments":{"query":"right"}}', tool),
+            0.0,
+        )
+        self.assertEqual(
+            reward.score(
+                "<think>draft</think>still thinking</think>\n"
+                '{"tool":"search","arguments":{"query":"right"}}',
+                tool,
+            ),
+            1.0,
+        )
+        self.assertEqual(
+            reward.score(f"<think>notes</think>\n{patch_text}", patch_example),
+            1.0,
+        )
+        self.assertEqual(reward.score(f"<think>{patch_text}", patch_example), 0.0)
+        self.assertEqual(
+            reward.score(
+                '<think>{"tool":"search","arguments":{"query":"right"}}</think>   ',
+                tool,
+            ),
+            0.0,
+        )
 
 
 class TestSyntheticMathDataset(unittest.TestCase):
@@ -1884,6 +2014,34 @@ class TestToolCallReward(unittest.TestCase):
         r = ToolCallReward()
         self.assertAlmostEqual(r.score("no json here", self._ex("calc", {})), 0.0)
 
+    def test_prose_around_one_object_scores_and_two_objects_do_not(self):
+        r = ToolCallReward()
+        example = self._ex("calculator", {"expression": "1+1"})
+        wrapped = 'plan {"tool": "calculator", "arguments": {"expression": "1+1"}} done'
+        self.assertAlmostEqual(r.score(wrapped, example), 1.0)
+        self.assertEqual(StrictToolCallReward().score(wrapped, example), 0.0)
+        doubled = (
+            '{"tool": "calculator", "arguments": {"expression": "1+1"}} '
+            '{"tool": "calculator", "arguments": {"expression": "1+1"}}'
+        )
+        self.assertAlmostEqual(r.score(doubled, example), 0.1)
+
+    def test_legacy_credit_is_key_presence_not_exact_values(self):
+        r = ToolCallReward()
+        example = self._ex("calculator", {"expression": "1+1"})
+        wrong_value = '{"tool": "calculator", "arguments": {"expression": "WRONG"}}'
+        self.assertAlmostEqual(r.score(wrong_value, example), 1.0)
+        self.assertAlmostEqual(StrictToolCallReward().score(wrong_value, example), 0.7)
+        alias = '{"name": "calculator", "parameters": {"expression": "1+1"}}'
+        self.assertAlmostEqual(r.score(alias, example), 1.0)
+        empty = self._ex("calculator", {})
+        self.assertAlmostEqual(r.score('{"tool": "calculator", "arguments": {}}', empty), 0.7)
+        partial = self._ex("calculator", {"expression": "1+1", "mode": "deg"})
+        one_key = '{"tool": "calculator", "arguments": {"expression": "1+1"}}'
+        self.assertAlmostEqual(r.score(one_key, partial), 0.85)
+        not_a_dict = '{"tool": "calculator", "arguments": "1+1"}'
+        self.assertAlmostEqual(r.score(not_a_dict, example), 0.7)
+
     def test_invalid_json(self):
         r = ToolCallReward()
         # "{bad json" has no closing brace, so regex finds no JSON object => 0.0
@@ -1925,7 +2083,72 @@ class TestStrictToolCallReward(unittest.TestCase):
         reward = StrictToolCallReward()
         response = '{"tool":"search","arguments":{"query":"right","extra":1}}'
         score = reward.score(response, self._ex("search", {"query": "right"}))
-        self.assertLess(score, 1.0)
+        self.assertAlmostEqual(score, 0.5 + 0.2 * (2 / 3) + 0.3)
+
+    def test_partial_overlap_wrong_tool_and_rejected_shapes(self):
+        reward = StrictToolCallReward()
+        self.assertEqual(
+            reward.score(
+                '{"tool":"other","arguments":{"query":"right"}}',
+                self._ex("search", {"query": "right"}),
+            ),
+            0.1,
+        )
+        self.assertEqual(
+            reward.score(
+                '{"tool":"search","arguments":{"extra":1}}',
+                self._ex("search", {}),
+            ),
+            0.5,
+        )
+        one_of_two = reward.score(
+            '{"tool":"search","arguments":{"a":1}}',
+            self._ex("search", {"a": 1, "b": 2}),
+        )
+        self.assertAlmostEqual(one_of_two, 0.5 + 0.2 * (2 / 3) + 0.3 * 0.5)
+        self.assertEqual(
+            reward.score(
+                '{"tool":"search","arguments":{"q":[2, 1]}}',
+                self._ex("search", {"q": [1, 2]}),
+            ),
+            0.7,
+        )
+        self.assertEqual(
+            reward.score(
+                '{"tool":"search","arguments":{"meta":{"b":1,"a":2}}}',
+                self._ex("search", {"meta": {"a": 2, "b": 1}}),
+            ),
+            1.0,
+        )
+        self.assertEqual(
+            reward.score('[{"tool":"search","arguments":{}}]', self._ex("search", {})),
+            0.0,
+        )
+        self.assertEqual(
+            reward.score('{"tool":"search","arguments":[1]}', self._ex("search", {"q": 1})),
+            0.0,
+        )
+        self.assertEqual(
+            reward.score(
+                '{"arguments":{"query":"right"}}',
+                self._ex("search", {"query": "right"}),
+            ),
+            0.0,
+        )
+        numbered = TrainingExample(prompt="q", target={"tool": 1, "arguments": {}})
+        self.assertEqual(reward.score('{"tool":"1","arguments":{}}', numbered), 0.0)
+        agreed = '{"tool":"search","name":"search","arguments":{}}'
+        self.assertEqual(reward.score(agreed, self._ex("search", {})), 1.0)
+        conflicted = TrainingExample(
+            prompt="q",
+            target={"tool": "search", "arguments": {"q": 1}, "parameters": {"q": 2}},
+        )
+        self.assertEqual(
+            reward.score('{"tool":"search","arguments":{"q":1}}', conflicted),
+            0.0,
+        )
+        padded = '  \n{"tool":"search","arguments":{}}\n  '
+        self.assertEqual(reward.score(padded, self._ex("search", {})), 1.0)
 
     def test_leading_prose_is_rejected(self):
         reward = StrictToolCallReward()
@@ -1969,7 +2192,7 @@ class TestStrictToolCallReward(unittest.TestCase):
         reward = StrictToolCallReward()
         response = '{"tool":"Search","arguments":{"query":"Right"}}'
         score = reward.score(response, self._ex("search", {"query": "right"}))
-        self.assertLess(score, 1.0)
+        self.assertEqual(score, 0.1)
 
     def test_string_argument_whitespace_is_not_normalized(self):
         reward = StrictToolCallReward()
@@ -2037,6 +2260,17 @@ class TestMathReward(unittest.TestCase):
         score = r.score("1 + 2 = ?", self._ex("42"))
         self.assertAlmostEqual(score, 0.1)
 
+    def test_boxed_grouping_and_tolerance_do_not_fall_through(self):
+        r = MathReward()
+        self.assertAlmostEqual(r.score("\\boxed{1, 234}", self._ex("1234")), 1.0)
+        self.assertAlmostEqual(r.score("\\boxed{42.005}", self._ex("42")), 1.0)
+        self.assertAlmostEqual(r.score("\\boxed{42.02}", self._ex("42")), 0.3)
+        # A boxed answer stops the search. A later correct number does not rescue it.
+        self.assertAlmostEqual(r.score("\\boxed{99} and the end is 42", self._ex("42")), 0.3)
+        self.assertAlmostEqual(r.score("total is 1,234", self._ex("1234")), 0.0)
+        # The word-boundary path does not see the sign, so the last-number path scores it.
+        self.assertAlmostEqual(r.score("answer is -42", self._ex("-42")), 1.0)
+
 
 class TestExactMathReward(unittest.TestCase):
     def test_binary_reward_has_no_partial_credit(self):
@@ -2045,6 +2279,16 @@ class TestExactMathReward(unittest.TestCase):
 
         self.assertEqual(reward.score("\\boxed{42}", example), 1.0)
         self.assertEqual(reward.score("The answer might be \\boxed{41}", example), 0.0)
+        thousands = TrainingExample(prompt="q", target="1234")
+        self.assertEqual(reward.score("total is 1,234", thousands), 1.0)
+        self.assertEqual(reward.score("1,234 then 5", thousands), 0.0)
+        self.assertEqual(reward.score("\\boxed{99} and the end is 42", example), 1.0)
+        self.assertEqual(reward.score("42.005", example), 1.0)
+        self.assertEqual(reward.score("42.02", example), 0.0)
+        self.assertEqual(
+            reward.score("answer is -42", TrainingExample(prompt="q", target="-42")),
+            1.0,
+        )
 
 
 class TestRunGrpo(unittest.TestCase):

@@ -7,6 +7,7 @@ import pytest
 
 from platform_tinker.tinkerrl import grpo
 from platform_tinker.tinkerrl.grpo_cli import (
+    PRESETS,
     _build_dataset,
     _parse_args,
     build_config,
@@ -24,6 +25,14 @@ def test_baseline_preset_preserves_legacy_experiment_configuration():
     assert config.num_seeds == 5
     assert config.seed == 0
     assert config.resume is True
+
+
+def test_heldout_preset_derives_from_baseline():
+    assert PRESETS["tooluse_heldout"] == {
+        **PRESETS["tooluse_baseline"],
+        "name": "grpo_tooluse_qwen3_8b",
+        "evaluate_heldout": True,
+    }
 
 
 def test_legacy_gsm8k_flags_translate_to_canonical_interface():

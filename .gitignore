@@ -303,6 +303,24 @@ outputs/e1_e14_small_scale_2026-09-26/E3/code/*
 !outputs/finish_pending_2026-09-27/E6/result.json
 !outputs/finish_pending_2026-09-27/E9/result.json
 
+# Thesis-cited receipts reviewed 2026-10-03: no credentials, provider account /
+# run identifiers, private checkpoint or endpoint paths, spend records or local
+# home paths (public_source_availability.json withheld categories). Other cited
+# outputs/ files stay ignored because they contain one of those.
+!outputs/e1_e14_small_scale_2026-09-26/E4/result.json
+!outputs/e1_e14_small_scale_2026-09-26/E4/BRIDGE_STOP_TOKEN_FINDING.md
+!outputs/e1_swe_bench_pro/
+outputs/e1_swe_bench_pro/*
+!outputs/e1_swe_bench_pro/lane_receipt_2026-08-09.json
+!outputs/verification/
+outputs/verification/*
+!outputs/verification/LEDGER_CODE_CHECK_2026-09-19.json
+!outputs/PES_Phase2_Review_2026-09-12/
+outputs/PES_Phase2_Review_2026-09-12/*
+!outputs/PES_Phase2_Review_2026-09-12/finish/
+outputs/PES_Phase2_Review_2026-09-12/finish/*
+!outputs/PES_Phase2_Review_2026-09-12/finish/e14_terminal_note_2026-09-19.json
+
 # Reviewed scientific C1 case ledger, not a bulk generated-data export.
 !research/public_results/c1_case_ledger.csv
 !reports/public_revision_2026-10-03/addendum/C1_Research_Addendum_2026-10-03_PUBLIC.pdf

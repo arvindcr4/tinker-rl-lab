@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from unittest.mock import patch
 
+import pytest
+
 from platform_hybrid.paper.figure_module import (
     FallbackResultsAdapter,
     FigureModule,
@@ -98,9 +100,5 @@ def test_figure_module_rejects_an_incomplete_renderer(tmp_path):
     )
 
     with patch("platform_hybrid.paper.figure_module.runpy.run_path", return_value={}):
-        try:
+        with pytest.raises(RuntimeError, match="did not create expected outputs"):
             FigureModule().render(request)
-        except RuntimeError as error:
-            assert "did not create expected outputs" in str(error)
-        else:
-            raise AssertionError("incomplete renderer must fail")

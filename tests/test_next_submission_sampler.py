@@ -10,7 +10,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "zvf-program/next-submission/contrast_sampler.py"
 SPEC = importlib.util.spec_from_file_location("next_submission_sampler", MODULE_PATH)
-assert SPEC is not None and SPEC.loader is not None
+assert SPEC is not None
+assert SPEC.loader is not None
 SAMPLER = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = SAMPLER
 SPEC.loader.exec_module(SAMPLER)

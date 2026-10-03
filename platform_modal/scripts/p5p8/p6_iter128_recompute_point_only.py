@@ -31,8 +31,11 @@ import csv
 import json
 from pathlib import Path
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-RES = ROOT / "experiments" / "results" / "p5p8"
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
 
 SEED = 20260705
@@ -52,7 +55,7 @@ METHOD_NAMES = {
 def load_risk_index():
     """Return dict {method_name: [mean_zvf_per_seed ...]} for the 9 methods."""
     out = {}
-    with (ROOT / "experiments" / "results" / "zvf_iter130_risk_index.tsv").open() as f:
+    with (ROOT / "platform_hybrid/experiments" / "results" / "zvf_iter130_risk_index.tsv").open() as f:
         rdr = csv.DictReader(f, delimiter="\t")
         for row in rdr:
             m = row["method"]
@@ -88,7 +91,7 @@ def boot_ci(values, B, seed):
 
 def load_registry_delta(delta_id):
     """Read platform_hybrid/registry/entries/delta_<id>.json, return measured[] list."""
-    fp = ROOT / "registry" / "entries" / f"{delta_id}.json"
+    fp = ROOT / "platform_hybrid/registry" / "entries" / f"{delta_id}.json"
     if not fp.exists():
         return None, None
     with fp.open() as f:

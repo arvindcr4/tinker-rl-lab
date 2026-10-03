@@ -23,8 +23,8 @@ import pytest
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
-from platform_local.unified.backends import BACKEND_NAMES, BACKENDS  # noqa: E402
-from platform_local.unified.canonical import FRAMEWORKS, load_spec  # noqa: E402
+from platform_local.unified.backends import BACKEND_NAMES, BACKENDS
+from platform_local.unified.canonical import FRAMEWORKS, load_spec
 
 MATRIX = REPO / "platform_local" / "unified" / "matrix.json"
 
@@ -142,7 +142,7 @@ def test_colab_dispatches_in_process_no_recursion(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "backend,framework",
+    ("backend", "framework"),
     [(be, fw) for be in BACKEND_NAMES for fw in FRAMEWORKS],
 )
 def test_cli_dry_run_resolves_cell(backend, framework):

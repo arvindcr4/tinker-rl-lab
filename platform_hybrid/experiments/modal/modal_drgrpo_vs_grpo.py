@@ -198,8 +198,8 @@ def run_arm(algo: str, seed: int) -> dict:
     try:
         if "HF_TOKEN" in os.environ:
             repo_id = f"arvindcr4/tinkerrl-drgrpo-vs-grpo-{algo}-s{seed}"
-            model.push_to_hub(repo_id, token=os.environ["HF_TOKEN"])
-            tok.push_to_hub(repo_id, token=os.environ["HF_TOKEN"])
+            model.push_to_hub(repo_id, token=os.environ["HF_TOKEN"], private=True)
+            tok.push_to_hub(repo_id, token=os.environ["HF_TOKEN"], private=True)
             print(f"Pushed model to HF Hub: {repo_id}")
         else:
             print("HF_TOKEN not found in environment, skipping push_to_hub")

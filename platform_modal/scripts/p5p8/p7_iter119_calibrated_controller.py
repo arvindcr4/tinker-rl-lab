@@ -38,7 +38,10 @@ import math
 import random
 from pathlib import Path
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
 P5P8 = ROOT / "platform_hybrid/experiments/results/p5p8"
 P5P8.mkdir(parents=True, exist_ok=True)
 

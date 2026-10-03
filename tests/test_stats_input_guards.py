@@ -17,7 +17,7 @@ from utils import stats
 
 
 def test_bootstrap_ci_empty_raises():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="at least one score"):
         stats.compute_bootstrap_ci(np.array([]))
 
 
@@ -38,9 +38,9 @@ def test_bootstrap_ci_normal_case_unchanged():
 
 
 def test_welch_ttest_single_observation_raises():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="at least two scores"):
         stats.welch_ttest(np.array([1.0]), np.array([1.0, 2.0, 3.0]))
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="at least two scores"):
         stats.welch_ttest(np.array([]), np.array([1.0, 2.0]))
 
 
@@ -50,13 +50,13 @@ def test_welch_ttest_constant_inputs_finite_effect():
 
 
 def test_mann_whitney_u_empty_raises():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="at least one score per group"):
         stats.mann_whitney_u(np.array([]), np.array([1.0, 2.0]))
 
 
-def test_generate_results_table_single_seed():
+def test_generate_results_table_single_seed(tmp_path):
     df = stats.generate_results_table(
-        {"algo": np.array([0.9])}, output_path="/tmp/test_stats_single.tex"
+        {"algo": np.array([0.9])}, output_path=str(tmp_path / "test_stats_single.tex")
     )
     assert len(df) == 1
     assert df.iloc[0]["Seeds"] == 1
@@ -73,7 +73,7 @@ def test_plot_learning_curves_single_seed(tmp_path):
 
 
 def test_plot_learning_curves_empty_raises(tmp_path):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="No curves to plot"):
         stats.plot_learning_curves_with_ci(
             {"algo": {}},
             output_path=str(tmp_path / "curves.pdf"),

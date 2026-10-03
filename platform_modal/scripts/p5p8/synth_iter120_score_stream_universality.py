@@ -46,8 +46,11 @@ from pathlib import Path
 import numpy as np
 import xgboost as xgb
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-RES = ROOT / "experiments" / "results" / "p5p8"
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
 SEED = 20260705
 N_BOOT = 1000
@@ -96,7 +99,7 @@ def consecutive_gradient(scores_sorted_desc):
 
 def load_n2_tensors(method="grpo"):
     """Load N2 per-(prompt × G) reward tensors for one method."""
-    path = ROOT / "experiments" / "results" / "n2_reward_tensor_resume" / f"{method}_s0_tensors.jsonl"
+    path = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume" / f"{method}_s0_tensors.jsonl"
     rows = []
     with path.open() as f:
         for line in f:

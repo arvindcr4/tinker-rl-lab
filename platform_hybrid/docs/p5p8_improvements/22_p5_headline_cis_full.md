@@ -19,9 +19,10 @@ replacement; group sizes are preserved. B=10,000 replicates, two-sided
 Two new headline CIs are added:
 
 - **H4 (algorithm-axis η² on ZVF and on reward_mean):** point
-  estimate 0.0454 / 0.0075; bootstrap CI [0.0014, 0.0585] /
-  [0.0014, 0.0577]. The CI upper bound (≤ 5.85%) is strictly below
-  the Exhibit-5 single-seed point estimate of 6.31%.
+  estimate 0.0454 / 0.0075; within-arm bootstrap CI [0.0094, 0.1476] /
+  [0.0019, 0.0790] (corrected 2026-10-03: the earlier [0.0014, 0.0585] /
+  [0.0014, 0.0577] resampled pooled data, a null band, not a CI). The ZVF
+  reading is suggestive, not decisive.
 - **H5 (4-method last-10 reward spread):** point estimate 0.0359
   (matches Exhibit 3's 0.034); bootstrap CI [0.0164, 0.0984]. The
   four arms are statistically distinguishable (lower-CI strictly
@@ -40,14 +41,14 @@ locally for ≤300 LoC.
 
 | Claim | Metric                    | n     | Point   | 95% CI              | Verdict  |
 |-------|---------------------------|-------|---------|---------------------|----------|
-| H4    | η²(algorithm, ZVF)        | 4×40  | 0.0454  | [0.0014, 0.0585]   | DECISIVE |
-| H4    | η²(algorithm, reward_mean) | 4×40  | 0.0075  | [0.0014, 0.0577]   | DECISIVE |
+| H4    | η²(algorithm, ZVF)        | 4×40  | 0.0454  | [0.0094, 0.1476]   | SUGGESTIVE |
+| H4    | η²(algorithm, reward_mean) | 4×40  | 0.0075  | [0.0019, 0.0790]   | DECISIVE |
 | H5    | spread last-10 reward      | 4×10  | 0.0359  | [0.0164, 0.0984]   | TINY     |
 
 ## Sharpest falsifiable claim
 On the four-method same-stack N2 run, the algorithm axis explains
-strictly less than 5.85% of ZVF variance and strictly less than 5.77%
-of reward variance at the 95% upper-CI bound, with point estimates
+less than 14.8% of ZVF variance and less than 7.9% of reward variance
+at the 95% upper-CI bound (within-arm resample; corrected 2026-10-03), with point estimates
 of 0.0454 and 0.0075. The four method arms (grpo / aero / gift /
 areal) differ by 1.6-9.8 pp of reward at the last-10 step window.
 Both numbers sharpen Exhibits 3 and 5 of `p5_evidence.tex` with
@@ -55,8 +56,8 @@ real CIs replacing the single-seed point estimates.
 
 ## Implications for P5
 1. **The "Report the Stack, Not the Label" thesis is sharpened.** The
-   algorithm-vs-stack η² gap is now ≥12× at the 95% level (algorithm
-   ≤ 5.85% vs stack ≥ 73% per Exhibit 7). The "stack dominates
+   algorithm-vs-stack η² gap is ≥4.9× at the 95% level (algorithm
+   ≤ 14.8% vs stack ≥ 73% per Exhibit 7; corrected 2026-10-03). The "stack dominates
    algorithm" reading is now quantified with a real CI.
 2. **The P5 bootstrap-CI roadmap (item 02) is closed at the headline
    level.** Future iterations can extend CIs to the 12-cell h2h

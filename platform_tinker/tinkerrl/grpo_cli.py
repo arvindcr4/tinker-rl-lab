@@ -77,21 +77,6 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "num_seeds": 5,
         "seed": 0,
     },
-    "tooluse_heldout": {
-        "name": "grpo_tooluse_qwen3_8b",
-        "model": "Qwen/Qwen3-8B",
-        "lora_rank": 32,
-        "steps": 200,
-        "group_size": 8,
-        "batch_size": 4,
-        "lr": 3e-5,
-        "temperature": 0.8,
-        "max_response_tokens": 192,
-        "save_every": 10,
-        "num_seeds": 5,
-        "seed": 0,
-        "evaluate_heldout": True,
-    },
     "tooluse_xlam": {
         "name": "tooluse_xlam",
         "model": "Qwen/Qwen3-8B",
@@ -223,6 +208,13 @@ PRESETS: Dict[str, Dict[str, Any]] = {
     },
 }
 
+# Heldout reruns the baseline grid and only flips evaluation on.
+PRESETS["tooluse_heldout"] = {
+    **PRESETS["tooluse_baseline"],
+    "name": "grpo_tooluse_qwen3_8b",
+    "evaluate_heldout": True,
+}
+
 DATASET_FACTORIES = {
     "tooluse_synth": make_synthetic_tool_use_dataset,
     "tooluse_baseline": make_synthetic_tool_use_dataset,
@@ -262,72 +254,64 @@ def _build_dataset(args: argparse.Namespace, config: GRPOConfig) -> Any:
 
 def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str, Any]:
     """Override preset fields with any CLI values the user actually passed."""
-    mapping = {
-        "model": "model",
-        "model_revision": "model_revision",
-        "lora_rank": "lora_rank",
-        "steps": "steps",
-        "group_size": "group_size",
-        "batch_size": "batch_size",
-        "lr": "lr",
-        "temperature": "temperature",
-        "top_p": "top_p",
-        "max_prompt_tokens": "max_prompt_tokens",
-        "max_response_tokens": "max_response_tokens",
-        "save_every": "save_every",
-        "seed": "seed",
-        "dataset_revision": "dataset_revision",
-        "num_seeds": "num_seeds",
-        "name": "name",
-        "checkpoint_dir": "checkpoint_dir",
-        "wandb_project": "wandb_project",
-        "wandb_entity": "wandb_entity",
-        "wandb_group": "wandb_group",
-        "wandb_mode": "wandb_mode",
-        "hf_owner": "hf_owner",
-        "hf_repo_prefix": "hf_repo_prefix",
-        "checkpoint_name_prefix": "checkpoint_name_prefix",
-        "dynamic_sampling_max_resamples": "dynamic_sampling_max_resamples",
-        "nll_aux_coef": "nll_aux_coef",
-        "nll_aux_min_reward": "nll_aux_min_reward",
-        "gspo_update_epochs": "gspo_update_epochs",
-        "gspo_epsilon_low": "gspo_epsilon_low",
-        "gspo_epsilon_high": "gspo_epsilon_high",
-        "critic_lr": "critic_lr",
-        "critic_pretrain_batches": "critic_pretrain_batches",
-        "critic_hidden_dim": "critic_hidden_dim",
-        "critic_updates_per_step": "critic_updates_per_step",
-    }
-    for cfg_key, attr in mapping.items():
-        val = getattr(args, attr, None)
+    for key in (
+        "model",
+        "model_revision",
+        "lora_rank",
+        "steps",
+        "group_size",
+        "batch_size",
+        "lr",
+        "temperature",
+        "top_p",
+        "max_prompt_tokens",
+        "max_response_tokens",
+        "save_every",
+        "seed",
+        "dataset_revision",
+        "num_seeds",
+        "name",
+        "checkpoint_dir",
+        "wandb_project",
+        "wandb_entity",
+        "wandb_group",
+        "wandb_mode",
+        "hf_owner",
+        "hf_repo_prefix",
+        "checkpoint_name_prefix",
+        "dynamic_sampling_max_resamples",
+        "nll_aux_coef",
+        "nll_aux_min_reward",
+        "gspo_update_epochs",
+        "gspo_epsilon_low",
+        "gspo_epsilon_high",
+        "critic_lr",
+        "critic_pretrain_batches",
+        "critic_hidden_dim",
+        "critic_updates_per_step",
+    ):
+        val = getattr(args, key, None)
         if val is not None:
-            cfg[cfg_key] = val
-    if args.evaluate_heldout:
-        cfg["evaluate_heldout"] = True
-    if args.debias_advantages:
-        cfg["debias_advantages"] = True
-    if args.dynamic_sampling:
-        cfg["dynamic_sampling"] = True
-    if args.mask_truncated_responses:
-        cfg["mask_truncated_responses"] = True
-    if args.seed_sampling:
-        cfg["seed_sampling"] = True
-    if args.global_advantage_normalization:
-        cfg["global_advantage_normalization"] = True
-    if args.no_global_norm_exclude_truncated:
-        cfg["global_norm_exclude_truncated"] = False
+            cfg[key] = val
+    for attr, key, value in (
+        ("evaluate_heldout", "evaluate_heldout", True),
+        ("debias_advantages", "debias_advantages", True),
+        ("dynamic_sampling", "dynamic_sampling", True),
+        ("mask_truncated_responses", "mask_truncated_responses", True),
+        ("seed_sampling", "seed_sampling", True),
+        ("global_advantage_normalization", "global_advantage_normalization", True),
+        ("no_global_norm_exclude_truncated", "global_norm_exclude_truncated", False),
+        ("gspo", "gspo_enabled", True),
+        ("critic", "critic_enabled", True),
+        ("no_resume", "resume", False),
+        ("hf_public", "hf_public", True),
+    ):
+        if getattr(args, attr):
+            cfg[key] = value
     if args.nll_aux or args.nll_aux_coef is not None:
         # A coef without the flag still opts in: silently ignoring an
         # explicitly passed coefficient would be a worse surprise.
         cfg["nll_aux_enabled"] = True
-    if args.gspo:
-        cfg["gspo_enabled"] = True
-    if args.critic:
-        cfg["critic_enabled"] = True
-    if args.no_resume:
-        cfg["resume"] = False
-    if args.hf_public:
-        cfg["hf_public"] = True
     return cfg
 
 

@@ -23,6 +23,7 @@ from platform_tinker.tinkerrl.grpo import (
     ExactMathReward,
     GRPOConfig,
     InMemoryDataset,
+    MathReward,
     TrainingExample,
     make_grpo_loss_fn,
     make_gspo_loss_fn,
@@ -491,3 +492,17 @@ def test_cli_reward_follows_dataset(monkeypatch):
     monkeypatch.setattr(grpo_cli, "_build_dataset", lambda *_a, **_k: object())
     assert grpo_cli.main(["--preset", "tooluse_synth", "--dataset", "gsm8k"]) == 0
     assert isinstance(seen["reward"], ExactMathReward)
+
+
+def test_explicit_reward_overrides_the_preset(monkeypatch):
+    monkeypatch.setenv("TINKER_API_KEY", "test-key")
+    seen = {}
+
+    def fake_run(_config, _dataset, reward):
+        seen["reward"] = reward
+        return []
+
+    monkeypatch.setattr(grpo_cli, "run_grpo", fake_run)
+    monkeypatch.setattr(grpo_cli, "_build_dataset", lambda *_a, **_k: object())
+    assert grpo_cli.main(["--preset", "tooluse_synth", "--reward", "math100"]) == 0
+    assert isinstance(seen["reward"], MathReward)

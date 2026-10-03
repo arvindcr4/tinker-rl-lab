@@ -11,6 +11,7 @@ trajectory-level counterparts, kept for future token-level use.
 
 from __future__ import annotations
 
+import statistics
 from typing import List, Sequence, Tuple
 
 import torch
@@ -117,13 +118,11 @@ def explained_variance(predicted: Sequence[float], targets: Sequence[float]) -> 
     n = len(targets)
     if n == 0:
         return 0.0
-    mean_t = sum(targets) / n
-    var_t = sum((t - mean_t) ** 2 for t in targets) / n
+    var_t = statistics.pvariance(targets)
     if var_t <= 1e-12:
         return 0.0
     residuals = [t - p for t, p in zip(targets, predicted)]
-    mean_r = sum(residuals) / n
-    var_r = sum((r - mean_r) ** 2 for r in residuals) / n
+    var_r = statistics.pvariance(residuals)
     return 1.0 - var_r / var_t
 
 

@@ -282,6 +282,92 @@ def _sanitize_task(row: dict[str, Any]) -> dict[str, Any]:
     return task
 
 
+_HUNK_HEADER = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$")
+
+
+def _hunk_body_counts(lines: list[str], start: int) -> tuple[int, int, int]:
+    """Count (old, new) lines of the hunk body at ``start``; mirrors git's recount_diff."""
+    old = new = 0
+    index = start
+    while index < len(lines):
+        line = lines[index]
+        if line.startswith(("@@ ", "diff ")):
+            break
+        if line == "" or line.startswith(" "):
+            old += 1
+            new += 1
+        elif line.startswith("-"):
+            old += 1
+        elif line.startswith("+"):
+            new += 1
+        elif not line.startswith("\\"):
+            break
+        index += 1
+    return old, new, index
+
+
+def _recount_hunks(patch: str) -> tuple[str, int]:
+    """Rewrite every @@ header with the counts its body actually has.
+
+    Equivalent of ``git apply --recount``. The model never sees line numbers,
+    so its header counts are guesses; the 2026-08-16 seed1818 run (2/731) was
+    evaluated on unrepaired patches, of which 593/713 failed ``git apply`` as
+    corrupt. Context-only hunks (no +/- lines) are no-ops that plain
+    ``git apply`` rejects as corrupt, so they are dropped. Returns the repaired
+    patch and the number of hunks changed or dropped.
+    """
+    lines = patch.splitlines()
+    out: list[str] = []
+    repaired = 0
+    index = 0
+    while index < len(lines):
+        match = _HUNK_HEADER.match(lines[index])
+        if not match:
+            out.append(lines[index])
+            index += 1
+            continue
+        old, new, end = _hunk_body_counts(lines, index + 1)
+        body = lines[index + 1 : end]
+        if not any(line.startswith(("+", "-")) for line in body):
+            repaired += 1
+            index = end
+            continue
+        if (int(match.group(2) or 1), int(match.group(4) or 1)) != (old, new):
+            repaired += 1
+        out.append(f"@@ -{match.group(1)},{old} +{match.group(3)},{new} @@{match.group(5)}")
+        out.extend(body)
+        index = end
+    # A file diff left with no hunk is a no-op; drop it rather than emit a
+    # header-only block.
+    blocks = re.split(r"(?m)(?=^diff --git )", "\n".join(out))
+    kept = [block for block in blocks if not block.startswith("diff --git ") or "\n@@ " in block]
+    repaired += len(blocks) - len(kept)
+    text = "".join(kept)
+    if kept and kept[-1] is not blocks[-1]:
+        text = text[:-1]  # separator newline that preceded the dropped final block
+    return text + ("\n" if patch.endswith("\n") and text else ""), repaired
+
+
+def _git_apply_parse_status(patch: str) -> dict[str, Any]:
+    """Parse-only ``git apply --stat`` (no repo needed): separates corrupt patches
+    from patches that apply but fail tests."""
+    try:
+        completed = subprocess.run(
+            ["git", "apply", "--stat", "-"],
+            input=patch,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=60,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"ok": None, "error": f"git apply unavailable: {exc}"}
+    return {
+        "ok": completed.returncode == 0,
+        "error": completed.stderr.strip()[-500:] or None,
+    }
+
+
 def _validate_unified_diff(patch: str) -> tuple[bool, str]:
     if not patch.startswith("diff --git "):
         return False, "patch must begin with a diff --git header"
@@ -333,6 +419,13 @@ def _validate_unified_diff(patch: str) -> tuple[bool, str]:
                 return False, f"invalid hunk header: {line}"
             if line and not line.startswith((" ", "+", "-", "\\")):
                 return False, f"invalid patch line: {line}"
+        for index, line in enumerate(lines):
+            header = _HUNK_HEADER.match(line)
+            if header is None:
+                continue
+            old, new, _ = _hunk_body_counts(lines, index + 1)
+            if (int(header.group(2) or 1), int(header.group(4) or 1)) != (old, new):
+                return False, f"hunk header counts do not match body: {line}"
     if not re.search(r"(?m)^[+-](?![+-]{2} )", patch):
         return False, "patch contains no changed lines"
     return True, "valid unified diff"
@@ -352,11 +445,13 @@ def _extract_diff(response: str) -> tuple[str, str]:
         ]
         cut_points = sorted(set([len(tail), *stop_markers]), reverse=True)
         candidates.extend(tail[:point].strip() + "\n" for point in cut_points)
+    # Header counts are repaired later (_build_candidates); validate the
+    # recounted form so count-only errors do not discard the raw model patch.
     for candidate in sorted(candidates, key=len, reverse=True):
-        valid, reason = _validate_unified_diff(candidate)
+        valid, reason = _validate_unified_diff(_recount_hunks(candidate)[0])
         if valid:
             return candidate, reason
-    _, reason = _validate_unified_diff(candidates[-1])
+    _, reason = _validate_unified_diff(_recount_hunks(candidates[-1])[0])
     return "", reason
 
 
@@ -1202,6 +1297,7 @@ def _build_candidates(
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     candidates: list[dict[str, Any]] = []
     generations: list[dict[str, Any]] = []
+    apply_status: dict[str, dict[str, Any]] = {}
     for task in tasks:
         generation = json.loads(
             (tasks_dir / str(task["instance_id"]) / "generation.json").read_text(
@@ -1213,12 +1309,26 @@ def _build_candidates(
             raise RuntimeError(f"nonterminal generation for {task['instance_id']}: {status}")
         generations.append(generation)
         if status == "GENERATED":
-            patch = str(generation.get("patch") or "")
+            raw_patch = str(generation.get("patch") or "")
+            patch, hunks_repaired = _recount_hunks(raw_patch)
             valid, reason = _validate_unified_diff(patch)
+            if not valid and not patch.strip():
+                # Every hunk was a no-op: submit the raw patch so the instance
+                # is still evaluated (and fails) instead of vanishing.
+                patch, valid = raw_patch, True
             if not valid:
                 raise RuntimeError(
                     f"saved patch failed validation for {task['instance_id']}: {reason}"
                 )
+            # Per-instance status so a corrupt patch (harness/format failure) is
+            # separable from an applied patch that fails tests (model failure).
+            apply_status[str(task["instance_id"])] = {
+                "raw_patch_sha256": _sha256_text(raw_patch),
+                "submitted_patch_sha256": _sha256_text(patch),
+                "hunk_headers_repaired": hunks_repaired,
+                "raw_git_apply_parse": _git_apply_parse_status(raw_patch),
+                "submitted_git_apply_parse": _git_apply_parse_status(patch),
+            }
             candidates.append(
                 {
                     "instance_id": task["instance_id"],
@@ -1229,6 +1339,7 @@ def _build_candidates(
                 }
             )
     _write_json(candidates_path, candidates)
+    _write_json(candidates_path.with_name("patch_apply_status.json"), apply_status)
     return candidates, generations
 
 
@@ -1320,6 +1431,12 @@ def _aggregate_receipt(
     score = resolved / EXPECTED_TASK_COUNT
     full_results_path = run_dir / "full_eval_results.json"
     _write_json(full_results_path, full_results)
+    apply_status_path = run_dir / "patch_apply_status.json"
+    apply_status: dict[str, Any] = (
+        json.loads(apply_status_path.read_text(encoding="utf-8"))
+        if apply_status_path.is_file()
+        else {}
+    )
 
     raw_path = run_dir / "dataset_test_731.jsonl"
     sanitized_path = run_dir / "generation_manifest_731.jsonl"
@@ -1365,6 +1482,16 @@ def _aggregate_receipt(
                 for item in generations
             ),
             "native_evaluations": len(eval_results),
+            "raw_patches_git_apply_parse_ok": sum(
+                item["raw_git_apply_parse"]["ok"] is True for item in apply_status.values()
+            ),
+            "submitted_patches_git_apply_parse_ok": sum(
+                item["submitted_git_apply_parse"]["ok"] is True
+                for item in apply_status.values()
+            ),
+            "patches_with_repaired_hunk_headers": sum(
+                item["hunk_headers_repaired"] > 0 for item in apply_status.values()
+            ),
             "resolved": resolved,
             "unresolved": EXPECTED_TASK_COUNT - resolved,
             "complete": True,
@@ -1439,6 +1566,7 @@ def _aggregate_receipt(
         },
         "artifacts": {
             "candidates_path": str((run_dir / "candidates.json").relative_to(root)),
+            "patch_apply_status_path": str(apply_status_path.relative_to(root)),
             "task_receipts_dir": str((run_dir / "tasks").relative_to(root)),
         },
     }

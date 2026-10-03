@@ -5,10 +5,11 @@ This prevents unittest.mock.patch.dict(sys.modules, ...) in test suites
 from removing dynamically loaded C++ operator libraries on unpatch.
 """
 
-import torch  # noqa: F401
-import torch._dynamo  # noqa: F401
+import contextlib
 
-try:
-    import torch._inductor.test_operators  # noqa: F401
-except Exception:
-    pass
+import torch
+import torch._dynamo
+
+# Optional: absent or failing to load on some torch builds; best-effort pre-import only.
+with contextlib.suppress(Exception):
+    import torch._inductor.test_operators  # noqa: F401  (side-effect import)

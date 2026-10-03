@@ -37,7 +37,10 @@ import random
 from pathlib import Path
 from statistics import mean, stdev
 
-WORK = Path('/home/claude/tinker-rl-lab-minimax')
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORK = REPO_ROOT
 N2_DIR = WORK / 'platform_hybrid/experiments/results/n2_reward_tensor_resume'
 N10_DIR = WORK / 'platform_hybrid/experiments/results/n10_seed_expansion'
 OUT_DIR = WORK / 'platform_hybrid/experiments/results/p5p8'

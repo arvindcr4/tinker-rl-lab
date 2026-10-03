@@ -15,7 +15,10 @@ import random
 from collections import defaultdict
 from pathlib import Path
 
-WORK = Path("/home/claude/tinker-rl-lab-minimax")
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORK = REPO_ROOT
 OUT = WORK / "platform_hybrid/experiments/results/p5p8"
 G_BASE = 8
 N_PROMPTS_PER_STEP = 16

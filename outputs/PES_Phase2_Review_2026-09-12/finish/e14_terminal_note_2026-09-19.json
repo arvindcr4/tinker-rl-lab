@@ -1,0 +1,15 @@
+{
+  "schema_version": "e14-terminal-note-v1",
+  "recorded_at": "2026-09-19T13:40:00Z",
+  "directive": "finish all expts (user, 2026-09-19)",
+  "lane": "E14",
+  "question": "Can the 2 parser-exclusion rows (omni-01195-a6cbdc4ee3c8694b row_index 1195, omni-02044-612ddacaa39d91fe row_index 2044) be resolved to reach 4428/4428 accepted dispositions?",
+  "finding": "No. The Omni-Judge outputs for both rows are truncated before any '## Equivalence Judgement' section (row 1195 ends mid numeric answer; row 2044 ends mid sum expression). The judge emitted no verdict; the native scorer's omission of missing-Equivalence-Judgement rows is correct official behavior, not a parser bug.",
+  "score_impact": "None. Official accuracy 2271/4428 = 0.5131043831902395 already counts both rows in the denominator as not-correct. The 4426/4428 'accepted' figure is parser coverage, not the score denominator.",
+  "decision": "E14 closes as terminal-complete under the native protocol: 4428/4428 dispositions recorded (4426 accepted + 2 recorded skip_reason), official score unchanged. No re-judge: it would deviate from the official scorer and constitute new evidence generation with no score effect.",
+  "evidence": [
+    "outputs/public_portfolio_2026-09-05/native_finish_v5/e14_official_collector/official_result01/native_dispositions.jsonl rows 1195, 2044",
+    "outputs/public_portfolio_2026-09-05/native_finish_v5/e14_official_collector/official_result01/native_judged_rows.jsonl rows 1195, 2044",
+    "outputs/PES_Phase2_Review_2026-09-12/e14_scoring_recheck.json"
+  ]
+}

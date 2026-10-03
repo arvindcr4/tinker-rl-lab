@@ -55,7 +55,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
 MANIFEST_DIR = ROOT / "platform_hybrid/experiments/results/mega_20260704/manifests"
 CELLS_TSV = ROOT / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
 TENSOR_DIR = ROOT / "platform_hybrid/experiments/results/mega_20260704/group_tensors"

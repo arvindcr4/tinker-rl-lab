@@ -68,7 +68,10 @@ random.seed(20260706)
 N_BOOT = 2000
 SEED = 20260706
 
-WORKTREE = Path("/home/claude/tinker-rl-lab-minimax")
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORKTREE = REPO_ROOT
 CELLS_TSV = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
 N2_METRICS = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume/metrics.tsv"
 OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"

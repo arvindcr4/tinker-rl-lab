@@ -30,9 +30,11 @@ from pathlib import Path
 import numpy as np
 from scipy import stats
 
-ROOT = Path('/home/claude/tinker-rl-lab-minimax')
-RES = ROOT / 'experiments' / 'results'
-FIG = ROOT / 'figures'
+sys.path.append(str(Path(__file__).resolve().parent))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+RES = ROOT / 'platform_hybrid/experiments' / 'results'
+FIG = ROOT / 'platform_hybrid/figures'
 RES.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
 

@@ -51,8 +51,11 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-RES = ROOT / "experiments" / "results" / "p5p8"
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
 SEED = 20260705
 N_BOOT = 1500
@@ -79,7 +82,7 @@ def density_ci(n_fire, n_total, n_boot=N_BOOT, seed=SEED):
 
 def load_mega_cells():
     """Load cells.tsv; return per-cell zvf and G, model_family, task_slice."""
-    path = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
+    path = ROOT / "platform_hybrid/experiments" / "results" / "mega_20260704" / "cells.tsv"
     rows = []
     with path.open() as f:
         rdr = csv.DictReader(f, delimiter="\t")

@@ -17,7 +17,8 @@ OFFLINE_PACKET_PATH = REPO_ROOT / "zvf-program/experiments-next/offline_falsific
 
 def load_verifier():
     spec = importlib.util.spec_from_file_location("verify_rlhfbook_followup", VERIFIER_PATH)
-    assert spec is not None and spec.loader is not None
+    assert spec is not None
+    assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module

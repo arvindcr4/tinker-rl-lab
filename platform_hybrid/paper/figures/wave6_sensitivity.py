@@ -19,8 +19,8 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
 
 # Default paths are derived from this file's location so the script works
 # from any checkout. Override via --results / --out.

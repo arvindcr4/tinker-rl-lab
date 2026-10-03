@@ -52,7 +52,9 @@ from p5_iter121_value_correctness import (
     load_cells_tsv, parse_filename, check_consistency
 )
 
-WORK = Path("/home/claude/tinker-rl-lab-minimax")
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+WORK = REPO_ROOT
 MEGA = WORK / "platform_hybrid/experiments/results/mega_20260704"
 MANIFEST_DIR = MEGA / "manifests"
 CELLS_TSV = MEGA / "cells.tsv"

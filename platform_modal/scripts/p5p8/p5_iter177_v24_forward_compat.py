@@ -52,9 +52,12 @@ import random
 import re
 from pathlib import Path
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-RES = ROOT / "experiments" / "results" / "p5p8"
-MEGA = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+MEGA = ROOT / "platform_hybrid/experiments" / "results" / "mega_20260704" / "manifests"
 RES.mkdir(parents=True, exist_ok=True)
 
 N_SAMPLE = 20

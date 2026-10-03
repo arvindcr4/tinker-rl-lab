@@ -38,12 +38,14 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-REG_DIR = ROOT / "registry" / "entries"
-SCHEMA = ROOT / "registry" / "schema.json"
-WANDB_DIR = ROOT / "experiments" / "results" / "wandb_inventory"
-N2_DIR = ROOT / "experiments" / "results" / "n2_reward_tensor_resume"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT  # noqa: E402
+ROOT = REPO_ROOT
+REG_DIR = ROOT / "platform_hybrid/registry" / "entries"
+SCHEMA = ROOT / "platform_hybrid/registry" / "schema.json"
+WANDB_DIR = ROOT / "platform_hybrid/experiments" / "results" / "wandb_inventory"
+N2_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
+OUT_DIR = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 
 # --- 1. read registry ---------------------------------------------------------
 DELTA_FILES = sorted(REG_DIR.glob("delta_*.json"))

@@ -288,10 +288,7 @@ for i in range(n_metrics):
 def fmt_val(metric_name, val):
     if "Steps" in metric_name:
         return f"{int(val)}"
-    elif "Volatility" in metric_name:
-        return f"{val:.3f}"
-    else:
-        return f"{val:.3f}"
+    return f"{val:.3f}"
 
 
 # ── Plot ─────────────────────────────────────────────────────────────────────

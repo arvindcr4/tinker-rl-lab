@@ -40,7 +40,8 @@ tinker-rl-lab/
 ├── platform_local/       # Local GPU & unified execution
 │   ├── unified/          # Unified launcher for all frameworks
 │   ├── trl_integrations/ # HuggingFace TRL local integration
-│   └── contexts/         # Local workspace context
+│   ├── contexts/         # Local workspace context
+│   └── run_all_audits.py + *_audit.py/ # In-process submission audit suite
 │
 ├── platform_hybrid/      # Hybrid-cloud execution logic
 │   ├── experiments/      # Tinker RL Cookbook & evaluation logs
@@ -53,7 +54,9 @@ tinker-rl-lab/
 ├── platform_hf_spaces/   # HuggingFace Spaces deployments
 │
 ├── agentic-rl-finetuning/ # Agentic RL fine-tuning research
-└── capstone-literature-survey/ # Literature Survey
+├── capstone-literature-survey/ # Literature Survey
+├── submission/ # M.Tech submission packages
+└── research/ # Hyperresearch vault (notes + verification reports)
 ```
 
 ## Components

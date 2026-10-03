@@ -11,7 +11,11 @@ import unittest
 
 import torch
 
-from platform_tinker.tinkerrl.grpo import make_grpo_loss_fn, normalize_rewards
+from platform_tinker.tinkerrl.grpo import (
+    make_grpo_loss_fn,
+    normalize_advantages_global,
+    normalize_rewards,
+)
 
 
 class TestNormalizeRewards(unittest.TestCase):
@@ -105,12 +109,91 @@ class TestMakeGrpoLossFn(unittest.TestCase):
         self.assertEqual(loss.item(), 0.0)
         self.assertEqual(metrics["grpo_loss"], 0.0)
 
+    def test_nll_aux_disabled_by_default(self):
+        loss_fn = make_grpo_loss_fn([2.0])
+        logprobs = torch.tensor([-0.5, -0.2, -0.1], requires_grad=True)
+        loss, metrics = loss_fn(None, [logprobs])
+        self.assertTrue(math.isclose(loss.item(), 1.6, rel_tol=1e-5))
+        self.assertEqual(metrics["grpo_loss"], loss.item())
+        self.assertEqual(metrics["nll_loss"], 0.0)
+
+    def test_nll_aux_correct_only(self):
+        loss_fn = make_grpo_loss_fn([0.0, 0.0], nll_mask=[True, False], nll_coef=1.0)
+        lp0 = torch.tensor([-0.5, -0.5])
+        lp1 = torch.tensor([-9.0])
+        loss, metrics = loss_fn(None, [lp0, lp1])
+        self.assertTrue(math.isclose(metrics["nll_loss"], 0.5, rel_tol=1e-5))
+        self.assertTrue(math.isclose(loss.item(), 0.5, rel_tol=1e-5))
+
+    def test_nll_aux_empty_set_is_zero(self):
+        loss_fn = make_grpo_loss_fn([2.0], nll_mask=[False], nll_coef=1.0)
+        logprobs = torch.tensor([-0.5, -0.2, -0.1])
+        loss, metrics = loss_fn(None, [logprobs])
+        self.assertEqual(metrics["nll_loss"], 0.0)
+        self.assertTrue(math.isclose(loss.item(), 1.6, rel_tol=1e-5))
+
+    def test_nll_aux_token_mean_not_sum(self):
+        loss_fn = make_grpo_loss_fn([0.0, 0.0], nll_mask=[True, True], nll_coef=1.0)
+        lp_short = torch.tensor([-0.5, -0.5])
+        lp_long = torch.tensor([-1.0, -1.0, -1.0, -1.0])
+        loss, metrics = loss_fn(None, [lp_short, lp_long])
+        self.assertTrue(math.isclose(metrics["nll_loss"], 0.75, rel_tol=1e-5))
+        self.assertTrue(math.isclose(loss.item(), 0.75, rel_tol=1e-5))
+
+    def test_nll_aux_gradients(self):
+        loss_fn = make_grpo_loss_fn([0.0, 0.0], nll_mask=[True, False], nll_coef=0.5)
+        lp0 = torch.tensor([-0.5, -0.5], requires_grad=True)
+        lp1 = torch.tensor([-1.0, -1.0, -1.0], requires_grad=True)
+        loss, _ = loss_fn(None, [lp0, lp1])
+        loss.backward()
+        self.assertTrue(torch.allclose(lp0.grad, torch.tensor([-0.25, -0.25])))
+        self.assertTrue(torch.allclose(lp1.grad, torch.tensor([0.0, 0.0, 0.0])))
+
     @unittest.skip(
         "run_grpo needs live W&B + Hugging Face auth + Tinker service/model "
         "download; not runnable as a fast unit test"
     )
     def test_run_grpo_end_to_end(self):
         pass
+
+
+class TestNormalizeAdvantagesGlobal(unittest.TestCase):
+    def test_batch_mean_zero_std_one(self):
+        advs = normalize_advantages_global([1.0, 2.0, 3.0, 10.0, 11.0, 12.0])
+        mean_adv = sum(advs) / len(advs)
+        self.assertTrue(math.isclose(mean_adv, 0.0, abs_tol=1e-7))
+        std_adv = (sum((a - mean_adv) ** 2 for a in advs) / len(advs)) ** 0.5
+        self.assertTrue(math.isclose(std_adv, 1.0, rel_tol=1e-5))
+
+    def test_differs_from_per_group(self):
+        batch = [1.0, 2.0, 3.0, 10.0, 11.0, 12.0]
+        per_group = normalize_rewards(batch[:3]) + normalize_rewards(batch[3:])
+        batch_global = normalize_advantages_global(batch)
+        self.assertFalse(
+            all(math.isclose(a, b, rel_tol=1e-5) for a, b in zip(per_group, batch_global))
+        )
+
+    def test_unbiased_is_batch_centered(self):
+        advs = normalize_advantages_global([1.0, 2.0, 3.0, 4.0], unbiased=True)
+        self.assertEqual(advs, [-1.5, -0.5, 0.5, 1.5])
+
+    def test_unbiased_near_uniform_does_not_explode(self):
+        advs = normalize_advantages_global([1.0, 1.0 + 1e-9], unbiased=True)
+        for a in advs:
+            self.assertLess(abs(a), 1e-6)
+
+    def test_exclude_leaves_stats_but_keeps_alignment(self):
+        advs = normalize_advantages_global([0.0, 1.0, 1.0], exclude=[False, False, True])
+        self.assertEqual(len(advs), 3)
+        self.assertTrue(math.isclose(advs[0], -1.0, rel_tol=1e-5))
+        self.assertTrue(math.isclose(advs[1], 1.0, rel_tol=1e-5))
+
+    def test_exclude_mismatch_fails_closed(self):
+        with self.assertRaises(ValueError):
+            normalize_advantages_global([1.0, 2.0], exclude=[False])
+
+    def test_empty(self):
+        self.assertEqual(normalize_advantages_global([]), [])
 
 
 if __name__ == "__main__":

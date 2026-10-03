@@ -168,6 +168,83 @@ class TestSuiteReceipts(unittest.TestCase):
             require_frozen_suite_receipt("not_a_suite")
 
 
+class TestCheckpointResumeCompat(unittest.TestCase):
+    def _write_payload(self, directory, config, stored_config, seed=7):
+        path = grpo._checkpoint_path(config, seed)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"config": stored_config, "reward_trace": []}))
+        return path
+
+    def test_exact_receipt_resumes_despite_tuple_fields(self):
+        # Regression: wandb_tags is a tuple live but a list on disk; every
+        # resume used to fail as "incompatible".
+        with tempfile.TemporaryDirectory() as directory:
+            config = GRPOConfig(name="resume", checkpoint_dir=directory)
+            stored = json.loads(json.dumps(grpo._config_fingerprint(config, 7)))
+            self._write_payload(directory, config, stored)
+            payload = grpo._load_checkpoint(config, 7)
+            self.assertIsNotNone(payload)
+            self.assertEqual(payload["reward_trace"], [])
+
+    def test_old_receipt_missing_new_keys_is_backfilled(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = GRPOConfig(name="resume", checkpoint_dir=directory)
+            stored = json.loads(json.dumps(grpo._config_fingerprint(config, 7)))
+            for key in (
+                "debias_advantages",
+                "dynamic_sampling",
+                "global_advantage_normalization",
+                "nll_aux_enabled",
+            ):
+                del stored[key]
+            self._write_payload(directory, config, stored)
+            payload = grpo._load_checkpoint(config, 7)
+            self.assertIsNotNone(payload)
+            self.assertIn("nll_aux_enabled", payload["config"])
+
+    def test_genuine_drift_still_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = GRPOConfig(name="resume", checkpoint_dir=directory)
+            stored = json.loads(json.dumps(grpo._config_fingerprint(config, 7)))
+            stored["group_size"] = 999
+            self._write_payload(directory, config, stored)
+            with self.assertRaises(ValueError):
+                grpo._load_checkpoint(config, 7)
+
+    def test_resume_disabled_returns_none(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = GRPOConfig(name="resume", checkpoint_dir=directory, resume=False)
+            stored = json.loads(json.dumps(grpo._config_fingerprint(config, 7)))
+            self._write_payload(directory, config, stored)
+            self.assertIsNone(grpo._load_checkpoint(config, 7))
+
+
+class TestNllMaskForGroup(unittest.TestCase):
+    def test_correct_responses_kept(self):
+        self.assertEqual(
+            grpo._nll_mask_for_group([0.0, 1.0, 0.5], [False, False, False], 1.0, False),
+            [False, True, False],
+        )
+
+    def test_truncated_forced_out_when_masking(self):
+        self.assertEqual(
+            grpo._nll_mask_for_group([1.0, 1.0], [True, False], 1.0, True),
+            [False, True],
+        )
+
+    def test_truncated_kept_without_masking(self):
+        self.assertEqual(
+            grpo._nll_mask_for_group([1.0, 1.0], [True, False], 1.0, False),
+            [True, True],
+        )
+
+    def test_custom_threshold(self):
+        self.assertEqual(
+            grpo._nll_mask_for_group([0.4, 0.6], [False, False], 0.5, False),
+            [False, True],
+        )
+
+
 class TestMakeGrpoLossFn(unittest.TestCase):
     def test_positive_advantage(self):
         import torch
@@ -237,6 +314,11 @@ class TestGRPOConfig(unittest.TestCase):
         self.assertFalse(cfg.dynamic_sampling)
         self.assertEqual(cfg.dynamic_sampling_max_resamples, 16)
         self.assertFalse(cfg.mask_truncated_responses)
+        self.assertFalse(cfg.global_advantage_normalization)
+        self.assertTrue(cfg.global_norm_exclude_truncated)
+        self.assertFalse(cfg.nll_aux_enabled)
+        self.assertEqual(cfg.nll_aux_coef, 0.0)
+        self.assertEqual(cfg.nll_aux_min_reward, 1.0)
 
     def test_effective_save_every_explicit(self):
         cfg = GRPOConfig(name="t", save_every=10)

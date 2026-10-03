@@ -288,6 +288,8 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         "hf_repo_prefix": "hf_repo_prefix",
         "checkpoint_name_prefix": "checkpoint_name_prefix",
         "dynamic_sampling_max_resamples": "dynamic_sampling_max_resamples",
+        "nll_aux_coef": "nll_aux_coef",
+        "nll_aux_min_reward": "nll_aux_min_reward",
     }
     for cfg_key, attr in mapping.items():
         val = getattr(args, attr, None)
@@ -301,6 +303,12 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         cfg["dynamic_sampling"] = True
     if args.mask_truncated_responses:
         cfg["mask_truncated_responses"] = True
+    if args.global_advantage_normalization:
+        cfg["global_advantage_normalization"] = True
+    if args.no_global_norm_exclude_truncated:
+        cfg["global_norm_exclude_truncated"] = False
+    if args.nll_aux:
+        cfg["nll_aux_enabled"] = True
     if args.no_resume:
         cfg["resume"] = False
     if args.hf_public:
@@ -366,6 +374,19 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--mask-truncated-responses", dest="mask_truncated_responses", action="store_true"
     )
+    parser.add_argument(
+        "--global-advantage-normalization",
+        dest="global_advantage_normalization",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--no-global-norm-exclude-truncated",
+        dest="no_global_norm_exclude_truncated",
+        action="store_true",
+    )
+    parser.add_argument("--nll-aux", dest="nll_aux", action="store_true")
+    parser.add_argument("--nll-aux-coef", dest="nll_aux_coef", type=float)
+    parser.add_argument("--nll-aux-min-reward", dest="nll_aux_min_reward", type=float)
     parser.add_argument("--checkpoint-dir")
     parser.add_argument("--no-resume", action="store_true")
     parser.add_argument("--wandb-project")

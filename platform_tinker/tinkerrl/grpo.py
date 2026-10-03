@@ -295,6 +295,15 @@ class GRPOConfig:
     dynamic_sampling: bool = False
     dynamic_sampling_max_resamples: int = 16
     mask_truncated_responses: bool = False
+    # REINFORCE++ batch-global advantage normalization (Hu, 2025).  Off by
+    # default; per-group path stays byte-identical.
+    global_advantage_normalization: bool = False
+    global_norm_exclude_truncated: bool = True
+    # VAPO-style NLL auxiliary loss on correct responses.  Disabled and
+    # zero-weighted by default, so the loss is unchanged unless opted in.
+    nll_aux_enabled: bool = False
+    nll_aux_coef: float = 0.0
+    nll_aux_min_reward: float = 1.0
 
     def __post_init__(self) -> None:
         # JSON configuration commonly supplies lists.  Convert all metadata
@@ -520,6 +529,54 @@ def apply_truncation_mask(
     return [0.0 if length >= max_tokens else adv for adv, length in zip(advantages, token_lengths)]
 
 
+def normalize_advantages_global(
+    rewards: Sequence[float],
+    epsilon: float = 1e-8,
+    unbiased: bool = False,
+    exclude: Optional[Sequence[bool]] = None,
+) -> List[float]:
+    """Batch-global advantage normalization (REINFORCE++, Hu 2025).
+
+    Same centering/scaling choice as :func:`normalize_rewards`, but the
+    mean (and std) are pooled across the whole batch instead of per group.
+    ``exclude`` marks entries to leave out of the pooled statistics (used
+    for truncated responses); excluded entries are still centered with the
+    pooled mean so the output stays 1:1 with the input.  Empty input gives
+    ``[]``; a one-sample basis centers to ~0 (epsilon-guarded, no floor
+    needed).
+    """
+    n = len(rewards)
+    if n == 0:
+        return []
+    if exclude is None:
+        basis_idx = list(range(n))
+    else:
+        if len(exclude) != n:
+            raise ValueError(f"exclude must pair 1:1 with rewards, got {len(exclude)} for {n}")
+        basis_idx = [i for i, drop in enumerate(exclude) if not drop]
+    basis = [rewards[i] for i in basis_idx] or list(rewards)
+    mean_b = sum(basis) / len(basis)
+    centered = [r - mean_b for r in rewards]
+    if unbiased:
+        return centered
+    var_b = sum((r - mean_b) ** 2 for r in basis) / len(basis)
+    std_b = var_b**0.5 + epsilon
+    return [c / std_b for c in centered]
+
+
+def _nll_mask_for_group(
+    rewards: Sequence[float],
+    truncated: Sequence[bool],
+    min_reward: float,
+    mask_truncated: bool,
+) -> List[bool]:
+    """Per-response NLL-auxiliary flags: correct and (when masking) untruncated."""
+    return [
+        (reward >= min_reward) and not (mask_truncated and was_truncated)
+        for reward, was_truncated in zip(rewards, truncated)
+    ]
+
+
 def heldout_reward_summary(test_rewards: Sequence[float]) -> Dict[str, float]:
     """Mean (+ bootstrap CI when n >= 2) for held-out eval logging.
 
@@ -552,17 +609,34 @@ def heldout_reward_summary(test_rewards: Sequence[float]) -> Dict[str, float]:
 
 def make_grpo_loss_fn(
     advantages: Sequence[float],
+    nll_mask: Optional[Sequence[bool]] = None,
+    nll_coef: float = 0.0,
 ) -> Callable:
-    """Return a Tinker-compatible loss closure bound to ``advantages``."""
+    """Return a Tinker-compatible loss closure bound to ``advantages``.
+
+    With ``nll_mask``/``nll_coef`` set, adds a VAPO-style NLL auxiliary term
+    over masked (correct) responses: token-mean NLL averaged over the
+    masked set, ``0`` when the set is empty.  Token-mean (not the GRPO
+    term's token-sum) so responses of different lengths weigh equally.
+    ``nll_mask=None`` or ``nll_coef=0.0`` reproduces the GRPO term exactly.
+    """
 
     def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:
         losses = []
         for i, logprobs in enumerate(logprobs_list):
             losses.append(-advantages[i] * logprobs.sum())
         if not losses:
-            return torch.tensor(0.0), {"grpo_loss": 0.0}
+            return torch.tensor(0.0), {"grpo_loss": 0.0, "nll_loss": 0.0}
         loss = torch.stack(losses).mean()
-        return loss, {"grpo_loss": loss.item()}
+        nll_loss = torch.tensor(0.0)
+        if nll_mask is not None and nll_coef != 0.0:
+            masked = [logprobs.mean() for keep, logprobs in zip(nll_mask, logprobs_list) if keep]
+            if masked:
+                nll_loss = -torch.stack(masked).mean()
+                loss = loss + nll_coef * nll_loss
+        # grpo_loss stays the optimized total (as before); nll_loss exposes
+        # the auxiliary component for tracking.
+        return loss, {"grpo_loss": loss.item(), "nll_loss": nll_loss.item()}
 
     return _loss_fn
 
@@ -645,8 +719,22 @@ def _load_checkpoint(config: GRPOConfig, seed: int) -> Dict[str, Any] | None:
     if not config.resume or not path.exists():
         return None
     payload = json.loads(path.read_text())
-    expected = _config_fingerprint(config, seed)
-    if payload.get("config") != expected:
+    # Normalize through JSON so tuple-valued fields (e.g. wandb_tags) compare
+    # equal to their stored list form; without this every resume fails as
+    # "incompatible" (fixed 2026-10-03).
+    expected = json.loads(json.dumps(_config_fingerprint(config, seed), sort_keys=True))
+    stored = payload.get("config")
+    if stored != expected:
+        # Backfill keys added after the checkpoint was written so old
+        # receipts resume under the current config instead of failing.
+        # Genuine drift (changed values, removed keys) still fails closed.
+        if isinstance(stored, dict):
+            backfilled = dict(stored)
+            for key, value in expected.items():
+                backfilled.setdefault(key, value)
+            if backfilled == expected:
+                payload["config"] = backfilled
+                return payload
         raise ValueError(f"[{config.name}] incompatible checkpoint: {path}")
     return payload
 
@@ -1250,6 +1338,8 @@ def _run_one_seed(
             batch = rng.sample(train_examples, min(config.batch_size, len(train_examples)))
             all_data: List[Any] = []
             all_advs: List[float] = []
+            all_nll: List[bool] = []
+            pending: List[Any] = []
             batch_rewards: List[float] = []
 
             # Dynamic sampling (DAPO §3.2) refills the batch pool with fresh
@@ -1288,24 +1378,73 @@ def _run_one_seed(
                         pool.append(rng.choice(train_examples))
                         resamples_used += 1
                     continue
-                advs = normalize_rewards(rewards, unbiased=config.debias_advantages)
-                if config.mask_truncated_responses:
-                    advs = apply_truncation_mask(
-                        advs,
-                        [len(resp.tokens) for resp in responses.sequences],
-                        config.max_response_tokens,
+                token_lengths = [len(resp.tokens) for resp in responses.sequences]
+                truncated = [length >= config.max_response_tokens for length in token_lengths]
+                nll_flags = _nll_mask_for_group(
+                    rewards,
+                    truncated,
+                    config.nll_aux_min_reward,
+                    config.mask_truncated_responses,
+                )
+                if config.global_advantage_normalization:
+                    # Stage raw rewards; one global pass runs after the pool.
+                    pending.append(
+                        (
+                            prompt_ids,
+                            [list(resp.tokens) for resp in responses.sequences],
+                            rewards,
+                            token_lengths,
+                            nll_flags,
+                        )
                     )
+                else:
+                    advs = normalize_rewards(rewards, unbiased=config.debias_advantages)
+                    if config.mask_truncated_responses:
+                        advs = apply_truncation_mask(
+                            advs, token_lengths, config.max_response_tokens
+                        )
+                    for resp, adv, keep_nll in zip(responses.sequences, advs, nll_flags):
+                        resp_ids = list(resp.tokens)
+                        all_data.append(_build_datum(prompt_ids, resp_ids))
+                        all_advs.append(adv)
+                        all_nll.append(keep_nll)
                 batch_rewards.extend(rewards)
 
-                for resp, adv in zip(responses.sequences, advs):
-                    resp_ids = list(resp.tokens)
-                    all_data.append(_build_datum(prompt_ids, resp_ids))
-                    all_advs.append(adv)
+            if config.global_advantage_normalization:
+                flat_rewards = [r for (_, _, rewards, _, _) in pending for r in rewards]
+                flat_lengths = [ln for (_, _, _, lengths, _) in pending for ln in lengths]
+                flat_truncated = [ln >= config.max_response_tokens for ln in flat_lengths]
+                exclude = (
+                    flat_truncated
+                    if config.mask_truncated_responses and config.global_norm_exclude_truncated
+                    else None
+                )
+                flat_advs = normalize_advantages_global(
+                    flat_rewards,
+                    unbiased=config.debias_advantages,
+                    exclude=exclude,
+                )
+                if config.mask_truncated_responses:
+                    flat_advs = apply_truncation_mask(
+                        flat_advs, flat_lengths, config.max_response_tokens
+                    )
+                cursor = 0
+                for prompt_ids, resp_ids_list, _, _, nll_flags in pending:
+                    for resp_ids, keep_nll in zip(resp_ids_list, nll_flags):
+                        all_data.append(_build_datum(prompt_ids, resp_ids))
+                        all_advs.append(flat_advs[cursor])
+                        all_nll.append(keep_nll)
+                        cursor += 1
 
             if not all_data:
                 continue
 
-            loss_fn = make_grpo_loss_fn(all_advs)
+            if config.nll_aux_enabled:
+                loss_fn = make_grpo_loss_fn(
+                    all_advs, nll_mask=all_nll, nll_coef=config.nll_aux_coef
+                )
+            else:
+                loss_fn = make_grpo_loss_fn(all_advs)
             train_result = tc.forward_backward_custom(
                 data=all_data,
                 loss_fn=loss_fn,
@@ -1339,6 +1478,13 @@ def _run_one_seed(
             }
             if config.dynamic_sampling:
                 step_log["train/skipped_degenerate_groups"] = float(skipped_degenerate)
+            if config.global_advantage_normalization and all_advs:
+                mean_a = sum(all_advs) / len(all_advs)
+                var_a = sum((a - mean_a) ** 2 for a in all_advs) / len(all_advs)
+                step_log["train/global_adv_std"] = var_a**0.5
+            if config.nll_aux_enabled and all_nll:
+                step_log["train/nll_loss"] = _metric(train_result, ["nll_loss"], default=0.0)
+                step_log["train/nll_frac"] = sum(all_nll) / len(all_nll)
             _wandb_log(wb, step_log)
 
             if (step + 1) % save_every == 0:

@@ -157,6 +157,11 @@ def test_shaping_flags_default_off_and_cli_enables_them():
     assert off.dynamic_sampling is False
     assert off.mask_truncated_responses is False
     assert off.dynamic_sampling_max_resamples == 16
+    assert off.global_advantage_normalization is False
+    assert off.global_norm_exclude_truncated is True
+    assert off.nll_aux_enabled is False
+    assert off.nll_aux_coef == 0.0
+    assert off.nll_aux_min_reward == 1.0
 
     on = build_config(
         _parse_args(
@@ -168,6 +173,12 @@ def test_shaping_flags_default_off_and_cli_enables_them():
                 "--dynamic-sampling-max-resamples",
                 "4",
                 "--mask-truncated-responses",
+                "--global-advantage-normalization",
+                "--nll-aux",
+                "--nll-aux-coef",
+                "0.01",
+                "--nll-aux-min-reward",
+                "0.5",
             ]
         )
     )
@@ -175,6 +186,17 @@ def test_shaping_flags_default_off_and_cli_enables_them():
     assert on.dynamic_sampling is True
     assert on.mask_truncated_responses is True
     assert on.dynamic_sampling_max_resamples == 4
+    assert on.global_advantage_normalization is True
+    assert on.nll_aux_enabled is True
+    assert on.nll_aux_coef == 0.01
+    assert on.nll_aux_min_reward == 0.5
+
+
+def test_no_global_norm_exclude_truncated_opt_out():
+    config = build_config(
+        _parse_args(["--preset", "tooluse_synth", "--no-global-norm-exclude-truncated"])
+    )
+    assert config.global_norm_exclude_truncated is False
 
 
 def test_no_wandb_escape_hatch_is_removed():

@@ -11,9 +11,11 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+import zipfile
 
 from tools import build_public_documents as build
 from tools import check_public_release as release
+from tools import prepare_public_tex_bundle as tex_bundle
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,7 +27,7 @@ class PublicDocumentBuildTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.root = self.base / "checkout"
         self.root.mkdir()
         self.output = self.base / "rebuilt"
@@ -124,6 +126,159 @@ class PublicDocumentBuildTests(unittest.TestCase):
 
     def run_build(self, **kwargs):
         return build.build_documents(self.root, self.output, ["addendum"], **kwargs)
+
+    def make_bundle(self):
+        cache = self.base / "local cache"
+        cache.mkdir()
+        (cache / "plain.tex").write_bytes(b"synthetic TeX resource")
+        destination = self.base / "toolchain's bundle with spaces"
+        tex_bundle.prepare_bundle(cache, [], destination, {"cache": "Synthetic fixture"})
+        return destination / "public-tex-bundle.zip"
+
+    def test_local_bundle_is_staged_hash_bound_and_preserves_safety_flags(self):
+        supplied = self.make_bundle()
+        before = self.snapshot()
+        native = self.bin / "tectonic"
+        native.write_text(
+            native.read_text() + "\n"
+            "bundle = pathlib.Path(args[args.index('--bundle') + 1])\n"
+            f"assert bundle != pathlib.Path({str(supplied)!r})\n"
+            "assert bundle.name == 'local-tex-bundle.zip'\n"
+            f"assert bundle.read_bytes() == {supplied.read_bytes()!r}\n"
+        )
+        result = self.run_build(tectonic_bundle=supplied)
+        self.assertEqual(result["status"], "BUILT")
+        self.assertEqual(before, self.snapshot())
+        receipt = json.loads((self.output / "BUILD_RECEIPT.json").read_text())
+        self.assertEqual(receipt["tectonic_flags"], ["--only-cached", "--untrusted"])
+        self.assertEqual(receipt["tectonic_bundle"]["sha256"], release.sha256(supplied))
+        self.assertEqual(receipt["tectonic_bundle"]["bytes"], supplied.stat().st_size)
+        self.assertEqual(receipt["tectonic_bundle"]["option"], "--bundle")
+        self.assertEqual(receipt["tectonic_bundle"]["resource_files"], 1)
+        self.assertFalse((self.output / "local-tex-bundle.zip").exists())
+
+    def test_bad_or_missing_bundle_fails_before_native_execution(self):
+        corrupt = self.base / "corrupt.zip"
+        corrupt.write_bytes(b"not a bundle")
+        for supplied in (
+            self.base / "missing.zip",
+            corrupt,
+            "https://example.invalid/tex.zip",
+            "file:///tmp/tex.zip",
+        ):
+            with (
+                self.subTest(supplied=supplied),
+                patch.object(build, "build_environment") as native,
+            ):
+                with self.assertRaises((ValueError, OSError)):
+                    self.run_build(tectonic_bundle=supplied)
+                native.assert_not_called()
+            self.assertFalse(self.output.exists())
+
+    def test_symlink_bundle_and_parent_are_rejected(self):
+        supplied = self.make_bundle()
+        link = self.base / "linked.zip"
+        link.symlink_to(supplied)
+        parent = self.base / "bundle alias"
+        parent.symlink_to(supplied.parent, target_is_directory=True)
+        for candidate in (link, parent / supplied.name):
+            with self.assertRaisesRegex(ValueError, "symlink"):
+                self.run_build(tectonic_bundle=candidate)
+        self.assertFalse(self.output.exists())
+
+    def test_corrupt_deflate_bundle_cli_returns_json_failure(self):
+        supplied = self.make_bundle()
+        with zipfile.ZipFile(supplied) as archive:
+            contents = {name: archive.read(name) for name in archive.namelist()}
+        with zipfile.ZipFile(supplied, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for name, data in contents.items():
+                archive.writestr(name, data)
+        with zipfile.ZipFile(supplied) as archive:
+            entry = archive.getinfo("FILELIST")
+            offset = entry.header_offset + 30 + len(entry.filename) + len(entry.extra)
+        data = bytearray(supplied.read_bytes())
+        data[offset] = (data[offset] & ~6) | 6  # Invalid DEFLATE BTYPE=3.
+        supplied.write_bytes(data)
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-B",
+                str(ROOT / "tools/build_public_documents.py"),
+                "--root",
+                str(self.root),
+                "--document",
+                "addendum",
+                "--output-dir",
+                str(self.output),
+                "--tectonic-bundle",
+                str(supplied),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 1)
+        self.assertEqual(json.loads(completed.stderr)["status"], "FAIL")
+        self.assertIn("invalid local TeX bundle", json.loads(completed.stderr)["error"])
+        self.assertEqual(completed.stdout, "")
+        self.assertFalse(self.output.exists())
+
+    def test_changed_or_missing_bundle_before_publication_is_rejected(self):
+        supplied = self.make_bundle()
+        contents = supplied.read_bytes()
+        original = build.run_builder
+        for mode in ("source", "staged", "missing"):
+            supplied.write_bytes(contents)
+
+            def change_bundle(directory, document, env, timeout, log):
+                original(directory, document, env, timeout, log)
+                if mode == "missing":
+                    supplied.unlink()
+                else:
+                    target = supplied if mode == "source" else log.parent / "local-tex-bundle.zip"
+                    target.write_bytes(b"changed bundle")
+
+            with (
+                self.subTest(mode=mode),
+                patch.object(build, "run_builder", side_effect=change_bundle),
+            ):
+                with self.assertRaisesRegex(ValueError, "bundle changed"):
+                    self.run_build(tectonic_bundle=supplied)
+                self.assertFalse(self.output.exists())
+
+    def test_bundle_changed_during_stage_copy_is_rejected(self):
+        supplied = self.make_bundle()
+        original = build.shutil.copyfileobj
+
+        def corrupt_copy(source, destination, *args, **kwargs):
+            original(source, destination, *args, **kwargs)
+            if destination.name.endswith("local-tex-bundle.zip"):
+                destination.write(b"unexpected")
+
+        with patch.object(build.shutil, "copyfileobj", side_effect=corrupt_copy):
+            with self.assertRaisesRegex(ValueError, "changed while staging"):
+                self.run_build(tectonic_bundle=supplied)
+        self.assertFalse(self.output.exists())
+
+    def test_bundle_shim_cannot_fall_back_to_unrestricted_tool(self):
+        supplied = self.make_bundle()
+        marker = self.base / "unsafe-tool-ran"
+        self.native(
+            "tectonic", f"from pathlib import Path\nPath({str(marker)!r}).write_text('ran')\n"
+        )
+        original = build.build_environment
+
+        def disable_shim(stage, bundle_path=None):
+            env = original(stage, bundle_path)
+            self.assertEqual(env["PATH"], str(stage / "native-tools"))
+            (stage / "native-tools/tectonic").chmod(0o600)
+            return env
+
+        with patch.object(build, "build_environment", side_effect=disable_shim):
+            with self.assertRaisesRegex(build.BuildError, "builder failed"):
+                self.run_build(tectonic_bundle=supplied)
+        self.assertFalse(marker.exists())
+        self.assertFalse(self.output.exists())
 
     def add_synthetic_thesis(self):
         spec = build.DOCUMENTS["thesis"]
@@ -240,6 +395,16 @@ class PublicDocumentBuildTests(unittest.TestCase):
         alias.symlink_to(self.root, target_is_directory=True)
         with self.assertRaisesRegex(build.BuildError, "outside"):
             build.build_documents(self.root, alias / "output", ["addendum"])
+
+    def test_output_parent_traversal_cannot_select_the_wrong_directory(self):
+        target = self.base / "target"
+        (target / "nested").mkdir(parents=True)
+        alias = self.base / "output alias"
+        alias.symlink_to(target / "nested", target_is_directory=True)
+        with self.assertRaisesRegex(build.BuildError, "canonical output path"):
+            build.build_documents(self.root, alias / ".." / "built", ["addendum"])
+        self.assertFalse((target / "built").exists())
+        self.assertFalse((self.base / "built").exists())
 
     def test_integrity_failure_happens_before_native_execution(self):
         self.write(

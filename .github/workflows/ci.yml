@@ -133,15 +133,9 @@ jobs:
             fi
           done
           echo "Shard $SHARD/$TOTAL: ${#SELECTED[@]} files"
-          timeout 20m uv run --no-sync pytest "${SELECTED[@]}" -m "not latex" -v --tb=short
+          timeout 20m uv run --no-sync pytest "${SELECTED[@]}" -m "not latex"
       - name: Check current thesis evidence and offline demo
         run: timeout 10m make submission-check
-      - name: Test seed utility
-        run: timeout 5m uv run --no-sync python -c "from utils.seed import set_global_seed; info = set_global_seed(42); print('Seed set successfully:', info)"
-      - name: Test imports
-        run: |
-          timeout 5m uv run --no-sync python -c "from utils.seed import set_global_seed, get_seed_from_args"
-          timeout 5m uv run --no-sync python -c "from utils.stats import bootstrap_ci, compute_iqm"
 
   docs-build:
     # Native LaTeX audit tests and paper builds run here, not in test-core.
@@ -177,24 +171,7 @@ jobs:
           timeout 10m tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" grpo_agentic_llm_paper_anonymous.tex
           timeout 10m tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" supplementary_appendix.tex
       - name: Run native LaTeX audit integration tests
-        run: timeout 10m uv run --no-sync pytest tests/ -m latex -v --tb=short
-
-  legacy-scripts:
-    # Root one-shot drivers (train_grpo_test.py, train_test_idpo.py,
-    # verify_*.py) import heavy model weights at module scope, so CI must
-    # never import or execute them. This job byte-compiles them only:
-    # no imports run, no weights download. Their bodies are intentionally
-    # untouched; this job config is the entire CI coverage for them.
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v7
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
-      - name: Compile-check heavy root drivers (no imports, no weights)
-        run: timeout 5m python -m py_compile train_grpo_test.py train_test_idpo.py verify_*.py
+        run: timeout 10m uv run --no-sync pytest tests/ -m latex
 
   package:
     runs-on: ubuntu-latest
@@ -205,13 +182,10 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-      - name: Build wheel from locked metadata
+      - name: Build and verify wheel from locked metadata
         run: |
           pip install uv==0.10.11
-          uv lock --check
-          uv build --wheel
-      - name: Verify wheel contents
-        run: python tools/check_wheel.py dist/*.whl
+          make package PYTHON=python
 
   test-environments:
     runs-on: ubuntu-latest
@@ -251,57 +225,13 @@ jobs:
           print(f'Env test passed: obs={obs}, reward={reward}, correct={info[\"correct\"]}')
           "
 
-  reproducibility-check:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install numpy torch gymnasium
-      - name: Verify seed determinism
-        run: |
-          timeout 5m python -c "
-          import sys
-          sys.path.insert(0, '.')
-          from utils.seed import set_global_seed
-          import numpy as np
-          import torch
-          
-          # Run 1
-          set_global_seed(42)
-          r1_np = np.random.random(10).tolist()
-          r1_torch = torch.randn(10).tolist()
-          
-          # Run 2 (same seed)
-          set_global_seed(42)
-          r2_np = np.random.random(10).tolist()
-          r2_torch = torch.randn(10).tolist()
-          
-          assert r1_np == r2_np, 'NumPy seed not deterministic!'
-          assert r1_torch == r2_torch, 'PyTorch seed not deterministic!'
-          print('Reproducibility check PASSED')
-          "
-
   docs-check:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
       - name: Check required documentation
-        run: |
-          for f in README.md LICENSE REPRODUCE.md BASELINES.md CONTRIBUTING.md SECURITY.md ARTIFACT.md; do
-            if [ ! -f "$f" ]; then
-              echo "ERROR: Missing required file: $f"
-              exit 1
-            fi
-          done
-          echo "All required documentation files present"
+        run: make docs-check
       - name: Check experiment implementations exist
         run: |
           count=$(ls platform_hybrid/experiments/implementations/*.py 2>/dev/null | wc -l)

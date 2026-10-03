@@ -63,6 +63,7 @@ import statistics
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
+from _analysis_common import maybe_matplotlib as _maybe_matplotlib, rankdata_avg
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RESULTS = REPO_ROOT / "experiments" / "results"
@@ -94,19 +95,7 @@ def _spearman(xs: Sequence[float], ys: Sequence[float]) -> float:
     if n < 3:
         return float("nan")
 
-    def _rank(vs: Sequence[float]) -> List[float]:
-        order = sorted(range(n), key=lambda i: vs[i])
-        ranks = [0.0] * n
-        i = 0
-        while i < n:
-            j = i
-            while j < n and vs[order[j]] == vs[order[i]]:
-                j += 1
-            avg = (i + 1 + j) / 2.0
-            for k in range(i, j):
-                ranks[order[k]] = avg
-            i = j
-        return ranks
+    _rank = rankdata_avg
 
     mx = statistics.fmean(_rank(xs))
     my = statistics.fmean(_rank(ys))
@@ -373,16 +362,6 @@ def delta_d_per_library(by_lib_rows: List[Dict[str, Any]], p_proxy: Dict[Tuple[s
 # ---------------------------------------------------------------------------
 # Figure
 # ---------------------------------------------------------------------------
-
-
-def _maybe_matplotlib():
-    try:
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-        return plt
-    except Exception:
-        return None
 
 
 def write_figure(bins: List[Dict[str, Any]], delta_d: List[Dict[str, Any]], out_path: Path) -> Optional[str]:

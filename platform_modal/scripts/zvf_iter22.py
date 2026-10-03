@@ -39,6 +39,7 @@ import statistics
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
+from _analysis_common import maybe_matplotlib as _maybe_matplotlib
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RESULTS = REPO_ROOT / "experiments" / "results"
@@ -520,17 +521,6 @@ def write_pre_post_test(
 # ---------------------------------------------------------------------------
 # Figure
 # ---------------------------------------------------------------------------
-
-
-def _maybe_matplotlib():
-    try:
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-
-        return plt
-    except Exception:
-        return None
 
 
 METHOD_COLOR = {

@@ -42,6 +42,12 @@ import xgboost as xgb
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p8_common import (  # noqa: E402
+    RAW20,
+    ALL24,
+    load,
+    downsample_positives,
+)
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -59,9 +65,6 @@ LLM_PRICE_TIERS = [
 ]
 RATES_PCT = [1.44, 1.00, 0.50, 0.10, 0.05]
 
-RAW20 = [f"V{i}" for i in range(1, 21)]
-AGG4 = ["V_mean", "V_std", "V_max", "V_min"]
-ALL24 = RAW20 + AGG4
 FEATURE_SETS = {
     "24full":       ALL24,
     "20raw":        RAW20,
@@ -70,18 +73,6 @@ FEATURE_SETS = {
 }
 
 TAUS = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
-
-
-def load(path):
-    with path.open() as f:
-        rdr = csv.reader(f)
-        header = next(rdr)
-        idx = {n: i for i, n in enumerate(header)}
-        X, y = [], []
-        for line in rdr:
-            X.append([float(line[idx[c]]) for c in ALL24])
-            y.append(int(float(line[idx["Class"]])))
-    return np.array(X), np.array(y)
 
 
 def fit_predict(Xtr, ytr, Xte, feats, seed):
@@ -100,18 +91,6 @@ def fit_predict(Xtr, ytr, Xte, feats, seed):
     )
     m.fit(Xtr_s, ytr)
     return m.predict_proba(Xte_s)[:, 1]
-
-
-def downsample_positives(Xte, yte, target_rate_pct, rng):
-    n_te = len(yte)
-    n_target_pos = max(1, int(round(n_te * target_rate_pct / 100.0)))
-    pos_idx = np.where(yte == 1)[0]
-    neg_idx = np.where(yte == 0)[0]
-    keep_pos = pos_idx if len(pos_idx) < n_target_pos else rng.choice(
-        pos_idx, size=n_target_pos, replace=False)
-    keep = np.concatenate([keep_pos, neg_idx])
-    keep.sort()
-    return Xte[keep], yte[keep]
 
 
 def cell_counters_at_tau(scores, v_mean, y, tau):

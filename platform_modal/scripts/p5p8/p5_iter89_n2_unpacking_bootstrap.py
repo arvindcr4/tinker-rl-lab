@@ -40,10 +40,15 @@ Outputs (≤300 LoC, stdlib only):
   - platform_hybrid/experiments/results/p5p8/p5_n2_unpacking_boot_summary.json (machine-readable)
 """
 from __future__ import annotations
-import json, math, os, random
+import json, math, os, random, sys
 from collections import defaultdict
 from itertools import combinations
 from statistics import fmean, pstdev
+
+from _p5p7_common import load_rows
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
+from _stats import paired_step_bootstrap  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 RES  = os.path.join(ROOT, "experiments", "results")
@@ -59,29 +64,6 @@ ALPHA = 0.05
 
 
 # ----------------------- helpers -----------------------
-
-def load_rows(path):
-    rows = []
-    with open(path) as f:
-        header = f.readline().rstrip("\n").split("\t")
-        for line in f:
-            line = line.rstrip("\n")
-            if not line:
-                continue
-            parts = line.split("\t")
-            d = dict(zip(header, parts))
-            for col in ("step", "group_size", "seed"):
-                if col in d:
-                    d[col] = int(d[col])
-            for col in METRICS + ["frac_all_zero", "frac_all_one", "lag1_autocorr"]:
-                if col in d and d[col] not in ("nan", "", "None"):
-                    try:
-                        d[col] = float(d[col])
-                    except ValueError:
-                        d[col] = float("nan")
-            rows.append(d)
-    return rows
-
 
 def axis_eta2(rows, axis_key, value_key):
     """Reuse the Berkeley unpacking machinery. Returns SS_axis/SS_total."""
@@ -113,28 +95,6 @@ def cohens_d(a, b):
     return (ma - mb) / pooled
 
 
-def paired_step_bootstrap(rows, fn, b=B, seed=SEED):
-    """Resample steps with replacement; for each resample build a new
-    160-row panel by sampling (step s, all methods at step s) jointly.
-    """
-    rng = random.Random(seed)
-    by_step = defaultdict(list)
-    for r in rows:
-        by_step[r["step"]].append(r)
-    steps = sorted(by_step.keys())
-    n_steps = len(steps)
-    out = []
-    for _ in range(b):
-        pick = [rng.choice(steps) for _ in range(n_steps)]
-        sample = []
-        for s in pick:
-            sample.extend(by_step[s])
-        v = fn(sample)
-        if v is not None and not (isinstance(v, float) and math.isnan(v)):
-            out.append(v)
-    return out
-
-
 def ci(arr, alpha=ALPHA):
     if not arr:
         return None, None, None
@@ -158,7 +118,7 @@ def reject_in_null(ci_lo, ci_hi, null_value, direction="two-sided"):
 # ----------------------- main -----------------------
 
 def main():
-    rows = load_rows(N2)
+    rows = load_rows(N2, METRICS)
     print(f"== Iter 89 P5 N2 unpacking bootstrap (B={B}, seed={SEED}) ==")
     print(f"loaded {len(rows)} rows ({len(METHODS)} methods x {len({r['step'] for r in rows})} steps x 1 seed)")
 
@@ -167,7 +127,7 @@ def main():
     h1_table = []
     for metric in METRICS:
         point = axis_eta2(rows, "method", metric)
-        boots = paired_step_bootstrap(rows, lambda s, m=metric: axis_eta2(s, "method", m))
+        boots = paired_step_bootstrap(rows, lambda s, m=metric: axis_eta2(s, "method", m), B, SEED)
         lo, mu, hi = ci(boots)
         ub_lt_005 = hi is not None and hi <= 0.05
         ub_lt_010 = hi is not None and hi <= 0.10
@@ -198,7 +158,7 @@ def main():
             if len({r["method"] for r in sub}) < 2:
                 continue
             point = axis_eta2(sub, "method", metric)
-            boots = paired_step_bootstrap(sub, lambda s, m=metric: axis_eta2(s, "method", m), b=B)
+            boots = paired_step_bootstrap(sub, lambda s, m=metric: axis_eta2(s, "method", m), B, SEED)
             lo, mu, hi = ci(boots)
             ub_lt_004 = hi is not None and hi <= 0.04
             h2_table.append({
@@ -230,7 +190,7 @@ def main():
         if len({r["method"] for r in sub}) < 2:
             continue
         point = axis_eta2(sub, "method", "zvf")
-        boots = paired_step_bootstrap(sub, lambda s: axis_eta2(s, "method", "zvf"), b=B)
+        boots = paired_step_bootstrap(sub, lambda s: axis_eta2(s, "method", "zvf"), B, SEED)
         lo, mu, hi = ci(boots)
         h3_table.append({
             "omit_method": omit,

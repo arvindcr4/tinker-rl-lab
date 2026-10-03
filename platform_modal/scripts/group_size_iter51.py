@@ -22,6 +22,7 @@ import random
 from pathlib import Path
 
 import numpy as np
+from _analysis_common import load_token_norm, write_header_tsv as write_tsv
 
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -32,26 +33,6 @@ np.random.seed(SEED)
 # ---------------------------------------------------------------------------
 # Load data
 # ---------------------------------------------------------------------------
-
-
-def load_token_norm():
-    """Return list of dicts: {T, G, acc, ci_lo, ci_hi, gu}."""
-    out = []
-    with open(RES / "group_size_token_normalized.tsv") as f:
-        header = f.readline().rstrip("\n").split("\t")
-        for line in f:
-            row = dict(zip(header, line.rstrip("\n").split("\t")))
-            out.append(
-                {
-                    "T": int(row["budget_tokens"]),
-                    "G": int(row["G"]),
-                    "acc": float(row["heldout_acc_mean"]),
-                    "ci_lo": float(row["heldout_acc_ci_low"]),
-                    "ci_hi": float(row["heldout_acc_ci_high"]),
-                    "gu": float(row["gu_estimate"]),
-                }
-            )
-    return out
 
 
 def load_zvf_sweep():
@@ -72,13 +53,6 @@ def load_zvf_sweep():
                 }
             )
     return out
-
-
-def write_tsv(path, header, rows):
-    with open(path, "w") as f:
-        f.write("\t".join(header) + "\n")
-        for r in rows:
-            f.write("\t".join(str(r.get(h, "")) for h in header) + "\n")
 
 
 # ---------------------------------------------------------------------------
@@ -377,7 +351,7 @@ def summarize(rows, peak_rows, tost_rows, lit_rows, wu_rows):
 
 
 def main():
-    rows = load_token_norm()
+    rows = load_token_norm(RES)
     zvf = load_zvf_sweep()
 
     print(f"Loaded {len(rows)} token-normalized cells, {len(zvf)} zvf-sweep rows.")

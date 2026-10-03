@@ -61,6 +61,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
+from _analysis_common import write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -258,15 +259,6 @@ def bayes_factor_two_models(y: np.ndarray, mu1: np.ndarray, mu2: np.ndarray,
         bic1=bic1, bic2=bic2, log_bf_12=log_bf_12,
         favored=int(1 if log_bf_12 > 0 else 2),
     )
-
-
-def _write_tsv(path: Path, cols: list[str], rows: list[list]) -> None:
-    with path.open("w", newline="") as f:
-        w = csv.writer(f, delimiter="\t")
-        w.writerow(cols)
-        for r in rows:
-            w.writerow(r)
-    print(f"wrote {path}")
 
 
 # ---------- main ----------

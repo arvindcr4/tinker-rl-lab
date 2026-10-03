@@ -19,6 +19,11 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+try:
+    from .pavlov_verilog_eval_adapter import _sha256, canonical_json
+except ImportError:  # pragma: no cover - direct execution fallback
+    from pavlov_verilog_eval_adapter import _sha256, canonical_json
+
 SCHEMA_VERSION = "pavlov-verilog-eval-split-manifest-v1"
 SUITE_ID = "verilog_eval"
 SUITE_ROLE = "primary_eval"
@@ -87,14 +92,6 @@ _CREDENTIAL_KEYS = (
 
 class VerilogEvalSplitManifestError(ValueError):
     """Raised for malformed verilog_eval split manifest input."""
-
-
-def canonical_json(value: Any) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-
-
-def _sha256(value: str) -> str:
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
 def _is_placeholder(value: Any) -> bool:

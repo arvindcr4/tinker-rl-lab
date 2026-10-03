@@ -57,6 +57,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from _p5p7_common import spearman_v2 as spearman
+
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_DIR = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
 CELLS_TSV = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
@@ -149,36 +151,6 @@ def shannon_entropy_bits(values: list) -> float:
         p = c / n
         h -= p * math.log2(p)
     return h
-
-
-def spearman(xs: list[float], ys: list[float]) -> float:
-    """Spearman rho (ties handled by midrank) without scipy."""
-    n = len(xs)
-    if n < 3:
-        return float("nan")
-
-    def ranks(vs):
-        order = sorted(range(n), key=lambda i: vs[i])
-        r = [0.0] * n
-        i = 0
-        while i < n:
-            j = i
-            while j + 1 < n and vs[order[j + 1]] == vs[order[i]]:
-                j += 1
-            avg = (i + j) / 2.0 + 1.0
-            for k in range(i, j + 1):
-                r[order[k]] = avg
-            i = j + 1
-        return r
-
-    rx, ry = ranks(xs), ranks(ys)
-    mx, my = statistics.mean(rx), statistics.mean(ry)
-    num = sum((rx[i] - mx) * (ry[i] - my) for i in range(n))
-    dx = math.sqrt(sum((rx[i] - mx) ** 2 for i in range(n)))
-    dy = math.sqrt(sum((ry[i] - my) ** 2 for i in range(n)))
-    if dx == 0 or dy == 0:
-        return 0.0
-    return num / (dx * dy)
 
 
 def hamming(a: tuple, b: tuple) -> int:

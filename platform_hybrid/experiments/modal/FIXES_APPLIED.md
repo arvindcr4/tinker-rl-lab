@@ -3,7 +3,8 @@
 **Date:** 2026-04-18  
 **Files modified:**
 - `modal_parallel_runner.py`
-- `relaunch_kl.py`
+- `relaunch_kl.py` (since removed: it was a standalone clone of
+  `modal_parallel_runner.run_kl_tracking`; that function is the only copy now)
 
 ---
 
@@ -125,5 +126,5 @@ With the model loaded once, expected throughput for Qwen3-8B on H100 at 512 outp
 modal run experiments/modal/modal_parallel_runner.py
 
 # Or relaunch only the KL tracking experiment
-modal run experiments/modal/relaunch_kl.py
+modal run experiments/modal/modal_parallel_runner.py::run_kl_tracking
 ```

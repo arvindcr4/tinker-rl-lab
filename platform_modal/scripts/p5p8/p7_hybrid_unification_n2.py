@@ -55,6 +55,8 @@ import random
 import statistics
 from pathlib import Path
 
+from _p5p7_common import c3_hybrid
+
 # ----------------------------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------------------------
@@ -108,18 +110,6 @@ def c1_zvf_triage(z: list[float], tau: float) -> list[int]:
 
 def c2_dualformer(z: list[float], tau: float) -> list[int]:
     return [G_DES if zt >= tau else G_BASE for zt in z]
-
-
-def c3_hybrid(z: list[float], tau: float, delta: float) -> list[int]:
-    out = []
-    for zt in z:
-        if zt >= tau + delta:
-            out.append(G_DES)        # saturation band: de-escalate
-        elif zt >= tau:
-            out.append(G_ESC)        # boundary band: escalate
-        else:
-            out.append(G_BASE)
-    return out
 
 
 # ----------------------------------------------------------------------------
@@ -203,7 +193,7 @@ def main() -> None:
         "C0_baseline": lambda z: c0(z),
         f"C1_zvf_triage@{TAU:.2f}": lambda z: c1_zvf_triage(z, TAU),
         f"C2_dualformer@{TAU:.2f}": lambda z: c2_dualformer(z, TAU),
-        f"C3_hybrid@{TAU:.2f}+{TAU_DELTA:.2f}": lambda z: c3_hybrid(z, TAU, TAU_DELTA),
+        f"C3_hybrid@{TAU:.2f}+{TAU_DELTA:.2f}": lambda z: c3_hybrid(z, TAU, TAU_DELTA, g_base=G_BASE, g_esc=G_ESC, g_des=G_DES),
     }
     c1_key = f"C1_zvf_triage@{TAU:.2f}"
     c2_key = f"C2_dualformer@{TAU:.2f}"

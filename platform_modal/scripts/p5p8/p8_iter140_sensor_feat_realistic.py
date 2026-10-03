@@ -46,6 +46,11 @@ import xgboost as xgb
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p8_common import (  # noqa: E402
+    RAW20,
+    ALL24,
+    load,
+)
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -57,9 +62,6 @@ K_PCT = 1.0     # top-1% for the rate-conditioned read
 G_THR = 0.001
 WIDTH = 0.50
 
-RAW20 = [f"V{i}" for i in range(1, 21)]
-AGG4 = ["V_mean", "V_std", "V_max", "V_min"]
-ALL24 = RAW20 + AGG4
 
 FEATURE_SETS = {
     "24full":       ALL24,
@@ -69,19 +71,6 @@ FEATURE_SETS = {
 }
 
 RATES = [1.44, 1.00, 0.50, 0.10, 0.05]
-
-
-def load(path):
-    """Load the 24 numeric columns + Class."""
-    with path.open() as f:
-        rdr = csv.reader(f)
-        header = next(rdr)
-        idx = {n: i for i, n in enumerate(header)}
-        X, y = [], []
-        for line in rdr:
-            X.append([float(line[idx[c]]) for c in ALL24])
-            y.append(int(float(line[idx["Class"]])))
-    return np.array(X), np.array(y)
 
 
 def downsample_keep(labels, target_rate_pct, rng):

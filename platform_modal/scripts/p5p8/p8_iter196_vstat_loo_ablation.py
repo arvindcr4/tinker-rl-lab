@@ -45,7 +45,6 @@ Outputs:
 Cost ratios: 1, 10, 100, 1000. Default cost-optimal headline at c=100.
 """
 from __future__ import annotations
-import csv
 import json
 from pathlib import Path
 
@@ -54,16 +53,20 @@ import numpy as np
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p8_common import (  # noqa: E402
+    RAW20,
+    AGG4,
+    ALL24,
+    TRAIN,
+    TEST,
+    load_v2 as load,
+    fit_xgb,
+    paired_bootstrap_ci,
+)
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
-TRAIN = ROOT / "fraud_data.csv"
-TEST = ROOT / "test_data.csv"
 
-RAW20 = [f"V{i}" for i in range(1, 21)]
-AGG4 = ["V_mean", "V_std", "V_max", "V_min"]
-ALL24 = RAW20 + AGG4
-COL_IDX = {c: i for i, c in enumerate(ALL24)}
 
 # 7 feature sets: 20raw, 24full, four 23-feature LOO sets, 4sensor
 FEATURE_SETS = {
@@ -86,31 +89,6 @@ SEEDS = [42, 179, 316, 453, 590]
 COST_RATIOS = [1, 10, 100, 1000]
 N_BOOT = 2000
 N_TH = 100
-
-
-def load(path):
-    X, y = [], []
-    with path.open() as f:
-        rdr = csv.reader(f)
-        header = next(rdr)
-        col_idx = {name: i for i, name in enumerate(header)}
-        for line in rdr:
-            X.append([float(line[col_idx[c]]) for c in ALL24])
-            y.append(int(float(line[col_idx["Class"]])))
-    return np.array(X, dtype=np.float64), np.array(y, dtype=np.int32)
-
-
-def fit_xgb(Xtr, ytr, Xte, feats, seed):
-    import xgboost as xgb
-    cols = [COL_IDX[c] for c in feats]
-    spw = float((ytr == 0).sum()) / max(1.0, float((ytr == 1).sum()))
-    m = xgb.XGBClassifier(
-        n_estimators=200, max_depth=6, learning_rate=0.05,
-        subsample=0.8, colsample_bytree=0.8, scale_pos_weight=spw,
-        eval_metric="logloss", random_state=seed,
-        tree_method="hist", n_jobs=4)
-    m.fit(Xtr[:, cols], ytr, verbose=False)
-    return m.predict_proba(Xte[:, cols])[:, 1]
 
 
 def cost_curve(s, y, c):
@@ -164,20 +142,6 @@ def auc(s, y):
     sum_ranks_pos = ranks[:n_pos].sum()
     u = sum_ranks_pos - n_pos * (n_pos + 1) / 2.0
     return float(u / (n_pos * n_neg))
-
-
-def paired_bootstrap_ci(diff, n_boot, seed):
-    rng = np.random.default_rng(seed)
-    n = len(diff)
-    means = np.empty(n_boot)
-    for i in range(n_boot):
-        idx = rng.integers(0, n, size=n)
-        means[i] = diff[idx].mean()
-    return {
-        "mean": float(diff.mean()),
-        "lo": float(np.quantile(means, 0.025)),
-        "hi": float(np.quantile(means, 0.975)),
-    }
 
 
 def main():

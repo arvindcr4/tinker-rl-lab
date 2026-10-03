@@ -67,6 +67,13 @@ import xgboost as xgb
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p8_common import (  # noqa: E402
+    RAW20,
+    AGG4,
+    ALL24,
+    load,
+    recall_at_K,
+)
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -86,28 +93,12 @@ LLM_PRICE_TIERS = [
     ("frontier_gpt4",   0.0300),
 ]
 
-RAW20 = [f"V{i}" for i in range(1, 21)]
-AGG4 = ["V_mean", "V_std", "V_max", "V_min"]
-ALL24 = RAW20 + AGG4
 FEATURE_SETS = {
     "24full":       ALL24,
     "20raw":        RAW20,
     "20raw+minmax": RAW20 + ["V_min", "V_max"],
     "20raw+stat":   RAW20 + ["V_mean", "V_std"],
 }
-
-
-def load(path):
-    """Load CSV with the 24 numeric columns + Class."""
-    with path.open() as f:
-        rdr = csv.reader(f)
-        header = next(rdr)
-        idx = {n: i for i, n in enumerate(header)}
-        X, y = [], []
-        for line in rdr:
-            X.append([float(line[idx[c]]) for c in ALL24])
-            y.append(int(float(line[idx["Class"]])))
-    return np.array(X), np.array(y)
 
 
 def fit_predict(Xtr, ytr, Xte, feats):
@@ -146,17 +137,6 @@ def gradient_band_fire(scores, top_k_mask, g_thr=G_THR):
     fire = np.zeros(len(scores), dtype=bool)
     fire[sorted_idx] = fire_sorted
     return fire & top_k_mask
-
-
-def recall_at_K(scores, y, k_pct=K_PCT):
-    n = len(scores)
-    k = max(1, int(round(n * k_pct / 100.0)))
-    top_k_idx = np.argsort(-scores)[:k]
-    mask = np.zeros(n, dtype=bool)
-    mask[top_k_idx] = True
-    pos_total = max(1, int(y.sum()))
-    pos_caught = int(y[mask].sum())
-    return mask, pos_caught, pos_total
 
 
 def mann_whitney_u(a, b):
@@ -235,7 +215,7 @@ def main():
         print(f"[iter124] fitting {fset_name} ({len(feats)} feats) ...")
         scores = fit_predict(Xtr, ytr, Xte, feats)
         scores_per_feat[fset_name] = scores
-        top_k_mask, pos_caught_xgb, pos_total = recall_at_K(scores, yte)
+        top_k_mask, pos_caught_xgb, pos_total = recall_at_K(scores, yte, K_PCT)
         fire_grad = gradient_band_fire(scores, top_k_mask)
         fire_per_feat[fset_name] = fire_grad
         n_llm = int(fire_grad.sum())
@@ -295,7 +275,7 @@ def main():
     fset_name = "24full"
     scores = scores_per_feat[fset_name]
     fire_grad = fire_per_feat[fset_name]
-    top_k_mask, pos_caught_xgb, pos_total = recall_at_K(scores, yte)
+    top_k_mask, pos_caught_xgb, pos_total = recall_at_K(scores, yte, K_PCT)
     n_test = len(yte)
 
     # Per-V_stat quartile, 5 price tiers.  For each (stat, quartile, tier),
@@ -311,7 +291,7 @@ def main():
             n_pos_q = int(yte[q_mask].sum())
             sub_scores = scores[q_mask]
             sub_y = yte[q_mask]
-            sub_mask, sub_caught, sub_total = recall_at_K(sub_scores, sub_y)
+            sub_mask, sub_caught, sub_total = recall_at_K(sub_scores, sub_y, K_PCT)
             n_missed_q = max(1, sub_total - sub_caught)
             fire_q = (fire_grad & q_mask)
             n_llm_q = int(fire_q.sum())

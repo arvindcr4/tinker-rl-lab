@@ -41,6 +41,7 @@ import math
 from pathlib import Path
 
 import numpy as np
+from _analysis_common import load_token_norm, load_zvf_sweep, write_header_tsv as write_tsv
 
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -51,53 +52,6 @@ np.random.seed(SEED)
 # ---------------------------------------------------------------------------
 # Data
 # ---------------------------------------------------------------------------
-
-
-def load_token_norm():
-    out = []
-    with open(RES / "group_size_token_normalized.tsv") as f:
-        header = f.readline().rstrip("\n").split("\t")
-        for line in f:
-            row = dict(zip(header, line.rstrip("\n").split("\t")))
-            out.append(
-                {
-                    "T": int(row["budget_tokens"]),
-                    "G": int(row["G"]),
-                    "acc": float(row["heldout_acc_mean"]),
-                    "ci_lo": float(row["heldout_acc_ci_low"]),
-                    "ci_hi": float(row["heldout_acc_ci_high"]),
-                    "gu": float(row["gu_estimate"]),
-                }
-            )
-    return out
-
-
-def load_zvf_sweep():
-    out = []
-    with open(RES / "groupsize_zvf_sweep.tsv") as f:
-        header = f.readline().rstrip("\n").split("\t")
-        for line in f:
-            row = dict(zip(header, line.rstrip("\n").split("\t")))
-            out.append(
-                {
-                    "G": int(row["G"]),
-                    "n_seeds": int(row["n_seeds"]),
-                    "acc": float(row["heldout_acc_mean"]),
-                    "acc_se": float(row["heldout_acc_se"]),
-                    "last10": float(row["last10_mean"]),
-                    "mean_zvf": float(row["mean_zvf"]),
-                    "zvf_th": float(row["zvf_theory_at_mean_p"]),
-                    "mean_reward_train": float(row["mean_reward_train"]),
-                }
-            )
-    return out
-
-
-def write_tsv(path, header, rows):
-    with open(path, "w") as f:
-        f.write("\t".join(header) + "\n")
-        for r in rows:
-            f.write("\t".join(str(r.get(h, "")) for h in header) + "\n")
 
 
 def acc_at(rows, T, G):
@@ -444,8 +398,8 @@ def summarize(regions, frontier, decomp):
 
 
 def main():
-    rows = load_token_norm()
-    zvf = load_zvf_sweep()
+    rows = load_token_norm(RES)
+    zvf = load_zvf_sweep(RES)
     print(f"Loaded {len(rows)} iso-token cells, {len(zvf)} zvf-sweep rows.")
 
     # A. Equivalence regions

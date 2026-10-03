@@ -17,6 +17,8 @@ import re
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from flagship.pavlov_statistics import wilson_interval
+
 DEFAULT_BASE_RECEIPT = Path("autoresearch/orchestrator-260809-0922/base_eval_100.json")
 DEFAULT_SUITE_ID = "xlam_component"
 DEFAULT_DOMAINS = ("tool_use",)
@@ -147,21 +149,15 @@ def wilson_uncertainty(
         raise ValueError("the receipt contract fixes confidence_level to 0.95")
     if trials <= 0 or successes < 0 or successes > trials:
         raise ValueError("invalid Wilson counts")
-    p = successes / trials
-    z = WILSON_Z_95
-    denominator = 1.0 + z * z / trials
-    center = (p + z * z / (2.0 * trials)) / denominator
-    half = z * math.sqrt(
-        p * (1.0 - p) / trials + z * z / (4.0 * trials * trials)
-    ) / denominator
+    low, high = wilson_interval(successes, trials, z=WILSON_Z_95)
     return {
         "method": "wilson",
         "confidence_level": 0.95,
         "successes": successes,
         "trials": trials,
-        "estimate": p,
-        "wilson_low": max(0.0, center - half),
-        "wilson_high": min(1.0, center + half),
+        "estimate": successes / trials,
+        "wilson_low": low,
+        "wilson_high": high,
     }
 
 

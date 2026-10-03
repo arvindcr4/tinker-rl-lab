@@ -23,6 +23,8 @@ import os
 
 import modal
 
+from _modal_common import boxed_only_reward, chatml_prompt, gsm8k_gold, patch_wandb_vram, push_to_hub_private
+
 app = modal.App("tinker-rl-openrlhf-grpo")
 
 # WARNING (security): HF/W&B tokens previously were baked into the image via .env()/Secret.from_dict(); they now come from named Modal secrets. Rotate tokens if old images exist.
@@ -57,6 +59,7 @@ image = (
     .env({
         "WANDB_PROJECT": "tinker-rl-lab-world-class",
     })
+    .add_local_python_source("_modal_common")
 )
 
 
@@ -74,7 +77,6 @@ image = (
 )
 def run_openrlhf_qwen3_8b():
     """Execute the OpenRLHF GRPO GSM8K-500 run on a single H100."""
-    import re
     import subprocess
     import sys
     import threading
@@ -85,20 +87,7 @@ def run_openrlhf_qwen3_8b():
     import numpy as np
     import uvicorn
     import wandb
-    try:
-        import torch, wandb
-        if not getattr(wandb, '_vram_patched', False):
-            _old_log = wandb.log
-            def _vram_log(data, *args, **kwargs):
-                if torch.cuda.is_available():
-                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
-                    torch.cuda.reset_peak_memory_stats()
-                _old_log(data, *args, **kwargs)
-            wandb.log = _vram_log
-            wandb._vram_patched = True
-    except ImportError:
-        pass
+    patch_wandb_vram()
 
     MODEL = "Qwen/Qwen3-8B"
     PROJECT = "tinker-rl-lab-world-class"
@@ -127,36 +116,19 @@ def run_openrlhf_qwen3_8b():
     jsonl_path = f"{WORK}/gsm8k500.jsonl"
     with open(jsonl_path, "w") as f:
         for row in ds:
-            m = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
-            gt = m.group(1).replace(",", "").strip() if m else ""
-            prompt = (
-                f"<|im_start|>system\n{SYS}<|im_end|>\n"
-                f"<|im_start|>user\n{row['question']} Give a numerical answer inside \\boxed{{}}.<|im_end|>\n"
-                f"<|im_start|>assistant\n"
-            )
+            gt = gsm8k_gold(row["answer"]) or ""
+            prompt = chatml_prompt(SYS, f"{row['question']} Give a numerical answer inside \\boxed{{}}.")
             label_map[prompt] = gt
             f.write(json.dumps({"prompt": prompt, "label": gt}) + "\n")
 
     # ---- reward server ----
     reward_app = FastAPI()
 
-    def score(text, gt):
-        boxed = re.findall(r"\\boxed\{([^}]+)\}", text or "")
-        for b in boxed:
-            b_clean = b.strip().replace(",", "")
-            try:
-                if gt and abs(float(b_clean) - float(gt)) < 1e-2:
-                    return 1.0
-            except Exception:
-                if b_clean == gt:
-                    return 1.0
-        return 0.0
-
     @reward_app.post("/get_reward")
     async def get_reward(payload: dict):
         queries = payload.get("query", [])
         labels = payload.get("label", [])
-        rewards = [score(q, l) for q, l in zip(queries, labels)]
+        rewards = [boxed_only_reward(q, l) for q, l in zip(queries, labels)]
         return {"rewards": rewards}
 
     threading.Thread(
@@ -253,9 +225,8 @@ def run_openrlhf_qwen3_8b():
             print(f"Loading model from {actor_path} for push_to_hub...")
             model = AutoModelForCausalLM.from_pretrained(actor_path, torch_dtype="auto")
             tokenizer = AutoTokenizer.from_pretrained(actor_path)
-            model.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""), private=True)
-            tokenizer.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""), private=True)
-            print(f"Pushed model to HF: {hf_repo_id}")
+            if push_to_hub_private(model, tokenizer, hf_repo_id):
+                print(f"Pushed model to HF: {hf_repo_id}")
     except Exception as e:
         print(f"HF push failed: {e}")
 

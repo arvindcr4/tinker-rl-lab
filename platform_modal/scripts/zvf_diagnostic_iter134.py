@@ -69,6 +69,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from _analysis_common import auroc_argsort_ranks as auroc, bootstrap_ci
 
 ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / "experiments" / "results"
@@ -260,33 +261,6 @@ base["failure_bin"] = [
 # ----------------------------------------------------------------------
 # 6.  AUROC + bootstrap CI on real-only rows
 # ----------------------------------------------------------------------
-def auroc(y_true: np.ndarray, score: np.ndarray) -> float:
-    """Mann-Whitney AUROC, O(n log n)."""
-    order = np.argsort(score)
-    ranks = np.empty_like(order, dtype=float)
-    ranks[order] = np.arange(1, len(score) + 1)
-    pos = y_true == 1
-    n_pos = pos.sum()
-    n_neg = len(y_true) - n_pos
-    if n_pos == 0 or n_neg == 0:
-        return float("nan")
-    return float((ranks[pos].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
-
-
-def bootstrap_ci(y_true: np.ndarray, score: np.ndarray, B: int = 2000
-                 ) -> tuple[float, float]:
-    idx = np.arange(len(y_true))
-    aucs = []
-    for _ in range(B):
-        b = RNG.choice(idx, size=len(idx), replace=True)
-        a = auroc(y_true[b], score[b])
-        if not math.isnan(a):
-            aucs.append(a)
-    if not aucs:
-        return float("nan"), float("nan")
-    return float(np.percentile(aucs, 2.5)), float(np.percentile(aucs, 97.5))
-
-
 # real-only set = variance_mitigation only (45 rows; the iter130 tool_use
 # and scaling_law rows were SYNTHETIC for channels lag1/slope).
 real_only = base.dropna(subset=["mean_zvf", "lag1_zvf_rolling_w15", "slope"]).copy()
@@ -379,7 +353,7 @@ def auroc_block(axes_dict: dict, y_arr: np.ndarray) -> dict:
     out = {}
     for name, s in axes_dict.items():
         a = auroc(y_arr, s)
-        lo, hi = bootstrap_ci(y_arr, s)
+        lo, hi = bootstrap_ci(y_arr, s, RNG)
         out[name] = {"auroc": round(a, 4),
                      "ci_lo": round(lo, 4),
                      "ci_hi": round(hi, 4),

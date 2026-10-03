@@ -34,10 +34,12 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import xgboost as xgb
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from _p8_common import (  # noqa: E402
+    load_split,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 TRAIN = ROOT / "fraud_data.csv"
@@ -64,29 +66,6 @@ FEATS = {
     "XGB-24full": V20 + V_AGG,
     "XGB-4sensor": V_AGG,
 }
-
-
-def fit_tree(X_tr, y_tr):
-    clf = xgb.XGBClassifier(
-        n_estimators=200, max_depth=5, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8,
-        objective="binary:logistic", eval_metric="auc",
-        tree_method="hist", random_state=TREE_SEED, n_jobs=4,
-    )
-    clf.fit(X_tr, y_tr)
-    return clf
-
-
-def load_split():
-    train = pd.read_csv(TRAIN)
-    test = pd.read_csv(TEST)
-    y_tr = train["Class"].to_numpy(np.int32)
-    y_te = test["Class"].to_numpy(np.int32)
-    scores = {}
-    for name, cols in FEATS.items():
-        clf = fit_tree(train[cols].to_numpy(np.float64), y_tr)
-        scores[name] = clf.predict_proba(test[cols].to_numpy(np.float64))[:, 1]
-    return scores, y_te
 
 
 def argmin_cost(scores, y, c_inv, L, c_sense):
@@ -321,7 +300,7 @@ def plot_grid(grid_rows, out_png, out_pdf):
 
 def main():
     print("Fitting trees on V20 / V20+V_AGG / V_AGG feature sets ...")
-    scores, y = load_split()
+    scores, y = load_split(TRAIN, TEST, FEATS, TREE_SEED)
     n = len(y)
     pos = int(y.sum())
     print(f"test n = {n}, positives = {pos} ({y.mean()*100:.3f}%)")

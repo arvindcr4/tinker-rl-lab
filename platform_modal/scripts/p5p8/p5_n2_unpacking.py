@@ -35,9 +35,14 @@ Outputs (≤300 LoC, stdlib only):
   - platform_hybrid/experiments/results/p5p8/p5_n2_unpacking_summary.json (machine-readable)
 """
 from __future__ import annotations
-import json, math, os
+import json, math, os, sys
 from collections import defaultdict
-from statistics import fmean, pstdev
+from statistics import fmean
+
+from _p5p7_common import load_rows
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
+from _stats import cohens_d_pstdev_pooled as cohens_d  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 RES  = os.path.join(ROOT, "experiments", "results")
@@ -49,30 +54,6 @@ METRICS = ["zvf", "pcd", "larq", "reward_mean", "mean_len", "cv_len", "loss"]
 METHODS = ["grpo", "aero", "areal", "gift"]
 
 # ----------------------- helpers -----------------------
-
-def load_rows(path):
-    """Load TSV into a list of dicts with numeric coercion on numeric columns."""
-    rows = []
-    with open(path) as f:
-        header = f.readline().rstrip("\n").split("\t")
-        for line in f:
-            line = line.rstrip("\n")
-            if not line:
-                continue
-            parts = line.split("\t")
-            d = dict(zip(header, parts))
-            for col in ("step", "group_size", "seed"):
-                if col in d:
-                    d[col] = int(d[col])
-            for col in METRICS + ["frac_all_zero", "frac_all_one", "lag1_autocorr"]:
-                if col in d and d[col] not in ("nan", "", "None"):
-                    try:
-                        d[col] = float(d[col])
-                    except ValueError:
-                        d[col] = float("nan")
-            rows.append(d)
-    return rows
-
 
 def axis_variance_fraction(rows, axis_key, value_key, filter_fn=None):
     """Reuse the Berkeley unpacking machinery. SS_axis / SS_total."""
@@ -108,17 +89,8 @@ def axis_variance_fraction(rows, axis_key, value_key, filter_fn=None):
     }
 
 
-def cohens_d(a, b):
-    if len(a) < 2 or len(b) < 2:
-        return float("nan")
-    ma, mb = fmean(a), fmean(b)
-    sa, sb = pstdev(a), pstdev(b)
-    sp = math.sqrt(((len(a) - 1) * sa * sa + (len(b) - 1) * sb * sb) / max(len(a) + len(b) - 2, 1))
-    return (ma - mb) / sp if sp > 1e-12 else float("nan")
-
-
 def main():
-    rows = load_rows(N2)
+    rows = load_rows(N2, METRICS)
     assert len(rows) == 160, f"expected 160 (4 methods x 40 steps), got {len(rows)}"
 
     # ------------------- H1: pooled algorithm-axis eta^2 per metric -------------------

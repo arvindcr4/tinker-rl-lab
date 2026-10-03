@@ -35,6 +35,8 @@ import random
 import statistics
 from pathlib import Path
 
+from _p5p7_common import load_tensors_a
+
 ROOT = Path(__file__).resolve().parents[2]
 N2_DIR = ROOT / "experiments" / "results" / "n2_reward_tensor_resume"
 OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
@@ -79,20 +81,6 @@ def bernoulli_z(p_hat: float, G: int) -> float:
 
 def contrast_mag(p_hat: float, G: int) -> float:
     return 1.0 - bernoulli_z(p_hat, G)
-
-
-def load_tensors():
-    by_method = {}
-    for m in METHODS:
-        path = N2_DIR / f"{m}_s{SEED}_tensors.jsonl"
-        steps = []
-        with open(path) as f:
-            for line in f:
-                if not line.strip():
-                    continue
-                steps.append(json.loads(line))
-        by_method[m] = steps
-    return by_method
 
 
 def evaluate_step(method, step_rec, cname, cfn):
@@ -149,7 +137,7 @@ def aggregate_step(decisions):
 
 def main():
     print("Loading N2 reward tensors ...")
-    by_method = load_tensors()
+    by_method = load_tensors_a(N2_DIR, METHODS, SEED)
     for m in METHODS:
         print(f"  {m}: {len(by_method[m])} steps")
 

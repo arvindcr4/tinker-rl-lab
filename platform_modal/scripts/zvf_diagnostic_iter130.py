@@ -277,19 +277,6 @@ def auroc(y_true: np.ndarray, score: np.ndarray) -> float:
     return float((ranks[pos].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
 
 
-def bootstrap_ci(y_true: np.ndarray, score: np.ndarray, B: int = 2000) -> tuple[float, float]:
-    idx = np.arange(len(y_true))
-    aucs = []
-    for _ in range(B):
-        b = RNG.choice(idx, size=len(idx), replace=True)
-        a = auroc(y_true[b], score[b])
-        if not math.isnan(a):
-            aucs.append(a)
-    if not aucs:
-        return float("nan"), float("nan")
-    return float(np.percentile(aucs, 2.5)), float(np.percentile(aucs, 97.5))
-
-
 y = base["failure_bin"].to_numpy()
 axes = {
     "magnitude": base["mean_zvf"].to_numpy(),

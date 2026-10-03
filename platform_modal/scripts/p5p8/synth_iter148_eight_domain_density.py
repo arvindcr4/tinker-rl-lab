@@ -58,7 +58,6 @@ Stdlib + numpy only.
 from __future__ import annotations
 import csv
 import json
-import math
 from pathlib import Path
 
 import numpy as np
@@ -66,6 +65,7 @@ import numpy as np
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _stats import wilson  # noqa: E402
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -76,11 +76,7 @@ def wilson_ci(k, n, z=1.96):
     """Wilson score interval for binomial proportion."""
     if n == 0:
         return (0.0, 0.0, 0.0)
-    p = k / n
-    denom = 1.0 + z * z / n
-    center = (p + z * z / (2.0 * n)) / denom
-    half = (z * math.sqrt(p * (1 - p) / n + z * z / (4.0 * n * n))) / denom
-    return (p, max(0.0, center - half), min(1.0, center + half))
+    return wilson(k, n, z)
 
 
 def main():

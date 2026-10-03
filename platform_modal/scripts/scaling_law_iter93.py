@@ -48,6 +48,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+from _analysis_common import fit_saturation as _fit_saturation, write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -124,26 +125,6 @@ def _fit_1seg_ols(t, y):
     A = np.vstack([np.ones_like(t), t]).T
     coef, *_ = np.linalg.lstsq(A, y, rcond=None)
     return [float(coef[0]), float(coef[1])]
-
-
-def _fit_saturation(t, y):
-    """Solve in log-y / identity-y via bounded grid then polish.
-    Bounded lambda in [1e-3, 10]; R_max in [max(y), 1.5]."""
-    lam_grid = np.geomspace(0.01, 10.0, 60)
-    best = (np.inf, None)
-    for lam in lam_grid:
-        X = np.vstack([np.ones_like(t), 1.0 - np.exp(-lam * t)]).T
-        coef, *_ = np.linalg.lstsq(X, y, rcond=None)
-        rm = float(coef[1])
-        if rm < max(0.4 * float(y.max()), 0.05):
-            continue
-        rm = max(rm, 0.05)
-        rm = min(rm, 1.5)
-        pred = coef[0] + rm * (1.0 - np.exp(-lam * t))
-        sse = float(np.sum((y - pred) ** 2))
-        if sse < best[0]:
-            best = (sse, [rm, float(lam)])
-    return best[1] if best[1] else [float(y.mean()), 0.3]
 
 
 def _fit_powerlaw(t, y):
@@ -313,15 +294,6 @@ def _bootstrap_phi_ci(y, n_boot=N_BOOT):
 
 
 # ---------- main ----------------------------------------------------------
-
-def _write_tsv(path: Path, cols: list[str], rows: list[list]) -> None:
-    with path.open("w", newline="") as fh:
-        w = csv.writer(fh, delimiter="\t")
-        w.writerow(cols)
-        for r in rows:
-            w.writerow(r)
-    print(f"wrote {path}")
-
 
 def main() -> None:
     raw = {}

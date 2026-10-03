@@ -45,6 +45,8 @@ import random
 import statistics
 from pathlib import Path
 
+from _p5p7_common import c3_hybrid as controller_hybrid
+
 ROOT = Path(__file__).resolve().parents[2]
 N10_DIR = ROOT / "platform_hybrid/experiments/results/n10_seed_expansion"
 OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
@@ -89,18 +91,6 @@ def controller_zvf_triage(z: list[float], tau: float) -> list[int]:
 
 def controller_dualformer(z: list[float], tau: float) -> list[int]:
     return [G_DES if zt >= tau else G_BASE for zt in z]
-
-
-def controller_hybrid(z: list[float], tau: float, delta: float) -> list[int]:
-    out = []
-    for zt in z:
-        if zt >= tau + delta:
-            out.append(G_DES)
-        elif zt >= tau:
-            out.append(G_ESC)
-        else:
-            out.append(G_BASE)
-    return out
 
 
 def per_seed_metrics(G_t: list[int], z: list[float]) -> dict:
@@ -154,7 +144,7 @@ def main():
     controllers = [
         ("zvf_triage", controller_zvf_triage, {}),
         ("dualformer_auto", controller_dualformer, {}),
-        ("hybrid", controller_hybrid, {"delta": DELTA}),
+        ("hybrid", controller_hybrid, {"delta": DELTA, "g_base": G_BASE, "g_esc": G_ESC, "g_des": G_DES}),
     ]
 
     # -- per-seed detail rows -------------------------------------------------

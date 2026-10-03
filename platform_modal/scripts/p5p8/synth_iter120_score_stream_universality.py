@@ -49,6 +49,9 @@ import xgboost as xgb
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p8_common import (  # noqa: E402
+    load,
+)
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -59,24 +62,10 @@ COST_LLM = 0.0010
 K_PCT = 2.0
 G_THR_P8 = 0.001  # gradient-band threshold (iter-80 row 94)
 
-RAW20 = [f"V{i}" for i in range(1, 21)]
-AGG4 = ["V_mean", "V_std", "V_max", "V_min"]
-ALL24 = RAW20 + AGG4
-
 
 def load_p8_data():
     """Load train_data.csv + test_data.csv for XGB-24full training."""
-    def load_one(path):
-        with path.open() as f:
-            rdr = csv.reader(f)
-            header = next(rdr)
-            idx = {n: i for i, n in enumerate(header)}
-            X, y = [], []
-            for line in rdr:
-                X.append([float(line[idx[c]]) for c in ALL24])
-                y.append(int(float(line[idx["Class"]])))
-        return np.array(X), np.array(y)
-    return load_one(ROOT / "train_data.csv"), load_one(ROOT / "test_data.csv")
+    return load(ROOT / "train_data.csv"), load(ROOT / "test_data.csv")
 
 
 def fit_xgb(Xtr, ytr, Xte):

@@ -1,13 +1,14 @@
 repos:
   - repo: local
     hooks:
-      - id: ruff-check
-        name: ruff check
-        # `make lint-ruff` lints the same files as CI. A bare repo-wide
-        # `ruff check` instead flags archived/exploratory experiment trees that
-        # are deliberately outside the supported surface (see Makefile
-        # RUFF_PATHS and [tool.ruff] in pyproject.toml).
-        entry: make lint-ruff
+      - id: lint
+        name: ruff check + repository policy
+        # `make lint` = `make lint-ruff` (the same files as CI) + the repository
+        # policy gate. A bare repo-wide `ruff check` instead flags
+        # archived/exploratory experiment trees that are deliberately outside
+        # the supported surface (see Makefile RUFF_PATHS and [tool.ruff] in
+        # pyproject.toml).
+        entry: make lint
         language: system
         pass_filenames: false
       - id: ruff-format-check
@@ -19,14 +20,9 @@ repos:
         entry: make format-check
         language: system
         pass_filenames: false
-      - id: focused-tests
-        name: focused unit tests
-        entry: uv run --no-sync pytest -q tests/
-        language: system
-        pass_filenames: false
-      - id: repository-policy
-        name: repository policy
-        entry: python3 tools/check_repo_policy.py
+      - id: tests
+        name: unit tests
+        entry: make test
         language: system
         pass_filenames: false
       - id: mypy

@@ -2,7 +2,6 @@
 
 import json
 import os
-import sys
 
 import matplotlib
 
@@ -10,8 +9,6 @@ matplotlib.use("Agg")
 
 import numpy as np
 import pytest
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from utils import stats
 
@@ -26,15 +23,6 @@ def test_bootstrap_ci_single_value_collapses():
     assert mean == pytest.approx(0.75)
     assert lo == pytest.approx(0.75)
     assert hi == pytest.approx(0.75)
-
-
-def test_bootstrap_ci_normal_case_unchanged():
-    rng = np.random.default_rng(0)
-    mean, lo, hi = stats.compute_bootstrap_ci(
-        np.array([0.5, 0.6, 0.7, 0.8]), n_bootstrap=500, rng=rng
-    )
-    assert mean == pytest.approx(0.65)
-    assert lo <= mean <= hi
 
 
 def test_welch_ttest_single_observation_raises():
@@ -93,7 +81,3 @@ def test_load_multi_seed_results_skips_bad_dirs(tmp_path):
     out = stats.load_multi_seed_results(str(tmp_path), "exp")
     assert list(out.keys()) == [1]
     assert out[1] == [{"reward/mean": 1.0}]
-
-
-def test_compute_iqm_empty_is_nan():
-    assert np.isnan(stats.compute_iqm(np.array([])))

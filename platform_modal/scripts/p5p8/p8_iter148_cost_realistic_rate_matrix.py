@@ -42,6 +42,13 @@ import xgboost as xgb
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p8_common import (  # noqa: E402
+    RAW20,
+    ALL24,
+    load,
+    recall_at_K,
+    downsample_positives,
+)
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -63,28 +70,12 @@ LLM_PRICE_TIERS = [
 # 5 realistic positive rates (fraud-ops deployment envelope)
 RATES_PCT = [1.44, 1.00, 0.50, 0.10, 0.05]
 
-RAW20 = [f"V{i}" for i in range(1, 21)]
-AGG4 = ["V_mean", "V_std", "V_max", "V_min"]
-ALL24 = RAW20 + AGG4
 FEATURE_SETS = {
     "24full":       ALL24,
     "20raw":        RAW20,
     "20raw+minmax": RAW20 + ["V_min", "V_max"],
     "20raw+stat":   RAW20 + ["V_mean", "V_std"],
 }
-
-
-def load(path):
-    """Load CSV with the 24 numeric columns + Class."""
-    with path.open() as f:
-        rdr = csv.reader(f)
-        header = next(rdr)
-        idx = {n: i for i, n in enumerate(header)}
-        X, y = [], []
-        for line in rdr:
-            X.append([float(line[idx[c]]) for c in ALL24])
-            y.append(int(float(line[idx["Class"]])))
-    return np.array(X), np.array(y)
 
 
 def fit_predict(Xtr, ytr, Xte, feats):
@@ -104,33 +95,6 @@ def fit_predict(Xtr, ytr, Xte, feats):
     )
     m.fit(Xtr_s, ytr)
     return m.predict_proba(Xte_s)[:, 1]
-
-
-def downsample_positives(Xte, yte, target_rate_pct, rng):
-    """Downsample test positives to target_rate_pct (rate-preserving IID)."""
-    n_te = len(yte)
-    n_target_pos = max(1, int(round(n_te * target_rate_pct / 100.0)))
-    pos_idx = np.where(yte == 1)[0]
-    neg_idx = np.where(yte == 0)[0]
-    if len(pos_idx) < n_target_pos:
-        # already sparser than target
-        keep_pos = pos_idx
-    else:
-        keep_pos = rng.choice(pos_idx, size=n_target_pos, replace=False)
-    keep = np.concatenate([keep_pos, neg_idx])
-    keep.sort()
-    return Xte[keep], yte[keep]
-
-
-def recall_at_K(scores, y, k_pct=K_PCT):
-    n = len(scores)
-    k = max(1, int(round(n * k_pct / 100.0)))
-    top_k_idx = np.argsort(-scores)[:k]
-    mask = np.zeros(n, dtype=bool)
-    mask[top_k_idx] = True
-    pos_total = max(1, int(y.sum()))
-    pos_caught = int(y[mask].sum())
-    return mask, pos_caught, pos_total
 
 
 def gradient_band_fire(scores, top_k_mask, g_thr=G_THR):
@@ -195,7 +159,7 @@ def main():
         for fset_name, feats in FEATURE_SETS.items():
             print(f"[iter148]   fset={fset_name} ({len(feats)} feats) ...")
             scores = fit_predict(Xtr_full, ytr_full, Xte, feats)
-            top_k_mask, pos_caught_xgb, pos_total = recall_at_K(scores, yte)
+            top_k_mask, pos_caught_xgb, pos_total = recall_at_K(scores, yte, K_PCT)
             fire_grad = gradient_band_fire(scores, top_k_mask)
             n_llm = int(fire_grad.sum())
             sweet = sweet_spot_price(fire_grad, n_te, pos_caught_xgb)

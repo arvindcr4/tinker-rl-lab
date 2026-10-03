@@ -67,6 +67,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
+from _analysis_common import write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -410,15 +411,6 @@ def bootstrap_t80(t: np.ndarray, y: np.ndarray, n_boot: int = N_BOOT) -> dict:
                 t_80_lo=float(np.percentile(arr, 2.5)),
                 t_80_hi=float(np.percentile(arr, 97.5)),
                 n_boot=int(len(arr)))
-
-
-def _write_tsv(path: Path, cols: list[str], rows: list[list]) -> None:
-    with path.open("w", newline="") as fh:
-        w = csv.writer(fh, delimiter="\t")
-        w.writerow(cols)
-        for r in rows:
-            w.writerow(r)
-    print(f"wrote {path}")
 
 
 def main() -> None:

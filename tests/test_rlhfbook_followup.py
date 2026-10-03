@@ -77,6 +77,16 @@ def test_course_foundations_are_bound_to_assumptions_and_diagnostics() -> None:
     assert payload["decision_rules"]["stage_order"][1] == "S1_foundations_mapping"
 
 
+def _assert_contract_rejects(mutation) -> None:
+    verifier = load_verifier()
+    payload = json.loads(PROTOCOL_PATH.read_text(encoding="utf-8"))
+    candidate = copy.deepcopy(payload)
+    mutation(candidate)
+
+    with pytest.raises(verifier.FollowupContractError):
+        verifier.verify_contract(candidate, REPO_ROOT)
+
+
 @pytest.mark.parametrize(
     "mutation",
     [
@@ -91,13 +101,7 @@ def test_course_foundations_are_bound_to_assumptions_and_diagnostics() -> None:
     ],
 )
 def test_missing_foundations_sections_fail_closed(mutation) -> None:
-    verifier = load_verifier()
-    payload = json.loads(PROTOCOL_PATH.read_text(encoding="utf-8"))
-    candidate = copy.deepcopy(payload)
-    mutation(candidate)
-
-    with pytest.raises(verifier.FollowupContractError):
-        verifier.verify_contract(candidate, REPO_ROOT)
+    _assert_contract_rejects(mutation)
 
 
 @pytest.mark.parametrize(
@@ -120,13 +124,7 @@ def test_missing_foundations_sections_fail_closed(mutation) -> None:
     ],
 )
 def test_malformed_or_semantically_weakened_contract_fails_closed(mutation) -> None:
-    verifier = load_verifier()
-    payload = json.loads(PROTOCOL_PATH.read_text(encoding="utf-8"))
-    candidate = copy.deepcopy(payload)
-    mutation(candidate)
-
-    with pytest.raises(verifier.FollowupContractError):
-        verifier.verify_contract(candidate, REPO_ROOT)
+    _assert_contract_rejects(mutation)
 
 
 def test_theory_ledger_blocks_unsupported_promotion() -> None:

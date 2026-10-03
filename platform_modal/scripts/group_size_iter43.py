@@ -49,6 +49,7 @@ import csv
 import math
 from itertools import combinations
 from pathlib import Path
+from statistics import NormalDist
 
 import numpy as np
 
@@ -206,9 +207,7 @@ def tost_pvalue(diff: float, ci_low: float, ci_high: float, eps: float) -> float
     If both < 0.05, claim equivalence.
     """
     se = max((ci_high - ci_low) / (2 * 1.96), 1e-6)
-    from math import erf, sqrt
-    def norm_cdf(x: float) -> float:
-        return 0.5 * (1 + erf(x / sqrt(2)))
+    norm_cdf = NormalDist().cdf
     p_lower = 1 - norm_cdf((-eps - diff) / se)
     p_upper = norm_cdf((diff - eps) / se)
     return max(p_lower, p_upper)

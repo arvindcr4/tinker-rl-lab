@@ -31,6 +31,9 @@ import csv, json, os, re, sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _stats
+from _stats import pow_root, wilson_p  # noqa: E402
+
 ROOT = Path("platform_hybrid/experiments/results")
 MEGA_CELLS = ROOT / "mega_20260704" / "cells.tsv"
 MEGA_MANIFESTS = ROOT / "mega_20260704" / "manifests"
@@ -307,11 +310,7 @@ SOURCE_EVAL = {
 def wilson95(p, n):
     if n == 0:
         return (0.0, 1.0)
-    z = 1.96
-    denom = 1 + z*z/n
-    centre = (p + z*z/(2*n)) / denom
-    half = z * (p*(1-p)/n + z*z/(4*n*n)) ** 0.5 / denom
-    return (max(0.0, centre - half), min(1.0, centre + half))
+    return wilson_p(p, n, 1.96, pow_root)
 
 
 # ---------------------------------------------------------------------------

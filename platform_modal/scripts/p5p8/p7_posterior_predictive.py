@@ -31,13 +31,14 @@ from __future__ import annotations
 import json
 import math
 import pathlib
-import random
 import statistics
 from typing import Dict, List
 
 import sys
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p5p7_common import load_tensors_d  # noqa: E402
+from _stats import bootstrap_ci_statmean, log_beta as betaln  # noqa: E402
 WORKTREE = REPO_ROOT
 TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
@@ -46,11 +47,6 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 METHODS = ("grpo", "aero", "gift", "areal")
 G_BASE, G_NEW = 8, 16
 BOOT, RNG_SEED = 4000, 20260704
-
-
-def betaln(a: float, b: float) -> float:
-    """log B(a, b) = lgamma(a)+lgamma(b)-lgamma(a+b)."""
-    return math.lgamma(a) + math.lgamma(b) - math.lgamma(a + b)
 
 
 def bb_postpred(k: int, n: int, yp: int, gp: int, alpha: float = 1.0, beta: float = 1.0) -> float:
@@ -95,34 +91,12 @@ def midrange_prob(k: int, n: int = G_BASE, alpha: float = 1.0, beta: float = 1.0
     return total
 
 
-def load_tensors(method: str) -> List[dict]:
-    fp = TENSOR_DIR / f"{method}_s0_tensors.jsonl"
-    out = []
-    with fp.open() as fh:
-        for line in fh:
-            out.append(json.loads(line))
-    return out
-
-
-def bootstrap_ci(values, boot=BOOT, seed=RNG_SEED):
-    if not values:
-        return (0.0, 0.0, 0.0)
-    rng = random.Random(seed)
-    n = len(values)
-    pts = []
-    for _ in range(boot):
-        sample = [values[rng.randrange(n)] for _ in range(n)]
-        pts.append(statistics.mean(sample))
-    pts.sort()
-    return (statistics.mean(values), pts[int(0.025 * boot)], pts[int(0.975 * boot)])
-
-
 def main():
     rows_per_step: List[dict] = []
     per_method: Dict[str, dict] = {}
 
     for method in METHODS:
-        tensors = load_tensors(method)
+        tensors = load_tensors_d(TENSOR_DIR, method)
         n_steps = len(tensors)
         per_prompt_restore = []
         per_prompt_midrange = []
@@ -224,8 +198,8 @@ def main():
     }
     for method in METHODS:
         pm = per_method[method]
-        m_restore, lo_restore, hi_restore = bootstrap_ci(pm["_all_restore"])
-        m_mid, lo_mid, hi_mid = bootstrap_ci(pm["_all_midrange"])
+        m_restore, lo_restore, hi_restore = bootstrap_ci_statmean(pm["_all_restore"], BOOT, RNG_SEED)
+        m_mid, lo_mid, hi_mid = bootstrap_ci_statmean(pm["_all_midrange"], BOOT, RNG_SEED)
         cevs = {}
         for tau_post in (0.60, 0.65, 0.70, 0.80, 0.90):
             ev = pm["bayes_tau_post"][tau_post]
@@ -280,7 +254,7 @@ def main():
     print("Method: Beta-Binomial posterior predictive under Beta(1,1) prior\n")
     print(f"{'method':<8}{'mean_restore':>14}{'95% CI':>22}{'degen':>8}")
     for method in METHODS:
-        m_restore, lo, hi = bootstrap_ci(per_method[method]["_all_restore"])
+        m_restore, lo, hi = bootstrap_ci_statmean(per_method[method]["_all_restore"], BOOT, RNG_SEED)
         print(f"{method:<8}{m_restore:>14.4f}  [{lo:.4f}, {hi:.4f}]   {per_method[method]['n_degenerate_total']:>8}")
 
     print("\n=== Controller compare: expected restore per fire (per method) ===")

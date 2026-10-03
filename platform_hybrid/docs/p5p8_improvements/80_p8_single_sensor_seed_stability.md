@@ -6,8 +6,8 @@ measurement. JOB B closes the seed-stability gap on that finding.
 
 ## Method
 
-Re-ran `p8_single_sensor_ablation.py` with `SEED = 42` (instead of
-`20260705`) and compared:
+Re-ran `p8_single_sensor_ablation.py --seed 42 --suffix _seed42` (seed 42
+instead of the default `20260705`) and compared:
 
 - Per-variant AUC at seed=42 vs seed=20260705
 - Per-variant recall@K=2% at seed=42 vs seed=20260705
@@ -67,6 +67,8 @@ random_state, identical output. The iter-68 row 79 recommendation
 
 ## Reproducibility
 
+- `scripts/p5p8/p8_single_sensor_ablation.py --seed 42 --suffix _seed42`
+  (writes the `*_seed42` files below)
 - `scripts/p5p8/p8_single_sensor_seed_stability.py` (~110 LoC, stdlib)
 - `experiments/results/p5p8/p8_single_sensor_seed42.tsv` (12 rows)
 - `experiments/results/p5p8/p8_single_pair_boot_seed42.tsv` (11 rows)

@@ -15,15 +15,13 @@ from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _stats import log_beta as lbeta  # noqa: E402
 WORK = REPO_ROOT
 N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 OUT = WORK / "platform_hybrid/experiments/results/p5p8"
 METHODS = ["grpo", "aero", "gift", "areal"]
 GB, GE, NS, NP, TAU = 8, 8, 40, 16, 0.70
 SEED, NBOOT = 20260705, 4000
-
-
-def lbeta(a, b): return math.lgamma(a) + math.lgamma(b) - math.lgamma(a + b)
 
 
 def digamma(x):

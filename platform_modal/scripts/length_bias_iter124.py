@@ -56,6 +56,7 @@ from typing import Any
 
 import numpy as np
 from scipy import stats
+from _analysis_common import build_long, load_iter108_perrun, load_step_log_task as load_step_log, permutation_null, spearman, window_mean
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "experiments", "results")
@@ -68,55 +69,6 @@ DRGR_GSM8K = os.path.join(RES, "drgrpo_gsm8k_cot_full.json")
 # ---------------------------------------------------------------------------
 # Loaders (mostly identical to iter120)
 # ---------------------------------------------------------------------------
-def load_iter108_perrun() -> list[dict[str, Any]]:
-    out = []
-    with open(ITER108_PERRUN) as fh:
-        hdr = fh.readline().rstrip().split("\t")
-        for line in fh:
-            f = line.rstrip().split("\t")
-            row = dict(zip(hdr, f))
-            row["window"] = int(row["window"])
-            row["seed"] = int(row["seed"])
-            row["n_total"] = int(row["n_total"])
-            row["n_in_window"] = int(row["n_in_window"])
-            for k in ("phi_L", "phi_R", "bwd", "fwd",
-                      "bwd_signed", "fwd_signed"):
-                row[k] = float(row[k])
-            out.append(row)
-    return out
-
-
-def load_step_log(path: str, task_label: str) -> list[dict[str, Any]]:
-    with open(path) as fh:
-        d = json.load(fh)
-    out = []
-    for r in d["runs"]:
-        sl = r.get("step_log") or []
-        if len(sl) < 5:
-            continue
-        L = np.array([float(s["mean_comp_len"]) for s in sl],
-                     dtype=np.float64)
-        R = np.array([float(s["mean_reward"]) for s in sl],
-                     dtype=np.float64)
-        out.append({"task": task_label, "algo": r["algo"],
-                    "seed": int(r["seed"]), "n": int(len(sl)),
-                    "L": L, "R": R})
-    return out
-
-
-def window_mean(x: np.ndarray, n_w: int) -> np.ndarray:
-    """Return window-mean of x over n_w equal-length windows."""
-    n = len(x)
-    edges = [int(np.floor(n * w / n_w)) for w in range(n_w + 1)]
-    for w in range(1, n_w + 1):
-        edges[w] = max(edges[w], edges[w - 1] + 4)
-        edges[w] = min(edges[w], n)
-    out = np.zeros(n_w, dtype=np.float64)
-    for w in range(n_w):
-        out[w] = float(x[edges[w]:edges[w + 1]].mean())
-    return out
-
-
 def velocity(w_windows: np.ndarray) -> np.ndarray:
     """First-difference length-n_w array.  v[0] := w_windows[0]
     (no prior), v[w] = w_windows[w] - w_windows[w-1] for w>=1."""
@@ -131,37 +83,6 @@ def velocity(w_windows: np.ndarray) -> np.ndarray:
 # Build long table indexed by (task, algo, seed, window) with iter108
 # per-run CCF quantities and window-mean L,R.  Then make paired delta.
 # ---------------------------------------------------------------------------
-def build_long(perrun108: list[dict], step_runs: list[dict],
-               n_w: int) -> list[dict[str, Any]]:
-    by_step: dict[tuple, dict[int, dict]] = {}
-    for r in step_runs:
-        by_step.setdefault((r["task"], r["algo"]), {})[r["seed"]] = r
-
-    out: list[dict[str, Any]] = []
-    for r108 in perrun108:
-        task = r108["task"]
-        algo = r108["algo"]
-        seed = r108["seed"]
-        w = r108["window"]
-        run = by_step.get((task, algo), {}).get(seed)
-        if run is None:
-            continue
-        L_w = window_mean(run["L"], n_w=n_w)
-        R_w = window_mean(run["R"], n_w=n_w)
-        out.append({"task": task, "algo": algo, "seed": seed,
-                    "window": w,
-                    "bwd": float(r108["bwd"]),
-                    "fwd": float(r108["fwd"]),
-                    "bwd_signed": float(r108["bwd_signed"]),
-                    "phi_L": float(r108["phi_L"]),
-                    "phi_R": float(r108["phi_R"]),
-                    "L_w": float(L_w[w]),
-                    "R_w": float(R_w[w]),
-                    "n_in_window": int(r108["n_in_window"]),
-                    "n_total": int(r108["n_total"])})
-    return out
-
-
 def pair_long(long_tab: list[dict], tasks: list[str],
               algos: tuple, n_w: int) -> dict:
     by_tas: dict[tuple, dict[str, dict[int, dict]]] = {}
@@ -209,11 +130,6 @@ def pair_long(long_tab: list[dict], tasks: list[str],
 # ---------------------------------------------------------------------------
 # Stats helpers
 # ---------------------------------------------------------------------------
-def spearman(x, y) -> tuple[float, float]:
-    sp = stats.spearmanr(x, y)
-    return float(sp.statistic), float(sp.pvalue)
-
-
 def partial_spearman(x, y, z) -> tuple[float, float]:
     """Rank-based partial Spearman: rho(x,y | z)."""
     rx = stats.rankdata(x)
@@ -226,30 +142,6 @@ def partial_spearman(x, y, z) -> tuple[float, float]:
     res_x = rx - X1 @ beta_x
     res_y = ry - X1 @ beta_y
     return spearman(res_x, res_y)
-
-
-def permutation_null(x, y, B: int, seed: int) -> dict[str, float]:
-    rng = np.random.default_rng(seed)
-    obs, _ = spearman(x, y)
-    abs_obs = abs(obs)
-    n = len(x)
-    y_arr = np.array(y, dtype=np.float64)
-    count = 0
-    boot = np.empty(B, dtype=np.float64)
-    for b in range(B):
-        idx = rng.permutation(n)
-        r_b, _ = spearman(x, y_arr[idx])
-        boot[b] = r_b
-        if abs(r_b) >= abs_obs:
-            count += 1
-    p_perm = (count + 1) / (B + 1)
-    return {"obs_rho": float(obs), "abs_obs": float(abs_obs),
-            "p_perm": float(p_perm), "null_mean": float(boot.mean()),
-            "null_std": float(boot.std()),
-            "null_q025": float(np.quantile(boot, 0.025)),
-            "null_q500": float(np.quantile(boot, 0.5)),
-            "null_q975": float(np.quantile(boot, 0.975)),
-            "n": int(n), "B": int(B)}
 
 
 def write_tsv(name: str, rows: list[dict], keys: list[str]) -> str:
@@ -282,7 +174,7 @@ def main(argv=None) -> int:
     ALGOS = ("grpo", "dr_grpo")
     TASKS = ["arithmetic_easy", "gsm8k_cot"]
 
-    perrun108 = load_iter108_perrun()
+    perrun108 = load_iter108_perrun(ITER108_PERRUN)
     step_runs = (load_step_log(DRGR_VS_GRPO, "arithmetic_easy")
                  + load_step_log(DRGR_GSM8K, "gsm8k_cot"))
 

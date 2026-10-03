@@ -66,6 +66,7 @@ import numpy as np  # noqa: E402
 from scipy.cluster.hierarchy import fcluster, linkage  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
 from scipy.stats import binomtest, spearmanr  # noqa: E402
+from _analysis_common import write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -262,15 +263,6 @@ def kass_raftery_bf(loglik2: float, loglik1: float) -> str:
 
 
 # ---------- main ----------
-
-def _write_tsv(path: Path, cols: list[str], rows: list[list]) -> None:
-    with path.open("w", newline="") as f:
-        w = csv.writer(f, delimiter="\t")
-        w.writerow(cols)
-        for r in rows:
-            w.writerow(r)
-    print(f"wrote {path}")
-
 
 def main() -> None:
     rng = np.random.default_rng(SEED)

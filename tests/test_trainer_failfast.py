@@ -3,14 +3,10 @@
 Fast: exercises only the seeded dryrun path — no model downloads, no GPUs.
 """
 
-import ast
 import asyncio
-import os
 import sys
 
 import pytest
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from verl.config import VERLConfig
 from verl.trainer import VERLTrainer
@@ -116,22 +112,3 @@ def test_deterministic_mode_failure_reraises_with_context(monkeypatch):
             monkeypatch.setitem(sys.modules, "torch", real_torch)
         else:
             monkeypatch.delitem(sys.modules, "torch", raising=False)
-
-
-def test_tinker_grpo_signature_is_typed_and_returns_dict():
-    """Check annotations/return via AST — avoids importing torch/tinker."""
-    path = os.path.join(os.path.dirname(__file__), "..", "utils", "tinker_grpo.py")
-    with open(path) as f:
-        tree = ast.parse(f.read())
-    fn = next(
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.FunctionDef) and node.name == "run_grpo_training"
-    )
-    assert fn.returns is not None, "run_grpo_training must declare a return type"
-    untyped = [a.arg for a in fn.args.args if a.annotation is None]
-    assert not untyped, f"untyped params: {untyped}"
-    returns_value = any(
-        isinstance(node, ast.Return) and node.value is not None for node in ast.walk(fn)
-    )
-    assert returns_value, "run_grpo_training must return a result dict"

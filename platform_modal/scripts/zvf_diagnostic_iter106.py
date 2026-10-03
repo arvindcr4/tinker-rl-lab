@@ -73,6 +73,7 @@ import sys
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
+from _analysis_common import maybe_matplotlib as _maybe_matplotlib, write_commented_tsv as _write_tsv
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -288,41 +289,9 @@ def _classify_row(collapse_rate: float, p: float) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _write_tsv(
-    path: pathlib.Path,
-    rows: List[Dict[str, Any]],
-    header_comment: str,
-    cols: Optional[List[str]] = None,
-) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if cols is None and rows:
-        cols = list(rows[0].keys())
-    elif cols is None:
-        cols = []
-    with path.open("w") as fh:
-        fh.write(header_comment)
-        if not header_comment.endswith("\n"):
-            fh.write("\n")
-        fh.write("\t".join(cols) + "\n")
-        for r in rows:
-            fh.write("\t".join(str(r.get(c, "")) for c in cols) + "\n")
-
-
 # ---------------------------------------------------------------------------
 # Figure.
 # ---------------------------------------------------------------------------
-
-
-def _maybe_matplotlib():
-    try:
-        import matplotlib
-
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-
-        return plt
-    except Exception:
-        return None
 
 
 COLOR_BY_LABEL = {

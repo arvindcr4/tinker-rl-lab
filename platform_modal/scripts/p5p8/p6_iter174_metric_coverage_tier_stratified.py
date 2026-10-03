@@ -34,11 +34,13 @@ Stdlib only. Deterministic. Re-runnable.
 """
 import json
 import glob
-import math
 import os
 import sys
 import time
 from collections import defaultdict
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
+from _stats import wilson_p  # noqa: E402
 
 REG = "registry/entries/delta_*.json"
 OUT_DIR = "platform_hybrid/experiments/results/p5p8"
@@ -51,11 +53,7 @@ def wilson_ci(k, n, z=1.96):
     """Wilson 95% CI on a binomial proportion. Returns (low, high)."""
     if n == 0:
         return (0.0, 1.0)
-    p = k / n
-    denom = 1.0 + (z * z) / n
-    centre = (p + (z * z) / (2 * n)) / denom
-    half = (z * math.sqrt(p * (1 - p) / n + (z * z) / (4 * n * n))) / denom
-    return (max(0.0, centre - half), min(1.0, centre + half))
+    return wilson_p(k / n, n, z)
 
 
 def classify_tier(n_sig, n_panels, n_total):

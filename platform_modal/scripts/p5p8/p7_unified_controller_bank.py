@@ -52,6 +52,7 @@ from typing import Iterable
 import sys
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _stats import bootstrap_ci_rng  # noqa: E402
 ROOT = REPO_ROOT
 N10_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n10_seed_expansion"
 N2_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
@@ -207,25 +208,6 @@ def n2_per_prompt_metrics(step: dict, tau_esc: float, tau_des: float) -> dict:
     }
 
 
-def bootstrap_ci(values: list[float], n_boot: int = N_BOOT, alpha: float = 0.05,
-                 rng: random.Random | None = None) -> tuple[float, float, float]:
-    """Percentile bootstrap CI for the mean of `values`. n=seed level for N10
-    so we resample n_seeds with replacement B times."""
-    if rng is None:
-        rng = random.Random(RNG_SEED)
-    n = len(values)
-    if n < 2:
-        return 0.0, 0.0, 0.0
-    means = []
-    for _ in range(n_boot):
-        s = [values[rng.randrange(n)] for _ in range(n)]
-        means.append(sum(s) / n)
-    means.sort()
-    lo = means[int(alpha / 2 * n_boot)]
-    hi = means[int((1 - alpha / 2) * n_boot) - 1]
-    return sum(values) / n, lo, hi
-
-
 def all_theta_points():
     """Yield all (tau_esc, delta) such that tau_des = tau_esc+delta <= MAX_TAU_DES
     and tau_esc < tau_des (strict inequality by construction)."""
@@ -287,7 +269,7 @@ def main() -> None:
         savings_list = [r["savings"] for r in rows]
         total_list = [r["total_G"] for r in rows]
         headroom_bad = sum(r["headroom_bad"] for r in rows) / len(rows)
-        mean_savings, lo, hi = bootstrap_ci(savings_list, n_boot=N_BOOT, rng=rng)
+        mean_savings, lo, hi = bootstrap_ci_rng(savings_list, N_BOOT, 0.05, rng)
         seed_cv = (statistics.pstdev(total_list) / (statistics.mean(total_list) or 1.0))
         n2_rows = [r for r in per_step_n2_rows
                    if r["tau_esc"] == tau_esc and r["tau_des"] == tau_des]

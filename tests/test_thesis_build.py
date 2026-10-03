@@ -15,6 +15,13 @@ THESIS_DIR = (
 )
 OLD_PDF = b"previously published PDF"
 NEW_PDF = b"newly compiled PDF"
+FAILED_COMPILE_CASES = [
+    (1, None),
+    (1, b"partial PDF"),
+    (0, None),
+    (0, b""),
+    ("timeout", b"partial PDF"),
+]
 
 
 def load_tool(name):
@@ -151,16 +158,7 @@ def test_failed_pandoc_cleans_temporary_markdown(thesis, failure):
     assert Path(thesis.MASTER).read_text() == "previous master"
 
 
-@pytest.mark.parametrize(
-    ("exit_code", "artifact"),
-    [
-        (1, None),
-        (1, b"partial PDF"),
-        (0, None),
-        (0, b""),
-        ("timeout", b"partial PDF"),
-    ],
-)
+@pytest.mark.parametrize(("exit_code", "artifact"), FAILED_COMPILE_CASES)
 def test_failed_compile_cannot_publish_stale_or_partial_pdf(thesis, exit_code, artifact, capsys):
     convert = thesis.subprocess.run.side_effect
 
@@ -239,16 +237,7 @@ def test_force_bypasses_figure_cache_and_publishes_new_pdf(figures, monkeypatch)
     assert not list(Path(figures.FIGDIR).glob(".fig_demo-*"))
 
 
-@pytest.mark.parametrize(
-    ("exit_code", "artifact"),
-    [
-        (1, None),
-        (1, b"partial PDF"),
-        (0, None),
-        (0, b""),
-        ("timeout", b"partial PDF"),
-    ],
-)
+@pytest.mark.parametrize(("exit_code", "artifact"), FAILED_COMPILE_CASES)
 def test_failed_figure_compile_keeps_published_pdf(figures, exit_code, artifact):
     def fail(cmd, **kwargs):
         outdir = Path(cmd[cmd.index("--outdir") + 1])

@@ -41,6 +41,9 @@ import numpy as np
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p8_common import (  # noqa: E402
+    paired_bootstrap_ci,
+)
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments/results/p5p8"
 ITER187_PER_STEP = RES / "p7_iter187_infogain_per_step.tsv"
@@ -48,20 +51,6 @@ ITER187_PER_METHOD = RES / "p7_iter187_infogain_per_method.tsv"
 G_ESC = 8
 N_BOOT = 2000
 METHODS = ["grpo", "aero", "gift", "areal"]
-
-
-def paired_bootstrap_ci(diff, n_boot, seed):
-    rng = np.random.default_rng(seed)
-    n = len(diff)
-    means = np.empty(n_boot)
-    for i in range(n_boot):
-        idx = rng.integers(0, n, size=n)
-        means[i] = diff[idx].mean()
-    return {
-        "mean": float(diff.mean()),
-        "lo": float(np.quantile(means, 0.025)),
-        "hi": float(np.quantile(means, 0.975)),
-    }
 
 
 def main():

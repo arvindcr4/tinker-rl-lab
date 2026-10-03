@@ -51,6 +51,10 @@ import os
 from pathlib import Path
 
 import numpy as np
+import sys
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _analysis_common import read_tsv_lines as _read_tsv
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "experiments" / "results"
@@ -66,17 +70,6 @@ ITER129_META = RESULTS / "scaling_law_iter129_meta.json"
 ITER137_LINK = RESULTS / "scaling_law_iter137_capability_link.tsv"
 ITER137_T80 = RESULTS / "scaling_law_iter137_t80_scaling.tsv"
 RQS_PATH = BERK / "eureka_rqs_per_anchor.tsv"
-
-
-def _read_tsv(path):
-    rows = []
-    with open(path) as f:
-        for ln in f:
-            ln = ln.rstrip("\n")
-            if not ln:
-                continue
-            rows.append(ln.split("\t"))
-    return rows
 
 
 def _pearson(x, y):

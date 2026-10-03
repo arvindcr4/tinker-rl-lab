@@ -52,6 +52,7 @@ import statistics
 import sys
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _stats import log_beta as lbeta  # noqa: E402
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
@@ -63,11 +64,6 @@ N_STEPS = 40
 TARGET_GU = 0.85  # iid GU threshold for "useful contrast"
 N_BOOT = 2000
 SEED = 20260706
-
-
-def lbeta(a: float, b: float) -> float:
-    """log Beta(a,b) via lgamma."""
-    return math.lgamma(a) + math.lgamma(b) - math.lgamma(a + b)
 
 
 def beta_binom_cdf(k: int, n: int, alpha: float, beta: float) -> float:

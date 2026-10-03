@@ -55,6 +55,12 @@ import xgboost as xgb
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p8_common import (  # noqa: E402
+    AGG4,
+    ALL24,
+    load,
+    recall_at_K,
+)
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -65,23 +71,6 @@ COST_LLM = 0.0010
 K_PCT = 2.0
 G_THR = 0.001  # gradient-band threshold (iter-80 row 94)
 WIDTH = 0.50   # absolute-band threshold (iter-80)
-
-RAW20 = [f"V{i}" for i in range(1, 21)]
-AGG4 = ["V_mean", "V_std", "V_max", "V_min"]
-ALL24 = RAW20 + AGG4
-
-
-def load(path):
-    """Load CSV with the 24 numeric columns + Class."""
-    with path.open() as f:
-        rdr = csv.reader(f)
-        header = next(rdr)
-        idx = {n: i for i, n in enumerate(header)}
-        X, y = [], []
-        for line in rdr:
-            X.append([float(line[idx[c]]) for c in ALL24])
-            y.append(int(float(line[idx["Class"]])))
-    return np.array(X), np.array(y)
 
 
 def fit_predict(Xtr, ytr, Xte):
@@ -134,18 +123,6 @@ def absolute_band_fire(scores, top_k_mask, width=WIDTH):
     return fire
 
 
-def recall_at_K(scores, y, k_pct=K_PCT):
-    """Top-K mask and recall on positives."""
-    n = len(scores)
-    k = max(1, int(round(n * k_pct / 100.0)))
-    top_k_idx = np.argsort(-scores)[:k]
-    mask = np.zeros(n, dtype=bool)
-    mask[top_k_idx] = True
-    pos_total = max(1, int(y.sum()))
-    pos_caught = int(y[mask].sum())
-    return mask, pos_caught, pos_total
-
-
 def bootstrap_delta_ci(metric_a, metric_b, n_boot=N_BOOT, seed=SEED):
     """Paired bootstrap CI on delta = metric_a - metric_b (per-row metric)."""
     rng = np.random.default_rng(seed)
@@ -172,7 +149,7 @@ def main():
 
     print(f"[iter120] fitting XGB-24full ...")
     scores = fit_predict(Xtr, ytr, Xte)
-    top_k_mask, pos_caught_xgb, pos_total = recall_at_K(scores, yte)
+    top_k_mask, pos_caught_xgb, pos_total = recall_at_K(scores, yte, K_PCT)
     print(f"[iter120] xgb-only recall@K=2% = {pos_caught_xgb}/{pos_total} "
           f"= {pos_caught_xgb/pos_total:.4f}")
 
@@ -195,7 +172,7 @@ def main():
             # xgb-only recall@K in this quartile (restricted subset ranking)
             sub_scores = scores[q_mask]
             sub_y = yte[q_mask]
-            sub_mask, sub_caught, sub_total = recall_at_K(sub_scores, sub_y)
+            sub_mask, sub_caught, sub_total = recall_at_K(sub_scores, sub_y, K_PCT)
             # LLM fires in this quartile (intersect with top-K on full set)
             fire_q_grad = (fire_grad & q_mask)
             fire_q_abs = (fire_abs & q_mask)

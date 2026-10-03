@@ -50,6 +50,7 @@ import pathlib
 import sys
 
 import numpy as np
+from _analysis_common import auc_rank as _auc_rank, bootstrap_ci_xy as _bootstrap_ci, write_hash_commented_tsv as _write_tsv
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -81,51 +82,6 @@ def _spearman(x: np.ndarray, y: np.ndarray) -> float:
     if denom < EPS:
         return float("nan")
     return float((rx * ry).sum() / denom)
-
-
-def _auc_rank(labels: np.ndarray, scores: np.ndarray) -> float:
-    """AUC of (score -> positive label). Positive = collapse."""
-    pos = labels == 1
-    neg = labels == 0
-    if pos.sum() == 0 or neg.sum() == 0:
-        return float("nan")
-    n_pos = int(pos.sum())
-    n_neg = int(neg.sum())
-    order = np.argsort(scores)
-    ranks = np.empty_like(order, dtype=float)
-    ranks[order] = np.arange(1, len(scores) + 1)
-    sum_ranks_pos = ranks[pos].sum()
-    return float((sum_ranks_pos - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
-
-
-def _bootstrap_ci(x: np.ndarray, y: np.ndarray, fn, B: int = 2000, seed: int = 0):
-    rng = np.random.default_rng(seed)
-    n = len(x)
-    boots = np.empty(B, dtype=float)
-    for b in range(B):
-        idx = rng.integers(0, n, size=n)
-        try:
-            boots[b] = fn(x[idx], y[idx])
-        except Exception:
-            boots[b] = float("nan")
-    boots = boots[~np.isnan(boots)]
-    if len(boots) < 10:
-        return float("nan"), float("nan"), float("nan")
-    return float(np.percentile(boots, 2.5)), float(np.percentile(boots, 50)), float(np.percentile(boots, 97.5))
-
-
-def _write_tsv(path: pathlib.Path, rows, header_comment: str | None = None) -> None:
-    with path.open("w") as f:
-        if header_comment:
-            for line in header_comment.splitlines():
-                f.write(f"# {line}\n")
-        if not rows:
-            f.write("(empty)\n")
-            return
-        cols = list(rows[0].keys())
-        f.write("\t".join(cols) + "\n")
-        for r in rows:
-            f.write("\t".join(str(r.get(c, "")) for c in cols) + "\n")
 
 
 def load_sweep_perstep():

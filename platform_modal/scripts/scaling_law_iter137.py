@@ -76,6 +76,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
 from scipy.stats import mannwhitneyu, spearmanr  # noqa: E402
+from _analysis_common import ols
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -206,24 +207,6 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
     t_80 = float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
     best["t_80"] = t_80
     return best
-
-
-def ols(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float]:
-    """Plain OLS, returns (intercept, slope, se_slope)."""
-    x, y = np.asarray(x, float), np.asarray(y, float)
-    n = len(x)
-    if n < 3:
-        return float("nan"), float("nan"), float("nan")
-    xm, ym = x.mean(), y.mean()
-    den = float(np.sum((x - xm) ** 2))
-    if den <= 0:
-        return float("nan"), float("nan"), float("nan")
-    b = float(np.sum((x - xm) * (y - ym))) / den
-    a = ym - b * xm
-    resid = y - (a + b * x)
-    s2 = float(np.sum(resid ** 2)) / (n - 2)
-    se_b = math.sqrt(s2 / den) if den > 0 else float("nan")
-    return a, b, se_b
 
 
 def main() -> None:

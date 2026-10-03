@@ -20,12 +20,49 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 try:
     from .pavlovs_domain_contract import load_contract
 except ImportError:  # pragma: no cover - direct execution fallback
     from pavlovs_domain_contract import load_contract
+
+try:
+    from .pavlov_native_contract import (
+        canonical_json,
+        _expected_bundle_signature,
+        _expected_source_id,
+        _first_value,
+        _is_hex40,
+        _is_immutable_revision,
+        _is_sha256,
+        _load_contract_suite,
+        _native_contract_for_suite,
+        _native_contract_signature,
+        _placeholder,
+        sha256_text,
+        update_bundle_signature,
+    )
+except ImportError:  # pragma: no cover - direct execution fallback
+    from pavlov_native_contract import (
+        canonical_json,
+        _expected_bundle_signature,
+        _expected_source_id,
+        _first_value,
+        _is_hex40,
+        _is_immutable_revision,
+        _is_sha256,
+        _load_contract_suite,
+        _native_contract_for_suite,
+        _native_contract_signature,
+        _placeholder,
+        sha256_text,
+        update_bundle_signature,
+    )
+
+try:
+    from .pavlov_trust import load_trust_root
+except ImportError:  # pragma: no cover - direct execution fallback
+    from pavlov_trust import load_trust_root
 
 SCHEMA_VERSION = "pavlov-agentharm-frontiermath-adapter-v1"
 ADAPTER_ID = "pavlov-e10-e14-official-boundary-adapter-v1"
@@ -81,31 +118,6 @@ REQUIRED_BUNDLE_KEYS = (
     "bundle_signature",
 )
 
-_PLACEHOLDER_WORDS = {
-    "",
-    "none",
-    "null",
-    "nil",
-    "na",
-    "n/a",
-    "undefined",
-    "unknown",
-    "todo",
-    "tbd",
-    "unset",
-    "pending",
-    "missing",
-    "placeholder",
-    "to_be_pinned_before_paid_runs",
-    "to_be_pinned",
-    "license-receipt",
-}
-_ZERO_40 = "0" * 40
-_ZERO_64 = "0" * 64
-
-_HEX40_RE = re.compile(r"^[0-9a-fA-F]{40}$")
-_HEX64_RE = re.compile(r"^[0-9a-fA-F]{64}$")
-_SHA256_RE = re.compile(r"^(?:sha256:)?[0-9a-fA-F]{64}$")
 _URL_RE = re.compile(r"^https://\S+$")
 
 _BANNED_SUBSTITUTION_MARKERS = (
@@ -175,141 +187,19 @@ _NATIVE_CONTRACT = {
 }
 
 
-def canonical_json(value: Any) -> str:
-    """Return a deterministic JSON encoding used for hashing and signature checks."""
-
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-
-
-def sha256_text(value: str) -> str:
-    """Hash textual input with SHA-256."""
-
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()
-
-
 def aggregate_task_id_hashes(task_id_hashes: Sequence[str]) -> str:
     """Deterministically aggregate ordered task hashes into one manifest hash."""
 
     return sha256_text("\n".join(task_id_hashes))
 
 
-def _placeholder(value: Any) -> bool:
-    if value is None or value is False:
-        return True
-    if isinstance(value, str):
-        return value.strip().lower() in _PLACEHOLDER_WORDS
-    return False
-
-
-def _first_value(record: Mapping[str, Any], names: Sequence[str]) -> Any:
-    for name in names:
-        if name in record:
-            return record[name]
-    return None
-
-
-def _as_sequence(value: Any) -> tuple[Any, ...] | None:
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
-        return tuple(value)
-    return None
-
-
-def _is_hex40(value: Any) -> bool:
-    if not isinstance(value, str):
-        return False
-    normalized = value.strip().lower().removeprefix("sha256:")
-    if normalized in {_ZERO_40, _ZERO_64[:40]}:
-        return False
-    return bool(_HEX40_RE.fullmatch(value.strip()))
-
-
-def _is_hex64(value: Any) -> bool:
-    if not isinstance(value, str):
-        return False
-    normalized = value.strip().lower().removeprefix("sha256:")
-    if normalized in {_ZERO_64, _ZERO_40}:
-        return False
-    return bool(_HEX64_RE.fullmatch(value.strip()))
-
-
-def _is_sha256(value: Any) -> bool:
-    if not isinstance(value, str):
-        return False
-    normalized = value.strip().lower().removeprefix("sha256:")
-    if normalized in {_ZERO_64, _ZERO_40}:
-        return False
-    return bool(_SHA256_RE.fullmatch(value.strip()))
-
-
-def _is_immutable_revision(value: Any) -> bool:
-    return _is_hex40(value) or _is_sha256(value)
-
-
 def _is_url(value: Any) -> bool:
     return isinstance(value, str) and bool(_URL_RE.fullmatch(value.strip()))
-
-
-def _expected_source_id(source_url: str) -> str:
-    parsed = urlparse(source_url)
-    parts = [segment for segment in parsed.path.split("/") if segment]
-    if parsed.netloc == "github.com" and len(parts) >= 2:
-        return f"{parts[0]}/{parts[1]}"
-    if parsed.netloc and parts:
-        return f"{parsed.netloc}/" + "/".join(parts)
-    return parsed.netloc
 
 
 def _split_is_heldout(split: str) -> bool:
     lowered = split.lower()
     return "held-out" in lowered or lowered.startswith("private")
-
-
-def _load_contract_suite(contract: Mapping[str, Any], suite_id: str) -> Mapping[str, Any]:
-    suites = contract.get("suite_registry", {})
-    if not isinstance(suites, Mapping):
-        raise ValueError("contract suite_registry must be an object")
-    suite = suites.get(suite_id)
-    if not isinstance(suite, Mapping):
-        raise ValueError(f"contract is missing suite {suite_id}")
-    return suite
-
-
-def _native_contract_signature(spec: Mapping[str, Any]) -> str:
-    return sha256_text(canonical_json(spec))
-
-
-def _native_contract_for_suite(suite_id: str) -> Mapping[str, Any]:
-    spec = _NATIVE_CONTRACT[suite_id]
-    return {
-        "environment": {
-            "name": spec["environment"]["name"],
-            "mode": spec["environment"]["mode"],
-            "artifact_required": bool(spec["environment"]["artifact_required"]),
-            "contract_sha256": _native_contract_signature(spec["environment"]),
-        },
-        "verifier": {
-            "name": spec["verifier"]["name"],
-            "mode": spec["verifier"]["mode"],
-            "verifier_sha256": _native_contract_signature(spec["verifier"]),
-        },
-        "artifact": {
-            "mode": spec["artifact"]["mode"],
-            "artifact_sha256": _native_contract_signature(spec["artifact"]),
-        },
-    }
-
-
-def _expected_bundle_signature(bundle: Mapping[str, Any]) -> str:
-    payload = {key: bundle[key] for key in bundle if key != "bundle_signature"}
-    return sha256_text(canonical_json(payload))
-
-
-def update_bundle_signature(bundle: dict[str, Any]) -> str:
-    """Attach a deterministic bundle signature after local mutation."""
-
-    signature = _expected_bundle_signature(bundle)
-    bundle["bundle_signature"] = signature
-    return signature
 
 
 def build_boundary_receipts(suite_id: str) -> dict[str, Any]:
@@ -377,7 +267,7 @@ def generate_boundary_bundle() -> dict[str, Any]:
             "stateful": bool(suite.get("stateful")),
             "artifact_or_side_effect": bool(suite.get("artifact_or_side_effect")),
             "component_only": False,
-            "native_contract": _native_contract_for_suite(suite_id),
+            "native_contract": _native_contract_for_suite(_NATIVE_CONTRACT, suite_id),
             "domains": sorted({str(v) for v in suite.get("domains", ())}),
             "receipts": build_boundary_receipts(suite_id),
         }
@@ -1258,29 +1148,13 @@ def emit_agentharm_score(
     return receipt
 
 
-def _load_agentharm_trust_root(trust_root: Mapping[str, Any] | str | Path | None) -> dict[str, str]:
-    """Load an explicit provider-issued E10 trust root; no embedded key is trusted."""
-    try:
-        raw = json.loads(Path(trust_root).read_text()) if isinstance(trust_root, (str, Path)) else trust_root
-        required = {"schema_version", "lane", "suite_id", "provider", "key_id", "public_key_hex"}
-        if not isinstance(raw, Mapping) or set(raw) != required or not all(isinstance(raw[key], str) for key in required):
-            raise ValueError("trust-root schema")
-        root = {key: str(value) for key, value in raw.items()}
-        if (root["schema_version"], root["lane"], root["suite_id"], root["provider"]) != (
-            AGENTHARM_TRUST_ROOT_SCHEMA, "E10", AGENTHARM_SUITE_ID, "AISI"
-        ) or not root["key_id"] or not re.fullmatch(r"[0-9a-f]{64}", root["public_key_hex"]):
-            raise ValueError("trust-root identity")
-        Ed25519PublicKey.from_public_bytes(bytes.fromhex(root["public_key_hex"]))
-        root["document_sha256"] = sha256_text(canonical_json(dict(raw)))
-        root["key_fingerprint"] = hashlib.sha256(bytes.fromhex(root["public_key_hex"])).hexdigest()
-        return root
-    except Exception as exc:
-        raise HeldoutSplitUnavailable("explicit valid E10 provider trust root is required") from exc
-
-
 def _verify_e10_signature(payload: Mapping[str, Any], trust_root: Mapping[str, Any] | str | Path | None) -> dict[str, str]:
     try:
-        root = _load_agentharm_trust_root(trust_root)
+        root = load_trust_root(
+            trust_root,
+            lane=(AGENTHARM_TRUST_ROOT_SCHEMA, "E10", AGENTHARM_SUITE_ID, "AISI"),
+            error=HeldoutSplitUnavailable,
+        )
         if payload.get("signature_key_id") != root["key_id"]:
             raise ValueError("wrong trust root")
         signature = base64.b64decode(str(payload["signature"]), validate=True)

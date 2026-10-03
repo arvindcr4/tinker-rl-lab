@@ -12,6 +12,10 @@ import os
 from pathlib import Path
 
 import numpy as np
+import sys
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _analysis_common import read_tsv_lines as _read_tsv
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "experiments" / "results"
@@ -22,17 +26,6 @@ SWEEP_PATH = RESULTS / "groupsize_zvf_sweep.tsv"
 JOINT_PATH = RESULTS / "group_size_iter127_joint_fit.tsv"
 OPT_PATH = RESULTS / "group_size_iter127_optimal_g.tsv"
 EFFECT_PATH = RESULTS / "group_size_effect.tsv"
-
-
-def _read_tsv(path):
-    rows = []
-    with open(path) as f:
-        for ln in f:
-            ln = ln.rstrip("\n")
-            if not ln:
-                continue
-            rows.append(ln.split("\t"))
-    return rows
 
 
 def load_iter131_sweep():

@@ -69,7 +69,6 @@ Outputs
 from __future__ import annotations
 import csv
 import json
-import math
 import re
 import statistics
 from collections import Counter, defaultdict
@@ -79,6 +78,7 @@ from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _stats import wilson  # noqa: E402
 WORKTREE = REPO_ROOT
 MANIFEST_DIR = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/manifests"
 CELLS_TSV = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
@@ -95,11 +95,7 @@ TELEMETRY = ["zvf", "mean_reward", "pcd", "mean_completion_len"]
 def wilson_ci(k: int, n: int, z: float = 1.96):
     if n == 0:
         return (0.0, 0.0, 0.0)
-    p = k / n
-    denom = 1 + z*z/n
-    centre = (p + z*z/(2*n)) / denom
-    half = z * math.sqrt(p*(1-p)/n + z*z/(4*n*n)) / denom
-    return (p, max(0.0, centre - half), min(1.0, centre + half))
+    return wilson(k, n, z)
 
 
 def eta_squared(y, groups):

@@ -23,6 +23,7 @@ import numpy as np
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _stats import wilson_p  # noqa: E402
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 
@@ -91,12 +92,7 @@ def wilson_ci(k, n, alpha=0.05):
     """Wilson score CI on proportion.  Returns (lo, hi)."""
     if n == 0:
         return 0.0, 1.0
-    p = k / n
-    z = 1.96  # alpha=0.05
-    denom = 1 + z * z / n
-    centre = (p + z * z / (2 * n)) / denom
-    half = (z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))) / denom
-    return max(0.0, centre - half), min(1.0, centre + half)
+    return wilson_p(k / n, n, 1.96)  # z = 1.96 for alpha=0.05
 
 
 def bootstrap_ratio_ci(k1, n1, k2, n2, n_boot=2000, seed=20260705):

@@ -70,6 +70,7 @@ import sys
 from typing import Any
 
 import numpy as np
+from _analysis_common import ccf_at_lags, load_step_log
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS = os.path.join(ROOT, "experiments", "results")
@@ -81,29 +82,6 @@ DRGRPO_GSM8K_PATH = os.path.join(RESULTS, "drgrpo_gsm8k_cot_full.json")
 # ---------------------------------------------------------------------------
 #  I/O helpers
 # ---------------------------------------------------------------------------
-
-def load_step_log(path: str) -> list[dict[str, Any]]:
-    """Load runs from a Dr.GRPO JSON file and return list of dicts with
-    keys (algo, seed, n, L, R)."""
-    with open(path) as fh:
-        d = json.load(fh)
-    runs_raw = d["runs"]
-    out = []
-    for r in runs_raw:
-        step_log = r.get("step_log") or []
-        if len(step_log) < 5:
-            continue
-        L = np.array([float(s["mean_comp_len"]) for s in step_log], dtype=np.float64)
-        R = np.array([float(s["mean_reward"]) for s in step_log], dtype=np.float64)
-        out.append({
-            "algo": r["algo"],
-            "seed": r["seed"],
-            "n": int(len(step_log)),
-            "L": L,
-            "R": R,
-        })
-    return out
-
 
 # ---------------------------------------------------------------------------
 #  AR(1) fitting (OLS) with intercept
@@ -125,29 +103,6 @@ def fit_ar1(x: np.ndarray) -> tuple[float, float, np.ndarray]:
 # ---------------------------------------------------------------------------
 #  Cross-correlation function at lags -K..+K
 # ---------------------------------------------------------------------------
-
-def ccf_at_lags(e_a: np.ndarray, e_b: np.ndarray, K: int) -> np.ndarray:
-    """Return CCF(e_a, e_b; k) for k in -K..+K, length 2K+1, ordered as
-    CCF[-K], ..., CCF[+K].  Uses Pearson correlation on overlapping
-    windows."""
-    n = min(len(e_a), len(e_b))
-    a = e_a[:n] - e_a[:n].mean()
-    b = e_b[:n] - e_b[:n].mean()
-    denom = math.sqrt((a * a).sum() * (b * b).sum()) + 1e-300
-    out = np.zeros(2 * K + 1, dtype=np.float64)
-    for i, k in enumerate(range(-K, K + 1)):
-        if k >= 0:
-            x = a[:n - k]
-            y = b[k:n]
-        else:
-            x = a[-k:n]
-            y = b[:n + k]
-        if len(x) < 3:
-            out[i] = 0.0
-            continue
-        out[i] = float(np.dot(x, y) / denom)
-    return out
-
 
 def lag_label(k: int) -> str:
     return f"k={k:+d}"

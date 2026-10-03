@@ -18,7 +18,10 @@ Pillar: P7 (Pillar 3 — adaptive-G controller / signal-starvation theory)
 from __future__ import annotations
 import json, math, os, sys, statistics
 from collections import defaultdict
+from functools import partial
 from pathlib import Path
+
+from _p5p7_common import bernoulli_z, c_unified_c4, is_boundary, load_tensors_a
 
 ROOT = Path(__file__).resolve().parents[2]
 N2_DIR = ROOT / "experiments" / "results" / "n2_reward_tensor_resume"
@@ -34,23 +37,9 @@ RHO_SAT = 0.85     # Dualformer saturation threshold (iter119)
 SEED = 0
 
 
-def bernoulli_z(p_hat: float, G: int) -> float:
-    """Closed-form Bernoulli zero-variance fraction: p^G + (1-p)^G."""
-    if p_hat <= 0.0:
-        return 1.0
-    if p_hat >= 1.0:
-        return 1.0
-    return p_hat ** G + (1.0 - p_hat) ** G
-
-
 def contrast_mag(p_hat: float, G: int) -> float:
     """1 - z(p, G) — within-group contrast magnitude."""
     return 1.0 - bernoulli_z(p_hat, G)
-
-
-def is_boundary(p_hat: float) -> bool:
-    """Boundary prompt (k=0 or k=G): no contrast possible at any G."""
-    return p_hat <= 0.0 or p_hat >= 1.0
 
 
 # ---------------------------------------------------------------------------
@@ -83,58 +72,18 @@ def c_adaptive_pp_oracle(p_hat, z_obs):
             best_z, best_g = z, g
     return best_g
 
-def c_unified_c4(p_hat, z_obs):
-    """Iter119 C4 unified controller (regime-gated composition).
-       Per-prompt application of:
-         - Dualformer auto-G (fast regime)
-         - Adaptive-G*-Bernoulli (degenerate regime, capped at G=32)
-         - gamma*=0 baseline tightening (no G change, but tracked)
-    """
-    if z_obs < 0.50:
-        # FAST regime: drop G (Dualformer)
-        return 2 if is_boundary(p_hat) else 4
-    if z_obs >= TAU_DEGEN:
-        # DEGENERATE regime: escalate via Bernoulli inversion, cap G=32
-        if is_boundary(p_hat):
-            return G_BASE
-        target_z = max(0.5, 0.5 * z_obs)
-        best_g = G_BASE
-        for g in [16, 32]:
-            if bernoulli_z(p_hat, g) < target_z:
-                best_g = g
-                break
-        return best_g
-    # BASELINE regime
-    return G_BASE
-
 CONTROLLERS = {
     "STATIC_G8": c_static_g8,
     "STATIC_G16": c_static_g16,
     "DUALFORMER_PP": c_dualformer_pp,
     "ADAPTIVE_PP_ORACLE": c_adaptive_pp_oracle,
-    "UNIFIED_C4": c_unified_c4,
+    "UNIFIED_C4": partial(c_unified_c4, tau_degen=TAU_DEGEN, g_base=G_BASE),
 }
 
 
 # ---------------------------------------------------------------------------
 # Load real N2 tensors
 # ---------------------------------------------------------------------------
-def load_tensors():
-    """Returns list of step-records: dict[method] -> list of {step, prompt_rewards[...]}.
-       Each step has 16 prompts; each prompt has 8 rewards."""
-    by_method = {}
-    for m in METHODS:
-        path = N2_DIR / f"{m}_s{SEED}_tensors.jsonl"
-        steps = []
-        with open(path) as f:
-            for line in f:
-                if not line.strip():
-                    continue
-                steps.append(json.loads(line))
-        by_method[m] = steps
-    return by_method
-
-
 def per_prompt_k(rewards_row):
     """k_p = number of correct (1.0) rewards in a single prompt's group."""
     return int(round(sum(rewards_row)))
@@ -208,7 +157,7 @@ def aggregate(cells, n_boot=1000):
 
 
 def main():
-    by_method = load_tensors()
+    by_method = load_tensors_a(N2_DIR, METHODS, SEED)
     all_cells = []
     for m, steps in by_method.items():
         for srec in steps:

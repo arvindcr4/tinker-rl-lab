@@ -39,6 +39,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
+from _analysis_common import write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -516,15 +517,6 @@ def main() -> None:
     fig.savefig(PAPER_FIG / "scaling_law_elevated.png", dpi=150)
     plt.close(fig)
     print(f"wrote {out_pdf}")
-
-
-def _write_tsv(path: Path, cols: list[str], rows: list[list]) -> None:
-    with path.open("w", newline="") as fh:
-        w = csv.writer(fh, delimiter="\t")
-        w.writerow(cols)
-        for r in rows:
-            w.writerow(r)
-    print(f"wrote {path}")
 
 
 if __name__ == "__main__":

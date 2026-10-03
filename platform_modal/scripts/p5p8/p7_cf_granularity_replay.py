@@ -44,6 +44,7 @@ from typing import Iterable
 import sys
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _stats import bootstrap_ci_rng  # noqa: E402
 ROOT = REPO_ROOT
 N2_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
@@ -276,23 +277,6 @@ def compute_step_metrics(method: str, step: dict) -> dict:
 # Bootstrap CI
 # ----------------------------------------------------------------------------
 
-def bootstrap_ci(values: list[float], n_boot: int = N_BOOT, alpha: float = 0.05,
-                 rng: random.Random | None = None) -> tuple[float, float, float]:
-    if rng is None:
-        rng = random.Random(RNG_SEED)
-    n = len(values)
-    if n < 2:
-        return 0.0, 0.0, 0.0
-    means = []
-    for _ in range(n_boot):
-        s = [values[rng.randrange(n)] for _ in range(n)]
-        means.append(sum(s) / n)
-    means.sort()
-    lo = means[int(alpha / 2 * n_boot)]
-    hi = means[int((1 - alpha / 2) * n_boot) - 1]
-    return sum(values) / n, lo, hi
-
-
 # ============================================================================
 # Main
 # ----------------------------------------------------------------------------
@@ -329,12 +313,9 @@ def main() -> None:
             int(r["restore_rate_at_esc"] * r["n_boundary_prompts"])
             for r in rows
         )
-        m_savings_pp, m_savings_pp_lo, m_savings_pp_hi = bootstrap_ci(
-            savings_pp, n_boot=N_BOOT, rng=rng)
-        m_regret_pp, m_regret_pp_lo, m_regret_pp_hi = bootstrap_ci(
-            regret_pp, n_boot=N_BOOT, rng=rng)
-        m_restore, m_restore_lo, m_restore_hi = bootstrap_ci(
-            restore_rates, n_boot=N_BOOT, rng=rng)
+        m_savings_pp, m_savings_pp_lo, m_savings_pp_hi = bootstrap_ci_rng(savings_pp, N_BOOT, 0.05, rng)
+        m_regret_pp, m_regret_pp_lo, m_regret_pp_hi = bootstrap_ci_rng(regret_pp, N_BOOT, 0.05, rng)
+        m_restore, m_restore_lo, m_restore_hi = bootstrap_ci_rng(restore_rates, N_BOOT, 0.05, rng)
         summary_rows.append({
             "method": m,
             "n_steps": len(rows),
@@ -367,12 +348,9 @@ def main() -> None:
     pooled_savings = [r["savings_per_prompt"] for r in per_step_rows]
     pooled_regret = [r["regret_per_prompt"] for r in per_step_rows]
     pooled_restore = [r["restore_rate_at_esc"] for r in per_step_rows]
-    pooled_mean_sav, pooled_sav_lo, pooled_sav_hi = bootstrap_ci(
-        pooled_savings, n_boot=N_BOOT, rng=rng)
-    pooled_mean_reg, pooled_reg_lo, pooled_reg_hi = bootstrap_ci(
-        pooled_regret, n_boot=N_BOOT, rng=rng)
-    pooled_mean_rest, pooled_rest_lo, pooled_rest_hi = bootstrap_ci(
-        pooled_restore, n_boot=N_BOOT, rng=rng)
+    pooled_mean_sav, pooled_sav_lo, pooled_sav_hi = bootstrap_ci_rng(pooled_savings, N_BOOT, 0.05, rng)
+    pooled_mean_reg, pooled_reg_lo, pooled_reg_hi = bootstrap_ci_rng(pooled_regret, N_BOOT, 0.05, rng)
+    pooled_mean_rest, pooled_rest_lo, pooled_rest_hi = bootstrap_ci_rng(pooled_restore, N_BOOT, 0.05, rng)
     total_actual_all = sum(r["total_rollouts_actual"] for r in summary_rows)
     total_pp_all = sum(r["total_rollouts_per_prompt"] for r in summary_rows)
     total_oracle_all = sum(r["total_rollouts_oracle"] for r in summary_rows)

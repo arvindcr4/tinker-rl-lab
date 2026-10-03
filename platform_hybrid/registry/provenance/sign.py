@@ -63,10 +63,6 @@ def canonical_bytes(record: dict) -> bytes:
     return json.dumps(record, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
-def digest_hex(record: dict) -> str:
-    return hashlib.sha256(canonical_bytes(record)).hexdigest()
-
-
 # ---------------------------------------------------------------------------
 # Key management
 # ---------------------------------------------------------------------------

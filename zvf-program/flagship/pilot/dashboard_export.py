@@ -551,19 +551,45 @@ def _render_page_wrapper(title: str, body_html: str, data_js: str) -> str:
 </html>"""
 
 
+def _coerce_payload(
+    data: Any,
+    data_cls: type,
+    required_keys: tuple[str, ...],
+    missing_message: str,
+    type_label: str,
+) -> dict[str, Any]:
+    """Convert a dataclass or Mapping payload to a dict, preserving each caller's error strings."""
+    if isinstance(data, data_cls):
+        return data.to_dict()
+    if isinstance(data, Mapping):
+        _require(all(key in data for key in required_keys), missing_message)
+        return dict(data)
+    raise DashboardExportError(f"Invalid {type_label} data type: {type(data)}")
+
+
+def _finalize(title: str, body_html: str, data_js: str, output_path: str | Path | None) -> str:
+    """Render the full page and optionally write it to ``output_path``."""
+    full_html = _render_page_wrapper(title, body_html, data_js)
+    if output_path is not None:
+        path = Path(output_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(full_html, encoding="utf-8")
+    return full_html
+
+
 def export_spectral_trajectory_html(
     data: SpectralTrajectoryData | Mapping[str, Any],
     output_path: str | Path | None = None,
     title: str = "Spectral Trajectory Distances",
 ) -> str:
     """Generate interactive HTML visualizer for spectral trajectory distances."""
-    if isinstance(data, SpectralTrajectoryData):
-        payload = data.to_dict()
-    elif isinstance(data, Mapping):
-        _require("distances" in data and "labels" in data, "Mapping payload lacks required keys")
-        payload = dict(data)
-    else:
-        raise DashboardExportError(f"Invalid spectral data type: {type(data)}")
+    payload = _coerce_payload(
+        data,
+        SpectralTrajectoryData,
+        ("distances", "labels"),
+        "Mapping payload lacks required keys",
+        "spectral",
+    )
 
     data_json = json.dumps(payload, indent=2)
 
@@ -646,12 +672,7 @@ def export_spectral_trajectory_html(
     if (document.readyState !== 'loading') renderSpectralMatrix();
     """
 
-    full_html = _render_page_wrapper(title, body_html, data_js)
-    if output_path is not None:
-        path = Path(output_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(full_html, encoding="utf-8")
-    return full_html
+    return _finalize(title, body_html, data_js, output_path)
 
 
 def export_gating_density_heatmap_html(
@@ -660,13 +681,13 @@ def export_gating_density_heatmap_html(
     title: str = "Givens Entropic Gating Heatmap",
 ) -> str:
     """Generate interactive HTML visualizer for Givens entropic gating density heatmaps."""
-    if isinstance(data, EntropicGatingData):
-        payload = data.to_dict()
-    elif isinstance(data, Mapping):
-        _require("pre_gating_entropy" in data and "post_gating_entropy" in data, "Mapping lacks entropy fields")
-        payload = dict(data)
-    else:
-        raise DashboardExportError(f"Invalid entropic gating data type: {type(data)}")
+    payload = _coerce_payload(
+        data,
+        EntropicGatingData,
+        ("pre_gating_entropy", "post_gating_entropy"),
+        "Mapping lacks entropy fields",
+        "entropic gating",
+    )
 
     data_json = json.dumps(payload, indent=2)
 
@@ -754,12 +775,7 @@ def export_gating_density_heatmap_html(
     if (document.readyState !== 'loading') renderGatingHeatmap();
     """
 
-    full_html = _render_page_wrapper(title, body_html, data_js)
-    if output_path is not None:
-        path = Path(output_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(full_html, encoding="utf-8")
-    return full_html
+    return _finalize(title, body_html, data_js, output_path)
 
 
 def export_gradient_recovery_html(
@@ -768,13 +784,13 @@ def export_gradient_recovery_html(
     title: str = "Gradient Norm Recovery Curves",
 ) -> str:
     """Generate interactive HTML visualizer for gradient norm recovery curves."""
-    if isinstance(data, GradientRecoveryData):
-        payload = data.to_dict()
-    elif isinstance(data, Mapping):
-        _require("steps" in data and "curves" in data, "Mapping lacks steps or curves")
-        payload = dict(data)
-    else:
-        raise DashboardExportError(f"Invalid gradient recovery data type: {type(data)}")
+    payload = _coerce_payload(
+        data,
+        GradientRecoveryData,
+        ("steps", "curves"),
+        "Mapping lacks steps or curves",
+        "gradient recovery",
+    )
 
     data_json = json.dumps(payload, indent=2)
 
@@ -904,12 +920,7 @@ def export_gradient_recovery_html(
     }}
     """
 
-    full_html = _render_page_wrapper(title, body_html, data_js)
-    if output_path is not None:
-        path = Path(output_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(full_html, encoding="utf-8")
-    return full_html
+    return _finalize(title, body_html, data_js, output_path)
 
 
 def export_comparative_dashboard_html(
@@ -1221,9 +1232,4 @@ def export_comparative_dashboard_html(
     if (document.readyState !== 'loading') initAll();
     """
 
-    full_html = _render_page_wrapper(title, body_html, data_js)
-    if output_path is not None:
-        path = Path(output_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(full_html, encoding="utf-8")
-    return full_html
+    return _finalize(title, body_html, data_js, output_path)

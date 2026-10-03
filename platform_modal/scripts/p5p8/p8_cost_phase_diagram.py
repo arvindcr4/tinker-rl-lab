@@ -25,11 +25,13 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import xgboost as xgb
 from sklearn.metrics import roc_auc_score
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from _p8_common import (  # noqa: E402
+    fit_tree,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 TRAIN = ROOT / "fraud_data.csv"
@@ -58,17 +60,6 @@ def load_split():
     X_tr, y_tr = train[V20 + V_AGG], train["Class"].values
     X_te, y_te = test[V20 + V_AGG], test["Class"].values
     return X_tr, y_tr, X_te, y_te
-
-
-def fit_tree(X_tr, y_tr):
-    clf = xgb.XGBClassifier(
-        n_estimators=200, max_depth=5, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8,
-        objective="binary:logistic", eval_metric="auc",
-        tree_method="hist", random_state=TREE_SEED, n_jobs=4,
-    )
-    clf.fit(X_tr, y_tr)
-    return clf
 
 
 def expected_cost(p, y, L, c_inv=C_INV, c_sense=C_SENSE):
@@ -123,7 +114,7 @@ def main():
     print("Loading + training baseline trees")
     X_tr, y_tr, X_te, y_te = load_split()
     # Train 20raw tree once (no sensor)
-    clf_20 = fit_tree(X_tr[V20], y_tr)
+    clf_20 = fit_tree(X_tr[V20], y_tr, TREE_SEED)
     p_te_20 = clf_20.predict_proba(X_te[V20])[:, 1]
     print(f"  XGB-20raw: AUC={roc_auc_score(y_te, p_te_20):.4f}")
 
@@ -139,7 +130,7 @@ def main():
         else:
             X_te_24 = X_te.copy()
             X_tr_24 = X_tr.copy()
-        clf_24 = fit_tree(X_tr_24, y_tr)
+        clf_24 = fit_tree(X_tr_24, y_tr, TREE_SEED)
         p_te_24 = clf_24.predict_proba(X_te_24)[:, 1]
         auc_24 = roc_auc_score(y_te, p_te_24)
         print(f"  sigma={sigma:.3f}: XGB-24full AUC={auc_24:.4f}")

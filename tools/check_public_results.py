@@ -24,6 +24,12 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from research.public_analysis.parser_v2 import normalize_number
 
+# Support both `python tools/<checker>.py` and module/test imports.
+if __package__:
+    from ._strict import require
+else:
+    from _strict import require
+
 
 REVISION = "reports/public_revision_2026-10-03"
 RESULTS = "research/public_results"
@@ -120,11 +126,6 @@ ADDENDUM_CSV_FIELDS = (
     "frozen_primary_event",
     "conservative_corroborated_numeric_recovery",
 )
-
-
-def require(condition, message):
-    if not condition:
-        raise ValueError(message)
 
 
 def exact(actual, expected, label):

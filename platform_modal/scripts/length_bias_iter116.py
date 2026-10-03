@@ -52,6 +52,7 @@ from typing import Any
 
 import numpy as np
 from scipy import stats
+from _analysis_common import load_iter108_perrun, permutation_null, spearman, window_mean
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "experiments", "results")
@@ -79,37 +80,6 @@ def load_step_log(path: str, task_label: str) -> list[dict[str, Any]]:
         out.append({"task": task_label, "algo": r["algo"],
                     "seed": int(r["seed"]), "n": int(len(sl)),
                     "Z": Z, "L": L, "R": R})
-    return out
-
-
-def load_iter108_perrun() -> list[dict[str, Any]]:
-    out = []
-    with open(ITER108_PERRUN) as fh:
-        hdr = fh.readline().rstrip().split("\t")
-        for line in fh:
-            f = line.rstrip().split("\t")
-            row = dict(zip(hdr, f))
-            row["window"] = int(row["window"])
-            row["seed"] = int(row["seed"])
-            row["n_total"] = int(row["n_total"])
-            row["n_in_window"] = int(row["n_in_window"])
-            for k in ("phi_L", "phi_R", "bwd", "fwd", "bwd_signed",
-                      "fwd_signed"):
-                row[k] = float(row[k])
-            out.append(row)
-    return out
-
-
-def window_mean(x: np.ndarray, n_w: int) -> np.ndarray:
-    """Return window-mean of x over n_w equal-length windows."""
-    n = len(x)
-    edges = [int(np.floor(n * w / n_w)) for w in range(n_w + 1)]
-    for w in range(1, n_w + 1):
-        edges[w] = max(edges[w], edges[w - 1] + 4)
-        edges[w] = min(edges[w], n)
-    out = np.zeros(n_w, dtype=np.float64)
-    for w in range(n_w):
-        out[w] = float(x[edges[w]:edges[w + 1]].mean())
     return out
 
 
@@ -183,35 +153,6 @@ def pair_table(long_tab: list[dict], tasks: list[str],
 # ---------------------------------------------------------------------------
 # Stats helpers
 # ---------------------------------------------------------------------------
-def spearman(x, y) -> tuple[float, float]:
-    sp = stats.spearmanr(x, y)
-    return float(sp.statistic), float(sp.pvalue)
-
-
-def permutation_null(x, y, B: int, seed: int) -> dict[str, float]:
-    rng = np.random.default_rng(seed)
-    obs, _ = spearman(x, y)
-    abs_obs = abs(obs)
-    n = len(x)
-    y_arr = np.array(y, dtype=np.float64)
-    count = 0
-    boot = np.empty(B, dtype=np.float64)
-    for b in range(B):
-        idx = rng.permutation(n)
-        r_b, _ = spearman(x, y_arr[idx])
-        boot[b] = r_b
-        if abs(r_b) >= abs_obs:
-            count += 1
-    p_perm = (count + 1) / (B + 1)
-    return {"obs_rho": float(obs), "abs_obs": float(abs_obs),
-            "p_perm": float(p_perm), "null_mean": float(boot.mean()),
-            "null_std": float(boot.std()),
-            "null_q025": float(np.quantile(boot, 0.025)),
-            "null_q500": float(np.quantile(boot, 0.5)),
-            "null_q975": float(np.quantile(boot, 0.975)),
-            "n": int(n), "B": int(B)}
-
-
 def write_tsv(name: str, rows: list[dict], keys: list[str]) -> str:
     out = os.path.join(RES, name)
     with open(out, "w", newline="") as fh:
@@ -241,7 +182,7 @@ def main(argv=None) -> int:
     ALGOS = ("grpo", "dr_grpo")
     TASKS = ["arithmetic_easy", "gsm8k_cot"]
 
-    perrun108 = load_iter108_perrun()
+    perrun108 = load_iter108_perrun(ITER108_PERRUN)
     step_runs = (load_step_log(DRGR_VS_GRPO, "arithmetic_easy")
                  + load_step_log(DRGR_GSM8K, "gsm8k_cot"))
     long_tab = build_long(step_runs, perrun108, n_w=n_w)

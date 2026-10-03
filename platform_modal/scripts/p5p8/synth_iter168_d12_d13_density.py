@@ -21,12 +21,12 @@ Stdlib only.  <= 250 lines.  Reads iter-168 threshold matrix from JOB A.
 from __future__ import annotations
 import csv
 import json
-import math
 from pathlib import Path
 
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _stats import wilson  # noqa: E402
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -45,12 +45,7 @@ RESCUE_RATIO = 5.0
 def wilson95(k, n):
     if n == 0:
         return 0.0, 0.0, 1.0
-    z = 1.96
-    p = k / n
-    denom = 1.0 + z*z / n
-    center = (p + z*z / (2*n)) / denom
-    half = (z * math.sqrt(p * (1 - p) / n + z*z / (4*n*n))) / denom
-    return p, max(0.0, center - half), min(1.0, center + half)
+    return wilson(k, n, 1.96)
 
 
 def load_matrix(path):

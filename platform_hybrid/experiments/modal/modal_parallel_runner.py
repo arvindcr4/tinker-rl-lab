@@ -3,11 +3,13 @@ Uses H100 GPUs for maximum throughput. Complementary to Tinker API experiments.
 """
 import modal, os
 
+from _modal_common import boxed_or_last_number_reward, chatml_prompt, gsm8k_gold, patch_wandb_vram
+
 app = modal.App("tinker-rl-lab-world-class")
 
 # WARNING (security): HF/W&B tokens previously were baked into the image via .env()/Secret.from_dict(); they now come from named Modal secrets. Rotate tokens if old images exist.
 
-image = (
+base_image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install(
         "torch>=2.1", "transformers>=4.40", "datasets", "trl>=0.12",
@@ -18,6 +20,7 @@ image = (
         "WANDB_PROJECT": "tinker-rl-lab-world-class",
     })
 )
+image = base_image.add_local_python_source("_modal_common")
 
 # ── Helper: upload results to HF Hub ─────────────────────────────────────
 def _upload_hf(exp_tag, model_id, results, method="grpo"):
@@ -66,21 +69,8 @@ Modal H100 GPU experiment from TinkerRL-Bench world-class suite.
 @app.function(image=image, gpu="H100", timeout=7200,
               secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")])
 def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int = 30):
-    import torch, random, re, json, wandb, os
-    try:
-        import torch, wandb
-        if not getattr(wandb, '_vram_patched', False):
-            _old_log = wandb.log
-            def _vram_log(data, *args, **kwargs):
-                if torch.cuda.is_available():
-                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
-                    torch.cuda.reset_peak_memory_stats()
-                _old_log(data, *args, **kwargs)
-            wandb.log = _vram_log
-            wandb._vram_patched = True
-    except ImportError:
-        pass
+    import torch, random, json, wandb, os
+    patch_wandb_vram()
     from datasets import load_dataset
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from peft import LoraConfig, get_peft_model
@@ -112,8 +102,8 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
     ds = load_dataset("openai/gsm8k", "main", split="train")
     examples = []
     for row in ds:
-        m = re.search(r'####\s*([\-\d,\.]+)', row["answer"])
-        if m: examples.append({"question": row["question"], "answer": m.group(1).replace(",","").strip()})
+        gold = gsm8k_gold(row["answer"])
+        if gold is not None: examples.append({"question": row["question"], "answer": gold})
     random.shuffle(examples)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=3e-5)
@@ -122,7 +112,7 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
 
     for step in range(steps):
         ex = random.choice(examples)
-        prompt = f"<|im_start|>system\n{system}<|im_end|>\n<|im_start|>user\n{ex['question']}<|im_end|>\n<|im_start|>assistant\n"
+        prompt = chatml_prompt(system, ex['question'])
         inputs = tokenizer(prompt, return_tensors="pt", max_length=1024, truncation=True).to(model.device)
 
         with torch.no_grad():
@@ -134,18 +124,7 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
         rewards = []
         for out in outputs:
             resp = tokenizer.decode(out[inputs.input_ids.shape[1]:], skip_special_tokens=True)
-            r = 0.0
-            for b in re.findall(r'\\boxed\{([^}]+)\}', resp):
-                try:
-                    if abs(float(b.strip().replace(",","")) - float(ex['answer'])) < 0.01: r = 1.0
-                except: pass
-            if r == 0.0:
-                nums = re.findall(r'[-+]?\d[\d,]*\.?\d*', resp)
-                if nums:
-                    try:
-                        if abs(float(nums[-1].replace(",","")) - float(ex['answer'])) < 0.01: r = 1.0
-                    except: pass
-            rewards.append(r)
+            rewards.append(boxed_or_last_number_reward(resp, ex['answer']))
 
         avg_r = sum(rewards) / len(rewards)
         step_rewards.append(avg_r)
@@ -205,24 +184,11 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
 
 
 # ── Experiment 2: Full HumanEval evaluation ──────────────────────────────
-@app.function(image=image.pip_install("human-eval"), gpu="H100", timeout=7200,
+@app.function(image=base_image.pip_install("human-eval").add_local_python_source("_modal_common"), gpu="H100", timeout=7200,
               secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")])
 def run_humaneval_eval(model_name: str = "Qwen/Qwen3-8B", num_samples: int = 5):
     import torch, json, wandb, os
-    try:
-        import torch, wandb
-        if not getattr(wandb, '_vram_patched', False):
-            _old_log = wandb.log
-            def _vram_log(data, *args, **kwargs):
-                if torch.cuda.is_available():
-                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
-                    torch.cuda.reset_peak_memory_stats()
-                _old_log(data, *args, **kwargs)
-            wandb.log = _vram_log
-            wandb._vram_patched = True
-    except ImportError:
-        pass
+    patch_wandb_vram()
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from human_eval.data import read_problems
     from human_eval.execution import check_correctness
@@ -293,20 +259,7 @@ def run_humaneval_eval(model_name: str = "Qwen/Qwen3-8B", num_samples: int = 5):
               secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")])
 def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int = 30):
     import torch, torch.nn.functional as F, random, re, json, wandb, os
-    try:
-        import torch, wandb
-        if not getattr(wandb, '_vram_patched', False):
-            _old_log = wandb.log
-            def _vram_log(data, *args, **kwargs):
-                if torch.cuda.is_available():
-                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
-                    torch.cuda.reset_peak_memory_stats()
-                _old_log(data, *args, **kwargs)
-            wandb.log = _vram_log
-            wandb._vram_patched = True
-    except ImportError:
-        pass
+    patch_wandb_vram()
     from datasets import load_dataset
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from peft import LoraConfig, get_peft_model
@@ -349,7 +302,7 @@ def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: in
 
     for step in range(steps):
         q = random.choice(questions)
-        prompt = f"<|im_start|>system\n{system}<|im_end|>\n<|im_start|>user\n{q}<|im_end|>\n<|im_start|>assistant\n"
+        prompt = chatml_prompt(system, q)
         inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True).to(policy_model.device)
 
         # KL and entropy are monitoring metrics only — compute entirely inside no_grad
@@ -403,21 +356,8 @@ def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: in
 @app.function(image=image, gpu="H100", timeout=7200,
               secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")])
 def run_gsm8k_heldout_eval(model_name: str = "Qwen/Qwen3-32B", num_examples: int = 200):
-    import torch, re, json, random, wandb, os
-    try:
-        import torch, wandb
-        if not getattr(wandb, '_vram_patched', False):
-            _old_log = wandb.log
-            def _vram_log(data, *args, **kwargs):
-                if torch.cuda.is_available():
-                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
-                    torch.cuda.reset_peak_memory_stats()
-                _old_log(data, *args, **kwargs)
-            wandb.log = _vram_log
-            wandb._vram_patched = True
-    except ImportError:
-        pass
+    import torch, json, random, wandb, os
+    patch_wandb_vram()
     from datasets import load_dataset
     from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -444,7 +384,7 @@ def run_gsm8k_heldout_eval(model_name: str = "Qwen/Qwen3-32B", num_examples: int
     correct = 0
 
     for i, ex in enumerate(examples):
-        prompt = f"<|im_start|>system\n{system}<|im_end|>\n<|im_start|>user\n{ex['question']}<|im_end|>\n<|im_start|>assistant\n"
+        prompt = chatml_prompt(system, ex['question'])
         inputs = tokenizer(prompt, return_tensors="pt", max_length=1024, truncation=True).to(model.device)
 
         with torch.no_grad():
@@ -454,23 +394,10 @@ def run_gsm8k_heldout_eval(model_name: str = "Qwen/Qwen3-32B", num_examples: int
             )
 
         resp = tokenizer.decode(output[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
-        m = re.search(r'####\s*([\-\d,\.]+)', ex["answer"])
-        if not m: continue
-        gold = m.group(1).replace(",","").strip()
+        gold = gsm8k_gold(ex["answer"])
+        if gold is None: continue
 
-        got = False
-        for b in re.findall(r'\\boxed\{([^}]+)\}', resp):
-            try:
-                if abs(float(b.strip().replace(",","")) - float(gold)) < 0.01: got = True; break
-            except: pass
-        if not got:
-            nums = re.findall(r'[-+]?\d[\d,]*\.?\d*', resp)
-            if nums:
-                try:
-                    if abs(float(nums[-1].replace(",","")) - float(gold)) < 0.01: got = True
-                except: pass
-
-        if got: correct += 1
+        if boxed_or_last_number_reward(resp, gold) == 1.0: correct += 1
         wandb.log({"eval/example_idx": i+1, "eval/running_accuracy": correct/(i+1)}, step=i+1)
 
         if (i+1) % 50 == 0:

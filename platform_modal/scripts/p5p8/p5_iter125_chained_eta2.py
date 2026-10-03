@@ -62,6 +62,9 @@ from collections import defaultdict
 from itertools import combinations
 from statistics import fmean, pstdev
 
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
+from _stats import paired_step_bootstrap  # noqa: E402
+
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 RES  = os.path.join(ROOT, "experiments", "results")
 OUT  = os.path.join(RES, "p5p8")
@@ -168,27 +171,6 @@ def ci(arr, alpha=ALPHA):
     return s[lo_i], fmean(s), s[hi_i]
 
 
-def paired_step_bootstrap_n2(rows, fn, b=B_N2, seed=SEED):
-    """Resample steps with replacement; for each resample build a new
-    per-(step,method) panel, preserving the within-step correlation."""
-    rng = random.Random(seed)
-    by_step = defaultdict(list)
-    for r in rows:
-        by_step[r["step"]].append(r)
-    steps = sorted(by_step.keys())
-    n_steps = len(steps)
-    out = []
-    for _ in range(b):
-        pick = [rng.choice(steps) for _ in range(n_steps)]
-        sample = []
-        for s in pick:
-            sample.extend(by_step[s])
-        v = fn(sample)
-        if v is not None and not (isinstance(v, float) and math.isnan(v)):
-            out.append(v)
-    return out
-
-
 def paired_cell_bootstrap_mega(rows, fn, b=B_MEGA, seed=SEED):
     """Resample cells with replacement; mega-98 has 1 row per cell."""
     rng = random.Random(seed)
@@ -231,7 +213,7 @@ def main():
     n2_table = []
     for metric in METRICS:
         point = axis_eta2(n2, "method", metric)
-        boots = paired_step_bootstrap_n2(n2, lambda s, m=metric: axis_eta2(s, "method", m))
+        boots = paired_step_bootstrap(n2, lambda s, m=metric: axis_eta2(s, "method", m), B_N2, SEED)
         lo, mean, hi = ci(boots)
         n2_table.append({
             "metric": metric,
@@ -292,7 +274,7 @@ def main():
                 continue
             # paired-bootstrap: replicate-aligned; we treat each replicate's ratio
             # under each stream's own paired bootstrap and aggregate
-            algo_boots = paired_step_bootstrap_n2(n2, lambda s, mm=m: axis_eta2(s, "method", mm))
+            algo_boots = paired_step_bootstrap(n2, lambda s, mm=m: axis_eta2(s, "method", mm), B_N2, SEED)
             stack_boots = paired_cell_bootstrap_mega(mega, lambda s, a=axis, mm=m: axis_eta2(s, a, mm))
             # min-length align
             n_align = min(len(algo_boots), len(stack_boots))

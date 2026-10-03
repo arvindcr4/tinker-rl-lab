@@ -29,8 +29,13 @@ import glob
 import json
 import math
 import os
-from collections import defaultdict
+import sys
 from statistics import fmean
+
+from _p5p7_common import axis_variance_fraction
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
+from _stats import wilson_p_factored  # noqa: E402
 
 
 # ---- LCG bootstrap primitives (deterministic) ----
@@ -61,29 +66,7 @@ def bootstrap_ci_mean(values, B=2000, alpha=0.05, seed=20260705):
 def wilson_ci(p, n, z=1.96):
     if n == 0:
         return (0.0, 1.0)
-    denom = 1 + z * z / n
-    centre = (p + z * z / (2 * n)) / denom
-    half = (z * math.sqrt((p * (1 - p) + z * z / (4 * n)) / n)) / denom
-    return (max(0.0, centre - half), min(1.0, centre + half))
-
-
-def axis_variance_fraction(rows, axis_key, value_key):
-    grand = []
-    by_axis = defaultdict(list)
-    for r in rows:
-        v = r.get(value_key)
-        if v is None:
-            continue
-        grand.append(v)
-        by_axis[r[axis_key]].append(v)
-    if not grand or len(by_axis) < 2:
-        return float("nan"), 0.0, 0.0, len(by_axis), float("nan")
-    grand_mean = fmean(grand)
-    ss_total = sum((x - grand_mean) ** 2 for x in grand)
-    ss_axis = sum(len(vs) * (fmean(vs) - grand_mean) ** 2 for vs in by_axis.values())
-    ss_within = ss_total - ss_axis
-    eta2 = ss_axis / ss_total if ss_total > 1e-12 else float("nan")
-    return eta2, ss_axis, ss_within, len(by_axis), grand_mean
+    return wilson_p_factored(p, n, z)
 
 
 # ---- paths ----
@@ -275,7 +258,7 @@ def cluster_per_step_trajectory(panel):
 
 # ---- cluster 4: TOST-style ratio ----
 
-def cluster_tost(eta2_method, eta2_G):
+def eta2_ratio(eta2_method, eta2_G):
     if eta2_method <= 1e-12:
         return {"ratio_point": float("inf"),
                 "interpretation": "method axis ~ 0; G dominates by ∞"}
@@ -371,7 +354,7 @@ def main():
             "hypothesis": "H5",
         })
 
-    tost = cluster_tost(eta["eta2_method_pooled"], eta["eta2_G"])
+    tost = eta2_ratio(eta["eta2_method_pooled"], eta["eta2_G"])
     out_rows.append({
         "headline_id": "tost_G_vs_method.ratio_point",
         "value": tost["ratio_point"],

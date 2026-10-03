@@ -44,6 +44,7 @@ import math
 import random
 import statistics
 from pathlib import Path
+from _analysis_common import paired_bootstrap, write_dict_tsv as write_tsv
 
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -190,43 +191,6 @@ def iso_reward_band(R: list[float], L: list[float],
             "R_max": R_max, "delta": delta}
 
 
-def paired_bootstrap(g: list[float], d: list[float], n_boot: int = N_BOOT,
-                     rng: random.Random | None = None) -> dict:
-    rng = rng or random.Random(RNG_SEED)
-    diffs = [di - gi for gi, di in zip(g, d)]
-    n = len(diffs)
-    if n == 0:
-        return {"mean_diff": 0.0, "sd_diff": 0.0, "ci_lo": 0.0, "ci_hi": 0.0,
-                "p_le0": 1.0, "n_pairs": 0}
-    mean_diff = sum(diffs) / n
-    var = sum((x - mean_diff) ** 2 for x in diffs) / max(1, n - 1)
-    sd_diff = math.sqrt(var)
-    idx = list(range(n))
-    boots = []
-    for _ in range(n_boot):
-        s = [diffs[rng.choice(idx)] for _ in range(n)]
-        boots.append(sum(s) / n)
-    boots.sort()
-    return {
-        "mean_diff": round(mean_diff, 8),
-        "sd_diff": round(sd_diff, 8),
-        "ci_lo": round(boots[int(0.025 * n_boot)], 8),
-        "ci_hi": round(boots[int(0.975 * n_boot)], 8),
-        "p_le0": round((sum(1 for b in boots if b <= 0) + 1) / (n_boot + 1), 4),
-        "n_pairs": n,
-    }
-
-
-def write_tsv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore",
-                           delimiter="\t")
-        w.writeheader()
-        for r in rows:
-            w.writerow(r)
-
-
 def _is_finite(x: float) -> bool:
     try:
         return math.isfinite(x)
@@ -324,7 +288,7 @@ def main() -> None:
                 continue
             gv = [grpo[s][metric] for s in common]
             dv = [drgrpo[s][metric] for s in common]
-            boot = paired_bootstrap(gv, dv, rng=rng)
+            boot = paired_bootstrap(gv, dv, N_BOOT, rng)
             interp = "inconclusive"
             if metric == "pos_frac" and boot["mean_diff"] < 0 and boot["ci_hi"] < 0:
                 interp = "Dr.GRPO fewer positive-elasticity steps"
@@ -356,7 +320,7 @@ def main() -> None:
                   for s in common]
             dv = [float(drgrpo[s][metric]) if drgrpo[s][metric] != "nan" else 0.0
                   for s in common]
-            boot = paired_bootstrap(gv, dv, rng=rng)
+            boot = paired_bootstrap(gv, dv, N_BOOT, rng)
             interp = "inconclusive"
             if metric == "L_star" and boot["mean_diff"] > 0 and boot["ci_lo"] > 0:
                 interp = "Dr.GRPO optimal length L* larger"
@@ -386,7 +350,7 @@ def main() -> None:
                   for s in common]
             dv = [float(drgrpo[s][metric]) if drgrpo[s][metric] != "nan" else 0.0
                   for s in common]
-            boot = paired_bootstrap(gv, dv, rng=rng)
+            boot = paired_bootstrap(gv, dv, N_BOOT, rng)
             interp = "inconclusive"
             if metric == "width" and boot["mean_diff"] > 0 and boot["ci_lo"] > 0:
                 interp = "Dr.GRPO iso-reward length band wider"

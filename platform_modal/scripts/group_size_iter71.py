@@ -39,6 +39,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from _analysis_common import write_dicts_tsv as write_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 RES = REPO / "experiments" / "results"
@@ -59,16 +60,6 @@ PRIOR_WEIGHTS = {"signal": 0.50, "noise": 0.30, "batch": 0.20}
 def read_tsv(path: Path) -> list[dict]:
     with path.open() as f:
         return list(csv.DictReader(f, delimiter="\t"))
-
-
-def write_tsv(path: Path, dicts: list[dict]) -> None:
-    if not dicts:
-        return
-    with path.open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(dicts[0].keys()), delimiter="\t")
-        w.writeheader()
-        for r in dicts:
-            w.writerow(r)
 
 
 def main() -> None:

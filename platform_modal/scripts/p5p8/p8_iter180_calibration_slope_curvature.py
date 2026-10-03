@@ -31,7 +31,6 @@ Outputs (platform_hybrid/experiments/results/p5p8/):
 Stdlib + numpy + xgboost + sklearn (already in venv).
 """
 from __future__ import annotations
-import csv
 import json
 import sys
 from pathlib import Path
@@ -40,16 +39,19 @@ import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p8_common import (  # noqa: E402
+    RAW20,
+    AGG4,
+    ALL24,
+    TRAIN,
+    TEST,
+    load_v2 as load,
+    fit_xgb,
+)
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
-TRAIN = ROOT / "fraud_data.csv"
-TEST = ROOT / "test_data.csv"
 
-RAW20 = [f"V{i}" for i in range(1, 21)]
-AGG4 = ["V_mean", "V_std", "V_max", "V_min"]
-ALL24 = RAW20 + AGG4
-COL_IDX = {c: i for i, c in enumerate(ALL24)}
 FEATURE_SETS = {
     "20raw":   RAW20,
     "24full":  ALL24,
@@ -58,31 +60,6 @@ FEATURE_SETS = {
 SEEDS = [42, 179, 316, 453, 590]
 N_BOOT = 2000
 K_BUDGETS_PCT = [1.0, 2.0]
-
-
-def load(path):
-    X, y = [], []
-    with path.open() as f:
-        rdr = csv.reader(f)
-        header = next(rdr)
-        col_idx = {name: i for i, name in enumerate(header)}
-        for line in rdr:
-            X.append([float(line[col_idx[c]]) for c in ALL24])
-            y.append(int(float(line[col_idx["Class"]])))
-    return np.array(X, dtype=np.float64), np.array(y, dtype=np.int32)
-
-
-def fit_xgb(Xtr, ytr, Xte, feats, seed):
-    import xgboost as xgb
-    cols = [COL_IDX[c] for c in feats]
-    spw = float((ytr == 0).sum()) / max(1, float((ytr == 1).sum()))
-    m = xgb.XGBClassifier(
-        n_estimators=200, max_depth=6, learning_rate=0.05,
-        subsample=0.8, colsample_bytree=0.8, scale_pos_weight=spw,
-        eval_metric="logloss", random_state=seed,
-        tree_method="hist", n_jobs=4)
-    m.fit(Xtr[:, cols], ytr, verbose=False)
-    return m.predict_proba(Xte[:, cols])[:, 1]
 
 
 def platt_calibrate(p_train_uncal,y_train):

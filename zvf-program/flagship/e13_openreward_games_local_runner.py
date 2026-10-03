@@ -41,6 +41,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Protocol, Sequence
 
+try:
+    from .pavlov_trust import load_trust_root
+except ImportError:  # pragma: no cover - direct execution fallback
+    from pavlov_trust import load_trust_root
+
 SCHEMA_VERSION = "e13-openreward-games-receipt-v1"
 PROVIDER_GRANT_SCHEMA = "e13-openreward-provider-grant-v1"
 E13_PROVIDER_REQUEST_SCHEMA = "e13-provider-execution-request-v1"
@@ -521,36 +526,6 @@ def _load_manifest(path: str) -> SplitManifest:
     return parse_split_manifest(json.loads(Path(path).read_text(encoding="utf-8")))
 
 
-def _load_e13_trust_root(trust_root: Mapping[str, Any] | str | Path | None) -> dict[str, str]:
-    try:
-        raw = (
-            json.loads(Path(trust_root).read_text())
-            if isinstance(trust_root, (str, Path))
-            else trust_root
-        )
-        required = {"schema_version", "lane", "suite_id", "provider", "key_id", "public_key_hex"}
-        if (
-            not isinstance(raw, Mapping)
-            or set(raw) != required
-            or not all(isinstance(raw[key], str) for key in required)
-        ):
-            raise ValueError("schema")
-        root = {key: str(value) for key, value in raw.items()}
-        if (
-            (root["schema_version"], root["lane"], root["suite_id"], root["provider"])
-            != (E13_TRUST_ROOT_SCHEMA, "E13", "openreward_games_eval", "OpenReward")
-            or not root["key_id"]
-            or not re.fullmatch(r"[0-9a-f]{64}", root["public_key_hex"])
-        ):
-            raise ValueError("identity")
-        Ed25519PublicKey.from_public_bytes(bytes.fromhex(root["public_key_hex"]))
-        root["document_sha256"] = hashlib.sha256(canonical_json(raw).encode()).hexdigest()
-        root["key_fingerprint"] = hashlib.sha256(bytes.fromhex(root["public_key_hex"])).hexdigest()
-        return root
-    except Exception as exc:
-        raise ValueError("explicit valid E13 provider trust root is required") from exc
-
-
 def _exact_mapping(value: Any, fields: set[str], label: str) -> Mapping[str, Any]:
     if not isinstance(value, Mapping) or set(value) != fields:
         raise ValueError(f"{label} has missing or unknown fields")
@@ -589,7 +564,11 @@ def _verify_e13_signature(
     payload: Mapping[str, Any], trust_root: Mapping[str, Any] | str | Path | None
 ) -> dict[str, str]:
     try:
-        root = _load_e13_trust_root(trust_root)
+        root = load_trust_root(
+            trust_root,
+            lane=(E13_TRUST_ROOT_SCHEMA, "E13", "openreward_games_eval", "OpenReward"),
+            error=ValueError,
+        )
         if payload.get("signature_key_id") != root["key_id"]:
             raise ValueError("wrong lane key")
         Ed25519PublicKey.from_public_bytes(bytes.fromhex(root["public_key_hex"])).verify(

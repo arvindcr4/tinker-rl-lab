@@ -41,6 +41,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+try:
+    from .pavlov_trust import load_trust_root
+except ImportError:  # pragma: no cover - direct execution fallback
+    from pavlov_trust import load_trust_root
+
 SCHEMA_VERSION = "e14-frontiermath-public-samples-v1"
 HOSTED_OFFER_SCHEMA = "e14-frontiermath-hosted-offer-v1"
 HOSTED_REQUEST_SCHEMA = "e14-frontiermath-hosted-request-v1"
@@ -711,25 +716,6 @@ def _parse_canonical_utc(value: Any, *, field: str) -> datetime:
         raise ScoreProhibited(f"{field} must be a valid UTC timestamp") from exc
 
 
-def _load_e14_trust_root(trust_root: Mapping[str, Any] | str | Path | None) -> dict[str, str]:
-    try:
-        raw = json.loads(Path(trust_root).read_text()) if isinstance(trust_root, (str, Path)) else trust_root
-        required = {"schema_version", "lane", "suite_id", "provider", "key_id", "public_key_hex"}
-        if not isinstance(raw, Mapping) or set(raw) != required or not all(isinstance(raw[key], str) for key in required):
-            raise ValueError("trust-root schema")
-        root = {key: str(value) for key, value in raw.items()}
-        if (root["schema_version"], root["lane"], root["suite_id"], root["provider"]) != (
-            E14_TRUST_ROOT_SCHEMA, "E14", "frontiermath_eval", "Epoch AI"
-        ) or not root["key_id"] or not re.fullmatch(r"[0-9a-f]{64}", root["public_key_hex"]):
-            raise ValueError("trust-root identity")
-        Ed25519PublicKey.from_public_bytes(bytes.fromhex(root["public_key_hex"]))
-        root["document_sha256"] = sha256_bytes(canonical_json(raw).encode())
-        root["key_fingerprint"] = sha256_bytes(bytes.fromhex(root["public_key_hex"]))
-        return root
-    except Exception as exc:
-        raise ScoreProhibited("explicit valid E14 provider trust root is required") from exc
-
-
 def canonical_json(value: Any) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
@@ -738,7 +724,11 @@ def _verify_epoch_signature(
     value: dict[str, Any], trust_root: Mapping[str, Any] | str | Path | None
 ) -> dict[str, str]:
     try:
-        root = _load_e14_trust_root(trust_root)
+        root = load_trust_root(
+            trust_root,
+            lane=(E14_TRUST_ROOT_SCHEMA, "E14", "frontiermath_eval", "Epoch AI"),
+            error=ScoreProhibited,
+        )
         if value.get("signature_key_id") != root["key_id"]:
             raise ValueError
         Ed25519PublicKey.from_public_bytes(bytes.fromhex(root["public_key_hex"])).verify(

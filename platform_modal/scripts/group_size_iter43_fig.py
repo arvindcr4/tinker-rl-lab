@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
+from statistics import NormalDist
 
 import matplotlib
 
@@ -89,8 +90,7 @@ def panel_c(ax, tost_rows: list[dict]) -> None:
         diff_lo = float(sub["diff_ci_low"])
         diff_hi = float(sub["diff_ci_high"])
         se = max((diff_hi - diff_lo) / (2 * 1.96), 1e-6)
-        from math import erf, sqrt
-        def norm_cdf(x): return 0.5 * (1 + erf(x / sqrt(2)))
+        norm_cdf = NormalDist().cdf
         # TOST p = max(p_lower, p_upper)
         p_tost = []
         for eps in eps_levels:

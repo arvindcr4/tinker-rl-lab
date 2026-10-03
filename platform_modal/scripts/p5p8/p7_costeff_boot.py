@@ -24,6 +24,8 @@ import statistics
 import sys
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p5p7_common import load_tensors_d  # noqa: E402
+from _stats import log_beta as betaln  # noqa: E402
 WORKTREE = REPO_ROOT
 TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
@@ -32,10 +34,6 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 METHODS = ("grpo", "aero", "gift", "areal")
 G_BASE, G_NEW = 8, 16
 BOOT, RNG_SEED = 4000, 20260704
-
-
-def betaln(a: float, b: float) -> float:
-    return math.lgamma(a) + math.lgamma(b) - math.lgamma(a + b)
 
 
 def bb_postpred(k: int, n: int, yp: int, gp: int, alpha: float = 1.0, beta: float = 1.0) -> float:
@@ -71,15 +69,6 @@ def midrange_prob(k: int, n: int = G_BASE, alpha: float = 1.0, beta: float = 1.0
     return total
 
 
-def load_tensors(method: str):
-    fp = TENSOR_DIR / f"{method}_s0_tensors.jsonl"
-    out = []
-    with fp.open() as fh:
-        for line in fh:
-            out.append(json.loads(line))
-    return out
-
-
 # Pre-compute per-step records ONCE and store as parallel arrays for fast
 # O(n) bootstrap resampling (no Python-level per-element dict rebuilds).
 class StepMatrix:
@@ -91,7 +80,7 @@ class StepMatrix:
         self.records = []  # flat list of dicts (used for printing / breakdown)
 
     def add_method(self, method: str, method_idx: int):
-        tensors = load_tensors(method)
+        tensors = load_tensors_d(TENSOR_DIR, method)
         for step_idx, step_rec in enumerate(tensors):
             ks = [int(round(sum(r))) for r in step_rec["rewards"]]
             self.steps.append({
@@ -159,19 +148,6 @@ class StepMatrix:
                     mask[s_idx * 16 + j] = True
                     restore_total += s["restores"][j]
         return mask, restore_total
-
-
-def bootstrap_ci_mean(values, boot=BOOT, seed=RNG_SEED):
-    if not values:
-        return (0.0, 0.0, 0.0)
-    rng = random.Random(seed)
-    n = len(values)
-    pts = []
-    for _ in range(boot):
-        sample = [values[rng.randrange(n)] for _ in range(n)]
-        pts.append(statistics.mean(sample))
-    pts.sort()
-    return (statistics.mean(values), pts[int(0.025 * boot)], pts[int(0.975 * boot)])
 
 
 def rest_per_k_extra(n_fires: int, total_restore: float) -> float:

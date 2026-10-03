@@ -33,6 +33,7 @@ Outputs:
 Stdlib only. <=300 LoC.
 """
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -40,6 +41,9 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _stats
+from _stats import wilson_p  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 RES = ROOT / "experiments" / "results" / "p5p8"
@@ -126,11 +130,7 @@ def wilson_ci(k, n, z=1.96):
     """Wilson interval for binomial proportion."""
     if n == 0:
         return (0.0, 1.0)
-    p = k / n
-    denom = 1 + z * z / n
-    centre = (p + z * z / (2 * n)) / denom
-    half = z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denom
-    return (max(0.0, centre - half), min(1.0, centre + half))
+    return wilson_p(k / n, n, z)
 
 
 def boot_ratio(numer_k, numer_n, denom_k, denom_n, n_boot=BOOT_N, seed=BOOT_SEED):

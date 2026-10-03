@@ -26,12 +26,12 @@ Stdlib only. <= 280 lines.
 from __future__ import annotations
 import csv
 import json
-import math
 from pathlib import Path
 
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _stats import wilson_centre_half  # noqa: E402
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 TENSOR_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
@@ -43,11 +43,7 @@ def wilson_ci_half_width(k, n, z=1.96):
     """Wilson 95% CI half-width on a binomial proportion."""
     if n == 0:
         return float("nan")
-    p = k / n
-    denom = 1 + z * z / n
-    center = (p + z * z / (2 * n)) / denom
-    half = (z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))) / denom
-    return half
+    return wilson_centre_half(k / n, n, z)[1]
 
 
 def main():

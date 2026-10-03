@@ -73,9 +73,8 @@ submission-check:
 
 # Standard library only: use `make public-check PYTHON=python3` without uv or a GPU.
 # The 2026-10-03 manifest is read-only; this target never refreshes expected hashes.
+# The unittest suite runs both checkers and both CLIs against the real repository.
 public-check:
-	$(PYTHON) -B tools/check_public_release.py
-	$(PYTHON) -B tools/check_public_results.py
 	$(PYTHON) -B -m unittest discover -s tests -p 'test_public*.py' -v
 
 docs-check:
@@ -85,6 +84,7 @@ docs-check:
 	@test -f SUBMISSION.md
 	@test -f README.md
 	@test -f REPRODUCE.md
+	@test -f BASELINES.md
 	@test -f CONTRIBUTING.md
 	@test -f SECURITY.md
 	@test -f ARTIFACT.md

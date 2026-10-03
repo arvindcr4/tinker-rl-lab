@@ -1,11 +1,6 @@
 """Smoke tests for seed management and stats utilities."""
 
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from utils.seed import set_global_seed
+from utils.seed import get_seed_from_args, set_global_seed
 
 
 def test_set_global_seed_deterministic():
@@ -50,9 +45,20 @@ def test_numpy_seed():
         pass  # numpy not installed, skip
 
 
-if __name__ == "__main__":
-    test_set_global_seed_deterministic()
-    test_set_global_seed_different()
-    test_seed_returns_dict()
-    test_numpy_seed()
-    print("All seed tests passed")
+def test_torch_seed():
+    """PyTorch seeding is deterministic (replaces the CI reproducibility-check job)."""
+    import torch
+
+    set_global_seed(42)
+    a = torch.randn(10)
+    set_global_seed(42)
+    b = torch.randn(10)
+    assert torch.equal(a, b), "PyTorch should be deterministic with same seed"
+
+
+def test_get_seed_from_args(monkeypatch):
+    """--seed is parsed from argv; unknown args are ignored; default otherwise."""
+    monkeypatch.setattr("sys.argv", ["prog", "--other", "x", "--seed", "7"])
+    assert get_seed_from_args() == 7
+    monkeypatch.setattr("sys.argv", ["prog"])
+    assert get_seed_from_args(default=13) == 13

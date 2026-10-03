@@ -1,8 +1,8 @@
 # Submission-quality figures (v2)
 
-These figures are generated deterministically from
-`experiments/master_results.json` by
-[`platform_modal/scripts/regenerate_figures.py`](../../../scripts/regenerate_figures.py).
+These figures were generated from `experiments/master_results.json`. The
+generator script was removed as dead code (its paths no longer resolved after
+the platform restructure); recover it from git history if a rebuild is needed.
 
 Every figure is rendered at **300 dpi PNG** and as a **vector PDF** with the
 following design rules:
@@ -36,17 +36,6 @@ following design rules:
 | 6 | `kl_proxy`               | ZVF fraction + surrogate loss per step across six flagship runs.         |
 | 7 | `group_size_ablation`    | GRPO group-size sweep G ∈ {2, 4, 8, 16, 32} on Qwen3-8B / GSM8K.         |
 | 8 | `framework_comparison`   | Horizontal bar comparison of Tinker GRPO vs legacy RL frameworks.        |
-
-## Reproducing
-
-```bash
-python platform_modal/scripts/regenerate_figures.py
-```
-
-The script is idempotent and deterministic (`np.random.seed(7)` is fixed for
-the small scatter jitter). It reads a single input file
-(`experiments/master_results.json`) and writes 16 artifacts
-(`*.png` + `*.pdf`) into this directory.
 
 ## Data provenance
 

@@ -32,11 +32,13 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import xgboost as xgb
 from sklearn.calibration import calibration_curve
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from _p8_common import (  # noqa: E402
+    fit_tree,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 TRAIN = ROOT / "fraud_data.csv"
@@ -69,17 +71,6 @@ ABLATIONS = [
 FULL_FEATS = V20 + V_AGG
 RAW_FEATS = V20
 AGG_FEATS = V_AGG
-
-
-def fit_tree(X_tr, y_tr):
-    clf = xgb.XGBClassifier(
-        n_estimators=200, max_depth=5, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8,
-        objective="binary:logistic", eval_metric="auc",
-        tree_method="hist", random_state=TREE_SEED, n_jobs=4,
-    )
-    clf.fit(X_tr, y_tr)
-    return clf
 
 
 def ece10(p, y):
@@ -178,17 +169,17 @@ def main():
 
     print("Fitting (a) the three canonical trees ...")
     sens_scores = {
-        "XGB-20raw": fit_tree(train[RAW_FEATS].to_numpy(np.float64), y_tr)
+        "XGB-20raw": fit_tree(train[RAW_FEATS].to_numpy(np.float64), y_tr, TREE_SEED)
                        .predict_proba(test[RAW_FEATS].to_numpy(np.float64))[:, 1],
-        "XGB-24full": fit_tree(train[FULL_FEATS].to_numpy(np.float64), y_tr)
+        "XGB-24full": fit_tree(train[FULL_FEATS].to_numpy(np.float64), y_tr, TREE_SEED)
                        .predict_proba(test[FULL_FEATS].to_numpy(np.float64))[:, 1],
-        "XGB-4sensor": fit_tree(train[AGG_FEATS].to_numpy(np.float64), y_tr)
+        "XGB-4sensor": fit_tree(train[AGG_FEATS].to_numpy(np.float64), y_tr, TREE_SEED)
                        .predict_proba(test[AGG_FEATS].to_numpy(np.float64))[:, 1],
     }
     print("Fitting (b) 8 ablations of XGB-24full ...")
     abl_scores = {}
     for name, cols in ABLATIONS:
-        clf = fit_tree(train[cols].to_numpy(np.float64), y_tr)
+        clf = fit_tree(train[cols].to_numpy(np.float64), y_tr, TREE_SEED)
         abl_scores[name] = clf.predict_proba(test[cols].to_numpy(np.float64))[:, 1]
 
     # ---- H1: calibration-by-budget ----

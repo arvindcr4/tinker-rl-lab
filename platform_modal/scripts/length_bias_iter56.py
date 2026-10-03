@@ -48,6 +48,7 @@ import math
 import random
 import statistics
 from pathlib import Path
+from _analysis_common import paired_bootstrap, write_dict_tsv as write_tsv
 
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -85,43 +86,6 @@ def load_runs(path: Path, task: str) -> list[dict]:
         out.append({"task": task, "algo": r["algo"], "seed": r["seed"],
                     "t": ts, "R": rs, "L": ls, "zvf": zs, "rho": rho})
     return out
-
-
-def paired_bootstrap(g: list[float], d: list[float], n_boot: int = N_BOOT,
-                     rng: random.Random | None = None) -> dict:
-    rng = rng or random.Random(RNG_SEED)
-    diffs = [di - gi for gi, di in zip(g, d)]
-    n = len(diffs)
-    if n == 0:
-        return {"mean_diff": 0.0, "sd_diff": 0.0, "ci_lo": 0.0, "ci_hi": 0.0,
-                "p_le0": 1.0, "n_pairs": 0}
-    mean_diff = sum(diffs) / n
-    var = sum((x - mean_diff) ** 2 for x in diffs) / max(1, n - 1)
-    sd_diff = math.sqrt(var)
-    idx = list(range(n))
-    boots = []
-    for _ in range(n_boot):
-        s = [diffs[rng.choice(idx)] for _ in range(n)]
-        boots.append(sum(s) / n)
-    boots.sort()
-    return {
-        "mean_diff": round(mean_diff, 8),
-        "sd_diff": round(sd_diff, 8),
-        "ci_lo": round(boots[int(0.025 * n_boot)], 8),
-        "ci_hi": round(boots[int(0.975 * n_boot)], 8),
-        "p_le0": round((sum(1 for b in boots if b <= 0) + 1) / (n_boot + 1), 4),
-        "n_pairs": n,
-    }
-
-
-def write_tsv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore",
-                           delimiter="\t")
-        w.writeheader()
-        for r in rows:
-            w.writerow(r)
 
 
 def main() -> None:
@@ -165,7 +129,7 @@ def main() -> None:
                 continue
             gv = [grpo[s][metric] for s in common]
             dv = [drgrpo[s][metric] for s in common]
-            boot = paired_bootstrap(gv, dv, rng=rng)
+            boot = paired_bootstrap(gv, dv, N_BOOT, rng)
             paired_rows.append({
                 "task": task, "metric": metric, "n_pairs": boot["n_pairs"],
                 "mean_grpo": round(sum(gv) / len(gv), 8),
@@ -222,7 +186,7 @@ def main() -> None:
             continue
         gv = [grpo[s]["cumulative_tax_norm"] for s in common]
         dv = [drgrpo[s]["cumulative_tax_norm"] for s in common]
-        boot = paired_bootstrap(gv, dv, rng=rng)
+        boot = paired_bootstrap(gv, dv, N_BOOT, rng)
         tax_paired.append({
             "task": task, "metric": "cumulative_tax_norm",
             "n_pairs": boot["n_pairs"],
@@ -277,7 +241,7 @@ def main() -> None:
                 continue
             gv = [grpo[s][metric] for s in common]
             dv = [drgrpo[s][metric] for s in common]
-            boot = paired_bootstrap(gv, dv, rng=rng)
+            boot = paired_bootstrap(gv, dv, N_BOOT, rng)
             pp_paired.append({
                 "task": task, "metric": metric, "n_pairs": boot["n_pairs"],
                 "mean_grpo": round(sum(gv) / len(gv), 6),
@@ -336,7 +300,7 @@ def main() -> None:
                 continue
             gv = [grpo[s][metric] for s in common]
             dv = [drgrpo[s][metric] for s in common]
-            boot = paired_bootstrap(gv, dv, rng=rng)
+            boot = paired_bootstrap(gv, dv, N_BOOT, rng)
             hl_paired.append({
                 "task": task, "metric": metric, "n_pairs": boot["n_pairs"],
                 "mean_grpo": round(sum(gv) / len(gv), 6),

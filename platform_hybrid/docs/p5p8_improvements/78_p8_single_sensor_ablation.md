@@ -163,3 +163,5 @@ NOT necessary on this corpus.
 - `experiments/results/p5p8/figures/p8_cost_per_decision.{png,pdf}`
 
 Seed: 20260705, B=600 paired bootstrap resamples, percentile CI.
+`--seed N --suffix _tag` reruns at another seed into `*_tag` output
+names (see #80 for the seed-42 rerun).

@@ -41,6 +41,7 @@ import statistics
 import sys
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p5p7_common import load_tensors_c  # noqa: E402
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
@@ -56,18 +57,6 @@ N_PROMPTS = 16            # N2 prompt set size per step
 # ---------------------------------------------------------------------------
 # Data loading
 # ---------------------------------------------------------------------------
-def load_tensors():
-    """Return dict[(method, step)] -> list[list[float]] (16 x G_BASE rewards)."""
-    out = {}
-    for m in METHODS:
-        path = N2 / f"{m}_s0_tensors.jsonl"
-        with path.open() as f:
-            for line in f:
-                d = json.loads(line)
-                out[(m, d["step"])] = d["rewards"]
-    return out
-
-
 def per_prompt_means(rewards):
     return [sum(g) / len(g) for g in rewards]
 
@@ -196,7 +185,7 @@ def main():
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
 
-    tensors = load_tensors()
+    tensors = load_tensors_c(N2, METHODS)
     steps = sorted({k[1] for k in tensors})
     summary_rows = []
     per_step_rows = []

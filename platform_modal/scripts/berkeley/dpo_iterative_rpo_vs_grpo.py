@@ -17,6 +17,10 @@ platform_hybrid/experiments/results/berkeley/. No new training; re-analysis only
 import json
 import math
 from pathlib import Path
+import sys
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _analysis_common import read_tsv_lines as _read_tsv
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "experiments" / "results"
@@ -32,17 +36,6 @@ NOISE = RESULTS / "group_size_iter123_noise_mech.tsv"
 EFFECT = RESULTS / "group_size_iter123_effect_size.tsv"
 BOUNDED = RESULTS / "group_size_iter127_bounded_cone.tsv"
 COMP = RESULTS / "group_size_iter127_complementarity.tsv"
-
-
-def _read_tsv(path):
-    rows = []
-    with open(path) as f:
-        for ln in f:
-            ln = ln.rstrip("\n")
-            if not ln:
-                continue
-            rows.append(ln.split("\t"))
-    return rows
 
 
 def _parse_float(s):

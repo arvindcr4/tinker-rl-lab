@@ -16,6 +16,8 @@ import random
 import statistics
 from pathlib import Path
 
+from _p5p7_common import load_tensors_a
+
 ROOT = Path(__file__).resolve().parents[2]
 N2_DIR = ROOT / "experiments" / "results" / "n2_reward_tensor_resume"
 OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
@@ -87,20 +89,6 @@ def contrast_mag(p_hat: float, G: int) -> float:
 
 def per_prompt_k(rewards_row):
     return int(round(sum(rewards_row)))
-
-
-def load_tensors():
-    by_method = {}
-    for m in METHODS:
-        path = N2_DIR / f"{m}_s{SEED}_tensors.jsonl"
-        steps = []
-        with open(path) as f:
-            for line in f:
-                if not line.strip():
-                    continue
-                steps.append(json.loads(line))
-        by_method[m] = steps
-    return by_method
 
 
 def evaluate_step(method: str, step_rec: dict, cname: str, cfn) -> dict:
@@ -182,7 +170,7 @@ def sensitivity_sweep() -> dict:
 
 
 def main():
-    by_method = load_tensors()
+    by_method = load_tensors_a(N2_DIR, METHODS, SEED)
     print(f"Loaded tensors for {list(by_method.keys())}")
     for m in METHODS:
         print(f"  {m}: {len(by_method[m])} steps")

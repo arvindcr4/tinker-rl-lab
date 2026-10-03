@@ -47,6 +47,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
+from _analysis_common import write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -152,15 +153,6 @@ def robust_rmax(y: np.ndarray) -> dict:
         "late_mean": late_mean,
         "rise_step": rise_step,
     }
-
-
-def _write_tsv(path: Path, cols: list[str], rows: list[list]) -> None:
-    with path.open("w", newline="") as fh:
-        w = csv.writer(fh, delimiter="\t")
-        w.writerow(cols)
-        for r in rows:
-            w.writerow(r)
-    print(f"wrote {path}")
 
 
 def load_pool(pool: dict[str, tuple[str, float]]) -> dict[str, dict]:

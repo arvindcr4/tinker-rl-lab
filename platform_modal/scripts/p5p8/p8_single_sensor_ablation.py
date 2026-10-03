@@ -45,10 +45,15 @@ platform_hybrid/experiments/results/p5p8/p8_single_sensor_summary.json
 platform_hybrid/experiments/results/p5p8/figures/p8_single_sensor.{png,pdf}
 platform_hybrid/experiments/results/p5p8/figures/p8_cost_per_decision.{png,pdf}
 
+`--seed N --suffix _tag` (defaults 20260705 / '') reruns at another seed and
+appends `_tag` to every output stem; `--seed 42 --suffix _seed42` produces the
+files `p8_single_sensor_seed_stability.py` reads.
+
 Stdlib + numpy + pandas + xgboost + matplotlib. <=290 lines.
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import math
@@ -65,6 +70,11 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p8_common import (  # noqa: E402
+    RAW20,
+    AGG4,
+    ALL24,
+)
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 FIG = RES / "figures"
@@ -74,9 +84,6 @@ FIG.mkdir(parents=True, exist_ok=True)
 SEED = 20260705
 N_BOOT = 600
 K_BUDGETS = [0.5, 1.0, 2.0, 3.0, 5.0]  # percent of test alerted
-RAW20 = [f"V{i}" for i in range(1, 21)]
-AGG4 = ["V_mean", "V_std", "V_max", "V_min"]
-ALL24 = RAW20 + AGG4
 COST_XGB = 0.0001   # dollars per decision for tree
 COST_LLM = 0.0010   # dollars per decision for LLM sensor (once per row)
 
@@ -141,7 +148,7 @@ def f1_at_k(scores, labels, k_pct):
     return 2 * p * r / (p + r) if (p + r) else 0.0
 
 
-def fit_xgb(X_tr, y_tr, X_te, n_est=300, depth=5, lr=0.1, seed=SEED):
+def fit_xgb(X_tr, y_tr, X_te, seed, n_est=300, depth=5, lr=0.1):
     import xgboost as xgb
 
     m = xgb.XGBClassifier(
@@ -158,7 +165,7 @@ def fit_xgb(X_tr, y_tr, X_te, n_est=300, depth=5, lr=0.1, seed=SEED):
     return p.tolist()
 
 
-def paired_bootstrap_ci(metric_a, metric_b, B=N_BOOT, seed=SEED):
+def paired_bootstrap_ci(metric_a, metric_b, seed, B=N_BOOT):
     """Paired percentile CI on per-row differences, but here metrics are
     scalar (AUC / Brier / cost). We resample the test labels to estimate
     the metric variance, then compute paired-diff CIs."""
@@ -190,7 +197,18 @@ def cost_per_caught(scores, labels, k_pct, cost_per_decision):
     return total_cost / tp if tp else float("inf"), tp, k
 
 
-def main():
+def parse_args(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--seed", type=int, default=SEED,
+                    help="XGB + bootstrap seed (default %(default)s; 42 for the seed-stability rerun)")
+    ap.add_argument("--suffix", default="",
+                    help="appended to every output stem, e.g. _seed42 -> p8_single_sensor_seed42.tsv")
+    return ap.parse_args(argv)
+
+
+def main(argv=None):
+    args = parse_args(argv)
+    seed, sfx = args.seed, args.suffix
     print(f"[p8_single_sensor] loading fraud_data.csv + test_data.csv")
     tr_rows, tr_labels, _ = load(ROOT / "fraud_data.csv")
     te_rows, te_labels, _ = load(ROOT / "test_data.csv")
@@ -218,7 +236,7 @@ def main():
     for name, feats, cost_d in variants:
         X_tr = [[row[c] for c in feats] for row in X_tr_all]
         X_te = [[row[c] for c in feats] for row in X_te_all]
-        scores[name] = (fit_xgb(X_tr, tr_labels, X_te), cost_d)
+        scores[name] = (fit_xgb(X_tr, tr_labels, X_te, seed), cost_d)
 
     # ---- AUC / Brier summary -------------------------------------------
     abl_rows = []
@@ -230,11 +248,11 @@ def main():
                          "n_features": len([f for f in (name.split("+")[1:] or [])
                                             if f in AGG4]) + 20})
 
-    with (RES / "p8_single_sensor.tsv").open("w") as f:
+    with (RES / f"p8_single_sensor{sfx}.tsv").open("w") as f:
         f.write("variant\tn_features\tauc\tbrier\n")
         for r in abl_rows:
             f.write(f"{r['variant']}\t{r['n_features']}\t{r['auc']}\t{r['brier']}\n")
-    with (RES / "p8_pair_sensor.tsv").open("w") as f:
+    with (RES / f"p8_pair_sensor{sfx}.tsv").open("w") as f:
         f.write("variant\tn_features\tauc\tbrier\n")
         for r in abl_rows:
             if "+V_" in r["variant"] or "+V_m" in r["variant"]:
@@ -250,12 +268,13 @@ def main():
         a0, b0, d, lo, hi = paired_bootstrap_ci(
             {"scores": s, "labels": te_labels, "fn": auc_roc},
             {"scores": base_s, "labels": te_labels, "fn": auc_roc},
+            seed,
         )
         boot_rows.append({"variant": name, "auc": round(a0, 4),
                           "auc_24full": round(b0, 4), "delta_auc": round(d, 4),
                           "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
                           "excludes_zero": "yes" if (lo > 0 or hi < 0) else "no"})
-    with (RES / "p8_single_pair_boot.tsv").open("w") as f:
+    with (RES / f"p8_single_pair_boot{sfx}.tsv").open("w") as f:
         f.write("variant\tauc\tauc_24full\tdelta_auc\tci_lo\tci_hi\texcludes_zero\n")
         for r in boot_rows:
             f.write(f"{r['variant']}\t{r['auc']}\t{r['auc_24full']}\t{r['delta_auc']}\t{r['ci_lo']}\t{r['ci_hi']}\t{r['excludes_zero']}\n")
@@ -293,7 +312,7 @@ def main():
                               "true_pos": tp, "precision": round(p, 4),
                               "recall": round(r, 4),
                               "cost_per_caught_dollars": round(cpc, 4)})
-    with (RES / "p8_cost_per_decision.tsv").open("w") as f:
+    with (RES / f"p8_cost_per_decision{sfx}.tsv").open("w") as f:
         f.write("model\tk_pct\tk_alerts\ttrue_pos\tprecision\trecall\tcost_per_caught_dollars\n")
         for r in cost_rows:
             f.write(f"{r['model']}\t{r['k_pct']}\t{r['k_alerts']}\t{r['true_pos']}\t{r['precision']}\t{r['recall']}\t{r['cost_per_caught_dollars']}\n")
@@ -312,7 +331,7 @@ def main():
                 s_a, cost_d_a = scores["XGB-24full"]
                 s_b, cost_d_b = scores[model]
             # Bootstrap cost-per-caught
-            rng = random.Random(SEED + int(k_pct * 10) + hash(model) % 1000)
+            rng = random.Random(seed + int(k_pct * 10) + hash(model) % 1000)
             n = len(te_labels)
             diffs = []
             for _ in range(N_BOOT):
@@ -336,7 +355,7 @@ def main():
                               "delta_cost_per_caught": round(diffs[len(diffs) // 2], 4),
                               "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
                               "excludes_zero": "yes" if (lo > 0 or hi < 0) else "no"})
-    with (RES / "p8_cost_per_decision_boot.tsv").open("w") as f:
+    with (RES / f"p8_cost_per_decision_boot{sfx}.tsv").open("w") as f:
         f.write("model\tk_pct\tdelta_cost_per_caught\tci_lo\tci_hi\texcludes_zero\n")
         for r in cost_boot:
             f.write(f"{r['model']}\t{r['k_pct']}\t{r['delta_cost_per_caught']}\t{r['ci_lo']}\t{r['ci_hi']}\t{r['excludes_zero']}\n")
@@ -374,8 +393,8 @@ def main():
                label="XGB-24full baseline")
     ax.legend(loc="lower right", fontsize=8)
     fig.tight_layout()
-    fig.savefig(FIG / "p8_single_sensor.png", dpi=150)
-    fig.savefig(FIG / "p8_single_sensor.pdf")
+    fig.savefig(FIG / f"p8_single_sensor{sfx}.png", dpi=150)
+    fig.savefig(FIG / f"p8_single_sensor{sfx}.pdf")
     plt.close(fig)
 
     # Figure 2: cost-per-decision vs K budget for each model
@@ -395,14 +414,14 @@ best_single: "tab:green", best_pair: "tab:purple",
     ax.legend(loc="best", fontsize=8)
     ax.grid(True, alpha=0.3)
     fig.tight_layout()
-    fig.savefig(FIG / "p8_cost_per_decision.png", dpi=150)
-    fig.savefig(FIG / "p8_cost_per_decision.pdf")
+    fig.savefig(FIG / f"p8_cost_per_decision{sfx}.png", dpi=150)
+    fig.savefig(FIG / f"p8_cost_per_decision{sfx}.pdf")
     plt.close(fig)
 
     # ---- Summary JSON ---------------------------------------------------
     summary = {
         "n_train": len(tr_rows), "n_test": len(te_rows),
-        "n_pos_test": sum(te_labels), "seed": SEED, "n_boot": N_BOOT,
+        "n_pos_test": sum(te_labels), "seed": seed, "n_boot": N_BOOT,
         "k_budgets": K_BUDGETS,
         "abl_rows": len(abl_rows),
         "boot_rows": len(boot_rows),
@@ -413,7 +432,7 @@ best_single: "tab:green", best_pair: "tab:purple",
         "cost_boot_rows": len(cost_boot),
         "cost_boot_excludes_zero": sum(1 for r in cost_boot if r["excludes_zero"] == "yes"),
     }
-    with (RES / "p8_single_sensor_summary.json").open("w") as f:
+    with (RES / f"p8_single_sensor_summary{sfx}.json").open("w") as f:
         json.dump(summary, f, indent=2)
     print(json.dumps(summary, indent=2))
 

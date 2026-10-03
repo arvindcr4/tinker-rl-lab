@@ -50,6 +50,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
 
+from _modal_common import (
+    boxed_or_last_number_reward as reward_fn,
+    chatml_prompt,
+    gsm8k_gold,
+    patch_wandb_vram,
+)
+
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
@@ -83,31 +90,6 @@ EVAL_MAX_WORKERS = 8            # concurrent sample calls per checkpoint
 
 WANDB_PROJECT = "tinker-rl-lab-world-class"
 WANDB_ENTITY = "arvindcr4-pes-university"
-
-
-# ---------------------------------------------------------------------------
-# Reward function (identical to campaign_v2.reward_fn)
-# ---------------------------------------------------------------------------
-def reward_fn(response: str, answer: str) -> float:
-    response = response.strip()
-    boxed = re.findall(r"\\boxed\{([^}]+)\}", response)
-    for b in boxed:
-        b_clean = b.strip().replace(",", "").replace(" ", "")
-        try:
-            if abs(float(b_clean) - float(answer)) < 0.01:
-                return 1.0
-        except Exception:
-            if b_clean == answer:
-                return 1.0
-    all_nums = re.findall(r"[-+]?\d[\d,]*\.?\d*", response)
-    if all_nums:
-        last = all_nums[-1].replace(",", "")
-        try:
-            if abs(float(last) - float(answer)) < 0.01:
-                return 1.0
-        except Exception:
-            pass
-    return 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -229,10 +211,9 @@ def load_heldout_gsm8k(n: int = HELDOUT_N, seed: int = HELDOUT_SEED):
     ds = load_dataset("openai/gsm8k", "main", split="test")
     problems: list[tuple[str, str]] = []
     for row in ds:
-        m = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
-        if not m:
+        ans = gsm8k_gold(row["answer"])
+        if ans is None:
             continue
-        ans = m.group(1).replace(",", "").strip()
         problems.append((row["question"], ans))
 
     rng = random.Random(seed)
@@ -351,11 +332,7 @@ def evaluate_checkpoint(
     sp = T.SamplingParams(max_tokens=MAX_TOKENS, temperature=TEMPERATURE, top_p=TOP_P)
 
     def build_prompt(question: str) -> list[int]:
-        prompt = (
-            f"<|im_start|>system\n{SYSTEM_PROMPT}<|im_end|>\n"
-            f"<|im_start|>user\n{question + QUESTION_SUFFIX}<|im_end|>\n"
-            f"<|im_start|>assistant\n"
-        )
+        prompt = chatml_prompt(SYSTEM_PROMPT, question + QUESTION_SUFFIX)
         pid = tok.encode(prompt, add_special_tokens=False)
         if len(pid) > PROMPT_MAX_LEN:
             pid = pid[:PROMPT_MAX_LEN]
@@ -632,20 +609,7 @@ def run(
     if os.environ.get("WANDB_API_KEY"):
         try:
             import wandb
-            try:
-                import torch, wandb
-                if not getattr(wandb, '_vram_patched', False):
-                    _old_log = wandb.log
-                    def _vram_log(data, *args, **kwargs):
-                        if torch.cuda.is_available():
-                            data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                            data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
-                            torch.cuda.reset_peak_memory_stats()
-                        _old_log(data, *args, **kwargs)
-                    wandb.log = _vram_log
-                    wandb._vram_patched = True
-            except ImportError:
-                pass
+            patch_wandb_vram()
 
             run = wandb.init(
                 project=WANDB_PROJECT,
@@ -704,6 +668,7 @@ if _MODAL_AVAILABLE and os.environ.get("MODAL_EVAL_DISABLE_APP") != "1":
             "numpy",
         )
         .env({"WANDB_PROJECT": WANDB_PROJECT, "WANDB_ENTITY": WANDB_ENTITY})
+        .add_local_python_source("_modal_common")
     )
     app = modal.App("tinker-rl-heldout-eval", image=image)
 

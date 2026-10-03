@@ -21,14 +21,18 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    # Bare names pass the host value through. When unset on the host, the
+    # Dockerfile ENV default applies (WANDB_MODE=offline, SEED=42,
+    # OMP_NUM_THREADS=8). A host variable set to an empty string is passed as
+    # empty and overrides that default.
     environment:
       - WANDB_API_KEY=${WANDB_API_KEY:-}
       - HF_TOKEN=${HF_TOKEN:-}
       - TINKER_API_KEY=${TINKER_API_KEY:-}
-      - WANDB_MODE=${WANDB_MODE:-offline}
+      - WANDB_MODE
       - WANDB_PROJECT=${WANDB_PROJECT:-tinker-rl-lab}
-      - SEED=${SEED:-42}
-      - OMP_NUM_THREADS=${OMP_NUM_THREADS:-8}
+      - SEED
+      - OMP_NUM_THREADS
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-all}
       - ACCELERATE_LOG_LEVEL=${ACCELERATE_LOG_LEVEL:-info}
     volumes:

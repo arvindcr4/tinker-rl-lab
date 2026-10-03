@@ -1,19 +1,16 @@
 from __future__ import annotations
 
 import copy
-import importlib.util
 from pathlib import Path
 
 import pytest
 
+from tests._shared_fakes import load_module
+
 
 ROOT = Path(__file__).resolve().parents[1]
 HERE = ROOT / "zvf-program/next-submission"
-SPEC = importlib.util.spec_from_file_location("next_submission_verifier", HERE / "verify_design.py")
-assert SPEC is not None
-assert SPEC.loader is not None
-VERIFIER = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(VERIFIER)
+VERIFIER = load_module("next_submission_verifier", HERE / "verify_design.py")
 
 
 @pytest.fixture

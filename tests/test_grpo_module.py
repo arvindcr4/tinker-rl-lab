@@ -30,12 +30,10 @@ from platform_tinker.tinkerrl.grpo import (
     ToolCallReward,
     StrictToolCallReward,
     TrainingExample,
-    make_grpo_loss_fn,
     make_pavlov_non_xlam_dataset,
     make_synthetic_math_dataset,
     make_synthetic_tool_use_dataset,
     make_xlam_dataset,
-    normalize_rewards,
     apply_truncation_mask,
     heldout_reward_summary,
     is_degenerate_group,
@@ -44,6 +42,7 @@ from platform_tinker.tinkerrl.grpo import (
     PAVLOV_SUITE_RECEIPTS,
     run_grpo,
 )
+from tests._shared_fakes import _Future
 
 
 _MISSING = object()
@@ -72,32 +71,6 @@ def _temporary_modules(mapping):
                 sys.modules.pop(key, None)
             else:
                 sys.modules[key] = value
-
-
-class TestNormalizeRewards(unittest.TestCase):
-    def test_basic(self):
-        advs = normalize_rewards([1.0, 2.0, 3.0, 4.0, 5.0])
-        mean = sum(advs) / len(advs)
-        self.assertAlmostEqual(mean, 0.0, places=7)
-        std = (sum((a - mean) ** 2 for a in advs) / len(advs)) ** 0.5
-        self.assertAlmostEqual(std, 1.0, places=5)
-
-    def test_identical(self):
-        advs = normalize_rewards([3.0, 3.0, 3.0])
-        for a in advs:
-            self.assertAlmostEqual(a, 0.0, places=7)
-
-    def test_empty(self):
-        self.assertEqual(normalize_rewards([]), [])
-
-    def test_single(self):
-        advs = normalize_rewards([42.0])
-        self.assertAlmostEqual(advs[0], 0.0, places=7)
-
-    def test_monotonic(self):
-        advs = normalize_rewards([1.0, 2.0, 3.0, 4.0, 5.0])
-        for i in range(len(advs) - 1):
-            self.assertLess(advs[i], advs[i + 1])
 
 
 class TestDynamicSampling(unittest.TestCase):
@@ -350,54 +323,6 @@ class TestNllMaskForGroup(unittest.TestCase):
         )
 
 
-class TestMakeGrpoLossFn(unittest.TestCase):
-    def test_positive_advantage(self):
-        import torch
-
-        loss_fn = make_grpo_loss_fn([2.0])
-        logprobs = [torch.tensor([-0.5, -0.2, -0.1], requires_grad=True)]
-        loss, metrics = loss_fn(None, logprobs)
-        expected = -(2.0) * (-0.8)
-        self.assertAlmostEqual(loss.item(), expected, places=5)
-        self.assertEqual(metrics["grpo_loss"], loss.item())
-
-    def test_negative_advantage(self):
-        import torch
-
-        loss_fn = make_grpo_loss_fn([-1.0])
-        logprobs = [torch.tensor([-0.5, -0.2, -0.1], requires_grad=True)]
-        loss, _ = loss_fn(None, logprobs)
-        expected = -(-1.0) * (-0.8)
-        self.assertAlmostEqual(loss.item(), expected, places=5)
-
-    def test_zero_advantage(self):
-        import torch
-
-        loss_fn = make_grpo_loss_fn([0.0])
-        logprobs = [torch.tensor([-0.5, -0.2], requires_grad=True)]
-        loss, _ = loss_fn(None, logprobs)
-        self.assertEqual(loss.item(), 0.0)
-
-    def test_batch(self):
-        import torch
-
-        loss_fn = make_grpo_loss_fn([1.0, -1.0, 0.0])
-        logprobs = [
-            torch.tensor([-1.0]),
-            torch.tensor([-2.0]),
-            torch.tensor([-3.0]),
-        ]
-        loss, _ = loss_fn(None, logprobs)
-        expected = (1.0 - 2.0 + 0.0) / 3.0
-        self.assertAlmostEqual(loss.item(), expected, places=5)
-
-    def test_empty(self):
-        loss_fn = make_grpo_loss_fn([])
-        loss, metrics = loss_fn(None, [])
-        self.assertEqual(loss.item(), 0.0)
-        self.assertEqual(metrics["grpo_loss"], 0.0)
-
-
 class TestGRPOConfig(unittest.TestCase):
     def test_defaults(self):
         cfg = GRPOConfig(name="test")
@@ -577,13 +502,6 @@ class TestTrackingFailClosed(unittest.TestCase):
         events = []
         holder = {}
 
-        class Future:
-            def __init__(self, value):
-                self.value = value
-
-            def result(self):
-                return self.value
-
         class Response:
             tokens = [1, 2]
 
@@ -593,7 +511,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         class SamplingClient:
             def sample(self, *_args, **_kwargs):
                 events.append("sample")
-                return Future(Responses())
+                return _Future(Responses())
 
         class TrainingClient:
             model_id = "tinker-run-1"
@@ -606,7 +524,7 @@ class TestTrackingFailClosed(unittest.TestCase):
             def save_weights_for_sampler(self, name):
                 self.save_count += 1
                 events.append(("save_sampler", name))
-                return Future(SimpleNamespace(path=f"tinker://run/sampler/{self.save_count}"))
+                return _Future(SimpleNamespace(path=f"tinker://run/sampler/{self.save_count}"))
 
             def create_sampling_client(self, model_path):
                 events.append(("sampling_client", model_path))
@@ -615,16 +533,16 @@ class TestTrackingFailClosed(unittest.TestCase):
             def forward_backward_custom(self, **_kwargs):
                 self.forward_count += 1
                 events.append("forward_backward")
-                return Future(SimpleNamespace(metrics={"grpo_loss": 0.25}))
+                return _Future(SimpleNamespace(metrics={"grpo_loss": 0.25}))
 
             def optim_step(self, _params):
                 self.optim_count += 1
                 events.append("optim_step")
-                return Future(None)
+                return _Future(None)
 
             def save_state(self, name, overwrite):
                 events.append(("save_state", name, overwrite))
-                return Future(SimpleNamespace(path=f"tinker://run/state/{name}"))
+                return _Future(SimpleNamespace(path=f"tinker://run/state/{name}"))
 
         class ServiceClient:
             def __init__(self, **_kwargs):

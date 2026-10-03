@@ -52,6 +52,7 @@ import numpy as np
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _stats import wilson  # noqa: E402
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -66,11 +67,7 @@ N_ROLLOUTS = 128
 def wilson_ci(k, n, z=1.96):
     if n == 0:
         return 0.0, 0.0, 0.0
-    p = k / n
-    denom = 1 + z * z / n
-    centre = (p + z * z / (2 * n)) / denom
-    half = (z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n))) / denom
-    return p, max(0.0, centre - half), min(1.0, centre + half)
+    return wilson(k, n, z)
 
 
 def bootstrap_reward(reward_arr, B=2000, seed=SEED):

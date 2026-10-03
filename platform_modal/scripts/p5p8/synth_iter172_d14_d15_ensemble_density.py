@@ -36,6 +36,7 @@ from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _stats import pow_root, wilson_p  # noqa: E402
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -44,12 +45,7 @@ RES.mkdir(parents=True, exist_ok=True)
 def wilson_95(k: int, n: int) -> tuple[float, float]:
     if n == 0:
         return 0.0, 0.0
-    p = k / n
-    z = 1.959963984540054
-    denom = 1 + z * z / n
-    center = (p + z * z / (2 * n)) / denom
-    halfw = (z * (p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / denom
-    return max(0.0, center - halfw), min(1.0, center + halfw)
+    return wilson_p(k / n, n, 1.959963984540054, pow_root)
 
 
 def layer_for(p: float) -> str:

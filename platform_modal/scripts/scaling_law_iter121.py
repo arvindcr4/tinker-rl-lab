@@ -65,6 +65,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+from _analysis_common import write_rows_tsv as _write_tsv, ols
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -134,23 +135,6 @@ def trace_stats(rt: list[float]) -> dict:
     )
 
 
-def ols(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float]:
-    x, y = np.asarray(x, float), np.asarray(y, float)
-    n = len(x)
-    if n < 3:
-        return float("nan"), float("nan"), float("nan")
-    xm, ym = x.mean(), y.mean()
-    den = float(np.sum((x -xm) ** 2))
-    if den <= 0:
-        return float("nan"), float("nan"), float("nan")
-    b = float(np.sum((x - xm) * (y - ym))) / den
-    a = ym - b * xm
-    resid = y - (a + b * x)
-    s2 = float(np.sum(resid ** 2)) / (n - 2)
-    se_b = math.sqrt(s2 / den) if den > 0 else float("nan")
-    return a, b, se_b
-
-
 def spearman_rho(x: np.ndarray, y: np.ndarray) -> float:
     """Spearman rank correlation. NaN-safe (drops nans pairwise)."""
     x = np.asarray(x, float)
@@ -167,15 +151,6 @@ def spearman_rho(x: np.ndarray, y: np.ndarray) -> float:
     if den <= 0:
         return float("nan")
     return float(np.sum((rx - rxm) * (ry - rym)) / den)
-
-
-def _write_tsv(path: Path, cols: list[str], rows: list[list]) -> None:
-    with path.open("w", newline="") as f:
-        w = csv.writer(f, delimiter="\t")
-        w.writerow(cols)
-        for r in rows:
-            w.writerow(r)
-    print(f"wrote {path}")
 
 
 def _anchors_array(rng: np.random.Generator,

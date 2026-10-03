@@ -21,7 +21,6 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO))
 
 from platform_local.unified.backends import BACKEND_NAMES, BACKENDS
 from platform_local.unified.canonical import FRAMEWORKS, load_spec

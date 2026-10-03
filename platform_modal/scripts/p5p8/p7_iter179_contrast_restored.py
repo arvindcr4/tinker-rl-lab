@@ -46,12 +46,13 @@ Outputs:
 Stdlib only; deterministic.
 """
 from __future__ import annotations
-import csv, glob, json, os, random, statistics
+import csv, json, os, random, statistics
 
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p5p7_common import load_tensors_b  # noqa: E402
 WORKTREE = str(REPO_ROOT)
 DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
 OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
@@ -77,22 +78,6 @@ def _bci(v, stat_fn=statistics.mean, rng=None):
         boots.append(stat_fn([v[i] for i in idx]))
     boots.sort()
     return (pt, boots[int(ALPHA/2*B)], boots[int((1-ALPHA/2)*B)], B)
-
-
-def load_tensors():
-    out = {m: [] for m in METHODS}
-    for path in sorted(glob.glob(os.path.join(DATA_DIR, "*_tensors.jsonl"))):
-        method = os.path.basename(path).split("_")[0]
-        if method not in METHODS:
-            continue
-        with open(path) as fh:
-            for line in fh:
-                line = line.strip()
-                if line:
-                    out[method].append(json.loads(line))
-    for m in METHODS:
-        out[m].sort(key=lambda r: r["step"])
-    return out
 
 
 def per_prompt_restored(step, g_n):
@@ -131,7 +116,7 @@ def per_prompt_restored(step, g_n):
 
 def main():
     print("[iter179] loading N2 tensors...")
-    tensors = load_tensors()
+    tensors = load_tensors_b(DATA_DIR, METHODS)
     for m in METHODS:
         print(f"  {m}: {len(tensors[m])} steps")
 

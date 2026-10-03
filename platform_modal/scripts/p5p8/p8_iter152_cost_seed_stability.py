@@ -27,6 +27,11 @@ import xgboost as xgb
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p8_common import (  # noqa: E402
+    RAW20,
+    ALL24,
+    load,
+)
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -53,27 +58,12 @@ LLM_PRICE_TIERS = [
 
 RATES_PCT = [1.44, 1.00, 0.50, 0.10, 0.05]
 
-RAW20 = [f"V{i}" for i in range(1, 21)]
-AGG4 = ["V_mean", "V_std", "V_max", "V_min"]
-ALL24 = RAW20 + AGG4
 FEATURE_SETS = {
     "24full":       ALL24,
     "20raw":        RAW20,
     "20raw+minmax": RAW20 + ["V_min", "V_max"],
     "20raw+stat":   RAW20 + ["V_mean", "V_std"],
 }
-
-
-def load(path):
-    with path.open() as f:
-        rdr = csv.reader(f)
-        header = next(rdr)
-        idx = {n: i for i, n in enumerate(header)}
-        X, y = [], []
-        for line in rdr:
-            X.append([float(line[idx[c]]) for c in ALL24])
-            y.append(int(float(line[idx["Class"]])))
-    return np.array(X), np.array(y)
 
 
 def downsample_positives_iter148(X, y, rate_pct, seed):

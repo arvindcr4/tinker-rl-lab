@@ -41,9 +41,12 @@ per-step differences; seed=20260704 (matches the stored seed where possible).
 import csv
 import json
 import os
-import random
 import glob
+import sys
 from collections import defaultdict
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
+from _stats import paired_boot_pct  # noqa: E402
 
 REG_DIR = "registry/entries"
 N2_METRICS = "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
@@ -71,25 +74,6 @@ def load_n2():
     return by
 
 
-def paired_bootstrap_pct(dv, dg, n_boot=N_BOOT, seed=BOOT_SEED):
-    """Exact replica of platform_modal/scripts/p5p8/p6_measured_delta_block.py::paired_boot.
-
-    Returns (delta, lo, hi, n). Uses resampled-mean percentile at indices
-    [int(0.025*n_boot), int(0.975*n_boot)-1].
-    """
-    d = [a - b for a, b in zip(dv, dg)]
-    rng = random.Random(seed)
-    n = len(d)
-    means = []
-    for _ in range(n_boot):
-        s = [d[rng.randrange(n)] for _ in range(n)]
-        means.append(sum(s) / n)
-    means.sort()
-    lo = means[int(0.025 * n_boot)]
-    hi = means[int(0.975 * n_boot) - 1]
-    return sum(d) / n, lo, hi, n
-
-
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     n2 = load_n2()
@@ -114,7 +98,7 @@ def main():
             v_steps = n2[metric][variant][-LAST_N:]
             g_steps = grpo[metric][-LAST_N:]
             diff = [v - g for v, g in zip(v_steps, g_steps)]
-            fresh_delta, fresh_lo, fresh_hi, fresh_n = paired_bootstrap_pct(v_steps, g_steps)
+            fresh_delta, fresh_lo, fresh_hi, fresh_n = paired_boot_pct(v_steps, g_steps, N_BOOT, BOOT_SEED)
             stored_delta = float(stored["delta"])
             stored_lo = float(stored["ci_low"])
             stored_hi = float(stored["ci_high"])

@@ -50,6 +50,7 @@ import os
 import random
 import statistics
 from pathlib import Path
+from _analysis_common import write_dict_tsv as write_tsv
 
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -203,16 +204,6 @@ def paired_bootstrap(grpo_vals: list[float], drgrpo_vals: list[float],
         "p_le0": round(p_le0, 4),
         "n_pairs": n,
     }
-
-
-def write_tsv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore",
-                           delimiter="\t")
-        w.writeheader()
-        for r in rows:
-            w.writerow(r)
 
 
 def main() -> None:

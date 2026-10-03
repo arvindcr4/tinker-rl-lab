@@ -17,6 +17,12 @@ from pathlib import Path, PurePosixPath
 import re
 from urllib.parse import unquote, urlsplit
 
+# Support both `python tools/<checker>.py` and module/test imports.
+if __package__:
+    from ._strict import require
+else:
+    from _strict import require
+
 
 ROOT = Path(__file__).resolve().parents[1]
 REVISION = "reports/public_revision_2026-10-03"
@@ -36,11 +42,6 @@ SCOPE = (
     "a privacy certification or replay of omitted executions."
 )
 HEX256 = re.compile(r"[0-9a-f]{64}\Z")
-
-
-def require(condition, message):
-    if not condition:
-        raise ValueError(message)
 
 
 def strict_json(path):
@@ -89,11 +90,8 @@ def safe_file(root, relative):
 
 
 def sha256(path):
-    digest = hashlib.sha256()
     with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+        return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
 def snapshot_paths(root):

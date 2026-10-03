@@ -3,17 +3,16 @@
 
 Small synthetic inputs with real assertions; bootstrap resampling uses a
 seeded RNG and few reps to stay fast. Heavyweight paths (rliable install,
-model downloads) are skip-marked, not silently passed.
+model downloads) are not exercised here.
 """
 
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
 import numpy as np
-import pytest
 
-from utils import stats
 from utils.stats import (
     bootstrap_ci,
     compute_bootstrap_ci,
@@ -83,8 +82,6 @@ class TestComputeIQM(unittest.TestCase):
 
 class TestLoadMultiSeedResults(unittest.TestCase):
     def test_loads_seed_dirs(self):
-        import tempfile
-
         with tempfile.TemporaryDirectory() as tmp:
             exp_dir = Path(tmp) / "demo"
             for seed in (0, 1):
@@ -101,8 +98,6 @@ class TestLoadMultiSeedResults(unittest.TestCase):
 
 class TestGenerateResultsTable(unittest.TestCase):
     def test_writes_tex_and_csv(self):
-        import tempfile
-
         with tempfile.TemporaryDirectory() as tmp:
             tex = str(Path(tmp) / "results_table.tex")
             df = generate_results_table(
@@ -126,27 +121,23 @@ class TestVerifyResults(unittest.TestCase):
         }
         (directory / f"{name}.json").write_text(json.dumps(payload))
 
-    def test_verify_within_tolerance(self):
-        import tempfile
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+        self.expected = {"gsm8k_qwen3_8b": {"last10": 0.344, "peak": 0.625}}
 
-        expected = {"gsm8k_qwen3_8b": {"last10": 0.344, "peak": 0.625}}
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            self._write_result(root, "gsm8k_qwen3_8b_s42", 0.35, 0.63)
-            rows, failed = verify(root, expected, last10_tol=0.05, peak_tol=0.10)
-            self.assertEqual(failed, 0)
-            self.assertEqual(len(rows), 1)
-            self.assertTrue(rows[0][6])
+    def test_verify_within_tolerance(self):
+        self._write_result(self.root, "gsm8k_qwen3_8b_s42", 0.35, 0.63)
+        rows, failed = verify(self.root, self.expected, last10_tol=0.05, peak_tol=0.10)
+        self.assertEqual(failed, 0)
+        self.assertEqual(len(rows), 1)
+        self.assertTrue(rows[0][6])
 
     def test_verify_outside_tolerance(self):
-        import tempfile
-
-        expected = {"gsm8k_qwen3_8b": {"last10": 0.344, "peak": 0.625}}
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            self._write_result(root, "gsm8k_qwen3_8b_s42", 0.90, 0.95)
-            _, failed = verify(root, expected, last10_tol=0.05, peak_tol=0.10)
-            self.assertEqual(failed, 1)
+        self._write_result(self.root, "gsm8k_qwen3_8b_s42", 0.90, 0.95)
+        _, failed = verify(self.root, self.expected, last10_tol=0.05, peak_tol=0.10)
+        self.assertEqual(failed, 1)
 
     def test_match_key_prefers_longest(self):
         expected = {
@@ -155,14 +146,6 @@ class TestVerifyResults(unittest.TestCase):
         }
         self.assertEqual(_match_key("gsm8k_qwen3_8b_base_s1", expected), "gsm8k_qwen3_8b_base")
         self.assertEqual(_match_key("gsm8k_qwen3_8b_s42", expected), "gsm8k_qwen3_8b")
-
-
-@pytest.mark.skip(
-    reason="rliable aggregate analysis needs the optional rliable package and "
-    "heavyweight score matrices; not a fast unit test"
-)
-def test_rliable_analysis_heavyweight():
-    stats.try_rliable_analysis({"algo": np.array([0.5, 0.6])}, output_dir=".")
 
 
 if __name__ == "__main__":

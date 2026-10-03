@@ -40,11 +40,13 @@ import math
 import os
 import statistics
 from collections import defaultdict
+from functools import partial
 from pathlib import Path
 
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p5p7_common import bernoulli_z, c_unified_c4, is_boundary  # noqa: E402
 WORKTREE = REPO_ROOT
 TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 HELDOUT = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
@@ -62,22 +64,9 @@ B = 2000
 SEED = 20260705
 
 
-def bernoulli_z(p_hat: float, G: int) -> float:
-    """Closed-form Bernoulli zero-variance fraction: p^G + (1-p)^G."""
-    if p_hat <= 0.0:
-        return 1.0
-    if p_hat >= 1.0:
-        return 1.0
-    return p_hat ** G + (1.0 - p_hat) ** G
-
-
 def contrast_mag(p_hat: float, G: int) -> float:
     """1 - z(p, G) — within-group contrast magnitude."""
     return 1.0 - bernoulli_z(p_hat, G)
-
-
-def is_boundary(p_hat: float) -> bool:
-    return p_hat <= 0.0 or p_hat >= 1.0
 
 
 def c_static_g8(p_hat, z_obs):
@@ -109,31 +98,12 @@ def c_adaptive_pp_oracle(p_hat, z_obs):
     return best_g
 
 
-def c_unified_c4(p_hat, z_obs):
-    """Iter-119 C4 unified controller (regime-gated composition)."""
-    if z_obs < 0.50:
-        # FAST regime: drop G (Dualformer)
-        return 2 if is_boundary(p_hat) else 4
-    if z_obs >= TAU_DEGEN:
-        # DEGENERATE regime: escalate via Bernoulli inversion, cap G=32
-        if is_boundary(p_hat):
-            return G_BASE
-        target_z = max(0.5, 0.5 * z_obs)
-        best_g = G_BASE
-        for g in [16, 32]:
-            if bernoulli_z(p_hat, g) < target_z:
-                best_g = g
-                break
-        return best_g
-    return G_BASE
-
-
 CONTROLLERS = [
     ("STATIC_G8", c_static_g8),
     ("STATIC_G16", c_static_g16),
     ("DUALFORMER_PP", c_dualformer_pp),
     ("ADAPTIVE_PP_ORACLE", c_adaptive_pp_oracle),
-    ("UNIFIED_C4", c_unified_c4),
+    ("UNIFIED_C4", partial(c_unified_c4, tau_degen=TAU_DEGEN, g_base=G_BASE)),
 ]
 
 

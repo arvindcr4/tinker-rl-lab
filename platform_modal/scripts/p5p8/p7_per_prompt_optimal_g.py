@@ -44,6 +44,7 @@ import statistics
 import sys
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p5p7_common import load_tensors_c  # noqa: E402
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
@@ -97,18 +98,6 @@ def optimal_gstar(k: int, g_base: int = G_BASE) -> int:
     return g_base
 
 
-def load_rewards():
-    """Return dict[(method, step)] -> list[list[float]] (16 x G_BASE rewards)."""
-    out = {}
-    for m in METHODS:
-        path = N2 / f"{m}_s0_tensors.jsonl"
-        with path.open() as f:
-            for line in f:
-                d = json.loads(line)
-                out[(m, d["step"])] = d["rewards"]
-    return out
-
-
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write", action="store_true",
@@ -117,7 +106,7 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     FIG.mkdir(parents=True, exist_ok=True)
 
-    tensors = load_rewards()
+    tensors = load_tensors_c(N2, METHODS)
     # Per-method aggregates
     method_stats = {}
     per_step_rows = []

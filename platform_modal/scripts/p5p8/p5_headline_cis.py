@@ -29,6 +29,9 @@ import statistics
 import sys
 from pathlib import Path
 
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _stats
+from _stats import bootstrap_ci_mean_pct  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[2]
 SWEEP = ROOT / "experiments" / "results" / "groupsize_zvf_sweep.tsv"
 DELTA = ROOT / "experiments" / "results" / "group_size_iter107_bootstrap_delta.tsv"
@@ -37,22 +40,6 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 N_BOOT = 10000
 SEED = 20260704
-
-
-def bootstrap_ci_mean(values, B=N_BOOT, alpha=0.05, seed=SEED):
-    """Non-paired percentile bootstrap CI on the mean."""
-    if not values:
-        return float("nan"), float("nan"), float("nan"), 0
-    rng = random.Random(seed)
-    n = len(values)
-    means = []
-    for _ in range(B):
-        s = [values[rng.randrange(n)] for _ in range(n)]
-        means.append(sum(s) / n)
-    means.sort()
-    lo = means[int(B * alpha / 2)]
-    hi = means[int(B * (1 - alpha / 2))]
-    return sum(values) / n, lo, hi, n
 
 
 def bootstrap_ci_difference_paired(a, b, B=N_BOOT, alpha=0.05, seed=SEED):
@@ -150,7 +137,7 @@ def headline_h1_zvf_monotone(sweep):
         rng = random.Random(SEED + r["G"])
         draws = [r["mean_zvf"] + rng.gauss(0, r["heldout_acc_se"])
                  for _ in range(r["n_seeds"])]
-        m, lo, hi, n = bootstrap_ci_mean(draws)
+        m, lo, hi, n = bootstrap_ci_mean_pct(draws, N_BOOT, 0.05, SEED)
         out.append({
             "claim": "H1", "G": r["G"], "metric": "mean_zvf",
             "n": n, "point": round(m, 4),
@@ -185,7 +172,7 @@ def headline_h2_heldout_flat(sweep):
         rng = random.Random(SEED + 1000 + r["G"])
         draws = [r["heldout_acc_mean"] + rng.gauss(0, r["heldout_acc_se"])
                  for _ in range(r["n_seeds"])]
-        m, lo, hi, n = bootstrap_ci_mean(draws)
+        m, lo, hi, n = bootstrap_ci_mean_pct(draws, N_BOOT, 0.05, SEED)
         out.append({
             "claim": "H2", "G": r["G"], "metric": "heldout_acc",
             "n": n, "point": round(m, 4),

@@ -38,7 +38,6 @@ Stdlib + numpy + xgboost. <= 300 lines.
 """
 from __future__ import annotations
 
-import csv
 import json
 from pathlib import Path
 
@@ -48,6 +47,12 @@ import xgboost as xgb
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
+from _p8_common import (  # noqa: E402
+    RAW20,
+    ALL24,
+    load,
+    auc_p8 as auc,
+)
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -58,23 +63,8 @@ K_PCT = 2.0
 COST_XGB = 0.0001
 COST_LLM = 0.0010
 G_THR = 1e-4
-RAW20 = [f"V{i}" for i in range(1, 21)]
-AGG4 = ["V_mean", "V_std", "V_max", "V_min"]
-ALL24 = RAW20 + AGG4
 NOISE_LEVELS = [0.05, 0.10, 0.20]
 SHIFT_LEVEL = 0.10
-
-
-def load(path):
-    with path.open() as f:
-        rdr = csv.reader(f)
-        header = next(rdr)
-        idx = {n: i for i, n in enumerate(header)}
-        X, y = [], []
-        for line in rdr:
-            X.append([float(line[idx[c]]) for c in ALL24])
-            y.append(int(float(line[idx["Class"]])))
-    return np.array(X), np.array(y)
 
 
 def fit_xgb(Xtr, ytr, Xte, cols, seed):
@@ -84,15 +74,6 @@ def fit_xgb(Xtr, ytr, Xte, cols, seed):
                           random_state=seed, n_jobs=4)
     m.fit(Xtr[:, ci], ytr)
     return m.predict_proba(Xte[:, ci])[:, 1]
-
-
-def auc(scores, y):
-    pos = scores[y == 1]; neg = scores[y == 0]
-    n_pos, n_neg = len(pos), len(neg)
-    if n_pos == 0 or n_neg == 0: return 0.5
-    comb = np.concatenate([pos, neg])
-    ranks = np.argsort(np.argsort(comb)) + 1
-    return float((ranks[:n_pos].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
 
 
 def pr_at_K(scores, y, k_pct):

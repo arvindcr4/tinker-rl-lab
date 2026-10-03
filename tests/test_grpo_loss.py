@@ -2,7 +2,7 @@
 
 Exercises :func:`normalize_rewards` and :func:`make_grpo_loss_fn` imported
 from the production module (not local redefinitions) with small synthetic
-inputs. End-to-end :func:`run_grpo` is skip-marked: it requires a live
+inputs. End-to-end :func:`run_grpo` is not exercised here: it requires a live
 W&B run, Hugging Face auth, and the Tinker service / model download.
 """
 
@@ -157,13 +157,6 @@ class TestMakeGrpoLossFn(unittest.TestCase):
         loss_fn = make_grpo_loss_fn([1.0], nll_mask=[True, False], nll_coef=1.0)
         with self.assertRaises(ValueError):
             loss_fn(None, [torch.tensor([-0.5])])
-
-    @unittest.skip(
-        "run_grpo needs live W&B + Hugging Face auth + Tinker service/model "
-        "download; not runnable as a fast unit test"
-    )
-    def test_run_grpo_end_to_end(self):
-        pass
 
 
 class TestMakeGspoLossFn(unittest.TestCase):

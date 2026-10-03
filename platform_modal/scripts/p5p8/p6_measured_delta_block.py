@@ -18,8 +18,11 @@ emits a TSV. Stdlib + jsonschema only.
 import csv
 import json
 import pathlib
-import random
 import statistics as st
+import sys
+
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _stats
+from _stats import paired_boot_pct  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 ENTRIES = ROOT / "registry" / "entries"
@@ -55,21 +58,6 @@ def n2_series(rows, method, metric):
     return [v for _, v in vals][-LAST_K:]
 
 
-def paired_boot(dv, dg, n_boot=N_BOOT, seed=SEED):
-    # dv, dg aligned per-step series; delta_i = variant_i - base_i
-    d = [a - b for a, b in zip(dv, dg)]
-    rng = random.Random(seed)
-    n = len(d)
-    means = []
-    for _ in range(n_boot):
-        s = [d[rng.randrange(n)] for _ in range(n)]
-        means.append(sum(s) / n)
-    means.sort()
-    lo = means[int(0.025 * n_boot)]
-    hi = means[int(0.975 * n_boot) - 1]
-    return sum(d) / n, lo, hi, n
-
-
 def n2_measured():
     rows = read_tsv(N2)
     out = {}  # method -> list of measured dicts
@@ -78,7 +66,7 @@ def n2_measured():
         for metric in ("zvf", "reward_mean"):
             vser = n2_series(rows, m, metric)
             gser = n2_series(rows, BASE, metric)
-            delta, lo, hi, n = paired_boot(vser, gser)
+            delta, lo, hi, n = paired_boot_pct(vser, gser, N_BOOT, SEED)
             recs.append({
                 "metric": metric, "panel": "n2_same_stack_last10", "base": BASE,
                 "delta": round(delta, 6), "ci_low": round(lo, 6), "ci_high": round(hi, 6),

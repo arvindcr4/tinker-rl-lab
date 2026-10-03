@@ -50,6 +50,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from _analysis_common import write_union_tsv as write_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 RESULTS = REPO / "experiments" / "results"
@@ -386,24 +387,6 @@ def make_plots(egt_rows, gstar_rows, iso_compute_rows, outpath):
 # ---------------------------------------------------------------------------
 # Writers
 # ---------------------------------------------------------------------------
-def write_tsv(rows: list[dict], path: Path):
-    if not rows:
-        return
-    keys: list[str] = []
-    seen = set()
-    for r in rows:
-        for k in r.keys():
-            if k not in seen:
-                keys.append(k)
-                seen.add(k)
-    with path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=keys, delimiter="\t",
-                           extrasaction="ignore")
-        w.writeheader()
-        for r in rows:
-            w.writerow(r)
-
-
 def write_summary(rows: list[dict], path: Path):
     lines = ["metric\tvalue"]
     for r in rows:

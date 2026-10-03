@@ -36,58 +36,25 @@ from __future__ import annotations
 
 import csv
 import json
-import math
 import os
+import sys
 from collections import defaultdict
-from statistics import fmean, pstdev
+from statistics import fmean
+
+from _p5p7_common import axis_variance_fraction
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
+from _stats import cohens_d_pstdev_pooled as cohens_d, wilson_p_factored  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 RES  = os.path.join(ROOT, "experiments", "results")
 OUT  = os.path.join(RES, "p5p8")
 os.makedirs(OUT, exist_ok=True)
 
-# ---- eta^2 helper (same logic as unpacking_dpo_ppo_factorization.py) ----
-
-def axis_variance_fraction(rows, axis_key, value_key):
-    """SS_axis / SS_total nested ANOVA-style decomposition.
-
-    Returns (eta2, ss_axis, ss_within, n_groups, grand_mean).
-    """
-    grand = []
-    by_axis = defaultdict(list)
-    for r in rows:
-        v = r.get(value_key)
-        if v is None:
-            continue
-        grand.append(v)
-        by_axis[r[axis_key]].append(v)
-    if not grand or len(by_axis) < 2:
-        return float("nan"), 0.0, 0.0, len(by_axis), float("nan")
-    grand_mean = fmean(grand)
-    ss_total = sum((x - grand_mean) ** 2 for x in grand)
-    ss_axis = sum(len(vs) * (fmean(vs) - grand_mean) ** 2 for vs in by_axis.values())
-    ss_within = ss_total - ss_axis
-    eta2 = ss_axis / ss_total if ss_total > 1e-12 else float("nan")
-    return eta2, ss_axis, ss_within, len(by_axis), grand_mean
-
-
-def cohens_d(a, b):
-    if len(a) < 2 or len(b) < 2:
-        return float("nan")
-    ma, mb = fmean(a), fmean(b)
-    sa, sb = pstdev(a), pstdev(b)
-    sp = math.sqrt(((len(a) - 1) * sa * sa + (len(b) - 1) * sb * sb)
-                   / (len(a) + len(b) - 2))
-    return (ma - mb) / sp if sp > 1e-12 else float("nan")
-
-
 def wilson_ci(p, n, z=1.96):
     if n == 0:
         return (0.0, 1.0)
-    denom = 1 + z * z / n
-    centre = (p + z * z / (2 * n)) / denom
-    half = (z * math.sqrt((p * (1 - p) + z * z / (4 * n)) / n)) / denom
-    return (max(0.0, centre - half), min(1.0, centre + half))
+    return wilson_p_factored(p, n, z)
 
 
 # ---- loaders ----

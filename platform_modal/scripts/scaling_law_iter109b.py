@@ -43,6 +43,7 @@ import math
 from pathlib import Path
 
 import numpy as np
+from _analysis_common import write_rows_tsv as _write_tsv, ols
 
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -55,32 +56,6 @@ N_BOOT = 5000
 # Re-import the iter109 anchors + fits from the meta.json (deterministic;
 # we don't re-run the slow curve_fit bootstrap here).
 META = json.loads((RES / "scaling_law_iter109_meta.json").read_text())
-
-
-def ols(x, y):
-    x = np.asarray(x, float); y = np.asarray(y, float)
-    n = len(x)
-    if n < 3:
-        return float("nan"), float("nan"), float("nan")
-    xm, ym = x.mean(), y.mean()
-    den = float(np.sum((x - xm) ** 2))
-    if den <= 0:
-        return float("nan"), float("nan"), float("nan")
-    b = float(np.sum((x - xm) * (y - ym)) / den)
-    a = ym - b * xm
-    resid = y - (a + b * x)
-    s2 = float(np.sum(resid ** 2)) / (n - 2)
-    se_b = math.sqrt(s2 / den) if den > 0 else float("nan")
-    return a, b, se_b
-
-
-def _write_tsv(path: Path, cols: list[str], rows: list[list]) -> None:
-    with path.open("w", newline="") as f:
-        w = csv.writer(f, delimiter="\t")
-        w.writerow(cols)
-        for r in rows:
-            w.writerow(r)
-    print(f"wrote {path}")
 
 
 def main() -> None:

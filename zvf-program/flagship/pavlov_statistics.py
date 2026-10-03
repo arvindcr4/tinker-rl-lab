@@ -121,17 +121,22 @@ def wilson_interval(
     trials: int,
     *,
     confidence: float = DEFAULT_CONFIDENCE,
+    z: float | None = None,
 ) -> tuple[float, float]:
-    """Return a two-sided Wilson score interval for a binomial proportion."""
+    """Return a two-sided Wilson score interval for a binomial proportion.
+
+    ``z`` pins the critical value exactly (e.g. a receipt-contract constant);
+    when given, ``confidence`` is not used to derive it.
+    """
 
     successes = _integer("successes", successes, minimum=0)
     trials = _integer("trials", trials, minimum=1)
     if successes > trials:
         raise StatisticsInputError("successes cannot exceed trials")
-    confidence = _confidence(confidence)
-
-    alpha = 1.0 - confidence
-    z = statistics.NormalDist().inv_cdf(1.0 - alpha / 2.0)
+    if z is None:
+        confidence = _confidence(confidence)
+        alpha = 1.0 - confidence
+        z = statistics.NormalDist().inv_cdf(1.0 - alpha / 2.0)
     proportion = successes / trials
     z_squared = z * z
     denominator = 1.0 + z_squared / trials

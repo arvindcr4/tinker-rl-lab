@@ -48,27 +48,12 @@ FIGURES = REPO_ROOT / "figures"
 
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import zvf_diagnostic as zd  # type: ignore  # noqa: E402
+from _analysis_common import maybe_matplotlib as _maybe_matplotlib, rankdata_avg as _rankdata
 
 
 # ---------------------------------------------------------------------------
 # AUROC
 # ---------------------------------------------------------------------------
-
-
-def _rankdata(vs: Sequence[float]) -> List[float]:
-    n = len(vs)
-    order = sorted(range(n), key=lambda i: vs[i])
-    ranks = [0.0] * n
-    i = 0
-    while i < n:
-        j = i
-        while j < n and vs[order[j]] == vs[order[i]]:
-            j += 1
-        avg = (i + 1 + j) / 2.0
-        for k in range(i, j):
-            ranks[order[k]] = avg
-        i = j
-    return ranks
 
 
 def _auc_mann_whitney(pos: Sequence[float], neg: Sequence[float]) -> float:
@@ -502,18 +487,6 @@ def write_calibration(pooled: List[Dict[str, Any]], out_path: Path) -> Dict[str,
         "low_failure_rate": low_fail,
         "high_failure_rate": high_fail,
     }
-
-
-def _maybe_matplotlib():
-    try:
-        import matplotlib
-
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-
-        return plt
-    except Exception:
-        return None
 
 
 def write_calibration_figure(

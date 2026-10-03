@@ -19,11 +19,18 @@ On macOS: `brew install pandoc tectonic`.
 
 Tectonic audits use its local package cache. On a fresh installation, warm that
 cache by compiling the three historical audit documents into temporary output,
-as the `Warm TeX cache` step in `.github/workflows/ci.yml` does. Missing tools or
-uncached TeX inputs are reported as failures, never silent passes. Audit builds
-must not modify or delete the author's PDFs.
+as the `Compile papers to a scratch outdir` step in the `docs-build` job in
+`.github/workflows/ci.yml` does. Missing tools or uncached TeX inputs are reported
+as failures, never silent passes. Audit builds must not modify or delete the
+author's PDFs.
 
-Run the same quality gate used by CI before opening a pull request:
+CI runs core tests with `pytest tests/ -m "not latex"`, without a TeX toolchain.
+Compiler-mocked unit tests stay in core. The `docs-build` job installs the locked
+development dependencies and checksum-pinned Tectonic, warms its cache, then runs
+the real audit integration tests with `pytest tests/ -m latex`.
+
+Run the complete local quality gate before opening a pull request. `make check`
+includes all tests, including the native LaTeX integration tests:
 
 ```bash
 make check

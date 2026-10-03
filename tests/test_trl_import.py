@@ -1,11 +1,20 @@
-"""Importing the supported TRL API must not start telemetry or create artifacts."""
+"""Importing trainer APIs must not start telemetry or create artifacts."""
 
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 
-def test_trl_import_has_no_telemetry_side_effects(tmp_path):
+
+@pytest.mark.parametrize(
+    ("module_name", "trainer_name"),
+    [
+        ("platform_local.trl_integrations", "TRLTrainer"),
+        ("verl.trainer", "VERLTrainer"),
+    ],
+)
+def test_trainer_import_has_no_telemetry_side_effects(tmp_path, module_name, trainer_name):
     root = Path(__file__).resolve().parents[1]
     script = f"""
 import sys
@@ -14,13 +23,13 @@ sys.path.insert(0, {str(root)!r})
 class RejectTelemetryImports:
     def find_spec(self, fullname, path=None, target=None):
         if fullname == "codecarbon" or fullname.startswith("codecarbon."):
-            raise AssertionError("TRL import must not initialize CodeCarbon")
+            raise AssertionError("Trainer import must not initialize CodeCarbon")
         return None
 
 sys.meta_path.insert(0, RejectTelemetryImports())
-from platform_local.trl_integrations import TRLTrainer
+from {module_name} import {trainer_name}
 assert "codecarbon" not in sys.modules
-print(TRLTrainer.__name__)
+print({trainer_name}.__name__)
 """
     completed = subprocess.run(
         [sys.executable, "-c", script],
@@ -30,5 +39,5 @@ print(TRLTrainer.__name__)
         check=False,
     )
     assert completed.returncode == 0, completed.stdout + completed.stderr
-    assert completed.stdout.strip() == "TRLTrainer"
+    assert completed.stdout.strip() == trainer_name
     assert list(tmp_path.iterdir()) == []

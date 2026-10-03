@@ -1,0 +1,87 @@
+{
+ "lane": "E5",
+ "benchmark": "tau3 = sierra-research/tau2-bench@a2c024725189473d2d7cea3a5cfdbcc67478e41f, domain banking_knowledge, alltools retrieval, 97 tasks",
+ "scope": "replacement scope (E5 Tau3); fresh single run of all 97 tasks under one protocol; never pooled with original-contract numbers",
+ "actor": "pavlov-public-portfolio-bf16 (seed809 merged) on dedicated Modal H200 app e5-trained-actor-65k-0927 (max_model_len 65536); temperature 0.0, max_tokens 4096, non-thinking",
+ "user_simulator": "gpt-4.1-2025-04-14 (temperature 0.0) via token-gated relay e5-openai-relay-0927",
+ "grader": "native tau2 reward / compute_metrics",
+ "metric": "pass^1 (native compute_metrics(...).pass_hat_ks[1]; success = reward 1.0)",
+ "n_attempted": 97,
+ "n_graded": 72,
+ "n_success": 8,
+ "score": 0.0825,
+ "ci95_wilson": [
+  0.0424,
+  0.1544
+ ],
+ "score_rule": "lane rule: infrastructure errors/timeouts count as failures over all 97",
+ "native_pass1_excluding_infra": 0.1111111111111111,
+ "n_infrastructure_error": 25,
+ "infrastructure_error_breakdown": {
+  "context_window_exceeded_65536": 14,
+  "empty_assistant_message": 11
+ },
+ "subsets": {
+  "remaining77_excluding_native10_graded20": {
+   "n": 77,
+   "passes": 7,
+   "pass1": 0.0909,
+   "wilson95": [
+    0.0447,
+    0.176
+   ]
+  },
+  "native10_graded20_rerun": {
+   "n": 20,
+   "passes": 1,
+   "pass1": 0.05,
+   "wilson95": [
+    0.0089,
+    0.2361
+   ]
+  }
+ },
+ "spend_usd": 18.42,
+ "spend_breakdown": "Modal e5-trained-actor-65k-0927 $15.21 + e5-openai-relay-0927 $0.04 (modal billing report, 2026-09-27) + OpenAI user-sim/embeddings $3.17 (relay ledger: 1032 chat, 16 embeddings)",
+ "deviations": [
+  "Thin runner code/run_tau3.sh replaces the fail-closed zvf-program/e5_successor27 controller (paperwork gate only; superseded by AUTHORIZATION.json).",
+  "Dedicated 65k-context actor copy instead of the shared 32k endpoint (banking_knowledge prompts exceed 32k).",
+  "OpenAI roles routed through a spend-capped relay."
+ ],
+ "caveats": [
+  "Main run (tau3-e5-native97-0927) completed 92/97 and exited at 2026-09-27T03:19Z with task_097/099/100/101/102 unstarted.",
+  "An accidental tau2 --auto-resume at ~05:04Z rewrote results.json and dropped the 24 infrastructure_error simulations before it was killed (it had begun retrying them; none of those retries were kept). The 24 ids and causes are reconstructed from the run log in infra_errors_reconstructed.json; they score as failures either way (absent = infra = failure in score_and_redact.py).",
+  "The 5 unstarted tasks were run as tau3-e5-missing5-0927 under the same protocol. A first attempt failed with connection errors while the actor cold-started (0 messages each, archived as aborted_coldstart_missing5-0927, not scored); the rerun on the warm endpoint is the one scored. task_097 hit the 65536 context limit (also its failure mode in the main run).",
+  "Merged save tau3-e5-native97-0927-merged = 68 main sims + 5 missing5 sims; 24 absent ids = infrastructure errors.",
+  "Per-call LLM artifacts (612 MB) are gitignored; results.json and scores_native.json are kept."
+ ],
+ "infrastructure_error_tasks": [
+  "task_018",
+  "task_020",
+  "task_022",
+  "task_026",
+  "task_027",
+  "task_028",
+  "task_029",
+  "task_058",
+  "task_059",
+  "task_062",
+  "task_063",
+  "task_064",
+  "task_065",
+  "task_066",
+  "task_068",
+  "task_069",
+  "task_071",
+  "task_073",
+  "task_074",
+  "task_090",
+  "task_091",
+  "task_092",
+  "task_094",
+  "task_096",
+  "task_097"
+ ],
+ "authorization": "outputs/finish_pending_2026-09-27/AUTHORIZATION.json (E5 cap $80)",
+ "resources_cleaned": "Modal apps e5-trained-actor-65k-0927 and e5-openai-relay-0927 stopped 2026-09-27 ~07:40Z (modal app list: stopped, 0 tasks). No cloud VMs were created by this lane."
+}

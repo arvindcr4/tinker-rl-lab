@@ -33,6 +33,8 @@ def submission_files(root: Path) -> list[Path]:
         Path(name)
         for name in (
             "SUBMISSION.md",
+            "BASELINES.md",
+            "REPRODUCE.md",
             "LICENSE",
             "CITATION.cff",
             "PROJECT_HISTORY.md",

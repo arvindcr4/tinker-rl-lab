@@ -1,0 +1,127 @@
+% ---------------------------------------------------------------------------
+% fig_group_size.tex
+% Trainability and held-out performance vs group size G.
+% The relationship is NON-MONOTONE: the headline GSM8K sweep peaks at the
+% intermediate G=8 and collapses at G=16, while the confirmation sweep's train
+% reward rises and its mean ZVF falls monotonically in G.
+% DATA:
+%   paper/expected_results.json                -> panel (a): headline G-sweep
+%   experiments/results/group_size_effect.tsv  -> panels (b), (c), (d)
+% INTEGRITY (do not remove):
+%   (a) is a SINGLE-SEED, 30-step sweep -> no error bars are possible and it
+%       cannot establish an optimum. Labelled as such inside the panel.
+%   (b) is the measured n=3 confirmation sweep; its held-out apex is NOT
+%       statistically separable from its neighbours (overlapping SEs), so the
+%       supported claim is only that the optimum is interior.
+%   Every plotted value is a cell of the cited file; nothing is invented.
+% ---------------------------------------------------------------------------
+\documentclass[border=6pt]{standalone}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,decorations.pathreplacing,patterns}
+\usetikzlibrary{pgfplots.groupplots}
+\tikzset{
+  blk/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=blue!6,
+              minimum height=8mm, minimum width=20mm, align=center, font=\small},
+  io/.style={rectangle, rounded corners=6pt, draw=black!70, thick, fill=green!8,
+             minimum height=8mm, align=center, font=\small},
+  proc/.style={rectangle, draw=black!70, thick, fill=orange!10, minimum height=8mm,
+               align=center, font=\small},
+  dec/.style={diamond, aspect=2, draw=black!70, thick, fill=yellow!15, align=center, font=\footnotesize},
+  warnbox/.style={rectangle, rounded corners=2pt, draw=red!60!black, thick, fill=red!7,
+                  minimum height=8mm, align=center, font=\small},
+  oklbox/.style={rectangle, rounded corners=2pt, draw=green!45!black, thick, fill=green!8,
+                 minimum height=8mm, align=center, font=\small},
+  ar/.style={-{Latex[length=2mm]}, thick},
+  arl/.style={-{Latex[length=2mm]}, thick, dashed, draw=black!55},
+  lbl/.style={font=\footnotesize\itshape, text=black!60},
+}
+\definecolor{good}{RGB}{34,139,34}
+\definecolor{bad}{RGB}{178,34,34}
+\definecolor{warn}{RGB}{218,165,32}
+\definecolor{pesblue}{RGB}{0,45,98}
+\definecolor{complete}{RGB}{30,125,79}
+\definecolor{partial}{RGB}{176,106,0}
+\definecolor{blocked}{RGB}{166,43,43}
+\begin{document}
+% fig_group_size. Sources: (a) platform_hybrid/paper/expected_results.json
+% (gsm8k_qwen3_8b_g{2,4,8,16}: peak, last10 = in-training reward, single seed);
+% (b,c) platform_hybrid/experiments/results/group_size_effect.tsv A_reward_vs_G
+% (3 seeds; bars = +-1.96 SE); (d) same file, B_broader_g4_vs_g32
+% (reconstructed retention, bars = the file's conditional reconstruction interval).
+\begin{tikzpicture}
+\begin{groupplot}[
+  group style={group size=2 by 2, horizontal sep=1.55cm, vertical sep=1.75cm},
+  width=6.9cm, height=4.9cm,
+  xmode=log,
+  xtick={2,4,8,16}, xticklabels={2,4,8,16},
+  xmin=1.55, xmax=30,
+  ymajorgrids, grid style={black!10},
+  axis line style={draw=black!55},
+  tick align=outside,
+  tick label style={font=\footnotesize},
+  label style={font=\footnotesize},
+  title style={font=\footnotesize},
+  s1/.style={thick, mark=*, mark size=1.8pt},
+  s2/.style={thick, dashed, mark=square*, mark size=1.6pt},
+  s3/.style={thick, mark=triangle*, mark size=2.0pt},
+]
+% (a) single seed, in-training reward
+\nextgroupplot[
+  ymin=0.25, ymax=1.08, ytick={0.3,0.5,0.7,0.9},
+  ylabel={GSM8K train reward},
+  xlabel={Group size $G$},
+  title={(a) Qwen3-8B, 1 seed: $G{=}8$ highest},
+]
+\addplot[s2, draw=black!55] coordinates {(2,0.500) (4,0.750) (8,1.000) (16,0.719)};
+\addplot[s1, draw=pesblue] coordinates {(2,0.375) (4,0.521) (8,0.844) (16,0.380)};
+\node[anchor=west, font=\footnotesize, text=black!60, inner sep=2pt, xshift=2pt] at (axis cs:16,0.719) {peak};
+\node[anchor=west, font=\footnotesize, text=pesblue, inner sep=2pt, xshift=2pt] at (axis cs:16,0.380) {last-10};
+% (b) 3 seeds
+\nextgroupplot[
+  xmax=22,
+  ymin=0.815, ymax=1.020, ytick={0.85,0.90,0.95,1.00},
+  yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},
+  ylabel={Score (3-seed mean)},
+  xlabel={Group size $G$},
+  title={(b) Qwen2.5-0.5B arithmetic, 3 seeds},
+  error bars/y dir=both, error bars/y explicit,
+]
+\addplot[s1, draw=pesblue] coordinates {
+  (2,0.9817) +- (0,0.0086) (4,0.9883) +- (0,0.0033) (8,0.9900) +- (0,0.0057) (16,0.9783) +- (0,0.0118)};
+\addplot[s2, draw=blocked] coordinates {
+  (2,0.8398) +- (0,0.0141) (4,0.8625) +- (0,0.0065) (8,0.8694) +- (0,0.0037) (16,0.8731) +- (0,0.0053)};
+\node[anchor=north, font=\footnotesize, text=pesblue, inner sep=2pt] at (axis cs:5.6,0.975) {held-out accuracy};
+\node[anchor=south, font=\footnotesize, text=blocked, inner sep=2pt] at (axis cs:5.6,0.878) {mean train reward};
+% (c) ZVF
+\nextgroupplot[
+  xmax=22,
+  ymin=0.58, ymax=0.90, ytick={0.6,0.7,0.8,0.9},
+  ylabel={Mean zero-variance fraction},
+  xlabel={Group size $G$},
+  title={(c) Same sweep: ZVF falls with $G$},
+]
+\addplot[s3, draw=blocked] coordinates {(2,0.838) (4,0.7635) (8,0.6906) (16,0.6312)};
+\draw[<->, thick, draw=blocked!75] (axis cs:1.72,0.6312) -- (axis cs:1.72,0.838);
+\node[anchor=west, font=\footnotesize, text=blocked!85, align=left] at (axis cs:1.85,0.68) {$-0.207$};
+% (d) reconstructed
+\nextgroupplot[
+  xtick={1000000,4000000,16000000,64000000},
+  xticklabels={1M,4M,16M,64M},
+  xmin=700000, xmax=110000000,
+  ymin=0.66, ymax=1.12,
+  ytick={0.7,0.8,0.9,1.0,1.1},
+  ylabel={Retention $G{=}4\,/\,G{=}32$},
+  xlabel={Budget $T$ (tokens)},
+  title={(d) Reconstructed, not trained},
+  error bars/y dir=both, error bars/y explicit,
+]
+\draw[densely dotted, thick, draw=black!55] (axis cs:700000,0.976) -- (axis cs:110000000,0.976);
+\node[anchor=south east, font=\footnotesize, text=black!65, inner sep=1pt] at (axis cs:105000000,0.978) {0.976 (Wu et al.)};
+\addplot[thick, dashed, draw=complete, mark=o, mark size=2pt, mark options={solid, fill=white},
+         error bars/error bar style={solid, complete}] coordinates {
+  (1000000,0.9770) += (0,0.1147) -= (0,0.1043) (4000000,0.8339) += (0,0.0672) -= (0,0.0634) (16000000,0.7508) += (0,0.0497) -= (0,0.0482) (64000000,0.7273) += (0,0.0463) -= (0,0.0444)};
+\end{groupplot}
+\end{tikzpicture}
+\end{document}

@@ -15,7 +15,11 @@ submission**, not an anonymous conference package.
 The directory date identifies the original review folder. The thesis incorporates
 the 2 October follow-up and the submission-preparation corrections. Chapter
 Markdown, `frontmatter.tex`, `references.bib`, and `build_thesis.py` are the
-sources; `thesis_master.tex` and the PDF are generated.
+sources; `thesis_master.tex` and the PDF are generated. The published thesis PDF,
+canonical authored sources, and selected compact receipts are versioned. Broad
+`outputs/` cleanup must not remove those inputs. The tracking regression in
+`tests/test_thesis_submission.py` checks the Git index as well as local files;
+ignored files on one machine are not proof that a fresh checkout works.
 
 **Do not upload the old deck or an older bundle as this submission.**
 `FINAL_HANDOFF.md`, `submission/contents/`, `submission/mtech_phase1/`, and the
@@ -88,7 +92,7 @@ rerun tolerance is ±5 percentage points on last-10 and ±10 points on peak
 | M1b unsaturated same-stack rerun | `platform_hybrid/experiments/results/samestack_gsm8k_cot{,_full}.json` | Five paired seeds; GRPO G8 minus untuned-critic PPO is +5.0 pp. Paired t-test p=0.016; exact sign-flip p=0.0625. Not superiority over tuned PPO. |
 | Trained/base small-scale pairs | `outputs/e1_e14_small_scale_2026-09-26/E*/paired.json` | Same serving engine, per-lane comparison. No significant primary lane difference; no cross-lane aggregate. E12 rubric items are clustered by application. |
 | Six replacement scopes | `outputs/finish_pending_2026-09-27/E*/result.json` | E1, E2, E5, E6, E9, E13. Attempted coverage is not the same as successful native grading. |
-| Full source map | Thesis Appendix G | Other evidence remains in the repository, not all in this compact ZIP. |
+| Full source map | Thesis Appendix G | Only selected receipts are retained in the current checkout; other source notes resolve in project history, not necessarily in this ZIP. |
 
 The E12 receipt uses the shared E3/E7/E12 generator's staged rounding: it
 subtracts four-decimal arm means to obtain -0.0332. The direct per-item
@@ -120,8 +124,9 @@ No weights, full datasets, hidden answer keys, cloud credentials, local caches,
 or provider logs are bundled. They require their own licenses, accounts, or
 large downloads. Some original execution sources and the historical Tinker
 sampler route are no longer available. The ZIP is a **thesis review package**,
-not a self-contained reproduction of every research run. Use the complete
-repository and each study's receipts for broader reproduction.
+not a self-contained reproduction of every research run. Use each study's receipts and the full project history for broader reproduction.
+Older source paths removed by the artifact cleanup can be inspected at the
+pre-cleanup revision `649c6beb3`; they are not all present in today's checkout.
 
 ## Before the actual submission — author checklist
 

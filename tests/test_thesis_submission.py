@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import subprocess
 import zipfile
 from pathlib import Path
 
@@ -56,3 +57,28 @@ def test_modified_member_fails_verification(tmp_path):
             target.writestr(name, b"tampered" if name == "report.pdf" else source.read(name))
     with pytest.raises(ValueError, match="checksum"):
         builder.verify_bundle(corrupted)
+
+
+def test_submission_sources_and_evidence_are_versioned():
+    """Ignored local files must not mask a broken source checkout."""
+    required = [
+        path
+        for path in builder.submission_files(ROOT)
+        if not (
+            (path.suffix == ".pdf" and path.name != "Thesis_Report_ArvindCR.pdf")
+            or path.name == "thesis_master.tex"
+        )
+    ]
+    assert all((ROOT / path).is_file() for path in required)
+    if not (ROOT / ".git").exists():
+        pytest.skip("Review/source archive has no Git index; file presence checked above")
+    result = subprocess.run(
+        ["git", "ls-files", "-z", "--", *(path.as_posix() for path in required)],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    tracked = set(result.stdout.split("\0"))
+    missing = [path.as_posix() for path in required if path.as_posix() not in tracked]
+    assert not missing, f"Required submission inputs are untracked: {missing}"

@@ -53,6 +53,7 @@ def test_audit_runner_collects_results_without_subprocess_or_regex():
     assert "METRIC suite_issues=1" in rendered
 
 
+@pytest.mark.latex
 def test_repository_audit_suite_currently_passes():
     assert run_suite().passed
 
@@ -190,6 +191,7 @@ def test_scientific_builds_preserve_source_artifacts(tmp_path, monkeypatch, tool
         assert latex_codes == [f"latex.tool_missing:{compiler}"]
 
 
+@pytest.mark.latex
 def test_every_audit_compatibility_entrypoint_runs_without_traceback():
     repo_root = Path(__file__).parents[1]
     audit_scripts = sorted((repo_root / "platform_local").glob("*_audit.py"))

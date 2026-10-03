@@ -1,0 +1,231 @@
+{
+ "lane": "E11",
+ "metric": "pass@1 (1 sample/problem, native sv-iv-test testbench: 'Mismatches: 0 in N samples')",
+ "n_items": 50,
+ "trained_value": 0.66,
+ "base_value": 0.66,
+ "difference": 0.0,
+ "discordant_b_trained_only": 2,
+ "discordant_c_base_only": 2,
+ "mcnemar_exact_p": 1.0,
+ "per_item": {
+  "verilog_eval/code-complete-iccad2023/Prob005_notgate": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob010_mt2015_q4a": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob012_xnorgate": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob014_andgate": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob019_m2014_q4f": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob030_popcount255": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob032_vector0": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob033_ece241_2014_q1c": {
+   "trained": true,
+   "base": false
+  },
+  "verilog_eval/code-complete-iccad2023/Prob042_vector4": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/code-complete-iccad2023/Prob048_m2014_q4c": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob050_kmap1": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob052_gates100": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob058_alwaysblock2": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob059_wire4": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob064_vector3": {
+   "trained": true,
+   "base": false
+  },
+  "verilog_eval/code-complete-iccad2023/Prob065_7420": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob080_timer": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob083_mt2015_q4b": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob089_ece241_2014_q5a": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/code-complete-iccad2023/Prob096_review2015_fsmseq": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob105_rotate100": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob116_m2014_q3": {
+   "trained": false,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob127_lemmings1": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob130_circuit5": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/code-complete-iccad2023/Prob151_review2015_fsm": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/spec-to-rtl/Prob004_vector2": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/spec-to-rtl/Prob007_wire": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/spec-to-rtl/Prob011_norgate": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/spec-to-rtl/Prob021_mux256to1v": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/spec-to-rtl/Prob023_vector100r": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/spec-to-rtl/Prob028_m2014_q4a": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/spec-to-rtl/Prob039_always_if": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/spec-to-rtl/Prob040_count10": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/spec-to-rtl/Prob041_dff8r": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/spec-to-rtl/Prob045_edgedetect2": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/spec-to-rtl/Prob046_dff8p": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/spec-to-rtl/Prob049_m2014_q4b": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/spec-to-rtl/Prob062_bugs_mux2": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/spec-to-rtl/Prob065_7420": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/spec-to-rtl/Prob087_gates": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/spec-to-rtl/Prob092_gatesv100": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/spec-to-rtl/Prob094_gatesv": {
+   "trained": false,
+   "base": true
+  },
+  "verilog_eval/spec-to-rtl/Prob097_mux9to1v": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/spec-to-rtl/Prob103_circuit2": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/spec-to-rtl/Prob106_always_nolatches": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/spec-to-rtl/Prob109_fsm1": {
+   "trained": true,
+   "base": true
+  },
+  "verilog_eval/spec-to-rtl/Prob124_rule110": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/spec-to-rtl/Prob142_lemmings2": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/spec-to-rtl/Prob143_fsm_onehot": {
+   "trained": false,
+   "base": false
+  },
+  "verilog_eval/spec-to-rtl/Prob146_fsm_serialdata": {
+   "trained": false,
+   "base": false
+  }
+ },
+ "cost": {
+  "trained": {
+   "tinker_tokens": 0,
+   "vllm_tokens": 32213,
+   "colab_units": 0.0,
+   "modal_usd": 0.0,
+   "wall_seconds": 142,
+   "note": "actor GPU bill is shared and reconciled by the lead"
+  },
+  "base": {
+   "tinker_tokens": 0,
+   "vllm_tokens": 34012,
+   "colab_units": 0.0,
+   "modal_usd": 0.0,
+   "wall_seconds": 135,
+   "note": "actor GPU bill is shared and reconciled by the lead"
+  }
+ }
+}

@@ -1,0 +1,90 @@
+{
+ "benchmark": "WebArena (web-arena-x/webarena @ dce04686, native test loop + native evaluator_router)",
+ "scope": "replacement scope: all 812 WebArena tasks, trained actor pavlov-public-portfolio-bf16 (seed809 merged) as the agent LLM, CoT prompt p_cot_id_actree_2s, accessibility-tree obs, max 30 steps. Not pooled with any original-contract number.",
+ "n_attempted": 812,
+ "n_graded": 704,
+ "n_ungraded_judge_unavailable": 108,
+ "n_success": 90,
+ "n_errors": 41,
+ "metric": "task success rate (native evaluator score == 1.0); errors and ungraded (judge-unavailable) tasks counted as failures in the denominator",
+ "score": 0.1108,
+ "ci95_wilson": [
+  0.0911,
+  0.1343
+ ],
+ "secondary": {
+  "score_over_graded_only": 0.1278,
+  "ci95_wilson_over_graded": [
+   0.1052,
+   0.1545
+  ],
+  "score_upper_bound_if_all_ungraded_passed": 0.2438,
+  "per_split": {
+   "w1_shopping": {
+    "n": 187,
+    "success": 20,
+    "judge_pending": 34
+   },
+   "w2_shopping_admin": {
+    "n": 184,
+    "success": 26,
+    "judge_pending": 26
+   },
+   "w3_gitlab": {
+    "n": 186,
+    "success": 18,
+    "judge_pending": 3
+   },
+   "w4_reddit_map": {
+    "n": 232,
+    "success": 26,
+    "judge_pending": 44
+   },
+   "w5_cross_reddit": {
+    "n": 23,
+    "success": 0,
+    "judge_pending": 1
+   }
+  },
+  "n_resolved_without_judge": 6,
+  "actor_calls": 8900,
+  "actor_prompt_tokens": 26482139,
+  "actor_completion_tokens": 1353126
+ },
+ "spend_usd": 13.46,
+ "spend_breakdown": {
+  "gcp_vm_n2-highmem-16_hours": 10.73,
+  "gcp_vm_compute_usd_est": 11.25,
+  "gcp_pd_balanced_1500GB_usd_est": 2.21,
+  "llm_judge_usd": 0.0,
+  "note": "list-price estimates (N2 $0.031611/vCPU-h, $0.004237/GB-h; pd-balanced $0.10/GB-mo). Shared trained-actor endpoint (Modal) is billed to the shared_trained_actor_endpoint cap, not E6."
+ },
+ "cap_usd": 60,
+ "authorization": "outputs/finish_pending_2026-09-27/AUTHORIZATION.json",
+ "deviations": [
+  "Compute: GCP VM e6-webarena-0927 (n2-highmem-16, us-central1-a) instead of the AWS AMI (EC2 quota 1 vCPU). Site images from gs://arvindcr-webarena-images-20260422; map served by am1n3e/webarena-verified-map (tiles/nominatim/OSRM, iptables 8080->3000); wikipedia via kiwix-serve 3.3.0.",
+  "Thin runner code/e6_driver.py mirrors run.py::test() (same env, prompt agent, early_stop, auto_login, evaluator_router); the fail-closed zvf machinery was not used.",
+  "Agent LLM: trained actor via OpenAI-compatible vLLM, temperature 0, non-thinking, max_tokens 384; few-shot system(name=example_*) turns mapped to user/assistant (Qwen template rejects non-leading system msgs); tiktoken cl100k_base for obs truncation.",
+  "LLM judge: native gpt-4-1106-preview is retired (404); swapped to openai/gpt-4.1 via OpenRouter. The OpenRouter account had no credit for the whole run (0 successful judge calls; HTTP 402), and the OPENAI_API_KEY account is also out of credit. 114 tasks needed llm_fuzzy_match/llm_ua_match: 6 were resolved to 0 without the judge (another check in the product score was already 0; code/offline_regrade.py), 108 remain ungraded and are counted as failures.",
+  "Per-task wall-clock timeout 1500 s; screenshots off (text-only agent).",
+  "Splits by site (splits/, seed 20260927) ran in parallel, one worker per site. At 08:52Z the last 103 w2_shopping_admin tasks were sharded over 3 workers: original container :7780 plus two fresh containers of the same official image on :7781/:7782 (config_files URL-rewritten copies; code/w2_shard.sh).",
+  "No per-task environment reset (same as native run.py); state-changing tasks run sequentially per site container."
+ ],
+ "caveats": [
+  "Headline score is a lower bound: 108 ungraded string_match tasks count as failures. If all passed, the score would be 0.2438; the score over graded tasks only is 0.1278. Regrade later with code/offline_regrade.py once a judge key has credit (needs the WebArena config_files, which were on the deleted VM; regenerate them from test.raw.json).",
+  "41 tasks errored with Playwright 'Timeout 500ms exceeded' inside the native fetch_browser_info (harness-level); counted as failures.",
+  "Early stops dominate the failures: same action x3 (237), same typing x3 (103), max steps (101), parse failures x3 (98).",
+  "Single run, temperature 0, one seed; the actor is shared with other lanes (cold starts absorbed by retries)."
+ ],
+ "resources": {
+  "vm_deleted_utc": "2026-09-27T11:36:01Z",
+  "verified_absent": [
+   "instance e6-webarena-0927",
+   "disk e6-webarena-0927 (autoDelete)"
+  ]
+ },
+ "run_window_utc": [
+  "2026-09-27T02:34:01Z",
+  "2026-09-27T11:33:51Z"
+ ]
+}

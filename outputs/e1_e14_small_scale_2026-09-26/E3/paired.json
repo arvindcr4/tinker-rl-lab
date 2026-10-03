@@ -1,0 +1,67 @@
+{
+ "lane": "E3",
+ "n_items": 8,
+ "trained_value": 0.625,
+ "base_value": 0.375,
+ "difference_trained_minus_base": 0.25,
+ "discordant_b_trained_only": 2,
+ "discordant_c_base_only": 0,
+ "mcnemar_exact_p": 0.5,
+ "per_item": {
+  "build-cython-ext": {
+   "trained": 0,
+   "base": 0
+  },
+  "build-pmars": {
+   "trained": 1,
+   "base": 0
+  },
+  "cobol-modernization": {
+   "trained": 1,
+   "base": 1
+  },
+  "count-dataset-tokens": {
+   "trained": 1,
+   "base": 0
+  },
+  "hf-model-inference": {
+   "trained": 1,
+   "base": 1
+  },
+  "largest-eigenval": {
+   "trained": 0,
+   "base": 0
+  },
+  "pytorch-model-recovery": {
+   "trained": 1,
+   "base": 1
+  },
+  "query-optimize": {
+   "trained": 0,
+   "base": 0
+  }
+ },
+ "wall_time_s": {
+  "vllm_trained": 1733,
+  "vllm_base": 1367
+ },
+ "tokens": {
+  "vllm_trained": {
+   "tinker_tokens": 0,
+   "vllm_tokens": 1688475,
+   "vllm_calls": 162,
+   "colab_units": 0.0,
+   "modal_usd": null,
+   "modal_usd_note": "shared GPU bill reconciled by lead"
+  },
+  "vllm_base": {
+   "tinker_tokens": 0,
+   "vllm_tokens": 1689447,
+   "vllm_calls": 147,
+   "colab_units": 0.0,
+   "modal_usd": null,
+   "modal_usd_note": "shared GPU bill reconciled by lead"
+  }
+ },
+ "note": "McNemar exact on 8 binary task outcomes; per-lane only, no pooling."
+}

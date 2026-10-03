@@ -185,3 +185,6 @@ exclude = ["experiments/**", "scripts/**"]
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-v --tb=short"
+markers = [
+    "latex: integration tests requiring a native TeX toolchain (pdflatex/bibtex or cached Tectonic)",
+]

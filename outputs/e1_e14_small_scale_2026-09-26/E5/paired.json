@@ -1,0 +1,74 @@
+{
+  "lane": "E5",
+  "n_items": 10,
+  "item_ids": [
+    "airline/8",
+    "airline/6",
+    "airline/2",
+    "airline/22",
+    "airline/18",
+    "retail/18",
+    "retail/12",
+    "retail/9",
+    "retail/45",
+    "retail/90"
+  ],
+  "per_item": {
+    "airline/8": {
+      "trained": 1.0,
+      "base": 1.0
+    },
+    "airline/6": {
+      "trained": 1.0,
+      "base": 0.0
+    },
+    "airline/2": {
+      "trained": 1.0,
+      "base": 0.0
+    },
+    "airline/22": {
+      "trained": 0.0,
+      "base": 1.0
+    },
+    "airline/18": {
+      "trained": 1.0,
+      "base": 0.0
+    },
+    "retail/18": {
+      "trained": 0.0,
+      "base": 0.0
+    },
+    "retail/12": {
+      "trained": 1.0,
+      "base": 0.0
+    },
+    "retail/9": {
+      "trained": 0.0,
+      "base": 0.0
+    },
+    "retail/45": {
+      "trained": 0.0,
+      "base": 0.0
+    },
+    "retail/90": {
+      "trained": 0.0,
+      "base": 0.0
+    }
+  },
+  "trained_value": 0.5,
+  "base_value": 0.2,
+  "difference": 0.3,
+  "discordant_b_trained_only": 4,
+  "discordant_c_base_only": 1,
+  "mcnemar_exact_p": 0.375,
+  "wall_time": {
+    "both_arms_concurrent": "16:32:23Z-16:39:58Z (7.6 min)"
+  },
+  "tokens": {
+    "trained_agent": 1041801,
+    "base_agent": 2881681,
+    "user_sim_vllm_base_both_arms": 1624924
+  },
+  "benchmark": "tau2-bench airline+retail test split, 10 seeded items, pass^1 (substitute for APEX-Agents)",
+  "note": "User simulator = vLLM base endpoint in both arms (Tinker cap exhausted). Claim limited to this paired difference."
+}

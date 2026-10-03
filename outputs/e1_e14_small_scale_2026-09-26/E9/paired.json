@@ -1,0 +1,120 @@
+{
+ "lane": "E9",
+ "n_items": 5,
+ "metric": "any-medal rate (official mlebench grade_csv any_medal)",
+ "trained_value": 0.0,
+ "base_value": 0.0,
+ "difference": 0.0,
+ "b_trained_only": 0,
+ "c_base_only": 0,
+ "mcnemar_exact_p": 1.0,
+ "above_median": {
+  "trained": 0.0,
+  "base": 0.2,
+  "b_trained_only": 0,
+  "c_base_only": 1,
+  "mcnemar_exact_p": 1.0
+ },
+ "per_item": [
+  {
+   "item": "detecting-insults-in-social-commentary",
+   "trained": {
+    "any_medal": 0,
+    "above_median": 0,
+    "valid": 0,
+    "score": null
+   },
+   "base": {
+    "any_medal": 0,
+    "above_median": 0,
+    "valid": 0,
+    "score": null
+   }
+  },
+  {
+   "item": "spooky-author-identification",
+   "trained": {
+    "any_medal": 0,
+    "above_median": 0,
+    "valid": 1,
+    "score": 0.46155
+   },
+   "base": {
+    "any_medal": 0,
+    "above_median": 0,
+    "valid": 1,
+    "score": 0.49916
+   }
+  },
+  {
+   "item": "random-acts-of-pizza",
+   "trained": {
+    "any_medal": 0,
+    "above_median": 0,
+    "valid": 0,
+    "score": null
+   },
+   "base": {
+    "any_medal": 0,
+    "above_median": 1,
+    "valid": 1,
+    "score": 0.66764
+   }
+  },
+  {
+   "item": "leaf-classification",
+   "trained": {
+    "any_medal": 0,
+    "above_median": 0,
+    "valid": 1,
+    "score": 0.37782
+   },
+   "base": {
+    "any_medal": 0,
+    "above_median": 0,
+    "valid": 1,
+    "score": 0.37782
+   }
+  },
+  {
+   "item": "nomad2018-predict-transparent-conductors",
+   "trained": {
+    "any_medal": 0,
+    "above_median": 0,
+    "valid": 0,
+    "score": null
+   },
+   "base": {
+    "any_medal": 0,
+    "above_median": 0,
+    "valid": 0,
+    "score": null
+   }
+  }
+ ],
+ "arms": {
+  "vllm_trained": {
+   "endpoint": "https://arvindcr4--pavlov-trained-actor-e1e14-serve.modal.run",
+   "model": "pavlov-public-portfolio-bf16",
+   "started_utc": "2026-09-26T14:46:00Z",
+   "finished_utc": "2026-09-26T15:09:36Z",
+   "vllm_tokens": 208827,
+   "wall_time_s": 1416
+  },
+  "vllm_base": {
+   "endpoint": "https://arvindcr4--pavlov-trained-actor-e1e14-basectl-serve.modal.run",
+   "model": "qwen36-base-bf16",
+   "started_utc": "2026-09-26T14:46:00Z",
+   "finished_utc": "2026-09-26T15:00:33Z",
+   "vllm_tokens": 170111,
+   "wall_time_s": 873
+  }
+ },
+ "claim_boundary": "Within-vLLM paired difference only; never differenced against the Tinker-base arm; no pooling across lanes.",
+ "caveats": [
+  "nomad2018: identical prompt (46.8k tokens, due to the harness listing ~3k per-id geometry subdirs) exceeds the endpoint max-model-len 32768, so all 3 attempts got HTTP 400 in BOTH vLLM arms -> no submission -> failure (protocol error rule). The Tinker-base arm (no such limit) medalled on it; this is an engine context-limit difference, identical across the paired arms.",
+  "vllm_tokens includes the 3x ~46.8k rejected nomad2018 prompt tokens per arm (never processed).",
+  "Two Colab CPU sessions (e9-mle-tr, e9-mle-base) ran in parallel; both stopped. colab_units is an upper-bound estimate.",
+  "n is small; McNemar exact p reported, nothing stronger claimed."
+ ]
+}

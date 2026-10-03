@@ -14,16 +14,6 @@ from this file for CI smoke-tests. Real results are produced via
 
 from __future__ import annotations
 
-import atexit
-try:
-    from codecarbon import EmissionsTracker
-    _tracker = EmissionsTracker()
-    _tracker.start()
-    atexit.register(_tracker.stop)
-except ImportError:
-    pass
-
-
 import asyncio
 import json
 import os

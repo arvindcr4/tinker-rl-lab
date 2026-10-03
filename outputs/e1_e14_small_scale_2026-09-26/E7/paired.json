@@ -1,0 +1,59 @@
+{
+ "lane": "E7",
+ "n_items": 6,
+ "trained_value": 0.1667,
+ "base_value": 0.0,
+ "difference_trained_minus_base": 0.1667,
+ "discordant_b_trained_only": 1,
+ "discordant_c_base_only": 0,
+ "mcnemar_exact_p": 1.0,
+ "per_item": {
+  "dnsmasq-backdoor-detect": {
+   "trained": 1,
+   "base": 0
+  },
+  "dnsmasq-backdoor-detect-execvp-obfuscated": {
+   "trained": 0,
+   "base": 0
+  },
+  "dnsmasq-backdoor-detect-negative": {
+   "trained": 0,
+   "base": 0
+  },
+  "dnsmasq-backdoor-detect-printf": {
+   "trained": 0,
+   "base": 0
+  },
+  "lighttpd-authentication-harvester-detect": {
+   "trained": 0,
+   "base": 0
+  },
+  "lighttpd-backdoor-detect-negative": {
+   "trained": 0,
+   "base": 0
+  }
+ },
+ "wall_time_s": {
+  "vllm_trained": 853,
+  "vllm_base": 821
+ },
+ "tokens": {
+  "vllm_trained": {
+   "tinker_tokens": 0,
+   "vllm_tokens": 2033284,
+   "vllm_calls": 141,
+   "colab_units": 0.0,
+   "modal_usd": null,
+   "modal_usd_note": "shared GPU bill reconciled by lead"
+  },
+  "vllm_base": {
+   "tinker_tokens": 0,
+   "vllm_tokens": 2241843,
+   "vllm_calls": 142,
+   "colab_units": 0.0,
+   "modal_usd": null,
+   "modal_usd_note": "shared GPU bill reconciled by lead"
+  }
+ },
+ "note": "McNemar exact on 6 binary task outcomes (one is an env error in both arms)."
+}

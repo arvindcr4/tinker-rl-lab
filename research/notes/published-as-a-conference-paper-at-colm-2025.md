@@ -4,12 +4,12 @@ id: published-as-a-conference-paper-at-colm-2025
 tags:
 - rl-verification
 created: '2026-10-03T15:01:09.984752Z'
-updated: '2026-10-03T15:02:48.503955Z'
+updated: '2026-10-03T15:13:26.708119Z'
 source: https://arxiv.org/pdf/2503.20783
 source_domain: arxiv.org
 fetched_at: '2026-10-03T15:01:09.984505Z'
 fetch_provider: builtin
-status: review
+status: evergreen
 type: note
 tier: institutional
 content_type: paper

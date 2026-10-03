@@ -1,16 +1,19 @@
 ---
-title: 'Dr. GRPO bias analysis mapped to debias flag'
+title: Dr. GRPO bias analysis mapped to debias flag
 id: drgrpo-bias-code-mapping
 tags:
 - rl-verification
 - extract
 created: '2026-10-03T15:05:00Z'
-status: review
-tier: institutional
+updated: '2026-10-03T15:13:27.329144Z'
+status: evergreen
 type: note
+tier: institutional
 content_type: review
 parent: published-as-a-conference-paper-at-colm-2025
-summary: 'Extract: Dr. GRPO §3.1 length/difficulty biases and the unbiased advantage, mapped to normalize_rewards(unbiased=True) and contrasted with global normalization.'
+deprecated: false
+summary: 'Extract: Dr. GRPO §3.1 length/difficulty biases and the unbiased advantage,
+  mapped to normalize_rewards(unbiased=True) and contrasted with global normalization.'
 ---
 
 # Dr. GRPO bias analysis → code mapping

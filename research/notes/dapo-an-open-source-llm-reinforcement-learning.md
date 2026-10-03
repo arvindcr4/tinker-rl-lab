@@ -4,12 +4,12 @@ id: dapo-an-open-source-llm-reinforcement-learning
 tags:
 - rl-verification
 created: '2026-10-03T15:01:09.866556Z'
-updated: '2026-10-03T15:02:48.371935Z'
+updated: '2026-10-03T15:13:26.533773Z'
 source: https://arxiv.org/pdf/2503.14476
 source_domain: arxiv.org
 fetched_at: '2026-10-03T15:01:09.866273Z'
 fetch_provider: builtin
-status: review
+status: evergreen
 type: note
 tier: institutional
 content_type: paper

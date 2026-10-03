@@ -1,14 +1,17 @@
 ---
-title: 'RL citation verification report'
+title: RL citation verification report
 id: final_report_rl-verification
 tags:
 - rl-verification
 created: '2026-10-03T15:06:00Z'
-status: review
-tier: institutional
+updated: '2026-10-03T15:13:27.469541Z'
+status: evergreen
 type: note
+tier: institutional
 content_type: review
-summary: 'Final report: full-text verification verdicts for the DAPO, Dr. GRPO, REINFORCE++, and VAPO claims cited by grpo.py comments and flags.'
+deprecated: false
+summary: 'Final report: full-text verification verdicts for the DAPO, Dr. GRPO, REINFORCE++,
+  and VAPO claims cited by grpo.py comments and flags.'
 ---
 
 # RL citation verification report (2026-10-03)

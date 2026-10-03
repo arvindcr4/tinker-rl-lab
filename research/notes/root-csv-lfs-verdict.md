@@ -1,14 +1,17 @@
 ---
-title: 'Root CSV LFS verdict no migration needed'
+title: Root CSV LFS verdict no migration needed
 id: root-csv-lfs-verdict
 tags:
 - rl-verification
 created: '2026-10-03T15:30:00Z'
-status: review
-tier: institutional
+updated: '2026-10-03T15:13:27.631359Z'
+status: evergreen
 type: note
+tier: institutional
 content_type: review
-summary: 'Verified 2026-10-03: root fraud/train/test CSVs are untracked and ignored; only a 28K JSON is tracked. No LFS migration needed; prior plan item was stale.'
+deprecated: false
+summary: 'Verified 2026-10-03: root fraud/train/test CSVs are untracked and ignored;
+  only a 28K JSON is tracked. No LFS migration needed; prior plan item was stale.'
 ---
 
 # Root CSV / LFS verdict: no migration needed

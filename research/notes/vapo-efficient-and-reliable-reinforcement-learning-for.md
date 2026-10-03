@@ -4,12 +4,12 @@ id: vapo-efficient-and-reliable-reinforcement-learning-for
 tags:
 - rl-verification
 created: '2026-10-03T15:01:09.883774Z'
-updated: '2026-10-03T15:02:48.763711Z'
+updated: '2026-10-03T15:13:27.033289Z'
 source: https://arxiv.org/pdf/2504.05118
 source_domain: arxiv.org
 fetched_at: '2026-10-03T15:01:09.883518Z'
 fetch_provider: builtin
-status: review
+status: evergreen
 type: note
 tier: institutional
 content_type: paper

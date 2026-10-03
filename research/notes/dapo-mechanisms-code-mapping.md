@@ -1,16 +1,19 @@
 ---
-title: 'DAPO mechanisms mapped to grpo.py shaping flags'
+title: DAPO mechanisms mapped to grpo.py shaping flags
 id: dapo-mechanisms-code-mapping
 tags:
 - rl-verification
 - extract
 created: '2026-10-03T15:05:00Z'
-status: review
-tier: institutional
+updated: '2026-10-03T15:13:27.184644Z'
+status: evergreen
 type: note
+tier: institutional
 content_type: review
 parent: dapo-an-open-source-llm-reinforcement-learning
-summary: 'Extract: DAPO §3.1/§3.2/§3.4 mechanisms and exactly where each lands in grpo.py (clip plumbing, degenerate-group filter, truncation mask).'
+deprecated: false
+summary: 'Extract: DAPO §3.1/§3.2/§3.4 mechanisms and exactly where each lands in
+  grpo.py (clip plumbing, degenerate-group filter, truncation mask).'
 ---
 
 # DAPO mechanisms → code mapping

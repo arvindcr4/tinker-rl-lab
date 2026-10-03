@@ -14,11 +14,11 @@ import pytest
 
 pytest.importorskip("hypothesis")
 torch = pytest.importorskip("torch")
-from hypothesis import assume, given  # noqa: E402
-from hypothesis import strategies as st  # noqa: E402
+from hypothesis import assume, given
+from hypothesis import strategies as st
 
-from platform_tinker.tinkerrl import critic, grpo  # noqa: E402
-from tests._shared_fakes import fast_settings  # noqa: E402
+from platform_tinker.tinkerrl import critic, grpo
+from tests._shared_fakes import fast_settings
 
 FAST = fast_settings()
 

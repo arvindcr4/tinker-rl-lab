@@ -25,12 +25,12 @@ import numpy as np
 import pytest
 
 hypothesis = pytest.importorskip("hypothesis")
-from hypothesis import assume, given  # noqa: E402
-from hypothesis import strategies as st  # noqa: E402
+from hypothesis import assume, given
+from hypothesis import strategies as st
 
-from tests._shared_fakes import fast_settings  # noqa: E402
-from tools import check_thesis_evidence as evidence  # noqa: E402
-from utils import stats  # noqa: E402
+from tests._shared_fakes import fast_settings
+from tools import check_thesis_evidence as evidence
+from utils import stats
 
 ROOT = Path(__file__).resolve().parents[1]
 FAST = fast_settings()
@@ -38,7 +38,8 @@ FAST = fast_settings()
 
 def _load_path(name: str, rel: str):
     spec = importlib.util.spec_from_file_location(name, ROOT / rel)
-    assert spec is not None and spec.loader is not None
+    assert spec is not None
+    assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module  # dataclasses resolve annotations via sys.modules
     # compute_statistics.py calls warnings.filterwarnings("ignore") at import;
@@ -65,6 +66,8 @@ def _lift_functions(rel: str, names: tuple[str, ...], consts: tuple[str, ...] = 
     if missing:
         pytest.skip(f"{rel}: helpers not found: {sorted(missing)}")
     namespace: dict = {"math": math, "itertools": itertools}
+    # Runs this repo's own helper defs extracted from a Modal script (importing it
+    # would need the modal package); never untrusted input.
     exec(compile(ast.Module(body=keep, type_ignores=[]), rel, "exec"), namespace)  # noqa: S102
     return namespace
 

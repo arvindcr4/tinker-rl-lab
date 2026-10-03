@@ -230,7 +230,7 @@ class PublicDocumentBuildTests(unittest.TestCase):
         for mode in ("source", "staged", "missing"):
             supplied.write_bytes(contents)
 
-            def change_bundle(directory, document, env, timeout, log):
+            def change_bundle(directory, document, env, timeout, log, mode=mode):
                 original(directory, document, env, timeout, log)
                 if mode == "missing":
                     supplied.unlink()

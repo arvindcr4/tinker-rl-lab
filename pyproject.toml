@@ -156,7 +156,14 @@ extend-exclude = [
 # Noisy exploratory-code paths (``scripts/**``, ``experiments/**``) scope
 # those same rules via ``per-file-ignores`` below; vendored trees are
 # excluded entirely via ``extend-exclude`` above.
-select = ["F", "W", "I", "UP031"]
+# Bug-finding + security on top of the original F/W/I/UP031 gate:
+#   B = flake8-bugbear, S = flake8-bandit, PIE = misc anti-patterns,
+#   PT = pytest style (only fires on tests), RUF100 = stale ``# noqa``,
+#   RET505 = superfluous else-after-return.
+# Broader UP (UP006/UP045, PEP 585/604 annotations) is deliberately NOT enabled:
+# on py39 it needs ``from __future__ import annotations``, which changes how
+# pydantic models resolve annotations at runtime.
+select = ["F", "W", "I", "UP031", "B", "S", "PIE", "PT", "RUF100", "RET505"]
 ignore = [
     "E501",   # line length — handled by formatter if at all
     "F541",   # f-string without placeholders — used for multi-line format strings
@@ -164,6 +171,9 @@ ignore = [
     "W291",   # trailing whitespace (autofixable; CI should not block on it)
     "W293",   # blank line with whitespace
     "I001",   # unsorted imports (let contributors organize imports their way)
+    "S311",   # random/np.random for seeded RL sampling + bootstrap, never crypto
+    "S603",   # subprocess with argv list (no shell); fires on every call, no signal
+    "S607",   # partial executable path (git/uv/python/latexmk resolved via PATH by design)
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -177,6 +187,21 @@ ignore = [
 # Top-level GRPO research drivers (one-shot scripts, not reusable library
 # code; they keep exploratory imports deliberately).
 "grpo_*.py"            = ["F401", "F811", "F821"]
+# Tests: bare ``assert`` is how pytest works; unittest.TestCase assert* methods
+# are a legitimate style in this suite; fake tokens/secrets are fixtures.
+"tests/**/*.py" = ["S101", "PT009", "PT027", "S105", "S106"]
+# TODO(2026-10-03): fix after pydantic migration lands (B010 grpo.py:1209
+# setattr constant; RUF100 grpo.py:1713 stale ``noqa: F811``).
+"platform_tinker/tinkerrl/grpo.py" = ["B010", "RUF100"]
+# TODO(2026-10-03): file has another session's uncommitted edits; fix
+# B007 (unused loop var ``seed`` at utils/stats.py:191,375) once it lands.
+"utils/stats.py" = ["B007"]
+# TODO(2026-10-03): file has another session's uncommitted edits; fix
+# B002 false positive (``-(-1.0)``, :370) and B023 (spy closure, :1299-1300).
+"tests/test_grpo_module.py" = ["B002", "B023"]
+# TODO(2026-10-03): file has another session's uncommitted edits; S110
+# try/except/pass at :768,:773 (unparseable manifest treated as empty).
+"tools/apply_antivibe.py" = ["S110"]
 
 [tool.ruff.format]
 # Only format what we lint; keep research scripts as the author wrote them

@@ -43,7 +43,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install ruff
-        run: pip install ruff==0.15.11
+        run: pip install ruff==0.16.10
       - name: Lint with ruff
         run: make lint RUFF=ruff PYTHON=python
       - name: Check formatting

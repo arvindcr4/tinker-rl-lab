@@ -230,7 +230,7 @@ class PublicTexBundleTests(unittest.TestCase):
         for name in ("pgf.sty", "SHA256SUM", "FILELIST"):
             self.output = self.base / name
             self.prepare()
-            path = self.rewrite_zip(lambda contents: contents.update({name: b"corrupt"}))
+            path = self.rewrite_zip(lambda contents, name=name: contents.update({name: b"corrupt"}))
             with self.assertRaises(ValueError):
                 bundle.validate_bundle(path)
         invalid = self.base / "invalid.zip"

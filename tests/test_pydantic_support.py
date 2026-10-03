@@ -42,7 +42,8 @@ from verl.config import (
 
 def _load_module_directly(module_name: str, file_path: Path):
     spec = importlib.util.spec_from_file_location(module_name, file_path)
-    assert spec is not None and spec.loader is not None
+    assert spec is not None
+    assert spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod

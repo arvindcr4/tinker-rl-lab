@@ -8,7 +8,7 @@ status: review
 tier: institutional
 type: note
 content_type: review
-summary: 'Optional CPU prompt-value baseline is wired into the GRPO loop and off by default. It is unmeasured and not a thesis result. GAE stays a trajectory helper, not the token-loop advantage.'
+summary: 'Optional CPU prompt-value baseline is wired into the GRPO loop and off by default. It converges to the noise ceiling on synthetic E[reward|prompt] but has no live-run evidence and is not a thesis result. GAE stays a trajectory helper, not the token-loop advantage.'
 ---
 
 # Value-model track status (2026-10-03)
@@ -19,8 +19,11 @@ The trainer can subtract a prompt-level value from the reward before the
 batch-wide advantage normalization. `PromptValueCritic` is a CPU
 hash-embedding plus a small MLP. It predicts E[reward | prompt]. It does
 not read a backbone value head, because the Tinker closure only returns
-sampled-token logprobs. `critic_enabled` defaults to false. No measured
-run exists. Do not put this baseline on a defense slide or in the thesis.
+sampled-token logprobs. `critic_enabled` defaults to false. The only
+measurement is synthetic: on 8 prompt prototypes with Gaussian reward
+noise, the critic reaches 99% of the explained-variance noise ceiling
+(`TestCriticConvergence`), and refits are bit-deterministic. Do not put
+this baseline on a defense slide or in the thesis.
 
 What the loop does when the flag is on:
 - Advantages are R − V(x), then normalized across the batch. Per-group
@@ -38,3 +41,4 @@ Still not a value track:
   The token loop does not use GAE.
 - There is no length-adaptive λ, no learned value head on the policy, and
   no live-run evidence that this baseline changes held-out accuracy.
+  Synthetic convergence does not imply lower-variance live advantages.

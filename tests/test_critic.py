@@ -138,6 +138,49 @@ class TestTrainCriticStep(unittest.TestCase):
         self.assertTrue(torch.equal(critic(batch), restored(batch)))
 
 
+class TestCriticConvergence(unittest.TestCase):
+    def test_learns_prompt_conditional_mean(self):
+        means = [-1.0, -0.7, -0.4, -0.1, 0.1, 0.4, 0.7, 1.0]
+        noise_sd = 0.3
+
+        def batch(rng, n):
+            protos = torch.randint(0, len(means), (n,), generator=rng).tolist()
+            ids, rewards = [], []
+            for proto in protos:
+                length = 8 + (proto * 3) % 9
+                ids.append((torch.randint(0, 20, (length,), generator=rng) + proto * 100).tolist())
+                rewards.append(means[proto] + torch.randn((), generator=rng).item() * noise_sd)
+            return ids, rewards
+
+        torch.manual_seed(7)
+        rng = torch.Generator().manual_seed(8)
+        critic = PromptValueCritic()
+        opt = torch.optim.Adam(critic.parameters(), lr=1e-2)
+        _, calibration = batch(torch.Generator().manual_seed(0), 4000)
+        mean = sum(calibration) / len(calibration)
+        total_var = sum((r - mean) ** 2 for r in calibration) / len(calibration)
+        ceiling = 1.0 - noise_sd**2 / total_var
+        for _ in range(150):
+            batch_ids, rewards = batch(rng, 32)
+            train_critic_step(critic, opt, batch_ids, rewards)
+        with torch.no_grad():
+            test_ids, test_rewards = batch(torch.Generator().manual_seed(1), 2000)
+            ev = explained_variance(critic(test_ids).tolist(), test_rewards)
+        self.assertGreater(ev, 0.9 * ceiling)
+
+    def test_repeated_fit_is_deterministic(self):
+        torch.manual_seed(11)
+        first = PromptValueCritic()
+        opt = torch.optim.Adam(first.parameters(), lr=1e-2)
+        batch = [[10, 11], [210], [320, 321, 322]]
+        train_critic_step(first, opt, batch, [1.0, 0.0, 0.5], steps=5)
+        torch.manual_seed(11)
+        second = PromptValueCritic()
+        opt = torch.optim.Adam(second.parameters(), lr=1e-2)
+        train_critic_step(second, opt, batch, [1.0, 0.0, 0.5], steps=5)
+        self.assertTrue(torch.equal(first(batch), second(batch)))
+
+
 class TestExplainedVariance(unittest.TestCase):
     def test_perfect_is_one(self):
         self.assertTrue(math.isclose(explained_variance([1.0, 2.0], [1.0, 2.0]), 1.0))

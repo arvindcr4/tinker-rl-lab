@@ -207,6 +207,12 @@ class TestMakeGspoLossFn(unittest.TestCase):
             make_gspo_loss_fn([1.0], old_logprobs=[torch.tensor([-0.5])] * 2)(
                 None, [torch.tensor([-0.5])]
             )
+        with self.assertRaises(ValueError):
+            make_gspo_loss_fn([1.0], old_logprobs=[torch.tensor([-0.5, -0.5])])(
+                None, [torch.tensor([-0.5])]
+            )
+        with self.assertRaises(ValueError):
+            make_gspo_loss_fn([1.0])(None, [torch.tensor([])])
 
     def test_stash_captures_detached_first_call_only(self):
         stash = []

@@ -17,8 +17,9 @@ Designed to be run by NeurIPS artifact reviewers after a reproduction run:
 The default tolerances (±5 pts on last-10, ±10 pts on peak) are justified in
 `ARTIFACT.md §6` and `REPRODUCE.md §8`.
 
-Result file format (either JSON or the tail of the training log produced by
-`grpo_gsm8k_base.py`):
+Result file formats accepted:
+
+1. JSON (one object per file)::
 
     {
         "experiment": "gsm8k_qwen3_8b_s42",
@@ -28,10 +29,23 @@ Result file format (either JSON or the tail of the training log produced by
         "peak":       0.625
     }
 
+2. A ``.log`` captured from ``platform_tinker/grpo_gsm8k_base.py`` (which
+   routes through ``tinkerrl.grpo_cli``). One block per seed is printed::
+
+    [grpo_cli] Seed 42 done.
+      avg_last10    : 0.344
+      peak_reward   : 0.625
+
+   The experiment tag is the log's file stem (plus ``_s<seed>`` when one log
+   holds several seeds).
+
+3. The legacy final-report lines ``Last-10 avg accuracy: 34.4%`` /
+   ``Peak accuracy: 62.5%``.
+
 Exit codes:
-    0  all experiments within tolerance
-    1  at least one experiment outside tolerance
-    2  usage / IO error
+    0  every matched experiment within tolerance
+    1  an experiment outside tolerance, or no result file matched an expected key
+    2  usage / IO error (missing results dir or expectations file, bad JSON)
 """
 
 from __future__ import annotations
@@ -58,28 +72,53 @@ DEFAULT_EXPECTED: Dict[str, Dict[str, float]] = {
 
 _LOG_LAST10_RE = re.compile(r"Last-10 avg accuracy:\s*([0-9.]+)%")
 _LOG_PEAK_RE = re.compile(r"Peak accuracy:\s*([0-9.]+)%")
+# grpo_cli.main() per-seed block (fractions, not percentages).
+_CLI_SEED_RE = re.compile(r"\[grpo_cli\] Seed (\S+) done\.")
+_CLI_LAST10_RE = re.compile(r"avg_last10\s*:\s*([0-9.]+)")
+_CLI_PEAK_RE = re.compile(r"peak_reward\s*:\s*([0-9.]+)")
 
 
-def _parse_result_file(path: Path) -> Optional[Dict]:
-    """Parse a JSON result file or the tail of a grpo_gsm8k_base.py log."""
+def _parse_result_file(path: Path) -> List[Dict]:
+    """Parse a JSON result file or a trainer log into zero or more result dicts."""
     if path.suffix == ".json":
         try:
-            return json.loads(path.read_text())
+            data = json.loads(path.read_text())
         except json.JSONDecodeError as exc:
             print(f"  ! could not parse {path}: {exc}", file=sys.stderr)
-            return None
-    # Plain log: extract the final-report block
+            return []
+        return [data] if isinstance(data, dict) else []
     text = path.read_text(errors="replace")
+    exp = path.stem
+    # grpo_cli format: one block per seed, split on the "Seed N done." header.
+    headers = list(_CLI_SEED_RE.finditer(text))
+    rows: List[Dict] = []
+    for i, h in enumerate(headers):
+        block = text[h.end() : headers[i + 1].start() if i + 1 < len(headers) else len(text)]
+        last10 = _CLI_LAST10_RE.search(block)
+        peak = _CLI_PEAK_RE.search(block)
+        if not last10 or not peak:
+            continue
+        rows.append(
+            {
+                "experiment": exp if len(headers) == 1 else f"{exp}_s{h.group(1)}",
+                "last10_avg": float(last10.group(1)),
+                "peak": float(peak.group(1)),
+            }
+        )
+    if rows:
+        return rows
+    # Legacy final-report block (percentages)
     last10 = _LOG_LAST10_RE.search(text)
     peak = _LOG_PEAK_RE.search(text)
     if not last10 or not peak:
-        return None
-    exp = path.stem
-    return {
-        "experiment": exp,
-        "last10_avg": float(last10.group(1)) / 100.0,
-        "peak": float(peak.group(1)) / 100.0,
-    }
+        return []
+    return [
+        {
+            "experiment": exp,
+            "last10_avg": float(last10.group(1)) / 100.0,
+            "peak": float(peak.group(1)) / 100.0,
+        }
+    ]
 
 
 def _match_key(experiment: str, expected: Dict[str, Dict[str, float]]) -> Optional[str]:
@@ -113,23 +152,22 @@ def verify(
         return rows, 1
 
     for path in files:
-        parsed = _parse_result_file(path)
-        if not parsed:
-            continue
-        exp = parsed.get("experiment", path.stem)
-        key = _match_key(exp, expected)
-        if not key:
-            continue
-        exp_vals = expected[key]
-        got_l10 = float(parsed.get("last10_avg", parsed.get("last10", float("nan"))))
-        got_peak = float(parsed.get("peak", parsed.get("peak_reward", float("nan"))))
-        within = (
-            abs(got_l10 - exp_vals["last10"]) <= last10_tol
-            and abs(got_peak - exp_vals["peak"]) <= peak_tol
-        )
-        rows.append((exp, key, exp_vals["last10"], got_l10, exp_vals["peak"], got_peak, within))
-        if not within:
-            failed += 1
+        for parsed in _parse_result_file(path):
+            exp = str(parsed.get("experiment", path.stem))
+            key = _match_key(exp, expected)
+            if not key:
+                continue
+            exp_vals = expected[key]
+            got_l10 = float(parsed.get("last10_avg", parsed.get("last10", float("nan"))))
+            got_peak = float(parsed.get("peak", parsed.get("peak_reward", float("nan"))))
+            # NaN (missing field) compares False, so it counts as a failure.
+            within = (
+                abs(got_l10 - exp_vals["last10"]) <= last10_tol
+                and abs(got_peak - exp_vals["peak"]) <= peak_tol
+            )
+            rows.append((exp, key, exp_vals["last10"], got_l10, exp_vals["peak"], got_peak, within))
+            if not within:
+                failed += 1
     return rows, failed
 
 
@@ -151,7 +189,12 @@ def main() -> int:
         return 2
 
     expected = DEFAULT_EXPECTED
-    if args.expected_results and args.expected_results.exists():
+    if args.expected_results is not None:
+        if not args.expected_results.exists():
+            print(
+                f"error: expectations file {args.expected_results} does not exist", file=sys.stderr
+            )
+            return 2
         try:
             expected = json.loads(args.expected_results.read_text())
         except json.JSONDecodeError as exc:
@@ -161,8 +204,12 @@ def main() -> int:
     rows, failed = verify(args.results_dir, expected, args.last10_tolerance, args.peak_tolerance)
 
     if not rows:
-        print("No matching result files found.")
-        return 1 if args.strict else 0
+        print(
+            f"FAIL: no result under {args.results_dir} matched an expected experiment "
+            f"({', '.join(k for k in expected if not k.startswith('_'))}).",
+            file=sys.stderr,
+        )
+        return 1
 
     hdr = f"{'experiment':35s} {'key':22s} {'last10_exp':>10s} {'last10_got':>10s} {'peak_exp':>9s} {'peak_got':>9s}  ok?"
     print(hdr)
@@ -179,7 +226,9 @@ def main() -> int:
     )
 
     if args.strict:
-        missing = [k for k in expected if not any(r[1] == k for r in rows)]
+        missing = [
+            k for k in expected if not k.startswith("_") and not any(r[1] == k for r in rows)
+        ]
         if missing:
             print(f"  ! strict mode: missing expected experiments: {missing}")
             return 1

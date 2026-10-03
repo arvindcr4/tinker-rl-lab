@@ -310,6 +310,8 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         cfg["dynamic_sampling"] = True
     if args.mask_truncated_responses:
         cfg["mask_truncated_responses"] = True
+    if args.seed_sampling:
+        cfg["seed_sampling"] = True
     if args.global_advantage_normalization:
         cfg["global_advantage_normalization"] = True
     if args.no_global_norm_exclude_truncated:
@@ -381,6 +383,7 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--evaluate-heldout", dest="evaluate_heldout", action="store_true")
     parser.add_argument("--debias-advantages", dest="debias_advantages", action="store_true")
     parser.add_argument("--dynamic-sampling", dest="dynamic_sampling", action="store_true")
+    parser.add_argument("--seed-sampling", dest="seed_sampling", action="store_true")
     parser.add_argument(
         "--dynamic-sampling-max-resamples", dest="dynamic_sampling_max_resamples", type=int
     )
@@ -434,11 +437,15 @@ def main(argv: Optional[List[str]] = None) -> int:
         print("ERROR: Set TINKER_API_KEY in the environment.", file=sys.stderr)
         return 1
 
+    # The reward follows the dataset actually trained on; an unknown name
+    # fails before any dataset load instead of silently scoring with
+    # ToolCallReward (fixed 2026-10-03).
+    reward_name = args.reward or args.dataset or args.preset
+    if reward_name not in REWARD_MAP:
+        raise SystemExit(f"Unknown reward: {reward_name!r}.  Choose from {sorted(REWARD_MAP)}")
     config = build_config(args)
     dataset = _build_dataset(args, config)
-    reward_name = args.reward or args.preset
-    reward_cls = REWARD_MAP.get(reward_name, ToolCallReward)
-    reward = reward_cls()
+    reward = REWARD_MAP[reward_name]()
 
     print(f"[grpo_cli] preset={args.preset} seeds={config.num_seeds} steps={config.steps}")
     print(f"[grpo_cli] model={config.model} lr={config.lr} group={config.group_size}")

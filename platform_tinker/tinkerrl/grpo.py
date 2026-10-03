@@ -26,7 +26,7 @@ import random
 import re
 import subprocess
 import sys
-from dataclasses import asdict, dataclass, field, replace
+from dataclasses import MISSING, asdict, dataclass, field, fields, replace
 from pathlib import Path
 from typing import (
     Any,
@@ -354,6 +354,10 @@ class GRPOConfig:
     save_every: Optional[int] = None
     seed: int = 42
     num_seeds: int = 1
+    # Pass a per-request seed to the sampler. Off by default: whether Tinker
+    # seeds each sample of a num_samples=G request independently is unverified,
+    # and a shared seed would make every group identical (zero advantages).
+    seed_sampling: bool = False
     beta1: float = 0.9
     beta2: float = 0.95
     eps: float = 1e-8
@@ -753,10 +757,38 @@ def heldout_reward_summary(test_rewards: Sequence[float]) -> Dict[str, float]:
     return summary
 
 
+def _response_logprobs(
+    logprobs_list: Any, response_lens: Optional[Sequence[int]]
+) -> List[torch.Tensor]:
+    """Slice each datum's logprobs down to its response tokens.
+
+    ``_build_datum`` targets ``prompt + response`` shifted by one, so Tinker
+    returns ``P + R - 1`` logprobs per datum; the response tokens
+    ``y_{i,1..R}`` are the last ``R``.  ``response_lens=None`` keeps the
+    full tensors (callers that already pass response-only logprobs).
+    """
+    logprobs_list = list(logprobs_list)
+    if response_lens is None:
+        return logprobs_list
+    if len(response_lens) != len(logprobs_list):
+        raise ValueError(
+            "response_lens must pair 1:1 with logprobs, got "
+            f"{len(response_lens)} lengths for {len(logprobs_list)} responses"
+        )
+    sliced = []
+    for i, (logprobs, n) in enumerate(zip(logprobs_list, response_lens)):
+        total = logprobs.shape[0]
+        if n < 0 or n > total:
+            raise ValueError(f"response length {n} out of range for {total} logprobs on {i}")
+        sliced.append(logprobs[total - n :])
+    return sliced
+
+
 def make_grpo_loss_fn(
     advantages: Sequence[float],
     nll_mask: Optional[Sequence[bool]] = None,
     nll_coef: float = 0.0,
+    response_lens: Optional[Sequence[int]] = None,
 ) -> Callable:
     """Return a Tinker-compatible loss closure bound to ``advantages``.
 
@@ -766,6 +798,11 @@ def make_grpo_loss_fn(
     empty.  Token-mean (not the GRPO term's token-sum) so responses of
     different lengths weigh equally.  ``nll_mask=None`` or ``nll_coef=0.0``
     reproduces the GRPO term exactly.
+
+    ``response_lens`` restricts both terms to response tokens (ch05:
+    ``sum_t log pi(y_{i,t} | x, y_{i,<t})``); prompt-token logprobs then get
+    zero gradient.  The training loop always passes it (fixed 2026-10-03:
+    prompt tokens were previously inside the sum).
     """
 
     def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:
@@ -774,15 +811,20 @@ def make_grpo_loss_fn(
                 "nll_mask must pair 1:1 with logprobs, got "
                 f"{len(nll_mask)} flags for {len(logprobs_list)} responses"
             )
+        resp_logprobs = _response_logprobs(logprobs_list, response_lens)
         losses = []
-        for i, logprobs in enumerate(logprobs_list):
+        for i, logprobs in enumerate(resp_logprobs):
             losses.append(-advantages[i] * logprobs.sum())
         if not losses:
             return torch.tensor(0.0), {"grpo_loss": 0.0, "nll_loss": 0.0}
         loss = torch.stack(losses).mean()
         nll_loss = torch.tensor(0.0)
         if nll_mask is not None and nll_coef != 0.0:
-            masked = [logprobs.mean() for keep, logprobs in zip(nll_mask, logprobs_list) if keep]
+            masked = [
+                logprobs.mean()
+                for keep, logprobs in zip(nll_mask, resp_logprobs)
+                if keep and logprobs.numel() > 0
+            ]
             if masked:
                 nll_loss = -torch.stack(masked).mean()
                 loss = loss + nll_coef * nll_loss
@@ -799,6 +841,7 @@ def make_gspo_loss_fn(
     epsilon_low: float = 3e-4,
     epsilon_high: float = 4e-4,
     stash: Optional[List[Any]] = None,
+    response_lens: Optional[Sequence[int]] = None,
 ) -> Callable:
     """Return a Tinker-compatible GSPO loss closure (Zheng et al. 2025, Eq. 5-7).
 
@@ -811,10 +854,18 @@ def make_gspo_loss_fn(
     must pair 1:1, and each sequence's old and new token logprobs must
     have the same shape, or the closure raises instead of broadcasting
     a mis-assigned ratio.
+
+    ``response_lens`` slices the trainer logprobs to response tokens before
+    the ratio (see :func:`_response_logprobs`); ``old_logprobs`` and the
+    stash are then response-only too.  The training loop passes the
+    sampler's per-token logprobs as ``old_logprobs`` on every epoch, so
+    the ratio measures pi_theta against the behaviour policy (fixed
+    2026-10-03: epoch 0 used the trainer's own detached logprobs, so
+    s_i == 1 and the clip never fired at the default 1 epoch).
     """
 
     def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:
-        logprobs_list = list(logprobs_list)
+        logprobs_list = _response_logprobs(logprobs_list, response_lens)
         if len(advantages) != len(logprobs_list):
             raise ValueError(
                 "advantages must pair 1:1 with logprobs, got "
@@ -839,7 +890,7 @@ def make_gspo_loss_fn(
                 # of logprobs so gradients flow (length-normalized PG).
                 ratio = torch.exp((logprobs - logprobs.detach()).mean())
             else:
-                old = old_logprobs[i]
+                old = torch.as_tensor(old_logprobs[i], dtype=logprobs.dtype)
                 if logprobs.shape != old.shape:
                     raise ValueError(
                         "old_logprobs must match new logprobs token-for-token, "
@@ -872,21 +923,39 @@ def _sample_scored_group(
     config: GRPOConfig,
     reward: RewardAdapter,
     example: TrainingExample,
+    *,
+    seed: Optional[int] = None,
+    meta: Optional[Dict[str, Any]] = None,
 ) -> Tuple[List[int], List[List[int]], List[float], List[int]]:
     """Sample one group for an example and score it.
 
     Shared by the main loop and critic pretraining.  Returns
     ``(prompt_ids, response_ids_list, rewards, token_lengths)``.
+
+    ``seed`` is forwarded to ``SamplingParams`` when the installed Tinker
+    exposes a ``seed`` field.  When ``meta`` is a dict it receives
+    ``sampler_logprobs`` (per-response token logprobs, or ``None`` when the
+    sampler returned none or a mismatched length), ``truncated`` (from
+    ``stop_reason == "length"`` when available, else ``length >=
+    max_response_tokens``) and ``identical_group`` (a seeded group of 2+
+    whose responses are all token-identical).
     """
     prompt_ids = tok.encode(example.prompt, add_special_tokens=False)
     if len(prompt_ids) > config.max_prompt_tokens:
         prompt_ids = prompt_ids[: config.max_prompt_tokens]
 
-    sp = T.SamplingParams(
-        max_tokens=config.max_response_tokens,
-        temperature=config.temperature,
-        top_p=config.top_p,
-    )
+    sp_kwargs: Dict[str, Any] = {
+        "max_tokens": config.max_response_tokens,
+        "temperature": config.temperature,
+        "top_p": config.top_p,
+    }
+    if (
+        config.seed_sampling
+        and seed is not None
+        and "seed" in (getattr(T.SamplingParams, "model_fields", None) or {})
+    ):
+        sp_kwargs["seed"] = seed
+    sp = T.SamplingParams(**sp_kwargs)
     responses = sc.sample(
         T.ModelInput.from_ints(prompt_ids),
         num_samples=config.group_size,
@@ -896,7 +965,38 @@ def _sample_scored_group(
     resp_ids_list = [list(resp.tokens) for resp in responses.sequences]
     rewards = [reward.score(_decode_response(tok, resp), example) for resp in responses.sequences]
     token_lengths = [len(ids) for ids in resp_ids_list]
+    if meta is not None:
+        sampler_logprobs: List[Optional[List[float]]] = []
+        truncated: List[bool] = []
+        for resp, ids in zip(responses.sequences, resp_ids_list):
+            lps = getattr(resp, "logprobs", None)
+            sampler_logprobs.append(
+                [float(v) for v in lps] if lps is not None and len(lps) == len(ids) else None
+            )
+            stop_reason = getattr(resp, "stop_reason", None)
+            stop_reason = getattr(stop_reason, "value", stop_reason)
+            if stop_reason in ("length", "stop"):
+                truncated.append(stop_reason == "length")
+            else:
+                truncated.append(len(ids) >= config.max_response_tokens)
+        meta["sampler_logprobs"] = sampler_logprobs
+        meta["truncated"] = truncated
+        meta["identical_group"] = (
+            "seed" in sp_kwargs
+            and len(resp_ids_list) > 1
+            and all(ids == resp_ids_list[0] for ids in resp_ids_list)
+        )
     return prompt_ids, resp_ids_list, rewards, token_lengths
+
+
+def _sampling_seed(seed: int, step: int, index: int) -> int:
+    """Deterministic per-request sampling seed from (run seed, step, index)."""
+    return ((seed * 1_000_003 + step) * 10_007 + index) % (2**31 - 1)
+
+
+def _datum_response_len(prompt_ids: List[int], response_ids: List[int]) -> int:
+    """Number of response tokens that :func:`_build_datum` targets."""
+    return len(response_ids) if prompt_ids else max(len(response_ids) - 1, 0)
 
 
 def _build_datum(prompt_ids: List[int], response_ids: List[int]) -> Any:
@@ -998,6 +1098,27 @@ def _write_checkpoint(path: Path, payload: Dict[str, Any]) -> None:
     os.replace(temporary, path)
 
 
+def _config_field_default(key: str, derived: Any) -> Any:
+    """JSON-normalised dataclass default for a fingerprint key.
+
+    A key missing from an old receipt was written by code that predates the
+    field, i.e. under the field's default.  Backfilling with the *current*
+    value (pre-2026-10-03) let any new setting, e.g. ``gspo_enabled=True``,
+    resume as compatible.  Keys that are not ``GRPOConfig`` fields are
+    derived from fields that are checked themselves, so ``derived`` stands.
+    """
+    spec = {f.name: f for f in fields(GRPOConfig)}.get(key)
+    if spec is None:
+        return derived
+    if spec.default is not MISSING:
+        value = spec.default
+    elif spec.default_factory is not MISSING:
+        value = spec.default_factory()
+    else:
+        return derived
+    return json.loads(json.dumps(value))
+
+
 def _load_checkpoint(config: GRPOConfig, seed: int) -> Dict[str, Any] | None:
     path = _checkpoint_path(config, seed)
     if not config.resume or not path.exists():
@@ -1015,7 +1136,8 @@ def _load_checkpoint(config: GRPOConfig, seed: int) -> Dict[str, Any] | None:
         if isinstance(stored, dict):
             backfilled = dict(stored)
             for key, value in expected.items():
-                backfilled.setdefault(key, value)
+                if key not in backfilled:
+                    backfilled[key] = _config_field_default(key, value)
             if backfilled == expected:
                 payload["config"] = backfilled
                 return payload
@@ -1672,18 +1794,24 @@ def _run_one_seed(
                 f"[{config.name}] critic pretraining: "
                 f"{config.critic_pretrain_batches} batches (policy frozen)"
             )
-            for _ in range(config.critic_pretrain_batches):
+            for pre_idx in range(config.critic_pretrain_batches):
                 pre_batch = rng.sample(train_examples, min(config.batch_size, len(train_examples)))
                 pre_prompts: List[List[int]] = []
                 pre_targets: List[float] = []
-                for example in pre_batch:
-                    prompt_ids, _, rewards, lengths = _sample_scored_group(
-                        tok, sc, T, config, reward, example
+                for ex_idx, example in enumerate(pre_batch):
+                    pre_meta: Dict[str, Any] = {}
+                    prompt_ids, _, rewards, _ = _sample_scored_group(
+                        tok,
+                        sc,
+                        T,
+                        config,
+                        reward,
+                        example,
+                        seed=_sampling_seed(seed, -1 - pre_idx, ex_idx),
+                        meta=pre_meta,
                     )
-                    for length, r in zip(lengths, rewards):
-                        if config.mask_truncated_responses and (
-                            length >= config.max_response_tokens
-                        ):
+                    for is_trunc, r in zip(pre_meta["truncated"], rewards):
+                        if config.mask_truncated_responses and is_trunc:
                             continue
                         pre_prompts.append(prompt_ids)
                         pre_targets.append(r)
@@ -1700,8 +1828,12 @@ def _run_one_seed(
             all_data: List[Any] = []
             all_advs: List[float] = []
             all_nll: List[bool] = []
+            all_resp_lens: List[int] = []
+            all_old: List[Optional[List[float]]] = []
             pending: List[Any] = []
+            pending_extra: List[Any] = []
             batch_rewards: List[float] = []
+            sampled_rewards: List[float] = []
             critic_prompts: List[List[int]] = []
             critic_targets: List[float] = []
             critic_ev = 0.0
@@ -1716,20 +1848,37 @@ def _run_one_seed(
             pool = list(batch)
             resamples_used = 0
             skipped_degenerate = 0
+            identical_groups = 0
             pool_idx = 0
             while pool_idx < len(pool):
                 example = pool[pool_idx]
                 pool_idx += 1
+                group_meta: Dict[str, Any] = {}
                 prompt_ids, resp_ids_list, rewards, token_lengths = _sample_scored_group(
-                    tok, sc, T, config, reward, example
+                    tok,
+                    sc,
+                    T,
+                    config,
+                    reward,
+                    example,
+                    seed=_sampling_seed(seed, step, pool_idx - 1),
+                    meta=group_meta,
                 )
+                if group_meta["identical_group"] and config.temperature > 0:
+                    identical_groups += 1
+                # train/reward covers every sampled group, including the
+                # degenerate ones dynamic sampling drops (fixed 2026-10-03).
+                sampled_rewards.extend(rewards)
                 if config.dynamic_sampling and is_degenerate_group(rewards):
                     skipped_degenerate += 1
                     if resamples_used < config.dynamic_sampling_max_resamples:
                         pool.append(rng.choice(train_examples))
                         resamples_used += 1
                     continue
-                truncated = [length >= config.max_response_tokens for length in token_lengths]
+                # stop_reason == "length" when the sampler reports it, so an
+                # EOS exactly at the budget is not masked as truncated.
+                truncated = group_meta["truncated"]
+                sampler_lps = group_meta["sampler_logprobs"]
                 nll_flags = _nll_mask_for_group(
                     rewards,
                     truncated,
@@ -1747,22 +1896,24 @@ def _run_one_seed(
                             nll_flags,
                         )
                     )
+                    pending_extra.append((truncated, sampler_lps))
                 else:
                     advs = normalize_rewards(rewards, unbiased=config.debias_advantages)
                     if config.mask_truncated_responses:
-                        advs = apply_truncation_mask(
-                            advs, token_lengths, config.max_response_tokens
-                        )
-                    for resp_ids, adv, keep_nll in zip(resp_ids_list, advs, nll_flags):
+                        advs = [0.0 if cut else adv for adv, cut in zip(advs, truncated)]
+                    for resp_ids, adv, keep_nll, old_lps in zip(
+                        resp_ids_list, advs, nll_flags, sampler_lps
+                    ):
                         all_data.append(_build_datum(prompt_ids, resp_ids))
                         all_advs.append(adv)
                         all_nll.append(keep_nll)
+                        all_resp_lens.append(_datum_response_len(prompt_ids, resp_ids))
+                        all_old.append(old_lps)
                 batch_rewards.extend(rewards)
 
             if use_batch_path:
                 flat_rewards = [r for (_, _, rewards, _, _) in pending for r in rewards]
-                flat_lengths = [ln for (_, _, _, lengths, _) in pending for ln in lengths]
-                flat_truncated = [ln >= config.max_response_tokens for ln in flat_lengths]
+                flat_truncated = [cut for (cuts, _) in pending_extra for cut in cuts]
                 flat_basis = flat_rewards
                 if config.critic_enabled and pending:
                     with torch.no_grad():
@@ -1787,26 +1938,53 @@ def _run_one_seed(
                     exclude=exclude,
                 )
                 if config.mask_truncated_responses:
-                    flat_advs = apply_truncation_mask(
-                        flat_advs, flat_lengths, config.max_response_tokens
-                    )
+                    flat_advs = [0.0 if cut else adv for adv, cut in zip(flat_advs, flat_truncated)]
                 cursor = 0
-                for prompt_ids, resp_ids_list, rewards, lengths, nll_flags in pending:
+                for (prompt_ids, resp_ids_list, rewards, _, nll_flags), (cuts, lps) in zip(
+                    pending, pending_extra
+                ):
                     if config.critic_enabled:
-                        for length, r in zip(lengths, rewards):
-                            if config.mask_truncated_responses and (
-                                length >= config.max_response_tokens
-                            ):
+                        for cut, r in zip(cuts, rewards):
+                            if config.mask_truncated_responses and cut:
                                 continue
                             critic_prompts.append(prompt_ids)
                             critic_targets.append(r)
-                    for resp_ids, keep_nll in zip(resp_ids_list, nll_flags):
+                    for resp_ids, keep_nll, old_lps in zip(resp_ids_list, nll_flags, lps):
                         all_data.append(_build_datum(prompt_ids, resp_ids))
                         all_advs.append(flat_advs[cursor])
                         all_nll.append(keep_nll)
+                        all_resp_lens.append(_datum_response_len(prompt_ids, resp_ids))
+                        all_old.append(old_lps)
                         cursor += 1
 
+            # Logged reward covers every sampled group (dynamic sampling
+            # included); batch_rewards is the subset that was trained on.
+            avg = sum(sampled_rewards) / len(sampled_rewards)
+            if identical_groups:
+                logger(
+                    f"[{config.name}] WARNING: {identical_groups} seeded group(s) at "
+                    f"temperature {config.temperature} returned identical responses"
+                )
             if not all_data:
+                # Every group was degenerate: no update, but keep the trace
+                # aligned with steps (fixed 2026-10-03; skipped steps used to
+                # vanish from reward_trace).
+                step_rewards.append(avg)
+                if avg == 0:
+                    zero_reward_steps += 1
+                logger(
+                    f"[{config.name}] Step {step + 1:3d}/{config.steps}"
+                    f" | skipped (all groups degenerate) | reward={avg:.3f}"
+                )
+                _wandb_log(
+                    wb,
+                    {
+                        "train/reward": avg,
+                        "train/step": step + 1,
+                        "train/skipped_step": 1.0,
+                        "train/skipped_degenerate_groups": float(skipped_degenerate),
+                    },
+                )
                 continue
 
             adam_params = T.AdamParams(
@@ -1816,17 +1994,36 @@ def _run_one_seed(
                 eps=config.eps,
             )
             if config.gspo_enabled:
-                # Multi-epoch GSPO: epoch 0 runs at ratio 1 (policy equals
-                # sampler) and stashes its logprobs as the old policy for
-                # later epochs.
+                # GSPO's ratio is pi_theta / pi_old with pi_old the policy
+                # that generated the rollouts, so the sampler's own response
+                # logprobs are old_logprobs on every epoch.  Fallback when
+                # the sampler returned none: epoch 0 at ratio 1, stash for
+                # later epochs (the pre-2026-10-03 behaviour), logged.
+                gspo_sampler_old = all(lps is not None for lps in all_old)
+                sampler_old = (
+                    [lps[len(lps) - n :] for lps, n in zip(all_old, all_resp_lens)]
+                    if gspo_sampler_old
+                    else None
+                )
+                if not gspo_sampler_old:
+                    logger(
+                        f"[{config.name}] WARNING: sampler returned no logprobs for "
+                        f"{sum(lps is None for lps in all_old)}/{len(all_old)} responses; "
+                        "GSPO falls back to trainer logprobs (ratio 1 on epoch 0)"
+                    )
                 stashed_old: List[Any] = []
                 for epoch in range(config.gspo_update_epochs):
                     loss_fn = make_gspo_loss_fn(
                         all_advs,
-                        old_logprobs=None if epoch == 0 else stashed_old,
+                        old_logprobs=(
+                            sampler_old
+                            if gspo_sampler_old
+                            else (None if epoch == 0 else stashed_old)
+                        ),
                         epsilon_low=config.gspo_epsilon_low,
                         epsilon_high=config.gspo_epsilon_high,
-                        stash=stashed_old if epoch == 0 else None,
+                        stash=stashed_old if epoch == 0 and not gspo_sampler_old else None,
+                        response_lens=all_resp_lens,
                     )
                     train_result = tc.forward_backward_custom(
                         data=all_data,
@@ -1837,10 +2034,13 @@ def _run_one_seed(
             else:
                 if config.nll_aux_enabled:
                     loss_fn = make_grpo_loss_fn(
-                        all_advs, nll_mask=all_nll, nll_coef=config.nll_aux_coef
+                        all_advs,
+                        nll_mask=all_nll,
+                        nll_coef=config.nll_aux_coef,
+                        response_lens=all_resp_lens,
                     )
                 else:
-                    loss_fn = make_grpo_loss_fn(all_advs)
+                    loss_fn = make_grpo_loss_fn(all_advs, response_lens=all_resp_lens)
                 train_result = tc.forward_backward_custom(
                     data=all_data,
                     loss_fn=loss_fn,
@@ -1858,7 +2058,6 @@ def _run_one_seed(
                     steps=config.critic_updates_per_step,
                 )
 
-            avg = sum(batch_rewards) / len(batch_rewards)
             step_rewards.append(avg)
             loss_val = _metric(train_result, ["grpo_loss", "gspo_loss", "loss"])
             if abs(loss_val) < 1e-6:
@@ -1877,6 +2076,7 @@ def _run_one_seed(
             }
             if config.dynamic_sampling:
                 step_log["train/skipped_degenerate_groups"] = float(skipped_degenerate)
+                step_log["train/reward_trained"] = sum(batch_rewards) / len(batch_rewards)
             if use_batch_path and all_advs:
                 mean_a = sum(all_advs) / len(all_advs)
                 var_a = sum((a - mean_a) ** 2 for a in all_advs) / len(all_advs)
@@ -1888,6 +2088,7 @@ def _run_one_seed(
                 step_log["train/gspo_clip_frac"] = _metric(
                     train_result, ["gspo_clip_frac"], default=0.0
                 )
+                step_log["train/gspo_sampler_old"] = float(gspo_sampler_old)
             if config.critic_enabled:
                 step_log["train/critic_loss"] = critic_loss
                 step_log["train/critic_ev"] = critic_ev
@@ -1959,26 +2160,42 @@ def _run_one_seed(
             test_examples = list(dataset.test_examples())
             if test_examples:
                 test_rewards: List[float] = []
-                for ex in test_examples:
+                heldout_failed = 0
+                for ex_idx, ex in enumerate(test_examples):
                     pid = tok.encode(ex.prompt, add_special_tokens=False)
                     if len(pid) > config.max_prompt_tokens:
                         pid = pid[: config.max_prompt_tokens]
-                    sp = T.SamplingParams(
-                        max_tokens=config.max_response_tokens,
-                        temperature=0.1,
-                        top_p=0.95,
-                    )
+                    sp_kwargs: Dict[str, Any] = {
+                        "max_tokens": config.max_response_tokens,
+                        "temperature": 0.1,
+                        "top_p": 0.95,
+                    }
+                    if config.seed_sampling and "seed" in (
+                        getattr(T.SamplingParams, "model_fields", None) or {}
+                    ):
+                        sp_kwargs["seed"] = _sampling_seed(seed, config.steps, ex_idx)
+                    sp = T.SamplingParams(**sp_kwargs)
                     try:
                         resp = sc.sample(
                             T.ModelInput.from_ints(pid), num_samples=1, sampling_params=sp
                         ).result()
                         text = _decode_response(tok, resp.sequences[0])
                         test_rewards.append(reward.score(text, ex))
-                    except Exception:
-                        continue
-                if test_rewards:
-                    heldout_reward = sum(test_rewards) / len(test_rewards)
-                    _wandb_log(wb, heldout_reward_summary(test_rewards))
+                    except Exception as exc:
+                        # A failed sample scores 0 and stays in the
+                        # denominator (fixed 2026-10-03: failures used to be
+                        # dropped silently, shrinking the denominator).
+                        heldout_failed += 1
+                        test_rewards.append(0.0)
+                        logger(
+                            f"[{config.name}] held-out example {ex_idx} failed, "
+                            f"scored 0: {_redact_error(exc)}"
+                        )
+                heldout_reward = sum(test_rewards) / len(test_rewards)
+                summary = heldout_reward_summary(test_rewards)
+                summary["test/failed_n"] = float(heldout_failed)
+                summary["test/total_n"] = float(len(test_examples))
+                _wandb_log(wb, summary)
 
         result = GRPORunResult(
             seed=seed,

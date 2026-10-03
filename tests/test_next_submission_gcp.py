@@ -1,30 +1,17 @@
 from __future__ import annotations
 
 import base64
-import importlib.util
-import json
 from pathlib import Path
 import re
-import sys
 
 import pytest
+
+from tests._shared_fakes import embedded_payload, load_module
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PATH = ROOT / "zvf-program/next-submission/run_gcp_preflight.py"
-SPEC = importlib.util.spec_from_file_location("next_submission_gcp", PATH)
-assert SPEC is not None
-assert SPEC.loader is not None
-GCP = importlib.util.module_from_spec(SPEC)
-sys.modules[SPEC.name] = GCP
-SPEC.loader.exec_module(GCP)
-
-
-def embedded_payload(script: str) -> dict[str, str]:
-    match = re.search(r"FILES = json\.loads\((.+)\)\n", script)
-    assert match is not None
-    encoded_json = json.loads(match.group(1))
-    return json.loads(encoded_json)
+GCP = load_module("next_submission_gcp", PATH)
 
 
 def test_entry_embeds_exact_sources_and_only_existing_secret_references():

@@ -25,14 +25,15 @@ import numpy as np
 import pytest
 
 hypothesis = pytest.importorskip("hypothesis")
-from hypothesis import HealthCheck, assume, given, settings  # noqa: E402
+from hypothesis import assume, given  # noqa: E402
 from hypothesis import strategies as st  # noqa: E402
 
+from tests._shared_fakes import fast_settings  # noqa: E402
 from tools import check_thesis_evidence as evidence  # noqa: E402
 from utils import stats  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-FAST = settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+FAST = fast_settings()
 
 
 def _load_path(name: str, rel: str):

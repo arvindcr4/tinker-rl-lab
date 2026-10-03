@@ -25,13 +25,9 @@ from platform_tinker.tinkerrl.grpo import (
     MathReward,
     PatchReward,
     StrictToolCallReward,
-    TrainingExample,
 )
 from platform_tinker.tinkerrl.grpo_cli import _build_dataset, _parse_args, build_config
-
-
-def _example(target="1", prompt="q"):
-    return TrainingExample(prompt=prompt, target=target)
+from tests._shared_fakes import HfApi, _Future, _Tokenizer, _config, _example
 
 
 def _dataset(*examples, test=()):
@@ -75,25 +71,9 @@ def _quiet_run():
     return run
 
 
-class _Future:
-    def __init__(self, value):
-        self.value = value
-
-    def result(self):
-        return self.value
-
-
 class _Seq:
     def __init__(self, tokens):
         self.tokens = list(tokens)
-
-
-class _Tokenizer:
-    def encode(self, _prompt, add_special_tokens=False):
-        return [1, 2, 3, 4, 5]
-
-    def decode(self, tokens, skip_special_tokens=True):
-        return "1" if list(tokens) == [1] else "0"
 
 
 @contextlib.contextmanager
@@ -151,25 +131,6 @@ def _runtime(monkeypatch, *, metrics=None, sample_fn=None, install_transformers=
     wandb = types.ModuleType("wandb")
     wandb.init = Mock(return_value=run)
 
-    class HfApi:
-        info_count = 0
-
-        def __init__(self, **_kwargs):
-            pass
-
-        def whoami(self, **_kwargs):
-            return {"name": "owner"}
-
-        def model_info(self, _repo_id, revision):
-            type(self).info_count += 1
-            return SimpleNamespace(sha=f"{type(self).info_count:040x}")
-
-        def create_repo(self, **_kwargs):
-            return None
-
-        def create_branch(self, **_kwargs):
-            return None
-
     hf = types.ModuleType("huggingface_hub")
     hf.HfApi = HfApi
     tinker = types.ModuleType("tinker")
@@ -202,12 +163,6 @@ def _runtime(monkeypatch, *, metrics=None, sample_fn=None, install_transformers=
     with patch.dict(sys.modules, modules, clear=False):
         with patch.object(grpo.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
             yield holder
-
-
-def _config(tmp_path, **kwargs):
-    base = dict(name="cov", steps=1, group_size=2, batch_size=1, checkpoint_dir=str(tmp_path))
-    base.update(kwargs)
-    return GRPOConfig(**base)
 
 
 def test_pending_suite_receipt_is_unfrozen():

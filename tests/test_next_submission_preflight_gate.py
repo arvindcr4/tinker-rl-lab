@@ -1,22 +1,17 @@
 from __future__ import annotations
 
 import copy
-import importlib.util
 import json
 from pathlib import Path
-import sys
 
 import pytest
+
+from tests._shared_fakes import load_module
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PATH = ROOT / "zvf-program/next-submission/verify_preflight_matrix.py"
-SPEC = importlib.util.spec_from_file_location("next_submission_preflight_gate", PATH)
-assert SPEC is not None
-assert SPEC.loader is not None
-GATE = importlib.util.module_from_spec(SPEC)
-sys.modules[SPEC.name] = GATE
-SPEC.loader.exec_module(GATE)
+GATE = load_module("next_submission_preflight_gate", PATH)
 
 PROTOCOL = GATE.load_json(ROOT / "zvf-program/next-submission/preregistration.json")
 RESULTS = ROOT / "zvf-program/next-submission/results/preflight/results"

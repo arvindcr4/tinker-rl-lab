@@ -1,28 +1,16 @@
 from __future__ import annotations
 
 import base64
-import importlib.util
 import json
 from pathlib import Path
 import re
-import sys
+
+from tests._shared_fakes import embedded_payload, load_module
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PATH = ROOT / "zvf-program/next-submission/run_kaggle_preflight.py"
-SPEC = importlib.util.spec_from_file_location("next_submission_kaggle", PATH)
-assert SPEC is not None
-assert SPEC.loader is not None
-KAGGLE = importlib.util.module_from_spec(SPEC)
-sys.modules[SPEC.name] = KAGGLE
-SPEC.loader.exec_module(KAGGLE)
-
-
-def embedded_payload(script: str) -> dict[str, str]:
-    match = re.search(r"FILES = json\.loads\((.+)\)\n", script)
-    assert match is not None
-    encoded_json = json.loads(match.group(1))
-    return json.loads(encoded_json)
+KAGGLE = load_module("next_submission_kaggle", PATH)
 
 
 def test_kernel_script_embeds_exact_sources_pins_and_secret_lookup():

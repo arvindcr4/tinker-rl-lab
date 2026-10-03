@@ -1,33 +1,19 @@
 from __future__ import annotations
 
 import base64
-import importlib.util
-import json
 from pathlib import Path
-import re
-import sys
+
+from tests._shared_fakes import embedded_payload, load_module
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PATH = ROOT / "zvf-program/next-submission/run_hf_jobs_preflight.py"
-SPEC = importlib.util.spec_from_file_location("next_submission_hf_jobs", PATH)
-assert SPEC is not None
-assert SPEC.loader is not None
-HF_JOBS = importlib.util.module_from_spec(SPEC)
-sys.modules[SPEC.name] = HF_JOBS
-SPEC.loader.exec_module(HF_JOBS)
-
-
-def embedded_payload(script: str) -> dict[str, str]:
-    match = re.search(r"FILES = json\.loads\((.+)\)\nsource_root", script)
-    assert match is not None
-    encoded_json = json.loads(match.group(1))
-    return json.loads(encoded_json)
+HF_JOBS = load_module("next_submission_hf_jobs", PATH)
 
 
 def test_job_script_embeds_exact_executable_sources_without_credentials():
     script = HF_JOBS.build_job_script()
-    embedded = embedded_payload(script)
+    embedded = embedded_payload(script, r"FILES = json\.loads\((.+)\)\nsource_root")
     expected = HF_JOBS.embedded_sources()
 
     assert set(embedded) == set(expected)

@@ -8,17 +8,19 @@ GAE, and the GRPO / GSPO loss closures (response-token scoping).
 from __future__ import annotations
 
 import math
+from statistics import pstdev as _std
 
 import pytest
 
 pytest.importorskip("hypothesis")
 torch = pytest.importorskip("torch")
-from hypothesis import HealthCheck, assume, given, settings  # noqa: E402
+from hypothesis import assume, given  # noqa: E402
 from hypothesis import strategies as st  # noqa: E402
 
 from platform_tinker.tinkerrl import critic, grpo  # noqa: E402
+from tests._shared_fakes import fast_settings  # noqa: E402
 
-FAST = settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+FAST = fast_settings()
 
 rewards = st.lists(
     st.floats(min_value=-10.0, max_value=10.0, allow_nan=False, allow_infinity=False),
@@ -26,11 +28,6 @@ rewards = st.lists(
     max_size=16,
 )
 binary_rewards = st.lists(st.sampled_from([0.0, 1.0]), min_size=2, max_size=16)
-
-
-def _std(xs):
-    m = sum(xs) / len(xs)
-    return math.sqrt(sum((x - m) ** 2 for x in xs) / len(xs))
 
 
 # --------------------------------------------------------------------------- group advantages

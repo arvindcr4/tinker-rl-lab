@@ -24,18 +24,15 @@ from platform_tinker.tinkerrl.grpo import (
     GRPOConfig,
     InMemoryDataset,
     MathReward,
-    TrainingExample,
     make_grpo_loss_fn,
     make_gspo_loss_fn,
 )
 
+from tests._shared_fakes import HfApi, _Future, _Tokenizer, _config, _example, make_fake_run
+
 PROMPT = [11, 12, 13, 14, 15]
 PROMPT_LP = -5.0  # trainer logprob on prompt positions
 RESP_LP = -1.0  # trainer logprob on response positions
-
-
-def _example(target="1", prompt="q"):
-    return TrainingExample(prompt=prompt, target=target)
 
 
 def _with_prefix(n_prompt: int, resp: list) -> torch.Tensor:
@@ -114,22 +111,6 @@ def test_datum_response_len_matches_build_datum_targets():
 # ---------------------------------------------------------------- fake runtime
 
 
-class _Future:
-    def __init__(self, value):
-        self.value = value
-
-    def result(self):
-        return self.value
-
-
-class _Tokenizer:
-    def encode(self, _prompt, add_special_tokens=False):
-        return list(PROMPT)
-
-    def decode(self, tokens, skip_special_tokens=True):
-        return "1" if list(tokens)[:1] == [1] else "0"
-
-
 class _SeededParams(SimpleNamespace):
     """Mimics pydantic SamplingParams: exposes ``model_fields`` incl. seed."""
 
@@ -202,25 +183,6 @@ def _runtime(monkeypatch, *, sample_fn=None, seeded=False):
         def create_training_client_from_state_with_optimizer(self, path):
             return self.client
 
-    class HfApi:
-        info_count = 0
-
-        def __init__(self, **_kwargs):
-            pass
-
-        def whoami(self, **_kwargs):
-            return {"name": "owner"}
-
-        def model_info(self, _repo_id, revision):
-            type(self).info_count += 1
-            return SimpleNamespace(sha=f"{type(self).info_count:040x}")
-
-        def create_repo(self, **_kwargs):
-            return None
-
-        def create_branch(self, **_kwargs):
-            return None
-
     wandb = types.ModuleType("wandb")
     wandb.init = Mock(return_value=run)
     hf = types.ModuleType("huggingface_hub")
@@ -240,19 +202,13 @@ def _runtime(monkeypatch, *, sample_fn=None, seeded=False):
             yield holder
 
 
-def _config(tmp_path, **kwargs):
-    base = dict(name="cal", steps=1, group_size=2, batch_size=1, checkpoint_dir=str(tmp_path))
-    base.update(kwargs)
-    return GRPOConfig(**base)
-
-
 def _run(config, dataset=None, logs=None):
     dataset = dataset or InMemoryDataset(train=[_example()])
     return grpo._run_one_seed(
         config,
         dataset,
         ExactMathReward(),
-        _Tokenizer(),
+        _Tokenizer(tokens=PROMPT, decode_first_only=True),
         logger=(logs.append if logs is not None else (lambda _m: None)),
     )
 
@@ -274,7 +230,7 @@ def _run(config, dataset=None, logs=None):
 )
 def test_training_paths_put_no_gradient_on_prompt_tokens(tmp_path, monkeypatch, kwargs):
     with _runtime(monkeypatch) as holder:
-        _run(_config(tmp_path, **kwargs))
+        _run(_config(tmp_path, name="cal", **kwargs))
     assert holder["grads"], "loss closure never ran"
     n_prompt_targets = len(PROMPT) - 1
     for grads in holder["grads"]:
@@ -297,7 +253,7 @@ def test_gspo_uses_stale_sampler_logprobs_and_clips(tmp_path, monkeypatch):
         )
 
     with _runtime(monkeypatch, sample_fn=sample_fn) as holder:
-        _run(_config(tmp_path, gspo_enabled=True))
+        _run(_config(tmp_path, name="cal", gspo_enabled=True))
     assert holder["metrics"][0]["gspo_clip_frac"] > 0
     step_log = next(item for item in holder["logs"] if "train/gspo_clip_frac" in item)
     assert step_log["train/gspo_clip_frac"] == 1.0
@@ -307,7 +263,7 @@ def test_gspo_uses_stale_sampler_logprobs_and_clips(tmp_path, monkeypatch):
 def test_gspo_without_sampler_logprobs_falls_back_and_logs(tmp_path, monkeypatch):
     logs = []
     with _runtime(monkeypatch) as holder:
-        _run(_config(tmp_path, gspo_enabled=True), logs=logs)
+        _run(_config(tmp_path, name="cal", gspo_enabled=True), logs=logs)
     assert holder["metrics"][0]["gspo_clip_frac"] == 0.0
     assert any("GSPO falls back" in message for message in logs)
     step_log = next(item for item in holder["logs"] if "train/gspo_sampler_old" in item)
@@ -331,7 +287,9 @@ def test_heldout_failures_score_zero_and_are_logged(tmp_path, monkeypatch):
     dataset = InMemoryDataset(train=[_example()], test=[_example(), _example()])
     logs = []
     with _runtime(monkeypatch, sample_fn=sample_fn) as holder:
-        result = _run(_config(tmp_path, evaluate_heldout=True), dataset=dataset, logs=logs)
+        result = _run(
+            _config(tmp_path, name="cal", evaluate_heldout=True), dataset=dataset, logs=logs
+        )
     assert result.heldout_reward == 0.5
     summary = next(item for item in holder["logs"] if "test/failed_n" in item)
     assert summary["test/failed_n"] == 1.0
@@ -346,7 +304,7 @@ def test_heldout_failures_score_zero_and_are_logged(tmp_path, monkeypatch):
 def test_sampling_is_seeded_per_step_and_index(tmp_path, monkeypatch):
     with _runtime(monkeypatch, seeded=True) as holder:
         _run(
-            _config(tmp_path, steps=2, batch_size=2, seed_sampling=True),
+            _config(tmp_path, name="cal", steps=2, batch_size=2, seed_sampling=True),
             dataset=InMemoryDataset(train=[_example(), _example(prompt="r")]),
         )
     seeds = [params.seed for params in holder["params"]]
@@ -358,13 +316,13 @@ def test_sampling_is_seeded_per_step_and_index(tmp_path, monkeypatch):
 
 def test_sampling_seed_skipped_when_params_have_no_seed_field(tmp_path, monkeypatch):
     with _runtime(monkeypatch) as holder:
-        _run(_config(tmp_path))
+        _run(_config(tmp_path, name="cal"))
     assert all(not hasattr(params, "seed") for params in holder["params"])
 
 
 def test_sampling_is_unseeded_by_default(tmp_path, monkeypatch):
     with _runtime(monkeypatch, seeded=True) as holder:
-        _run(_config(tmp_path))
+        _run(_config(tmp_path, name="cal"))
     assert all(getattr(params, "seed", None) is None for params in holder["params"])
 
 
@@ -390,7 +348,13 @@ def test_truncation_uses_stop_reason_when_available():
     )
     meta = {}
     grpo._sample_scored_group(
-        _Tokenizer(), sampler, types_mod, config, ExactMathReward(), _example(), meta=meta
+        _Tokenizer(tokens=PROMPT, decode_first_only=True),
+        sampler,
+        types_mod,
+        config,
+        ExactMathReward(),
+        _example(),
+        meta=meta,
     )
     assert meta["truncated"] == [False, True, True]
     assert meta["sampler_logprobs"] == [None, None, None]
@@ -404,7 +368,9 @@ def test_dynamic_sampling_logs_all_groups_and_keeps_trace_aligned(tmp_path, monk
     def sample_fn(_prompt, _n, _sp):
         return SimpleNamespace(sequences=[_seq([1, 7]), _seq([1, 8])])
 
-    config = _config(tmp_path, steps=3, dynamic_sampling=True, dynamic_sampling_max_resamples=1)
+    config = _config(
+        tmp_path, name="cal", steps=3, dynamic_sampling=True, dynamic_sampling_max_resamples=1
+    )
     with _runtime(monkeypatch, sample_fn=sample_fn) as holder:
         result = _run(config)
     assert result.reward_trace == [1.0, 1.0, 1.0]
@@ -424,7 +390,7 @@ def test_dynamic_sampling_reward_includes_degenerate_groups(tmp_path, monkeypatc
             return SimpleNamespace(sequences=[_seq([1, 7]), _seq([1, 8])])
         return SimpleNamespace(sequences=[_seq([1, 7]), _seq([2, 7])])
 
-    config = _config(tmp_path, dynamic_sampling=True, dynamic_sampling_max_resamples=1)
+    config = _config(tmp_path, name="cal", dynamic_sampling=True, dynamic_sampling_max_resamples=1)
     with _runtime(monkeypatch, sample_fn=sample_fn) as holder:
         result = _run(config)
     step_log = next(item for item in holder["logs"] if "train/reward_trained" in item)
@@ -484,11 +450,7 @@ def test_cli_reward_follows_dataset(monkeypatch):
     monkeypatch.setenv("TINKER_API_KEY", "test-key")
     seen = {}
 
-    def fake_run(_config, _dataset, reward):
-        seen["reward"] = reward
-        return []
-
-    monkeypatch.setattr(grpo_cli, "run_grpo", fake_run)
+    monkeypatch.setattr(grpo_cli, "run_grpo", make_fake_run(seen))
     monkeypatch.setattr(grpo_cli, "_build_dataset", lambda *_a, **_k: object())
     assert grpo_cli.main(["--preset", "tooluse_synth", "--dataset", "gsm8k"]) == 0
     assert isinstance(seen["reward"], ExactMathReward)
@@ -498,11 +460,7 @@ def test_explicit_reward_overrides_the_preset(monkeypatch):
     monkeypatch.setenv("TINKER_API_KEY", "test-key")
     seen = {}
 
-    def fake_run(_config, _dataset, reward):
-        seen["reward"] = reward
-        return []
-
-    monkeypatch.setattr(grpo_cli, "run_grpo", fake_run)
+    monkeypatch.setattr(grpo_cli, "run_grpo", make_fake_run(seen))
     monkeypatch.setattr(grpo_cli, "_build_dataset", lambda *_a, **_k: object())
     assert grpo_cli.main(["--preset", "tooluse_synth", "--reward", "math100"]) == 0
     assert isinstance(seen["reward"], MathReward)

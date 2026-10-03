@@ -19,8 +19,10 @@ import tempfile
 # Support both `python tools/build_public_documents.py` and module/test imports.
 if __package__:
     from . import check_public_release as release
+    from . import prepare_public_tex_bundle as tex_bundle
 else:
     import check_public_release as release
+    import prepare_public_tex_bundle as tex_bundle
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,6 +52,7 @@ def require(condition, message):
 
 def destination_path(root, destination):
     """Require a fresh leaf under an existing real parent, outside the checkout."""
+    require(".." not in Path(destination).parts, "use a canonical output path without '..'")
     destination = Path(os.path.abspath(destination))
     require(not os.path.lexists(destination), f"output directory already exists: {destination}")
     require(
@@ -113,7 +116,45 @@ def stage_inputs(root, stage, manifest, document):
     return directory, copied
 
 
-def build_environment(stage):
+def stage_bundle(stage, supplied):
+    """Bind one explicit local ZIP to immutable build-stage bytes; never fetch it."""
+    source = tex_bundle.local_path(supplied)
+    require(source.is_file(), f"missing local Tectonic bundle: {source}")
+    # Validate before copying, including bounded ZIP size, member types and hashes.
+    details = tex_bundle.validate_bundle(source)
+    digest = release.sha256(source)
+    size = source.stat().st_size
+    target = stage / "local-tex-bundle.zip"
+    with source.open("rb") as src, target.open("xb") as dst:
+        shutil.copyfileobj(src, dst)
+    require(
+        target.stat().st_size == size and release.sha256(target) == digest,
+        "local Tectonic bundle changed while staging; nothing published",
+    )
+    require(tex_bundle.validate_bundle(target) == details, "local bundle inventory changed")
+    record = {
+        "source_name": source.name,
+        "staged_filename": target.name,
+        "bytes": size,
+        "sha256": digest,
+        "option": "--bundle",
+        **details,
+    }
+    return source, target, record
+
+
+def verify_bundle_unchanged(source, staged, record):
+    for path in (source, staged):
+        path = tex_bundle.local_path(path)
+        require(
+            path.is_file()
+            and path.stat().st_size == record["bytes"]
+            and release.sha256(path) == record["sha256"],
+            "local Tectonic bundle changed during build; nothing published",
+        )
+
+
+def build_environment(stage, tectonic_bundle=None):
     require(os.name == "posix", "this wrapper requires POSIX process groups (Linux or macOS)")
     native = {name: shutil.which(name) for name in ("pandoc", "tectonic")}
     missing = [name for name, path in native.items() if path is None]
@@ -135,6 +176,8 @@ def build_environment(stage):
     for name, executable in native.items():
         shim = shim_dir / name
         flags = " --only-cached --untrusted" if name == "tectonic" else ""
+        if name == "tectonic" and tectonic_bundle is not None:
+            flags += " --bundle " + shlex.quote(str(tectonic_bundle))
         shim.write_text(
             f"#!/bin/sh\nPATH={shlex.quote(native_path)}\nexport PATH\n"
             f'exec {shlex.quote(executable)} "$@"{flags}\n',
@@ -237,7 +280,7 @@ def publish(destination, outputs, receipt):
             ) from exc
 
 
-def build_documents(root, destination, documents, timeout=1800):
+def build_documents(root, destination, documents, timeout=1800, tectonic_bundle=None):
     root = Path(root).resolve()
     require(
         math.isfinite(timeout) and 0 < timeout <= 3600, "timeout must be > 0 and <= 3600 seconds"
@@ -254,7 +297,12 @@ def build_documents(root, destination, documents, timeout=1800):
             not stage.is_relative_to(root),
             "temporary directory must be outside the source checkout",
         )
-        env = build_environment(stage)
+        bundle_record = None
+        if tectonic_bundle is not None:
+            bundle_source, bundle_stage, bundle_record = stage_bundle(stage, tectonic_bundle)
+            env = build_environment(stage, bundle_stage)
+        else:
+            env = build_environment(stage)
         outputs = []
         records = {}
         for document in documents:
@@ -274,6 +322,8 @@ def build_documents(root, destination, documents, timeout=1800):
         require(
             final_digest == digest, "publication manifest changed during build; nothing published"
         )
+        if bundle_record is not None:
+            verify_bundle_unchanged(bundle_source, bundle_stage, bundle_record)
         receipt = {
             "schema": "public-document-build-v1",
             "status": "BUILT",
@@ -287,12 +337,18 @@ def build_documents(root, destination, documents, timeout=1800):
                 "scientific validation, privacy certification or replay of omitted executions."
             ),
         }
+        if bundle_record is not None:
+            receipt["tectonic_bundle"] = bundle_record
         publish(destination, outputs, receipt)
     return {"status": "BUILT", "output_directory": str(destination), "documents": records}
 
 
 def main(argv=None):
     cli = argparse.ArgumentParser(description=__doc__)
+    cli.add_argument(
+        "--tectonic-bundle",
+        help="Optional existing local TeX ZIP from prepare_public_tex_bundle.py; no URLs",
+    )
     cli.add_argument(
         "--root", type=Path, default=ROOT, help="Frozen source checkout (default: this checkout)"
     )
@@ -309,7 +365,13 @@ def main(argv=None):
     args = cli.parse_args(argv)
     documents = list(DOCUMENTS) if args.document == "all" else [args.document]
     try:
-        result = build_documents(args.root, args.output_dir, documents, args.timeout)
+        result = build_documents(
+            args.root,
+            args.output_dir,
+            documents,
+            args.timeout,
+            tectonic_bundle=args.tectonic_bundle,
+        )
     except (OSError, ValueError, TypeError, KeyError) as exc:
         print(json.dumps({"status": "FAIL", "error": str(exc)}, sort_keys=True), file=sys.stderr)
         return 1

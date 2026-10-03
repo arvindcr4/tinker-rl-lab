@@ -22,7 +22,13 @@ from .grpo import (
     make_pavlov_non_xlam_dataset,
     make_xlam_dataset,
 )
-from .critic import compute_gae_advantages, value_loss_mse
+from .critic import (
+    PromptValueCritic,
+    compute_gae_advantages,
+    explained_variance,
+    train_critic_step,
+    value_loss_mse,
+)
 
 __all__ = [
     "GRPOConfig",
@@ -48,5 +54,8 @@ __all__ = [
     "make_pavlov_non_xlam_dataset",
     "make_xlam_dataset",
     "compute_gae_advantages",
+    "explained_variance",
+    "train_critic_step",
     "value_loss_mse",
+    "PromptValueCritic",
 ]

@@ -1,5 +1,6 @@
 """Tests for the consolidated ``tinkerrl.grpo`` module."""
 
+import contextlib
 import unittest
 import json
 import sys
@@ -43,6 +44,34 @@ from platform_tinker.tinkerrl.grpo import (
     PAVLOV_SUITE_RECEIPTS,
     run_grpo,
 )
+
+
+_MISSING = object()
+
+
+@contextlib.contextmanager
+def _temporary_modules(mapping):
+    """Install fake modules, restoring only the patched keys on exit.
+
+    Unlike ``patch.dict(sys.modules, ...)`` — whose exit restores the
+    whole dict to its enter-time snapshot, deleting every module first
+    imported inside the block — this leaves genuine imports in place.
+    The critic path lazily imports ``torch._dynamo`` (via the
+    optimizer's ``@_disable_dynamo`` wrapper); evicting it from
+    ``sys.modules`` breaks the next test with a duplicate
+    TORCH_LIBRARY registration because the C++ registration outlives
+    the eviction.
+    """
+    saved = {key: sys.modules.get(key, _MISSING) for key in mapping}
+    sys.modules.update(mapping)
+    try:
+        yield
+    finally:
+        for key, value in saved.items():
+            if value is _MISSING:
+                sys.modules.pop(key, None)
+            else:
+                sys.modules[key] = value
 
 
 class TestNormalizeRewards(unittest.TestCase):
@@ -393,6 +422,11 @@ class TestGRPOConfig(unittest.TestCase):
         self.assertEqual(cfg.gspo_epsilon_low, 3e-4)
         self.assertEqual(cfg.gspo_epsilon_high, 4e-4)
         self.assertEqual(cfg.gspo_update_epochs, 1)
+        self.assertFalse(cfg.critic_enabled)
+        self.assertEqual(cfg.critic_lr, 1e-3)
+        self.assertEqual(cfg.critic_hidden_dim, 64)
+        self.assertEqual(cfg.critic_updates_per_step, 4)
+        self.assertEqual(cfg.critic_pretrain_batches, 0)
 
     def test_effective_save_every_explicit(self):
         cfg = GRPOConfig(name="t", save_every=10)
@@ -415,6 +449,22 @@ class TestGRPOConfig(unittest.TestCase):
             GRPOConfig(name="t", gspo_update_epochs=0)
         with self.assertRaises(ValueError):
             GRPOConfig(name="t", gspo_enabled=True, nll_aux_enabled=True)
+        with self.assertRaises(ValueError):
+            GRPOConfig(name="t", gspo_epsilon_low=-1e-4)
+        with self.assertRaises(ValueError):
+            GRPOConfig(name="t", gspo_epsilon_high=-1e-4)
+        GRPOConfig(name="t", gspo_epsilon_low=0.0, gspo_epsilon_high=0.0)
+
+    def test_critic_validates_hyperparameters(self):
+        with self.assertRaises(ValueError):
+            GRPOConfig(name="t", critic_lr=0.0)
+        with self.assertRaises(ValueError):
+            GRPOConfig(name="t", critic_hidden_dim=0)
+        with self.assertRaises(ValueError):
+            GRPOConfig(name="t", critic_updates_per_step=-1)
+        with self.assertRaises(ValueError):
+            GRPOConfig(name="t", critic_pretrain_batches=-1)
+        GRPOConfig(name="t", critic_updates_per_step=0)  # frozen critic is valid
 
     def test_tracking_is_mandatory(self):
         with self.assertRaisesRegex(ValueError, "W&B tracking is mandatory"):
@@ -935,6 +985,293 @@ class TestTrackingFailClosed(unittest.TestCase):
             runtime["wandb_run"].summary["checkpoint_receipts"][0]["revision"],
             original_revision,
         )
+
+    def _fake_modules(self, runtime):
+        return {
+            "wandb": runtime["wandb"],
+            "huggingface_hub": runtime["hf"],
+            "tinker": runtime["tinker"],
+            "tinker.types": runtime["tinker_types"],
+        }
+
+    def _fake_success_receipt(self, _config, _seed, folder_path, _logger, *, step, **_kwargs):
+        sha = "1" * 40
+        revision = f"checkpoint-step-{step}"
+        return {
+            "step": step,
+            "repo_id": "owner/critic-run",
+            "revision": revision,
+            "commit_sha": sha,
+            "hf_commit_sha": sha,
+            "repo_url": "https://huggingface.co/owner/critic-run",
+            "revision_url": f"https://huggingface.co/owner/critic-run/tree/{revision}",
+            "commit_url": f"https://huggingface.co/owner/critic-run/commit/{sha}",
+            "source_path": str(folder_path),
+        }
+
+    def test_critic_run_writes_state_and_logs(self):
+        import torch
+
+        runtime = self._fake_runtime()
+        with _temporary_modules(self._fake_modules(runtime)):
+            with patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt):
+                with tempfile.TemporaryDirectory() as checkpoint_dir:
+                    config = GRPOConfig(
+                        name="critic-run",
+                        steps=2,
+                        save_every=1,
+                        group_size=2,
+                        batch_size=1,
+                        checkpoint_dir=checkpoint_dir,
+                        critic_enabled=True,
+                        critic_pretrain_batches=1,
+                        critic_updates_per_step=2,
+                    )
+                    result = grpo._run_one_seed(
+                        config,
+                        self._dataset(),
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=lambda _message: None,
+                    )
+
+                    self.assertEqual(result.run_id, "tinker-run-1")
+                    critic_path = Path(checkpoint_dir) / "critic-run_seed42.critic.pt"
+                    self.assertTrue(critic_path.exists())
+                    state = torch.load(critic_path, map_location="cpu", weights_only=True)
+                    self.assertIn("embedding.weight", state["model"])
+                    self.assertIn("optimizer", state)
+        step_logs = [p for p in runtime["wandb_run"].logs if "train/critic_loss" in p]
+        self.assertEqual(len(step_logs), 2)
+        self.assertTrue(all("train/critic_ev" in p for p in step_logs))
+        # The critic forces the batch-wide advantage path.
+        self.assertTrue(all("train/global_adv_std" in p for p in step_logs))
+        samples = [e for e in runtime["events"] if e == "sample"]
+        self.assertEqual(len(samples), 3)  # 1 pretrain batch + 2 steps
+
+    def test_critic_state_resumes_mid_run(self):
+        runtime = self._fake_runtime()
+        messages: list[str] = []
+        with _temporary_modules(self._fake_modules(runtime)):
+            with patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt):
+                with tempfile.TemporaryDirectory() as checkpoint_dir:
+                    config = GRPOConfig(
+                        name="critic-resume",
+                        steps=2,
+                        save_every=1,
+                        group_size=2,
+                        batch_size=1,
+                        checkpoint_dir=checkpoint_dir,
+                        critic_enabled=True,
+                    )
+                    grpo._run_one_seed(
+                        config,
+                        self._dataset(),
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=lambda _message: None,
+                    )
+                    # Rewind the completed receipt to a mid-run state.  The
+                    # config is unchanged, so the fingerprint still matches.
+                    receipt_path = Path(checkpoint_dir) / "critic-resume_seed42.json"
+                    payload = json.loads(receipt_path.read_text())
+                    payload["status"] = "started"
+                    payload["step"] = 1
+                    receipt_path.write_text(json.dumps(payload))
+
+                    result = grpo._run_one_seed(
+                        config,
+                        self._dataset(),
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=messages.append,
+                    )
+
+        self.assertEqual(len(result.reward_trace), 2)
+        self.assertTrue(any("critic resumed from" in m for m in messages))
+
+    def test_critic_resume_accepts_raw_state_dict(self):
+        import torch
+
+        runtime = self._fake_runtime()
+        messages: list[str] = []
+        with _temporary_modules(self._fake_modules(runtime)):
+            with patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt):
+                with tempfile.TemporaryDirectory() as checkpoint_dir:
+                    config = GRPOConfig(
+                        name="critic-raw",
+                        steps=2,
+                        save_every=1,
+                        group_size=2,
+                        batch_size=1,
+                        checkpoint_dir=checkpoint_dir,
+                        critic_enabled=True,
+                    )
+                    grpo._run_one_seed(
+                        config,
+                        self._dataset(),
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=lambda _message: None,
+                    )
+                    critic_path = Path(checkpoint_dir) / "critic-raw_seed42.critic.pt"
+                    payload = torch.load(critic_path, map_location="cpu", weights_only=True)
+                    torch.save(payload["model"], critic_path)
+                    receipt_path = Path(checkpoint_dir) / "critic-raw_seed42.json"
+                    receipt = json.loads(receipt_path.read_text())
+                    receipt["status"] = "started"
+                    receipt["step"] = 1
+                    receipt_path.write_text(json.dumps(receipt))
+                    result = grpo._run_one_seed(
+                        config,
+                        self._dataset(),
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=messages.append,
+                    )
+        self.assertEqual(len(result.reward_trace), 2)
+        self.assertTrue(any("critic resumed from" in m for m in messages))
+
+    def test_critic_resume_without_state_fails_closed(self):
+        runtime = self._fake_runtime()
+        with _temporary_modules(self._fake_modules(runtime)):
+            with patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt):
+                with tempfile.TemporaryDirectory() as checkpoint_dir:
+                    config = GRPOConfig(
+                        name="critic-missing",
+                        steps=2,
+                        save_every=1,
+                        group_size=2,
+                        batch_size=1,
+                        checkpoint_dir=checkpoint_dir,
+                        critic_enabled=True,
+                    )
+                    grpo._run_one_seed(
+                        config,
+                        self._dataset(),
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=lambda _message: None,
+                    )
+                    receipt_path = Path(checkpoint_dir) / "critic-missing_seed42.json"
+                    payload = json.loads(receipt_path.read_text())
+                    payload["status"] = "started"
+                    payload["step"] = 1
+                    receipt_path.write_text(json.dumps(payload))
+                    (Path(checkpoint_dir) / "critic-missing_seed42.critic.pt").unlink()
+                    with self.assertRaisesRegex(RuntimeError, "no critic state"):
+                        grpo._run_one_seed(
+                            config,
+                            self._dataset(),
+                            ExactMathReward(),
+                            runtime["tokenizer"],
+                            logger=lambda _message: None,
+                        )
+
+    def test_critic_pretrain_resume_keeps_example_order(self):
+        dataset = InMemoryDataset(
+            train=[
+                TrainingExample(prompt="easy", target="1"),
+                TrainingExample(prompt="hard", target="0"),
+            ]
+        )
+        runtime = self._fake_runtime()
+        with _temporary_modules(self._fake_modules(runtime)):
+            with patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt):
+                with tempfile.TemporaryDirectory() as checkpoint_dir:
+                    config = GRPOConfig(
+                        name="critic-pretrain-resume",
+                        steps=2,
+                        save_every=1,
+                        group_size=2,
+                        batch_size=1,
+                        checkpoint_dir=checkpoint_dir,
+                        critic_enabled=True,
+                        critic_pretrain_batches=1,
+                        seed=42,
+                    )
+                    full = grpo._run_one_seed(
+                        config,
+                        dataset,
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=lambda _message: None,
+                    )
+                    receipt_path = Path(checkpoint_dir) / "critic-pretrain-resume_seed42.json"
+                    payload = json.loads(receipt_path.read_text())
+                    payload["status"] = "started"
+                    payload["step"] = 1
+                    receipt_path.write_text(json.dumps(payload))
+                    resumed = grpo._run_one_seed(
+                        config,
+                        dataset,
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=lambda _message: None,
+                    )
+        self.assertEqual(full.reward_trace, [1.0, 0.0])
+        self.assertEqual(resumed.reward_trace, full.reward_trace)
+
+    def test_gspo_epochs_step_the_optimizer_once_per_epoch(self):
+        runtime = self._fake_runtime()
+        with _temporary_modules(self._fake_modules(runtime)):
+            with patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt):
+                with tempfile.TemporaryDirectory() as checkpoint_dir:
+                    config = GRPOConfig(
+                        name="gspo-epochs",
+                        steps=2,
+                        save_every=1,
+                        group_size=2,
+                        batch_size=1,
+                        checkpoint_dir=checkpoint_dir,
+                        gspo_enabled=True,
+                        gspo_update_epochs=2,
+                    )
+                    grpo._run_one_seed(
+                        config,
+                        self._dataset(),
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=lambda _message: None,
+                    )
+        training_client = runtime["holder"]["training_client"]
+        self.assertEqual(training_client.forward_count, 4)
+        self.assertEqual(training_client.optim_count, 4)
+
+    def test_dynamic_sampling_resume_fails_closed(self):
+        runtime = self._fake_runtime()
+        with _temporary_modules(self._fake_modules(runtime)):
+            with patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt):
+                with tempfile.TemporaryDirectory() as checkpoint_dir:
+                    config = GRPOConfig(
+                        name="dynamic-resume",
+                        steps=2,
+                        save_every=1,
+                        group_size=2,
+                        batch_size=1,
+                        checkpoint_dir=checkpoint_dir,
+                        dynamic_sampling=True,
+                    )
+                    grpo._run_one_seed(
+                        config,
+                        self._dataset(),
+                        ExactMathReward(),
+                        runtime["tokenizer"],
+                        logger=lambda _message: None,
+                    )
+                    receipt_path = Path(checkpoint_dir) / "dynamic-resume_seed42.json"
+                    payload = json.loads(receipt_path.read_text())
+                    payload["status"] = "started"
+                    payload["step"] = 1
+                    receipt_path.write_text(json.dumps(payload))
+                    with self.assertRaisesRegex(RuntimeError, "dynamic-sampling draws"):
+                        grpo._run_one_seed(
+                            config,
+                            self._dataset(),
+                            ExactMathReward(),
+                            runtime["tokenizer"],
+                            logger=lambda _message: None,
+                        )
 
     def test_receipt_failure_stops_future_training_and_optimizer_calls(self):
         runtime = self._fake_runtime()

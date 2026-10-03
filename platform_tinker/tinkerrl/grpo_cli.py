@@ -293,6 +293,8 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         "gspo_update_epochs": "gspo_update_epochs",
         "gspo_epsilon_low": "gspo_epsilon_low",
         "gspo_epsilon_high": "gspo_epsilon_high",
+        "critic_lr": "critic_lr",
+        "critic_pretrain_batches": "critic_pretrain_batches",
     }
     for cfg_key, attr in mapping.items():
         val = getattr(args, attr, None)
@@ -316,6 +318,8 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         cfg["nll_aux_enabled"] = True
     if args.gspo:
         cfg["gspo_enabled"] = True
+    if args.critic:
+        cfg["critic_enabled"] = True
     if args.no_resume:
         cfg["resume"] = False
     if args.hf_public:
@@ -398,6 +402,9 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--gspo-update-epochs", dest="gspo_update_epochs", type=int)
     parser.add_argument("--gspo-epsilon-low", dest="gspo_epsilon_low", type=float)
     parser.add_argument("--gspo-epsilon-high", dest="gspo_epsilon_high", type=float)
+    parser.add_argument("--critic", dest="critic", action="store_true")
+    parser.add_argument("--critic-lr", dest="critic_lr", type=float)
+    parser.add_argument("--critic-pretrain-batches", dest="critic_pretrain_batches", type=int)
     parser.add_argument("--checkpoint-dir")
     parser.add_argument("--no-resume", action="store_true")
     parser.add_argument("--wandb-project")

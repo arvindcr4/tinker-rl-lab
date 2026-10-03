@@ -41,6 +41,8 @@ from typing import (
 
 import torch
 
+from .critic import PromptValueCritic, explained_variance, train_critic_step
+
 
 # ---------------------------------------------------------------------------
 # Value objects
@@ -410,6 +412,14 @@ class GRPOConfig:
     gspo_epsilon_low: float = 3e-4
     gspo_epsilon_high: float = 4e-4
     gspo_update_epochs: int = 1
+    # Prompt-conditioned value baseline (critic).  Off by default.  When on,
+    # advantages are R - V(x) normalized batch-wide (implies the batch-wide
+    # advantage path; per-group centering would cancel the baseline).
+    critic_enabled: bool = False
+    critic_lr: float = 1e-3
+    critic_hidden_dim: int = 64
+    critic_updates_per_step: int = 4
+    critic_pretrain_batches: int = 0
 
     def __post_init__(self) -> None:
         # JSON configuration commonly supplies lists.  Convert all metadata
@@ -436,8 +446,18 @@ class GRPOConfig:
             raise ValueError("dynamic_sampling_max_resamples must be >= 0")
         if self.gspo_update_epochs < 1:
             raise ValueError("gspo_update_epochs must be >= 1")
+        if self.gspo_epsilon_low < 0 or self.gspo_epsilon_high < 0:
+            raise ValueError("gspo clip epsilons must be >= 0")
         if self.gspo_enabled and self.nll_aux_enabled:
             raise ValueError("gspo_enabled and nll_aux_enabled are mutually exclusive")
+        if self.critic_lr <= 0:
+            raise ValueError("critic_lr must be > 0")
+        if self.critic_hidden_dim < 1:
+            raise ValueError("critic_hidden_dim must be >= 1")
+        if self.critic_updates_per_step < 0:
+            raise ValueError("critic_updates_per_step must be >= 0")
+        if self.critic_pretrain_batches < 0:
+            raise ValueError("critic_pretrain_batches must be >= 0")
 
     def effective_save_every(self) -> int:
         return self.save_every or max(self.steps // 4, 10)
@@ -778,8 +798,9 @@ def make_gspo_loss_fn(
     epoch (policy equals sampler, ratio exactly 1 with gradients flowing).
     When ``stash`` is given, the first call's detached logprobs are
     appended for use as the next epoch's ``old_logprobs``.  All inputs
-    must pair 1:1 or the closure raises instead of silently mis-assigning
-    ratios.
+    must pair 1:1, and each sequence's old and new token logprobs must
+    have the same shape, or the closure raises instead of broadcasting
+    a mis-assigned ratio.
     """
 
     def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:
@@ -801,12 +822,20 @@ def make_gspo_loss_fn(
         terms = []
         clipped = 0
         for i, logprobs in enumerate(logprobs_list):
+            if logprobs.numel() == 0:
+                raise ValueError(f"sequence {i} has no token logprobs")
             if old_logprobs is None:
                 # First epoch: ratio is exactly 1, but keep it a function
                 # of logprobs so gradients flow (length-normalized PG).
                 ratio = torch.exp((logprobs - logprobs.detach()).mean())
             else:
-                ratio = torch.exp((logprobs - old_logprobs[i]).mean())
+                old = old_logprobs[i]
+                if logprobs.shape != old.shape:
+                    raise ValueError(
+                        "old_logprobs must match new logprobs token-for-token, "
+                        f"got {tuple(old.shape)} vs {tuple(logprobs.shape)} on sequence {i}"
+                    )
+                ratio = torch.exp((logprobs - old).mean())
             unclipped = ratio * advantages[i]
             clipped_ratio = torch.clamp(ratio, 1.0 - epsilon_low, 1.0 + epsilon_high)
             clipped_term = clipped_ratio * advantages[i]
@@ -824,6 +853,40 @@ def make_gspo_loss_fn(
 
 def _decode_response(tokenizer: Any, resp: Any) -> str:
     return tokenizer.decode(list(resp.tokens), skip_special_tokens=True)
+
+
+def _sample_scored_group(
+    tok: Any,
+    sc: Any,
+    T: Any,
+    config: GRPOConfig,
+    reward: RewardAdapter,
+    example: TrainingExample,
+) -> Tuple[List[int], List[List[int]], List[float], List[int]]:
+    """Sample one group for an example and score it.
+
+    Shared by the main loop and critic pretraining.  Returns
+    ``(prompt_ids, response_ids_list, rewards, token_lengths)``.
+    """
+    prompt_ids = tok.encode(example.prompt, add_special_tokens=False)
+    if len(prompt_ids) > config.max_prompt_tokens:
+        prompt_ids = prompt_ids[: config.max_prompt_tokens]
+
+    sp = T.SamplingParams(
+        max_tokens=config.max_response_tokens,
+        temperature=config.temperature,
+        top_p=config.top_p,
+    )
+    responses = sc.sample(
+        T.ModelInput.from_ints(prompt_ids),
+        num_samples=config.group_size,
+        sampling_params=sp,
+    ).result()
+
+    resp_ids_list = [list(resp.tokens) for resp in responses.sequences]
+    rewards = [reward.score(_decode_response(tok, resp), example) for resp in responses.sequences]
+    token_lengths = [len(ids) for ids in resp_ids_list]
+    return prompt_ids, resp_ids_list, rewards, token_lengths
 
 
 def _build_datum(prompt_ids: List[int], response_ids: List[int]) -> Any:
@@ -854,6 +917,25 @@ def _metric(result: Any, names: Sequence[str], default: float = float("nan")) ->
 def _checkpoint_path(config: GRPOConfig, seed: int) -> Path:
     safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "-", config.name).strip("-")
     return Path(config.checkpoint_dir) / f"{safe_name}_seed{seed}.json"
+
+
+def _critic_checkpoint_path(config: GRPOConfig, seed: int) -> Path:
+    return _checkpoint_path(config, seed).with_suffix(".critic.pt")
+
+
+def _save_critic(
+    config: GRPOConfig,
+    seed: int,
+    critic: torch.nn.Module,
+    optimizer: Optional[torch.optim.Optimizer] = None,
+) -> None:
+    """Persist critic weights and Adam state next to the JSON receipt."""
+    path = _critic_checkpoint_path(config, seed)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload: Dict[str, Any] = {"model": critic.state_dict()}
+    if optimizer is not None:
+        payload["optimizer"] = optimizer.state_dict()
+    torch.save(payload, path)
 
 
 def _config_fingerprint(config: GRPOConfig, seed: int) -> Dict[str, Any]:
@@ -1397,8 +1479,39 @@ def _run_one_seed(
     prior = _load_checkpoint(config, seed)
     resume_step = int((prior or {}).get("step", 0))
     resume_state_path = (prior or {}).get("train_state_path")
+    # Critic pretrain draws from this RNG before the step loop, and only
+    # on a fresh run.  Replay those draws before the per-step draws so a
+    # resume after pretraining keeps the same example order.
+    if config.critic_enabled and config.critic_pretrain_batches > 0 and resume_step > 0:
+        for _ in range(config.critic_pretrain_batches):
+            rng.sample(train_examples, min(config.batch_size, len(train_examples)))
     for _ in range(resume_step):
         rng.sample(train_examples, min(config.batch_size, len(train_examples)))
+
+    critic: Any = None
+    critic_opt: Any = None
+    if config.critic_enabled:
+        critic = PromptValueCritic(
+            hidden_dim=config.critic_hidden_dim,
+            max_prompt_tokens=config.max_prompt_tokens,
+        )
+        critic_opt = torch.optim.Adam(critic.parameters(), lr=config.critic_lr)
+        critic_path = _critic_checkpoint_path(config, seed)
+        if resume_step > 0:
+            if not critic_path.exists():
+                raise RuntimeError(
+                    f"[{config.name}] resume at step {resume_step} has no critic "
+                    f"state at {critic_path}"
+                )
+            payload = torch.load(critic_path, map_location="cpu", weights_only=True)
+            if isinstance(payload, dict) and "model" in payload:
+                critic.load_state_dict(payload["model"])
+                if "optimizer" in payload:
+                    critic_opt.load_state_dict(payload["optimizer"])
+            else:
+                # Files written before the optimizer was stored.
+                critic.load_state_dict(payload)
+            logger(f"[{config.name}] critic resumed from {critic_path}")
 
     wb = _start_wandb(config, seed)
     try:
@@ -1434,6 +1547,15 @@ def _run_one_seed(
                 _wandb_summary(wb)["checkpoint_urls"] = list(completed.checkpoint_urls)
             _finish_wandb(wb, success=True)
             return completed
+
+        # Dynamic sampling draws rng.choice once per rejected group.  The
+        # step counter does not record how many, so a replay would train
+        # on a different batch.  Fresh runs are unaffected.
+        if config.dynamic_sampling and resume_step > 0:
+            raise RuntimeError(
+                "resume cannot replay dynamic-sampling draws; start this seed "
+                "from step 0 or turn dynamic sampling off"
+            )
 
         try:
             import tinker
@@ -1511,9 +1633,41 @@ def _run_one_seed(
         sc = tc.create_sampling_client(model_path=w0.path)
 
         save_every = config.effective_save_every()
-        step_rewards: List[float] = list((prior or {}).get("reward_trace", []))[:resume_step]
-        zero_loss_steps = int((prior or {}).get("zero_loss_steps", 0))
-        zero_reward_steps = int((prior or {}).get("zero_reward_steps", 0))
+        # Final receipts nest the trace inside "result"; periodic receipts
+        # carry it top-level.  Fall back so rewound finals resume intact.
+        prior_result = (prior or {}).get("result", {}) or {}
+        step_rewards: List[float] = list(
+            (prior or {}).get("reward_trace", prior_result.get("reward_trace", []))
+        )[:resume_step]
+        zero_loss_steps = int(
+            (prior or {}).get("zero_loss_steps", prior_result.get("zero_loss_steps", 0))
+        )
+        zero_reward_steps = int(
+            (prior or {}).get("zero_reward_steps", prior_result.get("zero_reward_steps", 0))
+        )
+
+        if config.critic_enabled and config.critic_pretrain_batches > 0 and resume_step == 0:
+            logger(
+                f"[{config.name}] critic pretraining: "
+                f"{config.critic_pretrain_batches} batches (policy frozen)"
+            )
+            for _ in range(config.critic_pretrain_batches):
+                pre_batch = rng.sample(train_examples, min(config.batch_size, len(train_examples)))
+                pre_prompts: List[List[int]] = []
+                pre_targets: List[float] = []
+                for example in pre_batch:
+                    prompt_ids, _, rewards, _ = _sample_scored_group(
+                        tok, sc, T, config, reward, example
+                    )
+                    pre_prompts.extend([prompt_ids] * len(rewards))
+                    pre_targets.extend(rewards)
+                train_critic_step(
+                    critic,
+                    critic_opt,
+                    pre_prompts,
+                    pre_targets,
+                    steps=config.critic_updates_per_step,
+                )
 
         for step in range(resume_step, config.steps):
             batch = rng.sample(train_examples, min(config.batch_size, len(train_examples)))
@@ -1522,6 +1676,12 @@ def _run_one_seed(
             all_nll: List[bool] = []
             pending: List[Any] = []
             batch_rewards: List[float] = []
+            critic_prompts: List[List[int]] = []
+            critic_targets: List[float] = []
+            critic_ev = 0.0
+            # The critic implies the batch-wide path: per-group centering
+            # would cancel its per-prompt baseline.
+            use_batch_path = config.global_advantage_normalization or config.critic_enabled
 
             # Dynamic sampling (DAPO §3.2) refills the batch pool with fresh
             # examples when a group is degenerate.  The refill loop is bounded
@@ -1534,32 +1694,15 @@ def _run_one_seed(
             while pool_idx < len(pool):
                 example = pool[pool_idx]
                 pool_idx += 1
-                prompt_ids = tok.encode(example.prompt, add_special_tokens=False)
-                if len(prompt_ids) > config.max_prompt_tokens:
-                    prompt_ids = prompt_ids[: config.max_prompt_tokens]
-
-                sp = T.SamplingParams(
-                    max_tokens=config.max_response_tokens,
-                    temperature=config.temperature,
-                    top_p=config.top_p,
+                prompt_ids, resp_ids_list, rewards, token_lengths = _sample_scored_group(
+                    tok, sc, T, config, reward, example
                 )
-                responses = sc.sample(
-                    T.ModelInput.from_ints(prompt_ids),
-                    num_samples=config.group_size,
-                    sampling_params=sp,
-                ).result()
-
-                rewards = [
-                    reward.score(_decode_response(tok, resp), example)
-                    for resp in responses.sequences
-                ]
                 if config.dynamic_sampling and is_degenerate_group(rewards):
                     skipped_degenerate += 1
                     if resamples_used < config.dynamic_sampling_max_resamples:
                         pool.append(rng.choice(train_examples))
                         resamples_used += 1
                     continue
-                token_lengths = [len(resp.tokens) for resp in responses.sequences]
                 truncated = [length >= config.max_response_tokens for length in token_lengths]
                 nll_flags = _nll_mask_for_group(
                     rewards,
@@ -1567,12 +1710,12 @@ def _run_one_seed(
                     config.nll_aux_min_reward,
                     config.mask_truncated_responses,
                 )
-                if config.global_advantage_normalization:
-                    # Stage raw rewards; one global pass runs after the pool.
+                if use_batch_path:
+                    # Stage raw rewards; one batch-wide pass runs after the pool.
                     pending.append(
                         (
                             prompt_ids,
-                            [list(resp.tokens) for resp in responses.sequences],
+                            resp_ids_list,
                             rewards,
                             token_lengths,
                             nll_flags,
@@ -1584,24 +1727,36 @@ def _run_one_seed(
                         advs = apply_truncation_mask(
                             advs, token_lengths, config.max_response_tokens
                         )
-                    for resp, adv, keep_nll in zip(responses.sequences, advs, nll_flags):
-                        resp_ids = list(resp.tokens)
+                    for resp_ids, adv, keep_nll in zip(resp_ids_list, advs, nll_flags):
                         all_data.append(_build_datum(prompt_ids, resp_ids))
                         all_advs.append(adv)
                         all_nll.append(keep_nll)
                 batch_rewards.extend(rewards)
 
-            if config.global_advantage_normalization:
+            if use_batch_path:
                 flat_rewards = [r for (_, _, rewards, _, _) in pending for r in rewards]
                 flat_lengths = [ln for (_, _, _, lengths, _) in pending for ln in lengths]
                 flat_truncated = [ln >= config.max_response_tokens for ln in flat_lengths]
+                flat_basis = flat_rewards
+                if config.critic_enabled and pending:
+                    with torch.no_grad():
+                        pred = critic([item[0] for item in pending]).tolist()
+                    flat_basis = [
+                        r - v for (_, _, rewards, _, _), v in zip(pending, pred) for r in rewards
+                    ]
+                    # The number logged as critic EV is this baseline, before
+                    # the fit.  V is subtracted from truncated rewards too.
+                    baseline_pred = [
+                        v for (_, _, rewards, _, _), v in zip(pending, pred) for _ in rewards
+                    ]
+                    critic_ev = explained_variance(baseline_pred, flat_rewards)
                 exclude = (
                     flat_truncated
                     if config.mask_truncated_responses and config.global_norm_exclude_truncated
                     else None
                 )
                 flat_advs = normalize_advantages_global(
-                    flat_rewards,
+                    flat_basis,
                     unbiased=config.debias_advantages,
                     exclude=exclude,
                 )
@@ -1610,7 +1765,15 @@ def _run_one_seed(
                         flat_advs, flat_lengths, config.max_response_tokens
                     )
                 cursor = 0
-                for prompt_ids, resp_ids_list, _, _, nll_flags in pending:
+                for prompt_ids, resp_ids_list, rewards, lengths, nll_flags in pending:
+                    if config.critic_enabled:
+                        for length, r in zip(lengths, rewards):
+                            if config.mask_truncated_responses and (
+                                length >= config.max_response_tokens
+                            ):
+                                continue
+                            critic_prompts.append(prompt_ids)
+                            critic_targets.append(r)
                     for resp_ids, keep_nll in zip(resp_ids_list, nll_flags):
                         all_data.append(_build_datum(prompt_ids, resp_ids))
                         all_advs.append(flat_advs[cursor])
@@ -1659,6 +1822,16 @@ def _run_one_seed(
                 ).result()
                 tc.optim_step(adam_params).result()
 
+            critic_loss = 0.0
+            if config.critic_enabled and critic_prompts:
+                critic_loss = train_critic_step(
+                    critic,
+                    critic_opt,
+                    critic_prompts,
+                    critic_targets,
+                    steps=config.critic_updates_per_step,
+                )
+
             avg = sum(batch_rewards) / len(batch_rewards)
             step_rewards.append(avg)
             loss_val = _metric(train_result, ["grpo_loss", "gspo_loss", "loss"])
@@ -1678,7 +1851,7 @@ def _run_one_seed(
             }
             if config.dynamic_sampling:
                 step_log["train/skipped_degenerate_groups"] = float(skipped_degenerate)
-            if config.global_advantage_normalization and all_advs:
+            if use_batch_path and all_advs:
                 mean_a = sum(all_advs) / len(all_advs)
                 var_a = sum((a - mean_a) ** 2 for a in all_advs) / len(all_advs)
                 step_log["train/global_adv_std"] = var_a**0.5
@@ -1689,6 +1862,9 @@ def _run_one_seed(
                 step_log["train/gspo_clip_frac"] = _metric(
                     train_result, ["gspo_clip_frac"], default=0.0
                 )
+            if config.critic_enabled:
+                step_log["train/critic_loss"] = critic_loss
+                step_log["train/critic_ev"] = critic_ev
             _wandb_log(wb, step_log)
 
             if (step + 1) % save_every == 0:
@@ -1727,6 +1903,8 @@ def _run_one_seed(
                         "campaign_metadata": _campaign_metadata(config),
                     },
                 )
+                if config.critic_enabled:
+                    _save_critic(config, seed, critic, critic_opt)
                 logger(f"[{config.name}]   -> Checkpoint step_{step + 1}")
 
         tc.save_state(name=f"seed{seed}_final", overwrite=True).result()
@@ -1811,6 +1989,8 @@ def _run_one_seed(
                 "result": asdict(result),
             },
         )
+        if config.critic_enabled:
+            _save_critic(config, seed, critic, critic_opt)
         _wandb_summary(wb)["tinker_run_id"] = run_id
         _wandb_summary(wb)["checkpoint_urls"] = list(checkpoint_urls)
         _wandb_summary(wb)["checkpoint_commit_shas"] = list(checkpoint_commit_shas)

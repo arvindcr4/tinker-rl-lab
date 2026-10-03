@@ -229,6 +229,27 @@ def test_gspo_flags_round_trip():
     assert on.gspo_epsilon_high == 0.002
 
 
+def test_critic_flags_round_trip():
+    off = build_config(_parse_args(["--preset", "tooluse_synth"]))
+    assert off.critic_enabled is False
+    on = build_config(
+        _parse_args(
+            [
+                "--preset",
+                "tooluse_synth",
+                "--critic",
+                "--critic-lr",
+                "0.01",
+                "--critic-pretrain-batches",
+                "2",
+            ]
+        )
+    )
+    assert on.critic_enabled is True
+    assert on.critic_lr == 0.01
+    assert on.critic_pretrain_batches == 2
+
+
 def test_no_wandb_escape_hatch_is_removed():
     with pytest.raises(SystemExit):
         _parse_args(["--preset", "tooluse_synth", "--no-" + "wandb"])

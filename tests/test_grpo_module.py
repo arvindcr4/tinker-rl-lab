@@ -135,6 +135,14 @@ class TestHeldoutRewardSummary(unittest.TestCase):
     def test_empty_is_empty(self):
         self.assertEqual(heldout_reward_summary([]), {})
 
+    def test_stats_import_failure_degrades_to_mean_only(self):
+        with patch.dict(sys.modules, {"utils.stats": None}):
+            summary = heldout_reward_summary([0.0, 1.0, 1.0, 0.0])
+        self.assertEqual(summary["test/reward"], 0.5)
+        self.assertEqual(summary["test/reward_n"], 4.0)
+        self.assertNotIn("test/reward_ci_low", summary)
+        self.assertNotIn("test/reward_ci_high", summary)
+
 
 class TestSuiteReceipts(unittest.TestCase):
     def test_all_primary_suites_have_receipts(self):
@@ -166,6 +174,18 @@ class TestSuiteReceipts(unittest.TestCase):
             pavlov_suite_receipt("not_a_suite")
         with self.assertRaises(KeyError):
             require_frozen_suite_receipt("not_a_suite")
+
+    def test_receipt_lookup_returns_a_copy(self):
+        receipt = pavlov_suite_receipt("agentharm_eval")
+        receipt["frozen"] = False
+        self.assertTrue(pavlov_suite_receipt("agentharm_eval")["frozen"])
+
+    def test_frozen_without_split_fails_closed(self):
+        spoofed = dict(PAVLOV_SUITE_RECEIPTS["agentharm_eval"])
+        spoofed["split"] = None
+        with patch.dict(grpo.PAVLOV_SUITE_RECEIPTS, {"agentharm_eval": spoofed}):
+            with self.assertRaises(ValueError):
+                require_frozen_suite_receipt("agentharm_eval")
 
 
 class TestCheckpointResumeCompat(unittest.TestCase):
@@ -331,6 +351,10 @@ class TestGRPOConfig(unittest.TestCase):
     def test_effective_save_every_minimum(self):
         cfg = GRPOConfig(name="t", steps=10)
         self.assertEqual(cfg.effective_save_every(), 10)
+
+    def test_negative_resample_cap_is_rejected(self):
+        with self.assertRaises(ValueError):
+            GRPOConfig(name="t", dynamic_sampling_max_resamples=-1)
 
     def test_tracking_is_mandatory(self):
         with self.assertRaisesRegex(ValueError, "W&B tracking is mandatory"):

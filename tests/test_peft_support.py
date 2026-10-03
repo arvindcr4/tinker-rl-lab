@@ -185,6 +185,7 @@ def test_generated_grpo_script_round_trips_decoupled_clip(tmp_path):
     compile(script, str(tmp_path / "clip.py"), "exec")
     assert "epsilon=0.2," in script
     assert "epsilon_high=0.28," in script
+    assert "# Requires TRL with GRPOConfig.epsilon_high" in script
 
 
 def test_generated_grpo_script_defaults_to_symmetric_clip(tmp_path):
@@ -206,6 +207,29 @@ def test_generated_idpo_script_omits_clip_range(tmp_path):
     )
     compile(script, str(tmp_path / "idpo.py"), "exec")
     assert "epsilon" not in script
+
+
+def test_ppo_trainer_warns_when_clip_is_decoupled():
+    from platform_local.trl_integrations.trainer import create_ppo_trainer
+
+    config = TRLConfig(algorithm={"algorithm": "ppo", "epsilon_low": 0.2, "epsilon_high": 0.28})
+    with pytest.warns(UserWarning, match="single clip_eps"):
+        try:
+            create_ppo_trainer(None, None, None, [], config)
+        except ImportError:
+            pass  # trl is not installed in the unit-test env; warning is the point
+
+
+def test_ppo_trainer_silent_on_symmetric_clip():
+    import warnings
+
+    from platform_local.trl_integrations.trainer import create_ppo_trainer
+
+    config = TRLConfig(algorithm={"algorithm": "ppo"})
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        with pytest.raises(ImportError):
+            create_ppo_trainer(None, None, None, [], config)
 
 
 def test_cli_rejects_quantized_full_fine_tuning(tmp_path):

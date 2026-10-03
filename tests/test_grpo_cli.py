@@ -199,6 +199,12 @@ def test_no_global_norm_exclude_truncated_opt_out():
     assert config.global_norm_exclude_truncated is False
 
 
+def test_nll_aux_coef_without_flag_still_opts_in():
+    config = build_config(_parse_args(["--preset", "tooluse_synth", "--nll-aux-coef", "0.1"]))
+    assert config.nll_aux_enabled is True
+    assert config.nll_aux_coef == 0.1
+
+
 def test_no_wandb_escape_hatch_is_removed():
     with pytest.raises(SystemExit):
         _parse_args(["--preset", "tooluse_synth", "--no-" + "wandb"])

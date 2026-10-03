@@ -5,6 +5,7 @@ Unified interface for HuggingFace TRL (GRPO, PPO, DPO training).
 """
 
 import time
+import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, List
 
@@ -230,6 +231,15 @@ def create_ppo_trainer(
     """
     Create a PPO trainer with TRL.
     """
+    if config.algorithm.epsilon_low != config.algorithm.epsilon_high:
+        warnings.warn(
+            "PPO takes a single clip_eps; using epsilon_low="
+            f"{config.algorithm.epsilon_low} and dropping epsilon_high="
+            f"{config.algorithm.epsilon_high}. Use the GRPO script path for "
+            "the decoupled clip.",
+            UserWarning,
+            stacklevel=2,
+        )
     from trl import PPOConfig, PPOTrainer
 
     ppo_config = PPOConfig(
@@ -322,8 +332,10 @@ def generate_trl_train_script(config: TRLConfig, output_path: str = "train_trl.p
     boxed_marker = "\\boxed{"
     if algorithm == "grpo":
         # TRL GRPOConfig takes the decoupled DAPO clip; OnlineDPOConfig
-        # takes no clip range, so only GRPO scripts emit it.
+        # takes no clip range, so only GRPO scripts emit it.  epsilon_high
+        # needs a TRL with GRPOConfig.epsilon_high (repo pins trl==1.2.0).
         clip_lines = (
+            "    # Requires TRL with GRPOConfig.epsilon_high (DAPO Clip-Higher).\n"
             f"    epsilon={config.algorithm.epsilon_low!r},\n"
             f"    epsilon_high={config.algorithm.epsilon_high!r},\n"
         )

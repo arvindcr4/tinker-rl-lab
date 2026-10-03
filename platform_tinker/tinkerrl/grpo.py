@@ -128,11 +128,11 @@ PAVLOV_SUITE_RECEIPTS: Dict[str, Dict[str, Any]] = {
 
 
 def pavlov_suite_receipt(suite_id: str) -> Dict[str, Any]:
-    """Return the receipt record for a primary-evaluation suite.
+    """Return a copy of the receipt record for a primary-evaluation suite.
 
     Raises ``KeyError`` for unknown suite IDs: lookups fail closed.
     """
-    return PAVLOV_SUITE_RECEIPTS[suite_id]
+    return dict(PAVLOV_SUITE_RECEIPTS[suite_id])
 
 
 def require_frozen_suite_receipt(suite_id: str) -> Dict[str, Any]:
@@ -142,7 +142,7 @@ def require_frozen_suite_receipt(suite_id: str) -> Dict[str, Any]:
     a pending suite can never silently pass as evaluated.
     """
     receipt = pavlov_suite_receipt(suite_id)
-    if not receipt["frozen"]:
+    if not receipt["frozen"] or not receipt["split"]:
         raise ValueError(
             f"suite {suite_id!r} has no frozen receipt "
             "(split/hash/license/runtime/decontamination pending)"
@@ -328,6 +328,8 @@ class GRPOConfig:
             "primary_evaluation_domain_union",
             tuple(self.primary_evaluation_domain_union or ()),
         )
+        if self.dynamic_sampling_max_resamples < 0:
+            raise ValueError("dynamic_sampling_max_resamples must be >= 0")
 
     def effective_save_every(self) -> int:
         return self.save_every or max(self.steps // 4, 10)
@@ -489,7 +491,9 @@ def normalize_rewards(
     Default matches historical behavior (mean 0, std 1).  With
     ``unbiased=True`` (Dr. GRPO: Liu et al., COLM 2025), return
     ``R - mean(R)`` with no std division, so near-uniform groups cannot
-    explode and short-correct responses are not up-weighted.
+    explode.  This is the std-division half of the Dr. GRPO fix; this
+    loss never length-normalizes, so the paper's length-norm removal has
+    no counterpart here.
     """
     n = len(rewards)
     if n == 0:
@@ -545,7 +549,8 @@ def normalize_advantages_global(
     for truncated responses); excluded entries are still centered with the
     pooled mean so the output stays 1:1 with the input.  Empty input gives
     ``[]``; a one-sample basis centers to ~0 (epsilon-guarded, no floor
-    needed).
+    needed).  If every entry is excluded, statistics fall back to the full
+    vector so the call still returns aligned values.
     """
     n = len(rewards)
     if n == 0:
@@ -582,8 +587,9 @@ def _nll_mask_for_group(
 def heldout_reward_summary(test_rewards: Sequence[float]) -> Dict[str, float]:
     """Mean (+ bootstrap CI when n >= 2) for held-out eval logging.
 
-    Routes through :func:`utils.stats.compute_bootstrap_ci` so single-point
-    held-out means gain uncertainty bounds.  The import is lazy because
+    Routes through :func:`utils.stats.compute_bootstrap_ci` so a held-out
+    eval run with n >= 2 scores logs uncertainty bounds alongside the mean.
+    The import is lazy because
     ``utils.stats`` pulls heavy plotting deps; when it is unavailable the
     summary degrades to mean-only instead of failing the run.  A single
     held-out score likewise logs mean-only: one observation has no spread.
@@ -625,6 +631,11 @@ def make_grpo_loss_fn(
     """
 
     def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:
+        if nll_mask is not None and len(nll_mask) != len(logprobs_list):
+            raise ValueError(
+                "nll_mask must pair 1:1 with logprobs, got "
+                f"{len(nll_mask)} flags for {len(logprobs_list)} responses"
+            )
         losses = []
         for i, logprobs in enumerate(logprobs_list):
             losses.append(-advantages[i] * logprobs.sum())

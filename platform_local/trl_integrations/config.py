@@ -61,6 +61,11 @@ class TRLAlgorithmConfig(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _legacy_epsilon(cls, data: Any) -> Any:
+        """Map a legacy ``epsilon`` kwarg onto both clip sides.
+
+        Precedence: explicit ``epsilon_low``/``epsilon_high`` win; the
+        legacy value fills only sides the caller did not set.
+        """
         if isinstance(data, dict) and "epsilon" in data:
             data = dict(data)
             legacy = data.pop("epsilon")

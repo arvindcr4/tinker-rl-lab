@@ -307,7 +307,9 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         cfg["global_advantage_normalization"] = True
     if args.no_global_norm_exclude_truncated:
         cfg["global_norm_exclude_truncated"] = False
-    if args.nll_aux:
+    if args.nll_aux or args.nll_aux_coef is not None:
+        # A coef without the flag still opts in: silently ignoring an
+        # explicitly passed coefficient would be a worse surprise.
         cfg["nll_aux_enabled"] = True
     if args.no_resume:
         cfg["resume"] = False

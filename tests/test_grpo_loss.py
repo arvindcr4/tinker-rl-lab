@@ -58,8 +58,11 @@ class TestNormalizeRewards(unittest.TestCase):
             self.assertLess(abs(a), 1e-6)
 
     def test_biased_mode_unchanged_regression_pin(self):
-        rewards = [1.0, 2.0, 3.0, 4.0, 5.0]
-        self.assertEqual(normalize_rewards(rewards, unbiased=False), normalize_rewards(rewards))
+        advs = normalize_rewards([1.0, 2.0, 3.0, 4.0, 5.0])
+        expected = [-1.41421356, -0.70710678, 0.0, 0.70710678, 1.41421356]
+        self.assertEqual(len(advs), len(expected))
+        for actual, want in zip(advs, expected):
+            self.assertTrue(math.isclose(actual, want, rel_tol=1e-5))
 
 
 class TestMakeGrpoLossFn(unittest.TestCase):
@@ -149,6 +152,11 @@ class TestMakeGrpoLossFn(unittest.TestCase):
         self.assertTrue(torch.allclose(lp0.grad, torch.tensor([-0.25, -0.25])))
         self.assertTrue(torch.allclose(lp1.grad, torch.tensor([0.0, 0.0, 0.0])))
 
+    def test_nll_mask_mismatch_fails_closed(self):
+        loss_fn = make_grpo_loss_fn([1.0], nll_mask=[True, False], nll_coef=1.0)
+        with self.assertRaises(ValueError):
+            loss_fn(None, [torch.tensor([-0.5])])
+
     @unittest.skip(
         "run_grpo needs live W&B + Hugging Face auth + Tinker service/model "
         "download; not runnable as a fast unit test"
@@ -185,6 +193,13 @@ class TestNormalizeAdvantagesGlobal(unittest.TestCase):
     def test_exclude_leaves_stats_but_keeps_alignment(self):
         advs = normalize_advantages_global([0.0, 1.0, 1.0], exclude=[False, False, True])
         self.assertEqual(len(advs), 3)
+        self.assertTrue(math.isclose(advs[0], -1.0, rel_tol=1e-5))
+        self.assertTrue(math.isclose(advs[1], 1.0, rel_tol=1e-5))
+        self.assertTrue(math.isclose(advs[2], 1.0, rel_tol=1e-5))
+
+    def test_all_excluded_falls_back_to_full_vector(self):
+        advs = normalize_advantages_global([0.0, 2.0], exclude=[True, True])
+        self.assertEqual(len(advs), 2)
         self.assertTrue(math.isclose(advs[0], -1.0, rel_tol=1e-5))
         self.assertTrue(math.isclose(advs[1], 1.0, rel_tol=1e-5))
 

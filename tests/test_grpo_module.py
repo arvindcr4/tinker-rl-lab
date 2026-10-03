@@ -181,6 +181,22 @@ class TestSuiteReceipts(unittest.TestCase):
             for key in ("split", "hash", "license", "runtime", "source"):
                 self.assertTrue(receipt[key], f"{suite_id}.{key}")
 
+    def test_frozen_public_hashes_are_full_sha1(self):
+        import re
+
+        sha1 = re.compile(r"\b[0-9a-f]{40}\b")
+        for suite_id in (
+            "mle_bench_eval",
+            "swe_bench_pro_eval",
+            "verilog_eval",
+            "webbench_eval",
+        ):
+            digest = PAVLOV_SUITE_RECEIPTS[suite_id]["hash"]
+            self.assertRegex(digest, sha1)
+        verilog = PAVLOV_SUITE_RECEIPTS["verilog_eval"]["hash"]
+        self.assertIn("c498220d0a52248f8e3fdffe279075215bde2da6", verilog)
+        self.assertIn("4b9b16e92f1d9cc520afbfa3ecd5a2f20a350fd5", verilog)
+
     def test_pending_suites_fail_closed(self):
         pending = [s for s, r in PAVLOV_SUITE_RECEIPTS.items() if not r["frozen"]]
         self.assertEqual(
@@ -373,6 +389,10 @@ class TestGRPOConfig(unittest.TestCase):
         self.assertFalse(cfg.nll_aux_enabled)
         self.assertEqual(cfg.nll_aux_coef, 0.0)
         self.assertEqual(cfg.nll_aux_min_reward, 1.0)
+        self.assertFalse(cfg.gspo_enabled)
+        self.assertEqual(cfg.gspo_epsilon_low, 3e-4)
+        self.assertEqual(cfg.gspo_epsilon_high, 4e-4)
+        self.assertEqual(cfg.gspo_update_epochs, 1)
 
     def test_effective_save_every_explicit(self):
         cfg = GRPOConfig(name="t", save_every=10)
@@ -389,6 +409,12 @@ class TestGRPOConfig(unittest.TestCase):
     def test_negative_resample_cap_is_rejected(self):
         with self.assertRaises(ValueError):
             GRPOConfig(name="t", dynamic_sampling_max_resamples=-1)
+
+    def test_gspo_validates_epochs_and_nll_conflict(self):
+        with self.assertRaises(ValueError):
+            GRPOConfig(name="t", gspo_update_epochs=0)
+        with self.assertRaises(ValueError):
+            GRPOConfig(name="t", gspo_enabled=True, nll_aux_enabled=True)
 
     def test_tracking_is_mandatory(self):
         with self.assertRaisesRegex(ValueError, "W&B tracking is mandatory"):

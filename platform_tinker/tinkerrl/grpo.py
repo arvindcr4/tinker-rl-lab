@@ -138,7 +138,7 @@ _PUBLIC_SUITE_RECEIPTS: Dict[str, Dict[str, Any]] = {
         "split": "v2: spec-to-rtl + code-complete-iccad2023 (156 HDLBits, "
         "Human only); v1: Human/Machine JSONLs",
         "hash": "v2.0.0=c498220d0a52248f8e3fdffe279075215bde2da6; "
-        "v1.0.0=4b9b16e92f1d9cc520afbfa3ecd5a2f20a350fd",
+        "v1.0.0=4b9b16e92f1d9cc520afbfa3ecd5a2f20a350fd5",
         "license": "MIT (NVIDIA 2023-2024 + OpenAI human-eval portion)",
         "runtime": "v1 Docker+pip (iverilog pinned); v2 bare-metal make, iverilog v12",
         "decontamination": "Partial: MinHash dedup on synthetic SFT data "
@@ -403,6 +403,13 @@ class GRPOConfig:
     nll_aux_enabled: bool = False
     nll_aux_coef: float = 0.0
     nll_aux_min_reward: float = 1.0
+    # GSPO sequence-ratio loss mode (Zheng et al. 2025, arXiv:2507.18071
+    # Eq. 5-7; paper clips 3e-4/4e-4, §4.1).  Off by default; the loop
+    # keeps the plain GRPO loss unless opted in.
+    gspo_enabled: bool = False
+    gspo_epsilon_low: float = 3e-4
+    gspo_epsilon_high: float = 4e-4
+    gspo_update_epochs: int = 1
 
     def __post_init__(self) -> None:
         # JSON configuration commonly supplies lists.  Convert all metadata
@@ -427,6 +434,10 @@ class GRPOConfig:
         )
         if self.dynamic_sampling_max_resamples < 0:
             raise ValueError("dynamic_sampling_max_resamples must be >= 0")
+        if self.gspo_update_epochs < 1:
+            raise ValueError("gspo_update_epochs must be >= 1")
+        if self.gspo_enabled and self.nll_aux_enabled:
+            raise ValueError("gspo_enabled and nll_aux_enabled are mutually exclusive")
 
     def effective_save_every(self) -> int:
         return self.save_every or max(self.steps // 4, 10)
@@ -748,6 +759,65 @@ def make_grpo_loss_fn(
         # grpo_loss stays the optimized total (as before); nll_loss exposes
         # the auxiliary component for tracking.
         return loss, {"grpo_loss": loss.item(), "nll_loss": nll_loss.item()}
+
+    return _loss_fn
+
+
+def make_gspo_loss_fn(
+    advantages: Sequence[float],
+    old_logprobs: Optional[Sequence[Any]] = None,
+    epsilon_low: float = 3e-4,
+    epsilon_high: float = 4e-4,
+    stash: Optional[List[Any]] = None,
+) -> Callable:
+    """Return a Tinker-compatible GSPO loss closure (Zheng et al. 2025, Eq. 5-7).
+
+    Sequence-level clipped objective: ``s_i = exp(mean(new_lp - old_lp))``
+    (length-normalized sequence ratio), loss ``-mean(min(s·A,
+    clip(s, 1-ε_low, 1+ε_high)·A))``.  ``old_logprobs=None`` means first
+    epoch (policy equals sampler, ratio exactly 1 with gradients flowing).
+    When ``stash`` is given, the first call's detached logprobs are
+    appended for use as the next epoch's ``old_logprobs``.  All inputs
+    must pair 1:1 or the closure raises instead of silently mis-assigning
+    ratios.
+    """
+
+    def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:
+        logprobs_list = list(logprobs_list)
+        if len(advantages) != len(logprobs_list):
+            raise ValueError(
+                "advantages must pair 1:1 with logprobs, got "
+                f"{len(advantages)} advantages for {len(logprobs_list)} responses"
+            )
+        if old_logprobs is not None and len(old_logprobs) != len(logprobs_list):
+            raise ValueError(
+                "old_logprobs must pair 1:1 with logprobs, got "
+                f"{len(old_logprobs)} for {len(logprobs_list)} responses"
+            )
+        if stash is not None and not stash:
+            stash.extend(lp.detach().clone() for lp in logprobs_list)
+        if not logprobs_list:
+            return torch.tensor(0.0), {"gspo_loss": 0.0, "gspo_clip_frac": 0.0}
+        terms = []
+        clipped = 0
+        for i, logprobs in enumerate(logprobs_list):
+            if old_logprobs is None:
+                # First epoch: ratio is exactly 1, but keep it a function
+                # of logprobs so gradients flow (length-normalized PG).
+                ratio = torch.exp((logprobs - logprobs.detach()).mean())
+            else:
+                ratio = torch.exp((logprobs - old_logprobs[i]).mean())
+            unclipped = ratio * advantages[i]
+            clipped_ratio = torch.clamp(ratio, 1.0 - epsilon_low, 1.0 + epsilon_high)
+            clipped_term = clipped_ratio * advantages[i]
+            if not torch.equal(clipped_ratio, ratio):
+                clipped += 1
+            terms.append(torch.min(unclipped, clipped_term))
+        loss = -torch.stack(terms).mean()
+        return loss, {
+            "gspo_loss": loss.item(),
+            "gspo_clip_frac": clipped / len(logprobs_list),
+        }
 
     return _loss_fn
 
@@ -1550,29 +1620,48 @@ def _run_one_seed(
             if not all_data:
                 continue
 
-            if config.nll_aux_enabled:
-                loss_fn = make_grpo_loss_fn(
-                    all_advs, nll_mask=all_nll, nll_coef=config.nll_aux_coef
-                )
+            adam_params = T.AdamParams(
+                learning_rate=config.lr,
+                beta1=config.beta1,
+                beta2=config.beta2,
+                eps=config.eps,
+            )
+            if config.gspo_enabled:
+                # Multi-epoch GSPO: epoch 0 runs at ratio 1 (policy equals
+                # sampler) and stashes its logprobs as the old policy for
+                # later epochs.
+                stashed_old: List[Any] = []
+                for epoch in range(config.gspo_update_epochs):
+                    loss_fn = make_gspo_loss_fn(
+                        all_advs,
+                        old_logprobs=None if epoch == 0 else stashed_old,
+                        epsilon_low=config.gspo_epsilon_low,
+                        epsilon_high=config.gspo_epsilon_high,
+                        stash=stashed_old if epoch == 0 else None,
+                    )
+                    train_result = tc.forward_backward_custom(
+                        data=all_data,
+                        loss_fn=loss_fn,
+                        loss_type_input="logprobs",
+                    ).result()
+                    tc.optim_step(adam_params).result()
             else:
-                loss_fn = make_grpo_loss_fn(all_advs)
-            train_result = tc.forward_backward_custom(
-                data=all_data,
-                loss_fn=loss_fn,
-                loss_type_input="logprobs",
-            ).result()
-            tc.optim_step(
-                T.AdamParams(
-                    learning_rate=config.lr,
-                    beta1=config.beta1,
-                    beta2=config.beta2,
-                    eps=config.eps,
-                )
-            ).result()
+                if config.nll_aux_enabled:
+                    loss_fn = make_grpo_loss_fn(
+                        all_advs, nll_mask=all_nll, nll_coef=config.nll_aux_coef
+                    )
+                else:
+                    loss_fn = make_grpo_loss_fn(all_advs)
+                train_result = tc.forward_backward_custom(
+                    data=all_data,
+                    loss_fn=loss_fn,
+                    loss_type_input="logprobs",
+                ).result()
+                tc.optim_step(adam_params).result()
 
             avg = sum(batch_rewards) / len(batch_rewards)
             step_rewards.append(avg)
-            loss_val = _metric(train_result, ["grpo_loss", "loss"])
+            loss_val = _metric(train_result, ["grpo_loss", "gspo_loss", "loss"])
             if abs(loss_val) < 1e-6:
                 zero_loss_steps += 1
             if avg == 0:
@@ -1596,6 +1685,10 @@ def _run_one_seed(
             if config.nll_aux_enabled and all_nll:
                 step_log["train/nll_loss"] = _metric(train_result, ["nll_loss"], default=0.0)
                 step_log["train/nll_frac"] = sum(all_nll) / len(all_nll)
+            if config.gspo_enabled:
+                step_log["train/gspo_clip_frac"] = _metric(
+                    train_result, ["gspo_clip_frac"], default=0.0
+                )
             _wandb_log(wb, step_log)
 
             if (step + 1) % save_every == 0:

@@ -13,6 +13,7 @@ import torch
 
 from platform_tinker.tinkerrl.grpo import (
     make_grpo_loss_fn,
+    make_gspo_loss_fn,
     normalize_advantages_global,
     normalize_rewards,
 )
@@ -163,6 +164,66 @@ class TestMakeGrpoLossFn(unittest.TestCase):
     )
     def test_run_grpo_end_to_end(self):
         pass
+
+
+class TestMakeGspoLossFn(unittest.TestCase):
+    def test_first_epoch_ratio_one_with_gradients(self):
+        loss_fn = make_gspo_loss_fn([2.0])
+        logprobs = torch.tensor([-0.5, -0.2, -0.1], requires_grad=True)
+        loss, metrics = loss_fn(None, [logprobs])
+        self.assertTrue(math.isclose(loss.item(), -2.0, rel_tol=1e-5))
+        self.assertEqual(metrics["gspo_loss"], loss.item())
+        self.assertEqual(metrics["gspo_clip_frac"], 0.0)
+        loss.backward()
+        for g in logprobs.grad:
+            self.assertTrue(math.isclose(g.item(), -2.0 / 3.0, rel_tol=1e-5))
+
+    def test_clipping_positive_advantage(self):
+        loss_fn = make_gspo_loss_fn([2.0], old_logprobs=[torch.tensor([-1.0, -1.0])])
+        logprobs = torch.tensor([-0.99, -0.99])
+        loss, metrics = loss_fn(None, [logprobs])
+        # s = e^0.01 ≈ 1.01005 clips to 1.0004; min picks the clipped term.
+        self.assertTrue(math.isclose(loss.item(), -2.0008, rel_tol=1e-4))
+        self.assertEqual(metrics["gspo_clip_frac"], 1.0)
+
+    def test_clipping_negative_advantage_picks_unclipped(self):
+        loss_fn = make_gspo_loss_fn([-2.0], old_logprobs=[torch.tensor([-1.0, -1.0])])
+        logprobs = torch.tensor([-0.99, -0.99])
+        loss, metrics = loss_fn(None, [logprobs])
+        self.assertTrue(math.isclose(loss.item(), 2.0201003, rel_tol=1e-4))
+        self.assertEqual(metrics["gspo_clip_frac"], 1.0)
+
+    def test_small_drift_unclipped(self):
+        loss_fn = make_gspo_loss_fn([2.0], old_logprobs=[torch.tensor([-1.0, -1.0])])
+        logprobs = torch.tensor([-1.0 + 1e-5, -1.0 + 1e-5])
+        loss, metrics = loss_fn(None, [logprobs])
+        self.assertTrue(math.isclose(loss.item(), -2.0 * math.exp(1e-5), rel_tol=1e-5))
+        self.assertEqual(metrics["gspo_clip_frac"], 0.0)
+
+    def test_mismatch_fails_closed(self):
+        with self.assertRaises(ValueError):
+            make_gspo_loss_fn([1.0, 2.0])(None, [torch.tensor([-0.5])])
+        with self.assertRaises(ValueError):
+            make_gspo_loss_fn([1.0], old_logprobs=[torch.tensor([-0.5])] * 2)(
+                None, [torch.tensor([-0.5])]
+            )
+
+    def test_stash_captures_detached_first_call_only(self):
+        stash = []
+        loss_fn = make_gspo_loss_fn([1.0], stash=stash)
+        lp = torch.tensor([-0.5, -0.2], requires_grad=True)
+        loss_fn(None, [lp])
+        loss_fn(None, [torch.tensor([-9.0, -9.0])])
+        self.assertEqual(len(stash), 1)
+        self.assertFalse(stash[0].requires_grad)
+        self.assertTrue(torch.allclose(stash[0], torch.tensor([-0.5, -0.2])))
+
+    def test_empty_group(self):
+        loss_fn = make_gspo_loss_fn([])
+        loss, metrics = loss_fn(None, [])
+        self.assertEqual(loss.item(), 0.0)
+        self.assertEqual(metrics["gspo_loss"], 0.0)
+        self.assertEqual(metrics["gspo_clip_frac"], 0.0)
 
 
 class TestNormalizeAdvantagesGlobal(unittest.TestCase):

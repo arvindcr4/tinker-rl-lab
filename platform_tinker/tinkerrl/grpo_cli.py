@@ -290,6 +290,9 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         "dynamic_sampling_max_resamples": "dynamic_sampling_max_resamples",
         "nll_aux_coef": "nll_aux_coef",
         "nll_aux_min_reward": "nll_aux_min_reward",
+        "gspo_update_epochs": "gspo_update_epochs",
+        "gspo_epsilon_low": "gspo_epsilon_low",
+        "gspo_epsilon_high": "gspo_epsilon_high",
     }
     for cfg_key, attr in mapping.items():
         val = getattr(args, attr, None)
@@ -311,6 +314,8 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         # A coef without the flag still opts in: silently ignoring an
         # explicitly passed coefficient would be a worse surprise.
         cfg["nll_aux_enabled"] = True
+    if args.gspo:
+        cfg["gspo_enabled"] = True
     if args.no_resume:
         cfg["resume"] = False
     if args.hf_public:
@@ -389,6 +394,10 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--nll-aux", dest="nll_aux", action="store_true")
     parser.add_argument("--nll-aux-coef", dest="nll_aux_coef", type=float)
     parser.add_argument("--nll-aux-min-reward", dest="nll_aux_min_reward", type=float)
+    parser.add_argument("--gspo", dest="gspo", action="store_true")
+    parser.add_argument("--gspo-update-epochs", dest="gspo_update_epochs", type=int)
+    parser.add_argument("--gspo-epsilon-low", dest="gspo_epsilon_low", type=float)
+    parser.add_argument("--gspo-epsilon-high", dest="gspo_epsilon_high", type=float)
     parser.add_argument("--checkpoint-dir")
     parser.add_argument("--no-resume", action="store_true")
     parser.add_argument("--wandb-project")

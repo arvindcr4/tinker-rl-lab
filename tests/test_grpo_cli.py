@@ -205,6 +205,30 @@ def test_nll_aux_coef_without_flag_still_opts_in():
     assert config.nll_aux_coef == 0.1
 
 
+def test_gspo_flags_round_trip():
+    off = build_config(_parse_args(["--preset", "tooluse_synth"]))
+    assert off.gspo_enabled is False
+    on = build_config(
+        _parse_args(
+            [
+                "--preset",
+                "tooluse_synth",
+                "--gspo",
+                "--gspo-update-epochs",
+                "3",
+                "--gspo-epsilon-low",
+                "0.001",
+                "--gspo-epsilon-high",
+                "0.002",
+            ]
+        )
+    )
+    assert on.gspo_enabled is True
+    assert on.gspo_update_epochs == 3
+    assert on.gspo_epsilon_low == 0.001
+    assert on.gspo_epsilon_high == 0.002
+
+
 def test_no_wandb_escape_hatch_is_removed():
     with pytest.raises(SystemExit):
         _parse_args(["--preset", "tooluse_synth", "--no-" + "wandb"])

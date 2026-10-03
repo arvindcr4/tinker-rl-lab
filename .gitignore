@@ -302,3 +302,6 @@ outputs/e1_e14_small_scale_2026-09-26/E3/code/*
 !outputs/finish_pending_2026-09-27/E5/result.json
 !outputs/finish_pending_2026-09-27/E6/result.json
 !outputs/finish_pending_2026-09-27/E9/result.json
+
+# Reviewed scientific C1 case ledger, not a bulk generated-data export.
+!research/public_results/c1_case_ledger.csv

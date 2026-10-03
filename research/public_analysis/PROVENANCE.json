@@ -1,0 +1,139 @@
+{
+  "definition_digest_encoding": "SHA-256 of UTF-8 exact ast.get_source_segment(source, node). No AST-dump serialization or whitespace normalization; the AST only locates the original source span. This is independent of empty version-only AST fields.",
+  "derivative_notice": "Function-only public derivative. This is not an original frozen source file or a raw-data evidence release.",
+  "modules": {
+    "parser_review.py": {
+      "selected_definition_source_sha256": {
+        "canonical_value": "b10e56fe10aaafd0c479c93bb2928ca42fafd730dbbc706c4d5f5f3ddd125abc",
+        "decide": "7eb2c499380f13ce6df0e08eb484949db2eabe3dcb79791ba4a28ce9bfc392cf",
+        "now": "6a140002b941507cbcdf19c113d18dea532a82b9c7b2413b4b15f6cb65a66313",
+        "packet_rows": "f3e21e6d3e611b7792b3cd15b028ec5f84aae3af5190e6dbb58e3a5859795673",
+        "pairs": "176f2169a02e7ae2ed3dc1ccd220f1db52bd9f31539027b16da8d5dea92e5ee6",
+        "parse": "34a257c5f2001797c8391e9bff4d4ed23e1cb652e03406fc85bbf2b53964cc4c",
+        "require": "965499cc11e0dc5aa9d82622516b6318d463dd07e97ce49c96af18eeb95612f4",
+        "utc": "5cd77e900d444859d34ede1495dc656a2b60eaa1ab03865235c9cba0ff6f4d89",
+        "validate_packet": "bda1e5003cd8befd256b4fd3cdcd1a08a643957dea041ea45b04249e667ed7cd",
+        "validate_review": "70b6890d89e442c516427472370f5f294c494b819cba0118792e2fdfdb8a77ca",
+        "wrapper_labels": "c4f644c489abef6d1a91346f278fdb8198aaf7f0a0127dd503c180f789a3f234"
+      },
+      "source": "original_parser_review_logic",
+      "transformation": "Selected complete AST nodes copied verbatim; imports, module header and public-only constants supplied separately; no original whole-file identity claimed."
+    },
+    "parser_v1.py": {
+      "selected_definition_source_sha256": {
+        "_ATOM": "7d90abc3928a7758dd022fcdc11f494070fa29089a0eab9eca00beb8e7db3670",
+        "_NUMBER": "7c77440256072edbee4e514f1187f4373f91a27bad91f041b30abb5f7e999f87",
+        "_boxed_values": "a8fec752ee136f745c5ee1549eb85e0d00517d65b81909804a44ab3baaf0a485",
+        "normalize_number": "330ddf0d2f14acd0610d678094023982799589ab700b180def4beae016ff3c27",
+        "parse_answer": "1e703d3ab2bed8d131fe009911baedb56e97d68d82e32e27c97e623b8236f652",
+        "strip_terminal_tokens": "29265c6c37e369b49018dc1b700a209c5b8c91e701bf469a74ad36c264b40943"
+      },
+      "source": "original_parser_policy_1",
+      "transformation": "Selected complete AST nodes copied verbatim; imports, module header and public-only constants supplied separately; no original whole-file identity claimed."
+    },
+    "parser_v2.py": {
+      "selected_definition_source_sha256": {
+        "_ATOM": "7d90abc3928a7758dd022fcdc11f494070fa29089a0eab9eca00beb8e7db3670",
+        "_EXPLICIT": "fcf22eb6da4d52b74427b12b5a302413b06685fc0e13ed0b67d3b84b33eb53f0",
+        "_HEADING": "47a1e5f005de9a69c05ede7fd64bb05f4ce303a5aabefeb5d7ca292b83289ce1",
+        "_NUMBER": "7c77440256072edbee4e514f1187f4373f91a27bad91f041b30abb5f7e999f87",
+        "_XML": "74e34bfe6168439ab5f4e7a85b716c679e927f2359d1ca906dd2a7aced1b0336",
+        "_XML_LIKE": "38f31fabd1067c702c97c2ecdd67a86925c8c430cd0af8eeb526cca5dc23ab09",
+        "_boxed_values": "a8fec752ee136f745c5ee1549eb85e0d00517d65b81909804a44ab3baaf0a485",
+        "_canonical_line": "590c10b61ecd2f3b8b309fecd6bef4ffea051a4bb366fd04a22c5859af426362",
+        "normalize_number": "330ddf0d2f14acd0610d678094023982799589ab700b180def4beae016ff3c27",
+        "parse_answer": "89e22bf714cf6b7d958a8bc2237735afd646786082a26f6d8cfaa4adde2b0521"
+      },
+      "source": "original_parser_policy_2",
+      "transformation": "Selected complete AST nodes copied verbatim; imports, module header and public-only constants supplied separately; no original whole-file identity claimed."
+    },
+    "parser_v3.py": {
+      "selected_definition_source_sha256": {
+        "_ATOM": "7d90abc3928a7758dd022fcdc11f494070fa29089a0eab9eca00beb8e7db3670",
+        "_EXPLICIT": "fcf22eb6da4d52b74427b12b5a302413b06685fc0e13ed0b67d3b84b33eb53f0",
+        "_HEADING": "47a1e5f005de9a69c05ede7fd64bb05f4ce303a5aabefeb5d7ca292b83289ce1",
+        "_NUMBER": "7c77440256072edbee4e514f1187f4373f91a27bad91f041b30abb5f7e999f87",
+        "_XML": "74e34bfe6168439ab5f4e7a85b716c679e927f2359d1ca906dd2a7aced1b0336",
+        "_XML_LIKE": "38f31fabd1067c702c97c2ecdd67a86925c8c430cd0af8eeb526cca5dc23ab09",
+        "_boxed_values": "a8fec752ee136f745c5ee1549eb85e0d00517d65b81909804a44ab3baaf0a485",
+        "_canonical_line": "590c10b61ecd2f3b8b309fecd6bef4ffea051a4bb366fd04a22c5859af426362",
+        "_whole_numeric_box": "a2831eae7fcc1221288080650937d413fe0798218be1dcf01c91c4af4e6e97f2",
+        "normalize_number": "330ddf0d2f14acd0610d678094023982799589ab700b180def4beae016ff3c27",
+        "parse_answer": "9cdba5b71ff0ba27201c8c1955a1687ea57340f8ac6ae1fe529c396d05e7fd2d"
+      },
+      "source": "original_parser_policy_3",
+      "transformation": "Selected complete AST nodes copied verbatim; imports, module header and public-only constants supplied separately; no original whole-file identity claimed."
+    },
+    "reference_grader.py": {
+      "selected_definition_source_sha256": {
+        "extract_answer": "520182a3d11f81ed1e3992fe7cb615779ad3fd8c6f01a55d4b9b0bddaf8ded8a",
+        "normalize_number": "c560fdf79cb0f3c287e425562045f80489e2d88a5fcf7693fc39fef588712435"
+      },
+      "source": "original_reference_comparator",
+      "transformation": "Selected complete AST nodes copied verbatim; imports, module header and public-only constants supplied separately; no original whole-file identity claimed."
+    },
+    "rescue_statistics.py": {
+      "selected_definition_source_sha256": {
+        "binomial_summary": "3e3bce4f1a307062827f3806692ba4d7e5aaccda3cdf5166652184fd5c912b05",
+        "logbeta": "37c9a4c6cebe1315a40a989a37967e6fad00674525703dc9dec1de7f1bfe7b98",
+        "rescue_prediction": "3398fdc3f72e4496ce3de3948b9612acf17660bcb4e4927342b34d08bb127061",
+        "wilson": "efea26a79381be44d7b905fe74bbc9bc601b9e5218ee3ca0d7cf5a6a78425cec"
+      },
+      "source": "original_rescue_statistics",
+      "transformation": "Selected complete AST nodes copied verbatim; imports, module header and public-only constants supplied separately; no original whole-file identity claimed."
+    },
+    "selection.py": {
+      "selected_definition_source_sha256": {
+        "MAX_SELECTED": "2682f23551733846bbe59938e9f2e68bba8d1e41ff44fae4f2e682e8ae3ba893",
+        "SCREEN_N": "f18d8726d480f68a5ca22976639a2a8690595824f156391d2fb7635ade31f440",
+        "interval": "07f3d882461f6c7c88baa1106b41405825bb46d82cb742c08b4d70f6901c7b39",
+        "primary_success": "f7919af19e0ef058c18752d7e5b18045c7a8a08ff0f0c42b6bd32a43f445bb35",
+        "quality": "e7a8e28093520d700e8c126a28976199188ecd548b6f767267eba68db2bb1ae6",
+        "require": "570ace48effbcffbb325b4bdc4424b575500114187d28c59c86b8870081e9f76",
+        "selection_from_screen": "ce9872e0831357b106736225fecd419d478aeddbf8b669f6448d5086a0382f1a",
+        "validate_selection": "e4cfa54f862ec267c121669d4c21f202bcae0c2355c8e93263df7ab5ca2c445f"
+      },
+      "source": "original_conditional_analysis",
+      "transformation": "Selected complete AST nodes copied verbatim; imports, module header and public-only constants supplied separately; no original whole-file identity claimed."
+    },
+    "statistics.py": {
+      "selected_definition_source_sha256": {
+        "analyze_validated": "76f8799ec1f891cfc8b817443f435dfd341c3c5c78ce9a5d2def8c28ba603367",
+        "estimate": "6e1b0dcc98b0c5ee5f8faee6065fa84435c694b2ff465749d170e4e6814fb4e3",
+        "prediction": "57936ca3501a13b3da09bc6f389c3ac84630879e9bbd5655f67fee54e3021e98",
+        "quality": "c14afc01b86d1317bf35255837da906a015f15fcb11e64f31eecbda8dc501e71",
+        "require": "570ace48effbcffbb325b4bdc4424b575500114187d28c59c86b8870081e9f76",
+        "wilson": "a9c05bccd576e00458370bfb233611ff0d07c88557b86b731fbfdce6738888c6"
+      },
+      "source": "original_stable_statistics",
+      "transformation": "Selected complete AST nodes copied verbatim; imports, module header and public-only constants supplied separately; no original whole-file identity claimed."
+    }
+  },
+  "source_hash_scope": "SHA-256 values identify retained original code files, not data, execution provenance, accounts, or published derivative files.",
+  "sources": {
+    "original_conditional_analysis": {
+      "original_code_sha256": "fd116f7799c5fc8d1a7eac7a685942afa9535e048b76a2818e31654fef812674"
+    },
+    "original_parser_policy_1": {
+      "original_code_sha256": "3910baf144d466e004e0b306afb6d1b6e5ae0408e7f8421dbc47e5462d981b08"
+    },
+    "original_parser_policy_2": {
+      "original_code_sha256": "ae09c1fb6a07de88dbe931d00d741afea0f612378661d1ea3c317090361daa3f"
+    },
+    "original_parser_policy_3": {
+      "original_code_sha256": "dd9fd856ff3352ba2ffe5c4840f44983a103bf1d943c7b594917985c077878d4"
+    },
+    "original_parser_review_logic": {
+      "original_code_sha256": "af73d168fae1024732203363302aa6d751b3e77752c540645fc49f95c3e83b85"
+    },
+    "original_reference_comparator": {
+      "original_code_sha256": "85af69fa847e61629c3a9d3f6e7890e8a0f36b1e92d8b21b9b8a37fce3e1f397"
+    },
+    "original_rescue_statistics": {
+      "original_code_sha256": "5dae289a815a55efa10a4cfca0de15a289af2443ec02a38298babf4ef269e6ca"
+    },
+    "original_stable_statistics": {
+      "original_code_sha256": "dcbaa17ff06a8e9a19ddd2282d28bd53ed22881125b5addbedb56c1fd59f8450"
+    }
+  }
+}

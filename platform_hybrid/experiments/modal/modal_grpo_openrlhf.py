@@ -199,7 +199,10 @@ def run_openrlhf_qwen3_8b():
         "--remote_rm_url", "http://127.0.0.1:8765/get_reward",
         "--seed", "42",
     ]
-    print("[openrlhf] cmd:", " ".join(cmd))
+    # WARNING (security): --use_wandb carries WANDB_API_KEY; redact it so the
+    # key never lands in Modal logs.
+    shown = ["***" if i and cmd[i - 1] == "--use_wandb" else a for i, a in enumerate(cmd)]
+    print("[openrlhf] cmd:", " ".join(shown))
     start = time.time()
     env = os.environ.copy()
     env["PYTHONPATH"] = ""

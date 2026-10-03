@@ -20,18 +20,18 @@
   "files": [
     {
       "path": ".gitignore",
-      "bytes": 13612,
-      "sha256": "9cdb7b3c4a2001c4986447f0ab2ca1ba53a224065e5723613e650178c847c01f"
+      "bytes": 14599,
+      "sha256": "add021632156ddddbe3c8d4d5331ac5c3b3cedd9dbaecc110e715c19ff41bc46"
     },
     {
       "path": "README.md",
-      "bytes": 12911,
-      "sha256": "c34f17ed4f5774c2aebf0d1111bd188a7bc05f5ff5719f0ac8a2302dbfadea4f"
+      "bytes": 13119,
+      "sha256": "444df4a78c096df710fbc57d6cd5b437aaf658b58947145de2055d90e30f37f2"
     },
     {
       "path": "SUBMISSION.md",
-      "bytes": 9605,
-      "sha256": "0a9fc924d86a3667adf6d3a81c8681f12add355ce549852bb89b5c9cdaa33754"
+      "bytes": 9772,
+      "sha256": "fdc00a8ea569278bcad177aba6ee9bed5aa94dd28414eeedbf06744e67850645"
     },
     {
       "path": "reports/public_revision_2026-10-03/README.md",
@@ -85,8 +85,8 @@
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/Thesis_Report_ArvindCR_C1_Coverage_Derived_2026-10-03_PUBLIC.pdf",
-      "bytes": 1516500,
-      "sha256": "e9d9d6f6ce18620b8ecdf5e330699de70939dffbe6623e4683b0e3efeeaf5337"
+      "bytes": 1668859,
+      "sha256": "864af7f3fd0d2afd4edaa1c3cb06c9a3e2b1cab7ad90738e723a77fe131aa5e3"
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/build_thesis.py",
@@ -110,8 +110,8 @@
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch01_introduction.md",
-      "bytes": 41266,
-      "sha256": "a0db75a9f6d67851479fd4df82bca92d65323e22a329f26d3cce67f912c47e9f"
+      "bytes": 41508,
+      "sha256": "da35e6b09ad7346a8d155a11d4b10926c0bfa68b5a442f0225e26b626330d8c1"
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch02_literature.md",
@@ -125,8 +125,8 @@
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch04_methodology.md",
-      "bytes": 55842,
-      "sha256": "b702ebeaf8452e4ad8e16117639ea2b1aae077c63528e72f51896950cd224486"
+      "bytes": 55908,
+      "sha256": "f6b08a864c85cbef4e1647b02aa6a446e99c42f90abe81efee0c37ff6969adb7"
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch05_implementation.md",
@@ -135,13 +135,13 @@
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch06_results_core.md",
-      "bytes": 75549,
-      "sha256": "c0ab68e465b86377ba8b5bfb943b16d5d212e711db25dc690479e1bc0a269e32"
+      "bytes": 78548,
+      "sha256": "b075d1ea070af7d6591a096fb1c4933787529c777d2d14048d7a12eeb026753c"
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch07_results_infra.md",
-      "bytes": 51846,
-      "sha256": "cedac0c0fc077a5a51f12f9235bfd7f8dee61b9311202b9e17b1886794e55c05"
+      "bytes": 52485,
+      "sha256": "84c4402c95707af6842cb938a7ce3208ac6ad583a958597a8d6b759ce1f6fc72"
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch08_results_fraud.md",
@@ -150,13 +150,13 @@
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch09_results_campaign.md",
-      "bytes": 40747,
-      "sha256": "95b6604fe5234c28896083c076bb62ae8571edcdc0bf16276ac392771f362a54"
+      "bytes": 44326,
+      "sha256": "9f67073594dea1e4665560b90065a424ef5c1cc671d4f1c0776391998f572b26"
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch10_synthesis_conclusions.md",
-      "bytes": 44334,
-      "sha256": "766553ca7f1f7699d18e2195a1b98313e1ef11c8683215d94226b86debd8187a"
+      "bytes": 44846,
+      "sha256": "9cf7a19df7ce5c78d8e44c2986525d4c924587b2735505dea2d38493d532db5f"
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch_back_c1_evidence.md",
@@ -165,8 +165,8 @@
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch_back_campaign_detail.md",
-      "bytes": 39673,
-      "sha256": "d65e2e591c8e8d46f88cde1f0eff100c7464f31d6f375baefe930853558bb45d"
+      "bytes": 44233,
+      "sha256": "3d230f406c347ce21f82391d8b60a490ac62814db137267f638250a383586f02"
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch_back_coverage_audit.md",
@@ -175,8 +175,8 @@
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch_back_errata.md",
-      "bytes": 14178,
-      "sha256": "ae7ae531ef8e0aa26e02814e384e088e440d97cc80139ace4d57ba1e4e6cd9b8"
+      "bytes": 18640,
+      "sha256": "3493295be71725e4e8569a22bf53fcfe6d1d500d981810b26aa895650129d670"
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch_back_notation.md",
@@ -185,8 +185,8 @@
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch_back_reproducibility.md",
-      "bytes": 31947,
-      "sha256": "011928c09f19d08bbcbb27dd8771905a8e869955d29736a8d4ad95a112f8e289"
+      "bytes": 34117,
+      "sha256": "5a6dce1c7d214a561ab9d9edc92f1cca5739475b30eff6126ff8053fc5f98b70"
     },
     {
       "path": "reports/public_revision_2026-10-03/thesis/ch_back_run_registry.md",

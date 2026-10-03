@@ -1,0 +1,19 @@
+# Coverage gate for the supported Python surface (run: make coverage).
+# fail_under = floor(measured TOTAL) - 1. Measured 2026-10-03 without the
+# optional hypothesis property tests installed; ratchet up as coverage grows.
+[run]
+source =
+    platform_tinker/tinkerrl
+    utils
+    tools
+omit =
+    */__pycache__/*
+
+[report]
+fail_under = 0
+skip_covered = True
+precision = 1
+exclude_also =
+    if __name__ == .__main__.:
+    raise NotImplementedError
+    if TYPE_CHECKING:

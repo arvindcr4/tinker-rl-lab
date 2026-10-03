@@ -81,9 +81,8 @@ PAVLOV_PRIMARY_EVALUATION_SUITE_IDS: Tuple[str, ...] = (
     "webbench_eval",
 )
 # Only these six primary suites currently have an explicit held-out/private
-# split description.  The other eight remain primary-evaluation IDs without a
-# held-out claim until their split, hash, license, runtime, and decontamination
-# receipts are frozen.
+# split description.  Of the other eight, four carry frozen public pins and
+# four stay pending (see _PUBLIC_SUITE_RECEIPTS).
 PAVLOV_HELDOUT_SUITE_IDS: Tuple[str, ...] = (
     "agentharm_eval",
     "apex_agents_eval",
@@ -102,26 +101,124 @@ def _pending_suite_receipt() -> Dict[str, Any]:
         "license": None,
         "runtime": None,
         "decontamination": None,
+        "source": None,
     }
 
 
+# Public pins for the eight non-held-out suites, researched 2026-10-03 from
+# canonical sources (paper, official repo, HuggingFace dataset — every value
+# read from the live source).  Four suites freeze here; four stay pending
+# with their partial findings recorded.  ``None`` is a verified absence
+# (field does not exist publicly), never a skipped lookup.
+_PUBLIC_SUITE_RECEIPTS: Dict[str, Dict[str, Any]] = {
+    "mle_bench_eval": {
+        "frozen": True,
+        "split": "Full 75 comps (split75.txt); Lite 21 (low.txt); pkg v1.0.0",
+        "hash": "507f92e1138bb6e40dac5c6ee7a6758e6424bf97 "
+        "(openai/mle-bench HEAD 2026-10-03; no tags)",
+        "license": "MIT code only; datasets per-competition Kaggle terms",
+        "runtime": "mlebench CLI + Docker mlebench-env grading server",
+        "decontamination": "No pretraining decon; effects measured instead "
+        "(familiarity + obfuscation ablations, arXiv:2410.07095 §4)",
+        "source": "https://github.com/openai/mle-bench",
+    },
+    "swe_bench_pro_eval": {
+        "frozen": True,
+        "split": "test (default V2 642 tasks v2.0.0; hard 51; v1 731/tag v1.0)",
+        "hash": "2d52cb3df914a3fcf80c7f66738b3a88ae37fc50 (HF ScaleAI/SWE-bench_Pro 2026-09-22)",
+        "license": "MIT harness; task content per upstream repo licenses",
+        "runtime": "Harbor task dirs + ghcr.io/scaleapi/swe-bench_pro-v2 "
+        "images; hidden F2P/P2P re-grade",
+        "decontamination": "GPL/copyleft-only repos as legal barrier; "
+        "held-out set retained; V2 sanitised bundles",
+        "source": "https://huggingface.co/datasets/ScaleAI/SWE-bench_Pro",
+    },
+    "verilog_eval": {
+        "frozen": True,
+        "split": "v2: spec-to-rtl + code-complete-iccad2023 (156 HDLBits, "
+        "Human only); v1: Human/Machine JSONLs",
+        "hash": "v2.0.0=c498220d0a52248f8e3fdffe279075215bde2da6; "
+        "v1.0.0=4b9b16e92f1d9cc520afbfa3ecd5a2f20a350fd",
+        "license": "MIT (NVIDIA 2023-2024 + OpenAI human-eval portion)",
+        "runtime": "v1 Docker+pip (iverilog pinned); v2 bare-metal make, iverilog v12",
+        "decontamination": "Partial: MinHash dedup on synthetic SFT data "
+        "only; eval set itself not deconed",
+        "source": "https://github.com/NVlabs/verilog-eval",
+    },
+    "webbench_eval": {
+        "frozen": True,
+        "split": "webbenchfinal.csv: 2454 tasks / 452 live sites; single set, no splits",
+        "hash": "repo ea7a1628443321363989f354401f0653e0cba6f4; HF "
+        "Halluminate/WebBench 48b35267b72544a6cc7fb13fab4ad947be22c3b0",
+        "license": "MIT (repo + HF card)",
+        "runtime": "No public harness: live-site agents graded by human "
+        "annotators; leaderboard webbench.ai",
+        "decontamination": "None documented (full-text searched; unreleased holdouts exist)",
+        "source": "https://github.com/Halluminate/WebBench",
+    },
+    "binaryaudit_eval": {
+        "frozen": False,
+        "split": "tasks/ (full suite; 46 task dirs; no named split/version)",
+        "hash": "cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23 (main HEAD 2026-02-27; no tags upstream)",
+        "license": "Apache-2.0 claimed in README; no LICENSE file, GitHub API license=null",
+        "runtime": "Harbor harness + Docker per-task containers (Ghidra/Radare2)",
+        "decontamination": None,
+        "source": "https://github.com/QuesmaOrg/BinaryAudit",
+    },
+    "frontier_swe_eval": {
+        "frozen": False,
+        "split": "CANDIDATE mapping: SWE-bench Verified test (500 "
+        "instances) — confirm suite-ID mapping before freezing",
+        "hash": "78f471bf655a3137b2e8a75af1501690ec009ec3 (SWE-bench_Verified HF HEAD @2026-08-16)",
+        "license": "No single dataset license (per-repo OSS); harness MIT",
+        "runtime": "Official swebench harness, Docker eval (v5 CLI)",
+        "decontamination": "Train/eval repos disjoint per Jimenez et al. ICLR 2024",
+        "source": "https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified",
+    },
+    "lifescibench_eval": {
+        "frozen": False,
+        "split": "750 expert tasks, single eval set (7 workflows x 7 "
+        "domains); rubric score + pass rate",
+        "hash": None,
+        "license": None,
+        "runtime": "Single-turn + browsing; expert-rubric grading; no public harness",
+        "decontamination": None,
+        "source": "bioRxiv DOI 10.64898/2026.08.13.744657 v1 (paper-only; release restricted)",
+    },
+    "sdab_eval": {
+        "frozen": False,
+        "split": None,
+        "hash": None,
+        "license": None,
+        "runtime": "Provider-run (Emulated, Inc.): Docker + cloudboxes; no "
+        "public harness; gated access",
+        "decontamination": None,
+        "source": "https://emulated.so/sdab (80-task SDAB, Apr 2026; no public paper/repo/dataset)",
+    },
+}
+
+
 # Machine-checkable per-suite receipts for all 14 primary-evaluation IDs.
-# The six held-out suites have their split description pinned; the other
-# eight stay explicitly pending until their split, hash, license, runtime,
-# and decontamination receipts are frozen.  No hashes are invented here:
-# ``None`` means unpinned, full stop.
+# The six held-out suites carry campaign split descriptions; four more
+# suites carry frozen public pins; four stay pending with partial findings.
+# No hashes are invented here: ``None`` means unpinned, full stop.
 PAVLOV_SUITE_RECEIPTS: Dict[str, Dict[str, Any]] = {
     suite_id: (
-        {
-            "frozen": True,
-            "split": "held-out/private split described with suite",
-            "hash": None,
-            "license": None,
-            "runtime": None,
-            "decontamination": None,
-        }
-        if suite_id in PAVLOV_HELDOUT_SUITE_IDS
-        else _pending_suite_receipt()
+        dict(_PUBLIC_SUITE_RECEIPTS[suite_id])
+        if suite_id in _PUBLIC_SUITE_RECEIPTS
+        else (
+            {
+                "frozen": True,
+                "split": "held-out/private split described with suite",
+                "hash": None,
+                "license": None,
+                "runtime": None,
+                "decontamination": None,
+                "source": None,
+            }
+            if suite_id in PAVLOV_HELDOUT_SUITE_IDS
+            else _pending_suite_receipt()
+        )
     )
     for suite_id in PAVLOV_PRIMARY_EVALUATION_SUITE_IDS
 }

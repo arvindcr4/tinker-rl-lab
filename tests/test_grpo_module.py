@@ -148,24 +148,58 @@ class TestSuiteReceipts(unittest.TestCase):
     def test_all_primary_suites_have_receipts(self):
         self.assertEqual(set(PAVLOV_SUITE_RECEIPTS), set(PAVLOV_PRIMARY_EVALUATION_SUITE_IDS))
         for suite_id, receipt in PAVLOV_SUITE_RECEIPTS.items():
-            for key in ("frozen", "split", "hash", "license", "runtime", "decontamination"):
+            for key in (
+                "frozen",
+                "split",
+                "hash",
+                "license",
+                "runtime",
+                "decontamination",
+                "source",
+            ):
                 self.assertIn(key, receipt, suite_id)
 
-    def test_exactly_six_suites_are_frozen(self):
+    def test_ten_suites_are_frozen(self):
         frozen = {s for s, r in PAVLOV_SUITE_RECEIPTS.items() if r["frozen"]}
-        self.assertEqual(frozen, set(PAVLOV_HELDOUT_SUITE_IDS))
-        self.assertEqual(len(frozen), 6)
+        expected = set(PAVLOV_HELDOUT_SUITE_IDS) | {
+            "mle_bench_eval",
+            "swe_bench_pro_eval",
+            "verilog_eval",
+            "webbench_eval",
+        }
+        self.assertEqual(frozen, expected)
+        self.assertEqual(len(frozen), 10)
+
+    def test_frozen_public_pins_carry_hash_and_license(self):
+        for suite_id in (
+            "mle_bench_eval",
+            "swe_bench_pro_eval",
+            "verilog_eval",
+            "webbench_eval",
+        ):
+            receipt = PAVLOV_SUITE_RECEIPTS[suite_id]
+            for key in ("split", "hash", "license", "runtime", "source"):
+                self.assertTrue(receipt[key], f"{suite_id}.{key}")
 
     def test_pending_suites_fail_closed(self):
-        heldout = set(PAVLOV_HELDOUT_SUITE_IDS)
-        pending = [s for s in PAVLOV_PRIMARY_EVALUATION_SUITE_IDS if s not in heldout]
-        self.assertEqual(len(pending), 8)
+        pending = [s for s, r in PAVLOV_SUITE_RECEIPTS.items() if not r["frozen"]]
+        self.assertEqual(
+            set(pending),
+            {
+                "binaryaudit_eval",
+                "frontier_swe_eval",
+                "lifescibench_eval",
+                "sdab_eval",
+            },
+        )
         for suite_id in pending:
             with self.assertRaises(ValueError, msg=suite_id):
                 require_frozen_suite_receipt(suite_id)
 
     def test_frozen_suites_pass(self):
-        for suite_id in PAVLOV_HELDOUT_SUITE_IDS:
+        frozen = [s for s, r in PAVLOV_SUITE_RECEIPTS.items() if r["frozen"]]
+        self.assertEqual(len(frozen), 10)
+        for suite_id in frozen:
             receipt = require_frozen_suite_receipt(suite_id)
             self.assertTrue(receipt["frozen"])
 

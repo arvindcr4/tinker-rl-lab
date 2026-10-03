@@ -50,9 +50,23 @@ class TRLAlgorithmConfig(BaseModel):
     algorithm: str = "grpo"  # grpo, ppo, reinforce, dpo
     gamma: float = 1.0
     lam: float = 0.95
-    epsilon: float = 0.2  # PPO clip
+    # Decoupled clip (DAPO §3.1: 0.2/0.28).  Defaults preserve the
+    # historical symmetric ε=0.2.  A legacy ``epsilon`` kwarg maps onto
+    # both sides (see _legacy_epsilon).
+    epsilon_low: float = 0.2
+    epsilon_high: float = 0.2
     kl_coef: float = 0.01
     max_grad_norm: float = 1.0
+
+    @model_validator(mode="before")
+    @classmethod
+    def _legacy_epsilon(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "epsilon" in data:
+            data = dict(data)
+            legacy = data.pop("epsilon")
+            data.setdefault("epsilon_low", legacy)
+            data.setdefault("epsilon_high", legacy)
+        return data
 
 
 class TRLDataConfig(BaseModel):

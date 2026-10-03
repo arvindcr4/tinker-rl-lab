@@ -42,6 +42,21 @@ class TestNormalizeRewards(unittest.TestCase):
         self.assertFalse(math.isnan(advs[0]))
         self.assertFalse(math.isinf(advs[0]))
 
+    def test_unbiased_returns_centered_unscaled(self):
+        advs = normalize_rewards([1.0, 2.0, 3.0, 4.0, 5.0], unbiased=True)
+        self.assertEqual(advs, [-2.0, -1.0, 0.0, 1.0, 2.0])
+        mean_adv = sum(advs) / len(advs)
+        self.assertTrue(math.isclose(mean_adv, 0.0, abs_tol=1e-9))
+
+    def test_unbiased_near_uniform_does_not_explode(self):
+        advs = normalize_rewards([1.0, 1.0 + 1e-9], unbiased=True)
+        for a in advs:
+            self.assertLess(abs(a), 1e-6)
+
+    def test_biased_mode_unchanged_regression_pin(self):
+        rewards = [1.0, 2.0, 3.0, 4.0, 5.0]
+        self.assertEqual(normalize_rewards(rewards, unbiased=False), normalize_rewards(rewards))
+
 
 class TestMakeGrpoLossFn(unittest.TestCase):
     def test_positive_advantage(self):

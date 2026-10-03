@@ -151,6 +151,32 @@ def test_dataset_revision_cli_override_is_carried_into_config():
     assert config.model_revision == "model-rev-123"
 
 
+def test_shaping_flags_default_off_and_cli_enables_them():
+    off = build_config(_parse_args(["--preset", "tooluse_synth"]))
+    assert off.debias_advantages is False
+    assert off.dynamic_sampling is False
+    assert off.mask_truncated_responses is False
+    assert off.dynamic_sampling_max_resamples == 16
+
+    on = build_config(
+        _parse_args(
+            [
+                "--preset",
+                "tooluse_synth",
+                "--debias-advantages",
+                "--dynamic-sampling",
+                "--dynamic-sampling-max-resamples",
+                "4",
+                "--mask-truncated-responses",
+            ]
+        )
+    )
+    assert on.debias_advantages is True
+    assert on.dynamic_sampling is True
+    assert on.mask_truncated_responses is True
+    assert on.dynamic_sampling_max_resamples == 4
+
+
 def test_no_wandb_escape_hatch_is_removed():
     with pytest.raises(SystemExit):
         _parse_args(["--preset", "tooluse_synth", "--no-" + "wandb"])

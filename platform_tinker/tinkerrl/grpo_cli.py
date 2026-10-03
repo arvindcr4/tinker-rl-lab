@@ -287,6 +287,7 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         "hf_owner": "hf_owner",
         "hf_repo_prefix": "hf_repo_prefix",
         "checkpoint_name_prefix": "checkpoint_name_prefix",
+        "dynamic_sampling_max_resamples": "dynamic_sampling_max_resamples",
     }
     for cfg_key, attr in mapping.items():
         val = getattr(args, attr, None)
@@ -294,6 +295,12 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
             cfg[cfg_key] = val
     if args.evaluate_heldout:
         cfg["evaluate_heldout"] = True
+    if args.debias_advantages:
+        cfg["debias_advantages"] = True
+    if args.dynamic_sampling:
+        cfg["dynamic_sampling"] = True
+    if args.mask_truncated_responses:
+        cfg["mask_truncated_responses"] = True
     if args.no_resume:
         cfg["resume"] = False
     if args.hf_public:
@@ -351,6 +358,14 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--dataset-revision")
     parser.add_argument("--num-seeds", dest="num_seeds", type=int)
     parser.add_argument("--evaluate-heldout", dest="evaluate_heldout", action="store_true")
+    parser.add_argument("--debias-advantages", dest="debias_advantages", action="store_true")
+    parser.add_argument("--dynamic-sampling", dest="dynamic_sampling", action="store_true")
+    parser.add_argument(
+        "--dynamic-sampling-max-resamples", dest="dynamic_sampling_max_resamples", type=int
+    )
+    parser.add_argument(
+        "--mask-truncated-responses", dest="mask_truncated_responses", action="store_true"
+    )
     parser.add_argument("--checkpoint-dir")
     parser.add_argument("--no-resume", action="store_true")
     parser.add_argument("--wandb-project")

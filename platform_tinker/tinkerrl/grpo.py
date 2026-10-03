@@ -92,6 +92,64 @@ PAVLOV_HELDOUT_SUITE_IDS: Tuple[str, ...] = (
     "frontiermath_eval",
     "openreward_games_eval",
 )
+
+
+def _pending_suite_receipt() -> Dict[str, Any]:
+    return {
+        "frozen": False,
+        "split": None,
+        "hash": None,
+        "license": None,
+        "runtime": None,
+        "decontamination": None,
+    }
+
+
+# Machine-checkable per-suite receipts for all 14 primary-evaluation IDs.
+# The six held-out suites have their split description pinned; the other
+# eight stay explicitly pending until their split, hash, license, runtime,
+# and decontamination receipts are frozen.  No hashes are invented here:
+# ``None`` means unpinned, full stop.
+PAVLOV_SUITE_RECEIPTS: Dict[str, Dict[str, Any]] = {
+    suite_id: (
+        {
+            "frozen": True,
+            "split": "held-out/private split described with suite",
+            "hash": None,
+            "license": None,
+            "runtime": None,
+            "decontamination": None,
+        }
+        if suite_id in PAVLOV_HELDOUT_SUITE_IDS
+        else _pending_suite_receipt()
+    )
+    for suite_id in PAVLOV_PRIMARY_EVALUATION_SUITE_IDS
+}
+
+
+def pavlov_suite_receipt(suite_id: str) -> Dict[str, Any]:
+    """Return the receipt record for a primary-evaluation suite.
+
+    Raises ``KeyError`` for unknown suite IDs: lookups fail closed.
+    """
+    return PAVLOV_SUITE_RECEIPTS[suite_id]
+
+
+def require_frozen_suite_receipt(suite_id: str) -> Dict[str, Any]:
+    """Return the receipt, refusing suites without frozen receipts.
+
+    Adapter work (BFCL, SWE-bench, LiveCodeBench, ...) must gate on this so
+    a pending suite can never silently pass as evaluated.
+    """
+    receipt = pavlov_suite_receipt(suite_id)
+    if not receipt["frozen"]:
+        raise ValueError(
+            f"suite {suite_id!r} has no frozen receipt "
+            "(split/hash/license/runtime/decontamination pending)"
+        )
+    return receipt
+
+
 PAVLOV_DOMAIN_TAGS: Tuple[str, ...] = (
     "code",
     "browser",
@@ -231,6 +289,12 @@ class GRPOConfig:
     # dataset and model sources used by the run.
     dataset_revision: Optional[str] = None
     model_revision: Optional[str] = None
+    # DAPO / Dr. GRPO training-shaping flags.  All default off so existing
+    # presets reproduce their current behavior exactly.
+    debias_advantages: bool = False
+    dynamic_sampling: bool = False
+    dynamic_sampling_max_resamples: int = 16
+    mask_truncated_responses: bool = False
 
     def __post_init__(self) -> None:
         # JSON configuration commonly supplies lists.  Convert all metadata
@@ -406,14 +470,84 @@ class RewardAdapter(Protocol):
 # ---------------------------------------------------------------------------
 
 
-def normalize_rewards(rewards: Sequence[float], epsilon: float = 1e-8) -> List[float]:
-    """Group-relative advantage normalization (mean 0, std 1)."""
+def normalize_rewards(
+    rewards: Sequence[float], epsilon: float = 1e-8, unbiased: bool = False
+) -> List[float]:
+    """Group-relative advantages.
+
+    Default matches historical behavior (mean 0, std 1).  With
+    ``unbiased=True`` (Dr. GRPO: Liu et al., COLM 2025), return
+    ``R - mean(R)`` with no std division, so near-uniform groups cannot
+    explode and short-correct responses are not up-weighted.
+    """
     n = len(rewards)
     if n == 0:
         return []
     mean_r = sum(rewards) / n
+    if unbiased:
+        return [r - mean_r for r in rewards]
     std_r = (sum((r - mean_r) ** 2 for r in rewards) / n) ** 0.5 + epsilon
     return [(r - mean_r) / std_r for r in rewards]
+
+
+def is_degenerate_group(rewards: Sequence[float], epsilon: float = 1e-8) -> bool:
+    """True when a group carries no learnable contrast (DAPO, Yu et al. 2025, §3.2).
+
+    All-correct / all-wrong groups center to zero advantage, so dynamic
+    sampling skips them instead of spending forward/backward on noise.
+    Groups with fewer than two samples are degenerate by definition.
+    """
+    if len(rewards) < 2:
+        return True
+    first = rewards[0]
+    return all(abs(r - first) <= epsilon for r in rewards[1:])
+
+
+def apply_truncation_mask(
+    advantages: Sequence[float], token_lengths: Sequence[int], max_tokens: int
+) -> List[float]:
+    """Zero advantages for responses that hit the sampling token budget.
+
+    A truncated response may be sound-but-incomplete; scoring it as a full
+    negative injects reward noise (DAPO §3.4).  ``token_lengths`` must pair
+    1:1 with ``advantages``.
+    """
+    if len(advantages) != len(token_lengths):
+        raise ValueError(
+            "advantages and token_lengths must pair 1:1, got "
+            f"{len(advantages)} advantages and {len(token_lengths)} lengths"
+        )
+    return [0.0 if length >= max_tokens else adv for adv, length in zip(advantages, token_lengths)]
+
+
+def heldout_reward_summary(test_rewards: Sequence[float]) -> Dict[str, float]:
+    """Mean (+ bootstrap CI when n >= 2) for held-out eval logging.
+
+    Routes through :func:`utils.stats.compute_bootstrap_ci` so single-point
+    held-out means gain uncertainty bounds.  The import is lazy because
+    ``utils.stats`` pulls heavy plotting deps; when it is unavailable the
+    summary degrades to mean-only instead of failing the run.  A single
+    held-out score likewise logs mean-only: one observation has no spread.
+    """
+    rewards = [float(r) for r in test_rewards]
+    if not rewards:
+        return {}
+    mean_r = sum(rewards) / len(rewards)
+    summary: Dict[str, float] = {
+        "test/reward": mean_r,
+        "test/reward_n": float(len(rewards)),
+    }
+    if len(rewards) < 2:
+        return summary
+    try:
+        from utils.stats import compute_bootstrap_ci
+    except ImportError:
+        return summary
+    mean_ci, ci_low, ci_high = compute_bootstrap_ci(rewards)
+    summary["test/reward"] = float(mean_ci)
+    summary["test/reward_ci_low"] = float(ci_low)
+    summary["test/reward_ci_high"] = float(ci_high)
+    return summary
 
 
 def make_grpo_loss_fn(
@@ -1118,7 +1252,17 @@ def _run_one_seed(
             all_advs: List[float] = []
             batch_rewards: List[float] = []
 
-            for example in batch:
+            # Dynamic sampling (DAPO §3.2) refills the batch pool with fresh
+            # examples when a group is degenerate.  The refill loop is bounded
+            # by dynamic_sampling_max_resamples, so degenerate batches
+            # terminate instead of spinning.
+            pool = list(batch)
+            resamples_used = 0
+            skipped_degenerate = 0
+            pool_idx = 0
+            while pool_idx < len(pool):
+                example = pool[pool_idx]
+                pool_idx += 1
                 prompt_ids = tok.encode(example.prompt, add_special_tokens=False)
                 if len(prompt_ids) > config.max_prompt_tokens:
                     prompt_ids = prompt_ids[: config.max_prompt_tokens]
@@ -1138,7 +1282,19 @@ def _run_one_seed(
                     reward.score(_decode_response(tok, resp), example)
                     for resp in responses.sequences
                 ]
-                advs = normalize_rewards(rewards)
+                if config.dynamic_sampling and is_degenerate_group(rewards):
+                    skipped_degenerate += 1
+                    if resamples_used < config.dynamic_sampling_max_resamples:
+                        pool.append(rng.choice(train_examples))
+                        resamples_used += 1
+                    continue
+                advs = normalize_rewards(rewards, unbiased=config.debias_advantages)
+                if config.mask_truncated_responses:
+                    advs = apply_truncation_mask(
+                        advs,
+                        [len(resp.tokens) for resp in responses.sequences],
+                        config.max_response_tokens,
+                    )
                 batch_rewards.extend(rewards)
 
                 for resp, adv in zip(responses.sequences, advs):
@@ -1176,14 +1332,14 @@ def _run_one_seed(
                 f"[{config.name}] Step {step + 1:3d}/{config.steps}"
                 f" | loss={loss_val:.4f} | reward={avg:.3f}"
             )
-            _wandb_log(
-                wb,
-                {
-                    "train/loss": loss_val,
-                    "train/reward": avg,
-                    "train/step": step + 1,
-                },
-            )
+            step_log: Dict[str, float] = {
+                "train/loss": loss_val,
+                "train/reward": avg,
+                "train/step": step + 1,
+            }
+            if config.dynamic_sampling:
+                step_log["train/skipped_degenerate_groups"] = float(skipped_degenerate)
+            _wandb_log(wb, step_log)
 
             if (step + 1) % save_every == 0:
                 state = tc.save_state(name=f"state_seed{seed}_{step + 1}", overwrite=True).result()
@@ -1268,7 +1424,7 @@ def _run_one_seed(
                         continue
                 if test_rewards:
                     heldout_reward = sum(test_rewards) / len(test_rewards)
-                    _wandb_log(wb, {"test/reward": heldout_reward})
+                    _wandb_log(wb, heldout_reward_summary(test_rewards))
 
         result = GRPORunResult(
             seed=seed,

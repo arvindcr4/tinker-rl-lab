@@ -13,7 +13,8 @@
     "lora_alpha": 32,
     "lora_target_modules": "all-linear",
     "beta": 0.0,
-    "epsilon": 0.2,
+    "epsilon_low": 0.2,
+    "epsilon_high": 0.2,
     "max_completion_length": 1024,
     "seed": 211
   },

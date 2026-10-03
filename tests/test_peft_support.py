@@ -7,7 +7,12 @@ import pytest
 import torch
 from pydantic import ValidationError
 
-from platform_local.trl_integrations.config import TRLConfig, TRLModelConfig
+from platform_local.trl_integrations.config import (
+    TRLAlgorithmConfig,
+    TRLConfig,
+    TRLModelConfig,
+)
+from platform_local.unified.canonical import CanonicalSpec
 from platform_local.trl_integrations.trainer import generate_trl_train_script
 from platform_local.unified.peft_utils import (
     apply_bitfit,
@@ -146,6 +151,61 @@ def test_cli_generates_script_instead_of_running_smoke_training(tmp_path):
     assert completed.returncode == 0, completed.stderr
     assert output_path.exists()
     assert "PEFT_METHOD = 'prefix_tuning'" in output_path.read_text(encoding="utf-8")
+
+
+def test_decoupled_clip_defaults_preserve_symmetric_epsilon():
+    assert CanonicalSpec().epsilon_low == 0.2
+    assert CanonicalSpec().epsilon_high == 0.2
+    algo = TRLAlgorithmConfig()
+    assert algo.epsilon_low == 0.2
+    assert algo.epsilon_high == 0.2
+
+
+def test_legacy_epsilon_kwarg_maps_to_both_sides():
+    algo = TRLAlgorithmConfig(epsilon=0.15)
+    assert algo.epsilon_low == 0.15
+    assert algo.epsilon_high == 0.15
+    explicit = TRLAlgorithmConfig(epsilon=0.15, epsilon_high=0.28)
+    assert explicit.epsilon_low == 0.15
+    assert explicit.epsilon_high == 0.28
+
+
+def test_generated_grpo_script_round_trips_decoupled_clip(tmp_path):
+    script = generate_trl_train_script(
+        TRLConfig(
+            algorithm={
+                "algorithm": "grpo",
+                "epsilon_low": 0.2,
+                "epsilon_high": 0.28,
+            },
+            data={"train_data": ["train.json"]},
+        ),
+        tmp_path / "clip.py",
+    )
+    compile(script, str(tmp_path / "clip.py"), "exec")
+    assert "epsilon=0.2," in script
+    assert "epsilon_high=0.28," in script
+
+
+def test_generated_grpo_script_defaults_to_symmetric_clip(tmp_path):
+    script = generate_trl_train_script(
+        TRLConfig(data={"train_data": ["train.json"]}),
+        tmp_path / "clip_default.py",
+    )
+    assert "epsilon=0.2," in script
+    assert "epsilon_high=0.2," in script
+
+
+def test_generated_idpo_script_omits_clip_range(tmp_path):
+    script = generate_trl_train_script(
+        TRLConfig(
+            algorithm={"algorithm": "idpo"},
+            data={"train_data": ["train.json"]},
+        ),
+        tmp_path / "idpo.py",
+    )
+    compile(script, str(tmp_path / "idpo.py"), "exec")
+    assert "epsilon" not in script
 
 
 def test_cli_rejects_quantized_full_fine_tuning(tmp_path):

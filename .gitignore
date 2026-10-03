@@ -333,3 +333,8 @@ outputs/e1_e14_small_scale_2026-09-26/E3/code/*
 !reports/public_revision_2026-10-03/thesis/figures/fig_terminal_taxonomy.pdf
 !reports/public_revision_2026-10-03/thesis/figures/fig_zvf_by_library.pdf
 !reports/public_revision_2026-10-03/thesis/figures/fig_zvf_definition.pdf
+
+# unattended harness runtime
+tools/harness/logs/
+tools/harness/.ralph-state
+tools/harness/STOP

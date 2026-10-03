@@ -242,7 +242,7 @@ def create_ppo_trainer(
         max_grad_norm=config.algorithm.max_grad_norm,
         gamma=config.algorithm.gamma,
         lam=config.algorithm.lam,
-        clip_eps=config.algorithm.epsilon,
+        clip_eps=config.algorithm.epsilon_low,
         bf16=config.bf16,
         fp16=config.fp16,
         gradient_checkpointing=config.gradient_checkpointing,
@@ -320,6 +320,15 @@ def generate_trl_train_script(config: TRLConfig, output_path: str = "train_trl.p
         raise ValueError("At least one data.train_data JSON path is required")
 
     boxed_marker = "\\boxed{"
+    if algorithm == "grpo":
+        # TRL GRPOConfig takes the decoupled DAPO clip; OnlineDPOConfig
+        # takes no clip range, so only GRPO scripts emit it.
+        clip_lines = (
+            f"    epsilon={config.algorithm.epsilon_low!r},\n"
+            f"    epsilon_high={config.algorithm.epsilon_high!r},\n"
+        )
+    else:
+        clip_lines = ""
     script = f'''"""
 TRL GRPO Training Script
 Generated for config: {config.model_name}
@@ -480,7 +489,7 @@ trainer_config = {"GRPOConfig" if algorithm == "grpo" else "OnlineDPOConfig"}(
     gradient_accumulation_steps={config.data.gradient_accumulation_steps},
     learning_rate={config.optimizer.learning_rate},
     max_grad_norm={config.algorithm.max_grad_norm},
-    max_steps={config.max_steps},
+{clip_lines}    max_steps={config.max_steps},
     bf16=BF16,
     fp16=FP16,
     gradient_checkpointing={config.gradient_checkpointing!r},

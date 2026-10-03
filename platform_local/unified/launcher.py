@@ -317,7 +317,11 @@ class UnifiedLauncher:
                 "lora_rank": spec.lora_rank,
             },
             optimizer={"learning_rate": spec.learning_rate},
-            algorithm={"algorithm": self.algorithm},
+            algorithm={
+                "algorithm": self.algorithm,
+                "epsilon_low": spec.epsilon_low,
+                "epsilon_high": spec.epsilon_high,
+            },
             data={"train_data": train_data},
             epochs=self.epochs,
             project_name=getattr(self, "wandb_project", "unified-rl"),

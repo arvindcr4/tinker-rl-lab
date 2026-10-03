@@ -45,7 +45,10 @@ class CanonicalSpec:
     lora_alpha: int = 32
     lora_target_modules: str = "all-linear"
     beta: float = 0.0  # canonical GRPO: no KL penalty
-    epsilon: float = 0.2
+    # Decoupled PPO-style clip (DAPO §3.1: 0.2/0.28).  Defaults preserve the
+    # historical symmetric ε=0.2; set epsilon_high explicitly to opt in.
+    epsilon_low: float = 0.2
+    epsilon_high: float = 0.2
     max_completion_length: int = 1024
     seed: int = 211
 

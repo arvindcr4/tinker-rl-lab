@@ -35,6 +35,12 @@ from platform_tinker.tinkerrl.grpo import (
     make_synthetic_tool_use_dataset,
     make_xlam_dataset,
     normalize_rewards,
+    apply_truncation_mask,
+    heldout_reward_summary,
+    is_degenerate_group,
+    pavlov_suite_receipt,
+    require_frozen_suite_receipt,
+    PAVLOV_SUITE_RECEIPTS,
     run_grpo,
 )
 
@@ -63,6 +69,103 @@ class TestNormalizeRewards(unittest.TestCase):
         advs = normalize_rewards([1.0, 2.0, 3.0, 4.0, 5.0])
         for i in range(len(advs) - 1):
             self.assertLess(advs[i], advs[i + 1])
+
+
+class TestDynamicSampling(unittest.TestCase):
+    def test_all_correct_is_degenerate(self):
+        self.assertTrue(is_degenerate_group([1.0, 1.0, 1.0, 1.0]))
+
+    def test_all_wrong_is_degenerate(self):
+        self.assertTrue(is_degenerate_group([0.0, 0.0, 0.0, 0.0]))
+
+    def test_mixed_group_is_kept(self):
+        self.assertFalse(is_degenerate_group([0.0, 1.0, 0.0, 1.0]))
+        self.assertFalse(is_degenerate_group([0.25, 0.5, 0.75]))
+
+    def test_near_equal_within_epsilon_is_degenerate(self):
+        self.assertTrue(is_degenerate_group([1.0, 1.0 + 1e-9]))
+        self.assertFalse(is_degenerate_group([1.0, 1.1]))
+
+    def test_short_groups_are_degenerate(self):
+        self.assertTrue(is_degenerate_group([]))
+        self.assertTrue(is_degenerate_group([0.5]))
+
+    def test_resample_cap_is_a_positive_bound(self):
+        cfg = GRPOConfig(name="t")
+        self.assertFalse(cfg.dynamic_sampling)
+        self.assertIsInstance(cfg.dynamic_sampling_max_resamples, int)
+        self.assertGreater(cfg.dynamic_sampling_max_resamples, 0)
+
+
+class TestTruncationMask(unittest.TestCase):
+    def test_truncated_responses_are_masked_not_scored_wrong(self):
+        advs = apply_truncation_mask([1.5, -2.0, 0.5], [10, 512, 100], 512)
+        self.assertEqual(advs, [1.5, 0.0, 0.5])
+
+    def test_short_wrong_response_still_scored(self):
+        advs = apply_truncation_mask([-2.0], [100], 512)
+        self.assertEqual(advs, [-2.0])
+
+    def test_no_truncation_is_identity(self):
+        advs = [1.5, -2.0, 0.5]
+        self.assertEqual(apply_truncation_mask(advs, [10, 20, 30], 512), advs)
+
+    def test_length_mismatch_fails_closed(self):
+        with self.assertRaises(ValueError):
+            apply_truncation_mask([1.0, 2.0], [10], 512)
+
+
+class TestHeldoutRewardSummary(unittest.TestCase):
+    def test_multi_score_emits_ci_bounds(self):
+        summary = heldout_reward_summary([0.0, 1.0, 0.0, 1.0, 1.0, 0.0])
+        self.assertIn("test/reward", summary)
+        self.assertEqual(summary["test/reward_n"], 6.0)
+        self.assertIn("test/reward_ci_low", summary)
+        self.assertIn("test/reward_ci_high", summary)
+        self.assertLessEqual(summary["test/reward_ci_low"], summary["test/reward"])
+        self.assertLessEqual(summary["test/reward"], summary["test/reward_ci_high"])
+
+    def test_single_score_is_mean_only(self):
+        summary = heldout_reward_summary([0.75])
+        self.assertEqual(summary["test/reward"], 0.75)
+        self.assertEqual(summary["test/reward_n"], 1.0)
+        self.assertNotIn("test/reward_ci_low", summary)
+        self.assertNotIn("test/reward_ci_high", summary)
+
+    def test_empty_is_empty(self):
+        self.assertEqual(heldout_reward_summary([]), {})
+
+
+class TestSuiteReceipts(unittest.TestCase):
+    def test_all_primary_suites_have_receipts(self):
+        self.assertEqual(set(PAVLOV_SUITE_RECEIPTS), set(PAVLOV_PRIMARY_EVALUATION_SUITE_IDS))
+        for suite_id, receipt in PAVLOV_SUITE_RECEIPTS.items():
+            for key in ("frozen", "split", "hash", "license", "runtime", "decontamination"):
+                self.assertIn(key, receipt, suite_id)
+
+    def test_exactly_six_suites_are_frozen(self):
+        frozen = {s for s, r in PAVLOV_SUITE_RECEIPTS.items() if r["frozen"]}
+        self.assertEqual(frozen, set(PAVLOV_HELDOUT_SUITE_IDS))
+        self.assertEqual(len(frozen), 6)
+
+    def test_pending_suites_fail_closed(self):
+        heldout = set(PAVLOV_HELDOUT_SUITE_IDS)
+        pending = [s for s in PAVLOV_PRIMARY_EVALUATION_SUITE_IDS if s not in heldout]
+        self.assertEqual(len(pending), 8)
+        for suite_id in pending:
+            with self.assertRaises(ValueError, msg=suite_id):
+                require_frozen_suite_receipt(suite_id)
+
+    def test_frozen_suites_pass(self):
+        for suite_id in PAVLOV_HELDOUT_SUITE_IDS:
+            receipt = require_frozen_suite_receipt(suite_id)
+            self.assertTrue(receipt["frozen"])
+
+    def test_unknown_suite_fails_closed(self):
+        with self.assertRaises(KeyError):
+            pavlov_suite_receipt("not_a_suite")
+        with self.assertRaises(KeyError):
+            require_frozen_suite_receipt("not_a_suite")
 
 
 class TestMakeGrpoLossFn(unittest.TestCase):
@@ -130,6 +233,10 @@ class TestGRPOConfig(unittest.TestCase):
         self.assertEqual(cfg.seed, 42)
         self.assertEqual(cfg.num_seeds, 1)
         self.assertFalse(cfg.evaluate_heldout)
+        self.assertFalse(cfg.debias_advantages)
+        self.assertFalse(cfg.dynamic_sampling)
+        self.assertEqual(cfg.dynamic_sampling_max_resamples, 16)
+        self.assertFalse(cfg.mask_truncated_responses)
 
     def test_effective_save_every_explicit(self):
         cfg = GRPOConfig(name="t", save_every=10)

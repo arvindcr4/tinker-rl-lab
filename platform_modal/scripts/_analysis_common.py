@@ -7,6 +7,8 @@ unchanged. Functions take everything they need as parameters (paths, RNGs,
 bootstrap counts); none reads a caller's module globals. RNG seeding stays
 at the call sites.
 
+Boundary validation rejects invalid resampling and paired inputs. AUC helpers
+now average tied ranks; archived scientific outputs have not been regenerated.
 Heavy optional dependencies (scipy, matplotlib) are imported lazily.
 """
 
@@ -16,6 +18,7 @@ import csv
 import json
 import math
 import random
+from numbers import Integral
 from pathlib import Path
 from typing import Any
 
@@ -249,8 +252,20 @@ def load_zvf_sweep(res: Path):
 # ---------------------------------------------------------------------------
 
 
+def _validate_resamples(count):
+    if isinstance(count, bool) or not isinstance(count, Integral) or count <= 0:
+        raise ValueError("resample count must be a positive integer")
+
+
+def _validate_paired_lengths(x, y):
+    if len(x) != len(y):
+        raise ValueError("paired samples must have equal lengths")
+
+
 def paired_bootstrap(g: list[float], d: list[float], n_boot: int, rng: random.Random) -> dict:
     """length_bias_iter56/60: percentile bootstrap of mean(d - g) over pairs."""
+    _validate_resamples(n_boot)
+    _validate_paired_lengths(g, d)
     diffs = [di - gi for gi, di in zip(g, d)]
     n = len(diffs)
     if n == 0:
@@ -262,7 +277,11 @@ def paired_bootstrap(g: list[float], d: list[float], n_boot: int, rng: random.Ra
             "p_le0": 1.0,
             "n_pairs": 0,
         }
+    if not all(math.isfinite(value) for value in diffs):
+        raise ValueError("paired differences must be finite")
     mean_diff = sum(diffs) / n
+    if not math.isfinite(mean_diff):
+        raise ValueError("paired mean must be finite")
     var = sum((x - mean_diff) ** 2 for x in diffs) / max(1, n - 1)
     sd_diff = math.sqrt(var)
     idx = list(range(n))
@@ -270,6 +289,8 @@ def paired_bootstrap(g: list[float], d: list[float], n_boot: int, rng: random.Ra
     for _ in range(n_boot):
         s = [diffs[rng.choice(idx)] for _ in range(n)]
         boots.append(sum(s) / n)
+    if not all(math.isfinite(value) for value in boots):
+        raise ValueError("bootstrap means must be finite")
     boots.sort()
     return {
         "mean_diff": round(mean_diff, 8),
@@ -287,23 +308,29 @@ def paired_bootstrap_delta(g, d, B, seed, statistic=np.median):
     Resamples ``d - g`` with ``numpy.default_rng(seed)`` and summarizes the
     resampled statistics with quantile CIs and a two-sided sign p-value.
     """
+    _validate_resamples(B)
+    _validate_paired_lengths(g, d)
     g = np.array(g, dtype=np.float64)
     d = np.array(d, dtype=np.float64)
-    n = min(len(g), len(d))
+    if g.ndim != 1 or d.ndim != 1:
+        raise ValueError("paired samples must be one-dimensional")
+    n = len(g)
     if n == 0:
         return {"delta": float("nan"), "ci_lo": float("nan"),
                 "ci_hi": float("nan"), "p": float("nan"), "n": 0}
-    g = g[:n]
-    d = d[:n]
     diffs = d - g
+    if not np.all(np.isfinite(diffs)):
+        raise ValueError("paired differences must be finite")
     rng = np.random.default_rng(seed)
     idx = rng.integers(0, n, size=(B, n))
     boot = statistic(diffs[idx], axis=1)
     point = float(statistic(diffs))
+    if not math.isfinite(point) or not np.all(np.isfinite(boot)):
+        raise ValueError("bootstrap statistic must be finite")
     return {"delta": point,
             "ci_lo": float(np.quantile(boot, 0.025)),
             "ci_hi": float(np.quantile(boot, 0.975)),
-            "p": float(2 * min(np.mean(boot <= 0), np.mean(boot >= 0))),
+            "p": float(min(1.0, 2 * min(np.mean(boot <= 0), np.mean(boot >= 0)))),
             "n": int(n)}
 
 
@@ -317,8 +344,12 @@ def spearman(x, y) -> tuple[float, float]:
 
 def permutation_null(x, y, B: int, seed: int) -> dict[str, float]:
     """length_bias_iter116/120/124: two-sided permutation null for Spearman rho."""
+    _validate_resamples(B)
+    _validate_paired_lengths(x, y)
     rng = np.random.default_rng(seed)
     obs, _ = spearman(x, y)
+    if not math.isfinite(obs):
+        raise ValueError("permutation correlation requires a finite observed statistic")
     abs_obs = abs(obs)
     n = len(x)
     y_arr = np.array(y, dtype=np.float64)
@@ -397,12 +428,24 @@ def build_long(perrun108: list[dict], step_runs: list[dict], n_w: int) -> list[d
 
 def ccf_at_lags(e_a: np.ndarray, e_b: np.ndarray, K: int) -> np.ndarray:
     """CCF for lags -K..+K; length 2K+1 (length_bias_iter96/104/108)."""
-    n = min(len(e_a), len(e_b))
+    if isinstance(K, bool) or not isinstance(K, Integral) or K < 0:
+        raise ValueError("K must be a nonnegative integer")
+    _validate_paired_lengths(e_a, e_b)
+    e_a, e_b = np.asarray(e_a, dtype=float), np.asarray(e_b, dtype=float)
+    if e_a.ndim != 1 or e_b.ndim != 1:
+        raise ValueError("samples must be one-dimensional")
+    if not np.all(np.isfinite(e_a)) or not np.all(np.isfinite(e_b)):
+        raise ValueError("samples must be finite")
+    n = len(e_a)
+    if n < 3:
+        return np.zeros(2 * K + 1, dtype=np.float64)
     a = e_a[:n] - e_a[:n].mean()
     b = e_b[:n] - e_b[:n].mean()
     denom = math.sqrt((a * a).sum() * (b * b).sum()) + 1e-300
     out = np.zeros(2 * K + 1, dtype=np.float64)
     for i, k in enumerate(range(-K, K + 1)):
+        if abs(k) >= n:
+            continue
         if k >= 0:
             x = a[: n - k]
             y = b[k:n]
@@ -461,25 +504,33 @@ def fit_saturation(t, y):
 
 
 def auc_rank(labels: np.ndarray, scores: np.ndarray) -> float:
-    """AUC of (score -> positive label) via argsort ranks (zvf_iter98/102: ``_auc_rank``).
+    """Mann-Whitney AUC using average ranks for tied scores.
 
-    Ties are ranked by argsort order, not averaged.
+    Historical scripts used argsort-order ranks, which made ties depend on row
+    order. Future reruns use tie-corrected ranks; archived outputs are unchanged.
     """
+    labels = np.asarray(labels)
+    scores = np.asarray(scores, dtype=float)
+    if labels.ndim != 1 or scores.ndim != 1:
+        raise ValueError("labels and scores must be one-dimensional")
+    _validate_paired_lengths(labels, scores)
+    if not np.all(np.isin(labels, [0, 1])):
+        raise ValueError("labels must be binary (0 or 1)")
+    if not np.all(np.isfinite(scores)):
+        raise ValueError("scores must be finite")
     pos = labels == 1
-    neg = labels == 0
-    if pos.sum() == 0 or neg.sum() == 0:
-        return float("nan")
     n_pos = int(pos.sum())
-    n_neg = int(neg.sum())
-    order = np.argsort(scores)
-    ranks = np.empty_like(order, dtype=float)
-    ranks[order] = np.arange(1, len(scores) + 1)
-    sum_ranks_pos = ranks[pos].sum()
-    return float((sum_ranks_pos - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
+    n_neg = len(labels) - n_pos
+    if n_pos == 0 or n_neg == 0:
+        return float("nan")
+    ranks = np.asarray(rankdata_avg(scores))
+    return float((ranks[pos].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
 
 
 def bootstrap_ci_xy(x: np.ndarray, y: np.ndarray, fn, B: int = 2000, seed: int = 0):
     """zvf_iter98/102: ``_bootstrap_ci`` -> (2.5%, 50%, 97.5%) of fn over paired resamples."""
+    _validate_resamples(B)
+    _validate_paired_lengths(x, y)
     rng = np.random.default_rng(seed)
     n = len(x)
     boots = np.empty(B, dtype=float)
@@ -489,7 +540,7 @@ def bootstrap_ci_xy(x: np.ndarray, y: np.ndarray, fn, B: int = 2000, seed: int =
             boots[b] = fn(x[idx], y[idx])
         except Exception:
             boots[b] = float("nan")
-    boots = boots[~np.isnan(boots)]
+    boots = boots[np.isfinite(boots)]
     if len(boots) < 10:
         return float("nan"), float("nan"), float("nan")
     return (
@@ -500,25 +551,16 @@ def bootstrap_ci_xy(x: np.ndarray, y: np.ndarray, fn, B: int = 2000, seed: int =
 
 
 def auroc_argsort_ranks(y_true: np.ndarray, score: np.ndarray) -> float:
-    """Mann-Whitney AUROC, O(n log n) (zvf_diagnostic_iter134: ``auroc``).
-
-    Ties are ranked by argsort order, not averaged.
-    """
-    order = np.argsort(score)
-    ranks = np.empty_like(order, dtype=float)
-    ranks[order] = np.arange(1, len(score) + 1)
-    pos = y_true == 1
-    n_pos = pos.sum()
-    n_neg = len(y_true) - n_pos
-    if n_pos == 0 or n_neg == 0:
-        return float("nan")
-    return float((ranks[pos].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
+    """Tie-corrected Mann-Whitney AUROC; legacy function name kept for callers."""
+    return auc_rank(y_true, score)
 
 
 def bootstrap_ci(
     y_true: np.ndarray, score: np.ndarray, rng: np.random.Generator, B: int = 2000
 ) -> tuple[float, float]:
     """zvf_diagnostic_iter134: 95% percentile CI of ``auroc_argsort_ranks`` over resamples."""
+    _validate_resamples(B)
+    _validate_paired_lengths(y_true, score)
     idx = np.arange(len(y_true))
     aucs = []
     for _ in range(B):

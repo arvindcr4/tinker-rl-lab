@@ -194,9 +194,6 @@ ignore = [
 # setattr constant; RUF100 grpo.py:1713 stale ``noqa: F811``).
 "platform_tinker/tinkerrl/grpo.py" = ["B010", "RUF100"]
 # TODO(2026-10-03): file has another session's uncommitted edits; fix
-# B007 (unused loop var ``seed`` at utils/stats.py:191,375) once it lands.
-"utils/stats.py" = ["B007"]
-# TODO(2026-10-03): file has another session's uncommitted edits; fix
 # B002 false positive (``-(-1.0)``, :370) and B023 (spy closure, :1299-1300).
 "tests/test_grpo_module.py" = ["B002", "B023"]
 # TODO(2026-10-03): file has another session's uncommitted edits; S110

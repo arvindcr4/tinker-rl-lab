@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List[float]]:
+def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List[dict]]:
     """
     Load results from multiple seeds for a given experiment.
 
@@ -35,7 +35,7 @@ def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List
         results/<experiment>/seed_<N>/metrics.jsonl
 
     Returns:
-        Dict mapping seed -> list of metric values over training steps.
+        Dict mapping seed -> list of metric records over training steps.
     """
     seed_results = {}
     pattern = os.path.join(results_dir, experiment, "seed_*", "*.jsonl")
@@ -134,12 +134,17 @@ def welch_ttest(scores_a: np.ndarray, scores_b: np.ndarray) -> dict:
     if not np.all(np.isfinite(scores_a)) or not np.all(np.isfinite(scores_b)):
         raise ValueError("welch_ttest requires finite scores")
 
-    t_stat, p_value = stats.ttest_ind(scores_a, scores_b, equal_var=False)
-    pooled = np.sqrt((np.var(scores_a) + np.var(scores_b)) / 2)
-    if pooled == 0:
-        # Zero pooled variance (constant inputs): no measurable effect.
-        effect_size = 0.0
+    constant_a = np.all(scores_a == scores_a[0])
+    constant_b = np.all(scores_b == scores_b[0])
+    if constant_a and constant_b:
+        # Avoid a 0/0 statistic for identical point masses. Distinct point
+        # masses have a signed infinite standardized effect, not zero effect.
+        difference = scores_a[0] - scores_b[0]
+        t_stat = effect_size = float(np.copysign(np.inf, difference)) if difference else 0.0
+        p_value = 0.0 if difference else 1.0
     else:
+        t_stat, p_value = stats.ttest_ind(scores_a, scores_b, equal_var=False)
+        pooled = np.sqrt((np.var(scores_a) + np.var(scores_b)) / 2)
         effect_size = (np.mean(scores_a) - np.mean(scores_b)) / pooled
 
     return {
@@ -171,7 +176,13 @@ def mann_whitney_u(scores_a: np.ndarray, scores_b: np.ndarray) -> dict:
     if scores_a.size == 0 or scores_b.size == 0:
         raise ValueError("mann_whitney_u requires at least one score per group")
 
-    u_stat, p_value = stats.mannwhitneyu(scores_a, scores_b, alternative="two-sided")
+    if not np.all(np.isfinite(scores_a)) or not np.all(np.isfinite(scores_b)):
+        raise ValueError("mann_whitney_u requires finite scores")
+    if np.all(scores_a == scores_a[0]) and np.all(scores_b == scores_a[0]):
+        # All ranks tie: every permutation has the same U statistic.
+        u_stat, p_value = scores_a.size * scores_b.size / 2, 1.0
+    else:
+        u_stat, p_value = stats.mannwhitneyu(scores_a, scores_b, alternative="two-sided")
 
     return {
         "u_statistic": float(u_stat),
@@ -204,7 +215,7 @@ def plot_learning_curves_with_ci(
     for idx, (algo_name, seed_data) in enumerate(results.items()):
         # Align all seeds to same number of steps
         all_curves = []
-        for seed, metrics_list in seed_data.items():
+        for metrics_list in seed_data.values():
             curve = [m.get(metric_key, 0) for m in metrics_list]
             all_curves.append(curve)
 
@@ -214,10 +225,10 @@ def plot_learning_curves_with_ci(
         min_len = min(len(c) for c in all_curves)
         if min_len == 0:
             raise ValueError(f"Empty curves for algorithm {algo_name!r}")
-        all_curves = np.array([c[:min_len] for c in all_curves])
+        aligned_curves = np.array([c[:min_len] for c in all_curves])
 
-        mean = np.mean(all_curves, axis=0)
-        se = standard_error(all_curves, axis=0)
+        mean = np.mean(aligned_curves, axis=0)
+        se = standard_error(aligned_curves, axis=0)
         steps = np.arange(1, min_len + 1)
 
         ax.plot(steps, mean, label=algo_name, color=colors[idx], linewidth=2)
@@ -380,7 +391,7 @@ def main():
 
         # Extract final scores for each seed
         final_scores = []
-        for seed, metrics_list in seed_results.items():
+        for metrics_list in seed_results.values():
             if metrics_list:
                 last_metric = metrics_list[-1]
                 score = last_metric.get(

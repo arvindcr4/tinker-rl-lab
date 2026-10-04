@@ -328,9 +328,33 @@ def run_arm(arm: str, seed: int, smoke: bool = False) -> dict:
 
 def _t_cdf(t, df):
     """Student-t CDF via the regularized incomplete beta (scipy-free)."""
+    if not math.isfinite(df) or df <= 0 or math.isnan(t):
+        raise ValueError("Student-t requires positive finite df and non-NaN t")
     if t == 0:
         return 0.5
-    x = df / (df + t * t)
+    if math.isinf(t):
+        return 1.0 if t > 0 else 0.0
+    # Compute df/(df+t*t) without overflowing t*t. Keep log(x) even
+    # when x underflows: for heavy tails the probability may still be finite.
+    log_ratio = math.log(abs(t)) - 0.5 * math.log(df)
+    if log_ratio > 0:
+        log_x = -2 * log_ratio - math.log1p(math.exp(-2 * log_ratio))
+        x = math.exp(log_x)
+    else:
+        x = 1 / (1 + (t / math.sqrt(df)) ** 2)
+    if x < 1e-100:
+        a = df / 2.0
+        # I_x(a, 1/2) = x**a / (a*B(a,1/2)) * (1 + O(x)).
+        # In this branch the omitted relative correction is below 1e-100.
+        log_tail = (math.lgamma(a + 0.5) - math.lgamma(a)
+                    - math.lgamma(0.5) - math.log(a) - math.log(2) + a * log_x)
+        tail = math.exp(log_tail)
+        return 1 - tail if t > 0 else tail
+    if x == 1:
+        # Near zero, squaring t loses the complement of x to rounding.
+        # The local linear expansion avoids log(0); cubic error is negligible.
+        density = math.exp(math.lgamma((df + 1) / 2) - math.lgamma(df / 2)) / math.sqrt(df * math.pi)
+        return 0.5 + t * density
     def betacf(a, b, x):
         qab, qap, qam = a + b, a + 1, a - 1
         c, d = 1.0, 1 - qab * x / qap
@@ -351,11 +375,28 @@ def _t_cdf(t, df):
 
 
 def _t_ppf(p, df):
-    lo, hi = -50.0, 50.0
+    if not 0 < p < 1 or not math.isfinite(df) or df <= 0:
+        raise ValueError("Student-t quantile requires 0 < p < 1 and positive finite df")
+    if p == 0.5:
+        return 0.0
+    # Invert the lower tail on both sides. Comparing an upper CDF near 1
+    # loses relative accuracy in the requested tail through subtraction.
+    q = min(p, 1 - p)
+    sign = -1.0 if p < 0.5 else 1.0
+    lo, hi = 0.0, 1.0
+    largest = float.fromhex("0x1.fffffffffffffp+1023")
+    while _t_cdf(-hi, df) > q:
+        lo = hi
+        if hi == largest:
+            # The mathematical quantile exceeds the finite float range.
+            return sign * float("inf")
+        hi = min(2 * hi, largest)
     for _ in range(200):
-        mid = (lo + hi) / 2
-        lo, hi = (mid, hi) if _t_cdf(mid, df) < p else (lo, mid)
-    return (lo + hi) / 2
+        mid = lo / 2 + hi / 2
+        if mid == lo or mid == hi:
+            break
+        lo, hi = (mid, hi) if _t_cdf(-mid, df) > q else (lo, mid)
+    return sign * (lo / 2 + hi / 2)
 
 
 def signflip_p(d):
@@ -370,15 +411,21 @@ def paired(a: dict, b: dict) -> dict:
     seeds = sorted(set(a) & set(b))
     d = [a[s] - b[s] for s in seeds]
     n = len(d)
-    md = sum(d) / n
+    if n < 2:
+        raise ValueError("paired requires at least two common seeds")
+    if not all(math.isfinite(x) for x in d):
+        raise ValueError("paired requires finite differences")
+    md = d[0] if all(x == d[0] for x in d) else math.fsum(d) / n
     sd = math.sqrt(sum((x - md) ** 2 for x in d) / (n - 1)) if n > 1 else float("nan")
     se = sd / math.sqrt(n)
     df = n - 1
-    t = md / se if se > 0 else float("inf")
-    p = 2 * (1 - _t_cdf(abs(t), df)) if se > 0 else 0.0
+    t = md / se if se > 0 else (math.copysign(float("inf"), md) if md else 0.0)
+    p = 2 * _t_cdf(-abs(t), df) if se > 0 else (0.0 if md else 1.0)
     tc = _t_ppf(0.975, df)
-    p_lo = 1 - _t_cdf((md + MARGIN) / se, df) if se > 0 else 0.0
-    p_hi = _t_cdf((md - MARGIN) / se, df) if se > 0 else 0.0
+    # Use one-sided limiting probabilities at zero SE. At the equivalence
+    # boundary the null is not rejected; outside it equivalence is false.
+    p_lo = _t_cdf(-(md + MARGIN) / se, df) if se > 0 else (0.0 if md > -MARGIN else 0.5 if md == -MARGIN else 1.0)
+    p_hi = _t_cdf((md - MARGIN) / se, df) if se > 0 else (0.0 if md < MARGIN else 0.5 if md == MARGIN else 1.0)
     return {"n_seeds": n, "seeds": seeds, "diffs": d, "mean_diff": md, "sd": sd,
             "ci95": [md - tc * se, md + tc * se], "t": t, "df": df, "p_two_sided": p,
             "signflip_p": signflip_p(d),

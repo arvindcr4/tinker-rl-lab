@@ -196,15 +196,12 @@ def test_signflip_all_zero_differences_is_one(n):
 def test_scipy_free_t_cdf_matches_scipy(t, df):
     from scipy import stats as sps
 
-    assume(abs(t) >= 1e-6)  # tiny |t| crashes; see the strict xfail below
     assert math.isclose(V2["_t_cdf"](t, df), float(sps.t.cdf(t, df)), abs_tol=1e-8)
 
 
 @FAST
 @given(st.floats(min_value=0.6, max_value=0.99), st.integers(min_value=1, max_value=60))
 def test_t_ppf_inverts_t_cdf(p, df):
-    # _t_ppf bisects on [-50, 50]: it saturates for df=1 beyond p ~ 0.9936.
-    # The runner only calls it at p=0.975 (t = 12.7 at df=1).
     assert math.isclose(V2["_t_cdf"](V2["_t_ppf"](p, df), df), p, abs_tol=1e-7)
 
 
@@ -221,29 +218,12 @@ def test_paired_p_in_unit_interval_and_ci_contains_mean(d):
     assert 0.0 <= out["tost_p"] <= 1.0
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason=(
-        "BUG (modal_samestack_gsm8k_cot_v2._t_cdf): for 0 < |t| < ~1e-8*sqrt(df), "
-        "x = df/(df+t*t) rounds to 1.0 and math.log(1 - x) raises 'math domain "
-        "error'. paired() hits it when float noise leaves mean_diff ~1e-18."
-    ),
-)
 def test_paired_float_noise_mean_does_not_crash():
     d = [0.078, 0.052, -0.086, 0.072, -0.043, -0.073]  # mean ~1.16e-18, not 0.0
     out = V2["paired"](dict(enumerate(d)), dict.fromkeys(range(len(d)), 0.0))
     assert out["p_two_sided"] == pytest.approx(1.0)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG (modal_samestack_gsm8k_cot_v2.paired): identical arms (all paired "
-        "differences 0, se == 0) report p_two_sided = 0.0, i.e. 'significant'. "
-        "Should be 1.0 (or NaN) when mean_diff == 0."
-    ),
-)
 def test_paired_identical_arms_is_not_significant():
     a = {s: 0.5 for s in range(5)}
     out = V2["paired"](a, dict(a))
@@ -335,7 +315,6 @@ def test_welch_p_range_and_swap_antisymmetry(a, b):
 @FAST
 @given(unit_scores, unit_scores)
 def test_mann_whitney_p_range_and_swap_symmetry(a, b):
-    assume(len(set(a) | set(b)) > 1)  # all-tied input -> NaN; see strict xfail below
     ab = stats.mann_whitney_u(a, b)
     ba = stats.mann_whitney_u(b, a)
     assert 0.0 <= ab["p_value"] <= 1.0
@@ -343,12 +322,103 @@ def test_mann_whitney_p_range_and_swap_symmetry(a, b):
     assert math.isclose(ab["u_statistic"] + ba["u_statistic"], len(a) * len(b))
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "GAP (utils.stats.mann_whitney_u): all-tied inputs return p_value=NaN "
-        "(scipy), unlike welch_ttest which guards constant inputs explicitly."
-    ),
-)
 def test_mann_whitney_all_tied_returns_finite_p():
     assert math.isfinite(stats.mann_whitney_u([0.5, 0.5], [0.5, 0.5])["p_value"])
+
+
+@pytest.mark.parametrize("t", [0.0, 1e-20, -1e-20, 1e-9, -1e-9, float("inf"), -float("inf"), 1e200])
+def test_t_cdf_rounding_and_infinite_boundaries(t):
+    from scipy.stats import t as student_t
+
+    assert V2["_t_cdf"](t, 5) == pytest.approx(student_t.cdf(t, 5), abs=1e-14)
+
+
+@pytest.mark.parametrize("p", [0.001, 0.999])
+def test_t_quantile_does_not_saturate_at_fifty(p):
+    from scipy.stats import t as student_t
+
+    assert V2["_t_ppf"](p, 1) == pytest.approx(student_t.ppf(p, 1), rel=1e-8)
+
+
+@pytest.mark.parametrize("delta", [-0.1, -0.02, 0.0, 0.02, 0.1])
+def test_constant_paired_difference_equivalence_limits(delta):
+    margin = V2["MARGIN"]
+    out = V2["paired"](dict.fromkeys(range(3), delta), dict.fromkeys(range(3), 0.0))
+    assert out["p_two_sided"] == (1.0 if delta == 0 else 0.0)
+    assert out["equivalent_at_margin"] == (abs(delta) < margin)
+    assert out["ci95"] == [delta, delta]
+    if delta:
+        assert math.copysign(1, out["t"]) == math.copysign(1, delta)
+
+
+@pytest.mark.parametrize("delta_sign", [-1, 1])
+def test_constant_paired_difference_at_equivalence_margin(delta_sign):
+    delta = delta_sign * V2["MARGIN"]
+    out = V2["paired"]({0: delta, 1: delta}, {0: 0.0, 1: 0.0})
+    assert out["tost_p"] == 0.5
+    assert not out["equivalent_at_margin"]
+
+
+@pytest.mark.parametrize(
+    ("a", "b"), [({}, {}), ({0: 1}, {1: 1}), ({0: 1}, {0: 1}), ({0: 1, 1: math.nan}, {0: 1, 1: 1})]
+)
+def test_paired_invalid_samples_raise(a, b):
+    with pytest.raises(ValueError, match="paired requires"):
+        V2["paired"](a, b)
+
+
+@pytest.mark.parametrize("invalid", [math.nan, math.inf, -math.inf])
+def test_mann_whitney_nonfinite_is_rejected(invalid):
+    with pytest.raises(ValueError, match="finite scores"):
+        stats.mann_whitney_u([invalid], [0.0])
+
+
+@pytest.mark.parametrize(("n", "m"), [(1, 1), (2, 3), (10, 20)])
+def test_mann_whitney_ties_have_midrank_u_and_unit_p(n, m):
+    out = stats.mann_whitney_u([0.1] * n, [0.1] * m)
+    assert out["u_statistic"] == n * m / 2
+    assert out["p_value"] == 1.0
+    assert not out["significant_at_005"]
+
+
+@pytest.mark.parametrize(("a", "b"), [(0.1, 0.1), (0.1, 0.2), (0.2, 0.1)])
+def test_welch_constant_arms_have_correct_null_and_effect(a, b):
+    out = stats.welch_ttest([a] * 3, [b] * 5)
+    assert out["p_value"] == (1.0 if a == b else 0.0)
+    assert out["significant_at_005"] == (a != b)
+    expected = math.copysign(math.inf, a - b) if a != b else 0.0
+    assert out["t_statistic"] == expected
+    assert out["effect_size_cohens_d"] == expected
+
+
+@pytest.mark.parametrize("df", [0, -1, math.nan, math.inf])
+def test_t_helpers_reject_invalid_degrees_of_freedom(df):
+    with pytest.raises(ValueError, match="positive finite df"):
+        V2["_t_cdf"](0.0, df)
+    with pytest.raises(ValueError, match="positive finite df"):
+        V2["_t_ppf"](0.975, df)
+
+
+@pytest.mark.parametrize("p", [0.0, 1.0, -0.1, 1.1, math.nan])
+def test_t_quantile_rejects_invalid_probability(p):
+    with pytest.raises(ValueError, match="0 < p < 1"):
+        V2["_t_ppf"](p, 5)
+
+
+@pytest.mark.parametrize("magnitude", [1e150, 1e160, 1e200, 1e300])
+def test_cauchy_extreme_tail_survives_squared_argument_overflow(magnitude):
+    expected = math.atan(1 / magnitude) / math.pi
+    assert V2["_t_cdf"](-magnitude, 1) == pytest.approx(expected, rel=2e-13, abs=0)
+
+
+@pytest.mark.parametrize("p", [1e-100, 1e-200, 1e-300, math.nextafter(1.0, 0.0)])
+def test_cauchy_extreme_quantile_matches_analytical_tail(p):
+    q = min(p, 1 - p)
+    expected = (1 if p > 0.5 else -1) / math.tan(math.pi * q)
+    result = V2["_t_ppf"](p, 1)
+    assert math.isfinite(result)
+    assert result == pytest.approx(expected, rel=3e-13)
+
+
+def test_unrepresentable_cauchy_quantile_terminates_with_infinity():
+    assert V2["_t_ppf"](math.nextafter(0.0, 1.0), 1) == -math.inf

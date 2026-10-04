@@ -1,0 +1,237 @@
+%=====================================================================
+% PES University --- M.Tech (Data Science and Machine Learning)
+% Project Phase-2 Report / Thesis
+% Tinker RL Lab --- Post-Training of Large Language Models
+% Author: Arvind C R (SRN )   Guide: Ramesh Prakash Guledgudd
+% Built with tectonic:  cd <dir> && tectonic thesis_master.tex
+%=====================================================================
+\documentclass[12pt,a4paper]{report}
+
+% ---- binding margin: extra room on the left (spine) side --------------
+\usepackage[a4paper,left=1.5in,right=1in,top=1in,bottom=1in]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{amsmath,amssymb}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext,newtxmath}   % Times, per PES front-page sample
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{calc}          % required by pandoc's table column-width arithmetic
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\usepackage{xcolor}
+\definecolor{pesmaroon}{RGB}{150,30,40}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+  pdftitle={Derived Public Revision - Tinker RL Lab: Post-Training of Large Language Models --- A multi-framework training harness and studies of GRPO signal starvation},
+  pdfauthor={Arvind C R},
+  pdfsubject={Derived public C1 coverage revision dated 2026-10-03 of M.Tech Project Phase-2 Report, PES University},
+  pdfkeywords={GRPO, RLVR, zero-variance fraction, reproducibility, telemetry, benchmark evaluation}
+}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,
+                decorations.pathreplacing,patterns,pgfplots.groupplots}
+
+% ---- shared tikz styles (identical to the ESA / Phase-1 figure set) ----
+\tikzset{
+  blk/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=blue!6,
+              minimum height=8mm, minimum width=20mm, align=center, font=\small},
+  io/.style={rectangle, rounded corners=6pt, draw=black!70, thick, fill=green!8,
+             minimum height=8mm, align=center, font=\small},
+  proc/.style={rectangle, draw=black!70, thick, fill=orange!10, minimum height=8mm,
+               align=center, font=\small},
+  dec/.style={diamond, aspect=2, draw=black!70, thick, fill=yellow!15, align=center,
+              font=\footnotesize},
+  warnbox/.style={rectangle, rounded corners=2pt, draw=red!60!black, thick, fill=red!7,
+                  minimum height=8mm, align=center, font=\small},
+  oklbox/.style={rectangle, rounded corners=2pt, draw=green!45!black, thick, fill=green!8,
+                 minimum height=8mm, align=center, font=\small},
+  ar/.style={-{Latex[length=2mm]}, thick},
+  arl/.style={-{Latex[length=2mm]}, thick, dashed, draw=black!55},
+  lbl/.style={font=\footnotesize\itshape, text=black!60},
+}
+\definecolor{good}{RGB}{34,139,34}
+\definecolor{bad}{RGB}{178,34,34}
+\definecolor{warn}{RGB}{218,165,32}
+\definecolor{pesblue}{RGB}{0,45,98}
+\definecolor{complete}{RGB}{30,125,79}
+\definecolor{partial}{RGB}{176,106,0}
+\definecolor{blocked}{RGB}{166,43,43}
+
+\newcommand{\zvf}{\mathrm{ZVF}}
+\renewcommand{\bibname}{References}
+
+\setlength{\parskip}{0.4em}
+\setlength{\parindent}{0pt}
+\setlength{\emergencystretch}{4em}
+
+%=====================================================================
+% ---- LONG UNBREAKABLE STRINGS: allow line breaks inside \texttt ----
+%=====================================================================
+% The corpus contains file paths, JSON fragments, model ids, W&B keys and
+% SHA-256 digests far wider than the text column and containing no spaces.
+% Measured on the 2026-09-25 build with pdftotext -bbox: 72 of 217 pages
+% (33%) carried ink past the right text margin at 523.3pt, worst case
+% 602pt on a 595pt-wide A4 page -- i.e. text physically off the paper.
+% Every offending token was an unbreakable \texttt path/hash/URI.
+%
+% Fix, verified in isolation (max ink 523.3pt vs 523.3pt limit, 0 overflow):
+%   * xurl     -- breaks \url{} and path-like strings at their delimiters
+%   * seqsplit -- breaks arbitrary long unbroken tokens (hashes, URIs) at
+%                 any character, via the \longtok wrapper
+% The \longtok/sub-token rewriting is applied automatically by a source-level
+% pass in build_thesis.py; short identifiers are left alone so ordinary words
+% such as logging-group-14 are NOT hyphenated mid-word (the [htt]hyphenat
+% option was tried and removed for exactly that reason).
+\usepackage{xurl}
+\usepackage{seqsplit}
+\DeclareRobustCommand{\longtok}[1]{\texttt{\seqsplit{#1}}}
+\tolerance=6000
+\hbadness=10000
+\vbadness=10000
+\sloppy
+
+% ---- pandoc compatibility -------------------------------------------
+% pandoc's LaTeX fragments reference macros that live in pandoc's own
+% default template, not in the fragment. Define them here.
+\providecommand{\real}[1]{#1}          % table column-width arithmetic
+\providecommand{\tightlist}{%          % compact lists
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\providecommand{\pandocbounded}[1]{#1} % image bounding wrapper
+\providecommand{\passthrough}[1]{#1}
+\newenvironment{Shaded}{}{}            % syntax-highlighted code block
+\newenvironment{Highlighting}{}{}
+
+% pandoc emits \XxxTok{...} for syntax-highlighted spans. Render each as
+% monospace with no colour so highlighted code compiles under any engine.
+\providecommand{\NormalTok}[1]{\texttt{#1}}
+\providecommand{\KeywordTok}[1]{\texttt{#1}}
+\providecommand{\DataTypeTok}[1]{\texttt{#1}}
+\providecommand{\DecValTok}[1]{\texttt{#1}}
+\providecommand{\BaseNTok}[1]{\texttt{#1}}
+\providecommand{\FloatTok}[1]{\texttt{#1}}
+\providecommand{\ConstantTok}[1]{\texttt{#1}}
+\providecommand{\CharTok}[1]{\texttt{#1}}
+\providecommand{\SpecialCharTok}[1]{\texttt{#1}}
+\providecommand{\StringTok}[1]{\texttt{#1}}
+\providecommand{\VerbatimStringTok}[1]{\texttt{#1}}
+\providecommand{\SpecialStringTok}[1]{\texttt{#1}}
+\providecommand{\ImportTok}[1]{\texttt{#1}}
+\providecommand{\CommentTok}[1]{\texttt{#1}}
+\providecommand{\DocumentationTok}[1]{\texttt{#1}}
+\providecommand{\AnnotationTok}[1]{\texttt{#1}}
+\providecommand{\CommentVarTok}[1]{\texttt{#1}}
+\providecommand{\OtherTok}[1]{\texttt{#1}}
+\providecommand{\FunctionTok}[1]{\texttt{#1}}
+\providecommand{\VariableTok}[1]{\texttt{#1}}
+\providecommand{\ControlFlowTok}[1]{\texttt{#1}}
+\providecommand{\OperatorTok}[1]{\texttt{#1}}
+\providecommand{\BuiltInTok}[1]{\texttt{#1}}
+\providecommand{\ExtensionTok}[1]{\texttt{#1}}
+\providecommand{\PreprocessorTok}[1]{\texttt{#1}}
+\providecommand{\AttributeTok}[1]{\texttt{#1}}
+\providecommand{\RegionMarkerTok}[1]{\texttt{#1}}
+\providecommand{\InformationTok}[1]{\texttt{#1}}
+\providecommand{\WarningTok}[1]{\texttt{#1}}
+\providecommand{\AlertTok}[1]{\texttt{#1}}
+\providecommand{\ErrorTok}[1]{\texttt{#1}}
+
+% ---- unicode glyphs absent from Latin Modern ----
+\usepackage{newunicodechar}
+\newunicodechar{§}{\S}
+\newunicodechar{−}{\ensuremath{-}}
+\newunicodechar{…}{\ldots{}}
+\newunicodechar{‖}{\ensuremath{\Vert}}
+\newunicodechar{†}{\ensuremath{\dagger}}
+\newunicodechar{—}{\textnormal{\textemdash}}
+\newunicodechar{∈}{\ensuremath{\in}}
+\newunicodechar{∉}{\ensuremath{\notin}}
+\newunicodechar{≤}{\ensuremath{\leq}}
+\newunicodechar{≥}{\ensuremath{\geq}}
+\newunicodechar{≠}{\ensuremath{\neq}}
+\newunicodechar{≈}{\ensuremath{\approx}}
+\newunicodechar{±}{\ensuremath{\pm}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{←}{\ensuremath{\leftarrow}}
+\newunicodechar{⁻}{\ensuremath{^{-}}}
+\newunicodechar{⁰}{\ensuremath{^{0}}}
+\newunicodechar{¹}{\ensuremath{^{1}}}
+\newunicodechar{²}{\ensuremath{^{2}}}
+\newunicodechar{³}{\ensuremath{^{3}}}
+\newunicodechar{⁴}{\ensuremath{^{4}}}
+\newunicodechar{⁵}{\ensuremath{^{5}}}
+\newunicodechar{⁶}{\ensuremath{^{6}}}
+\newunicodechar{⁷}{\ensuremath{^{7}}}
+\newunicodechar{⁸}{\ensuremath{^{8}}}
+\newunicodechar{⁹}{\ensuremath{^{9}}}
+\newunicodechar{₀}{\ensuremath{_{0}}}
+\newunicodechar{₁}{\ensuremath{_{1}}}
+\newunicodechar{₂}{\ensuremath{_{2}}}
+\newunicodechar{₃}{\ensuremath{_{3}}}
+\newunicodechar{σ}{\ensuremath{\sigma}}
+\newunicodechar{π}{\ensuremath{\pi}}
+\newunicodechar{θ}{\ensuremath{\theta}}
+\newunicodechar{Δ}{\ensuremath{\Delta}}
+\newunicodechar{μ}{\ensuremath{\mu}}
+\newunicodechar{α}{\ensuremath{\alpha}}
+\newunicodechar{β}{\ensuremath{\beta}}
+\newunicodechar{₈}{\ensuremath{_{8}}}
+\newunicodechar{₄}{\ensuremath{_{4}}}
+\newunicodechar{₅}{\ensuremath{_{5}}}
+\newunicodechar{₆}{\ensuremath{_{6}}}
+\newunicodechar{₇}{\ensuremath{_{7}}}
+\newunicodechar{₉}{\ensuremath{_{9}}}
+\newunicodechar{↔}{\ensuremath{\leftrightarrow}}
+\newunicodechar{∇}{\ensuremath{\nabla}}
+\newunicodechar{≳}{\ensuremath{\gtrsim}}
+\newunicodechar{≲}{\ensuremath{\lesssim}}
+\newunicodechar{⌊}{\ensuremath{\lfloor}}
+\newunicodechar{⌋}{\ensuremath{\rfloor}}
+\newunicodechar{⌈}{\ensuremath{\lceil}}
+\newunicodechar{⌉}{\ensuremath{\rceil}}
+\newunicodechar{⇒}{\ensuremath{\Rightarrow}}
+\newunicodechar{∝}{\ensuremath{\propto}}
+\newunicodechar{∂}{\ensuremath{\partial}}
+\newunicodechar{∅}{\ensuremath{\emptyset}}
+\newunicodechar{γ}{\ensuremath{\gamma}}
+\newunicodechar{δ}{\ensuremath{\delta}}
+\newunicodechar{ε}{\ensuremath{\varepsilon}}
+\newunicodechar{η}{\ensuremath{\eta}}
+\newunicodechar{κ}{\ensuremath{\kappa}}
+\newunicodechar{λ}{\ensuremath{\lambda}}
+\newunicodechar{ρ}{\ensuremath{\rho}}
+\newunicodechar{τ}{\ensuremath{\tau}}
+\newunicodechar{φ}{\ensuremath{\phi}}
+\newunicodechar{ω}{\ensuremath{\omega}}
+\newunicodechar{ν}{\ensuremath{\nu}}
+\newunicodechar{χ}{\ensuremath{\chi}}
+\newunicodechar{ψ}{\ensuremath{\psi}}
+\newunicodechar{ξ}{\ensuremath{\xi}}
+\newunicodechar{ζ}{\ensuremath{\zeta}}
+\newunicodechar{ι}{\ensuremath{\iota}}
+\newunicodechar{Σ}{\ensuremath{\Sigma}}
+\newunicodechar{Ω}{\ensuremath{\Omega}}
+\newunicodechar{Λ}{\ensuremath{\Lambda}}
+\newunicodechar{Φ}{\ensuremath{\Phi}}
+\newunicodechar{Γ}{\ensuremath{\Gamma}}
+\newunicodechar{√}{\ensuremath{\surd}}
+\newunicodechar{∞}{\ensuremath{\infty}}
+\newunicodechar{∑}{\ensuremath{\sum}}
+\newunicodechar{≪}{\ensuremath{\ll}}
+\newunicodechar{≫}{\ensuremath{\gg}}
+
+% ---- figure inclusion helper: \fig{name}{caption}{label} ----
+\newcommand{\fig}[3]{%
+  \begin{figure}[htbp]\centering
+  \includegraphics[width=0.94\linewidth]{figures/#1.pdf}%
+  \caption{#2}\label{#3}%
+  \end{figure}}
+
+\begin{document}
+\hypersetup{pageanchor=false}

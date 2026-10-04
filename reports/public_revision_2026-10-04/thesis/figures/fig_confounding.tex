@@ -1,0 +1,182 @@
+\documentclass[border=6pt]{standalone}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,decorations.pathreplacing,patterns}
+\usetikzlibrary{pgfplots.groupplots}
+\tikzset{
+  blk/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=blue!6,
+              minimum height=8mm, minimum width=20mm, align=center, font=\small},
+  io/.style={rectangle, rounded corners=6pt, draw=black!70, thick, fill=green!8,
+             minimum height=8mm, align=center, font=\small},
+  proc/.style={rectangle, draw=black!70, thick, fill=orange!10, minimum height=8mm,
+               align=center, font=\small},
+  dec/.style={diamond, aspect=2, draw=black!70, thick, fill=yellow!15, align=center, font=\footnotesize},
+  warnbox/.style={rectangle, rounded corners=2pt, draw=red!60!black, thick, fill=red!7,
+                  minimum height=8mm, align=center, font=\small},
+  oklbox/.style={rectangle, rounded corners=2pt, draw=green!45!black, thick, fill=green!8,
+                 minimum height=8mm, align=center, font=\small},
+  ar/.style={-{Latex[length=2mm]}, thick},
+  arl/.style={-{Latex[length=2mm]}, thick, dashed, draw=black!55},
+  lbl/.style={font=\footnotesize\itshape, text=black!60},
+}
+\definecolor{good}{RGB}{34,139,34}
+\definecolor{bad}{RGB}{178,34,34}
+\definecolor{warn}{RGB}{218,165,32}
+\definecolor{pesblue}{RGB}{0,45,98}
+\definecolor{complete}{RGB}{30,125,79}
+\definecolor{partial}{RGB}{176,106,0}
+\definecolor{blocked}{RGB}{166,43,43}
+\begin{document}
+\begin{tikzpicture}[x=1cm,y=1cm,
+  panel/.style={draw=black!55, thick, rounded corners=3pt, fill=black!2},
+  pnlw/.style={draw=warn!70!black, thick, rounded corners=3pt, fill=warn!4},
+  ptitle/.style={font=\small\bfseries, text=pesblue, align=center, inner sep=1pt},
+  psub/.style={font=\footnotesize\itshape, text=black!60, align=center, inner sep=1pt},
+  hl/.style={rectangle, rounded corners=2pt, draw=pesblue, very thick, fill=pesblue!8,
+             align=center, inner sep=4pt},
+  plate/.style={rectangle, draw=black!45, thick, fill=white, text width=7.20cm,
+                minimum height=0.50cm, align=left, font=\footnotesize, inner sep=2.5pt},
+  nte/.style={font=\footnotesize, align=left, inner sep=2pt},
+  vlab/.style={font=\footnotesize, text=black!75, anchor=east, inner sep=1pt},
+  vval/.style={font=\footnotesize\bfseries, anchor=west, inner sep=1pt, fill=white},
+  tagm/.style={rectangle, rounded corners=1pt, draw=complete!75, thick, fill=complete!10,
+               font=\footnotesize, inner sep=2pt, align=center, text width=1.55cm},
+  tagx/.style={rectangle, rounded corners=1pt, draw=black!50, thick, fill=black!6,
+               font=\footnotesize, inner sep=2pt, align=center, text width=1.55cm},
+]
+% =======================================================================
+% PANEL A -- one reported number over a hidden stack   x in [-8.4,-0.2]
+% =======================================================================
+\draw[panel] (-8.4,4.00) rectangle (-0.2,-5.25);
+\node[ptitle] at (-4.3,3.70) {One reported number, a hidden stack};
+\node[hl, text width=7.20cm] (HEAD) at (-4.3,2.62)
+  {{\small\bfseries What gets published}\\[2pt]
+   {\small ``GRPO reaches \textbf{0.856} on GSM8K''}\\[2pt]
+   {\footnotesize\itshape label $=$ the algorithm; everything below is unstated}};
+\draw[arl] (-7.70,1.72) -- (-7.70,1.14);
+\draw[blocked, very thick] (-7.94,1.66) -- (-7.46,1.18);
+\draw[blocked, very thick] (-7.94,1.18) -- (-7.46,1.66);
+\node[nte, text width=6.50cm, anchor=west] at (-7.30,1.42)
+  {no attribution path: the number is a property of the stack, not of the label};
+\node[plate] (P1) at (-4.3, 0.62) {library / framework\hfill\textit{Tinker, TRL, veRL, OpenRLHF}};
+\node[plate] (P2) at (-4.3, 0.06) {back-end \& hardware\hfill\textit{managed API, H100, CPU}};
+\node[plate] (P3) at (-4.3,-0.50) {base checkpoint\hfill\textit{Qwen2.5-0.5B to Qwen3.6-35B}};
+\node[plate] (P4) at (-4.3,-1.06) {decoding parameters\hfill\textit{temperature, top-$p$, max tokens}};
+\node[plate] (P5) at (-4.3,-1.62) {group size $G$\hfill\textit{2, 8, 16, 64}};
+\node[plate] (P6) at (-4.3,-2.18) {dataset and split\hfill\textit{gsm8k-500, held-out suites}};
+\node[plate] (P7) at (-4.3,-2.74) {seed\hfill\textit{42, 123, 456, 789, 1024}};
+\node[plate] (P8) at (-4.3,-3.30) {reward shaping\hfill\textit{verifier, KL coef., length norm.}};
+\node[plate] (P9) at (-4.3,-3.86) {advantage normalisation\hfill\textit{group vs.\ batch}};
+\node[lbl, text width=7.40cm, align=center] at (-4.3,-4.55)
+  {nine factors, each set per run, all routinely absent from the report};
+\begin{scope}[on background layer]
+  \node[pnlw, fit=(HEAD)(P1)(P9)] {};
+\end{scope}
+
+% =======================================================================
+% PANEL B -- one nominal config, two measured stacks   x in [0.2,8.4]
+% =======================================================================
+\draw[panel] (0.2,4.00) rectangle (8.4,-5.25);
+\node[ptitle] at (4.3,3.70) {One nominal config, two measured stacks};
+\node[psub, text width=7.70cm] at (4.3,3.20)
+  {Qwen3-8B $\cdot$ GRPO $\cdot$ seed 42 $\cdot$ $G{=}8$ $\cdot$ lr $10^{-5}$ $\cdot$ gsm8k-500 $\cdot$ 30 steps};
+\node[font=\footnotesize, text=black!60, anchor=west] at (0.40,2.72)
+  {bars: last-10 mean training reward, axis $0$--$1$};
+
+\foreach \yy in {2.15,1.60,1.05,0.50} \draw[black!20] (2.10,\yy) -- (5.40,\yy);
+\draw[black!45] (2.10,2.36) -- (2.10,0.29);
+
+\node[vlab] at (2.00,2.15) {Tinker API};
+\filldraw[fill=complete!22, draw=complete!75, thick] (2.10,1.97) rectangle (4.92,2.33);
+\node[vval] at (5.00,2.15) {0.856};
+\node[tagm] at (7.40,2.15) {measured};
+
+\node[vlab] at (2.00,1.60) {TRL};
+\filldraw[fill=complete!22, draw=complete!75, thick] (2.10,1.42) rectangle (2.27,1.78);
+\node[vval] at (2.35,1.60) {0.050};
+\node[tagm] at (7.40,1.60) {measured};
+
+\node[vlab] at (2.00,1.05) {veRL};
+\node[font=\footnotesize\itshape, text=black!55, anchor=west, fill=black!2, inner sep=1pt] at (2.15,1.05) {no measurement};
+\node[tagx] at (7.40,1.05) {not run};
+
+\node[vlab] at (2.00,0.50) {OpenRLHF};
+\node[font=\footnotesize\itshape, text=black!55, anchor=west, fill=black!2, inner sep=1pt] at (2.15,0.50) {no measurement};
+\node[tagx] at (7.40,0.50) {not run};
+
+\node[nte, text width=7.70cm, anchor=north west] at (0.40,0.18)
+  {The two measured rows sit $17\times$ apart ($0.856$ vs.\ $0.050$) on a nominally
+   identical configuration. veRL and OpenRLHF were not installed in the sandbox, so
+   no value is shown for them.};
+
+\draw[black!30] (0.40,-1.20) -- (8.20,-1.20);
+\node[font=\small\bfseries, text=black!75] at (4.3,-1.48) {And the label alone does not fix the run};
+\node[nte, text width=7.70cm, anchor=north west] at (0.40,-1.72)
+  {``DAPO'' on an open Colab trainer whose dynamic sampling filters zero-variance
+   groups: mean ZVF \textbf{0.00}. ``DAPO'' on a closed managed stack where only an
+   asymmetric-clip surrogate is settable: mean ZVF \textbf{0.58}. Same label,
+   opposite telemetry.};
+
+\draw[black!30] (0.40,-3.52) -- (8.20,-3.52);
+\node[nte, text width=7.70cm, anchor=north west] at (0.40,-3.68)
+  {\textbf{And the same run gets two answers.} The Qwen PPO last-10 GSM8K figure is
+   \textbf{22.5\%} in the primary results ledger and \textbf{35.0\%} in the statistical
+   summary of the same campaign.};
+
+% =======================================================================
+% PANEL C -- variance decomposition
+% =======================================================================
+\draw[panel] (-8.4,-5.65) rectangle (-0.2,-10.50);
+\node[ptitle] at (-4.3,-5.95) {How much moves with the stack};
+\node[psub, text width=7.70cm] at (-4.3,-6.45)
+  {$\eta^2$ over 42 reported experiments (one-way, per factor)};
+
+\foreach \yy in {-6.95,-7.45,-7.95,-8.45} \draw[black!20] (-5.20,\yy) -- (-1.60,\yy);
+\draw[black!45] (-5.20,-6.73) -- (-5.20,-8.67);
+
+\node[vlab] at (-5.30,-6.95) {framework / library};
+\filldraw[fill=pesblue!35, draw=pesblue, thick] (-5.20,-7.12) rectangle (-3.23,-6.78);
+\node[vval] at (-3.15,-6.95) {0.546};
+\node[vlab] at (-5.30,-7.45) {training algorithm};
+\filldraw[fill=pesblue!35, draw=pesblue, thick] (-5.20,-7.62) rectangle (-3.19,-7.28);
+\node[vval] at (-3.11,-7.45) {0.558};
+\node[vlab] at (-5.30,-7.95) {model family};
+\filldraw[fill=pesblue!35, draw=pesblue, thick] (-5.20,-8.12) rectangle (-3.50,-7.78);
+\node[vval] at (-3.42,-7.95) {0.471};
+\node[vlab] at (-5.30,-8.45) {model scale};
+\filldraw[fill=pesblue!35, draw=pesblue, thick] (-5.20,-8.62) rectangle (-4.04,-8.28);
+\node[vval] at (-3.96,-8.45) {0.322};
+
+\draw[thick] (-5.20,-8.82) -- (-1.60,-8.82);
+\foreach \vv/\xx in {0/-5.20, 0.25/-4.30, 0.50/-3.40, 0.75/-2.50, 1.00/-1.60}{
+  \draw[thick] (\xx,-8.78) -- (\xx,-8.86);
+  \node[font=\footnotesize, text=black!65] at (\xx,-9.06) {\vv};
+}
+\node[font=\footnotesize, text=black!65, anchor=west] at (-1.52,-8.82) {$\eta^2$};
+\node[nte, text width=7.70cm, anchor=north west] at (-8.20,-9.40)
+  {\textcolor{blocked}{\textbf{Shares are confounded with one another: do not sum}} (they total 1.90). They say how much moves with the stack, not why.};
+
+% =======================================================================
+% PANEL D -- same contrast, opposite answer
+% =======================================================================
+% d axis: x = 2.24 + 0.32 d   (d in [-2,18] -> x in [1.60,8.00])
+\draw[panel] (0.2,-5.65) rectangle (8.4,-10.50);
+\node[ptitle] at (4.3,-5.95) {Same contrast, opposite answer};
+\node[psub, text width=7.70cm] at (4.3,-6.45)
+  {PPO vs.\ GRPO, one run per arm per family; descriptive only, no inferential statistic};
+
+\node[nte, text width=7.70cm, anchor=north west] at (0.40,-6.75)
+  {\textbf{Qwen3-8B (provenance conflict)}: the historical Welch $p{=}0.76$ is over the last ten
+   autocorrelated steps of one run per arm; the methods note marks the row
+   \emph{not estimable}, so no effect size is drawn. The arms also ran on
+   different back-ends (GRPO managed, PPO on Modal H100).};
+\node[nte, text width=7.70cm, anchor=north west] at (0.40,-8.70)
+  {\textbf{Llama-3.1-8B-Instruct}: the same table reports the contrast in the
+   opposite direction, again from one run per arm.};
+\node[nte, text width=7.70cm, anchor=north west] at (0.40,-9.85)
+  {The direction is not stable across model families, and neither row
+   supports an algorithm claim.};
+
+\end{tikzpicture}
+\end{document}

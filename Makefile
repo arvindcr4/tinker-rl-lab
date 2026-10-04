@@ -7,7 +7,7 @@ GRPO_PATHS := platform_tinker/tinkerrl platform_tinker/grpo_100_math.py platform
 SUBMISSION_PATHS := platform_modal/scripts/build_university_submission.py
 RUFF_PATHS := $(SUBMISSION_PATHS) platform_local/unified platform_local/trl_integrations $(GRPO_PATHS) platform_hybrid/registry/provenance/minreport.py $(AUDIT_PATHS) $(FIGURE_PATHS) utils tests tools
 
-.PHONY: bootstrap check lint lint-ruff format format-check typecheck test coverage package lock-check secrets secrets-history docs-check submission submission-check public-check
+.PHONY: bootstrap check lint lint-ruff format format-check typecheck test coverage package lock-check secrets secrets-history docs-check submission submission-check public-check review-check
 
 bootstrap:
 	$(UV) sync --locked --extra dev
@@ -76,6 +76,11 @@ submission-check:
 # The unittest suite runs both checkers and both CLIs against the real repository.
 public-check:
 	$(PYTHON) -B -m unittest discover -s tests -p 'test_public*.py' -v
+
+# Separate publication-review gate: a frozen inventory match is not proof that
+# the quality receipt reviews the current PDF. Existing stale receipts fail.
+review-check:
+	$(PYTHON) -B tools/check_public_quality_receipt.py
 
 docs-check:
 	@test -f PUBLIC_RESEARCH_CHECKS.md

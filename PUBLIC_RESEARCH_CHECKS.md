@@ -42,6 +42,14 @@ The dedicated `public-research` CI job runs the same command on Python 3.11,
 3.12 and 3.13. The normal non-LaTeX test suite also discovers these regressions.
 A local pass does not imply that hosted CI has run or passed.
 
+Run `make review-check PYTHON=python3` separately before claiming the current PDF
+has a matching completed review receipt. This binds the explicitly selected PDF
+to the receipt's filename, size and SHA-256 and checks its recorded review status.
+It does not independently review page layout, science, privacy or reviewer identity.
+The frozen October 3 quality receipt describes an older PDF and currently fails
+this gate. Preserve that historical record; a fresh review must issue a truthful
+receipt for the actual final PDF. Do not change hashes merely to pass the gate.
+
 For a native PDF rebuild into new output files, use the separate
 [safe public-document rebuild wrapper](BUILD_PUBLIC_RESEARCH.md). It preserves
 the reviewed snapshot and requires a compatible existing TeX toolchain/cache.

@@ -1,6 +1,12 @@
 {
   "schema_version": "thesis-number-provenance-v1",
-  "status": "PASS",
+  "status": "INCOMPLETE",
+  "token_counts": {
+    "PASS": 789,
+    "ARTIFACT_MISSING": 120,
+    "CONTEXT": 22,
+    "UNBOUND": 6
+  },
   "scope": "Printed values in the results chapters versus local artifacts; no model, scorer or provider run.",
   "groups": [
     {
@@ -153,72 +159,62 @@
       "artifacts": [
         {
           "path": "outputs/PES_Phase2_Third_Review_2026-09-24/thesis_review_2026-09-27/stats_followup/m18_mantel_summary.json",
-          "sha256": "9635c13e719910178f8ee5a8d7cb30e16119abb3fc901bd72673848755d93aa1"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "+0.44",
           "in_chapter": true,
-          "recomputed": 0.4358,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "+0.39",
           "in_chapter": true,
-          "recomputed": 0.3859,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "+0.28",
           "in_chapter": true,
-          "recomputed": 0.275,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "4,753",
           "in_chapter": true,
-          "recomputed": "4,753",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "9,999",
           "in_chapter": true,
-          "recomputed": "9,999",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "+0.47",
           "in_chapter": true,
-          "recomputed": 0.4692,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "+0.43",
           "in_chapter": true,
-          "recomputed": 0.4301,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "+0.32",
           "in_chapter": true,
-          "recomputed": 0.3246,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "+0.407",
           "in_chapter": true,
-          "recomputed": 0.4073,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "+0.336",
           "in_chapter": true,
-          "recomputed": 0.3361,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "§7.2 registry stress test",
@@ -358,96 +354,82 @@
       "artifacts": [
         {
           "path": "outputs/PES_Phase2_Third_Review_2026-09-24/thesis_review_2026-09-27/stats_followup/m16_summary.json",
-          "sha256": "7bb9942129db5c81008d700f1b0be777fb7d39ffa8fa81e31ba2ef1e444dda88"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "−0.014",
           "in_chapter": true,
-          "recomputed": -0.014060999999999999,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "−0.023",
           "in_chapter": true,
-          "recomputed": -0.0234,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "−0.005",
           "in_chapter": true,
-          "recomputed": -0.0055,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "−0.020",
           "in_chapter": true,
-          "recomputed": -0.019531,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "−0.032",
           "in_chapter": true,
-          "recomputed": -0.032,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "−0.008",
           "in_chapter": true,
-          "recomputed": -0.0078,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "+0.016",
           "in_chapter": true,
-          "recomputed": 0.016406,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "−0.007",
           "in_chapter": true,
-          "recomputed": -0.007,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "+0.040",
           "in_chapter": true,
-          "recomputed": 0.0398,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "p = 0.047",
           "in_chapter": true,
-          "recomputed": "p = 0.046875",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "0.047",
           "in_chapter": true,
-          "recomputed": 0.046875,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "0.23",
           "in_chapter": true,
-          "recomputed": 0.23046875,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "p = 0.20",
           "in_chapter": true,
-          "recomputed": "p = 0.202440",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "160",
           "in_chapter": true,
-          "recomputed": 160,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "§7.1 Bernoulli null vs ZVF",
@@ -823,7 +805,7 @@
       "method": "R",
       "artifacts": [
         {
-          "path": "reports/public_revision_2026-10-04/thesis/c1_case_ledger.csv",
+          "path": "reports/public_revision_2026-10-03/thesis/c1_case_ledger.csv",
           "sha256": "70f48e55a442eb827eaa4f1b0f20648b3e9bb9364501a0e4bf5c2c14dea89128"
         }
       ],
@@ -879,7 +861,7 @@
       "method": "R",
       "artifacts": [
         {
-          "path": "reports/public_revision_2026-10-04/thesis/c1_case_ledger.csv",
+          "path": "reports/public_revision_2026-10-03/thesis/c1_case_ledger.csv",
           "sha256": "70f48e55a442eb827eaa4f1b0f20648b3e9bb9364501a0e4bf5c2c14dea89128"
         }
       ],
@@ -945,28 +927,26 @@
       "artifacts": [
         {
           "path": "checkpoints/grpo/pavlov_portfolio_api_swegym_qwen36_20260809_seed809.json",
-          "sha256": "139e7d36ae21765269876c39ca90122be894954a98d8ab889879d78e3bc581ef"
+          "sha256": null
         },
         {
           "path": "wandb/[withheld actor-training run]/files/wandb-summary.json",
-          "sha256": "98ec70a6a268596c57ec1295c697db06f72f38d3ab70149725800de4a81e9c0d"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "mean 0.025 over the first 5 steps and 0.2425 over the last 10; reward zero on 22 of 40 steps; loss zero on 35 of 40 steps",
           "in_chapter": true,
-          "recomputed": "mean 0.025000 over the first 5 steps and 0.242500 over the last 10; reward zero on 22 of 40 steps; loss zero on 35 of 40 steps",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "started 2026-08-09; runtime 1,934 s",
           "in_chapter": true,
-          "recomputed": "started 2026-08-09; runtime 1,934 s",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "Table 8.2 E1/E8/E11/E14",
@@ -975,90 +955,79 @@
       "artifacts": [
         {
           "path": "outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/receipt.json",
-          "sha256": "358ed237beb1cc0ecbaaf1975dcd5afc6460bf197e9ff2c2e91c2e533adbb4d4"
+          "sha256": null
         },
         {
           "path": "outputs/public_portfolio_2026-09-05/labbench_final_diagnostics.json",
-          "sha256": "7d7d0bd47162534212f7526db548e1f5d42bbe16554bc2e29115f0d9cf5af941"
+          "sha256": null
         },
         {
           "path": "outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json",
-          "sha256": "35a3d2f3072a9d834983496b3a5570a277ee939276be04fd8413688fc3139197"
+          "sha256": null
         },
         {
           "path": "outputs/public_portfolio_2026-09-05/native_finish_v5/e14_official_collector/official_result01/native_dispositions.jsonl",
-          "sha256": "85478b0f7e61d3db25addbde0137796a5de22691e51ad1f8764aa1bebea651ae"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "476 Tinker",
           "in_chapter": true,
-          "recomputed": "476 Tinker",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "255 Modal",
           "in_chapter": true,
-          "recomputed": "255 Modal",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "14 generation failures",
           "in_chapter": true,
-          "recomputed": "14 generation failures",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "4 artefacts lost",
           "in_chapter": true,
-          "recomputed": "4 artefacts lost",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "1,259/1,967 unparsed (64.0%)",
           "in_chapter": true,
-          "recomputed": "1,259/1,967 unparsed (64.006101%)",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "1,086/1,967 length-truncated (55.2%)",
           "in_chapter": true,
-          "recomputed": "1,086/1,967 length-truncated (55.210981%)",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "150/312 extraction failures (48.1%)",
           "in_chapter": true,
-          "recomputed": "150/312 extraction failures (48.076923%)",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "1,002 of 1,024",
           "in_chapter": true,
-          "recomputed": "1,002 of 1,024",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "2,982/4,428 responses at the 2,048-token cap (67.3%)",
           "in_chapter": true,
-          "recomputed": "2,982/4,428 responses at the 2,048-token cap (67.344173%)",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "34.5%",
           "in_chapter": true,
-          "recomputed": 34.5,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "85.9%",
           "in_chapter": true,
-          "recomputed": 85.9,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "Table 8.2 finish and cap counts",
@@ -1067,50 +1036,47 @@
       "artifacts": [
         {
           "path": "outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/*/generation.json",
-          "sha256": "d5cf4012edca50c24bd17515515659e345379c24878aaae00b4d80dcc4e06cf1"
+          "sha256": null
         },
         {
           "path": "outputs/public_portfolio_2026-09-05/agentdojo_fast02_journals/result/native_driver_responses.jsonl",
-          "sha256": "82af40a57fcc3455af92045e2b1a801fa0babd90675749c41ea91741b5c2360d"
+          "sha256": null
         },
         {
           "path": "outputs/public_portfolio_2026-09-05/agentdojo_fast02_journals/dispatch_result.json",
-          "sha256": "f3d2fdd1df6100e2b64717850d978b024a49f20401bac3334a824cb8920956a4"
+          "sha256": null
         },
         {
           "path": "outputs/public_portfolio_2026-09-05/agentdojo_continuation01_journals/result/native_driver_responses.jsonl",
-          "sha256": "041dcd345e55cf1119585e3c313ba9a9a502721e1645cfa9c08fb627dbddf4ea"
+          "sha256": null
         },
         {
           "path": "outputs/public_portfolio_2026-09-05/agentdojo_continuation01_journals/result/responses.jsonl",
-          "sha256": "c4ebdc2047e4868d4cc50b0118dbee0c32b7e7585ed7abb6c80abd1665c11455"
+          "sha256": null
         },
         {
           "path": "outputs/PES_Phase2_Review_2026-09-12/finish/e13_control/E13-native-20260912-01/out/native/journal/episodes/*/turn-*/attempt-*/response.raw",
-          "sha256": "81c2f1967e224e412fe72ed0f719845a86a4cd1430bba8da8cddd103ec757c72"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "40/476 Tinker and 22/255 vLLM",
           "in_chapter": true,
-          "recomputed": "40/476 Tinker and 22/255 vLLM",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "1 length finish in 418 recorded response bodies (407 main run, 11 continuation)",
           "in_chapter": true,
-          "recomputed": "1 length finish in 418 recorded response bodies (407 main run, 11 continuation)",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "73 length finishes against 189 stop finishes in 262 recorded responses",
           "in_chapter": true,
-          "recomputed": "73 length finishes against 189 stop finishes in 262 recorded responses",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "§8.2 E8 LAB-Bench",
@@ -1119,42 +1085,37 @@
       "artifacts": [
         {
           "path": "outputs/public_portfolio_2026-09-05/labbench_final_diagnostics.json",
-          "sha256": "7d7d0bd47162534212f7526db548e1f5d42bbe16554bc2e29115f0d9cf5af941"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "450/1967 = 0.2288",
           "in_chapter": true,
-          "recomputed": "450/1967 = 0.228775",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "[0.211, 0.248]",
           "in_chapter": true,
-          "recomputed": "[0.210751, 0.247856]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "450/708 = 0.636",
           "in_chapter": true,
-          "recomputed": "450/708 = 0.635593",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "[0.600, 0.670]",
           "in_chapter": true,
-          "recomputed": "[0.599500, 0.670223]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "1,517",
           "in_chapter": true,
-          "recomputed": "1,517",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "§8.2 E10 AgentDojo",
@@ -1163,24 +1124,22 @@
       "artifacts": [
         {
           "path": "outputs/public_portfolio_2026-09-05/agentdojo_native_receipt.json",
-          "sha256": "a40c90015200a389ce0767b14a78f9409330a0ae8615cb4822ef9b54656ebaa0"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "88/97 = 0.9072",
           "in_chapter": true,
-          "recomputed": "88/97 = 0.907216",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "[0.833, 0.950]",
           "in_chapter": true,
-          "recomputed": "[0.832991, 0.950417]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "§8.2 E11 cluster bootstrap",
@@ -1189,7 +1148,7 @@
       "artifacts": [
         {
           "path": "outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json",
-          "sha256": "35a3d2f3072a9d834983496b3a5570a277ee939276be04fd8413688fc3139197"
+          "sha256": null
         },
         {
           "path": "platform_hybrid/experiments/scripts/e11_design_cluster_bootstrap.json",
@@ -1200,53 +1159,45 @@
         {
           "token": "129 passes of 312 = 0.4135",
           "in_chapter": true,
-          "recomputed": "129 passes of 312 = 0.413462",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "67/156 = 0.4295",
           "in_chapter": true,
-          "recomputed": "67/156 = 0.429487",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "62/156 = 0.3974",
           "in_chapter": true,
-          "recomputed": "62/156 = 0.397436",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "[0.343, 0.487]",
           "in_chapter": true,
-          "recomputed": "[0.342949, 0.487179]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "200,000 replicates",
           "in_chapter": true,
-          "recomputed": "200,000 replicates",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "312,622",
           "in_chapter": true,
-          "recomputed": "312,622",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "129/162 = 0.796",
           "in_chapter": true,
-          "recomputed": "129/162 = 0.796296",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "129/311 = 0.4148",
           "in_chapter": true,
-          "recomputed": "129/311 = 0.414791",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "§8.2 E14 denominators",
@@ -1255,48 +1206,42 @@
       "artifacts": [
         {
           "path": "outputs/public_portfolio_2026-09-05/native_finish_v5/e14_official_collector/official_result01/native_dispositions.jsonl",
-          "sha256": "85478b0f7e61d3db25addbde0137796a5de22691e51ad1f8764aa1bebea651ae"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "4,426 accepted rows of 4,428",
           "in_chapter": true,
-          "recomputed": "4,426 accepted rows of 4,428",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "0.5131043831902395",
           "in_chapter": true,
-          "recomputed": "0.5131043831902395",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "2,271/4,428 = 51.29 per cent",
           "in_chapter": true,
-          "recomputed": "2,271/4,428 = 51.287263 per cent",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "[0.498, 0.528]",
           "in_chapter": true,
-          "recomputed": "[0.498146, 0.527577]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "1,029 cases (34.5%)",
           "in_chapter": true,
-          "recomputed": "1,029 cases (34.507042%)",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "1,242 of the 1,446 uncapped responses (85.9%)",
           "in_chapter": true,
-          "recomputed": "1,242 of the 1,446 uncapped responses (85.892116%)",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "§8.3 E1 SWE-bench Pro",
@@ -1305,40 +1250,36 @@
       "artifacts": [
         {
           "path": "outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/receipt.json",
-          "sha256": "358ed237beb1cc0ecbaaf1975dcd5afc6460bf197e9ff2c2e91c2e533adbb4d4"
+          "sha256": null
         },
         {
           "path": "outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/candidates.json",
-          "sha256": "c62075918d1ef425b62c81a84c8b17212a040f2d80923591b2ca3f5f9f2ff70a"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "2/731 = 0.00274",
           "in_chapter": true,
-          "recomputed": "2/731 = 0.00274",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "0.274 per cent",
           "in_chapter": true,
-          "recomputed": "0.273598 per cent",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "[0.08%, 0.99%]",
           "in_chapter": true,
-          "recomputed": "[0.075062%, 0.992033%]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "593 of the 713",
           "in_chapter": true,
-          "recomputed": "593 of the 713",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "§8.3 original-contract partials",
@@ -1347,32 +1288,32 @@
       "artifacts": [
         {
           "path": "outputs/e1_e14_results_2026-09-05/E1_E14_Results.md",
-          "sha256": "aeadadf861bba7cdd39d42e1ca0cc5a877b89c01474ec136f7d3c2adcfca04cc"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "0.8628",
           "in_chapter": true,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "0.3115",
           "in_chapter": true,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "0.050505",
           "in_chapter": true,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "0.079365",
           "in_chapter": true,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "§8.3 E9 coverage",
@@ -1680,51 +1621,51 @@
       "artifacts": [
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E1/result.json",
-          "sha256": "107ab1fc6a2d62eddfe41fe87499b648f847866e198632607bf8068f2d3f7b2d"
+          "sha256": null
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E2/result.json",
-          "sha256": "24ba91938daf8f35448b06c01df721b9cb46774e44d39668908f48cae2225801"
+          "sha256": null
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E3/result.json",
-          "sha256": "66454303cc42b6ac3bfe6d2ef32e380d74847bbc62dce0697efbffd58804a628"
+          "sha256": null
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E5/result.json",
-          "sha256": "d23c558e635883cc7d904331c4d96aa246e7c499542353315f549723a3c30d05"
+          "sha256": null
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E6/result.json",
-          "sha256": "a571f85c04df42cf50df7a64baaceca9b85e8669e997880c5c7eb12357e06ec4"
+          "sha256": null
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E7/result.json",
-          "sha256": "b3478a1a9d3454ea481b4d51e03a7d71d35a155e8ed37a8773702a3c4359fac3"
+          "sha256": null
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E8/result.json",
-          "sha256": "deff3f11393d7eabc87bceeb260084e766ea315dc94d4123f7c839db8ac285f7"
+          "sha256": null
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E9/result.json",
-          "sha256": "54520b3b401f8eb5f76468527558be5016c28ba9474618f819f6dfc0ce9ee811"
+          "sha256": null
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E10/result.json",
-          "sha256": "70cd91391bc3b399c7539230561b719d1e910a6a01c8483a684a0883c830f6b4"
+          "sha256": null
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E11/result.json",
-          "sha256": "ed91c93a1e832ca0becc439e4f909c3fc25e950a6a2265e595c6ee7cdbe82a60"
+          "sha256": null
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E12/result.json",
-          "sha256": "392b59efed99273077514009040e03a66cd80333590e66d49a7647a1d07ce367"
+          "sha256": null
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E14/result.json",
-          "sha256": "364cd41a0ae7fcd04a06f1bc264583113effba7030c55e4de597bc4fd5f7ad89"
+          "sha256": null
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E4/result.json",
@@ -1732,96 +1673,82 @@
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E13/result.json",
-          "sha256": "c947bc02d6f3be4097d369673429598ef455548e2bf6a2654d27a53c2f1ecca3"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "0/10 = 0.000 | [0.00, 0.28]",
           "in_chapter": true,
-          "recomputed": "0/10 = 0.000000 | [0.000000, 0.277533]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "23/30 = 0.767 | [0.59, 0.88]",
           "in_chapter": true,
-          "recomputed": "23/30 = 0.766667 | [0.590717, 0.882076]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "4/8 = 0.500 | [0.22, 0.78]",
           "in_chapter": true,
-          "recomputed": "4/8 = 0.500000 | [0.215216, 0.784784]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "3/10 = 0.300 | [0.11, 0.60]",
           "in_chapter": true,
-          "recomputed": "3/10 = 0.300000 | [0.107791, 0.603222]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "15/36 = 0.417 | [0.27, 0.58]",
           "in_chapter": true,
-          "recomputed": "15/36 = 0.416667 | [0.271406, 0.577997]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "0/6 = 0.000 | [0.00, 0.39]",
           "in_chapter": true,
-          "recomputed": "0/6 = 0.000000 | [0.000000, 0.390334]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "26/80 = 0.325 | [0.23, 0.43]",
           "in_chapter": true,
-          "recomputed": "26/80 = 0.325000 | [0.232442, 0.433595]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "1/5 = 0.200 | [0.04, 0.62]",
           "in_chapter": true,
-          "recomputed": "1/5 = 0.200000 | [0.036224, 0.624465]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "20/30 = 0.667 | [0.49, 0.81]",
           "in_chapter": true,
-          "recomputed": "20/30 = 0.666667 | [0.487801, 0.807695]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "35/50 = 0.700 | [0.56, 0.81]",
           "in_chapter": true,
-          "recomputed": "35/50 = 0.700000 | [0.562496, 0.808964]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "122/151 = 0.808 | [0.74, 0.86]",
           "in_chapter": true,
-          "recomputed": "122/151 = 0.807947 | [0.737794, 0.862821]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "38/100 = 0.380 | [0.29, 0.48]",
           "in_chapter": true,
-          "recomputed": "38/100 = 0.380000 | [0.290976, 0.477902]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "0.068 (n = 6; one nonzero task, 0.409)",
           "in_chapter": true,
-          "recomputed": "0.068100 (n = 6; one nonzero task, 0.408700)",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "| 23.1% |",
           "in_chapter": true,
-          "recomputed": "| 23.100000% |",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "Table 8.B binary lanes",
@@ -2111,7 +2038,7 @@
       "artifacts": [
         {
           "path": "outputs/public_portfolio_2026-09-05/agentdojo_native_receipt.json",
-          "sha256": "a40c90015200a389ce0767b14a78f9409330a0ae8615cb4822ef9b54656ebaa0"
+          "sha256": null
         },
         {
           "path": "platform_hybrid/experiments/scripts/e11_design_cluster_bootstrap.json",
@@ -2119,11 +2046,11 @@
         },
         {
           "path": "outputs/public_portfolio_2026-09-05/native_finish_v5/e14_official_collector/official_result01/native_dispositions.jsonl",
-          "sha256": "85478b0f7e61d3db25addbde0137796a5de22691e51ad1f8764aa1bebea651ae"
+          "sha256": null
         },
         {
           "path": "outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/receipt.json",
-          "sha256": "358ed237beb1cc0ecbaaf1975dcd5afc6460bf197e9ff2c2e91c2e533adbb4d4"
+          "sha256": null
         },
         {
           "path": "outputs/finish_pending_2026-09-27/E1/result.json",
@@ -2154,89 +2081,75 @@
         {
           "token": "88/97 = 0.907",
           "in_chapter": true,
-          "recomputed": "88/97 = 0.907216",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "[0.833, 0.950]",
           "in_chapter": true,
-          "recomputed": "[0.832991, 0.950417]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "129/312 = 41.35%",
           "in_chapter": true,
-          "recomputed": "129/312 = 41.346154%",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "[34.3%, 48.7%]",
           "in_chapter": true,
-          "recomputed": "[34.294872%, 48.717949%]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "2,271/4,428 = 51.29%",
           "in_chapter": true,
-          "recomputed": "2,271/4,428 = 51.287263%",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "2/731 = 0.274%",
           "in_chapter": true,
-          "recomputed": "2/731 = 0.273598%",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "[0.08%, 0.99%]",
           "in_chapter": true,
-          "recomputed": "[0.075062%, 0.992033%]",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "27/45 = 0.600",
           "in_chapter": true,
-          "recomputed": "27/45 = 0.600000",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "8/97 = 0.082",
           "in_chapter": true,
-          "recomputed": "8/97 = 0.082474",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "90/812 = 0.111",
           "in_chapter": true,
-          "recomputed": "90/812 = 0.110837",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "10/34 = 0.294",
           "in_chapter": true,
-          "recomputed": "10/34 = 0.294118",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "26.1%",
           "in_chapter": true,
-          "recomputed": "26.100000%",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "1/190",
           "in_chapter": true,
-          "recomputed": "1/190",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "4/110",
           "in_chapter": true,
-          "recomputed": "4/110",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "Table 9.1 denominators",
@@ -2245,11 +2158,11 @@
       "artifacts": [
         {
           "path": "outputs/e1_e14_results_2026-09-05/E1_E14_Results.md",
-          "sha256": "aeadadf861bba7cdd39d42e1ca0cc5a877b89c01474ec136f7d3c2adcfca04cc"
+          "sha256": null
         },
         {
           "path": "outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/receipt.json",
-          "sha256": "358ed237beb1cc0ecbaaf1975dcd5afc6460bf197e9ff2c2e91c2e533adbb4d4"
+          "sha256": null
         },
         {
           "path": "outputs/finish_pending_2026-09-27/E6/result.json",
@@ -2257,24 +2170,22 @@
         },
         {
           "path": "outputs/public_portfolio_2026-09-05/native_finish_v5/e14_official_collector/official_result01/native_dispositions.jsonl",
-          "sha256": "85478b0f7e61d3db25addbde0137796a5de22691e51ad1f8764aa1bebea651ae"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "0.3115",
           "in_chapter": true,
-          "recomputed": "0.3115",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "2/731, 90/812, 4,428",
           "in_chapter": true,
-          "recomputed": "2/731, 90/812, 4,428",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "Table 9.1 SDK versions",
@@ -3402,7 +3313,7 @@
       "artifacts": [
         {
           "path": "platform_tinker/tinkerrl/grpo.py",
-          "sha256": "869896ba3a87c5f17720fb19193cb6f1f90664b4d5eb65fb6393f8af8ed6e728"
+          "sha256": "bd2ac0637950ccb8739bbe327cf0ee98759a906c3dbb388eba49032a86fa77b2"
         }
       ],
       "tokens": [
@@ -4434,7 +4345,7 @@
       "artifacts": [
         {
           "path": "outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/receipt.json",
-          "sha256": "358ed237beb1cc0ecbaaf1975dcd5afc6460bf197e9ff2c2e91c2e533adbb4d4"
+          "sha256": null
         },
         {
           "path": "outputs/finish_pending_2026-09-27/E1/result.json",
@@ -4462,11 +4373,11 @@
         },
         {
           "path": "outputs/public_portfolio_2026-09-05/labbench_final_diagnostics.json",
-          "sha256": "7d7d0bd47162534212f7526db548e1f5d42bbe16554bc2e29115f0d9cf5af941"
+          "sha256": null
         },
         {
           "path": "outputs/public_portfolio_2026-09-05/agentdojo_native_receipt.json",
-          "sha256": "a40c90015200a389ce0767b14a78f9409330a0ae8615cb4822ef9b54656ebaa0"
+          "sha256": null
         },
         {
           "path": "platform_hybrid/experiments/scripts/e11_design_cluster_bootstrap.json",
@@ -4474,7 +4385,7 @@
         },
         {
           "path": "outputs/public_portfolio_2026-09-05/native_finish_v5/e14_official_collector/official_result01/native_dispositions.jsonl",
-          "sha256": "85478b0f7e61d3db25addbde0137796a5de22691e51ad1f8764aa1bebea651ae"
+          "sha256": null
         },
         {
           "path": "outputs/e1_e14_small_scale_2026-09-26/E4/result.json",
@@ -4485,77 +4396,65 @@
         {
           "token": "2/731 = 0.274% pass@1 (97.54% coverage, 713/731 native evals)",
           "in_chapter": true,
-          "recomputed": "2/731 = 0.273598% pass@1 (97.537620% coverage, 713/731 native evals)",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "1/190 resolved (57 graded); earlier waves 4/110",
           "in_chapter": true,
-          "recomputed": "1/190 resolved (57 graded); earlier waves 4/110",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "27/45 = 0.600 task accuracy",
           "in_chapter": true,
-          "recomputed": "27/45 = 0.600000 task accuracy",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "8/97 = 0.082 pass^1 (25 infra errors counted as failures)",
           "in_chapter": true,
-          "recomputed": "8/97 = 0.082474 pass^1 (25 infra errors counted as failures)",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "90/812 = 0.111, lower bound; 108 ungraded",
           "in_chapter": true,
-          "recomputed": "90/812 = 0.110837, lower bound; 108 ungraded",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "**1967/1967 COMPLETE**",
           "in_chapter": true,
-          "recomputed": "**1967/1967 COMPLETE**",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "10/34 = 0.294 task success",
           "in_chapter": true,
-          "recomputed": "10/34 = 0.294118 task success",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "97/97 tasks completed, utility 88/97 = 0.907",
           "in_chapter": true,
-          "recomputed": "97/97 tasks completed, utility 88/97 = 0.907216",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "**312/312 = 129/312 pass@1 (41.35%)**; 67/156 completion + 62/156 spec-to-RTL",
           "in_chapter": true,
-          "recomputed": "**312/312 = 129/312 pass@1 (41.346154%)**; 67/156 completion + 62/156 spec-to-RTL",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "255/255 episodes; 26.1% progression",
           "in_chapter": true,
-          "recomputed": "255/255 episodes; 26.100000% progression",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "4426/4428 accepted (99.95%); accuracy 2271/4428 = 51.29% (official scorer 51.31% on 4426 judged rows)",
           "in_chapter": true,
-          "recomputed": "4426/4428 accepted (99.954833%); accuracy 2271/4428 = 51.287263% (official scorer 51.310438% on 4426 judged rows)",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "100/100 trials, mean reward 0.0",
           "in_chapter": true,
-          "recomputed": "100/100 trials, mean reward 0.0",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "Table A.8 transcribed partials",
@@ -4564,32 +4463,32 @@
       "artifacts": [
         {
           "path": "outputs/e1_e14_results_2026-09-05/E1_E14_Results.md",
-          "sha256": "aeadadf861bba7cdd39d42e1ca0cc5a877b89c01474ec136f7d3c2adcfca04cc"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "1/17 tasks; replay normalized 0.8628",
           "in_chapter": true,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "1/100 tasks, recovery 0.3115",
           "in_chapter": true,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "7/480 native-scored; prefix mean 0.050505",
           "in_chapter": true,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "40/75 natively graded",
           "in_chapter": true,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "Table A.8 E9 coverage",
@@ -4613,17 +4512,17 @@
       "artifacts": [
         {
           "path": "outputs/E1_E14_FINAL_RESULTS_2026-09-19.md",
-          "sha256": "6291cace293782e030bb0c3cd56fbd3a8d7aab3e0ab7972c4ccb62b998ef20f7"
+          "sha256": null
         }
       ],
       "tokens": [
         {
           "token": "1/46 attempted",
           "in_chapter": true,
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "Table A.10 corpora",
@@ -4640,7 +4539,7 @@
         },
         {
           "path": "outputs/PES_Phase2_Third_Review_2026-09-24/thesis_review_2026-09-27/stats_followup/m18_mantel_summary.json",
-          "sha256": "9635c13e719910178f8ee5a8d7cb30e16119abb3fc901bd72673848755d93aa1"
+          "sha256": null
         },
         {
           "path": "platform_hybrid/experiments/results/samestack_gsm8k_cot.json",
@@ -4651,29 +4550,25 @@
         {
           "token": "| 79 |",
           "in_chapter": true,
-          "recomputed": "| 79 |",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "| 790 |",
           "in_chapter": true,
-          "recomputed": "| 790 |",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "| 98 |",
           "in_chapter": true,
-          "recomputed": "| 98 |",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         },
         {
           "token": "| 15 |",
           "in_chapter": true,
-          "recomputed": "| 15 |",
-          "result": "PASS"
+          "result": "ARTIFACT_MISSING"
         }
       ],
-      "status": "PASS"
+      "status": "ARTIFACT_MISSING"
     },
     {
       "group": "Table A.10 named-run total",
@@ -4754,18 +4649,17 @@
         },
         {
           "path": "reports/public_revision_2026-10-04/thesis/ch_back_errata.md",
-          "sha256": "3493295be71725e4e8569a22bf53fcfe6d1d500d981810b26aa895650129d670"
+          "sha256": "cfb972fa39033cfc80070d097637b6d1dc97dc4bc8f7d34841339deb2029e0d1"
         }
       ],
       "tokens": [
         {
           "token": "1.897",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "UNBOUND"
         }
       ],
-      "status": "PASS"
+      "status": "UNBOUND"
     },
     {
       "group": "§6.2.1 prose",
@@ -4825,14 +4719,12 @@
         {
           "token": "1.000",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "PASS"
         },
         {
           "token": "10.0",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "PASS"
         },
         {
           "token": "0.285",
@@ -5155,15 +5047,14 @@
         },
         {
           "path": "reports/public_revision_2026-10-04/thesis/ch_back_errata.md",
-          "sha256": "3493295be71725e4e8569a22bf53fcfe6d1d500d981810b26aa895650129d670"
+          "sha256": "cfb972fa39033cfc80070d097637b6d1dc97dc4bc8f7d34841339deb2029e0d1"
         }
       ],
       "tokens": [
         {
           "token": "0.990",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "PASS"
         },
         {
           "token": "0.992",
@@ -5247,11 +5138,10 @@
         {
           "token": "0.7605",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "UNBOUND"
         }
       ],
-      "status": "PASS"
+      "status": "UNBOUND"
     },
     {
       "group": "§6.2.4 prose",
@@ -5264,7 +5154,7 @@
         },
         {
           "path": "reports/public_revision_2026-10-04/thesis/ch_back_errata.md",
-          "sha256": "3493295be71725e4e8569a22bf53fcfe6d1d500d981810b26aa895650129d670"
+          "sha256": "cfb972fa39033cfc80070d097637b6d1dc97dc4bc8f7d34841339deb2029e0d1"
         }
       ],
       "tokens": [
@@ -5415,8 +5305,7 @@
         {
           "token": "0.4%",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "PASS"
         },
         {
           "token": "2.86",
@@ -5644,7 +5533,7 @@
         },
         {
           "path": "reports/public_revision_2026-10-04/thesis/ch_back_errata.md",
-          "sha256": "3493295be71725e4e8569a22bf53fcfe6d1d500d981810b26aa895650129d670"
+          "sha256": "cfb972fa39033cfc80070d097637b6d1dc97dc4bc8f7d34841339deb2029e0d1"
         }
       ],
       "tokens": [
@@ -5847,7 +5736,7 @@
         },
         {
           "path": "reports/public_revision_2026-10-04/thesis/ch_back_errata.md",
-          "sha256": "3493295be71725e4e8569a22bf53fcfe6d1d500d981810b26aa895650129d670"
+          "sha256": "cfb972fa39033cfc80070d097637b6d1dc97dc4bc8f7d34841339deb2029e0d1"
         }
       ],
       "tokens": [
@@ -6029,14 +5918,12 @@
         {
           "token": "−0.37",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "UNBOUND"
         },
         {
           "token": "0.88",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "UNBOUND"
         },
         {
           "token": "−0.16",
@@ -6056,7 +5943,7 @@
           "note": "verified by an explicit recomputation in this chapter"
         }
       ],
-      "status": "PASS"
+      "status": "UNBOUND"
     },
     {
       "group": "§6.3.4 prose",
@@ -6208,8 +6095,7 @@
         {
           "token": "0.9900",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "PASS"
         },
         {
           "token": "0.0029",
@@ -6259,8 +6145,7 @@
         {
           "token": "0.0060",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "PASS"
         },
         {
           "token": "0.0104",
@@ -6375,14 +6260,12 @@
         {
           "token": "52%",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "UNBOUND"
         },
         {
           "token": "48%",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "UNBOUND"
         },
         {
           "token": "0.971",
@@ -6395,7 +6278,7 @@
           "result": "PASS"
         }
       ],
-      "status": "PASS"
+      "status": "UNBOUND"
     },
     {
       "group": "§6.4.1 prose",
@@ -6452,7 +6335,7 @@
         },
         {
           "path": "reports/public_revision_2026-10-04/thesis/ch_back_errata.md",
-          "sha256": "3493295be71725e4e8569a22bf53fcfe6d1d500d981810b26aa895650129d670"
+          "sha256": "cfb972fa39033cfc80070d097637b6d1dc97dc4bc8f7d34841339deb2029e0d1"
         }
       ],
       "tokens": [
@@ -6510,7 +6393,7 @@
         },
         {
           "path": "reports/public_revision_2026-10-04/thesis/ch_back_errata.md",
-          "sha256": "3493295be71725e4e8569a22bf53fcfe6d1d500d981810b26aa895650129d670"
+          "sha256": "cfb972fa39033cfc80070d097637b6d1dc97dc4bc8f7d34841339deb2029e0d1"
         }
       ],
       "tokens": [
@@ -6575,7 +6458,7 @@
         },
         {
           "path": "reports/public_revision_2026-10-04/thesis/ch_back_errata.md",
-          "sha256": "3493295be71725e4e8569a22bf53fcfe6d1d500d981810b26aa895650129d670"
+          "sha256": "cfb972fa39033cfc80070d097637b6d1dc97dc4bc8f7d34841339deb2029e0d1"
         }
       ],
       "tokens": [
@@ -6992,8 +6875,7 @@
         {
           "token": "1.0",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "PASS"
         },
         {
           "token": "0.11",
@@ -7372,7 +7254,7 @@
         {
           "token": "0.90",
           "in_chapter": true,
-          "result": "CONTEXT"
+          "result": "PASS"
         },
         {
           "token": "194.4",
@@ -7990,7 +7872,7 @@
         },
         {
           "path": "reports/public_revision_2026-10-04/thesis/ch_back_errata.md",
-          "sha256": "3493295be71725e4e8569a22bf53fcfe6d1d500d981810b26aa895650129d670"
+          "sha256": "cfb972fa39033cfc80070d097637b6d1dc97dc4bc8f7d34841339deb2029e0d1"
         }
       ],
       "tokens": [
@@ -8002,8 +7884,7 @@
         {
           "token": "+5.0",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "PASS"
         },
         {
           "token": "0.0051",
@@ -8178,7 +8059,7 @@
         },
         {
           "path": "reports/public_revision_2026-10-04/thesis/ch_back_errata.md",
-          "sha256": "3493295be71725e4e8569a22bf53fcfe6d1d500d981810b26aa895650129d670"
+          "sha256": "cfb972fa39033cfc80070d097637b6d1dc97dc4bc8f7d34841339deb2029e0d1"
         }
       ],
       "tokens": [
@@ -8253,8 +8134,7 @@
         {
           "token": "0.5",
           "in_chapter": true,
-          "result": "PASS",
-          "note": "verified by an explicit recomputation in this chapter"
+          "result": "CONTEXT"
         }
       ],
       "status": "PASS"

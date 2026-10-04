@@ -185,6 +185,8 @@ def verify_source_definitions(root):
                 f"invalid definition digest: {filename}:{name}",
             )
             source_text = ast.get_source_segment(source, nodes[name])
+            if source_text is None:
+                raise ValueError(f"unavailable copied source segment: {filename}:{name}")
             actual = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
             require(actual == expected, f"copied source definition changed: {filename}:{name}")
             copied += 1

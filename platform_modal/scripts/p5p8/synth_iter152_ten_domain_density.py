@@ -62,7 +62,7 @@ import numpy as np
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
-from _stats import wilson  # noqa: E402
+from _stats import wilson_ci  # noqa: E402
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -81,13 +81,6 @@ D_ANCHORS = {
 }
 
 ACD_THRESHOLDS = [1.01, 1.10, 1.50, 2.00, 5.00]
-
-
-def wilson_ci(k, n, z=1.96):
-    """Wilson score interval."""
-    if n == 0:
-        return (0.0, 0.0, 0.0)
-    return wilson(k, n, z)
 
 
 def main():

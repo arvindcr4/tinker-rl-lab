@@ -1,8 +1,9 @@
 """Shared statistics primitives for the platform_modal analysis scripts.
 
 Every helper reproduces, bit for bit, the copy it replaced in the p5/p6/p7/synth
-scripts. Callers keep their own z literal, n == 0 handling, tuple order and
-bootstrap size/seed; nothing here reads module globals or picks defaults.
+scripts. Callers keep their own z literal, tuple order and bootstrap size/seed;
+the one exception is ``wilson_ci``, whose z default and n == 0 guard were
+identical in all four scripts that shared it. Nothing here reads module globals.
 
 Usage from a script one level below (``p5p8/``)::
 
@@ -42,6 +43,14 @@ def wilson(k, n, z, root=math.sqrt):
     """``(p, lo, hi)`` Wilson score interval for ``k`` successes out of ``n > 0``."""
     p = k / n
     return (p, *wilson_p(p, n, z, root))
+
+
+def wilson_ci(k, n, z=1.96):
+    """``(p, lo, hi)`` Wilson score interval, ``(0, 0, 0)`` when ``n == 0``
+    (synth_iter148/152/156/160: ``wilson_ci``)."""
+    if n == 0:
+        return (0.0, 0.0, 0.0)
+    return wilson(k, n, z)
 
 
 def wilson_p_factored(p, n, z):

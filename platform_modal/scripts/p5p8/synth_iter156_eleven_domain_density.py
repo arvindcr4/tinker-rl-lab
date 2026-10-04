@@ -49,7 +49,7 @@ import numpy as np
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
-from _stats import wilson  # noqa: E402
+from _stats import wilson_ci  # noqa: E402
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -64,12 +64,6 @@ LLM_PRICE_TIERS = [
 ]
 RATES_PCT = [1.44, 1.00, 0.50, 0.10, 0.05]
 FEATURE_SETS = ["24full", "20raw", "20raw+minmax", "20raw+stat"]
-
-
-def wilson_ci(k, n, z=1.96):
-    if n == 0:
-        return 0.0, 0.0, 0.0
-    return wilson(k, n, z)
 
 
 def load_p8_iter156():

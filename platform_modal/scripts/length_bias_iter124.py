@@ -52,7 +52,6 @@ import csv
 import json
 import os
 import sys
-from typing import Any
 
 import numpy as np
 from scipy import stats

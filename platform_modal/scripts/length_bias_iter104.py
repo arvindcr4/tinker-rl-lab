@@ -84,7 +84,7 @@ from typing import Any
 
 import numpy as np
 from scipy import stats
-from _analysis_common import ccf_at_lags, load_step_log
+from _analysis_common import ccf_at_lags, load_step_log, paired_bootstrap_delta
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS = os.path.join(ROOT, "experiments", "results")
@@ -211,29 +211,6 @@ def page_l_trend(values: np.ndarray, monotone: str = "decreasing") -> dict:
 
 
 # ---------------------------------------------------------------------------
-#  Bootstrap
-# ---------------------------------------------------------------------------
-
-def paired_bootstrap_delta(g, d, B, statistic=np.median):
-    g = np.array(g, dtype=np.float64); d = np.array(d, dtype=np.float64)
-    n = min(len(g), len(d))
-    if n == 0:
-        return {"delta": float("nan"), "ci_lo": float("nan"),
-                "ci_hi": float("nan"), "p": float("nan"), "n": 0}
-    g = g[:n]; d = d[:n]
-    diffs = d - g
-    rng = np.random.default_rng(0xC0FFEE)
-    idx = rng.integers(0, n, size=(B, n))
-    boot = statistic(diffs[idx], axis=1)
-    point = float(statistic(diffs))
-    return {"delta": point,
-            "ci_lo": float(np.quantile(boot, 0.025)),
-            "ci_hi": float(np.quantile(boot, 0.975)),
-            "p": float(2 * min(np.mean(boot <= 0), np.mean(boot >= 0))),
-            "n": int(n)}
-
-
-# ---------------------------------------------------------------------------
 #  Main
 # ---------------------------------------------------------------------------
 
@@ -296,7 +273,7 @@ def main(argv: list[str] | None = None) -> int:
             for side in ["fwd", "bwd", "fwd_signed", "bwd_signed"]:
                 g = [float(seeds_g[s]["q"][q][side]) for s in common]
                 d = [float(seeds_d[s]["q"][q][side]) for s in common]
-                stat = paired_bootstrap_delta(g, d, B=B, statistic=np.median)
+                stat = paired_bootstrap_delta(g, d, B=B, seed=0xC0FFEE, statistic=np.median)
                 paired_rows.append({
                     "task": task, "q": q, "side": side, **stat,
                 })
@@ -304,7 +281,7 @@ def main(argv: list[str] | None = None) -> int:
                 lag = i - K
                 g = [float(seeds_g[s]["q"][q]["ccf"][i]) for s in common]
                 d = [float(seeds_d[s]["q"][q]["ccf"][i]) for s in common]
-                stat = paired_bootstrap_delta(g, d, B=B, statistic=np.median)
+                stat = paired_bootstrap_delta(g, d, B=B, seed=0xC0FFEE, statistic=np.median)
                 paired_rows.append({
                     "task": task, "q": q, "side": lag_label(lag), **stat,
                 })

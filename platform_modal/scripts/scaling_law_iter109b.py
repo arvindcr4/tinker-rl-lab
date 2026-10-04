@@ -37,7 +37,6 @@ Outputs:
   platform_hybrid/experiments/results/scaling_law_iter109b_meta.json
 """
 from __future__ import annotations
-import csv
 import json
 import math
 from pathlib import Path

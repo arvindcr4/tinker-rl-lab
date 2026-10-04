@@ -35,7 +35,7 @@ import random
 import statistics
 from pathlib import Path
 
-from _p5p7_common import load_tensors_a
+from _p5p7_common import bernoulli_z, load_tensors_a
 
 ROOT = Path(__file__).resolve().parents[2]
 N2_DIR = ROOT / "experiments" / "results" / "n2_reward_tensor_resume"
@@ -71,12 +71,6 @@ CONTROLLERS = {
     "DUALFORMER_STEP":   c_dualformer_step,
     "UNIFIED_STEP_C4":   c_unified_step_c4,
 }
-
-
-def bernoulli_z(p_hat: float, G: int) -> float:
-    if p_hat <= 0.0 or p_hat >= 1.0:
-        return 1.0
-    return p_hat ** G + (1.0 - p_hat) ** G
 
 
 def contrast_mag(p_hat: float, G: int) -> float:

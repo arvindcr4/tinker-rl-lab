@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import pytest
-from _shared_fakes import load_module
+from tests._shared_fakes import load_module
 
 mc = load_module(
     "_modal_common",

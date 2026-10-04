@@ -64,13 +64,12 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import math
 import os
 import sys
 from typing import Any
 
 import numpy as np
-from _analysis_common import ccf_at_lags, load_step_log
+from _analysis_common import ccf_at_lags, load_step_log, paired_bootstrap_delta
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS = os.path.join(ROOT, "experiments", "results")
@@ -189,42 +188,6 @@ def per_run_icca(L: np.ndarray, R: np.ndarray, K: int) -> dict[str, float]:
 
 
 # ---------------------------------------------------------------------------
-#  Bootstrap paired CIs
-# ---------------------------------------------------------------------------
-
-def paired_bootstrap_delta(
-    values_grpo: list[float],
-    values_drgrpo: list[float],
-    B: int,
-    statistic=np.median,
-) -> dict[str, float]:
-    """Paired sign-preserving bootstrap (resample over seed indices)."""
-    grpo = np.array(values_grpo, dtype=np.float64)
-    drgrpo = np.array(values_drgrpo, dtype=np.float64)
-    n = min(len(grpo), len(drgrpo))
-    if n == 0:
-        return {"delta": float("nan"), "ci_lo": float("nan"), "ci_hi": float("nan"),
-                "p": float("nan"), "n": 0}
-    grpo = grpo[:n]
-    drgrpo = drgrpo[:n]
-    diffs = drgrpo - grpo
-    rng = np.random.default_rng(0xC0FFEE)
-    idx = rng.integers(0, n, size=(B, n))
-    boot = statistic(diffs[idx], axis=1)
-    point = float(statistic(diffs))
-    lo = float(np.quantile(boot, 0.025))
-    hi = float(np.quantile(boot, 0.975))
-    p_two = float(2 * min(np.mean(boot <= 0), np.mean(boot >= 0)))
-    return {
-        "delta": point,
-        "ci_lo": lo,
-        "ci_hi": hi,
-        "p": p_two,
-        "n": int(n),
-    }
-
-
-# ---------------------------------------------------------------------------
 #  Main
 # ---------------------------------------------------------------------------
 
@@ -289,7 +252,7 @@ def main(argv: list[str] | None = None) -> int:
         for key in KEYS_TO_PAIR:
             gv = [float(seeds_grpo[s][key]) for s in common]
             dv = [float(seeds_drgrpo[s][key]) for s in common]
-            stat = paired_bootstrap_delta(gv, dv, B=B, statistic=np.median)
+            stat = paired_bootstrap_delta(gv, dv, B=B, seed=0xC0FFEE, statistic=np.median)
             paired_rows.append({
                 "task": task,
                 "key": key,

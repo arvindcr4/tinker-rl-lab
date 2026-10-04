@@ -49,7 +49,7 @@ import json
 import math
 import pathlib
 import sys
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Sequence, Tuple
 
 import numpy as np
 from _analysis_common import maybe_matplotlib as _maybe_matplotlib, write_commented_tsv as _write_tsv

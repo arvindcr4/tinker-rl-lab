@@ -76,3 +76,17 @@ def test_auroc_argsort_ranks_tie_example_and_bootstrap():
 
 def test_rankdata_avg_averages_ties():
     assert ac.rankdata_avg([3.0, 1.0, 3.0, 2.0]) == [3.5, 1.0, 3.5, 2.0]
+
+
+def test_paired_bootstrap_delta_is_seed_deterministic():
+    g, d = [0.1, 0.2, 0.3, 0.4], [0.2, 0.25, 0.5, 0.45]
+    a = ac.paired_bootstrap_delta(g, d, 500, 0xC0FFEE)
+    assert a == ac.paired_bootstrap_delta(g, d, 500, 0xC0FFEE)
+    assert a["n"] == 4
+    assert a["delta"] == float(np.median(np.array(d) - np.array(g)))
+    assert a["ci_lo"] <= a["delta"]
+    assert a["delta"] <= a["ci_hi"]
+    empty = ac.paired_bootstrap_delta([], [], 10, 0)
+    assert empty["n"] == 0
+    assert np.isnan(empty["delta"])
+    assert np.isnan(empty["p"])

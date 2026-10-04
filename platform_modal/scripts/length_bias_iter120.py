@@ -43,11 +43,9 @@ import csv
 import json
 import os
 import sys
-from typing import Any
 
 import numpy as np
-from scipy import stats
-from _analysis_common import build_long, load_iter108_perrun, load_step_log_task as load_step_log, permutation_null, spearman, window_mean
+from _analysis_common import build_long, load_iter108_perrun, load_step_log_task as load_step_log, permutation_null, spearman
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "experiments", "results")

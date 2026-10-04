@@ -11,6 +11,11 @@ from typing import Any
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
+try:
+    from .pavlov_native_contract import canonical_json, sha256_text
+except ImportError:  # pragma: no cover - direct execution fallback
+    from pavlov_native_contract import canonical_json, sha256_text
+
 _REQUIRED = {"schema_version", "lane", "suite_id", "provider", "key_id", "public_key_hex"}
 
 
@@ -45,8 +50,8 @@ def load_trust_root(
         ):
             raise ValueError("trust-root identity")
         Ed25519PublicKey.from_public_bytes(bytes.fromhex(root["public_key_hex"]))
-        document = json.dumps(dict(raw), sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-        root["document_sha256"] = hashlib.sha256(document.encode("utf-8")).hexdigest()
+        document = canonical_json(dict(raw))
+        root["document_sha256"] = sha256_text(document)
         root["key_fingerprint"] = hashlib.sha256(bytes.fromhex(root["public_key_hex"])).hexdigest()
         return root
     except Exception as exc:

@@ -26,14 +26,13 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import math
 import os
 import sys
 from typing import Any
 
 import numpy as np
 from scipy import stats
-from _analysis_common import ccf_at_lags, load_step_log
+from _analysis_common import ccf_at_lags, load_step_log, paired_bootstrap_delta
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS = os.path.join(ROOT, "experiments", "results")
@@ -51,25 +50,6 @@ def fit_ar1(x: np.ndarray) -> tuple[float, float, np.ndarray]:
     phi, c = float(coef[0]), float(coef[1])
     e = x_cur - (phi * x_lag + c)
     return phi, c, e
-
-
-def paired_bootstrap_delta(g, d, B, statistic=np.median):
-    g = np.array(g, dtype=np.float64); d = np.array(d, dtype=np.float64)
-    n = min(len(g), len(d))
-    if n == 0:
-        return {"delta": float("nan"), "ci_lo": float("nan"),
-                "ci_hi": float("nan"), "p": float("nan"), "n": 0}
-    g = g[:n]; d = d[:n]
-    diffs = d - g
-    rng = np.random.default_rng(0x10C8)
-    idx = rng.integers(0, n, size=(B, n))
-    boot = statistic(diffs[idx], axis=1)
-    point = float(statistic(diffs))
-    return {"delta": point,
-            "ci_lo": float(np.quantile(boot, 0.025)),
-            "ci_hi": float(np.quantile(boot, 0.975)),
-            "p": float(2 * min(np.mean(boot <= 0), np.mean(boot >= 0))),
-            "n": int(n)}
 
 
 def write_tsv(name: str, rows: list[dict], keys: list[str]) -> str:
@@ -217,7 +197,7 @@ def main(argv: list[str] | None = None) -> int:
                 d = [float(seeds_d[s]["windows"][w_idx][side]) for s in common]
                 paired_prog_rows.append({"task": task, "window": w_idx,
                                           "side": side,
-                                          **paired_bootstrap_delta(g, d, B=B)})
+                                          **paired_bootstrap_delta(g, d, B=B, seed=0x10C8)})
     write_tsv("length_bias_iter108_paired_progress.tsv", paired_prog_rows,
               ["task", "window", "side", "delta", "ci_lo", "ci_hi", "p", "n"])
 
@@ -287,7 +267,7 @@ def main(argv: list[str] | None = None) -> int:
                 g = [float(seeds_g[s]["q"][q][side]) for s in common]
                 d = [float(seeds_d[s]["q"][q][side]) for s in common]
                 paired_len_rows.append({"task": task, "q": q, "side": side,
-                                         **paired_bootstrap_delta(g, d, B=B)})
+                                         **paired_bootstrap_delta(g, d, B=B, seed=0x10C8)})
     write_tsv("length_bias_iter108_paired_length.tsv", paired_len_rows,
               ["task", "q", "side", "delta", "ci_lo", "ci_hi", "p", "n"])
 

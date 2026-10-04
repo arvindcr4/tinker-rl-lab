@@ -51,7 +51,6 @@ import sys
 from typing import Any
 
 import numpy as np
-from scipy import stats
 from _analysis_common import load_iter108_perrun, permutation_null, spearman, window_mean
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

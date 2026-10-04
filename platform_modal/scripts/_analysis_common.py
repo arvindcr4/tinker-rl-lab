@@ -273,6 +273,32 @@ def paired_bootstrap(g: list[float], d: list[float], n_boot: int, rng: random.Ra
     }
 
 
+def paired_bootstrap_delta(g, d, B, seed, statistic=np.median):
+    """length_bias_iter96/104/108: paired sign-preserving bootstrap over seed indices.
+
+    Resamples ``d - g`` with ``numpy.default_rng(seed)`` and summarizes the
+    resampled statistics with quantile CIs and a two-sided sign p-value.
+    """
+    g = np.array(g, dtype=np.float64)
+    d = np.array(d, dtype=np.float64)
+    n = min(len(g), len(d))
+    if n == 0:
+        return {"delta": float("nan"), "ci_lo": float("nan"),
+                "ci_hi": float("nan"), "p": float("nan"), "n": 0}
+    g = g[:n]
+    d = d[:n]
+    diffs = d - g
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, n, size=(B, n))
+    boot = statistic(diffs[idx], axis=1)
+    point = float(statistic(diffs))
+    return {"delta": point,
+            "ci_lo": float(np.quantile(boot, 0.025)),
+            "ci_hi": float(np.quantile(boot, 0.975)),
+            "p": float(2 * min(np.mean(boot <= 0), np.mean(boot >= 0))),
+            "n": int(n)}
+
+
 def spearman(x, y) -> tuple[float, float]:
     """length_bias_iter116/120/124: scipy Spearman (rho, p)."""
     from scipy import stats

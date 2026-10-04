@@ -40,7 +40,6 @@ Reads:
   platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json (gsm8k_cot: 3 seeds)
 """
 from __future__ import annotations
-import csv
 import json
 import math
 import random

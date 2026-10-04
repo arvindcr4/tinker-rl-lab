@@ -30,7 +30,6 @@ Outputs:
 """
 from __future__ import annotations
 
-import csv
 import json
 import math
 from pathlib import Path
@@ -39,7 +38,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from _analysis_common import write_dicts_tsv as write_tsv
+from _analysis_common import read_tsv, write_dicts_tsv as write_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 RES = REPO / "experiments" / "results"
@@ -55,11 +54,6 @@ G_REF = 64
 # unweighted prior (equal thirds) so the reader can see how much of
 # the attribution is data-driven vs prior-driven.
 PRIOR_WEIGHTS = {"signal": 0.50, "noise": 0.30, "batch": 0.20}
-
-
-def read_tsv(path: Path) -> list[dict]:
-    with path.open() as f:
-        return list(csv.DictReader(f, delimiter="\t"))
 
 
 def main() -> None:

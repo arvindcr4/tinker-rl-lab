@@ -10,23 +10,18 @@ Panels:
   C. Phase-plane loop area ∮R dL per (algo, task).
 """
 from __future__ import annotations
-import csv
 import json
 import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from _analysis_common import read_tsv as load_tsv
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "experiments", "results")
 FIG = os.path.join(ROOT, "figures")
 PAPER_FIG = os.path.join(ROOT, "paper", "figures")
-
-
-def load_tsv(path):
-    with open(path) as f:
-        return list(csv.DictReader(f, delimiter="\t"))
 
 
 def main():

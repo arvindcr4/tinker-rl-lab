@@ -10,23 +10,18 @@
 """
 from __future__ import annotations
 
-import csv
 from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from _analysis_common import read_tsv
 
 
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
 FIG = ROOT / "figures"
-
-
-def read_tsv(path: Path) -> list[dict]:
-    with path.open() as f:
-        return list(csv.DictReader(f, delimiter="\t"))
 
 
 def main() -> None:

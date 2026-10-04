@@ -9,13 +9,13 @@ Bars carry 95% bootstrap CI whiskers from the paired diff columns. Headline
 annotation in panel (a) reports the diff + CI; panel (b) reports the same.
 """
 from __future__ import annotations
-import csv
 import math
 from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from _analysis_common import read_tsv
 
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -25,11 +25,6 @@ SUMMARY_TSV = RES / "length_bias_iter48_summary.tsv"
 PAIRED_TSV = RES / "length_bias_iter48_grpo_vs_drgrpo.tsv"
 
 OUT_PDF = FIG_DIR / "length_plateau_slopes.pdf"
-
-
-def read_tsv(path: Path) -> list[dict]:
-    with open(path) as f:
-        return list(csv.DictReader(f, delimiter="\t"))
 
 
 def main() -> None:

@@ -39,7 +39,6 @@ Outputs:
 """
 from __future__ import annotations
 
-import csv
 import json
 import math
 import statistics
@@ -49,7 +48,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from _analysis_common import write_dicts_tsv as write_tsv
+from _analysis_common import read_tsv, write_dicts_tsv as write_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 RES = REPO / "experiments" / "results"
@@ -60,11 +59,6 @@ N_BOOT = 5000
 
 # Hypothesised scaling exponents we test against.
 NULL_EXPONENTS = (0.0, 0.5, 1.0)
-
-
-def read_tsv(path: Path) -> list[dict]:
-    with path.open() as f:
-        return list(csv.DictReader(f, delimiter="\t"))
 
 
 def fit_power_law(

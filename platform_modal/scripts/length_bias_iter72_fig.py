@@ -7,7 +7,6 @@ Three panels:
 """
 from __future__ import annotations
 
-import csv
 import json
 import os
 import math
@@ -15,6 +14,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from _analysis_common import read_tsv as load_tsv
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "experiments", "results")
@@ -22,11 +22,6 @@ FIG_DIR = os.path.join(ROOT, "figures")
 PAPER_FIG_DIR = os.path.join(ROOT, "paper", "figures")
 os.makedirs(FIG_DIR, exist_ok=True)
 os.makedirs(PAPER_FIG_DIR, exist_ok=True)
-
-
-def load_tsv(path):
-    with open(path) as fh:
-        return list(csv.DictReader(fh, delimiter="\t"))
 
 
 def f(v, default=float("nan")):

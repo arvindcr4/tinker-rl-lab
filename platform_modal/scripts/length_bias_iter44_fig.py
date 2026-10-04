@@ -9,7 +9,6 @@ Panel D: condvar std(R|L) vs L_bin_center overlaid for the two algos on the
          easy task (most data).
 """
 from __future__ import annotations
-import csv
 import json
 import math
 from pathlib import Path
@@ -18,17 +17,13 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from _analysis_common import read_tsv
 
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
 FIG = ROOT / "figures"
 FIG.mkdir(exist_ok=True)
 TAUS = (0.1, 0.25, 0.5, 0.75, 0.9)
-
-
-def read_tsv(path: Path) -> list[dict]:
-    with open(path) as f:
-        return list(csv.DictReader(f, delimiter="\t"))
 
 
 def to_float(x: str) -> float:

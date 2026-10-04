@@ -11,7 +11,6 @@ Panel (c): TOST p-value curves across epsilons, one line per (G_a, G_b)
 """
 from __future__ import annotations
 
-import csv
 from pathlib import Path
 from statistics import NormalDist
 
@@ -20,6 +19,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from _analysis_common import read_tsv
 
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -29,11 +29,6 @@ FIG.mkdir(parents=True, exist_ok=True)
 WU = 0.976
 COLORS_G = {4: "#e41a1c", 8: "#377eb8", 16: "#4daf4a", 32: "#984ea3", 64: "#ff7f00"}
 MARKERS_G = {4: "o", 8: "s", 16: "^", 32: "D", 64: "v"}
-
-
-def read_tsv(path: Path) -> list[dict]:
-    with path.open() as f:
-        return list(csv.DictReader(f, delimiter="\t"))
 
 
 def panel_a(ax, eff_rows: list[dict]) -> None:

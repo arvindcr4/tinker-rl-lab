@@ -18,15 +18,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from _analysis_common import read_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 RES = REPO / "experiments" / "results"
 FIG = REPO / "figures"
-
-
-def read_tsv(path: Path) -> list[dict]:
-    with path.open() as f:
-        return list(csv.DictReader(f, delimiter="\t"))
 
 
 def solve_min_T_for_acc(target_acc: float, log_t_by_G: dict[int, list[float]],

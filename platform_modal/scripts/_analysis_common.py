@@ -38,6 +38,14 @@ def read_tsv_lines(path):
     return rows
 
 
+def read_tsv(path) -> list[dict]:
+    """Dict rows of a header TSV (group_size_iter39_fig/43_fig/47_fig/67/71/75,
+    length_bias_iter44_fig/48_fig/52_fig: ``read_tsv``; length_bias_iter68_fig/
+    72_fig/76_fig: ``load_tsv``). Accepts str or Path."""
+    with open(path) as f:
+        return list(csv.DictReader(f, delimiter="\t"))
+
+
 def write_dict_tsv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
     """length_bias_iter48/52/56/60: ``write_tsv``."""
     path.parent.mkdir(parents=True, exist_ok=True)

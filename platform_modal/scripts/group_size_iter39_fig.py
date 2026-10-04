@@ -1,7 +1,6 @@
 """Iter 39 figure: 3-panel synthesis of G=4 vs G=32 critical-budget analysis."""
 from __future__ import annotations
 
-import csv
 from pathlib import Path
 
 import numpy as np
@@ -9,15 +8,11 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from _analysis_common import read_tsv
 
 RESULTS = Path("platform_hybrid/experiments/results")
 FIG_DIR = Path("figures")
 FIG_DIR.mkdir(parents=True, exist_ok=True)
-
-
-def read_tsv(path: Path) -> list[dict]:
-    with path.open() as f:
-        return list(csv.DictReader(f, delimiter="\t"))
 
 
 def main() -> None:

@@ -11,12 +11,12 @@ Reads:
   platform_hybrid/experiments/results/length_bias_iter52_above_minus_below.tsv
 """
 from __future__ import annotations
-import csv
 from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from _analysis_common import read_tsv
 
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -26,11 +26,6 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 PAIRED_TSV = RES / "length_bias_iter52_grpo_vs_drgrpo.tsv"
 HL_TSV = RES / "length_bias_iter52_above_minus_below.tsv"
 OUT_PDF = FIG_DIR / "length_regime_drift.pdf"
-
-
-def read_tsv(path: Path) -> list[dict]:
-    with open(path) as f:
-        return list(csv.DictReader(f, delimiter="\t"))
 
 
 def main() -> None:

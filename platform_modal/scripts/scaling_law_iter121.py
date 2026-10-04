@@ -64,7 +64,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
-from _analysis_common import write_rows_tsv as _write_tsv, ols
+from _analysis_common import saturation, write_rows_tsv as _write_tsv, ols
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -85,10 +85,6 @@ N_PERM = 5000
 N_SYNTH_REPS = 200
 SLOPES = [0.01, 0.025, 0.05, 0.10, 0.20]
 N_ANCHORS_GRID = [5, 8, 12, 20, 40]
-
-
-def saturation(t: np.ndarray, r_max: float, lam: float) -> np.ndarray:
-    return r_max * (1.0 - np.exp(-lam * t))
 
 
 def fit_one(t: np.ndarray, y: np.ndarray) -> dict:

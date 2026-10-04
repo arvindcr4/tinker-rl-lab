@@ -60,7 +60,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
-from _analysis_common import write_rows_tsv as _write_tsv
+from _analysis_common import saturation, write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -81,11 +81,6 @@ N_BOOT = 5000
 
 
 # ---------- core model helpers ----------
-
-def saturation(t: np.ndarray, r_max: float, lam: float) -> np.ndarray:
-    """R(t) = R_max * (1 - e^{-lambda*t}).  Strictly monotone."""
-    return r_max * (1.0 - np.exp(-lam * t))
-
 
 def piecewise_saturate_collapse(t: np.ndarray, r_max: float, lam: float,
                                 t_peak: float, gamma: float) -> np.ndarray:

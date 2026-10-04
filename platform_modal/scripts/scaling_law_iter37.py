@@ -40,6 +40,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
+from _analysis_common import saturation as model_saturation  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 DATA = REPO / "experiments" / "results" / "scaling_law_extended_frontier.tsv"
@@ -57,10 +58,6 @@ B_BOOT = 200
 
 # ---------- candidate models ----------------------------------------------------
 # All fit on (1-indexed) step t in [1, n_steps], reward y in [0, 1].
-def model_saturation(t, r_max, lam):
-    return r_max * (1.0 - np.exp(-lam * t))
-
-
 def model_michaelis_menten(t, r_max, t_half):
     return r_max * t / (t_half + t)
 

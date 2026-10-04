@@ -34,6 +34,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
+from _analysis_common import saturation as model_saturation  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 DATA = REPO / "experiments" / "results" / "scaling_law_extended_frontier.tsv"
@@ -48,10 +49,6 @@ RNG = np.random.default_rng(20260702)
 B_BOOT = 200
 TRUNCATIONS = [0.40, 0.60, 0.80, 1.00]
 NOISE_SIGMA = 0.05  # smaller than iter37's 0.10 to test real stability
-
-
-def model_saturation(t, r_max, lam):
-    return r_max * (1.0 - np.exp(-lam * t))
 
 
 def synth_trace(r, rc_lookup):

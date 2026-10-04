@@ -35,6 +35,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
+from _analysis_common import saturation  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -77,10 +78,6 @@ ARCH: dict[str, str] = {
 DENSE_POOL = [a for a, k in ARCH.items() if k == "dense"]
 SEED = 42
 N_BOOT = 500
-
-
-def saturation(t, r_max, lam):
-    return r_max * (1.0 - np.exp(-lam * t))
 
 
 def fit_saturation(t, y):

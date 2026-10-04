@@ -42,7 +42,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
-from _analysis_common import write_rows_tsv as _write_tsv, ols
+from _analysis_common import saturation, write_rows_tsv as _write_tsv, ols
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -60,10 +60,6 @@ MODELS: dict[str, tuple[str, float, str]] = {
 }
 SEED = 1172026
 N_BOOT = 5000
-
-
-def saturation(t: np.ndarray, r_max: float, lam: float) -> np.ndarray:
-    return r_max * (1.0 - np.exp(-lam * t))
 
 
 def fit_one(t: np.ndarray, y: np.ndarray) -> dict:

@@ -40,6 +40,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
+from _analysis_common import saturation  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -62,10 +63,6 @@ LAM_LO, LAM_HI = 1e-4, 10.0
 SEED = 42
 N_BOOT = 2000
 rng = np.random.default_rng(SEED)
-
-
-def saturation(t, r_max, lam):
-    return r_max * (1.0 - np.exp(-lam * t))
 
 
 def load_trace(fname: str) -> np.ndarray:

@@ -44,6 +44,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
+from _analysis_common import saturation as model_saturation  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 DATA = REPO / "experiments" / "results" / "scaling_law_extended_frontier.tsv"
@@ -57,10 +58,6 @@ for d in (FIG_DIR, PAPER_SEC):
 RNG = np.random.default_rng(20260702)
 L_BAR = 512.0  # canonical mid-length tokens / response
 B_BOOT = 400
-
-
-def model_saturation(t, r_max, lam):
-    return r_max * (1.0 - np.exp(-lam * t))
 
 
 def fit_saturation(n_steps, r_first, r_final, r_mean, r_peak, r_var, early_mean,

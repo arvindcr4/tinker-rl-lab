@@ -434,6 +434,13 @@ def ols(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float]:
     return a, b, se_b
 
 
+def saturation(t, r_max, lam):
+    """Exponential saturation R_max * (1 - exp(-λt)) (scaling_law_iter25/57/73/
+    77/elevated/fit/121/125/129/133: ``saturation``; scaling_law_iter37/37b/37c/
+    37d/41/45: ``model_saturation``)."""
+    return r_max * (1.0 - np.exp(-lam * t))
+
+
 def fit_saturation(t, y):
     """scaling_law_iter93/97/101: ``_fit_saturation`` grid search over lambda."""
     lam_grid = np.geomspace(0.01, 10.0, 60)

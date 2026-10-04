@@ -38,7 +38,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
-from _analysis_common import write_rows_tsv as _write_tsv
+from _analysis_common import saturation, write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -65,10 +65,6 @@ PARAM_B: dict[str, float] = {
 
 SEED = 42
 N_BOOT = 1000
-
-
-def saturation(t, r_max, lam):
-    return r_max * (1.0 - np.exp(-lam * t))
 
 
 def _saturation_capped(t, r_max, lam):

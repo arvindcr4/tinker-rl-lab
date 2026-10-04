@@ -25,6 +25,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
+from _analysis_common import saturation as model_saturation  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 SRC = REPO / "experiments" / "results" / "samestack_ppo_grpo.json"
@@ -33,10 +34,6 @@ FIG_DIR = REPO / "figures"
 PAPER_FIG = REPO / "paper" / "figures"
 for d in (FIG_DIR, PAPER_FIG):
     d.mkdir(parents=True, exist_ok=True)
-
-
-def model_saturation(t, r_max, lam):
-    return r_max * (1.0 - np.exp(-lam * t))
 
 
 def model_michaelis_menten(t, r_max, t_half):

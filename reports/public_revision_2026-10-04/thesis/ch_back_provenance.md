@@ -8,7 +8,7 @@ Each row binds the values printed at one location to the bytes they were checked
 
 | Location | Values | M | Artifacts | SHA-256 (prefix) | Result |
 |----------------------|-----:|:----:|------------------------------------------|---------------|-------------|
-| Table 1.1 | 19 | RT | `35 files` | `Σd136e3050c0` | agree |
+| Table 1.1 | 19 | RT | `35 files` | `Σ6cde4e31da5` | agree |
 | Table 4.1 | 2 | R | `2 files` | `Σa5f4cf0dddc` | agree |
 | Table 4.2 | 18 | C | `17 files` | `Σ3fac2be0211` | agree |
 | §6.1 | 6 | RP | `2 files` | `Σef6dbd7be9d` | agree |
@@ -17,7 +17,7 @@ Each row binds the values printed at one location to the bytes they were checked
 | §6.4 | 111 | RSP | `15 files` | `Σ8adf6b0a02c` | agree |
 | §6.5 | 174 | P | `15 files` | `Σ68b18a3ffd4` | agree |
 | Table 6.1 | 11 | R | `samestack_gsm8k_cot.json` | `ed3022290a87` | agree |
-| §6 recomputations | 43 | RST | `20 files` | `Σ4c812e92bc7` | agree |
+| §6 recomputations | 43 | RST | `20 files` | `Σ9aa773371c9` | agree |
 | §7.1 | 36 | RST | `5 files` | `Σf51fc73ea89` | agree |
 | §7.2 | 32 | RA | `2 files` | `Σ3dc3ccc3d12` | agree |
 | §7.3 | 34 | TA | `p7_controller.tex` | `a5caaab4b855` | agree |

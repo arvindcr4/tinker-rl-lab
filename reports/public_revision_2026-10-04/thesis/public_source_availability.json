@@ -11,8 +11,8 @@
     },
     {
       "path": "Thesis_Report_ArvindCR_C1_Coverage_Derived_2026-10-04_PUBLIC.pdf",
-      "bytes": 1679101,
-      "sha256": "4840e78d8d17d23396f4699de1fcfc8c1d78b5649136f611f93ee63e1a9ed016"
+      "bytes": 1679697,
+      "sha256": "d6add94956973dc319de9d4e6f30a2263fd28d3a4939ced05156775ef6f8213d"
     },
     {
       "path": "build_thesis.py",
@@ -107,12 +107,12 @@
     {
       "path": "ch_back_provenance.md",
       "bytes": 4866,
-      "sha256": "01b5cd4cbe60be84ffab395b8297ce50b3211315239f7958ce93457af3c61716"
+      "sha256": "cb97ada2989bdc6bcc514d2617b9eae652f33bd6249d91ef67446ca1d9f6cabd"
     },
     {
       "path": "ch_back_reproducibility.md",
-      "bytes": 35237,
-      "sha256": "4097360cfe622573123b6c750f98327e882f273e7bd996eec182ad35deb96b71"
+      "bytes": 35778,
+      "sha256": "afde391b86946ea2b1f3a22996f5d47d1661476c9815602324b8fffef9b0fe02"
     },
     {
       "path": "ch_back_run_registry.md",
@@ -382,7 +382,7 @@
     {
       "path": "provenance_audit.json",
       "bytes": 277936,
-      "sha256": "317b8ecb2108aa8a11c0b8fdd414937b62dad81600a8c6b761808e5a421af77a"
+      "sha256": "497772a1a2c8157583e9dcb3cd21273f2613e65d476b5ca01545328d477a32b0"
     },
     {
       "path": "public_p11_manifest_bindings.json",

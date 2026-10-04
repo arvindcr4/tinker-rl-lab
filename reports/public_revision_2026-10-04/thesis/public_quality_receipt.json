@@ -2,8 +2,8 @@
   "schema": "public-document-quality-v1",
   "status": "reviewed",
   "pdf_filename": "Thesis_Report_ArvindCR_C1_Coverage_Derived_2026-10-04_PUBLIC.pdf",
-  "sha256": "4840e78d8d17d23396f4699de1fcfc8c1d78b5649136f611f93ee63e1a9ed016",
-  "bytes": 1679101,
+  "sha256": "d6add94956973dc319de9d4e6f30a2263fd28d3a4939ced05156775ef6f8213d",
+  "bytes": 1679697,
   "pages": 306,
   "all_page_text_bounds_failures": [],
   "replacement_character_pages": [],
@@ -319,7 +319,7 @@
     306
   ],
   "visual_review": "pass: Authoring assistant inspected physical pages 1–156 in rendered contact sheets and enlarged selected dense/changed pages; independent assistant inspected pages 157–306 with selected enlargements. All pages covered; no observed clipping, overlap, broken tables or missing glyphs. Minor continuation-page whitespace remains.",
-  "independent_review": "pass: Separate nonhuman assistant reviewed manuscript claims and physical PDF pages 157–306. Final rebuild changed only rendered pages 15 and 74, re-reviewed by authoring assistant; pages 157–306 were pixel-identical. This is assistant review, not human academic approval or independent scientific regrading.",
+  "independent_review": "pass: Separate nonhuman assistant reviewed manuscript claims and physical PDF pages 157–306. The CLI-documentation rebuild changed only pages 12, 226–238 and 306. The independent assistant re-reviewed 226–238 and 306 and verified all remaining assigned page images unchanged; the authoring assistant re-reviewed page 12. This is assistant review, not human academic approval or independent scientific regrading.",
   "limitations": [
     "Automated bindings do not establish scientific validity, original-source authentication, or full source availability.",
     "Recorded page count is not independently parsed by the standard-library receipt checker.",

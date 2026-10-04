@@ -1,14 +1,14 @@
 {
   "schema": "public-scientific-release-v1",
   "date": "2026-10-04",
-  "code_and_results_commit": "dd5bfe7838c58c1b2e39f8a72d2dec2585b491ab",
+  "code_and_results_commit": "ce3bbaa4f67b503df79b3a81593df22f17359d0f",
   "scope": "Separately versioned public thesis, editable sources, figures, bindings, and recorded final artifact review. Not a complete experiment archive.",
   "documents": {
     "thesis_pages": 306
   },
   "verification": {
     "document_review": "Completed nonhuman assistant rendered-page and manuscript review with exact final-PDF binding; no institutional certification.",
-    "test_results": "1139 passed and 1 device-related skip across CPU suite plus targeted repaired-failure and native-LaTeX reruns; CPU coverage83.98%. Ruff, formatting, mypy20files, docs, lock and all9audits passed.",
+    "test_results": "1164 passed, 1 device-related skip, 0 failures and 0 deselections in one complete final CPU-plus-native-LaTeX invocation on settled code ce3bbaa4f67b503df79b3a81593df22f17359d0f; coverage84.68%. Ruff, formatting, mypy20files, docs, lock and all9audits passed.",
     "replay_limit": "No omitted private execution is authenticated or replayed by this export."
   },
   "files": [
@@ -24,8 +24,8 @@
     },
     {
       "path": "reports/public_revision_2026-10-04/thesis/Thesis_Report_ArvindCR_C1_Coverage_Derived_2026-10-04_PUBLIC.pdf",
-      "bytes": 1679101,
-      "sha256": "4840e78d8d17d23396f4699de1fcfc8c1d78b5649136f611f93ee63e1a9ed016"
+      "bytes": 1679697,
+      "sha256": "d6add94956973dc319de9d4e6f30a2263fd28d3a4939ced05156775ef6f8213d"
     },
     {
       "path": "reports/public_revision_2026-10-04/thesis/build_thesis.py",
@@ -120,12 +120,12 @@
     {
       "path": "reports/public_revision_2026-10-04/thesis/ch_back_provenance.md",
       "bytes": 4866,
-      "sha256": "01b5cd4cbe60be84ffab395b8297ce50b3211315239f7958ce93457af3c61716"
+      "sha256": "cb97ada2989bdc6bcc514d2617b9eae652f33bd6249d91ef67446ca1d9f6cabd"
     },
     {
       "path": "reports/public_revision_2026-10-04/thesis/ch_back_reproducibility.md",
-      "bytes": 35237,
-      "sha256": "4097360cfe622573123b6c750f98327e882f273e7bd996eec182ad35deb96b71"
+      "bytes": 35778,
+      "sha256": "afde391b86946ea2b1f3a22996f5d47d1661476c9815602324b8fffef9b0fe02"
     },
     {
       "path": "reports/public_revision_2026-10-04/thesis/ch_back_run_registry.md",
@@ -395,7 +395,7 @@
     {
       "path": "reports/public_revision_2026-10-04/thesis/provenance_audit.json",
       "bytes": 277936,
-      "sha256": "317b8ecb2108aa8a11c0b8fdd414937b62dad81600a8c6b761808e5a421af77a"
+      "sha256": "497772a1a2c8157583e9dcb3cd21273f2613e65d476b5ca01545328d477a32b0"
     },
     {
       "path": "reports/public_revision_2026-10-04/thesis/public_p11_manifest_bindings.json",
@@ -404,13 +404,13 @@
     },
     {
       "path": "reports/public_revision_2026-10-04/thesis/public_quality_receipt.json",
-      "bytes": 4619,
-      "sha256": "da167bf079ffd3bc1dad0a6bc6483a0c33bf64ddd11d0c6c7e372244afe5800b"
+      "bytes": 4724,
+      "sha256": "13ab92cfd6a9b0bc891b49ad4883fad724089ac5897f3af47c2c7f98690e6b31"
     },
     {
       "path": "reports/public_revision_2026-10-04/thesis/public_source_availability.json",
       "bytes": 14092,
-      "sha256": "e41ecc07020d4dba23d749e335d0d380efc5d8f4d080a7a9207acfc0415092e8"
+      "sha256": "74ce9e576d550cdd0e72e311a4d528404a9431f1a48b89fad6b4b87bfe339be7"
     },
     {
       "path": "reports/public_revision_2026-10-04/thesis/references.bib",
@@ -418,5 +418,5 @@
       "sha256": "ea71d21a82b41a2f9581281cab3455c1eafa6236136a79ba5b83e7e61dfc000e"
     }
   ],
-  "code_and_results_commit_scope": "Exact local code baseline including numerical provenance bindings and public-package validation; the publication documents are recorded in the following scoped Git commit."
+  "code_and_results_commit_scope": "Exact settled local code baseline including CLI exports, seed-aware verification, numerical provenance bindings and public-package validation; document receipts are recorded in the following scoped Git commit."
 }

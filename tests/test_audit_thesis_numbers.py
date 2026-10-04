@@ -47,7 +47,8 @@ def test_registry_tokens_are_verbatim_and_current():
         assert audit.overall_status(groups) == "INCOMPLETE"
     assert all(a["sha256"] for g in groups if "C1" in g["group"] for a in g["artifacts"])
     appendix = audit.appendix(groups, "audit.json")
-    assert "evidence unavailable" in appendix
+    if any(g["status"] == "ARTIFACT_MISSING" for g in groups):
+        assert "evidence unavailable" in appendix
     assert "no value is left unchecked" not in appendix
 
 
@@ -401,3 +402,56 @@ def test_prose_fallback_does_not_match_substrings_or_claim_recomputation(
     assert groups[0]["status"] == "PASS"
     assert groups[1]["status"] == "UNBOUND"
     assert groups[2]["status"] == ("PASS" if method == "R" else "UNBOUND")
+
+
+def test_precise_supplementary_claim_calculations(monkeypatch):
+    monkeypatch.setattr(
+        audit,
+        "text",
+        lambda _: (
+            "library/framework ($eta = 0.546$), training algorithm ($eta = 0.558$), family explains $eta = 0.471$; model scale explains $eta = 0.322$."
+        ),
+    )
+    assert audit.marginal_eta_sum() == ["These four values sum to 1.897000"]
+    monkeypatch.setattr(
+        audit,
+        "tsv",
+        lambda _: [
+            {"G": "2", "snr_advantage_variance": "1.4628"},
+            {"G": "16", "snr_advantage_variance": "2.1622"},
+        ],
+    )
+    assert audit.numbers_agree("52%", audit.snr_ratios()[0])
+    assert audit.numbers_agree("48%", audit.snr_ratios()[1])
+    monkeypatch.setattr(
+        audit,
+        "tsv",
+        lambda _: [
+            {
+                "claim_id": "P2-C2",
+                "heldout_metric": "Spearman rho=0.27, bootstrap 95% CI [-0.37, 0.88], n=23 pooled cells",
+            }
+        ],
+    )
+    assert audit.registry_bootstrap_ci() == ["the registry's bootstrap 95% CI is [-0.37, 0.88]"]
+
+
+def test_prose_bindings_keep_method_and_are_section_specific():
+    claim = {
+        "group": "§6 registry bootstrap CI",
+        "chapter": "ch06_results_core.md",
+        "status": "PASS",
+        "method": "S",
+        "tokens": [{"token": "CI [−0.37, 0.88]", "result": "PASS"}],
+    }
+    assert audit.bound_prose_evidence("§6.3.4 prose", "−0.37", claim["chapter"], [claim]) is claim
+    assert audit.bound_prose_evidence("§6.3.5 prose", "−0.37", claim["chapter"], [claim]) is None
+    assert audit.bound_prose_evidence("§6.3.4 prose", "0.27", claim["chapter"], [claim]) is None
+    claim["status"] = "ARTIFACT_MISSING"
+    assert audit.bound_prose_evidence("§6.3.4 prose", "−0.37", claim["chapter"], [claim]) is None
+
+
+def test_registry_ci_requires_unique_target_row(monkeypatch):
+    monkeypatch.setattr(audit, "tsv", lambda _: [])
+    with pytest.raises(ValueError, match="exactly one P2-C2"):
+        audit.registry_bootstrap_ci()

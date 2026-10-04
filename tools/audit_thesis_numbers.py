@@ -1297,6 +1297,10 @@ MONTHS = (
     "December",
 )
 NOTES = {
+    "§6.1 η² sum": "Arithmetic on the four rounded marginal eta-squared summaries in _shared_methods.tex; not a rerun of ANOVA on the 42 underlying experiments.",
+    "§6 registry bootstrap CI": "Stored P2-C2 heldout_metric summary only; bootstrap sampling and raw-row reconstruction are not rerun by this claim.",
+    "§6 historical Welch test": "Historical p=0.7605 transcription from REPRODUCE.md, not a recomputed Welch test or the current paired same-stack result.",
+    "§6 SNR ratios": "Ratios calculated from stored G=2 and G=16 snr_advantage_variance summaries; not a fresh SNR estimate from raw trajectories.",
     "Table A.5 evidence tiers": "claim_to_run_table.tsv records P1-C2 as X; the thesis rectifies it to C "
     "because the Nemotron identity was arbitrated against the HF adapter (Table A.5 P1-C2 row).",
 }
@@ -1690,6 +1694,43 @@ def a8_rows():
     ]
 
 
+def marginal_eta_sum():
+    source = text(f"{SEC}/_shared_methods.tex")
+    # Bind to the four labeled factors, not unrelated decimal tokens.
+    values = []
+    for label in (
+        "library/framework",
+        "training algorithm",
+        "family explains",
+        "model scale explains",
+    ):
+        value = rx(re.escape(label) + r".{0,30}?= ([0-9.]+)", source, 1)
+        values.append(Decimal(value))
+    return [f"These four values sum to {sum(values):.6f}"]
+
+
+def registry_bootstrap_ci():
+    rows = [
+        r for r in tsv(f"{RES}/claim_to_run/claim_to_run_table.tsv") if r["claim_id"] == "P2-C2"
+    ]
+    if len(rows) != 1:
+        raise ValueError("expected exactly one P2-C2 registry row")
+    interval = rx(r"bootstrap 95% CI (\[[^]]+\])", rows[0]["heldout_metric"], 1)
+    return [f"the registry's bootstrap 95% CI is {interval}"]
+
+
+def snr_ratios():
+    rows = {
+        int(r["G"]): float(r["snr_advantage_variance"])
+        for r in tsv(f"{RES}/group_size_iter27_synthesis.tsv")
+    }
+    ratio = rows[16] / rows[2]
+    return [
+        f"about {100 * ratio / math.sqrt(16 / 2):.6f}% of the √G ideal",
+        f"about {100 * (ratio - 1):.6f}% above a flat baseline",
+    ]
+
+
 def claims_ext():
     yield ("§6 recomputed values", "ch06", CH06_TOKENS, "R", CH06_FILES, ch06_rows)
     recon = f"{RES}/group_size_g4_vs_g32_broader_scale.tsv"
@@ -1722,19 +1763,28 @@ def claims_ext():
         "§6.1 η² sum",
         "ch06",
         ["These four values sum to 1.897"],
-        "A",
-        [],
-        lambda: [f"These four values sum to {0.546 + 0.558 + 0.471 + 0.322:.6f}"],
+        "R",
+        [f"{SEC}/_shared_methods.tex"],
+        marginal_eta_sum,
+    )
+    yield (
+        "§6 registry bootstrap CI",
+        "ch06",
+        ["the registry's bootstrap 95% CI is [−0.37, 0.88]"],
+        "S",
+        [f"{RES}/claim_to_run/claim_to_run_table.tsv"],
+        registry_bootstrap_ci,
+    )
+    yield (
+        "§6 SNR ratios",
+        "ch06",
+        ["about 52% of the √G ideal", "about 48% above a flat baseline"],
+        "R",
+        [f"{RES}/group_size_iter27_synthesis.tsv"],
+        snr_ratios,
     )
     for name, tok, src in (
-        (
-            "registry bootstrap CI",
-            "the registry's bootstrap 95% CI is [−0.37, 0.88]",
-            f"{RES}/claim_to_run/claim_to_run_table.tsv",
-        ),
         ("historical Welch test", "p = 0.7605", "REPRODUCE.md"),
-        ("SNR fraction", "about 52% of the √G ideal", f"{SEC}/p3_abstract.tex"),
-        ("SNR above flat", "about 48% above a flat baseline", f"{SEC}/group_size_iter27.tex"),
         (
             "superseded ε statement",
             "The earlier ≤0.4% ε-sensitivity statement",
@@ -2516,12 +2566,40 @@ def in_source(token, source):
     return all(Decimal(n.replace("−", "-").replace(",", "")) in values for n in wanted)
 
 
+# Only these exact section/token pairs may inherit a named explicit claim.
+# A stored summary or transcription never becomes a general chapter-wide
+# numeric whitelist, and the inherited method is recorded on the prose row.
+PROSE_BINDINGS = {
+    ("§6.1 prose", "1.897"): "§6.1 η² sum",
+    ("§6.2.3 prose", "0.7605"): "§6 historical Welch test",
+    ("§6.3.4 prose", "−0.37"): "§6 registry bootstrap CI",
+    ("§6.3.4 prose", "0.88"): "§6 registry bootstrap CI",
+    ("§6.4.1 prose", "52%"): "§6 SNR ratios",
+    ("§6.4.1 prose", "48%"): "§6 SNR ratios",
+}
+
+
+def bound_prose_evidence(group, token, chapter, groups):
+    name = PROSE_BINDINGS.get((group, token))
+    return next(
+        (
+            g
+            for g in groups
+            if g["group"] == name
+            and g["chapter"] == chapter
+            and g["status"] == "PASS"
+            and any(in_source(token, r["token"]) for r in g["tokens"] if r["result"] == "PASS")
+        ),
+        None,
+    )
+
+
 def evaluate():
     # A second audit in this process must observe edited files and new evidence.
     for reader in (text, J, jsonl, expand, sha256, e14, e11_boot):
         reader.cache_clear()
     chapters = {k: text(f"{THESIS}/{v}") for k, v in CHAPTERS.items()}
-    groups = []
+    groups: list[dict[str, Any]] = []
     verified: dict[str, list[str]] = {}
     for group, ch, tokens, method, artifacts, compute in itertools.chain(
         claims(), claims_ext(), prose_claims("ch06")
@@ -2563,7 +2641,14 @@ def evaluate():
                     "PASS" if any(in_source(tok, text(a)) for a in artifacts) else "FAIL"
                 )
                 if method == "P" and row["result"] == "FAIL":
-                    if any(in_source(tok, v) for v in verified.get(ch, [])):
+                    binding = bound_prose_evidence(group, tok, CHAPTERS[ch], groups)
+                    if binding is not None:
+                        row["result"] = "PASS"
+                        row["source_binding"] = {
+                            k: binding[k] for k in ("group", "method", "artifacts")
+                        }
+                        row["note"] = binding.get("note", "explicit section-specific claim binding")
+                    elif any(in_source(tok, v) for v in verified.get(ch, [])):
                         row["result"] = "PASS"
                         row["note"] = "verified by an explicit recomputation in this chapter"
                     elif tok in PROSE_DEFINITIONS:

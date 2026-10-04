@@ -65,3 +65,7 @@ These checks do not authenticate the manifest's author or freeze time, recover
 withheld raw completions, replay inference, independently validate review labels,
 certify privacy or institutional approval, or establish training or capability
 gains. A file digest is a consistency commitment, not evidence of execution.
+
+## October 4 candidate
+
+Run `python tools/check_public_revision.py --revision reports/public_revision_2026-10-04 --pdf thesis/Thesis_Report_ArvindCR_C1_Coverage_Derived_2026-10-04_PUBLIC.pdf` to check the separately versioned candidate. This validates exact inventory and recorded PDF review binding; it does not independently perform the review or establish scientific validity. See [public review packaging](PUBLIC_REVIEW_PACKAGE.md). The historical October 3 checks remain separate.

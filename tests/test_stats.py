@@ -125,7 +125,7 @@ class TestVerifyResults(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.root = Path(tmp.name)
-        self.expected = {"gsm8k_qwen3_8b": {"last10": 0.344, "peak": 0.625}}
+        self.expected = {"gsm8k_qwen3_8b": {"last10": 0.344, "peak": 0.625, "seed": 42}}
 
     def test_verify_within_tolerance(self):
         self._write_result(self.root, "gsm8k_qwen3_8b_s42", 0.35, 0.63)

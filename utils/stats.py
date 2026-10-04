@@ -349,7 +349,7 @@ def try_rliable_analysis(results: Dict[str, np.ndarray], output_dir: str):
         print("Falling back to bootstrap CI analysis.")
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description="Statistical analysis for RL experiments")
     parser.add_argument("--results-dir", type=str, default="results/")
     parser.add_argument(
@@ -361,7 +361,18 @@ def main():
     parser.add_argument(
         "--bootstrap-samples", type=int, default=10000, help="Bootstrap resamples for the CI"
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+    if args.rliable:
+        parser.error(
+            "--rliable is not supported by this CLI: its per-experiment seed files "
+            "do not define a normalized multi-task score matrix. Use the explicit "
+            "try_rliable_analysis API with appropriately prepared scores."
+        )
+    if args.bootstrap_samples < 1:
+        parser.error("--bootstrap-samples must be positive")
+    if not os.path.isdir(args.results_dir):
+        parser.error("--results-dir must name an existing directory")
+    summary_rows = []
 
     os.makedirs(args.output_dir, exist_ok=True)
 
@@ -377,7 +388,7 @@ def main():
 
     print(f"Found experiments: {experiments}")
 
-    for exp in experiments:
+    for exp in sorted(experiments):
         print(f"\n{'=' * 60}")
         print(f"Analyzing: {exp}")
         print(f"{'=' * 60}")
@@ -396,8 +407,16 @@ def main():
                 last_metric = metrics_list[-1]
                 score = last_metric.get(
                     "reward/mean",
-                    last_metric.get("accuracy", last_metric.get("eval/percent_correct", 0)),
+                    last_metric.get("accuracy", last_metric.get("eval/percent_correct")),
                 )
+                if (
+                    isinstance(score, bool)
+                    or not isinstance(score, (int, float))
+                    or not np.isfinite(score)
+                ):
+                    parser.error(
+                        f"{exp}: final score must be a finite numeric metric; missing metrics are not zero"
+                    )
                 final_scores.append(score)
 
         if final_scores:
@@ -406,10 +425,28 @@ def main():
                 scores_arr, n_bootstrap=args.bootstrap_samples
             )
             se = standard_error(scores_arr)
+            summary_rows.append(
+                {
+                    "experiment": exp,
+                    "seeds": len(final_scores),
+                    "mean": float(mean),
+                    "standard_error": float(se),
+                    "ci_lower": float(ci_lower),
+                    "ci_upper": float(ci_upper),
+                    "bootstrap_samples": args.bootstrap_samples,
+                }
+            )
             print(
                 f"  Final score: {mean:.4f} ± {se:.4f} (95% CI: [{ci_lower:.4f}, {ci_upper:.4f}])"
             )
 
+    if not summary_rows:
+        parser.error("no nonempty seed results found; no analysis was produced")
+    table = pd.DataFrame(summary_rows)
+    if args.format in {"csv", "both"}:
+        table.to_csv(os.path.join(args.output_dir, "results_table.csv"), index=False)
+    if args.format in {"latex", "both"}:
+        table.to_latex(os.path.join(args.output_dir, "results_table.tex"), index=False, escape=True)
     print("\nStatistical analysis complete.")
 
 

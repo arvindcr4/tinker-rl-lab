@@ -167,10 +167,19 @@ Each log ends with a per-seed block of the form (fractions, not percent):
   peak_reward   : 0.YYY
 ```
 
-`utils/verify_results.py` (§8) parses this block. Note that it compares every
-seed against the single headline expectation (`gsm8k_qwen3_8b`: 0.344 / 0.625),
-so seeds whose recorded values in the table below differ by more than the
-tolerance (e.g. seed 456 peak 100 %) are reported as outside tolerance.
+`utils/verify_results.py` (§8) preserves the seed from this block and applies only
+an explicitly applicable reference. The shipped headline reference is scoped to
+seed 42. Other seeds and legacy unscoped references report `UNVERIFIED` and exit
+nonzero, rather than being compared with seed 42. Provide a `seeds` mapping in an
+expectations JSON file when independently supported per-seed expectations exist:
+`{"experiment_name": {"seeds": {"42": {"last10": 0.344, "peak": 0.625}}}}`.
+Use the actual experiment key and verified source values; this structural example
+is not a reference for an arbitrary experiment. A flat reference can instead
+carry `seed: 42`. Only references deliberately defined across seeds should carry
+`seed_independent: true`. Missing or conflicting seed identities cannot satisfy
+a seed-specific reference. `--strict` requires every declared seed reference to
+be represented. The historical table below is retained as a source transcription;
+this change does not promote its rows into newly authenticated measurements.
 
 | seed | last-10 (paper)* | peak (paper)* | W&B run (reference) |
 |------|------------------|---------------|---------------------|
@@ -198,6 +207,11 @@ python utils/stats.py \
 `utils/stats.py` reads `results/<experiment>/seed_<N>/*.jsonl` (one JSON object
 per line; the last line's `reward/mean`, `accuracy` or `eval/percent_correct` is
 the seed's score) and prints the mean, SE and a percentile-bootstrap 95% CI.
+`--format csv`, `latex` or `both` (default) writes `results_table.csv`,
+`results_table.tex` or both under `--output-dir`, using that same summary.
+Missing/nonfinite metrics and empty inputs fail instead of silently producing
+zero scores. `--rliable` exits with a clear usage error: these files do not
+define the normalized task matrix required for an aggregate comparison.
 The trainer does **not** write that layout: it prints the per-seed block above to
 the log. Write one `metrics.jsonl` per seed (e.g. `{"accuracy": <avg_last10>}`)
 before running this step.

@@ -4,7 +4,10 @@ import json
 from pathlib import Path
 import zipfile
 
-import pytest
+import unittest
+import tempfile
+import io
+from contextlib import redirect_stdout
 
 from tools import build_public_review_package as package
 
@@ -25,8 +28,7 @@ def entries(root, names, relative_to=None):
     ]
 
 
-@pytest.fixture
-def release(tmp_path):
+def make_release(tmp_path):
     root = tmp_path / "repo"
     for name in package.REQUIRED:
         path = root / name
@@ -77,80 +79,86 @@ def release(tmp_path):
     return root
 
 
-def test_build_is_deterministic_and_verifies(release, tmp_path):
-    first, second = tmp_path / "one.zip", tmp_path / "two.zip"
-    result = package.build_package(release, first)
-    package.build_package(release, second)
-    assert first.read_bytes() == second.read_bytes()
-    assert result["status"] == "PACKAGED"
-    assert package.verify_package(first)["sha256"] == result["sha256"]
-    with zipfile.ZipFile(first) as archive:
-        assert set(archive.namelist()) == package.REQUIRED | {package.PUBLICATION, package.PACKAGE}
-    with pytest.raises(ValueError, match="already exists"):
-        package.build_package(release, first)
+class TestPublicReviewPackage(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.tmp_path = Path(temporary.name)
+        self.release = make_release(self.tmp_path)
+        self.stdout = io.StringIO()
+        redirect = redirect_stdout(self.stdout)
+        redirect.__enter__()
+        self.addCleanup(redirect.__exit__, None, None, None)
 
+    def test_build_is_deterministic_and_verifies(self):
+        first, second = self.tmp_path / "one.zip", self.tmp_path / "two.zip"
+        result = package.build_package(self.release, first)
+        package.build_package(self.release, second)
+        assert first.read_bytes() == second.read_bytes()
+        assert result["status"] == "PACKAGED"
+        assert package.verify_package(first)["sha256"] == result["sha256"]
+        with zipfile.ZipFile(first) as archive:
+            assert set(archive.namelist()) == package.REQUIRED | {
+                package.PUBLICATION,
+                package.PACKAGE,
+            }
+        with self.assertRaisesRegex(ValueError, "already exists"):
+            package.build_package(self.release, first)
 
-def test_stale_receipt_and_missing_inputs_leave_no_archive(release, tmp_path):
-    output = tmp_path / "bad.zip"
-    (release / package.PDF).write_bytes(b"%PDF-changed")
-    with pytest.raises(ValueError, match="mismatch"):
-        package.build_package(release, output)
-    assert not output.exists()
+    def test_stale_receipt_and_missing_inputs_leave_no_archive(self):
+        output = self.tmp_path / "bad.zip"
+        (self.release / package.PDF).write_bytes(b"%PDF-changed")
+        with self.assertRaisesRegex(ValueError, "mismatch"):
+            package.build_package(self.release, output)
+        assert not output.exists()
 
+    def test_unlisted_file_is_not_silently_packaged(self):
+        (self.release / package.THESIS / "operational.txt").write_text("not reviewed")
+        with self.assertRaisesRegex(ValueError, "inventory mismatch"):
+            package.build_package(self.release, self.tmp_path / "bad.zip")
 
-def test_unlisted_file_is_not_silently_packaged(release, tmp_path):
-    (release / package.THESIS / "operational.txt").write_text("not reviewed")
-    with pytest.raises(ValueError, match="inventory mismatch"):
-        package.build_package(release, tmp_path / "bad.zip")
+    def test_symlink_rejected(self):
+        target = self.release / package.THESIS / "ch01_introduction.md"
+        original = target.read_bytes()
+        target.unlink()
+        elsewhere = self.tmp_path / "source"
+        elsewhere.write_bytes(original)
+        target.symlink_to(elsewhere)
+        with self.assertRaisesRegex(ValueError, "symlink"):
+            package.build_package(self.release, self.tmp_path / "bad.zip")
 
+    def test_private_or_noncanonical_paths_rejected(self):
+        for name in [
+            "../private",
+            "/etc/passwd",
+            "outputs/export.json",
+            f"{package.THESIS}/../private",
+            f"{package.THESIS}/.env",
+        ]:
+            with self.subTest(name=name):
+                with self.assertRaisesRegex(ValueError, "package|scratch|hidden"):
+                    package.public_name(name)
 
-def test_symlink_rejected(release, tmp_path):
-    target = release / package.THESIS / "ch01_introduction.md"
-    original = target.read_bytes()
-    target.unlink()
-    elsewhere = tmp_path / "source"
-    elsewhere.write_bytes(original)
-    target.symlink_to(elsewhere)
-    with pytest.raises(ValueError, match="symlink"):
-        package.build_package(release, tmp_path / "bad.zip")
+    def test_tampered_and_extra_archive_members_rejected(self):
+        original = self.tmp_path / "one.zip"
+        package.build_package(self.release, original)
+        with zipfile.ZipFile(original) as archive:
+            contents = {name: archive.read(name) for name in archive.namelist()}
+        contents[package.PDF] = b"%PDF-tampered"
+        changed = self.tmp_path / "changed.zip"
+        with zipfile.ZipFile(changed, "w") as archive:
+            for name, data in contents.items():
+                archive.writestr(name, data)
+        with self.assertRaisesRegex(ValueError, "mismatch"):
+            package.verify_package(changed)
+        with zipfile.ZipFile(original, "a") as archive:
+            archive.writestr("private/account.json", "{}")
+        with self.assertRaisesRegex(ValueError, "outside public"):
+            package.verify_package(original)
 
-
-@pytest.mark.parametrize(
-    "name",
-    [
-        "../private",
-        "/etc/passwd",
-        "outputs/export.json",
-        f"{package.THESIS}/../private",
-        f"{package.THESIS}/.env",
-    ],
-)
-def test_private_or_noncanonical_paths_rejected(name):
-    with pytest.raises(ValueError, match="package|scratch|hidden"):
-        package.public_name(name)
-
-
-def test_tampered_and_extra_archive_members_rejected(release, tmp_path):
-    original = tmp_path / "one.zip"
-    package.build_package(release, original)
-    with zipfile.ZipFile(original) as archive:
-        contents = {name: archive.read(name) for name in archive.namelist()}
-    contents[package.PDF] = b"%PDF-tampered"
-    changed = tmp_path / "changed.zip"
-    with zipfile.ZipFile(changed, "w") as archive:
-        for name, data in contents.items():
-            archive.writestr(name, data)
-    with pytest.raises(ValueError, match="mismatch"):
-        package.verify_package(changed)
-    with zipfile.ZipFile(original, "a") as archive:
-        archive.writestr("private/account.json", "{}")
-    with pytest.raises(ValueError, match="outside public"):
-        package.verify_package(original)
-
-
-def test_cli_success_and_error(release, tmp_path, capsys):
-    path = tmp_path / "public.zip"
-    assert package.main(["--root", str(release), "--output", str(path)]) == 0
-    assert package.main(["--verify", str(path)]) == 0
-    assert package.main(["--root", str(release), "--output", str(path)]) == 1
-    assert '"status": "FAIL"' in capsys.readouterr().out
+    def test_cli_success_and_error(self):
+        path = self.tmp_path / "public.zip"
+        assert package.main(["--root", str(self.release), "--output", str(path)]) == 0
+        assert package.main(["--verify", str(path)]) == 0
+        assert package.main(["--root", str(self.release), "--output", str(path)]) == 1
+        assert '"status": "FAIL"' in self.stdout.getvalue()

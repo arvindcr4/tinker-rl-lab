@@ -19,6 +19,8 @@ import os
 import json
 import glob
 import argparse
+import math
+from numbers import Real
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -38,6 +40,7 @@ def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List
         Dict mapping seed -> list of metric records over training steps.
     """
     seed_results = {}
+    sources: Dict[int, str] = {}
     pattern = os.path.join(results_dir, experiment, "seed_*", "*.jsonl")
     for filepath in sorted(glob.glob(pattern)):
         seed_dir = os.path.basename(os.path.dirname(filepath))
@@ -45,6 +48,11 @@ def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List
             seed = int(seed_dir.replace("seed_", ""))
         except ValueError:
             continue
+        if seed in sources:
+            raise ValueError(
+                f"Ambiguous metric sources for seed {seed}: {sources[seed]} and {filepath}"
+            )
+        sources[seed] = filepath
         metrics = []
         with open(filepath, "r") as f:
             for line in f:
@@ -52,6 +60,8 @@ def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List
                 if not line:
                     continue
                 data = json.loads(line)
+                if not isinstance(data, dict):
+                    raise ValueError(f"Metric record must be an object: {filepath}")
                 metrics.append(data)
         seed_results[seed] = metrics
     return seed_results
@@ -122,6 +132,8 @@ def welch_ttest(scores_a: np.ndarray, scores_b: np.ndarray) -> dict:
     """
     Welch's t-test for comparing two algorithms.
     Recommended over Student's t-test when variances may differ.
+    Cohen's d uses the sample-size-weighted pooled sample variance.
+    Identical point masses report d=0; distinct point masses report signed infinity.
 
     Reference: Colas et al. (2019), Section 4.1
     """
@@ -144,7 +156,13 @@ def welch_ttest(scores_a: np.ndarray, scores_b: np.ndarray) -> dict:
         p_value = 0.0 if difference else 1.0
     else:
         t_stat, p_value = stats.ttest_ind(scores_a, scores_b, equal_var=False)
-        pooled = np.sqrt((np.var(scores_a) + np.var(scores_b)) / 2)
+        pooled = np.sqrt(
+            (
+                (len(scores_a) - 1) * np.var(scores_a, ddof=1)
+                + (len(scores_b) - 1) * np.var(scores_b, ddof=1)
+            )
+            / (len(scores_a) + len(scores_b) - 2)
+        )
         effect_size = (np.mean(scores_a) - np.mean(scores_b)) / pooled
 
     return {
@@ -200,7 +218,10 @@ def plot_learning_curves_with_ci(
     title: str = "Learning Curves with 95% Confidence Intervals",
 ):
     """
-    Plot learning curves with shaded confidence bands (±1 SE).
+    Plot learning curves with shaded normal-approximation bands (±1.96 SE).
+
+    Seeds must share strictly increasing step grids. Missing metrics and unequal
+    schedules are rejected. Legacy step-less data uses observation indices.
 
     Args:
         results: Dict[algorithm_name -> Dict[seed -> List[step_metrics]]]
@@ -208,39 +229,56 @@ def plot_learning_curves_with_ci(
         output_path: Where to save the figure
         title: Plot title
     """
-    fig, ax = plt.subplots(1, 1, figsize=(10, 6))
-
-    colors = sns.color_palette("colorblind", n_colors=len(results))
-
-    for idx, (algo_name, seed_data) in enumerate(results.items()):
-        # Align all seeds to same number of steps
-        all_curves = []
-        for metrics_list in seed_data.values():
-            curve = [m.get(metric_key, 0) for m in metrics_list]
-            all_curves.append(curve)
-
-        if not all_curves:
+    # Validate before allocating a figure or writing any output. Step-less legacy
+    # curves remain supported, but only on identical observation-index grids.
+    prepared = []
+    modes = set()
+    for algo_name, seed_data in results.items():
+        if not seed_data:
             raise ValueError(f"No curves to plot for algorithm {algo_name!r}")
-        # Truncate to shortest run
-        min_len = min(len(c) for c in all_curves)
-        if min_len == 0:
-            raise ValueError(f"Empty curves for algorithm {algo_name!r}")
-        aligned_curves = np.array([c[:min_len] for c in all_curves])
-
+        curves = []
+        grid: list = []
+        for metrics_list in seed_data.values():
+            if not metrics_list:
+                raise ValueError(f"Empty curves for algorithm {algo_name!r}")
+            has_steps = ["step" in m for m in metrics_list]
+            if any(has_steps) and not all(has_steps):
+                raise ValueError("Every observation must have a step, or none may have one")
+            explicit = all(has_steps)
+            modes.add(explicit)
+            values = [m.get(metric_key) for m in metrics_list]
+            steps = (
+                [m["step"] for m in metrics_list] if explicit else list(range(1, len(values) + 1))
+            )
+            for label, numbers in (("metrics", values), ("steps", steps)):
+                if any(
+                    isinstance(v, bool) or not isinstance(v, Real) or not math.isfinite(v)
+                    for v in numbers
+                ):
+                    raise ValueError(f"Plot {label} must be finite numeric values")
+            if any(b <= a for a, b in zip(steps, steps[1:])):
+                raise ValueError(
+                    "Plot steps must be strictly increasing; duplicate or reordered steps are invalid"
+                )
+            if grid and steps != grid:
+                raise ValueError(
+                    "All seeds must use the same step grid; no truncation or interpolation"
+                )
+            grid = steps
+            curves.append(values)
+        prepared.append((algo_name, grid, np.asarray(curves, dtype=float)))
+    if len(modes) > 1:
+        raise ValueError("Cannot mix explicit training steps and observation indices")
+    if not prepared:
+        raise ValueError("No curves to plot")
+    fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+    colors = sns.color_palette("colorblind", n_colors=len(prepared))
+    for idx, (algo_name, steps, aligned_curves) in enumerate(prepared):
         mean = np.mean(aligned_curves, axis=0)
         se = standard_error(aligned_curves, axis=0)
-        steps = np.arange(1, min_len + 1)
-
         ax.plot(steps, mean, label=algo_name, color=colors[idx], linewidth=2)
-        ax.fill_between(
-            steps,
-            mean - 1.96 * se,
-            mean + 1.96 * se,
-            alpha=0.2,
-            color=colors[idx],
-        )
-
-    ax.set_xlabel("Training Step", fontsize=12)
+        ax.fill_between(steps, mean - 1.96 * se, mean + 1.96 * se, alpha=0.2, color=colors[idx])
+    ax.set_xlabel("Training Step" if True in modes else "Observation index", fontsize=12)
     ax.set_ylabel(metric_key, fontsize=12)
     ax.set_title(title, fontsize=14)
     ax.legend(fontsize=10, loc="best")

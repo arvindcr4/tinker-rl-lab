@@ -78,12 +78,28 @@ DEFAULT_EXPECTED: Dict[str, Dict[str, Any]] = {
     "gsm8k_qwen3_8b_g16": {"last10": 0.380, "peak": 0.719},
 }
 
-_LOG_LAST10_RE = re.compile(r"Last-10 avg accuracy:\s*([0-9.]+)%")
-_LOG_PEAK_RE = re.compile(r"Peak accuracy:\s*([0-9.]+)%")
+_LOG_LAST10_RE = re.compile(r"Last-10 avg accuracy:[ \t]*([^\r\n]*)")
+_LOG_PEAK_RE = re.compile(r"Peak accuracy:[ \t]*([^\r\n]*)")
 # grpo_cli.main() per-seed block (fractions, not percentages).
 _CLI_SEED_RE = re.compile(r"\[grpo_cli\] Seed (\S+) done\.")
-_CLI_LAST10_RE = re.compile(r"avg_last10\s*:\s*([0-9.]+)")
-_CLI_PEAK_RE = re.compile(r"peak_reward\s*:\s*([0-9.]+)")
+_CLI_LAST10_RE = re.compile(r"avg_last10[ \t]*:[ \t]*([^\r\n]*)")
+_CLI_PEAK_RE = re.compile(r"peak_reward[ \t]*:[ \t]*([^\r\n]*)")
+
+
+def _log_metric(match, percent=False):
+    if match is None:
+        return None
+    token = match.group(1).strip()
+    if percent:
+        if not token.endswith("%"):
+            raise ValueError("Legacy accuracy must end with %")
+        token = token[:-1].strip()
+    if not re.fullmatch(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?", token):
+        raise ValueError("Invalid complete numeric metric token")
+    value = float(token) / (100 if percent else 1)
+    if not math.isfinite(value) or not 0 <= value <= 1:
+        raise ValueError("Accuracy metrics must be finite fractions in [0, 1]")
+    return value
 
 
 def _parse_result_file(path: Path) -> List[Dict]:
@@ -107,8 +123,8 @@ def _parse_result_file(path: Path) -> List[Dict]:
             {
                 "experiment": exp if len(headers) == 1 else f"{exp}_s{h.group(1)}",
                 "seed": h.group(1),
-                "last10_avg": float(last10.group(1)) if last10 else None,
-                "peak": float(peak.group(1)) if peak else None,
+                "last10_avg": _log_metric(last10),
+                "peak": _log_metric(peak),
             }
         )
     if rows:
@@ -121,8 +137,8 @@ def _parse_result_file(path: Path) -> List[Dict]:
     return [
         {
             "experiment": exp,
-            "last10_avg": float(last10.group(1)) / 100.0,
-            "peak": float(peak.group(1)) / 100.0,
+            "last10_avg": _log_metric(last10, percent=True),
+            "peak": _log_metric(peak, percent=True),
         }
     ]
 

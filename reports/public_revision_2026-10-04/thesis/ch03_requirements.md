@@ -155,7 +155,7 @@ Semester 4 adds five software components to the requirement set. First, the audi
 
 **The managed back-end is a black box at the layer level.** Per-layer gradients are not exposed on the managed path, so claims about the relationship between reward spread and gradient magnitude are confined to the small-model white-box configuration and are directional only (source: platform_hybrid/paper/paper_P7_zvf_controller.tex).
 
-**Group-size differences must not be attributed to sampling noise.** The comparison protocols share a deterministic prompt schedule, so that method-to-method differences in ZVF reflect training dynamics rather than independent draws of prompts (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
+**Group-size comparisons must control prompt sampling.** The comparison protocols share a deterministic prompt schedule, reducing one source of variation; completion randomness and unequal exposure can still affect method-to-method differences in ZVF (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex).
 
 **Framework parity is incomplete.** The requirement in FR-2 covers two seven-library rosters, but only two of the seven cross-launcher entries produced completed runs in this release, and the remaining comparison entries are dry-run placeholders. Comparative framework claims are therefore constrained to the rosters and the completed runs actually recorded, and the repository states the dry-run status explicitly (source: platform_hybrid/paper/sections/_shared_methods.tex; source: platform_hybrid/experiments/results/framework_comparison.json).
 

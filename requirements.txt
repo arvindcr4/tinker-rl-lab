@@ -19,51 +19,51 @@
 # =============================================================================
 
 # --- Core ML Frameworks (E1-locked) ---
-torch==2.7.1
-numpy==2.2.6
+torch==2.14.1
+numpy==2.4.6
 scipy>=1.17.0,<2.0.0
 
 # --- HuggingFace Ecosystem (E1-locked) ---
-transformers==5.5.4
-trl==1.2.0
-datasets==4.8.4
-accelerate==1.13.0
-peft==0.19.1
+transformers==5.19.0
+trl==1.14.2
+datasets==5.1.0
+accelerate==1.15.0
+peft==0.21.2
 safetensors>=0.8.0,<0.9.0
-huggingface-hub==1.11.0
-tokenizers>=0.22.0,<0.24.0
+huggingface-hub==2.1.1
+tokenizers>=0.23.2,<0.24.0
 
 # --- RL Libraries ---
 stable-baselines3>=2.8.0,<3.0.0
-gymnasium==1.2.3
+gymnasium==1.4.0
 tianshou>=2.0.0,<2.1.0
 d3rlpy>=2.8.0,<2.9.0
 
 # --- Tinker & Atropos ---
-tinker==0.24.1
-tinker-cookbook>=0.2.0  # not in uv.lock
-atroposlib>=0.1.0  # not in uv.lock
+tinker==0.32.0
+tinker-cookbook>=0.5.7  # not in uv.lock
+atroposlib>=0.4.0  # not in uv.lock
 
 # --- Math Verification (not in uv.lock) ---
-latex2sympy2-extended>=0.1.0
-math-verify>=0.3.0
+latex2sympy2-extended>=1.11.0
+math-verify>=0.9.0
 
 # --- Statistical Analysis ---
-rliable>=1.1.0,<1.3.0  # not in uv.lock
+rliable>=1.2.0,<1.3.0  # not in uv.lock
 matplotlib>=3.11.0,<4.0.0
 seaborn>=0.13.0,<0.14.0
-pandas>=2.3.0,<2.4.0
+pandas>=2.3.0,<3.1.0
 scikit-learn>=1.9.0,<2.0.0
 
 # --- Experiment Tracking (E1-locked) ---
-wandb==0.21.0
-codecarbon==3.2.8
+wandb==0.30.0
+codecarbon==3.3.1
 
 # --- Web Server (Atropos) ---
 fastapi>=0.142.0,<0.143.0
 uvicorn>=0.54.0,<0.55.0
 requests>=2.34.0,<3.0.0
-tenacity>=9.0.0,<10.0.0  # not in uv.lock
+tenacity>=9.2.1,<10.0.0  # not in uv.lock
 pydantic>=2.13.0,<3.0.0
 
 # --- Utilities ---
@@ -73,9 +73,9 @@ jsonlines>=4.0.0,<4.1.0  # not in uv.lock
 
 # --- Evaluation ---
 fschat==0.2.36
-openai==2.45.0
+openai==3.26.0
 
 # --- Testing ---
 pytest>=9.1.0,<10.0.0
-pytest-asyncio>=0.24.0,<2.0.0  # not in uv.lock
+pytest-asyncio>=1.4.0,<2.0.0  # not in uv.lock
 asyncssh  # not in uv.lock; skyrl/backends/vastai_runner.py (vast.ai SSH provisioning)

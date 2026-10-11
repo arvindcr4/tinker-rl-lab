@@ -1,5 +1,6 @@
 """Pure, CPU-testable command contract for the OpenRLHF v0.8.4 CLI."""
 
+import math
 import os
 import sys
 from urllib.parse import urlsplit
@@ -9,9 +10,42 @@ from .budget import plan_native_budget
 
 
 def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: str) -> list[str]:
-    if config.algorithm.algorithm.lower() != "grpo":
+    if (
+        not isinstance(config.algorithm.algorithm, str)
+        or config.algorithm.algorithm.lower() != "grpo"
+    ):
         raise ValueError("Native OpenRLHF driver supports only algorithm=grpo")
     plan_native_budget(config)
+    numeric = {
+        "learning_rate": config.optimizer.learning_rate,
+        "beta1": config.optimizer.beta1,
+        "beta2": config.optimizer.beta2,
+        "eps": config.optimizer.eps,
+        "weight_decay": config.optimizer.weight_decay,
+        "gamma": config.algorithm.gamma,
+        "lam": config.algorithm.lam,
+        "epsilon": config.algorithm.epsilon,
+        "kl_coef": config.algorithm.kl_coef,
+        "temperature": config.algorithm.temperature,
+        "gpu_memory_utilization": config.gpu_memory_utilization,
+    }
+    for name, value in numeric.items():
+        try:
+            finite = type(value) in (int, float) and math.isfinite(value)
+        except OverflowError:
+            finite = False
+        if not finite:
+            raise ValueError(f"{name} must be a finite number for native training")
+    for name in ("learning_rate", "weight_decay", "temperature", "epsilon"):
+        if numeric[name] < 0:
+            raise ValueError(f"{name} must be nonnegative")
+    for name in ("beta1", "beta2"):
+        if not 0 <= numeric[name] < 1:
+            raise ValueError(f"{name} must be in [0, 1)")
+    if type(config.seed) is not int:
+        raise ValueError("seed must be an integer")
+    if type(config.model.lora_rank) is not int or config.model.lora_rank < 0:
+        raise ValueError("lora_rank must be a nonnegative integer")
     # These historical knobs were never mapped by this native driver. Keep
     # loading old default configurations, but do not silently accept overrides.
     legacy_defaults = {
@@ -55,8 +89,10 @@ def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: s
         config.data.max_prompt_length,
         config.data.max_response_length,
     )
-    if any(value < 1 for value in positive):
-        raise ValueError("Training sizes, epochs, token caps and GPU counts must be positive")
+    if any(type(value) is not int or value < 1 for value in positive):
+        raise ValueError(
+            "Training sizes, epochs, token caps and GPU counts must be positive integers"
+        )
     if config.tensor_parallel_size > config.num_gpus:
         raise ValueError("colocated tensor_parallel_size cannot exceed num_gpus")
     if config.tensor_parallel_size != config.num_gpus:

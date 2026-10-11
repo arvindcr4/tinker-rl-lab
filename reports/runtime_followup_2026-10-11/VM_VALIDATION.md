@@ -508,3 +508,30 @@ intentionally deselected**, 85.17% coverage, in 139.39 seconds. Packaging,
 lock consistency, docs, public/demo and submission gates passed. The preceding
 full run passed native TeX; this batch changes metadata validation and its
 scope documentation, not thesis source or measured artifacts.
+
+## Native numeric preflight after configuration mutation
+
+CPU reproduction showed that NaN learning rates, Adam coefficients,
+temperatures, and clipping values could reach the OpenRLHF launch command.
+A public-source Muse review of `fb6d93c9` independently identified nonfinite
+floats and assignment-time bypasses of Pydantic construction bounds.
+
+The native command now rejects nonfinite/non-numeric live float settings,
+invalid Adam coefficient/learning-rate/weight-decay bounds, and nonintegral
+live counts before runtime validation, data preparation, or subprocess launch.
+Budget planning rechecks the fixed source's 500-row upper bound even after
+mutation. Zero learning rate, temperature, clipping width, weight decay, and
+LoRA rank remain supported. Existing Pydantic construction coercion is retained;
+this is a launch-time check of the normalized, possibly mutated configuration.
+No unverified ranges were imposed on gamma, lambda, or KL coefficients.
+
+The review's proposal to require exactly 500 training rows was rejected:
+`max_samples` is deliberately a configurable subset budget, with whole-batch
+arithmetic and an upper bound of 500. Requiring equality would contradict that
+existing supported contract. All 46 focused native-command/budget tests passed,
+including synthetic failure-before-provider checks and preserved zero modes.
+
+Aggregate validation: **1,606 passed, 1 skipped, 2 native-LaTeX tests
+intentionally deselected**, 85.17% coverage, in 134.94 seconds. Static,
+packaging, lock, docs, public/demo and submission checks passed. No native
+provider, GPU, or paid training was launched.

@@ -265,3 +265,82 @@ def test_native_default_contract_disables_periodic_work_explicitly():
     for name in ("save_steps", "eval_steps"):
         assert command[command.index("--" + name) + 1] == "-1"
     assert command[command.index("--save_path") + 1] == "/output/ckpt"
+
+
+def test_nonfinite_native_settings_fail_before_any_external_work(tmp_path):
+    fields = {
+        "optimizer": ("learning_rate", "beta1", "beta2", "eps", "weight_decay"),
+        "algorithm": ("gamma", "lam", "epsilon", "kl_coef", "temperature"),
+    }
+    for section, names in fields.items():
+        for name in names:
+            for value in (float("nan"), float("inf"), -float("inf"), True, "0.5", 10**400):
+                cfg = config()
+                setattr(getattr(cfg, section), name, value)
+                output = tmp_path / "not-created"
+                with (
+                    patch.object(trainer, "_prepare_gsm8k_500_jsonl") as prepare,
+                    patch.object(trainer, "_validate_native_runtime") as runtime,
+                    patch.object(trainer.subprocess, "run") as launch,
+                    pytest.raises(ValueError, match=name),
+                ):
+                    trainer.run_openrlhf_training(cfg, str(output))
+                prepare.assert_not_called()
+                runtime.assert_not_called()
+                launch.assert_not_called()
+                assert not output.exists()
+
+
+def test_mutated_native_counts_and_dataset_limits_fail_before_launch():
+    for field in (
+        "epochs",
+        "train_batch_size",
+        "micro_batch_size",
+        "num_gpus",
+        "rollout_batch_size",
+        "max_samples",
+        "tensor_parallel_size",
+        "seed",
+    ):
+        for value in (True, 2.0, "2", None):
+            cfg = config()
+            setattr(cfg, field, value)
+            with pytest.raises(ValueError, match="integer"):
+                build_openrlhf_command(cfg, "/data", "/output")
+    cfg = config()
+    cfg.max_samples = 504
+    with pytest.raises(ValueError, match="500-row"):
+        build_openrlhf_command(cfg, "/data", "/output")
+    for section, field in (
+        ("algorithm", "sample_num"),
+        ("model", "lora_rank"),
+        ("data", "max_prompt_length"),
+        ("data", "max_response_length"),
+    ):
+        cfg = config()
+        setattr(getattr(cfg, section), field, 2.0)
+        with pytest.raises(ValueError, match="integer"):
+            build_openrlhf_command(cfg, "/data", "/output")
+
+
+def test_native_optimizer_boundaries_preserve_zero_modes():
+    for field, value in (
+        ("learning_rate", -0.1),
+        ("weight_decay", -0.1),
+        ("beta1", -0.1),
+        ("beta1", 1.0),
+        ("beta2", 1.0),
+    ):
+        cfg = config()
+        setattr(cfg.optimizer, field, value)
+        with pytest.raises(ValueError, match=field):
+            build_openrlhf_command(cfg, "/data", "/output")
+    cfg = config()
+    cfg.optimizer.learning_rate = 0.0
+    cfg.optimizer.weight_decay = 0.0
+    cfg.optimizer.beta1 = 0.0
+    cfg.algorithm.temperature = 0.0
+    cfg.algorithm.epsilon = 0.0
+    command = build_openrlhf_command(cfg, "/data", "/output")
+    for name in ("actor_learning_rate", "temperature", "eps_clip", "l2"):
+        assert float(command[command.index("--" + name) + 1]) == 0.0

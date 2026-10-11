@@ -24,8 +24,12 @@ def plan_native_budget(config: OpenRLHFConfig) -> dict:
         config.max_samples,
         config.algorithm.sample_num,
     )
-    if any(value < 1 for value in sizes):
-        raise ValueError("Native training batch sizes, epochs and GPU counts must be positive")
+    if any(type(value) is not int or value < 1 for value in sizes):
+        raise ValueError(
+            "Native training batch sizes, epochs and GPU counts must be positive integers"
+        )
+    if config.max_samples > 500:
+        raise ValueError("max_samples cannot exceed the fixed 500-row dataset")
     if config.max_samples % config.rollout_batch_size:
         raise ValueError(
             "max_samples must contain whole rollout batches (native loader drops tails)"

@@ -1063,3 +1063,36 @@ native TeX, at **85.76%** configured supported-surface coverage in 264.44 second
 Static, package, lock, docs, public/demo and submission checks passed, aggregate
 exit zero. No provider job, learning-policy change or historical regrading was
 performed.
+
+## Typed visibility flags and safe endpoint overrides (19:49 UTC)
+
+Synthetic fake-transport reproductions exposed two configuration hazards:
+`hf_public="false"` requested public Hub repositories because the string is
+truthy, and HTTP userinfo in `base_url` was copied into W&B configuration.
+No actual credentials, provider calls or Hub repositories were involved.
+Boolean-valued config options now require actual booleans; strings/numbers are
+not silently coerced. Optional paid-campaign flags retain their existing
+separate fail-closed gate. Validation is repeated at run, tracking/publication
+and fingerprint boundaries so mutation after construction cannot bypass it.
+
+Explicit endpoint overrides must be unambiguous HTTP(S) URLs without userinfo,
+whitespace/control characters, backslashes, invalid/missing hosts, invalid
+ports or fragments. Default `None`, valid HTTPS base paths, local HTTP and
+IPv6 endpoints remain supported. Errors never interpolate the rejected URL;
+parser exceptions are suppressed to avoid echoing userinfo. This is not a
+general secret detector: arbitrary query values are not inspected, and callers
+must not place credentials there. No authentication mechanism or access grant
+was configured or changed.
+
+Seventeen privacy/invalid-input cases failed before the guards, while five
+valid-endpoint controls already passed. All **22 focused cases** and the broader
+**238-test** config/CLI/training suite now pass. A completed Muse review of the
+public endpoint/tracking path supported early validation and bounded errors.
+The existing valid private/public boolean semantics are unchanged.
+
+Full validation passed **1,778 tests, 2 skipped**, including native TeX, at
+**85.83%** configured supported-surface coverage in 266.45 seconds. Static,
+package, lock, docs, public/demo and submission checks passed, aggregate exit
+zero. The preceding published `74f3d646` commit's engineering CI completed
+successfully; the scientific `minreport-audit` gate remains red. No scorer or
+sampler-refresh default was changed.

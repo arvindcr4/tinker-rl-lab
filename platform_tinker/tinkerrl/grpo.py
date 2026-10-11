@@ -35,6 +35,7 @@ from dataclasses import MISSING, asdict, dataclass, field, fields, replace
 from decimal import Context, Decimal, InvalidOperation, ROUND_FLOOR, ROUND_HALF_EVEN, localcontext
 from numbers import Real
 from pathlib import Path
+from urllib.parse import urlsplit
 from typing import (
     Any,
     Callable,
@@ -470,6 +471,38 @@ class GRPOConfig:
         )
         self.validate_numerics()
 
+    def _validate_boundary_inputs(self) -> None:
+        # Never let strings such as hf_public="false" become public uploads.
+        # Optional campaign flags retain their separate fail-closed gate.
+        for spec in fields(self):
+            if isinstance(spec.default, bool) and type(getattr(self, spec.name)) is not bool:
+                raise ValueError(f"{spec.name} must be a boolean")
+        value = self.base_url
+        if value is None:
+            return
+        # Endpoint overrides are persisted in tracking/receipt configs. Reject
+        # URL userinfo, and characters URL parsers may silently reinterpret.
+        if (
+            not isinstance(value, str)
+            or not value
+            or "\\" in value
+            or any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in value)
+        ):
+            raise ValueError("base_url must be an HTTP(S) URL without whitespace or controls")
+        try:
+            url = urlsplit(value)
+            hostname, port = url.hostname, url.port
+        except ValueError:
+            raise ValueError("base_url has an invalid host or port") from None
+        if url.scheme not in {"http", "https"} or not hostname:
+            raise ValueError("base_url must name an HTTP(S) service")
+        if "@" in url.netloc:
+            raise ValueError("base_url must not contain userinfo; endpoint config is logged")
+        if (port is not None and not 1 <= port <= 65535) or url.netloc.endswith(":"):
+            raise ValueError("base_url has an invalid port")
+        if "#" in value:
+            raise ValueError("base_url must not contain a fragment")
+
     def validate_numerics(self) -> None:
         """Reject malformed budgets before datasets, tracking, or provider work.
 
@@ -477,6 +510,7 @@ class GRPOConfig:
         groups and zero temperature remain valid; this is not a provider-specific
         model-capability validator.
         """
+        self._validate_boundary_inputs()
         minima = {
             "steps": 0,
             "lora_rank": 0,
@@ -547,6 +581,7 @@ class GRPOConfig:
 
     def validate_tracking(self) -> None:
         """Reject configurations that would silently skip campaign receipts."""
+        self._validate_boundary_inputs()
         if not self.wandb_enabled or not self.require_wandb:
             raise ValueError("W&B tracking is mandatory; it cannot be disabled")
         if not isinstance(self.wandb_project, str) or not self.wandb_project.strip():
@@ -1419,6 +1454,7 @@ def _load_critic_checkpoint(
 
 
 def _config_fingerprint(config: GRPOConfig, seed: int) -> Dict[str, Any]:
+    config._validate_boundary_inputs()
     values = asdict(config)
     values["seed"] = seed
     values.pop("resume", None)

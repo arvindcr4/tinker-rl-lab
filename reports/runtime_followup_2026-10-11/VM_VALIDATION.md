@@ -475,3 +475,36 @@ Full validation passed: **1,597 passed, 1 skipped**, no native-LaTeX
 deselections, 85.30% coverage, in 252.25 seconds. `make check submission-check`
 passed all static, packaging, locked-dependency, secret, native TeX, docs,
 public/demo and submission gates. Frozen benchmark artifacts were unchanged.
+
+## Fail-closed MIN-REPORT metadata assertions
+
+A bounded public-source Muse review of `73995148` and independent local
+reproduction found false-PASS cases in the provenance verifier: strings such as
+`"false"` satisfied truthiness checks, and a fractional seed count or repeated
+seed identifiers could pass the multi-seed check. Malformed JSON section types
+could instead crash before producing a useful failure report.
+
+Verification now requires explicit Boolean assertions, an integral count and
+matching distinct integral seed identities, and expected top-level metadata
+shapes. Malformed records produce failed checks without mutating inputs.
+Generator defaults no longer invent held-out disjointness or verified
+decontamination; a missing named config fails instead of silently falling back
+to empty settings. A CLI integration proves truthy-false uncertainty still
+causes strict failure and an audit receipt rather than a traceback.
+
+Documentation now distinguishes declared metadata from independently verified
+results, explains that only the live code hash is recomputed here, and corrects
+the outdated campaign 100% description. The unchanged signed campaign remains
+**95.7%, grade A, strict FAIL** because `rigor.reports_ci` does not explicitly
+assert uncertainty reporting. Its literal `results.sd` is not sufficient to
+verify scope or provenance. The unchanged sweep remains **82.6%, grade B,
+strict FAIL** for a single seed and unasserted uncertainty. No signed record,
+measured result, key, signature, or strict-gate threshold was changed.
+
+All 10 focused provenance/API/CLI tests and repository static checks passed.
+
+Aggregate validation passed: **1,603 passed, 1 skipped, 2 native-LaTeX tests
+intentionally deselected**, 85.17% coverage, in 139.39 seconds. Packaging,
+lock consistency, docs, public/demo and submission gates passed. The preceding
+full run passed native TeX; this batch changes metadata validation and its
+scope documentation, not thesis source or measured artifacts.

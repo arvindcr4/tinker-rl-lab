@@ -34,7 +34,7 @@ SEVEN = [
 
 
 def resolve_source_path(raw_path):
-    if not raw_path:
+    if not isinstance(raw_path, (str, os.PathLike)) or not raw_path:
         return None
     path = Path(raw_path)
     candidates = (
@@ -68,7 +68,13 @@ def git_sha():
 
 
 def generate(run, config_path, out):
-    cfg = json.load(open(config_path)) if config_path and os.path.exists(config_path) else {}
+    if config_path is not None:
+        with open(config_path) as source:
+            cfg = json.load(source)
+        if not isinstance(cfg, dict):
+            raise ValueError("provenance configuration must be a JSON object")
+    else:
+        cfg = {}
     code = cfg.get("code_file", "platform_hybrid/experiments/openings/campaign.py")
     record = {
         "run_id": run,
@@ -93,11 +99,9 @@ def generate(run, config_path, out):
                 "group_size_schedule", {"G": cfg.get("G"), "schedule": "constant"}
             ),
             "heldout_split": cfg.get(
-                "heldout_split", {"n": cfg.get("heldout_n"), "disjoint": True, "eval": "greedy"}
+                "heldout_split", {"n": cfg.get("heldout_n"), "disjoint": None, "eval": "greedy"}
             ),
-            "decontamination": cfg.get(
-                "decontamination", {"method": "index-disjoint from train pool", "verified": True}
-            ),
+            "decontamination": cfg.get("decontamination", {"method": None, "verified": False}),
         },
         "provenance": {
             "git_sha": git_sha(),
@@ -127,26 +131,52 @@ def verify(record, strict=False):
             ("PASS" if cond else ("WARN" if warn else "FAIL"), w, ok_msg if cond else bad_msg)
         )
 
-    mr = record.get("min_report_rl", {})
+    if not isinstance(record, dict):
+        return {
+            "run_id": None,
+            "score_pct": 0.0,
+            "grade": "F",
+            "checks": [
+                {"level": "FAIL", "weight": 1, "msg": "provenance record must be a JSON object"}
+            ],
+        }
+
+    def section(name):
+        value = record.get(name, {})
+        if not isinstance(value, dict):
+            add(False, 1, "", f"{name} must be a JSON object")
+            return {}
+        return value
+
+    mr = section("min_report_rl")
     # 1) completeness: all 7 items present & non-null
     for item in SEVEN:
         v = mr.get(item)
+        expected = str if item == "sampler_backend" else list if item == "telemetry" else dict
         add(
-            v not in (None, {}, []),
+            isinstance(v, expected) and bool(v),
             1,
             f"MIN-REPORT item present: {item}",
-            f"MISSING MIN-REPORT item: {item}",
+            f"MISSING or malformed MIN-REPORT item: {item}",
         )
     # 2) integrity: provenance hashes present & code hash recomputes
-    pv = record.get("provenance", {})
+    pv = section("provenance")
     for h in ["git_sha", "code_hash", "reward_fn_hash", "data_hash"]:
-        add(bool(pv.get(h)), 1, f"provenance hash present: {h}", f"missing provenance: {h}")
+        value = pv.get(h)
+        add(
+            isinstance(value, str) and bool(value.strip()),
+            1,
+            f"provenance hash present: {h}",
+            f"missing or malformed provenance: {h}",
+        )
     # recompute code hash against the file named in the record's provenance
     code_file = pv.get("code_file")
     resolved_code_file = resolve_source_path(code_file)
     live = sha256_file(code_file) if code_file else None
     resolved_label = (
         str(resolved_code_file.relative_to(REPO_ROOT))
+        if resolved_code_file is not None and resolved_code_file.is_relative_to(REPO_ROOT)
+        else str(resolved_code_file)
         if resolved_code_file is not None
         else code_file
     )
@@ -165,25 +195,49 @@ def verify(record, strict=False):
             warn=True,
         )
     # 3) rigor
-    rg = record.get("rigor", {})
+    rg = section("rigor")
     ns = rg.get("n_seeds", 0)
-    add(ns >= 3, 3, f"multi-seed (n={ns}>=3)", f"UNDERPOWERED: n_seeds={ns} (<3)")
-    add(bool(rg.get("reports_heldout")), 2, "held-out reported", "no held-out evaluation reported")
+    seeds = rg.get("seeds")
+    valid_count = type(ns) is int and ns >= 3
+    valid_seeds = (
+        isinstance(seeds, list)
+        and all(type(seed) is int for seed in seeds)
+        and len(seeds) == ns
+        and len(set(seeds)) == ns
+    )
+    if type(ns) is not int:
+        seed_error = "INVALID n_seeds: must be an integer"
+    elif ns < 3:
+        seed_error = f"UNDERPOWERED: n_seeds={ns} (<3)"
+    else:
+        seed_error = "INVALID seed identities: require n_seeds distinct integer seeds"
+    add(valid_count and valid_seeds, 3, f"multi-seed (n={ns}>=3)", seed_error)
     add(
-        bool(rg.get("heldout_disjoint")),
+        rg.get("reports_heldout") is True,
+        2,
+        "held-out reporting asserted",
+        "held-out reporting is not explicitly asserted",
+    )
+    add(
+        rg.get("heldout_disjoint") is True,
         1,
         "held-out disjoint from train",
         "held-out disjointness not asserted",
     )
     add(
-        bool(rg.get("reports_ci")),
+        rg.get("reports_ci") is True,
         1,
-        "uncertainty (CI/sd) reported",
-        "no CI/sd on results",
+        "uncertainty reporting asserted (not result-verified)",
+        "uncertainty reporting is not explicitly asserted in rigor.reports_ci",
         warn=True,
     )
+    split = mr.get("heldout_split")
+    decontamination = mr.get("decontamination")
     add(
-        mr.get("heldout_split", {}).get("disjoint") is True,
+        isinstance(split, dict)
+        and split.get("disjoint") is True
+        and isinstance(decontamination, dict)
+        and decontamination.get("verified") is True,
         1,
         "decontamination asserted",
         "decontamination not asserted",

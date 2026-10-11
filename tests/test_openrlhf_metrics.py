@@ -1,6 +1,8 @@
 """Dependency-free checks of the native TensorBoard boundary; fixtures are synthetic."""
 
 import hashlib
+import os
+import struct
 import sys
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
@@ -132,3 +134,55 @@ def test_source_deleted_during_parse_is_not_collected(tmp_path):
     result = read(tmp_path, module)
     assert result["metrics_status"] == "not_collected"
     assert result["reward_trace"] == []
+
+
+@pytest.mark.parametrize("replacement_kind", ["symlink", "fifo"])
+def test_nonregular_swap_after_type_check_is_not_observed(tmp_path, replacement_kind):
+    event, reader, module = fixture(tmp_path, [(1, 0.25), (2, 0.5)])
+    replacement = tmp_path / "synthetic-target"
+    replacement.write_bytes(event.read_bytes())
+    original = Path.is_symlink
+
+    def swap(path):
+        checked = original(path)
+        if path == event and not checked:
+            event.unlink()
+            if replacement_kind == "symlink":
+                event.symlink_to(replacement)
+            else:
+                os.mkfifo(event)
+        return checked
+
+    with patch.object(Path, "is_symlink", side_effect=swap, autospec=True):
+        result = read(tmp_path, module)
+    assert result["metrics_status"] == "not_collected"
+    reader.Reload.assert_not_called()
+
+
+def test_second_writer_appearing_during_parse_is_ambiguous(tmp_path):
+    event, reader, module = fixture(tmp_path, [(1, 0.25), (2, 0.5)])
+
+    def scalars(tag):
+        event.with_name("events.out.tfevents.second").write_bytes(b"second writer")
+        return [SimpleNamespace(step=1, value=0.25), SimpleNamespace(step=2, value=0.5)]
+
+    reader.Scalars.side_effect = scalars
+    result = read(tmp_path, module)
+    assert result["metrics_status"] == "not_collected"
+    assert result["reward_trace"] == []
+
+
+@pytest.mark.parametrize("error", [struct.error("truncated record"), TypeError("bad scalar")])
+def test_parser_errors_are_uncollected_not_successful_metrics(tmp_path, error):
+    _, reader, module = fixture(tmp_path, [(1, 0.25), (2, 0.5)])
+    reader.Reload.side_effect = error
+    result = read(tmp_path, module)
+    assert result["metrics_reason"] == "native_events_unreadable"
+    assert result["reward_trace"] == []
+
+
+def test_parser_interruption_is_not_swallowed(tmp_path):
+    _, reader, module = fixture(tmp_path, [(1, 0.25), (2, 0.5)])
+    reader.Reload.side_effect = KeyboardInterrupt
+    with pytest.raises(KeyboardInterrupt):
+        read(tmp_path, module)

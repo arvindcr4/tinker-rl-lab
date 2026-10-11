@@ -2,11 +2,11 @@
 
 import hashlib
 import json
-import os
 import re
-import stat
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+
+from .artifacts import read_regular_bytes
 
 
 SOURCE_ROWS = 500
@@ -74,22 +74,6 @@ def materialize_gsm8k(out_path: str, system_prompt: str) -> str:
     return str(output)
 
 
-def _read_regular_bytes(path: Path) -> bytes:
-    if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_NONBLOCK"):
-        raise RuntimeError("native input verification requires POSIX no-follow/nonblocking open")
-    try:
-        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
-    except OSError as exc:
-        raise RuntimeError("native input must be a readable regular file") from exc
-    try:
-        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
-            raise RuntimeError("native input must be a regular file")
-        with os.fdopen(descriptor, "rb", closefd=False) as stream:
-            return stream.read()
-    finally:
-        os.close(descriptor)
-
-
 def _unique_json_object(pairs: list) -> dict:
     result = {}
     for key, value in pairs:
@@ -102,7 +86,7 @@ def _unique_json_object(pairs: list) -> dict:
 def inspect_native_input(path: str) -> dict:
     """Validate and hash one snapshot of the JSONL chat-message source."""
     source = Path(path)
-    data = _read_regular_bytes(source)
+    data = read_regular_bytes(source)
     try:
         lines = data.decode("utf-8").splitlines()
     except UnicodeDecodeError as exc:
@@ -151,6 +135,6 @@ def inspect_native_input(path: str) -> dict:
 
 
 def ensure_input_unchanged(path: str, receipt: dict) -> None:
-    current = hashlib.sha256(_read_regular_bytes(Path(path))).hexdigest()
+    current = hashlib.sha256(read_regular_bytes(Path(path))).hexdigest()
     if current != receipt["sha256"]:
         raise RuntimeError("native input changed during execution; refusing a success receipt")

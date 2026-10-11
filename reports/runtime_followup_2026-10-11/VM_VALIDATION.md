@@ -632,3 +632,42 @@ later seed identities and hyperparameters, not a changing iteration count.
 Full validation passed: **1,620 passed, 1 skipped**, including native TeX,
 85.34% configured supported-surface coverage, in 253.31 seconds. Static,
 package, lock, docs, public/demo and submission checks all passed.
+
+## Native event-file boundaries and real TensorBoard integration
+
+A bounded Muse review of public `8e27a44a` flagged check-then-read file races
+and event-writer ambiguity. Two regression tests failed before the fix: replacing
+the event file with a symlink after its type check still produced observed
+metrics, and adding a second writer during parsing was silently accepted.
+
+Input and metric artifacts now share a descriptor-pinned no-follow/nonblocking
+regular-file reader. FIFO replacement fails without waiting for a writer; a
+symlink is never followed. Event membership is rechecked after parsing and
+parsed-byte hashing remains intact. Optional third-party parser exceptions now
+produce `not_collected` with no invented trace; process interruptions still
+propagate. The native writer must be quiescent before collection. These checks
+cover changes observed during collection, not future modifications, malicious
+parent-directory replacement, or proof of model execution. All 28 focused input
+and metric boundary checks passed.
+
+A separate workspace-local environment installed official PyPI
+`tensorboard==2.20.0` for an actual CPU writer/reader integration. No repository
+lock or production dependency was changed. All four synthetic event cases
+passed: a complete finite trace was recovered; duplicate steps, NaN and a
+missing rollout were rejected. The reproducible integration is now included as
+`tests/test_openrlhf_tensorboard_integration.py`; it skips explicitly when the
+optional TensorBoard package is absent. A dependency-enabled invocation is:
+
+```sh
+uv run --with tensorboard==2.20.0 pytest tests/test_openrlhf_tensorboard_integration.py -q --no-cov
+```
+
+The actual VM dependency-enabled run passed **4 tests**. These are synthetic
+local event files, not measured training gains or held-out scores.
+
+Full default-environment validation passed: **1,626 passed, 2 skipped**,
+including both native TeX tests, with 85.34% configured supported-surface
+coverage in 270.31 seconds. One additional skip is the optional TensorBoard
+integration module; its four dependency-enabled tests passed separately above.
+Static, package, lock, docs, public/demo and submission checks passed. Native
+module lint was checked explicitly in addition to the standard repository gate.

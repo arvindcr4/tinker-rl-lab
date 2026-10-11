@@ -5,6 +5,8 @@ import math
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from .artifacts import read_regular_bytes
+
 
 REWARD_TAG = "train/reward"
 
@@ -15,6 +17,8 @@ def read_native_metrics(output_dir: str, run_name: str, expected_rollouts: int) 
     The driver reserves a fresh output directory before launch. These are native
     training rewards indexed by rollout, never held-out scores or update counts.
     Hash binding detects file changes; it does not authenticate model execution.
+    The native writer must be stopped before collection. Rechecking membership
+    and bytes detects observed changes, not mutations after this call returns.
     """
     result = {"metrics_status": "not_collected", "reward_trace": [], "steps": None}
     directory = Path(output_dir) / "tensorboard" / run_name
@@ -23,7 +27,7 @@ def read_native_metrics(output_dir: str, run_name: str, expected_rollouts: int) 
         return {**result, "metrics_reason": "expected_one_native_event_file"}
     event_file = files[0]
     try:
-        source_bytes = event_file.read_bytes()
+        source_bytes = read_regular_bytes(event_file)
         before = hashlib.sha256(source_bytes).hexdigest()
         from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
@@ -50,9 +54,15 @@ def read_native_metrics(output_dir: str, run_name: str, expected_rollouts: int) 
             ):
                 return {**result, "metrics_reason": "invalid_or_incomplete_reward_trace"}
             values = [float(item.value) for item in scalars]
-        if hashlib.sha256(event_file.read_bytes()).hexdigest() != before:
+        if sorted(directory.glob("events.out.tfevents.*")) != files:
+            return {**result, "metrics_reason": "native_event_writers_changed_during_read"}
+        if hashlib.sha256(read_regular_bytes(event_file)).hexdigest() != before:
             return {**result, "metrics_reason": "native_events_changed_during_read"}
-    except (ImportError, OSError, ValueError, KeyError):
+    except Exception:
+        # This optional third-party parser can raise protobuf/record-decoding
+        # errors beyond the built-in I/O exceptions. A parser failure supplies
+        # no metrics; it must never turn malformed events into training evidence.
+        # Process interruption exceptions (BaseException) still propagate.
         return {**result, "metrics_reason": "native_events_unreadable"}
     return {
         **result,

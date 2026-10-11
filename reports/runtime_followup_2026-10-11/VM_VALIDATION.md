@@ -1553,3 +1553,34 @@ submission-check` passed **1,888 tests, 2 skipped**, native TeX included, at
 **86.10%** configured supported-surface coverage in 253.43 seconds; all aggregate
 stages passed, exit zero. This adds a regression harness, not a new optimizer,
 default sampler cadence, provider run or model-quality result.
+
+## Checkpoint-reference validation and snapshots (22:28 UTC)
+
+An offline provider-double probe returned `save_state(path=None)` and still
+completed two optimizer updates while writing two non-resumable periodic actor
+references. Another export callback changed a response object's path after
+publication, so subsequent sampling and local result references disagreed with
+the exported source. Seven initial regressions reproduced these boundaries.
+
+The runner now validates and captures each actor/sampler reference immediately
+after its save response, before subsequent save/export/client/receipt use.
+References must be nonblank strings without a leading CLI-option dash or ASCII
+control characters. Valid strings are preserved verbatim; no URI syntax,
+existence or remote-durability attestation is invented. The existing public
+export helper's empty-reference error is retained. Snapshot strings are reused
+consistently even if a callback later mutates the response objects.
+
+All **8 boundary checks** pass, including initial/periodic/final failures,
+actor and sampler mutation, malformed direct export inputs, and retention of
+the last valid step-one receipt when the step-two actor save is malformed.
+**78 broader focused tests** passed before adding that last-good-receipt case.
+Already-applied optimizer updates are not rolled back; the guard prevents
+further checkpoint/export work at the invalid boundary. It is not a distributed
+transaction or a guarantee that every failed run has a recoverable checkpoint.
+Public-source Muse review supported the validation/snapshot boundary; reviewed
+source bytes were also matched against anonymous, commit-pinned GitHub fetches.
+
+The final `make check submission-check` passed **1,896 tests, 2 skipped**, native
+TeX included, at **86.12%** configured supported-surface coverage in 252.60
+seconds; all aggregate stages passed, exit zero. Ordinary references, sampling
+cadence, objectives and historical result files remain unchanged.

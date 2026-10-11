@@ -2120,6 +2120,18 @@ def _require_checkpoint_receipt(value: Any, *, step: int | str) -> Dict[str, Any
     return json.loads(json.dumps(value, sort_keys=True))
 
 
+def _validated_checkpoint_path(value: Any, *, kind: str) -> str:
+    """Require an unambiguous reference before export, reuse or persistence."""
+    if (
+        not isinstance(value, str)
+        or not value.strip()
+        or value.startswith("-")
+        or any(ord(char) < 32 or ord(char) == 127 for char in value)
+    ):
+        raise RuntimeError(f"Invalid Tinker {kind} checkpoint path")
+    return value
+
+
 def _publish_checkpoint(
     config: GRPOConfig,
     seed: int,
@@ -2135,8 +2147,9 @@ def _publish_checkpoint(
     push_flag = os.environ.get("HF_PUSH")
     if push_flag and push_flag.strip().lower() in {"0", "false", "no", "off"}:
         raise RuntimeError("Hugging Face checkpoint tracking cannot be disabled")
-    if not folder_path:
+    if folder_path is None or (isinstance(folder_path, str) and not folder_path):
         raise RuntimeError("Cannot publish an empty Tinker sampler checkpoint path")
+    folder_path = _validated_checkpoint_path(folder_path, kind="sampler")
     owner = hf_owner or _preflight_hf(config)
     repo_id = _checkpoint_repo_id(config, owner, seed, step, str(folder_path))
     revision = _checkpoint_revision(seed, step, str(folder_path))
@@ -2474,10 +2487,11 @@ def _run_one_seed(
             config.checkpoint_name_prefix or config.name
         ) + f"_seed{seed}_step_{resume_step}"
         w0 = tc.save_weights_for_sampler(name=initial_name).result()
+        initial_path = _validated_checkpoint_path(getattr(w0, "path", None), kind="sampler")
         initial_receipt = _publish_checkpoint(
             config,
             seed,
-            w0.path,
+            initial_path,
             logger,
             step=resume_step,
             hf_owner=hf_owner,
@@ -2491,7 +2505,7 @@ def _run_one_seed(
             initial_receipt,
             step=resume_step,
         )
-        sc = tc.create_sampling_client(model_path=w0.path)
+        sc = tc.create_sampling_client(model_path=initial_path)
 
         save_every = config.effective_save_every()
         if config.critic_enabled and config.critic_pretrain_batches > 0 and resume_step == 0:
@@ -2808,11 +2822,15 @@ def _run_one_seed(
                         config, seed, critic, critic_opt, step=step + 1
                     )
                 state = tc.save_state(name=f"state_seed{seed}_{step + 1}", overwrite=True).result()
+                actor_path = _validated_checkpoint_path(getattr(state, "path", None), kind="actor")
                 ckpt = tc.save_weights_for_sampler(name=f"step_seed{seed}_{step + 1}").result()
+                sampler_path = _validated_checkpoint_path(
+                    getattr(ckpt, "path", None), kind="sampler"
+                )
                 checkpoint_receipt = _publish_checkpoint(
                     config,
                     seed,
-                    ckpt.path,
+                    sampler_path,
                     logger,
                     step=step + 1,
                     hf_owner=hf_owner,
@@ -2826,15 +2844,15 @@ def _run_one_seed(
                     checkpoint_receipt,
                     step=step + 1,
                 )
-                sc = tc.create_sampling_client(model_path=ckpt.path)
+                sc = tc.create_sampling_client(model_path=sampler_path)
                 _write_checkpoint(
                     checkpoint_path,
                     {
                         "status": "started",
                         "config": _config_fingerprint(config, seed),
                         "step": step + 1,
-                        "train_state_path": state.path,
-                        "sampler_path": ckpt.path,
+                        "train_state_path": actor_path,
+                        "sampler_path": sampler_path,
                         "run_id": run_id,
                         "reward_trace": step_rewards,
                         "zero_loss_steps": zero_loss_steps,
@@ -2857,12 +2875,14 @@ def _run_one_seed(
             critic_binding["critic_state_sha256"] = _save_critic(
                 config, seed, critic, critic_opt, step=config.steps
             )
-        tc.save_state(name=f"seed{seed}_final", overwrite=True).result()
+        final_state = tc.save_state(name=f"seed{seed}_final", overwrite=True).result()
+        _validated_checkpoint_path(getattr(final_state, "path", None), kind="actor")
         final = tc.save_weights_for_sampler(name=f"seed{seed}_final").result()
+        final_path = _validated_checkpoint_path(getattr(final, "path", None), kind="sampler")
         final_receipt = _publish_checkpoint(
             config,
             seed,
-            final.path,
+            final_path,
             logger,
             step="final",
             hf_owner=hf_owner,
@@ -2876,7 +2896,7 @@ def _run_one_seed(
             final_receipt,
             step="final",
         )
-        sc = tc.create_sampling_client(model_path=final.path)
+        sc = tc.create_sampling_client(model_path=final_path)
 
         last10 = step_rewards[-10:] if step_rewards else []
         first5 = step_rewards[:5] if step_rewards else []
@@ -2954,7 +2974,7 @@ def _run_one_seed(
         result = GRPORunResult(
             seed=seed,
             run_id=run_id,
-            sampler_path=getattr(final, "path", None),
+            sampler_path=final_path,
             reward_trace=step_rewards,
             avg_first5=(_reward_mean(first5)) if first5 else 0.0,
             avg_last10=(_reward_mean(last10)) if last10 else 0.0,

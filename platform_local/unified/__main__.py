@@ -168,7 +168,13 @@ Examples:
     launcher.wandb_project = args.wandb_project
 
     max_steps = -1
-    if args.total_token_budget:
+    if args.total_token_budget is not None:
+        if args.total_token_budget <= 0 or args.tokens_per_sample <= 0 or args.batch_size <= 0:
+            parser.error("token budget, tokens per sample and batch size must be positive")
+        if args.framework != "trl" or (
+            not args.generate_script and args.backend not in ("local", "colab")
+        ):
+            parser.error("--total-token-budget requires local/Colab TRL or TRL script generation")
         # P1: SFT warm-up ablation: Match total sampled/training tokens
         total_samples = args.total_token_budget / args.tokens_per_sample
         # Assuming gradient_accumulation_steps=4 (default in config) for rough step match
@@ -184,13 +190,15 @@ Examples:
         launcher.run()
         return
 
-    if args.generate_script:
+    if args.generate_script or (
+        args.framework == "trl" and args.backend in ("local", "colab") and not args.dry_run
+    ):
         if args.framework != "trl":
             parser.error("--generate-script requires --framework trl")
         if args.algorithm not in ("grpo", "idpo"):
-            parser.error("--generate-script currently supports --algorithm grpo or idpo")
+            parser.error("TRL script generation/execution supports --algorithm grpo or idpo")
         if not args.train_data:
-            parser.error("--generate-script requires at least one --train-data path")
+            parser.error("TRL script generation/execution requires at least one --train-data path")
         if args.no_peft and (args.load_in_4bit or args.load_in_8bit):
             parser.error("quantized training cannot be combined with --no-peft")
 
@@ -222,8 +230,10 @@ Examples:
             project_name=args.wandb_project,
             deepspeed=args.deepspeed,
         )
-        generate_trl_train_script(config, args.generate_script)
-        return
+        if args.generate_script:
+            generate_trl_train_script(config, args.generate_script)
+            return
+        launcher.trl_config = config
 
     # Run training
     launcher.run()

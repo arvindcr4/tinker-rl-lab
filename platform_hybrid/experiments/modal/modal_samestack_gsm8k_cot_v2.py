@@ -412,9 +412,9 @@ def paired(a: dict, b: dict) -> dict:
     d = [a[s] - b[s] for s in seeds]
     n = len(d)
     if n < 2:
-        raise ValueError("paired requires at least two common seeds")
+        raise ValueError("paired requires at least two shared seeds")
     if not all(math.isfinite(x) for x in d):
-        raise ValueError("paired requires finite differences")
+        raise ValueError("paired requires finite paired differences")
     md = d[0] if all(x == d[0] for x in d) else math.fsum(d) / n
     sd = math.sqrt(sum((x - md) ** 2 for x in d) / (n - 1)) if n > 1 else float("nan")
     se = sd / math.sqrt(n)

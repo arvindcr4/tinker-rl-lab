@@ -1,0 +1,38 @@
+{
+  "scope": "Integrated source files validated locally on macOS CPU; no model/training execution.",
+  "base_commit": "a779f6048ca3f2f0fc3cb11619966c0a71d37a37",
+  "tests": {
+    "passed": 1267,
+    "skipped": 1,
+    "skip_reason": "no non-CPU torch device available",
+    "failed": 0,
+    "coverage_percent": 84.53,
+    "native_latex_tests_included": true,
+    "hypothesis_version": "6.156.2",
+    "python": "3.12.13",
+    "warnings": 3
+  },
+  "checks": {
+    "ruff": "0.16.10 lint and format pass, 126 files",
+    "repository_policy": "pass",
+    "mypy": "pass, 20 files",
+    "wheel": "built offline from existing dependencies; 9 supported modules verified",
+    "uv_lock": "pass",
+    "requirements_export": "exact non-comment-line match",
+    "docs": "pass",
+    "public_frozen_release": "pass within full suite",
+    "public_new_numbers": "INCOMPLETE: zero disagreement; 120 source-unavailable occurrences",
+    "new_independent_review_gate": "not passed: separate final-thesis review pending"
+  },
+  "source_sha256": {
+    "platform_hybrid/experiments/modal/modal_samestack_gsm8k_cot_v2.py": "cc2cee7a0051153fa5ff40d189f97314465a2386a4be4730e1b20baaf0db8dc8",
+    "platform_local/unified/__main__.py": "9b2537cfb408ba406c72531c2200499028f901f3a146d52e4bbc5e92568a6424",
+    "platform_local/unified/launcher.py": "3a781219a1c6e424aa26c3dd26ef3164e075ee925a6efc24c274606c1164a1e1",
+    "tests/test_audit_thesis_numbers.py": "bd4284000262de42c8ccf59fda7522e20ddc5ff6f61afbf18bf6bab67e1180d5",
+    "tests/test_stats_input_guards.py": "2a7d635c74684f2affaffb885bc7bb473895c8bf618f427e926186a3c5f2852a",
+    "tools/audit_thesis_numbers.py": "437e1f7aa5b119371625d1bb1565e70fa696590303c51c13e40c915575d18675",
+    "tests/test_launcher_forwarding.py": "286f4dbf08fbfdec05b34d15891b41151f11bf453ce1351ad39de941103d5d1e",
+    "tests/test_samestack_statistics.py": "568c84d1951803ec47774b4647430e892b246c44e506b27ed0b4262a9b3fcf3e"
+  },
+  "logs_retained": "Local integration handoff; no personal host paths or raw execution logs bundled."
+}

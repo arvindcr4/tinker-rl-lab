@@ -69,6 +69,7 @@ class UnifiedLauncher:
         self.algorithm = "grpo"
         self.epochs = 20
         self.config = None
+        self.trl_config = None  # Validated CLI config shared by generation and execution.
         self.use_peft = True
         self.peft_method = "lora"
         # Backend dispatch (framework × backend matrix).
@@ -218,6 +219,8 @@ class UnifiedLauncher:
         Delegates to the real Tinker SDK loop in
         ``platform_tinker/tinkerrl/grpo_cli.py`` (preset gsm8k, ExactMathReward).
         """
+        if self.algorithm != "grpo":
+            raise ValueError("The Tinker launcher currently supports only algorithm=grpo")
         import subprocess
 
         spec = self._resolve_spec()
@@ -233,6 +236,16 @@ class UnifiedLauncher:
             str(spec.training_steps),
             "--seed",
             str(spec.seed),
+            "--group-size",
+            str(spec.num_generations),
+            "--lr",
+            str(spec.learning_rate),
+            "--lora-rank",
+            str(spec.lora_rank),
+            "--max-response-tokens",
+            str(spec.max_completion_length),
+            "--batch-size",
+            str(spec.per_device_train_batch_size),
         ]
         print(f"\n[TINKER] {' '.join(cmd)}")
         subprocess.run(cmd, check=True)
@@ -278,9 +291,12 @@ class UnifiedLauncher:
         CLI command. The hosted-equivalent path is the MODAL backend
         (``modal_grpo_openrlhf.py``).
         """
+        if self.algorithm != "grpo":
+            raise ValueError("The OpenRLHF launcher currently supports only algorithm=grpo")
         spec = self._resolve_spec()
         print("\n[OPENRLHF] OpenRLHF (Ray + vLLM, group-norm GRPO)")
         try:
+            from platform_modal.openrlhf.config import OpenRLHFConfig
             from platform_modal.openrlhf.trainer import run_openrlhf_training  # type: ignore
         except ImportError as exc:
             raise NotImplementedError(
@@ -288,8 +304,17 @@ class UnifiedLauncher:
                 "use `--backend modal` (modal_grpo_openrlhf.py). CLI equivalent: "
                 "`python -m openrlhf.cli.train_ppo_ray --advantage_estimator group_norm`."
             ) from exc
-        run_openrlhf_training({}, output_dir="./checkpoints/openrlhf")
-        return TrainingResult("openrlhf", spec.model, self.algorithm, spec.training_steps, [], [])
+        config = OpenRLHFConfig(
+            model={"model_name": self.model or spec.model},
+            optimizer={"learning_rate": spec.learning_rate},
+            algorithm={"algorithm": "grpo", "kl_coef": spec.beta},
+            seed=spec.seed,
+            max_steps=spec.training_steps,
+        )
+        run_openrlhf_training(config, output_dir="./checkpoints/openrlhf")
+        return TrainingResult(
+            "openrlhf", config.model_name, self.algorithm, spec.training_steps, [], []
+        )
 
     def _run_trl(self) -> TrainingResult:
         """Run TRL training.
@@ -320,7 +345,7 @@ class UnifiedLauncher:
             from trl_integrations.config import TRLConfig  # type: ignore
             from trl_integrations.trainer import generate_trl_train_script  # type: ignore
 
-        config = TRLConfig(
+        config = self.trl_config or TRLConfig(
             model={
                 "model_name": self.model or spec.model,
                 "use_peft": self.use_peft,

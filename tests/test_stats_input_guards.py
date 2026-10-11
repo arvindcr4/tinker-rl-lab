@@ -42,6 +42,20 @@ def test_mann_whitney_u_empty_raises():
         stats.mann_whitney_u(np.array([]), np.array([1.0, 2.0]))
 
 
+@pytest.mark.parametrize(("n_a", "n_b"), [(1, 1), (2, 3), (8, 12)])
+def test_mann_whitney_u_all_tied_is_not_significant(n_a, n_b):
+    out = stats.mann_whitney_u(np.full(n_a, 0.5), np.full(n_b, 0.5))
+    assert out["u_statistic"] == n_a * n_b / 2
+    assert out["p_value"] == 1.0
+    assert out["significant_at_005"] is False
+
+
+@pytest.mark.parametrize("value", [np.nan, np.inf, -np.inf])
+def test_mann_whitney_u_rejects_nonfinite_scores(value):
+    with pytest.raises(ValueError, match="finite scores"):
+        stats.mann_whitney_u(np.array([value, value]), np.array([value, value]))
+
+
 def test_generate_results_table_single_seed(tmp_path):
     df = stats.generate_results_table(
         {"algo": np.array([0.9])}, output_path=str(tmp_path / "test_stats_single.tex")

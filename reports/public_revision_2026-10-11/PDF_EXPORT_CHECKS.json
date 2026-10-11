@@ -1,0 +1,9 @@
+{
+  "pages": 317,
+  "out_of_bounds_pages": [],
+  "replacement_characters": 0,
+  "selected_privacy_pattern_failures": [],
+  "embedded_files": 0,
+  "qpdf_status": "checking reports/public_revision_2026-10-11/thesis/Thesis_Report_ArvindCR_2026-10-11_ESA_CORRECTED_REVIEW.pdf\nPDF Version: 1.5\nFile is not encrypted\nFile is not linearized\nNo syntax or stream encoding errors found; the file may still contain\nerrors that qpdf cannot detect\n",
+  "scope": "Fresh checks of exported PDF; pattern matching is limited, not a guarantee of exhaustive privacy or accessibility review."
+}

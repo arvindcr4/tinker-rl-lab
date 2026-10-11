@@ -45,3 +45,40 @@ def test_real_tensorboard_event_contract(tmp_path, points, observed):
         assert result["metrics_status"] == "not_collected"
         assert result["reward_trace"] == []
         assert result["metrics_reason"] == "invalid_or_incomplete_reward_trace"
+
+
+@pytest.mark.parametrize("tail", ["short-header", "bad-header-crc", "bad-data-crc"])
+def test_complete_reward_prefix_does_not_hide_corrupt_event_tail(tmp_path, tail):
+    import struct
+
+    directory = tmp_path / "tensorboard/synthetic"
+    writer = EventFileWriter(str(directory))
+    try:
+        for step in (1, 2):
+            writer.add_event(
+                Event(
+                    step=step,
+                    summary=Summary(
+                        value=[Summary.Value(tag="train/reward", simple_value=0.25 * step)]
+                    ),
+                )
+            )
+        writer.flush()
+    finally:
+        writer.close()
+    event = next(directory.glob("events.out.tfevents.*"))
+    original = event.read_bytes()
+    if tail == "short-header":
+        suffix = b"\x01\x02"
+    elif tail == "bad-header-crc":
+        suffix = b"\x00" * 16
+    else:
+        length = struct.unpack("<Q", original[:8])[0]
+        record = bytearray(original[: length + 16])
+        record[-1] ^= 1
+        suffix = bytes(record)
+    event.write_bytes(original + suffix)
+    result = read_native_metrics(str(tmp_path), "synthetic", expected_rollouts=2)
+    assert result["metrics_status"] == "not_collected"
+    assert result["reward_trace"] == []
+    assert result["metrics_reason"] == "native_events_unreadable"

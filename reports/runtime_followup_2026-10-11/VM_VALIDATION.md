@@ -1467,3 +1467,36 @@ all aggregate stages passed, exit zero. The extra token-mutation assertions
 were checked in the 16-test focused rerun after that aggregate; production code
 was unchanged. This verifies consistency of captured local rollouts, not remote
 provider immutability or model-quality gains.
+
+## Closed native event-file integrity (21:54 UTC)
+
+A real TensorBoard 2.20.0 writer/reader probe showed that a valid two-reward
+prefix was accepted even with a two-byte partial header, an invalid header CRC,
+or a copied record with a flipped payload CRC appended. All three new cases
+failed before the fix. TensorBoard's live-stream loader deliberately stops on
+`DataLossError` so a future write can complete a record; see the
+[official 2.20.0 loader](https://raw.githubusercontent.com/tensorflow/tensorboard/2.20.0/tensorboard/backend/event_processing/event_file_loader.py).
+That streaming behavior is insufficient for this wrapper's stopped-writer,
+complete-artifact contract.
+
+The native metrics reader now validates complete TFRecord framing and both
+masked CRC32C checksums across the exact captured bytes before parsing scalar
+rewards. It reuses TensorBoard's checksum implementation, bounds each declared
+payload length against remaining bytes before slicing, and rejects corrupt or
+partial records as `native_events_unreadable`. Existing reward tag, step,
+finiteness, file-membership and byte-stability checks remain in place. This is
+an integrity check, not authentication of training or a live-tailing feature.
+
+**29 focused checks passed**, including all seven real TensorBoard cases and
+dependency-free reader-boundary tests. A framing test also covers every partial
+minimum-record length, an impossible uint64 payload length and both CRC fields
+before the scalar parser is called. The dependency-free scalar-parser mocks
+use explicitly stubbed CRCs; checksum correctness is exercised by the real
+writer/reader cases. Public-source Muse review supported the narrow gate.
+
+Full `make check submission-check` passed **1,876 tests, 2 skipped**, native TeX
+included, at **86.11%** configured supported-surface coverage in 258.90 seconds;
+all aggregate stages passed, exit zero. Native optional TensorBoard integration
+is the separate 29-test check above; native code is outside the configured
+coverage denominator. No model training, provider jobs or historical result
+rewrites were used.

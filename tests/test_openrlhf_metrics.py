@@ -17,7 +17,9 @@ def fixture(tmp_path, values, tag="train/reward"):
     directory = tmp_path / "tensorboard/native"
     directory.mkdir(parents=True)
     event = directory / "events.out.tfevents.synthetic"
-    event.write_bytes(b"synthetic event bytes, not real training")
+    # Framed synthetic bytes; CRC behavior is stubbed only in these parser mocks.
+    payload = b"synthetic event bytes, not real training"
+    event.write_bytes(struct.pack("<QI", len(payload), 0) + payload + struct.pack("<I", 0))
     reader = Mock()
     reader.Reload.return_value = reader
     reader.Tags.return_value = {"scalars": [tag]}
@@ -28,7 +30,9 @@ def fixture(tmp_path, values, tag="train/reward"):
 
 
 def read(tmp_path, module, expected=2):
-    with patch.dict(sys.modules, {module.__name__: module}):
+    crc = ModuleType("tensorboard.compat.tensorflow_stub.pywrap_tensorflow")
+    crc.masked_crc32c = lambda data: 0
+    with patch.dict(sys.modules, {module.__name__: module, crc.__name__: crc}):
         return read_native_metrics(str(tmp_path), "native", expected)
 
 
@@ -186,3 +190,19 @@ def test_parser_interruption_is_not_swallowed(tmp_path):
     reader.Reload.side_effect = KeyboardInterrupt
     with pytest.raises(KeyboardInterrupt):
         read(tmp_path, module)
+
+
+def test_invalid_record_framing_is_rejected_before_scalar_parser(tmp_path):
+    event, reader, module = fixture(tmp_path, [(1, 0.25), (2, 0.5)])
+    original = event.read_bytes()
+    invalid_tails = [bytes(size) for size in range(1, 16)] + [
+        struct.pack("<QI", 2**64 - 1, 0) + bytes(4),
+        struct.pack("<QI", 0, 1) + bytes(4),
+        struct.pack("<QI", 0, 0) + struct.pack("<I", 1),
+    ]
+    for suffix in invalid_tails:
+        event.write_bytes(original + suffix)
+        result = read(tmp_path, module)
+        assert result["metrics_reason"] == "native_events_unreadable"
+        assert result["reward_trace"] == []
+    reader.Reload.assert_not_called()

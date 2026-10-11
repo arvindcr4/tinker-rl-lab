@@ -2,6 +2,7 @@
 
 import hashlib
 import math
+import struct
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -9,6 +10,24 @@ from .artifacts import read_regular_bytes
 
 
 REWARD_TAG = "train/reward"
+
+
+def _validate_event_records(data: bytes, masked_crc32c) -> None:
+    """Reject partial/corrupt TFRecords that live-stream readers may ignore."""
+    offset = 0
+    while offset < len(data):
+        if len(data) - offset < 16:
+            raise ValueError("truncated event record")
+        length, header_crc = struct.unpack_from("<QI", data, offset)
+        if length > len(data) - offset - 16:
+            raise ValueError("truncated event payload")
+        if masked_crc32c(data[offset : offset + 8]) != header_crc:
+            raise ValueError("event header checksum mismatch")
+        end = offset + 12 + length
+        payload_crc = struct.unpack_from("<I", data, end)[0]
+        if masked_crc32c(data[offset + 12 : end]) != payload_crc:
+            raise ValueError("event payload checksum mismatch")
+        offset = end + 4
 
 
 def read_native_metrics(output_dir: str, run_name: str, expected_rollouts: int) -> dict:
@@ -30,6 +49,11 @@ def read_native_metrics(output_dir: str, run_name: str, expected_rollouts: int) 
         source_bytes = read_regular_bytes(event_file)
         before = hashlib.sha256(source_bytes).hexdigest()
         from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+        from tensorboard.compat.tensorflow_stub.pywrap_tensorflow import masked_crc32c
+
+        # The writer is stopped: unlike a live dashboard, trailing partial
+        # records or bad checksums cannot be treated as a clean end of file.
+        _validate_event_records(source_bytes, masked_crc32c)
 
         # Parse exactly the bytes we hash. Hashing the mutable source before
         # and after parsing alone cannot detect an A -> B -> A replacement.
@@ -74,6 +98,6 @@ def read_native_metrics(output_dir: str, run_name: str, expected_rollouts: int) 
             "path": str(event_file.relative_to(output_dir)),
             "sha256": before,
             "tag": REWARD_TAG,
-            "reader": "tensorboard.EventAccumulator; immutable byte snapshot; all scalars; no orphan purging",
+            "reader": "tensorboard.EventAccumulator; immutable byte snapshot; complete CRC-checked TFRecords; all scalars; no orphan purging",
         },
     }

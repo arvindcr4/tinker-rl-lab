@@ -57,3 +57,18 @@ The final focused run passed80 tests (one existing SciPy precision warning).
 Unknown unrelated files remain outside the matched-results contract; a passing
 summary is not a statement that every file in the directory was validated.
 Local commits so far: `e1254ab6` evidence guards; `f2f3af97` ingestion/reward fixes.
+
+### Statistics ingestion and estimator correction
+
+Rank trimming replaces quantile-value filtering for IQM; independent review
+matched SciPy in100 tied/small-sample comparisons. Bootstrap/IQM reject
+nonfinite scores. Aggregation rejects empty or missing seed sources, requires a
+shared metric, and records metric/horizon metadata. Explicit steps must increase
+and end at the same value. Legacy files without steps use observation counts,
+which do not establish optimizer-step equivalence. Recognized alternate step
+keys(global_step, _step, optimizer_step) require explicit normalization; their
+units are never assumed. Common-metric inference uses the intersection across
+seeds. Five cross-review counterexamples failed before these follow-ups; all87
+focused tests passed afterwards(one existing SciPy precision warning). Earlier
+agent validation passed66 statistical property tests. Singleton uncertainty
+remains a limitation; these repairs do not provide missing replicate evidence.

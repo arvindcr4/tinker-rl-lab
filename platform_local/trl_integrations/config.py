@@ -56,6 +56,8 @@ class TRLAlgorithmConfig(BaseModel):
     epsilon_low: float = 0.2
     epsilon_high: float = 0.2
     kl_coef: float = 0.01
+    num_generations: int = Field(default=8, ge=2)
+    temperature: float = Field(default=1.0, gt=0)
     max_grad_norm: float = 1.0
 
     @model_validator(mode="before")
@@ -79,7 +81,8 @@ class TRLDataConfig(BaseModel):
 
     train_data: List[str] = Field(default_factory=list)
     val_data: List[str] = Field(default_factory=list)
-    max_prompt_length: int = 512
+    # TRL 1.2.0 has no max_prompt_length option; native generation rejects a cap.
+    max_prompt_length: Optional[int] = None
     max_response_length: int = 1024
     train_batch_size: int = 8
     gradient_accumulation_steps: int = 4
@@ -92,6 +95,11 @@ class TRLConfig(BaseModel):
     optimizer: TROptimizerConfig = Field(default_factory=TROptimizerConfig)
     algorithm: TRLAlgorithmConfig = Field(default_factory=TRLAlgorithmConfig)
     data: TRLDataConfig = Field(default_factory=TRLDataConfig)
+
+    # Native script execution requires an explicit task-specific reward and fresh output.
+    reward_callable: Optional[str] = None  # importable module:attribute
+    output_dir: Optional[str] = None
+    seed: int = 42
 
     # Training settings
     epochs: int = 20

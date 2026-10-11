@@ -72,3 +72,23 @@ seeds. Five cross-review counterexamples failed before these follow-ups; all87
 focused tests passed afterwards(one existing SciPy precision warning). Earlier
 agent validation passed66 statistical property tests. Singleton uncertainty
 remains a limitation; these repairs do not provide missing replicate evidence.
+
+### 14:08 UTC — integrated CPU validation
+
+Full suite: **1415 passed,1 intentional skip,3 warnings,84.88% coverage** in90.26s.
+Lint, formatting, repository policy and configured mypy20files passed. TRL
+changes received root source review and63 focused checks before integration;
+see[TRL_NATIVE_CONTRACT.md](TRL_NATIVE_CONTRACT.md) for supported behavior and
+explicit limitations. No native training or external publishing occurred.
+
+Original checkout HEAD and all six modified tracked-file byte hashes match the
+preserved baseline. Its status still lists the same modified/untracked entries;
+the baseline status-hash serialization could not be reproduced, so an identical
+status hash is not claimed. Pre-existing integration `.coverage` remains intact;
+new coverage uses a separate artifact file.
+
+Outstanding next candidates: ExactMath scientific-notation tokenization, xLAM
+multi-call/truncated-tool ingestion, legacy TRL simulation scaffolding, and
+remaining scientific/provenance/publication gates. No new review workers are
+being launched while the user clarifies quota usage concerns. No per-task quota
+counter is available; all child agents have completed.

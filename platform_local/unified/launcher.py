@@ -30,7 +30,7 @@ class TrainingResult:
     framework: str
     model: str
     algorithm: str
-    final_step: int
+    final_step: int | None
     reward_history: list[float]
     loss_history: list[float]
     total_time: float = 0.0
@@ -334,7 +334,7 @@ class UnifiedLauncher:
     def _run_trl(self) -> TrainingResult:
         """Run TRL training.
 
-        Generates the checkpoint-resumable GRPO script
+        Generates the explicit-reward, fresh-output GRPO script
         (``trl_integrations.trainer.generate_trl_train_script``) and executes it
         when training data is available; otherwise points the user at
         ``--generate-script`` / the MODAL & GCP TRL drivers, which carry the
@@ -372,8 +372,19 @@ class UnifiedLauncher:
                 "algorithm": self.algorithm,
                 "epsilon_low": spec.epsilon_low,
                 "epsilon_high": spec.epsilon_high,
+                "kl_coef": spec.beta,
+                "num_generations": spec.num_generations,
             },
-            data={"train_data": train_data},
+            data={
+                "train_data": train_data,
+                "train_batch_size": spec.per_device_train_batch_size,
+                "gradient_accumulation_steps": spec.gradient_accumulation_steps,
+                "max_response_length": spec.max_completion_length,
+            },
+            reward_callable=getattr(self, "reward_callable", None),
+            output_dir=getattr(self, "output_dir", None),
+            seed=spec.seed,
+            max_steps=spec.training_steps,
             epochs=self.epochs,
             project_name=getattr(self, "wandb_project", "unified-rl"),
         )
@@ -383,4 +394,5 @@ class UnifiedLauncher:
         import subprocess
 
         subprocess.run([sys.executable, script], check=True)
-        return TrainingResult("trl", self.model or spec.model, self.algorithm, self.epochs, [], [])
+        # A successful subprocess is not an observed optimizer-step receipt.
+        return TrainingResult("trl", config.model_name, config.algorithm.algorithm, None, [], [])

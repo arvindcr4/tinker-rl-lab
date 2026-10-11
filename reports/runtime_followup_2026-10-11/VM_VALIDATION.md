@@ -698,3 +698,42 @@ Full validation passed: **1,642 passed, 2 skipped**, including native TeX,
 TensorBoard module remains absent in the default environment; its separate
 four-case real integration passed in the preceding batch. Static, package,
 lock, docs, public/demo and submission checks passed.
+
+## Immutable public GSM8K source revision for future native inputs
+
+The native loader now explicitly requests public `openai/gsm8k` revision
+`740312add88f781978c0658806c59bc2815b9866`, configuration `main`, split
+`train[:500]`, with `token=False`. It no longer follows moving `main` or uses
+implicit authentication for this public, ungated dataset. New input receipts
+record the configured revision alongside the actual launch-input byte hash.
+This changes future source selection only; no historical result, dataset or
+frozen artifact is rewritten. Model/tokenizer revision pinning remains separate.
+
+Primary-source verification on 2026-10-11:
+
+- Official public metadata: `https://huggingface.co/api/datasets/openai/gsm8k`
+- Revision tree: `https://huggingface.co/api/datasets/openai/gsm8k/tree/740312add88f781978c0658806c59bc2815b9866/main`
+- Training file: `https://huggingface.co/datasets/openai/gsm8k/resolve/740312add88f781978c0658806c59bc2815b9866/main/train-00000-of-00001.parquet`
+- Training file size: 2,306,545 bytes; SHA-256:
+  `ea82612ea9582142387730c793eb67d3b12849002bc0b7fa6f8efafa7351419d`
+
+The file was fetched anonymously with normal TLS and matched the official
+revision's LFS digest. PyArrow confirmed 7,473 training rows. All first 500
+actual public rows passed the native formatter and validator, producing JSONL
+SHA-256 `4416d0abbb8f31205160171db451cc7e76854d3d0d07ab9a79aaecab78cce795`.
+That check used the verified local Parquet rows with the dataset loader mocked;
+it is distinct from an end-to-end Hub loader check. Raw dataset files remain
+outside the repository. All **57 focused native input/command tests** passed.
+
+A separate live Hub-loader attempt did not complete observably in this VM and
+is **not** counted as a passed integration. The first attempt identified missing
+HTTPX SOCKS support; the documented optional `socksio==1.0.0` dependency was
+installed in a separate workspace directory without changing proxy settings.
+The retried run produced no completion receipt. The verified Parquet/formatter
+check and mocked revision-argument regressions above are the available evidence.
+
+Full regression validation passed: **1,642 passed, 2 skipped**, including native
+TeX, 85.34% configured supported-surface coverage, in 267.54 seconds. Static,
+package, lock, docs, public/demo and submission checks passed. The test count
+is unchanged: existing input-contract tests now require the immutable revision
+and explicit anonymous loading.

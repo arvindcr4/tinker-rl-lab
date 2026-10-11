@@ -10,6 +10,9 @@ from .artifacts import read_regular_bytes
 
 
 SOURCE_ROWS = 500
+# Official public openai/gsm8k revision verified on 2026-10-11. Upgrade this
+# deliberately; floating main would make otherwise identical runs drift.
+GSM8K_REVISION = "740312add88f781978c0658806c59bc2815b9866"
 _NUMERIC_LABEL = re.compile(r"[-+]?(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
 
 
@@ -32,7 +35,9 @@ def materialize_gsm8k(out_path: str, system_prompt: str) -> str:
 
     if not isinstance(system_prompt, str) or not system_prompt.strip():
         raise ValueError("system prompt must be a nonempty string")
-    dataset = load_dataset("openai/gsm8k", "main", split="train[:500]")
+    dataset = load_dataset(
+        "openai/gsm8k", "main", split="train[:500]", revision=GSM8K_REVISION, token=False
+    )
     records = []
     for index, row in enumerate(dataset, 1):
         if index > SOURCE_ROWS:
@@ -129,8 +134,8 @@ def inspect_native_input(path: str) -> dict:
         "source": "openai/gsm8k",
         "configuration": "main",
         "split": "train[:500]",
-        "source_revision": None,
-        "scope": "validated launch-input bytes before native tokenizer rendering; upstream revision is unpinned",
+        "source_revision": GSM8K_REVISION,
+        "scope": "configured upstream revision and validated launch-input bytes before native tokenizer rendering",
     }
 
 

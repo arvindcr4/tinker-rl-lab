@@ -131,7 +131,7 @@ def test_success_records_config_without_inventing_measurements(
     assert prepare.call_args.args[0] == str(tmp_path / "relative/gsm8k500.jsonl")
     assert native.call_args.kwargs["check"] is True
     assert result["input_artifact"]["rows"] == 500
-    assert result["input_artifact"]["source_revision"] is None
+    assert result["input_artifact"]["source_revision"] == "740312add88f781978c0658806c59bc2815b9866"
     assert len(result["input_artifact"]["sha256"]) == 64
     assert "--apply_chat_template" in native.call_args.args[0]
     assert result["seed"] == 19

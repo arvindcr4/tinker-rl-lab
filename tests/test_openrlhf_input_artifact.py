@@ -32,7 +32,9 @@ def test_materialization_preserves_messages_and_normalizes_complete_labels(tmp_p
     path = tmp_path / "input.jsonl"
     with modules:
         trainer._prepare_gsm8k_500_jsonl(str(path))
-    load.assert_called_once_with("openai/gsm8k", "main", split="train[:500]")
+    load.assert_called_once_with(
+        "openai/gsm8k", "main", split="train[:500]", revision=inputs.GSM8K_REVISION, token=False
+    )
     rows = [json.loads(line) for line in path.read_text().splitlines()]
     assert len(rows) == 500
     assert rows[0]["prompt"][0] == {"role": "system", "content": trainer.GSM8K_SYSTEM_PROMPT}
@@ -44,7 +46,7 @@ def test_materialization_preserves_messages_and_normalizes_complete_labels(tmp_p
     assert receipt["sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
     assert receipt["rows"] == 500
     assert receipt["bytes"] == path.stat().st_size
-    assert receipt["source_revision"] is None
+    assert receipt["source_revision"] == "740312add88f781978c0658806c59bc2815b9866"
     inputs.ensure_input_unchanged(str(path), receipt)
 
 

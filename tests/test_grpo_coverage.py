@@ -10,7 +10,6 @@ import types
 from dataclasses import asdict
 
 import torch
-from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -618,7 +617,10 @@ def test_critic_masks_truncated_responses_out_of_the_fit(tmp_path, monkeypatch):
             config, _dataset(_example()), ExactMathReward(), _Tokenizer(), logger=lambda _m: None
         )
     assert result.reward_trace
-    assert Path(str(tmp_path)).joinpath(f"{config.name}_seed{config.seed}.critic.pt").exists()
+    receipt = json.loads(grpo._checkpoint_path(config, config.seed).read_text())
+    assert grpo._critic_checkpoint_path(
+        config, config.seed, receipt["critic_state_sha256"]
+    ).exists()
 
 
 def test_fresh_run_pins_revisions_and_scores_heldout(tmp_path, monkeypatch):

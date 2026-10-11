@@ -294,3 +294,44 @@ suggestion to allow nonfinite loss propagation was not adopted.
 Full native `make check` on the policy-loss batch passed: **1,554 tests passed,
 one expected non-CPU skip, no deselections; 84.94% coverage**, 251.55 seconds.
 Both native LaTeX tests and all aggregate quality/package/public gates passed.
+
+## Interrupted-checkpoint recovery
+
+Matched-step validation detects a torn actor/critic pair but cannot recover the
+previous pair if either component has already been overwritten. New critic
+writes are therefore immutable, content-addressed `critic-<sha256>.pt` siblings.
+The writer fully writes and fsyncs a private temporary, then atomically creates
+the immutable filename without overwriting an existing artifact. The JSON
+receipt, containing `critic_state_sha256`, is committed last. An interruption
+before that commit leaves the preceding receipt and its sidecar intact; orphan
+sidecars are ignored rather than selected by time or filename order.
+
+Restore derives the filename from a validated digest, verifies a single byte
+snapshot, and loads that same snapshot with `weights_only=True`. It checks the
+saved step and configuration/seed binding before restoring weights or Adam.
+Malformed bindings cannot fall back to legacy paths. Corrupt, symbolic-link,
+directory, and FIFO inputs are rejected before deserialization, and corrupted
+content-addressed artifacts are never overwritten. No older sidecars or
+receipts are automatically migrated or deleted. Disk retention follows the
+existing checkpoint cadence, with no new automatic garbage collection.
+
+Matching regular legacy sidecars remain readable with the earlier step and
+optimizer checks; new writes do not maintain a legacy flat-file copy, so older
+software cannot resume the new format. Completed result receipts retain their
+existing read-only return behavior. The guarantee covers process interruption
+of these local files, not a cross-provider transaction or a power-loss guarantee
+for the entire filesystem.
+
+Fault-injection integrations interrupt both critic publication and JSON receipt
+publication, then verify the next run restores the preceding actor/critic pair
+and performs only the remaining optimizer step. Other tests verify byte
+corruption rejection before `torch.load`, source replacement after snapshot,
+configuration/seed mismatch, legacy loading, immutable-file collision handling,
+and temporary-file cleanup. All 206 focused checkpoint/GRPO tests passed;
+repository lint, formatting and configured type checks also passed.
+
+Aggregate CPU validation: **1,568 passed, 1 skipped, 2 native-LaTeX tests
+intentionally deselected**, 84.93% coverage, in 131.60 seconds. Packaging,
+lock consistency, documentation, public-demo, and submission checks passed.
+Native-LaTeX checks had passed in the preceding full validation; this batch
+changes only checkpoint handling and its regressions.

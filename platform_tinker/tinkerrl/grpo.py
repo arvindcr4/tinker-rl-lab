@@ -19,6 +19,7 @@ from __future__ import annotations
 import ast
 import difflib
 import hashlib
+import io
 import json
 import math
 import os
@@ -26,6 +27,7 @@ import random
 import re
 import subprocess
 import sys
+import tempfile
 from dataclasses import MISSING, asdict, dataclass, field, fields, replace
 from decimal import Context, Decimal, InvalidOperation, ROUND_FLOOR
 from pathlib import Path
@@ -1094,8 +1096,19 @@ def _checkpoint_path(config: GRPOConfig, seed: int) -> Path:
     return Path(config.checkpoint_dir) / f"{safe_name}_seed{seed}.json"
 
 
-def _critic_checkpoint_path(config: GRPOConfig, seed: int) -> Path:
-    return _checkpoint_path(config, seed).with_suffix(".critic.pt")
+def _critic_checkpoint_path(config: GRPOConfig, seed: int, digest: Optional[str] = None) -> Path:
+    receipt = _checkpoint_path(config, seed)
+    if digest is None:
+        return receipt.with_suffix(".critic.pt")  # legacy, unbound sidecar
+    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+        raise RuntimeError("invalid critic SHA-256 binding in checkpoint receipt")
+    # No path from a receipt is ever trusted or joined to the filesystem.
+    return receipt.parent / f"critic-{digest}.pt"
+
+
+def _critic_config_hash(config: GRPOConfig, seed: int) -> str:
+    encoded = json.dumps(_config_fingerprint(config, seed), sort_keys=True).encode()
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def _save_critic(
@@ -1105,22 +1118,82 @@ def _save_critic(
     optimizer: Optional[torch.optim.Optimizer] = None,
     *,
     step: int,
-) -> None:
-    """Persist critic weights and Adam state next to the JSON receipt.
+) -> str:
+    """Publish immutable critic bytes; return the digest for the commit receipt.
 
-    The write is atomic (temp file + ``os.replace``, like
-    :func:`_write_checkpoint`) so a kill mid-save cannot corrupt the
-    previous state. ``step`` binds the sidecar to the actor receipt;
-    resume rejects mismatched or unversioned state rather than mixing steps.
+    A unique temporary is hard-linked only after its bytes are fully written.
+    The JSON receipt is committed separately, last. An interrupted save leaves
+    the previous receipt and its sidecar intact; unreferenced files are ignored.
+    This provides process-interruption safety, not a cross-provider transaction.
     """
-    path = _critic_checkpoint_path(config, seed)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    payload: Dict[str, Any] = {"model": critic.state_dict(), "step": step}
+    payload: Dict[str, Any] = {
+        "model": critic.state_dict(),
+        "step": step,
+        "config_sha256": _critic_config_hash(config, seed),
+    }
     if optimizer is not None:
         payload["optimizer"] = optimizer.state_dict()
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    torch.save(payload, temporary)
-    os.replace(temporary, path)
+    buffer = io.BytesIO()
+    torch.save(payload, buffer)
+    data = buffer.getvalue()
+    digest = hashlib.sha256(data).hexdigest()
+    path = _critic_checkpoint_path(config, seed, digest)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, prefix=".critic-", delete=False) as file:
+            temporary = Path(file.name)
+            file.write(data)
+            file.flush()
+            os.fsync(file.fileno())
+        try:
+            os.link(temporary, path)
+        except FileExistsError as exc:
+            if path.is_symlink() or not path.is_file() or path.read_bytes() != data:
+                raise RuntimeError(
+                    "existing content-addressed critic artifact is inconsistent"
+                ) from exc
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+    return digest
+
+
+def _load_critic_checkpoint(
+    config: GRPOConfig, seed: int, resume_step: int, receipt: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Verify the committed bytes and state binding before restoring any model."""
+    bound = "critic_state_sha256" in receipt
+    digest = receipt.get("critic_state_sha256") if bound else None
+    if bound and digest is None:
+        raise RuntimeError("invalid critic SHA-256 binding in checkpoint receipt")
+    critic_path = _critic_checkpoint_path(config, seed, digest)
+    if not critic_path.exists():
+        raise RuntimeError(
+            f"[{config.name}] resume at step {resume_step} has no critic state at {critic_path}"
+        )
+    if critic_path.is_symlink() or not critic_path.is_file():
+        raise RuntimeError("critic checkpoint must be a regular file, not a symbolic link")
+    data = critic_path.read_bytes()
+    if bound and hashlib.sha256(data).hexdigest() != digest:
+        raise RuntimeError("critic checkpoint SHA-256 mismatch; artifact is preserved")
+    # Hash and deserialize the same snapshot, never reopen a changed file.
+    payload = torch.load(io.BytesIO(data), map_location="cpu", weights_only=True)
+    if (
+        not isinstance(payload, dict)
+        or "model" not in payload
+        or "optimizer" not in payload
+        or type(payload.get("step")) is not int
+        or payload["step"] != resume_step
+    ):
+        raise RuntimeError(
+            f"[{config.name}] critic state must include model and optimizer "
+            f"at actor checkpoint step {resume_step}; restore a matching "
+            "checkpoint pair or start a fresh run"
+        )
+    if bound and payload.get("config_sha256") != _critic_config_hash(config, seed):
+        raise RuntimeError("critic checkpoint configuration binding does not match")
+    return payload
 
 
 def _config_fingerprint(config: GRPOConfig, seed: int) -> Dict[str, Any]:
@@ -1727,29 +1800,11 @@ def _run_one_seed(
             max_prompt_tokens=config.max_prompt_tokens,
         )
         critic_opt = torch.optim.Adam(critic.parameters(), lr=config.critic_lr)
-        critic_path = _critic_checkpoint_path(config, seed)
         if resume_step > 0:
-            if not critic_path.exists():
-                raise RuntimeError(
-                    f"[{config.name}] resume at step {resume_step} has no critic "
-                    f"state at {critic_path}"
-                )
-            payload = torch.load(critic_path, map_location="cpu", weights_only=True)
-            if (
-                not isinstance(payload, dict)
-                or "model" not in payload
-                or "optimizer" not in payload
-                or type(payload.get("step")) is not int
-                or payload["step"] != resume_step
-            ):
-                raise RuntimeError(
-                    f"[{config.name}] critic state must include model and optimizer "
-                    f"at actor checkpoint step {resume_step}; restore a matching "
-                    "checkpoint pair or start a fresh run"
-                )
+            payload = _load_critic_checkpoint(config, seed, resume_step, prior or {})
             critic.load_state_dict(payload["model"])
             critic_opt.load_state_dict(payload["optimizer"])
-            logger(f"[{config.name}] critic resumed from {critic_path}")
+            logger(f"[{config.name}] critic resumed from committed step {resume_step}")
 
     wb = _start_wandb(config, seed)
     try:
@@ -2210,6 +2265,11 @@ def _run_one_seed(
                     step=step + 1,
                 )
                 sc = tc.create_sampling_client(model_path=ckpt.path)
+                critic_binding = {}
+                if config.critic_enabled:
+                    critic_binding["critic_state_sha256"] = _save_critic(
+                        config, seed, critic, critic_opt, step=step + 1
+                    )
                 _write_checkpoint(
                     checkpoint_path,
                     {
@@ -2226,10 +2286,9 @@ def _run_one_seed(
                         "checkpoint_commit_shas": checkpoint_commit_shas,
                         "checkpoint_receipts": checkpoint_receipts,
                         "campaign_metadata": _campaign_metadata(config),
+                        **critic_binding,
                     },
                 )
-                if config.critic_enabled:
-                    _save_critic(config, seed, critic, critic_opt, step=step + 1)
                 logger(f"[{config.name}]   -> Checkpoint step_{step + 1}")
 
         tc.save_state(name=f"seed{seed}_final", overwrite=True).result()
@@ -2321,8 +2380,11 @@ def _run_one_seed(
         )
         # Persist the critic before declaring completion. A failed final
         # sidecar save must not leave a successful completion receipt.
+        critic_binding = {}
         if config.critic_enabled:
-            _save_critic(config, seed, critic, critic_opt, step=config.steps)
+            critic_binding["critic_state_sha256"] = _save_critic(
+                config, seed, critic, critic_opt, step=config.steps
+            )
         # The local completion receipt is written before W&B is marked
         # successful.  Any receipt failure therefore leaves a failed run.
         _write_checkpoint(
@@ -2338,6 +2400,7 @@ def _run_one_seed(
                 "checkpoint_receipts": checkpoint_receipts,
                 "campaign_metadata": _campaign_metadata(config),
                 "result": asdict(result),
+                **critic_binding,
             },
         )
         # The tinker run ID and checkpoint summary keys were already recorded

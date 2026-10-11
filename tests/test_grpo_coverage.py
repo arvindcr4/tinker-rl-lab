@@ -1119,3 +1119,15 @@ def test_module_guard_exits_with_main_status(monkeypatch):
     with pytest.raises(SystemExit) as raised:
         runpy.run_module("platform_tinker.tinkerrl.grpo_cli", run_name="__main__")
     assert raised.value.code == 1
+
+
+def test_redact_error_masks_tinker_and_overlapping_configured_credentials(monkeypatch):
+    # Entirely synthetic values; no real credentials are inspected.
+    monkeypatch.setenv("HF_TOKEN", "synthetic-prefix")
+    monkeypatch.setenv("HUGGINGFACE_HUB_TOKEN", "synthetic-other-hub")
+    monkeypatch.setenv("WANDB_API_KEY", "synthetic-other-wandb")
+    monkeypatch.setenv("TINKER_API_KEY", "synthetic-prefix-private-suffix")
+    result = grpo._redact_error(
+        RuntimeError("request failed: synthetic-prefix-private-suffix and synthetic-prefix")
+    )
+    assert result == "request failed: [redacted] and [redacted]"

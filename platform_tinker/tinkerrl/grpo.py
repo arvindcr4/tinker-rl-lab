@@ -1385,10 +1385,14 @@ def _load_checkpoint(config: GRPOConfig, seed: int) -> Dict[str, Any] | None:
 def _redact_error(exc: BaseException) -> str:
     """Return an error string with credential values removed."""
     message = str(exc)
-    for env_name in ("HF_TOKEN", "HUGGINGFACE_HUB_TOKEN", "WANDB_API_KEY"):
-        secret = os.environ.get(env_name)
-        if secret:
-            message = message.replace(secret, "[redacted]")
+    secrets = {
+        os.environ.get(env_name)
+        for env_name in ("TINKER_API_KEY", "HF_TOKEN", "HUGGINGFACE_HUB_TOKEN", "WANDB_API_KEY")
+    }
+    # Redact longer overlapping credentials first, so masking a short prefix
+    # cannot leave the rest of another configured credential in a failure log.
+    for secret in sorted((value for value in secrets if value), key=len, reverse=True):
+        message = message.replace(secret, "[redacted]")
     message = re.sub(
         r"(?i)\b(?:hf|wandb|sk|ghp|github_pat)[_-][A-Za-z0-9][A-Za-z0-9._-]{7,}\b",
         "[redacted]",

@@ -671,3 +671,30 @@ coverage in 270.31 seconds. One additional skip is the optional TensorBoard
 integration module; its four dependency-enabled tests passed separately above.
 Static, package, lock, docs, public/demo and submission checks passed. Native
 module lint was checked explicitly in addition to the standard repository gate.
+
+## Credential-safe native URL and failure boundaries
+
+A synthetic-only reproduction showed URL userinfo reaching `--remote_rm_url`.
+The pinned OpenRLHF v0.8.4 entrypoint prints its argparse namespace
+(`train_ppo_ray.py`, line 25 in the previously hash-verified source), so this
+was a credential-disclosure path. A bounded Muse review of public `e8581dbb`
+confirmed the issue and identified malformed host/port/control handling.
+Native preflight now rejects userinfo, missing hosts, invalid ports, literal
+whitespace/control characters, backslashes and fragments before runtime or
+filesystem work. Normal HTTP(S), IPv6 and nonsecret query parameters retain
+their exact configured URLs. Diagnostics do not echo rejected URL contents.
+This does not promise to detect arbitrary secrets hidden in paths or query
+values: reward-service URLs must still be credential-free because they are
+logged by the native framework.
+
+A second synthetic-only reproduction showed the Tinker environment credential
+was absent from the shared error redactor's known credential list. It is now
+included; longer overlapping values are removed first so masking a short token
+cannot expose the suffix of another. No actual credentials were inspected or
+transmitted for these tests. The focused suites passed **116 tests**.
+
+Full validation passed: **1,642 passed, 2 skipped**, including native TeX,
+85.34% configured supported-surface coverage, in 254.95 seconds. The optional
+TensorBoard module remains absent in the default environment; its separate
+four-case real integration passed in the preceding batch. Static, package,
+lock, docs, public/demo and submission checks passed.

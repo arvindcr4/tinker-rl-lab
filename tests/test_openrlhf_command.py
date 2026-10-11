@@ -22,9 +22,9 @@ def native_runtime():
 
 def config(**kwargs):
     kwargs.setdefault("train_batch_size", 8)
+    kwargs.setdefault("remote_rm_url", "http://127.0.0.1:8765/get_reward")
     return OpenRLHFConfig(
         algorithm={"algorithm": "grpo", "sample_num": 6},
-        remote_rm_url="http://127.0.0.1:8765/get_reward",
         **kwargs,
     )
 
@@ -392,3 +392,43 @@ def test_native_optimizer_boundaries_preserve_zero_modes():
     command = build_openrlhf_command(cfg, "/data", "/output")
     for name in ("actor_learning_rate", "temperature", "eps_clip", "l2"):
         assert float(command[command.index("--" + name) + 1]) == 0.0
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://synthetic-user:synthetic-password@127.0.0.1:8765/get_reward",
+        "http://synthetic-user@localhost/get_reward",
+        "http://:8765/get_reward",
+        "http://localhost:abc/get_reward",
+        "http://localhost:99999/get_reward",
+        "http://localhost:0/get_reward",
+        "http://localhost:/get_reward",
+        "http://[::1/get_reward",
+        "http://localhost/get_reward\n",
+        "http://local\thost/get_reward",
+        "http://localhost/get_reward#fragment",
+        "http://localhost\\other/get_reward",
+    ],
+)
+def test_invalid_reward_service_url_fails_before_runtime_or_files(tmp_path, url):
+    output = tmp_path / "no-launch"
+    with patch.object(trainer, "_validate_native_runtime") as runtime:
+        with pytest.raises(ValueError, match="remote_rm_url") as caught:
+            trainer.run_openrlhf_training(config(remote_rm_url=url), str(output))
+    assert "synthetic-password" not in str(caught.value)
+    runtime.assert_not_called()
+    assert not output.exists()
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://127.0.0.1:8765/get_reward",
+        "https://reward.example.org/get_reward?format=json",
+        "http://[::1]:8765/get_reward",
+    ],
+)
+def test_valid_reward_service_urls_are_preserved(url):
+    command = build_openrlhf_command(config(remote_rm_url=url), "/input", "/output")
+    assert command[command.index("--remote_rm_url") + 1] == url

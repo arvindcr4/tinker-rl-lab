@@ -9,6 +9,33 @@ from .config import OpenRLHFConfig
 from .budget import plan_native_budget
 
 
+def _validate_reward_service_url(value: object) -> None:
+    # OpenRLHF prints its argparse namespace. Never accept URL userinfo, and
+    # reject characters that urllib may silently strip or reinterpret.
+    if (
+        not isinstance(value, str)
+        or not value
+        or "\\" in value
+        or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in value)
+    ):
+        raise ValueError("remote_rm_url must be an HTTP(S) URL without whitespace or controls")
+    try:
+        url = urlsplit(value)
+        port = url.port
+        hostname = url.hostname
+    except ValueError:
+        # Parser diagnostics may echo credential-bearing input.
+        raise ValueError("remote_rm_url has an invalid host or port") from None
+    if url.scheme not in {"http", "https"} or not hostname:
+        raise ValueError("remote_rm_url must name an explicitly configured HTTP(S) reward service")
+    if "@" in url.netloc:
+        raise ValueError("remote_rm_url must not contain userinfo; native arguments are logged")
+    if (port is not None and not 1 <= port <= 65535) or url.netloc.endswith(":"):
+        raise ValueError("remote_rm_url has an invalid port")
+    if url.fragment:
+        raise ValueError("remote_rm_url must not contain a fragment")
+
+
 def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: str) -> list[str]:
     if (
         not isinstance(config.algorithm.algorithm, str)
@@ -67,9 +94,7 @@ def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: s
             "for the single colocated engine. Periodic evaluation and checkpoints "
             "are disabled; final model saving is separate."
         )
-    url = urlsplit(config.remote_rm_url or "")
-    if url.scheme not in {"http", "https"} or not url.netloc:
-        raise ValueError("remote_rm_url must name an explicitly configured HTTP(S) reward service")
+    _validate_reward_service_url(config.remote_rm_url)
     if config.env_class != "gsm8k" or any(
         (config.data.train_data, config.data.val_data, config.data.test_data)
     ):

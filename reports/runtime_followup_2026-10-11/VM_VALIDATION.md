@@ -1763,3 +1763,39 @@ Final `make check submission-check` passed **1,955 tests, 2 skipped**, native
 TeX included, at **86.24%** configured supported-surface coverage in 258.00
 seconds. All aggregate stages passed, exit zero. No new training defaults or
 provider jobs were introduced.
+
+## Closed-loop CPU learning and fresh-object resume (23:40 UTC)
+
+The next smoke test runs the actual GRPO seed runner around a random tiny
+causal LM, rather than supplying fixed completions or hand-set advantages.
+It has one synthetic prompt and four possible terminal one-token actions;
+two separate fixtures reward different actions. Samples are drawn from each
+frozen model snapshot, scored by the existing reward adapter, normalized by
+the runner, and updated through the real SDK loss bridge and CPU Adam.
+
+Each fixture uses 20 steps, groups of eight, explicit seeded sampling,
+temperature/top-p 1, and explicit `save_every=1`. It trains all parameters of
+the tiny model, not LoRA adapters or pretrained Qwen3 weights. The rewarded
+action's probability must rise from below 0.4 to above 0.9, with a gain over
+0.6, and the actual reward trace and completion receipt must agree. This is a
+controlled plumbing/learning regression, not benchmark accuracy, generalization
+or a language-model-quality claim. The default sampler cadence is unchanged.
+
+The same test then restores the real step-ten model/Adam state into newly
+constructed model and optimizer objects through an in-memory provider double.
+The remaining ten updates must reproduce the exact sampled reward trace and
+match final model/optimizer state within the regression tolerances. Checkpoint
+publication/tracking transports remain offline doubles; remote durability is
+not being tested. Socket connections are blocked.
+
+Two process-local negative controls verify sensitivity: disabling optimizer
+updates fails the learning assertion, and discarding saved Adam moments breaks
+resume equivalence. A Muse review of the published one-update harness clarified
+why it alone was insufficient and informed the fresh-object restore control.
+No uncommitted source was sent for that review. All **19 related real-SDK/CPU
+checks** passed normally.
+
+Final `make check submission-check` passed **1,957 tests, 2 skipped**, native
+TeX included, at **86.28%** configured supported-surface coverage in 262.44
+seconds. All aggregate stages passed, exit zero. This batch adds two substantive
+regressions without changing production behavior or historical results.

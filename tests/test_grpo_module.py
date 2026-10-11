@@ -1074,6 +1074,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                     receipt = json.loads(receipt_path.read_text())
                     receipt["status"] = "started"
                     receipt["step"] = 1
+                    receipt["train_state_path"] = "tinker://run/state/state_seed42_1"
                     receipt_path.write_text(json.dumps(receipt))
                     with (
                         patch.object(grpo, "_start_wandb") as tracking,
@@ -1227,6 +1228,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                     payload = json.loads(receipt_path.read_text())
                     payload["status"] = "started"
                     payload["step"] = 1
+                    payload["train_state_path"] = "tinker://run/state/state_seed42_1"
                     receipt_path.write_text(json.dumps(payload))
                     (Path(checkpoint_dir) / "critic-missing_seed42.critic.pt").unlink()
                     with self.assertRaisesRegex(RuntimeError, "no critic state"):
@@ -1697,7 +1699,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         self.assertEqual(second.run_id, first.run_id)
         self.assertEqual(second.sampler_path, first.sampler_path)
 
-    def test_rewound_final_does_not_restore_discarded_counters(self):
+    def test_rewound_final_without_actor_state_cannot_resume(self):
         dataset = InMemoryDataset(
             train=[
                 TrainingExample(prompt="easy", target="1"),
@@ -1717,7 +1719,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                         checkpoint_dir=checkpoint_dir,
                         seed=42,
                     )
-                    full = grpo._run_one_seed(
+                    grpo._run_one_seed(
                         config,
                         dataset,
                         ExactMathReward(),
@@ -1731,19 +1733,18 @@ class TestTrackingFailClosed(unittest.TestCase):
                     payload["result"]["zero_reward_steps"] = 9
                     payload["result"]["zero_loss_steps"] = 5
                     receipt_path.write_text(json.dumps(payload))
-                    resumed = grpo._run_one_seed(
-                        config,
-                        dataset,
-                        ExactMathReward(),
-                        runtime["tokenizer"],
-                        logger=lambda _message: None,
-                    )
-        self.assertEqual(resumed.reward_trace, full.reward_trace)
-        self.assertEqual(
-            resumed.zero_reward_steps,
-            sum(1 for reward in resumed.reward_trace if reward == 0),
-        )
-        self.assertEqual(resumed.zero_loss_steps, 0)
+                    with (
+                        patch.object(grpo, "_start_wandb") as tracking,
+                        self.assertRaisesRegex(RuntimeError, "no actor optimizer state"),
+                    ):
+                        grpo._run_one_seed(
+                            config,
+                            dataset,
+                            ExactMathReward(),
+                            runtime["tokenizer"],
+                            logger=lambda _message: None,
+                        )
+                    tracking.assert_not_called()
 
 
 class TestTrainingExample(unittest.TestCase):

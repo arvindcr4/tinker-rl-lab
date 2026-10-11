@@ -183,3 +183,42 @@ Changed-tree CPU suite: **1,465 passed, one expected skip, two native LaTeX
 tests deselected; 84.78% coverage**, 126.43 seconds. Repository lint, format and
 configured mypy checks passed. Native TeX source and build code are unchanged
 from the fully passing native checkpoint above.
+
+## Harness checkpoint: actor receipts and reward boundaries
+
+A nonzero resume step with no actor optimizer-state path previously selected a
+fresh actor while skipping earlier training steps. Resume now rejects that
+receipt before tracking or provider setup, along with coerced, negative, and
+out-of-budget step values and non-object JSON receipts. Completed receipts
+retain their read-only result-return behavior. Invalid receipts are preserved.
+Dynamic-sampling resume remains unsupported and now fails before tracking.
+
+The portfolio reward router previously split at the last `</think>` anywhere
+in the response. Correct JSON argument values and patch source lines containing
+that literal were truncated and scored incorrectly. Structured answers are now
+preserved; for prefixed reasoning, the first complete structured suffix is
+selected. Excessively nested model JSON also returns a failed reward instead
+of propagating a recursion exception into training or evaluation.
+
+Math reward comparison previously converted both answers to binary floats,
+letting distinct integers above 2^53 compare equal. Decimal comparison now
+preserves the existing strict absolute tolerance of 0.01 without that collapse.
+The nonnegative difference uses downward rounding against an exactly
+representable threshold, preserving the strict comparison even just below the
+boundary; the arithmetic context is independent of callers' decimal settings.
+Property checks compare against an exact rational oracle. Final-number parsing
+now consumes scientific notation and leading-dot decimals as whole numbers,
+not an exponent or fractional digit fragment. Numeric zero targets are no
+longer replaced by an empty string. These scoring corrections do not regenerate
+or regrade frozen experiment results.
+
+Source for decimal semantics: [Python decimal documentation](https://docs.python.org/3/library/decimal.html).
+Focused checks: 212 resume/GRPO tests and 198 precision/reward/GRPO tests passed
+in overlapping targeted suites. Public-source Muse review identified the literal
+reasoning-delimiter issue; all cases were reproduced locally before changes.
+
+Full `make check` passed on this changed tree: **1,510 passed, one expected
+non-CPU skip, no deselections, 84.93% coverage**, 240.15 seconds. This includes
+both native LaTeX integration tests, repository lint/format/types, package and
+lock verification, redacted secret checks, documentation checks, and the 237-test
+public-release suite. The independent strict provenance gap remains unchanged.

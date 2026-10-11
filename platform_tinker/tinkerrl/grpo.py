@@ -27,6 +27,7 @@ import re
 import subprocess
 import sys
 from dataclasses import MISSING, asdict, dataclass, field, fields, replace
+from decimal import Context, Decimal, InvalidOperation, ROUND_FLOOR
 from pathlib import Path
 from typing import (
     Any,
@@ -1121,6 +1122,8 @@ def _load_checkpoint(config: GRPOConfig, seed: int) -> Dict[str, Any] | None:
     if not config.resume or not path.exists():
         return None
     payload = json.loads(path.read_text())
+    if not isinstance(payload, dict):
+        raise ValueError(f"[{config.name}] checkpoint must be a JSON object: {path}")
     # Normalize through JSON so tuple-valued fields (e.g. wandb_tags) compare
     # equal to their stored list form; without this every resume fails as
     # "incompatible" (fixed 2026-10-03).
@@ -1632,8 +1635,21 @@ def _run_one_seed(
 
     checkpoint_path = _checkpoint_path(config, seed)
     prior = _load_checkpoint(config, seed)
-    resume_step = int((prior or {}).get("step", 0))
+    resume_step = (prior or {}).get("step", 0)
     resume_state_path = (prior or {}).get("train_state_path")
+    if type(resume_step) is not int or not 0 <= resume_step <= config.steps:
+        raise RuntimeError(f"[{config.name}] checkpoint step must be an integer in [0, steps]")
+    if prior and prior.get("status") != "completed" and resume_step > 0:
+        if config.dynamic_sampling:
+            raise RuntimeError(
+                "resume cannot replay dynamic-sampling draws; start this seed "
+                "from step 0 or turn dynamic sampling off"
+            )
+        if not isinstance(resume_state_path, str) or not resume_state_path.strip():
+            raise RuntimeError(
+                f"[{config.name}] checkpoint step {resume_step} has no actor optimizer state; "
+                "restore a matching periodic receipt or start a fresh run"
+            )
     # Critic pretrain draws from this RNG before the step loop, and only
     # on a fresh run.  Replay those draws before the per-step draws so a
     # resume after pretraining keeps the same example order.
@@ -1711,15 +1727,6 @@ def _run_one_seed(
                 _wandb_summary(wb)["checkpoint_urls"] = list(completed.checkpoint_urls)
             _finish_wandb(wb, success=True)
             return completed
-
-        # Dynamic sampling draws rng.choice once per rejected group.  The
-        # step counter does not record how many, so a replay would train
-        # on a different batch.  Fresh runs are unaffected.
-        if config.dynamic_sampling and resume_step > 0:
-            raise RuntimeError(
-                "resume cannot replay dynamic-sampling draws; start this seed "
-                "from step 0 or turn dynamic sampling off"
-            )
 
         try:
             import tinker
@@ -2834,7 +2841,7 @@ def _strict_json_object(response: str) -> Optional[Dict[str, Any]]:
             parse_constant=reject_nonstandard_constant,
             parse_float=finite_float,
         )
-    except (json.JSONDecodeError, _DuplicateJSONKey, TypeError, ValueError):
+    except (json.JSONDecodeError, _DuplicateJSONKey, TypeError, ValueError, RecursionError):
         return None
     return parsed if isinstance(parsed, dict) else None
 
@@ -2866,6 +2873,14 @@ class StrictToolCallReward:
     """Verifier-backed reward for one exact, unambiguous JSON tool call."""
 
     def score(self, response: str, example: TrainingExample) -> float:
+        # Model output can parse successfully yet exceed the recursive
+        # canonicalizer's depth. It must not abort the training/eval loop.
+        try:
+            return self._score(response, example)
+        except RecursionError:
+            return 0.0
+
+    def _score(self, response: str, example: TrainingExample) -> float:
         target = example.target if isinstance(example.target, dict) else {}
         tool_name = _tool_alias_value(target, "tool", "name")
         arguments = _tool_alias_value(target, "arguments", "parameters")
@@ -2935,19 +2950,30 @@ def _boxed_candidates(response: str) -> List[str]:
 
 def _numeric_equal(candidate: str, answer: str, *, tolerance: float = 0.01) -> bool:
     """Return True when two answer strings match exactly or numerically."""
-    if candidate == answer:
-        return True
+    context = Context(prec=28, rounding=ROUND_FLOOR, traps=[InvalidOperation])
     try:
-        return abs(float(candidate) - float(answer)) < tolerance
-    except (ValueError, TypeError):
+        left = Decimal(candidate, context=context)
+        right = Decimal(answer, context=context)
+    except (InvalidOperation, ValueError, TypeError):
+        return bool(candidate) and candidate == answer
+    if not left.is_finite() or not right.is_finite():
         return False
+    limit = Decimal(str(tolerance), context=context)
+    if not limit.is_finite() or limit <= 0:
+        return False
+    context.prec = max(context.prec, len(limit.as_tuple().digits))
+    # The limit is exactly representable. Rounding a nonnegative difference
+    # DOWN preserves its strict comparison to that limit, even immediately
+    # below the boundary; float conversion can merge distinct large integers.
+    difference = context.subtract(max(left, right), min(left, right))
+    return difference < limit
 
 
 class MathReward:
     """Scores math completions: boxed answer > last number > partial credit."""
 
     def score(self, response: str, example: TrainingExample) -> float:
-        answer = str(example.target or "")
+        answer = "" if example.target is None else str(example.target)
         response = response.strip()
 
         boxed = _boxed_candidates(response)
@@ -2961,14 +2987,11 @@ class MathReward:
         if nums:
             return 0.5
 
-        all_nums = re.findall(r"[-+]?\d*\.?\d+", response)
+        all_nums = re.findall(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?", response)
         if all_nums:
             last = all_nums[-1].replace(",", "")
-            try:
-                if abs(float(last) - float(answer)) < 0.01:
-                    return 1.0
-            except (ValueError, TypeError):
-                pass
+            if _numeric_equal(last, answer):
+                return 1.0
 
         if any(c in response for c in "+-*/="):
             return 0.1
@@ -2979,9 +3002,9 @@ class ExactMathReward:
     """Binary boxed-or-final-number reward used by held-out math benchmarks."""
 
     def score(self, response: str, example: TrainingExample) -> float:
-        answer = str(example.target or "")
+        answer = "" if example.target is None else str(example.target)
         candidates = _boxed_candidates(response.strip())
-        all_numbers = re.findall(r"[-+]?\d[\d,]*\.?\d*", response)
+        all_numbers = re.findall(r"[-+]?(?:\d[\d,]*(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?", response)
         if all_numbers:
             candidates.append(all_numbers[-1].replace(",", ""))
         for candidate in candidates:
@@ -3023,13 +3046,26 @@ class PavlovNonXLAMReward:
         self._patch = PatchReward()
 
     def score(self, response: str, example: TrainingExample) -> float:
+        reward_kind = example.metadata.get("reward_kind")
+
+        def is_answer(text: str) -> bool:
+            if reward_kind == "tool_call":
+                return _strict_json_object(text) is not None
+            return reward_kind == "patch" and text.startswith("diff --git")
+
         # Qwen's chat template exposes its reasoning channel in decoded token
         # text.  Score only the answer after a completed reasoning block, just
         # as the E11 verifier extracts HDL after ``</think>``.  An unclosed
         # block remains invalid and receives no special treatment.
-        if "</think>" in response:
-            response = response.rsplit("</think>", 1)[1].lstrip()
-        reward_kind = example.metadata.get("reward_kind")
+        # A delimiter inside an already structured answer is literal data.
+        # Select the first complete structured suffix, not the last delimiter
+        # inside JSON string values or source-code diff lines.
+        if "</think>" in response and not is_answer(response):
+            for match in re.finditer("</think>", response):
+                candidate = response[match.end() :].lstrip()
+                if is_answer(candidate):
+                    response = candidate
+                    break
         if reward_kind == "tool_call":
             return self._tool.score(response, example)
         if reward_kind == "patch":

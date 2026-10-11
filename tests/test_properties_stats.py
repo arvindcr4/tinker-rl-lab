@@ -196,7 +196,6 @@ def test_signflip_all_zero_differences_is_one(n):
 def test_scipy_free_t_cdf_matches_scipy(t, df):
     from scipy import stats as sps
 
-    assume(abs(t) >= 1e-6)  # tiny |t| crashes; see the strict xfail below
     assert math.isclose(V2["_t_cdf"](t, df), float(sps.t.cdf(t, df)), abs_tol=1e-8)
 
 
@@ -221,29 +220,12 @@ def test_paired_p_in_unit_interval_and_ci_contains_mean(d):
     assert 0.0 <= out["tost_p"] <= 1.0
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason=(
-        "BUG (modal_samestack_gsm8k_cot_v2._t_cdf): for 0 < |t| < ~1e-8*sqrt(df), "
-        "x = df/(df+t*t) rounds to 1.0 and math.log(1 - x) raises 'math domain "
-        "error'. paired() hits it when float noise leaves mean_diff ~1e-18."
-    ),
-)
 def test_paired_float_noise_mean_does_not_crash():
     d = [0.078, 0.052, -0.086, 0.072, -0.043, -0.073]  # mean ~1.16e-18, not 0.0
     out = V2["paired"](dict(enumerate(d)), dict.fromkeys(range(len(d)), 0.0))
     assert out["p_two_sided"] == pytest.approx(1.0)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG (modal_samestack_gsm8k_cot_v2.paired): identical arms (all paired "
-        "differences 0, se == 0) report p_two_sided = 0.0, i.e. 'significant'. "
-        "Should be 1.0 (or NaN) when mean_diff == 0."
-    ),
-)
 def test_paired_identical_arms_is_not_significant():
     a = {s: 0.5 for s in range(5)}
     out = V2["paired"](a, dict(a))
@@ -335,7 +317,6 @@ def test_welch_p_range_and_swap_antisymmetry(a, b):
 @FAST
 @given(unit_scores, unit_scores)
 def test_mann_whitney_p_range_and_swap_symmetry(a, b):
-    assume(len(set(a) | set(b)) > 1)  # all-tied input -> NaN; see strict xfail below
     ab = stats.mann_whitney_u(a, b)
     ba = stats.mann_whitney_u(b, a)
     assert 0.0 <= ab["p_value"] <= 1.0
@@ -343,12 +324,5 @@ def test_mann_whitney_p_range_and_swap_symmetry(a, b):
     assert math.isclose(ab["u_statistic"] + ba["u_statistic"], len(a) * len(b))
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "GAP (utils.stats.mann_whitney_u): all-tied inputs return p_value=NaN "
-        "(scipy), unlike welch_ttest which guards constant inputs explicitly."
-    ),
-)
 def test_mann_whitney_all_tied_returns_finite_p():
     assert math.isfinite(stats.mann_whitney_u([0.5, 0.5], [0.5, 0.5])["p_value"])

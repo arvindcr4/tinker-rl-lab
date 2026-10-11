@@ -331,6 +331,13 @@ def _t_cdf(t, df):
     if t == 0:
         return 0.5
     x = df / (df + t * t)
+    if x == 1.0:
+        # Tiny nonzero t can round x to 1, making log(1-x) undefined.
+        # Use the CDF's linear limit at zero; the omitted term is O(t**3).
+        density_at_zero = math.exp(math.lgamma((df + 1) / 2) - math.lgamma(df / 2)) / math.sqrt(df * math.pi)
+        return 0.5 + t * density_at_zero
+    if x == 0.0:
+        return 1.0 if t > 0 else 0.0
     def betacf(a, b, x):
         qab, qap, qam = a + b, a + 1, a - 1
         c, d = 1.0, 1 - qab * x / qap
@@ -370,15 +377,25 @@ def paired(a: dict, b: dict) -> dict:
     seeds = sorted(set(a) & set(b))
     d = [a[s] - b[s] for s in seeds]
     n = len(d)
+    if n < 2:
+        raise ValueError("paired requires at least two shared seeds")
+    if not all(math.isfinite(x) for x in d):
+        raise ValueError("paired requires finite paired differences")
     md = sum(d) / n
     sd = math.sqrt(sum((x - md) ** 2 for x in d) / (n - 1)) if n > 1 else float("nan")
     se = sd / math.sqrt(n)
     df = n - 1
-    t = md / se if se > 0 else float("inf")
-    p = 2 * (1 - _t_cdf(abs(t), df)) if se > 0 else 0.0
+    t = md / se if se > 0 else (0.0 if md == 0 else math.copysign(float("inf"), md))
+    p = 2 * (1 - _t_cdf(abs(t), df)) if se > 0 else (1.0 if md == 0 else 0.0)
     tc = _t_ppf(0.975, df)
-    p_lo = 1 - _t_cdf((md + MARGIN) / se, df) if se > 0 else 0.0
-    p_hi = _t_cdf((md - MARGIN) / se, df) if se > 0 else 0.0
+    if se > 0:
+        p_lo = 1 - _t_cdf((md + MARGIN) / se, df)
+        p_hi = _t_cdf((md - MARGIN) / se, df)
+    else:
+        # Degenerate differences use the one-sided tests' zero-variance limits.
+        # A constant effect outside (or at) the margin cannot show equivalence.
+        p_lo = 0.0 if md > -MARGIN else (0.5 if md == -MARGIN else 1.0)
+        p_hi = 0.0 if md < MARGIN else (0.5 if md == MARGIN else 1.0)
     return {"n_seeds": n, "seeds": seeds, "diffs": d, "mean_diff": md, "sd": sd,
             "ci95": [md - tc * se, md + tc * se], "t": t, "df": df, "p_two_sided": p,
             "signflip_p": signflip_p(d),

@@ -170,8 +170,15 @@ def mann_whitney_u(scores_a: np.ndarray, scores_b: np.ndarray) -> dict:
     scores_b = np.asarray(scores_b, dtype=float).ravel()
     if scores_a.size == 0 or scores_b.size == 0:
         raise ValueError("mann_whitney_u requires at least one score per group")
+    if not np.isfinite(scores_a).all() or not np.isfinite(scores_b).all():
+        raise ValueError("mann_whitney_u requires finite scores")
 
-    u_stat, p_value = stats.mannwhitneyu(scores_a, scores_b, alternative="two-sided")
+    if np.all(scores_a == scores_a[0]) and np.all(scores_b == scores_a[0]):
+        # With every pooled observation tied, every permutation has the same U.
+        # The asymptotic variance is zero, but the two-sided permutation p is 1.
+        u_stat, p_value = scores_a.size * scores_b.size / 2.0, 1.0
+    else:
+        u_stat, p_value = stats.mannwhitneyu(scores_a, scores_b, alternative="two-sided")
 
     return {
         "u_statistic": float(u_stat),

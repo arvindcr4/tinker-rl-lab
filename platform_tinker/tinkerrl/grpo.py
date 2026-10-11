@@ -3230,15 +3230,91 @@ class MathReward:
         return 0.0
 
 
+def _exact_math_box_spans(response: str) -> List[Tuple[int, int, Optional[str]]]:
+    """Scan balanced boxes iteratively, retaining malformed trailing spans."""
+    spans: List[Tuple[int, int, Optional[str]]] = []
+    cursor = 0
+    pattern = re.compile(r"\\boxed\s*\{")
+    while match := pattern.search(response, cursor):
+        start = match.start()
+        content_start = match.end()
+        position = content_start
+        depth = 1
+        while position < len(response) and depth:
+            char = response[position]
+            if char == "\\":
+                position += 2
+                continue
+            if char == "{":
+                depth += 1
+            elif char == "}":
+                depth -= 1
+            position += 1
+        if depth:
+            spans.append((start, len(response), None))
+            break
+        spans.append((start, position, response[content_start : position - 1]))
+        cursor = position
+    return spans
+
+
+def _normalise_exact_math_candidate(value: str) -> str:
+    value = value.strip().replace(" ", "")
+    # Redundant balanced braces around a scalar are TeX grouping, not algebra.
+    leading = len(value) - len(value.lstrip("{"))
+    trailing = len(value) - len(value.rstrip("}"))
+    if leading and leading == trailing:
+        inner = value[leading:-trailing]
+        if re.fullmatch(r"[-+]?(?:\d[\d,]*(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?", inner):
+            value = inner
+    # Remove thousands separators only for a valid grouped numeric token.
+    if re.fullmatch(r"[-+]?\d{1,3}(?:,\d{3})+(?:\.\d*)?(?:[eE][-+]?\d+)?", value):
+        return value.replace(",", "")
+    return value
+
+
+def _exact_math_candidates(response: str) -> List[str]:
+    spans = _exact_math_box_spans(response)
+    candidates = [_normalise_exact_math_candidate(value) for _, _, value in spans if value]
+    # Never rescue a wrong final box using an earlier number in the reasoning.
+    suffix = response[spans[-1][1] :] if spans else response
+    matches = list(re.finditer(r"[-+]?(?:\d[\d,]*(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?", suffix))
+    if not matches:
+        return candidates
+    last = matches[-1]
+    before, after = suffix[: last.start()], suffix[last.end() :]
+    left, right = before.rstrip(), after.lstrip()
+    for opening, closing in ((r"\(", r"\)"), (r"\[", r"\]")):
+        if left.endswith(opening) and right.startswith(closing):
+            before, after = left[: -len(opening)], right[len(closing) :]
+            left, right = before.rstrip(), after.lstrip()
+            break
+    if left.endswith("(") and right.startswith(")"):
+        # A standalone parenthesized scalar is still numeric; function calls
+        # and tuples fail the surrounding-token checks below.
+        before, after = left[:-1], right[1:]
+    if (before and (before[-1].isalnum() or before[-1] in "_.")) or (
+        after and (after[0].isalnum() or after[0] in "_.")
+    ):
+        return candidates
+    # A component adjacent to expression/container syntax is not a bare answer.
+    left, right = before.rstrip(), after.lstrip()
+    if (left and left[-1] in "/^*+-,([{\\") or (right and right[0] in "/^*+-,)]}\\"):
+        return candidates
+    if last.group().startswith(("+", "-")) and left and (left[-1].isdigit() or left[-1] in ").]}"):
+        return candidates
+    candidate = _normalise_exact_math_candidate(last.group().removesuffix(","))
+    if "," not in candidate:
+        candidates.append(candidate)
+    return candidates
+
+
 class ExactMathReward:
     """Binary boxed-or-final-number reward used by held-out math benchmarks."""
 
     def score(self, response: str, example: TrainingExample) -> float:
         answer = "" if example.target is None else str(example.target)
-        candidates = _boxed_candidates(response.strip())
-        all_numbers = re.findall(r"[-+]?(?:\d[\d,]*(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?", response)
-        if all_numbers:
-            candidates.append(all_numbers[-1].replace(",", ""))
+        candidates = _exact_math_candidates(response.strip())
         for candidate in candidates:
             if _numeric_equal(candidate, answer):
                 return 1.0

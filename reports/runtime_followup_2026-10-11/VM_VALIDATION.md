@@ -444,3 +444,34 @@ The shared-cast regression and aggregate checks passed: **1,589 passed,
 1 skipped, 2 native-LaTeX tests intentionally deselected**, 85.00% coverage,
 in 132.31 seconds. All static, package, lock, docs, demo and submission gates
 also passed. Native TeX was unchanged from the preceding full validation.
+
+## Structured-answer boundaries in exact math scoring
+
+A Muse review of public source at `8d457dd0`, followed by local reproduction,
+confirmed that the held-out exact-math scorer awarded full credit to a fraction
+denominator, exponent, identifier suffix, or incomplete box. For target `2`,
+examples included `\\boxed{1/2}`, `10^2`, `\\boxed{5} for Q2`, and
+`\\boxed{2`. Malformed thousands grouping also turned `12,34` into `1234`.
+
+The exact scorer now scans balanced boxes iteratively and only considers a
+bare final numeric token after the last boxed span. An incomplete trailing box
+cannot leak its numbers, and a wrong final box cannot be rescued by a number
+from earlier reasoning. Numeric token boundaries reject adjacent identifier
+characters and expression/container operators; grouped commas are normalized
+only when their thousands grouping is valid. Nested boxes are retained whole,
+with redundant scalar grouping braces handled without recursive parsing.
+Ordinary signed decimals, scientific notation, valid thousands grouping,
+parenthesized scalars, and inline/display TeX numeric wrappers remain accepted.
+
+The existing distinction is preserved: a wrong box followed by a later bare
+correct answer is accepted by `ExactMathReward`, while `MathReward` still gives
+its existing partial reward for the wrong box. Decimal tolerance is unchanged;
+no symbolic algebra, fraction evaluation, historical re-scoring, or new
+benchmark result claim is introduced. Regression cases include deeply nested
+and repeated boxes, malformed expressions, identifier digits, and the earlier
+wrong-final-box policy. All 215 focused tests and static checks passed.
+
+Full validation passed: **1,597 passed, 1 skipped**, no native-LaTeX
+deselections, 85.30% coverage, in 252.25 seconds. `make check submission-check`
+passed all static, packaging, locked-dependency, secret, native TeX, docs,
+public/demo and submission gates. Frozen benchmark artifacts were unchanged.

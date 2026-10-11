@@ -1500,3 +1500,32 @@ all aggregate stages passed, exit zero. Native optional TensorBoard integration
 is the separate 29-test check above; native code is outside the configured
 coverage denominator. No model training, provider jobs or historical result
 rewrites were used.
+
+## Completed-cache identity and arithmetic (22:03 UTC)
+
+A synthetic completed receipt configured for seed 42 returned seed 999 and
+`avg_last10=123.0` despite its validated `reward_trace=[0.5]`. The cache path
+previously validated history but trusted the separately stored result fields.
+It now checks result construction, exact integer seed identity, nonblank run
+ID, agreement with an optional top-level run ID, the resumed-step range, and
+finite numeric summary/held-out scalars before tracking or provider access.
+First-five/last-ten means and peak must agree with the validated trace within
+1e-12 relative/absolute floating-point tolerance. Receipts are never repaired
+or rewritten by this validation.
+
+Eight rejection cases failed before the fix; the valid cached-return control
+already passed. Eleven targeted cases now cover those failures, a contradictory
+top-level ID and preserved historical summation roundoff. **126 focused tests**
+passed before the final two controls were added; the final 11-case file and the
+full aggregate below passed afterward. Existing legacy checkpoint-URL and
+unrecorded provenance controls remain valid. Public-source Muse review agreed
+with the boundary checks. Its suggestion to grandfather contradictory zero
+summaries was not adopted: a missing/default summary is usable only when it
+agrees with the stored trace, rather than being silently treated as evidence.
+
+An initial aggregate stopped at a test-parametrization lint rule; after that
+syntax correction, full `make check submission-check` passed **1,887 tests,
+2 skipped**, native TeX included, at **86.10%** configured supported-surface
+coverage in 243.95 seconds; every aggregate stage passed, exit zero. These are
+internal consistency checks, not authentication of historical rewards or a
+change to reward/scorer versions.

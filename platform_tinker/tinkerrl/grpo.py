@@ -1666,6 +1666,47 @@ def _resume_reward_history(
     return kept, counters[0], counters[1]
 
 
+def _validated_completed_result(
+    prior: Dict[str, Any], seed: int, steps: int, trace: Sequence[float]
+) -> GRPORunResult:
+    """Check cached-result identity and arithmetic before external side effects.
+
+    The caller has already validated the committed history. This is internal
+    consistency, not authentication of the receipt or its underlying scores.
+    """
+    try:
+        result = GRPORunResult(**prior["result"])
+    except (KeyError, TypeError) as exc:
+        raise RuntimeError("Completed receipt has a malformed result") from exc
+    if type(result.seed) is not int or result.seed != seed:
+        raise RuntimeError("Completed receipt result seed disagrees with its configuration")
+    if not isinstance(result.run_id, str) or not result.run_id.strip():
+        raise RuntimeError("Completed receipt has no nonempty Tinker run ID")
+    if prior.get("run_id") is not None and prior["run_id"] != result.run_id:
+        raise RuntimeError("Completed receipt has contradictory Tinker run IDs")
+    if type(result.resumed_from_step) is not int or not 0 <= result.resumed_from_step <= steps:
+        raise RuntimeError("Completed receipt has an invalid resumed_from_step")
+    expected = {
+        "avg_first5": _reward_mean(trace[:5]) if trace else 0.0,
+        "avg_last10": _reward_mean(trace[-10:]) if trace else 0.0,
+        "peak_reward": max(trace) if trace else 0.0,
+    }
+    for key in (*expected, "heldout_reward"):
+        value = getattr(result, key)
+        if key == "heldout_reward" and value is None:
+            continue
+        try:
+            valid = type(value) in (int, float) and math.isfinite(value)
+        except OverflowError:
+            valid = False
+        if not valid:
+            raise RuntimeError(f"Completed receipt has a nonnumeric or nonfinite {key}")
+        # Permit historical summation roundoff, never repair or rewrite a cache.
+        if key in expected and not math.isclose(value, expected[key], rel_tol=1e-12, abs_tol=1e-12):
+            raise RuntimeError(f"Completed receipt {key} disagrees with its reward history")
+    return result
+
+
 def _redact_error(exc: BaseException) -> str:
     """Return an error string with credential values removed."""
     message = str(exc)
@@ -2303,6 +2344,11 @@ def _run_one_seed(
     step_rewards, zero_loss_steps, zero_reward_steps = _resume_reward_history(
         prior, resume_step, config.steps
     )
+    completed = (
+        _validated_completed_result(prior, seed, config.steps, step_rewards)
+        if prior and prior.get("status") == "completed"
+        else None
+    )
     dataset_source = _dataset_source_receipt(train_examples, resume_step, prior)
     if not (prior and prior.get("status") == "completed"):
         _preflight_checkpoint_storage(checkpoint_path)
@@ -2344,10 +2390,7 @@ def _run_one_seed(
             raise RuntimeError(f"campaign launch gate failed: {exc}") from exc
         hf_owner = _preflight_hf(config)
 
-        if prior and prior.get("status") == "completed":
-            completed = GRPORunResult(**prior["result"])
-            if not completed.run_id:
-                raise RuntimeError("Completed receipt has no nonempty Tinker run ID")
+        if completed is not None:
             _wandb_log(wb, {"tinker/run_id": completed.run_id})
             _wandb_summary(wb)["tinker_run_id"] = completed.run_id
             prior_receipts = list(getattr(completed, "checkpoint_receipts", []))

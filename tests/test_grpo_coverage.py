@@ -490,6 +490,10 @@ def test_empty_dataset_fails_before_wandb(tmp_path):
 
 
 def _completed_config(tmp_path, result):
+    # Build an arithmetically consistent completed-result fixture.
+    result.avg_first5 = grpo._reward_mean(result.reward_trace[:5])
+    result.avg_last10 = grpo._reward_mean(result.reward_trace[-10:])
+    result.peak_reward = max(result.reward_trace)
     config = _config(tmp_path, steps=1)
     _write_prior(
         config,
@@ -547,7 +551,8 @@ def test_completed_receipt_without_run_id_fails_closed(tmp_path, monkeypatch):
     monkeypatch.setattr(grpo, "_preflight_hf", lambda _config: "owner")
     with pytest.raises(RuntimeError, match="no nonempty Tinker run ID"):
         grpo._run_one_seed(config, _dataset(_example()), ExactMathReward(), object())
-    assert run.summary["status"] == "failed"
+    assert run.summary == {}
+    run.finish.assert_not_called()
 
 
 def test_tinker_and_tokenizer_imports_fail_closed(tmp_path, monkeypatch):

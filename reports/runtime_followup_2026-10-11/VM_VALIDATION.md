@@ -1382,3 +1382,22 @@ Together with the adapter-pin change below, full `make check submission-check`
 passed **1,866 tests, 2 skipped**, native TeX included, at **86.08%** configured
 supported-surface coverage in 263.06 seconds. All aggregate stages passed,
 exit zero. Normal training/scoring/cadence defaults remain unchanged.
+
+## Cross-adapter source-pin preflight (21:17 UTC)
+
+The adapter review identified a reproducible mismatch: selecting `pavlov_xlam`
+from the `pavlov_portfolio` preset forwarded the portfolio's composite revision
+to the xLAM loader. Cross-source overrides now reject a demonstrably inherited
+pin unless the caller explicitly supplies a replacement revision or owns the
+revision through a JSON configuration. Same-source aliases retain their pin.
+This does not validate remote revision existence or all campaign metadata.
+Three new cases failed before the guard; three explicit/alias/JSON controls
+passed. The final combined preflight/CLI/CPU focused suite passed **107 tests**,
+and the 1,866-test aggregate above passed.
+
+The review's portfolio-JSON example did not silently train on synthetic data:
+the existing unsupported-revision guard rejected it locally. CLI help now
+clarifies that JSON contains GRPO hyperparameters while adapter selection
+follows CLI flags; no adapter is inferred from an experiment name. Dependent
+NLL threshold settings remain inactive without enabling the objective, rather
+than changing scoring/training defaults based on that review suggestion.

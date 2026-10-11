@@ -247,6 +247,20 @@ def _dataset_request(args: argparse.Namespace, config: GRPOConfig) -> tuple[Any,
     factory = DATASET_FACTORIES.get(dataset_name)
     if factory is None:
         raise SystemExit(f"Unknown dataset preset: {dataset_name}")
+    inherited_revision = PRESETS.get(args.preset, {}).get("dataset_revision")
+    if (
+        not getattr(args, "json_config", None)
+        and args.dataset
+        and args.dataset != args.preset
+        and getattr(args, "dataset_revision", None) is None
+        and inherited_revision is not None
+        and config.dataset_revision == inherited_revision
+        and DATASET_FACTORIES.get(args.preset) is not factory
+    ):
+        raise ValueError(
+            "dataset override would reuse another adapter's inherited revision; "
+            "pass --dataset-revision explicitly or supply a matching JSON config"
+        )
     if dataset_name in {"tooluse_xlam", "pavlov_xlam", "gsm8k"}:
         if config.dataset_revision is not None:
             return factory, {"seed": config.seed, "revision": config.dataset_revision}
@@ -359,7 +373,11 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         default="tooluse_synth",
         help="Experiment preset (default: tooluse_synth).",
     )
-    parser.add_argument("--json-config", type=Path, help="Path to a JSON config file.")
+    parser.add_argument(
+        "--json-config",
+        type=Path,
+        help="GRPO hyperparameters in JSON; dataset/reward selection still follows CLI flags.",
+    )
     parser.add_argument(
         "--check-config",
         action="store_true",

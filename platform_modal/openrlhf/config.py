@@ -76,6 +76,8 @@ class OpenRLHFConfig(BaseModel):
 
     # Ray cluster settings
     num_gpus: int = 1
+    # Legacy compatibility fields: native mode accepts only these defaults.
+    # They do not control native placement or periodic evaluation/checkpoints.
     num_workers: int = 1
     num_actors: int = 1
     actor_num_gpus: int = 1

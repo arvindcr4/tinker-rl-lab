@@ -235,3 +235,33 @@ def test_directory_with_stale_events_cannot_be_reused(tmp_path):
         trainer.run_openrlhf_training(config(), str(tmp_path))
     runtime.assert_not_called()
     assert (tmp_path / "events.out.tfevents.old").read_text() == "preserve"
+
+
+def test_legacy_overrides_are_rejected_before_native_work(tmp_path):
+    for field in (
+        "num_workers",
+        "num_actors",
+        "actor_num_gpus",
+        "critic_num_gpus",
+        "eval_interval",
+        "save_interval",
+    ):
+        output = tmp_path / field
+        with (
+            patch.object(trainer, "_prepare_gsm8k_500_jsonl") as prepare,
+            patch.object(trainer, "_validate_native_runtime") as runtime,
+            patch.object(trainer.subprocess, "run") as launch,
+            pytest.raises(ValueError, match=field),
+        ):
+            trainer.run_openrlhf_training(config(**{field: 99}), str(output))
+        prepare.assert_not_called()
+        runtime.assert_not_called()
+        launch.assert_not_called()
+        assert not output.exists()
+
+
+def test_native_default_contract_disables_periodic_work_explicitly():
+    command = build_openrlhf_command(config(), "/data", "/output")
+    for name in ("save_steps", "eval_steps"):
+        assert command[command.index("--" + name) + 1] == "-1"
+    assert command[command.index("--save_path") + 1] == "/output/ckpt"

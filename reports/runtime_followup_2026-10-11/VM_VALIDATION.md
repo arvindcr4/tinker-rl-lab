@@ -335,3 +335,37 @@ intentionally deselected**, 84.93% coverage, in 131.60 seconds. Packaging,
 lock consistency, documentation, public-demo, and submission checks passed.
 Native-LaTeX checks had passed in the preceding full validation; this batch
 changes only checkpoint handling and its regressions.
+
+## Configuration fidelity and early budget validation
+
+Two bounded Muse reviews used only published source at `f8371df1` and the
+anonymously retrieved official OpenRLHF v0.8.4 source listed above. Their
+configuration findings were independently reproduced and narrowed to the
+supported contracts; no unpublished working files were sent for review.
+
+GRPO now rejects nonintegral or Boolean counts, invalid budget bounds, and
+nonfinite/non-numeric arithmetic settings at construction and again before
+execution. The second check covers the existing mutable dataclass API. Invalid
+zero seed counts can no longer silently return an empty successful run, and
+fractional loop budgets cannot consume provider setup before failing at
+`range`. Zero-step runs, single-response groups, rank zero, temperature zero,
+frozen critics, zero pretraining/resampling/auxiliary weights, and default
+checkpoint cadence remain supported. This does not claim model-specific
+provider capability validation or impose new speculative parameter bounds.
+
+Native OpenRLHF now rejects non-default overrides to six historically ignored
+fields: `num_workers`, `num_actors`, `actor_num_gpus`, `critic_num_gpus`,
+`eval_interval`, and `save_interval`. Old default configurations still load.
+The native topology is controlled by `num_gpus` and `tensor_parallel_size`;
+the legacy defaults themselves have no operational placement/interval meaning.
+Both `save_steps=-1` and `eval_steps=-1` are explicit. The pinned upstream
+trainer disables periodic work for these sentinels, while its CLI performs a
+separate final actor-model save after training. No interval units, resume
+support, or distributed capabilities are invented by mapping these old knobs.
+Regression checks prove overrides fail before runtime validation, dataset
+preparation, subprocess launch, or output-directory creation.
+
+Validation: **1,576 passed, 1 skipped**, no native-LaTeX deselections,
+85.09% coverage, in 254.71 seconds. Full `make check submission-check` passed,
+including both native TeX tests, lint, formatting, configured type checks,
+packaging, lock consistency, secret scan, docs, and public/demo checks.

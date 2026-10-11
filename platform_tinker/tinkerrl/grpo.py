@@ -459,28 +459,72 @@ class GRPOConfig:
             "primary_evaluation_domain_union",
             tuple(self.primary_evaluation_domain_union or ()),
         )
-        if self.dynamic_sampling_max_resamples < 0:
-            raise ValueError("dynamic_sampling_max_resamples must be >= 0")
-        if self.gspo_update_epochs < 1:
-            raise ValueError("gspo_update_epochs must be >= 1")
-        if any(
-            not math.isfinite(value) or value < 0
-            for value in (self.gspo_epsilon_low, self.gspo_epsilon_high)
+        self.validate_numerics()
+
+    def validate_numerics(self) -> None:
+        """Reject malformed budgets before datasets, tracking, or provider work.
+
+        Zero-step runs and rank zero retain their existing meaning. Single-item
+        groups and zero temperature remain valid; this is not a provider-specific
+        model-capability validator.
+        """
+        minima = {
+            "steps": 0,
+            "lora_rank": 0,
+            "group_size": 1,
+            "batch_size": 1,
+            "max_prompt_tokens": 1,
+            "max_response_tokens": 1,
+            "num_seeds": 1,
+            "dynamic_sampling_max_resamples": 0,
+            "gspo_update_epochs": 1,
+            "critic_hidden_dim": 1,
+            "critic_updates_per_step": 0,
+            "critic_pretrain_batches": 0,
+        }
+        for name, minimum in minima.items():
+            value = getattr(self, name)
+            if type(value) is not int or value < minimum:
+                raise ValueError(f"{name} must be an integer >= {minimum}")
+        if type(self.seed) is not int:
+            raise ValueError("seed must be an integer")
+        if self.save_every is not None and (
+            type(self.save_every) is not int or self.save_every < 1
         ):
+            raise ValueError("save_every must be None or an integer >= 1")
+        for name in (
+            "lr",
+            "temperature",
+            "top_p",
+            "beta1",
+            "beta2",
+            "eps",
+            "nll_aux_coef",
+            "nll_aux_min_reward",
+            "critic_lr",
+            "gspo_epsilon_low",
+            "gspo_epsilon_high",
+        ):
+            value = getattr(self, name)
+            try:
+                finite = type(value) in (int, float) and math.isfinite(value)
+            except OverflowError:
+                finite = False
+            if not finite:
+                raise ValueError(
+                    f"{name}: gspo clip epsilons must be finite and >= 0"
+                    if name.startswith("gspo_epsilon_")
+                    else f"{name} must be a finite number"
+                )
+        if self.gspo_epsilon_low < 0 or self.gspo_epsilon_high < 0:
             raise ValueError("gspo clip epsilons must be finite and >= 0")
         if self.gspo_enabled and self.nll_aux_enabled:
             raise ValueError("gspo_enabled and nll_aux_enabled are mutually exclusive")
         if self.critic_lr <= 0:
             raise ValueError("critic_lr must be > 0")
-        if self.critic_hidden_dim < 1:
-            raise ValueError("critic_hidden_dim must be >= 1")
-        if self.critic_updates_per_step < 0:
-            raise ValueError("critic_updates_per_step must be >= 0")
-        if self.critic_pretrain_batches < 0:
-            raise ValueError("critic_pretrain_batches must be >= 0")
 
     def effective_save_every(self) -> int:
-        return self.save_every or max(self.steps // 4, 10)
+        return self.save_every if self.save_every is not None else max(self.steps // 4, 10)
 
     def validate_tracking(self) -> None:
         """Reject configurations that would silently skip campaign receipts."""
@@ -1755,6 +1799,7 @@ def _run_one_seed(
     logger: Callable[[str], Any] = print,
 ) -> GRPORunResult:
     """Execute the GRPO loop for one seed.  Pure enough to unit-test with fakes."""
+    config.validate_numerics()
     seed = config.seed
     config.validate_tracking()
     rng = random.Random(seed)
@@ -2430,6 +2475,7 @@ def run_grpo(
     logger: Callable[[str], Any] = print,
 ) -> List[GRPORunResult]:
     """Run GRPO for ``config.num_seeds`` seeds and return all results."""
+    config.validate_numerics()
     results: List[GRPORunResult] = []
     for seed_idx in range(config.num_seeds):
         cfg = replace(config, seed=config.seed + seed_idx)

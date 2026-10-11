@@ -12,6 +12,27 @@ def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: s
     if config.algorithm.algorithm.lower() != "grpo":
         raise ValueError("Native OpenRLHF driver supports only algorithm=grpo")
     plan_native_budget(config)
+    # These historical knobs were never mapped by this native driver. Keep
+    # loading old default configurations, but do not silently accept overrides.
+    legacy_defaults = {
+        "num_workers": 1,
+        "num_actors": 1,
+        "actor_num_gpus": 1,
+        "critic_num_gpus": 1,
+        "eval_interval": 5,
+        "save_interval": 10,
+    }
+    unsupported = [
+        name for name, default in legacy_defaults.items() if getattr(config, name) != default
+    ]
+    if unsupported:
+        raise ValueError(
+            "Native OpenRLHF does not support overrides for "
+            + ", ".join(unsupported)
+            + "; remove these legacy keys. Use num_gpus and tensor_parallel_size "
+            "for the single colocated engine. Periodic evaluation and checkpoints "
+            "are disabled; final model saving is separate."
+        )
     url = urlsplit(config.remote_rm_url or "")
     if url.scheme not in {"http", "https"} or not url.netloc:
         raise ValueError("remote_rm_url must name an explicitly configured HTTP(S) reward service")
@@ -74,6 +95,7 @@ def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: s
         "l2": config.optimizer.weight_decay,
         "kl_estimator": "k3",
         "save_steps": -1,
+        "eval_steps": -1,
         "logging_steps": 1,
         "max_samples": config.max_samples,
         "save_path": os.path.join(output_dir, "ckpt"),

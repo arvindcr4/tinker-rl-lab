@@ -73,3 +73,38 @@ def test_e9_rejects_success_on_error_task():
     data["n_errors_or_timeouts"] += 1
     with pytest.raises(ValueError, match="E9 successful task has a nonzero return code"):
         evidence.check_replacement("E9", data)
+
+
+def test_e1_rejects_prior_successes_exceeding_graded_count():
+    data = receipt("E1")
+    prior = data["prior_waves_separate_not_pooled"]
+    prior["graded"] = 1
+    prior["errors_patch_apply_or_eval"] = prior["attempted"] - prior["empty_patch"] - 1
+    prior["resolved_over_graded"] = prior["resolved"] / prior["graded"]
+    with pytest.raises(ValueError, match="E1 partition resolved exceeds graded"):
+        evidence.check_replacement("E1", data)
+
+
+def test_e6_rejects_errors_overlapping_successes():
+    data = receipt("E6")
+    data["n_errors"] = data["n_graded"]
+    with pytest.raises(ValueError, match="E6 errors and successes exceed graded"):
+        evidence.check_replacement("E6", data)
+
+
+@pytest.mark.parametrize("field", ["b_trained_only", "c_base_only"])
+def test_paired_discordance_aliases_cannot_contradict_checked_counts(field):
+    record = {
+        "trained_value": 0.5,
+        "base_value": 0.5,
+        "difference": 0.0,
+        "discordant_b_trained_only": 1,
+        "discordant_c_base_only": 1,
+        "b_trained_only": 1,
+        "c_base_only": 1,
+        "mcnemar_exact_p": 1.0,
+    }
+    assert evidence.paired_metric(record, [1, 0], [0, 1], "difference") is None
+    record[field] = 2
+    with pytest.raises(ValueError, match="discordance alias"):
+        evidence.paired_metric(record, [1, 0], [0, 1], "difference")

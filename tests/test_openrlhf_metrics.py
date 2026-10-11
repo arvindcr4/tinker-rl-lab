@@ -2,6 +2,7 @@
 
 import hashlib
 import sys
+from pathlib import Path
 from types import ModuleType, SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -38,9 +39,13 @@ def test_records_full_trace_with_hash_and_distinct_step_semantics(tmp_path):
     assert result["metrics_status"] == "observed_training_rollout_rewards"
     assert result["metrics_source"]["sha256"] == hashlib.sha256(event.read_bytes()).hexdigest()
     assert result["metrics_source"]["tag"] == "train/reward"
-    module.EventAccumulator.assert_called_once_with(
-        str(event), size_guidance={"scalars": 0}, purge_orphaned_data=False
-    )
+    module.EventAccumulator.assert_called_once()
+    call = module.EventAccumulator.call_args
+    snapshot = Path(call.args[0])
+    assert snapshot.name == event.name
+    assert snapshot != event
+    assert not snapshot.exists(), "temporary byte snapshot must be cleaned up"
+    assert call.kwargs == {"size_guidance": {"scalars": 0}, "purge_orphaned_data": False}
 
 
 @pytest.mark.parametrize(
@@ -91,3 +96,39 @@ def test_missing_events_have_no_fake_zero_reward(tmp_path):
     assert result["metrics_status"] == "not_collected"
     assert result["reward_trace"] == []
     assert "logged_rollout_steps" not in result
+
+
+def test_source_swap_cannot_bind_different_parsed_bytes_to_original_hash(tmp_path):
+    event, reader, module = fixture(tmp_path, [(1, 0.25), (2, 0.5)])
+    original = event.read_bytes()
+
+    def construct_reader(path, **kwargs):
+        # Restore the source before the final digest, so a before/after hash
+        # comparison alone misses this change around the parser's own read.
+        event.write_bytes(b"different event bytes with inflated reward")
+        parsed_bytes = Path(path).read_bytes()
+        event.write_bytes(original)
+        value = 0.5 if parsed_bytes == original else 0.99
+        reader.Scalars.return_value = [
+            SimpleNamespace(step=1, value=0.25),
+            SimpleNamespace(step=2, value=value),
+        ]
+        return reader
+
+    module.EventAccumulator.side_effect = construct_reader
+    result = read(tmp_path, module)
+    assert result["reward_trace"] == [0.25, 0.5]
+    assert result["metrics_source"]["sha256"] == hashlib.sha256(original).hexdigest()
+
+
+def test_source_deleted_during_parse_is_not_collected(tmp_path):
+    event, reader, module = fixture(tmp_path, [(1, 0.25), (2, 0.5)])
+
+    def scalars(tag):
+        event.unlink()
+        return [SimpleNamespace(step=1, value=0.25), SimpleNamespace(step=2, value=0.5)]
+
+    reader.Scalars.side_effect = scalars
+    result = read(tmp_path, module)
+    assert result["metrics_status"] == "not_collected"
+    assert result["reward_trace"] == []

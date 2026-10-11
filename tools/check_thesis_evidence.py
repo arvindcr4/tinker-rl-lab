@@ -131,6 +131,13 @@ def paired_metric(record, trained, base, difference_key, binary=True, staged_rou
         prefix = "discordant_" if "discordant_b_trained_only" in record else ""
         same(count(record[prefix + "b_trained_only"]), b, "trained-only discordances")
         same(count(record[prefix + "c_base_only"]), c, "base-only discordances")
+        # Both spellings are supported, but an unused alias must not contradict
+        # the counts established by the actual paired outcomes.
+        for alias_prefix in ("", "discordant_"):
+            for field, computed in (("b_trained_only", b), ("c_base_only", c)):
+                alias = alias_prefix + field
+                if alias in record:
+                    same(count(record[alias]), computed, f"discordance alias {alias}")
         same(record["mcnemar_exact_p"], p, "McNemar exact p", digits=4)
 
 
@@ -252,6 +259,10 @@ def check_replacement(lane, d):
         for field, expected in (("attempted", n), ("graded", graded), ("resolved", success)):
             same(sum(count(p[field]) for p in parts), expected, f"E1 partition {field}")
         for part in [*parts, d["prior_waves_separate_not_pooled"]]:
+            require(
+                count(part["resolved"]) <= count(part["graded"]),
+                "E1 partition resolved exceeds graded",
+            )
             same(
                 count(part["attempted"]),
                 count(part["graded"])
@@ -324,6 +335,10 @@ def check_replacement(lane, d):
         pending = count(d["n_ungraded_judge_unavailable"])
         same(graded + pending, n, "E6 graded+ungraded")
         require(count(d["n_errors"]) <= graded, "E6 error count exceeds graded")
+        require(
+            d["n_errors"] + success <= graded,
+            "E6 errors and successes exceed graded",
+        )
         secondary = d["secondary"]
         parts = list(secondary["per_split"].values())
         require(len(parts) == 5, "E6 split partition changed")

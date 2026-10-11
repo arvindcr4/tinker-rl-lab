@@ -83,7 +83,7 @@ The CPU run used `pytest tests/ -q -m 'not latex' --cov
 and W&B offline. This passes the existing 77% coverage gate; it is not a full
 native-document validation result.
 
-## Native-document blocker
+## Native-document repair
 
 The installed `pdflatex` executable lacks `pdflatex.fmt`, so its first compilation
 fails before processing the paper. The CI-pinned Tectonic 0.17.0 executable was
@@ -92,6 +92,54 @@ installed and checked against SHA-256
 Its official default bundle request returned HTTP 403 at
 `https://relay.fullyjustified.net/default_bundle_v33.tar.index.gz`.
 
-No access restriction was bypassed. Native LaTeX checks remain blocked; the
-scientific audit cannot be reported as passing on this VM. Strict provenance
-and independent-thesis-review gaps are unchanged.
+No access restriction was bypassed. Further inspection found the official TeX
+Live source packages already installed, but their generated filename databases,
+format, language configuration, and font maps pointed into an absent system
+state directory. A workspace-local configuration now searches those installed
+sources directly and supplies a newly generated pdfLaTeX format and font maps.
+System files and author PDFs were not changed.
+
+Both native LaTeX integration tests now pass on this VM (**2 passed**, 119.14
+seconds), including the real repository audit suite. Workspace-local compiler
+wrappers and a developer activation script make the repaired configuration
+reusable. The optional Tectonic download remains blocked; it is not needed for
+the working pdfLaTeX/BibTeX path. Strict provenance and independent-thesis-review
+gaps are unchanged.
+
+## Additional checker and metric-ingestion corrections
+
+Four new regression cases reproduced receipt false-passes: E1 prior-wave
+successes could exceed that partition's graded count, E6 errors and successes
+could overlap beyond the graded total, and either unused McNemar-count alias
+could contradict the checked alias. Minimal guards now reject those cases.
+All preserved receipts still pass unchanged; 30 focused thesis-evidence tests pass.
+
+Native TensorBoard parsing now reads a private snapshot of the exact bytes whose
+SHA-256 it reports. Previously an A-to-B-to-A source replacement during parsing
+could attach A's hash to rewards read from B. A regression demonstrates the
+old mismatch; the fixed reader preserves the binding and handles source removal
+as unavailable metrics. The real TensorBoard 2.20.0 writer/reader also passed a
+two-event snapshot/hash integration check using an ephemeral dependency overlay.
+No real training was performed, and logged rollout counts remain separate from
+optimizer steps. The 38 focused native metric/command tests pass.
+
+## Complete Linux validation after the repair
+
+The full test suite, now including both native LaTeX tests, passed with
+**1,459 passed, one expected non-CPU-device skip, no deselections, and 84.91%
+configured coverage**, in 241.82 seconds. Lint, formatting, configured mypy,
+wheel build/content checks, lock/export freshness, documentation checks, 237
+public-release tests, selected thesis arithmetic, and the seven-test demo passed.
+The remaining non-test gates were rerun separately after an approval-review
+interruption at the package stage; the expensive full suite was not duplicated.
+
+Both strict provenance checks were explicitly rerun and still reject their
+unchanged records: campaign 95.7% (unbound uncertainty scope) and sweep 82.6%
+(single seed and uncertainty). A high audit score is not a strict pass. These
+remaining scientific gaps are not repaired by the software or TeX installation.
+
+The first source/test checkpoint is local commit `39686a2a`; its publication
+range passed a redacted Gitleaks 8.30.1 scan. The first push attempt was blocked
+by missing VM GitHub authentication, not by a code or secret-scan failure.
+Publication status must be checked against the remote; a local commit is not
+proof of a successful push or CI run.

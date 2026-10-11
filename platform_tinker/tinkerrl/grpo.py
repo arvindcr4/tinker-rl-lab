@@ -702,6 +702,7 @@ class GRPORunResult:
     model_source: Dict[str, Any] = field(default_factory=dict)
     # Empty means legacy-unrecorded, not a disabled or successful evaluation.
     heldout_evaluation: Dict[str, Any] = field(default_factory=dict)
+    dataset_source: Dict[str, Any] = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -1641,6 +1642,100 @@ def _redact_error(exc: BaseException) -> str:
     return message or exc.__class__.__name__
 
 
+def _training_input_fingerprint(examples: Sequence[TrainingExample]) -> Optional[str]:
+    """Hash ordered strict-JSON projections without coercing adapter objects."""
+    encoder = json.JSONEncoder(
+        sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
+    )
+    digest = hashlib.sha256(b"tinkerrl-training-inputs-v1\n")
+    try:
+        for example in examples:
+            if type(example) is not TrainingExample:
+                return None
+            row = {"prompt": example.prompt, "target": example.target, "metadata": example.metadata}
+            pending: List[Any] = [row]
+            seen: set[int] = set()
+            while pending:
+                value = pending.pop()
+                kind = type(value)
+                if kind in (type(None), str, bool, int):
+                    continue
+                if kind is float:
+                    if not math.isfinite(value):
+                        return None
+                elif kind in (dict, list):
+                    if id(value) in seen:
+                        continue  # Encoder still rejects cycles, unlike shared references.
+                    seen.add(id(value))
+                    if kind is dict:
+                        if any(type(key) is not str for key in value):
+                            return None
+                        pending.extend(value.values())
+                    else:
+                        pending.extend(value)
+                else:
+                    return None
+            for chunk in encoder.iterencode(row):
+                digest.update(chunk.encode("utf-8"))
+            digest.update(b"\n")
+        digest.update(f"count={len(examples)}\n".encode())
+        return digest.hexdigest()
+    except (TypeError, ValueError, UnicodeError, RecursionError, OverflowError):
+        return None
+
+
+def _dataset_source_receipt(
+    examples: Sequence[TrainingExample], resume_step: int, prior: Optional[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """Bind new resume receipts to seed-start inputs, never infer legacy evidence."""
+    error = "training input fingerprint is malformed, changed, or no longer verifiable"
+    completed = bool(prior and prior.get("status") == "completed")
+    container = (prior or {}).get("result", {}) if completed else (prior or {})
+    stored = container.get("dataset_source", {})
+    if not isinstance(stored, dict):
+        raise RuntimeError(error)
+    if stored:
+        if (
+            type(stored.get("schema_version")) is not int
+            or stored.get("schema_version") != 1
+            or stored.get("status") not in ("fingerprinted", "unrecorded")
+            or type(stored.get("train_count")) is not int
+            or stored["train_count"] < 0
+        ):
+            raise RuntimeError(error)
+        if stored["status"] == "fingerprinted":
+            origin = stored.get("fingerprinted_from_step")
+            sha = stored.get("train_sha256")
+            if (
+                type(origin) is not int
+                or not 0 <= origin <= resume_step
+                or not isinstance(sha, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", sha)
+            ):
+                raise RuntimeError(error)
+        elif (
+            stored.get("train_sha256") is not None
+            or stored.get("fingerprinted_from_step") is not None
+        ):
+            raise RuntimeError(error)
+    if completed and (not stored or stored["status"] == "unrecorded"):
+        return dict(stored)  # No new execution; do not invent a historical fingerprint.
+    digest = _training_input_fingerprint(examples)
+    origin = resume_step if digest is not None else None
+    if stored.get("status") == "fingerprinted":
+        if digest != stored["train_sha256"] or len(examples) != stored["train_count"]:
+            raise RuntimeError(error)
+        origin = stored["fingerprinted_from_step"]
+    return {
+        "schema_version": 1,
+        "status": "fingerprinted" if digest is not None else "unrecorded",
+        "train_count": len(examples),
+        "train_sha256": digest,
+        "fingerprinted_from_step": origin,
+        "scope": "Ordered strict-JSON training inputs at seed start; not authenticated source or proof of immutable consumed data.",
+    }
+
+
 def _model_source_receipt(
     config: GRPOConfig,
     *,
@@ -2164,6 +2259,7 @@ def _run_one_seed(
     step_rewards, zero_loss_steps, zero_reward_steps = _resume_reward_history(
         prior, resume_step, config.steps
     )
+    dataset_source = _dataset_source_receipt(train_examples, resume_step, prior)
     # Critic pretrain draws from this RNG before the step loop, and only
     # on a fresh run.  Replay those draws before the per-step draws so a
     # resume after pretraining keeps the same example order.
@@ -2658,6 +2754,7 @@ def _run_one_seed(
                         "checkpoint_receipts": checkpoint_receipts,
                         "campaign_metadata": _campaign_metadata(config),
                         "model_source": model_source,
+                        "dataset_source": dataset_source,
                         **critic_binding,
                     },
                 )
@@ -2776,6 +2873,7 @@ def _run_one_seed(
             campaign_metadata=_campaign_metadata(config),
             model_source=model_source,
             heldout_evaluation=heldout_evaluation,
+            dataset_source=dataset_source,
         )
         # Persist the critic before declaring completion. A failed final
         # sidecar save must not leave a successful completion receipt.

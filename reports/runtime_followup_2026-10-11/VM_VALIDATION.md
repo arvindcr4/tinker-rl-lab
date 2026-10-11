@@ -1321,3 +1321,37 @@ included, at **85.97%** configured supported-surface coverage in 258.74 seconds;
 all aggregate stages passed, exit zero. This also revalidated the newly added
 public token-budget audit artifact. Engineering CI on `a19b3fec` passed; the
 scientific `minreport-audit` gate remains red.
+
+## Bind newly recorded resumes to training inputs (21:03 UTC)
+
+A synthetic interrupted-run reproduction changed a training prompt under the
+same configuration, resumed step one, and previously declared mixed-source
+history successful. New local `dataset_source` receipts now fingerprint the
+ordered seed-start JSON projection of training prompts, targets and metadata.
+Matching recorded inputs retain the original fingerprint scope; changed order,
+content or newly unverifiable input fails before tracking, critic or provider
+setup. Counts/schema/origin/hash metadata are validated rather than coerced.
+Fingerprints are streamed and never sent to tracking/provider metadata.
+
+The projection accepts only exact built-in JSON types and `TrainingExample`
+objects. Tuple/custom/non-finite/cyclic/unencodable values remain explicitly
+unrecorded, without coercing or changing adapter objects. Completed legacy
+receipts remain untouched and do not acquire invented evidence; a legacy
+partial resume records only the new suffix's starting step. This is neither
+source authentication nor proof that mutable data stayed unchanged after the
+seed-start observation. Historical source evidence is not backfilled.
+
+Ten initial cases failed before the change. Thirteen final cases cover changed
+inputs, canonical/type-sensitive hashing, malformed receipt metadata, unchanged
+and legacy resume, unsupported values, and completed-result reuse. **129 focused
+tests** pass, including the real SDK/Adam resume smoke. A public-source Muse
+review supported the limited binding and legacy rules. On all 7,473 pinned
+public GSM8K train examples (seed 42), fingerprint-only work took 0.491 seconds
+with 148,718 bytes of incremental tracemalloc peak allocation; corpus loading
+is excluded. The v1 digest was
+`6b73cc410d8156c9fdeba59120df196ab0c0bdc0c85f06e8f70a6961636613e3`.
+
+Full `make check submission-check` passed **1,854 tests, 2 skipped**, native TeX
+included, at **86.04%** configured supported-surface coverage in 255.30 seconds;
+all aggregate stages passed, exit zero. No scorer or sampler-refresh default
+was changed, and no paid/provider job was run.

@@ -5,17 +5,13 @@ import sys
 from urllib.parse import urlsplit
 
 from .config import OpenRLHFConfig
+from .budget import plan_native_budget
 
 
 def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: str) -> list[str]:
     if config.algorithm.algorithm.lower() != "grpo":
         raise ValueError("Native OpenRLHF driver supports only algorithm=grpo")
-    if config.max_steps is not None:
-        raise ValueError(
-            "OpenRLHF v0.8.4 has no native max_steps CLI contract; "
-            "use an explicit max_samples dataset budget with max_steps=None. "
-            "A dataset budget does not guarantee optimizer steps."
-        )
+    plan_native_budget(config)
     url = urlsplit(config.remote_rm_url or "")
     if url.scheme not in {"http", "https"} or not url.netloc:
         raise ValueError("remote_rm_url must name an explicitly configured HTTP(S) reward service")
@@ -40,15 +36,6 @@ def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: s
     )
     if any(value < 1 for value in positive):
         raise ValueError("Training sizes, epochs, token caps and GPU counts must be positive")
-    if config.train_batch_size % (config.micro_batch_size * config.num_gpus):
-        raise ValueError("train_batch_size must divide into whole distributed micro-batches")
-    if (
-        config.max_samples < config.rollout_batch_size
-        or config.max_samples % config.rollout_batch_size
-    ):
-        raise ValueError(
-            "max_samples must contain whole rollout batches (native loader drops tails)"
-        )
     if config.tensor_parallel_size > config.num_gpus:
         raise ValueError("colocated tensor_parallel_size cannot exceed num_gpus")
     if not 0 < config.gpu_memory_utilization <= 1:

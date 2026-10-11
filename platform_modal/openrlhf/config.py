@@ -68,7 +68,8 @@ class OpenRLHFConfig(BaseModel):
     # LIMITATION: short max_samples/steps yield early-training snapshots only.
     max_steps: Optional[int] = None
 
-    # Explicit native dataset budget; this is not an optimizer-step budget.
+    # Native mode requires whole prompt/global batches per rollout.
+    # Explicit dataset budget; this is not an optimizer-step budget.
     max_samples: int = Field(default=240, gt=0, le=500)
     rollout_batch_size: int = Field(default=8, gt=0)
     remote_rm_url: Optional[str] = None

@@ -20,6 +20,7 @@ def native_runtime():
 
 
 def config(**kwargs):
+    kwargs.setdefault("train_batch_size", 8)
     return OpenRLHFConfig(
         algorithm={"algorithm": "grpo", "sample_num": 6},
         remote_rm_url="http://127.0.0.1:8765/get_reward",
@@ -111,6 +112,9 @@ def test_success_records_config_without_inventing_measurements(
     assert result["seed"] == 19
     assert result["group_size"] == 6
     assert result["steps"] is None
+    assert result["optimizer_steps"] is None
+    assert result["budget_plan"]["planned_rollouts"] == 30
+    assert result["budget_plan"]["planned_update_boundaries"] == 3600
     assert result["reward_trace"] == []
     assert result["metrics_status"] == "not_collected"
     assert "peak_reward" not in result

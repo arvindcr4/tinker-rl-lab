@@ -174,6 +174,7 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
     runs by display name, start a second run, or publish checkpoints.
     """
     from .command import build_openrlhf_command
+    from .budget import plan_native_budget
     from .metrics import read_native_metrics
 
     output = Path(output_dir).resolve()
@@ -203,6 +204,8 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
         "group_size": config.algorithm.sample_num,
         "learning_rate": config.learning_rate,
         "steps": None,
+        "optimizer_steps": None,
+        "budget_plan": plan_native_budget(config),
         "max_samples": config.max_samples,
         "reward_trace": [],
         "metrics_status": "not_collected",
@@ -217,7 +220,7 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
     else:
         result.update(read_native_metrics(
             str(output), config.run_name or "openrlhf-grpo",
-            expected_rollouts=config.max_samples // config.rollout_batch_size,
+            expected_rollouts=result["budget_plan"]["planned_rollouts"],
         ))
     (output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     return result

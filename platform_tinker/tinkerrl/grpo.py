@@ -1051,9 +1051,8 @@ def _save_critic(
 
     The write is atomic (temp file + ``os.replace``, like
     :func:`_write_checkpoint`) so a kill mid-save cannot corrupt the
-    previous state.  ``step`` stamps the training step the weights came
-    from; resume keeps loading the latest critic file after a receipt
-    rewind (see ``test_critic_state_resumes_mid_run``).
+    previous state. ``step`` binds the sidecar to the actor receipt;
+    resume rejects mismatched or unversioned state rather than mixing steps.
     """
     path = _critic_checkpoint_path(config, seed)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -1662,13 +1661,20 @@ def _run_one_seed(
                     f"state at {critic_path}"
                 )
             payload = torch.load(critic_path, map_location="cpu", weights_only=True)
-            if isinstance(payload, dict) and "model" in payload:
-                critic.load_state_dict(payload["model"])
-                if "optimizer" in payload:
-                    critic_opt.load_state_dict(payload["optimizer"])
-            else:
-                # Files written before the optimizer was stored.
-                critic.load_state_dict(payload)
+            if (
+                not isinstance(payload, dict)
+                or "model" not in payload
+                or "optimizer" not in payload
+                or type(payload.get("step")) is not int
+                or payload["step"] != resume_step
+            ):
+                raise RuntimeError(
+                    f"[{config.name}] critic state must include model and optimizer "
+                    f"at actor checkpoint step {resume_step}; restore a matching "
+                    "checkpoint pair or start a fresh run"
+                )
+            critic.load_state_dict(payload["model"])
+            critic_opt.load_state_dict(payload["optimizer"])
             logger(f"[{config.name}] critic resumed from {critic_path}")
 
     wb = _start_wandb(config, seed)
@@ -2245,6 +2251,10 @@ def _run_one_seed(
             checkpoint_receipts=checkpoint_receipts,
             campaign_metadata=_campaign_metadata(config),
         )
+        # Persist the critic before declaring completion. A failed final
+        # sidecar save must not leave a successful completion receipt.
+        if config.critic_enabled:
+            _save_critic(config, seed, critic, critic_opt, step=config.steps)
         # The local completion receipt is written before W&B is marked
         # successful.  Any receipt failure therefore leaves a failed run.
         _write_checkpoint(
@@ -2262,8 +2272,6 @@ def _run_one_seed(
                 "result": asdict(result),
             },
         )
-        if config.critic_enabled:
-            _save_critic(config, seed, critic, critic_opt, step=config.steps)
         # The tinker run ID and checkpoint summary keys were already recorded
         # by _log_wandb_checkpoint for the final receipt; no re-write needed.
         _finish_wandb(wb, success=True)

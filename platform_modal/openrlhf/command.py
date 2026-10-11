@@ -38,6 +38,12 @@ def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: s
         raise ValueError("Training sizes, epochs, token caps and GPU counts must be positive")
     if config.tensor_parallel_size > config.num_gpus:
         raise ValueError("colocated tensor_parallel_size cannot exceed num_gpus")
+    if config.tensor_parallel_size != config.num_gpus:
+        # v0.8.4 checks this only after waiting for a Ray placement group.
+        # This wrapper uses one synchronous, colocated vLLM engine.
+        raise ValueError(
+            "The single colocated vLLM engine requires tensor_parallel_size == num_gpus"
+        )
     if not 0 < config.gpu_memory_utilization <= 1:
         raise ValueError("gpu_memory_utilization must be in (0, 1]")
     run_name = config.run_name or "openrlhf-grpo"

@@ -71,6 +71,7 @@ def test_command_forwards_nondefault_runtime_settings(monkeypatch):
         ({"algorithm": {"algorithm": "ppo"}}, "only algorithm=grpo"),
         ({"algorithm": {"algorithm": "grpo", "sample_num": 1}}, "sample_num"),
         ({"data": {"train_data": ["custom.json"]}}, "fixed GSM8K"),
+        ({"num_gpus": 2, "tensor_parallel_size": 1}, "single colocated"),
     ],
 )
 def test_invalid_requests_fail_before_provider_or_filesystem_work(tmp_path, changes, match):
@@ -82,6 +83,21 @@ def test_invalid_requests_fail_before_provider_or_filesystem_work(tmp_path, chan
             trainer.run_openrlhf_training(OpenRLHFConfig(**values), str(output))
     prepare.assert_not_called()
     assert not output.exists()
+
+
+@pytest.mark.parametrize("gpus", [1, 2, 4, 8])
+def test_supported_topology_satisfies_upstream_colocation_contract(gpus):
+    command = build_openrlhf_command(
+        config(num_gpus=gpus, tensor_parallel_size=gpus), "/data", "/output"
+    )
+
+    def integer_option(name):
+        return int(command[command.index("--" + name) + 1])
+
+    assert "--colocate_all_models" in command
+    assert integer_option("actor_num_gpus_per_node") == (
+        integer_option("vllm_num_engines") * integer_option("vllm_tensor_parallel_size")
+    )
 
 
 def test_failure_cannot_create_success_receipt(tmp_path, native_runtime):

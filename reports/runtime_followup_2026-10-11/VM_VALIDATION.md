@@ -143,3 +143,43 @@ range passed a redacted Gitleaks 8.30.1 scan. The first push attempt was blocked
 by missing VM GitHub authentication, not by a code or secret-scan failure.
 Publication status must be checked against the remote; a local commit is not
 proof of a successful push or CI run.
+
+## Harness checkpoint: topology and critic-state continuity
+
+The public OpenRLHF v0.8.4 CLI requires actor GPU count to equal
+`vllm_num_engines * vllm_tensor_parallel_size` in synchronous colocated mode.
+The wrapper fixes one engine but previously accepted two actor GPUs with
+tensor parallelism one, failing only after Ray placement-group initialization.
+The wrapper now rejects that mismatch before any provider or filesystem work.
+CPU regressions verify supported one-, two-, four-, and eight-GPU command
+contracts without allocating GPUs. Upstream source: [v0.8.4 train_ppo_ray.py](https://github.com/OpenRLHF/OpenRLHF/blob/v0.8.4/openrlhf/cli/train_ppo_ray.py),
+SHA-256 `32e830931965f5a30cff5e3cf601b06827a6b65feae3570783ef3b2437fa3db0`.
+
+The GRPO critic sidecar already recorded its training step, but resume ignored
+it and accepted raw model weights with freshly initialized Adam state. A torn
+actor/critic write or rewound receipt could silently mix states. Resume now
+requires a model-plus-optimizer sidecar with an integer step exactly matching
+the actor receipt, before tracking or provider setup. Unversioned legacy
+sidecars are intentionally rejected; restore a matching saved pair or start a
+fresh run, rather than relabeling weights or inventing optimizer continuity.
+The final critic save now precedes the successful completion receipt, so a
+failed sidecar write cannot leave an apparent completed run.
+
+The old positive resume test rewrote a final receipt and did not call the actor
+state-restoration API. Its replacement captures and restores a genuine periodic
+actor/critic pair, verifies actor optimizer-state restoration is selected, and
+checks only the remaining optimizer step runs. Tests also cover a real simulated
+interruption between the actor and critic writes, stale/future and malformed
+step stamps, missing optimizer state, raw legacy state, final-save failure, and
+pretraining RNG replay. These are synthetic CPU integration checks, not a paid
+provider replay or evidence of model-quality improvement.
+
+Focused validation: 40 OpenRLHF command/budget tests and 125 GRPO module tests
+pass. Public-source Muse reviews independently identified the topology and
+critic-state mismatch; their suggestions were checked against source and
+reproducible regressions before implementation.
+
+Changed-tree CPU suite: **1,465 passed, one expected skip, two native LaTeX
+tests deselected; 84.78% coverage**, 126.43 seconds. Repository lint, format and
+configured mypy checks passed. Native TeX source and build code are unchanged
+from the fully passing native checkpoint above.

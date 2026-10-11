@@ -561,6 +561,10 @@ class TestTrackingFailClosed(unittest.TestCase):
                 events.append("create_training_client")
                 return self.training_client
 
+            def create_training_client_from_state_with_optimizer(self, path):
+                events.append(("resume_training_client", path))
+                return self.training_client
+
         class HfApi:
             info_count = 0
 
@@ -940,6 +944,33 @@ class TestTrackingFailClosed(unittest.TestCase):
             "source_path": str(folder_path),
         }
 
+    def _run_and_restore_first_critic_checkpoint(self, config, dataset, runtime):
+        """Restore a genuine matching actor/critic pair, never relabel final weights."""
+        real_save = grpo._save_critic
+        saved = {}
+
+        def capture(*args, **kwargs):
+            real_save(*args, **kwargs)
+            if kwargs["step"] == 1:
+                for path in (
+                    grpo._checkpoint_path(config, config.seed),
+                    grpo._critic_checkpoint_path(config, config.seed),
+                ):
+                    saved[path] = path.read_bytes()
+
+        with patch.object(grpo, "_save_critic", capture):
+            result = grpo._run_one_seed(
+                config,
+                dataset,
+                ExactMathReward(),
+                runtime["tokenizer"],
+                logger=lambda _message: None,
+            )
+        self.assertEqual(len(saved), 2)
+        for path, contents in saved.items():
+            path.write_bytes(contents)
+        return result
+
     def test_critic_run_writes_state_and_logs(self):
         import torch
 
@@ -995,20 +1026,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                         checkpoint_dir=checkpoint_dir,
                         critic_enabled=True,
                     )
-                    grpo._run_one_seed(
-                        config,
-                        self._dataset(),
-                        ExactMathReward(),
-                        runtime["tokenizer"],
-                        logger=lambda _message: None,
-                    )
-                    # Rewind the completed receipt to a mid-run state.  The
-                    # config is unchanged, so the fingerprint still matches.
-                    receipt_path = Path(checkpoint_dir) / "critic-resume_seed42.json"
-                    payload = json.loads(receipt_path.read_text())
-                    payload["status"] = "started"
-                    payload["step"] = 1
-                    receipt_path.write_text(json.dumps(payload))
+                    self._run_and_restore_first_critic_checkpoint(config, self._dataset(), runtime)
 
                     result = grpo._run_one_seed(
                         config,
@@ -1020,8 +1038,12 @@ class TestTrackingFailClosed(unittest.TestCase):
 
         self.assertEqual(len(result.reward_trace), 2)
         self.assertTrue(any("critic resumed from" in m for m in messages))
+        self.assertIn(
+            ("resume_training_client", "tinker://run/state/state_seed42_1"), runtime["events"]
+        )
+        self.assertEqual(runtime["holder"]["training_client"].optim_count, 1)
 
-    def test_critic_resume_accepts_raw_state_dict(self):
+    def test_critic_resume_rejects_unversioned_raw_state_dict(self):
         import torch
 
         runtime = self._fake_runtime()
@@ -1053,15 +1075,132 @@ class TestTrackingFailClosed(unittest.TestCase):
                     receipt["status"] = "started"
                     receipt["step"] = 1
                     receipt_path.write_text(json.dumps(receipt))
-                    result = grpo._run_one_seed(
-                        config,
-                        self._dataset(),
-                        ExactMathReward(),
-                        runtime["tokenizer"],
-                        logger=messages.append,
+                    with (
+                        patch.object(grpo, "_start_wandb") as tracking,
+                        self.assertRaisesRegex(RuntimeError, "actor checkpoint step"),
+                    ):
+                        grpo._run_one_seed(
+                            config,
+                            self._dataset(),
+                            ExactMathReward(),
+                            runtime["tokenizer"],
+                            logger=messages.append,
+                        )
+                    tracking.assert_not_called()
+
+    def test_critic_resume_rejects_mismatched_or_incomplete_state_before_tracking(self):
+        import torch
+
+        runtime = self._fake_runtime()
+        with (
+            _temporary_modules(self._fake_modules(runtime)),
+            patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt),
+            tempfile.TemporaryDirectory() as checkpoint_dir,
+        ):
+            config = GRPOConfig(
+                name="critic-pair",
+                steps=2,
+                save_every=1,
+                group_size=2,
+                batch_size=1,
+                checkpoint_dir=checkpoint_dir,
+                critic_enabled=True,
+            )
+            self._run_and_restore_first_critic_checkpoint(config, self._dataset(), runtime)
+            path = grpo._critic_checkpoint_path(config, config.seed)
+            original = torch.load(path, map_location="cpu", weights_only=True)
+            for changes in (
+                {"step": 0},
+                {"step": 2},
+                {"step": True},
+                {"step": "1"},
+                {"step": None},
+                {"optimizer": None},
+            ):
+                with self.subTest(changes=changes):
+                    payload = dict(original)
+                    payload.update(changes)
+                    if changes.get("optimizer", "present") is None:
+                        del payload["optimizer"]
+                    torch.save(payload, path)
+                    with (
+                        patch.object(grpo, "_start_wandb") as tracking,
+                        self.assertRaisesRegex(RuntimeError, "actor checkpoint step 1"),
+                    ):
+                        grpo._run_one_seed(
+                            config, self._dataset(), ExactMathReward(), runtime["tokenizer"]
+                        )
+                    tracking.assert_not_called()
+
+    def test_interrupted_critic_save_cannot_resume_stale_sidecar(self):
+        runtime = self._fake_runtime()
+        with (
+            _temporary_modules(self._fake_modules(runtime)),
+            patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt),
+            tempfile.TemporaryDirectory() as checkpoint_dir,
+        ):
+            config = GRPOConfig(
+                name="critic-torn",
+                steps=2,
+                save_every=1,
+                group_size=2,
+                batch_size=1,
+                checkpoint_dir=checkpoint_dir,
+                critic_enabled=True,
+            )
+            real_save = grpo._save_critic
+
+            def interrupted(*args, **kwargs):
+                if kwargs["step"] == 2:
+                    raise OSError("simulated interrupted critic write")
+                return real_save(*args, **kwargs)
+
+            with patch.object(grpo, "_save_critic", interrupted):
+                with self.assertRaisesRegex(OSError, "interrupted critic"):
+                    grpo._run_one_seed(
+                        config, self._dataset(), ExactMathReward(), runtime["tokenizer"]
                     )
-        self.assertEqual(len(result.reward_trace), 2)
-        self.assertTrue(any("critic resumed from" in m for m in messages))
+            with (
+                patch.object(grpo, "_start_wandb") as tracking,
+                self.assertRaisesRegex(RuntimeError, "actor checkpoint step 2"),
+            ):
+                grpo._run_one_seed(config, self._dataset(), ExactMathReward(), runtime["tokenizer"])
+            tracking.assert_not_called()
+
+    def test_final_critic_failure_cannot_leave_completed_receipt(self):
+        runtime = self._fake_runtime()
+        with (
+            _temporary_modules(self._fake_modules(runtime)),
+            patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt),
+            tempfile.TemporaryDirectory() as checkpoint_dir,
+        ):
+            config = GRPOConfig(
+                name="critic-final-failure",
+                steps=1,
+                save_every=1,
+                group_size=2,
+                batch_size=1,
+                checkpoint_dir=checkpoint_dir,
+                critic_enabled=True,
+            )
+            real_save = grpo._save_critic
+            calls = 0
+
+            def fail_final(*args, **kwargs):
+                nonlocal calls
+                calls += 1
+                if calls == 2:
+                    raise OSError("simulated final critic failure")
+                return real_save(*args, **kwargs)
+
+            with patch.object(grpo, "_save_critic", fail_final):
+                with self.assertRaisesRegex(OSError, "final critic"):
+                    grpo._run_one_seed(
+                        config, self._dataset(), ExactMathReward(), runtime["tokenizer"]
+                    )
+            receipt = json.loads(grpo._checkpoint_path(config, config.seed).read_text())
+            self.assertEqual(receipt["status"], "started")
+            self.assertNotIn("result", receipt)
 
     def test_critic_resume_without_state_fails_closed(self):
         runtime = self._fake_runtime()
@@ -1121,18 +1260,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                         critic_pretrain_batches=1,
                         seed=42,
                     )
-                    full = grpo._run_one_seed(
-                        config,
-                        dataset,
-                        ExactMathReward(),
-                        runtime["tokenizer"],
-                        logger=lambda _message: None,
-                    )
-                    receipt_path = Path(checkpoint_dir) / "critic-pretrain-resume_seed42.json"
-                    payload = json.loads(receipt_path.read_text())
-                    payload["status"] = "started"
-                    payload["step"] = 1
-                    receipt_path.write_text(json.dumps(payload))
+                    full = self._run_and_restore_first_critic_checkpoint(config, dataset, runtime)
                     resumed = grpo._run_one_seed(
                         config,
                         dataset,

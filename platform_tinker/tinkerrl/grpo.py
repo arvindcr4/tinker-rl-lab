@@ -1485,6 +1485,23 @@ def _campaign_metadata(config: GRPOConfig) -> Dict[str, List[str]]:
     }
 
 
+def _preflight_checkpoint_storage(path: Path) -> None:
+    """Probe an owned temporary before remote work; not a future-space guarantee."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            dir=path.parent, prefix=".grpo-write-check-", delete=False
+        ) as file:
+            temporary = Path(file.name)
+            file.write(b"{}\n")
+            file.flush()
+            os.fsync(file.fileno())
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
 def _write_checkpoint(path: Path, payload: Dict[str, Any]) -> None:
     # Serialize before creating directories or files. Stage exclusively under
     # a unique name, never follow a predictable leftover temporary symlink.
@@ -2260,6 +2277,8 @@ def _run_one_seed(
         prior, resume_step, config.steps
     )
     dataset_source = _dataset_source_receipt(train_examples, resume_step, prior)
+    if not (prior and prior.get("status") == "completed"):
+        _preflight_checkpoint_storage(checkpoint_path)
     # Critic pretrain draws from this RNG before the step loop, and only
     # on a fresh run.  Replay those draws before the per-step draws so a
     # resume after pretraining keeps the same example order.
@@ -2712,6 +2731,12 @@ def _run_one_seed(
             _wandb_log(wb, step_log)
 
             if (step + 1) % save_every == 0:
+                # Prepare local critic bytes before creating remote exports.
+                critic_binding = {}
+                if config.critic_enabled:
+                    critic_binding["critic_state_sha256"] = _save_critic(
+                        config, seed, critic, critic_opt, step=step + 1
+                    )
                 state = tc.save_state(name=f"state_seed{seed}_{step + 1}", overwrite=True).result()
                 ckpt = tc.save_weights_for_sampler(name=f"step_seed{seed}_{step + 1}").result()
                 checkpoint_receipt = _publish_checkpoint(
@@ -2732,11 +2757,6 @@ def _run_one_seed(
                     step=step + 1,
                 )
                 sc = tc.create_sampling_client(model_path=ckpt.path)
-                critic_binding = {}
-                if config.critic_enabled:
-                    critic_binding["critic_state_sha256"] = _save_critic(
-                        config, seed, critic, critic_opt, step=step + 1
-                    )
                 _write_checkpoint(
                     checkpoint_path,
                     {
@@ -2760,6 +2780,13 @@ def _run_one_seed(
                 )
                 logger(f"[{config.name}]   -> Checkpoint step_{step + 1}")
 
+        # Prepare local critic state before remote persistence/publication.
+        # Later failures may leave unused sidecars; old receipts remain valid.
+        critic_binding = {}
+        if config.critic_enabled:
+            critic_binding["critic_state_sha256"] = _save_critic(
+                config, seed, critic, critic_opt, step=config.steps
+            )
         tc.save_state(name=f"seed{seed}_final", overwrite=True).result()
         final = tc.save_weights_for_sampler(name=f"seed{seed}_final").result()
         final_receipt = _publish_checkpoint(
@@ -2875,13 +2902,6 @@ def _run_one_seed(
             heldout_evaluation=heldout_evaluation,
             dataset_source=dataset_source,
         )
-        # Persist the critic before declaring completion. A failed final
-        # sidecar save must not leave a successful completion receipt.
-        critic_binding = {}
-        if config.critic_enabled:
-            critic_binding["critic_state_sha256"] = _save_critic(
-                config, seed, critic, critic_opt, step=config.steps
-            )
         # The local completion receipt is written before W&B is marked
         # successful.  Any receipt failure therefore leaves a failed run.
         _write_checkpoint(

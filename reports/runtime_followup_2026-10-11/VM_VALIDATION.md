@@ -1355,3 +1355,30 @@ Full `make check submission-check` passed **1,854 tests, 2 skipped**, native TeX
 included, at **86.04%** configured supported-surface coverage in 255.30 seconds;
 all aggregate stages passed, exit zero. No scorer or sampler-refresh default
 was changed, and no paid/provider job was run.
+
+## Local storage checks before avoidable remote work (21:17 UTC)
+
+A synthetic checkpoint-directory collision previously failed only after one
+actor optimizer update. New/incomplete runs now probe a unique owned temporary
+(write/flush/fsync/cleanup) before tracking or provider setup. Completed cached
+receipts do not require writes. At periodic/final save boundaries, local critic
+bytes are prepared before remote state/sampler persistence and Hub export, so
+a known critic serialization/storage failure does not publish that step first.
+Earlier valid exports may remain, and later failures can still orphan external
+artifacts or unused immutable sidecars. This is not a future-capacity guarantee
+or a cross-provider transaction; the previous local receipt stays authoritative.
+
+Five cases failed before these changes; the completed-read-only control passed.
+All six new cases and the 56-test storage/critic/CPU/data-binding focused suite
+pass. The training-loop Muse review prompted the publication-order investigation.
+Its claim that teardown discards the original exception was rejected: a direct
+Python traceback probe retained the original training failure. Duplicate resume
+snapshots were not treated as a uniqueness defect or changed without lifecycle
+evidence. No new loss-math/statistics defect was substantiated by the two other
+independent Muse reviews; these were bounded reasoning reviews, not proof of
+all behavior.
+
+Together with the adapter-pin change below, full `make check submission-check`
+passed **1,866 tests, 2 skipped**, native TeX included, at **86.08%** configured
+supported-surface coverage in 263.06 seconds. All aggregate stages passed,
+exit zero. Normal training/scoring/cadence defaults remain unchanged.

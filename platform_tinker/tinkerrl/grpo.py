@@ -2603,9 +2603,22 @@ def _swe_gym_prompt(row: Dict[str, Any]) -> str:
     if not problem or not repo or not re.fullmatch(r"[0-9a-f]{40}", base_commit):
         raise ValueError("SWE-Gym task is missing repo, problem statement, or base commit")
     hints = str(row.get("hints_text") or "").strip()
-    tests = sorted(
-        str(item) for key in ("FAIL_TO_PASS", "PASS_TO_PASS") for item in (row.get(key) or [])
-    )
+    tests: List[str] = []
+    for key in ("FAIL_TO_PASS", "PASS_TO_PASS"):
+        names = row.get(key)
+        if names is None:
+            continue
+        if isinstance(names, str):
+            try:
+                names = json.loads(names)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"SWE-Gym {key} must be a list of test names") from exc
+        if not isinstance(names, list) or any(
+            not isinstance(name, str) or not name.strip() for name in names
+        ):
+            raise ValueError(f"SWE-Gym {key} must be a list of nonempty test names")
+        tests.extend(names)
+    tests.sort()
     context = [
         f"Repository: {repo}",
         f"Base commit: {base_commit}",
@@ -2800,11 +2813,18 @@ def _strict_json_object(response: str) -> Optional[Dict[str, Any]]:
     def reject_nonstandard_constant(value: str) -> None:
         raise ValueError(f"non-standard JSON constant: {value}")
 
+    def finite_float(value: str) -> float:
+        parsed = float(value)
+        if not math.isfinite(parsed):
+            raise ValueError(f"non-finite JSON number: {value}")
+        return parsed
+
     try:
         parsed = json.loads(
             response.strip(),
             object_pairs_hook=object_pairs_hook,
             parse_constant=reject_nonstandard_constant,
+            parse_float=finite_float,
         )
     except (json.JSONDecodeError, _DuplicateJSONKey, TypeError, ValueError):
         return None
@@ -2816,17 +2836,21 @@ def _tool_alias_value(payload: Dict[str, Any], primary: str, alias: str) -> Any:
     present = [payload[key] for key in (primary, alias) if key in payload]
     if not present:
         return _MISSING_TOOL_FIELD
-    if len(present) == 2 and present[0] != present[1]:
+    if len(present) == 2 and _canonical_tool_value(present[0]) != _canonical_tool_value(present[1]):
         return _CONFLICTING_TOOL_FIELD
     return present[0]
 
 
 def _canonical_tool_value(value: Any) -> Any:
-    """Canonicalize JSON structure while preserving case and string whitespace."""
+    """Preserve JSON boolean types, case, whitespace, and numeric equivalence."""
     if isinstance(value, dict):
         return {str(k): _canonical_tool_value(v) for k, v in sorted(value.items())}
     if isinstance(value, list):
         return [_canonical_tool_value(v) for v in value]
+    if isinstance(value, bool):
+        # Python considers True == 1 and False == 0, unlike JSON tool schemas.
+        # A tuple cannot collide with an input JSON array (represented as a list).
+        return ("boolean", value)
     return value
 
 
@@ -2963,7 +2987,9 @@ class PatchReward:
 
     @staticmethod
     def _normalise(value: str) -> str:
-        return "\n".join(line.rstrip() for line in value.strip().splitlines() if line.strip())
+        # Context lines consisting of one space count toward unified-diff hunks.
+        # Trailing content whitespace can also change the resulting source file.
+        return value.replace("\r\n", "\n").strip("\n")
 
     def score(self, response: str, example: TrainingExample) -> float:
         expected = self._normalise(str(example.target or ""))

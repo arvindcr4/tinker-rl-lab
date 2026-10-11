@@ -1814,11 +1814,13 @@ class TestPavlovPortfolioReward(unittest.TestCase):
         self.assertGreater(partial, 0.2)
         self.assertLess(partial, 1.0)
 
-    def test_whitespace_equivalent_diff_is_exact_and_a_missing_header_is_zero(self):
+    def test_line_ending_equivalent_diff_is_exact_and_a_missing_header_is_zero(self):
         expected = "diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-x\n+y"
         example = TrainingExample(prompt="q", target=expected)
         reward = PatchReward()
-        padded = "\n" + expected.replace("\n", "  \n") + "\n\n"
+        # Only line endings and boundary blank newlines are equivalent;
+        # whitespace inside a diff line is source content or hunk structure.
+        padded = "\r\n" + expected.replace("\n", "\r\n") + "\r\n\r\n"
         self.assertEqual(reward.score(padded, example), 1.0)
         body = "--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-x\n+y"
         self.assertEqual(reward.score(body, example), 0.0)

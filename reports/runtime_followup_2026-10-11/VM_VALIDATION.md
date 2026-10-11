@@ -557,3 +557,51 @@ Combined compatibility validation passed: **1,609 passed, 1 skipped,
 2 native-LaTeX tests intentionally deselected**, 85.21% coverage, in
 129.95 seconds. All static, package, lock, docs, public/demo and submission
 checks passed. The prior full validation passed native TeX.
+
+## Validated chat-message inputs and native artifact binding
+
+A public-source Muse review of `16af6867` identified unchecked empty/malformed
+labels, assumed source row counts, and missing input-byte identity in native
+success receipts. The fixed GSM8K source is now validated before any input file
+is written: exactly 500 rows, nonempty questions, an explicit final-answer
+delimiter, and complete finite numeric labels with valid thousands grouping.
+An existing artifact is never overwritten. Smaller configured `max_samples`
+budgets remain supported; the corpus itself still contains 500 source rows.
+
+The adapter now emits system/user message objects and enables the pinned
+OpenRLHF `--apply_chat_template` path. The previous handwritten `<|system|>`
+headers did not match the default Qwen model's actual chat template. Native
+rendering now delegates to that model's tokenizer rather than inventing role
+markers. Models used through this driver must provide a compatible chat
+template; no silent plain-text fallback is introduced.
+
+Primary-source checks, retrieved anonymously with normal TLS:
+
+- OpenRLHF v0.8.4 `openrlhf/datasets/prompts_dataset.py`:
+  `https://raw.githubusercontent.com/OpenRLHF/OpenRLHF/v0.8.4/openrlhf/datasets/prompts_dataset.py`
+  SHA-256 `97530244a440d0297313f7bfd696e827ddb662f9cbda954d004076307967d82c`
+- Official Qwen2.5-1.5B-Instruct tokenizer configuration:
+  `https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/main/tokenizer_config.json`
+  SHA-256 `5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583`
+
+A CPU-only check executed the inspected upstream preprocessing function with
+its exact verified source hash and rendered a synthetic system/user pair using
+the official Qwen template in a sandboxed Jinja environment. It preserved the
+label and produced Qwen's system/user/assistant generation boundaries. This
+used no model weights, GPU, provider request, or private dataset.
+
+Before launch, one regular-file descriptor snapshot is parsed and SHA-256
+hashed. Malformed/duplicate JSON fields, raw legacy prompt strings, invalid
+labels, nonregular files, and wrong row counts fail before subprocess launch.
+The result receipt records exact input bytes, row count and schema, and a
+post-run hash check refuses success if input bytes changed. These are validated
+launch-input messages before tokenizer rendering, not proof of model consumption
+or learning quality. The upstream dataset revision remains explicitly unpinned;
+`source_revision` is null rather than fabricated. Historical measurements and
+framework-confound limitations are unchanged.
+
+Full VM validation passed: **1,618 passed, 1 skipped**, including both native
+LaTeX tests, with 85.34% configured supported-surface coverage in 261.27 seconds.
+All static, package, lock, docs, public/demo and submission checks passed.
+Native adapter tests are outside the configured coverage denominator; this
+percentage is not a claim of whole-repository coverage.

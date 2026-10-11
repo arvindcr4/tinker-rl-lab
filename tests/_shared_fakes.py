@@ -144,3 +144,18 @@ def fast_settings():
     from hypothesis import HealthCheck, settings
 
     return settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+
+
+def write_native_input_fixture(path, *, rows=500, label="42"):
+    """Write local synthetic chat-message rows, never fetch a provider dataset."""
+    source = Path(path)
+    source.parent.mkdir(parents=True, exist_ok=True)
+    row = {
+        "prompt": [
+            {"role": "system", "content": "Synthetic math fixture"},
+            {"role": "user", "content": "Return a number inside \\boxed{}."},
+        ],
+        "label": label,
+    }
+    source.write_text((json.dumps(row) + "\n") * rows, encoding="utf-8")
+    return str(source)

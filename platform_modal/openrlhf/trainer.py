@@ -18,7 +18,6 @@ import asyncio
 import json
 from importlib import metadata, util
 import os
-import re
 import subprocess
 import time
 from pathlib import Path
@@ -131,24 +130,10 @@ GSM8K_SYSTEM_PROMPT = (
 
 
 def _prepare_gsm8k_500_jsonl(out_path: str) -> str:
-    """Materialise GSM8K[:500] in OpenRLHF prompt+label JSONL format."""
-    from datasets import load_dataset  # type: ignore
+    """Materialise validated GSM8K chat messages for the native tokenizer."""
+    from .inputs import materialize_gsm8k
 
-    # LIMITATION: held-out generalization not established for this dryrun/short path.
-    ds = load_dataset("openai/gsm8k", "main", split="train[:500]")
-    out = Path(out_path)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open("w") as f:
-        for row in ds:
-            m = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
-            gt = m.group(1).replace(",", "").strip() if m else ""
-            prompt = (
-                f"<|system|>\n{GSM8K_SYSTEM_PROMPT}\n"
-                f"<|user|>\n{row['question']} Give a numerical answer inside \\boxed{{}}.\n"
-                f"<|assistant|>\n"
-            )
-            f.write(json.dumps({"prompt": prompt, "label": gt}) + "\n")
-    return str(out)
+    return materialize_gsm8k(out_path, GSM8K_SYSTEM_PROMPT)
 
 
 def _validate_native_runtime(local_metrics: bool) -> str:
@@ -180,6 +165,7 @@ def run_openrlhf_training(
     from .command import build_openrlhf_command
     from .budget import plan_native_budget
     from .metrics import read_native_metrics
+    from .inputs import inspect_native_input, ensure_input_unchanged
 
     output = Path(output_dir).resolve()
     data_path = str(output / "gsm8k500.jsonl")
@@ -194,11 +180,13 @@ def run_openrlhf_training(
         raise RuntimeError("Native training requires OpenRLHF v0.8.4 + Ray + vLLM") from exc
     output.mkdir(parents=True, exist_ok=False)
     _prepare_gsm8k_500_jsonl(data_path)
+    input_artifact = inspect_native_input(data_path)
     env = os.environ.copy()
     env["PYTHONPATH"] = ""
     start = time.time()
     # A nonzero exit must never produce a successful result or publish a model.
     subprocess.run(cmd, cwd=str(output), env=env, check=True)
+    ensure_input_unchanged(data_path, input_artifact)
     result = {
         "framework": "openrlhf",
         "mode": "real",
@@ -210,6 +198,7 @@ def run_openrlhf_training(
         "steps": None,
         "optimizer_steps": None,
         "budget_plan": plan_native_budget(config),
+        "input_artifact": input_artifact,
         "max_samples": config.max_samples,
         "reward_trace": [],
         "metrics_status": "not_collected",

@@ -149,7 +149,7 @@ def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: s
     for name, value in options.items():
         command.extend(["--" + name, str(value)])
     command.extend(["--adam_betas", str(config.optimizer.beta1), str(config.optimizer.beta2)])
-    command.extend(["--use_kl_loss", "--colocate_all_models", "--bf16"])
+    command.extend(["--use_kl_loss", "--colocate_all_models", "--bf16", "--apply_chat_template"])
     if config.model.use_flash_attention:
         command.append("--flash_attn")
     if config.model.load_in_4bit:

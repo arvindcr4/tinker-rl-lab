@@ -11,6 +11,7 @@ import pytest
 from platform_modal.openrlhf.command import build_openrlhf_command
 from platform_modal.openrlhf.config import OpenRLHFConfig
 from platform_modal.openrlhf import trainer
+from tests._shared_fakes import write_native_input_fixture
 
 
 @pytest.fixture
@@ -78,7 +79,9 @@ def test_invalid_requests_fail_before_provider_or_filesystem_work(tmp_path, chan
     values = config().model_dump()
     values.update(changes)
     output = tmp_path / "not-created"
-    with patch.object(trainer, "_prepare_gsm8k_500_jsonl") as prepare:
+    with patch.object(
+        trainer, "_prepare_gsm8k_500_jsonl", side_effect=write_native_input_fixture
+    ) as prepare:
         with pytest.raises(ValueError, match=match):
             trainer.run_openrlhf_training(OpenRLHFConfig(**values), str(output))
     prepare.assert_not_called()
@@ -103,7 +106,7 @@ def test_supported_topology_satisfies_upstream_colocation_contract(gpus):
 def test_failure_cannot_create_success_receipt(tmp_path, native_runtime):
     with (
         patch.dict(sys.modules, {"openrlhf": types.ModuleType("openrlhf")}),
-        patch.object(trainer, "_prepare_gsm8k_500_jsonl"),
+        patch.object(trainer, "_prepare_gsm8k_500_jsonl", side_effect=write_native_input_fixture),
         patch.object(
             trainer.subprocess, "run", side_effect=subprocess.CalledProcessError(9, "native")
         ),
@@ -119,12 +122,18 @@ def test_success_records_config_without_inventing_measurements(
     monkeypatch.chdir(tmp_path)
     with (
         patch.dict(sys.modules, {"openrlhf": types.ModuleType("openrlhf")}),
-        patch.object(trainer, "_prepare_gsm8k_500_jsonl") as prepare,
+        patch.object(
+            trainer, "_prepare_gsm8k_500_jsonl", side_effect=write_native_input_fixture
+        ) as prepare,
         patch.object(trainer.subprocess, "run") as native,
     ):
         result = trainer.run_openrlhf_training(config(seed=19), "relative")
     assert prepare.call_args.args[0] == str(tmp_path / "relative/gsm8k500.jsonl")
     assert native.call_args.kwargs["check"] is True
+    assert result["input_artifact"]["rows"] == 500
+    assert result["input_artifact"]["source_revision"] is None
+    assert len(result["input_artifact"]["sha256"]) == 64
+    assert "--apply_chat_template" in native.call_args.args[0]
     assert result["seed"] == 19
     assert result["group_size"] == 6
     assert result["steps"] is None
@@ -147,7 +156,9 @@ def test_import_does_not_start_emissions_tracker():
 def test_existing_receipt_is_preserved_before_any_provider_work(tmp_path):
     receipt = tmp_path / "result.json"
     receipt.write_text("existing evidence")
-    with patch.object(trainer, "_prepare_gsm8k_500_jsonl") as prepare:
+    with patch.object(
+        trainer, "_prepare_gsm8k_500_jsonl", side_effect=write_native_input_fixture
+    ) as prepare:
         with pytest.raises(FileExistsError, match="fresh output"):
             trainer.run_openrlhf_training(config(), str(tmp_path))
     prepare.assert_not_called()
@@ -189,7 +200,7 @@ def test_native_wandb_credential_stays_out_of_argv_and_receipt(
     monkeypatch.setenv("WANDB_API_KEY", key)
     with (
         patch.dict(sys.modules, {"openrlhf": types.ModuleType("openrlhf")}),
-        patch.object(trainer, "_prepare_gsm8k_500_jsonl"),
+        patch.object(trainer, "_prepare_gsm8k_500_jsonl", side_effect=write_native_input_fixture),
         patch.object(trainer.subprocess, "run") as native,
     ):
         output = tmp_path / "run"
@@ -209,7 +220,9 @@ def test_explicit_wandb_requires_credentials(monkeypatch):
 def test_unvalidated_versions_fail_before_dataset_work(tmp_path, version):
     with (
         patch.object(trainer.metadata, "version", return_value=version),
-        patch.object(trainer, "_prepare_gsm8k_500_jsonl") as prepare,
+        patch.object(
+            trainer, "_prepare_gsm8k_500_jsonl", side_effect=write_native_input_fixture
+        ) as prepare,
         pytest.raises(RuntimeError, match="Unsupported OpenRLHF version"),
     ):
         trainer.run_openrlhf_training(config(), str(tmp_path / "run"))
@@ -248,7 +261,9 @@ def test_legacy_overrides_are_rejected_before_native_work(tmp_path):
     ):
         output = tmp_path / field
         with (
-            patch.object(trainer, "_prepare_gsm8k_500_jsonl") as prepare,
+            patch.object(
+                trainer, "_prepare_gsm8k_500_jsonl", side_effect=write_native_input_fixture
+            ) as prepare,
             patch.object(trainer, "_validate_native_runtime") as runtime,
             patch.object(trainer.subprocess, "run") as launch,
             pytest.raises(ValueError, match=field),
@@ -279,7 +294,9 @@ def test_nonfinite_native_settings_fail_before_any_external_work(tmp_path):
                 setattr(getattr(cfg, section), name, value)
                 output = tmp_path / "not-created"
                 with (
-                    patch.object(trainer, "_prepare_gsm8k_500_jsonl") as prepare,
+                    patch.object(
+                        trainer, "_prepare_gsm8k_500_jsonl", side_effect=write_native_input_fixture
+                    ) as prepare,
                     patch.object(trainer, "_validate_native_runtime") as runtime,
                     patch.object(trainer.subprocess, "run") as launch,
                     pytest.raises(ValueError, match=name),

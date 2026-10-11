@@ -912,3 +912,36 @@ cases; all 17 snapshot/SDK cases afterward). Full validation passed **1,695 test
 coverage in 259.52 seconds. Static, package, lock, docs, public/demo and submission
 checks passed, aggregate exit zero. The learning objective, scorer policy and
 historical results are unchanged.
+
+## Resume reward-history consistency (19:13 UTC)
+
+A mocked two-step run resumed from a step-one receipt with an empty reward
+trace, performed one optimizer update, and declared completion with only one
+recorded reward. Resume now validates trace shape, finite numeric entries,
+committed-step coverage, configured budget and counters before tracking,
+critic loading or provider initialization. It rejects booleans/numeric strings,
+unrepresentable integers, missing committed history, impossible or coerced
+counters, contradictory zero-reward counts, malformed nested results and
+premature completed receipts. It never pads missing history or rewrites an
+invalid input receipt.
+
+Legitimate rewinds retain only the committed prefix, reconstruct its zero-reward
+count and discard full-run loss counts that cannot be assigned to that prefix.
+Legacy receipts with valid traces but no zero-reward counter reconstruct that
+counter from observed history. Legacy Hub URL-only receipts remain supported
+when their reward history is complete. Three older synthetic fixtures were
+updated to supply the step-one history their test scenarios claimed; their
+optimizer-resume, missing-run-ID and legacy-URL assertions remain intact.
+
+The first 13 corruption regressions all failed before the guard; the expanded
+focused suite passed **268 tests**. A completed Muse review of the public resume
+path supported early history validation. Its suggestions to forbid step-zero
+partial receipts or require integer-only, unique checkpoint-export steps were
+not adopted: those would reject valid existing receipt forms.
+
+Full validation passed **1,714 tests, 2 skipped**, including native TeX, at
+**85.63%** configured supported-surface coverage in 245.72 seconds. Static,
+package, lock, docs, public/demo and submission checks passed, aggregate exit
+zero. No provider training or historical regrading was performed. GitHub's
+engineering checks for the preceding published `13f856ad` commit all completed
+successfully; the existing scientific `minreport-audit` gate remains red.

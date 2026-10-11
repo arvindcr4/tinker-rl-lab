@@ -1465,6 +1465,48 @@ def _load_checkpoint(config: GRPOConfig, seed: int) -> Dict[str, Any] | None:
     return payload
 
 
+def _resume_reward_history(
+    prior: Optional[Dict[str, Any]], resume_step: int, steps: int
+) -> Tuple[List[float], int, int]:
+    """Validate committed history locally, then trim a legitimate rewind."""
+    if prior is None:
+        return [], 0, 0
+    error = "checkpoint reward history is malformed or inconsistent with committed steps"
+    result = prior.get("result", {})
+    if result is None and prior.get("status") != "completed":
+        result = {}
+    if not isinstance(result, dict):
+        raise RuntimeError(error)
+    completed = prior.get("status") == "completed"
+    source = result if completed else prior
+    trace = source.get("reward_trace", result.get("reward_trace", []))
+    if not isinstance(trace, list) or any(type(value) not in (int, float) for value in trace):
+        raise RuntimeError(error)
+    try:
+        finite = all(math.isfinite(value) for value in trace)
+    except OverflowError:
+        finite = False
+    if not finite or not resume_step <= len(trace) <= steps:
+        raise RuntimeError(error)
+    if completed and (resume_step != steps or len(trace) != steps):
+        raise RuntimeError(error)
+    zero_count = sum(value == 0 for value in trace)
+    counters = []
+    for key, default in (("zero_loss_steps", 0), ("zero_reward_steps", zero_count)):
+        value = source.get(key, result.get(key, default))
+        if type(value) is not int or not 0 <= value <= len(trace):
+            raise RuntimeError(error)
+        if key == "zero_reward_steps" and value != zero_count:
+            raise RuntimeError(error)
+        counters.append(value)
+    kept = trace[:resume_step]
+    if len(trace) > resume_step:
+        # Loss is not stored per step, so discarded suffix totals cannot be
+        # retained. Reward-zero counts can be reconstructed from the prefix.
+        return kept, 0, sum(value == 0 for value in kept)
+    return kept, counters[0], counters[1]
+
+
 def _redact_error(exc: BaseException) -> str:
     """Return an error string with credential values removed."""
     message = str(exc)
@@ -1975,6 +2017,9 @@ def _run_one_seed(
                 f"[{config.name}] checkpoint step {resume_step} has no actor optimizer state; "
                 "restore a matching periodic receipt or start a fresh run"
             )
+    step_rewards, zero_loss_steps, zero_reward_steps = _resume_reward_history(
+        prior, resume_step, config.steps
+    )
     # Critic pretrain draws from this RNG before the step loop, and only
     # on a fresh run.  Replay those draws before the per-step draws so a
     # resume after pretraining keeps the same example order.
@@ -2114,25 +2159,6 @@ def _run_one_seed(
         sc = tc.create_sampling_client(model_path=w0.path)
 
         save_every = config.effective_save_every()
-        prior_result = (prior or {}).get("result", {}) or {}
-        # Periodic receipts store the trace beside counters that match it.
-        # A rewound final nests a longer trace under "result"; cutting that
-        # trace back to resume_step must not keep totals for discarded steps.
-        # Loss is not stored per step, so a cut trace starts its loss count
-        # over instead of copying the full-run total.
-        stored_trace = list((prior or {}).get("reward_trace", prior_result.get("reward_trace", [])))
-        step_rewards: List[float] = stored_trace[:resume_step]
-        if len(stored_trace) > resume_step:
-            zero_reward_steps = sum(1 for reward in step_rewards if reward == 0)
-            zero_loss_steps = 0
-        else:
-            zero_loss_steps = int(
-                (prior or {}).get("zero_loss_steps", prior_result.get("zero_loss_steps", 0))
-            )
-            zero_reward_steps = int(
-                (prior or {}).get("zero_reward_steps", prior_result.get("zero_reward_steps", 0))
-            )
-
         if config.critic_enabled and config.critic_pretrain_batches > 0 and resume_step == 0:
             logger(
                 f"[{config.name}] critic pretraining: "

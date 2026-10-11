@@ -97,3 +97,87 @@ def test_nonfinite_checkpoint_write_preserves_previous_receipt(tmp_path):
     with pytest.raises(ValueError, match="Out of range float values"):
         grpo._write_checkpoint(path, {"step": 1, "reward_trace": [float("inf")]})
     assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize(
+    "trace", [None, {}, "0.5", [], [True], ["0.5"], [10**400], [0.1, 0.2, 0.3]]
+)
+def test_resume_history_requires_finite_numeric_trace_covering_committed_steps(tmp_path, trace):
+    config = grpo.GRPOConfig(name="history", steps=2, checkpoint_dir=str(tmp_path))
+    payload = {
+        "config": grpo._config_fingerprint(config, config.seed),
+        "status": "started",
+        "step": 1,
+        "train_state_path": "tinker://synthetic/state",
+        "reward_trace": trace,
+    }
+    path = grpo._checkpoint_path(config, config.seed)
+    grpo._write_checkpoint(path, payload)
+    before = path.read_bytes()
+    dataset = grpo.InMemoryDataset(train=[grpo.TrainingExample(prompt="q", target="1")])
+    with patch.object(grpo, "_start_wandb", side_effect=AssertionError("tracking started")):
+        with pytest.raises(RuntimeError, match="checkpoint reward history"):
+            grpo._run_one_seed(config, dataset, grpo.ExactMathReward(), tokenizer=None)
+    assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("zero_loss_steps", True),
+        ("zero_loss_steps", -1),
+        ("zero_loss_steps", 2),
+        ("zero_reward_steps", "0"),
+        ("zero_reward_steps", 1),
+    ],
+)
+def test_resume_counters_cannot_be_coerced_or_contradict_history(tmp_path, field, value):
+    config = grpo.GRPOConfig(name="counters", steps=2, checkpoint_dir=str(tmp_path))
+    payload = {
+        "config": grpo._config_fingerprint(config, config.seed),
+        "status": "started",
+        "step": 1,
+        "train_state_path": "tinker://synthetic/state",
+        "reward_trace": [0.5],
+        field: value,
+    }
+    grpo._write_checkpoint(grpo._checkpoint_path(config, config.seed), payload)
+    dataset = grpo.InMemoryDataset(train=[grpo.TrainingExample(prompt="q", target="1")])
+    with patch.object(grpo, "_start_wandb", side_effect=AssertionError("tracking started")):
+        with pytest.raises(RuntimeError, match="checkpoint reward history"):
+            grpo._run_one_seed(config, dataset, grpo.ExactMathReward(), tokenizer=None)
+
+
+def test_completed_history_must_cover_the_full_configured_budget(tmp_path):
+    config = grpo.GRPOConfig(name="short-completed", steps=2, checkpoint_dir=str(tmp_path))
+    payload = {
+        "config": grpo._config_fingerprint(config, config.seed),
+        "status": "completed",
+        "step": 1,
+        "result": {"seed": 42, "run_id": "synthetic", "reward_trace": [0.5]},
+    }
+    grpo._write_checkpoint(grpo._checkpoint_path(config, config.seed), payload)
+    dataset = grpo.InMemoryDataset(train=[grpo.TrainingExample(prompt="q", target="1")])
+    with patch.object(grpo, "_start_wandb", side_effect=AssertionError("tracking started")):
+        with pytest.raises(RuntimeError, match="checkpoint reward history"):
+            grpo._run_one_seed(config, dataset, grpo.ExactMathReward(), tokenizer=None)
+
+
+def test_rewound_nested_final_uses_only_committed_prefix_counters():
+    prior = {
+        "status": "started",
+        "result": {"reward_trace": [0.0, 0.5], "zero_loss_steps": 2, "zero_reward_steps": 1},
+    }
+    assert grpo._resume_reward_history(prior, resume_step=1, steps=2) == ([0.0], 0, 1)
+    assert prior["result"]["reward_trace"] == [0.0, 0.5]
+
+
+def test_legacy_missing_reward_counter_is_reconstructed_without_inventing_trace():
+    prior = {"status": "started", "reward_trace": [0.0, 0.5]}
+    assert grpo._resume_reward_history(prior, resume_step=2, steps=2) == ([0.0, 0.5], 0, 1)
+
+
+@pytest.mark.parametrize("result", [[], "bad", 1])
+def test_nested_result_shape_is_validated_before_resume(result):
+    with pytest.raises(RuntimeError, match="checkpoint reward history"):
+        grpo._resume_reward_history({"result": result}, resume_step=0, steps=1)

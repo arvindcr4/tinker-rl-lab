@@ -525,6 +525,7 @@ def test_completed_legacy_urls_are_retained(tmp_path, monkeypatch):
     result = GRPORunResult(
         seed=42,
         run_id="tinker-legacy",
+        reward_trace=[0.5],
         checkpoint_urls=["https://huggingface.co/legacy/tree/old"],
     )
     config = _completed_config(tmp_path, result)
@@ -539,7 +540,7 @@ def test_completed_legacy_urls_are_retained(tmp_path, monkeypatch):
 
 
 def test_completed_receipt_without_run_id_fails_closed(tmp_path, monkeypatch):
-    result = GRPORunResult(seed=42, run_id="")
+    result = GRPORunResult(seed=42, run_id="", reward_trace=[0.5])
     config = _completed_config(tmp_path, result)
     run = _quiet_run()
     monkeypatch.setattr(grpo, "_start_wandb", lambda *_args, **_kwargs: run)
@@ -571,7 +572,13 @@ def test_tinker_and_tokenizer_imports_fail_closed(tmp_path, monkeypatch):
 
 def test_resume_uses_saved_optimizer_state(tmp_path, monkeypatch):
     config = _config(tmp_path, steps=1)
-    _write_prior(config, status="started", step=1, train_state_path="tinker://state/resume")
+    _write_prior(
+        config,
+        status="started",
+        step=1,
+        train_state_path="tinker://state/resume",
+        reward_trace=[0.5],
+    )
     logs = []
     with _runtime(monkeypatch):
         result = grpo._run_one_seed(

@@ -429,8 +429,8 @@ def test_huggingface_helpers_cover_import_auth_and_receipt_failures(monkeypatch)
 
     monkeypatch.setenv("HF_REPO_OWNER", "hub-owner")
     prefixed = GRPOConfig(name="n", hf_repo_prefix="Someone/Pretty Name")
-    repo_id = grpo._checkpoint_repo_id(prefixed, "fallback-owner", 3, 4, "tinker://path")
-    assert repo_id.startswith("hub-owner/")
+    repo_id = grpo._checkpoint_repo_id(prefixed, "resolved-owner", 3, 4, "tinker://path")
+    assert repo_id.startswith("resolved-owner/")
     assert "pretty-name" in repo_id
 
     with pytest.raises(RuntimeError, match="receipt missing"):

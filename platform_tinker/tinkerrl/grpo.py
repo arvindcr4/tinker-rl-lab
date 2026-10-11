@@ -1887,10 +1887,14 @@ def _checkpoint_repo_id(
     base = config.hf_repo_prefix or config.checkpoint_name_prefix or config.name
     if "/" in base:
         # A slash in the prefix is treated as a name separator, never as an
-        # implicit owner override; ownership comes from the authenticated Hub
-        # identity unless ``hf_owner``/``HF_REPO_OWNER`` is explicit.
+        # implicit owner override; ownership comes from the preflight-resolved
+        # owner argument, which already applied configured overrides.
         _, base = base.split("/", 1)
-    repo_owner = config.hf_owner or os.environ.get("HF_REPO_OWNER") or owner
+    # Owner selection is resolved before provider work. Do not reread mutable
+    # environment/config overrides and redirect a later checkpoint upload.
+    if not isinstance(owner, str) or not owner.strip():
+        raise ValueError("resolved checkpoint owner must be a non-empty string")
+    repo_owner = owner.strip()
     source_slug = _safe_component(tinker_path)
     source_hash = hashlib.sha256(str(tinker_path).encode("utf-8")).hexdigest()[:12]
     step_slug = _safe_component(step)

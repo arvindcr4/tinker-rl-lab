@@ -1258,3 +1258,41 @@ final focused cases pass. Full `make check submission-check` passed **1,830
 tests, 2 skipped**, including native TeX, at **85.91%** configured
 supported-surface coverage in 256.32 seconds. Static/package/lock/docs/public/
 demo/submission checks passed, exit zero. No historical artifact was changed.
+
+## Preserve the preflight-resolved checkpoint owner (20:42 UTC)
+
+Publication previously selected the owner again after preflight. A whitespace-
+normalized configured owner was replaced by its raw spelling; a tracking
+callback changing `HF_REPO_OWNER` redirected later exports to another namespace.
+Repository naming now uses only the resolved owner argument. Configuration,
+environment and authenticated-account precedence remain in preflight, and
+empty explicit owner strings fail before publication. Preflight resolves an
+identity; it does not establish organization write permissions.
+
+Two synthetic regressions reproduced the owner drift. Three final cases pass,
+along with **198 focused tests**. A former private-helper test that expected an
+environment override was updated to assert the resolved-owner contract; the
+prefix-slash isolation check remains. Muse reviewed the public paths and
+supported the narrow fix. Full `make check submission-check` passed **1,833
+tests, 2 skipped**, native TeX included, at **85.92%** configured supported-surface
+coverage in 257.93 seconds. All aggregate stages passed, exit zero. Engineering
+CI on the preceding published `cfc431f1` passed; the scientific gate remains red.
+
+## Actual public GSM8K/tokenizer CPU check (20:42 UTC)
+
+A separate source-bound input audit used all **7,473** public GSM8K train rows at
+revision `740312add88f781978c0658806c59bc2815b9866` and the official Qwen3-8B
+tokenizer at `b968826d9c46dd6066d109eabc6255188de91218`. The anonymous tokenizer
+fetch was limited to tokenizer JSON/config assets; no weights were downloaded.
+The actual Transformers loader ran from those local files with remote code
+disabled and network sockets blocked, as did the real GSM8K adapter using the
+local pinned Parquet fixture. All rows were retained. Prompt lengths were
+48 minimum, 92 median, 137 p95 and 248 maximum; **none exceeded the existing
+1,024-token budget**. One synthetic system/user rendering matched the official
+default chat template. This does not generalize to other adapters, model
+families or tool/multiturn templates, and is not a generation/quality evaluation.
+No truncation policy was changed on the basis of a speculative concern.
+
+`GSM8K_TOKEN_BUDGET_AUDIT.json` records source URLs, asset hashes, versions,
+function hashes and the exact scope. Raw public data/tokenizer downloads remain
+outside the repository. No credentials, provider job or private data were used.

@@ -1,0 +1,49 @@
+{
+  "actual_adapter_examples": 7473,
+  "actual_max_tokens": 248,
+  "actual_over_1024": 0,
+  "actual_transformers_loader": true,
+  "code_commit": "cfc431f16ecb8a3576cb434218c0ea9ebf06a156",
+  "dataset_parquet_sha256": "ea82612ea9582142387730c793eb67d3b12849002bc0b7fa6f8efafa7351419d",
+  "dataset_revision": "740312add88f781978c0658806c59bc2815b9866",
+  "function_sha256": {
+    "_chat_prompt": "e61b60eb53467217b5c5ee2d37601b8d6be83fe0faec7431ccc09cab5c069b4c",
+    "make_gsm8k_dataset": "2f706c2136bd9263f7eacbe58d6ff2040425d47151d4e2f1a664622a889f2776"
+  },
+  "max_tokens": 248,
+  "median_tokens": 92,
+  "min_tokens": 48,
+  "n": 7473,
+  "network_blocked_during_audit": true,
+  "over_1024_tokens": 0,
+  "p95_tokens": 137,
+  "prompt_template": "current Tinker GSM8K adapter",
+  "remote_code": false,
+  "scope": "CPU tokenization only; no model weights, generation or quality measurement",
+  "source": "openai/gsm8k",
+  "source_files": [
+    {
+      "anonymous": true,
+      "bytes": 11422654,
+      "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+      "url": "https://huggingface.co/Qwen/Qwen3-8B/resolve/b968826d9c46dd6066d109eabc6255188de91218/tokenizer.json"
+    },
+    {
+      "anonymous": true,
+      "bytes": 9732,
+      "sha256": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+      "url": "https://huggingface.co/Qwen/Qwen3-8B/resolve/b968826d9c46dd6066d109eabc6255188de91218/tokenizer_config.json"
+    }
+  ],
+  "split": "train",
+  "static_prompt_matches_official_template": true,
+  "template_probe_scope": "one synthetic system/user pair with default thinking setting; not tools, multiturn, or other model families",
+  "tokenizer": "Qwen/Qwen3-8B",
+  "tokenizer_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+  "tokenizer_sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+  "versions": {
+    "pyarrow": "25.0.1",
+    "tokenizers": "0.22.2",
+    "transformers": "5.5.4"
+  }
+}

@@ -535,3 +535,25 @@ Aggregate validation: **1,606 passed, 1 skipped, 2 native-LaTeX tests
 intentionally deselected**, 85.17% coverage, in 134.94 seconds. Static,
 packaging, lock, docs, public/demo and submission checks passed. No native
 provider, GPU, or paid training was launched.
+
+### Parser punctuation and metadata-schema compatibility follow-up
+
+A public-source follow-up Muse review of `fb6d93c9` identified ratio/time and
+comparison tails that still looked like bare numeric answers, plus ordinary
+parenthesized answers rejected when followed by a sentence period. Independent
+reproduction confirmed both. The exact scorer now rejects adjacent ratio,
+comparison, and operator components while preserving label colons, assignment
+answers, percentage units, and nested numeric wrappers with sentence punctuation.
+Wrapper stripping uses indices and remains nonrecursive even with 10,000 pairs.
+
+Cross-checking the audit's accepted shapes against the registry schema also
+found that canonical backend/telemetry objects must coexist with the frozen
+records' compact string/list forms. Both forms are now explicitly supported;
+truthy scalar assertions and malformed section types remain rejected. No
+frozen record changes or new scientific claims were needed. The focused math
+suite passed all 217 tests before the combined compatibility validation.
+
+Combined compatibility validation passed: **1,609 passed, 1 skipped,
+2 native-LaTeX tests intentionally deselected**, 85.21% coverage, in
+129.95 seconds. All static, package, lock, docs, public/demo and submission
+checks passed. The prior full validation passed native TeX.

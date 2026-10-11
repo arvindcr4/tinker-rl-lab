@@ -152,7 +152,15 @@ def verify(record, strict=False):
     # 1) completeness: all 7 items present & non-null
     for item in SEVEN:
         v = mr.get(item)
-        expected = str if item == "sampler_backend" else list if item == "telemetry" else dict
+        # The registry schema uses objects; frozen protocol records also use
+        # compact backend strings and telemetry lists. Preserve both forms.
+        expected = (
+            (str, dict)
+            if item == "sampler_backend"
+            else (list, dict)
+            if item == "telemetry"
+            else (dict,)
+        )
         add(
             isinstance(v, expected) and bool(v),
             1,

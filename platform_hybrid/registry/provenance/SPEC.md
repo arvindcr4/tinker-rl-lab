@@ -19,7 +19,9 @@ descriptive — nothing checks that a given run actually satisfies it. P5 makes 
 ## The verifier (`minreport.py verify`)
 Grades three axes and returns a badge **A–F**:
 - **Completeness** — all 7 MIN-REPORT items have their expected nonempty top-level
-  shape. This is not full nested-schema or result-evidence validation.
+  shape. Registry-schema objects and the frozen records' compact backend-string
+  and telemetry-list forms are both accepted. This is not full nested-schema or
+  result-evidence validation.
 - **Integrity** — provenance hashes present; `code_hash` **recomputed against the live file** (catches
   code drift since the run).
 - **Rigor** — integer `n_seeds >= 3` with the same number of distinct integer

@@ -90,3 +90,33 @@ def test_deep_or_many_boxes_are_scanned_without_recursion():
     assert score(deep, "2") == 1.0
     repeated = r"\boxed{99} " * 1000 + "42"
     assert score(repeated, "42") == 1.0
+
+
+def test_ratio_comparison_and_operator_components_are_not_bare_answers():
+    for response, target in (
+        ("12:30", "30"),
+        ("12 : 30", "30"),
+        ("1<2", "2"),
+        ("1<=2", "2"),
+        ("1>=2", "2"),
+        ("1!=2", "2"),
+        ("1==2", "2"),
+        ("1≤2", "2"),
+        ("2×3", "3"),
+        ("12%5", "5"),
+        ("3!", "3"),
+        ("2|3", "3"),
+    ):
+        assert score(response, target) == 0.0, response
+    # A label colon, assignment/equation equals sign, and percent unit retain
+    # their established numeric-answer interpretation.
+    for response in ("answer: 42", "answer = 42", "42%"):
+        assert score(response, "42") == 1.0
+
+
+def test_nested_numeric_wrappers_and_sentence_punctuation_remain_valid():
+    for response in ("(42).", "((42))", "( (42) ).", r"\((42)\).", "(42). Done"):
+        assert score(response, "42") == 1.0, response
+    assert score("sqrt((2))", "2") == 0.0
+    assert score("(42).3", "0.3") == 0.0
+    assert score("(" * 10000 + "42" + ")" * 10000 + ".", "42") == 1.0

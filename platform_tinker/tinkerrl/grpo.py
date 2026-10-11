@@ -3273,6 +3273,24 @@ def _normalise_exact_math_candidate(value: str) -> str:
     return value
 
 
+def _unwrap_numeric_context(before: str, after: str) -> Tuple[str, str]:
+    """Remove matched numeric wrappers using indices, without recursive slicing."""
+    left_end, right_start = len(before), 0
+    wrappers = ((r"\(", r"\)"), (r"\[", r"\]"), ("(", ")"))
+    while True:
+        left, right = left_end, right_start
+        while left and before[left - 1].isspace():
+            left -= 1
+        while right < len(after) and after[right].isspace():
+            right += 1
+        for opening, closing in wrappers:
+            if before.endswith(opening, 0, left) and after.startswith(closing, right):
+                left_end, right_start = left - len(opening), right + len(closing)
+                break
+        else:
+            return before[:left_end], after[right_start:]
+
+
 def _exact_math_candidates(response: str) -> List[str]:
     spans = _exact_math_box_spans(response)
     candidates = [_normalise_exact_math_candidate(value) for _, _, value in spans if value]
@@ -3283,23 +3301,23 @@ def _exact_math_candidates(response: str) -> List[str]:
         return candidates
     last = matches[-1]
     before, after = suffix[: last.start()], suffix[last.end() :]
-    left, right = before.rstrip(), after.lstrip()
-    for opening, closing in ((r"\(", r"\)"), (r"\[", r"\]")):
-        if left.endswith(opening) and right.startswith(closing):
-            before, after = left[: -len(opening)], right[len(closing) :]
-            left, right = before.rstrip(), after.lstrip()
-            break
-    if left.endswith("(") and right.startswith(")"):
-        # A standalone parenthesized scalar is still numeric; function calls
-        # and tuples fail the surrounding-token checks below.
-        before, after = left[:-1], right[1:]
-    if (before and (before[-1].isalnum() or before[-1] in "_.")) or (
-        after and (after[0].isalnum() or after[0] in "_.")
+    before, after = _unwrap_numeric_context(before, after)
+    # A sentence period after a wrapper is punctuation, not a decimal suffix.
+    if after.startswith(".") and (len(after) == 1 or after[1].isspace()):
+        after = after[1:]
+    if (before and (before[-1].isalnum() or before[-1] in "_.)]}")) or (
+        after and (after[0].isalnum() or after[0] in "_.([{")
     ):
         return candidates
     # A component adjacent to expression/container syntax is not a bare answer.
     left, right = before.rstrip(), after.lstrip()
-    if (left and left[-1] in "/^*+-,([{\\") or (right and right[0] in "/^*+-,)]}\\"):
+    if (left and left[-1] in "/^*+-,([{\\<>≤≥≠&|%×÷") or (
+        right and right[0] in "/^*+-,)]}\\<>≤≥≠&|!×÷="
+    ):
+        return candidates
+    if left.endswith(("<=", ">=", "!=", "==")):
+        return candidates
+    if left.endswith(":") and re.search(r"(?<![\w.])[-+]?(?:\d+(?:\.\d*)?|\.\d+)\s*$", left[:-1]):
         return candidates
     if last.group().startswith(("+", "-")) and left and (left[-1].isdigit() or left[-1] in ").]}"):
         return candidates

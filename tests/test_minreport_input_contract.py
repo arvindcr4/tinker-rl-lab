@@ -133,3 +133,19 @@ def test_strict_cli_rejects_truthy_false_and_writes_a_failure_receipt(declared_r
     assert "Traceback" not in result.stderr
     receipt = json.loads(path.with_suffix(".audit.json").read_text())
     assert any(item["level"] == "WARN" for item in receipt["checks"])
+
+
+def test_registry_schema_objects_and_legacy_compact_forms_are_supported(declared_record):
+    assert failures(declared_record) == []
+    declared_record["min_report_rl"]["sampler_backend"] = {
+        "backend": "tinker",
+        "precision": "float32",
+        "temperature": 0.8,
+        "top_p": 0.95,
+    }
+    declared_record["min_report_rl"]["telemetry"] = {
+        "per_step_zvf": True,
+        "per_step_gu": True,
+        "source": "synthetic-fixture.jsonl",
+    }
+    assert failures(declared_record) == []

@@ -7,3 +7,5 @@ The root README and SUBMISSION files are themselves hash-bound in the frozen Oct
 The October 11 thesis has completed authoring-assistant layout checks, with a separate final-thesis review still pending. This is public research-review material, not an institutional submission.
 
 [CI follow-up](CI_FOLLOWUP_2026-10-11.md) records the first actual post-integration workflow, compatibility corrections and the remaining strict provenance evidence gap.
+
+[Runtime and uncertainty correction](reports/runtime_followup_2026-10-11/README.md) records the unresolved campaign SD scope and bounded OpenRLHF fixes. The canonical OpenRLHF step budget remains unsupported; code fixes do not certify historical runs.

@@ -15,6 +15,7 @@ class OpenRLHFModelConfig(BaseModel):
     use_flash_attention: bool = True
     load_in_8bit: bool = False
     load_in_4bit: bool = False
+    lora_rank: int = Field(default=0, ge=0)
 
 
 class OpenRLHFOptimizerConfig(BaseModel):
@@ -66,6 +67,11 @@ class OpenRLHFConfig(BaseModel):
     seed: int = 42
     # LIMITATION: short max_samples/steps yield early-training snapshots only.
     max_steps: Optional[int] = None
+
+    # Explicit native dataset budget; this is not an optimizer-step budget.
+    max_samples: int = Field(default=240, gt=0, le=500)
+    rollout_batch_size: int = Field(default=8, gt=0)
+    remote_rm_url: Optional[str] = None
 
     # Ray cluster settings
     num_gpus: int = 1

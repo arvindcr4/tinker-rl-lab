@@ -3,8 +3,8 @@ OpenRLHF Trainer for tinker-rl-lab
 
 Real GRPO runner for framework-gap comparison. Uses OpenRLHF's Ray + vLLM
 trainer in the "ppo_ray" configuration with advantage_estimator=group_norm
-(i.e. GRPO). Training loop mirrors the TRL/Tinker loops so reward traces are
-comparable apples-to-apples.
+(i.e. GRPO). Runtime settings require explicit validation; historical framework comparisons
+remain confounded and are not repaired by this launcher.
 
 # LIMITATION: framework-gap vs Tinker is confounded by managed defaults (closed-source confound).
 
@@ -13,16 +13,6 @@ clearly marked as such in the returned metrics.
 """
 
 from __future__ import annotations
-
-import atexit
-try:
-    from codecarbon import EmissionsTracker
-    _tracker = EmissionsTracker()
-    _tracker.start()
-    atexit.register(_tracker.stop)
-except ImportError:
-    pass
-
 
 import asyncio
 import json
@@ -133,7 +123,7 @@ class OpenRLHFTrainer:
 
 
 # ---------------------------------------------------------------------------
-# Real driver — invoked by platform_hybrid/experiments/modal/modal_grpo_openrlhf.py on H100.
+# Native driver for explicit local/Ray launches; the historical Modal runner is separate.
 # ---------------------------------------------------------------------------
 
 GSM8K_SYSTEM_PROMPT = (
@@ -163,185 +153,49 @@ def _prepare_gsm8k_500_jsonl(out_path: str) -> str:
 
 
 def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrlhf-run") -> Dict[str, Any]:
-    """Real end-to-end OpenRLHF GRPO driver on GSM8K-500.
+    """Launch the validated native command; record execution, not inferred metrics.
 
-    OpenRLHF is launched as a subprocess (``python -m openrlhf.cli.train_ppo_ray``)
-    with ``--advantage_estimator group_norm`` to yield GRPO semantics. Reward
-    trace is read back from the W&B run history after the subprocess exits.
+    A successful subprocess does not establish a reward trace or held-out gain.
+    The native CLI owns any optional W&B logging. This wrapper does not retrieve
+    runs by display name, start a second run, or publish checkpoints.
     """
+    from .command import build_openrlhf_command
+
+    output = Path(output_dir).resolve()
+    data_path = str(output / "gsm8k500.jsonl")
+    # Validate before importing providers, downloading data, or creating output.
+    cmd = build_openrlhf_command(config, data_path, str(output))
+    if (output / "result.json").exists():
+        raise FileExistsError("Choose a fresh output directory; result.json already exists")
     try:
-        import wandb  # type: ignore
-        try:
-            import torch, wandb
-            if not getattr(wandb, '_vram_patched', False):
-                _old_log = wandb.log
-                def _vram_log(data, *args, **kwargs):
-                    if torch.cuda.is_available():
-                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
-                        torch.cuda.reset_peak_memory_stats()
-                    _old_log(data, *args, **kwargs)
-                wandb.log = _vram_log
-                wandb._vram_patched = True
-        except ImportError:
-            pass
         import openrlhf  # type: ignore  # noqa: F401
-    except Exception as exc:
-        raise RuntimeError(
-            "run_openrlhf_training requires openrlhf + wandb; "
-            "launch via platform_hybrid/experiments/modal/modal_grpo_openrlhf.py"
-        ) from exc
-
-    os.makedirs(output_dir, exist_ok=True)
-    data_path = _prepare_gsm8k_500_jsonl(os.path.join(output_dir, "gsm8k500.jsonl"))
-
-    run_name = config.run_name or "openrlhf-gsm8k-qwen3-8b"
-    os.environ["WANDB_PROJECT"] = os.environ.get(
-        "WANDB_PROJECT", "tinker-rl-lab-world-class"
-    )
-
-    # Initialize W&B
-    wandb.init(
-        project=os.environ["WANDB_PROJECT"],
-        name=run_name,
-        tags=["openrlhf-grpo"],
-        config=config.to_dict()
-    )
-
-    # ---- launch OpenRLHF PPO-Ray with group_norm advantage (GRPO) ----
-    # We rely on the reward being baked in via a verifiable reward function
-    # the container will register under --reward_pretrain (see modal_grpo_openrlhf.py).
-    cmd = [
-        "python", "-m", "openrlhf.cli.train_ppo_ray",
-        "--pretrain", config.model_name,
-        "--ref_pretrain", config.model_name,
-        "--prompt_data", data_path,
-        "--input_key", "prompt",
-        "--label_key", "label",
-        "--advantage_estimator", "group_norm",
-        "--n_samples_per_prompt", "8",
-        "--train_batch_size", "8",
-        "--micro_train_batch_size", "1",
-        "--rollout_batch_size", "8",
-        "--micro_rollout_batch_size", "1",
-        "--max_epochs", "1",
-        "--num_episodes", "1",
-        "--prompt_max_len", "512",
-        "--generate_max_len", "512",
-        "--actor_learning_rate", str(config.learning_rate),
-        "--init_kl_coef", str(config.algorithm.kl_coef),
-        "--use_kl_loss",
-        "--kl_estimator", "k3",
-        "--save_steps", "-1",
-        "--logging_steps", "1",
-        # LIMITATION: default horizon is a short snapshot (not full convergence).
-        "--max_samples", "240",  # 30 steps * batch=8
-        "--save_path", os.path.join(output_dir, "ckpt"),
-        "--ckpt_path", os.path.join(output_dir, "ckpt"),
-        "--use_wandb", os.environ.get("WANDB_API_KEY", ""),
-        "--wandb_project", os.environ["WANDB_PROJECT"],
-        "--wandb_run_name", run_name,
-        "--colocate_all_models",
-        "--vllm_num_engines", "1",
-        "--vllm_tensor_parallel_size", "1",
-        "--bf16",
-        "--flash_attn",
-        "--actor_num_gpus_per_node", str(config.num_gpus),
-        "--ref_num_gpus_per_node", str(config.num_gpus),
-        "--remote_rm_url", "verifiable_gsm8k",  # served by modal_grpo_openrlhf.py
-        # LIMITATION: default seed path is N=1 unless callers parameterize multi-seed.
-        "--seed", "42",
-    ]
-    print("[openrlhf] cmd:", " ".join(cmd))
-    # Strip repo root from subprocess PYTHONPATH so python -m openrlhf.cli.*
-    # resolves to the installed pypi package, not the repo's platform_modal/openrlhf/ launcher.
+    except ImportError as exc:
+        raise RuntimeError("Native training requires OpenRLHF v0.8.4 + Ray + vLLM") from exc
+    output.mkdir(parents=True, exist_ok=True)
+    _prepare_gsm8k_500_jsonl(data_path)
     env = os.environ.copy()
     env["PYTHONPATH"] = ""
     start = time.time()
-    proc = subprocess.run(cmd, cwd=output_dir, env=env)
-    duration = time.time() - start
-    print(f"[openrlhf] subprocess exit={proc.returncode} in {duration:.1f}s")
-
-    # Pull reward trace from W&B
-    # LIMITATION: ZVF is a symptom metric; also log reward/advantage/entropy.
-    reward_trace: List[float] = []
-    try:
-        import wandb as _wb  # type: ignore
-        try:
-            import torch, wandb
-            if not getattr(wandb, '_vram_patched', False):
-                _old_log = wandb.log
-                def _vram_log(data, *args, **kwargs):
-                    if torch.cuda.is_available():
-                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
-                        torch.cuda.reset_peak_memory_stats()
-                    _old_log(data, *args, **kwargs)
-                wandb.log = _vram_log
-                wandb._vram_patched = True
-        except ImportError:
-            pass
-        api = _wb.Api()
-        runs = api.runs(
-            f"{api.default_entity}/{os.environ['WANDB_PROJECT']}",
-            {"display_name": run_name},
-        )
-        if runs:
-            hist = runs[0].history(keys=["train/reward_mean", "reward/mean", "critic/rewards/mean"])
-            for col in ("train/reward_mean", "reward/mean", "critic/rewards/mean"):
-                if col in hist.columns:
-                    reward_trace = [float(x) for x in hist[col].dropna().tolist()]
-                    break
-    except Exception as exc:
-        print(f"[openrlhf] could not fetch W&B history: {exc}")
-
-    last10 = float(np.mean(reward_trace[-10:])) if len(reward_trace) >= 10 else float(np.mean(reward_trace or [0]))
-    peak = float(max(reward_trace or [0]))
-    first5 = float(np.mean(reward_trace[:5])) if reward_trace else 0.0
-
-    wandb.log({
-        "final_peak": peak,
-        "final_last10": last10,
-        "first5_avg": first5,
-        "duration_s": duration,
-        "subprocess_exit": proc.returncode,
-    })
-    wandb.finish()
-
-    hf_repo_id = os.environ.get("HF_REPO_ID", f"arvindcr4/{run_name}")
-    try:
-        from transformers import AutoModelForCausalLM, AutoTokenizer
-        actor_path = f"{output_dir}/ckpt/_actor" if os.path.exists(f"{output_dir}/ckpt/_actor") else f"{output_dir}/ckpt"
-        if os.path.exists(actor_path):
-            print(f"Loading model from {actor_path} for push_to_hub...")
-            model = AutoModelForCausalLM.from_pretrained(actor_path, torch_dtype="auto")
-            tokenizer = AutoTokenizer.from_pretrained(actor_path)
-            model.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""))
-            tokenizer.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""))
-            print(f"Pushed model to HF: {hf_repo_id}")
-    except Exception as e:
-        print(f"HF push failed: {e}")
-
+    # A nonzero exit must never produce a successful result or publish a model.
+    subprocess.run(cmd, cwd=str(output), env=env, check=True)
     result = {
         "framework": "openrlhf",
         "mode": "real",
         "model": config.model_name,
         "algorithm": "GRPO",
-        "seed": 42,
-        "group_size": 8,
+        "seed": config.seed,
+        "group_size": config.algorithm.sample_num,
         "learning_rate": config.learning_rate,
-        "steps": len(reward_trace),
+        "steps": None,
+        "max_samples": config.max_samples,
+        "reward_trace": [],
+        "metrics_status": "not_collected",
         "task": "gsm8k-500",
-        "platform": "modal-h100",
-        "peak_reward": peak,
-        "last10_avg": last10,
-        "first5_avg": first5,
-        "reward_trace": reward_trace,
-        "duration_s": duration,
-        "subprocess_exit": proc.returncode,
+        "duration_s": time.time() - start,
+        "subprocess_exit": 0,
+        "config": config.to_dict(),
     }
-    with open(os.path.join(output_dir, "result.json"), "w") as f:
-        json.dump(result, f, indent=2)
+    (output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 
 

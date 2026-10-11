@@ -287,9 +287,9 @@ class UnifiedLauncher:
 
         Delegates to ``platform_modal/openrlhf/trainer.py:run_openrlhf_training``
         (subprocesses ``openrlhf.cli.train_ppo_ray`` with group-norm advantage)
-        when OpenRLHF + Ray + vLLM are installed; otherwise emits the documented
-        CLI command. The hosted-equivalent path is the MODAL backend
-        (``modal_grpo_openrlhf.py``).
+        when OpenRLHF + Ray + vLLM are installed. The native CLI currently
+        cannot enforce the canonical optimizer-step budget, so it rejects that
+        request before provider work. The historical Modal path is separate.
         """
         if self.algorithm != "grpo":
             raise ValueError("The OpenRLHF launcher currently supports only algorithm=grpo")
@@ -305,15 +305,30 @@ class UnifiedLauncher:
                 "`python -m openrlhf.cli.train_ppo_ray --advantage_estimator group_norm`."
             ) from exc
         config = OpenRLHFConfig(
-            model={"model_name": self.model or spec.model},
+            model={"model_name": self.model or spec.model, "lora_rank": spec.lora_rank},
             optimizer={"learning_rate": spec.learning_rate},
-            algorithm={"algorithm": "grpo", "kl_coef": spec.beta},
+            algorithm={
+                "algorithm": "grpo",
+                "kl_coef": spec.beta,
+                "sample_num": spec.num_generations,
+            },
+            data={"max_response_length": spec.max_completion_length},
+            train_batch_size=spec.per_device_train_batch_size,
             seed=spec.seed,
             max_steps=spec.training_steps,
         )
-        run_openrlhf_training(config, output_dir="./checkpoints/openrlhf")
+        result = run_openrlhf_training(config, output_dir="./checkpoints/openrlhf")
+        if result.get("steps") is None:
+            raise RuntimeError(
+                "OpenRLHF execution finished without verified optimizer-step metrics"
+            )
         return TrainingResult(
-            "openrlhf", config.model_name, self.algorithm, spec.training_steps, [], []
+            "openrlhf",
+            config.model_name,
+            self.algorithm,
+            result["steps"],
+            result.get("reward_trace", []),
+            [],
         )
 
     def _run_trl(self) -> TrainingResult:

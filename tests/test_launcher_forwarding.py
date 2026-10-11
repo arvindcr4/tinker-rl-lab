@@ -58,7 +58,9 @@ def test_openrlhf_driver_receives_typed_requested_configuration():
     package.__path__ = [str(ROOT / "platform_modal/openrlhf")]
     driver = types.ModuleType("platform_modal.openrlhf.trainer")
     captured = []
-    driver.run_openrlhf_training = lambda config, output_dir: captured.append(config)
+    driver.run_openrlhf_training = lambda config, output_dir: (
+        captured.append(config) or {"steps": 7}
+    )
     with patch.dict(sys.modules, {package.__name__: package, driver.__name__: driver}):
         item = launcher("openrlhf")
         result = item._run_openrlhf()
@@ -67,6 +69,11 @@ def test_openrlhf_driver_receives_typed_requested_configuration():
         assert config.learning_rate == item.spec.learning_rate
         assert config.algorithm.algorithm == "grpo"
         assert config.algorithm.kl_coef == item.spec.beta
+        assert config.algorithm.sample_num == item.spec.num_generations
+        assert config.model.lora_rank == item.spec.lora_rank
+        assert config.data.max_response_length == item.spec.max_completion_length
+        assert config.train_batch_size == item.spec.per_device_train_batch_size
+        assert result.final_step == 7
         assert config.seed == item.spec.seed
         assert config.max_steps == item.spec.training_steps
         assert config.to_dict()["model"]["model_name"] == item.model

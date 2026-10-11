@@ -1212,3 +1212,28 @@ passed **64 tests**. Full `make check submission-check`, including the CPU
 optimizer smoke cases documented next, passed **1,824 tests, 2 skipped**, native
 TeX included, at **85.90%** configured supported-surface coverage in 248.56
 seconds. Static/package/lock/docs/public/demo/submission checks passed, exit zero.
+
+## Real SDK and CPU optimizer/resume smoke (20:30 UTC)
+
+Four offline integration cases now execute the complete one-seed runner, the
+actual locked Tinker custom-loss bridge, and Torch Adam on tiny independent
+prompt/response categorical parameters. Only network transports, sampling,
+tracking and checkpoint publication are faked; socket connections are blocked.
+An independent direct objective (not production loss helpers or generated
+weights) predicts each gradient and final Adam-updated response parameter for
+GRPO, NLL-auxiliary, GSPO, and reversed GRPO rewards. Prompt parameters stay
+unchanged. Restoring the captured step-one actor/Adam state and local receipt
+then finishing the same budget matches uninterrupted execution.
+
+A separate uncommitted negative-control fixture intentionally discarded Adam
+history: NLL and GSPO resume comparisons failed, while constant-gradient GRPO
+controls passed. This confirms sensitivity to missing optimizer state where it
+changes this fixture's trajectory. The fixed balanced response batch always
+has reward 0.5; increasing the rewarded-token probability is a wiring assertion,
+not evidence of real-model quality improvement. `save_every=1` is explicit in
+this fixture and does not alter the production sampler-refresh default.
+
+A public-source Muse review supported the independent oracle and bounded scope.
+All four final smoke cases, the 64-test focused suite and the 1,824-test aggregate
+above passed. Run directly with `pytest -q tests/test_cpu_optimizer_smoke.py`.
+No provider model, paid job or new authentication grant was used.

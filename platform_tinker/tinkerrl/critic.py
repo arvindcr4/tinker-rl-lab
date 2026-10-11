@@ -81,7 +81,9 @@ def train_critic_step(
     """Fit the critic toward Monte-Carlo returns; return mean half-MSE loss.
 
     Empty batches are a no-op returning ``0.0`` (degenerate steps still
-    reach here when every group is filtered).
+    reach here when every group is filtered). Nonfinite targets, loss or
+    gradients raise before that critic optimizer update; earlier iterations
+    are not rolled back.
     """
     if not batch_ids or steps <= 0:
         return 0.0
@@ -91,12 +93,22 @@ def train_critic_step(
             f"got {len(targets)} targets for {len(batch_ids)} prompts"
         )
     targets_t = torch.tensor(list(targets), dtype=torch.float32)
+    if not torch.isfinite(targets_t).all():
+        raise ValueError("critic targets must be finite and representable as float32")
     total = 0.0
     for _ in range(steps):
         optimizer.zero_grad()
         pred = critic(batch_ids)
         loss = value_loss_mse(pred, targets_t.to(pred.device))
+        if not torch.isfinite(loss):
+            raise ValueError("critic loss must be finite; refusing optimizer update")
         loss.backward()
+        if any(
+            parameter.grad is not None and not torch.isfinite(parameter.grad).all()
+            for parameter in critic.parameters()
+        ):
+            optimizer.zero_grad(set_to_none=True)
+            raise ValueError("critic gradients must be finite; refusing optimizer update")
         optimizer.step()
         total += loss.item()
     return total / steps

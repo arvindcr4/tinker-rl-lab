@@ -974,3 +974,34 @@ package, lock, docs, public/demo and submission checks passed, aggregate exit
 zero. These are CPU/fake-transport checks, not provider training or evidence of
 improved model quality. The two proposed scorer/sampler-refresh default changes
 remain unimplemented pending approval.
+
+## CPU critic update guards (19:28 UTC)
+
+Real CPU Adam reproductions showed that target `1e20` produced infinite
+float32 half-MSE while still updating, and a NaN target poisoned parameters
+and Adam state. Critic training now rejects nonfinite/unrepresentable float32
+targets, nonfinite loss before backward, and nonfinite gradients before Adam.
+Rejected gradients are cleared. Ordinary arithmetic and empty-batch behavior
+are unchanged; no reward clamping, objective change or update reordering was
+introduced. Five failing regressions now pass, alongside an exact two-update
+comparison against the previous finite-input arithmetic.
+
+An end-to-end mocked training regression confirms that critic overflow cannot
+write a successful completion receipt or critic sidecar. The actor update still
+precedes critic fitting and is not rolled back; this guard prevents an invalid
+critic update and false completion, not every possible earlier actor update.
+Seven focused integrity cases passed; the broader critic/training suite passed
+224 tests with one hardware skip before the final integration case was added.
+Muse's completed public-source review supported finite target/loss/gradient
+gates. Its suggested silent skipping/nonfinite diagnostic returns were not
+adopted. Its blanket claim that the finite `1e20` example necessarily produces
+infinite gradients was not supported by the CPU reproduction: loss overflow
+alone is sufficient to reject it.
+
+Full validation passed **1,744 tests, 2 skipped**, including native TeX, at
+**85.69%** configured supported-surface coverage in 268.67 seconds. Static,
+package, lock, docs, public/demo and submission checks passed, aggregate exit
+zero. All critic experiments used synthetic local CPU data and no providers.
+A separate follow-up is checking finite model/optimizer checkpoint state;
+these pre-update checks alone do not repair pre-existing poisoned Adam state
+or guarantee that every finite-gradient optimizer update remains finite.

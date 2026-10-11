@@ -29,9 +29,11 @@ import stat
 import subprocess
 import sys
 import tempfile
+from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import MISSING, asdict, dataclass, field, fields, replace
 from decimal import Context, Decimal, InvalidOperation, ROUND_FLOOR, ROUND_HALF_EVEN, localcontext
+from numbers import Real
 from pathlib import Path
 from typing import (
     Any,
@@ -1256,6 +1258,22 @@ def _metric(result: Any, names: Sequence[str], default: float = float("nan")) ->
     return default
 
 
+def _training_result_loss(result: Any) -> float:
+    """Require a trustworthy scalar loss before applying provider gradients."""
+    error = "training result must contain a finite numeric loss; refusing optimizer update"
+    if not isinstance(getattr(result, "metrics", None), Mapping):
+        raise ValueError(error)
+    value = _metric(result, ["grpo_loss", "gspo_loss", "loss"])
+    if isinstance(value, bool) or not isinstance(value, Real):
+        raise ValueError(error)
+    try:
+        if not math.isfinite(value):
+            raise ValueError(error)
+        return float(value)
+    except OverflowError as exc:
+        raise ValueError(error) from exc
+
+
 def _checkpoint_path(config: GRPOConfig, seed: int) -> Path:
     safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "-", config.name).strip("-")
     return Path(config.checkpoint_dir) / f"{safe_name}_seed{seed}.json"
@@ -2400,6 +2418,7 @@ def _run_one_seed(
                         loss_fn=loss_fn,
                         loss_type_input="logprobs",
                     ).result()
+                    loss_val = _training_result_loss(train_result)
                     tc.optim_step(adam_params).result()
             else:
                 if config.nll_aux_enabled:
@@ -2416,6 +2435,7 @@ def _run_one_seed(
                     loss_fn=loss_fn,
                     loss_type_input="logprobs",
                 ).result()
+                loss_val = _training_result_loss(train_result)
                 tc.optim_step(adam_params).result()
 
             critic_loss = 0.0
@@ -2429,7 +2449,6 @@ def _run_one_seed(
                 )
 
             step_rewards.append(avg)
-            loss_val = _metric(train_result, ["grpo_loss", "gspo_loss", "loss"])
             if abs(loss_val) < 1e-6:
                 zero_loss_steps += 1
             if avg == 0:

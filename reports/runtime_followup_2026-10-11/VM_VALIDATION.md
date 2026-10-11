@@ -945,3 +945,32 @@ package, lock, docs, public/demo and submission checks passed, aggregate exit
 zero. No provider training or historical regrading was performed. GitHub's
 engineering checks for the preceding published `13f856ad` commit all completed
 successfully; the existing scientific `minreport-audit` gate remains red.
+
+## Validate training loss before optimizer updates (19:20 UTC)
+
+A mocked forward/backward response with an empty metrics object still triggered
+an optimizer step, logged a NaN loss and wrote a successful completion receipt.
+Both GRPO and every GSPO epoch now require a finite real scalar loss before
+calling the policy optimizer. Existing `grpo_loss`, `gspo_loss` and `loss`
+aliases, including valid signed zero, retain their behavior. Missing/non-mapping
+metrics, absent losses, NaN/Infinity, booleans, numeric strings, non-scalars and
+unrepresentable integers fail the run without applying that epoch's optimizer
+update or emitting successful step/completion records. Previously completed
+GSPO epochs are not rolled back; a later invalid epoch aborts further work.
+The validated scalar is captured before the optimizer callback so later mutation
+of the returned metrics object cannot change the logged loss.
+
+Seventeen failure regressions failed before the gate (three valid-zero controls
+already passed). The expanded focused file now passes **23 cases**, and the
+broader training/SDK suite passed **248 cases** before the final three additions.
+Muse's completed public-source review confirmed the unconditional optimizer
+problem. Its suggestions to silently continue/skip or log raw metric payloads
+were rejected: this implementation raises a bounded error and does not publish
+untrusted payloads or declare a partial run successful.
+
+Full validation passed **1,737 tests, 2 skipped**, including native TeX, at
+**85.67%** configured supported-surface coverage in 250.73 seconds. Static,
+package, lock, docs, public/demo and submission checks passed, aggregate exit
+zero. These are CPU/fake-transport checks, not provider training or evidence of
+improved model quality. The two proposed scorer/sampler-refresh default changes
+remain unimplemented pending approval.

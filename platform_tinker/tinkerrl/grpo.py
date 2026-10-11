@@ -48,7 +48,12 @@ from typing import (
 
 import torch
 
-from .critic import PromptValueCritic, explained_variance, train_critic_step
+from .critic import (
+    PromptValueCritic,
+    explained_variance,
+    require_finite_critic_state,
+    train_critic_step,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -1336,6 +1341,7 @@ def _save_critic(
         "config_sha256": _critic_config_hash(config, seed),
     }
     payload["optimizer"] = optimizer.state_dict()
+    require_finite_critic_state(payload["model"], payload["optimizer"])
     buffer = io.BytesIO()
     torch.save(payload, buffer)
     data = buffer.getvalue()
@@ -1398,6 +1404,7 @@ def _load_critic_checkpoint(
         )
     if bound and payload.get("config_sha256") != _critic_config_hash(config, seed):
         raise RuntimeError("critic checkpoint configuration binding does not match")
+    require_finite_critic_state(payload["model"], payload["optimizer"])
     return payload
 
 

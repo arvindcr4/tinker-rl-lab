@@ -11,8 +11,10 @@ trajectory-level counterparts, kept for future token-level use.
 
 from __future__ import annotations
 
+import math
 import statistics
-from typing import List, Sequence, Tuple
+from collections.abc import Mapping
+from typing import Any, List, Sequence, Tuple
 
 import torch
 
@@ -71,6 +73,23 @@ class PromptValueCritic(torch.nn.Module):
         return self.mlp(torch.cat([pooled, length_feat], dim=1)).squeeze(1)
 
 
+def require_finite_critic_state(*states: Any) -> None:
+    """Reject nonfinite tensors/scalars without modifying a nested state tree."""
+    pending = list(states)
+    visited = set()
+    while pending:
+        value = pending.pop()
+        if isinstance(value, torch.Tensor):
+            if not torch.isfinite(value).all():
+                raise ValueError("critic state must be finite")
+        elif isinstance(value, float):
+            if not math.isfinite(value):
+                raise ValueError("critic state must be finite")
+        elif isinstance(value, (Mapping, list, tuple)) and id(value) not in visited:
+            visited.add(id(value))
+            pending.extend(value.values() if isinstance(value, Mapping) else value)
+
+
 def train_critic_step(
     critic: PromptValueCritic,
     optimizer: torch.optim.Optimizer,
@@ -83,7 +102,8 @@ def train_critic_step(
     Empty batches are a no-op returning ``0.0`` (degenerate steps still
     reach here when every group is filtered). Nonfinite targets, loss or
     gradients raise before that critic optimizer update; earlier iterations
-    are not rolled back.
+    are not rolled back. Model/optimizer state is checked before training and
+    after each update; post-update detection raises without rollback.
     """
     if not batch_ids or steps <= 0:
         return 0.0
@@ -92,6 +112,7 @@ def train_critic_step(
             "critic targets must pair 1:1 with prompts, "
             f"got {len(targets)} targets for {len(batch_ids)} prompts"
         )
+    require_finite_critic_state(critic.state_dict(), optimizer.state_dict())
     targets_t = torch.tensor(list(targets), dtype=torch.float32)
     if not torch.isfinite(targets_t).all():
         raise ValueError("critic targets must be finite and representable as float32")
@@ -110,6 +131,7 @@ def train_critic_step(
             optimizer.zero_grad(set_to_none=True)
             raise ValueError("critic gradients must be finite; refusing optimizer update")
         optimizer.step()
+        require_finite_critic_state(critic.state_dict(), optimizer.state_dict())
         total += loss.item()
     return total / steps
 

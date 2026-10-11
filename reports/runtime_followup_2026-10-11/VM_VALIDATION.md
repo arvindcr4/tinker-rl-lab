@@ -1005,3 +1005,33 @@ zero. All critic experiments used synthetic local CPU data and no providers.
 A separate follow-up is checking finite model/optimizer checkpoint state;
 these pre-update checks alone do not repair pre-existing poisoned Adam state
 or guarantee that every finite-gradient optimizer update remains finite.
+
+## Finite critic state at persistence and update boundaries (19:35 UTC)
+
+A synthetic Adam state containing Infinity was successfully serialized,
+SHA-256-bound and reloaded by the previous implementation. Byte integrity does
+not establish numerical validity. A shared, non-mutating finite-state check
+now covers nested model/optimizer tensors and floating scalars before critic
+training, after each critic optimizer step, before serialization and after
+hash/config/step verification on load. The iterative walker tolerates shared
+or cyclic containers without recursion. Invalid saved artifacts are preserved
+for diagnosis; invalid new state cannot be published as a critic sidecar.
+
+Eight regressions failed before the change and now pass: model/Adam corruption
+at save, bound and legacy load, pre-existing poisoned state, and state poisoned
+by an optimizer callback. The last test explicitly establishes post-step
+detection: the completed update is not rolled back, but no later iteration
+runs. A ninth case covers nested scalar state and container aliasing. All 16
+critic integrity cases pass; the broader critic/training suite passed 233 tests
+with one hardware skip before that ninth state case was added. A completed
+Muse review of public save/load/training code independently identified these
+boundaries and the no-rollback limitation.
+
+Full validation passed **1,753 tests, 2 skipped**, including native TeX, at
+**85.74%** configured supported-surface coverage in 254.03 seconds. Static,
+package, lock, docs, public/demo and submission checks passed, aggregate exit
+zero. These guards do not repair poisoned state, prove optimizer quality, or
+provide cross-provider rollback; failures require restoring a valid checkpoint.
+All experiments were local synthetic CPU checks. The preceding published
+`f059d9ad` commit's engineering CI finished successfully; the scientific
+`minreport-audit` gate remains the sole known CI failure.

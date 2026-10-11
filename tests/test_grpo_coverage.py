@@ -27,7 +27,7 @@ from platform_tinker.tinkerrl.grpo import (
     StrictToolCallReward,
 )
 from platform_tinker.tinkerrl.grpo_cli import _build_dataset, _parse_args, build_config
-from tests._shared_fakes import HfApi, _Future, _Tokenizer, _config, _example
+from tests._shared_fakes import HfApi, _Future, _Tokenizer, _config, _example, mocked_tinker_export
 
 
 def _dataset(*examples, test=()):
@@ -160,18 +160,8 @@ def _runtime(monkeypatch, *, metrics=None, sample_fn=None, install_transformers=
         transformers.AutoTokenizer = AutoTokenizer
         modules["transformers"] = transformers
 
-    real_run = grpo.subprocess.run
-
-    def run_without_provider_export(command, *args, **kwargs):
-        if isinstance(command, list) and command[1:3] == ["-m", "tinker.cli"]:
-            return SimpleNamespace(returncode=0)
-        # subprocess is a shared module: keep unrelated local library probes
-        # (e.g. Matplotlib's fontconfig discovery) working in isolated runs.
-        return real_run(command, *args, **kwargs)
-
-    with patch.dict(sys.modules, modules, clear=False):
-        with patch.object(grpo.subprocess, "run", side_effect=run_without_provider_export):
-            yield holder
+    with patch.dict(sys.modules, modules, clear=False), mocked_tinker_export():
+        yield holder
 
 
 def test_pending_suite_receipt_is_unfrozen():

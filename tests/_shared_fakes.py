@@ -17,11 +17,29 @@ importing this module never adds import-time dependencies to a consumer.
 from __future__ import annotations
 
 import importlib.util
+import contextlib
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
+
+
+@contextlib.contextmanager
+def mocked_tinker_export():
+    """Stub provider export, preserving unrelated local subprocess probes."""
+    real_run = subprocess.run
+
+    def without_export(command, *args, **kwargs):
+        if isinstance(command, list) and command[:3] == [sys.executable, "-m", "tinker.cli"]:
+            return SimpleNamespace(returncode=0)
+        return real_run(command, *args, **kwargs)
+
+    with patch.object(subprocess, "run", side_effect=without_export) as mocked:
+        yield mocked
+
 
 __all__ = [
     "HfApi",
@@ -33,6 +51,7 @@ __all__ = [
     "fast_settings",
     "load_module",
     "make_fake_run",
+    "mocked_tinker_export",
 ]
 
 

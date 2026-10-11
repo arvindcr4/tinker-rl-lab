@@ -461,8 +461,11 @@ class GRPOConfig:
             raise ValueError("dynamic_sampling_max_resamples must be >= 0")
         if self.gspo_update_epochs < 1:
             raise ValueError("gspo_update_epochs must be >= 1")
-        if self.gspo_epsilon_low < 0 or self.gspo_epsilon_high < 0:
-            raise ValueError("gspo clip epsilons must be >= 0")
+        if any(
+            not math.isfinite(value) or value < 0
+            for value in (self.gspo_epsilon_low, self.gspo_epsilon_high)
+        ):
+            raise ValueError("gspo clip epsilons must be finite and >= 0")
         if self.gspo_enabled and self.nll_aux_enabled:
             raise ValueError("gspo_enabled and nll_aux_enabled are mutually exclusive")
         if self.critic_lr <= 0:
@@ -823,15 +826,25 @@ def make_grpo_loss_fn(
     prompt tokens were previously inside the sum).
     """
 
+    advantages = tuple(advantages)
+    if not all(math.isfinite(value) for value in advantages):
+        raise ValueError("advantages must be finite")
+    if not math.isfinite(nll_coef):
+        raise ValueError("nll_coef must be finite")
+
     def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:
-        if nll_mask is not None and len(nll_mask) != len(logprobs_list):
+        resp_logprobs = _response_logprobs(logprobs_list, response_lens)
+        if len(advantages) != len(resp_logprobs):
+            raise ValueError("advantages must pair 1:1 with logprobs")
+        if nll_mask is not None and len(nll_mask) != len(resp_logprobs):
             raise ValueError(
                 "nll_mask must pair 1:1 with logprobs, got "
-                f"{len(nll_mask)} flags for {len(logprobs_list)} responses"
+                f"{len(nll_mask)} flags for {len(resp_logprobs)} responses"
             )
-        resp_logprobs = _response_logprobs(logprobs_list, response_lens)
         losses = []
         for i, logprobs in enumerate(resp_logprobs):
+            if not torch.isfinite(logprobs).all():
+                raise ValueError("response logprobs must be finite")
             losses.append(-advantages[i] * logprobs.sum())
         if not losses:
             return torch.tensor(0.0), {"grpo_loss": 0.0, "nll_loss": 0.0}
@@ -846,6 +859,8 @@ def make_grpo_loss_fn(
             if masked:
                 nll_loss = -torch.stack(masked).mean()
                 loss = loss + nll_coef * nll_loss
+        if not torch.isfinite(loss):
+            raise ValueError("GRPO objective is non-finite; refusing an invalid update")
         # grpo_loss stays the optimized total (as before); nll_loss exposes
         # the auxiliary component for tracking.
         return loss, {"grpo_loss": loss.item(), "nll_loss": nll_loss.item()}
@@ -882,6 +897,14 @@ def make_gspo_loss_fn(
     s_i == 1 and the clip never fired at the default 1 epoch).
     """
 
+    advantages = tuple(advantages)
+    if not all(math.isfinite(value) for value in advantages):
+        raise ValueError("advantages must be finite")
+    if any(not math.isfinite(value) or value < 0 for value in (epsilon_low, epsilon_high)):
+        raise ValueError("GSPO clip epsilons must be finite and nonnegative")
+    log_low = math.log1p(-epsilon_low) if epsilon_low < 1 else -math.inf
+    log_high = math.log1p(epsilon_high)
+
     def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:
         logprobs_list = _response_logprobs(logprobs_list, response_lens)
         if len(advantages) != len(logprobs_list):
@@ -894,8 +917,6 @@ def make_gspo_loss_fn(
                 "old_logprobs must pair 1:1 with logprobs, got "
                 f"{len(old_logprobs)} for {len(logprobs_list)} responses"
             )
-        if stash is not None and not stash:
-            stash.extend(lp.detach().clone() for lp in logprobs_list)
         if not logprobs_list:
             return torch.tensor(0.0), {"gspo_loss": 0.0, "gspo_clip_frac": 0.0}
         terms = []
@@ -903,25 +924,44 @@ def make_gspo_loss_fn(
         for i, logprobs in enumerate(logprobs_list):
             if logprobs.numel() == 0:
                 raise ValueError(f"sequence {i} has no token logprobs")
+            if not torch.isfinite(logprobs).all():
+                raise ValueError("response logprobs must be finite")
             if old_logprobs is None:
                 # First epoch: ratio is exactly 1, but keep it a function
                 # of logprobs so gradients flow (length-normalized PG).
-                ratio = torch.exp((logprobs - logprobs.detach()).mean())
+                log_ratio = (logprobs - logprobs.detach()).mean()
             else:
-                old = torch.as_tensor(old_logprobs[i], dtype=logprobs.dtype)
+                old = torch.as_tensor(
+                    old_logprobs[i], dtype=logprobs.dtype, device=logprobs.device
+                ).detach()
                 if logprobs.shape != old.shape:
                     raise ValueError(
                         "old_logprobs must match new logprobs token-for-token, "
                         f"got {tuple(old.shape)} vs {tuple(logprobs.shape)} on sequence {i}"
                     )
-                ratio = torch.exp((logprobs - old).mean())
-            unclipped = ratio * advantages[i]
-            clipped_ratio = torch.clamp(ratio, 1.0 - epsilon_low, 1.0 + epsilon_high)
-            clipped_term = clipped_ratio * advantages[i]
-            if not torch.equal(clipped_ratio, ratio):
+                if not torch.isfinite(old).all():
+                    raise ValueError("behavior logprobs must be finite")
+                log_ratio = (logprobs - old).mean()
+            if not torch.isfinite(log_ratio):
+                raise ValueError("GSPO log ratio is non-finite; refusing an invalid update")
+            if log_ratio < log_low or log_ratio > log_high:
                 clipped += 1
-            terms.append(torch.min(unclipped, clipped_term))
+            # Select the min-objective branch *before* exponentiating.
+            # exp(large) in an unused branch still causes 0 * inf = NaN
+            # during backward, even when its clipped loss is finite.
+            advantage = advantages[i]
+            if advantage == 0:
+                term = log_ratio * 0.0
+            elif advantage > 0:
+                term = torch.exp(torch.clamp(log_ratio, max=log_high)) * advantage
+            else:
+                term = torch.exp(torch.clamp(log_ratio, min=log_low)) * advantage
+            terms.append(term)
         loss = -torch.stack(terms).mean()
+        if not torch.isfinite(loss):
+            raise ValueError("GSPO objective is non-finite; refusing an invalid update")
+        if stash is not None and not stash:
+            stash.extend(lp.detach().clone() for lp in logprobs_list)
         return loss, {
             "gspo_loss": loss.item(),
             "gspo_clip_frac": clipped / len(logprobs_list),

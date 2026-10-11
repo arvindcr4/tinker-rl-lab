@@ -262,3 +262,35 @@ native LaTeX tests deselected; 84.80% coverage**, 131.82 seconds. Repository
 lint/format/type checks, wheel/lock validation, documentation/public-release
 checks, selected thesis arithmetic, and offline demo all passed. The immediately
 preceding full native checkpoint remains recorded above.
+
+## Policy-loss numerical stability
+
+A synthetic GSPO case with new log-probability -1 and behavior log-probability
+-1000 produced a finite clipped objective but NaN gradients: the unused
+exponential overflowed, and backward multiplied zero by infinity. The loss now
+selects the mathematically active clipped branch in log-ratio space before
+exponentiation. Positive clipping and zero advantages remain finite with zero
+gradient in that case. Negative-advantage overflow is not incorrectly clipped
+into a finite objective: it raises before an optimizer update. Behavior-policy
+reference tensors are detached and moved to the current log-probability device.
+No GPU execution was used to validate this change.
+
+A float32/float64 oracle compares both values and gradients to the direct finite
+objective for positive, negative, and zero advantages in every clipping region.
+Deep-underflow cases, the disabled lower-bound convention for epsilon >= 1,
+nonfinite inputs, reference detachment, and invalid advantage cardinality are
+also covered. GRPO now rejects mismatched advantage counts rather than silently
+using a prefix, and both kernels reject nonfinite objectives. GSPO clipping
+configuration rejects nonfinite values before provider setup. Failed GSPO calls
+do not populate the optional reference stash.
+
+The fake-runtime integration uses the actual loss closure and a deliberately
+stale sampler: an unbounded negative-advantage objective stops before backward
+or any optimizer call, with no success receipt. This is an arithmetic and
+failure-handling correction, not measured evidence of improved training reward.
+Public-source Muse analysis helped check the signed clipping derivation; its
+suggestion to allow nonfinite loss propagation was not adopted.
+
+Full native `make check` on the policy-loss batch passed: **1,554 tests passed,
+one expected non-CPU skip, no deselections; 84.94% coverage**, 251.55 seconds.
+Both native LaTeX tests and all aggregate quality/package/public gates passed.

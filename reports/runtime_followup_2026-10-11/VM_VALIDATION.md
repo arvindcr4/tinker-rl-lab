@@ -737,3 +737,41 @@ TeX, 85.34% configured supported-surface coverage, in 267.54 seconds. Static,
 package, lock, docs, public/demo and submission checks passed. The test count
 is unchanged: existing input-contract tests now require the immutable revision
 and explicit anonymous loading.
+
+## Stable advantages when finite reward moments exceed binary64
+
+CPU reproductions found that group and global normalization raised overflow for
+finite rewards `[1e200, -1e200]` and `[1e308, 9e307]`, despite representable
+standardized answers. Squared deviations can also underflow to zero, and a
+centered value or `std + epsilon` may overflow even when their ratio is finite.
+Fourteen new adversarial regressions failed before the fix; the ordinary-input
+bit-identity regression already passed.
+
+Ordinary binary64 arithmetic remains unchanged. Only failed/nonfinite moments,
+underflowed nonzero variance, or nonfinite outputs enter a high-precision
+Decimal fallback. Its private context retains tiny contributions between
+cancelling extreme finite floats and is independent of the caller's Decimal
+settings. Epsilon placement, tied-group zeros, global exclusion basis and
+unbiased centering semantics are preserved. Genuinely unrepresentable output
+advantages raise a clear `ValueError`; they are never clamped or propagated as
+NaN/Infinity into the update path.
+
+A Muse review of public `a105cb6f` confirmed the intermediate-overflow causes.
+Its suggestion to propagate nonfinite centered values was rejected: a centered
+value may exceed binary64 while the standardized result remains representable.
+The regression using opposite maximum floats covers that distinction. A
+high-precision fallback was chosen instead of a hand-written scaled arithmetic
+path with additional cancellation/division corner cases.
+
+All **169 focused normalization, advantage-property and GRPO module tests**
+passed. This includes exact equality with the previous ordinary-input floating
+arithmetic over 50 deterministic vectors, exclusion cases, genuine output
+nonrepresentability, subnormal-scale variance, and preserved tiny terms after
+extreme cancellation. Reward extraction/scoring policy remains unchanged.
+
+Full validation passed: **1,657 passed, 2 skipped**, including native TeX,
+85.42% configured supported-surface coverage, in 251.93 seconds. All static,
+package, lock, docs, public/demo and submission checks passed. A small local
+smoke timing measured about 2.6 microseconds per ordinary four-reward call and
+0.91 milliseconds per exceptional two-reward fallback call in this VM; this
+is a local diagnostic, not a general performance claim.

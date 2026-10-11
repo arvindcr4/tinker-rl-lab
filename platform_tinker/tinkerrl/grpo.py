@@ -30,7 +30,7 @@ import subprocess
 import sys
 import tempfile
 from dataclasses import MISSING, asdict, dataclass, field, fields, replace
-from decimal import Context, Decimal, InvalidOperation, ROUND_FLOOR
+from decimal import Context, Decimal, InvalidOperation, ROUND_FLOOR, ROUND_HALF_EVEN, localcontext
 from pathlib import Path
 from typing import (
     Any,
@@ -670,6 +670,36 @@ class RewardAdapter(Protocol):
 # ---------------------------------------------------------------------------
 
 
+def _normalize_extreme_rewards(
+    rewards: Sequence[float], basis: Sequence[float], epsilon: float, unbiased: bool
+) -> List[float]:
+    """Rare fallback when binary64 moments fail, without clamping advantages."""
+    # Exact finite binary64 values span fewer than 1,400 decimal positions.
+    # Preserve even tiny terms between cancelling extreme values; a usual
+    # 28/80-digit Decimal context would lose those terms before centering.
+    context = Context(
+        prec=1600 + len(str(len(basis))),
+        rounding=ROUND_HALF_EVEN,
+        Emin=-999999,
+        Emax=999999,
+    )
+    with localcontext(context):
+        reference = [Decimal.from_float(float(value)) for value in basis]
+        mean = sum(reference, Decimal(0)) / len(reference)
+        centered = [Decimal.from_float(float(value)) - mean for value in rewards]
+        if unbiased:
+            result = [float(value) for value in centered]
+        else:
+            variance = sum(((value - mean) ** 2 for value in reference), Decimal(0)) / len(
+                reference
+            )
+            denominator = variance.sqrt() + Decimal.from_float(float(epsilon))
+            result = [float(value / denominator) for value in centered]
+    if not all(math.isfinite(value) for value in result):
+        raise ValueError("advantages cannot be represented as finite floats")
+    return result
+
+
 def normalize_rewards(
     rewards: Sequence[float], epsilon: float = 1e-8, unbiased: bool = False
 ) -> List[float]:
@@ -693,11 +723,22 @@ def normalize_rewards(
     # whose naive sum/mean can otherwise introduce an epsilon-amplified residue.
     if all(r == rewards[0] for r in rewards):
         return [0.0] * n
-    mean_r = math.fsum(rewards) / n
-    if unbiased:
-        return [r - mean_r for r in rewards]
-    std_r = (sum((r - mean_r) ** 2 for r in rewards) / n) ** 0.5 + epsilon
-    return [(r - mean_r) / std_r for r in rewards]
+    try:
+        mean_r = math.fsum(rewards) / n
+        centered = [r - mean_r for r in rewards]
+        if unbiased:
+            if all(math.isfinite(value) for value in centered):
+                return centered
+        else:
+            variance = sum((r - mean_r) ** 2 for r in rewards) / n
+            std_r = variance**0.5 + epsilon
+            if math.isfinite(std_r) and (variance != 0 or not any(centered)):
+                result = [(r - mean_r) / std_r for r in rewards]
+                if all(math.isfinite(value) for value in result):
+                    return result
+    except OverflowError:
+        pass
+    return _normalize_extreme_rewards(rewards, rewards, epsilon, unbiased)
 
 
 def is_degenerate_group(rewards: Sequence[float], epsilon: float = 1e-8) -> bool:
@@ -761,13 +802,22 @@ def normalize_advantages_global(
             raise ValueError(f"exclude must pair 1:1 with rewards, got {len(exclude)} for {n}")
         basis_idx = [i for i, drop in enumerate(exclude) if not drop]
     basis = [rewards[i] for i in basis_idx] or list(rewards)
-    mean_b = basis[0] if all(r == basis[0] for r in basis) else math.fsum(basis) / len(basis)
-    centered = [r - mean_b for r in rewards]
-    if unbiased:
-        return centered
-    var_b = sum((r - mean_b) ** 2 for r in basis) / len(basis)
-    std_b = var_b**0.5 + epsilon
-    return [c / std_b for c in centered]
+    try:
+        mean_b = basis[0] if all(r == basis[0] for r in basis) else math.fsum(basis) / len(basis)
+        centered = [r - mean_b for r in rewards]
+        if unbiased:
+            if all(math.isfinite(value) for value in centered):
+                return centered
+        else:
+            var_b = sum((r - mean_b) ** 2 for r in basis) / len(basis)
+            std_b = var_b**0.5 + epsilon
+            if math.isfinite(std_b) and (var_b != 0 or all(r == mean_b for r in basis)):
+                result = [c / std_b for c in centered]
+                if all(math.isfinite(value) for value in result):
+                    return result
+    except OverflowError:
+        pass
+    return _normalize_extreme_rewards(rewards, basis, epsilon, unbiased)
 
 
 def _nll_mask_for_group(

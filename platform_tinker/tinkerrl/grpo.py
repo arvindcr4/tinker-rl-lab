@@ -25,6 +25,7 @@ import math
 import os
 import random
 import re
+import stat
 import subprocess
 import sys
 import tempfile
@@ -1191,6 +1192,25 @@ def _critic_config_hash(config: GRPOConfig, seed: int) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _read_regular_critic_bytes(path: Path) -> bytes:
+    """Pin a nonsymlink regular-file descriptor before reading its snapshot."""
+    if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_NONBLOCK"):
+        raise RuntimeError("secure critic loading requires O_NOFOLLOW and O_NONBLOCK support")
+    try:
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError as exc:
+        raise RuntimeError(
+            "critic checkpoint must be a readable regular file, not a symbolic link"
+        ) from exc
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise RuntimeError("critic checkpoint must be a regular file")
+        with os.fdopen(descriptor, "rb", closefd=False) as stream:
+            return stream.read()
+    finally:
+        os.close(descriptor)
+
+
 def _save_critic(
     config: GRPOConfig,
     seed: int,
@@ -1206,13 +1226,14 @@ def _save_critic(
     the previous receipt and its sidecar intact; unreferenced files are ignored.
     This provides process-interruption safety, not a cross-provider transaction.
     """
+    if optimizer is None:
+        raise ValueError("critic checkpoint requires optimizer state")
     payload: Dict[str, Any] = {
         "model": critic.state_dict(),
         "step": step,
         "config_sha256": _critic_config_hash(config, seed),
     }
-    if optimizer is not None:
-        payload["optimizer"] = optimizer.state_dict()
+    payload["optimizer"] = optimizer.state_dict()
     buffer = io.BytesIO()
     torch.save(payload, buffer)
     data = buffer.getvalue()
@@ -1229,7 +1250,11 @@ def _save_critic(
         try:
             os.link(temporary, path)
         except FileExistsError as exc:
-            if path.is_symlink() or not path.is_file() or path.read_bytes() != data:
+            try:
+                identical = _read_regular_critic_bytes(path) == data
+            except (OSError, RuntimeError):
+                identical = False
+            if not identical:
                 raise RuntimeError(
                     "existing content-addressed critic artifact is inconsistent"
                 ) from exc
@@ -1252,9 +1277,7 @@ def _load_critic_checkpoint(
         raise RuntimeError(
             f"[{config.name}] resume at step {resume_step} has no critic state at {critic_path}"
         )
-    if critic_path.is_symlink() or not critic_path.is_file():
-        raise RuntimeError("critic checkpoint must be a regular file, not a symbolic link")
-    data = critic_path.read_bytes()
+    data = _read_regular_critic_bytes(critic_path)
     if bound and hashlib.sha256(data).hexdigest() != digest:
         raise RuntimeError("critic checkpoint SHA-256 mismatch; artifact is preserved")
     # Hash and deserialize the same snapshot, never reopen a changed file.

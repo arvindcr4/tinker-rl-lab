@@ -138,3 +138,64 @@ def test_nonregular_artifacts_are_rejected_without_opening(saved, kind):
     ):
         grpo._load_critic_checkpoint(config, config.seed, 1, {"critic_state_sha256": digest})
     read.assert_not_called()
+
+
+def test_symlink_swap_at_open_cannot_redirect_legacy_restore(saved):
+    config, _, _, _, source = saved
+    legacy = grpo._critic_checkpoint_path(config, config.seed)
+    legacy.write_bytes(source.read_bytes())
+    real_open = os.open
+
+    def swap_before_open(path, flags, *args, **kwargs):
+        if Path(path) == legacy:
+            legacy.unlink()
+            legacy.symlink_to(source)
+        return real_open(path, flags, *args, **kwargs)
+
+    with (
+        patch.object(os, "open", side_effect=swap_before_open),
+        patch.object(torch, "load") as deserialize,
+        pytest.raises(RuntimeError, match="regular file"),
+    ):
+        grpo._load_critic_checkpoint(config, config.seed, 1, {})
+    deserialize.assert_not_called()
+
+
+def test_open_descriptor_pins_snapshot_after_path_is_replaced(saved):
+    config, _, _, digest, path = saved
+    replacement = path.with_name("replacement-fixture.pt")
+    replacement.write_bytes(b"not the committed checkpoint")
+    real_open = os.open
+
+    def swap_after_open(candidate, flags, *args, **kwargs):
+        descriptor = real_open(candidate, flags, *args, **kwargs)
+        if Path(candidate) == path:
+            path.unlink()
+            path.symlink_to(replacement)
+        return descriptor
+
+    with patch.object(os, "open", side_effect=swap_after_open):
+        payload = grpo._load_critic_checkpoint(
+            config, config.seed, 1, {"critic_state_sha256": digest}
+        )
+    assert payload["step"] == 1
+    with pytest.raises(RuntimeError, match="regular file"):
+        grpo._load_critic_checkpoint(config, config.seed, 1, {"critic_state_sha256": digest})
+
+
+def test_checkpoint_save_without_optimizer_fails_before_publication(tmp_path):
+    output = tmp_path / "not-created"
+    config = grpo.GRPOConfig(name="no-optimizer", checkpoint_dir=str(output))
+    critic = grpo.PromptValueCritic(hidden_dim=4)
+    with pytest.raises(ValueError, match="requires optimizer state"):
+        grpo._save_critic(config, config.seed, critic, step=1)
+    assert not output.exists()
+
+
+def test_secure_reader_fails_closed_without_nofollow_support(saved, monkeypatch):
+    _, _, _, _, path = saved
+    monkeypatch.delattr(os, "O_NOFOLLOW")
+    with patch.object(os, "open") as opening:
+        with pytest.raises(RuntimeError, match="requires O_NOFOLLOW"):
+            grpo._read_regular_critic_bytes(path)
+    opening.assert_not_called()

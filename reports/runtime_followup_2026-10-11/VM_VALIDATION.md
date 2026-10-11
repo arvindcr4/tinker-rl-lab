@@ -401,3 +401,30 @@ formatting, configured type checks, packaging, lock consistency, documentation,
 public demo, and submission checks passed. The preceding configuration batch
 passed both native-LaTeX tests; this batch changes only policy-loss kernels
 and their CPU regressions.
+
+## Descriptor-pinned checkpoint reads
+
+A further public-source Muse checkpoint review identified a path-check/read
+race. A local, synthetic fault injection confirmed that replacing a legacy
+sidecar with a symlink between `is_file()` and `read_bytes()` could redirect
+the bytes selected for restore. Loading and immutable-artifact collision
+checks now open with `O_NOFOLLOW | O_NONBLOCK`, validate the opened descriptor
+with `fstat`, and read that same regular-file descriptor. Replacement after
+open cannot redirect the snapshot; replacement before open is rejected.
+Nonblocking open prevents a raced-in FIFO from hanging the loader. The reader
+fails closed on platforms lacking these flags rather than claiming the same
+guarantee there; this Linux VM supports both.
+
+Saving without optimizer state now fails before artifact publication, matching
+the existing restore contract. Production callers already supply Adam state.
+Legacy artifacts remain explicitly unbound compatibility inputs with strict
+step/optimizer checks, not cryptographically authenticated history. No receipt
+migration, artifact deletion, or guessed recovery from orphan files was added.
+The review's suggestion to reject every legacy receipt when any newer artifact
+exists was not adopted: a legitimate interrupted new save can leave such an
+orphan while the older committed receipt is still the correct recovery point.
+
+Validation: 210 focused tests passed, then **1,588 passed, 1 skipped,
+2 native-LaTeX tests intentionally deselected**, 85.00% coverage, in
+134.97 seconds. Lint, formatting, configured type checks, packaging,
+lock consistency, docs, public demo and submission checks passed.

@@ -974,7 +974,9 @@ def claims():
         "E9": "1/5 = 0.200 | [0.04, 0.62]",
         "E10": "20/30 = 0.667 | [0.49, 0.81]",
         "E11": "35/50 = 0.700 | [0.56, 0.81]",
-        "E12": "122/151 = 0.808 | [0.74, 0.86]",
+        # E12's rubric items are clustered by application. Check the recorded
+        # fraction, without requiring or endorsing an independent-item CI.
+        "E12": "122/151 = 0.808",
         "E14": "38/100 = 0.380 | [0.29, 0.48]",
     }
     yield (
@@ -984,7 +986,12 @@ def claims():
         "R",
         [ss.format(lane) for lane in (*t8a, "E4", "E13")],
         lambda: (
-            ["{} = {:.6f} | [{:.6f}, {:.6f}]".format(*table_8a(lane)) for lane in t8a]
+            [
+                "{} = {:.6f}".format(*table_8a(lane)[:2])
+                if lane == "E12"
+                else "{} = {:.6f} | [{:.6f}, {:.6f}]".format(*table_8a(lane))
+                for lane in t8a
+            ]
             + [
                 (
                     lambda d: (
@@ -1284,6 +1291,13 @@ MONTHS = (
 NOTES = {
     "Table A.5 evidence tiers": "claim_to_run_table.tsv records P1-C2 as X; the thesis rectifies it to C "
     "because the Nemotron identity was arbitrated against the HF adapter (Table A.5 P1-C2 row).",
+    "§6.5.3 seed-paired mechanism contrasts": "Differences are Dr. GRPO minus GRPO, paired by task "
+    "and seed. Two-sided paired-t intervals and p-values are recomputed from the stored per-run TSV; "
+    "sign-flip p-values enumerate all seed-level signs. This checks the calculations, not causal identification.",
+    "§6.5.3 historical coefficient-product ratios (not causal mediation)": "The percentages are "
+    "100 times the within-task, within-algorithm mean of the historical prop_mediated field. "
+    "That field combines correlations and is not a valid common-scale mediation decomposition. "
+    "Agreement verifies the reported historical values only; it does not validate a causal interpretation.",
 }
 
 
@@ -1305,6 +1319,139 @@ def paired_t(diffs):
     m, sd = statistics.mean(diffs), statistics.stdev(diffs)
     half = stats.t.ppf(0.975, n - 1) * sd / math.sqrt(n)
     return m, m - half, m + half
+
+
+MECHANISM_TASK_SEEDS = {
+    "arithmetic_easy_qwen2.5-0.5b": (42, 123, 456, 789, 1024),
+    "gsm8k_cot_hard_qwen2.5-1.5b": (42, 123, 456),
+}
+MECHANISM_FILES = [
+    f"{RES}/length_bias_mechanism_per_run.tsv",
+    f"{RES}/length_bias_mechanism_mediation.tsv",
+]
+
+
+def mechanism_rows(path, fields):
+    """Read the complete two-task, seed-paired panel; never silently drop a row."""
+    expected = {
+        (task, algo, seed)
+        for task, seeds in MECHANISM_TASK_SEEDS.items()
+        for algo in ("grpo", "dr_grpo")
+        for seed in seeds
+    }
+    rows = {}
+    for row in tsv(path):
+        key = row["task"], row["algo"], int(row["seed"])
+        if key not in expected or key in rows:
+            raise ValueError(f"unexpected or duplicate mechanism row: {key}")
+        values = {field: float(row[field]) for field in fields}
+        if not all(math.isfinite(value) for value in values.values()):
+            raise ValueError(f"non-finite mechanism value: {key}")
+        rows[key] = values
+    if rows.keys() != expected:
+        raise ValueError(f"missing mechanism rows: {sorted(expected - rows.keys())}")
+    return rows
+
+
+def mechanism_statistics():
+    """Dr. GRPO minus GRPO, paired by task and seed, using the stored per-run values."""
+    from scipy import stats
+
+    fields = ("ols_dL_dR", "theil_sen_dL_dR", "spearman_L_R", "lag1_dL_autocorr")
+    rows = mechanism_rows(MECHANISM_FILES[0], fields)
+    out = {}
+    for task, seeds in MECHANISM_TASK_SEEDS.items():
+        for field in fields:
+            diffs = [
+                rows[task, "dr_grpo", seed][field] - rows[task, "grpo", seed][field]
+                for seed in seeds
+            ]
+            mean, lo, hi = paired_t(diffs)
+            p = float(stats.ttest_1samp(diffs, 0.0).pvalue)
+            if not all(math.isfinite(value) for value in (mean, lo, hi, p)):
+                raise ValueError(f"non-finite paired statistic: {task}, {field}")
+            out[task, field] = (mean, lo, hi, p, signflip_p(diffs))
+    return out
+
+
+def mechanism_comparison_tokens():
+    values = mechanism_statistics()
+    arithmetic, gsm8k = MECHANISM_TASK_SEEDS
+    templates = (
+        (
+            arithmetic,
+            "ols_dL_dR",
+            "The OLS slope difference is {:+.6f} [{:+.6f}, {:+.6f}], paired t p = {:.6f}, permutation p = {:.6f}",
+        ),
+        (
+            arithmetic,
+            "theil_sen_dL_dR",
+            "The Theil–Sen slope difference is {:+.6f} [{:+.6f}, {:+.6f}], p = {:.6f}, permutation p = {:.6f}",
+        ),
+        (
+            arithmetic,
+            "spearman_L_R",
+            "The ρ(L, R) difference is {:+.6f} [{:+.6f}, {:+.6f}], p = {:.6f}",
+        ),
+        (
+            arithmetic,
+            "lag1_dL_autocorr",
+            "The lag-1 autocorrelation is essentially unchanged, {:+.6f} [{:+.6f}, {:+.6f}], p = {:.6f}",
+        ),
+        (
+            gsm8k,
+            "ols_dL_dR",
+            "On GSM8K (n = 3) the OLS difference reverses sign, {:+.6f} [{:+.6f}, {:+.6f}], p = {:.6f}",
+        ),
+    )
+    return [template.format(*values[task, field]) for task, field, template in templates]
+
+
+def historical_mediation_percentages():
+    """Means of stored historical ratios only, not valid causal mediation estimates."""
+    rows = mechanism_rows(MECHANISM_FILES[1], ("prop_mediated",))
+    return [
+        100 * statistics.mean(rows[task, algo, seed]["prop_mediated"] for seed in seeds)
+        for task, seeds in MECHANISM_TASK_SEEDS.items()
+        for algo in ("grpo", "dr_grpo")
+    ]
+
+
+def mechanism_claims():
+    yield (
+        "§6.5.3 seed-paired mechanism contrasts",
+        "ch06",
+        [
+            "The OLS slope difference is +0.43 [+0.18, +0.68], paired t p = 0.009, permutation p = 0.0625",
+            "The Theil–Sen slope difference is +1.11 [+0.33, +1.88], p = 0.017, permutation p = 0.0625",
+            "The ρ(L, R) difference is +0.10 [−0.02, +0.22], p = 0.080",
+            "The lag-1 autocorrelation is essentially unchanged, −0.01 [−0.27, +0.26], p = 0.94",
+            "On GSM8K (n = 3) the OLS difference reverses sign, −4.41 [−37.7, +28.9], p = 0.63",
+        ],
+        "R",
+        [MECHANISM_FILES[0]],
+        mechanism_comparison_tokens,
+    )
+    # Preserve compatibility with the frozen historical wording without changing
+    # its bytes. Both forms bind the same four source-derived means; the report
+    # note expressly does not validate the old causal interpretation.
+    revised = "The historical script also labels coefficient-product ratios of"
+    if revised in text(f"{THESIS}/{CHAPTERS['ch06']}"):
+        claim_text = (
+            'ratios of 42% and 55% on arithmetic and 28% and 12% on GSM8K as "proportion mediated"'
+        )
+        template = 'ratios of {:.6f}% and {:.6f}% on arithmetic and {:.6f}% and {:.6f}% on GSM8K as "proportion mediated"'
+    else:
+        claim_text = "42% of the arithmetic effect to ZVF under GRPO and 55% under Dr. GRPO, against 28% and 12% on GSM8K"
+        template = "{:.6f}% of the arithmetic effect to ZVF under GRPO and {:.6f}% under Dr. GRPO, against {:.6f}% and {:.6f}% on GSM8K"
+    yield (
+        "§6.5.3 historical coefficient-product ratios (not causal mediation)",
+        "ch06",
+        [claim_text],
+        "R",
+        [MECHANISM_FILES[1]],
+        lambda: [template.format(*historical_mediation_percentages())],
+    )
 
 
 def p11():
@@ -1675,6 +1822,7 @@ def a8_rows():
 
 def claims_ext():
     yield ("§6 recomputed values", "ch06", CH06_TOKENS, "R", CH06_FILES, ch06_rows)
+    yield from mechanism_claims()
     recon = f"{RES}/group_size_g4_vs_g32_broader_scale.tsv"
     yield (
         "§6.4.2 reconstruction grid",
@@ -2603,12 +2751,27 @@ def location(group):
     return f"§{m[1]}" if m else group
 
 
+def audit_summary(groups):
+    """Count registered check outcomes without treating context as verification."""
+    results = Counter(r["result"] for g in groups for r in g["tokens"])
+    passed_by_method = Counter(
+        g["method"] for g in groups for r in g["tokens"] if r["result"] == "PASS"
+    )
+    return {
+        "registered_token_occurrences": sum(results.values()),
+        "passed_checks": results["PASS"],
+        "context_only_not_independently_checked": results["CONTEXT"],
+        "printed_count_arithmetic_passed": passed_by_method["A"],
+        "withheld_not_checked": results["NOT_CHECKED"],
+        "failed_checks": results["FAIL"],
+        "unbound_values": results["UNBOUND"],
+        "missing_artifact_values": results["ARTIFACT_MISSING"],
+        "passed_by_method": dict(sorted(passed_by_method.items())),
+    }
+
+
 def appendix(groups, report_name):
-    checked = [g for g in groups if g["method"] != "W"]
-    tokens = [r for g in checked for r in g["tokens"]]
-    n_pass = sum(r["result"] in ("PASS", "CONTEXT") for r in tokens)
-    n_ctx = sum(r["result"] == "CONTEXT" for r in tokens)
-    n_w = sum(len(g["tokens"]) for g in groups if g["method"] == "W")
+    summary = audit_summary(groups)
     rows: dict[str, list] = {}
     order = list(CHAPTERS.values())
     for g in sorted(groups, key=lambda g: order.index(g["chapter"])):
@@ -2616,17 +2779,31 @@ def appendix(groups, report_name):
     out = [
         "# Appendix J. Number-to-Artifact Provenance",
         "",
-        f"Each row binds the values printed at one location to the bytes they were checked against. "
-        f"`tools/audit_thesis_numbers.py` regenerates this table and `{report_name}`, which lists every value, "
-        f"its check and each file's full path and SHA-256. A value passes only if it appears verbatim in its "
-        f"chapter and agrees at its printed precision. Methods: R recomputed from rows (counts, means, SDs, "
+        f"This registry covers selected numeric token occurrences, not every number or scientific claim in "
+        f"the thesis. `tools/audit_thesis_numbers.py` regenerates this table and `{report_name}`, which lists "
+        f"each registered token, its check and the cited files' full paths and SHA-256 hashes. A PASS means "
+        f"the token appears verbatim in its chapter and satisfies its named check; it does not establish "
+        f"independent scientific verification. Methods: R recomputed from rows (counts, means, SDs, "
         f"Wilson, Fisher, t, TOST, ANOVA, McNemar, sign-flip, cluster bootstrap, `git apply --stat`); "
-        f"S stored summary field; C hyperparameter matched in the runner code; T verbatim in the cited source report; "
-        f"P prose sweep, every decimal and percentage in a cited span found in a file that span cites or verified by "
-        f"an R row ({n_ctx} values stated as thresholds or definitions are exempt); A arithmetic from printed "
-        f"counts, artifact absent from this checkout; W withheld source, not checked. Σ marks the SHA-256 of a "
+        f"S stored summary field; C hyperparameter matched in the runner code; T numeric transcription in "
+        f"the cited source report; P selected cited-prose tokens matched to a source or another registered "
+        f"check; A arithmetic from printed counts, without independently checking those inputs against "
+        f"an artifact; W withheld source, not checked. CONTEXT includes definitions and unverified printed "
+        f"inputs; these tokens are not independently checked and are excluded from passing-check counts. "
+        f"Σ marks the SHA-256 of a "
         f"group's sorted `sha256  path` lines. Hashes bind the author's checkout; Appendix I states which files "
         f"the public package includes.",
+        "",
+        f"Number-to-artifact registry for Chapters 1, 4 and 6–9 and Appendices A and F. "
+        f"Of {summary['registered_token_occurrences']} registered token occurrences, "
+        f"{summary['passed_checks']} checks pass and "
+        f"{summary['context_only_not_independently_checked']} are context only, not independently checked. "
+        f"The passing checks include {summary['printed_count_arithmetic_passed']} calculations from "
+        f"printed counts only. {summary['withheld_not_checked']} occurrences rest on withheld sources "
+        f"and are not checked; {summary['failed_checks']} checks fail, "
+        f"{summary['unbound_values']} are unbound and "
+        f"{summary['missing_artifact_values']} lack required artifacts. "
+        f"Passing this registry does not verify every numerical thesis claim or authenticate its sources.",
         "",
         "\\newpage",  # keep the table on one page
         "",
@@ -2652,52 +2829,83 @@ def appendix(groups, report_name):
         bad = sum(r["result"] in ("FAIL", "ARTIFACT_MISSING") for r in toks)
         unbound = sum(r["result"] == "UNBOUND" for r in toks)
         skipped = sum(r["result"] == "NOT_CHECKED" for r in toks)
-        parts = [f"{bad} disagree"] * bool(bad) + [f"{unbound} unbound"] * bool(unbound)
+        passed = sum(r["result"] == "PASS" for r in toks)
+        context = sum(r["result"] == "CONTEXT" for r in toks)
+        parts = [f"{passed} pass"] * bool(passed)
+        parts += [f"{context} context"] * bool(context)
+        parts += [f"{bad} failed or missing"] * bool(bad) + [f"{unbound} unbound"] * bool(unbound)
         parts += [f"{skipped} not checked"] * bool(skipped)
         methods = "".join(sorted({g["method"] for g in gs}, key="RSCTPAW".index))
         artifact = f"`{short_path([a['path'] for a in arts])}`" if arts else "—"
         out.append(
             f"| {loc} | {len(toks)} | {methods} | {artifact} | `{digest(arts)}` | "
-            f"{'; '.join(parts) or 'agree'} |"
+            f"{'; '.join(parts) or 'no checks'} |"
         )
     out += [
         "",
-        f": Number-to-artifact provenance for Chapters 1, 4 and 6–9 and Appendices A and F. {n_pass} of "
-        f"{len(tokens)} checked values agree"
-        + (
-            f"; {n_w} values rest on withheld sources and are not checked."
-            if n_w
-            else "; no value is left unchecked."
-        ),
+        ": Selected numerical token occurrences and their recorded checks.",
+        "",
         "",
     ]
     return "\n".join(out)
 
 
 def main(argv=None):
+    global THESIS
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--json", type=Path, default=ROOT / THESIS / "provenance_audit.json")
-    parser.add_argument("--appendix", type=Path, default=ROOT / THESIS / "ch_back_provenance.md")
     parser.add_argument(
-        "--check", action="store_true", help="exit 1 if any checked value disagrees"
+        "--thesis-dir",
+        type=Path,
+        default=Path(THESIS),
+        help="Repository-relative thesis source directory (default: %(default)s)",
+    )
+    parser.add_argument("--json", type=Path, help="Report path (default: thesis directory)")
+    parser.add_argument("--appendix", type=Path, help="Appendix path (default: thesis directory)")
+    parser.add_argument(
+        "--check", action="store_true", help="exit 1 for failed, unbound or missing-artifact checks"
     )
     args = parser.parse_args(argv)
-    groups = evaluate()
+    thesis_dir = (ROOT / args.thesis_dir).resolve()
+    if args.thesis_dir.is_absolute() or not thesis_dir.is_relative_to(ROOT.resolve()):
+        parser.error("--thesis-dir must be a repository-relative directory within the repository")
+    if not thesis_dir.is_dir():
+        parser.error("--thesis-dir must name an existing directory")
+    args.json = args.json or thesis_dir / "provenance_audit.json"
+    args.appendix = args.appendix or thesis_dir / "ch_back_provenance.md"
+    original_thesis = THESIS
+    THESIS = thesis_dir.relative_to(ROOT.resolve()).as_posix()
+    try:
+        for reader in (text, J, jsonl, expand, sha256, e14, e11_boot):
+            reader.cache_clear()
+        groups = evaluate()
+        appendix_text = appendix(groups, args.json.name)
+    finally:
+        THESIS = original_thesis
+    summary = audit_summary(groups)
     report = {
         "schema_version": "thesis-number-provenance-v1",
         "status": "FAIL"
-        if any(g["status"] in ("FAIL", "ARTIFACT_MISSING") for g in groups)
+        if any(
+            summary[key] for key in ("failed_checks", "unbound_values", "missing_artifact_values")
+        )
         else "PASS",
-        "scope": "Printed values in the results chapters versus local artifacts; no model, scorer or provider run.",
+        "scope": (
+            "Selected registered numeric tokens versus local artifacts or printed inputs, under the "
+            "named check methods; context and withheld values are not independently checked. "
+            "Not verification of every numerical thesis claim, source authentication or a model, "
+            "scorer or provider run."
+        ),
+        "summary": summary,
+        "thesis_directory": thesis_dir.relative_to(ROOT.resolve()).as_posix(),
         "groups": groups,
     }
     rendered = json.dumps(report, indent=2, ensure_ascii=False) + "\n"
     for pattern, replacement in REDACT.items():
         rendered = re.sub(pattern, replacement, rendered)
     args.json.write_text(rendered, encoding="utf-8")
-    args.appendix.write_text(appendix(groups, args.json.name), encoding="utf-8")
+    args.appendix.write_text(appendix_text, encoding="utf-8")
     for g in groups:
         bad = [r for r in g["tokens"] if r["result"] not in ("PASS", "CONTEXT", "NOT_CHECKED")]
         print(f"{g['status']:<16} {g['method']} {g['group']}")

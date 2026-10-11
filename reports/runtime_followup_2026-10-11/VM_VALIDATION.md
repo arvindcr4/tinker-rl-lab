@@ -1799,3 +1799,13 @@ Final `make check submission-check` passed **1,957 tests, 2 skipped**, native
 TeX included, at **86.28%** configured supported-surface coverage in 262.44
 seconds. All aggregate stages passed, exit zero. This batch adds two substantive
 regressions without changing production behavior or historical results.
+
+## 2026-10-11 23:58 UTC — portfolio evaluation input/output evidence
+
+The standalone portfolio source evaluator now rejects nonfinite adapter rewards and provider response counts other than the requested one before creating a SCORED receipt. Invalid token budgets and nonfinite/negative temperatures fail before dataset, tracking, or provider work. Strict JSON serialization supplies a second finite-value guard.
+
+The existing 2,048-token prefix policy is unchanged. New receipt fields record the original token count, truncation flag, canonical compact-JSON SHA-256 of the actual prompt token IDs, per-example sampling seed, top-p and prompt-budget policy. Response lengths are captured before decoder/reward callbacks. This does not change reward semantics, turn these source-validation results into E1–E14 scores, or attest managed-model weights.
+
+Nine adversarial integration cases failed before the patch. The final offline integration additionally exercises exact-budget nontruncation and callback-mutated response buffers; 42 related checks passed. W&B, tokenization and sampling are test doubles with socket connections forbidden; no provider evaluation was launched. The test restores its tracking-mode environment after each invocation. Muse reviewed anonymously fetched bytes of the public evaluator at `9732b9a59789de97a70ce40d456c8e7938675c16`, independently identifying these boundaries. Suggestions that would change failure scoring or claim checkpoint attestation were not adopted.
+
+Final `make check submission-check` completed successfully: **1,968 passed, 2 skipped**, **87.31%** configured supported-surface coverage, 263.26 seconds for pytest. Lint, formatting, types, packaging, locked export, staged/unstaged secret scans, public-document checks, native TeX tests and submission self-tests passed. Scientific minreport and independent thesis-review blockers remain separate and unresolved.

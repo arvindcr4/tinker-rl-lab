@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 from typing import Any, Sequence
@@ -19,7 +20,7 @@ from .grpo import (
     PAVLOV_NON_XLAM_SOURCE_REVISIONS,
     PavlovNonXLAMReward,
     TrainingExample,
-    _decode_response,
+    _finite_reward,
     make_pavlov_non_xlam_dataset,
 )
 
@@ -71,7 +72,12 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = _parser().parse_args(argv)
+    parser = _parser()
+    args = parser.parse_args(argv)
+    if args.per_suite < 1 or args.max_tokens < 1:
+        parser.error("--per-suite and --max-tokens must be positive")
+    if not math.isfinite(args.temperature) or args.temperature < 0:
+        parser.error("--temperature must be finite and nonnegative")
     if not os.environ.get("TINKER_API_KEY", "").startswith("tml-"):
         raise SystemExit("TINKER_API_KEY is required")
     if args.sampler_path:
@@ -110,6 +116,9 @@ def main(argv: list[str] | None = None) -> int:
             "per_suite": args.per_suite,
             "max_tokens": args.max_tokens,
             "temperature": args.temperature,
+            "top_p": 0.95,
+            "max_prompt_tokens": 2048,
+            "prompt_truncation": "prefix",
             "seed": args.seed,
         },
     )
@@ -130,7 +139,9 @@ def main(argv: list[str] | None = None) -> int:
         reward = PavlovNonXLAMReward()
         records: list[dict[str, Any]] = []
         for index, example in enumerate(examples):
-            prompt_ids = tokenizer.encode(example.prompt, add_special_tokens=False)[:2048]
+            full_prompt_ids = tokenizer.encode(example.prompt, add_special_tokens=False)
+            prompt_ids = list(full_prompt_ids[:2048])
+            prompt_token_hash = _sha256_text(json.dumps(prompt_ids, separators=(",", ":")))
             result = sampler.sample(
                 T.ModelInput.from_ints(prompt_ids),
                 num_samples=1,
@@ -141,16 +152,25 @@ def main(argv: list[str] | None = None) -> int:
                     seed=args.seed + index,
                 ),
             ).result()
-            sequence = result.sequences[0]
-            response = _decode_response(tokenizer, sequence)
-            score = float(reward.score(response, example))
+            sequences = list(result.sequences)
+            if len(sequences) != 1:
+                raise ValueError("portfolio sampler must return exactly one response")
+            # Bind provider fields before decoder or reward callbacks run.
+            response_ids = list(sequences[0].tokens)
+            response_count = len(response_ids)
+            response = tokenizer.decode(list(response_ids), skip_special_tokens=True)
+            score = _finite_reward(reward.score(response, example))
             record = {
                 "suite_id": example.metadata["suite_id"],
                 "source_id": example.metadata["source_id"],
                 "prompt_sha256": _sha256_text(example.prompt),
                 "response_sha256": _sha256_text(response),
                 "prompt_tokens": len(prompt_ids),
-                "response_tokens": len(sequence.tokens),
+                "original_prompt_tokens": len(full_prompt_ids),
+                "prompt_truncated": len(full_prompt_ids) > len(prompt_ids),
+                "prompt_token_ids_sha256": prompt_token_hash,
+                "sampling_seed": args.seed + index,
+                "response_tokens": response_count,
                 "score": score,
                 "exact": score == 1.0,
             }
@@ -199,6 +219,9 @@ def main(argv: list[str] | None = None) -> int:
                 "retries": 0,
                 "temperature": args.temperature,
                 "max_tokens": args.max_tokens,
+                "top_p": 0.95,
+                "max_prompt_tokens": 2048,
+                "prompt_truncation": "prefix",
                 "seed": args.seed,
             },
             "count": len(records),
@@ -209,7 +232,9 @@ def main(argv: list[str] | None = None) -> int:
             "wandb": {"run_id": run.id, "url": run.url, "project": WANDB_PROJECT},
         }
         args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        args.out.write_text(
+            json.dumps(receipt, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8"
+        )
         run.summary["eval/mean_reward"] = mean_reward
         run.summary["eval/exact_match_rate"] = exact_rate
         run.summary["eval/count"] = len(records)

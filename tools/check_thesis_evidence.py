@@ -293,6 +293,10 @@ def check_replacement(lane, d):
         same(sum(values(rows, "correct", binary=True)), success, "E2 task successes")
         same(sum(r["status"] == "completed" for r in rows), graded, "E2 graded count")
         require(
+            all(not r["correct"] or r["status"] == "completed" for r in rows),
+            "E2 correct task must be completed (graded)",
+        )
+        require(
             dict(Counter(f"{r['status']}/{r['end']}" for r in rows)) == d["outcome_breakdown"],
             "E2 completion partition mismatch",
         )
@@ -314,6 +318,7 @@ def check_replacement(lane, d):
         same(sum(count(p["n"]) for p in parts), n, "E5 subset counts")
         same(sum(count(p["passes"]) for p in parts), success, "E5 subset successes")
         for part in parts:
+            require(part["passes"] <= part["n"], "E5 subset successes exceed task count")
             same(part["pass1"], part["passes"] / part["n"], "E5 subset pass1", digits=4)
     elif lane == "E6":
         pending = count(d["n_ungraded_judge_unavailable"])
@@ -324,6 +329,11 @@ def check_replacement(lane, d):
         require(len(parts) == 5, "E6 split partition changed")
         for field, expected in (("n", n), ("success", success), ("judge_pending", pending)):
             same(sum(count(p[field]) for p in parts), expected, f"E6 split {field}")
+        for part in parts:
+            require(
+                part["success"] + part["judge_pending"] <= part["n"],
+                "E6 split successes and pending exceed task count",
+            )
         same(secondary["score_over_graded_only"], success / graded, "E6 graded score", digits=4)
         same(
             secondary["score_upper_bound_if_all_ungraded_passed"],
@@ -336,6 +346,10 @@ def check_replacement(lane, d):
         same(len(rows), n, "E9 per-task count")
         unique([r["task"] for r in rows], "E9 tasks")
         same(sum(values(rows, "success", binary=True)), success, "E9 task successes")
+        require(
+            all(not r["success"] or r["rc"] == 0 for r in rows),
+            "E9 successful task has a nonzero return code",
+        )
         errors = sum(r["rc"] != 0 for r in rows)
         same(count(d["n_errors_or_timeouts"]), errors, "E9 errors")
         same(graded, n - errors, "E9 graded")

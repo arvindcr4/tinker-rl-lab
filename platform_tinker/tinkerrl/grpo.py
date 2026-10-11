@@ -2537,6 +2537,10 @@ def run_grpo(
     logger: Callable[[str], Any] = print,
 ) -> List[GRPORunResult]:
     """Run GRPO for ``config.num_seeds`` seeds and return all results."""
+    # Keep the experiment fixed across seeds even if a caller callback edits
+    # its original config during an earlier run. Metadata sequences are
+    # normalized to immutable tuples by the copied config's constructor.
+    config = replace(config)
     config.validate_numerics()
     results: List[GRPORunResult] = []
     for seed_idx in range(config.num_seeds):

@@ -167,6 +167,10 @@ def run_openrlhf_training(
     from .metrics import read_native_metrics
     from .inputs import inspect_native_input, ensure_input_unchanged
 
+    # The caller may reuse or mutate its config while a long-running subprocess
+    # executes. Bind validation, launch arguments, metrics and receipt to one
+    # independent snapshot, including nested model/optimizer/data settings.
+    config = config.model_copy(deep=True)
     output = Path(output_dir).resolve()
     data_path = str(output / "gsm8k500.jsonl")
     # Validate before importing providers, downloading data, or creating output.

@@ -605,3 +605,30 @@ LaTeX tests, with 85.34% configured supported-surface coverage in 261.27 seconds
 All static, package, lock, docs, public/demo and submission checks passed.
 Native adapter tests are outside the configured coverage denominator; this
 percentage is not a claim of whole-repository coverage.
+
+## Fixed configuration snapshots across long-running work
+
+CPU fault injection demonstrated that changing the caller's native config
+inside the subprocess callback launched seed 17 but recorded seed 99. Native
+execution now deep-copies the complete nested config before validation so the
+command, budget, metrics selection and final receipt describe one snapshot.
+A regression mutates seed, optimizer, algorithm, model, data, budget and logging
+settings during execution and verifies the receipt retains the launch settings.
+
+A separate multi-seed regression failed before the fix with seeds
+`[10, 101, 102]` instead of `[10, 11, 12]` when a caller callback changed the
+original config during the first seed. `run_grpo` now constructs one independent
+experiment snapshot before iteration; each seed still receives its own copy.
+The config constructor normalizes sequence metadata to immutable tuples.
+Caller objects remain mutable and their changes are not overwritten. This is
+snapshot isolation from later edits, not a claim of atomic copying during a
+simultaneous mutation. Both focused config suites passed all 40 tests.
+
+A bounded Muse review of public `8e27a44a` independently identified both live
+config issues. Its concern about a missing dataclass decorator was an artifact
+of the excerpt and was rejected against the full source. The seed count is
+already fixed by Python's range evaluation; the reproduced drift concerned
+later seed identities and hyperparameters, not a changing iteration count.
+Full validation passed: **1,620 passed, 1 skipped**, including native TeX,
+85.34% configured supported-surface coverage, in 253.31 seconds. Static,
+package, lock, docs, public/demo and submission checks all passed.

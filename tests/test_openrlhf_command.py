@@ -145,6 +145,37 @@ def test_success_records_config_without_inventing_measurements(
     assert "peak_reward" not in result
 
 
+def test_native_receipt_uses_launch_snapshot_during_caller_mutation(tmp_path, native_runtime):
+    cfg = config(seed=17)
+    expected = cfg.to_dict()
+
+    def mutate_caller(command, **kwargs):
+        assert command[command.index("--seed") + 1] == "17"
+        cfg.seed = 99
+        cfg.optimizer.learning_rate = 0.5
+        cfg.algorithm.sample_num = 12
+        cfg.model.model_name = "changed/after-launch"
+        cfg.data.train_data.append("changed-after-launch.jsonl")
+        cfg.max_samples = 24
+        cfg.log_to_wandb = True
+
+    with (
+        patch.dict(sys.modules, {"openrlhf": types.ModuleType("openrlhf")}),
+        patch.object(trainer, "_prepare_gsm8k_500_jsonl", side_effect=write_native_input_fixture),
+        patch.object(trainer.subprocess, "run", side_effect=mutate_caller),
+    ):
+        result = trainer.run_openrlhf_training(cfg, str(tmp_path / "snapshot"))
+    assert result["config"] == expected
+    assert result["seed"] == 17
+    assert result["learning_rate"] == expected["optimizer"]["learning_rate"]
+    assert result["group_size"] == 6
+    assert result["model"] == expected["model"]["model_name"]
+    assert result["budget_plan"]["planned_rollouts"] == 30
+    assert result.get("metrics_reason") != "native_wandb_selected_no_local_metrics"
+    assert cfg.seed == 99
+    assert cfg.data.train_data == ["changed-after-launch.jsonl"]
+
+
 def test_import_does_not_start_emissions_tracker():
     fake = types.ModuleType("codecarbon")
     fake.EmissionsTracker = Mock()

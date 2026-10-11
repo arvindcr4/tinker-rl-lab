@@ -91,3 +91,22 @@ def test_mutated_config_fails_before_dataset_tracking_or_seed_run():
         tracking.assert_not_called()
     assert dataset.mock_calls == []
     assert reward.mock_calls == []
+
+
+def test_seed_campaign_keeps_initial_config_when_caller_changes_it():
+    config = grpo.GRPOConfig(name="snapshot", seed=10, num_seeds=3, lr=0.001)
+    seen = []
+
+    def run_seed(cfg, *_args):
+        seen.append((cfg.seed, cfg.lr, cfg.model, cfg.wandb_tags))
+        config.seed = 100
+        config.lr = 0.9
+        config.model = "changed-after-first-seed"
+        config.wandb_tags = ("changed",)
+        return grpo.GRPORunResult(seed=cfg.seed)
+
+    with patch.object(grpo, "_run_one_seed", side_effect=run_seed):
+        results = grpo.run_grpo(config, Mock(), Mock())
+    assert [result.seed for result in results] == [10, 11, 12]
+    assert seen == [(seed, 0.001, "Qwen/Qwen3-8B", ("grpo", "tinker")) for seed in (10, 11, 12)]
+    assert config.seed == 100

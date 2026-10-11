@@ -903,19 +903,22 @@ def make_grpo_loss_fn(
                 "nll_mask must pair 1:1 with logprobs, got "
                 f"{len(nll_mask)} flags for {len(resp_logprobs)} responses"
             )
+        # Share one cast node across policy and auxiliary terms. Separate
+        # cast-back paths could each overflow before their gradients cancel.
+        accumulators = [_loss_accumulator(lp) for lp in resp_logprobs]
         losses = []
         for i, logprobs in enumerate(resp_logprobs):
             if not torch.isfinite(logprobs).all():
                 raise ValueError("response logprobs must be finite")
-            losses.append(-advantages[i] * _loss_accumulator(logprobs).sum())
+            losses.append(-advantages[i] * accumulators[i].sum())
         if not losses:
             return torch.tensor(0.0), {"grpo_loss": 0.0, "nll_loss": 0.0}
         loss = torch.stack(losses).mean()
         nll_loss = torch.tensor(0.0)
         if nll_mask is not None and nll_coef != 0.0:
             masked = [
-                _loss_accumulator(logprobs).mean()
-                for keep, logprobs in zip(nll_mask, resp_logprobs)
+                logprobs.mean()
+                for keep, logprobs in zip(nll_mask, accumulators)
                 if keep and logprobs.numel() > 0
             ]
             if masked:

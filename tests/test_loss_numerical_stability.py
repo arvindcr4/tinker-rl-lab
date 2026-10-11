@@ -196,3 +196,11 @@ def test_half_precision_response_mask_keeps_prompt_gradients_zero(dtype):
         torch.testing.assert_close(values.grad, oracle.grad.to(dtype))
         assert torch.equal(values.grad[:2], torch.zeros_like(values[:2]))
         assert torch.isfinite(values.grad).all()
+
+
+def test_half_auxiliary_and_policy_gradients_combine_before_cast_back():
+    values = torch.tensor([-0.001], dtype=torch.float16, requires_grad=True)
+    loss, _ = make_grpo_loss_fn([-70000.0], nll_mask=[True], nll_coef=70000.0)(None, [values])
+    loss.backward()
+    assert loss.item() == 0.0
+    assert torch.equal(values.grad, torch.zeros_like(values))

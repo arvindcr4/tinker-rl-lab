@@ -428,3 +428,19 @@ Validation: 210 focused tests passed, then **1,588 passed, 1 skipped,
 2 native-LaTeX tests intentionally deselected**, 85.00% coverage, in
 134.97 seconds. Lint, formatting, configured type checks, packaging,
 lock consistency, docs, public demo and submission checks passed.
+
+### Shared cast-back path for auxiliary gradients
+
+An additional adversarial CPU check found that separate promoted casts for
+GRPO and NLL could each overflow on cast-back before cancelling at a float16
+leaf, despite a finite total derivative. The terms now reuse one promoted
+response tensor, so their gradients combine in float32 before the single
+cast-back. A `-70000` advantage and `70000` one-token auxiliary coefficient
+now produce the expected exact zero loss and zero gradient rather than NaN.
+This strengthens the previous half-precision validation; it does not change
+normal float32/float64 computations or the loss definition.
+
+The shared-cast regression and aggregate checks passed: **1,589 passed,
+1 skipped, 2 native-LaTeX tests intentionally deselected**, 85.00% coverage,
+in 132.31 seconds. All static, package, lock, docs, demo and submission gates
+also passed. Native TeX was unchanged from the preceding full validation.

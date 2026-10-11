@@ -2930,7 +2930,7 @@ def make_synthetic_math_dataset(
     return InMemoryDataset(train=train * 20, test=test)
 
 
-def make_gsm8k_dataset(seed: int = 42) -> InMemoryDataset:
+def make_gsm8k_dataset(seed: int = 42, revision: Optional[str] = None) -> InMemoryDataset:
     """Load GSM8K through the dataset adapter seam."""
     from datasets import load_dataset
 
@@ -2941,7 +2941,8 @@ def make_gsm8k_dataset(seed: int = 42) -> InMemoryDataset:
 
     def convert(split: str) -> List[TrainingExample]:
         rows: List[TrainingExample] = []
-        for row in load_dataset("openai/gsm8k", "main", split=split):
+        revision_kwargs = {"revision": revision} if revision is not None else {}
+        for row in load_dataset("openai/gsm8k", "main", split=split, **revision_kwargs):
             match = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
             if not match:
                 continue

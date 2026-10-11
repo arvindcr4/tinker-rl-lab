@@ -1119,3 +1119,31 @@ TeX, with **85.84%** configured supported-surface coverage in 252.24 seconds;
 static/package/lock/docs/public/demo/submission checks passed, exit zero.
 All engineering CI on the preceding `b5c06b6c` passed; the scientific gate remains
 red. No training/provider call or scorer/sampler default change was made.
+
+## CLI launch and dataset configuration fidelity (20:12 UTC)
+
+A JSON config with `steps=1000, seed=42` silently ignored explicit CLI
+`--steps 1 --seed 17 --no-resume`. The JSON path now uses the same explicit
+argument override path as presets. It also rejects duplicate keys at every
+object level, non-finite numbers and non-object/malformed JSON with a bounded
+error that does not echo config content. Unknown fields and mandatory tracking
+and campaign gates remain enforced. A mocked CLI-to-runner integration checks
+that the one-step budget, seed and resume choice reach execution; JSON-only
+values and file bytes remain unchanged. Nine new cases failed before the fix;
+the unknown-field control already passed.
+
+Separately, explicit dataset revisions were ignored by GSM8K and unsupported
+adapters. GSM8K now forwards an optional requested revision to both train and
+test loads, preserving the historical unpinned default when omitted. The
+portfolio accepts only its existing composite revision (or unrecorded None),
+and synthetic adapters reject an external revision instead of recording an
+unused request. Five new cases failed before; three default/composite controls
+already passed. No dataset/model download or provider run was performed.
+
+Two completed public-source Muse reviews supported these findings. The
+portfolio review's suggestion to reject every non-null revision was narrowed
+to preserve the preset's valid composite revision. **123 focused tests** pass.
+Full `make check submission-check` passed **1,802 tests, 2 skipped**, including
+native TeX, with **85.86%** configured supported-surface coverage in 258.01
+seconds; static/package/lock/docs/public/demo/submission checks passed, exit
+zero. Historical results and scorer/sampler defaults are unchanged.

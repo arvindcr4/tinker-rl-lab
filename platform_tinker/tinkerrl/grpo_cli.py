@@ -13,7 +13,6 @@ override individual fields.
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import sys
 from pathlib import Path
@@ -40,6 +39,7 @@ from .grpo import (
     make_pavlov_non_xlam_dataset,
     make_xlam_dataset,
     run_grpo,
+    _strict_json_object,
 )
 
 
@@ -243,12 +243,16 @@ def _build_dataset(args: argparse.Namespace, config: GRPOConfig) -> Any:
     factory = DATASET_FACTORIES.get(dataset_name)
     if factory is None:
         raise SystemExit(f"Unknown dataset preset: {dataset_name}")
-    if dataset_name in {"tooluse_xlam", "pavlov_xlam"}:
+    if dataset_name in {"tooluse_xlam", "pavlov_xlam", "gsm8k"}:
         if config.dataset_revision is not None:
             return factory(seed=config.seed, revision=config.dataset_revision)
         return factory(seed=config.seed)
-    if dataset_name in {"gsm8k", "pavlov_portfolio"}:
+    if dataset_name == "pavlov_portfolio":
+        if config.dataset_revision not in (None, PAVLOV_NON_XLAM_DATASET_REVISION):
+            raise ValueError("dataset revision must match the pinned portfolio composite")
         return factory(seed=config.seed)
+    if config.dataset_revision is not None:
+        raise ValueError("dataset revision is unsupported for this dataset adapter")
     return factory()
 
 
@@ -317,8 +321,10 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
 
 def build_config(args: argparse.Namespace) -> GRPOConfig:
     if args.json_config:
-        data = json.loads(args.json_config.read_text())
-        config = GRPOConfig(**data)
+        data = _strict_json_object(args.json_config.read_text(encoding="utf-8"))
+        if data is None:
+            raise ValueError("JSON config must be one object with unique keys and finite numbers")
+        config = GRPOConfig(**_apply_overrides(data, args))
         config.validate_tracking()
         config.validate_campaign_gate()
         return config

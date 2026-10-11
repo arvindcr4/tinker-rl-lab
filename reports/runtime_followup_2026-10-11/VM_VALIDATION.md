@@ -1529,3 +1529,27 @@ syntax correction, full `make check submission-check` passed **1,887 tests,
 coverage in 243.95 seconds; every aggregate stage passed, exit zero. These are
 internal consistency checks, not authentication of historical rewards or a
 change to reward/scorer versions.
+
+## Joint actor/critic CPU resume smoke (22:12 UTC)
+
+A new end-to-end CPU smoke exercises the actual runner, Tinker 0.24.1 custom
+loss bridge, Torch actor Adam, real prompt-value critic/Adam, local digest-bound
+critic sidecars, and a mid-run restore. Only provider transport, fixed synthetic
+sampling, tracking and export are faked; sockets are blocked. Three synthetic
+prompts have different reward patterns. The test checks nontrivial actor motion,
+full final actor/critic optimizer-state agreement, retained reward history and
+the exact remaining example order after critic-pretraining draw replay.
+
+The initial fixture's seed happened to sample only cancelling reward groups;
+its actor-motion assertion correctly failed. The final fixture uses seed 7 to
+include an informative group. Two deliberate, process-local negative controls
+then demonstrated sensitivity: discarding restored critic Adam moments changed
+final critic parameters (largest observed difference about 0.0193), while
+omitting pretraining RNG replay changed the checked example order. Neither
+negative control altered repository production code or persisted source files.
+
+All **14 focused real-SDK/CPU checks** passed normally. Full `make check
+submission-check` passed **1,888 tests, 2 skipped**, native TeX included, at
+**86.10%** configured supported-surface coverage in 253.43 seconds; all aggregate
+stages passed, exit zero. This adds a regression harness, not a new optimizer,
+default sampler cadence, provider run or model-quality result.

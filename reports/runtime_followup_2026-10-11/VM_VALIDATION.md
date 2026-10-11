@@ -1147,3 +1147,25 @@ Full `make check submission-check` passed **1,802 tests, 2 skipped**, including
 native TeX, with **85.86%** configured supported-surface coverage in 258.01
 seconds; static/package/lock/docs/public/demo/submission checks passed, exit
 zero. Historical results and scorer/sampler defaults are unchanged.
+
+## Fresh-run checkpoint identity protection (20:18 UTC)
+
+`experiment/a` and `experiment a` sanitize to the same checkpoint filename.
+Previously `resume=False` bypassed existing-receipt inspection, allowing the
+second experiment to overwrite the first in a mocked end-to-end run. Existing
+receipts are now parsed even for fresh starts. A fresh restart requires the
+original unsanitized name and exact integer seed to match; absent/malformed or
+foreign identity fails before tracking/provider creation and preserves bytes.
+An explicitly requested fresh restart of the same identity may still change
+its configuration. This is an early single-writer identity guard, not a lock or
+protection against concurrent filesystem replacement. Existing paths and
+compatible resume behavior are unchanged.
+
+Six collision/missing-identity cases failed before the guard; the same-identity
+changed-config control already passed. All **238 focused tests** pass. A
+public-source Muse review confirmed the collision; its broader suggestion to
+forbid all config changes was not adopted because it would defeat an explicit
+same-experiment fresh restart. Full `make check submission-check` passed
+**1,809 tests, 2 skipped**, including native TeX, at **85.87%** configured
+supported-surface coverage in 256.28 seconds. Static/package/lock/docs/public/
+demo/submission checks passed, exit zero. No historical file was rewritten.

@@ -1510,13 +1510,27 @@ def _config_field_default(key: str, derived: Any) -> Any:
 
 def _load_checkpoint(config: GRPOConfig, seed: int) -> Dict[str, Any] | None:
     path = _checkpoint_path(config, seed)
-    if not config.resume or not path.exists():
+    if not path.exists():
         return None
     payload = _strict_json_object(path.read_text())
     if payload is None:
         raise ValueError(
             f"[{config.name}] checkpoint must be a JSON object with unique keys and finite numbers: {path}"
         )
+    if not config.resume:
+        # Fresh restart may change this experiment's settings, but it must
+        # not erase another name that sanitizes to the same receipt path.
+        stored = payload.get("config")
+        if (
+            not isinstance(stored, dict)
+            or stored.get("name") != config.name
+            or type(stored.get("seed")) is not int
+            or stored.get("seed") != seed
+        ):
+            raise ValueError(
+                "checkpoint identity does not match this fresh run; choose a new name or directory"
+            )
+        return None
     # Normalize through JSON so tuple-valued fields (e.g. wandb_tags) compare
     # equal to their stored list form; without this every resume fails as
     # "incompatible" (fixed 2026-10-03).

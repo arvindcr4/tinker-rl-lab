@@ -630,7 +630,7 @@ def test_critic_masks_truncated_responses_out_of_the_fit(tmp_path, monkeypatch):
     ).exists()
 
 
-def test_fresh_run_pins_revisions_and_scores_heldout(tmp_path, monkeypatch):
+def test_fresh_run_requests_tokenizer_revision_and_scores_heldout(tmp_path, monkeypatch):
     calls = {"heldout": 0}
 
     def sample_fn(prompt, num_samples, sampling_params):

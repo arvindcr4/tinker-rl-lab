@@ -1096,3 +1096,26 @@ package, lock, docs, public/demo and submission checks passed, aggregate exit
 zero. The preceding published `74f3d646` commit's engineering CI completed
 successfully; the scientific `minreport-audit` gate remains red. No scorer or
 sampler-refresh default was changed.
+
+## Model-source receipt scope (20:06 UTC)
+
+The locked public Tinker 0.24.1 SDK's training-client creation interface has no
+base-weight revision argument. The runner's `model_revision` is a local
+tokenizer-load request and provider metadata, not proof of a managed weight
+commit. New local `model_source` receipts distinguish configured intent,
+caller-supplied versus requested tokenizers, fresh versus optimizer-checkpoint
+initialization, and the step from which the record applies. Managed base
+weights are explicitly unverified. Completed legacy receipts remain unrecorded;
+no historical source provenance is backfilled. Provider arguments and defaults
+are unchanged. CLI help now states the revision scope.
+
+Six focused receipt cases failed before the change and now pass; the broader
+214-test focused suite passed. A public-source Muse review supported this
+scope distinction. The first aggregate found two publication-integrity failures
+because a README clarification changed a manifest-frozen file. That paragraph
+was removed, leaving README and its manifest untouched. The corrected complete
+`make check submission-check` passed **1,784 tests, 2 skipped**, including native
+TeX, with **85.84%** configured supported-surface coverage in 252.24 seconds;
+static/package/lock/docs/public/demo/submission checks passed, exit zero.
+All engineering CI on the preceding `b5c06b6c` passed; the scientific gate remains
+red. No training/provider call or scorer/sampler default change was made.

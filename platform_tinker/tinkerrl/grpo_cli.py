@@ -350,7 +350,11 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     # overrides
     parser.add_argument("--name", help="Experiment name.")
     parser.add_argument("--model")
-    parser.add_argument("--model-revision", dest="model_revision")
+    parser.add_argument(
+        "--model-revision",
+        dest="model_revision",
+        help="Tokenizer revision request and run metadata; does not pin managed provider weights.",
+    )
     parser.add_argument("--lora-rank", dest="lora_rank", type=int)
     parser.add_argument("--steps", type=int)
     parser.add_argument("--group-size", dest="group_size", type=int)

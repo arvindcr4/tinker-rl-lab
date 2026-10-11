@@ -410,9 +410,9 @@ class GRPOConfig:
     declared_domains: Tuple[str, ...] = ()
     training_domain_union: Tuple[str, ...] = ()
     primary_evaluation_domain_union: Tuple[str, ...] = ()
-    # Optional immutable source revisions.  Generic runs may leave them unset;
-    # campaign presets pin them so W&B/checkpoint receipts identify the exact
-    # dataset and model sources used by the run.
+    # Optional declared source revisions. Dataset adapters must honor their
+    # revision. model_revision is forwarded to the local tokenizer loader and
+    # run metadata; it does not attest the managed provider's weight commit.
     dataset_revision: Optional[str] = None
     model_revision: Optional[str] = None
     # DAPO / Dr. GRPO training-shaping flags.  All default off so existing
@@ -698,6 +698,8 @@ class GRPORunResult:
     checkpoint_commit_shas: List[str] = field(default_factory=list)
     checkpoint_receipts: List[Dict[str, Any]] = field(default_factory=list)
     campaign_metadata: Dict[str, List[str]] = field(default_factory=dict)
+    # Empty means unrecorded (legacy), never inferred weight attestation.
+    model_source: Dict[str, Any] = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -1598,6 +1600,32 @@ def _redact_error(exc: BaseException) -> str:
     return message or exc.__class__.__name__
 
 
+def _model_source_receipt(
+    config: GRPOConfig,
+    *,
+    tokenizer_supplied: bool,
+    resume_step: int,
+    resume_state_path: Optional[str],
+) -> Dict[str, Any]:
+    """Record request scope, never infer managed weights from tokenizer metadata."""
+    return {
+        "schema_version": 1,
+        "recorded_from_step": resume_step,
+        "configured_model": config.model,
+        "configured_model_revision": config.model_revision,
+        "tokenizer": {
+            "mode": "caller_supplied" if tokenizer_supplied else "pretrained_request",
+            "requested_model": None if tokenizer_supplied else config.model,
+            "requested_revision": None if tokenizer_supplied else config.model_revision,
+        },
+        "managed_base_weights": {"status": "unverified", "commit_sha": None},
+        "initialization": {
+            "mode": "optimizer_checkpoint" if resume_state_path else "managed_base_model_name",
+            "checkpoint_path": resume_state_path,
+        },
+    }
+
+
 def _immutable_config(config: GRPOConfig, seed: int) -> Dict[str, Any]:
     """Create a detached, JSON-only config snapshot for W&B and receipts."""
     # ``asdict`` already recursively copies dataclass fields; the JSON round-trip
@@ -2165,6 +2193,12 @@ def _run_one_seed(
                     f"Tokenizer dependency is unavailable: {_redact_error(exc)}"
                 ) from exc
 
+        model_source = _model_source_receipt(
+            config,
+            tokenizer_supplied=tokenizer is not None,
+            resume_step=resume_step,
+            resume_state_path=resume_state_path,
+        )
         tokenizer_kwargs: Dict[str, Any] = {"trust_remote_code": True}
         if config.model_revision is not None:
             tokenizer_kwargs["revision"] = config.model_revision
@@ -2578,6 +2612,7 @@ def _run_one_seed(
                         "checkpoint_commit_shas": checkpoint_commit_shas,
                         "checkpoint_receipts": checkpoint_receipts,
                         "campaign_metadata": _campaign_metadata(config),
+                        "model_source": model_source,
                         **critic_binding,
                     },
                 )
@@ -2669,6 +2704,7 @@ def _run_one_seed(
             checkpoint_commit_shas=checkpoint_commit_shas,
             checkpoint_receipts=checkpoint_receipts,
             campaign_metadata=_campaign_metadata(config),
+            model_source=model_source,
         )
         # Persist the critic before declaring completion. A failed final
         # sidecar save must not leave a successful completion receipt.

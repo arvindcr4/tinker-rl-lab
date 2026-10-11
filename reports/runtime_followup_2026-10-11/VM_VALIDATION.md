@@ -1191,3 +1191,24 @@ native TeX, at **85.88%** configured supported-surface coverage in 257.79 second
 Static/package/lock/docs/public/demo/submission checks passed, exit zero.
 Engineering CI for preceding published `ee2fc11d` passed; the scientific
 `minreport-audit` gate remains red.
+
+## Exclusive JSON checkpoint staging (20:30 UTC)
+
+A synthetic-only local probe demonstrated that a symlink at the predictable
+PID-based temporary path redirected a checkpoint write into an unrelated
+synthetic file and left the receipt itself as a symlink. JSON is now serialized
+before filesystem side effects, then written to an exclusively created unique
+UTF-8 temporary, flushed and fsynced before atomic replacement. Cleanup removes
+only this write's owned temporary. Existing stale files/links are untouched;
+pre-replacement I/O failures preserve the prior receipt. This is not a
+multi-writer lock, ancestor-path hardening, cross-provider transaction or full
+power-loss durability guarantee.
+
+All four regression cases failed before the fix: stale-link isolation,
+replacement failure cleanup, fsync failure preservation, and serialization
+failure without directory creation. A completed public-source Muse review
+supported the narrow staging change. The combined checkpoint/CPU focused suite
+passed **64 tests**. Full `make check submission-check`, including the CPU
+optimizer smoke cases documented next, passed **1,824 tests, 2 skipped**, native
+TeX included, at **85.90%** configured supported-surface coverage in 248.56
+seconds. Static/package/lock/docs/public/demo/submission checks passed, exit zero.

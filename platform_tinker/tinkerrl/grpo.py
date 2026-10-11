@@ -1483,10 +1483,28 @@ def _campaign_metadata(config: GRPOConfig) -> Dict[str, List[str]]:
 
 
 def _write_checkpoint(path: Path, payload: Dict[str, Any]) -> None:
+    # Serialize before creating directories or files. Stage exclusively under
+    # a unique name, never follow a predictable leftover temporary symlink.
+    serialized = json.dumps(payload, indent=2, allow_nan=False) + "\n"
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    temporary.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n")
-    os.replace(temporary, path)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as file:
+            temporary = Path(file.name)
+            file.write(serialized)
+            file.flush()
+            os.fsync(file.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def _config_field_default(key: str, derived: Any) -> Any:

@@ -45,3 +45,15 @@ be recorded with the change. Incomplete evidence remains incomplete.
   prompts prepared, but no review launch confirmed: executor transport failed.
   No new private source or dataset was included. Extra review launches are held
   while the user clarifies Codex usage concerns. Per-task usage counters unavailable.
+
+### Result-verifier identity correction
+
+The verifier now requires an exact experiment identity (with recognized seed
+suffixes), preserves exact seed-suffixed reference names, rejects conflicting
+case-insensitive seed tags and duplicate reference identities, and bounds both
+reference and observed accuracy to[0,1]. Initial regressions failed11 cases;
+independent review found two additional regressions, both reproduced and fixed.
+The final focused run passed80 tests (one existing SciPy precision warning).
+Unknown unrelated files remain outside the matched-results contract; a passing
+summary is not a statement that every file in the directory was validated.
+Local commits so far: `e1254ab6` evidence guards; `f2f3af97` ingestion/reward fixes.

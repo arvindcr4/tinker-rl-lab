@@ -17,3 +17,5 @@ Validation of this follow-up: **1,270 passed, one expected non-CPU-device skip, 
 
 
 A second actual workflow, [38128256334](https://github.com/arvindcr4/tinker-rl-lab/actions/runs/38128256334), passed 13 of 15 jobs, including all four Python test shards and native document builds. Quality reached 84.53% coverage with 1,269 passing tests, but its remaining native audit test lacked the Tectonic executable. The quality job now installs the exact same checksum-pinned Tectonic already used successfully by docs-build; no test is skipped and no threshold is reduced. Local verification of both provenance records also identifies the sweep's one-seed underpowered result and missing uncertainty, in addition to the campaign's missing uncertainty. These strict evidence failures remain unchanged.
+
+The native audit deliberately invokes Tectonic with `--only-cached`. Quality therefore also performs the same three-document scratch compilation as docs-build to populate the cache before running offline tests; an installed executable alone is insufficient. Source PDFs remain untouched.

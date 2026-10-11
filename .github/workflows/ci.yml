@@ -82,6 +82,13 @@ jobs:
           mkdir -p "$RUNNER_TEMP/tex-bin"
           tar -xzf "$RUNNER_TEMP/tectonic.tar.gz" -C "$RUNNER_TEMP/tex-bin" tectonic
           echo "$RUNNER_TEMP/tex-bin" >> "$GITHUB_PATH"
+      - name: Compile papers to a scratch outdir
+        working-directory: platform_tinker/reports/final
+        run: |
+          mkdir -p "$RUNNER_TEMP/latex-audit"
+          timeout 10m tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" grpo_agentic_llm_paper.tex
+          timeout 10m tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" grpo_agentic_llm_paper_anonymous.tex
+          timeout 10m tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" supplementary_appendix.tex
       - name: Coverage gate
         run: timeout 20m make coverage
 

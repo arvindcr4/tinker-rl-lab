@@ -700,6 +700,8 @@ class GRPORunResult:
     campaign_metadata: Dict[str, List[str]] = field(default_factory=dict)
     # Empty means unrecorded (legacy), never inferred weight attestation.
     model_source: Dict[str, Any] = field(default_factory=dict)
+    # Empty means legacy-unrecorded, not a disabled or successful evaluation.
+    heldout_evaluation: Dict[str, Any] = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -2656,6 +2658,15 @@ def _run_one_seed(
         last10 = step_rewards[-10:] if step_rewards else []
         first5 = step_rewards[:5] if step_rewards else []
         heldout_reward: Optional[float] = None
+        heldout_evaluation: Dict[str, Any] = {
+            "schema_version": 1,
+            "status": "empty" if config.evaluate_heldout else "disabled",
+            "total_n": 0,
+            "failed_n": 0,
+            "failure_policy": "score_zero_keep_denominator",
+            "uncertainty_kind": "not_recorded",
+            "summary": {},
+        }
 
         if config.evaluate_heldout:
             test_examples = list(dataset.test_examples())
@@ -2699,6 +2710,22 @@ def _run_one_seed(
                 summary = heldout_reward_summary(test_rewards)
                 summary["test/failed_n"] = float(heldout_failed)
                 summary["test/total_n"] = float(len(test_examples))
+                heldout_evaluation.update(
+                    status=(
+                        "all_failed"
+                        if heldout_failed == len(test_examples)
+                        else "partial_failure"
+                        if heldout_failed
+                        else "completed"
+                    ),
+                    total_n=len(test_examples),
+                    failed_n=heldout_failed,
+                    # Within-run example bootstrap, never across-seed uncertainty.
+                    uncertainty_kind=(
+                        "example_bootstrap" if "test/reward_ci_low" in summary else "not_recorded"
+                    ),
+                    summary=dict(summary),
+                )
                 _wandb_log(wb, summary)
 
         result = GRPORunResult(
@@ -2719,6 +2746,7 @@ def _run_one_seed(
             checkpoint_receipts=checkpoint_receipts,
             campaign_metadata=_campaign_metadata(config),
             model_source=model_source,
+            heldout_evaluation=heldout_evaluation,
         )
         # Persist the critic before declaring completion. A failed final
         # sidecar save must not leave a successful completion receipt.

@@ -1169,3 +1169,25 @@ same-experiment fresh restart. Full `make check submission-check` passed
 **1,809 tests, 2 skipped**, including native TeX, at **85.87%** configured
 supported-surface coverage in 256.28 seconds. Static/package/lock/docs/public/
 demo/submission checks passed, exit zero. No historical file was rewritten.
+
+## Local held-out evaluation evidence (20:24 UTC)
+
+Completion receipts previously retained only the held-out mean; example counts,
+failure counts and uncertainty bounds existed only in tracking logs. New
+`heldout_evaluation` records snapshot the already-computed aggregate summary,
+with disabled/empty/completed/partial-failure/all-failed status, denominator,
+failure count and the existing score-zero/keep-denominator policy. Bounds are
+explicitly within-run example bootstrap, never across-seed uncertainty. Missing
+legacy evidence remains unrecorded. No prompt, response, exception text, extra
+sampling call or repeated bootstrap calculation is added. The summary is copied
+before the tracking callback so callback mutation cannot alter the local record.
+Training success semantics and numerical scoring are unchanged.
+
+Five initial cases failed before the new receipt; seven final cases cover the
+outcome states, legacy completion and callback isolation. **107 focused tests**
+pass. A public-source Muse review supported snapshot-only local evidence.
+Full `make check submission-check` passed **1,816 tests, 2 skipped**, including
+native TeX, at **85.88%** configured supported-surface coverage in 257.79 seconds.
+Static/package/lock/docs/public/demo/submission checks passed, exit zero.
+Engineering CI for preceding published `ee2fc11d` passed; the scientific
+`minreport-audit` gate remains red.

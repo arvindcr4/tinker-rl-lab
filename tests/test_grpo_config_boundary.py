@@ -110,3 +110,47 @@ def test_seed_campaign_keeps_initial_config_when_caller_changes_it():
     assert [result.seed for result in results] == [10, 11, 12]
     assert seen == [(seed, 0.001, "Qwen/Qwen3-8B", ("grpo", "tinker")) for seed in (10, 11, 12)]
     assert config.seed == 100
+
+
+def test_optimizer_and_sampling_domains_reject_invalid_finite_settings():
+    for field, value in (
+        ("lr", -1.0),
+        ("eps", -1e-8),
+        ("temperature", -0.1),
+        ("beta1", -0.1),
+        ("beta1", 1.0),
+        ("beta2", -0.1),
+        ("beta2", 1.0),
+        ("top_p", -0.1),
+        ("top_p", 1.1),
+    ):
+        with pytest.raises(ValueError, match=field):
+            grpo.GRPOConfig(name="invalid-domain", **{field: value})
+
+
+def test_numeric_domain_boundaries_do_not_change_existing_zero_modes():
+    config = grpo.GRPOConfig(
+        name="zero-controls",
+        lr=0,
+        eps=0,
+        temperature=0,
+        beta1=0,
+        beta2=0,
+        top_p=0,
+        nll_aux_min_reward=-10,
+    )
+    assert config.lr == config.eps == config.temperature == config.top_p == 0
+    assert replace(config, top_p=1, beta1=0.999999, beta2=0.999999).top_p == 1
+
+
+def test_mutated_domain_fails_before_dataset_or_tracking_work():
+    config = grpo.GRPOConfig(name="mutated-domain")
+    config.beta1 = 1.0
+    dataset, reward = Mock(), Mock()
+    with patch.object(grpo.GRPOConfig, "validate_tracking") as tracking:
+        with pytest.raises(ValueError, match="beta1"):
+            grpo._run_one_seed(config, dataset, reward, tokenizer=None)
+    tracking.assert_not_called()
+    dataset.assert_not_called()
+    assert dataset.mock_calls == []
+    assert reward.mock_calls == []

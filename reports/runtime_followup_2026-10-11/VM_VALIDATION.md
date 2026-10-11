@@ -1035,3 +1035,31 @@ provide cross-provider rollback; failures require restoring a valid checkpoint.
 All experiments were local synthetic CPU checks. The preceding published
 `f059d9ad` commit's engineering CI finished successfully; the scientific
 `minreport-audit` gate remains the sole known CI failure.
+
+## Necessary optimizer and sampling domains (19:42 UTC)
+
+Local construction reproduced acceptance of negative learning rate/epsilon/
+temperature, beta1 equal to one, negative beta2 and top-p greater than one by
+both the run config and locked Tinker 0.24.1 request models. No service requests
+were made. Configuration preflight now requires nonnegative learning rate,
+epsilon and temperature; Adam betas in `[0, 1)`; and top-p in `[0, 1]` before
+datasets or tracking are reached. Existing zero-valued controls and defaults
+are preserved. These are necessary mathematical bounds, not a guarantee that
+a particular remote model/service accepts every boundary value.
+
+The Adam bounds agree with the official versioned implementation inspected at
+https://raw.githubusercontent.com/pytorch/pytorch/v2.7.1/torch/optim/adam.py .
+Current Tinker field documentation was also inspected at
+https://tinker-docs.thinkingmachines.ai/tinker/api-reference/types/adamparams/
+and https://tinker-docs.thinkingmachines.ai/tinker/api-reference/types/samplingparams/ ;
+those pages describe a newer SDK snapshot and are not substituted for the
+locally tested locked schema. A completed Muse public-source review supported
+the narrow necessary bounds without model-specific limits or default changes.
+
+The new invalid-domain and mutated-config regressions failed before the guard;
+the zero-mode control already passed. The focused config/CLI/training suite
+passed **216 tests**. Full validation passed **1,756 tests, 2 skipped**, including
+native TeX, at **85.76%** configured supported-surface coverage in 264.44 seconds.
+Static, package, lock, docs, public/demo and submission checks passed, aggregate
+exit zero. No provider job, learning-policy change or historical regrading was
+performed.

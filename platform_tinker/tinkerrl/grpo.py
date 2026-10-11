@@ -525,6 +525,16 @@ class GRPOConfig:
                     if name.startswith("gspo_epsilon_")
                     else f"{name} must be a finite number"
                 )
+        # Necessary arithmetic/probability domains, not a guarantee that a
+        # particular remote model accepts every otherwise valid setting.
+        for name in ("lr", "eps", "temperature"):
+            if getattr(self, name) < 0:
+                raise ValueError(f"{name} must be >= 0")
+        for name in ("beta1", "beta2"):
+            if not 0 <= getattr(self, name) < 1:
+                raise ValueError(f"{name} must be in [0, 1)")
+        if not 0 <= self.top_p <= 1:
+            raise ValueError("top_p must be in [0, 1]")
         if self.gspo_epsilon_low < 0 or self.gspo_epsilon_high < 0:
             raise ValueError("gspo clip epsilons must be finite and >= 0")
         if self.gspo_enabled and self.nll_aux_enabled:

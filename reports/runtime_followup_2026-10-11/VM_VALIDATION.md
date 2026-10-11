@@ -1705,3 +1705,25 @@ Full `make check submission-check` passed **1,938 tests, 2 skipped**, native TeX
 included, at **86.18%** configured supported-surface coverage in 253.66 seconds.
 All aggregate stages passed, exit zero. This batch adds regression coverage
 without changing production behavior.
+
+## Staged-change coverage in the local secret gate (23:09 UTC)
+
+`make secrets` used `gitleaks git --pre-commit` without `--staged`, so it
+inspected unstaged tracked diffs while a staged-only addition could pass with
+zero bytes scanned. An isolated temporary Git repository and a dedicated
+synthetic-marker rule reproduced that false pass. The fixture contains no real
+credential. Its clean and unstaged controls already behaved correctly.
+
+The target now runs separate staged and unstaged tracked-diff scans. Newly
+added files must be staged to enter this gate; this is not a claim to scan all
+untracked files or the complete history. The existing upstream pre-commit hook
+and GitHub CI's explicit commit-range scan were already scoped correctly and
+are unchanged. No historical findings are suppressed or allowlists expanded.
+
+All three isolated real-Gitleaks checks pass, including redacted output and
+nonzero failure status for either changed surface. Full `make check
+submission-check` passed **1,941 tests, 2 skipped**, native TeX included, at
+**86.18%** configured supported-surface coverage in 246.20 seconds. The aggregate
+also exercised the repaired staged scan on this patch's actual staged source
+changes; all aggregate stages passed, exit zero. No user credential was read,
+used or placed in a fixture.

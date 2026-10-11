@@ -1237,3 +1237,24 @@ A public-source Muse review supported the independent oracle and bounded scope.
 All four final smoke cases, the 64-test focused suite and the 1,824-test aggregate
 above passed. Run directly with `pytest -q tests/test_cpu_optimizer_smoke.py`.
 No provider model, paid job or new authentication grant was used.
+
+## Descriptor-pinned JSON checkpoint reads (20:36 UTC)
+
+JSON resume now shares the existing critic loader's descriptor boundary:
+`O_NOFOLLOW | O_NONBLOCK`, regular-file verification, one read from the opened
+descriptor, and guaranteed descriptor closure. Existing and dangling symlinks
+are refused rather than followed or treated as a missing receipt. FIFOs and
+directories fail without blocking; invalid UTF-8 gets a bounded error. Normal
+receipts retain strict JSON/config/history validation. This requires the same
+OS flags already required for secure critic loading; it does not authenticate
+receipt content, pin ancestor directories, or prevent same-inode concurrent
+writes. No receipt size limit is newly imposed.
+
+Both symlink cases failed before the change; a normal-receipt control passed.
+The six final cases additionally verify FIFO nonblocking flags and descriptor
+closure, directory rejection and UTF-8 preservation. The broader 80-test
+checkpoint/critic/CPU suite passed before the additional UTF-8 case; all six
+final focused cases pass. Full `make check submission-check` passed **1,830
+tests, 2 skipped**, including native TeX, at **85.91%** configured
+supported-surface coverage in 256.32 seconds. Static/package/lock/docs/public/
+demo/submission checks passed, exit zero. No historical artifact was changed.

@@ -1348,23 +1348,25 @@ def _critic_config_hash(config: GRPOConfig, seed: int) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def _read_regular_critic_bytes(path: Path) -> bytes:
+def _read_regular_checkpoint_bytes(path: Path, *, kind: str) -> bytes:
     """Pin a nonsymlink regular-file descriptor before reading its snapshot."""
     if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_NONBLOCK"):
-        raise RuntimeError("secure critic loading requires O_NOFOLLOW and O_NONBLOCK support")
+        raise RuntimeError(f"secure {kind} loading requires O_NOFOLLOW and O_NONBLOCK support")
     try:
         descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     except OSError as exc:
-        raise RuntimeError(
-            "critic checkpoint must be a readable regular file, not a symbolic link"
-        ) from exc
+        raise RuntimeError(f"{kind} must be a readable regular file, not a symbolic link") from exc
     try:
         if not stat.S_ISREG(os.fstat(descriptor).st_mode):
-            raise RuntimeError("critic checkpoint must be a regular file")
+            raise RuntimeError(f"{kind} must be a regular file")
         with os.fdopen(descriptor, "rb", closefd=False) as stream:
             return stream.read()
     finally:
         os.close(descriptor)
+
+
+def _read_regular_critic_bytes(path: Path) -> bytes:
+    return _read_regular_checkpoint_bytes(path, kind="critic checkpoint")
 
 
 def _save_critic(
@@ -1530,9 +1532,14 @@ def _config_field_default(key: str, derived: Any) -> Any:
 
 def _load_checkpoint(config: GRPOConfig, seed: int) -> Dict[str, Any] | None:
     path = _checkpoint_path(config, seed)
-    if not path.exists():
+    if not path.exists() and not path.is_symlink():
         return None
-    payload = _strict_json_object(path.read_text())
+    raw = _read_regular_checkpoint_bytes(path, kind="JSON checkpoint")
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        raise ValueError("JSON checkpoint must be valid UTF-8") from None
+    payload = _strict_json_object(text)
     if payload is None:
         raise ValueError(
             f"[{config.name}] checkpoint must be a JSON object with unique keys and finite numbers: {path}"

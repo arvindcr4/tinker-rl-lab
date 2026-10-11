@@ -1425,3 +1425,45 @@ Full `make check submission-check` passed **1,872 tests, 2 skipped**, native TeX
 included, at **86.11%** configured supported-surface coverage in 260.11 seconds;
 all aggregate stages passed, exit zero. Valid experiment defaults, scoring and
 sampler cadence remain unchanged.
+
+## Legacy xLAM proxy scope and access limit (21:31 UTC)
+
+The existing xLAM adapter selects `answers[0]` and includes only `tools[:8]`.
+An invented two-action fixture received reward 1.0 for its first action alone;
+an invented nine-tool fixture omitted the required ninth tool from the prompt.
+These reproduce the transformation's limits, not their prevalence in the
+pinned corpus. Legacy scores therefore describe a first-call reward proxy,
+not verified completion of every requested call.
+
+[Salesforce's public dataset card](https://huggingface.co/datasets/Salesforce/xlam-function-calling-60k)
+documents multi-call answer arrays and conditions governing file access. No
+gated files were retrieved or conditions accepted. Pinned file contents and
+corpus-wide incidence remain unverified. Existing adapter/scorer defaults and
+historical metrics are unchanged; a multi-call extension is deferred pending
+an explicit definition/approval of its scoring and dataset semantics.
+
+## Rollout scoring and behavior snapshot boundary (21:44 UTC)
+
+User scoring hooks ran before behavior logprobs and stop reasons were copied,
+and text decoding reread live response tokens after training tokens were copied.
+A callback could therefore change the behavior-policy denominator or truncation
+mask, or score a different response than the one used for training. The runner
+now detaches token IDs and requested behavior metadata before invoking scoring
+hooks, decodes from a fresh copy of the detached IDs, and publishes the captured
+metadata after callbacks return. Ordinary scores and sampling cadence are unchanged.
+
+Two regressions failed before the fix: one uses the real Tinker 0.24.1 SDK's
+NumPy-backed logprobs; the other changes a later response's stop reason. A
+mutating-decoder control already passed. The second regression was then
+strengthened to mutate live token IDs and the output metadata dictionary too;
+all 16 focused snapshot, real-SDK loss bridge and real Torch CPU optimizer
+checks pass with sockets blocked. Public-source Muse review independently
+identified both snapshot windows and confirmed the decoder control; speculative
+prompt-buffer/concurrent-SDK concerns were not expanded into changes.
+
+Full `make check submission-check` passed **1,875 tests, 2 skipped**, native TeX
+included, at **86.11%** configured supported-surface coverage in 252.03 seconds;
+all aggregate stages passed, exit zero. The extra token-mutation assertions
+were checked in the 16-test focused rerun after that aggregate; production code
+was unchanged. This verifies consistency of captured local rollouts, not remote
+provider immutability or model-quality gains.

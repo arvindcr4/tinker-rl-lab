@@ -1274,9 +1274,7 @@ def _sample_scored_group(
             f"sampler returned {len(sequences)} responses for requested group_size={config.group_size}"
         )
     resp_ids_list = [list(resp.tokens) for resp in sequences]
-    rewards = [
-        _finite_reward(reward.score(_decode_response(tok, resp), example)) for resp in sequences
-    ]
+    # Detach every behavior-policy field before invoking user scoring hooks.
     token_lengths = [len(ids) for ids in resp_ids_list]
     if meta is not None:
         sampler_logprobs: List[Optional[List[float]]] = []
@@ -1292,6 +1290,11 @@ def _sample_scored_group(
                 truncated.append(stop_reason == "length")
             else:
                 truncated.append(len(ids) >= config.max_response_tokens)
+    rewards = [
+        _finite_reward(reward.score(tok.decode(list(ids), skip_special_tokens=True), example))
+        for ids in resp_ids_list
+    ]
+    if meta is not None:
         meta["sampler_logprobs"] = sampler_logprobs
         meta["truncated"] = truncated
         meta["identical_group"] = (

@@ -160,8 +160,17 @@ def _runtime(monkeypatch, *, metrics=None, sample_fn=None, install_transformers=
         transformers.AutoTokenizer = AutoTokenizer
         modules["transformers"] = transformers
 
+    real_run = grpo.subprocess.run
+
+    def run_without_provider_export(command, *args, **kwargs):
+        if isinstance(command, list) and command[1:3] == ["-m", "tinker.cli"]:
+            return SimpleNamespace(returncode=0)
+        # subprocess is a shared module: keep unrelated local library probes
+        # (e.g. Matplotlib's fontconfig discovery) working in isolated runs.
+        return real_run(command, *args, **kwargs)
+
     with patch.dict(sys.modules, modules, clear=False):
-        with patch.object(grpo.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
+        with patch.object(grpo.subprocess, "run", side_effect=run_without_provider_export):
             yield holder
 
 
@@ -662,6 +671,88 @@ def test_fresh_run_pins_revisions_and_scores_heldout(tmp_path, monkeypatch):
     assert summary["test/total_n"] == 2.0
     assert summary["test/reward_n"] == 2.0
     assert summary["test/reward"] == 0.5
+
+
+@pytest.mark.parametrize("count", [0, 1, 3])
+def test_partial_or_extra_training_group_fails_before_optimizer(tmp_path, monkeypatch, count):
+    def sample_fn(_prompt, _num_samples, _sampling_params):
+        return SimpleNamespace(sequences=[_Seq([1])] * count)
+
+    config = _config(tmp_path, group_size=2)
+    with _runtime(monkeypatch, sample_fn=sample_fn) as holder:
+        with pytest.raises(ValueError, match="requested group_size=2"):
+            grpo._run_one_seed(config, _dataset(_example()), ExactMathReward(), _Tokenizer())
+    assert "forward" not in holder["events"]
+    assert "optim" not in holder["events"]
+    assert holder["run"].summary["status"] == "failed"
+    assert not grpo._checkpoint_path(config, config.seed).exists()
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+@pytest.mark.parametrize("pretrain", [False, True])
+def test_nonfinite_reward_fails_before_actor_or_critic_update(
+    tmp_path, monkeypatch, value, pretrain
+):
+    reward = SimpleNamespace(score=lambda _text, _example: value)
+    config = _config(tmp_path, critic_enabled=pretrain, critic_pretrain_batches=int(pretrain))
+    with (
+        _runtime(monkeypatch) as holder,
+        patch.object(grpo, "train_critic_step") as critic_update,
+        pytest.raises(ValueError, match="finite numeric score"),
+    ):
+        grpo._run_one_seed(config, _dataset(_example()), reward, _Tokenizer())
+    critic_update.assert_not_called()
+    assert "forward" not in holder["events"]
+    assert "optim" not in holder["events"]
+    assert holder["run"].summary["status"] == "failed"
+
+
+@pytest.mark.parametrize("n", [1, 2])
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+def test_nonfinite_heldout_score_is_counted_as_failure_without_dropping_denominator(
+    tmp_path, monkeypatch, n, value
+):
+    def sample_fn(_prompt, num_samples, _sampling_params):
+        return SimpleNamespace(sequences=[_Seq([1])] * num_samples)
+
+    def score(_text, example):
+        return value if example.metadata.get("invalid_score") else 1.0
+
+    bad = grpo.TrainingExample(prompt="q", target="1", metadata={"invalid_score": True})
+    heldout = [bad] + [_example()] * (n - 1)
+    config = _config(tmp_path, evaluate_heldout=True)
+    with _runtime(monkeypatch, sample_fn=sample_fn) as holder:
+        result = grpo._run_one_seed(
+            config, _dataset(_example(), test=heldout), SimpleNamespace(score=score), _Tokenizer()
+        )
+    assert result.heldout_reward == (n - 1) / n
+    summary = next(item for item in holder["run"].logs if "test/failed_n" in item)
+    assert summary["test/failed_n"] == 1
+    assert summary["test/total_n"] == n
+    assert summary["test/reward_n"] == n
+    assert summary["test/reward"] == (n - 1) / n
+
+
+@pytest.mark.parametrize("count", [0, 2])
+def test_heldout_sampler_cardinality_failure_stays_in_denominator(tmp_path, monkeypatch, count):
+    def sample_fn(_prompt, num_samples, _sampling_params):
+        size = count if num_samples == 1 else num_samples
+        return SimpleNamespace(sequences=[_Seq([1])] * size)
+
+    config = _config(tmp_path, evaluate_heldout=True)
+    with _runtime(monkeypatch, sample_fn=sample_fn) as holder:
+        result = grpo._run_one_seed(
+            config, _dataset(_example(), test=[_example()]), ExactMathReward(), _Tokenizer()
+        )
+    assert result.heldout_reward == 0.0
+    summary = next(item for item in holder["run"].logs if "test/failed_n" in item)
+    assert summary["test/failed_n"] == summary["test/total_n"] == 1
+
+
+@pytest.mark.parametrize("scores", [[float("nan")], [float("inf")], [1.0, float("nan")]])
+def test_heldout_summary_rejects_nonfinite_even_for_one_score(scores):
+    with pytest.raises(ValueError, match="finite numeric score"):
+        grpo.heldout_reward_summary(scores)
 
 
 def test_wandb_failure_receipt_cannot_be_finalized(tmp_path, monkeypatch):

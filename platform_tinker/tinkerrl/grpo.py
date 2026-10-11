@@ -733,6 +733,17 @@ def _nll_mask_for_group(
     ]
 
 
+def _finite_reward(value: Any) -> float:
+    """Reject invalid adapter scores before they reach updates or receipts."""
+    try:
+        reward = float(value)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("reward adapter must return a finite numeric score") from exc
+    if not math.isfinite(reward):
+        raise ValueError("reward adapter must return a finite numeric score")
+    return reward
+
+
 def heldout_reward_summary(test_rewards: Sequence[float]) -> Dict[str, float]:
     """Mean (+ bootstrap CI when n >= 2) for held-out eval logging.
 
@@ -743,7 +754,7 @@ def heldout_reward_summary(test_rewards: Sequence[float]) -> Dict[str, float]:
     summary degrades to mean-only instead of failing the run.  A single
     held-out score likewise logs mean-only: one observation has no spread.
     """
-    rewards = [float(r) for r in test_rewards]
+    rewards = [_finite_reward(r) for r in test_rewards]
     if not rewards:
         return {}
     mean_r = sum(rewards) / len(rewards)
@@ -969,13 +980,20 @@ def _sample_scored_group(
         sampling_params=sp,
     ).result()
 
-    resp_ids_list = [list(resp.tokens) for resp in responses.sequences]
-    rewards = [reward.score(_decode_response(tok, resp), example) for resp in responses.sequences]
+    sequences = list(responses.sequences)
+    if len(sequences) != config.group_size:
+        raise ValueError(
+            f"sampler returned {len(sequences)} responses for requested group_size={config.group_size}"
+        )
+    resp_ids_list = [list(resp.tokens) for resp in sequences]
+    rewards = [
+        _finite_reward(reward.score(_decode_response(tok, resp), example)) for resp in sequences
+    ]
     token_lengths = [len(ids) for ids in resp_ids_list]
     if meta is not None:
         sampler_logprobs: List[Optional[List[float]]] = []
         truncated: List[bool] = []
-        for resp, ids in zip(responses.sequences, resp_ids_list):
+        for resp, ids in zip(sequences, resp_ids_list):
             lps = getattr(resp, "logprobs", None)
             sampler_logprobs.append(
                 [float(v) for v in lps] if lps is not None and len(lps) == len(ids) else None
@@ -2222,8 +2240,11 @@ def _run_one_seed(
                         resp = sc.sample(
                             T.ModelInput.from_ints(pid), num_samples=1, sampling_params=sp
                         ).result()
-                        text = _decode_response(tok, resp.sequences[0])
-                        test_rewards.append(reward.score(text, ex))
+                        sequences = list(resp.sequences)
+                        if len(sequences) != 1:
+                            raise ValueError("held-out sampler must return exactly one response")
+                        text = _decode_response(tok, sequences[0])
+                        test_rewards.append(_finite_reward(reward.score(text, ex)))
                     except Exception as exc:
                         # A failed sample scores 0 and stays in the
                         # denominator (fixed 2026-10-03: failures used to be

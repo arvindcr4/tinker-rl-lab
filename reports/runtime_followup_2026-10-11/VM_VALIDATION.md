@@ -222,3 +222,43 @@ non-CPU skip, no deselections, 84.93% coverage**, 240.15 seconds. This includes
 both native LaTeX integration tests, repository lint/format/types, package and
 lock verification, redacted secret checks, documentation checks, and the 237-test
 public-release suite. The independent strict provenance gap remains unchanged.
+
+## Adapter cardinality, finite rewards, and credential-safe native tracking
+
+Training and critic-pretraining groups now require exactly the requested number
+of sampled responses. Empty, short, and oversized groups fail before an actor
+or critic update instead of silently changing the estimator's group size.
+Adapter scores are converted to finite numbers at that boundary. The existing
+normalizers already rejected nonfinite ordinary training rewards, but critic
+pretraining did not pass through those normalizers; the shared boundary now
+protects that path too.
+
+Held-out evaluation now treats nonfinite scores and unexpected sampler response
+counts as failed cases, scored zero while retained in the original denominator.
+A one-example NaN previously bypassed the multi-example bootstrap guard and
+could appear in a successful receipt. The standalone summary also rejects
+nonfinite inputs for every sample count. Existing all-finite uncertainty
+calculation is unchanged; its result includes failure-as-zero cases under the
+existing evaluation policy, not a success-only denominator.
+
+The native OpenRLHF W&B command previously put the API key in `--use_wandb`.
+Official v0.8.4 logs that argument namespace to stdout and W&B configuration.
+The flag now carries only a non-secret selector, while the SDK uses the already
+supplied environment credential. No new authentication flow is introduced.
+Regressions verify the key is absent from argv and receipts. The exact official
+initializer was also exercised locally with all W&B methods mocked: existing
+SDK credentials bypass login, and logged configuration contains only the
+selector. No actual credential was read or disclosed in this validation.
+
+Verified upstream [ppo_trainer.py at v0.8.4](https://github.com/OpenRLHF/OpenRLHF/blob/v0.8.4/openrlhf/trainer/ppo_trainer.py),
+SHA-256 `2746e6da8e60ed6c5885bd0d4fa0190e4f358d6aecf8d4c11b7f5003b62673c9`.
+The installed W&B SDK's API-key resolver gives its environment key precedence.
+Focused checks: 246 adapter/GRPO/native-command tests passed. Test subprocess
+mocking was narrowed to the provider export command so unrelated local font
+inspection is not broken by test ordering.
+
+Changed-tree CPU validation: **1,529 passed, one expected skip, two unchanged
+native LaTeX tests deselected; 84.80% coverage**, 131.82 seconds. Repository
+lint/format/type checks, wheel/lock validation, documentation/public-release
+checks, selected thesis arithmetic, and offline demo all passed. The immediately
+preceding full native checkpoint remains recorded above.

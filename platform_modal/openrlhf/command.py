@@ -103,7 +103,10 @@ def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: s
         command.extend(
             [
                 "--use_wandb",
-                os.environ["WANDB_API_KEY"],
+                # v0.8.4 logs its entire argparse namespace to W&B and stdout.
+                # The SDK reads WANDB_API_KEY from the inherited environment;
+                # this truthy selector must never contain the credential.
+                "environment",
                 "--wandb_project",
                 config.project_name,
             ]

@@ -177,7 +177,26 @@ def test_environment_key_alone_does_not_switch_local_metrics_to_wandb(monkeypatc
     assert command[command.index("--use_tensorboard") + 1] == "/output/tensorboard"
     explicit = build_openrlhf_command(config(log_to_wandb=True), "/data", "/output")
     assert "--use_wandb" in explicit
+    assert explicit[explicit.index("--use_wandb") + 1] == "environment"
+    assert "synthetic-test-key" not in " ".join(explicit)
     assert "--use_tensorboard" not in explicit
+
+
+def test_native_wandb_credential_stays_out_of_argv_and_receipt(
+    tmp_path, monkeypatch, native_runtime
+):
+    key = "synthetic-only-wandb-credential"
+    monkeypatch.setenv("WANDB_API_KEY", key)
+    with (
+        patch.dict(sys.modules, {"openrlhf": types.ModuleType("openrlhf")}),
+        patch.object(trainer, "_prepare_gsm8k_500_jsonl"),
+        patch.object(trainer.subprocess, "run") as native,
+    ):
+        output = tmp_path / "run"
+        trainer.run_openrlhf_training(config(log_to_wandb=True), str(output))
+    assert native.call_args.kwargs["env"]["WANDB_API_KEY"] == key
+    assert key not in repr(native.call_args.args[0])
+    assert key not in (output / "result.json").read_text()
 
 
 def test_explicit_wandb_requires_credentials(monkeypatch):

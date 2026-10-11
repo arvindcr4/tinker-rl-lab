@@ -22,6 +22,7 @@ import hashlib
 import io
 import json
 import math
+import operator
 import os
 import random
 import re
@@ -1036,12 +1037,18 @@ def make_grpo_loss_fn(
     """
 
     advantages = tuple(advantages)
-    nll_mask = None if nll_mask is None else tuple(nll_mask)
-    response_lens = None if response_lens is None else tuple(response_lens)
+    nll_mask = None if nll_mask is None else tuple(bool(value) for value in nll_mask)
+    response_lens = (
+        None if response_lens is None else tuple(operator.index(value) for value in response_lens)
+    )
     if not all(math.isfinite(value) for value in advantages):
         raise ValueError("advantages must be finite")
+    # Tensor iteration yields mutable scalar views, so copying the outer
+    # sequence alone does not bind rollout labels across the async boundary.
+    advantages = tuple(float(value) for value in advantages)
     if not math.isfinite(nll_coef):
         raise ValueError("nll_coef must be finite")
+    nll_coef = float(nll_coef)
 
     def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:
         resp_logprobs = _response_logprobs(logprobs_list, response_lens)
@@ -1126,7 +1133,9 @@ def make_gspo_loss_fn(
     """
 
     advantages = tuple(advantages)
-    response_lens = None if response_lens is None else tuple(response_lens)
+    response_lens = (
+        None if response_lens is None else tuple(operator.index(value) for value in response_lens)
+    )
     # The SDK may await its forward request before invoking this callback.
     # Bind rollout values now; detach/clone tensors without downcasting lists
     # or NumPy arrays before the trainer logprob dtype is known. Stash remains
@@ -1138,6 +1147,9 @@ def make_gspo_loss_fn(
         )
     if not all(math.isfinite(value) for value in advantages):
         raise ValueError("advantages must be finite")
+    # Tensor iteration yields mutable scalar views, so copying the outer
+    # sequence alone does not bind rollout labels across the async boundary.
+    advantages = tuple(float(value) for value in advantages)
     if any(not math.isfinite(value) or value < 0 for value in (epsilon_low, epsilon_high)):
         raise ValueError("GSPO clip epsilons must be finite and nonnegative")
     log_low = math.log1p(-epsilon_low) if epsilon_low < 1 else -math.inf

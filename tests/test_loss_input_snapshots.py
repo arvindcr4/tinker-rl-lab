@@ -78,3 +78,42 @@ def test_outer_behavior_sequence_is_bound_and_stash_remains_output():
     after_yield(loss_fn, [torch.tensor([-8.0, -2.0], requires_grad=True)])
     assert len(stash) == 1
     assert stash[0].tolist() == [-1.0]
+
+
+@pytest.mark.parametrize("factory", [make_grpo_loss_fn, make_gspo_loss_fn])
+def test_tensor_advantage_views_are_copied_before_callback(factory):
+    advantages = torch.tensor([1.0])
+    loss_fn = factory(advantages)
+    advantages.zero_()
+    logprobs = torch.tensor([-1.0], requires_grad=True)
+    after_yield(loss_fn, [logprobs])
+    assert logprobs.grad.tolist() == [-1.0]
+
+
+@pytest.mark.parametrize("factory", [make_grpo_loss_fn, make_gspo_loss_fn])
+def test_tensor_response_length_views_cannot_include_prompt_tokens(factory):
+    lengths = torch.tensor([1], dtype=torch.int64)
+    loss_fn = factory([1.0], response_lens=lengths)
+    lengths.fill_(2)
+    logprobs = torch.tensor([-9.0, -1.0], requires_grad=True)
+    after_yield(loss_fn, [logprobs])
+    assert logprobs.grad.tolist() == [0.0, -1.0]
+
+
+def test_tensor_nll_mask_and_coefficient_are_bound_as_scalar_values():
+    mask = torch.tensor([True, False])
+    coefficient = torch.tensor(0.2)
+    loss_fn = make_grpo_loss_fn([0.0, 0.0], nll_mask=mask, nll_coef=coefficient)
+    mask.logical_not_()
+    coefficient.fill_(1.0)
+    logprobs = [torch.tensor([-1.0], requires_grad=True), torch.tensor([-3.0], requires_grad=True)]
+    loss, metrics = after_yield(loss_fn, logprobs)
+    assert loss == pytest.approx(0.2)
+    assert metrics["nll_loss"] == 1.0
+    assert [value.grad.item() for value in logprobs] == pytest.approx([-0.2, 0.0])
+
+
+@pytest.mark.parametrize("factory", [make_grpo_loss_fn, make_gspo_loss_fn])
+def test_snapshot_does_not_coerce_fractional_lengths_into_integer_masks(factory):
+    with pytest.raises(TypeError):
+        factory([1.0], response_lens=[1.5])

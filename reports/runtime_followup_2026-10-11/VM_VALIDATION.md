@@ -1584,3 +1584,29 @@ The final `make check submission-check` passed **1,896 tests, 2 skipped**, nativ
 TeX included, at **86.12%** configured supported-surface coverage in 252.60
 seconds; all aggregate stages passed, exit zero. Ordinary references, sampling
 cadence, objectives and historical result files remain unchanged.
+
+## Scalar tensor rollout snapshots (22:37 UTC)
+
+Copying a sequence into a tuple did not fully bind loss inputs: iterating a
+Torch tensor yields scalar views into the original storage. Mutating tensor
+advantages after constructing either loss closure changed the eventual policy
+gradient; mutating integer response lengths included prompt-token gradients.
+Tensor NLL masks and coefficients likewise changed the auxiliary objective.
+Five mutation regressions failed before the fix, alongside two controls that
+require fractional response lengths to fail at binding rather than be truncated.
+
+Loss factories now capture advantages and the NLL coefficient as Python floats,
+mask elements as bools, and response lengths with the integer-index protocol.
+Existing finite checks run before numeric conversion. This detaches scalar
+rollout labels, while the explicit GSPO output stash remains shared as designed.
+Normal Python input behavior and the objective formulas are unchanged.
+
+All **97 focused checks** passed, covering numerical stability, real Tinker SDK
+loss bridging, and CPU actor/critic optimizer-resume integration. The cancelled
+Muse review for this issue did not yield a verified result; this batch relies on
+local reproductions and validation, not an asserted external review.
+
+Full `make check submission-check` passed **1,903 tests, 2 skipped**, including
+native TeX, at **86.1%** displayed configured supported-surface coverage in
+249.20 seconds. All aggregate stages passed, exit zero. No default scorer,
+sampler cadence, provider job or historical score changed.

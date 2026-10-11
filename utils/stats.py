@@ -20,13 +20,21 @@ import json
 import glob
 import argparse
 import math
-from numbers import Real
+import re
+from numbers import Integral, Real
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+
+def _seed_from_directory(folder: str) -> int:
+    name = os.path.basename(folder)
+    if not re.fullmatch(r"seed_[0-9]+", name):
+        raise ValueError(f"Invalid seed directory name: {folder}")
+    return int(name.removeprefix("seed_"))
 
 
 def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List[dict]]:
@@ -43,11 +51,7 @@ def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List
     sources: Dict[int, str] = {}
     pattern = os.path.join(results_dir, experiment, "seed_*", "*.jsonl")
     for filepath in sorted(glob.glob(pattern)):
-        seed_dir = os.path.basename(os.path.dirname(filepath))
-        try:
-            seed = int(seed_dir.replace("seed_", ""))
-        except ValueError:
-            continue
+        seed = _seed_from_directory(os.path.dirname(filepath))
         if seed in sources:
             raise ValueError(
                 f"Ambiguous metric sources for seed {seed}: {sources[seed]} and {filepath}"
@@ -67,12 +71,9 @@ def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List
             raise ValueError(f"Empty metric source for seed {seed}: {filepath}")
         seed_results[seed] = metrics
     for folder in sorted(glob.glob(os.path.join(results_dir, experiment, "seed_*"))):
+        seed = _seed_from_directory(folder)
         if not os.path.isdir(folder):
-            continue
-        try:
-            seed = int(os.path.basename(folder).removeprefix("seed_"))
-        except ValueError:
-            continue
+            raise ValueError(f"Seed source is not a directory: {folder}")
         if not glob.glob(os.path.join(folder, "*.jsonl")):
             raise ValueError(f"Missing metric source for seed {seed}: {folder}")
     return seed_results
@@ -94,7 +95,8 @@ def compute_bootstrap_ci(
         rng: NumPy random generator for reproducibility.
 
     Returns:
-        (mean, lower_ci, upper_ci)
+        (mean, lower_ci, upper_ci). With one score, the bounds are NaN:
+        sampling uncertainty cannot be estimated from one seed/run.
     """
     scores = np.asarray(scores, dtype=float).ravel()
     if scores.size == 0:
@@ -103,16 +105,15 @@ def compute_bootstrap_ci(
         raise ValueError("compute_bootstrap_ci requires finite scores")
     if not 0.0 < confidence < 1.0:
         raise ValueError(f"confidence must be in (0, 1), got {confidence}")
+    if isinstance(n_bootstrap, bool) or not isinstance(n_bootstrap, Integral) or n_bootstrap < 1:
+        raise ValueError("n_bootstrap must be a positive integer")
 
     if rng is None:
         rng = np.random.default_rng(42)
 
     n = len(scores)
     if n == 1:
-        # A single observation carries no sampling spread: the CI collapses
-        # to the observation itself instead of bootstrapping noise.
-        mean = float(scores[0])
-        return mean, mean, mean
+        return float(scores[0]), float("nan"), float("nan")
     bootstrap_means = np.array(
         [np.mean(rng.choice(scores, size=n, replace=True)) for _ in range(n_bootstrap)]
     )
@@ -127,17 +128,23 @@ def compute_bootstrap_ci(
 
 def standard_error(scores: np.ndarray, axis: int = 0):
     """
-    Standard error of the mean with an n<2 guard.
+    Standard error of the mean; one observation has unestimable uncertainty.
 
-    ``std(ddof=1)`` is undefined for a single observation, so n<2 reports
-    zero spread instead of NaN. Returns a scalar for 1-D input, an array
-    along ``axis`` otherwise.
+    ``std(ddof=1)`` is undefined for one observation, so n=1 returns NaN,
+    never zero spread. Empty/nonfinite inputs are errors. Returns a scalar
+    for 1-D input, an array along ``axis`` otherwise.
     """
     arr = np.asarray(scores, dtype=float)
-    n = arr.shape[axis] if arr.ndim > 0 else 0
-    if n < 2:
-        zeros = np.zeros_like(np.mean(arr, axis=axis))
-        return zeros.item() if zeros.ndim == 0 else zeros
+    if arr.size == 0:
+        raise ValueError("standard_error requires at least one score")
+    if not np.all(np.isfinite(arr)):
+        raise ValueError("standard_error requires finite scores")
+    if arr.ndim == 0:
+        return float("nan")
+    n = arr.shape[axis]
+    if n == 1:
+        unavailable = np.full_like(np.mean(arr, axis=axis), np.nan)
+        return unavailable.item() if unavailable.ndim == 0 else unavailable
     return np.std(arr, axis=axis, ddof=1) / np.sqrt(n)
 
 
@@ -289,8 +296,11 @@ def plot_learning_curves_with_ci(
     for idx, (algo_name, steps, aligned_curves) in enumerate(prepared):
         mean = np.mean(aligned_curves, axis=0)
         se = standard_error(aligned_curves, axis=0)
-        ax.plot(steps, mean, label=algo_name, color=colors[idx], linewidth=2)
-        ax.fill_between(steps, mean - 1.96 * se, mean + 1.96 * se, alpha=0.2, color=colors[idx])
+        n_seeds = len(aligned_curves)
+        label = algo_name if n_seeds >= 2 else f"{algo_name} (n=1: CI not estimable)"
+        ax.plot(steps, mean, label=label, color=colors[idx], linewidth=2)
+        if n_seeds >= 2:
+            ax.fill_between(steps, mean - 1.96 * se, mean + 1.96 * se, alpha=0.2, color=colors[idx])
     ax.set_xlabel("Training Step" if True in modes else "Observation index", fontsize=12)
     ax.set_ylabel(metric_key, fontsize=12)
     ax.set_title(title, fontsize=14)
@@ -321,11 +331,16 @@ def generate_results_table(
         scores = np.asarray(scores, dtype=float).ravel()
         mean, ci_lower, ci_upper = compute_bootstrap_ci(scores)
         se = standard_error(scores)
+        mean_se = f"{mean:.3f} ± {se:.3f}"
+        interval = f"[{ci_lower:.3f}, {ci_upper:.3f}]"
+        if len(scores) == 1:
+            mean_se = f"{mean:.3f} (SE not estimable)"
+            interval = "not estimable (n=1)"
         rows.append(
             {
                 "Algorithm": algo_name,
-                f"{metric_name} (mean ± SE)": f"{mean:.3f} ± {se:.3f}",
-                "95% CI": f"[{ci_lower:.3f}, {ci_upper:.3f}]",
+                f"{metric_name} (mean ± SE)": mean_se,
+                "95% CI": interval,
                 "Seeds": len(scores),
             }
         )
@@ -535,11 +550,17 @@ def main(argv=None):
                     "ci_lower": float(ci_lower),
                     "ci_upper": float(ci_upper),
                     "bootstrap_samples": args.bootstrap_samples,
+                    "uncertainty_status": (
+                        "insufficient_seeds" if len(final_scores) == 1 else "estimated_from_seeds"
+                    ),
                 }
             )
-            print(
-                f"  Final score: {mean:.4f} ± {se:.4f} (95% CI: [{ci_lower:.4f}, {ci_upper:.4f}])"
-            )
+            if len(final_scores) == 1:
+                print(f"  Final score: {mean:.4f} (SE and 95% CI not estimable: n=1)")
+            else:
+                print(
+                    f"  Final score: {mean:.4f} ± {se:.4f} (95% CI: [{ci_lower:.4f}, {ci_upper:.4f}])"
+                )
 
     if not summary_rows:
         parser.error("no nonempty seed results found; no analysis was produced")

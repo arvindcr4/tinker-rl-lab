@@ -49,21 +49,19 @@ class OpenRLHFTrainer:
         print(f"{'=' * 60}\n")
 
         try:
-            import openrlhf  # type: ignore  # noqa: F401
+            import openrlhf  # type: ignore
+
             self.mode = "real"
-            print(f"OpenRLHF installed — mode=real, version={getattr(openrlhf, '__version__', 'unknown')}")
+            print(
+                f"OpenRLHF installed — mode=real, version={getattr(openrlhf, '__version__', 'unknown')}"
+            )
         except Exception as exc:
             print(f"OpenRLHF unavailable ({exc!r}); using seeded dryrun fallback.")
             self.mode = "dryrun"
 
     def _dryrun_reward(self, step: int) -> float:
-        """Deterministic seeded fallback for Qwen3-8B/GSM8K-500/G=8/lr=1e-5.
-
-        Calibrated slightly below verl (OpenRLHF's default DAPO-style KL can
-        over-regularize at lr=1e-5 on 30 steps), but above the near-collapse
-        TRL-H100 run. Real Modal numbers overwrite these.
-        """
-        rng = np.random.default_rng(seed=int(self.config.algorithm.kl_coef * 1e6) + 123 + step)
+        """Seeded synthetic trace for plumbing checks, not a training estimate."""
+        rng = np.random.default_rng(np.random.SeedSequence([self.config.seed, step, 123]))
         base = 0.22 + 0.012 * step
         noise = float(rng.normal(0, 0.10))
         return max(0.0, min(1.0, base + noise))
@@ -73,7 +71,8 @@ class OpenRLHFTrainer:
             raise RuntimeError("train_step() is dryrun-only; use run_openrlhf_training().")
         step_start = time.time()
         reward_val = self._dryrun_reward(step)
-        loss_val = 1.0 / (step + 1) + float(np.random.default_rng(step + 10000).normal(0, 0.05))
+        loss_rng = np.random.default_rng(np.random.SeedSequence([self.config.seed, step, 10000]))
+        loss_val = 1.0 / (step + 1) + float(loss_rng.normal(0, 0.05))
         self.reward_history.append(reward_val)
         self.loss_history.append(loss_val)
         print(f"  step={step} loss={loss_val:.4f} reward={reward_val:.4f}")
@@ -93,19 +92,18 @@ class OpenRLHFTrainer:
         await self.setup()
 
         if self.mode == "real":
-            print("Use run_openrlhf_training() for real runs; falling back to dryrun for run().")
-            self.mode = "dryrun"
+            raise RuntimeError("run() is dryrun-only; use run_openrlhf_training() for real runs.")
 
         for step in range(self.config.epochs):
-            try:
-                await self.train_step(step)
-                self.current_step = step + 1
-            except Exception as exc:
-                print(f"Error in step {step}: {exc}")
-                break
+            await self.train_step(step)
+            self.current_step = step + 1
 
         duration = time.time() - self.start_time
-        last10 = float(np.mean(self.reward_history[-10:])) if len(self.reward_history) >= 10 else float(np.mean(self.reward_history or [0]))
+        last10 = (
+            float(np.mean(self.reward_history[-10:]))
+            if len(self.reward_history) >= 10
+            else float(np.mean(self.reward_history or [0]))
+        )
         peak = float(max(self.reward_history or [0]))
         first5 = float(np.mean(self.reward_history[:5])) if self.reward_history else 0.0
 
@@ -160,13 +158,19 @@ def _validate_native_runtime(local_metrics: bool) -> str:
     except metadata.PackageNotFoundError as exc:
         raise RuntimeError("Native training requires OpenRLHF v0.8.4 + Ray + vLLM") from exc
     if version != "0.8.4":
-        raise RuntimeError(f"Unsupported OpenRLHF version {version!r}; command targets exactly 0.8.4")
+        raise RuntimeError(
+            f"Unsupported OpenRLHF version {version!r}; command targets exactly 0.8.4"
+        )
     if local_metrics and util.find_spec("tensorboard") is None:
         raise RuntimeError("Local native metrics require tensorboard; install it before training")
     return version
 
 
-def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrlhf-run") -> Dict[str, Any]:
+def run_openrlhf_training(
+    config: OpenRLHFConfig,
+    # An existing path is rejected and mkdir uses exist_ok=False before writes.
+    output_dir: str = "/tmp/openrlhf-run",  # noqa: S108
+) -> Dict[str, Any]:
     """Launch the validated native command; record execution, not inferred metrics.
 
     A successful subprocess does not establish a reward trace or held-out gain.
@@ -218,10 +222,13 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
     if config.log_to_wandb:
         result["metrics_reason"] = "native_wandb_selected_no_local_metrics"
     else:
-        result.update(read_native_metrics(
-            str(output), config.run_name or "openrlhf-grpo",
-            expected_rollouts=result["budget_plan"]["planned_rollouts"],
-        ))
+        result.update(
+            read_native_metrics(
+                str(output),
+                config.run_name or "openrlhf-grpo",
+                expected_rollouts=result["budget_plan"]["planned_rollouts"],
+            )
+        )
     (output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 

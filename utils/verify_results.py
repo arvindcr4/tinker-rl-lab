@@ -23,6 +23,8 @@ complete reference key apart from a trailing _sN, _seedN or _seed_N suffix;
 unknown group sizes or model variants cannot inherit the headline reference.
 Unknown or conflicting seed
 identities are UNVERIFIED and exit nonzero, never compared with seed 42 by default.
+Repeated experiment/seed identities are also UNVERIFIED, including copies across
+files; duplicate observations cannot count as independent reproduction evidence.
 
 The default tolerances (±5 pts on last-10, ±10 pts on peak) are justified in
 `ARTIFACT.md §6` and `REPRODUCE.md §8`.
@@ -61,6 +63,7 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import math
 import re
@@ -256,8 +259,21 @@ def verify(
     if not files:
         print(f"  ! no .json or .log files found under {results_dir}", file=sys.stderr)
         return rows, 1
-    for path in files:
-        parsed_rows = _parse_result_file(path)
+    parsed_files = [(path, _parse_result_file(path)) for path in files]
+    identities: Counter[Tuple[str, Optional[str]]] = Counter()
+    for path, parsed_rows in parsed_files:
+        for parsed in parsed_rows:
+            exp = str(parsed.get("experiment", path.stem))
+            key = _match_key(exp, expected)
+            if key is None:
+                continue
+            try:
+                seed = _result_seed(parsed, exp, path.stem)
+            except (ValueError, TypeError):
+                # The validation pass below reports conflicting/malformed seeds.
+                continue
+            identities[key, seed] += 1
+    for path, parsed_rows in parsed_files:
         if not parsed_rows and _match_key(path.stem, expected):
             raise ValueError(f"{path.name}: expected experiment file has no parseable result")
         for parsed in parsed_rows:
@@ -267,6 +283,11 @@ def verify(
                 continue
             try:
                 seed = _result_seed(parsed, exp, path.stem)
+                if identities[key, seed] > 1:
+                    raise ValueError(
+                        f"duplicate experiment/seed identity: {key}, seed {seed}; "
+                        "supply one unambiguous observation per seed"
+                    )
                 ref_seed = "*" if "*" in references[key] else seed
                 values = references[key].get(ref_seed) if ref_seed is not None else None
                 if values is None:

@@ -492,6 +492,13 @@ class TestGRPOConfig(unittest.TestCase):
 
 
 class TestTrackingFailClosed(unittest.TestCase):
+    def setUp(self):
+        # These tests mock the online providers. A developer's offline logging
+        # preference must not prevent the intended downstream guard from running.
+        environment = patch.dict("os.environ", {"WANDB_MODE": "online"})
+        environment.start()
+        self.addCleanup(environment.stop)
+
     def _dataset(self):
         return InMemoryDataset(train=[TrainingExample(prompt="q", target="1")])
 

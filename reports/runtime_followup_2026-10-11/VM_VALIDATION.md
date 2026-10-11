@@ -1401,3 +1401,27 @@ clarifies that JSON contains GRPO hyperparameters while adapter selection
 follows CLI flags; no adapter is inferred from an experiment name. Dependent
 NLL threshold settings remain inactive without enabling the objective, rather
 than changing scoring/training defaults based on that review suggestion.
+
+## Preserve configuration identity and metadata shapes (21:26 UTC)
+
+`wandb_tags="experiment"` previously became one tag per character, and
+`model=False` passed the local configuration/tracking checks. Identity and
+optional source/owner fields now require nonblank strings (or None where
+optional). Metadata sequences accept None, lists or tuples of nonblank strings;
+scalar strings, mappings, sets, booleans and wrong element types fail with
+field-name-only errors. Valid caller lists remain detached as tuples, optional
+None remains empty metadata, and pathlib checkpoint directories are normalized
+to JSON-compatible filesystem strings. The same guards run at validation
+boundaries so later mutation cannot reintroduce ambiguous shapes.
+
+Four initial cases failed; valid sequence copying and canonical W&B-mode
+controls already passed. The mutation regression blocks the dataset seam and
+network, keeping it independent of authentication state. **244 focused tests**
+pass. A public-source Muse review supported the shape guards. Its additional
+mode-normalization suggestion was not adopted: the existing runner already
+passes the literal `online` to the SDK, as the control test confirms.
+
+Full `make check submission-check` passed **1,872 tests, 2 skipped**, native TeX
+included, at **86.11%** configured supported-surface coverage in 260.11 seconds;
+all aggregate stages passed, exit zero. Valid experiment defaults, scoring and
+sampler cadence remain unchanged.

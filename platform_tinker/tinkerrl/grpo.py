@@ -349,6 +349,19 @@ class InMemoryDataset:
         return self.test
 
 
+_METADATA_SEQUENCE_FIELDS = (
+    "wandb_tags",
+    "training_suite_ids",
+    "heldout_suite_ids",
+    "held_out_suite_ids",
+    "primary_evaluation_suite_ids",
+    "domain_tags",
+    "declared_domains",
+    "training_domain_union",
+    "primary_evaluation_domain_union",
+)
+
+
 @dataclass(slots=True)
 class GRPOConfig:
     """All knobs for a GRPO experiment in one value object."""
@@ -449,29 +462,40 @@ class GRPOConfig:
     critic_pretrain_batches: int = 0
 
     def __post_init__(self) -> None:
-        # JSON configuration commonly supplies lists.  Convert all metadata
-        # sequences to tuples at construction so later caller mutation cannot
-        # change the W&B/config/checkpoint receipt.
-        object.__setattr__(self, "wandb_tags", tuple(self.wandb_tags or ()))
-        object.__setattr__(self, "training_suite_ids", tuple(self.training_suite_ids or ()))
-        object.__setattr__(self, "heldout_suite_ids", tuple(self.heldout_suite_ids or ()))
-        object.__setattr__(self, "held_out_suite_ids", tuple(self.held_out_suite_ids or ()))
-        object.__setattr__(
-            self,
-            "primary_evaluation_suite_ids",
-            tuple(self.primary_evaluation_suite_ids or ()),
-        )
-        object.__setattr__(self, "domain_tags", tuple(self.domain_tags or ()))
-        object.__setattr__(self, "declared_domains", tuple(self.declared_domains or ()))
-        object.__setattr__(self, "training_domain_union", tuple(self.training_domain_union or ()))
-        object.__setattr__(
-            self,
-            "primary_evaluation_domain_union",
-            tuple(self.primary_evaluation_domain_union or ()),
-        )
+        if isinstance(self.checkpoint_dir, os.PathLike):
+            object.__setattr__(self, "checkpoint_dir", os.fspath(self.checkpoint_dir))
+        self._validate_metadata_sequences()
+        # Detach caller lists without treating a string as one label per character.
+        for name in _METADATA_SEQUENCE_FIELDS:
+            object.__setattr__(self, name, tuple(getattr(self, name) or ()))
         self.validate_numerics()
 
+    def _validate_metadata_sequences(self) -> None:
+        for name in _METADATA_SEQUENCE_FIELDS:
+            value = getattr(self, name)
+            if value is not None and (
+                not isinstance(value, (list, tuple))
+                or any(not isinstance(item, str) or not item.strip() for item in value)
+            ):
+                raise ValueError(f"{name} must be a list or tuple of non-empty strings, or None")
+
     def _validate_boundary_inputs(self) -> None:
+        self._validate_metadata_sequences()
+        for name in ("name", "model", "checkpoint_dir"):
+            value = getattr(self, name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{name} must be a non-empty string")
+        for name in (
+            "model_revision",
+            "dataset_revision",
+            "hf_owner",
+            "hf_repo_prefix",
+            "checkpoint_name_prefix",
+            "wandb_entity",
+        ):
+            value = getattr(self, name)
+            if value is not None and (not isinstance(value, str) or not value.strip()):
+                raise ValueError(f"{name} must be a non-empty string or None")
         # Never let strings such as hf_public="false" become public uploads.
         # Optional campaign flags retain their separate fail-closed gate.
         for spec in fields(self):

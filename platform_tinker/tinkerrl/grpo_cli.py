@@ -13,6 +13,9 @@ override individual fields.
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict
+import hashlib
+import json
 import os
 import sys
 from pathlib import Path
@@ -238,22 +241,28 @@ REWARD_MAP = {
 }
 
 
-def _build_dataset(args: argparse.Namespace, config: GRPOConfig) -> Any:
+def _dataset_request(args: argparse.Namespace, config: GRPOConfig) -> tuple[Any, Dict[str, Any]]:
+    """Validate adapter selection without loading data or contacting a service."""
     dataset_name = args.dataset or args.preset
     factory = DATASET_FACTORIES.get(dataset_name)
     if factory is None:
         raise SystemExit(f"Unknown dataset preset: {dataset_name}")
     if dataset_name in {"tooluse_xlam", "pavlov_xlam", "gsm8k"}:
         if config.dataset_revision is not None:
-            return factory(seed=config.seed, revision=config.dataset_revision)
-        return factory(seed=config.seed)
+            return factory, {"seed": config.seed, "revision": config.dataset_revision}
+        return factory, {"seed": config.seed}
     if dataset_name == "pavlov_portfolio":
         if config.dataset_revision not in (None, PAVLOV_NON_XLAM_DATASET_REVISION):
             raise ValueError("dataset revision must match the pinned portfolio composite")
-        return factory(seed=config.seed)
+        return factory, {"seed": config.seed}
     if config.dataset_revision is not None:
         raise ValueError("dataset revision is unsupported for this dataset adapter")
-    return factory()
+    return factory, {}
+
+
+def _build_dataset(args: argparse.Namespace, config: GRPOConfig) -> Any:
+    factory, kwargs = _dataset_request(args, config)
+    return factory(**kwargs)
 
 
 def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str, Any]:
@@ -351,6 +360,11 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         help="Experiment preset (default: tooluse_synth).",
     )
     parser.add_argument("--json-config", type=Path, help="Path to a JSON config file.")
+    parser.add_argument(
+        "--check-config",
+        action="store_true",
+        help="Check local config and adapter selection only; print JSON without credentials or network.",
+    )
     parser.add_argument("--dataset", help="Dataset preset (overrides --preset default).")
     parser.add_argument("--reward", help="Reward adapter (overrides --preset default).")
     # overrides
@@ -420,11 +434,80 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _selected_reward_name(args: argparse.Namespace) -> str:
+    reward_name = args.reward or args.dataset or args.preset
+    if reward_name not in REWARD_MAP:
+        raise SystemExit(f"Unknown reward: {reward_name!r}.  Choose from {sorted(REWARD_MAP)}")
+    return str(reward_name)
+
+
+def _configuration_check(args: argparse.Namespace) -> Dict[str, Any]:
+    reward_name = _selected_reward_name(args)
+    config = build_config(args)
+    _dataset_request(args, config)
+    encoded = json.dumps(asdict(config), sort_keys=True, allow_nan=False).encode()
+    # Whitelist numeric/boolean knobs: never echo full config, endpoint, owner,
+    # private model identifiers, experiment names or filesystem paths.
+    effective = {
+        key: getattr(config, key)
+        for key in (
+            "num_seeds",
+            "seed",
+            "batch_size",
+            "group_size",
+            "lr",
+            "temperature",
+            "top_p",
+            "max_prompt_tokens",
+            "max_response_tokens",
+            "resume",
+            "evaluate_heldout",
+            "gspo_enabled",
+            "gspo_update_epochs",
+            "nll_aux_enabled",
+            "nll_aux_coef",
+            "dynamic_sampling",
+            "dynamic_sampling_max_resamples",
+            "seed_sampling",
+            "critic_enabled",
+            "critic_pretrain_batches",
+            "critic_updates_per_step",
+            "hf_public",
+        )
+    }
+    effective.update(
+        steps_per_seed=config.steps,
+        total_configured_steps=config.steps * config.num_seeds,
+        save_every=config.effective_save_every(),
+    )
+    return {
+        "schema_version": 1,
+        "status": "config_checks_passed",
+        "scope": "Local config and adapter selection only; no dataset, tokenizer, credentials, network, provider or scientific verification.",
+        "not_checked": [
+            "dataset_contents",
+            "tokenizer",
+            "credentials",
+            "provider_availability",
+            "tracking_export",
+            "scientific_validity",
+        ],
+        "config_sha256": hashlib.sha256(encoded).hexdigest(),
+        "dataset": args.dataset or args.preset,
+        "reward": reward_name,
+        "effective": effective,
+    }
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     args = _parse_args(argv)
     if args.help_overrides:
         # argparse --help covers this; kept for discoverability.
         args = _parse_args(["--help"])
+        return 0
+
+    if args.check_config:
+        print(json.dumps(_configuration_check(args), sort_keys=True, allow_nan=False))
         return 0
 
     if "TINKER_API_KEY" not in os.environ:
@@ -434,9 +517,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # The reward follows the dataset actually trained on; an unknown name
     # fails before any dataset load instead of silently scoring with
     # ToolCallReward (fixed 2026-10-03).
-    reward_name = args.reward or args.dataset or args.preset
-    if reward_name not in REWARD_MAP:
-        raise SystemExit(f"Unknown reward: {reward_name!r}.  Choose from {sorted(REWARD_MAP)}")
+    reward_name = _selected_reward_name(args)
     config = build_config(args)
     dataset = _build_dataset(args, config)
     reward = REWARD_MAP[reward_name]()

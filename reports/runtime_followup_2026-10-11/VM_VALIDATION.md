@@ -1296,3 +1296,28 @@ No truncation policy was changed on the basis of a speculative concern.
 `GSM8K_TOKEN_BUDGET_AUDIT.json` records source URLs, asset hashes, versions,
 function hashes and the exact scope. Raw public data/tokenizer downloads remain
 outside the repository. No credentials, provider job or private data were used.
+
+## Offline CLI configuration check (20:53 UTC)
+
+`python -m platform_tinker.tinkerrl.grpo_cli --check-config --preset gsm8k
+--steps 1 --seed 17 --no-resume` now runs local configuration and adapter-selection
+checks without an API key, dataset load, tokenizer, tracking or provider work.
+It reuses strict JSON/override/numeric/tracking/campaign validation and a pure
+adapter/revision selector. Output is a configuration SHA-256 plus allowlisted
+numeric/boolean settings and selected built-in adapter names. Raw config,
+private model identifiers, endpoint/owner strings and filesystem paths are not
+printed. Its explicit `not_checked` list prevents treating this as data,
+authentication, service, export or scientific-readiness approval. Normal
+execution defaults and the existing missing-key behavior are unchanged.
+
+Six initial cases failed before this mode existed; eight final cases cover
+offline success, JSON budget overrides, source-revision selection, invalid
+selection/budgets, tracking/campaign gates and bounded output. **109 focused
+tests** pass. A separate actual CLI invocation with the key absent and sockets
+blocked produced the expected one-step configuration receipt. A public-source
+Muse review supported the early-exit/pure-selection design. Full
+`make check submission-check` passed **1,841 tests, 2 skipped**, native TeX
+included, at **85.97%** configured supported-surface coverage in 258.74 seconds;
+all aggregate stages passed, exit zero. This also revalidated the newly added
+public token-budget audit artifact. Engineering CI on `a19b3fec` passed; the
+scientific `minreport-audit` gate remains red.

@@ -884,3 +884,31 @@ zero. An earlier aggregate run exposed two incorrect test assertions about
 where the completed receipt nests its trace; those assertions were corrected
 and the complete aggregate suite was rerun successfully. No provider job,
 model download, new result claim or frozen-artifact rewrite was involved.
+
+## Async loss-input binding (19:06 UTC)
+
+A CPU reproduction showed that mutating a response-length list after constructing
+its loss callback reintroduced prompt-token gradients. Mutating nested behavior
+logprobs changed an otherwise unclipped GSPO update into a clipped zero-gradient
+update. These callbacks are invoked after the SDK awaits its forward request,
+so the factory now snapshots masks, response lengths and behavior values.
+Tensor behavior values are detached and cloned; nested lists and NumPy arrays
+are copied without premature dtype conversion. The `stash` list remains shared
+output and keeps its existing first-call, detached response-only semantics.
+
+All eight new aliasing regressions failed before the change and pass afterward.
+They cover both loss factories, NumPy masks, nested lists/arrays, leaf and
+non-leaf tensors, float64 precision, outer-list mutation and stash ownership.
+Two additional transport-free tests run the actual locked Tinker SDK bridge,
+mutate caller inputs inside its awaited forward transport, and verify the
+resulting response-only cross-entropy weights. Network connections remain
+blocked and no provider client is constructed. A completed Muse review of the
+public callback implementations confirmed the aliasing risks; suggested scalar
+coercions were not adopted because they could weaken existing shape/type checks.
+
+The focused loss/SDK suites passed (111 cases before the two new SDK-await
+cases; all 17 snapshot/SDK cases afterward). Full validation passed **1,695 tests,
+2 skipped**, including native TeX, at **85.54%** configured supported-surface
+coverage in 259.52 seconds. Static, package, lock, docs, public/demo and submission
+checks passed, aggregate exit zero. The learning objective, scorer policy and
+historical results are unchanged.

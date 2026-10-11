@@ -29,6 +29,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+from copy import deepcopy
 from dataclasses import MISSING, asdict, dataclass, field, fields, replace
 from decimal import Context, Decimal, InvalidOperation, ROUND_FLOOR, ROUND_HALF_EVEN, localcontext
 from pathlib import Path
@@ -935,7 +936,10 @@ def make_grpo_loss_fn(
     nll_coef: float = 0.0,
     response_lens: Optional[Sequence[int]] = None,
 ) -> Callable:
-    """Return a Tinker-compatible loss closure bound to ``advantages``.
+    """Return a Tinker-compatible loss closure bound to rollout inputs.
+
+    Input masks and response lengths are snapshotted before the SDK can
+    await its forward request; later caller mutation cannot rebind the loss.
 
     With ``nll_mask``/``nll_coef`` set, adds a VAPO-style NLL auxiliary term
     (VAPO §4.3, ``L = L_PPO + μ·L_NLL``) over masked (correct) responses:
@@ -951,6 +955,8 @@ def make_grpo_loss_fn(
     """
 
     advantages = tuple(advantages)
+    nll_mask = None if nll_mask is None else tuple(nll_mask)
+    response_lens = None if response_lens is None else tuple(response_lens)
     if not all(math.isfinite(value) for value in advantages):
         raise ValueError("advantages must be finite")
     if not math.isfinite(nll_coef):
@@ -1016,6 +1022,9 @@ def make_gspo_loss_fn(
 ) -> Callable:
     """Return a Tinker-compatible GSPO loss closure (Zheng et al. 2025, Eq. 5-7).
 
+    Response lengths and behavior logprobs are snapshotted at creation;
+    ``stash`` remains a caller-visible output list.
+
     Sequence-level clipped objective: ``s_i = exp(mean(new_lp - old_lp))``
     (length-normalized sequence ratio), loss ``-mean(min(s·A,
     clip(s, 1-ε_low, 1+ε_high)·A))``.  ``old_logprobs=None`` means first
@@ -1036,6 +1045,16 @@ def make_gspo_loss_fn(
     """
 
     advantages = tuple(advantages)
+    response_lens = None if response_lens is None else tuple(response_lens)
+    # The SDK may await its forward request before invoking this callback.
+    # Bind rollout values now; detach/clone tensors without downcasting lists
+    # or NumPy arrays before the trainer logprob dtype is known. Stash remains
+    # intentionally shared output, not part of this immutable input snapshot.
+    if old_logprobs is not None:
+        old_logprobs = tuple(
+            value.detach().clone() if isinstance(value, torch.Tensor) else deepcopy(value)
+            for value in old_logprobs
+        )
     if not all(math.isfinite(value) for value in advantages):
         raise ValueError("advantages must be finite")
     if any(not math.isfinite(value) or value < 0 for value in (epsilon_low, epsilon_high)):

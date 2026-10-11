@@ -217,3 +217,26 @@ def test_sampling_controls_and_metadata_use_real_sdk_models():
     assert metadata["sampler_logprobs"][0] == pytest.approx([-0.1])
     assert metadata["sampler_logprobs"][1] == pytest.approx([-0.2] * 4)
     assert metadata["identical_group"] is False
+
+
+@pytest.mark.parametrize("mode", ["grpo", "gspo"])
+def test_real_sdk_await_cannot_rebind_rollout_inputs(mode):
+    lengths, mask, old = [1], [True], [[-1.0]]
+    if mode == "grpo":
+        loss_fn = make_grpo_loss_fn([1.0], nll_mask=mask, nll_coef=0.5, response_lens=lengths)
+        expected = [0.0, 1.5]
+    else:
+        loss_fn = make_gspo_loss_fn([1.0], old_logprobs=old, response_lens=lengths)
+        expected = [0.0, 1.0]
+
+    class MutatingForwardClient(TransportlessClient):
+        async def forward_async(self, data, loss_fn, loss_fn_config):
+            await asyncio.sleep(0)
+            lengths[0] = 2
+            mask[0] = False
+            old[0][0] = -10.0
+            return await super().forward_async(data, loss_fn, loss_fn_config)
+
+    client = MutatingForwardClient([[-9.0, -1.0]])
+    execute_bridge(client, [_build_datum([10, 11], [20])], loss_fn)
+    assert client.backward_data[0].loss_fn_inputs["weights"].data == pytest.approx(expected)

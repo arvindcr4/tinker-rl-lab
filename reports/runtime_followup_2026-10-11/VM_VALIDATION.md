@@ -369,3 +369,35 @@ Validation: **1,576 passed, 1 skipped**, no native-LaTeX deselections,
 85.09% coverage, in 254.71 seconds. Full `make check submission-check` passed,
 including both native TeX tests, lint, formatting, configured type checks,
 packaging, lock consistency, secret scan, docs, and public/demo checks.
+
+## Half-precision policy-loss arithmetic
+
+A public-source Muse review of `aefc66a3` identified precision risks. CPU
+reproduction confirmed two: float16 token sums overflow on a finite GRPO
+objective, and converting behavior log probabilities to float16/bfloat16 can
+erase a policy delta larger than GSPO's configured clip window. For example,
+new `-5.0` and behavior `-5.001` incorrectly took the unclipped positive-advantage
+gradient; the float32 oracle correctly produced zero gradient. The review's
+example had a sign error, which was corrected before writing the regression.
+
+Half-precision inputs now use float32 arithmetic before subtraction, reductions,
+and exponentiation. Existing float32/float64 arithmetic stays unchanged, and
+autograd still returns gradients to the original input dtype. This cannot
+recover precision already lost when a model produced its new log probabilities.
+The exact signed GSPO objective and clipping windows are unchanged.
+
+Promotion also checks the analytical per-token gradient range before accepting
+an update: a finite float32 objective must not create an infinite gradient when
+cast back to float16. A large unclipped ratio is accepted when averaging across
+enough tokens makes its gradients representable, rather than being incorrectly
+clipped or rejected solely because the loss exceeds the float16 range. Tests
+compare values and gradients against float32 references, including auxiliary
+NLL, clipped/unclipped signs, first epochs, and response-only prompt masking.
+These are CPU kernel regressions; no GPU or provider training was performed.
+
+Aggregate validation: **1,584 passed, 1 skipped, 2 native-LaTeX tests
+intentionally deselected**, 84.99% coverage, in 133.19 seconds. Lint,
+formatting, configured type checks, packaging, lock consistency, documentation,
+public demo, and submission checks passed. The preceding configuration batch
+passed both native-LaTeX tests; this batch changes only policy-loss kernels
+and their CPU regressions.

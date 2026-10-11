@@ -107,3 +107,92 @@ def test_grpo_nonfinite_reduction_is_rejected():
     with pytest.raises(ValueError, match="GRPO objective is non-finite"):
         make_grpo_loss_fn([1.0])(None, [values])
     assert values.grad is None
+
+
+@pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16])
+def test_half_precision_gspo_preserves_behavior_policy_delta(dtype):
+    actual = torch.tensor([-5.0], dtype=dtype, requires_grad=True)
+    oracle = actual.detach().float().requires_grad_()
+    for advantage, old in ((1.0, -5.001), (-1.0, -4.999)):
+        actual.grad = None
+        oracle.grad = None
+        loss, metrics = make_gspo_loss_fn([advantage], old_logprobs=[[old]])(None, [actual])
+        expected, expected_metrics = make_gspo_loss_fn([advantage], old_logprobs=[[old]])(
+            None, [oracle]
+        )
+        loss.backward()
+        expected.backward()
+        assert loss.dtype == torch.float32
+        torch.testing.assert_close(loss, expected)
+        torch.testing.assert_close(actual.grad, oracle.grad.to(dtype))
+        assert metrics == expected_metrics
+        assert metrics["gspo_clip_frac"] == 1.0
+        assert torch.equal(actual.grad, torch.zeros_like(actual))
+
+
+@pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16])
+def test_half_precision_grpo_long_response_and_auxiliary_match_float32(dtype):
+    actual = torch.full((2048,), -40.0, dtype=dtype, requires_grad=True)
+    oracle = actual.detach().float().requires_grad_()
+    factory = make_grpo_loss_fn([0.01], nll_mask=[True], nll_coef=0.1)
+    loss, metrics = factory(None, [actual])
+    expected, expected_metrics = factory(None, [oracle])
+    loss.backward()
+    expected.backward()
+    assert loss.dtype == torch.float32
+    torch.testing.assert_close(loss, expected)
+    torch.testing.assert_close(actual.grad, oracle.grad.to(dtype))
+    assert metrics == expected_metrics
+    assert torch.isfinite(actual.grad).all()
+
+
+@pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16])
+def test_half_precision_gspo_unclipped_and_first_epoch_gradients(dtype):
+    for old in (None, [[-5.0, -5.0]]):
+        actual = torch.tensor([-5.0, -5.0], dtype=dtype, requires_grad=True)
+        oracle = actual.detach().float().requires_grad_()
+        loss, _ = make_gspo_loss_fn([0.5], old_logprobs=old)(None, [actual])
+        expected, _ = make_gspo_loss_fn([0.5], old_logprobs=old)(None, [oracle])
+        loss.backward()
+        expected.backward()
+        torch.testing.assert_close(loss, expected)
+        torch.testing.assert_close(actual.grad, oracle.grad.to(dtype))
+        assert actual.grad[0] != 0
+
+
+def test_promoted_gspo_does_not_accept_unrepresentable_half_gradient():
+    values = torch.tensor([-1.0], dtype=torch.float16, requires_grad=True)
+    with pytest.raises(ValueError, match="gradient cannot be represented"):
+        make_gspo_loss_fn([-1.0], old_logprobs=[[-13.0]])(None, [values])
+    assert values.grad is None
+    # The same large ratio across a longer response has representable per-token
+    # derivatives. Rejecting it based on loss magnitude would be incorrect.
+    values = torch.full((32,), -1.0, dtype=torch.float16, requires_grad=True)
+    loss, _ = make_gspo_loss_fn([-1.0], old_logprobs=[[-13.0] * 32])(None, [values])
+    loss.backward()
+    assert torch.isfinite(values.grad).all()
+    assert loss.item() > torch.finfo(torch.float16).max
+
+
+def test_promoted_grpo_does_not_accept_unrepresentable_half_gradient():
+    values = torch.tensor([-0.001], dtype=torch.float16, requires_grad=True)
+    with pytest.raises(ValueError, match="gradient cannot be represented"):
+        make_grpo_loss_fn([70000.0])(None, [values])
+    assert values.grad is None
+
+
+@pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16])
+def test_half_precision_response_mask_keeps_prompt_gradients_zero(dtype):
+    for factory in (
+        make_grpo_loss_fn([0.5], nll_mask=[True], nll_coef=0.1, response_lens=[2]),
+        make_gspo_loss_fn([0.5], old_logprobs=[[-3.0, -3.0]], response_lens=[2]),
+    ):
+        values = torch.tensor([-100.0, -100.0, -3.0, -3.0], dtype=dtype, requires_grad=True)
+        oracle = values.detach().float().requires_grad_()
+        loss, _ = factory(None, [values])
+        expected, _ = factory(None, [oracle])
+        loss.backward()
+        expected.backward()
+        torch.testing.assert_close(values.grad, oracle.grad.to(dtype))
+        assert torch.equal(values.grad[:2], torch.zeros_like(values[:2]))
+        assert torch.isfinite(values.grad).all()

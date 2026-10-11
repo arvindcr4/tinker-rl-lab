@@ -851,6 +851,21 @@ def _response_logprobs(
     return sliced
 
 
+def _loss_accumulator(logprobs: torch.Tensor) -> torch.Tensor:
+    # Keep float64 or float32 untouched; cast before subtraction/reduction so
+    # half precision does not erase clip-scale policy deltas or overflow sums.
+    return logprobs.float() if logprobs.dtype in (torch.float16, torch.bfloat16) else logprobs
+
+
+def _check_low_precision_gradient(value: float, logprobs: torch.Tensor) -> None:
+    # Promoting the objective must not newly allow gradients that overflow when
+    # autograd casts them back to the original half-precision input tensor.
+    if logprobs.dtype in (torch.float16, torch.bfloat16) and (
+        not math.isfinite(value) or abs(value) > torch.finfo(logprobs.dtype).max
+    ):
+        raise ValueError("policy gradient cannot be represented in the input dtype")
+
+
 def make_grpo_loss_fn(
     advantages: Sequence[float],
     nll_mask: Optional[Sequence[bool]] = None,
@@ -891,14 +906,14 @@ def make_grpo_loss_fn(
         for i, logprobs in enumerate(resp_logprobs):
             if not torch.isfinite(logprobs).all():
                 raise ValueError("response logprobs must be finite")
-            losses.append(-advantages[i] * logprobs.sum())
+            losses.append(-advantages[i] * _loss_accumulator(logprobs).sum())
         if not losses:
             return torch.tensor(0.0), {"grpo_loss": 0.0, "nll_loss": 0.0}
         loss = torch.stack(losses).mean()
         nll_loss = torch.tensor(0.0)
         if nll_mask is not None and nll_coef != 0.0:
             masked = [
-                logprobs.mean()
+                _loss_accumulator(logprobs).mean()
                 for keep, logprobs in zip(nll_mask, resp_logprobs)
                 if keep and logprobs.numel() > 0
             ]
@@ -907,6 +922,17 @@ def make_grpo_loss_fn(
                 loss = loss + nll_coef * nll_loss
         if not torch.isfinite(loss):
             raise ValueError("GRPO objective is non-finite; refusing an invalid update")
+        masked_count = sum(
+            bool(keep) and lp.numel() > 0
+            for keep, lp in zip(() if nll_mask is None else nll_mask, resp_logprobs)
+        )
+        for i, logprobs in enumerate(resp_logprobs):
+            if logprobs.numel() == 0:
+                continue
+            gradient = -advantages[i] / len(resp_logprobs)
+            if masked_count and nll_mask is not None and nll_mask[i]:
+                gradient -= nll_coef / masked_count / logprobs.numel()
+            _check_low_precision_gradient(gradient, logprobs)
         # grpo_loss stays the optimized total (as before); nll_loss exposes
         # the auxiliary component for tracking.
         return loss, {"grpo_loss": loss.item(), "nll_loss": nll_loss.item()}
@@ -972,13 +998,14 @@ def make_gspo_loss_fn(
                 raise ValueError(f"sequence {i} has no token logprobs")
             if not torch.isfinite(logprobs).all():
                 raise ValueError("response logprobs must be finite")
+            accumulator = _loss_accumulator(logprobs)
             if old_logprobs is None:
                 # First epoch: ratio is exactly 1, but keep it a function
                 # of logprobs so gradients flow (length-normalized PG).
-                log_ratio = (logprobs - logprobs.detach()).mean()
+                log_ratio = (accumulator - accumulator.detach()).mean()
             else:
                 old = torch.as_tensor(
-                    old_logprobs[i], dtype=logprobs.dtype, device=logprobs.device
+                    old_logprobs[i], dtype=accumulator.dtype, device=logprobs.device
                 ).detach()
                 if logprobs.shape != old.shape:
                     raise ValueError(
@@ -987,7 +1014,7 @@ def make_gspo_loss_fn(
                     )
                 if not torch.isfinite(old).all():
                     raise ValueError("behavior logprobs must be finite")
-                log_ratio = (logprobs - old).mean()
+                log_ratio = (accumulator - old).mean()
             if not torch.isfinite(log_ratio):
                 raise ValueError("GSPO log ratio is non-finite; refusing an invalid update")
             if log_ratio < log_low or log_ratio > log_high:
@@ -1002,6 +1029,15 @@ def make_gspo_loss_fn(
                 term = torch.exp(torch.clamp(log_ratio, max=log_high)) * advantage
             else:
                 term = torch.exp(torch.clamp(log_ratio, min=log_low)) * advantage
+            active = (advantage > 0 and log_ratio <= log_high) or (
+                advantage < 0 and log_ratio >= log_low
+            )
+            gradient = (
+                float((term.detach() / len(logprobs_list) / logprobs.numel()).item())
+                if active
+                else 0.0
+            )
+            _check_low_precision_gradient(gradient, logprobs)
             terms.append(term)
         loss = -torch.stack(terms).mean()
         if not torch.isfinite(loss):

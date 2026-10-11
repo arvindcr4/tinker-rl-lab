@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from importlib import metadata, util
 import os
 import re
 import subprocess
@@ -152,6 +153,19 @@ def _prepare_gsm8k_500_jsonl(out_path: str) -> str:
     return str(out)
 
 
+def _validate_native_runtime(local_metrics: bool) -> str:
+    """Check the versioned contract before dataset or output side effects."""
+    try:
+        version = metadata.version("openrlhf")
+    except metadata.PackageNotFoundError as exc:
+        raise RuntimeError("Native training requires OpenRLHF v0.8.4 + Ray + vLLM") from exc
+    if version != "0.8.4":
+        raise RuntimeError(f"Unsupported OpenRLHF version {version!r}; command targets exactly 0.8.4")
+    if local_metrics and util.find_spec("tensorboard") is None:
+        raise RuntimeError("Local native metrics require tensorboard; install it before training")
+    return version
+
+
 def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrlhf-run") -> Dict[str, Any]:
     """Launch the validated native command; record execution, not inferred metrics.
 
@@ -160,18 +174,20 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
     runs by display name, start a second run, or publish checkpoints.
     """
     from .command import build_openrlhf_command
+    from .metrics import read_native_metrics
 
     output = Path(output_dir).resolve()
     data_path = str(output / "gsm8k500.jsonl")
     # Validate before importing providers, downloading data, or creating output.
     cmd = build_openrlhf_command(config, data_path, str(output))
-    if (output / "result.json").exists():
-        raise FileExistsError("Choose a fresh output directory; result.json already exists")
+    if output.exists():
+        raise FileExistsError("Choose a fresh output directory; existing artifacts are preserved")
+    version = _validate_native_runtime(local_metrics=not config.log_to_wandb)
     try:
         import openrlhf  # type: ignore  # noqa: F401
     except ImportError as exc:
         raise RuntimeError("Native training requires OpenRLHF v0.8.4 + Ray + vLLM") from exc
-    output.mkdir(parents=True, exist_ok=True)
+    output.mkdir(parents=True, exist_ok=False)
     _prepare_gsm8k_500_jsonl(data_path)
     env = os.environ.copy()
     env["PYTHONPATH"] = ""
@@ -193,8 +209,16 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
         "task": "gsm8k-500",
         "duration_s": time.time() - start,
         "subprocess_exit": 0,
+        "openrlhf_version": version,
         "config": config.to_dict(),
     }
+    if config.log_to_wandb:
+        result["metrics_reason"] = "native_wandb_selected_no_local_metrics"
+    else:
+        result.update(read_native_metrics(
+            str(output), config.run_name or "openrlhf-grpo",
+            expected_rollouts=config.max_samples // config.rollout_batch_size,
+        ))
     (output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 

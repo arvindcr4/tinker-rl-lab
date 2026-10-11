@@ -40,6 +40,22 @@ def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: s
     )
     if any(value < 1 for value in positive):
         raise ValueError("Training sizes, epochs, token caps and GPU counts must be positive")
+    if config.train_batch_size % (config.micro_batch_size * config.num_gpus):
+        raise ValueError("train_batch_size must divide into whole distributed micro-batches")
+    if (
+        config.max_samples < config.rollout_batch_size
+        or config.max_samples % config.rollout_batch_size
+    ):
+        raise ValueError(
+            "max_samples must contain whole rollout batches (native loader drops tails)"
+        )
+    if config.tensor_parallel_size > config.num_gpus:
+        raise ValueError("colocated tensor_parallel_size cannot exceed num_gpus")
+    if not 0 < config.gpu_memory_utilization <= 1:
+        raise ValueError("gpu_memory_utilization must be in (0, 1]")
+    run_name = config.run_name or "openrlhf-grpo"
+    if run_name in {".", ".."} or any(char in run_name for char in ("/", "\\")):
+        raise ValueError("run_name must be a single directory component for native logging")
     options = {
         "pretrain": config.model.model_path or config.model_name,
         "ref_pretrain": config.model.model_path or config.model_name,
@@ -87,15 +103,18 @@ def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: s
         command.append("--flash_attn")
     if config.model.load_in_4bit:
         command.append("--load_in_4bit")
-    if os.environ.get("WANDB_API_KEY"):
+    command.extend(["--wandb_run_name", run_name])
+    if config.log_to_wandb:
+        if not os.environ.get("WANDB_API_KEY"):
+            raise ValueError("log_to_wandb requires WANDB_API_KEY")
         command.extend(
             [
                 "--use_wandb",
                 os.environ["WANDB_API_KEY"],
                 "--wandb_project",
                 config.project_name,
-                "--wandb_run_name",
-                config.run_name or "openrlhf-grpo",
             ]
         )
+    else:
+        command.extend(["--use_tensorboard", os.path.join(output_dir, "tensorboard")])
     return command

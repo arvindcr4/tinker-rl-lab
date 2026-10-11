@@ -13,6 +13,12 @@ from platform_modal.openrlhf.config import OpenRLHFConfig
 from platform_modal.openrlhf import trainer
 
 
+@pytest.fixture
+def native_runtime():
+    with patch.object(trainer, "_validate_native_runtime", return_value="0.8.4"):
+        yield
+
+
 def config(**kwargs):
     return OpenRLHFConfig(
         algorithm={"algorithm": "grpo", "sample_num": 6},
@@ -77,7 +83,7 @@ def test_invalid_requests_fail_before_provider_or_filesystem_work(tmp_path, chan
     assert not output.exists()
 
 
-def test_failure_cannot_create_success_receipt(tmp_path):
+def test_failure_cannot_create_success_receipt(tmp_path, native_runtime):
     with (
         patch.dict(sys.modules, {"openrlhf": types.ModuleType("openrlhf")}),
         patch.object(trainer, "_prepare_gsm8k_500_jsonl"),
@@ -86,11 +92,13 @@ def test_failure_cannot_create_success_receipt(tmp_path):
         ),
         pytest.raises(subprocess.CalledProcessError),
     ):
-        trainer.run_openrlhf_training(config(), str(tmp_path))
-    assert not (tmp_path / "result.json").exists()
+        trainer.run_openrlhf_training(config(), str(tmp_path / "run"))
+    assert not (tmp_path / "run/result.json").exists()
 
 
-def test_success_records_config_without_inventing_measurements(tmp_path, monkeypatch):
+def test_success_records_config_without_inventing_measurements(
+    tmp_path, monkeypatch, native_runtime
+):
     monkeypatch.chdir(tmp_path)
     with (
         patch.dict(sys.modules, {"openrlhf": types.ModuleType("openrlhf")}),
@@ -124,3 +132,67 @@ def test_existing_receipt_is_preserved_before_any_provider_work(tmp_path):
             trainer.run_openrlhf_training(config(), str(tmp_path))
     prepare.assert_not_called()
     assert receipt.read_text() == "existing evidence"
+
+
+@pytest.mark.parametrize(
+    ("changes", "match"),
+    [
+        ({"max_samples": 7}, "whole rollout"),
+        ({"max_samples": 241}, "whole rollout"),
+        ({"micro_batch_size": 3}, "distributed micro"),
+        ({"tensor_parallel_size": 2}, "cannot exceed"),
+        ({"gpu_memory_utilization": 0}, "gpu_memory_utilization"),
+        ({"run_name": "../old-run"}, "directory component"),
+    ],
+)
+def test_rejects_unrepresentable_batch_and_logging_settings(changes, match):
+    with pytest.raises(ValueError, match=match):
+        build_openrlhf_command(config(**changes), "/data", "/output")
+
+
+def test_environment_key_alone_does_not_switch_local_metrics_to_wandb(monkeypatch):
+    monkeypatch.setenv("WANDB_API_KEY", "synthetic-test-key")
+    command = build_openrlhf_command(config(), "/data", "/output")
+    assert "--use_wandb" not in command
+    assert command[command.index("--use_tensorboard") + 1] == "/output/tensorboard"
+    explicit = build_openrlhf_command(config(log_to_wandb=True), "/data", "/output")
+    assert "--use_wandb" in explicit
+    assert "--use_tensorboard" not in explicit
+
+
+def test_explicit_wandb_requires_credentials(monkeypatch):
+    monkeypatch.delenv("WANDB_API_KEY", raising=False)
+    with pytest.raises(ValueError, match="requires WANDB_API_KEY"):
+        build_openrlhf_command(config(log_to_wandb=True), "/data", "/output")
+
+
+@pytest.mark.parametrize("version", ["0.8.3", "0.8.4.dev1", "0.9.0"])
+def test_unvalidated_versions_fail_before_dataset_work(tmp_path, version):
+    with (
+        patch.object(trainer.metadata, "version", return_value=version),
+        patch.object(trainer, "_prepare_gsm8k_500_jsonl") as prepare,
+        pytest.raises(RuntimeError, match="Unsupported OpenRLHF version"),
+    ):
+        trainer.run_openrlhf_training(config(), str(tmp_path / "run"))
+    prepare.assert_not_called()
+    assert not (tmp_path / "run").exists()
+
+
+def test_supported_version_requires_local_logging_dependency():
+    with (
+        patch.object(trainer.metadata, "version", return_value="0.8.4"),
+        patch.object(trainer.util, "find_spec", return_value=None),
+        pytest.raises(RuntimeError, match="require tensorboard"),
+    ):
+        trainer._validate_native_runtime(local_metrics=True)
+
+
+def test_directory_with_stale_events_cannot_be_reused(tmp_path):
+    (tmp_path / "events.out.tfevents.old").write_text("preserve")
+    with (
+        patch.object(trainer, "_validate_native_runtime") as runtime,
+        pytest.raises(FileExistsError, match="fresh output"),
+    ):
+        trainer.run_openrlhf_training(config(), str(tmp_path))
+    runtime.assert_not_called()
+    assert (tmp_path / "events.out.tfevents.old").read_text() == "preserve"

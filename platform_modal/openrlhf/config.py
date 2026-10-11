@@ -85,6 +85,8 @@ class OpenRLHFConfig(BaseModel):
     # Logging
     project_name: str = "openrlhf-tinker"
     run_name: Optional[str] = None
+    # Explicit opt-in: native W&B suppresses TensorBoard in v0.8.4.
+    log_to_wandb: bool = False
 
     # vLLM settings
     inference_backend: str = "vllm"

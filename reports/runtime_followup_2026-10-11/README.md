@@ -57,9 +57,14 @@ HTTP(S) reward endpoint, and rejects unsupported requests before provider work.
 A nonzero subprocess exit raises. Existing result receipts are preserved.
 Importing the package no longer starts an emissions tracker. The wrapper no
 longer queries ambiguous remote histories, fabricates reward summaries, starts a
-second W&B run, or automatically uploads checkpoints. Optional native CLI W&B
-logging remains available when configured. A successful process yields a local
-execution receipt with `steps: null` and `metrics_status: not_collected`.
+second W&B run, or automatically uploads checkpoints. Native CLI W&B
+logging now requires explicit `log_to_wandb=True`; an environment key alone does
+not enable it. Local TensorBoard logging is the default. The source-checked
+reader records finite, contiguous training rewards from one fresh event file
+only when the full planned rollout count is present, with a source hash and
+`logged_rollout_steps`. Missing or ambiguous logs remain `not_collected`. Every
+receipt retains `steps: null`: logged rollout iterations are not optimizer-step
+measurements. See the [second-pass review](RUNTIME_REVIEW.md).
 
 The contract targets the official
 [OpenRLHF v0.8.4 CLI](https://github.com/OpenRLHF/OpenRLHF/blob/v0.8.4/openrlhf/cli/train_ppo_ray.py).
@@ -76,7 +81,9 @@ decontamination, single-seed, and evaluation limitations. The separate historica
 Modal experiment script was not altered or executed. Independent final-thesis
 review must account for this note; the frozen PDF remains unchanged.
 
-## Validation and remaining work
+## Validation at commit d47e2b9c (prior run)
+
+The [review continuation](RUNTIME_REVIEW.md) records its own new checks separately.
 
 Validated on macOS with Python 3.12.13, CPU mocks only:
 
@@ -117,3 +124,5 @@ Priority remaining work:
 4. Resolve the previously documented scientific gaps: training-source and
    decontamination provenance, unresolved manifests and collaborator run
    permission. Runtime fixes and identity receipts do not close these gaps.
+
+Current manuscript/report corrections are enumerated in [MANUSCRIPT_ERRATA.md](MANUSCRIPT_ERRATA.md); the frozen export remains untouched.

@@ -806,3 +806,41 @@ Full validation passed: **1,663 passed, 2 skipped**, including native TeX,
 package, lock, docs, public/demo and submission checks passed. The preceding
 source-pin CI completed all engineering jobs successfully; its environment
 job's longer runtime was dependency installation, not a failing test.
+
+## Transport-free integration through the actual locked Tinker SDK
+
+The project environment contains Tinker SDK **0.24.1**, distinct from the
+separately installed CLI tools. Its official public wheel was anonymously
+retrieved from PyPI and verified against the published SHA-256:
+`67a6564b2563f970e36f870292eabbbe698b539e84c04ee96cec0ac6af2206a5`
+(250,296 bytes; metadata: `https://pypi.org/pypi/tinker/0.24.1/json`). Seven
+installed implementation/schema files, including the fast sampling response
+classes, matched that wheel byte-for-byte.
+
+New CPU integration checks execute the SDK's actual
+`TrainingClient.forward_backward_custom_async` implementation and its gradient
+conversion/metrics combination. Only the two transport methods are replaced
+with synthetic local fixtures; no `ServiceClient` is constructed, and socket
+connections are explicitly blocked during these tests. This is stronger than
+replacing the entire SDK with hand-written type stubs, but is not a live
+provider/backend or training-quality test.
+
+All **7 focused integration cases** passed. They verify target alignment,
+response-only gradients, the SDK's negative-gradient-to-CE-weight convention,
+GRPO auxiliary NLL, GSPO unclipped and clipped zero gradients, empty-response
+zero gradients, and rejection of nonfinite forward output before backward
+transport. The sampling case uses the real request model and NumPy-backed
+response classes to check explicit seed/temperature/top-p/token-cap forwarding
+and stop/logprob metadata. It proves argument construction, not that a remote
+sampler honors those arguments.
+
+A bounded Muse review of the public project loss callbacks and verified public
+SDK bridge found no mismatch in those contracts. The integration regressions
+make those conclusions executable. No SDK upgrade, model download, provider
+request, credential inspection or new learning claim was involved.
+
+Full validation passed: **1,670 passed, 2 skipped**, including native TeX,
+85.44% configured supported-surface coverage, in 252.96 seconds. All seven SDK
+integration cases ran in the default locked environment. Static, package,
+lock, docs, public/demo and submission checks passed; the persisted validation
+exit status is zero.

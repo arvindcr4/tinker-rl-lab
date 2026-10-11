@@ -1727,3 +1727,39 @@ submission-check` passed **1,941 tests, 2 skipped**, native TeX included, at
 also exercised the repaired staged scan on this patch's actual staged source
 changes; all aggregate stages passed, exit zero. No user credential was read,
 used or placed in a fixture.
+
+## Critic restore compatibility before external work (23:24 UTC)
+
+Finite, hash-matched critic checkpoints could still alter execution: loading
+Adam state replaced a configured learning rate of 0.001 with 0.5, and a finite
+wrong-shaped moment loaded successfully before failing at an update. Eight
+initial reproductions reached tracking despite incompatible state. Additional
+controls caught boolean step counters and complex model/moment tensors whose
+imaginary parts PyTorch would silently discard during loading.
+
+A dedicated restore boundary now checks parameter ordering, the configured
+Adam option groups, moment shapes and dtypes/devices, nonnegative second
+moments and integer nonboolean update counters. It rejects complex tensors
+for this real-valued critic and rechecks finiteness after loading, since a
+finite float64 value can overflow when cast to float32. This runs before
+tracking or provider construction. Invalid files remain untouched; the local
+model/optimizer pair may have been modified before rejection and is discarded.
+No optimizer-option mismatch is silently repaired or substituted.
+
+All **11 incompatible-state checks** now fail closed. Ordinary state, an
+uninitialized Adam state, and older states missing default `foreach`/`fused`
+fields remain supported. The actual joint actor/critic CPU resume smoke still
+matches model parameters, Adam moments and replayed example order. All **269
+focused tests passed, 1 hardware-dependent test skipped**.
+
+A completed Muse review of anonymously fetched, byte-matched public source
+confirmed the option/moment boundary. Its conflicting bound-only suggestion
+was not adopted: valid legacy unbound sidecars retain their existing support.
+Its broader allocation-limit suggestion is outside this patch. These checks
+provide compatibility and numeric integrity, not checkpoint authentication,
+allocation bounds or proof of valid training history.
+
+Final `make check submission-check` passed **1,955 tests, 2 skipped**, native
+TeX included, at **86.24%** configured supported-surface coverage in 258.00
+seconds. All aggregate stages passed, exit zero. No new training defaults or
+provider jobs were introduced.

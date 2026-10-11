@@ -54,6 +54,7 @@ from .critic import (
     PromptValueCritic,
     explained_variance,
     require_finite_critic_state,
+    restore_critic_state,
     train_critic_step,
 )
 
@@ -2465,8 +2466,7 @@ def _run_one_seed(
         critic_opt = torch.optim.Adam(critic.parameters(), lr=config.critic_lr)
         if resume_step > 0:
             payload = _load_critic_checkpoint(config, seed, resume_step, prior or {})
-            critic.load_state_dict(payload["model"])
-            critic_opt.load_state_dict(payload["optimizer"])
+            restore_critic_state(critic, critic_opt, payload)
             logger(f"[{config.name}] critic resumed from committed step {resume_step}")
 
     wb = _start_wandb(config, seed)

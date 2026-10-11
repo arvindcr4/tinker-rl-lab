@@ -11,6 +11,7 @@ trajectory-level counterparts, kept for future token-level use.
 
 from __future__ import annotations
 
+from copy import deepcopy
 import math
 import statistics
 from collections.abc import Mapping
@@ -88,6 +89,75 @@ def require_finite_critic_state(*states: Any) -> None:
         elif isinstance(value, (Mapping, list, tuple)) and id(value) not in visited:
             visited.add(id(value))
             pending.extend(value.values() if isinstance(value, Mapping) else value)
+
+
+def restore_critic_state(
+    critic: PromptValueCritic, optimizer: torch.optim.Adam, payload: Mapping[str, Any]
+) -> None:
+    """Restore only state compatible with a fresh configured critic/Adam pair.
+
+    Hash verification is the caller's responsibility. These checks bind shapes,
+    parameter order and optimizer options, including values after dtype casting.
+    Rejection can modify this local pair; no external work should precede it.
+    """
+    error = "critic restore state does not match the configured model and Adam contract"
+    expected_groups = deepcopy(optimizer.state_dict()["param_groups"])
+    try:
+        saved_groups = payload["optimizer"]["param_groups"]
+        if not isinstance(saved_groups, list) or len(saved_groups) != len(expected_groups):
+            raise ValueError(error)
+        for saved, expected in zip(saved_groups, expected_groups):
+            ids = saved["params"]
+            if (
+                not isinstance(ids, list)
+                or any(type(value) is not int for value in ids)
+                or ids != expected["params"]
+            ):
+                raise ValueError(error)
+        # The configured critic is real-valued. PyTorch otherwise silently
+        # discards imaginary components when casting complex checkpoint tensors.
+        tensors = list(payload["model"].values())
+        tensors.extend(
+            value for state in payload["optimizer"]["state"].values() for value in state.values()
+        )
+        if any(isinstance(value, torch.Tensor) and value.is_complex() for value in tensors):
+            raise ValueError(error)
+        critic.load_state_dict(payload["model"])
+        optimizer.load_state_dict(payload["optimizer"])
+        # Loading can cast finite float64 checkpoint values to float32 infinity.
+        require_finite_critic_state(critic.state_dict(), optimizer.state_dict())
+        if optimizer.state_dict()["param_groups"] != expected_groups:
+            raise ValueError(error)
+        parameters = [
+            parameter for group in optimizer.param_groups for parameter in group["params"]
+        ]
+        if not set(optimizer.state).issubset(set(parameters)):
+            raise ValueError(error)
+        for parameter in parameters:
+            state = optimizer.state.get(parameter, {})
+            if not state:
+                continue  # Adam legitimately has no moments before its first update.
+            if not isinstance(state, dict) or set(state) != {"step", "exp_avg", "exp_avg_sq"}:
+                raise ValueError(error)
+            step = state["step"]
+            if not isinstance(step, torch.Tensor) or step.numel() != 1 or step.dtype == torch.bool:
+                raise ValueError(error)
+            count = float(step.item())
+            if count < 0 or not count.is_integer():
+                raise ValueError(error)
+            for key in ("exp_avg", "exp_avg_sq"):
+                moment = state[key]
+                if (
+                    not isinstance(moment, torch.Tensor)
+                    or moment.shape != parameter.shape
+                    or moment.dtype != parameter.dtype
+                    or moment.device != parameter.device
+                ):
+                    raise ValueError(error)
+            if (state["exp_avg_sq"] < 0).any():
+                raise ValueError(error)
+    except (KeyError, TypeError, ValueError, RuntimeError, AttributeError) as exc:
+        raise ValueError(error) from exc
 
 
 def train_critic_step(

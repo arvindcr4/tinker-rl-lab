@@ -58,3 +58,42 @@ def test_resume_receipt_requires_json_object(tmp_path, payload):
     path.write_text(json.dumps(payload))
     with pytest.raises(ValueError, match="checkpoint must be a JSON object"):
         grpo._load_checkpoint(config, config.seed)
+
+
+@pytest.mark.parametrize("number", ["NaN", "Infinity", "-Infinity", "1e999"])
+def test_nonfinite_receipt_fails_before_tracking(tmp_path, number):
+    config = grpo.GRPOConfig(name="nonfinite", checkpoint_dir=str(tmp_path))
+    payload = json.dumps(
+        {
+            "config": grpo._config_fingerprint(config, config.seed),
+            "status": "completed",
+            "result": {"reward_trace": ["NUMBER"]},
+        }
+    )
+    path = grpo._checkpoint_path(config, config.seed)
+    path.write_text(payload.replace('"NUMBER"', number))
+    before = path.read_bytes()
+    dataset = grpo.InMemoryDataset(train=[grpo.TrainingExample(prompt="q", target="1")])
+    with patch.object(grpo, "_start_wandb") as tracking:
+        with pytest.raises(ValueError, match="checkpoint must be a JSON object"):
+            grpo._run_one_seed(config, dataset, grpo.ExactMathReward(), tokenizer=None)
+    tracking.assert_not_called()
+    assert path.read_bytes() == before
+
+
+def test_duplicate_receipt_fields_are_rejected(tmp_path):
+    config = grpo.GRPOConfig(name="duplicate", checkpoint_dir=str(tmp_path))
+    path = grpo._checkpoint_path(config, config.seed)
+    payload = json.dumps({"config": grpo._config_fingerprint(config, config.seed), "step": 0})
+    path.write_text(payload[:-1] + ', "step": 1}')
+    with pytest.raises(ValueError, match="checkpoint must be a JSON object"):
+        grpo._load_checkpoint(config, config.seed)
+
+
+def test_nonfinite_checkpoint_write_preserves_previous_receipt(tmp_path):
+    path = tmp_path / "checkpoint.json"
+    grpo._write_checkpoint(path, {"step": 0})
+    before = path.read_bytes()
+    with pytest.raises(ValueError, match="Out of range float values"):
+        grpo._write_checkpoint(path, {"step": 1, "reward_trace": [float("inf")]})
+    assert path.read_bytes() == before

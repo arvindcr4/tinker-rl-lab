@@ -670,6 +670,18 @@ class RewardAdapter(Protocol):
 # ---------------------------------------------------------------------------
 
 
+def _reward_mean(values: Sequence[float]) -> float:
+    """Keep historical arithmetic unless its intermediate sum overflows."""
+    result = sum(values) / len(values)
+    if math.isfinite(result):
+        return result
+    context = Context(
+        prec=1600 + len(str(len(values))), rounding=ROUND_HALF_EVEN, Emin=-999999, Emax=999999
+    )
+    with localcontext(context):
+        return float(sum((Decimal.from_float(float(v)) for v in values), Decimal(0)) / len(values))
+
+
 def _normalize_extreme_rewards(
     rewards: Sequence[float], basis: Sequence[float], epsilon: float, unbiased: bool
 ) -> List[float]:
@@ -857,7 +869,7 @@ def heldout_reward_summary(test_rewards: Sequence[float]) -> Dict[str, float]:
     rewards = [_finite_reward(r) for r in test_rewards]
     if not rewards:
         return {}
-    mean_r = sum(rewards) / len(rewards)
+    mean_r = _reward_mean(rewards)
     summary: Dict[str, float] = {
         "test/reward": mean_r,
         "test/reward_n": float(len(rewards)),
@@ -1379,7 +1391,7 @@ def _campaign_metadata(config: GRPOConfig) -> Dict[str, List[str]]:
 def _write_checkpoint(path: Path, payload: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    temporary.write_text(json.dumps(payload, indent=2) + "\n")
+    temporary.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n")
     os.replace(temporary, path)
 
 
@@ -1408,9 +1420,11 @@ def _load_checkpoint(config: GRPOConfig, seed: int) -> Dict[str, Any] | None:
     path = _checkpoint_path(config, seed)
     if not config.resume or not path.exists():
         return None
-    payload = json.loads(path.read_text())
-    if not isinstance(payload, dict):
-        raise ValueError(f"[{config.name}] checkpoint must be a JSON object: {path}")
+    payload = _strict_json_object(path.read_text())
+    if payload is None:
+        raise ValueError(
+            f"[{config.name}] checkpoint must be a JSON object with unique keys and finite numbers: {path}"
+        )
     # Normalize through JSON so tuple-valued fields (e.g. wandb_tags) compare
     # equal to their stored list form; without this every resume fails as
     # "incompatible" (fixed 2026-10-03).
@@ -2270,7 +2284,7 @@ def _run_one_seed(
 
             # Logged reward covers every sampled group (dynamic sampling
             # included); batch_rewards is the subset that was trained on.
-            avg = sum(sampled_rewards) / len(sampled_rewards)
+            avg = _reward_mean(sampled_rewards)
             if identical_groups:
                 logger(
                     f"[{config.name}] WARNING: {identical_groups} seeded group(s) at "
@@ -2387,7 +2401,7 @@ def _run_one_seed(
             }
             if config.dynamic_sampling:
                 step_log["train/skipped_degenerate_groups"] = float(skipped_degenerate)
-                step_log["train/reward_trained"] = sum(batch_rewards) / len(batch_rewards)
+                step_log["train/reward_trained"] = _reward_mean(batch_rewards)
             if use_batch_path and all_advs:
                 mean_a = sum(all_advs) / len(all_advs)
                 var_a = sum((a - mean_a) ** 2 for a in all_advs) / len(all_advs)
@@ -2515,7 +2529,7 @@ def _run_one_seed(
                             f"[{config.name}] held-out example {ex_idx} failed, "
                             f"scored 0: {_redact_error(exc)}"
                         )
-                heldout_reward = sum(test_rewards) / len(test_rewards)
+                heldout_reward = _reward_mean(test_rewards)
                 summary = heldout_reward_summary(test_rewards)
                 summary["test/failed_n"] = float(heldout_failed)
                 summary["test/total_n"] = float(len(test_examples))
@@ -2526,8 +2540,8 @@ def _run_one_seed(
             run_id=run_id,
             sampler_path=getattr(final, "path", None),
             reward_trace=step_rewards,
-            avg_first5=(sum(first5) / len(first5)) if first5 else 0.0,
-            avg_last10=(sum(last10) / len(last10)) if last10 else 0.0,
+            avg_first5=(_reward_mean(first5)) if first5 else 0.0,
+            avg_last10=(_reward_mean(last10)) if last10 else 0.0,
             peak_reward=max(step_rewards) if step_rewards else 0.0,
             zero_loss_steps=zero_loss_steps,
             zero_reward_steps=zero_reward_steps,

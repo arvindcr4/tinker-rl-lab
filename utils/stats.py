@@ -21,6 +21,7 @@ import glob
 import argparse
 import math
 import re
+from decimal import Context, Decimal, ROUND_HALF_EVEN, localcontext
 from numbers import Integral, Real
 from typing import Dict, List, Optional, Tuple
 
@@ -79,6 +80,36 @@ def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List
     return seed_results
 
 
+def _finite_mean(values: np.ndarray) -> float:
+    """NumPy's existing mean, with exact-range fallback on sum overflow."""
+    with np.errstate(over="ignore", invalid="ignore"):
+        result = np.mean(values)
+    if np.isfinite(result):
+        return result
+    context = Context(
+        prec=1600 + len(str(len(values))), rounding=ROUND_HALF_EVEN, Emin=-999999, Emax=999999
+    )
+    with localcontext(context):
+        return float(sum((Decimal.from_float(float(v)) for v in values), Decimal(0)) / len(values))
+
+
+def _finite_percentile(values: np.ndarray, percentile: float) -> float:
+    """Preserve NumPy's linear quantile, avoiding overflowing endpoint differences."""
+    with np.errstate(over="ignore", invalid="ignore"):
+        result = np.percentile(values, percentile)
+    if np.isfinite(result):
+        return result
+    ordered = np.sort(values)
+    index = (len(ordered) - 1) * (percentile / 100)
+    left = math.floor(index)
+    right = math.ceil(index)
+    context = Context(prec=1600, rounding=ROUND_HALF_EVEN, Emin=-999999, Emax=999999)
+    with localcontext(context):
+        weight = Decimal.from_float(index - left)
+        a, b = Decimal.from_float(float(ordered[left])), Decimal.from_float(float(ordered[right]))
+        return float(a + (b - a) * weight)
+
+
 def compute_bootstrap_ci(
     scores: np.ndarray,
     n_bootstrap: int = 10000,
@@ -115,13 +146,13 @@ def compute_bootstrap_ci(
     if n == 1:
         return float(scores[0]), float("nan"), float("nan")
     bootstrap_means = np.array(
-        [np.mean(rng.choice(scores, size=n, replace=True)) for _ in range(n_bootstrap)]
+        [_finite_mean(rng.choice(scores, size=n, replace=True)) for _ in range(n_bootstrap)]
     )
 
     alpha = (1 - confidence) / 2
-    lower = np.percentile(bootstrap_means, 100 * alpha)
-    upper = np.percentile(bootstrap_means, 100 * (1 - alpha))
-    mean = np.mean(scores)
+    lower = _finite_percentile(bootstrap_means, 100 * alpha)
+    upper = _finite_percentile(bootstrap_means, 100 * (1 - alpha))
+    mean = _finite_mean(scores)
 
     return mean, lower, upper
 

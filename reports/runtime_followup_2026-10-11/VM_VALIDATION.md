@@ -844,3 +844,43 @@ Full validation passed: **1,670 passed, 2 skipped**, including native TeX,
 integration cases ran in the default locked environment. Static, package,
 lock, docs, public/demo and submission checks passed; the persisted validation
 exit status is zero.
+
+## Finite reward summaries and strict resume JSON (18:59 UTC)
+
+A transport-free CPU run with valid finite custom rewards `1e308` and `9e307`
+completed an optimizer step but recorded `Infinity` in its reward trace,
+summary and completion receipt. The bootstrap utility likewise returned an
+infinite mean and NaN bounds. Reward means and bootstrap resample means now
+retain their historical Python/NumPy arithmetic whenever finite, and use a
+private high-precision Decimal fallback only when an intermediate sum
+fails. Percentiles retain NumPy's ordinary result, with a bounded endpoint
+interpolation fallback for overflowing differences. Bootstrap draws, ordering,
+confidence convention, and the single-observation uncertainty policy are
+unchanged. This does not change the math scorer or regrade historical results.
+
+Regressions exercise ordinary and dynamic two-step training, held-out means,
+strictly finite logs and checkpoint JSON, extreme positive/negative means,
+opposite-sign percentile interpolation, maximum binary64 values, tiny terms
+between cancelling extremes, caller Decimal-context independence, and exact
+ordinary bootstrap/RNG equivalence. An additional deterministic 100-case
+mixed-scale numerical smoke check passed with a two-ulp endpoint tolerance;
+the tolerance preserves existing NumPy rounding rather than introducing a
+clamp. A completed Muse review of the public pre-fix functions identified the
+same intermediate-overflow and RNG-preservation concerns; two earlier bounded
+attempts produced no completed review and are not counted as evidence.
+
+A separate reproduction showed that an existing completion receipt containing
+Infinity was reused as successful. Resume parsing now rejects duplicate keys,
+nonstandard nonfinite constants and overflowing JSON numbers before tracking
+or provider initialization. Checkpoint serialization refuses nonfinite values
+before replacing a valid prior receipt. Six new receipt regressions failed
+before these guards and pass afterward; invalid files remain untouched.
+
+The combined focused suite passed **86 tests**. The final full run passed
+**1,685 tests, 2 skipped**, including native TeX, with **85.52%** configured
+supported-surface coverage in 252.17 seconds. Static, package, lock, docs,
+public/demo and submission checks passed; persisted aggregate exit status is
+zero. An earlier aggregate run exposed two incorrect test assertions about
+where the completed receipt nests its trace; those assertions were corrected
+and the complete aggregate suite was rerun successfully. No provider job,
+model download, new result claim or frozen-artifact rewrite was involved.

@@ -3297,20 +3297,39 @@ def make_gsm8k_dataset(seed: int = 42, revision: Optional[str] = None) -> InMemo
         "your final numerical answer inside \\boxed{}."
     )
 
+    numeric_label = re.compile(
+        r"[-+]?(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+    )
+
     def convert(split: str) -> List[TrainingExample]:
         rows: List[TrainingExample] = []
         revision_kwargs = {"revision": revision} if revision is not None else {}
-        for row in load_dataset("openai/gsm8k", "main", split=split, **revision_kwargs):
-            match = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
-            if not match:
-                continue
-            prompt = _chat_prompt(system_prompt, row["question"])
+        source = load_dataset("openai/gsm8k", "main", split=split, **revision_kwargs)
+        for index, row in enumerate(source, 1):
+            error = f"GSM8K {split} row {index} must contain a question and complete numeric answer"
+            if (
+                not isinstance(row, dict)
+                or not isinstance(row.get("question"), str)
+                or not row["question"].strip()
+                or not isinstance(row.get("answer"), str)
+                or "####" not in row["answer"]
+            ):
+                raise ValueError(error)
+            label = row["answer"].rsplit("####", 1)[1].strip()
+            if not numeric_label.fullmatch(label):
+                raise ValueError(error)
+            label = label.replace(",", "")
+            try:
+                finite = Decimal(label).is_finite()
+            except InvalidOperation:
+                finite = False
+            if not finite:
+                raise ValueError(error)
             rows.append(
-                TrainingExample(
-                    prompt=prompt,
-                    target=match.group(1).replace(",", "").strip(),
-                )
+                TrainingExample(prompt=_chat_prompt(system_prompt, row["question"]), target=label)
             )
+        if not rows:
+            raise ValueError(f"GSM8K {split} source has no examples")
         random.Random(seed).shuffle(rows)
         return rows
 

@@ -1645,3 +1645,35 @@ Full `make check submission-check` passed **1,922 tests, 2 skipped**, native TeX
 included, at **86.20%** configured supported-surface coverage in 246.95 seconds.
 All aggregate stages passed, exit zero. No provider job or benchmark-default
 change was made.
+
+## Fail-closed GSM8K source labels (22:54 UTC)
+
+The Tinker adapter silently omitted rows without an answer marker and accepted
+numeric prefixes from malformed labels such as `#### 1/2` or `#### 2 or 3`.
+It also truncated exponent answers and omitted explicit plus-signed answers.
+Eleven initial regression cases reproduced these behaviors across training and
+held-out source rows.
+
+Each source row now requires a nonempty question and a complete finite numeric
+label after its final answer delimiter. Properly grouped thousands, signs,
+decimals and exponents are handled without prefix matching. Malformed rows or
+empty splits stop loading with split/row context, rather than silently changing
+the evaluation denominator. Errors do not include question or answer text.
+This validates dataset labels; it does not change the response scorer or the
+pending final-answer-selection policy.
+
+Both official public splits at revision
+`740312add88f781978c0658806c59bc2815b9866` were checked using anonymous,
+SHA-256-verified Parquet bytes. With networking blocked and only dataset
+transport replaced by local PyArrow rows, the actual adapter retained all
+**7,473 training and 1,319 test examples**. Ordered prompt/target/metadata
+fingerprints at seed 42 matched exactly before and after the fix. See
+`GSM8K_ADAPTER_FIDELITY.json` for source and transformed hashes. This is not a
+claim that the live Hugging Face datasets transport was exercised.
+
+All **87 focused checks** passed, including revision forwarding, malformed
+labels, empty splits and valid grouped/signed/exponent inputs. Full `make check
+submission-check` passed **1,935 tests, 2 skipped**, native TeX included, at
+**86.18%** configured supported-surface coverage in 249.53 seconds. All aggregate
+stages passed, exit zero. No raw dataset files or historical results are
+included in the patch, and no provider job was run.

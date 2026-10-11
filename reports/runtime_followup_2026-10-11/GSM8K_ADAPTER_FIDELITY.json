@@ -1,0 +1,25 @@
+{
+  "dataset": "openai/gsm8k",
+  "configuration": "main",
+  "revision": "740312add88f781978c0658806c59bc2815b9866",
+  "seed": 42,
+  "source_fetch": "anonymous public commit-pinned Parquet files; exact bytes matched published LFS SHA-256",
+  "execution": "network blocked; dataset transport replaced by local PyArrow rows; real project adapter used",
+  "comparison": "ordered prompt, target and metadata fingerprints unchanged before and after fail-closed label validation",
+  "splits": {
+    "train": {
+      "source_rows": 7473,
+      "adapted_rows": 7473,
+      "ordered_sha256": "6b73cc410d8156c9fdeba59120df196ab0c0bdc0c85f06e8f70a6961636613e3"
+    },
+    "test": {
+      "source_rows": 1319,
+      "adapted_rows": 1319,
+      "ordered_sha256": "000242595a920b5c3d78a2e1985fff7563dd7bcadfee4862fc91f7b0cf869f66"
+    }
+  },
+  "source_sha256": {
+    "train": "ea82612ea9582142387730c793eb67d3b12849002bc0b7fa6f8efafa7351419d",
+    "test": "ee7b8da9e381df27b9e3f7758a159ab2bdaa4dbaa910546cbbc47e0cb44e4f59"
+  }
+}

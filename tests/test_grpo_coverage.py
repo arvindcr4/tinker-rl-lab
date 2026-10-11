@@ -771,11 +771,10 @@ def test_wandb_failure_receipt_cannot_be_finalized(tmp_path, monkeypatch):
         grpo._run_one_seed(_config(tmp_path), _dataset(_example()), ExactMathReward(), _Tokenizer())
 
 
-def test_gsm8k_loader_skips_rows_without_a_final_answer():
+def test_gsm8k_loader_preserves_valid_grouped_answers():
     rows = {
         "train": [
             {"question": "What?", "answer": "work #### 1,234"},
-            {"question": "Skip", "answer": "no marker"},
         ],
         "test": [{"question": "Held?", "answer": "#### 7"}],
     }

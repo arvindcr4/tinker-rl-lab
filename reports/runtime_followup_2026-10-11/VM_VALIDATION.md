@@ -1677,3 +1677,31 @@ submission-check` passed **1,935 tests, 2 skipped**, native TeX included, at
 **86.18%** configured supported-surface coverage in 249.53 seconds. All aggregate
 stages passed, exit zero. No raw dataset files or historical results are
 included in the patch, and no provider job was run.
+
+## Real causal-LM CPU loss-bridge smoke (23:02 UTC)
+
+The CPU harness now exercises an actual Qwen3 causal-LM architecture in
+addition to the small categorical actor fixtures. The model is constructed
+locally from configuration with random weights: one layer, width 16, vocabulary
+64, and 3,392 parameters. No pretrained model, tokenizer download, provider
+request, GPU or quality benchmark is involved.
+
+For GRPO, GRPO+NLL and GSPO, the test builds real Tinker datums and executes the
+installed SDK's custom-loss bridge. Only its transports are replaced by real
+CPU model forward/backward calls. The resulting gradients, updated model
+parameters and Adam state must match a direct PyTorch objective on an identical
+model. Prompt logprob weights must remain zero, all gradients must be finite,
+parameters must actually change, and the rewarded fixture's log-odds relative
+to the negative fixture must increase after the update. Network sockets are
+blocked throughout the test.
+
+A process-local negative control deliberately reversed the SDK transport
+weights and was rejected by the gradient comparison; repository code was not
+modified by that control. All **17 related real-SDK/CPU checks** passed normally.
+This validates objective wiring on a real autoregressive network, not learned
+language ability, sample efficiency or pretrained Qwen3-8B behavior.
+
+Full `make check submission-check` passed **1,938 tests, 2 skipped**, native TeX
+included, at **86.18%** configured supported-surface coverage in 253.66 seconds.
+All aggregate stages passed, exit zero. This batch adds regression coverage
+without changing production behavior.

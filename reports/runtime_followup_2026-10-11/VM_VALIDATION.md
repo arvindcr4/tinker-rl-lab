@@ -775,3 +775,34 @@ package, lock, docs, public/demo and submission checks passed. A small local
 smoke timing measured about 2.6 microseconds per ordinary four-reward call and
 0.91 milliseconds per exceptional two-reward fallback call in this VM; this
 is a local diagnostic, not a general performance claim.
+
+## Reject valid-looking but incorrect native launch corpora
+
+The public-source Muse follow-up on `50370294` identified a remaining provenance
+gap: recording a newly computed hash accepted any well-formed 500-row corpus,
+including a stale/reordered/substituted one. Native launch now compares that
+already-computed hash to the independently verified fixed-profile reference
+`4416d0abbb8f31205160171db451cc7e76854d3d0d07ab9a79aaecab78cce795`
+before subprocess execution. The success input receipt binds the matching
+reference digest as well as the actual digest. Changing source, row order,
+system prompt or byte formatting now requires a deliberate reference update;
+there is no native bypass flag.
+
+The production gate accepted all 500 rows from the previously verified public
+Parquet/formatter artifact with no mocking of its reference constant. Offline
+regressions use an explicitly synthetic reference to prove that reordered rows,
+a substituted valid numeric label, changed prompt and whitespace-reserialized
+JSON all remain schema-valid but fail before launch. A positive byte-identical
+control passes, while an ordinary synthetic corpus is rejected by the real
+production constant. Existing subprocess-only tests explicitly substitute a
+synthetic reference; they do not pretend to contain the official dataset.
+
+All **75 focused input, command and budget tests** passed. This is a launch-byte
+identity control, not attestation that a tokenizer or model consumed those
+bytes; the previously documented live Hub-loader limitation remains.
+
+Full validation passed: **1,663 passed, 2 skipped**, including native TeX,
+85.42% configured supported-surface coverage, in 260.02 seconds. Static,
+package, lock, docs, public/demo and submission checks passed. The preceding
+source-pin CI completed all engineering jobs successfully; its environment
+job's longer runtime was dependency installation, not a failing test.

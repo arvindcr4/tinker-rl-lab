@@ -165,7 +165,7 @@ def run_openrlhf_training(
     from .command import build_openrlhf_command
     from .budget import plan_native_budget
     from .metrics import read_native_metrics
-    from .inputs import inspect_native_input, ensure_input_unchanged
+    from .inputs import inspect_native_input, bind_reference_input, ensure_input_unchanged
 
     # The caller may reuse or mutate its config while a long-running subprocess
     # executes. Bind validation, launch arguments, metrics and receipt to one
@@ -184,7 +184,7 @@ def run_openrlhf_training(
         raise RuntimeError("Native training requires OpenRLHF v0.8.4 + Ray + vLLM") from exc
     output.mkdir(parents=True, exist_ok=False)
     _prepare_gsm8k_500_jsonl(data_path)
-    input_artifact = inspect_native_input(data_path)
+    input_artifact = bind_reference_input(inspect_native_input(data_path))
     env = os.environ.copy()
     env["PYTHONPATH"] = ""
     start = time.time()

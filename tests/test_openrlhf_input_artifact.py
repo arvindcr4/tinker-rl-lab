@@ -146,11 +146,15 @@ def test_bad_prepared_input_never_launches_provider_or_writes_success(tmp_path):
 
 def test_input_mutation_after_zero_exit_prevents_success_receipt(tmp_path):
     output = tmp_path / "run"
+    reference = tmp_path / "synthetic-reference.jsonl"
+    write_native_input_fixture(reference)
+    digest = hashlib.sha256(reference.read_bytes()).hexdigest()
 
     def mutate(*_args, **_kwargs):
         (output / "gsm8k500.jsonl").write_text("changed during subprocess")
 
     with (
+        patch.object(inputs, "GSM8K500_INPUT_SHA256", digest),
         patch.object(trainer, "_validate_native_runtime", return_value="0.8.4"),
         patch.dict(sys.modules, {"openrlhf": types.ModuleType("openrlhf")}),
         patch.object(trainer, "_prepare_gsm8k_500_jsonl", side_effect=write_native_input_fixture),
@@ -185,3 +189,68 @@ def test_nonregular_input_is_rejected_and_open_snapshot_is_pinned(tmp_path):
     assert receipt["sha256"] == digest
     with pytest.raises(RuntimeError, match="input changed"):
         inputs.ensure_input_unchanged(str(source), receipt)
+
+
+def test_default_reference_rejects_valid_synthetic_corpus_before_launch(tmp_path):
+    assert inputs.GSM8K500_INPUT_SHA256 == (
+        "4416d0abbb8f31205160171db451cc7e76854d3d0d07ab9a79aaecab78cce795"
+    )
+    output = tmp_path / "run"
+    with (
+        patch.object(trainer, "_validate_native_runtime", return_value="0.8.4"),
+        patch.dict(sys.modules, {"openrlhf": types.ModuleType("openrlhf")}),
+        patch.object(trainer, "_prepare_gsm8k_500_jsonl", side_effect=write_native_input_fixture),
+        patch.object(trainer.subprocess, "run") as launch,
+        pytest.raises(ValueError, match="verified GSM8K-500 reference"),
+    ):
+        trainer.run_openrlhf_training(native_config(), str(output))
+    launch.assert_not_called()
+    assert not (output / "result.json").exists()
+
+
+@pytest.mark.parametrize("mutation", ["none", "reorder", "label", "prompt", "whitespace"])
+def test_reference_gate_rejects_schema_valid_drift(tmp_path, mutation):
+    rows = [
+        {
+            "prompt": [
+                {"role": "system", "content": "Synthetic fixed profile"},
+                {"role": "user", "content": f"Synthetic question {index}?"},
+            ],
+            "label": str(index),
+        }
+        for index in range(500)
+    ]
+    baseline = "".join(json.dumps(row) + "\n" for row in rows)
+    digest = hashlib.sha256(baseline.encode()).hexdigest()
+    if mutation == "reorder":
+        rows[0], rows[1] = rows[1], rows[0]
+    elif mutation == "label":
+        rows[0]["label"] = "99"
+    elif mutation == "prompt":
+        rows[0]["prompt"][0]["content"] = "Changed system prompt"
+    options = {"separators": (",", ":")} if mutation == "whitespace" else {}
+    prepared = "".join(json.dumps(row, **options) + "\n" for row in rows)
+    output = tmp_path / "run"
+
+    def prepare(path):
+        Path(path).write_text(prepared, encoding="utf-8")
+        # Every corruption case still passes the schema gate by itself.
+        assert inputs.inspect_native_input(path)["rows"] == 500
+        return path
+
+    with (
+        patch.object(inputs, "GSM8K500_INPUT_SHA256", digest),
+        patch.object(trainer, "_validate_native_runtime", return_value="0.8.4"),
+        patch.dict(sys.modules, {"openrlhf": types.ModuleType("openrlhf")}),
+        patch.object(trainer, "_prepare_gsm8k_500_jsonl", side_effect=prepare),
+        patch.object(trainer.subprocess, "run") as launch,
+    ):
+        if mutation == "none":
+            result = trainer.run_openrlhf_training(native_config(), str(output))
+            assert result["input_artifact"]["reference_sha256"] == digest
+            launch.assert_called_once()
+        else:
+            with pytest.raises(ValueError, match="verified GSM8K-500 reference"):
+                trainer.run_openrlhf_training(native_config(), str(output))
+            launch.assert_not_called()
+            assert not (output / "result.json").exists()

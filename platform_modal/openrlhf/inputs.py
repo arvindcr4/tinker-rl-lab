@@ -13,6 +13,10 @@ SOURCE_ROWS = 500
 # Official public openai/gsm8k revision verified on 2026-10-11. Upgrade this
 # deliberately; floating main would make otherwise identical runs drift.
 GSM8K_REVISION = "740312add88f781978c0658806c59bc2815b9866"
+# Exact first-500 JSONL bytes for that revision and this driver's fixed system
+# prompt/format. Independently verified public Parquet provenance is recorded
+# in reports/runtime_followup_2026-10-11/VM_VALIDATION.md. Upgrade deliberately.
+GSM8K500_INPUT_SHA256 = "4416d0abbb8f31205160171db451cc7e76854d3d0d07ab9a79aaecab78cce795"
 _NUMERIC_LABEL = re.compile(r"[-+]?(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
 
 
@@ -137,6 +141,16 @@ def inspect_native_input(path: str) -> dict:
         "source_revision": GSM8K_REVISION,
         "scope": "configured upstream revision and validated launch-input bytes before native tokenizer rendering",
     }
+
+
+def bind_reference_input(receipt: dict) -> dict:
+    """Require fixed-source bytes, not just a schema-valid 500-row corpus."""
+    if receipt.get("sha256") != GSM8K500_INPUT_SHA256:
+        raise ValueError(
+            "native input differs from the verified GSM8K-500 reference; "
+            "source, row order, formatting or system prompt drifted"
+        )
+    return {**receipt, "reference_sha256": GSM8K500_INPUT_SHA256}
 
 
 def ensure_input_unchanged(path: str, receipt: dict) -> None:

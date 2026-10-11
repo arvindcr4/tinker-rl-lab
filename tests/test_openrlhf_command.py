@@ -1,6 +1,7 @@
 """Native-driver contracts, using CPU mocks and no provider/network execution."""
 
 import importlib
+import hashlib
 import subprocess
 import sys
 import types
@@ -10,13 +11,20 @@ import pytest
 
 from platform_modal.openrlhf.command import build_openrlhf_command
 from platform_modal.openrlhf.config import OpenRLHFConfig
-from platform_modal.openrlhf import trainer
+from platform_modal.openrlhf import inputs, trainer
 from tests._shared_fakes import write_native_input_fixture
 
 
 @pytest.fixture
-def native_runtime():
-    with patch.object(trainer, "_validate_native_runtime", return_value="0.8.4"):
+def native_runtime(tmp_path):
+    # Native subprocess tests use an explicitly synthetic reference corpus.
+    reference = tmp_path / "synthetic-reference.jsonl"
+    write_native_input_fixture(reference)
+    digest = hashlib.sha256(reference.read_bytes()).hexdigest()
+    with (
+        patch.object(trainer, "_validate_native_runtime", return_value="0.8.4"),
+        patch.object(inputs, "GSM8K500_INPUT_SHA256", digest),
+    ):
         yield
 
 

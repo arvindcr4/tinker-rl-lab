@@ -1610,3 +1610,38 @@ Full `make check submission-check` passed **1,903 tests, 2 skipped**, including
 native TeX, at **86.1%** displayed configured supported-surface coverage in
 249.20 seconds. All aggregate stages passed, exit zero. No default scorer,
 sampler cadence, provider job or historical score changed.
+
+## Cached held-out evidence consistency (22:46 UTC)
+
+A synthetic completed receipt was accepted with a held-out result of 1.0 while
+its own summary said 0.0, both examples had failed, and its status said
+`completed`. Thirteen initial adversarial checks showed that recorded status,
+denominators, failure counts, uncertainty metadata and summary values were not
+cross-checked before the cached result returned.
+
+Version-one evaluation evidence now requires consistent status/counts, finite
+summary values, matching point estimates, and appropriate ordered bootstrap
+bounds. All-failed zero-scoring receipts cannot claim a nonzero mean or spread;
+a single example cannot claim bootstrap uncertainty. Malformed or unsupported
+evidence fails before tracking/provider activity, without repairing the file.
+Missing legacy evidence remains unrecorded and accepted; an explicit mean-only
+receipt stays mean-only. This verifies internal consistency, not authenticity
+or the underlying observations, and does not infer across-seed uncertainty.
+
+A separate cancellation-heavy numeric example exposed two point estimates for
+the same 102 scores: the run's canonical mean was about 0.980392, while NumPy's
+bootstrap helper returned about 0.823529. The summary now retains the run's
+existing canonical mean and uses the bootstrap helper only for its bounds.
+No historical result is rewritten or regraded. Ordinary bounded scores and the
+scorer's definition are unchanged.
+
+All **228 focused checks** passed. Valid disabled, empty, completed,
+partial-failure and all-failed receipts were replayed without a second provider
+or evaluation call. The malformed-cache integration check verifies no tracking
+starts and no cache bytes change. The public-source Muse review was cancelled
+and remains unverified; it is not cited as review evidence.
+
+Full `make check submission-check` passed **1,922 tests, 2 skipped**, native TeX
+included, at **86.20%** configured supported-surface coverage in 246.95 seconds.
+All aggregate stages passed, exit zero. No provider job or benchmark-default
+change was made.

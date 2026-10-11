@@ -963,8 +963,9 @@ def heldout_reward_summary(test_rewards: Sequence[float]) -> Dict[str, float]:
         from utils.stats import compute_bootstrap_ci
     except ImportError:
         return summary
-    mean_ci, ci_low, ci_high = compute_bootstrap_ci(rewards)
-    summary["test/reward"] = float(mean_ci)
+    _, ci_low, ci_high = compute_bootstrap_ci(rewards)
+    # Keep the point estimate identical to the run result; NumPy bootstrap
+    # summation can differ from the canonical mean after severe cancellation.
     summary["test/reward_ci_low"] = float(ci_low)
     summary["test/reward_ci_high"] = float(ci_high)
     return summary
@@ -1678,6 +1679,71 @@ def _resume_reward_history(
     return kept, counters[0], counters[1]
 
 
+def _validate_cached_heldout(result: GRPORunResult) -> None:
+    """Validate recorded evaluation arithmetic, not the underlying observations."""
+    receipt = result.heldout_evaluation
+    error = "Completed receipt has inconsistent held-out evaluation evidence"
+    if not isinstance(receipt, dict):
+        raise RuntimeError(error)
+    if not receipt:
+        return  # Legacy results did not record evaluation evidence.
+    if type(receipt.get("schema_version")) is not int or receipt["schema_version"] != 1:
+        raise RuntimeError(error)
+    total, failed = receipt.get("total_n"), receipt.get("failed_n")
+    if type(total) is not int or type(failed) is not int or not 0 <= failed <= total:
+        raise RuntimeError(error)
+    if receipt.get("failure_policy") != "score_zero_keep_denominator":
+        raise RuntimeError(error)
+    summary = receipt.get("summary")
+    if not isinstance(summary, dict):
+        raise RuntimeError(error)
+    uncertainty = receipt.get("uncertainty_kind")
+    if total == 0:
+        if (
+            receipt.get("status") not in ("disabled", "empty")
+            or summary
+            or result.heldout_reward is not None
+            or uncertainty != "not_recorded"
+        ):
+            raise RuntimeError(error)
+        return
+    status = "all_failed" if failed == total else "partial_failure" if failed else "completed"
+    if receipt.get("status") != status or result.heldout_reward is None:
+        raise RuntimeError(error)
+
+    def number(key: str) -> float:
+        value = summary.get(key)
+        try:
+            valid = type(value) in (int, float) and math.isfinite(value)
+        except OverflowError:
+            valid = False
+        if not valid:
+            raise RuntimeError(error)
+        return value
+
+    if any(
+        number(key) != expected
+        for key, expected in (
+            ("test/reward_n", total),
+            ("test/total_n", total),
+            ("test/failed_n", failed),
+        )
+    ):
+        raise RuntimeError(error)
+    mean = number("test/reward")
+    if not math.isclose(mean, result.heldout_reward, rel_tol=1e-12, abs_tol=1e-12):
+        raise RuntimeError(error)
+    if failed == total and mean != 0:
+        raise RuntimeError(error)
+    ci_keys = ("test/reward_ci_low", "test/reward_ci_high")
+    if uncertainty == "example_bootstrap":
+        low, high = number(ci_keys[0]), number(ci_keys[1])
+        if total < 2 or low > high or (failed == total and (low != 0 or high != 0)):
+            raise RuntimeError(error)
+    elif uncertainty != "not_recorded" or any(key in summary for key in ci_keys):
+        raise RuntimeError(error)
+
+
 def _validated_completed_result(
     prior: Dict[str, Any], seed: int, steps: int, trace: Sequence[float]
 ) -> GRPORunResult:
@@ -1716,6 +1782,7 @@ def _validated_completed_result(
         # Permit historical summation roundoff, never repair or rewrite a cache.
         if key in expected and not math.isclose(value, expected[key], rel_tol=1e-12, abs_tol=1e-12):
             raise RuntimeError(f"Completed receipt {key} disagrees with its reward history")
+    _validate_cached_heldout(result)
     return result
 
 

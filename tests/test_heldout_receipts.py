@@ -60,6 +60,15 @@ def test_heldout_receipt_records_outcome_without_repeating_evaluation(
     path = grpo._checkpoint_path(config, config.seed)
     persisted = json.loads(path.read_text())["result"]["heldout_evaluation"]
     assert persisted == receipt
+    before = path.read_bytes()
+    with _runtime(monkeypatch, sample_fn=sample) as replay:
+        repeated = grpo._run_one_seed(
+            config, dataset, grpo.ExactMathReward(), _Tokenizer(), logger=lambda _: None
+        )
+    assert repeated == result
+    assert "service_kwargs" not in replay
+    assert len(calls) == (total if enabled else 0)
+    assert path.read_bytes() == before
     receipt["summary"]["synthetic_mutation"] = 1
     assert (
         "synthetic_mutation"

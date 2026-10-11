@@ -95,3 +95,16 @@ def test_historical_summary_roundoff_is_preserved_without_rewriting(tmp_path, mo
         result = grpo._run_one_seed(config, dataset, grpo.ExactMathReward(), _Tokenizer())
     assert result.avg_first5 == payload["result"]["avg_first5"]
     assert path.read_bytes() == before
+
+
+def test_bad_evaluation_evidence_stops_before_tracking_and_keeps_cache(tmp_path, monkeypatch):
+    config, dataset, _, path = _completed(tmp_path, monkeypatch)
+    payload = json.loads(path.read_text())
+    payload["result"]["heldout_evaluation"]["status"] = "completed"
+    path.write_text(json.dumps(payload))
+    before = path.read_bytes()
+    with patch.object(grpo, "_start_wandb") as tracking:
+        with pytest.raises(RuntimeError, match="Completed receipt.*held-out"):
+            grpo._run_one_seed(config, dataset, grpo.ExactMathReward(), _Tokenizer())
+    tracking.assert_not_called()
+    assert path.read_bytes() == before

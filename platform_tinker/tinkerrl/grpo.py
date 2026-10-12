@@ -31,6 +31,7 @@ import subprocess
 import sys
 import tempfile
 from collections.abc import Mapping
+from contextlib import ExitStack, contextmanager
 from copy import deepcopy
 from dataclasses import MISSING, asdict, dataclass, field, fields, replace
 from decimal import Context, Decimal, InvalidOperation, ROUND_FLOOR, ROUND_HALF_EVEN, localcontext
@@ -41,6 +42,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Iterator,
     List,
     Optional,
     Protocol,
@@ -2510,6 +2512,48 @@ def _record_receipt(
     return receipt
 
 
+class _CheckpointLockError(RuntimeError):
+    """A local active-run lock is unavailable or already held."""
+
+
+@contextmanager
+def _active_checkpoint_lock(path: Path) -> Iterator[None]:
+    """Cooperating local invocations must not overwrite the same run receipt.
+
+    Keep the lock inode after release: unlinking it would let later callers
+    lock a different inode while an earlier owner still held the original.
+    This is local advisory exclusion, not a distributed/provider transaction.
+    """
+    try:
+        import fcntl
+    except ImportError as exc:
+        raise _CheckpointLockError("Active runs require local advisory-lock support") from exc
+    if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_NONBLOCK"):
+        raise _CheckpointLockError("Active runs require nonsymlink regular-file lock support")
+    lock_path = path.with_name(path.name + ".lock")
+    with ExitStack() as stack:
+        try:
+            lock_path.parent.mkdir(parents=True, exist_ok=True)
+            descriptor = os.open(
+                lock_path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600
+            )
+            stack.callback(os.close, descriptor)
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                raise _CheckpointLockError("Local checkpoint run lock must be a regular file")
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise _CheckpointLockError(
+                "Checkpoint is already active in another local run; "
+                "wait for it or choose a different experiment name/directory"
+            ) from exc
+        except OSError as exc:
+            raise _CheckpointLockError(
+                "Cannot acquire the local checkpoint run lock; verify writable regular-file storage"
+            ) from exc
+        # Do not recategorize exceptions from the training body as lock errors.
+        yield
+
+
 def _run_one_seed(
     config: GRPOConfig,
     dataset: DatasetAdapter,
@@ -2517,7 +2561,30 @@ def _run_one_seed(
     tokenizer: Any,
     logger: Callable[[str], Any] = print,
 ) -> GRPORunResult:
-    """Execute the GRPO loop for one seed.  Pure enough to unit-test with fakes."""
+    """Exclude duplicate active runs while keeping completed replay read-only."""
+    config.validate_numerics()
+    config.validate_tracking()
+    snapshot = _load_checkpoint(config, config.seed)
+    if snapshot and snapshot.get("status") == "completed":
+        return _run_one_seed_locked(
+            config, dataset, reward, tokenizer, logger, completed_snapshot=snapshot
+        )
+    with _active_checkpoint_lock(_checkpoint_path(config, config.seed)):
+        # Another invocation may have completed between the first read and
+        # acquisition. Reload under the lock rather than using a stale plan.
+        return _run_one_seed_locked(config, dataset, reward, tokenizer, logger)
+
+
+def _run_one_seed_locked(
+    config: GRPOConfig,
+    dataset: DatasetAdapter,
+    reward: RewardAdapter,
+    tokenizer: Any,
+    logger: Callable[[str], Any] = print,
+    *,
+    completed_snapshot: Optional[Dict[str, Any]] = None,
+) -> GRPORunResult:
+    """Run under an active lock, or replay one committed completed snapshot."""
     config.validate_numerics()
     seed = config.seed
     config.validate_tracking()
@@ -2529,7 +2596,7 @@ def _run_one_seed(
         raise ValueError(f"[{config.name}] dataset returned 0 training examples")
 
     checkpoint_path = _checkpoint_path(config, seed)
-    prior = _load_checkpoint(config, seed)
+    prior = completed_snapshot if completed_snapshot is not None else _load_checkpoint(config, seed)
     resume_step = (prior or {}).get("step", 0)
     resume_state_path = (prior or {}).get("train_state_path")
     if type(resume_step) is not int or not 0 <= resume_step <= config.steps:

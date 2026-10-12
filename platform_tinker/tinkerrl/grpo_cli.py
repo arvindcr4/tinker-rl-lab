@@ -44,6 +44,7 @@ from .grpo import (
     run_grpo,
     _strict_json_object,
     _redact_error,
+    _CheckpointLockError,
 )
 
 
@@ -580,7 +581,7 @@ def cli_entrypoint(argv: Optional[List[str]] = None) -> int:
     """Keep common shell input/I/O errors readable; library main still raises."""
     try:
         return main(argv)
-    except (OSError, TypeError, ValueError) as exc:
+    except (OSError, TypeError, ValueError, _CheckpointLockError) as exc:
         print(f"ERROR: {_redact_error(exc)}", file=sys.stderr)
         print(
             "Inspect supported options with python -m platform_tinker.tinkerrl.grpo_cli --help",

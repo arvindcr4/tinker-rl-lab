@@ -153,6 +153,7 @@ def main(argv: list[str] | None = None) -> int:
                 "CLI config inspection and execution",
                 "sampled learning",
                 "fresh actor/Adam resume",
+                "durable-checkpoint recovery after an applied optimizer update loses its response",
                 "independent multi-epoch GSPO objective",
                 "critic resume",
                 "final-policy held-out failure denominator",

@@ -28,7 +28,7 @@ Installation can download substantial dependencies; the offline command itself n
 2. The CLI runs a 20-step random tiny Qwen3 CPU policy against a synthetic one-action task. The dataset/tokenizer and external transports are offline test adapters; the training loop, SDK loss bridge and Torch/Adam computations are real.
 3. Evaluation uses the final saved sampler snapshot. Three sampled successes and one deliberately injected transport failure produce a held-out mean of 0.75 with a denominator of four. This is a failure-accounting oracle, not measured benchmark accuracy. The local categorical sampler implements the toy test's temperature/top-p transformation; it does not attest a live provider's sampling implementation.
 4. A completed JSON receipt is checked against its configuration and evaluation evidence. Replay returns the same result without a provider call or rewriting the receipt.
-5. Companion integration tests check sampled learning for two targets, fresh-object actor/Adam resume, critic resume, and a multi-epoch GSPO update against an independently written clipped-ratio objective.
+5. Companion integration tests check sampled learning for two targets, fresh-object actor/Adam resume, recovery after a lost optimizer response using the last durable checkpoint, critic resume, and a multi-epoch GSPO update against an independently written clipped-ratio objective.
 
 The five pytest cases jointly cover these stages. A skipped test, missing/invalid test report, nonzero exit, timeout, changed selected source bytes, or unexpected test count cannot produce a passing receipt.
 
@@ -67,6 +67,14 @@ Removing `--check-config` changes the action: direct execution can contact track
 This prints a local plan for four examples (two per source suite), a request fingerprint and explicit unchecked capabilities. It does not create the output or its parent directory, inspect credentials, load data/tokenizers, or contact a service. Existing output paths still fail so a subsequent authorized run cannot casually overwrite prior evidence. For a trained sampler, the existing sampler/Hub-reference requirements apply; inspection does not attest that those references point to the same weights. Private sampler, Hub and output identifiers are hashed rather than echoed. The request digest includes the tokenizer/source revision requests and fixed sampling policy, and is recorded in subsequent execution/tracking receipts so the same request can be matched to its inspection. It is not a weight or dataset-content attestation.
 
 Removing `--check-config` invokes the existing external evaluation workflow and requires separate authorization and user-managed credentials. A successful plan does not establish example availability, writable storage, model identity, provider cost, scientific validity or a completed evaluation. This is portfolio source validation, not an E1–E14 benchmark run.
+
+## Avoid duplicate local training launches
+
+Active direct-baseline runs take a nonblocking advisory lock beside their seed checkpoint (`.json.lock`). A second cooperating local invocation using the same checkpoint fails before tracking/provider setup or changing the active run's Torch RNG. Wait for that run, or choose a genuinely separate experiment name/directory; different seed checkpoint paths are independent.
+
+The lock marker intentionally remains after release. Its existence does not mean a run is active, and deleting it is not a safe way to unlock a run. The operating system releases ownership when the descriptor or owning process closes. Lock files must be nonsymlink regular files on storage supporting Unix advisory locks. This is local exclusion, not a distributed lock or a provider transaction.
+
+Completed-cache replay uses one committed checkpoint snapshot without acquiring a write lock or rewriting that checkpoint. It still performs the existing validation and configured tracking checks. This protection does not authorize external training/evaluation or establish that provider-side resume is exact.
 
 ## Audit base/trained receipts before comparing them
 

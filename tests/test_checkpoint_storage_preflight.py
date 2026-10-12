@@ -24,8 +24,9 @@ def test_occupied_checkpoint_directory_fails_before_tracking_or_provider(tmp_pat
     occupied.write_text("preserve synthetic existing file")
     config = _config(occupied)
     with _runtime(monkeypatch) as holder, patch.object(grpo, "_start_wandb") as tracking:
-        with pytest.raises(FileExistsError):
+        with pytest.raises(grpo._CheckpointLockError, match="writable regular-file") as error:
             run(config)
+    assert isinstance(error.value.__cause__, FileExistsError)
     tracking.assert_not_called()
     assert "service_kwargs" not in holder
     assert occupied.read_text() == "preserve synthetic existing file"
@@ -43,7 +44,11 @@ def test_storage_probe_failure_cleans_only_its_stage(tmp_path, monkeypatch, stag
                 run(config)
     tracking.assert_not_called()
     assert "service_kwargs" not in holder
-    assert list(tmp_path.iterdir()) == [sentinel]
+    lock = grpo._checkpoint_path(config, config.seed).with_suffix(".json.lock")
+    assert set(tmp_path.iterdir()) == {sentinel, lock}
+    assert lock.read_bytes() == b""
+    with grpo._active_checkpoint_lock(grpo._checkpoint_path(config, config.seed)):
+        pass  # failed storage preflight must release ownership, not unlink the inode
     assert sentinel.read_text() == "keep"
 
 

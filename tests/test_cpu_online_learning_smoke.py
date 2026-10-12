@@ -53,7 +53,7 @@ class OnlineCPUClient(TinyCausalLMClient):
         self.model = Qwen3ForCausalLM(deepcopy(self.model.config)).cpu().eval()
         self.model.load_state_dict(state["model"])
         self.optimizer = torch.optim.Adam(self.model.parameters())
-        self.optimizer.load_state_dict(state["optimizer"])
+        self.optimizer.load_state_dict(deepcopy(state["optimizer"]))
         self.updates = 0
         return self
 
@@ -214,9 +214,38 @@ def test_runner_learns_from_its_own_cpu_causal_lm_samples(tmp_path, monkeypatch,
     expected_final = deepcopy(final_state)
     path = grpo._checkpoint_path(config, config.seed)
     grpo._write_checkpoint(path, periodic)
+    saved_tenth = deepcopy(client.states[periodic["train_state_path"]])
     resumed = run()
     assert client.updates == 10
     assert resumed.resumed_from_step == 10
+    _same_state(client.states[periodic["train_state_path"]], saved_tenth)
     assert resumed.reward_trace == result.reward_trace
+    _same_state(client.model.state_dict(), expected_final["model"])
+    _same_state(client.optimizer.state_dict(), expected_final["optimizer"])
+
+    # An optimizer response can fail after its update was applied. Recover only
+    # from the last durable receipt, discarding uncommitted actor/Adam changes.
+    grpo._write_checkpoint(path, periodic)
+    optimizer_step = client.optim_step
+
+    def applied_then_failed(params):
+        response = optimizer_step(params)
+        if client.updates == 2:
+            raise RuntimeError("synthetic optimizer response lost after application")
+        return response
+
+    with patch.object(client, "optim_step", side_effect=applied_then_failed):
+        with pytest.raises(RuntimeError, match="response lost after application"):
+            run()
+    durable = json.loads(path.read_text())
+    assert durable["status"] == "started"
+    assert durable["step"] == 11
+    assert durable["train_state_path"].endswith("state_seed7_11")
+    assert "result" not in durable
+    assert client.updates == 2
+    recovered = run()  # also proves the failed run released its local lock
+    assert recovered.resumed_from_step == 11
+    assert client.updates == 9
+    assert recovered.reward_trace == result.reward_trace
     _same_state(client.model.state_dict(), expected_final["model"])
     _same_state(client.optimizer.state_dict(), expected_final["optimizer"])

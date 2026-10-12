@@ -48,6 +48,8 @@ A test failure normally creates a `failed` receipt. A preflight/publication fail
 
 This checks local configuration and adapter selection only. It does not fetch datasets/tokenizers, check credentials or provider availability, attest tracking/export, or validate scientific claims. The output whitelists numeric/boolean settings and a configuration digest rather than printing endpoints or private identifiers.
 
+The documented module command reports common invalid-value, unknown-config-field and missing-file errors concisely with exit code 1 and the correct module help command. Argument-parser usage errors retain exit code 2. Programmatic `main()` callers still receive their original exceptions; unexpected runtime failures are not turned into successful or configuration-check receipts.
+
 Removing `--check-config` changes the action: direct execution can contact tracking, Hub and training services, publish checkpoints and consume provider resources. It requires a separately authorized run and appropriate user-managed credentials. The offline developer command does not grant or test those capabilities.
 
 ## Backend and demonstration matrix

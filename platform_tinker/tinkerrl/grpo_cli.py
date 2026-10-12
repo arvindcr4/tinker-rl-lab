@@ -2,8 +2,8 @@
 
 Usage::
 
-    python -m tinkerrl.grpo_cli --preset tooluse_synth --steps 200
-    python -m tinkerrl.grpo_cli --preset gsm8k --model Qwen/Qwen3-8B --seed 137
+    python -m platform_tinker.tinkerrl.grpo_cli --preset tooluse_synth --steps 200
+    python -m platform_tinker.tinkerrl.grpo_cli --preset gsm8k --model Qwen/Qwen3-8B --seed 137
 
 Presets encode the experiment configurations that used to live in separate
 ``grpo_*.py`` files.  The short ``--preset`` parameter selects one; CLI flags
@@ -43,6 +43,7 @@ from .grpo import (
     make_xlam_dataset,
     run_grpo,
     _strict_json_object,
+    _redact_error,
 )
 
 
@@ -364,7 +365,7 @@ def build_config(args: argparse.Namespace) -> GRPOConfig:
 
 def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="python -m tinkerrl.grpo_cli",
+        prog="python -m platform_tinker.tinkerrl.grpo_cli",
         description="Consolidated GRPO experiment runner.",
     )
     parser.add_argument(
@@ -575,5 +576,18 @@ def legacy_main(preset: str, argv: Optional[List[str]] = None) -> int:
     return main(["--preset", preset, *forwarded])
 
 
+def cli_entrypoint(argv: Optional[List[str]] = None) -> int:
+    """Keep common shell input/I/O errors readable; library main still raises."""
+    try:
+        return main(argv)
+    except (OSError, TypeError, ValueError) as exc:
+        print(f"ERROR: {_redact_error(exc)}", file=sys.stderr)
+        print(
+            "Inspect supported options with python -m platform_tinker.tinkerrl.grpo_cli --help",
+            file=sys.stderr,
+        )
+        return 1
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(cli_entrypoint())

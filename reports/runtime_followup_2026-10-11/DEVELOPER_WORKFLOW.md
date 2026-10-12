@@ -52,6 +52,16 @@ The documented module command reports common invalid-value, unknown-config-field
 
 Removing `--check-config` changes the action: direct execution can contact tracking, Hub and training services, publish checkpoints and consume provider resources. It requires a separately authorized run and appropriate user-managed credentials. The offline developer command does not grant or test those capabilities.
 
+## Inspect a source-validation evaluation request
+
+```sh
+.venv/bin/python -m platform_tinker.tinkerrl.pavlov_portfolio_eval --base-model --per-suite 2 --out /tmp/portfolio-inspection-001.json --check-config
+```
+
+This prints a local plan for four examples (two per source suite), a request fingerprint and explicit unchecked capabilities. It does not create the output or its parent directory, inspect credentials, load data/tokenizers, or contact a service. Existing output paths still fail so a subsequent authorized run cannot casually overwrite prior evidence. For a trained sampler, the existing sampler/Hub-reference requirements apply; inspection does not attest that those references point to the same weights. Private sampler, Hub and output identifiers are hashed rather than echoed. The request digest includes the tokenizer/source revision requests and fixed sampling policy, and is recorded in subsequent execution/tracking receipts so the same request can be matched to its inspection. It is not a weight or dataset-content attestation.
+
+Removing `--check-config` invokes the existing external evaluation workflow and requires separate authorization and user-managed credentials. A successful plan does not establish example availability, writable storage, model identity, provider cost, scientific validity or a completed evaluation. This is portfolio source validation, not an E1–E14 benchmark run.
+
 ## Backend and demonstration matrix
 
 | Entry point | Current supported purpose | Important limit |
@@ -59,6 +69,7 @@ Removing `--check-config` changes the action: direct execution can contact track
 | `tools/run_offline_harness.py` | Fixed offline CPU CLI/training/evaluation/resume checks and local receipt | Random toy models; in-memory service doubles |
 | `submission/demo/demo.sh` | Existing stdlib offline group-math and historical-artifact integrity demo | Does not train a model or prove benchmark improvement |
 | `platform_tinker.tinkerrl.grpo_cli --check-config` | Direct baseline configuration inspection | No provider/data/weight/scientific verification |
+| Portfolio evaluator with `--check-config` | Read-only sampling-request and fresh-path inspection | No source availability, weight binding, cost or evaluation attestation |
 | Direct Tinker baseline without `--check-config` | Independently configured baseline execution when separately authorized | Not canonical clipped-PPO equivalence; live operation was not run in this session |
 | `platform_local.unified --framework tinker --dry-run` | Read-only route/configuration inspection | Execution is guarded because canonical fields are not faithfully implemented |
 | `platform_local.unified --framework skyrl --dry-run` | Read-only route/configuration inspection | Server startup is not a completed training recipe; execution is guarded |

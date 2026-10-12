@@ -75,6 +75,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--temperature", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=1809)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument(
+        "--check-config",
+        action="store_true",
+        help="Inspect the local request without credentials, downloads, writes or provider work",
+    )
     return parser
 
 
@@ -92,6 +97,51 @@ def _model_request_source(args: argparse.Namespace) -> dict[str, Any]:
         },
         "hf_checkpoint_binding": {"status": "unverified" if trained else "not_applicable"},
         "scope": "Request metadata only; no provider-weight or Hub/sampler binding attestation.",
+    }
+
+
+def _configuration_check(args: argparse.Namespace) -> dict[str, Any]:
+    request = dict(vars(args))
+    request.pop("check_config", None)
+    request["out"] = str(args.out)
+    request.update(
+        tokenizer_model=MODEL_ID,
+        tokenizer_revision=MODEL_REVISION,
+        dataset_revision=PAVLOV_NON_XLAM_DATASET_REVISION,
+        source_revisions=PAVLOV_NON_XLAM_SOURCE_REVISIONS,
+        top_p=0.95,
+        max_prompt_tokens=2048,
+        prompt_truncation="prefix",
+    )
+    return {
+        "schema_version": 1,
+        "status": "config_checks_passed",
+        "config_sha256": _sha256_text(json.dumps(request, sort_keys=True, allow_nan=False)),
+        "source_mode": "checkpoint_path" if args.sampler_path is not None else "base_model_name",
+        "sampling_request": {
+            "per_suite": args.per_suite,
+            "planned_examples": 2 * args.per_suite,
+            "samples_per_problem": 1,
+            "max_tokens": args.max_tokens,
+            "max_prompt_tokens": 2048,
+            "temperature": args.temperature,
+            "top_p": 0.95,
+            "seed": args.seed,
+        },
+        "scope": "Local argument and fresh-path inspection only; no execution or scientific verification.",
+        "not_checked": [
+            "dataset_contents",
+            "available_example_count",
+            "tokenizer",
+            "credentials",
+            "provider_availability",
+            "provider_weights",
+            "hub_sampler_binding",
+            "storage_writability",
+            "tracking_export",
+            "cost",
+            "scientific_validity",
+        ],
     }
 
 
@@ -113,10 +163,14 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit("--hf-commit must be an immutable 40-hex commit")
     elif any(value is not None for value in (args.hf_repo, args.hf_revision, args.hf_commit)):
         parser.error("HF checkpoint references require --sampler-path, not --base-model")
-    if not os.environ.get("TINKER_API_KEY", "").startswith("tml-"):
-        raise SystemExit("TINKER_API_KEY is required")
     if os.path.lexists(args.out):
         parser.error("--out must name a new receipt; choose a fresh output path")
+    inspection = _configuration_check(args)
+    if args.check_config:
+        print(json.dumps(inspection, sort_keys=True, allow_nan=False))
+        return 0
+    if not os.environ.get("TINKER_API_KEY", "").startswith("tml-"):
+        raise SystemExit("TINKER_API_KEY is required")
     _preflight_checkpoint_storage(args.out, exclusive=True)
     model_source = _model_request_source(args)
 
@@ -135,6 +189,7 @@ def main(argv: list[str] | None = None) -> int:
         name=f"pavlov_portfolio_{role}_seed{args.seed}",
         tags=["pavlov", "portfolio-validation", role, "api-bank", "swe-gym"],
         config={
+            "request_sha256": inspection["config_sha256"],
             "evidence_class": "portfolio_source_validation",
             "is_e1_e14_score": False,
             "model_id": MODEL_ID,
@@ -236,6 +291,7 @@ def main(argv: list[str] | None = None) -> int:
         receipt = {
             "schema_version": "pavlov-portfolio-source-eval-v1",
             "status": "SCORED",
+            "request_sha256": inspection["config_sha256"],
             "evidence_class": "portfolio_source_validation",
             "is_model_score": True,
             "is_e1_e14_score": False,

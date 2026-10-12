@@ -150,5 +150,5 @@ def test_missing_dependencies_have_actionable_error(tmp_path, monkeypatch, setup
     with pytest.raises(SystemExit) as raised:
         harness.main(["--out", str(tmp_path / "receipt.json")])
     assert raised.value.code == 2
-    assert "uv sync --frozen --extra dev" in capsys.readouterr().err
+    assert "uv sync --frozen --extra dev --python 3.12" in capsys.readouterr().err
     assert calls == []

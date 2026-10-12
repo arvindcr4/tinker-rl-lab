@@ -15,8 +15,10 @@ Use a **new output path for each invocation**. Expected final status is `OFFLINE
 If dependencies are missing, the command exits with an actionable error before running checks. To provision a new authorized development environment, use the repository lock:
 
 ```sh
-uv sync --frozen --extra dev
+uv sync --frozen --extra dev --python 3.12
 ```
+
+Select Python 3.12 explicitly for the VM-validated setup. The repository has no `.python-version` pin; [uv otherwise selects a suitable interpreter according to project requirements](https://docs.astral.sh/uv/reference/cli/#uv-sync--python), which is broader than this tested environment. An offline dry-run of the command above checked 141 packages and required no changes in the current VM. This is not a claim that every supported Python/platform combination was freshly installed.
 
 Installation can download substantial dependencies; the offline command itself never installs anything. Run it with the resulting `.venv/bin/python`, rather than an unrelated system Python. No service credentials are needed.
 
@@ -39,6 +41,10 @@ The fresh JSON receipt records pass/fail, check counts, dependency versions, sel
 - Exit 2: invalid arguments, existing output path, or missing dependencies
 
 A test failure normally creates a `failed` receipt. A preflight/publication failure may produce no receipt; the terminal error explains why. The diagnostic tail is local; review it before sharing. Generated model/checkpoint artifacts live in pytest temporary storage. The durable deliverable is the local harness receipt, not a downloadable trained model.
+
+### Clean-source portability check
+
+The five-case command also passed in 14.507 seconds from a separate 20-file tracked-source archive of commit `412d9293047ae272cae072f3f49dede066070c00`. Every copied file matched its Git blob, and the selected project modules resolved inside that archive. The existing Python 3.12.14 VM dependency environment was reused; this checks source portability, not a hermetic environment or fresh dependency installation. No untracked model/data assets were copied. The harness source manifest now additionally includes its CPU optimizer helper, test configuration and project configuration so their changes are visible in later receipts.
 
 ## Inspect a real baseline request without launching it
 

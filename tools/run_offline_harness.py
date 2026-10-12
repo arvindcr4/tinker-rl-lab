@@ -30,6 +30,9 @@ SOURCES = (
     "platform_tinker/tinkerrl/grpo_cli.py",
     "platform_tinker/tinkerrl/critic.py",
     "tests/_shared_fakes.py",
+    "tests/conftest.py",
+    "tests/test_cpu_optimizer_smoke.py",
+    "pyproject.toml",
     "tests/test_grpo_coverage.py",
     "tests/test_cpu_causal_lm_smoke.py",
     "tests/test_tinker_sdk_loss_integration.py",
@@ -67,7 +70,7 @@ def main(argv: list[str] | None = None) -> int:
             "missing dependencies: "
             + ", ".join(missing)
             + "; from the repository root install the locked dev environment with "
-            "`uv sync --frozen --extra dev`, then run `.venv/bin/python tools/run_offline_harness.py --out NEW_PATH`"
+            "`uv sync --frozen --extra dev --python 3.12`, then run `.venv/bin/python tools/run_offline_harness.py --out NEW_PATH`"
         )
     fingerprints = {
         name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in SOURCES

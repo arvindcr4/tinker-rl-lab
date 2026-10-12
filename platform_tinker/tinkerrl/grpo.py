@@ -1206,9 +1206,11 @@ def make_gspo_loss_fn(
             if advantage == 0:
                 term = log_ratio * 0.0
             elif advantage > 0:
-                term = torch.exp(torch.clamp(log_ratio, max=log_high)) * advantage
+                # Form the scaled magnitude before exponentiating: exp(r) may
+                # overflow/underflow even when advantage * exp(r) is representable.
+                term = torch.exp(torch.clamp(log_ratio, max=log_high) + math.log(advantage))
             else:
-                term = torch.exp(torch.clamp(log_ratio, min=log_low)) * advantage
+                term = -torch.exp(torch.clamp(log_ratio, min=log_low) + math.log(-advantage))
             active = (advantage > 0 and log_ratio <= log_high) or (
                 advantage < 0 and log_ratio >= log_low
             )

@@ -31,7 +31,15 @@ def harness(tmp_path, monkeypatch):
         finish=lambda **kw: finished.append(kw["exit_code"]),
     )
     sequence = SimpleNamespace(tokens=[7, 8], stop_reason="stop")
-    state = SimpleNamespace(sequences=[sequence], score=1.0, prompt_length=3, mutate=False)
+    state = SimpleNamespace(
+        sequences=[sequence],
+        score=1.0,
+        prompt_length=3,
+        mutate=False,
+        sampler_requests=[],
+        tokenizer_requests=[],
+        tracking_config=None,
+    )
     tokenizer = SimpleNamespace(
         encode=lambda *_a, **_k: list(range(state.prompt_length)),
         decode=lambda ids, **_k: "answer",
@@ -56,7 +64,20 @@ def harness(tmp_path, monkeypatch):
         return state.score
 
     monkeypatch.setattr(evaluator, "PavlovNonXLAMReward", lambda: SimpleNamespace(score=score))
-    monkeypatch.setitem(sys.modules, "wandb", SimpleNamespace(init=lambda **_: run))
+
+    def init_tracking(**kwargs):
+        state.tracking_config = kwargs["config"]
+        return run
+
+    def create_sampler(**kwargs):
+        state.sampler_requests.append(kwargs)
+        return SimpleNamespace(sample=sample)
+
+    def load_tokenizer(*args, **kwargs):
+        state.tokenizer_requests.append((args, kwargs))
+        return tokenizer
+
+    monkeypatch.setitem(sys.modules, "wandb", SimpleNamespace(init=init_tracking))
     types = SimpleNamespace(
         ModelInput=SimpleNamespace(from_ints=lambda ids: ids), SamplingParams=lambda **kw: kw
     )
@@ -65,16 +86,14 @@ def harness(tmp_path, monkeypatch):
         "tinker",
         SimpleNamespace(
             types=types,
-            ServiceClient=lambda **_: SimpleNamespace(
-                create_sampling_client=lambda **_: SimpleNamespace(sample=sample)
-            ),
+            ServiceClient=lambda **_: SimpleNamespace(create_sampling_client=create_sampler),
         ),
     )
     monkeypatch.setitem(sys.modules, "tinker.types", types)
     monkeypatch.setitem(
         sys.modules,
         "transformers",
-        SimpleNamespace(AutoTokenizer=SimpleNamespace(from_pretrained=lambda *_a, **_k: tokenizer)),
+        SimpleNamespace(AutoTokenizer=SimpleNamespace(from_pretrained=load_tokenizer)),
     )
     output = tmp_path / "receipt.json"
     return SimpleNamespace(

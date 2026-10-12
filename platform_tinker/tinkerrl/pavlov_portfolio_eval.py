@@ -3,11 +3,15 @@
 This is a source-validation score, not an E1--E14 benchmark score.  It exists
 to compare the base model and a trained Tinker sampler on held-back rows from
 the two training sources while the native E-suite harnesses run separately.
+
+Use a fresh --out path for each receipt. The recorded revision is a tokenizer
+request; managed model weights and caller-supplied Hub bindings are unverified.
 """
 
 from __future__ import annotations
 
 import argparse
+from copy import deepcopy
 import hashlib
 import json
 import math
@@ -21,6 +25,9 @@ from .grpo import (
     PavlovNonXLAMReward,
     TrainingExample,
     _finite_reward,
+    _preflight_checkpoint_storage,
+    _validated_checkpoint_path,
+    _write_checkpoint,
     make_pavlov_non_xlam_dataset,
 )
 
@@ -71,6 +78,23 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _model_request_source(args: argparse.Namespace) -> dict[str, Any]:
+    """Separate requested tokenizer metadata from unverified managed weights."""
+    trained = args.sampler_path is not None
+    return {
+        "schema_version": 1,
+        "tokenizer_request": {"model_id": MODEL_ID, "revision": MODEL_REVISION},
+        "managed_base_weights": {"status": "unverified", "commit_sha": None},
+        "sampler_request": {
+            "mode": "checkpoint_path" if trained else "base_model_name",
+            "model_path": args.sampler_path,
+            "base_model": None if trained else MODEL_ID,
+        },
+        "hf_checkpoint_binding": {"status": "unverified" if trained else "not_applicable"},
+        "scope": "Request metadata only; no provider-weight or Hub/sampler binding attestation.",
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
@@ -78,13 +102,23 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--per-suite and --max-tokens must be positive")
     if not math.isfinite(args.temperature) or args.temperature < 0:
         parser.error("--temperature must be finite and nonnegative")
-    if not os.environ.get("TINKER_API_KEY", "").startswith("tml-"):
-        raise SystemExit("TINKER_API_KEY is required")
-    if args.sampler_path:
+    if args.sampler_path is not None:
+        try:
+            _validated_checkpoint_path(args.sampler_path, kind="sampler")
+        except RuntimeError as exc:
+            parser.error(str(exc))
         if not all((args.hf_repo, args.hf_revision, args.hf_commit)):
             raise SystemExit("trained sampler evaluation requires HF repo, revision, and commit")
         if len(args.hf_commit) != 40 or any(c not in "0123456789abcdef" for c in args.hf_commit):
             raise SystemExit("--hf-commit must be an immutable 40-hex commit")
+    elif any(value is not None for value in (args.hf_repo, args.hf_revision, args.hf_commit)):
+        parser.error("HF checkpoint references require --sampler-path, not --base-model")
+    if not os.environ.get("TINKER_API_KEY", "").startswith("tml-"):
+        raise SystemExit("TINKER_API_KEY is required")
+    if os.path.lexists(args.out):
+        parser.error("--out must name a new receipt; choose a fresh output path")
+    _preflight_checkpoint_storage(args.out, exclusive=True)
+    model_source = _model_request_source(args)
 
     dataset = make_pavlov_non_xlam_dataset(seed=809)
     examples = select_examples(list(dataset.test_examples()), per_suite=args.per_suite)
@@ -105,6 +139,8 @@ def main(argv: list[str] | None = None) -> int:
             "is_e1_e14_score": False,
             "model_id": MODEL_ID,
             "model_revision": MODEL_REVISION,
+            "model_revision_scope": "tokenizer_request_only",
+            "model_source": deepcopy(model_source),
             "sampler_path": args.sampler_path,
             "hf_repo": args.hf_repo,
             "hf_revision": args.hf_revision,
@@ -204,9 +240,11 @@ def main(argv: list[str] | None = None) -> int:
             "is_model_score": True,
             "is_e1_e14_score": False,
             "role": role,
+            "model_source": model_source,
             "model": {
                 "model_id": MODEL_ID,
                 "model_revision": MODEL_REVISION,
+                "model_revision_scope": "tokenizer_request_only",
                 "sampler_path": args.sampler_path,
                 "hf_repo": args.hf_repo,
                 "hf_revision": args.hf_revision,
@@ -231,10 +269,7 @@ def main(argv: list[str] | None = None) -> int:
             "records": records,
             "wandb": {"run_id": run.id, "url": run.url, "project": WANDB_PROJECT},
         }
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(
-            json.dumps(receipt, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8"
-        )
+        _write_checkpoint(args.out, receipt, exclusive=True)
         run.summary["eval/mean_reward"] = mean_reward
         run.summary["eval/exact_match_rate"] = exact_rate
         run.summary["eval/count"] = len(records)

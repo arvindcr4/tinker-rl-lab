@@ -1528,10 +1528,11 @@ def _campaign_metadata(config: GRPOConfig) -> Dict[str, List[str]]:
     }
 
 
-def _preflight_checkpoint_storage(path: Path) -> None:
+def _preflight_checkpoint_storage(path: Path, *, exclusive: bool = False) -> None:
     """Probe an owned temporary before remote work; not a future-space guarantee."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = None
+    linked = None
     try:
         with tempfile.NamedTemporaryFile(
             dir=path.parent, prefix=".grpo-write-check-", delete=False
@@ -1540,12 +1541,20 @@ def _preflight_checkpoint_storage(path: Path) -> None:
             file.write(b"{}\n")
             file.flush()
             os.fsync(file.fileno())
+        if exclusive:
+            candidate = Path(str(temporary) + ".link")
+            os.link(temporary, candidate)
+            linked = candidate  # Only remove the link after successful creation.
     finally:
-        if temporary is not None:
-            temporary.unlink(missing_ok=True)
+        try:
+            if linked is not None:
+                linked.unlink(missing_ok=True)
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
 
 
-def _write_checkpoint(path: Path, payload: Dict[str, Any]) -> None:
+def _write_checkpoint(path: Path, payload: Dict[str, Any], *, exclusive: bool = False) -> None:
     # Serialize before creating directories or files. Stage exclusively under
     # a unique name, never follow a predictable leftover temporary symlink.
     serialized = json.dumps(payload, indent=2, allow_nan=False) + "\n"
@@ -1564,7 +1573,13 @@ def _write_checkpoint(path: Path, payload: Dict[str, Any]) -> None:
             file.write(serialized)
             file.flush()
             os.fsync(file.fileno())
-        os.replace(temporary, path)
+        if exclusive:
+            # Publish the complete inode without replacing a competing receipt.
+            # Both names are in one directory/filesystem; unsupported links fail
+            # closed rather than falling back to a clobbering rename.
+            os.link(temporary, path)
+        else:
+            os.replace(temporary, path)
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)

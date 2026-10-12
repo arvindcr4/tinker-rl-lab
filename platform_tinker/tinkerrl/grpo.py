@@ -1810,11 +1810,17 @@ def _redact_error(exc: BaseException) -> str:
 
 
 def _training_input_fingerprint(examples: Sequence[TrainingExample]) -> Optional[str]:
+    return _example_input_fingerprint(examples, domain="training")
+
+
+def _example_input_fingerprint(
+    examples: Sequence[TrainingExample], *, domain: str
+) -> Optional[str]:
     """Hash ordered strict-JSON projections without coercing adapter objects."""
     encoder = json.JSONEncoder(
         sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
     )
-    digest = hashlib.sha256(b"tinkerrl-training-inputs-v1\n")
+    digest = hashlib.sha256(f"tinkerrl-{domain}-inputs-v1\n".encode("ascii"))
     try:
         for example in examples:
             if type(example) is not TrainingExample:
@@ -1849,6 +1855,49 @@ def _training_input_fingerprint(examples: Sequence[TrainingExample]) -> Optional
         return digest.hexdigest()
     except (TypeError, ValueError, UnicodeError, RecursionError, OverflowError):
         return None
+
+
+def _heldout_input_receipt(examples: Sequence[TrainingExample]) -> Dict[str, Any]:
+    digest = _example_input_fingerprint(examples, domain="heldout")
+    return {
+        "schema_version": 1,
+        "status": "fingerprinted" if digest is not None else "unrecorded",
+        "count": len(examples),
+        "sha256": digest,
+        "scope": "Ordered strict-JSON evaluation inputs at evaluation start; not authenticated source, scorer identity, or proof of immutable consumed data.",
+    }
+
+
+def _verify_cached_heldout_inputs(result: GRPORunResult, dataset: DatasetAdapter) -> None:
+    """Verify new input bindings without inventing evidence for legacy caches."""
+    receipt = result.heldout_evaluation
+    if "input_source" not in receipt:
+        return
+    source = receipt["input_source"]
+    error = "held-out input fingerprint is malformed, changed, or no longer verifiable"
+    if (
+        not isinstance(source, dict)
+        or type(source.get("schema_version")) is not int
+        or source.get("schema_version") != 1
+        or source.get("status") not in ("fingerprinted", "unrecorded")
+        or type(source.get("count")) is not int
+        or source.get("count") != receipt["total_n"]
+        or receipt["status"] == "disabled"
+    ):
+        raise RuntimeError(error)
+    if source["status"] == "unrecorded":
+        if source.get("sha256") is not None:
+            raise RuntimeError(error)
+        return
+    digest = source.get("sha256")
+    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+        raise RuntimeError(error)
+    examples = list(dataset.test_examples())
+    if (
+        len(examples) != source["count"]
+        or _example_input_fingerprint(examples, domain="heldout") != digest
+    ):
+        raise RuntimeError(error)
 
 
 def _dataset_source_receipt(
@@ -2445,6 +2494,8 @@ def _run_one_seed(
         else None
     )
     dataset_source = _dataset_source_receipt(train_examples, resume_step, prior)
+    if completed is not None:
+        _verify_cached_heldout_inputs(completed, dataset)
     if not (prior and prior.get("status") == "completed"):
         _preflight_checkpoint_storage(checkpoint_path)
     # Critic pretrain draws from this RNG before the step loop, and only
@@ -2994,6 +3045,7 @@ def _run_one_seed(
 
         if config.evaluate_heldout:
             test_examples = list(dataset.test_examples())
+            heldout_evaluation["input_source"] = _heldout_input_receipt(test_examples)
             if test_examples:
                 test_rewards: List[float] = []
                 heldout_failed = 0

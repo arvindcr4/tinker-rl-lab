@@ -33,23 +33,17 @@ def test_tinker_rejects_unimplemented_algorithms_before_launch(algorithm):
     run.assert_not_called()
 
 
-def test_tinker_canonical_settings_reach_real_cli_config():
-    from platform_tinker.tinkerrl.grpo_cli import _parse_args, build_config
+def test_tinker_migration_keeps_direct_baseline_config_inspection_offline(capsys):
+    from platform_tinker.tinkerrl.grpo_cli import main as baseline_main
+    import json
 
-    item = launcher("tinker")
-    with patch("subprocess.run") as run:
-        result = item._run_tinker()
-    command = run.call_args.args[0]
-    actual = build_config(_parse_args(command[3:]))
-    assert actual.model == item.model
-    assert actual.group_size == item.spec.num_generations
-    assert actual.lr == item.spec.learning_rate
-    assert actual.lora_rank == item.spec.lora_rank
-    assert actual.max_response_tokens == item.spec.max_completion_length
-    assert actual.batch_size == item.spec.per_device_train_batch_size
-    assert actual.steps == item.spec.training_steps
-    assert actual.seed == item.spec.seed
-    assert result.algorithm == "grpo"
+    with patch("socket.socket.connect", side_effect=AssertionError("network attempted")):
+        assert baseline_main(["--preset", "gsm8k", "--check-config"]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["status"] == "config_checks_passed"
+    assert result["dataset"] == "gsm8k"
+    assert "provider_availability" in result["not_checked"]
+    assert result["effective"]["gspo_enabled"] is False
 
 
 def test_openrlhf_driver_receives_typed_requested_configuration():

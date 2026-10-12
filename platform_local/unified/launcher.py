@@ -157,7 +157,11 @@ class UnifiedLauncher:
             return
 
         print("\n" + "=" * 60)
-        print("  Training Complete!")
+        print(
+            "  Training Complete!"
+            if result.final_step is not None
+            else "  Training process finished; optimizer-step completion is unverified"
+        )
         print("=" * 60)
         print(f"\n  Framework: {result.framework}")
         print(f"  Model: {result.model}")
@@ -185,72 +189,25 @@ class UnifiedLauncher:
         sys.exit(1)
 
     def _run_skyrl(self) -> TrainingResult:
-        """Run SkyRL tx training.
-
-        SkyRL tx runs the Tinker API on your own GPUs behind an external SkyRL
-        checkout; it is not pip-installable, so we emit the documented launch
-        sequence (from README §SkyRL) and shell out when an SKYRL_CHECKOUT env
-        var is present.
-        """
-        import os
-        import subprocess
-
-        spec = self._resolve_spec()
-        print("\n[SKYRL] SkyRL tx (self-hosted Tinker API server)")
-        cfg = "platform_hybrid/skyrl/configs/grpo_gsm8k.yaml"
-        checkout = os.environ.get("SKYRL_CHECKOUT")
-        if not checkout:
-            raise NotImplementedError(
-                "SkyRL tx requires an external SkyRL checkout. Set SKYRL_CHECKOUT to "
-                "its path, then: `uv run --extra gpu --extra tinker -m skyrl.tinker.api` "
-                f"and run the recipe at {cfg}. (The Tinker-cloud equivalent is "
-                "`--framework tinker`, which runs in-process via grpo_cli.)"
-            )
-        subprocess.run(
-            ["uv", "run", "--extra", "gpu", "--extra", "tinker", "-m", "skyrl.tinker.api"],
-            cwd=checkout,
-            check=True,
+        """Reject the server-only scaffold as a canonical training executor."""
+        raise NotImplementedError(
+            "SkyRL canonical execution is unavailable: the former route started only "
+            "skyrl.tinker.api, without executing a training recipe or verifying optimizer "
+            "steps. Use --dry-run to inspect the planned cell; an independently configured "
+            "SkyRL server/recipe is not a canonical completion receipt."
         )
-        return TrainingResult("skyrl", spec.model, self.algorithm, spec.training_steps, [], [])
 
     def _run_tinker(self) -> TrainingResult:
-        """Run Tinker (Atropos / GRPO-CLI) training in-process.
-
-        Delegates to the real Tinker SDK loop in
-        ``platform_tinker/tinkerrl/grpo_cli.py`` (preset gsm8k, ExactMathReward).
-        """
+        """Keep the direct baseline available without claiming canonical equivalence."""
         if self.algorithm != "grpo":
             raise ValueError("The Tinker launcher currently supports only algorithm=grpo")
-        import subprocess
-
-        spec = self._resolve_spec()
-        cmd = [
-            sys.executable,
-            "-m",
-            "platform_tinker.tinkerrl.grpo_cli",
-            "--preset",
-            spec.task,
-            "--model",
-            self.model or spec.model,
-            "--steps",
-            str(spec.training_steps),
-            "--seed",
-            str(spec.seed),
-            "--group-size",
-            str(spec.num_generations),
-            "--lr",
-            str(spec.learning_rate),
-            "--lora-rank",
-            str(spec.lora_rank),
-            "--max-response-tokens",
-            str(spec.max_completion_length),
-            "--batch-size",
-            str(spec.per_device_train_batch_size),
-        ]
-        print(f"\n[TINKER] {' '.join(cmd)}")
-        subprocess.run(cmd, check=True)
-        return TrainingResult(
-            "tinker", self.model or spec.model, self.algorithm, spec.training_steps, [], []
+        raise NotImplementedError(
+            "Tinker canonical execution is unavailable: the direct baseline cannot enforce "
+            "the canonical gradient accumulation, token-ratio clipping, KL coefficient, "
+            "LoRA alpha and target-module contract. Inspect the independent baseline with "
+            "python -m platform_tinker.tinkerrl.grpo_cli --preset gsm8k --check-config. "
+            "Use unified --dry-run for planned-cell inspection; neither is evidence of "
+            "canonical algorithm equivalence or completed optimizer steps."
         )
 
     def _run_verl(self) -> TrainingResult:

@@ -1863,3 +1863,9 @@ Final `make check submission-check` completed successfully: **2,011 passed, 2 sk
 Local partial-resume actor paths and export receipt shapes are now checked before tracking, tokenizer loading or provider construction. Previously, control-character/option-like actor references and malformed export containers/items reached external setup before being rejected later. Five offline red-before regressions now confirm early rejection and byte-preservation of the original receipt. The existing export validator returns a detached snapshot reused later rather than re-reading callback-owned objects.
 
 **121 focused checks passed**, including actual CPU learning and critic-resume integration. Final `make check submission-check` passed every stage: **2,016 passed, 2 skipped**, **87.55%** supported-surface coverage, 260.83 seconds for pytest. This checks local reference syntax and existing receipt structure, not remote actor authenticity or algorithm equivalence. Valid legacy missing-export-list behavior and direct baseline execution remain available.
+
+## 2026-10-12 01:16 UTC — bind sampled conditioning tokens
+
+Training now snapshots the tokenizer's prompt-token list before sampling/scoring callbacks. A reusable tokenizer list could previously be mutated by decoding, causing the training datum to use a different conditioning prefix from the one actually sampled. An offline reproduction changed `[10, 11]` into `[99]` and failed before the fix. The added actual-SDK checks verify both short and truncated prefixes, prove mutation occurred, and inspect the resulting training datum's model input.
+
+**133 focused checks passed**, including CPU sampled learning and the independent multi-epoch GSPO oracle. Final `make check submission-check`: **2,018 passed, 2 skipped**, **87.55%** supported-surface coverage, 263.73 seconds for pytest; all aggregate stages passed. Prompt truncation policy, reward behavior and sampler defaults are unchanged.

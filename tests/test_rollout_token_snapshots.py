@@ -119,3 +119,36 @@ def test_mutating_decoder_does_not_change_training_tokens():
     assert tokens == [[1]]
     assert sequences[0].tokens == [1]
     assert rewards == [1.0]
+
+
+@pytest.mark.parametrize("prompt_budget", [2, 8])
+def test_tokenizer_owned_prompt_cannot_change_after_sampling(prompt_budget):
+    shared = [10, 11, 12]
+    sampled = []
+
+    def sample(prompt, **_kwargs):
+        sampled.append(list(prompt.to_ints()))
+        return _Future(
+            SimpleNamespace(
+                sequences=[SimpleNamespace(tokens=[1], logprobs=None, stop_reason="stop")]
+            )
+        )
+
+    def decode(tokens, **_kwargs):
+        shared[:] = [99]
+        return "1"
+
+    prompt, responses, rewards, _ = grpo._sample_scored_group(
+        SimpleNamespace(encode=lambda *_a, **_k: shared, decode=decode),
+        SimpleNamespace(sample=sample),
+        T,
+        grpo.GRPOConfig(name="prompt-snapshot", group_size=1, max_prompt_tokens=prompt_budget),
+        SimpleNamespace(score=lambda *_a: 1.0),
+        grpo.TrainingExample(prompt="q"),
+    )
+    expected = [10, 11, 12][:prompt_budget]
+    assert shared == [99]  # Prove the callback actually mutated the tokenizer's list.
+    assert prompt == sampled[0] == expected
+    datum = grpo._build_datum(prompt, responses[0])
+    assert datum.model_input.to_ints() == expected
+    assert rewards == [1.0]

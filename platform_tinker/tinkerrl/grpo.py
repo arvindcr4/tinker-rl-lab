@@ -1262,7 +1262,9 @@ def _sample_scored_group(
     max_response_tokens``) and ``identical_group`` (a seeded group of 2+
     whose responses are all token-identical).
     """
-    prompt_ids = tok.encode(example.prompt, add_special_tokens=False)
+    # Tokenizers may return a reusable list. Bind the conditioning prefix
+    # before provider/scoring callbacks so training sees what was sampled.
+    prompt_ids = list(tok.encode(example.prompt, add_special_tokens=False))
     if len(prompt_ids) > config.max_prompt_tokens:
         prompt_ids = prompt_ids[: config.max_prompt_tokens]
 

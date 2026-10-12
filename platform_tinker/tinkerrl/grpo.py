@@ -1856,7 +1856,13 @@ def _redact_error(exc: BaseException) -> str:
     message = str(exc)
     secrets = {
         os.environ.get(env_name)
-        for env_name in ("TINKER_API_KEY", "HF_TOKEN", "HUGGINGFACE_HUB_TOKEN", "WANDB_API_KEY")
+        for env_name in (
+            "TINKER_API_KEY",
+            "HF_TOKEN",
+            "HUGGING_FACE_HUB_TOKEN",
+            "HUGGINGFACE_HUB_TOKEN",
+            "WANDB_API_KEY",
+        )
     }
     # Redact longer overlapping credentials first, so masking a short prefix
     # cannot leave the rest of another configured credential in a failure log.

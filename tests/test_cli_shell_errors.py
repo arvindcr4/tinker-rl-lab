@@ -44,10 +44,15 @@ def test_module_configuration_errors_are_actionable_without_traceback(tmp_path, 
     assert "platform_tinker.tinkerrl.grpo_cli --help" in result.stderr
 
 
-def test_shell_error_redacts_configured_secret_but_library_error_is_preserved(monkeypatch, capsys):
+@pytest.mark.parametrize("token_variable", ["HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"])
+def test_shell_error_redacts_configured_secret_but_library_error_is_preserved(
+    monkeypatch, capsys, token_variable
+):
     from platform_tinker.tinkerrl import grpo_cli as cli
 
-    monkeypatch.setenv("HF_TOKEN", "synthetic-secret-placeholder")
+    for name in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN", "HUGGINGFACE_HUB_TOKEN"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv(token_variable, "synthetic-secret-placeholder")
 
     def invalid(_argv):
         raise ValueError("invalid request synthetic-secret-placeholder")

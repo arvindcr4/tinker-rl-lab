@@ -112,6 +112,19 @@ Inputs must be nonsymlink regular files of at most 8 MiB. The tool does not load
 
 See [UNIFIED_EXECUTION_LIMITS.md](UNIFIED_EXECUTION_LIMITS.md) for the exact migration boundary. A successful process with no observed optimizer-step receipt must not be reported as verified training completion.
 
+## Check real native event files on CPU
+
+The `cleanrl` extra currently contains only TensorBoard; the existing CI quality job enables it to exercise the native event-file reader. These tests write synthetic TensorBoard records and check complete, duplicate, nonfinite, incomplete and corrupt traces. They do not launch CleanRL/OpenRLHF training or treat rollout rewards as optimizer steps or held-out scores.
+
+To keep the main environment unchanged, select a separate environment path:
+
+```sh
+UV_PROJECT_ENVIRONMENT=/tmp/tinker-native-validation-env uv sync --frozen --extra dev --extra cleanrl --python 3.12
+/tmp/tinker-native-validation-env/bin/python -m pytest -o addopts= -q -rs tests/test_openrlhf_tensorboard_integration.py
+```
+
+Use a dedicated path rather than replacing an unrelated environment. The validated lock contains TensorBoard 2.21.0. Expect seven passing cases and no skips. Installation may download official registry dependencies; the test execution itself is local. This supplements the standard dev-only checks, where the optional module may be skipped.
+
 ## Broader checks before publishing a change
 
 ```sh

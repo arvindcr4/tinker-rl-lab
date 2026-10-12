@@ -510,7 +510,7 @@ def test_completed_receipt_with_checkpoints_returns_without_tinker(tmp_path, mon
         run_id="tinker-done",
         sampler_path="tinker://final",
         reward_trace=[0.5],
-        checkpoint_receipts=[_receipt(step="final")],
+        checkpoint_receipts=[_receipt(step="final", source_path="tinker://final")],
     )
     config = _completed_config(tmp_path, result)
     run = _quiet_run()

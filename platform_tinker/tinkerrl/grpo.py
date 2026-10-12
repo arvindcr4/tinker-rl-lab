@@ -1762,6 +1762,48 @@ def _validate_cached_heldout(result: GRPORunResult) -> None:
         raise RuntimeError(error)
 
 
+def _validate_cached_checkpoint_evidence(
+    result: GRPORunResult, prior: Dict[str, Any], steps: int
+) -> None:
+    """Check recorded relationships, never infer absent legacy export evidence."""
+    error = "Completed receipt has inconsistent checkpoint evidence"
+    try:
+        if result.sampler_path is not None:
+            _validated_checkpoint_path(result.sampler_path, kind="sampler")
+        for name in ("checkpoint_receipts", "checkpoint_urls", "checkpoint_commit_shas"):
+            value = getattr(result, name)
+            if not isinstance(value, list) or (name in prior and prior[name] != value):
+                raise RuntimeError(error)
+            if name != "checkpoint_receipts" and any(
+                not isinstance(item, str) or not item.strip() for item in value
+            ):
+                raise RuntimeError(error)
+        receipts = []
+        for item in result.checkpoint_receipts:
+            if not isinstance(item, dict):
+                raise RuntimeError(error)
+            step = item.get("step")
+            if step != "final" and (type(step) is not int or not 0 <= step <= steps):
+                raise RuntimeError(error)
+            receipt = _require_checkpoint_receipt(item, step=step)
+            _validated_checkpoint_path(receipt["source_path"], kind="sampler")
+            receipts.append(receipt)
+        if receipts:
+            if result.checkpoint_urls and result.checkpoint_urls != [
+                item["revision_url"] for item in receipts
+            ]:
+                raise RuntimeError(error)
+            if result.checkpoint_commit_shas and result.checkpoint_commit_shas != [
+                item["commit_sha"] for item in receipts
+            ]:
+                raise RuntimeError(error)
+            final = [item for item in receipts if item["step"] == "final"]
+            if len(final) > 1 or (final and final[0]["source_path"] != result.sampler_path):
+                raise RuntimeError(error)
+    except (KeyError, TypeError, ValueError, RuntimeError, AttributeError) as exc:
+        raise RuntimeError(error) from exc
+
+
 def _validated_completed_result(
     prior: Dict[str, Any], seed: int, steps: int, trace: Sequence[float]
 ) -> GRPORunResult:
@@ -1801,6 +1843,7 @@ def _validated_completed_result(
         if key in expected and not math.isclose(value, expected[key], rel_tol=1e-12, abs_tol=1e-12):
             raise RuntimeError(f"Completed receipt {key} disagrees with its reward history")
     _validate_cached_heldout(result)
+    _validate_cached_checkpoint_evidence(result, prior, steps)
     return result
 
 

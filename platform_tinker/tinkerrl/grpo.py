@@ -2543,6 +2543,21 @@ def _run_one_seed(
                 f"[{config.name}] checkpoint step {resume_step} has no actor optimizer state; "
                 "restore a matching periodic receipt or start a fresh run"
             )
+    # Validate local references before tracking, tokenizer downloads or any
+    # provider client. Completed results have their own compatibility checks.
+    checkpoint_receipts: List[Dict[str, Any]] = []
+    if prior and prior.get("status") != "completed":
+        if resume_state_path is not None:
+            _validated_checkpoint_path(resume_state_path, kind="actor")
+        raw_receipts = prior.get("checkpoint_receipts", [])
+        if not isinstance(raw_receipts, list):
+            raise RuntimeError("Resume checkpoint receipts must be a list")
+        for item in raw_receipts:
+            if not isinstance(item, dict):
+                raise RuntimeError("Resume checkpoint receipt must be an object")
+            receipt = _require_checkpoint_receipt(item, step=item.get("step", "unknown"))
+            _validated_checkpoint_path(receipt["source_path"], kind="sampler")
+            checkpoint_receipts.append(receipt)
     step_rewards, zero_loss_steps, zero_reward_steps = _resume_reward_history(
         prior, resume_step, config.steps
     )
@@ -2667,10 +2682,6 @@ def _run_one_seed(
         _wandb_summary(wb)["tinker_run_id"] = run_id
         logger(f"[{config.name}] Run: {run_id}")
 
-        checkpoint_receipts: List[Dict[str, Any]] = [
-            _require_checkpoint_receipt(item, step=item.get("step", "unknown"))
-            for item in (prior or {}).get("checkpoint_receipts", [])
-        ]
         checkpoint_urls: List[str] = [item["revision_url"] for item in checkpoint_receipts]
         checkpoint_commit_shas: List[str] = [item["commit_sha"] for item in checkpoint_receipts]
         initial_name = (

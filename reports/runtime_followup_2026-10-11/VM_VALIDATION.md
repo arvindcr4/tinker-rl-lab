@@ -1857,3 +1857,9 @@ Completed-cache replay now verifies recorded checkpoint relationships before tra
 Legacy receipts lacking parallel lists remain accepted without inventing metadata. Existing URLs-only legacy evidence remains unbound to absent structured receipts. One synthetic coverage fixture was corrected to describe the same final sampler in its result and receipt; no historical result was rewritten. **125 focused checks passed**, including unchanged byte-preserving replay, legacy shapes and malformed receipt fields, with networking forbidden in the new regressions.
 
 Final `make check submission-check` completed successfully: **2,011 passed, 2 skipped**, **87.52%** supported-surface coverage, 264.97 seconds for pytest; all aggregate stages passed. The completion exit receipt was recovered after a truncated poll output, so no interrupted run is being counted. Scientific-score policy and sampler-refresh defaults remain unchanged.
+
+## 2026-10-12 01:10 UTC — partial-resume reference preflight
+
+Local partial-resume actor paths and export receipt shapes are now checked before tracking, tokenizer loading or provider construction. Previously, control-character/option-like actor references and malformed export containers/items reached external setup before being rejected later. Five offline red-before regressions now confirm early rejection and byte-preservation of the original receipt. The existing export validator returns a detached snapshot reused later rather than re-reading callback-owned objects.
+
+**121 focused checks passed**, including actual CPU learning and critic-resume integration. Final `make check submission-check` passed every stage: **2,016 passed, 2 skipped**, **87.55%** supported-surface coverage, 260.83 seconds for pytest. This checks local reference syntax and existing receipt structure, not remote actor authenticity or algorithm equivalence. Valid legacy missing-export-list behavior and direct baseline execution remain available.

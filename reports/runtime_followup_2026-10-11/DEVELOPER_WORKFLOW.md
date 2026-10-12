@@ -62,6 +62,20 @@ This prints a local plan for four examples (two per source suite), a request fin
 
 Removing `--check-config` invokes the existing external evaluation workflow and requires separate authorization and user-managed credentials. A successful plan does not establish example availability, writable storage, model identity, provider cost, scientific validity or a completed evaluation. This is portfolio source validation, not an E1–E14 benchmark run.
 
+## Audit base/trained receipts before comparing them
+
+```sh
+.venv/bin/python tools/audit_portfolio_comparability.py --base BASE.json --trained TRAINED.json
+```
+
+This stdlib-only command reads two existing portfolio source-validation receipts without rewriting them. It checks strict JSON, recorded row/aggregate arithmetic, suite accounting, ordered prompt/token hashes, source/tokenizer revision requests and sampling controls. Output identifies the exact input bytes by SHA-256 without printing prompts or new score differences.
+
+The current v1 format does **not** bind target contents or scorer implementation. Therefore even matching recorded settings yield overall `status: unknown`, `recorded_configuration: compatible` and **exit code 3**, never a readiness certificate. Missing historical metadata also remains unknown, without backfilling invented values. The audit deliberately does not provide a passing overall-comparability result for this incomplete schema.
+
+Known cohort/policy mismatches return `incompatible` with exit 1; malformed/contradictory evidence returns `invalid` with exit 1; argument-usage errors return exit 2. A matching configuration does not establish weight identity, decontamination, representativeness, causal improvement or statistical significance. Do not suppress the nonzero status to label a comparison scientifically ready. Existing source scores and historical results remain unchanged.
+
+Inputs must be nonsymlink regular files of at most 8 MiB. The tool does not load datasets, inspect credentials, contact a provider, choose a new scorer, regrade outputs or compute a new metric. Review its local diagnostic output before sharing it.
+
 ## Backend and demonstration matrix
 
 | Entry point | Current supported purpose | Important limit |
@@ -69,6 +83,7 @@ Removing `--check-config` invokes the existing external evaluation workflow and 
 | `tools/run_offline_harness.py` | Fixed offline CPU CLI/training/evaluation/resume checks and local receipt | Random toy models; in-memory service doubles |
 | `submission/demo/demo.sh` | Existing stdlib offline group-math and historical-artifact integrity demo | Does not train a model or prove benchmark improvement |
 | `platform_tinker.tinkerrl.grpo_cli --check-config` | Direct baseline configuration inspection | No provider/data/weight/scientific verification |
+| `tools/audit_portfolio_comparability.py` | Read-only arithmetic and recorded-input comparison | Current v1 target/scorer identity gaps force overall UNKNOWN |
 | Portfolio evaluator with `--check-config` | Read-only sampling-request and fresh-path inspection | No source availability, weight binding, cost or evaluation attestation |
 | Direct Tinker baseline without `--check-config` | Independently configured baseline execution when separately authorized | Not canonical clipped-PPO equivalence; live operation was not run in this session |
 | `platform_local.unified --framework tinker --dry-run` | Read-only route/configuration inspection | Execution is guarded because canonical fields are not faithfully implemented |

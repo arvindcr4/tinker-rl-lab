@@ -3285,7 +3285,9 @@ def _run_one_seed_locked(
         # by _log_wandb_checkpoint for the final receipt; no re-write needed.
         _finish_wandb(wb, success=True)
         return result
-    except Exception as exc:
+    except (Exception, KeyboardInterrupt) as exc:
+        # Ctrl+C still finalizes initialized tracking and releases the outer
+        # local lock. It does not attest cancellation of provider-side work.
         status_exc: Optional[BaseException] = None
         try:
             _mark_wandb_failure(wb, exc)
@@ -3296,6 +3298,8 @@ def _run_one_seed_locked(
         except Exception as finish_exc:
             status_exc = finish_exc
         if status_exc is not None:
+            if isinstance(exc, KeyboardInterrupt):
+                raise exc from status_exc
             raise RuntimeError("W&B failure receipt could not be finalized") from status_exc
         raise
 

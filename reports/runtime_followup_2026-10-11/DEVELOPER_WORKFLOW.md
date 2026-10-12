@@ -76,6 +76,12 @@ The lock marker intentionally remains after release. Its existence does not mean
 
 Completed-cache replay uses one committed checkpoint snapshot without acquiring a write lock or rewriting that checkpoint. It still performs the existing validation and configured tracking checks. This protection does not authorize external training/evaluation or establish that provider-side resume is exact.
 
+## Interrupt and resume deliberately
+
+Ctrl+C during direct-baseline training or portfolio evaluation attempts to finish initialized tracking with a failure status and preserves the original `KeyboardInterrupt`, including if tracking cleanup fails. A training interruption releases the local run lock and leaves the last durable checkpoint available for the existing resume path. Incomplete evaluation does not publish a scored receipt. Abrupt process termination or a second interruption can still prevent cleanup.
+
+Local cancellation does **not** establish that remote provider work stopped. Check the provider independently before authorizing replacement work. Resume is from the last committed checkpoint, so uncommitted updates may be discarded; the offline CPU workflow tests this boundary without certifying live-provider persistence or cancellation semantics.
+
 ## Audit base/trained receipts before comparing them
 
 ```sh

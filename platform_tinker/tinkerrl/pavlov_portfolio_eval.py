@@ -348,8 +348,13 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         return 0
-    except Exception:
-        run.finish(exit_code=1)
+    except (Exception, KeyboardInterrupt) as exc:
+        try:
+            run.finish(exit_code=1)
+        except Exception as finish_exc:
+            if isinstance(exc, KeyboardInterrupt):
+                raise exc from finish_exc
+            raise
         raise
 
 

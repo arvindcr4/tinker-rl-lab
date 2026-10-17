@@ -14,7 +14,8 @@ is repaired, that any historical run used 0.8.0, or that frameworks are matched.
 - `run(config, dry_run=True)` returns a separate `synthetic_fixture` schema with
   uncalibrated seeded random fixture values, without empirical reward-summary keys.
   `require_empirical_result` rejects this schema. Repaired JSON-trajectory consumers
-  reject explicit synthetic/failed inputs. Legacy data lacking provenance is not
+  reject explicit synthetic/failed inputs at both the enclosing JSON and run levels,
+  including synthetic evidence-type labels. Legacy data lacking provenance is not
   retroactively authenticated by this change. The direct framework-comparison
   aggregator is read-only, has no training/simulation fallback, rejects untyped
   legacy artifacts until independently validated, and writes only a versioned
@@ -125,7 +126,11 @@ conclusions. No producer was rerun against measured data during this repair.
   assignments. Paired t-equivalence uses a 90% interval at alpha=.05 and a candidate
   .005 margin; it is explicitly exploratory and not preregistered. Degenerate
   samples are inconclusive. Terminal observations are sorted and checked for
-  duplicates/gaps; a known final-step budget is required to verify completion.
+  duplicates/gaps; a known planned final-step budget is required to verify completion.
+  The paired producer preserves each row's completion status and the reason in
+  JSON/TSV, and reports H2/H4 as INCOMPLETE when that budget is unknown. Observed
+  prefix statistics are retained without a completed-budget verdict. All actually
+  used optional variance/group-size inputs are included in the artifact hashes.
 - AlphaStar/CFR mappings are untested analogies and descriptive thresholds.
   Constant ranks and missing cells cannot pass. The CFR simulation is an iid
   Bernoulli formula check, not a CFR update comparison. ZVF=1 means all rewards
@@ -146,7 +151,18 @@ conclusions. No producer was rerun against measured data during this repair.
 The sweep generator requires `--backend tinker-atropos`, the sole implemented
 route. Its default is a bounded three-configuration pilot, with explicit seeds and
 shell-safe argument/display quoting. It generates plans only. A separate runner
-records config-hash/seed attempts, skips an identical successful process, and
-records failures/interruption. Process success does not validate empirical output.
+uses the **grpo-sweep-pilot-v3** receipt contract. It validates the exact command,
+actual YAML-byte hash, actual command seed, trainer/runner source hashes, interpreter
+hash/version and relevant installed package versions **before** skipping a prior
+success. Unverifiable legacy receipts or changed command/config/source/runtime
+identities raise and require a new manifest; the runner never silently reuses them.
+Generated configuration/seed pairs have distinct checkpoint roots and W&B names;
+each retry additionally gets a separate effective-config snapshot, checkpoint
+subdirectory and W&B run identity. Changes to inputs/source during execution cannot
+produce a reusable success. The runner supports only the generated Python-script
+command form and records failures/interruption. Runtime versions are not a complete
+image/dependency lock, and neither missing packages nor a zero exit establish
+backend compatibility or empirical validity. This is process-success deduplication,
+not restoration of a training checkpoint. No real execution validated this contract.
 Held-out screening and independent confirmation seeds require an explicit next
 campaign decision; no automatic 108-run campaign is launched.

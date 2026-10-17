@@ -45,9 +45,13 @@ def write_artifact_metadata(directory, metadata):
 
 def reject_synthetic_or_failed(record):
     """Legacy artifacts without provenance remain descriptive, never relabeled measured."""
-    if record.get("data_kind") in {"synthetic_fixture", "synthetic", "synthetic_benchmark"} or record.get("mode") == "dryrun":
+    if not isinstance(record, dict):
+        raise ValueError("Trajectory provenance must be a mapping")
+    kinds = [str(record.get(key, "")).lower().replace("-", "_") for key in ("data_kind", "evidence_type")]
+    mode = str(record.get("mode", "")).lower().replace("-", "_")
+    if any(kind == "synthetic" or kind.startswith("synthetic_") for kind in kinds) or mode in {"dryrun", "dry_run"}:
         raise ValueError("Synthetic fixture is not an empirical trajectory")
-    if record.get("state") in {"failed", "incomplete", "running"}:
+    if record.get("state") in {"failed", "incomplete", "running", "interrupted", "cancelled", "canceled"}:
         raise ValueError("Incomplete attempt is not an empirical trajectory")
 
 

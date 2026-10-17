@@ -288,7 +288,7 @@ def validate_history(rows: list[dict], expected_rounds: int) -> list[dict]:
 def read_rewards(config: OpenRLHFConfig, run_id: str, expected_rounds: int) -> list[dict]:
     import wandb
     api = wandb.Api()
-    entity = config.wandb_entity or api.default_entity
+    entity = config.wandb_entity or os.environ.get("WANDB_ENTITY") or api.default_entity
     child = api.run(f"{entity}/{config.project_name}/{run_id}")
     if child.id != run_id or child.state != "finished":
         raise RuntimeError("Child W&B identity or completion state is unverified")
@@ -339,6 +339,9 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str | None = None)
         env = os.environ.copy()
         env.update(PYTHONPATH="", WANDB_RUN_ID=run_id, WANDB_RESUME="never",
                    WANDB_PROJECT=config.project_name, WANDB_DIR=str(run_dir))
+        if config.wandb_entity:
+            env["WANDB_ENTITY"] = config.wandb_entity
+        manifest["wandb_entity"] = env.get("WANDB_ENTITY")
         cli_preflight(cmd, env, run_dir)
         from .reward import smoke_test
         smoke_test()

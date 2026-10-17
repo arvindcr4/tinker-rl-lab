@@ -46,17 +46,23 @@ def main(argv=None):
         actual.setdefault("env", {}).update(group_size=group, batch_size=batch)
         actual.setdefault("tinker", {}).update(lora_rank=rank, learning_rate=lr)
         digest = hashlib.sha256(json.dumps(actual, sort_keys=True).encode()).hexdigest()
-        config_path = output / f"config_{digest[:16]}.yaml"
-        config_path.write_text(yaml.safe_dump(actual, sort_keys=False))
         for seed in args.seeds:
-            manifest = output / "attempts" / f"{digest}_{seed}.json"
+            seeded = copy.deepcopy(actual)
+            run_name = f"grpo-pilot-{digest[:16]}-s{seed}"
+            checkpoint_dir = output / "artifacts" / digest / f"seed-{seed}"
+            seeded["tinker"].update(checkpoint_dir=str(checkpoint_dir), wandb_run_name=run_name)
+            config_path = output / f"config_{digest[:16]}_s{seed}.yaml"
+            config_path.write_text(yaml.safe_dump(seeded, sort_keys=False))
+            config_hash = hashlib.sha256(config_path.read_bytes()).hexdigest()
+            manifest = output / "attempts" / f"{config_hash}_{seed}.json"
             command = [sys.executable, str(runner), "--manifest", str(manifest),
-                       "--config-hash", digest, "--seed", str(seed), "--",
+                       "--config-hash", config_hash, "--seed", str(seed), "--",
                        sys.executable, str(training_script), "--config", str(config_path), "--seed", str(seed)]
             commands.append(shell_command(command))
-            entries.append({"config_hash": digest, "seed": seed, "backend": args.backend,
-                            "command": command, "attempt_manifest": str(manifest)})
-    plan = {"protocol": "grpo-sweep-pilot-v2", "backend": args.backend,
+            entries.append({"config_hash": config_hash, "treatment_hash": digest, "seed": seed, "backend": args.backend,
+                            "command": command, "attempt_manifest": str(manifest),
+                            "checkpoint_dir": str(checkpoint_dir), "wandb_run_name": run_name})
+    plan = {"protocol": "grpo-sweep-pilot-v3", "backend": args.backend,
             "stage": "pilot", "screening": "requires held-out validation before expansion",
             "confirmation_seeds": "must be selected independently after screening",
             "training_started": False, "planned_attempts": entries}

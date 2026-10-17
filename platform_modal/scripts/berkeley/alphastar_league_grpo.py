@@ -69,7 +69,7 @@ Outputs (under platform_hybrid/experiments/results/berkeley/):
 """
 
 from __future__ import annotations
-import csv, json, math, datetime, ast
+import csv, json, math, datetime, ast, re
 from pathlib import Path
 
 import sys
@@ -110,7 +110,11 @@ def h1_league_law():
             Gstar_pred = float(Gstar_pred_str)
         except (IndexError, ValueError):
             continue
-        saturated = "SATURATED" in r["headline"]
+        if T <= 0 or Gstar <= 0 or not math.isfinite(Gstar_pred):
+            raise ValueError("Invalid optimum budget/group evidence")
+        if any(p["T"] == T for p in points):
+            raise ValueError("Duplicate optimum budget")
+        saturated = bool(re.search(r"(?<![A-Za-z_])SATURATED(?![A-Za-z_])", r["headline"]))
         points.append({"T": T, "Gstar": Gstar, "Gstar_pred": Gstar_pred, "saturated": saturated})
     points.sort(key=lambda r: r["T"])
 
@@ -140,7 +144,10 @@ def h1_league_law():
     # DESCRIPTIVE_THRESHOLD if b in [0.40, 0.60] AND last 2 Ts saturated at G=32
     n_sat = sum(1 for p in points if p["saturated"])
     b_in_range = (b is not None and 0.40 <= b <= 0.60)
-    decisive = b_in_range and n_sat >= 2
+    high = [p for p in points if p["T"] in {16_000_000, 64_000_000}]
+    saturated_at_32 = (len(high) == 2 and all(p["saturated"] and p["Gstar"] == 32 for p in high))
+    complete = {p["T"] for p in points} == {1_000_000, 4_000_000, 16_000_000, 64_000_000}
+    decisive = b_in_range and complete and saturated_at_32
     return rows, b, a, n_sat, decisive
 
 
@@ -163,7 +170,12 @@ def h2_bounded_cone():
             d = float(r["headline"].split("delta=")[1].split()[0])
         except (IndexError, ValueError):
             continue
-        deltas.append({"T": r["metric_key"].split("=")[1], "delta_G64_G32": d})
+        T = int(float(r["metric_key"].split("=")[1]))
+        if T <= 0 or not math.isfinite(d):
+            raise ValueError("Invalid bounded-cone budget/delta")
+        if any(int(float(row["T"])) == T for row in deltas):
+            raise ValueError("Duplicate bounded-cone budget")
+        deltas.append({"T": str(T), "delta_G64_G32": d})
     n_nonpos = sum(1 for d in deltas if d["delta_G64_G32"] <= 0)
 
     # Saturation check (G* = 32 at high T)

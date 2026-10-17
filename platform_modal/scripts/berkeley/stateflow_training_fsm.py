@@ -111,6 +111,7 @@ def analyze_run(run):
 def main():
     require_inputs(SRC)
     data = json.loads(SRC.read_text())
+    reject_synthetic_or_failed(data)
     runs = [analyze_run(run) for run in data["runs"]]
     if not runs:
         raise ValueError("No trajectories")

@@ -106,8 +106,11 @@ def _load_trl() -> Dict[str, Any]:
 def _load_saved(path: Path, framework: str) -> Dict[str, Any]:
     if not path.is_file():
         raise FileNotFoundError(f"Missing completed {framework} artifact: {path}; aggregation never launches training")
-    payload = _validate_measured(json.loads(path.read_text()))
-    payload.setdefault("framework", framework)
+    payload = dict(_validate_measured(json.loads(path.read_text())))
+    trace = _coerce(payload["reward_trace"])
+    payload.update(framework=framework, reward_trace=trace, peak_reward=max(trace),
+                   last10_avg=_last10(trace), comparison_configuration_status="as_recorded_no_imputation")
+    payload.setdefault("mode", "real")
     return payload
 
 

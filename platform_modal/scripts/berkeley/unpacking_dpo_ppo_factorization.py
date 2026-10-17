@@ -29,7 +29,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT, RESULTS_DIR
-from _review01_contracts import OUTPUT_ROOT, evidence_metadata, require_inputs, write_artifact_metadata, json_ready
+from _review01_contracts import OUTPUT_ROOT, evidence_metadata, require_inputs, write_artifact_metadata, json_ready, reject_synthetic_or_failed
 ROOT = WORKTREE = REPO_ROOT
 RES = RESULTS = RESULTS_DIR
 OUT = OUTPUT_ROOT / "unpacking_dpo_ppo_factorization"
@@ -79,8 +79,10 @@ def extract_metric_rows(samestack_ppo_grpo_path):
     out = []
     with open(samestack_ppo_grpo_path) as f:
         data = json.load(f)
+    reject_synthetic_or_failed(data)
     seen = set()
     for run in data["runs"]:
+        reject_synthetic_or_failed(run)
         identity = run["algo"], run["seed"]
         if identity in seen:
             raise ValueError("Duplicate algorithm/seed identity")
@@ -228,11 +230,12 @@ def paired_equivalence(differences, margin, alpha=.05):
 
 # ----------------- computations -----------------
 
-def main():
+def main(*, expected_final_step=None):
     inputs = [RES / "samestack_ppo_grpo.json"]
+    optional_inputs = [RES / name for name in ("variance_mitigation.tsv", "group_size_advantage_variance.tsv")]
+    inputs.extend(path for path in optional_inputs if path.is_file())
     require_inputs(*inputs)
     metadata = evidence_metadata("matched_seed_statistics_exact_sign_permutation_and_exploratory_paired_t_equivalence", inputs)
-    OUT.mkdir(parents=True, exist_ok=True)
     findings = []
 
     # ----- H1: samestack_ppo_grpo algorithm-axis variance (Ivison axis #2) -----
@@ -273,7 +276,9 @@ def main():
     if not os.path.exists(vm_path):
         print("  (variance_mitigation.tsv not found -- skipping H2)")
     else:
-        rows_vm = extract_varmit_rows(vm_path)
+        rows_vm = extract_varmit_rows(vm_path, expected_final_step=expected_final_step)
+        completion_status = "verified" if rows_vm and all(r["completion_status"] == "verified" for r in rows_vm) else "unverified_final_budget"
+        completion_reason = None if completion_status == "verified" else "Planned final step is unknown; only observed-prefix diagnostics are available"
         eta2_method, ss_m_axis, ss_m_within = axis_variance_fraction(rows_vm, "method", "terminal_acc")
         per_method = defaultdict(list)
         for r in rows_vm:
@@ -297,12 +302,19 @@ def main():
         h2_decisive = (eta2_method <= 0.20) and (method_spread <= 0.10)
         h2_verdict  = "DESCRIPTIVE_THRESHOLD (Ivison reward-axis is small fraction + small spread)" if h2_decisive else \
                       "SUGGESTIVE" if eta2_method <= 0.35 else "NULL"
+        if completion_status != "verified":
+            h2_verdict = "INCOMPLETE"
         print(f"  verdict: {h2_verdict}")
 
         findings.append({
             "hypothesis": "H2: REWARD/INTERVENTION axis variance is small (<20%)",
             "n_methods": len(per_method),
             "n_terminal_rows": len(rows_vm),
+            "terminal_rows": rows_vm,
+            "completion_status": completion_status,
+            "completion_reason": completion_reason,
+            "expected_final_step": expected_final_step,
+            "threshold_met_on_observed_prefix": h2_decisive,
             "eta2_method": eta2_method,
             "spread": method_spread,
             "pair_d_grpo_vs": {m: round(d, 4) for m, d in pair_d},
@@ -383,9 +395,15 @@ def main():
             print(f"  eta^2(method -> half_step)    = {eta2_half:.4f}")
             h4_decisive = (eta2_half > 0.30) and (cv_across_methods > cv_within_methods)
             h4_verdict = "DESCRIPTIVE_THRESHOLD" if h4_decisive else "SUGGESTIVE" if eta2_half > 0.15 else "NULL"
+            if completion_status != "verified":
+                h4_verdict = "INCOMPLETE"
             print(f"  verdict: {h4_verdict}")
             findings.append({
                 "hypothesis": "H4: convergence-rate axis variance dominates algorithm axis",
+                "completion_status": completion_status,
+                "completion_reason": completion_reason,
+                "expected_final_step": expected_final_step,
+                "threshold_met_on_observed_prefix": h4_decisive,
                 "cv_across_methods": cv_across_methods,
                 "cv_within_methods": cv_within_methods,
                 "eta2_method_half": eta2_half,
@@ -426,6 +444,7 @@ def main():
         })
 
     # ----------------- save -----------------
+    OUT.mkdir(parents=True, exist_ok=True)
     summary = {
         **metadata,
         "ts": "2026-07-04",
@@ -458,7 +477,7 @@ def main():
     # TSV row per hypothesis
     out_tsv = os.path.join(OUT, "unpacking_dpo_ppo_factorization.tsv")
     with open(out_tsv, "w") as f:
-        f.write("hypothesis\tn_pairs\teta2\tabs_delta\tcohens_d\tperm_p\tverdict\n")
+        f.write("hypothesis\tn_pairs\teta2\tabs_delta\tcohens_d\tperm_p\tverdict\tcompletion_status\tcompletion_reason\n")
         for h in findings:
             f.write("\t".join([
                 h.get("hypothesis", ""),
@@ -468,6 +487,8 @@ def main():
                 safe(h.get("cohens_d", "")),
                 safe(h.get("perm_p", "")),
                 h.get("verdict", ""),
+                h.get("completion_status", ""),
+                h.get("completion_reason") or "",
             ]) + "\n")
 
     write_artifact_metadata(OUT, metadata)
@@ -478,6 +499,7 @@ def main():
     print(f"  outputs:")
     print(f"    {out_json}")
     print(f"    {out_tsv}")
+    return summary
 
 if __name__ == "__main__":
     main()

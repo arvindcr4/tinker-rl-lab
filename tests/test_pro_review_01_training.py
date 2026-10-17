@@ -273,3 +273,31 @@ def test_framework_aggregate_preserves_actual_config_without_imputation(tmp_path
     assert result["group_size"] == 32
     assert "model" not in result
     assert result["last10_avg"] == pytest.approx(.3)
+
+
+def test_saved_framework_summary_is_recomputed_from_observations(tmp_path):
+    aggregate = aggregate_module()
+    path = tmp_path / "saved.json"
+    path.write_text(json.dumps({"data_kind": "empirical", "state": "completed", "mode": "real",
+                                "reward_trace": [.2] * 10, "last10_avg": .99, "peak_reward": .99}))
+    result = aggregate._load_saved(path, "OpenRLHF")
+    assert result["last10_avg"] == pytest.approx(.2)
+    assert result["peak_reward"] == .2
+    assert json.loads(path.read_text())["last10_avg"] == .99
+
+
+def test_requested_wandb_entity_overrides_inherited_destination(tmp_path, monkeypatch):
+    process, _ = mock_runtime(monkeypatch)
+    monkeypatch.setenv("WANDB_ENTITY", "other-team")
+    result = trainer.run_openrlhf_training(OpenRLHFConfig(wandb_entity="requested-team"), str(tmp_path))
+    assert process.call_args.kwargs["env"]["WANDB_ENTITY"] == "requested-team"
+    assert result["wandb_entity"] == "requested-team"
+
+
+def test_exact_run_lookup_honors_inherited_entity_when_not_configured(monkeypatch):
+    monkeypatch.setenv("WANDB_ENTITY", "inherited-team")
+    child = types.SimpleNamespace(id="unique", state="finished", scan_history=Mock(return_value=[{"_step": 1, "train/reward": .75}]))
+    api = types.SimpleNamespace(default_entity="other-owner", run=Mock(return_value=child))
+    monkeypatch.setitem(sys.modules, "wandb", types.SimpleNamespace(Api=lambda: api))
+    trainer.read_rewards(OpenRLHFConfig(project_name="project"), "unique", 1)
+    api.run.assert_called_once_with("inherited-team/project/unique")

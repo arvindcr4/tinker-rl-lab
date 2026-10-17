@@ -1,5 +1,6 @@
 """Adversarial offline fixtures for review-01 scientific producer repairs."""
 import csv
+import hashlib
 import importlib.util
 import json
 import math
@@ -279,18 +280,28 @@ def test_sweep_quotes_arbitrary_paths_and_is_bounded(tmp_path):
         assert entry["backend"] == "tinker-atropos"
 
 
+def sweep_fixture(tmp_path, *, seed=7):
+    config = tmp_path / "config.yaml"
+    config.write_text(f"env: {{}}\ntinker:\n  checkpoint_dir: {tmp_path / 'checkpoints'}\n  wandb_run_name: synthetic-test\n")
+    trainer = tmp_path / "trainer.py"
+    trainer.write_text("# Offline fixture; subprocess is always mocked.\n")
+    command = [sys.executable, str(trainer), "--config", str(config), "--seed", str(seed)]
+    return command, hashlib.sha256(config.read_bytes()).hexdigest()
+
+
 def test_sweep_completion_and_failed_attempt_manifest(tmp_path, monkeypatch):
     module = load("_sweep_attempt", "")
     process = Mock(return_value=types.SimpleNamespace(returncode=0))
     monkeypatch.setattr(module.subprocess, "run", process)
+    command, digest = sweep_fixture(tmp_path)
     path = tmp_path / "attempt.json"
-    assert module.execute(["synthetic-command"], path, "hash", 7) == 0
-    assert module.execute(["synthetic-command"], path, "hash", 7) == 0
+    assert module.execute(command, path, digest, 7) == 0
+    assert module.execute(command, path, digest, 7) == 0
     assert process.call_count == 1
     assert json.loads(path.read_text())["empirical_validation"] == "not_performed"
     process.return_value.returncode = 17
     failed = tmp_path / "failed.json"
-    assert module.execute(["synthetic-command"], failed, "hash", 7) == 17
+    assert module.execute(command, failed, digest, 7) == 17
     assert json.loads(failed.read_text())["state"] == "failed"
 
 
@@ -366,3 +377,250 @@ def test_hipporag_main_records_real_cutoffs_and_manifest(tmp_path, monkeypatch):
     assert all("bm25_hit25" in row for row in result["results"])
     manifest = json.loads((tmp_path/"out/artifact_manifest.json").read_text())
     assert len(manifest["artifacts"]) == 2
+
+
+def test_sweep_separates_every_configuration_and_seed_artifact_root(tmp_path):
+    import yaml
+    module = load("hyperparameter_sweep_grpo", "")
+    source = tmp_path / "base.yaml"
+    source.write_text("env: {}\ntinker: {checkpoint_dir: './checkpoints/run/', wandb_run_name: grpo-run}\n")
+    plan = module.main(["--base-config", str(source), "--output-dir", str(tmp_path / "sweep"),
+                        "--backend", "tinker-atropos", "--seeds", "42", "43"])
+    roots, names = [], []
+    for entry in plan["planned_attempts"]:
+        command = entry["command"]
+        config = yaml.safe_load(Path(command[command.index("--config") + 1]).read_text())
+        roots.append(config["tinker"]["checkpoint_dir"])
+        names.append(config["tinker"]["wandb_run_name"])
+        assert roots[-1] == entry["checkpoint_dir"]
+        assert names[-1] == entry["wandb_run_name"]
+        config_path = Path(command[command.index("--config") + 1])
+        assert entry["config_hash"] == hashlib.sha256(config_path.read_bytes()).hexdigest()
+        runner = load("_sweep_attempt", "")
+        identity = runner.command_identity(command[command.index("--") + 1:], entry["config_hash"], entry["seed"])
+        assert identity["seed"] == entry["seed"]
+    assert len(roots) == len(set(roots)) == 6
+    assert len(names) == len(set(names)) == 6
+
+
+def test_league_law_requires_the_declared_high_budget_saturation(monkeypatch):
+    module = load("alphastar_league_grpo")
+    def rows(high_group=32, marker="SATURATED"):
+        return [{"metric_key": f"T={t}", "headline": f"G*(T)={g}, G*(T)_pred={g} {state}"}
+                for t, g, state in [(1_000_000, 4, ""), (4_000_000, 8, ""),
+                                    (16_000_000, high_group, marker), (64_000_000, high_group, marker)]]
+    monkeypatch.setattr(module, "_read_tsv", lambda path: rows())
+    assert module.h1_league_law()[-1] is True
+    monkeypatch.setattr(module, "_read_tsv", lambda path: rows(4))
+    assert module.h1_league_law()[-1] is False
+    monkeypatch.setattr(module, "_read_tsv", lambda path: rows(32, "UNSATURATED"))
+    assert module.h1_league_law()[-1] is False
+    monkeypatch.setattr(module, "_read_tsv", lambda path: rows() + rows()[:1])
+    with pytest.raises(ValueError, match="Duplicate"):
+        module.h1_league_law()
+
+
+def test_bounded_cone_rejects_contradictory_duplicate_budget(monkeypatch):
+    module = load("alphastar_league_grpo")
+    bounded = [{"metric_key": f"T={t}", "headline": "delta=-0.1"}
+               for t in [1_000_000, 4_000_000, 16_000_000, 64_000_000]]
+    optimum = [{"metric_key": f"T={t}", "headline": "G*(T)=32, SATURATED"}
+               for t in [16_000_000, 64_000_000]]
+    monkeypatch.setattr(module, "_read_tsv", lambda path: bounded if "bounded_cone" in str(path) else optimum)
+    assert module.h2_bounded_cone()[-1] is True
+    bounded.append({"metric_key": "T=1000000", "headline": "delta=0.1"})
+    with pytest.raises(ValueError, match="Duplicate"):
+        module.h2_bounded_cone()
+
+
+@pytest.mark.parametrize("change", ["command", "config", "source", "runtime", "seed", "legacy_receipt"])
+def test_sweep_rechecks_identity_before_skipping_success(change, tmp_path, monkeypatch):
+    module = load("_sweep_attempt", "")
+    command, digest = sweep_fixture(tmp_path)
+    process = Mock(return_value=types.SimpleNamespace(returncode=0))
+    monkeypatch.setattr(module.subprocess, "run", process)
+    manifest = tmp_path / "attempt.json"
+    assert module.execute(command, manifest, digest, 7) == 0
+    if change == "command":
+        other = tmp_path / "other-trainer.py"
+        other.write_bytes(Path(command[1]).read_bytes())
+        command[1] = str(other)
+    elif change == "config":
+        Path(command[3]).write_text(Path(command[3]).read_text()+"# changed YAML bytes\n")
+    elif change == "source":
+        Path(command[1]).write_text("# changed implementation\n")
+    elif change == "runtime":
+        monkeypatch.setattr(module.importlib.metadata, "version", lambda name: "changed-version")
+    elif change == "seed":
+        command[5] = "8"
+    else:
+        manifest.write_text(json.dumps({"state": "process_succeeded", "config_hash": digest, "seed": 7}))
+    with pytest.raises(ValueError, match="identity|digest|seed"):
+        module.execute(command, manifest, digest, 7)
+    assert process.call_count == 1
+
+
+def test_changed_yaml_digest_also_requires_new_manifest(tmp_path, monkeypatch):
+    module = load("_sweep_attempt", "")
+    command, digest = sweep_fixture(tmp_path)
+    process = Mock(return_value=types.SimpleNamespace(returncode=0))
+    monkeypatch.setattr(module.subprocess, "run", process)
+    manifest = tmp_path / "attempt.json"
+    module.execute(command, manifest, digest, 7)
+    Path(command[3]).write_text(Path(command[3]).read_text()+"# changed\n")
+    new_digest = hashlib.sha256(Path(command[3]).read_bytes()).hexdigest()
+    with pytest.raises(ValueError, match="identity"):
+        module.execute(command, manifest, new_digest, 7)
+    assert process.call_count == 1
+
+
+def test_sweep_retries_use_isolated_configs_checkpoints_and_wandb_ids(tmp_path, monkeypatch):
+    import yaml
+    module = load("_sweep_attempt", "")
+    command, digest = sweep_fixture(tmp_path)
+    original = Path(command[3]).read_bytes()
+    process = Mock(side_effect=[types.SimpleNamespace(returncode=17), types.SimpleNamespace(returncode=0)])
+    monkeypatch.setattr(module.subprocess, "run", process)
+    manifest = tmp_path / "attempt.json"
+    assert module.execute(command, manifest, digest, 7) == 17
+    assert module.execute(command, manifest, digest, 7) == 0
+    attempts = json.loads(manifest.read_text())["attempts"]
+    assert len(attempts) == 2
+    for key in ("checkpoint_dir", "wandb_run_name", "wandb_run_id"):
+        assert len({attempt[key] for attempt in attempts}) == 2
+    assert attempts[0]["command"][3] != attempts[1]["command"][3]
+    for attempt, call in zip(attempts, process.call_args_list):
+        config = yaml.safe_load(Path(attempt["command"][3]).read_text())
+        assert config["tinker"]["checkpoint_dir"] == attempt["checkpoint_dir"]
+        assert config["tinker"]["wandb_run_name"] == attempt["wandb_run_name"]
+        assert call.kwargs["env"]["WANDB_RUN_ID"] == attempt["wandb_run_id"]
+        assert call.kwargs["env"]["WANDB_RESUME"] == "never"
+    assert Path(command[3]).read_bytes() == original
+
+
+def test_sweep_source_change_during_process_cannot_record_success(tmp_path, monkeypatch):
+    module = load("_sweep_attempt", "")
+    command, digest = sweep_fixture(tmp_path)
+    def changed_source(*args, **kwargs):
+        Path(command[1]).write_text("# changed while executing\n")
+        return types.SimpleNamespace(returncode=0)
+    monkeypatch.setattr(module.subprocess, "run", changed_source)
+    manifest = tmp_path / "attempt.json"
+    with pytest.raises(ValueError, match="changed during execution"):
+        module.execute(command, manifest, digest, 7)
+    assert json.loads(manifest.read_text())["state"] == "interrupted"
+
+
+@pytest.mark.parametrize("name", ["stateflow_training_fsm", "niah_training_signal", "unpacking_dpo_ppo_factorization"])
+@pytest.mark.parametrize("provenance", [
+    {"data_kind": "synthetic_fixture", "state": "failed", "mode": "dryrun"},
+    {"data_kind": "synthetic_fixture"}, {"state": "failed"}, {"mode": "dryrun"},
+    {"evidence_type": "synthetic_benchmark"}, {"evidence_type": "synthetic_fixture"},
+])
+def test_enclosing_provenance_cannot_be_discarded(name, provenance, tmp_path, monkeypatch):
+    module = load(name)
+    source = tmp_path / "input.json"
+    run = {"algo": "grpo", "seed": 0, "heldout_acc": .5} if name.startswith("unpacking") else state_run([i/50 for i in range(40)])
+    source.write_text(json.dumps({**provenance, "runs": [run]}))
+    original = source.read_bytes()
+    output = tmp_path / "output"
+    if name.startswith("unpacking"):
+        action = lambda: module.extract_metric_rows(source)
+    else:
+        monkeypatch.setattr(module, "SRC", source)
+        monkeypatch.setattr(module, "OUT", output)
+        action = module.main
+    with pytest.raises(ValueError, match="Synthetic|Incomplete"):
+        action()
+    assert not output.exists()
+    assert source.read_bytes() == original
+
+
+@pytest.mark.parametrize("name", ["stateflow_training_fsm", "niah_training_signal", "unpacking_dpo_ppo_factorization"])
+def test_nested_run_synthetic_evidence_type_is_rejected(name, tmp_path, monkeypatch):
+    module = load(name)
+    run = {"algo": "grpo", "seed": 0, "heldout_acc": .5} if name.startswith("unpacking") else state_run([.5]*40)
+    run["evidence_type"] = "synthetic_benchmark"
+    source = tmp_path / "input.json"
+    source.write_text(json.dumps({"data_kind": "empirical", "state": "completed", "runs": [run]}))
+    if name.startswith("unpacking"):
+        action = lambda: module.extract_metric_rows(source)
+    else:
+        monkeypatch.setattr(module, "SRC", source)
+        monkeypatch.setattr(module, "OUT", tmp_path / "out")
+        action = module.main
+    with pytest.raises(ValueError, match="Synthetic"):
+        action()
+
+
+def paired_main_fixture(tmp_path):
+    source = tmp_path / "samestack_ppo_grpo.json"
+    source.write_text(json.dumps({"runs": [
+        {"algo": algo, "seed": seed, "heldout_acc": value}
+        for algo in ("grpo", "ppo") for seed, value in enumerate((.4, .6))]}))
+    variance = tmp_path / "variance_mitigation.tsv"
+    variance.write_text("method\tseed\tstep\tzvf\treward_mean\theldout_acc\tcollapse\n" + "".join(
+        f"{method}\t{seed}\t{step}\t0\t{value}\t{value}\t0\n"
+        for method in ("grpo", "aero") for seed, value in enumerate((.4, .6)) for step in range(5)))
+    return source, variance
+
+
+@pytest.mark.parametrize("verified", [False, True])
+def test_paired_main_preserves_final_budget_status(verified, tmp_path, monkeypatch):
+    module = load("unpacking_dpo_ppo_factorization")
+    sources = paired_main_fixture(tmp_path)
+    original = [path.read_bytes() for path in sources]
+    output = tmp_path / "out"
+    monkeypatch.setattr(module, "RES", tmp_path)
+    monkeypatch.setattr(module, "OUT", output)
+    result = module.main(expected_final_step=4 if verified else None)
+    h2 = next(row for row in result["hypotheses"] if row["hypothesis"].startswith("H2:"))
+    assert h2["threshold_met_on_observed_prefix"] is True
+    assert h2["completion_status"] == ("verified" if verified else "unverified_final_budget")
+    assert {row["final_observed_step"] for row in h2["terminal_rows"]} == {4}
+    if not verified:
+        assert h2["verdict"] == "INCOMPLETE"
+        assert h2["completion_reason"]
+    else:
+        assert h2["verdict"].startswith("DESCRIPTIVE_THRESHOLD")
+    with (output / "unpacking_dpo_ppo_factorization.tsv").open() as stream:
+        tsv_h2 = next(row for row in csv.DictReader(stream, delimiter="\t") if row["hypothesis"].startswith("H2:"))
+    assert tsv_h2["completion_status"] == h2["completion_status"]
+    assert tsv_h2["verdict"] == h2["verdict"]
+    assert [path.read_bytes() for path in sources] == original
+
+
+@pytest.mark.parametrize("include_group_size", [False, True])
+def test_paired_main_manifest_hashes_every_used_input(include_group_size, tmp_path, monkeypatch):
+    module = load("unpacking_dpo_ppo_factorization")
+    sources = list(paired_main_fixture(tmp_path))
+    if include_group_size:
+        group_size = tmp_path / "group_size_advantage_variance.tsv"
+        group_size.write_text("G\tseed\tstep\tentropy\tmean_reward\tgrad_norm\n"+"".join(
+            f"{group}\t{seed}\t{step}\t1\t{value}\t{group}\n"
+            for group in (2, 16) for seed, value in enumerate((.4, .6)) for step in range(30, 35)))
+        sources.append(group_size)
+    (tmp_path / "unused.tsv").write_text("not an input\n")
+    output = tmp_path / "out"
+    monkeypatch.setattr(module, "RES", tmp_path)
+    monkeypatch.setattr(module, "OUT", output)
+    result = module.main()
+    expected = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in sources}
+    assert {row["path"]: row["sha256"] for row in result["inputs"]} == expected
+    manifest = json.loads((output / "artifact_manifest.json").read_text())
+    for artifact in manifest["artifacts"].values():
+        assert {row["path"]: row["sha256"] for row in artifact["inputs"]} == expected
+
+
+
+def test_sweep_cannot_attribute_runner_versions_to_another_virtualenv(tmp_path, monkeypatch):
+    module = load("_sweep_attempt", "")
+    command, digest = sweep_fixture(tmp_path)
+    alternate = tmp_path / "other-python"
+    alternate.symlink_to(sys.executable)
+    command[0] = str(alternate)
+    process = Mock()
+    monkeypatch.setattr(module.subprocess, "run", process)
+    with pytest.raises(ValueError, match="runner interpreter"):
+        module.execute(command, tmp_path / "attempt.json", digest, 7)
+    process.assert_not_called()

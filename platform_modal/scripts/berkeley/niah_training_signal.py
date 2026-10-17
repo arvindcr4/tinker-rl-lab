@@ -115,7 +115,9 @@ def analyze(runs):
 
 def main():
     require_inputs(SRC)
-    result = analyze(json.loads(SRC.read_text())["runs"])
+    data = json.loads(SRC.read_text())
+    reject_synthetic_or_failed(data)
+    result = analyze(data["runs"])
     metadata = evidence_metadata("censored_recovery_and_disjoint_window_rank_association", [SRC])
     result.update(metadata)
     OUT.mkdir(parents=True, exist_ok=True)

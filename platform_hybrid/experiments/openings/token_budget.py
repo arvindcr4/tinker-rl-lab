@@ -11,6 +11,12 @@ Each arm samples until it has spent TOKEN_BUDGET rollout tokens:
   - curriculum: skip collapsed groups; only spend optim steps on gradient-bearing data
 Both consume the SAME tokens. Compare held-out gain. Multi-seed. Process-parallel.
 """
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import completion_alignment, gsm8k_reward
+
 import os, re, json, random, argparse, warnings
 warnings.filterwarnings("ignore")
 import multiprocessing as mp
@@ -31,22 +37,10 @@ def run_one(cfg):
                    m.group(1).replace(",", "").strip()))
     random.shuffle(ex); HO = ex[:heldout_n]; POOL = ex[heldout_n:]
     def reward(resp, ans):
-        r = resp.strip()
-        for b in re.findall(r"\\boxed\{([^}]+)\}", r):
-            bc = b.strip().replace(",", "").replace(" ", "")
-            try:
-                if abs(float(bc)-float(ans)) < 0.01: return 1.0
-            except:
-                if bc == ans: return 1.0
-        nums = re.findall(r"[-+]?\d[\d,]*\.?\d*", r)
-        if nums:
-            try:
-                if abs(float(nums[-1].replace(",",""))-float(ans)) < 0.01: return 1.0
-            except: pass
-        return 0.0
+        return gsm8k_reward(resp, ans)
     def mkloss(advs):
         def _fn(data, lp):
-            l = torch.stack([(-advs[i]*lp[i].sum()) for i in range(len(lp))]).mean()
+            l = torch.stack([(-advs[i]*(lp[i] * torch.tensor(data[i].loss_fn_inputs["completion_mask"].data, device=lp[i].device)).sum()) for i in range(len(lp))]).mean()
             return l, {"loss": l.item()}
         return _fn
     tok = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
@@ -66,37 +60,48 @@ def run_one(cfg):
                      tags=["token-budget", mode, f"seed{seed}"], reinit=True)
     ho0 = held()
     tokens = 0; optim_steps = 0; grad_steps = 0; skipped = 0; step_i = 0; rewards = []
-    while tokens < budget:
+    attempts = 0
+    max_attempts = max(1, budget)
+    while tokens < budget and attempts < max_attempts:
         data, advs, br = [], [], []
         for _ in range(batch):
+            remaining_per_rollout = (budget - tokens) // G
+            if remaining_per_rollout < 1:
+                break
+            attempts += 1
             pt, ans = random.choice(POOL)
             pid = tok.encode(pt, add_special_tokens=False)[:1024]
             resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=G,
-                             sampling_params=T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95)).result()
+                             sampling_params=T.SamplingParams(max_tokens=min(512, remaining_per_rollout), temperature=0.8, top_p=0.95)).result()
             tokens += sum(len(r.tokens) for r in resp.sequences)
             rr = [reward(tok.decode(list(r.tokens), skip_special_tokens=True), ans) for r in resp.sequences]
+            br.extend(rr)  # every attempted group, before contrast filtering
             mr = sum(rr)/len(rr)
             if mode == "curriculum" and mr in (0.0, 1.0):
                 skipped += 1; continue
-            sd = (sum((x-mr)**2 for x in rr)/len(rr))**0.5 + 1e-8; br.extend(rr)
+            sd = (sum((x-mr)**2 for x in rr)/len(rr))**0.5 + 1e-8
             for rs, a in zip(resp.sequences, [(x-mr)/sd for x in rr]):
-                fid = pid + list(rs.tokens); tid = fid[1:]+[0]
+                fid, tid, cmask = completion_alignment(pid, list(rs.tokens))
                 data.append(T.Datum(model_input=T.ModelInput.from_ints(fid),
-                    loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)])}))
+                    loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)]), "completion_mask": T.TensorData(data=cmask, dtype="float32", shape=[len(cmask)])}))
                 advs.append(a)
+        rewards.append(sum(br)/len(br) if br else None)
         if not data:
+            wandb.log({"sampled_reward": sum(br)/len(br) if br else None, "tokens": tokens, "attempts": attempts})
+            if budget-tokens < G:
+                break
             continue
         res = tc.forward_backward_custom(data=data, loss_fn=mkloss(advs)).result()
         tc.optim_step(T.AdamParams(learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
         optim_steps += 1
         lv = res.metrics.get("loss", 0.0)
         if abs(lv) > 1e-6: grad_steps += 1
-        avg = sum(br)/len(br) if br else 0.0; rewards.append(avg)
+        avg = sum(br)/len(br) if br else None
         wandb.log({"reward": avg, "loss": lv, "tokens": tokens}, step=step_i); step_i += 1
         sc = tc.create_sampling_client(model_path=tc.save_weights_for_sampler(name=f"{name}_{step_i}").result().path)
     ho1 = held()
     out = dict(name=name, mode=mode, seed=seed, budget=budget, tokens_spent=tokens,
-               optim_steps=optim_steps, grad_bearing_steps=grad_steps, groups_skipped=skipped,
+               optim_steps=optim_steps, nonzero_scalar_loss_steps=grad_steps, groups_skipped=skipped,
                heldout_before=ho0, heldout_after=ho1, heldout_gain=ho1-ho0)
     for k, v in out.items(): run.summary[k] = v
     wandb.finish(); print("DONE", json.dumps(out), flush=True)

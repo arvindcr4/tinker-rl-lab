@@ -21,6 +21,12 @@ Run:  python3 experiments/survival_analysis.py
 """
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import EvidenceUnavailable
+
+
 import csv
 import glob
 import json
@@ -114,8 +120,8 @@ def _coerce_record(raw: dict) -> Optional[dict]:
     algo = raw.get("method") or raw.get("algorithm") or raw.get("algo") or "GRPO"
     seed = raw.get("seed")
     steps = raw.get("steps_completed") or raw.get("steps") or raw.get("num_steps")
-    last10 = _safe_float(raw.get("last10_avg") or raw.get("last10") or raw.get("last_10"))
-    peak = _safe_float(raw.get("peak_reward") or raw.get("peak"))
+    last10 = _safe_float(next((raw[k] for k in ("last10_avg", "last10", "last_10") if raw.get(k) is not None), None))
+    peak = _safe_float(next((raw[k] for k in ("peak_reward", "peak") if raw.get(k) is not None), None))
     # TODO: Include evaluation on held-out test sets. The paper relies entirely on
     # training reward (last10), which fails to rigorously prove generalized reasoning uplift.
     status = (raw.get("status") or "").lower()
@@ -423,30 +429,8 @@ def _tierab_runs(groups: List[RunGroup]) -> List[RunGroup]:
     return [g for g in groups if g.tier in ("A", "B")]
 
 
-def _f1_zvf_diagnostic(groups: List[RunGroup]):
-    """F1: ZVF tracks signal degeneracy in sparse-reward GRPO.
-    Tier-A/B check: any multi-seed GRPO run with computed per-step ZVF present.
-    We approximate by looking for `zero_reward_pct` being populated and
-    correlating with low last10 across seeds.
-    """
-    # TODO: ZVF breaks down outside of math tasks (saturates at 1.0 on format-gated tasks).
-    # Consider replacing with ERF (Effective-Rollout Fraction) as a more robust metric.
-    # Also, ZVF is borderline tautological (just a proxy for the model being stuck).
-    gsm = [g for g in groups if g.task.lower().startswith("gsm")]
-    gsm_ab = _tierab_runs(gsm)
-    if not gsm_ab:
-        return None
-    lows, highs = [], []
-    for g in gsm_ab:
-        for r in g.raw_records:
-            zvf_like = r.get("raw", {}).get("zero_reward_pct") if isinstance(r.get("raw"), dict) else None
-            # best-effort: if sparse info, fall back to correlation of last10 across seeds
-        lows.extend(g.last10)
-    a = [v for v in lows if v < 0.5]
-    b = [v for v in lows if v >= 0.5]
-    if len(a) < 2 or len(b) < 2:
-        return None
-    return (len(a) + len(b), cohens_d(b, a), b, a)
+def _f1_zvf_diagnostic(groups):
+    raise EvidenceUnavailable("_f1_zvf_diagnostic lacks required measured ZVF/matched configuration contributor identities")
 
 
 def _f2_trainability(groups: List[RunGroup]):
@@ -465,44 +449,12 @@ def _f2_trainability(groups: List[RunGroup]):
     return (len(inst) + len(base), cohens_d(inst, base), inst, base)
 
 
-def _f3_ppo_vs_grpo(groups: List[RunGroup]):
-    """F3: PPO vs GRPO ranking is heterogeneous across model families.
-    Tier-A/B: both algos with >=3 seeds >=50 steps on same model+framework.
-    """
-    tierab = _tierab_runs(groups)
-    grpo = [g for g in tierab if g.algo.upper() == "GRPO"]
-    ppo = [g for g in tierab if g.algo.upper() == "PPO"]
-    if not grpo or not ppo:
-        return None
-    a, b = [], []
-    for g in grpo:
-        a.extend(g.last10)
-    for g in ppo:
-        b.extend(g.last10)
-    if len(a) < 2 or len(b) < 2:
-        return None
-    return (len(a) + len(b), cohens_d(a, b), a, b)
+def _f3_ppo_vs_grpo(groups):
+    raise EvidenceUnavailable("_f3_ppo_vs_grpo lacks required measured ZVF/matched configuration contributor identities")
 
 
-def _f4_framework_gap(groups: List[RunGroup]):
-    """F4: framework implementation dominates outcomes (Henderson-style).
-    Tier-A/B: need Tier-A/B data in >=2 open frameworks on same model/algo.
-    """
-    tierab = _tierab_runs(groups)
-    by_fw: Dict[str, List[float]] = {}
-    for g in tierab:
-        if g.algo.upper() != "GRPO":
-            continue
-        if g.framework.lower() == "tinker":
-            # Exclude closed-source 'tinker' API to avoid confounding comparisons
-            continue
-        by_fw.setdefault(g.framework, []).extend(g.last10)
-    fws = [f for f, vs in by_fw.items() if len(vs) >= 2]
-    if len(fws) < 2:
-        return None
-    a = by_fw[fws[0]]
-    b = by_fw[fws[1]]
-    return (len(a) + len(b), cohens_d(a, b), a, b)
+def _f4_framework_gap(groups):
+    raise EvidenceUnavailable("_f4_framework_gap lacks required measured ZVF/matched configuration contributor identities")
 
 
 def _f5_frontier_stability(groups: List[RunGroup]):
@@ -561,130 +513,7 @@ FINDINGS: List[Tuple[str, str, callable]] = [
 # Top-level runner
 # ---------------------------------------------------------------------------
 def run() -> None:
-    records = load_all_runs()
-    groups = group_runs(records)
-    n_runs = len(records)
-    n_groups = len(groups)
-    n_a = sum(1 for g in groups if g.tier == "A")
-    n_b = sum(1 for g in groups if g.tier == "B")
-    n_c = sum(1 for g in groups if g.tier == "C")
-
-    sys.stderr.write(
-        f"[survival] loaded {n_runs} runs in {n_groups} groups "
-        f"(Tier-A={n_a}, Tier-B={n_b}, Tier-C={n_c})\n"
-    )
-
-    header = [
-        "finding",
-        "tier_a_support",
-        "tier_b_support",
-        "effect_size_cohens_d",
-        "bootstrap_ci_low",
-        "bootstrap_ci_high",
-        "n_runs_used",
-        "bh_adjusted_p",
-        "conclusion",
-    ]
-
-    # If NO Tier-A data at all, emit schema-only TSV and warn.
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    if n_a == 0:
-        sys.stderr.write(
-            "[survival] WARNING: no Tier-A (>=5 seeds, >=100 steps) groups found. "
-            "Emitting schema-only TSV; all F1-F5 claims DOWNGRADED to descriptive.\n"
-        )
-        with OUT_TSV.open("w", encoding="utf-8", newline="") as fh:
-            writer = csv.writer(fh, delimiter="\t")
-            writer.writerow(header)
-            for key, claim, _ in FINDINGS:
-                writer.writerow(
-                    [key, "no", "no", "nan", "nan", "nan", 0, "nan", "downgraded-to-Tier-C"]
-                )
-        _print_latex_table([], n_a, n_b, n_c)
-        return
-
-    raw_pvals: List[float] = []
-    rows: List[dict] = []
-    for key, claim, fn in FINDINGS:
-        result = fn(groups)
-        if result is None:
-            rows.append(
-                {
-                    "finding": key,
-                    "claim": claim,
-                    "tier_a_support": "no",
-                    "tier_b_support": "no",
-                    "d": float("nan"),
-                    "ci_lo": float("nan"),
-                    "ci_hi": float("nan"),
-                    "n_used": 0,
-                    "p": float("nan"),
-                    "conclusion": "insufficient Tier-A/B data (survival: NO)",
-                }
-            )
-            continue
-        n_used, d, a, b = result
-        ci_lo, ci_hi = bootstrap_mean_ci([ai - bi for ai, bi in zip(a[: min(len(a), len(b))], b[: min(len(a), len(b))])])
-        p = welch_pvalue(a, b)
-        raw_pvals.append(p if not math.isnan(p) else 1.0)
-
-        # Tier-A support requires at least one Tier-A group contributing to the finding
-        tier_a_has = any(g.tier == "A" for g in groups)
-        tier_b_has = any(g.tier == "B" for g in groups)
-
-        rows.append(
-            {
-                "finding": key,
-                "claim": claim,
-                "tier_a_support": "yes" if tier_a_has else "no",
-                "tier_b_support": "yes" if tier_b_has else "no",
-                "d": d,
-                "ci_lo": ci_lo,
-                "ci_hi": ci_hi,
-                "n_used": n_used,
-                "p": p,
-                "conclusion": "",  # filled below after BH
-            }
-        )
-
-    # Apply BH over Tier-A/B derived p-values ONLY.
-    ps = [r["p"] for r in rows if not math.isnan(r["p"])]
-    adj = bh_adjust(ps)
-    itr = iter(adj)
-    for r in rows:
-        if math.isnan(r["p"]):
-            r["p_bh"] = float("nan")
-            r["conclusion"] = "insufficient Tier-A/B data (survival: NO)"
-            continue
-        pb = next(itr)
-        r["p_bh"] = pb
-        if pb < ALPHA and abs(r["d"]) >= 0.3:
-            r["conclusion"] = f"survives BH (adj p={pb:.3g}, |d|={abs(r['d']):.2f})"
-        elif pb < ALPHA:
-            r["conclusion"] = f"survives BH but small effect (adj p={pb:.3g}, |d|={abs(r['d']):.2f})"
-        else:
-            r["conclusion"] = f"DOES NOT survive BH (adj p={pb:.3g})"
-
-    # Write TSV
-    with OUT_TSV.open("w", encoding="utf-8", newline="") as fh:
-        writer = csv.writer(fh, delimiter="\t")
-        writer.writerow(header)
-        for r in rows:
-            writer.writerow(
-                [
-                    r["finding"],
-                    r["tier_a_support"],
-                    r["tier_b_support"],
-                    f"{r['d']:.3f}" if not math.isnan(r["d"]) else "nan",
-                    f"{r['ci_lo']:.3f}" if not math.isnan(r["ci_lo"]) else "nan",
-                    f"{r['ci_hi']:.3f}" if not math.isnan(r["ci_hi"]) else "nan",
-                    r["n_used"],
-                    f"{r['p_bh']:.4g}" if not math.isnan(r["p_bh"]) else "nan",
-                    r["conclusion"],
-                ]
-            )
-
-    _print_latex_table(rows, n_a, n_b, n_c)
+    raise EvidenceUnavailable("Legacy survival certification disabled: requires finding-specific measurements, configuration matching and contributor receipts. See pro_review_06_protocol_v2.md.")
 
 
 def _print_latex_table(rows: List[dict], n_a: int, n_b: int, n_c: int) -> None:

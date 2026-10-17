@@ -71,6 +71,7 @@ class ScriptArguments:
     temperature: float = field(default=1.0, metadata={"help": "Sampling temperature."})
     
     # Training
+    max_steps: int = field(default=-1, metadata={"help": "Maximum optimizer updates; -1 uses epochs."})
     num_train_epochs: int = field(default=1, metadata={"help": "Number of training epochs."})
     logging_steps: int = field(default=1, metadata={"help": "Logging steps."})
     save_steps: int = field(default=10, metadata={"help": "Save steps."})
@@ -188,6 +189,7 @@ def main():
         max_new_tokens=args.max_new_tokens,
         temperature=args.temperature,
         num_train_epochs=args.num_train_epochs,
+        max_steps=args.max_steps,
         logging_steps=args.logging_steps,
         save_steps=args.save_steps,
         eval_strategy=args.eval_strategy,
@@ -226,7 +228,7 @@ def main():
     logger.info("Expected: reward=0.67 -> 1.0, accuracy=70% -> 100%")
     logger.info("=" * 50)
 
-    trainer.train(resume_from_checkpoint=True)
+    trainer.train(resume_from_checkpoint=False)
 
     # Save final model
     final_output_dir = f"{output_dir}_final_seed{args.seed}"

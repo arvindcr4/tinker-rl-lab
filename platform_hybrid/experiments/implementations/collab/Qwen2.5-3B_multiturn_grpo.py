@@ -1,3 +1,9 @@
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import execute_fixture_tool, TurnRecord, json_object
+
 # ============================================================
 #  ADVANCED EXPERIMENT — STEP 2: TRUE Multi-Turn GRPO
 #
@@ -60,49 +66,7 @@ WRAPUP_MSG = "You now have all the tool results you need. Give your final answer
 
 # ── FAKE TOOL EXECUTOR ────────────────────────────────────────
 def fake_tool_executor(tool_name: str, arguments: dict) -> str:
-    name = tool_name.lower()
-    if any(w in name for w in ["weather", "temperature", "climate", "forecast"]):
-        city = arguments.get("location") or arguments.get("city") or "the requested location"
-        return json.dumps({"location": city, "temperature": 22,
-                           "condition": "Partly cloudy", "humidity": "60%",
-                           "forecast": "Similar conditions tomorrow"})
-    elif any(w in name for w in ["search", "news", "find", "google", "lookup", "attraction"]):
-        query = arguments.get("query") or arguments.get("q") or arguments.get("city") or "unknown"
-        return json.dumps({"query": query,
-                           "results": [f"Top result about {query}",
-                                       f"Second result about {query}",
-                                       f"Third result about {query}"]})
-    elif any(w in name for w in ["stock", "price", "finance", "market", "ticker"]):
-        ticker = arguments.get("symbol") or arguments.get("ticker") or "AAPL"
-        return json.dumps({"ticker": ticker.upper(), "price": 189.45,
-                           "currency": "USD", "change": "+1.2%"})
-    elif any(w in name for w in ["calc", "math", "compute", "evaluate", "expression",
-                                  "sqrt", "density", "area", "population"]):
-        expr = arguments.get("expression") or "0"
-        try:
-            result = eval(expr, {"__builtins__": {}}, {})
-        except:
-            # For named-arg tools like calculate_density(population, area)
-            pop  = arguments.get("population", 0)
-            area = arguments.get("area", 1)
-            num  = arguments.get("number", 0)
-            if pop and area:
-                result = round(pop / area, 1)
-            elif num:
-                result = round(num ** 0.5, 4)
-            else:
-                result = 42
-        return json.dumps({"result": result})
-    elif any(w in name for w in ["translat", "language"]):
-        text   = arguments.get("text") or ""
-        target = arguments.get("target_language") or "French"
-        return json.dumps({"original": text,
-                           "translated": f"[{target}: {text[:40]}]",
-                           "language": target})
-    else:
-        return json.dumps({"tool": tool_name, "status": "success",
-                           "result": f"'{tool_name}' executed successfully",
-                           "data": arguments})
+    return json.dumps(execute_fixture_tool(tool_name, arguments))
 
 # ── PARSING HELPERS ───────────────────────────────────────────
 def extract_json(text: str):
@@ -197,154 +161,56 @@ def score_full_chain(turns: list) -> float:
 
 # ── GENERATE ONE COMPLETE CHAIN ───────────────────────────────
 def generate_chain(model, tokenizer, prompt_messages: list, max_turns: int) -> list:
-    """
-    Run one full multi-turn rollout.
-
-    FIX 1: wrap-up message is injected immediately when tool budget
-           is used up (tool_responses_left == 0 and we already had
-           at least one tool call), not at a fixed final turn index.
-
-    FIX 2: if the model repeats the exact same tool call, treat it
-           as a stall — inject the wrap-up and force a final answer.
-
-    We give the fake executor an unlimited budget here (MAX_TURNS fake
-    responses) because the eval limits come from the score, not hard stops.
-    """
-    history         = prompt_messages.copy()
-    turns           = []
-    tool_call_count = 0
-    last_sig        = None     # (tool_name, frozenset(arg_values))
-    wrapup_injected = False
-
-    for turn_idx in range(max_turns):
-
-        # FIX 1 & 2: inject wrap-up before generation when appropriate
-        if not wrapup_injected:
-            should_wrapup = (
-                tool_call_count >= 2          # already made ≥2 tool calls
-            )
-            if should_wrapup:
-                history.append({"role": "user", "content": WRAPUP_MSG})
-                wrapup_injected = True
-
-        prompt_text = tokenizer.apply_chat_template(
-            history, tokenize=False, add_generation_prompt=True
-        )
-        inputs = tokenizer(prompt_text, return_tensors="pt",
-                           truncation=True, max_length=512).to(model.device)
-
+    """Exact-state unassisted trajectories, sampled at temperature one, no top-k/p."""
+    model.eval()  # identical dropout state for generation and gradient scoring
+    history, turns, records = list(prompt_messages), [], []
+    for _ in range(max_turns):
+        text = tokenizer.apply_chat_template(history, tokenize=False, add_generation_prompt=True)
+        inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512).to(model.device)
         with torch.no_grad():
-            output_ids = model.generate(
-                **inputs,
-                max_new_tokens=80,
-                temperature=0.7,
-                do_sample=True,
-                eos_token_id=tokenizer.eos_token_id,
-                pad_token_id=tokenizer.eos_token_id,
-            )
-
-        response = tokenizer.decode(
-            output_ids[0][inputs["input_ids"].shape[1]:],
-            skip_special_tokens=True
-        ).strip()
-
+            output = model.generate(**inputs, max_new_tokens=80, temperature=1.0,
+                do_sample=True, top_k=0, top_p=1.0, eos_token_id=tokenizer.eos_token_id,
+                pad_token_id=tokenizer.eos_token_id)
+        generated = tuple(output[0, inputs["input_ids"].shape[1]:].tolist())
+        response = tokenizer.decode(generated, skip_special_tokens=True).strip()
         turns.append(response)
         history.append({"role": "assistant", "content": response})
-
-        obj, valid = extract_json(response)
-        if valid and is_tool_call(obj):
-            args = obj.get("arguments", {})
-            sig  = (obj.get("name", ""), frozenset(str(v) for v in args.values()))
-
-            # FIX 2: repeated identical call → inject wrap-up immediately
-            if sig == last_sig and not wrapup_injected:
-                history.append({"role": "user", "content": WRAPUP_MSG})
-                wrapup_injected = True
-                last_sig = sig
-                tool_call_count += 1
-                tool_result = fake_tool_executor(obj.get("name", ""), args)
-                history.append({"role": "tool", "content": tool_result})
-                continue   # let model respond to wrap-up
-
-            last_sig = sig
-            tool_call_count += 1
-            tool_result = fake_tool_executor(obj.get("name", ""), args)
-            history.append({"role": "tool", "content": tool_result})
-
-        else:
-            break  # model gave a final answer — chain complete
-
-    return turns
+        obj = json_object(response)
+        observation = fake_tool_executor(obj.get("name", ""), obj.get("arguments")) if obj and is_tool_call(obj) else None
+        records.append(TurnRecord(tuple(inputs["input_ids"][0].tolist()),
+            tuple(inputs["attention_mask"][0].tolist()), generated,
+            str(getattr(model, "behavior_policy_version", "initial")),
+            (("temperature", 1.0), ("top_k", 0), ("top_p", 1.0), ("max_new_tokens", 80), ("do_sample", True), ("eos_token_id", tokenizer.eos_token_id), ("pad_token_id", tokenizer.eos_token_id)), observation))
+        if observation is None:
+            break
+        history.append({"role": "tool", "content": observation})
+    return turns, tuple(records)
 
 
 # ── COMPUTE REINFORCE LOSS ────────────────────────────────────
-def compute_reinforce_loss(model, tokenizer, prompt_messages, turns, reward):
-    if not turns or reward == 0:
+def compute_reinforce_loss(model, tokenizer, prompt_messages, records, reward, denominator=1):
+    """Score immutable sampled state/action IDs; normalization precedes backward."""
+    if not records or reward == 0:
         return None
-
-    MAX_LEN  = 512
-    history  = prompt_messages.copy()
+    if denominator <= 0:
+        raise ValueError("Positive sampled-chain denominator required")
+    model.eval()
     total_loss = 0.0
-    n_turns    = 0
-
-    for i, turn in enumerate(turns):
-        prompt_text = tokenizer.apply_chat_template(
-            history, tokenize=False, add_generation_prompt=True
-        )
-        prompt_ids = tokenizer(prompt_text, return_tensors="pt",
-                               truncation=True, max_length=MAX_LEN
-                               ).input_ids.to(model.device)
-
-        response_ids = tokenizer(turn, return_tensors="pt",
-                                 add_special_tokens=False,
-                                 truncation=True, max_length=80
-                                 ).input_ids.to(model.device)
-
-        if response_ids.shape[1] == 0:
+    for record in records:
+        if not isinstance(record, TurnRecord):
+            raise ValueError("Exact immutable TurnRecord required; decoded strings are not actions")
+        if not record.generated_ids:
             continue
-
-        full_ids = torch.cat([prompt_ids, response_ids], dim=1)
-        if full_ids.shape[1] > MAX_LEN:
-            full_ids   = full_ids[:, -MAX_LEN:]
-            prompt_len = max(1, MAX_LEN - response_ids.shape[1])
-        else:
-            prompt_len = prompt_ids.shape[1]
-
-        with torch.enable_grad():
-            outputs      = model(full_ids)
-            logits       = outputs.logits
-            shift_logits = logits[:, :-1, :]
-            shift_labels = full_ids[:, 1:]
-            log_probs    = F.log_softmax(shift_logits, dim=-1)
-
-            resp_start     = prompt_len - 1
-            resp_log_probs = log_probs[:, resp_start:, :]
-            resp_labels    = shift_labels[:, resp_start:]
-
-            token_log_probs = resp_log_probs.gather(
-                2, resp_labels.unsqueeze(-1)
-            ).squeeze(-1)
-
-            turn_loss = -reward * token_log_probs.sum()
-
-        turn_loss.backward()
-        total_loss += turn_loss.item()
-        n_turns    += 1
-
-        del outputs, logits, shift_logits, shift_labels, log_probs
-        del resp_log_probs, resp_labels, token_log_probs, turn_loss
-        del full_ids, prompt_ids, response_ids
-        torch.cuda.empty_cache()
-
-        history.append({"role": "assistant", "content": turn})
-        obj, valid = extract_json(turn)
-        if valid and is_tool_call(obj):
-            tool_result = fake_tool_executor(
-                obj.get("name", ""), obj.get("arguments", {})
-            )
-            history.append({"role": "tool", "content": tool_result})
-
-    return total_loss / n_turns if n_turns > 0 else None
+        full = torch.tensor([record.input_ids + record.generated_ids], device=model.device)
+        attention = torch.tensor([record.attention_mask + (1,) * len(record.generated_ids)], device=model.device)
+        logits = model(input_ids=full, attention_mask=attention).logits[:, :-1]
+        start = len(record.input_ids) - 1
+        lp = F.log_softmax(logits[:, start:], dim=-1)
+        labels = full[:, 1:][:, start:]
+        loss = -reward * lp.gather(2, labels.unsqueeze(-1)).sum() / denominator
+        loss.backward()
+        total_loss += loss.item()
+    return total_loss
 
 
 # ── LOAD DATASET ─────────────────────────────────────────────
@@ -441,8 +307,8 @@ print(f"  Max turns/chain: {MAX_TURNS}")
 print(f"  Train steps    : {TRAIN_STEPS}")
 print()
 print("  Key fixes active:")
-print("  • Wrap-up injected IMMEDIATELY when ≥2 tool calls made")
-print("  • Wrap-up injected on repeated identical tool call")
+print("  • Protocol v2: unassisted stopping; exact sampled token records")
+print("  • Attempt/token caps; sampled-chain loss denominator before backward")
 print("  • Repeated calls penalised in reward (-0.3 each)")
 print("  • Non-empty args rewarded (+0.15 each)")
 print("=" * 60 + "\n")
@@ -450,18 +316,28 @@ print("=" * 60 + "\n")
 step         = 0
 total_loss   = 0.0
 total_reward = 0.0
+reward_attempts = 0
 
-while step < TRAIN_STEPS:
+attempts = 0
+sampled_tokens = 0
+max_attempts = TRAIN_STEPS * 10
+max_sampled_tokens = max_attempts * NUM_ROLLOUTS * MAX_TURNS * 80
+while step < TRAIN_STEPS and attempts < max_attempts and sampled_tokens < max_sampled_tokens:
+    attempts += 1
     prompt_messages = random.choice(prompts)
 
     chains, rewards = [], []
     for _ in range(NUM_ROLLOUTS):
-        turns  = generate_chain(model, tokenizer, prompt_messages, MAX_TURNS)
+        turns, records = generate_chain(model, tokenizer, prompt_messages, MAX_TURNS)
         reward = score_full_chain(turns)
-        chains.append(turns)
+        chains.append(records)
         rewards.append(reward)
 
+    sampled_tokens += sum(len(r.generated_ids) for chain in chains for r in chain)
     mean_reward      = sum(rewards) / len(rewards)
+    wandb.log({"attempt": attempts, "sampled_tokens": sampled_tokens, "sampled_reward": mean_reward, "reward_zvf": float(len(set(rewards)) == 1)})
+    total_reward += mean_reward
+    reward_attempts += 1
     relative_rewards = [r - mean_reward for r in rewards]
 
     optimizer.zero_grad()
@@ -472,7 +348,7 @@ while step < TRAIN_STEPS:
         if abs(rel_reward) < 1e-6:
             continue
         loss_val = compute_reinforce_loss(
-            model, tokenizer, prompt_messages, turns, rel_reward
+            model, tokenizer, prompt_messages, turns, rel_reward, denominator=NUM_ROLLOUTS
         )
         if loss_val is not None:
             batch_loss  += loss_val
@@ -483,18 +359,19 @@ while step < TRAIN_STEPS:
         optimizer.step()
         scheduler.step()
 
-        total_loss   += batch_loss / valid_count
-        total_reward += mean_reward
+        total_loss   += batch_loss
         step += 1
+        model.behavior_policy_version = f"update-{step}"
 
         if step % LOG_EVERY == 0:
             avg_loss   = total_loss   / LOG_EVERY
-            avg_reward = total_reward / LOG_EVERY
+            avg_reward = total_reward / reward_attempts
             total_loss = total_reward = 0.0
+            reward_attempts = 0
 
             chain_summary = " → ".join([
                 "TOOL" if is_tool_call(extract_json(t)[0]) else "ANSWER"
-                for t in chains[0]
+                for t in [tokenizer.decode(r.generated_ids, skip_special_tokens=True) for r in chains[0]]
             ])
             print(f"Step {step:3d}/{TRAIN_STEPS} | "
                   f"loss={avg_loss:.4f} | "
@@ -506,6 +383,8 @@ while step < TRAIN_STEPS:
                 "train/reward": avg_reward,
                 "train/step": step
             })
+
+wandb.log({"termination_reason": "update_budget" if step >= TRAIN_STEPS else "attempt_or_token_budget", "attempted_groups": attempts, "optimizer_updates": step})
 
 # ── SAVE ─────────────────────────────────────────────────────
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -526,7 +405,7 @@ test_prompt = [
     {"role": "user",   "content": "Get the weather in Paris and search for things to do there."},
 ]
 model.eval()
-turns = generate_chain(model, tokenizer, test_prompt, MAX_TURNS)
+turns, _records = generate_chain(model, tokenizer, test_prompt, MAX_TURNS)
 print(f"User: {test_prompt[1]['content']}")
 for i, t in enumerate(turns):
     obj, valid = extract_json(t)

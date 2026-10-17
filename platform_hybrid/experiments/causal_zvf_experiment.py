@@ -1,33 +1,27 @@
 #!/usr/bin/env python3
-"""
-Causal ZVF Experiment — Test whether GRPO learning signal depends on reward diversity.
+"""Difficulty-stratified ZVF diagnostic (not a causal intervention).
 
-This experiment directly tests the paper's central claim:
-"GRPO learns only when sampled groups contain reward diversity."
-
-Design: Hold everything fixed (model, backend, reward parser, seed, optimizer, LoRA config,
-group size, evaluator); change only the prompt pool to create dead, mixed, or saturated
-reward groups.
-
-Primary endpoint: Mixed-prompt arm has substantially higher first-5-step GU and positive
-reward slope; dead and saturated arms have high ZVF and little usable learning signal.
-
-Secondary endpoint: Held-out GSM8K accuracy (but this is NOT the primary success criterion).
-
-Usage:
-    # Step 1: Bin prompts (do once)
-    python causal_zvf_experiment.py --phase bin --model Qwen/Qwen3-8B --max-prompts 200
-
-    # Step 2: Run three matched GRPO arms
-    python causal_zvf_experiment.py --phase dead --model Qwen/Qwen3-8B --seed 42
-    python causal_zvf_experiment.py --phase mixed --model Qwen/Qwen3-8B --seed 42
-    python causal_zvf_experiment.py --phase saturated --model Qwen/Qwen3-8B --seed 42
-
-    # Step 3: Evaluate on held-out GSM8K
-    python causal_zvf_experiment.py --phase evaluate --run-ids <id1> <id2> <id3>
+Changing prompt pools also changes content, difficulty and reward headroom.
+Protocol v2 preserves observed sampling uncertainty and unmeasured failures.
+Usage: causal_zvf_experiment.py bin --model MODEL --max-prompts 200
+       causal_zvf_experiment.py train --phase dead --bin-data bins.json
+       causal_zvf_experiment.py evaluate --checkpoint-paths API_RETURNED_PATH
+See docs/reviews/pro_review_06_protocol_v2.md before interpreting arm differences.
 """
 
 from __future__ import annotations
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import content_hash, EvidenceUnavailable
+
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import gsm8k_reward, PROTOCOL_VERSION, GRADER_VERSION
+
 
 import argparse
 import json
@@ -99,6 +93,7 @@ class ExperimentResult:
     seed: int
     config: dict
     run_id: str = ""
+    sampler_checkpoint_path: str = ""
     tinker_model_id: str = ""
     steps_completed: int = 0
     metrics: list = field(default_factory=list)
@@ -117,20 +112,7 @@ class ExperimentResult:
 # =============================================================================
 
 def reward_gsm8k(response: str, answer: str) -> float:
-    """Standard GSM8K boxed-answer reward."""
-    # Try boxed answer first
-    m = re.search(r'####\s*(.+?)(?:\s|$)', response)
-    if not m:
-        # Fall back to last number
-        m = re.search(r'(?:answer|Answer|result).*?(\-?\d[\d,]*\.?\d*)', response)
-    if not m:
-        return 0.0
-    pred = m.group(1).replace(",", "").strip()
-    target = answer.replace(",", "").strip()
-    try:
-        return 1.0 if abs(float(pred) - float(target)) < 1e-4 else 0.0
-    except ValueError:
-        return 1.0 if pred == target else 0.0
+    return gsm8k_reward(response, answer)
 
 
 def compute_zvf_and_gu(rewards_per_prompt: list[list[float]]) -> tuple[float, float, int, float]:
@@ -275,9 +257,17 @@ def bin_prompts_by_difficulty(
             try:
                 rewards, lengths = future.result()
             except Exception as e:
-                rewards = [0.0] * num_samples
+                examples[i]["binning_status"] = "unmeasured_service_error"
+                examples[i]["binning_error"] = type(e).__name__
+                continue
 
-            success_rate = sum(1 for r in rewards if r > 0.5) / len(rewards)
+            if not rewards:
+                examples[i]["binning_status"] = "unmeasured_empty_rollout"
+                continue
+            examples[i]["binning_status"] = "measured"
+            successes = sum(1 for r in rewards if r > 0.5)
+            examples[i]["base_success_ci"] = wilson_ci(successes, len(rewards))
+            success_rate = successes / len(rewards)
             examples[i]["base_success_rate"] = success_rate
             examples[i]["base_rewards"] = rewards
 
@@ -574,6 +564,11 @@ def run_bin_phase(model: str, max_prompts: int, num_samples: int, output_path: s
     result = {
         "model": model,
         "num_samples": num_samples,
+        "protocol_version": PROTOCOL_VERSION,
+        "grader_version": GRADER_VERSION,
+        "prompt_hash": content_hash([ex["prompt_ids"] for ex in examples]),
+        "study_design": "difficulty_stratified_noncausal",
+        "unmeasured_indices": [i for i, ex in enumerate(examples) if ex.get("binning_status") != "measured"],
         "total_prompts": len(examples),
         "thresholds": {
             "easy_threshold": DEFAULT_CONFIG["bin_threshold_easy"],
@@ -584,6 +579,7 @@ def run_bin_phase(model: str, max_prompts: int, num_samples: int, output_path: s
                 "indices": [examples.index(ex) for ex in ex_list],
                 "rates": [ex["base_success_rate"] for ex in ex_list],
                 "count": len(ex_list),
+                "success_intervals": [ex["base_success_ci"] for ex in ex_list],
             }
             for bin_name, ex_list in bins.items()
         },
@@ -612,15 +608,22 @@ def run_training_arm(
     print(f"Model: {config['model']}, Seed: {config['seed']}, Steps: {config['total_steps']}")
     print(f"{'='*60}\n")
 
+    random.seed(config["seed"])
     # Load bin data
     bin_data = json.loads(Path(bin_data_path).read_text())
+    if bin_data.get("protocol_version") != PROTOCOL_VERSION or bin_data.get("grader_version") != GRADER_VERSION or bin_data.get("model") != config["model"]:
+        raise EvidenceUnavailable("Binning contract mismatch; legacy bins need remeasurement under an approved protocol")
     bin_prompts = bin_data["bins"][phase]["indices"]
     bin_rates = bin_data["bins"][phase]["rates"]
 
     # Reload all prompts and filter
     tok = AutoTokenizer.from_pretrained(config["model"], trust_remote_code=True)
     all_prompts = load_gsm8k_prompts(tok, max_examples=bin_data["total_prompts"])
-    prompts = [all_prompts[i] for i in bin_prompts if i < len(all_prompts)]
+    if content_hash([ex["prompt_ids"] for ex in all_prompts]) != bin_data.get("prompt_hash"):
+        raise EvidenceUnavailable("Binning prompt identities changed")
+    if len(bin_prompts) != len(bin_rates) or len(set(bin_prompts)) != len(bin_prompts) or any(i < 0 or i >= len(all_prompts) for i in bin_prompts):
+        raise EvidenceUnavailable("Invalid bin prompt IDs/rates")
+    prompts = [all_prompts[i] for i in bin_prompts]
 
     for ex, rate in zip(prompts, bin_rates):
         ex["base_success_rate"] = rate
@@ -660,6 +663,8 @@ def run_training_arm(
 
     # Save result
     result.run_id = tc.model_id
+    result.sampler_checkpoint_path = tc.save_weights_for_sampler(name="final").result().path
+    result.config.update(protocol_version=PROTOCOL_VERSION, grader_version=GRADER_VERSION, study_design="difficulty_stratified_noncausal")
     Path(output_path).write_text(json.dumps(asdict(result), indent=2))
     print(f"\nSaved result to: {output_path}")
 
@@ -681,6 +686,8 @@ def run_training_arm(
 
 def run_evaluate_phase(run_ids: list[str], model: str, heldout_n: int, output_path: str):
     """Phase 3: Evaluate checkpoints on held-out GSM8K."""
+    if any(not p.startswith("tinker://") or "/sampler_weights/" not in p for p in run_ids):
+        raise ValueError("API-returned sampler checkpoint paths are required")
     from transformers import AutoTokenizer
     import tinker
 
@@ -696,7 +703,9 @@ def run_evaluate_phase(run_ids: list[str], model: str, heldout_n: int, output_pa
 
     results = []
     for run_id in run_ids:
-        checkpoint = f"tinker://{run_id}"
+        checkpoint = run_id
+        if not checkpoint.startswith("tinker://") or "/sampler_weights/" not in checkpoint:
+            raise ValueError("Pass persisted API-returned sampler checkpoint paths, not model IDs")
         print(f"\nEvaluating {checkpoint}...")
         acc, lo, hi = evaluate_checkpoint_on_heldout(checkpoint, model, problems, tok)
         print(f"  Accuracy: {acc:.3f} [95% CI: {lo:.3f}, {hi:.3f}]")
@@ -725,7 +734,7 @@ def run_evaluate_phase(run_ids: list[str], model: str, heldout_n: int, output_pa
 
 def main():
     parser = argparse.ArgumentParser(description="Causal ZVF Experiment")
-    subparsers = parser.add_subparsers(dest="phase", help="Experiment phase")
+    subparsers = parser.add_subparsers(dest="command", help="Experiment phase")
 
     # Bin phase
     bin_parser = subparsers.add_parser("bin", help="Bin prompts by difficulty")
@@ -748,17 +757,17 @@ def main():
 
     # Evaluate phase
     eval_parser = subparsers.add_parser("evaluate", help="Evaluate on held-out GSM8K")
-    eval_parser.add_argument("--run-ids", nargs="+", required=True)
+    eval_parser.add_argument("--checkpoint-paths", "--run-ids", dest="run_ids", nargs="+", required=True, help="API-returned tinker://.../sampler_weights/... paths")
     eval_parser.add_argument("--model", default=DEFAULT_CONFIG["model"])
     eval_parser.add_argument("--heldout-n", type=int, default=500)
     eval_parser.add_argument("--output", default="./causal_zvf_heldout.json")
 
     args = parser.parse_args()
 
-    if args.phase == "bin":
+    if args.command == "bin":
         run_bin_phase(args.model, args.max_prompts, args.num_samples, args.output)
 
-    elif args.phase == "train":
+    elif args.command == "train":
         config = DEFAULT_CONFIG.copy()
         config.update({
             "model": args.model,
@@ -771,7 +780,7 @@ def main():
         })
         run_training_arm(args.phase, args.bin_data, config, args.output)
 
-    elif args.phase == "evaluate":
+    elif args.command == "evaluate":
         run_evaluate_phase(args.run_ids, args.model, args.heldout_n, args.output)
 
     else:

@@ -5,8 +5,8 @@ Loads per-prompt results from gsm8k_base_control_200.json (base Qwen3-8B, no LoR
 and gsm8k_heldout_seed{042,137,256,512,999}.json (5 GRPO seeds). Computes:
 
 1. Per-seed paired McNemar test (base vs single seed).
-2. Pooled-pair paired McNemar (base vs majority-vote-of-5 GRPO).
-3. Paired bootstrap 95% CI on the accuracy delta, per seed and majority-vote.
+2. Paired correctness-majority indicator (not an answer-voting ensemble).
+3. Paired bootstrap 95% CI on the accuracy delta, per seed and correctness-majority indicator.
 4. Per-prompt disagreement table (base correct / GRPO wrong, base wrong / GRPO correct).
 
 Writes a JSON result to experiments/results/p0_gsm8k_paired.json and a markdown
@@ -43,13 +43,17 @@ def load_passfail(path: Path) -> list[tuple[int, int]]:
     return out
 
 
-def align(base, grpo):
-    bmap = dict(base)
-    gmap = dict(grpo)
-    shared = sorted(set(bmap) & set(gmap))
-    b = [bmap[i] for i in shared]
-    g = [gmap[i] for i in shared]
-    return b, g
+def align(base, grpo, prompt_order=None):
+    bmap, gmap = dict(base), dict(grpo)
+    if len(bmap) != len(base) or len(gmap) != len(grpo):
+        raise ValueError("Duplicate prompt IDs")
+    if prompt_order is None:
+        if set(bmap) != set(gmap):
+            raise ValueError("Prompt sets differ; declare a common prompt_order across all seeds")
+        prompt_order = sorted(bmap)
+    if len(set(prompt_order)) != len(prompt_order) or any(i not in bmap or i not in gmap for i in prompt_order):
+        raise ValueError("Invalid common prompt order")
+    return [bmap[i] for i in prompt_order], [gmap[i] for i in prompt_order]
 
 
 def mcnemar_exact(b01, b10):
@@ -123,7 +127,9 @@ def analyze_pair(b, g, label):
     }
 
 
-def majority_vote(seed_g):
+def majority_correct_indicator(seed_g):
+    if not seed_g or len({len(s) for s in seed_g}) != 1:
+        raise ValueError("Aligned nonempty correctness vectors required")
     n = len(seed_g[0])
     out = []
     for i in range(n):
@@ -139,16 +145,19 @@ def main():
     seed_aligned = []
     base_aligned_any = None
 
-    for sf in SEED_FILES:
-        grpo = load_passfail(sf)
-        b, g = align(base, grpo)
+    loaded = [(sf, load_passfail(sf)) for sf in SEED_FILES]
+    prompt_order = sorted(set(dict(base)).intersection(*(set(dict(g)) for _, g in loaded)))
+    if not prompt_order:
+        raise ValueError("No common held-out prompt IDs")
+    for sf, grpo in loaded:
+        b, g = align(base, grpo, prompt_order)
         if base_aligned_any is None:
             base_aligned_any = b
         seed_aligned.append(g)
         seed_results.append(analyze_pair(b, g, sf.stem))
 
-    mv_g = majority_vote(seed_aligned)
-    mv_result = analyze_pair(base_aligned_any, mv_g, "grpo_majority_vote_5seeds")
+    mv_g = majority_correct_indicator(seed_aligned)
+    mv_result = analyze_pair(base_aligned_any, mv_g, "grpo_majority_correct_indicator")
 
     n = len(base_aligned_any)
     mean_seed = [sum(s[i] for s in seed_aligned) / len(seed_aligned) for i in range(n)]
@@ -164,7 +173,10 @@ def main():
         "base_file": str(BASE_FILE.relative_to(ROOT)),
         "seed_files": [str(s.relative_to(ROOT)) for s in SEED_FILES],
         "per_seed": seed_results,
-        "majority_vote_5seeds": mv_result,
+        "prompt_order": prompt_order,
+        "excluded_base_prompt_ids": sorted(set(dict(base)) - set(prompt_order)),
+        "excluded_seed_prompt_ids": {sf.stem: sorted(set(dict(g)) - set(prompt_order)) for sf, g in loaded},
+        "majority_correct_indicator": mv_result,
         "continuous_mean_indicator_paired_t": {
             "n": n,
             "mean_delta_indicator": mean_diff,
@@ -196,10 +208,10 @@ def main():
         )
     lines += [
         "",
-        "## Majority-vote-of-5 GRPO vs base",
+        "## Majority correctness indicator (not an answer-voting ensemble) GRPO vs base",
         "",
         f"- base acc: {mv_result['base_acc']:.3f}",
-        f"- majority-vote GRPO acc: {mv_result['grpo_acc']:.3f}",
+        f"- majority-correctness GRPO acc: {mv_result['grpo_acc']:.3f}",
         f"- Δ: {mv_result['delta']:+.3f} "
         f"(95% paired-bootstrap CI: [{mv_result['boot_ci_95'][0]:+.3f}, {mv_result['boot_ci_95'][1]:+.3f}])",
         f"- discordant pairs: b01={mv_result['mcnemar_b01']} (base wrong → GRPO correct), "
@@ -216,11 +228,8 @@ def main():
         "",
         "## Interpretation",
         "",
-        "Paired analyses confirm the non-significant held-out lift already reported in",
-        "the thesis (one-sample t-test on per-seed mean: t=1.32, p=0.26). The McNemar",
-        "framing makes explicit that the signal is carried by a small number of",
-        "discordant pairs; a base-wrong → GRPO-correct count that is not much larger",
-        "than base-correct → GRPO-wrong leaves the null unchallenged.",
+        "Results above are conditional on these held-out prompts and recorded runs.",
+        "A nonsignificant difference does not establish equivalence; no historical decision is imported.",
         "",
     ]
     OUT_MD.write_text("\n".join(lines) + "\n")

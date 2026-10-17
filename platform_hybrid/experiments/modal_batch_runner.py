@@ -32,7 +32,7 @@ image = (
 
 # Mount repo
 repo_mount = modal.Mount.from_local_dir(
-    "/Users/arvind/platform_hybrid/paper/tinker-rl-lab",
+    str(__import__("pathlib").Path(__file__).resolve().parents[2]),
     remote_path="/root/tinker-rl-lab",
     condition=lambda path: not any(
         x in path for x in [".git", "__pycache__", "wandb", ".pyc", "platform_hybrid/paper/"]
@@ -51,111 +51,48 @@ results_vol = modal.Volume.from_name("tinker-rl-results", create_if_missing=True
     retries=1,
 )
 def run_trl_grpo(seed: int, num_steps: int = 20) -> dict:
-    """Run TRL GRPO math experiment with a given seed."""
+    """Invoke supported CLI arguments; compile source without generating patches."""
     import subprocess
     import time
-    import sys
-
-    exp_path = "/root/tinker-rl-lab/platform_hybrid/experiments/implementations/trl_grpo_math.py"
-    result_dir = f"/results/trl_grpo/seed_{seed}"
-    os.makedirs(result_dir, exist_ok=True)
-
-    # Patch the script to limit steps and set seed
-    patched = f'''
-import sys, os
-sys.path.insert(0, "/root/tinker-rl-lab")
-
-# Override config before importing main
-os.environ["SEED"] = "{seed}"
-
-# Read original and patch
-with open("{exp_path}") as f:
-    src = f.read()
-
-# Replace num_train_epochs with max_steps for quick runs
-src = src.replace(
-        num_train_epochs=1,", "max_steps={num_steps},")
-
-# Reduce dataset size for speed
-src = src.replace("num_problems=1000", "num_problems=200")
-
-# Change output dir
-src = src.replace('output_dir="./grpo_math_output"', 'output_dir="{result_dir}/grpo_output"')
-src = src.replace('output_dir = f"./grpo_math_final_seed{{seed}}"', 'output_dir = "{result_dir}/final_model"')
-
-exec(src)
-'''
-    script_path = f"/tmp/run_seed_{seed}.py"
-    with open(script_path, "w") as f:
-        f.write(patched)
-
+    import uuid
+    from pathlib import Path
+    if num_steps <= 0 or type(seed) is not int:
+        raise ValueError("Valid seed and positive step budget required")
+    exp_path = Path("/root/tinker-rl-lab/platform_hybrid/experiments/implementations/trl_grpo_math.py")
+    compile(exp_path.read_text(), str(exp_path), "exec")  # syntax preflight, never executes source
+    attempt_id = uuid.uuid4().hex
+    result_dir = Path(f"/results/trl_grpo/seed_{seed}/{attempt_id}")
+    result_dir.mkdir(parents=True, exist_ok=False)
     start = time.time()
+    result = dict(experiment="trl_grpo_math", seed=seed, attempt_id=attempt_id, status="running", success=False)
     try:
-        proc = subprocess.run(
-            ["python", script_path],
-            capture_output=True,
-            text=True,
-            timeout=1200,
-            cwd="/root/tinker-rl-lab",
-            env={**os.environ, "PYTHONUNBUFFERED": "1"},
-        )
-        elapsed = time.time() - start
-
-        # Parse training log for reward trace
-        reward_trace = []
-        for line in proc.stdout.split("\n"):
-            if "reward" in line.lower() and any(c.isdigit() for c in line):
-                # Best-effort parse
-                try:
-                    parts = line.split()
-                    for i, p in enumerate(parts):
-                        if "reward" in p.lower() and i + 1 < len(parts):
-                            val = float(parts[i + 1].replace(",", "").replace("=", ""))
-                            reward_trace.append(val)
-                            break
-                except:
-                    pass
-
-        result = {
-            "experiment": "trl_grpo_math",
-            "seed": seed,
-            "success": proc.returncode == 0,
-            "elapsed_seconds": round(elapsed, 1),
-            "returncode": proc.returncode,
-            "reward_trace": reward_trace[-20:] if len(reward_trace) > 20 else reward_trace,
-            "stdout_tail": proc.stdout[-1500:] if proc.stdout else "",
-            "stderr_tail": proc.stderr[-1000:] if proc.stderr else "",
-        }
-
-        with open(f"{result_dir}/result.json", "w") as f:
-            json.dump(result, f, indent=2)
-
-        results_vol.commit()
-        return result
-
+        proc = subprocess.run(["python", str(exp_path), "--seed", str(seed), "--max_steps", str(num_steps),
+            "--num_train_problems", "200", "--output_dir", str(result_dir / "model")],
+            capture_output=True, text=True, timeout=1200, cwd="/root/tinker-rl-lab",
+            env={**os.environ, "PYTHONUNBUFFERED": "1", "RESULTS_DIR": str(result_dir)})
+        result.update(success=proc.returncode == 0, status="completed" if proc.returncode == 0 else "failed",
+            returncode=proc.returncode, stdout_tail=proc.stdout[-1500:], stderr_tail=proc.stderr[-1000:])
     except subprocess.TimeoutExpired:
-        elapsed = time.time() - start
-        return {
-            "experiment": "trl_grpo_math",
-            "seed": seed,
-            "success": False,
-            "elapsed_seconds": round(elapsed, 1),
-            "error": "timeout",
-        }
-    except Exception as e:
-        elapsed = time.time() - start
-        return {
-            "experiment": "trl_grpo_math",
-            "seed": seed,
-            "success": False,
-            "elapsed_seconds": round(elapsed, 1),
-            "error": str(e),
-        }
+        result.update(status="timeout", error="1200-second deadline exceeded")
+    except Exception as exc:
+        result.update(status="error", error=str(exc))
+    finally:
+        result["elapsed_seconds"] = round(time.time()-start, 1)
+        # Process success alone is never an empirical evidence attestation.
+        result.update(measured=False, claim_eligible=False, artifact_type="execution_receipt")
+        (result_dir / "result.json").write_text(json.dumps(result, indent=2))
+        results_vol.commit()
+    return result
 
 
 @app.local_entrypoint()
 def main(seeds: int = 3, steps: int = 20):
     """Launch multi-seed TRL experiments on Modal GPUs."""
+    from pathlib import Path
+    source = Path(__file__).resolve().parent / "implementations" / "trl_grpo_math.py"
+    compile(source.read_text(), str(source), "exec")
+    if type(seeds) is not int or not 1 <= seeds <= 3 or steps <= 0:
+        raise ValueError("Valid seed count and positive steps required")
     seed_list = [42, 123, 456][:seeds]
     print(f"Launching {len(seed_list)} TRL GRPO jobs (steps={steps})")
 

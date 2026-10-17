@@ -6,6 +6,12 @@ hot band, FREEZE the cold layers, and compare held-out accuracy + trainable-para
 If frozen ~= full on held-out with far fewer trainable params, the freeze lever works (read off the
 EMERGED band, not step-1). Two arms x seeds. Colab GPU; writes /content/p1_freeze_result.json.
 """
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import response_token_mask, topk_overlap, gsm8k_reward
+
 import subprocess, sys
 subprocess.run([sys.executable,"-m","pip","install","-q","-U","torchao>=0.16","transformers","peft","datasets"], check=False)
 import os, re, json, torch
@@ -48,7 +54,7 @@ def run_arm(arm, hot_layers, n_layers, tok, problems, seed):
     model = get_peft_model(model, lcfg)
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     opt = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=1e-4)
-    def heldout():
+    def heldout(model=model):
         model.eval(); c=0
         for pr in problems[:8]:
             ids = tok(pr["prompt"], return_tensors="pt").to("cuda")
@@ -76,7 +82,8 @@ def run_arm(arm, hot_layers, n_layers, tok, problems, seed):
                 tgt = seq[:, plen:]
                 # memory-efficient token log-prob (logsumexp, no full-vocab float32 softmax)
                 tok_lp = logits.gather(-1, tgt.unsqueeze(-1)).squeeze(-1) - torch.logsumexp(logits, dim=-1)
-                (-adv * tok_lp.sum() / (4*G)).backward()
+                mask = torch.tensor(response_token_mask(tgt[0].tolist(), tok.eos_token_id), device=tok_lp.device)
+                (-adv * (tok_lp * mask).sum() / (4*G)).backward()
         opt.step()
     h1 = heldout()
     del model; torch.cuda.empty_cache()

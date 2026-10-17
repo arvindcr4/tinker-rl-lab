@@ -1,3 +1,9 @@
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import response_token_mask, topk_overlap, gsm8k_reward
+
 # P1 white-box experiment (Colab L4) — per-layer adaptation profile under GRPO-style updates.
 # Tests: do GRPO gains concentrate in a few layers, and is the concentration PREDICTABLE from step 1?
 # (the premise of "causal predictive layer-freezing" that distinguishes P1 from SALF).
@@ -60,7 +66,9 @@ for step in range(STEPS):
             adv = (r-mr)/sd
             logits = model(full).logits[:, pids_i.shape[1]-1:-1, :]
             tgt = full[:, pids_i.shape[1]:]
-            logp = torch.log_softmax(logits.float(),-1).gather(-1, tgt.unsqueeze(-1)).sum()
+            token_lp = torch.log_softmax(logits.float(),-1).gather(-1, tgt.unsqueeze(-1)).squeeze(-1)
+            mask = torch.tensor(response_token_mask(tgt[0].tolist(), tok.eos_token_id), device=token_lp.device)
+            logp = (token_lp * mask).sum()
             (-adv*logp/ (N_PROMPTS*G)).backward()
             used += 1
     # record per-layer LoRA grad norm
@@ -84,11 +92,11 @@ meanL = M.mean(0)
 rank = np.argsort(-meanL)
 topk = set(rank[:max(3,n_layers//4)].tolist())
 step1_topk = set(np.argsort(-M[0])[:len(topk)].tolist()) if len(profile)>0 else set()
-overlap = len(topk & step1_topk)/max(len(topk),1)
+overlap = topk_overlap(M[0].tolist(), M[1:].mean(0).tolist(), max(len(topk),1))
 res = dict(model=MODEL, n_layers=n_layers, steps=len(profile),
            mean_gradnorm_by_layer=[round(x,4) for x in meanL.tolist()],
            top_layers_overall=rank[:8].tolist(),
            concentration_top25pct_share=round(float(meanL[rank[:max(1,n_layers//4)]].sum()/ (meanL.sum()+1e-9)),3),
-           step1_predicts_final_topk_overlap=round(overlap,3))
+           step1_predicts_final_topk_overlap=round(overlap,3) if overlap is not None else None)
 open("/content/p1_layer_profile_result.json","w").write(json.dumps(res, indent=2))
 print("RESULT:", json.dumps(res))

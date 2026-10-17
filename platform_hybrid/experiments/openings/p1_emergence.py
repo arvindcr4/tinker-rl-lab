@@ -5,6 +5,12 @@ the emergence curve: overlap(step_k top-k, FINAL top-k) as a function of k. If i
 rises over training, the band emerges gradually -> the mechanistic reason step-1 prediction fails.
 Colab GPU; writes /content/p1_emergence_result.json.
 """
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import topk_overlap, response_token_mask
+
 import subprocess, sys
 subprocess.run([sys.executable,"-m","pip","install","-q","-U","torchao>=0.16","transformers","peft","datasets"], check=False)
 import os, re, json, torch, numpy as np
@@ -51,7 +57,8 @@ def run_seed(seed, tok, problems):
                 adv=(rews[j]-mr)/sd; seq=gen[j:j+1]
                 logits=model(seq).logits[:,plen-1:-1,:]; tgt=seq[:,plen:]
                 lp=logits.gather(-1,tgt.unsqueeze(-1)).squeeze(-1)-torch.logsumexp(logits,dim=-1)
-                (-adv*lp.sum()/(4*G)).backward(); used+=1
+                mask = torch.tensor(response_token_mask(tgt[0].tolist(), tok.eos_token_id), device=lp.device)
+                (-adv*(lp * mask).sum()/(4*G)).backward(); used+=1
         gn=[0.0]*n_layers
         for nm,p in model.named_parameters():
             if p.grad is not None and "lora" in nm.lower():
@@ -61,19 +68,19 @@ def run_seed(seed, tok, problems):
     del model; torch.cuda.empty_cache()
     M=np.array(per_step)  # [steps, layers]
     k=max(3,n_layers//4)
-    final_top=set(np.argsort(-M.mean(0))[:k].tolist())
+    # Terminal-only profile is disjoint from every predictor step.
     # emergence: overlap(step_k top-k, FINAL top-k) for each k
-    emergence=[len(set(np.argsort(-M[s])[:k].tolist()) & final_top)/k for s in range(len(M))]
-    return dict(seed=seed, n_layers=n_layers, k=k, emergence_curve=[round(x,3) for x in emergence],
-                step1_overlap=round(emergence[0],3), final_overlap=round(emergence[-1],3),
-                step_reaches_half=next((s+1 for s,v in enumerate(emergence) if v>=0.5), None))
+    emergence=[topk_overlap(M[s].tolist(), M[-1].tolist(), k) for s in range(len(M)-1)]
+    return dict(seed=seed, n_layers=n_layers, k=k, emergence_curve=[round(x,3) if x is not None else None for x in emergence],
+                step1_overlap=round(emergence[0],3) if emergence[0] is not None else None, final_overlap=round(emergence[-1],3) if emergence[-1] is not None else None,
+                step_reaches_half=next((s+1 for s,v in enumerate(emergence) if v is not None and v>=0.5), None))
 
 tok=AutoTokenizer.from_pretrained(MODEL); problems=load_problems(tok)
 res=[run_seed(s,tok,problems) for s in SEEDS]
 for r in res: print(f"[seed {r['seed']}] emergence={r['emergence_curve']} half@step={r['step_reaches_half']}", flush=True)
 import statistics as st
-mean_curve=[round(st.mean([r["emergence_curve"][i] for r in res]),3) for i in range(min(len(r["emergence_curve"]) for r in res))]
+mean_curve=[None if any(r["emergence_curve"][i] is None for r in res) else round(st.mean([r["emergence_curve"][i] for r in res]),3) for i in range(min(len(r["emergence_curve"]) for r in res))]
 summary=dict(model=MODEL, per_seed=res, mean_emergence_curve=mean_curve,
-             mean_step1=round(st.mean([r["step1_overlap"] for r in res]),3))
+             mean_step1=None if any(r["step1_overlap"] is None for r in res) else round(st.mean([r["step1_overlap"] for r in res]),3))
 open("/content/p1_emergence_result.json","w").write(json.dumps(summary,indent=2))
 print("RESULT: "+json.dumps(summary))

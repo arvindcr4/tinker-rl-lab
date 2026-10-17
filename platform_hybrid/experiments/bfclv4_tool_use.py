@@ -27,6 +27,12 @@ Output
 
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import group_metrics, SIMULATION_METADATA
+
+
 import argparse
 import ast
 import json
@@ -189,13 +195,14 @@ def run_dry_run(n_seeds: int = 5, n_steps: int = 100) -> List[Dict[str, Any]]:
                 sparse_rewards.append(reward_sparse(pred, gold))
                 dense_rewards.append(reward_dense(pred, gold))
 
-            zvf_sparse = 1.0 if sum(sparse_rewards) == 0.0 or sum(sparse_rewards) == len(sparse_rewards) else 0.0
-            zvf_dense = 1.0 if sum(dense_rewards) == 0.0 or sum(dense_rewards) == len(dense_rewards) else 0.0
+            zvf_sparse = group_metrics(sparse_rewards)["reward_zvf"]
+            zvf_dense = group_metrics(dense_rewards)["reward_zvf"]
 
             rows.append(
                 dict(
                     seed=seed,
                     step=step,
+                    **SIMULATION_METADATA,
                     n_correct=int(sum(sparse_rewards)),
                     n_total=group_size,
                     reward_sparse=round(sum(sparse_rewards) / len(sparse_rewards), 4),
@@ -214,6 +221,7 @@ def run_dry_run(n_seeds: int = 5, n_steps: int = 100) -> List[Dict[str, Any]]:
 TSV_HEADER = [
     "seed", "step", "n_correct", "n_total",
     "reward_sparse", "reward_dense", "zvf_sparse", "zvf_dense",
+    "execution_kind", "measured", "claim_eligible", "artifact_type", "protocol_version",
 ]
 
 
@@ -242,9 +250,9 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parse_args(argv)
-    if args.dry_run or not args.dataset:
+    if args.dry_run:
         rows = run_dry_run(n_seeds=args.seeds, n_steps=args.steps)
-        write_tsv(rows, Path(args.out))
+        write_tsv(rows, Path(args.out).parent / "simulations" / Path(args.out).name)
         print(f"[bfclv4] wrote {len(rows)} rows -> {args.out}")
         print(f"[bfclv4] mean sparse reward: {sum(r['reward_sparse'] for r in rows)/len(rows):.3f}")
         print(f"[bfclv4] mean dense reward:  {sum(r['reward_dense'] for r in rows)/len(rows):.3f}")

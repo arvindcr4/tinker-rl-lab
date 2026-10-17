@@ -1,3 +1,9 @@
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import json_object, exact_json_equal
+
 # ============================================================
 #  EXPERIMENT — STEP 3: Compare SFT vs GRPO
 #  Evaluates both adapters on same test set and prints
@@ -36,50 +42,50 @@ TEST_CASES = [
     # Weather
     {"query": "What's the weather in Tokyo?",
      "expected_tool": "get_current_weather",
-     "expected_args": ["location"]},
+     "expected_args": {'location': 'Tokyo'}},
     {"query": "Is it raining in London right now?",
      "expected_tool": "get_current_weather",
-     "expected_args": ["location"]},
+     "expected_args": {'location': 'London'}},
     {"query": "Tell me the temperature in Berlin.",
      "expected_tool": "get_current_weather",
-     "expected_args": ["location"]},
+     "expected_args": {'location': 'Berlin'}},
 
     # Calculator / Math
     {"query": "What is 15% of 840?",
      "expected_tool": "calculate",
-     "expected_args": ["expression"]},
+     "expected_args": {'expression': '0.15*840'}},
     {"query": "Calculate the square root of 256.",
      "expected_tool": "calculate",
-     "expected_args": ["expression"]},
+     "expected_args": {'expression': 'sqrt(256)'}},
     {"query": "How much is 128 divided by 4 plus 56 times 3?",
      "expected_tool": "calculate",
-     "expected_args": ["expression"]},
+     "expected_args": {'expression': '128/4+56*3'}},
 
     # Search
     {"query": "Search for the latest news on AI.",
      "expected_tool": "search",
-     "expected_args": ["query"]},
+     "expected_args": {'query': 'latest news on AI'}},
     {"query": "Find Python tutorials for beginners.",
      "expected_tool": "search",
-     "expected_args": ["query"]},
+     "expected_args": {'query': 'Python tutorials for beginners'}},
 
     # Stock / Finance
     {"query": "What is the stock price of Apple?",
      "expected_tool": "get_stock_price",
-     "expected_args": ["symbol"]},
+     "expected_args": {'symbol': 'AAPL'}},
     {"query": "Get me the current price of Tesla shares.",
      "expected_tool": "get_stock_price",
-     "expected_args": ["symbol"]},
+     "expected_args": {'symbol': 'TSLA'}},
 
     # Translation
     {"query": "Translate 'Hello, how are you?' to French.",
      "expected_tool": "translate",
-     "expected_args": ["text", "target_language"]},
+     "expected_args": {'text': 'Hello, how are you?', 'target_language': 'French'}},
 
     # Unit conversion
     {"query": "Convert 100 kilometers to miles.",
      "expected_tool": "convert_units",
-     "expected_args": ["value", "from_unit", "to_unit"]},
+     "expected_args": {'value': 100, 'from_unit': 'kilometers', 'to_unit': 'miles'}},
 ]
 
 # ── SCORING ──────────────────────────────────────────────────
@@ -93,34 +99,17 @@ def parse_json(text):
         return None
 
 def score(output_text, expected_tool, expected_args):
-    parsed = parse_json(output_text)
-    if parsed is None:
-        return {"json": False, "tool": False, "args": False,
-                "clean": False, "score": 0.0, "parsed": None}
-
-    # Tool name — allow partial match (model may use slightly different name)
-    tool_out  = str(parsed.get("name", "")).lower()
-    tool_exp  = expected_tool.lower()
-    tool_ok   = (tool_out == tool_exp) or (tool_exp in tool_out) or (tool_out in tool_exp)
-
-    # Args — check expected keys exist in output arguments
-    args_out  = parsed.get("arguments", {})
-    args_ok   = all(
-        any(exp_k in out_k or out_k in exp_k
-            for out_k in str(args_out).lower().split())
-        for exp_k in expected_args
-    ) if isinstance(args_out, dict) and args_out else False
-
-    # Clean output (no extra text)
-    start = output_text.find("{")
-    end   = output_text.rfind("}") + 1
-    extra = len(output_text[:start].strip()) + len(output_text[end:].strip())
-    clean = extra < 15
-
-    sc = (0.3 * tool_ok) + (0.4 * args_ok) + (0.3 * clean)
-
-    return {"json": True, "tool": tool_ok, "args": args_ok,
-            "clean": clean, "score": round(sc, 2), "parsed": parsed}
+    parsed = json_object(output_text)
+    valid = isinstance(parsed, dict)
+    tool_ok = valid and isinstance(expected_tool, str) and bool(expected_tool) and parsed.get("name") == expected_tool
+    args = parsed.get("arguments") if valid else None
+    keys_ok = isinstance(args, dict) and all(k in args for k in expected_args)
+    values_known = isinstance(expected_args, dict)
+    args_ok = keys_ok and (not values_known or exact_json_equal(args, expected_args))
+    success = bool(tool_ok and args_ok and values_known)
+    return {"json": valid, "tool": bool(tool_ok), "args": bool(args_ok), "clean": valid,
+            "score": 1.0 if success else (0.5 if tool_ok and args_ok else 0.0),
+            "task_success": success, "argument_values_measured": values_known, "parsed": parsed}
 
 # ── LOAD MODEL HELPER ────────────────────────────────────────
 def load_model_with_adapter(adapter_path, label):

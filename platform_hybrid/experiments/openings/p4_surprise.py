@@ -3,13 +3,19 @@
 Standard GRPO loss -adv * sum_t logprob_t is length-biased (longer completions get
 larger gradient magnitude). Two known/proposed alternatives:
   - sum     : standard GRPO (length-biased baseline)
-  - mean    : length-normalized (Dr.GRPO-style fix)     loss = -adv * mean_t logprob_t
+  - mean    : sequence-length mean (not Dr.GRPO fixed-denominator reduction)     loss = -adv * mean_t logprob_t
   - surprise: weight each token by its (detached) surprise so gradient concentrates on
               decision tokens, not boilerplate.  w_t = softmax(-logprob.detach());
               loss = -adv * sum_t w_t * logprob_t
 Question: do these change held-out accuracy and/or the completion-length trajectory
 (the length bias)? Multi-seed, process-parallel, matched steps.
 """
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import completion_alignment, gsm8k_reward
+
 import os, re, json, random, argparse, warnings
 warnings.filterwarnings("ignore")
 import multiprocessing as mp
@@ -30,24 +36,12 @@ def run_one(cfg):
                    m.group(1).replace(",", "").strip()))
     random.shuffle(ex); HO = ex[:heldout_n]; POOL = ex[heldout_n:]
     def reward(resp, ans):
-        r = resp.strip()
-        for b in re.findall(r"\\boxed\{([^}]+)\}", r):
-            bc = b.strip().replace(",", "").replace(" ", "")
-            try:
-                if abs(float(bc)-float(ans)) < 0.01: return 1.0
-            except:
-                if bc == ans: return 1.0
-        nums = re.findall(r"[-+]?\d[\d,]*\.?\d*", r)
-        if nums:
-            try:
-                if abs(float(nums[-1].replace(",",""))-float(ans)) < 0.01: return 1.0
-            except: pass
-        return 0.0
+        return gsm8k_reward(resp, ans)
     def mkloss(advs):
         def _fn(data, lp):
             terms = []
             for i in range(len(lp)):
-                l = lp[i]
+                l = lp[i][torch.tensor(data[i].loss_fn_inputs["completion_mask"].data, device=lp[i].device, dtype=torch.bool)]
                 if loss_mode == "mean":
                     t = -advs[i] * l.mean()
                 elif loss_mode == "surprise":
@@ -85,18 +79,19 @@ def run_one(cfg):
                              sampling_params=T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95)).result()
             rr = [reward(tok.decode(list(r.tokens), skip_special_tokens=True), ans) for r in resp.sequences]
             slens.extend(len(r.tokens) for r in resp.sequences)
+            br.extend(rr)  # every attempted group, before contrast filtering
             mr = sum(rr)/len(rr)
             if mr in (0.0, 1.0):   # need variance for a gradient signal
                 continue
-            sd = (sum((x-mr)**2 for x in rr)/len(rr))**0.5 + 1e-8; br.extend(rr)
+            sd = (sum((x-mr)**2 for x in rr)/len(rr))**0.5 + 1e-8
             for rs, a in zip(resp.sequences, [(x-mr)/sd for x in rr]):
-                fid = pid + list(rs.tokens); tid = fid[1:]+[0]
+                fid, tid, cmask = completion_alignment(pid, list(rs.tokens))
                 data.append(T.Datum(model_input=T.ModelInput.from_ints(fid),
-                    loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)])}))
+                    loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)]), "completion_mask": T.TensorData(data=cmask, dtype="float32", shape=[len(cmask)])}))
                 advs.append(a)
         ml = sum(slens)/len(slens) if slens else 0; mean_lens.append(ml)
         if not data:
-            wandb.log({"mean_len": ml}, step=step); continue
+            wandb.log({"mean_len": ml, "reward": sum(br)/len(br) if br else None, "optimizer_updates": 0}, step=step); continue
         res = tc.forward_backward_custom(data=data, loss_fn=mkloss(advs)).result()
         tc.optim_step(T.AdamParams(learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
         avg = sum(br)/len(br) if br else 0.0; rewards.append(avg)

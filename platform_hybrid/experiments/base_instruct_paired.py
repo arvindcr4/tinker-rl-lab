@@ -116,10 +116,9 @@ def train_metrics(master: List[Dict[str, Any]], model_id: str) -> Dict[str, Any]
         # Prefer the identical-conditions runs (lr=1e-5, G=8) for the paired table.
         if lr and abs(float(lr) - 1e-5) > 1e-8:
             continue
-        gs = r.get("group_size") or r.get("rank")
-        if gs and gs not in (8,):
-            # rank 32 rows use G=8 in the campaign; only group_size is authoritative.
-            pass
+        gs = r.get("group_size")
+        if gs != 8:
+            continue
         trace = r.get("reward_trace") or []
         if trace:
             first5s.append(float(sum(trace[:5])) / max(1, len(trace[:5])))
@@ -130,10 +129,10 @@ def train_metrics(master: List[Dict[str, Any]], model_id: str) -> Dict[str, Any]
             last10s.append(float(r["last_10_avg"]))
         if r.get("seed") is not None:
             seeds.append(int(r["seed"]))
-        zr = r.get("zero_reward_pct")
+        zr = r.get("reward_zvf_at_100")
         if zr is not None:
             # zero_reward_pct is percent; normalise to fraction for ZVF@tail extrapolation.
-            zvf_tail.append(float(zr) / 100.0)
+            zvf_tail.append(float(zr))
     return {
         "train_pre_rl": _mean(first5s) if first5s else None,
         "train_post_rl": _mean(last10s) if last10s else None,
@@ -203,24 +202,12 @@ def heldout_instruct_metric(
     }
 
 
-def zvf_at_100(zvf_tail_mean: Optional[float], train_post_rl: Optional[float]) -> Optional[float]:
-    """Extrapolate ZVF@100 from the tail mean of ZVF over training.
-
-    No run in this revision goes past step 30. We report a simple projection:
-    ZVF@100 ~= clip(zvf_tail_mean * f(train_post_rl), 0, 1), where the
-    saturation factor f scales the tail up when the policy is far from 100%
-    reward (so ZVF is still growing) and down when the policy is near 100%.
-    This is intentionally crude -- it is only used to preserve column
-    symmetry with the paper's main ZVF analysis and is flagged in the table
-    as 'extrapolation'.
-    """
-    # LIMITATION (review): The "Early-Training Snapshot" problem. 30 steps is insufficient
-    # to observe meaningful RL convergence. We should execute full training runs instead of extrapolating.
-    if zvf_tail_mean is None or train_post_rl is None:
+def zvf_at_100(measured_at_100=None, unused_training_reward=None):
+    """Only the explicit actual step-100 measurement, never an extrapolation."""
+    if measured_at_100 is None:
         return None
-    # heuristic: ZVF@100 ~ tail + (1 - train_post_rl) * 0.3, clipped.
-    proj = zvf_tail_mean + max(0.0, 1.0 - train_post_rl) * 0.3
-    return max(0.0, min(1.0, proj))
+    value = float(measured_at_100)
+    return value if math.isfinite(value) and 0 <= value <= 1 else None
 
 
 # ---------------------------------------------------------------------------

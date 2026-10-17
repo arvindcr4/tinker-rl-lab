@@ -32,6 +32,12 @@ Output
 
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import EvidenceUnavailable, SIMULATION_METADATA
+
+
 import argparse
 import math
 import os
@@ -195,15 +201,15 @@ def advantage_computation(
     return adv, running_mean
 
 
-def reward_shaping(
-    cfg: MethodConfig,
-    rewards: Sequence[float],
-    entropy: float,
-) -> List[float]:
-    """Scaf-GRPO: +beta_e * H(pi(.|prompt))."""
+def reward_shaping(cfg: MethodConfig, rewards: Sequence[float], entropy) -> List[float]:
+    """Only rollout-specific bonus is meaningful under group centering."""
     if not cfg.entropy_bonus:
         return list(rewards)
-    return [r + cfg.beta_e * entropy for r in rewards]
+    if isinstance(entropy, (int, float)):
+        raise ValueError("Shared entropy cancels under group centering; provide rollout-specific bonuses")
+    if len(entropy) != len(rewards):
+        raise ValueError("One entropy bonus per rollout required")
+    return [r + cfg.beta_e * h for r, h in zip(rewards, entropy)]
 
 
 # ---------------------------------------------------------------------------
@@ -226,75 +232,7 @@ def _try_import_baseline():
 
 
 def run_real(cfg: MethodConfig, config_path: str, seed: int) -> List[dict]:
-    """Wrapper around the baseline GRPO trainer with hooks installed.
-
-    Intentionally lightweight: we do not reimplement GRPO here; we
-    attach the hooks defined above and delegate the actual training
-    loop to the repo's existing trainer when it is available. If the
-    trainer is not importable in the current environment, we fall
-    back to synthesize mode so the CLI stays useful in CI.
-    """
-    Baseline = _try_import_baseline()
-    if Baseline is None:
-        print(
-            f"[{cfg.name}] baseline GRPO trainer not importable; "
-            f"falling back to synthesize",
-            file=sys.stderr,
-        )
-        return synthesize_rows(cfg, seed)
-
-    # Minimal config plumbing; the real trainer expects a richer config
-    # object, but we only need to seed the hooks here. The trainer
-    # reads config_path for hyperparameters (lr, G, etc.).
-    launcher = Baseline()
-    launcher.framework = "trl"
-    launcher.model = "Qwen/Qwen3-8B"
-    launcher.algorithm = "grpo"
-    launcher.epochs = cfg.n_steps
-    launcher.config = config_path
-
-    rows: List[dict] = []
-    running_mean: Optional[float] = None
-    rolling_zvf_window: List[float] = []
-    current_g = cfg.base_group_size
-
-    # NOTE: we re-implement a minimal training shim here because the
-    # existing UnifiedLauncher only exposes simulated trajectories in
-    # this repo snapshot. A real integration binds the three hooks
-    # (rollout_sampling, advantage_computation, reward_shaping) to the
-    # corresponding hook points in the full trainer.
-    rng = random.Random(seed)
-    heldout = 0.40 + 0.005 * seed
-
-    for step in range(cfg.n_steps):
-        # Simulate a group of G rollouts with decaying variance.
-        raw = [rng.gauss(0.5 + 0.002 * step, 0.25) for _ in range(current_g)]
-        rewards = reward_shaping(cfg, raw, entropy=1.2 - 0.005 * step)
-        group_mean = sum(rewards) / len(rewards)
-        group_var = sum((r - group_mean) ** 2 for r in rewards) / len(rewards)
-        zvf_here = 1.0 if group_var < 1e-4 else 0.0
-
-        rolling_zvf_window.append(zvf_here)
-        if len(rolling_zvf_window) > cfg.zvf_window:
-            rolling_zvf_window.pop(0)
-        rolling_zvf = sum(rolling_zvf_window) / len(rolling_zvf_window)
-
-        current_g = rollout_sampling(cfg, current_g, rolling_zvf)
-        _, running_mean = advantage_computation(cfg, rewards, running_mean)
-
-        heldout += 0.0005 * (1.0 - rolling_zvf)
-        rows.append(
-            dict(
-                method=cfg.name,
-                seed=seed,
-                step=step,
-                zvf=rolling_zvf,
-                reward_mean=group_mean,
-                heldout_acc=heldout,
-                collapse=int(rolling_zvf > 0.9),
-            )
-        )
-    return rows
+    raise EvidenceUnavailable("No real trainer integration exists. Use --dry-run for explicitly quarantined simulations.")
 
 
 # ---------------------------------------------------------------------------
@@ -377,7 +315,7 @@ def synthesize_rows(cfg: MethodConfig, seed: int) -> List[dict]:
     if seed >= collapse_quota:
         for r in rows:
             r["collapse"] = 0
-    return rows
+    return [{**row, **SIMULATION_METADATA} for row in rows]
 
 
 # ---------------------------------------------------------------------------
@@ -385,7 +323,7 @@ def synthesize_rows(cfg: MethodConfig, seed: int) -> List[dict]:
 # ---------------------------------------------------------------------------
 
 
-TSV_HEADER = ["method", "seed", "step", "zvf", "reward_mean", "heldout_acc", "collapse"]
+TSV_HEADER = ["method", "seed", "step", "zvf", "reward_mean", "heldout_acc", "collapse", "execution_kind", "measured", "claim_eligible", "artifact_type", "protocol_version"]
 
 
 def write_tsv(rows: List[dict], path: Path = OUT_TSV, append: bool = True) -> None:
@@ -456,10 +394,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     cfg.n_steps = args.steps
 
     out_path = Path(args.out)
+    if args.dry_run:
+        out_path = out_path.parent / "simulations" / out_path.name
     all_rows: List[dict] = []
     for seed in range(args.seeds):
         if args.dry_run:
-            all_rows.extend(synthesize_rows(cfg, seed))
+            all_rows.extend({**row, **SIMULATION_METADATA} for row in synthesize_rows(cfg, seed))
         else:
             all_rows.extend(run_real(cfg, args.config, seed))
 

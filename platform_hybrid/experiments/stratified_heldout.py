@@ -1,27 +1,13 @@
 #!/usr/bin/env python3
-"""Stratified held-out GSM8K evaluation protocols (addresses reviewer W8).
-
-Three sampling protocols are implemented over per-condition training checkpoints:
-
-  P1: top-10 by last-10 training-reward (original, selection-biased).
-  P2: uniform random 10 per condition (unbiased practitioner estimate).
-  P3: stratified -- 2 checkpoints each from training-reward deciles 1,3,5,7,9.
-
-For each (condition, protocol) we compute mean held-out accuracy and a 95%
-bootstrap CI (N_boot=1000), then emit a long-form TSV.
-
-Usage:
-    python3 platform_hybrid/experiments/stratified_heldout.py --protocol all
-    python3 platform_hybrid/experiments/stratified_heldout.py --protocol p2 --seed 42
-
-The script degrades gracefully when per-condition checkpoints are sparse:
-  - N_c < 10            -> P1/P2 use the full set
-  - N_c < 5             -> results flagged with 'sparse=True' in TSV
-  - missing heldout acc -> imputed from a linear heldout~last10 fit across
-                           the evaluated subset, with imputation flag preserved.
-"""
+"""Checkpoint-selection audit, protocol v2. Sampling frames contain saved checkpoint identities or one already measured final endpoint. Missing held-out observations remain missing. Descriptive checkpoint means have no independent-run confidence intervals; historical records need provenance audit."""
 
 from __future__ import annotations
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import require_empirical, EvidenceUnavailable
+
 
 import argparse
 import csv
@@ -108,84 +94,31 @@ def load_heldout_map():
 
 
 def group_checkpoints(experiments, heldout_map):
-    """Partition experiments into paper conditions and expand each experiment
-    into one pseudo-checkpoint per training step using its `reward_trace`.
-
-    Rationale: `master_results.json` stores one summary row per training run,
-    but each row contains a per-step reward_trace. Every element of that
-    trace is effectively a checkpoint snapshot -- the training-reward value
-    if you had stopped at that step. Expanding each experiment into its
-    trace gives us a realistic pool of per-condition checkpoints for the
-    three sampling protocols. Rows without a trace are retained with
-    last10_avg as a single-checkpoint fallback."""
+    """Use persisted checkpoints only; measured run endpoints are never expanded."""
     grouped = defaultdict(list)
     for exp in experiments:
-        # Match experiment to a condition first.
-        matched = None
-        for name, pred in CONDITIONS:
-            try:
-                if pred(exp):
-                    matched = name
-                    break
-            except Exception:
-                continue
-        if matched is None:
+        condition = next((name for name, pred in CONDITIONS if pred(exp)), None)
+        if condition is None:
             continue
-
-        trace = exp.get("reward_trace") or []
-        exp_id = exp.get("experiment_id") or exp.get("experiment_name") or "unknown"
-
-        if len(trace) >= 2:
-            # Expand into per-step pseudo-checkpoints.
-            for step_idx, r in enumerate(trace):
-                if r is None:
-                    continue
-                try:
-                    rv = float(r)
-                except (TypeError, ValueError):
-                    continue
-                grouped[matched].append({
-                    "experiment_id": f"{exp_id}@step{step_idx}",
-                    "parent_experiment_id": exp_id,
-                    "model": exp.get("model"),
-                    "method": exp.get("method"),
-                    "group": exp.get("group"),
-                    "last10_avg": rv,
-                    "_step_idx": step_idx,
-                })
-        elif exp.get("last10_avg") is not None:
-            grouped[matched].append({
-                "experiment_id": exp_id,
-                "parent_experiment_id": exp_id,
-                "model": exp.get("model"),
-                "method": exp.get("method"),
-                "group": exp.get("group"),
-                "last10_avg": float(exp["last10_avg"]),
-                "_step_idx": None,
-            })
-
-    # Anchored monotone surrogate for imputing per-checkpoint held-out accuracy.
-    # Calibrated to pass through (0.008, 0.008), (0.73, 0.79), (0.90, 0.90);
-    # see comment in previous revision for the rationale behind refusing to
-    # run an unconstrained OLS on the narrow measured subset.
-    slope = 0.98
-    intercept = 0.01
-    ceiling = 0.92
-
-    for name, rows in grouped.items():
-        for r in rows:
-            parent = r.get("parent_experiment_id")
-            last10 = r["last10_avg"]
-            if parent in heldout_map and r.get("_step_idx") is None:
-                r["_heldout_measured"] = True
-                r["_heldout_acc"] = heldout_map[parent]["heldout_accuracy"]
-                r["_heldout_n"] = heldout_map[parent]["heldout_n"]
-            else:
-                # Imputed from the training reward at that step.
-                r["_heldout_measured"] = False
-                est = intercept + slope * last10
-                r["_heldout_acc"] = max(0.0, min(ceiling, est))
-                r["_heldout_n"] = 500  # nominal
+        exp_id = exp.get("experiment_id")
+        checkpoints = exp.get("checkpoints") or []
+        # A measured final endpoint is one observation, not one per trace step.
+        if not checkpoints and exp_id in heldout_map:
+            checkpoints = [{"checkpoint_id": heldout_map[exp_id].get("checkpoint_id", exp_id),
+                            "last10_avg": exp.get("last10_avg", 0), "evaluation": heldout_map[exp_id]}]
+        for checkpoint in checkpoints:
+            cid = checkpoint.get("checkpoint_id") or checkpoint.get("checkpoint_path")
+            if not cid:
+                raise EvidenceUnavailable("Saved checkpoint identity required")
+            evaluation = checkpoint.get("evaluation") or heldout_map.get(cid, {})
+            acc = evaluation.get("heldout_accuracy")
+            measured = (acc is not None and evaluation.get("status", "completed") == "completed"
+                        and evaluation.get("execution_kind", "empirical") != "simulation"
+                        and evaluation.get("measured", True) is True)
+            grouped[condition].append({"experiment_id": cid, "parent_experiment_id": exp_id,
+                "checkpoint_id": cid, "last10_avg": checkpoint.get("last10_avg", exp.get("last10_avg", 0)),
+                "_heldout_measured": measured, "_heldout_acc": acc if measured else None,
+                "_heldout_n": evaluation.get("heldout_n") if measured else None})
     return grouped
 
 
@@ -265,26 +198,9 @@ def sample_p3(rows, rng):
 # -----------------------------------------------------------------------------
 
 def bootstrap_ci(values, n_boot=N_BOOT, seed=SEED_DEFAULT, alpha=0.05):
-    if not values:
-        return float("nan"), float("nan"), float("nan")
-    if len(values) == 1:
-        # Per-checkpoint binomial CI with n_heldout=500 is a better width than
-        # a synthetic +/-0.05; but since we don't have the Bernoulli sequence
-        # here we approximate with the Wilson/Normal CI at n=500.
-        v = values[0]
-        se = math.sqrt(max(1e-9, v * (1 - v) / 500))
-        return v, max(0.0, v - 1.96 * se), min(1.0, v + 1.96 * se)
-    rng = random.Random(seed)
-    means = []
-    n = len(values)
-    for _ in range(n_boot):
-        sample = [values[rng.randrange(n)] for _ in range(n)]
-        means.append(sum(sample) / n)
-    means.sort()
-    lo = means[int(alpha / 2 * n_boot)]
-    hi = means[int((1 - alpha / 2) * n_boot) - 1]
-    mean = sum(values) / n
-    return mean, lo, hi
+    """Checkpoint selection summaries are descriptive, not independent-run CIs."""
+    vals = [v for v in values if v is not None and math.isfinite(v)]
+    return (sum(vals) / len(vals) if vals else float("nan"), float("nan"), float("nan"))
 
 
 # -----------------------------------------------------------------------------
@@ -339,7 +255,7 @@ def run(protocols, seed):
             key=lambda e: (math.isnan(e["mean_acc"]), -e["mean_acc"]),
         )
         for i, e in enumerate(ranked, start=1):
-            e["rank"] = i
+            e["rank"] = i if math.isfinite(e["mean_acc"]) else ""
         for e in entries:
             rows_out.append({
                 "condition": e["condition"],
@@ -352,6 +268,8 @@ def run(protocols, seed):
                 "n_sampled": e["n_sampled"],
                 "n_measured": e["n_measured"],
                 "sparse": str(e["sparse"]).lower(),
+                "interval_type": "none_descriptive_checkpoint_mean",
+                "source": "measured_heldout_only",
             })
 
     return rows_out
@@ -361,7 +279,7 @@ def write_tsv(rows, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = [
         "condition", "protocol", "mean_acc", "ci_low", "ci_high", "rank",
-        "n_checkpoints_total", "n_sampled", "n_measured", "sparse",
+        "n_checkpoints_total", "n_sampled", "n_measured", "sparse", "interval_type", "source",
     ]
     with path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fieldnames, delimiter="\t")

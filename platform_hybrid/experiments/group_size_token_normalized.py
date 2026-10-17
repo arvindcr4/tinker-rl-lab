@@ -1,35 +1,12 @@
 #!/usr/bin/env python3
-"""Token-budget-normalized $G$-sweep for the GRPO group-size reconciliation
-appendix.
-
-Implements the estimator defined in
-``paper/sections/group_size_reconcile.tex`` Eq.~(eq:gu):
-
-    GU_hat(G, B) proportional to (1 - ZVF) * Var_A / (G * K * L_bar)
-
-and re-normalizes held-out accuracy to fixed total-token budgets T in
-{1M, 4M, 16M, 64M}. The output is a TSV with columns
-
-    budget_tokens, G, heldout_acc_mean, heldout_acc_ci_low,
-    heldout_acc_ci_high, gu_estimate, best_in_row
-
-and a LaTeX-ready table body printed to stdout.
-
-Inputs
-------
-``grpo_ablation_results/`` (JSON and/or JSONL). When per-seed accuracies
-are missing, falls back to the per-row numbers committed to
-``group_size_reconcile.tex`` so the appendix table stays reproducible
-end-to-end. If the ablation directory is empty, emits a schema-only TSV
-and prints a warning on stderr.
-
-Usage
------
-
-    python3 experiments/group_size_token_normalized.py \
-        --budgets 1M,4M,16M,64M [--out PATH]
-"""
+"""Token-budget analysis, protocol v2. Requires empirical run receipts, measured held-out endpoints and actual total_tokens at the requested budget. Missing evidence yields no rows; no reconstructed appendix points or illustrative confidence bands are emitted."""
 from __future__ import annotations
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import require_empirical, EvidenceUnavailable
+
 
 import argparse
 import csv
@@ -187,56 +164,38 @@ def _collect_g_sweep(records: Iterable[Dict[str, Any]]) -> Dict[int, List[Dict[s
     return by_g
 
 
-def _row_heldout_acc(rec: Dict[str, Any]) -> Optional[float]:
-    for k in ("heldout_acc", "heldout_accuracy", "last10_avg", "final_reward"):
-        v = rec.get(k)
-        if isinstance(v, (int, float)):
-            return float(v)
+def _row_heldout_acc(rec):
+    try:
+        require_empirical(rec)
+    except EvidenceUnavailable:
+        return None
+    for key in ("heldout_acc", "heldout_accuracy"):
+        value = rec.get(key)
+        if type(value) in (int, float) and math.isfinite(value) and 0 <= value <= 1:
+            return float(value)
     return None
 
 
-def _row_token_budget(rec: Dict[str, Any]) -> Optional[int]:
-    """Extract an explicit token budget from a run record, if present."""
-    for k in ("total_tokens", "train_tokens", "tokens_seen", "optimizer_tokens"):
-        v = rec.get(k)
-        if isinstance(v, (int, float)) and v > 0:
-            return int(v)
-    # fall back: steps_completed * group_size * K * L_bar
-    steps = rec.get("steps_completed") or rec.get("num_steps") or rec.get("steps")
-    g = rec.get("group_size") or rec.get("G")
-    if isinstance(steps, (int, float)) and isinstance(g, (int, float)) and steps > 0 and g > 0:
-        return int(steps * g * K_ROLLOUTS * L_BAR)
-    return None
+def _row_token_budget(rec):
+    """Only recorded actual total tokens; no assumed-length reconstruction."""
+    value = rec.get("total_tokens")
+    return int(value) if type(value) is int and value > 0 else None
 
 
 # ---------------------------------------------------------------------------
 # Statistics
 # ---------------------------------------------------------------------------
 
-def _bootstrap_ci(values: List[float], n_boot: int = 1000, alpha: float = 0.05) -> Tuple[float, float, float]:
-    """Return (mean, lo, hi); tiny samples get a simple t-interval fallback."""
+def _bootstrap_ci(values, n_boot=1000, alpha=0.05):
     if not values:
-        return (0.0, 0.0, 0.0)
-    n = len(values)
-    mu = sum(values) / n
-    if n < 3:
-        # fall back to +/- 0.05 band
-        return (mu, max(mu - 0.05, 0.0), min(mu + 0.05, 1.0))
-    try:
-        import random
-        rnd = random.Random(0)
-        samples: List[float] = []
-        for _ in range(n_boot):
-            resample = [values[rnd.randrange(n)] for _ in range(n)]
-            samples.append(sum(resample) / n)
-        samples.sort()
-        lo = samples[int(n_boot * (alpha / 2))]
-        hi = samples[int(n_boot * (1 - alpha / 2))]
-        return (mu, lo, hi)
-    except Exception:
-        sd = statistics.stdev(values)
-        half = 1.96 * sd / math.sqrt(n)
-        return (mu, mu - half, mu + half)
+        return None, None, None
+    mean = sum(values) / len(values)
+    if len(values) < 2:
+        return mean, None, None
+    import random
+    rng = random.Random(0)
+    means = sorted(sum(rng.choices(values, k=len(values))) / len(values) for _ in range(n_boot))
+    return mean, means[int(n_boot * alpha / 2)], means[min(n_boot - 1, int(n_boot * (1 - alpha / 2))) ]
 
 
 def gu_estimate(zvf: float, var_a: float, G: int, K: int = K_ROLLOUTS, L_bar: float = L_BAR) -> float:
@@ -265,69 +224,21 @@ def _canonical_budget_filter(budget: int) -> Tuple[int, ...]:
     return (best,)
 
 
-def build_rows(
-    budgets: List[int],
-    sweep: Dict[int, List[Dict[str, Any]]],
-    g_values: List[int],
-) -> List[Dict[str, Any]]:
-    rows: List[Dict[str, Any]] = []
+def build_rows(budgets, sweep, g_values):
+    rows = []
     for budget in budgets:
-        canonical = _canonical_budget_filter(budget)[0]
-        # allow records within a factor of 1.3x of the nominal budget
-        t_lo, t_hi = budget / 1.3, budget * 1.3
-        accs_by_g: Dict[int, Tuple[float, float, float]] = {}
-        gu_by_g: Dict[int, float] = {}
-        source_by_g: Dict[int, str] = {}
-        for G in g_values:
-            real_records = sweep.get(G, [])
-            matched = []
-            for rec in real_records:
-                tb = _row_token_budget(rec)
-                if tb is None:
-                    continue
-                if t_lo <= tb <= t_hi:
-                    acc = _row_heldout_acc(rec)
-                    if acc is not None:
-                        matched.append(acc)
-            fallback = FALLBACK_ROWS.get((canonical, G))
-            if matched:
-                mu, lo, hi = _bootstrap_ci(matched)
-                source_by_g[G] = "measured"
-                if fallback is not None:
-                    gu = gu_estimate(fallback["zvf"], fallback["var_a"], G)
-                else:
-                    gu = gu_estimate(0.6, 0.22, G)
-            elif fallback is not None:
-                mu = fallback["acc"]
-                # NOTE: the +/-0.03 band below is a NOMINAL illustrative band on a
-                # hardcoded reconstructed point estimate -- it is NOT a measured
-                # bootstrap confidence interval. Do not report it as a CI.
-                lo = max(mu - 0.03, 0.0)
-                hi = min(mu + 0.03, 1.0)
-                gu = gu_estimate(fallback["zvf"], fallback["var_a"], G)
-                source_by_g[G] = "reanalysis_fallback_nominal_band"
-            else:
+        for g in g_values:
+            selected = [r for r in sweep.get(g, []) if _row_token_budget(r) == budget and _row_heldout_acc(r) is not None]
+            ids = [r["run_id"] for r in selected]
+            if len(ids) != len(set(ids)):
+                raise EvidenceUnavailable("Duplicate run_id in token-normalized analysis")
+            if not selected:
                 continue
-            accs_by_g[G] = (mu, lo, hi)
-            gu_by_g[G] = gu
-        if not accs_by_g:
-            continue
-        best_G = max(accs_by_g.keys(), key=lambda g: accs_by_g[g][0])
-        for G in g_values:
-            if G not in accs_by_g:
-                continue
-            mu, lo, hi = accs_by_g[G]
-            rows.append(
-                {
-                    "budget_tokens": budget,
-                    "G": G,
-                    "heldout_acc_mean": round(mu, 4),
-                    "heldout_acc_ci_low": round(lo, 4),
-                    "heldout_acc_ci_high": round(hi, 4),
-                    "gu_estimate": round(gu_by_g[G], 4),
-                    "best_in_row": "yes" if G == best_G else "no",
-                }
-            )
+            mean, low, high = _bootstrap_ci([_row_heldout_acc(r) for r in selected])
+            rows.append(dict(budget_tokens=budget, G=g, heldout_acc_mean=mean,
+                heldout_acc_ci_low=low, heldout_acc_ci_high=high, gu_estimate=None,
+                best_in_row="", source="measured_run_receipts", run_ids=json.dumps(ids),
+                interval_type="independent_run_bootstrap" if len(ids)>1 else "none_single_run"))
     return rows
 
 
@@ -340,7 +251,7 @@ def write_tsv(rows: List[Dict[str, Any]], out: Path) -> None:
         "heldout_acc_ci_low",
         "heldout_acc_ci_high",
         "gu_estimate",
-        "best_in_row",
+        "best_in_row", "source", "run_ids", "interval_type",
     ]
     with out.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields, delimiter="\t")
@@ -373,7 +284,7 @@ def emit_latex_body(rows: List[Dict[str, Any]]) -> str:
         gu_cells = []
         for r in block:
             acc = f"{r['heldout_acc_mean']:.2f}"
-            gu = f"{r['gu_estimate']:.2f}"
+            gu = "---" if r["gu_estimate"] is None else f"{r['gu_estimate']:.2f}"
             if r["best_in_row"] == "yes":
                 acc = f"\\mathbf{{{acc}}}"
                 gu = f"\\mathbf{{{gu}}}"
@@ -435,7 +346,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         records = list(_iter_json_records(MASTER_RESULTS.parent))
     sweep = _collect_g_sweep(records)
 
-    if not sweep and not FALLBACK_ROWS:
+    if not sweep:
         # schema-only TSV
         write_tsv([], args.out)
         print(
@@ -443,11 +354,6 @@ def main(argv: Optional[List[str]] = None) -> int:
             file=sys.stderr,
         )
         return 0
-    if not sweep:
-        print(
-            "[gsweep] INFO: raw ablation records missing; using appendix fallback table (reproduces Table tab:groupsize-tokennorm)",
-            file=sys.stderr,
-        )
 
     rows = build_rows(budgets, sweep, g_values)
     write_tsv(rows, args.out)

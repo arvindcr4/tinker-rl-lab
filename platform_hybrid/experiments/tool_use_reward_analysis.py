@@ -76,24 +76,8 @@ def _is_non_math_record(record: dict, filename: str) -> bool:
 
 
 def _zvf_from_trace(trace):
-    """Step-level ZVF surrogate: fraction of adjacent pairs with identical
-    reward. For summary JSONs that don't preserve per-rollout groups,
-    this is a weak but defensible lower-bound proxy for true per-group
-    ZVF; when actual zero-variance groups are present it converges to
-    them. For all-zero traces it returns 1.0, matching the theoretical
-    value.
-    
-    LIMITATION: Fragility Across Domains — ZVF/tool-use metrics may not transfer outside the measured domain.
-    ZVF breaks down outside of math tasks. In format-gated tasks (like tool-use),
-    ZVF saturates at 1.0 because the base model consistently fails schema parsing.
-    We currently rely on ERF, but ZVF's utility here is fundamentally limited.
-    """
-    if not trace:
-        return float("nan")
-    if len(trace) == 1:
-        return 1.0
-    identical = sum(1 for a, b in zip(trace[:-1], trace[1:]) if a == b)
-    return identical / (len(trace) - 1)
+    """Step means do not identify within-group reward variance."""
+    return None
 
 
 def _erf_from_trace(trace, fmt_pass=None):

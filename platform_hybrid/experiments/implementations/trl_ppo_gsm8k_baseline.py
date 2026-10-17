@@ -6,7 +6,7 @@ On-policy RL baseline for GRPO comparison (addresses criticism #8).
 PPOTrainer was removed in TRL 1.0. RLOO (Reward-Leveraged Optimization Online)
 is the recommended on-policy RL replacement. Like GRPO, it does not need a
 value head, making it a fairer comparison:
-  - Same model, same LoRA rank, same reward, same compute budget.
+  - This legacy RLOO configuration is NOT a matched GRPO comparison.
   - RLOO uses leave-one-out baselines for advantage estimation.
   - GRPO uses group-relative normalization.
 
@@ -135,7 +135,7 @@ def main():
     # Save results
     metrics = trainer.state.log_history
     result = {
-        "experiment": "trl_ppo",
+        "experiment": "trl_rloo",
         "algorithm": "RLOO",
         "seed": seed,
         "model": model_name,

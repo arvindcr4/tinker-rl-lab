@@ -9,6 +9,12 @@ ZVF (zero-gradient waste), reward, and held-out accuracy gain per G.
 
 Usage: python parallel_sweep.py --model Qwen/Qwen3.5-4B --steps 6 --seeds 0 --groups 2,4,8,16
 """
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import completion_alignment, gsm8k_reward
+
 import os, re, json, random, argparse, warnings, threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 warnings.filterwarnings("ignore")
@@ -44,23 +50,11 @@ HELDOUT = _ex[:args.heldout]; POOL = _ex[args.heldout:]
 print(f"pool={len(POOL)} heldout={len(HELDOUT)} groups={GROUPS} model={args.model}", flush=True)
 
 def reward(response, answer):
-    r = response.strip()
-    for b in re.findall(r"\\boxed\{([^}]+)\}", r):
-        bc = b.strip().replace(",", "").replace(" ", "")
-        try:
-            if abs(float(bc) - float(answer)) < 0.01: return 1.0
-        except:
-            if bc == answer: return 1.0
-    nums = re.findall(r"[-+]?\d[\d,]*\.?\d*", r)
-    if nums:
-        try:
-            if abs(float(nums[-1].replace(",", "")) - float(answer)) < 0.01: return 1.0
-        except: pass
-    return 0.0
+    return gsm8k_reward(response, answer)
 
 def make_loss(advs):
     def _fn(data, lp):
-        losses = [(-advs[i] * lp[i].sum()) for i in range(len(lp))]
+        losses = [(-advs[i] * (lp[i] * torch.tensor(data[i].loss_fn_inputs["completion_mask"].data, device=lp[i].device)).sum()) for i in range(len(lp))]
         loss = torch.stack(losses).mean()
         return loss, {"loss": loss.item()}
     return _fn
@@ -105,9 +99,9 @@ def run_config(G):
             mr = sum(rews)/len(rews); sr = (sum((x-mr)**2 for x in rews)/len(rews))**0.5 + 1e-8
             batch_r.extend(rews)
             for rseq, a in zip(resp.sequences, [(x-mr)/sr for x in rews]):
-                fid = pid + list(rseq.tokens); tid = fid[1:] + [0]
+                fid, tid, cmask = completion_alignment(pid, list(rseq.tokens))
                 data.append(T.Datum(model_input=T.ModelInput.from_ints(fid),
-                    loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)])}))
+                    loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)]), "completion_mask": T.TensorData(data=cmask, dtype="float32", shape=[len(cmask)])}))
                 advs_all.append(a)
         res = tc.forward_backward_custom(data=data, loss_fn=make_loss(advs_all)).result()
         tc.optim_step(T.AdamParams(learning_rate=args.lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
@@ -115,7 +109,7 @@ def run_config(G):
         if abs(lv) < 1e-6: zero_loss += 1
         avg = sum(batch_r)/len(batch_r)
         rewards_hist.append(avg)
-        wandb.log({"reward": avg, "loss": lv, "collapsed": int(abs(lv)<1e-6), "tokens_used": tokens_used}, step=step)
+        wandb.log({"reward": avg, "loss": lv, "near_zero_scalar_loss": int(abs(lv)<1e-6), "tokens_used": tokens_used}, step=step)
         ck = tc.save_weights_for_sampler(name=f"G{G}_s{step+1}").result()
         sc = tc.create_sampling_client(model_path=ck.path)
         print(f"[G{G}] {step+1}/{args.steps} loss={lv:.3f} reward={avg:.3f} tokens={tokens_used}", flush=True)

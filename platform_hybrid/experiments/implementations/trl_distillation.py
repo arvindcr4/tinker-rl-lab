@@ -8,6 +8,12 @@ Two approaches:
 2. On-Policy: KL divergence minimization to teacher
 """
 
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import distillation_loss
+
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -132,7 +138,7 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
 
     print("Starting off-policy distillation...")
     wandb.init(project="trl-distillation", name="off-policy")
-    trainer.train(resume_from_checkpoint=True)
+    trainer.train(resume_from_checkpoint=False)
     trainer.save_model("./distillation_off_policy_final")
     trainer.push_to_hub()
     wandb.finish()
@@ -140,7 +146,7 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
 
 
 class OnPolicyDistillationTrainer(Trainer):
-    """On-policy distillation with KL divergence to teacher."""
+    """Fixed-history teacher matching; compatibility name retained for imports."""
 
     def __init__(self, teacher_model, temperature: float = 2.0, alpha: float = 0.5, **kwargs):
         super().__init__(**kwargs)
@@ -153,43 +159,15 @@ class OnPolicyDistillationTrainer(Trainer):
         self.teacher_model.eval()
 
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
-        """Combined loss: task loss + KL divergence."""
+        inputs = dict(inputs)
         labels = inputs.pop("labels", None)
-
+        response_mask = inputs.pop("response_mask", None)
         student_outputs = model(**inputs)
-        student_logits = student_outputs.logits
-
         with torch.no_grad():
             teacher_outputs = self.teacher_model(**inputs)
-            teacher_logits = teacher_outputs.logits
-
-        if labels is not None:
-            task_loss = F.cross_entropy(
-                student_logits.view(-1, student_logits.size(-1)),
-                labels.view(-1),
-                ignore_index=-100,
-            )
-        else:
-            task_loss = torch.tensor(0.0, device=student_logits.device)
-
-        student_probs = F.log_softmax(student_logits / self.temperature, dim=-1)
-        teacher_probs = F.softmax(teacher_logits / self.temperature, dim=-1)
-
-        kl_loss = F.kl_div(student_probs, teacher_probs, reduction="batchmean")
-        kl_loss = kl_loss * (self.temperature ** 2)
-
-        loss = self.alpha * task_loss + (1 - self.alpha) * kl_loss
-
-        if wandb.run is not None:
-            wandb.log({
-                "kl_loss": kl_loss.item(),
-                "task_loss": task_loss.item(),
-                "total_loss": loss.item()
-            })
-
-        if return_outputs:
-            return loss, student_outputs
-        return loss
+        loss, task_loss, kl_loss = distillation_loss(student_outputs.logits, teacher_outputs.logits,
+            labels, inputs.get("attention_mask"), response_mask, self.temperature, self.alpha)
+        return (loss, student_outputs) if return_outputs else loss
 
 
 def train_on_policy_distillation(config: DistillationConfig, train_dataset: Dataset):
@@ -212,7 +190,7 @@ def train_on_policy_distillation(config: DistillationConfig, train_dataset: Data
     tokenizer.pad_token = tokenizer.eos_token
 
     training_args = TrainingArguments(
-        output_dir=os.environ.get("RESULTS_DIR", "./distillation_on_policy"),
+        output_dir=os.environ.get("RESULTS_DIR", "./distillation_fixed_history"),
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
         learning_rate=5e-5,
@@ -222,7 +200,7 @@ def train_on_policy_distillation(config: DistillationConfig, train_dataset: Data
         remove_unused_columns=False,
         report_to="wandb",
         push_to_hub=True,
-        hub_model_id=f"{config.student_model_name.split('/')[-1]}-distilled-on-policy",
+        hub_model_id=f"{config.student_model_name.split('/')[-1]}-distilled-fixed-history",
     )
 
     trainer = OnPolicyDistillationTrainer(
@@ -235,16 +213,22 @@ def train_on_policy_distillation(config: DistillationConfig, train_dataset: Data
         tokenizer=tokenizer,
     )
 
-    print("Starting on-policy distillation (KL minimization)...")
-    wandb.init(project="trl-distillation", name="on-policy")
-    trainer.train(resume_from_checkpoint=True)
-    trainer.save_model("./distillation_on_policy_final")
+    teacher_tokenizer = AutoTokenizer.from_pretrained(config.teacher_model_name)
+    if teacher_tokenizer.get_vocab() != tokenizer.get_vocab():
+        raise ValueError("Teacher/student tokenizer vocabularies differ")
+    if "labels" not in train_dataset.column_names or "response_mask" not in train_dataset.column_names:
+        raise ValueError("Fixed-history teacher matching requires explicit causal labels and response_mask")
+    print("Starting fixed-history teacher matching (not on-policy distillation)...")
+    wandb.init(project="trl-distillation", name="fixed-history")
+    trainer.train(resume_from_checkpoint=False)
+    trainer.save_model("./distillation_fixed_history_final")
     trainer.push_to_hub()
     wandb.finish()
     return trainer
 
 
 def main():
+    raise ValueError("Supply an explicit labeled response dataset; default fixed prompts are not on-policy trajectories")
     config = DistillationConfig()
 
     prompts = [

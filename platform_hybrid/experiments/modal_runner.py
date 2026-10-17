@@ -89,114 +89,67 @@ SEEDS = [42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768]
     timeout=3600,
     retries=1,
 )
-def run_experiment(exp_name: str, exp_file: str, seed: int) -> dict:
-    """Run a single experiment with a given seed on GPU."""
+def run_experiment(exp_name: str, exp_file: str, seed: int, invocation_id: str) -> dict:
+    """Each attempt writes a distinct terminal execution receipt, including failure."""
     import subprocess
     import time
-    import glob
-    import shutil
-
-    exp_path = f"/root/tinker/experiments/implementations/{exp_file}"
-    result_dir = f"/results/{exp_name}/seed_{seed}"
-    os.makedirs(result_dir, exist_ok=True)
-
-    gpu_name = os.popen("nvidia-smi --query-gpu=name --format=csv,noheader").read().strip()
-    print(f"[{exp_name}] seed={seed} | GPU: {gpu_name}")
-
-    # HF login if token available
-    hf_token = os.environ.get("HF_TOKEN", "")
-    run_env = {**os.environ, "SEED": str(seed), "RESULTS_DIR": result_dir}
-    if hf_token:
-        run_env["HF_TOKEN"] = hf_token
-        run_env["HUGGING_FACE_HUB_TOKEN"] = hf_token
-
+    import uuid
+    from pathlib import Path
+    if not invocation_id or not invocation_id.isalnum():
+        raise ValueError("Explicit safe invocation ID required")
+    if exp_name not in EXPERIMENTS or EXPERIMENTS[exp_name] != exp_file:
+        raise ValueError("Unknown experiment entrypoint")
+    attempt_id = uuid.uuid4().hex
+    result_dir = Path(f"/results/{invocation_id}/{exp_name}/seed_{seed}/{attempt_id}")
+    result_dir.mkdir(parents=True, exist_ok=False)
+    result = dict(experiment=exp_name, seed=seed, invocation_id=invocation_id,
+        attempt_id=attempt_id, success=False, status="running", artifact_type="execution_receipt",
+        measured=False, claim_eligible=False)
     start = time.time()
     try:
-        proc = subprocess.run(
-            ["python", exp_path, "--seed", str(seed)],
-            capture_output=True,
-            text=True,
-            timeout=3000,
-            cwd="/root/tinker",
-            env=run_env,
-        )
-        elapsed = time.time() - start
-
-        result = {
-            "experiment": exp_name,
-            "seed": seed,
-            "success": proc.returncode == 0,
-            "elapsed_seconds": round(elapsed, 1),
-            "returncode": proc.returncode,
-            "stdout_tail": proc.stdout[-2000:] if proc.stdout else "",
-            "stderr_tail": proc.stderr[-2000:] if proc.stderr else "",
-        }
-
-        with open(f"{result_dir}/result.json", "w") as f:
-            json.dump(result, f, indent=2)
-
-        for pattern in ["*.json", "*.csv", "*.pt", "*.safetensors"]:
-            for fp in glob.glob(f"/root/tinker/experiments/implementations/{pattern}"):
-                shutil.copy2(fp, result_dir)
-
-        results_vol.commit()
-        return result
-
+        proc = subprocess.run(["python", f"/root/tinker/platform_hybrid/experiments/implementations/{exp_file}", "--seed", str(seed)],
+            capture_output=True, text=True, timeout=3000, cwd="/root/tinker",
+            env={**os.environ, "SEED": str(seed), "RESULTS_DIR": str(result_dir)})
+        result.update(success=proc.returncode == 0, status="completed" if proc.returncode == 0 else "failed",
+            returncode=proc.returncode, stdout_tail=proc.stdout[-2000:], stderr_tail=proc.stderr[-2000:])
     except subprocess.TimeoutExpired:
-        elapsed = time.time() - start
-        try:
-            results_vol.commit()
-        except Exception:
-            pass
-        return {
-            "experiment": exp_name,
-            "seed": seed,
-            "success": False,
-            "elapsed_seconds": round(elapsed, 1),
-            "error": "timeout (50min)",
-        }
-    except Exception as e:
-        elapsed = time.time() - start
-        try:
-            results_vol.commit()
-        except Exception:
-            pass
-        return {
-            "experiment": exp_name,
-            "seed": seed,
-            "success": False,
-            "elapsed_seconds": round(elapsed, 1),
-            "error": str(e),
-        }
+        result.update(status="timeout", error="3000-second deadline exceeded")
+    except Exception as exc:
+        result.update(status="error", error=str(exc))
+    finally:
+        result["elapsed_seconds"] = round(time.time()-start, 1)
+        (result_dir / "result.json").write_text(json.dumps(result, indent=2))
+        results_vol.commit()
+    return result
 
 
 @app.function(image=image, volumes={"/results": results_vol}, timeout=600)
-def aggregate_results() -> dict:
-    """Aggregate all results into a summary."""
-    import glob
-
-    all_results = []
-    for rf in glob.glob("/results/*/seed_*/result.json"):
-        with open(rf) as f:
-            all_results.append(json.load(f))
-
-    by_exp = {}
-    for r in all_results:
-        by_exp.setdefault(r["experiment"], []).append(r)
-
+def aggregate_results(invocation_id: str, selected_attempt_ids: list[str]) -> dict:
+    """Aggregate only the explicit invocation/attempt manifest, never stale glob hits."""
+    from pathlib import Path
+    if not invocation_id.isalnum() or len(selected_attempt_ids) != len(set(selected_attempt_ids)):
+        raise ValueError("Invalid selected invocation manifest")
+    selected = set(selected_attempt_ids)
+    rows = []
+    for path in Path(f"/results/{invocation_id}").glob("*/seed_*/*/result.json"):
+        record = json.loads(path.read_text())
+        if record.get("invocation_id") == invocation_id and record.get("attempt_id") in selected:
+            rows.append(record)
+    if {r["attempt_id"] for r in rows} != selected or len(rows) != len(selected):
+        raise ValueError("Missing or duplicate terminal receipts")
     summary = {}
-    for exp, runs in by_exp.items():
-        ok = [r for r in runs if r.get("success")]
-        summary[exp] = {
-            "total_runs": len(runs),
-            "successful": len(ok),
-            "failed": len(runs) - len(ok),
-            "seeds": [r["seed"] for r in runs],
-            "avg_time": round(sum(r["elapsed_seconds"] for r in runs) / max(len(runs), 1), 1),
-        }
-
-    with open("/results/summary.json", "w") as f:
-        json.dump(summary, f, indent=2)
+    for record in rows:
+        if record["status"] not in ("completed", "failed", "timeout", "error"):
+            raise ValueError("Nonterminal receipt")
+        group = summary.setdefault(record["experiment"], dict(total_runs=0, successful=0, failed=0, times=[]))
+        group["total_runs"] += 1
+        group["successful"] += int(record["success"])
+        group["failed"] += int(not record["success"])
+        group["times"].append(record["elapsed_seconds"])
+    for group in summary.values():
+        times = group.pop("times")
+        group["avg_time"] = sum(times)/len(times)
+    (Path("/results") / invocation_id / "summary.json").write_text(json.dumps(summary, indent=2))
     results_vol.commit()
     return summary
 
@@ -219,10 +172,12 @@ def main(exp: str = "", seeds: int = 5, dry_run: bool = False):
                 print(f"  {name} seed={s} -> {f}")
         return
 
+    import uuid
+    invocation_id = uuid.uuid4().hex
     jobs = []
     for name, f in experiments.items():
         for s in seed_list:
-            jobs.append(run_experiment.spawn(name, f, s))
+            jobs.append(run_experiment.spawn(name, f, s, invocation_id))
 
     print(f"{total} jobs dispatched. Waiting...")
 
@@ -235,7 +190,7 @@ def main(exp: str = "", seeds: int = 5, dry_run: bool = False):
             print(f"        stderr: {r['stderr_tail'][-300:]}")
         results.append(r)
 
-    summary = aggregate_results.remote()
+    summary = aggregate_results.remote(invocation_id, [r["attempt_id"] for r in results])
     print("\n" + "=" * 50)
     for name, s in summary.items():
         tag = "PASS" if s["successful"] == s["total_runs"] else "PARTIAL"

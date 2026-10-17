@@ -32,11 +32,11 @@ class MetricTests(unittest.TestCase):
         self.assertAlmostEqual(result["pam"], 2.5)
         self.assertAlmostEqual(result["gsr"], 0.2)
         self.assertAlmostEqual(result["egm"], result["pam"] * result["gsr"])
-        self.assertFalse(result["exact_zero_update"])
+        self.assertFalse(result["zero_policy_coefficient_mass"])
         zero = signal_metrics([1.0, 1.0], [0.0, 0.0], [1, 1])
         self.assertEqual(zero["pam"], 0.0)
         self.assertEqual(zero["gsr"], 0.0)
-        self.assertTrue(zero["exact_zero_update"])
+        self.assertTrue(zero["zero_policy_coefficient_mass"])
 
     def test_observation_tokens_are_excluded(self):
         result = signal_metrics([1, 100], [2, 100], [1, 1], [1, 0])

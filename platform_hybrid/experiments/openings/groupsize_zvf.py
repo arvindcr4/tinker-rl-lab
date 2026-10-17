@@ -7,6 +7,12 @@ with zero within-group reward variance) track held-out outcome across configs?
 Logs per step: zvf = mean over the batch's groups of 1[var(rewards)==0]; reward; then
 held-out gain. Sweep G in {2,4,8,16} x seeds {0,1,2}. Process-parallel.
 """
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import completion_alignment, gsm8k_reward
+
 import os, re, json, random, argparse, warnings
 warnings.filterwarnings("ignore")
 import multiprocessing as mp
@@ -27,22 +33,10 @@ def run_one(cfg):
                    m.group(1).replace(",", "").strip()))
     random.shuffle(ex); HO = ex[:heldout_n]; POOL = ex[heldout_n:]
     def reward(resp, ans):
-        r = resp.strip()
-        for b in re.findall(r"\\boxed\{([^}]+)\}", r):
-            bc = b.strip().replace(",", "").replace(" ", "")
-            try:
-                if abs(float(bc)-float(ans)) < 0.01: return 1.0
-            except:
-                if bc == ans: return 1.0
-        nums = re.findall(r"[-+]?\d[\d,]*\.?\d*", r)
-        if nums:
-            try:
-                if abs(float(nums[-1].replace(",",""))-float(ans)) < 0.01: return 1.0
-            except: pass
-        return 0.0
+        return gsm8k_reward(resp, ans)
     def mkloss(advs):
         def _fn(data, lp):
-            l = torch.stack([(-advs[i]*lp[i].sum()) for i in range(len(lp))]).mean()
+            l = torch.stack([(-advs[i]*(lp[i] * torch.tensor(data[i].loss_fn_inputs["completion_mask"].data, device=lp[i].device)).sum()) for i in range(len(lp))]).mean()
             return l, {"loss": l.item()}
         return _fn
     tok = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
@@ -70,15 +64,16 @@ def run_one(cfg):
                              sampling_params=T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95)).result()
             tokens += sum(len(r.tokens) for r in resp.sequences)
             rr = [reward(tok.decode(list(r.tokens), skip_special_tokens=True), ans) for r in resp.sequences]
+            br.extend(rr)  # every attempted group, before contrast filtering
             mr = sum(rr)/len(rr); var = sum((x-mr)**2 for x in rr)/len(rr)
             group_zv.append(1.0 if var == 0.0 else 0.0)   # per-group zero-variance indicator
             if var == 0.0:
                 continue
-            sd = var**0.5 + 1e-8; br.extend(rr)
+            sd = var**0.5 + 1e-8
             for rs, a in zip(resp.sequences, [(x-mr)/sd for x in rr]):
-                fid = pid + list(rs.tokens); tid = fid[1:]+[0]
+                fid, tid, cmask = completion_alignment(pid, list(rs.tokens))
                 data.append(T.Datum(model_input=T.ModelInput.from_ints(fid),
-                    loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)])}))
+                    loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)]), "completion_mask": T.TensorData(data=cmask, dtype="float32", shape=[len(cmask)])}))
                 advs.append(a)
         zvf = sum(group_zv)/len(group_zv) if group_zv else 0.0; zvf_hist.append(zvf)
         if data:

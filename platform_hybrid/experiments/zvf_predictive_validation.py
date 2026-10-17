@@ -36,7 +36,7 @@ FIG_PNG = ROOT / "paper" / "figures" / "v2" / "zvf_predictive_validation.png"
 FIG_PDF = ROOT / "paper" / "figures" / "v2" / "zvf_predictive_validation.pdf"
 
 EARLY_K = 5
-MIN_STEPS = 10
+MIN_STEPS = EARLY_K + 10  # disjoint five-step prefix and ten-step outcome
 COLLAPSE_THRESHOLD = 0.05
 USEFUL_THRESHOLD = 0.25
 RULE_ZVF_THRESHOLD = 0.80

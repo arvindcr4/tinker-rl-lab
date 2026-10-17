@@ -23,6 +23,12 @@ controlling for step-t reward, within the same training trajectory?)
 
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import lagged_pairs, EvidenceUnavailable
+
+
 import json
 import math
 from pathlib import Path
@@ -131,7 +137,7 @@ def load_runs() -> list[RunData]:
             task = str(rec.get("task") or "unknown")
             run_id = str(rec.get("run_id") or "")
             tag = str(rec.get("tag") or rec.get("experiment") or "")
-            key = f"{run_id}|{tag}|{model}|{task}|{len(step_data)}"
+            key = run_id or json.dumps([tag, model, task, rec.get("seed"), rec.get("rank"), rec.get("lr"), rec.get("group_size"), rec.get("temperature"), rec.get("attempt_id"), str(source), subpath], sort_keys=True)
 
             if key in seen:
                 continue
@@ -218,10 +224,10 @@ def cross_run_lagged_regression(runs: list[RunData], lag_k: int = 5) -> dict:
 
     for run_idx, run in enumerate(runs):
         sd = run.step_data
-        for i in range(len(sd) - lag_k):
-            r_t = sd[i]["reward"]
-            r_tk = sd[i + lag_k]["reward"]
-            zvf_t = sd[i]["zvf"]
+        for current, future in lagged_pairs(sd, lag_k):
+            r_t = current["reward"]
+            r_tk = future["reward"]
+            zvf_t = current["zvf"]
             R_t_list.append(r_t)
             R_tk_list.append(r_tk)
             ZVF_t_list.append(zvf_t)
@@ -237,11 +243,11 @@ def cross_run_lagged_regression(runs: list[RunData], lag_k: int = 5) -> dict:
         return {"error": f"too few observations: {n}"}
 
     # Model 1: R_{t+k} = a + b * R_t
-    X1 = np.column_stack([np.ones(n), R_t])
+    X1 = np.column_stack([np.ones(n), R_t, R_t**2, R_t**3])
     m1 = ols_regression(X1, R_tk)
 
     # Model 2: R_{t+k} = a + b * R_t + c * ZVF_t
-    X2 = np.column_stack([np.ones(n), R_t, ZVF_t])
+    X2 = np.column_stack([np.ones(n), R_t, ZVF_t, R_t**2, R_t**3])
     m2 = ols_regression(X2, R_tk)
 
     # Model 3: R_{t+k} = a + b * R_t + c * ZVF_t + d * R_t * ZVF_t
@@ -306,20 +312,21 @@ def within_run_lagged_regression(runs: list[RunData], lag_k: int = 5) -> dict:
         if len(sd) < lag_k + 5:
             continue
 
-        R_t = np.array([sd[i]["reward"] for i in range(len(sd) - lag_k)])
-        R_tk = np.array([sd[i + lag_k]["reward"] for i in range(len(sd) - lag_k)])
-        ZVF_t = np.array([sd[i]["zvf"] for i in range(len(sd) - lag_k)])
+        pairs = lagged_pairs(sd, lag_k)
+        R_t = np.array([current["reward"] for current, future in pairs])
+        R_tk = np.array([future["reward"] for current, future in pairs])
+        ZVF_t = np.array([current["zvf"] for current, future in pairs])
         n = len(R_t)
 
         if n < 5:
             continue
 
         # Model 1: R_{t+k} = a + b * R_t
-        X1 = np.column_stack([np.ones(n), R_t])
+        X1 = np.column_stack([np.ones(n), R_t, R_t**2, R_t**3])
         m1 = ols_regression(X1, R_tk)
 
         # Model 2: R_{t+k} = a + b * R_t + c * ZVF_t
-        X2 = np.column_stack([np.ones(n), R_t, ZVF_t])
+        X2 = np.column_stack([np.ones(n), R_t, ZVF_t, R_t**2, R_t**3])
         m2 = ols_regression(X2, R_tk)
 
         if m1.get("error") or m2.get("error"):
@@ -387,10 +394,10 @@ def zvf_partial_correlation_analysis(runs: list[RunData], lag_k: int = 5) -> dic
 
     for run in runs:
         sd = run.step_data
-        for i in range(len(sd) - lag_k):
-            R_t_list.append(sd[i]["reward"])
-            R_tk_list.append(sd[i + lag_k]["reward"])
-            ZVF_t_list.append(sd[i]["zvf"])
+        for current, future in lagged_pairs(sd, lag_k):
+            R_t_list.append(current["reward"])
+            R_tk_list.append(future["reward"])
+            ZVF_t_list.append(current["zvf"])
 
     R_t = np.array(R_t_list)
     R_tk = np.array(R_tk_list)
@@ -440,61 +447,8 @@ def fmt(value: float | int | None, digits: int = 3) -> str:
     return f"{value:.{digits}f}"
 
 
-def main() -> None:
-    runs = load_runs()
-    print(f"Loaded {len(runs)} runs with step-level ZVF data")
-    for run in runs:
-        print(f"  {run.model:30s} {run.task:15s} {len(run.step_data)} steps")
-
-    results = {}
-
-    # Run lagged regressions at multiple lag horizons
-    for lag_k in [1, 3, 5, 10]:
-        print(f"\n{'='*60}")
-        print(f"Lag k = {lag_k}")
-        print(f"{'='*60}")
-
-        # Cross-run analysis
-        cross = cross_run_lagged_regression(runs, lag_k=lag_k)
-        results[f"cross_run_lag{lag_k}"] = cross
-
-        print(f"  N observations: {cross.get('n_observations', 'NA')}")
-        m1 = cross.get("model1_reward_only", {})
-        m2 = cross.get("model2_reward_plus_zvf", {})
-        print(f"  Model 1 (reward only) R²: {fmt(m1.get('r_squared'))}")
-        print(f"  Model 2 (reward + ZVF) R²: {fmt(m2.get('r_squared'))}")
-        print(f"  Delta R²: {fmt(cross.get('delta_r_squared'))}")
-        if not m2.get("error"):
-            zvf_coef = m2.get("beta", [None, None, None])[2]
-            zvf_se = m2.get("se", [None, None, None])[2]
-            zvf_pval = m2.get("p_values", [None, None, None])[2]
-            print(f"  ZVF coefficient: {fmt(zvf_coef)} (SE={fmt(zvf_se)}, p={fmt(zvf_pval, 4)})")
-        print(f"  Incremental F-test: F={fmt(cross.get('incremental_f_test', {}).get('f_stat'))}, p={fmt(cross.get('incremental_f_test', {}).get('p_value'), 4)}")
-
-        # Within-run analysis
-        within = within_run_lagged_regression(runs, lag_k=lag_k)
-        results[f"within_run_lag{lag_k}"] = within
-
-        print(f"  Within-run: {within.get('n_runs', 'NA')} runs")
-        print(f"  Mean ZVF coef: {fmt(within.get('mean_zvf_coef'))} (t={fmt(within.get('t_stat_zvf'))}, p={fmt(within.get('p_value_zvf'), 4)})")
-        print(f"  Fraction negative ZVF coef: {fmt(within.get('fraction_negative_zvf_coef'))}")
-        print(f"  Mean delta R²: {fmt(within.get('mean_delta_r2'))}")
-
-        # Partial correlation analysis
-        partial = zvf_partial_correlation_analysis(runs, lag_k=lag_k)
-        results[f"partial_corr_lag{lag_k}"] = partial
-
-        print(f"  Zero-order r(ZVF_t, R_{{t+{lag_k}}}): {fmt(partial.get('zero_order', {}).get('zvf_vs_future_reward'))}")
-        print(f"  Partial r(ZVF_t, R_{{t+{lag_k}}} | R_t): {fmt(partial.get('partial', {}).get('zvf_vs_future_reward_controlling_current', {}).get('r'))} (p={fmt(partial.get('partial', {}).get('zvf_vs_future_reward_controlling_current', {}).get('p_value'), 4)})")
-
-    # Save results
-    OUT_JSON.write_text(json.dumps(results, indent=2, default=str))
-
-    # Write markdown report
-    write_markdown_report(runs, results)
-
-    print(f"\nResults saved to {OUT_JSON}")
-    print(f"Report saved to {OUT_MD}")
+def main():
+    raise EvidenceUnavailable("Legacy lagged-inference report disabled: trajectory dependence requires held-out-run prediction/cluster uncertainty; use lagged_pairs for descriptive joins")
 
 
 def write_markdown_report(runs: list[RunData], results: dict) -> None:

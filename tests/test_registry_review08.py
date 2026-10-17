@@ -344,3 +344,23 @@ def test_unparsed_semantic_anchor_is_an_inference(tmp_path):
     result=src.cell(r'def reward_fn', 'claimed semantics')
     assert result['status']=='inferred'
     assert 'not mechanically extracted' in result['note']
+
+
+
+def test_real_strict_validator_joins_delta_record_ids_not_filenames(tmp_path):
+    import shutil
+    reg=tmp_path/'platform_hybrid/registry';(reg/'entries').mkdir(parents=True)
+    for filename in ['query.py','schema.json','json_protocol.py']:
+        shutil.copy2(REG/filename,reg/filename)
+    target=tmp_path/'platform_modal/scripts/p5p8/p6_iter118_strict_validator.py'
+    target.parent.mkdir(parents=True)
+    shutil.copy2(ROOT/'platform_modal/scripts/p5p8/p6_iter118_strict_validator.py',target)
+    stack=json.loads((REG/'entries/tinker_grpo_qwen3-8b_gsm8k.json').read_text())
+    stack['variant_deltas_applied']=[{'delta_id':'delta_dapo','component':'fixture','status':'unknown'}]
+    (reg/'entries/stack.json').write_text(json.dumps(stack))
+    delta=json.loads((REG/'entries/delta_dapo.json').read_text());delta['id']='delta_aero'
+    for field in ['measured','expected_effects','claim_validation']:delta[field]=[]
+    (reg/'entries/delta_dapo.json').write_text(json.dumps(delta))
+    result=subprocess.run([sys.executable,str(reg/'query.py'),'validate-strict'],capture_output=True,text=True)
+    assert result.returncode!=0 and 'CI GATE: PASS' not in result.stdout
+    assert 'orphan_delta_id' in result.stdout

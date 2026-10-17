@@ -61,3 +61,8 @@ rewrites, push or merge. Missing historical execution receipts and trusted
 production private keys were not synthesized or provisioned. Publication on
 historical evidence remains blocked unless it independently satisfies the new
 contract and an authorized signer supplies approval.
+
+Independent-audit follow-up: the strict producer now resolves delta references
+against validated record IDs, never filename stems. A real subprocess regression
+rejects a `delta_dapo.json` file declaring `delta_aero` when a stack references the
+missing `delta_dapo` ID. Historical files remain untouched.

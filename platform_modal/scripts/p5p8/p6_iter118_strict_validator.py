@@ -68,7 +68,7 @@ def main(argv=None):
     sys.path.insert(0, str(WORKTREE / "platform_hybrid" / "registry"))
     from query import registry_input_manifest, registry_manifest_sha256, VALIDATOR_VERSION, load
     try:
-        load(registry=REGISTRY)
+        validated_records = load(registry=REGISTRY)
     except (ValueError, OSError) as exc:
         print(str(exc), file=sys.stderr)
         return 1
@@ -77,8 +77,8 @@ def main(argv=None):
     if args.input_sha256 and args.input_sha256 != digest:
         print("registry input manifest mismatch", file=sys.stderr)
         return 1
-    deltas = {p.stem for p in (REGISTRY / "entries").glob("delta_*.json")
-              if json.loads(p.read_text()).get("record_type") == "variant_delta"}
+    deltas = {record_id for record_id, rec in validated_records.items()
+              if rec["record_type"] == "variant_delta"}
 
     findings = []
 

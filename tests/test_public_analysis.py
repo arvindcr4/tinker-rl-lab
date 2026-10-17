@@ -236,7 +236,7 @@ OK = {"status": "ok", "source": "hash_marker", "value": "7"}
 def review(name="synthetic_reviewer_one", cases=None):
     return {
         "reviewer_id": name,
-        "packet_sha256": "synthetic_packet_digest",
+        "packet_sha256": v.packet_digest([{"case_id": "c", "raw_completion_text": "#### **Answer:**\n7"}] if cases is None else [{"case_id": item["case_id"], "raw_completion_text": "#### **Answer:**\n7"} for item in cases]),
         "independent_output_only_review": True,
         "completed_at_utc": "2000-01-01T00:00:00+00:00",
         "cases": cases
@@ -342,7 +342,7 @@ class ParserReviewTests(unittest.TestCase):
     def test_duplicate_and_missing_review_rejected(self):
         for cases in [[], review()["cases"] * 2]:
             with self.assertRaises(ValueError):
-                v.validate_review(review(cases=cases), "synthetic_packet_digest", {"c"})
+                v.validate_review(review(cases=cases), review()["packet_sha256"], {"c"})
 
     def test_packet_binding_and_independence(self):
         for key, value in [
@@ -353,7 +353,7 @@ class ParserReviewTests(unittest.TestCase):
             r = review()
             r[key] = value
             with self.assertRaises(ValueError):
-                v.validate_review(r, "synthetic_packet_digest", {"c"})
+                v.validate_review(r, review()["packet_sha256"], {"c"})
 
     def test_distinct_reviewers(self):
         with self.assertRaises(ValueError):
@@ -379,7 +379,7 @@ class ParserReviewTests(unittest.TestCase):
             r = review()
             r["cases"][0]["value"] = value
             with self.assertRaises(ValueError):
-                v.validate_review(r, "synthetic_packet_digest", {"c"})
+                v.validate_review(r, review()["packet_sha256"], {"c"})
 
     def test_utc_only(self):
         for value in ["2000-01-01T00:00:00", "2000-01-01T00:00:00+01:00"]:
@@ -623,8 +623,9 @@ class StatisticsTests(unittest.TestCase):
         self.assertIsNone(summary["fraction"])
         self.assertIsNone(summary["wilson_95"])
         self.assertIsNone(summary["zero_events_exact_upper_one_sided_95"])
-        # The early function does not validate k before its zero-n return.
-        self.assertIsNone(rescue_statistics.wilson(1, 0))
+        # Candidate v2 rejects impossible counts before handling zero n.
+        with self.assertRaises(ValueError):
+            rescue_statistics.wilson(1, 0)
 
 
 def synthetic_completion(index, reward=0, parsed_value="1", cap=False, status="ok"):

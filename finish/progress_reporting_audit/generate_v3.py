@@ -58,6 +58,22 @@ def e9_terminal(receipt, result):
     return m
 
 
+def terminal_recommendations(m, m9):
+    """Render only finalized numeric objects; no frozen historical counts."""
+    e5 = ('E5 native10 terminal: ' + v1.fmt(m['coverage']) + ' graded, '
+          + v1.fmt(m['allocation_graded_coverage']) + ' allocated, success '
+          + v1.fmt(m['accuracy_or_success']) + '; '
+          + str(m['started_allocation_coverage']['numerator']) + ' starts comprise '
+          + str(m['coverage']['numerator']) + ' grades, '
+          + str(len(m['infrastructure_failure_ids'])) + ' infrastructure failures and '
+          + str(len(m['interrupted_ids'])) + ' interrupted. Preserve each run separately.')
+    e9 = ('E2 v13 remains infrastructure-only. E9 continuation05 had no attempt; continuation06 revision02 has '
+          + v1.fmt(m9['terminal_attempt_coverage']) + ' terminal attempts but '
+          + v1.fmt(m9['coverage']) + ' capability-graded coverage and accuracy N/A. '
+          + str(m9['actor_smoke_calls']) + ' actor smoke calls are not task calls.')
+    return e5, e9
+
+
 def build(reader):
     report = v2.build(reader)
     reader.raw('finish/progress_reporting_audit/generate_v3.py')
@@ -113,12 +129,11 @@ def build(reader):
     report['rows'][8]['portfolio']['measurements'].append(m9)
     report['terminal_disposition_inventory'] = dispositions
     report['schema_version'] = 'evidence-progress-report-v3'
-    report['publication_recommendations'][2] = 'E5 native10 terminal: 20/97 graded (20.62%), 20/60 allocated (33.33%), success 0/20; 33 starts comprise 20 grades, 10 infrastructure failures and 3 interrupted. Preserve each run separately.'
-    report['publication_recommendations'][4] = 'E2 v13 remains infrastructure-only, 0/45 native. E9 continuation05 had no attempt; continuation06 revision02 has 1/34 terminal attempts but 0/34 capability-graded coverage and accuracy N/A. Two actor smoke calls are not task calls.'
+    report['publication_recommendations'][2], report['publication_recommendations'][4] = terminal_recommendations(m, m9)
     report['as_of_utc'] = datetime.now(timezone.utc).isoformat()
     v1.validate_report(report); reader.stable()
     report['sources'] = reader.sources; report['discovery_membership'] = reader.discoveries
-    return report
+    return v1.claim_receipts(report)
 
 
 def render(report):

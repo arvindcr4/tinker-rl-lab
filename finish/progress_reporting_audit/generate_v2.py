@@ -58,13 +58,31 @@ def audit_tau_snapshot(snapshot, raw_episodes, allocated_ids):
     need(len(raw) == len(raw_episodes), 'duplicate raw native10 task')
     for task, reward in graded.items():
         need(task in raw and raw[task]['reward_info']['reward'] == reward, 'coverage snapshot/raw native grade mismatch')
+    mode = snapshot.get('snapshot_mode', 'current')
+    need(mode in ('current', 'historical'), 'snapshot mode required')
+    later = []
+    if mode == 'current':
+        need(set(raw) == set(graded), 'current snapshot/raw grade identity mismatch')
+    else:
+        def epoch(value):
+            if type(value) in (int, float):
+                need(v1.math.isfinite(value), 'nonfinite snapshot timestamp')
+                return float(value)
+            need(isinstance(value, str), 'timestamp required')
+            timestamp = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            need(timestamp.tzinfo is not None, 'timezone-aware completion timestamp required')
+            return timestamp.timestamp()
+        cutoff = epoch(snapshot['at'])
+        before = {task for task, episode in raw.items() if epoch(episode['end_time']) <= cutoff}
+        need(before == set(graded), 'historical cutoff/raw grade identity mismatch')
+        later = sorted(set(raw) - before)
     selected = [raw[t] for t in graded]
     m = v1.tau_run('E5-native-20260912-10', selected, allocated_ids)
     m.update({'label':'Native10 coverage_snapshot completed-only subset',
               'allocation_graded_coverage':v1.ratio(len(graded),len(allocated_ids)),
               'started_allocation_coverage':v1.ratio(len(started),len(allocated_ids)),
               'started_without_grade':ungraded, 'never_started_count':len(never),
-              'snapshot_at_epoch':snapshot['at'], 'snapshot_raw_grade_count':len(raw),
+              'snapshot_mode':mode, 'later_graded_task_ids':later, 'snapshot_at_epoch':snapshot['at'], 'snapshot_raw_grade_count':len(raw),
               'failure_event_counts_not_task_outcomes':snapshot.get('known_failure_attempt_types',{}),
               'selection_caveat':'8 or other ungraded starts are neither automatic failures nor zeros. Prior37 are starts, not 37 grades. No cross-run score pooling.'})
     return m
@@ -108,7 +126,7 @@ def build(reader):
                     'CORE-Bench v13 infrastructure closeout; no native episodes',45)
     need(e2['native_score'] is None and e2['task_code_executed'] is False and e2['controller_and_watchdog_exited'] is True
          and e2['cleanup'] == 'INDEPENDENT_VM_AND_BOTH_DISKS_NOT_FOUND', 'E2 closure/scope mismatch')
-    for path, sha in e2['bound_receipts'].items(): reader.raw(path,sha)
+    for path, sha in e2['bound_receipts'].items(): reader.raw_ref({'path':path, 'sha256':sha})
     e2m.update({'cleanup':e2['cleanup'],'status':e2['status'],'source':e2path,'capsule_id':e2['capsule_id'],
                 'prepared_file_count_verified':e2['prepared_file_count_verified'],'other44_runtime_compatibility':e2['other44_runtime_compatibility']})
     result['rows'][1]['portfolio']['measurements'] = [e2m]
@@ -144,7 +162,7 @@ def build(reader):
     reader.stable()
     result['sources'] = reader.sources
     result['discovery_membership'] = reader.discoveries
-    return result
+    return v1.claim_receipts(result)
 
 
 def render(report):
@@ -180,7 +198,7 @@ def publish(root, dest, report):
     allowed=[root/'.codex-run/finish_20260912/progress_reporting',root/'finish/progress_reporting_audit']
     need(any(dest.is_relative_to(a) and dest != a for a in allowed),'output outside owned reporting subdirectories')
     need(not dest.exists(),'refuse overwrite')
-    payloads={'report.json':json.dumps(report,indent=2)+'\n','report.md':render(report)}
+    payloads={'report.json':json.dumps(report,indent=2,allow_nan=False)+'\n','report.md':render(report)}
     need(min(shutil.disk_usage(root).free,shutil.disk_usage('/').free)>=v1.FLOOR,'DISK_BELOW_6_GIB')
     dest.mkdir(parents=True)
     for name,text in payloads.items():

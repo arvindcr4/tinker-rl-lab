@@ -28,10 +28,9 @@ binomial working-model interval; its output does not authenticate the input.
   prospective candidate, not a deployed or independently validated policy.
   V1's narrower ambiguity behavior is preserved intentionally; versions are not
   silently substituted for one another.
-- `rescue_statistics`: original Wilson intervals, homogeneous-group summaries,
-  and beta-binomial rescue predictions. `statistics`: the later numerically
+- `rescue_statistics`: candidate v2 validates integer counts and prediction parameters before computing Wilson intervals, homogeneous-group summaries and beta-binomial rescue predictions. Original definitions remain in `rescue_statistics_historical_v1.py`. `statistics`: the later numerically
   stable intervals, fixed 8-initial/24-fresh prediction, quality rates and full
-  pure `analyze_validated` arithmetic. Historical numerical quirks are preserved.
+  pure `analyze_validated` arithmetic. Historical definitions in the provenance manifest remain preserved separately.
 - `selection`: complete-screen selection and checking, uncapped strict success,
   quality gates and selected-cohort intervals. The fixed scientific design is
   4,096 ordered screen questions, eight draws each, ranks 640 through 4,735,
@@ -40,21 +39,27 @@ binomial working-model interval; its output does not authenticate the input.
 - `reference_grader`: unchanged permissive heuristic comparator. It is not
   semantic ground truth and must not replace the registered strict parser.
 - `parser_review`: duplicate-key/nonfinite-JSON rejection, blind changed-output
-  packets, review validation, literal wrapper labels and unchanged decision
-  arithmetic. All examples of request, prompt, case and reviewer identities in
+  packets, review validation and literal wrapper labels. Candidate v2 rejects duplicate request IDs in every entry point and binds decisions to the canonical packet digest. Historical definitions remain in `parser_review_historical_v1.py`. All examples of request, prompt, case and reviewer identities in
   the tests are explicitly synthetic. These generic input field names contain
   no account-bound identifiers. Review packets can contain caller-supplied text;
   this package only handles them locally and does not publish or upload them.
 
 `statistics.analyze_validated` and `parser_review.decide` are lower-level pure
 functions. As in their original source, they rely on validated inputs: the
-former assumes complete ordered 32-draw rows with binary rewards; the latter
-requires the outputs of packet and review validation. Calling either directly
+former assumes complete ordered 32-draw rows with binary rewards; the latter now validates uniqueness, review annotations and a reconstructed packet digest. `parser_review.review_and_decide` additionally validates the supplied opaque packet and its exact content before returning a decision. Calling either directly
 on arbitrary records does not establish completeness, independence, provenance,
 or a legitimate pass. A parser review's decision string is a conditional
 calculation, not evidence of prospective execution. Synthetic tests exercise
 these contracts and explicitly distinguish complete object preservation from
 matching status or value alone.
+
+## Explicit candidate revisions from review 11
+
+`parser_v4` (CLI `--policy 4`) requires matching answer-wrapper closure and can reject malformed objects that historical v2/v3 accepted. It is not deployed and makes no blanket v3-object-preservation promise. The CLI default remains the explicitly historical policy 2 for reproducibility.
+
+`reference_grader_v2` uses whole candidates and exact Decimal/Fraction normalization, detects conflicting claims, and emits item-indexed comparator disagreements. `reference_grader` remains the historical heuristic; neither comparator alone proves task correctness.
+
+The candidate parser-review/rescue facades are newly versioned code, not verbatim frozen-source copies. `PROVENANCE.json` points to the preserved historical modules with unchanged per-definition hashes. No raw or published study result was rewritten.
 
 ## Exactness and provenance
 

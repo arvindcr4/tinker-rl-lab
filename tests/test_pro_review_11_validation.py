@@ -535,3 +535,52 @@ def test_correctly_hash_bound_wrong_ci_is_rejected(same_fixture):
     replay['arms']['ppo']['item_disagreements_pre_total']=1
     with pytest.raises(gate.AuditError,match='pre independent regrading disagreement'):
         gate.accept_publication(replay,deepcopy(replay))
+
+
+@pytest.mark.parametrize('bad',[r'\boxed{4.2,000}',r'\boxed{42.0,000}',r'\boxed{1,00}',r'\boxed{1,000,00}'])
+def test_malformed_decimal_grouping_is_not_a_correct_reward(bad):
+    assert v2.grade(bad,'4.2')[0]==0
+    assert v2.grade(bad,'42')[0]==0
+
+
+def test_valid_grouped_integer_and_fraction_remain_exact():
+    assert v2.grade(r'\boxed{1,000.25}','1000.25')[0]==1
+    assert v2.grade(r'\boxed{\frac{1,000}{4}}','250')[0]==1
+
+
+def test_selected_unstarted_slot_cannot_hide_completed_receipt(tmp_path,monkeypatch):
+    manifest,docs,binding,ref,seal=e12_fixture(tmp_path,monkeypatch)
+    row=docs['attempt_ledger']['attempts'][0]
+    row['run_id']='already-completed'
+    row['receipt']=ref('done',{'schema_version':'e12-attempt-receipt-v2-candidate','binding':binding,'task_id':row['task_id'],'ordinal':row['ordinal'],'run_id':row['run_id'],'state':'completed'})
+    seal()
+    result=e12.validate(manifest,tmp_path)
+    assert 'NOT_STARTED_CANNOT_HAVE_EXECUTION_EVIDENCE' in result['blockers']
+
+
+@pytest.mark.parametrize('mutation',['terminal_coverage','terminal_score','negative_errors','error_partition'])
+def test_auxiliary_terminal_counts_must_reconcile(mutation):
+    report=empty_report();m=v1.measure('synthetic native',35,300,4)
+    m.update(terminal_attempt_coverage=v1.ratio(40,300),terminal_attempt_success_rate_errors_as_zero=v1.ratio(4,40),patch_application_errors=3,empty_patch_errors=2)
+    report['rows'][0]['portfolio']['measurements']=[m];report.update(replacement_score_lanes=['E1'],replacement_score_lane_count=1)
+    v1.validate_report(report)
+    if mutation=='terminal_coverage':m['terminal_attempt_coverage']=v1.ratio(1,300)
+    elif mutation=='terminal_score':m['terminal_attempt_success_rate_errors_as_zero']=v1.ratio(99,100)
+    elif mutation=='negative_errors':m['empty_patch_errors']=-1
+    else:m['empty_patch_errors']=999
+    with pytest.raises(v1.EvidenceError):v1.validate_report(report)
+
+
+@pytest.mark.parametrize('raw',[b'{"value":NaN}',b'{"value":Infinity}',b'{"value":1e400}'])
+def test_all_json_nonfinite_encodings_rejected(tmp_path,raw):
+    p=tmp_path/'bad.json';p.write_bytes(raw)
+    with pytest.raises(ValueError):v2.load(p)
+    with pytest.raises(ValueError):v1.Reader.decode(raw)
+
+
+@pytest.mark.parametrize('bad',[float('nan'),float('inf'),True,1.2])
+def test_historical_v1_cli_rejects_invalid_stored_accuracy(tmp_path,bad):
+    runs=[{'arm':arm,'seed':seed,'n_eval':200,'pre_correct':[0]*200,'post_correct':[0]*200,'heldout_post_acc':bad,'step_log':[{'mean_comp_len':1.}],'elapsed_seconds':1.} for arm in ['grpo_g8','grpo_g2','ppo'] for seed in [1,2]]
+    (tmp_path/'samestack_gsm8k_cot_full.json').write_text(json.dumps({'runs':runs}))
+    result=subprocess.run([sys.executable,str(SAME/'v1_recompute.py'),str(tmp_path)],capture_output=True,text=True)
+    assert result.returncode!=0 and 'stored_mismatch_seeds' not in result.stdout

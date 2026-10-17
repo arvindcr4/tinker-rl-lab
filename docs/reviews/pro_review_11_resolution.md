@@ -55,3 +55,11 @@ Using `/tmp/tinker-review-venv/bin/python` only. Statsmodels 0.15.0 and its ordi
 The ten skips are the existing E12 admission fixture tests: `outputs/e12_appbench` retained assets are missing. Seven new fully synthetic candidate-ledger mutation tests run and pass independently. Retained SWE/reporting production receipts and an approved bound same-stack candidate manifest are also unavailable; no full production report/archive replay is claimed. The native reporting disk-floor guard remains unchanged; synthetic tests isolate disk capacity explicitly, since the executor's `/` filesystem is smaller than its production six-GiB floor.
 
 Explicit original exclusions remain absent: `platform_calibration.py` and `Platform.jsx`. No test, credential, or input was represented as available when it was not.
+
+## Independent-audit follow-up
+
+- Candidate exact grader v3 validates thousands grouping over the entire numeric atom; malformed decimal suffixes cannot turn `42.0,000` into a correct 42.
+- Unstarted E12 slots cannot contain prior execution IDs or receipts. Contradictory completed receipts cannot reopen an already consumed attempt.
+- Terminal/native coverage, errors and success denominators are reconciled rather than only individually range-checked.
+- Both candidate ingestion and historical-v1 audit reject NaN, infinity and overflowing JSON numbers; stored NaN accuracy cannot evade mismatch detection.
+- Regression tests include complete CLI rejection and synthetic authenticated/bound manifests. Historical result bytes remain unchanged.

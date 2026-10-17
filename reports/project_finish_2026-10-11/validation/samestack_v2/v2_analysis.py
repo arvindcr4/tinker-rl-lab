@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from stats_lib import paired, holm, mde, n_needed, mcnemar_exact
 
 ANALYSIS_VERSION = "samestack-publication-v3-candidate"
-GRADER_VERSION = "independent-boxed-rational-v2-candidate"
+GRADER_VERSION = "independent-boxed-rational-v3-candidate"
 PRIMARY = ["g8-ppo", "g8-ppo_8x8", "g8-g2"]
 
 def require(ok, message):
@@ -34,7 +34,11 @@ def load(path):
         return result
     raw = Path(path).read_bytes()
     if str(path).endswith(".gz"): raw = gzip.decompress(raw)
-    return json.loads(raw, object_pairs_hook=pairs, parse_constant=lambda x: (_ for _ in ()).throw(ValueError("nonfinite JSON")))
+    def finite_float(value):
+        number = float(value)
+        require(math.isfinite(number), "nonfinite JSON number")
+        return number
+    return json.loads(raw, object_pairs_hook=pairs, parse_float=finite_float, parse_constant=lambda x: (_ for _ in ()).throw(ValueError("nonfinite JSON")))
 
 def validated_inputs(data, gold_path, protocol):
     gold_doc = load(gold_path)
@@ -141,8 +145,6 @@ def to_num(value):
 
 def _to_rational(value):
     """Parse the entire undecorated rational recursively, without float math."""
-    value = re.sub(r"(?<![\d,])([+-]?\d{1,3}(?:,\d{3})+)(?![\d,])",
-                   lambda match: match.group().replace(",", ""), value)
     fraction = re.fullmatch(r"([+-]?)\\(?:frac|dfrac|tfrac)\s*\{([^{}]+)\}\s*\{([^{}]+)\}", value)
     if fraction:
         numerator, denominator = _to_rational(fraction[2].strip()), _to_rational(fraction[3].strip())
@@ -152,6 +154,10 @@ def _to_rational(value):
     if value.count("/") == 1:
         numerator, denominator = (_to_rational(part.strip()) for part in value.split("/"))
         return None if numerator is None or denominator in (None, 0) else numerator / denominator
+    if "," in value:
+        if re.fullmatch(r"[+-]?\d{1,3}(?:,\d{3})+(?:\.\d*)?(?:[eE][+-]?\d+)?", value) is None:
+            return None
+        value = value.replace(",", "")
     if re.fullmatch(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", value) is None:
         return None
     try:

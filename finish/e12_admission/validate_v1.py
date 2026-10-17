@@ -129,6 +129,8 @@ def validate(manifest, root):
         require(not any(r.get("run_id") == attempt.get("run_id") for r in records), "RUN_ID_ALREADY_USED")
         used_run_ids = set()
         for r in records:
+            if r.get("state") == "not_started":
+                require(r.get("receipt") is None and r.get("run_id") in (None, ""), "NOT_STARTED_CANNOT_HAVE_EXECUTION_EVIDENCE")
             if r.get("state") in ("completed", "failed"):
                 run_id = r.get("run_id")
                 require(isinstance(run_id, str) and bool(run_id.strip()) and run_id not in used_run_ids, "HISTORICAL_RUN_ID_MISSING_OR_DUPLICATE")

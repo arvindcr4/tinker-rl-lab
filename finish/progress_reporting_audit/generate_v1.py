@@ -44,6 +44,12 @@ BOUNDARIES = [
 ]
 
 
+def finite_json_float(value):
+    number = float(value)
+    need(math.isfinite(number), "nonfinite evidence JSON number")
+    return number
+
+
 class EvidenceError(ValueError):
     pass
 
@@ -85,6 +91,18 @@ def validate_measurement(m, expected):
             if key in m: need(m[key]['denominator'] == expected, 'original measured scope mismatch')
         return
     need(expected is not None and c['denominator'] == expected, 'measured scope mismatch')
+    for key in ('terminal_attempt_coverage', 'attempted_coverage'):
+        if m.get(key) is not None:
+            need(m[key]['denominator'] == expected and m[key]['numerator'] >= c['numerator'], 'terminal/attempted coverage contradicts native coverage')
+    terminal = m.get('terminal_attempt_coverage')
+    terminal_score = m.get('terminal_attempt_success_rate_errors_as_zero')
+    if terminal_score is not None:
+        need(terminal is not None and terminal_score['denominator'] == terminal['numerator'], 'terminal score denominator mismatch')
+        need(m.get('accuracy_or_success') is not None and terminal_score['numerator'] == m['accuracy_or_success']['numerator'], 'terminal success count contradicts native passes')
+    errors = [m[key] for key in ('patch_application_errors', 'empty_patch_errors') if key in m]
+    need(all(integer(value) for value in errors), 'error counts must be nonnegative integers')
+    if errors:
+        need(terminal is not None and sum(errors) == terminal['numerator'] - c['numerator'], 'native and error dispositions do not partition terminal attempts')
     a = m.get('accuracy_or_success')
     if a is not None:
         policy = m.get('score_denominator_policy')
@@ -185,7 +203,7 @@ class Reader:
             return result
         def nonfinite(value):
             raise EvidenceError('nonfinite evidence JSON: ' + value)
-        return json.loads(raw, object_pairs_hook=pairs, parse_constant=nonfinite)
+        return json.loads(raw, object_pairs_hook=pairs, parse_constant=nonfinite, parse_float=lambda value: finite_json_float(value))
 
     def load(self, path, expected=None):
         return self.decode(self.raw(path, expected))

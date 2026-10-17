@@ -1,13 +1,16 @@
-import json, sys
+import json, sys, math
 import numpy as np
 sys.path.insert(0, sys.argv[0].rsplit("/", 1)[0])
 from stats_lib import paired, holm, mde, n_needed, mcnemar_exact
 
 R = sys.argv[1] if len(sys.argv) > 1 else "platform_hybrid/experiments/results/"
 R = R.rstrip("/") + "/"
-full = json.load(open(R + "samestack_gsm8k_cot_full.json"))
+from v2_analysis import load
+full = load(R + "samestack_gsm8k_cot_full.json")
 by = {}
 for r in full["runs"]:
+    if type(r.get("heldout_post_acc")) not in (int, float) or not math.isfinite(r["heldout_post_acc"]) or not 0 <= r["heldout_post_acc"] <= 1:
+        raise ValueError("finite stored accuracy in [0,1] required")
     if r["seed"] in by.get(r["arm"], {}):
         raise ValueError(f"Duplicate experiment key: {(r['arm'], r['seed'])}")
     for phase in ("pre", "post"):

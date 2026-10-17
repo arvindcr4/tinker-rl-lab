@@ -1,0 +1,37 @@
+\section{Analytical Regression Cases and Release Gates}
+\label{app:audit-regressions}
+These cases are deterministic mathematical checks, not additional experimental
+observations. They guard the interpretations above without training or changing
+stored result artifacts.
+\begin{enumerate}
+\item For any constant reward vector and $\epsilon>0$, each
+$(r_i-\bar r)/(s+\epsilon)=0$. For $(0,1)$ with population SD $1/2$, the
+coefficients are $\mp (1/2)/(1/2+\epsilon)$. This tests coefficients, not a
+nonzero total gradient or a learning benefit.
+\item For $G=8$, $h_G(0)=h_G(1)=1$ and $h_G(1/2)=1/128$.
+Two prompt populations with mean success $1/2$ can therefore have expected
+ZVF $1$ and $1/128$, respectively. At $p=0.2$, the GU gain from $G=8$ to
+$16$ is approximately $0.1396272$.
+\item At $G=2$, $1-h_G(p)=2p(1-p)$. For $Z=2R^2-2R+1$ and $Y=R^2$,
+$Y=-1/2+R+Z/2$ exactly. A nonzero ZVF coefficient after a linear reward
+control need not represent new predictive information.
+\item For homogeneous TPO scores, $q=p_{\mathrm{old}}$; at the rollout snapshot,
+$p_\theta-q=0$. This does not exclude anchoring after other groups update the
+policy on later epochs.
+\item For an all-zero reward trace, both SI and PTD have zero denominators and
+Cohen's $d$ has zero pooled variance. All are undefined, not zero-valued evidence
+of stability or no effect.
+\item The listed non-Colab spend ranges sum to USD 147--177, not USD 130--140.
+This is an arithmetic audit of historical entries, not a verified expenditure.
+\end{enumerate}
+
+\paragraph{Required release checks, not a certification.}
+A release should resolve every included reference/citation and required asset;
+render and inspect the PDF; reject significance output for ineligible records
+and seed bootstraps based on reconstructed observations; enforce shared family
+IDs across displays; and exclude quarantined or dry-run rows from empirical
+plots. A manifest must tie the PDF hash, source commit, immutable cohorts,
+analysis version, and figure hashes together. This source-only correction does
+not regenerate figures or assert that the existing generators implement these
+gates. The historical statistical appendix is excluded from this root; its
+source remains an archived generated artifact requiring generator-side repair.

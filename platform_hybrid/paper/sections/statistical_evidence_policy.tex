@@ -1,0 +1,43 @@
+Training steps within a run are autocorrelated and may be nonstationary. We
+retain fixed-window summaries and descriptive coefficients, not step-iid
+bootstrap intervals, first-versus-last-window tests, significance stars, or
+claims that a multiplicity correction calibrates invalid p-values. Resampling
+two arms independently is an unpaired bootstrap. Independence between runs does
+not imply independence between steps. A block bootstrap would require a justified
+dependence model and is not automatically reliable for a short evolving trace.
+
+Seed/run-level inference requires actual independent observations, an identified
+estimand, and an eligible matched comparison. Reconstructed vectors from a mean
+and standard error cannot support an empirical seed bootstrap. Trustworthy mean,
+SD, and sample count could support an analytic summary-statistic Welch test,
+but only after task and cohort identity are resolved. An all-zero trace has
+zero pooled variance: Cohen's $d=0/0$ is \emph{not estimable}, not zero with a
+zero-width interval. One seed cannot estimate across-seed uncertainty; this does
+not preclude separately justified conditional prompt-level inference.
+
+\paragraph{Multiplicity and eligibility.}
+The historical five-test, 20-test BH, and 38-test Bonferroni families were not
+consistent. Primary hypotheses were not preregistered. We withdraw their
+significance decisions rather than choosing a smaller denominator. Before any
+future inference, a single versioned comparison registry must specify comparison
+ID, cohort IDs, independent unit, estimand, eligibility, family ID, raw p-value,
+adjustment, and adjusted p-value. Retrospective enumeration must be labeled as
+such; missing comparisons do not silently reduce a prespecified family.
+For example, the historical $t(4)=7.44$ gives a two-sided $p\simeq0.001743$ and
+$38p\simeq0.06623$, not a family-wide significant result. This arithmetic check
+does not establish that the underlying comparison is scientifically eligible.
+
+\paragraph{Power illustration, not evidence.}
+\texttt{TTestIndPower} uses a pooled equal-variance model, not Welch's degrees
+of freedom. For five observations per arm, the equal-variance 80\%-power MDE
+at unadjusted $\alpha=0.05$ is approximately $d=2.024$; using $0.05/5$ or
+$0.05/38$ gives approximately $2.744$ or $3.778$. These are planning
+illustrations, not observed-effect ``achieved power,'' not an endorsement of
+any historical correction family, and not evidence for a measured effect.
+
+\paragraph{Historical seed summaries.}
+The TRL Qwen2.5-0.5B reference is identified in its baseline description as
+GSM8K, not the arithmetic task. Its reported five-seed mean $0.734$ and SD
+$0.0703$ are retained as summary statistics only in this audit; no reconstructed
+seed bootstrap or cross-task comparison is asserted. The later five-seed
+Qwen3-8B comparison against a fixed base is separate from the reviewed record.

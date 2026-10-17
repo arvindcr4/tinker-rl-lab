@@ -140,6 +140,8 @@ def test_echoverse_preserves_checkout(echo, monkeypatch, tmp_path, failure_at):
     calls = []
 
     def run(cmd, **kwargs):
+        if "check-ref-format" in cmd:
+            return 0, "branch"
         calls.append(cmd)
         return (1 if len(calls) - 1 == failure_at else 0), "mock failure"
 
@@ -940,3 +942,152 @@ def test_webarena_manifest_pins_tasks_and_sites(tmp_path):
     assert source.index("TASKS=$(python3") < source.index("gcloud config set")
     assert "--tasks all" not in source
     assert source.index("trap finish_shard EXIT") < source.index("# Required: Tinker key")
+
+
+def test_verl_dryrun_wrapper_is_rejected_before_execution(monkeypatch):
+    from platform_local.unified.launcher import UnifiedLauncher
+
+    monkeypatch.setitem(sys.modules, "verl.trainer", None)
+    with pytest.raises(NotImplementedError, match="dryrun/simulated"):
+        UnifiedLauncher()._run_verl()
+
+
+@pytest.mark.parametrize("framework", ["skyrl", "verl"])
+def test_gcp_rejects_nontraining_drivers_before_allocation(gcp, monkeypatch, framework):
+    monkeypatch.setattr(gcp, "gcloud_binary", lambda: pytest.fail("must not start provisioning"))
+    with pytest.raises(NotImplementedError, match="before provisioning"):
+        gcp.run_unit(gcp.parse_args(["--framework", framework]))
+
+
+@pytest.mark.parametrize("timeout", [float("nan"), float("inf"), float("-inf"), True, False])
+def test_queue_nonfinite_or_boolean_timeout_never_spawns(timeout, monkeypatch, tmp_path):
+    queue = load("platform_colab/publication_fixes/vm_queue.py", "review10_queue")
+    monkeypatch.setattr(
+        queue.subprocess, "Popen", lambda *a, **k: pytest.fail("spawned invalid spec")
+    )
+    with pytest.raises(ValueError, match="finite and positive"):
+        queue.run_queue([{"name": "test", "cmd": "exit 0", "timeout_s": timeout}], 1, tmp_path)
+
+
+@pytest.mark.parametrize("signum", [1, 2, 15])
+def test_queue_signal_stops_owned_job_group(tmp_path, signum):
+    import os
+    import shlex
+    import signal
+    import time
+
+    pidfile = tmp_path / "child.pid"
+    child = tmp_path / "harmless_child.py"
+    child.write_text(
+        "import os, pathlib, time\npathlib.Path("
+        + repr(str(pidfile))
+        + ").write_text(str(os.getpid()))\ntime.sleep(60)\n"
+    )
+    jobs = tmp_path / "jobs.json"
+    jobs.write_text(
+        json.dumps(
+            [
+                {
+                    "name": "child",
+                    "cmd": "exec " + shlex.join([sys.executable, str(child)]),
+                    "timeout_s": 60,
+                }
+            ]
+        )
+    )
+    proc = subprocess.Popen(
+        [
+            sys.executable,
+            str(ROOT / "platform_colab/publication_fixes/vm_queue.py"),
+            str(jobs),
+            "1",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    child_pid = None
+    try:
+        deadline = time.monotonic() + 5
+        while not pidfile.exists() and time.monotonic() < deadline and proc.poll() is None:
+            time.sleep(0.01)
+        assert pidfile.exists(), proc.communicate(timeout=1)
+        child_pid = int(pidfile.read_text())
+        proc.send_signal(signum)
+        stdout, stderr = proc.communicate(timeout=5)
+        assert proc.returncode == 128 + signum, (stdout, stderr)
+        with pytest.raises(ProcessLookupError):
+            os.kill(child_pid, 0)
+        status = json.loads((tmp_path / "logs/status.json").read_text())
+        assert status["child"]["state"] == "cancelled"
+        assert status["_interrupted_signal"] == signum
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait()
+        if child_pid is not None:
+            try:
+                os.killpg(child_pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+
+
+@pytest.mark.parametrize("branch", ["-f", "--force", "@{-1}", ""])
+def test_echoverse_branch_options_rejected_before_mutation(echo, monkeypatch, tmp_path, branch):
+    original = tmp_path / "work.txt"
+    original.write_text("UNCOMMITTED WORK")
+    monkeypatch.setattr(
+        echo, "_run_cmd", lambda *a, **k: pytest.fail("Git called for unsafe branch")
+    )
+    with pytest.raises(ValueError, match="branch"):
+        echo.ensure_repo(tmp_path, "unused", branch)
+    assert original.read_text() == "UNCOMMITTED WORK"
+
+
+def test_merge_ignores_completion_marker_but_rejects_malformed_result(monkeypatch, tmp_path):
+    import gzip
+    import hashlib
+
+    gate = load("platform_colab/samestack_v2/verify_and_merge.py", "review10_gate")
+    stage, canon = tmp_path / "stage", tmp_path / "canonical"
+    stage.mkdir()
+    canon.mkdir()
+    monkeypatch.setattr(gate, "STAGE", stage)
+    monkeypatch.setattr(gate, "CANON", canon)
+    monkeypatch.setattr(gate, "OUT", tmp_path / "report.json")
+    ref = {"n_eval": 1, "n_steps": 1, "model": "fixture"}
+    result = {
+        **ref,
+        "arm": "grpo_g8",
+        "seed": 123,
+        "group": 8,
+        "smoke": False,
+        "critic": None,
+        "pre_correct": [1],
+        "post_correct": [1],
+        "heldout_pre_acc": 1.0,
+        "heldout_post_acc": 1.0,
+        "step_log": [{"step": 0}],
+        "item_ids": ["a"],
+        "env": {"gpu": "fake", "python": "3", "torch": "2"},
+    }
+    (canon / "grpo_g8_s42.json").write_text(json.dumps(ref))
+    (stage / "grpo_g8_s123.json").write_text(json.dumps(result))
+    (stage / "grpo_g8_s123.complete.json").write_text(json.dumps({"protocol": "colab-staging-v2"}))
+    with gzip.open(stage / "grpo_g8_s123_texts.json.gz", "wt") as handle:
+        json.dump({"pre": [r"\boxed{2}"], "post": [r"\boxed{2}"]}, handle)
+    items = tmp_path / "items.json"
+    items.write_text(json.dumps({"items": [{"id": "a", "answer": "2"}]}))
+    args = [
+        "--item-manifest",
+        str(items),
+        "--item-manifest-sha256",
+        hashlib.sha256(items.read_bytes()).hexdigest(),
+    ]
+    policy = tmp_path / "policy.json"
+    policy.write_text(
+        json.dumps({"calibration": "fixture", "mode": "stratified_by_recorded_hardware"})
+    )
+    assert gate.main(args + ["--merge", "--pooling-policy", str(policy)]) == 0
+    assert list(json.loads(gate.OUT.read_text())["runs"]) == ["grpo_g8_s123"]
+    (stage / "grpo_g8_s123.bad.json").write_text(json.dumps(result))
+    assert gate.main(args) == 1

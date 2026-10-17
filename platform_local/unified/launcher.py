@@ -265,35 +265,10 @@ class UnifiedLauncher:
         )
 
     def _run_verl(self) -> TrainingResult:
-        """Run verl training."""
-        print("\n[VERL] Starting verl training...")
-
-        try:
-            from verl.config import VERLConfig, VERLModelConfig, VERLAlgorithmConfig
-            from verl.trainer import VERLTrainer
-            import asyncio
-
-            config = VERLConfig(
-                model=VERLModelConfig(model_name=self.model),
-                algorithm=VERLAlgorithmConfig(algorithm=self.algorithm),
-            )
-            trainer = VERLTrainer(config)
-            receipt = asyncio.run(trainer.run())
-            if not isinstance(receipt, dict) or type(receipt.get("final_step")) is not int:
-                raise RuntimeError("verl did not return an actual completed-step receipt")
-
-            return TrainingResult(
-                framework="verl",
-                model=self.model,
-                algorithm=self.algorithm,
-                final_step=receipt["final_step"],
-                reward_history=[],
-                loss_history=[],
-            )
-        except ImportError as exc:
-            raise NotImplementedError(
-                "verl is not installed. Install with: pip install verl"
-            ) from exc
+        """Reject the repository's dry-run wrapper as scientific execution."""
+        raise NotImplementedError(
+            "The repository verl driver emits dryrun/simulated metrics; a reviewed real-trainer receipt adapter is required"
+        )
 
     def _run_openrlhf(self) -> TrainingResult:
         """Run OpenRLHF training.

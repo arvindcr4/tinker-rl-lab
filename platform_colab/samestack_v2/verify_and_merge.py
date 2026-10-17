@@ -123,7 +123,14 @@ def main(argv=None):
         "pooling": "stratified_by_recorded_hardware",
     }
     accepted = []
-    paths = sorted(STAGE.glob("*_s*.json"))
+    # Completion markers are transfer receipts, never experimental results.
+    # Exclude only the exact known marker grammar: malformed result names must
+    # still enter validation and fail rather than disappear silently.
+    paths = sorted(
+        path
+        for path in STAGE.glob("*_s*.json")
+        if not re.fullmatch(r"(grpo_g8|grpo_g2|ppo|ppo_8x8)_s[0-9]+\.complete\.json", path.name)
+    )
     for path in paths:
         result = load(path)
         text_path = path.with_name(path.stem + "_texts.json.gz")

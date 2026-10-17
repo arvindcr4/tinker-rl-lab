@@ -5,6 +5,7 @@ and destinations before spawning anything; never reuse a bare done-file as proof
 """
 
 import json
+import math
 import os
 import re
 import signal
@@ -31,11 +32,9 @@ def validate_jobs(jobs, concurrency):
         names.add(name)
         if not isinstance(job.get("cmd"), str) or not job["cmd"].strip():
             raise ValueError("Each job needs a trusted nonempty shell command")
-        if (
-            not isinstance(job.get("timeout_s", 10800), (int, float))
-            or job.get("timeout_s", 10800) <= 0
-        ):
-            raise ValueError("Job timeout must be positive")
+        timeout = job.get("timeout_s", 10800)
+        if type(timeout) not in (int, float) or not math.isfinite(timeout) or timeout <= 0:
+            raise ValueError("Job timeout must be finite and positive")
         for key in ("done", "output"):
             if job.get(key):
                 destination = str(Path(job[key]).resolve())
@@ -51,6 +50,21 @@ def run_queue(jobs, concurrency, logdir, poll_s=1):
     logdir.mkdir(parents=True, exist_ok=True)
     status = {j["name"]: {"state": "queued"} for j in jobs}
     pending, running = list(jobs), {}
+    interrupted = None
+    previous_handlers = {}
+
+    def request_stop(signum, frame):
+        # Do not raise here: a signal can arrive between Popen and ownership
+        # registration. Finish registration, then leave the loop for cleanup.
+        nonlocal interrupted
+        interrupted = interrupted or signum
+
+    def stop_process_group(proc):
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        proc.wait()
 
     def dump():
         path = logdir / "status.json"
@@ -58,8 +72,10 @@ def run_queue(jobs, concurrency, logdir, poll_s=1):
         path.with_suffix(".tmp").replace(path)
 
     try:
-        while pending or running:
-            while pending and len(running) < concurrency:
+        for signum in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+            previous_handlers[signum] = signal.signal(signum, request_stop)
+        while (pending or running) and interrupted is None:
+            while pending and len(running) < concurrency and interrupted is None:
                 job = pending.pop(0)
                 handle = (logdir / (job["name"] + ".log")).open("w")
                 try:
@@ -88,8 +104,7 @@ def run_queue(jobs, concurrency, logdir, poll_s=1):
             for name, (proc, handle, deadline) in list(running.items()):
                 rc = proc.poll()
                 if rc is None and time.monotonic() >= deadline:
-                    os.killpg(proc.pid, signal.SIGKILL)
-                    proc.wait()
+                    stop_process_group(proc)
                     rc = 124
                 if rc is not None:
                     handle.close()
@@ -97,15 +112,26 @@ def run_queue(jobs, concurrency, logdir, poll_s=1):
                     del running[name]
                     dump()
             if pending or running:
-                time.sleep(poll_s)
+                # Bound cancellation latency even for an unusually long poll.
+                time.sleep(min(poll_s, 0.1))
     finally:
-        for proc, handle, _ in running.values():
-            if proc.poll() is None:
-                os.killpg(proc.pid, signal.SIGKILL)
-                proc.wait()
-            handle.close()
+        try:
+            for name, (proc, handle, _) in running.items():
+                stop_process_group(proc)
+                handle.close()
+                status[name].update(state="cancelled", rc=128 + (interrupted or 1), end=time.time())
+            for job in pending:
+                status[job["name"]].update(state="cancelled")
+            if interrupted is not None:
+                status["_interrupted_signal"] = interrupted
+            dump()
+        finally:
+            for signum, previous in previous_handlers.items():
+                signal.signal(signum, previous)
     status["_all_done"] = time.time()
     dump()
+    if interrupted is not None:
+        return 128 + interrupted
     return int(
         any(value.get("state") == "failed" for value in status.values() if isinstance(value, dict))
     )

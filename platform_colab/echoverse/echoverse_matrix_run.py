@@ -135,6 +135,12 @@ def _run_cmd(cmd: List[str], cwd: Optional[Path] = None, env: Optional[Dict[str,
 
 def ensure_repo(repo_dir: Path, repo_url: str, branch: Optional[str] = None) -> None:
     """Update without ever deleting or resetting a caller-owned checkout."""
+    if branch is not None:
+        if not isinstance(branch, str) or not branch or branch.startswith("-") or "@{" in branch:
+            raise ValueError("Expected a literal safe Git branch name")
+        rc, _ = _run_cmd(["git", "check-ref-format", "--branch", branch])
+        if rc:
+            raise ValueError("Invalid Git branch name")
     if repo_dir.exists():
         commands = [["git", "-C", str(repo_dir), "fetch", "origin", "--prune"]]
         if branch:
@@ -148,7 +154,7 @@ def ensure_repo(repo_dir: Path, repo_url: str, branch: Optional[str] = None) -> 
     cmd = ["git", "clone"]
     if branch:
         cmd += ["--branch", branch]
-    rc, _ = _run_cmd(cmd + [repo_url, str(repo_dir)])
+    rc, _ = _run_cmd(cmd + ["--", repo_url, str(repo_dir)])
     if rc:
         raise RuntimeError("Echoverse clone failed; partial checkout preserved for inspection")
 

@@ -240,9 +240,9 @@ def _wait_for_marker(*args, **kwargs):
 
 
 def run_unit(args):
-    if args.framework == "skyrl" and not args.dry_run:
+    if args.framework in ("skyrl", "verl") and not args.dry_run:
         raise NotImplementedError(
-            "SkyRL has no training-client receipt adapter; rejected before provisioning"
+            "SkyRL/verl lack a validated scientific training receipt adapter; rejected before provisioning"
         )
     if args.algorithm != "grpo" or args.task != "gsm8k":
         raise ValueError("Unsupported experiment; rejected before provisioning")

@@ -48,7 +48,7 @@ class GCPBackend(Backend):
             backend="gcp",
             framework=framework,
             argv=command,
-            blocked_reason="SkyRL has no training-client receipt adapter" if framework == "skyrl" else "",
+            blocked_reason="Framework lacks a validated scientific training receipt adapter" if framework in ("skyrl", "verl") else "",
             driver_file=driver_file,
             output=(
                 "HF repo arvindcr4/tinker-rl-next-preflight-gcp-* + W&B "

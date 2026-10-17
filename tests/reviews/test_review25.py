@@ -45,3 +45,35 @@ def test_quadratic_requires_negative_curvature(reward,identified):
 @pytest.mark.parametrize('z',[float('nan'),float('inf'),-.1,1.1])
 def test_missing_zvf_not_high(z):
     assert load('length_bias_iter52')._zvf_bin(z) == 'unavailable'
+
+def test_auc_step_grid_and_summary_not_double_counted():
+    m=load('length_bias_iter68'); m.B=100
+    assert m.trajectory_auc([2,2,2],[1,1,1],[0,2,7]) == 7
+    assert m.signed_auc_summary([3,3,3])[:3] == (-3,-3,-3)
+    with pytest.raises(ValueError): m.trajectory_auc([1,2],[1,2],[2,1])
+    with pytest.raises(ValueError): m.trajectory_auc([1,2],[1])
+
+def test_first_divergence_is_descriptive_not_self_contrast():
+    m=load('length_bias_iter68'); m.B=100
+    runs={(algo,seed):[{'mean_comp_len':v+offset,'mean_reward':.1*i,'step':i*2} for i,v in enumerate([2,5,3,7,4])]
+          for algo,offset in [('a',0),('b',1)] for seed in [1,2,3]}
+    row=m.analyse('synthetic',runs,'a','b')['summary'][0]
+    assert math.isnan(row['p_le0']) and math.isnan(row['mean_diff'])
+    assert math.isfinite(row['estimate'])
+
+def test_curvature_writer_reports_unidentified_optima(tmp_path,monkeypatch):
+    import csv
+    m=load('length_bias_iter60'); m.RES=tmp_path; m.N_BOOT=30
+    def synthetic(path,task):
+        return [{'task':task,'algo':algo,'seed':seed,'L':[1,2,3,4,5],
+                 'R':[.01*x*x for x in [1,2,3,4,5]],'t':[0,1,2,3,4]}
+                for algo in ['grpo','dr_grpo'] for seed in [1,2,3]]
+    monkeypatch.setattr(m,'load_runs',synthetic)
+    m.main()
+    with (tmp_path/'length_bias_iter60_pair_coverage_v2.tsv').open() as f:
+        rows=list(csv.DictReader(f,delimiter='\t'))
+    optima=[r for r in rows if r['metric']=='L_star']
+    assert len(optima)==2
+    assert all(r['n_excluded']=='3' and r['n_valid']=='0' for r in optima)
+    with (tmp_path/'length_bias_iter60_curvature_v2.tsv').open() as f:
+        assert all(r['optimum_identified']=='False' for r in csv.DictReader(f,delimiter='\t'))

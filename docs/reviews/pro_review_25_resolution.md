@@ -12,3 +12,13 @@ Implemented:
 7. Missing/nonfinite/out-of-domain ZVF is unavailable and excluded from named ZVF bins, rather than high ZVF.
 
 Validation: `python -m pytest -q tests/reviews/test_review25.py` (12 passed), synthetic fixtures only. No original experiment data or generated artifacts modified. These repairs do not recertify historical conclusions; regeneration requires a separately reviewed evidence protocol.
+
+## Follow-up completion
+
+- Item 5 is reproduced in iteration68, despite the review naming iteration72. Removed the self-versus-self first-divergence bootstrap and fake p-value. This is now a descriptive pair-level mean with its seed-bootstrap interval, an explicit estimate field, and unavailable algorithm contrasts.
+- Iter68 accepts an optional actual step grid, validates finite/equal/aligned trajectories, and rejects mismatched or incomplete grids. Its downstream signed AUC summary negates the area once; the former comparison against its negative doubled the effect. Constant-area and irregular-grid regressions cover both defects.
+- Iter60 exports optimum_identified per run and a separate pair-coverage table for every task/metric, including entirely unidentified comparisons, with valid/excluded and unmatched counts. Empty comparison tables retain their schema.
+- Figure136 uses raw paired mean differences with their corresponding bootstrap intervals rather than dividing a mean interval by a fixed standard deviation and calling it a Cohen-d interval. Direction counts derive from seed observations; removed the remaining hardcoded global p-value and labeled overlapping tests descriptive.
+- Figure40 has no import-time output-directory creation.
+
+Validation: 15 synthetic regressions pass, including a full iter60 writer run in a temporary directory with convex curves whose optima are all unidentified. This supersedes the initial item5 non-reproduction and the deferred step-grid/exclusion-count notes. The unavailable tail of item7 remains explicitly skipped.

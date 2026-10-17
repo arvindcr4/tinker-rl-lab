@@ -250,6 +250,7 @@ def main() -> None:
             "R_max_fit": round(fit["R_max"], 6),
             "R2": round(fit["R2"], 6),
             "n_pts": fit["n_pts"],
+            "optimum_identified": fit["optimum_identified"],
             "L_first": round(L[0], 4),
             "L_last": round(L[-1], 4),
         })
@@ -275,6 +276,7 @@ def main() -> None:
 
     # ---- Paired bootstrap across (A), (B), (C)
     paired = []
+    coverage = []
     for task in ("arithmetic_easy", "gsm8k_cot"):
         for metric in ("mean_eps", "median_eps", "pos_frac", "neg_frac"):
             sub = elast_rows
@@ -283,7 +285,15 @@ def main() -> None:
             drgrpo = {r["seed"]: r for r in sub if r["task"] == task
                       and r["algo"] in ("dr_grpo", "drgrpo")}
             common = sorted(set(grpo) & set(drgrpo))
-            if not common:
+            n_total = len(common)
+            valid = [s for s in common if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))]
+            coverage.append({"task": task, "metric": metric, "n_matched": n_total,
+                             "n_valid": len(valid), "n_excluded": n_total-len(valid),
+                             "n_unmatched_grpo": len(set(grpo)-set(drgrpo)),
+                             "n_unmatched_drgrpo": len(set(drgrpo)-set(grpo)),
+                             "status": "available" if len(valid) >= 2 else "insufficient_identifiable_pairs"})
+            common = valid
+            if len(common) < 2:
                 continue
             gv = [grpo[s][metric] for s in common]
             dv = [drgrpo[s][metric] for s in common]
@@ -313,7 +323,15 @@ def main() -> None:
             drgrpo = {r["seed"]: r for r in sub if r["task"] == task
                       and r["algo"] in ("dr_grpo", "drgrpo")}
             common = sorted(set(grpo) & set(drgrpo))
-            if not common:
+            n_total = len(common)
+            valid = [s for s in common if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))]
+            coverage.append({"task": task, "metric": metric, "n_matched": n_total,
+                             "n_valid": len(valid), "n_excluded": n_total-len(valid),
+                             "n_unmatched_grpo": len(set(grpo)-set(drgrpo)),
+                             "n_unmatched_drgrpo": len(set(drgrpo)-set(grpo)),
+                             "status": "available" if len(valid) >= 2 else "insufficient_identifiable_pairs"})
+            common = valid
+            if len(common) < 2:
                 continue
             common = [s for s in common if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))]
             if len(common) < 2:
@@ -344,7 +362,15 @@ def main() -> None:
             drgrpo = {r["seed"]: r for r in sub if r["task"] == task
                       and r["algo"] in ("dr_grpo", "drgrpo")}
             common = sorted(set(grpo) & set(drgrpo))
-            if not common:
+            n_total = len(common)
+            valid = [s for s in common if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))]
+            coverage.append({"task": task, "metric": metric, "n_matched": n_total,
+                             "n_valid": len(valid), "n_excluded": n_total-len(valid),
+                             "n_unmatched_grpo": len(set(grpo)-set(drgrpo)),
+                             "n_unmatched_drgrpo": len(set(drgrpo)-set(grpo)),
+                             "status": "available" if len(valid) >= 2 else "insufficient_identifiable_pairs"})
+            common = valid
+            if len(common) < 2:
                 continue
             common = [s for s in common if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))]
             if len(common) < 2:
@@ -366,8 +392,10 @@ def main() -> None:
                 "p_le0": boot["p_le0"],
                 "interpretation": interp,
             })
+    write_tsv(RES / "length_bias_iter60_pair_coverage_v2.tsv", coverage,
+              fieldnames=list(coverage[0].keys()))
     write_tsv(RES / "length_bias_iter60_grpo_vs_drgrpo_v2.tsv", paired,
-              fieldnames=list(paired[0].keys()))
+              fieldnames=list(paired[0].keys()) if paired else ["task", "metric", "kind", "n_pairs", "mean_grpo", "mean_drgrpo", "mean_diff", "ci_lo", "ci_hi", "p_le0", "interpretation"])
 
     # ---- Summary rollup -- the strongest cross-task findings
     summary_rows = []
@@ -384,7 +412,7 @@ def main() -> None:
             "interpretation": p["interpretation"],
         })
     write_tsv(RES / "length_bias_iter60_summary_v2.tsv", summary_rows,
-              fieldnames=list(summary_rows[0].keys()))
+              fieldnames=list(summary_rows[0].keys()) if summary_rows else ["task", "kind", "metric", "n_pairs", "mean_grpo", "mean_drgrpo", "mean_diff", "ci_lo", "ci_hi", "p_le0", "interpretation"])
 
     print("=== iter60 length elasticity summary ===")
     for r in summary_rows:

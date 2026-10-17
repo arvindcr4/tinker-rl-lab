@@ -97,12 +97,12 @@ def main():
             gr = np.array([by_seed[(task, "grpo", s, h_name)] for s in seeds], dtype=float)
             dr = np.array([by_seed[(task, "dr_grpo", s, h_name)] for s in seeds], dtype=float)
             delta = dr - gr
-            d = float(delta.mean() / (np.std(delta, ddof=1) + 1e-9))
+            d = float(delta.mean())
             lo, hi = bootstrap_paired_diff_ci(gr, dr, rng=rng)
             effects.append(d)
             # CI on the raw delta in standardized units
-            d_lo = lo / (np.std(delta, ddof=1) + 1e-9)
-            d_hi = hi / (np.std(delta, ddof=1) + 1e-9)
+            d_lo = lo
+            d_hi = hi
             ci_lo.append(d_lo)
             ci_hi.append(d_hi)
         ax.bar(bar_x + (i - 0.5) * width, effects, width=width, color=color, alpha=0.7,
@@ -115,22 +115,26 @@ def main():
     ax.axhline(0, color="gray", linestyle="--", linewidth=0.8)
     ax.set_xticks(bar_x)
     ax.set_xticklabels(list(hyp_to_keys.keys()), rotation=20, ha="right", fontsize=9)
-    ax.set_ylabel("Paired Cohen's d (DR - GR)")
-    ax.set_title("A. Effect size per (task, hypothesis); error bars = 95% boot CI")
+    ax.set_ylabel("Paired mean difference (DR - GR)")
+    ax.set_title("A. Raw paired differences; error bars = 95% seed bootstrap CI")
     ax.legend(loc="upper right", fontsize=9)
 
     # --- Panel B: sign-test summary bar ---
     ax = axes[0, 1]
-    summary = read_tsv(os.path.join(RES, "length_bias_iter136_cross_task.tsv"))
-    n_in_dir = int(next(r["n_dir_positive"] for r in summary
-                        if r["hypothesis"] == "GLOBAL_sign_test_over_all_8_paired"))
-    n_total = 8
+    n_in_dir = 0
+    n_total = 0
+    for task in tasks:
+        for h_name, (_, direction) in hyp_to_keys.items():
+            seeds = task_to_seeds[task]
+            difference = np.mean([by_seed[(task, "dr_grpo", seed, h_name)] -
+                                  by_seed[(task, "grpo", seed, h_name)] for seed in seeds])
+            n_in_dir += int(difference < 0 if direction == "smaller" else difference > 0)
+            n_total += 1
     ax.bar(["favours Dr.GR", "favours GR"], [n_in_dir, n_total - n_in_dir],
            color=["#d62728", "#1f77b4"], alpha=0.7)
     ax.set_ylabel("count of paired tests")
     ax.set_ylim(0, n_total + 1)
-    ax.set_title(f"B. Global sign test: {n_in_dir}/{n_total} in predicted direction; "
-                 f"one-sided binom p=0.0039")
+    ax.set_title(f"B. Descriptive directions: {n_in_dir}/{n_total}; overlapping tests")
     for i, v in enumerate([n_in_dir, n_total - n_in_dir]):
         ax.text(i, v + 0.2, str(v), ha="center", fontsize=11, fontweight="bold")
 

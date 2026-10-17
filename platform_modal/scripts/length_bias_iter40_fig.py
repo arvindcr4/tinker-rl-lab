@@ -22,10 +22,10 @@ ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
 FIGS = ROOT / "figures"
 PAPER_FIGS = ROOT / "paper" / "figures"
-FIGS.mkdir(parents=True, exist_ok=True)
-PAPER_FIGS.mkdir(parents=True, exist_ok=True)
 
 def main():
+    FIGS.mkdir(parents=True, exist_ok=True)
+    PAPER_FIGS.mkdir(parents=True, exist_ok=True)
     # Load summaries
     phases = []
     with open(RES / "length_bias_iter40_phases.tsv") as f:

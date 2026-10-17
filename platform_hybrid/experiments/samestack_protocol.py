@@ -9,8 +9,8 @@ from decimal import Decimal, InvalidOperation
 from fractions import Fraction
 from pathlib import Path
 
-PROTOCOL_ID = "samestack-gsm8k-cot-v3-policy-exact-eos"
-GRADING_SPEC_ID = "boxed-exact-rational-v1"
+PROTOCOL_ID = "samestack-gsm8k-cot-v4-policy-exact-eos-grouping"
+GRADING_SPEC_ID = "boxed-exact-rational-v2"
 ANALYSIS_PLAN_ID = "samestack-v3-seed-paired-analysis-v1"
 PROTOCOL_SPEC = {
     "protocol_id": PROTOCOL_ID, "grading_spec_id": GRADING_SPEC_ID,
@@ -22,6 +22,7 @@ PROTOCOL_SPEC = {
     "schedule": "seed-shared-step-prefix-independent-warmup-sha256-52bit-v1",
     "ppo_variant": "prompt-end detached linear terminal-reward baseline; no GAE",
     "numeric_decorations": "one currency prefix/wrapper, percent suffix (coefficient), or second/seconds suffix",
+    "numeric_grouping": "complete numeric atoms; commas only between three-digit integer groups",
 }
 
 
@@ -31,7 +32,7 @@ def canonical_hash(value):
 
 
 PROTOCOL_HASH = canonical_hash(PROTOCOL_SPEC)
-_NUMBER = re.compile(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?\Z")
+_NUMBER = re.compile(r"[+-]?(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?\Z")
 _BOX = re.compile(r"\\boxed\s*\{")
 _LATEX_FRACTION = re.compile(r"([+-]?)\\(?:dfrac|tfrac|frac)\s*\{([^{}]+)\}\s*\{([^{}]+)\}\Z")
 
@@ -68,9 +69,6 @@ def exact_number(value):
 
 
 def _numeric_core(value):
-    if "," in value:
-        value = re.sub(r"(?<![\d,])([+-]?\d{1,3}(?:,\d{3})+)(?![\d,])",
-                       lambda m: m.group(1).replace(",", ""), value)
     match = _LATEX_FRACTION.fullmatch(value)
     if match:
         numerator, denominator = _numeric_core(match[2].strip()), _numeric_core(match[3].strip())
@@ -82,10 +80,12 @@ def _numeric_core(value):
         if numerator is None or denominator is None or denominator == 0:
             return None
         return numerator / denominator
+    # Validate each complete atom before removing integer-group separators.
+    # A substring replacement could turn 42.0,000 or 1e0,000 into valid values.
     if not _NUMBER.fullmatch(value):
         return None
     try:
-        number = Decimal(value)
+        number = Decimal(value.replace(",", ""))
         if not number.is_finite() or abs(number.adjusted()) > 10000:
             return None
         return Fraction(number)

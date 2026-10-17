@@ -6,7 +6,7 @@ Branch: `fix/pro-review-samestack-v2`.
 This is a code and offline regression repair, not a new experiment. No training,
 paid service jobs, historical run records, stored verdicts, or historical analysis
 JSONs were changed. The corrected execution protocol is
-`samestack-gsm8k-cot-v3-policy-exact-eos`; its runtime lock is explicitly a
+`samestack-gsm8k-cot-v4-policy-exact-eos-grouping`; its runtime lock is explicitly a
 candidate, not a GPU-validated environment. Historical inputs cannot be upgraded
 into prospectively registered or fully reproduced evidence by this patch.
 
@@ -83,3 +83,41 @@ into prospectively registered or fully reproduced evidence by this patch.
 
 The full repository test suite and live GPU/browser execution were not claimed.
 The preserved historical source and result files have no Git diff.
+
+## C2 numeric-grouping follow-up (17 October 2026)
+
+All three exact parsers previously removed thousands-looking substrings before
+validating the numeric atom. That could incorrectly reward `\\boxed{42.0,000}`
+as 42 or `\\boxed{1e0,000}` as 1. Training, independent Python audit and JavaScript
+now validate each complete numeric atom after parsing fraction structure.
+Commas are accepted only in three-digit integer groups; fractional digits and
+exponents cannot contain them. Valid grouped decimals, exponents, fraction
+operands and the documented GSM8K decorations remain supported. Gold-answer
+commas also survive export/audit loading so malformed gold cannot bypass the
+parser through preprocessing.
+
+The changed reward semantics are `boxed-exact-rational-v2`, with execution
+protocol `samestack-gsm8k-cot-v4-policy-exact-eos-grouping` and a distinct protocol
+hash. Since random streams include the protocol ID, v4 also has distinct seeded
+prompt streams. The analysis method ID is unchanged. No old run is reclassified
+as v4, and the v1 fixture, historical results, checked-in demo data and HTML are
+unchanged. The new shared fixture retains the 34 original cases and adds 35
+grouping regressions, including malformed gold checks in every parser.
+
+Validation after this follow-up:
+
+- The same seven focused Python suites listed above: **317 passed**
+- JavaScript unit, parity, canonical-contract and rendering suites: **25 passed**
+- Exporter suite: **6 passed**, including preservation of literal gold grouping
+- Fresh temporary canonical export and `npm run build`: passed; tracked demo
+  HTML/data restored and verified byte-for-byte unchanged
+- Strict historical JavaScript audit: **71,226 completions, 27/27 runs, zero
+  disagreements**, with complete coverage
+- Independent Python audit of the same 71,226 completions: zero historical or
+  training-parser disagreements; 210 legacy nonfinite diagnostic tokens were
+  normalized only in memory, with no historical files changed
+- Ruff on changed Python sources/tests: passed, excluding the exporter test
+  file's existing unittest-style `PT009` convention; `git diff --check`: passed
+
+No training, model downloads, provider jobs, stored-result edits, excluded
+platform changes, or integration with a newer main branch were performed.

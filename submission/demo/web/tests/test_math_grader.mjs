@@ -11,7 +11,7 @@ import { paired, signflip, holm, tcdf, tppf, pct, sgn, pfmt, MAX_EXACT_SIGNFLIP_
 import { auditStoredScores, parseLegacyJson } from "./grade_all.mjs";
 
 const ROOT = fileURLToPath(new URL("../../../../", import.meta.url));
-const gradingFixture = JSON.parse(readFileSync(new URL("../../../../tests/fixtures/samestack_grading_v1.json", import.meta.url)));
+const gradingFixture = JSON.parse(readFileSync(new URL("../../../../tests/fixtures/samestack_grading_v2.json", import.meta.url)));
 const statisticsFixture = JSON.parse(readFileSync(new URL("./fixtures/stats_parity.json", import.meta.url)));
 const close = (actual, expected, label = "value") => assert.ok(Math.abs(actual - expected) <= 2e-10 * Math.max(1, Math.abs(expected)), `${label}: ${actual} != ${expected}`);
 
@@ -25,7 +25,15 @@ function python(script, input) {
 
 test("strict grader satisfies the versioned shared fixture", () => {
   assert.equal(gradingFixture.spec_id, GRADING_SPEC_ID);
-  for (const row of gradingFixture.cases) assert.equal(grade(row.text, row.gold).correct, row.reward, JSON.stringify(row));
+  for (const row of gradingFixture.cases) {
+    const result = grade(row.text, row.gold);
+    assert.equal(result.correct, row.reward, JSON.stringify(row));
+    if (row.status) {
+      assert.equal(result.status, row.status, JSON.stringify(row));
+      assert.equal(toNum(result.boxed), null);
+      assert.equal(grade("\\boxed{42}", result.boxed).status, "invalid gold");
+    }
+  }
 });
 
 test("boxes require the actual command, immediate optional whitespace and balanced braces", () => {
@@ -73,6 +81,7 @@ analysis_dir = root / 'reports/project_finish_2026-10-11/validation/samestack_v2
 sys.path.insert(0, str(analysis_dir))
 audit = load('v2_analysis_parity', analysis_dir / 'v2_analysis.py')
 cases = json.load(sys.stdin)
+assert protocol.GRADING_SPEC_ID == audit.GRADING_SPEC_ID == 'boxed-exact-rational-v2'
 print(json.dumps([[protocol.boxed_reward(c['text'], c['gold']), audit.grade(c['text'], c['gold'])[0]] for c in cases]))
 `, gradingFixture.cases);
   gradingFixture.cases.forEach((row, index) => assert.deepEqual(actual[index], [row.reward, row.reward], JSON.stringify(row)));
@@ -240,5 +249,27 @@ test("historical audit retains valid GSM8K decorations while exposing actual num
     assert.equal(report.by_phase.post.disagreements, 0);
     assert.equal(report.by_run[0].by_phase.pre.cause_counts.numeric_mismatch, 1);
     assert.equal(report.cause_examples.numeric_mismatch[0].boxed, "42.0000001");
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});
+
+test("historical audit validates grouping in both completions and unmodified gold", () => {
+  const directory = mkdtempSync(join(tmpdir(), "samestack-grouping-"));
+  try {
+    const goldPath = join(directory, "gold.json");
+    const runPath = join(directory, "demo_s1.json");
+    const original = JSON.stringify({ pre_correct: [1], post_correct: [1] });
+    writeFileSync(runPath, original);
+    writeFileSync(goldPath, JSON.stringify({ test: [{ answer: "#### 42" }] }));
+    writeFileSync(join(directory, "demo_s1_texts.json.gz"), gzipSync(JSON.stringify({ pre: ["\\boxed{42.0,000}"], post: ["\\boxed{42}"] })));
+    const report = auditStoredScores({ resultsDir: directory, goldPath });
+    assert.equal(report.disagreements, 1);
+    assert.equal(report.stored_correct_now_incorrect, 1);
+    assert.equal(report.examples[0].status, "unparsable");
+    writeFileSync(goldPath, JSON.stringify({ test: [{ answer: "#### 42.0,000" }] }));
+    assert.throws(() => auditStoredScores({ resultsDir: directory, goldPath }), /gold answers.*valid grouping/);
+    writeFileSync(goldPath, JSON.stringify({ test: [{ answer: "#### 1,234" }] }));
+    writeFileSync(join(directory, "demo_s1_texts.json.gz"), gzipSync(JSON.stringify({ pre: ["\\boxed{1234}"], post: ["\\boxed{1,234.0}"] })));
+    assert.equal(auditStoredScores({ resultsDir: directory, goldPath }).disagreements, 0);
+    assert.equal(readFileSync(runPath, "utf8"), original);
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });

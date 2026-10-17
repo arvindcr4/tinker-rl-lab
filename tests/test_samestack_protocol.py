@@ -7,14 +7,29 @@ from types import SimpleNamespace
 import pytest
 
 from platform_hybrid.experiments.samestack_protocol import (
-    PROTOCOL_ID, boxed_reward, budget_accounting, clear_inherited_generation_defaults, completion_mask_rows,
-    generation_configs, prompt_schedules, resolved_token_ids, strict_json_dump,
+    GRADING_SPEC_ID, PROTOCOL_HASH, PROTOCOL_ID, boxed_reward, budget_accounting,
+    clear_inherited_generation_defaults, completion_mask_rows, exact_number,
+    generation_configs, last_boxed_content, prompt_schedules, resolved_token_ids, strict_json_dump,
 )
 
 
-@pytest.mark.parametrize('case', json.loads((Path(__file__).parent / 'fixtures/samestack_grading_v1.json').read_text())['cases'])
+@pytest.mark.parametrize('case', json.loads((Path(__file__).parent / 'fixtures/samestack_grading_v2.json').read_text())['cases'])
 def test_exact_grading_spec(case):
     assert boxed_reward(case['text'], case['gold']) == case['reward']
+    if case.get('status') == 'unparsable':
+        malformed = last_boxed_content(case['text'])
+        assert exact_number(malformed) is None
+        assert boxed_reward(r'\boxed{42}', malformed) == 0
+
+
+def test_grouping_reward_contract_has_new_identity_and_preserves_v1_fixture():
+    fixtures = Path(__file__).parent / 'fixtures'
+    old = json.loads((fixtures / 'samestack_grading_v1.json').read_text())
+    current = json.loads((fixtures / 'samestack_grading_v2.json').read_text())
+    assert current['spec_id'] == GRADING_SPEC_ID == 'boxed-exact-rational-v2'
+    assert current['cases'][:len(old['cases'])] == old['cases']
+    assert PROTOCOL_ID == 'samestack-gsm8k-cot-v4-policy-exact-eos-grouping'
+    assert PROTOCOL_HASH != '5ede5418a2078388f1e124d42db0506847300f97405b84d2d56dd752dd1a46e7'
 
 
 def test_policy_prompt_stream_does_not_shift_for_critic_warmup():

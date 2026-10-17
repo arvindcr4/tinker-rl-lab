@@ -16,10 +16,13 @@ cross-check recorded 210 legacy NaN diagnostic tokens and normalized them only
 in temporary audit input, without rewriting original artifacts or inferring
 missing provenance.
 
-The repaired training code has a **new v3 protocol** (policy, stopping/masking,
-prompt schedules and exact grading changed). It cannot retrospectively make v1
-or v2 runs instances of that protocol. Keep original result arrays and previous
-analysis JSON intact; any newly requested rescore is a separate audit artifact.
+The repaired training code has a **new v4 candidate protocol**, following the v3
+policy, stopping/masking, prompt-schedule and exact-grading repair. V4 rejects
+malformed numeric grouping that v3 accepted, uses `boxed-exact-rational-v2`, and
+has a distinct protocol ID/hash and therefore distinct seeded prompt streams.
+It cannot retrospectively make v1, v2 or v3 runs instances of that protocol. Keep
+original result arrays and previous analysis JSON intact; any newly requested
+rescore is a separate audit artifact.
 No training is launched by these analysis modules.
 
 ## Canonical artifact
@@ -125,7 +128,7 @@ acceptable equivalence margin have not been supplied.
 
 ## Independent grading and JSON
 
-The audit implements `boxed-exact-rational-v1` independently of the training
+The audit implements `boxed-exact-rational-v2` independently of the training
 parser. Only an exact `\\boxed` command, optional whitespace and an immediate
 balanced brace are accepted. It selects the last complete box and compares
 finite Decimal/Fraction values exactly, rejecting malformed commands, zero
@@ -133,9 +136,17 @@ denominators, nonfinite values, broad unit stripping and six-digit rounding
 collisions. It preserves a narrowly documented full-string GSM8K coefficient
 grammar: one currency prefix/wrapper, percent suffix (not divided by 100), or
 second/seconds suffix. Decorations inside fraction operands, multiple kinds of
-decoration, numeric content in unit text and unrelated prose are rejected. Training, audit and JS consume
-`tests/fixtures/samestack_grading_v1.json`. For manifested runs the audit checks
+decoration, numeric content in unit text and unrelated prose are rejected.
+Thousands separators are validated over each complete numeric atom, after
+fraction parsing: commas can separate three-digit integer groups but cannot
+appear in fractional digits or exponents. Thus `1,234.5` and
+`\\frac{1,000}{2,000}` remain valid, while `42.0,000` and `1e0,000` fail closed.
+Training, audit and JS consume
+`tests/fixtures/samestack_grading_v2.json`. For manifested runs the audit checks
 ordered gold IDs and completion IDs against the manifest before regrading.
+The v1 fixture and historical outputs remain unchanged. Demo exports and the
+historical audit preserve gold-answer commas for the same validation rather
+than silently deleting them before grading.
 
 JSON input rejects NaN/Infinity, overflowed numbers and duplicate object keys;
 output uses `allow_nan=False`, with undefined diagnostics represented as null.

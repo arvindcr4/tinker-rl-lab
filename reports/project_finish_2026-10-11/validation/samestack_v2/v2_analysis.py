@@ -12,6 +12,8 @@ import json
 from pathlib import Path
 import re
 
+GRADING_SPEC_ID = "boxed-exact-rational-v2"
+
 
 def last_boxed(text):
     """Independently scan backwards for the last complete exact boxed command."""
@@ -57,8 +59,6 @@ def to_num(value):
 
 def _to_rational(value):
     """Parse the entire undecorated rational recursively, without float math."""
-    value = re.sub(r"(?<![\d,])([+-]?\d{1,3}(?:,\d{3})+)(?![\d,])",
-                   lambda match: match.group().replace(",", ""), value)
     fraction = re.fullmatch(r"([+-]?)\\(?:frac|dfrac|tfrac)\s*\{([^{}]+)\}\s*\{([^{}]+)\}", value)
     if fraction:
         numerator, denominator = _to_rational(fraction[2].strip()), _to_rational(fraction[3].strip())
@@ -68,10 +68,12 @@ def _to_rational(value):
     if value.count("/") == 1:
         numerator, denominator = (_to_rational(part.strip()) for part in value.split("/"))
         return None if numerator is None or denominator in (None, 0) else numerator / denominator
-    if re.fullmatch(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", value) is None:
+    # Grouping belongs only to an atom's integer portion, never to a substring
+    # of its decimal digits or exponent. Fraction operands are checked above.
+    if re.fullmatch(r"[+-]?(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", value) is None:
         return None
     try:
-        number = Decimal(value)
+        number = Decimal(value.replace(",", ""))
         return Fraction(number) if number.is_finite() and abs(number.adjusted()) <= 10000 else None
     except (InvalidOperation, ValueError, OverflowError, ZeroDivisionError):
         return None
@@ -200,7 +202,7 @@ def analyze(inputs, plan=None, bootstrap_samples=4000):
     audits = []
     for record, texts in zip(inputs["records"], inputs["completions"]):
         audit = {"arm": record["arm"], "seed": record["seed"], "run_id": (record.get("manifest") or {}).get("run_id"),
-                 "grading_spec": "boxed-exact-rational-v1", "n_items": len(inputs["gold"])}
+                 "grading_spec": GRADING_SPEC_ID, "n_items": len(inputs["gold"])}
         for stage in ("pre", "post"):
             scores = [grade(text, gold)[0] for text, gold in zip(texts[stage], inputs["gold"])]
             audit[stage + "_accuracy"] = sum(scores) / len(scores)

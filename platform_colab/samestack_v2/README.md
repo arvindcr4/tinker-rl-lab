@@ -1,6 +1,6 @@
 # Versioned Colab artifact preservation
 
-These wrappers now run `samestack-gsm8k-cot-v3-policy-exact-eos`. The historical
+These wrappers now run `samestack-gsm8k-cot-v4-policy-exact-eos-grouping`. The historical
 v2 filenames in this directory are entrypoint compatibility names, not permission
 to reuse legacy results as evidence for the corrected protocol. No GPU training
 or real Colab session was executed to validate this change.

@@ -35,6 +35,21 @@ def synthetic_bundle(directory, record, texts):
 
 
 class ExportTests(unittest.TestCase):
+    def test_examples_preserve_gold_grouping_for_the_exact_grader(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            gold_path = directory / "gold.json"
+            for arm in ("grpo_g8", "ppo"):
+                record = dict(pre_correct=[1], post_correct=[1], pre_trunc=[0], post_trunc=[0])
+                (directory / f"{arm}_s42.json").write_text(json.dumps(record))
+                with gzip.open(directory / f"{arm}_s42_texts.json.gz", "wt") as stream:
+                    json.dump(dict(pre=[r"\boxed{42}"], post=[r"\boxed{42}"]), stream)
+            for answer in ("1,234", "42.0,000"):
+                with self.subTest(answer=answer), patch.object(export, "GOLD", gold_path):
+                    gold_path.write_text(json.dumps({"test": [{"question": "synthetic", "answer": "#### " + answer}]}))
+                    examples = export.examples(seed=42, results_dir=directory)
+                    self.assertEqual(examples["items"][0]["gold"], answer)
+
     def test_historical_inputs_are_unverified_not_fabricated(self):
         before = {p: export.sha(p) for p in export.V2.glob("*.json")}
         ss, analysis = export.samestack()

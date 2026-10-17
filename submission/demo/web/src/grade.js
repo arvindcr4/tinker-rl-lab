@@ -1,7 +1,7 @@
-// Independent JavaScript implementation of boxed-exact-rational-v1.
-// Keep the shared tests/fixtures/samestack_grading_v1.json contract in sync with
+// Independent JavaScript implementation of boxed-exact-rational-v2.
+// Keep the shared tests/fixtures/samestack_grading_v2.json contract in sync with
 // samestack_protocol.py and the independently implemented analysis grader.
-export const GRADING_SPEC_ID = "boxed-exact-rational-v1";
+export const GRADING_SPEC_ID = "boxed-exact-rational-v2";
 
 export function lastBoxed(text) {
   if (typeof text !== "string") return null;
@@ -57,16 +57,17 @@ export function toNum(value) {
 }
 
 function numericCore(value) {
-  value = value.replace(/(?<![\d,])([+-]?\d{1,3}(?:,\d{3})+)(?![\d,])/g, (s) => s.replaceAll(",", ""));
   const fraction = value.match(/^([+-]?)\\(?:dfrac|tfrac|frac)\s*\{([^{}]+)\}\s*\{([^{}]+)\}$/);
   if (fraction) return divide(numericCore(fraction[2].trim()), numericCore(fraction[3].trim()), fraction[1] === "-" ? -1n : 1n);
   if ((value.match(/\//g) || []).length === 1) {
     const [numerator, denominator] = value.split("/");
     return divide(numericCore(numerator.trim()), numericCore(denominator.trim()));
   }
-  const decimal = value.match(/^([+-]?)(\d+(?:\.\d*)?|\.\d+)(?:[eE]([+-]?\d+))?$/);
+  // Validate the entire atom before removing integer grouping. In particular,
+  // neither decimal digits nor exponent digits may contain comma separators.
+  const decimal = value.match(/^([+-]?)((?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?|\.\d+)(?:[eE]([+-]?\d+))?$/);
   if (!decimal) return null;
-  const [integer, fractional = ""] = decimal[2].split(".");
+  const [integer, fractional = ""] = decimal[2].replaceAll(",", "").split(".");
   const digits = (integer + fractional).replace(/^0+/, "") || "0";
   const exponent = BigInt(decimal[3] || "0") - BigInt(fractional.length);
   const adjusted = exponent + BigInt(digits.length - 1);

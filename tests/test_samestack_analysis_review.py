@@ -150,9 +150,16 @@ def test_n_needed_failure_explicit(statistics):
 
 
 def test_independent_grader_shared_fixtures(audit):
-    fixture = json.loads((ROOT / "tests/fixtures/samestack_grading_v1.json").read_text())
+    fixture = json.loads((ROOT / "tests/fixtures/samestack_grading_v2.json").read_text())
+    assert audit.GRADING_SPEC_ID == fixture["spec_id"]
     for case in fixture["cases"]:
         assert audit.grade(case["text"], case["gold"])[0] == case["reward"], case
+        if case.get("status") == "unparsable":
+            assert audit.grade(case["text"], case["gold"])[1] == "unparsable"
+            malformed = audit.last_boxed(case["text"])
+            assert audit.to_num(malformed) is None
+            with pytest.raises(ValueError, match="gold answer"):
+                audit.grade(r"\boxed{42}", malformed)
 
 
 @pytest.mark.parametrize("text", [r"\boxedX{42}", r"\boxed99 then text {42}", r"\boxed12 then {42}"])

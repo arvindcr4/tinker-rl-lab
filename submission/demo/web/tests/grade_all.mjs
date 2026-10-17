@@ -56,7 +56,8 @@ const count = (object, key) => { object[key] = (object[key] || 0) + 1; };
 
 export function auditStoredScores({ resultsDir, goldPath }) {
   const gold = JSON.parse(readFileSync(goldPath, "utf8")).test
-    .map((t) => t.answer.split("####").pop().trim().replaceAll(",", ""));
+    .map((t) => t.answer.split("####").pop().trim());
+  if (gold.some((answer) => toNum(answer) === null)) throw new Error("gold answers must be finite exact numbers with valid grouping");
   const files = readdirSync(resultsDir).filter((f) => /_s\d+\.json$/.test(f)).sort();
   const report = {
     grading_spec_id: GRADING_SPEC_ID,

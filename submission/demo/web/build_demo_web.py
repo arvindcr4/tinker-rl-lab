@@ -146,7 +146,7 @@ def examples(seed=42, per_pattern=4, results_dir=None):
         for i in idx[:per_pattern]:
             items.append({
                 "i": i, "pattern": key, "question": gold[i]["question"],
-                "gold": gold[i]["answer"].split("####")[-1].strip().replace(",", ""),
+                "gold": gold[i]["answer"].split("####")[-1].strip(),
                 "base": {"text": texts["grpo_g8"]["pre"][i], "stored": g["pre_correct"][i], "trunc": g["pre_trunc"][i]},
                 "grpo_g8": {"text": texts["grpo_g8"]["post"][i], "stored": g["post_correct"][i], "trunc": g["post_trunc"][i]},
                 "ppo": {"text": texts["ppo"]["post"][i], "stored": p["post_correct"][i], "trunc": p["post_trunc"][i]},

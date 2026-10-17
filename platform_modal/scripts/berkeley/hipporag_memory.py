@@ -16,33 +16,33 @@ Verified citation:
   "HippoRAG: Neurobiologically Inspired Long-Term Memory for Large
    Language Models", arXiv:2405.14831, NeurIPS 2024.
 
-Pre-registered hypotheses (real on-disk data):
+Exploratory retrospective thresholds (not preregistered or multiplicity-adjusted):
 
   H1 [PPR beats BM25]: on a held-out set of 12 "find anchors most-improved
       under critique" queries against the Eureka+SelfDebug corpus, HippoRAG-
       style PPR retrieval achieves higher top-k hit rate than TF-IDF/BM25
-      cosine (baseline). DECISIVE if delta@10 > +0.10.
+      cosine (baseline). DESCRIPTIVE_THRESHOLD if delta@10 > +0.10.
 
   H2 [PPR beats random]: same hold-out, PPR > random retrieval (control).
-      DECISIVE if delta@10 > +0.20.
+      DESCRIPTIVE_THRESHOLD if delta@10 > +0.20.
 
   H3 [entity-driven anchor weight]: the PPR-derived entity importance
       matches the empirical RQS ordering of Pillar-1 anchors (Qwen3.5-4B >
-      Qwen3-8B on cap+RQS r_mean). DECISIVE if Pearson r(importance, RQS)
+      Qwen3-8B on cap+RQS r_mean). DESCRIPTIVE_THRESHOLD if Pearson r(importance, RQS)
       >= +0.40.
 
   H4 [graph-density bonus]: the influence of the seed node on its
       neighbours decays at rate 1/(1+out_degree), predicting a
       saturation that EMPIRICALLY holds: anchors with high out-degree
       (co-mentioned with many methods) have SMALLER PPR-mass delta vs
-      the dense-anchor (Qwen3.5-4B). DECISIVE if Spearman rho of
+      the dense-anchor (Qwen3.5-4B). DESCRIPTIVE_THRESHOLD if Spearman rho of
       delta_ppr vs out_degree <= -0.20 over n>=8.
 
-  H5 [cost-equivalence]: at query time, HippoRAG-style retrieval costs
+  H5 [retrieval-cutoff comparison]: at query time, HippoRAG-style retrieval costs
       <= RAG-25 (top-25 BM25 passages) because the KG compresses
-      redundant mentions. DECISIVE if recall@10(ppr) >= recall@10(bm25_25).
+      redundant mentions. DESCRIPTIVE_THRESHOLD if recall@10(ppr) >= recall@10(bm25_25).
 
-ALL inputs are real on-disk TinkerRL-Bench artifacts; no fabrication.
+Inputs are existing artifacts. Their provenance must be independently established; no held-out or preregistration guarantee is inferred here.
 
 Run:
   cd <repo root>
@@ -51,17 +51,19 @@ Run:
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import math
-import os
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+from _review01_contracts import OUTPUT_ROOT, evidence_metadata, require_inputs, write_artifact_metadata
 WORKTREE = REPO_ROOT
+OUT = OUTPUT_ROOT / "hipporag"
 RESULTS = WORKTREE / "platform_hybrid/experiments" / "results" / "berkeley"
 DOCS = WORKTREE / "platform_hybrid/docs" / "berkeley_improvements"
 
@@ -148,50 +150,52 @@ def build_kg(corpus: list[dict]) -> tuple[dict, list[tuple[str, str]]]:
                 if a < b:
                     edges[(a, b)] += 1
     node_list = sorted(nodes)
-    edge_list = [(a, b, w) for (a, b), w in edges.items()]
-    return {"nodes": node_list, "deg": dict(nodes)}, [(a, b) for (a, b, w) in edge_list]
+    edge_list = [(a, b, 1 + math.log(w)) for (a, b), w in edges.items()]
+    strength = {n: 0.0 for n in node_list}
+    for a, b, weight in edge_list:
+        strength[a] += weight
+        strength[b] += weight
+    return {"nodes": node_list, "deg": strength, "document_frequency": dict(nodes)}, edge_list
 
 # ----------------------- HippoRAG-style PPR ----------------------------
 
-def ppr(kg: dict, edges: list[tuple[str, str]], seeds: list[str],
-        alpha: float = 0.85, n_iters: int = 50) -> dict[str, float]:
-    """Personalized PageRank on the entity graph with seeds.
-
-    Restarts to seeds with probability (1 - alpha).
-    Returns mass per entity. Matches the HippoRAG retrieval mechanism:
-    seed = query entity(ies), PPR over KG = contextualised retrieval.
-    """
+def ppr(kg, edges, seeds, alpha=.85, n_iters=50):
+    """Fixed-personalization PageRank, weighted out-strength and dangling redistribution."""
+    if not 0 <= alpha < 1 or n_iters < 0:
+        raise ValueError("Invalid damping or iteration count")
     nodes = kg["nodes"]
-    deg = kg["deg"]
-    adj = defaultdict(list)
-    for a, b in edges:
-        adj[a].append(b)
-        adj[b].append(a)
-    mass = {n: 0.0 for n in nodes}
-    seed_total = sum(1.0 for s in seeds if s in mass) or 1.0
-    for s in seeds:
-        if s in mass:
-            mass[s] += 1.0 / seed_total
+    if not nodes:
+        return {}
+    if len(set(nodes)) != len(nodes):
+        raise ValueError("Duplicate graph node")
+    adj = {n: {} for n in nodes}
+    for edge in edges:
+        a, b = edge[:2]
+        weight = float(edge[2]) if len(edge) == 3 else 1.0
+        if a not in adj or b not in adj or not math.isfinite(weight) or weight <= 0:
+            raise ValueError("Invalid graph edge")
+        adj[a][b] = adj[a].get(b, 0) + weight
+        adj[b][a] = adj[b].get(a, 0) + weight
+    chosen = set(seeds) & set(nodes)
+    chosen = chosen or set(nodes)  # explicit uniform fallback for unmatched queries
+    v = {n: float(n in chosen)/len(chosen) for n in nodes}
+    mass = v.copy()
+    strengths = {n: sum(adj[n].values()) for n in nodes}
     for _ in range(n_iters):
-        leak = 0.0
-        new_mass = {n: (1 - alpha) * mass[n] for n in nodes}
+        dangling = sum(mass[n] for n in nodes if not strengths[n])
+        updated = {n: ((1-alpha) + alpha*dangling)*v[n] for n in nodes}
         for n in nodes:
-            d = deg.get(n, 0)
-            if d == 0:
-                continue
-            share = alpha * mass[n] / d
-            for nb in adj[n]:
-                new_mass[nb] += share
-        mass = new_mass
+            for neighbor, weight in adj[n].items():
+                updated[neighbor] += alpha*mass[n]*weight/strengths[n]
+        mass = updated
     return mass
 
 # ----------------------- BM25 baseline (CPU) -----------------------------
 
 def bm25_score(query_toks: list[str], doc: dict,
                df: dict[str, int], N: int,
-               k1: float = 1.2, b: float = 0.75) -> float:
+               k1: float = 1.2, b: float = 0.75, avgdl: float = 1.0) -> float:
     dl = len(doc["toks"])
-    avgdl = sum(len(p["toks"]) for p in corpus) / N
     score = 0.0
     for q in query_toks:
         f = sum(1 for t in doc["toks"] if t == q)
@@ -260,22 +264,33 @@ def rank_ppr(corpus, kg, edges, query_seeds):
     return scored
 
 def rank_bm25(corpus, query_toks, df, N, top_k=25):
-    scored = [(p, bm25_score(query_toks, p, df, N)) for p in corpus]
+    avgdl = sum(len(p["toks"]) for p in corpus) / N
+    scored = [(p, bm25_score(query_toks, p, df, N, avgdl=avgdl)) for p in corpus]
     scored.sort(key=lambda x: -x[1])
     return scored[:top_k]
 
 def rank_random(corpus, qid):
-    # deterministic shuffle via sum of byte values
-    scored = [(p, hash(qid + p["id"]) % 10_000) for p in corpus]
+    # Stable digest ordering; recorded protocol seed is zero
+    scored = [(p, int.from_bytes(hashlib.sha256(("hipporag-random-v2:0:" + qid + ":" + p["id"]).encode()).digest(), "big")) for p in corpus]
     scored.sort(key=lambda x: -x[1])
     return scored
+
+def first_gold(ranked, gold_substr, k=10):
+    for index, (passage, _score) in enumerate(ranked[:k]):
+        if gold_substr in passage["row"].get("model", "") or gold_substr in passage["passage"]:
+            return 1, index + 1
+    return 0, -1
+
 
 # --------------------------- main -----------------------------------
 
 def main():
-    global corpus
+    require_inputs(*(RESULTS / name for name, _, _ in CORPUS_SPEC))
+    metadata = evidence_metadata("weighted_personalized_pagerank_vs_BM25_and_stable_digest_baseline", [RESULTS / name for name, _, _ in CORPUS_SPEC])
     corpus = load_corpus()
     N = len(corpus)
+    if not N:
+        raise ValueError("No retrieval corpus")
     print(f"[hipporag] loaded {N} passages across "
           f"{len(set(p['src'] for p in corpus))} sources")
     kg, edges = build_kg(corpus)
@@ -296,16 +311,10 @@ def main():
         bm25_ranked = rank_bm25(corpus, tokenize(qtext), df, N, top_k=25)
         rnd_ranked = rank_random(corpus, str(qid))
 
-        def first_gold(ranked, k=10):
-            for j, (p, s) in enumerate(ranked[:k]):
-                if gold_substr in p["row"].get("model", "") or \
-                   gold_substr in p["passage"]:
-                    return 1, j + 1
-            return 0, -1
-
-        h_p, rk_p = first_gold(ppr_ranked)
-        h_b, rk_b = first_gold(bm25_ranked)
-        h_r, rk_r = first_gold(rnd_ranked)
+        h_p, rk_p = first_gold(ppr_ranked, gold_substr)
+        h_b, rk_b = first_gold(bm25_ranked, gold_substr, k=10)
+        h_b25, rk_b25 = first_gold(bm25_ranked, gold_substr, k=25)
+        h_r, rk_r = first_gold(rnd_ranked, gold_substr)
         ppr_hits.append(h_p)
         bm25_hits.append(h_b)
         rnd_hits.append(h_r)
@@ -317,6 +326,8 @@ def main():
             "ppr_rank": rk_p,
             "bm25_hit10": h_b,
             "bm25_rank": rk_b,
+            "bm25_hit25": h_b25,
+            "bm25_rank25": rk_b25,
             "random_hit10": h_r,
             "random_rank": rk_r,
         })
@@ -347,27 +358,8 @@ def main():
     print(f"[H2 PPR vs RAND ] delta={delta_h2:+.3f}  "
           f"MRR_ppr_vs_rnd={mrr_ppr - mrr_rnd:+.3f}")
 
-    # H3: entity importance matches RQS ordering
-    qwen_mass = ppr(kg, edges, ["qwen3.5-4b"])
-    qwen_mass_x = sum(qwen_mass.values())
-    qwen_mass_y = ppr(kg, edges, ["qwen3-8b"])
-    qwen_mass_y_val = sum(qwen_mass_y.values())
-    # Pillar-1 RQS: Qwen3.5-4B=0.7591, Qwen3-8B=0.3534
-    rqs = {"qwen3.5-4b": 0.7591, "qwen3-8b": 0.3534}
-    ppr_seed_mass = {
-        "qwen3.5-4b": qwen_mass_x,
-        "qwen3-8b":   qwen_mass_y_val,
-    }
-    # Pearson between (ppr_mass, RQS)
-    xs = [ppr_seed_mass["qwen3.5-4b"], ppr_seed_mass["qwen3-8b"]]
-    ys = [rqs["qwen3.5-4b"], rqs["qwen3-8b"]]
-    n = 2
-    mx = sum(xs) / n; my = sum(ys) / n
-    cov = sum((xs[i] - mx) * (ys[i] - my) for i in range(n))
-    varx = sum((xs[i] - mx) ** 2 for i in range(n))
-    vary = sum((ys[i] - my) ** 2 for i in range(n))
-    pearson_h3 = cov /math.sqrt(varx * vary) if varx and vary else 0.0
-    print(f"[H3 PPR entity mass vs RQS ] pearson r = {pearson_h3:+.4f}")
+    # Total PPR probability is one for every seed, so its correlation is undefined.
+    pearson_h3 = None
 
     # H4: degree-saturation test
     # Each anchor's "out-degree" in our KG
@@ -378,16 +370,16 @@ def main():
           f"qwen3-8b_deg={qwen8_deg} (denser entity = lower PPR-seed-mass "
           f"delta vs sparse entity)")
 
-    # H5: cost-equivalence using top-10 recall, PPR vs BM25-top25
+    # H5: retrieval-cutoff comparison using top-10 recall, PPR vs BM25-top25
     h5_ppr = ppr_hr
     # BM25 at top-25 should match PPR@10 in held-out queries
-    bm25_hr_top25 = sum(1 for r in out_rows if r["bm25_rank"] > 0) / len(out_rows)
-    print(f"[H5 cost-equivalence ] PPR@10={h5_ppr:.3f}  "
+    bm25_hr_top25 = sum(r["bm25_hit25"] for r in out_rows) / len(out_rows)
+    print(f"[H5 retrieval-cutoff comparison ] PPR@10={h5_ppr:.3f}  "
           f"BM25@25_recall={bm25_hr_top25:.3f}")
 
     # write TSVs
-    RESULTS.mkdir(parents=True, exist_ok=True)
-    eval_path = RESULTS / "hipporag_eval.tsv"
+    OUT.mkdir(parents=True, exist_ok=True)
+    eval_path = OUT / "hipporag_eval.tsv"
     with open(eval_path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(out_rows[0].keys()),
                            delimiter="\t")
@@ -397,6 +389,10 @@ def main():
     print(f"[hipporag] wrote {eval_path}")
 
     summary = {
+        **metadata,
+        "H3_status": "undefined_constant_total_probability_mass",
+        "random_baseline": "sha256; protocol seed 0",
+        "H5_cost_measured": False,
         "n_passages": N,
         "n_kg_nodes": len(kg["nodes"]),
         "n_kg_edges": len(edges),
@@ -417,23 +413,23 @@ def main():
         "H5_recall_bm25_at_25": bm25_hr_top25,
         "results": out_rows,
     }
-    summary_path = RESULTS / "hipporag_summary.json"
+    summary_path = OUT / "hipporag_summary.json"
     with open(summary_path, "w") as f:
         json.dump(summary, f, indent=2)
     print(f"[hipporag] wrote {summary_path}")
+    write_artifact_metadata(OUT, metadata)
 
     # --------------------------- summary ----------------------------
-    n_pass = lambda x: "DECISIVE" if x else "NULL"
+    n_pass = lambda x: "DESCRIPTIVE_THRESHOLD" if x else "NULL"
     print("\n==== HIPPORAG VERDICT ====")
     print(f"  H1 PPR vs BM25      : {n_pass(delta_h1 > 0.10)} "
           f"(delta@10 = {delta_h1:+.3f}; target >= +0.10)")
     print(f"  H2 PPR vs random    : {n_pass(delta_h2 > 0.20)} "
           f"(delta@10 = {delta_h2:+.3f}; target >= +0.20)")
-    print(f"  H3 r(mass, RQS)     : {n_pass(pearson_h3 >= 0.40)} "
-          f"(r = {pearson_h3:+.4f}; target >= +0.40)")
+    print("  H3: unavailable; total PPR mass is constant")
     print(f"  H4 degree saturation: informational "
           f"(q35_4b={qwen35_deg}, q3_8b={qwen8_deg})")
-    print(f"  H5 cost-equivalence : {n_pass(h5_ppr >= bm25_hr_top25)} "
+    print(f"  H5 retrieval-cutoff comparison : {n_pass(h5_ppr >= bm25_hr_top25)} "
           f"(PPR@10={h5_ppr:.3f} vs BM25@25={bm25_hr_top25:.3f})")
 
 if __name__ == "__main__":

@@ -1,89 +1,73 @@
-import os
+"""Generate a bounded, explicitly routed pilot; never launch training on generation."""
 import argparse
-import yaml
+import copy
+import hashlib
+import json
+import os
+import shlex
+import sys
 from itertools import product
+from pathlib import Path
+import yaml
 
-def main():
-    parser = argparse.ArgumentParser(description="Generate and run an exhaustive GRPO hyperparameter sweep.")
-    parser.add_argument("--base-config", required=True, help="Path to base YAML config (e.g., platform_tinker/atropos/configs/gsm8k_qwen_8b.yaml)")
-    parser.add_argument("--output-dir", default="sweep_configs", help="Directory to save generated configs and run script")
-    parser.add_argument("--run-script-name", default="run_sweep.sh", help="Name of the generated bash script")
-    
-    args = parser.parse_args()
 
-    # Define the sweep grid
-    learning_rates = [1e-5, 3e-5, 1e-4]
-    lora_ranks = [8, 16, 32, 64]
-    batch_sizes = [64, 128, 256]
-    group_sizes = [8, 16, 32]
+def shell_command(arguments):
+    return shlex.join([str(arg) for arg in arguments])
 
-    os.makedirs(args.output_dir, exist_ok=True)
-    
-    with open(args.base_config, "r") as f:
-        base_cfg = yaml.safe_load(f)
 
-    run_commands = []
-    
-    # Keep track of generated config count
-    count = 0
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--base-config", required=True)
+    parser.add_argument("--output-dir", default="sweep_configs")
+    parser.add_argument("--run-script-name", default="run_sweep.sh")
+    parser.add_argument("--backend", required=True, choices=["tinker-atropos"],
+                        help="Only the implemented Tinker/Atropos route is supported")
+    parser.add_argument("--max-configs", type=int, default=3, help="Bounded pilot size; larger campaigns require an explicit limit")
+    parser.add_argument("--seeds", nargs="+", type=int, default=[42])
+    args = parser.parse_args(argv)
+    if args.max_configs <= 0 or len(set(args.seeds)) != len(args.seeds):
+        parser.error("max-configs must be positive and seeds unique")
+    base = Path(args.base_config).resolve()
+    if not base.is_file():
+        raise FileNotFoundError(base)
+    cfg = yaml.safe_load(base.read_text())
+    if not isinstance(cfg, dict):
+        raise ValueError("Base config must be a mapping")
+    root = Path(__file__).resolve().parents[2]
+    training_script = root / "platform_tinker/atropos/train_grpo_unsloth.py"
+    if not training_script.is_file():
+        raise FileNotFoundError(training_script)
+    output = Path(args.output_dir).resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    commands, entries = [], []
+    runner = Path(__file__).with_name("_sweep_attempt.py").resolve()
+    for lr, rank, batch, group in list(product([1e-5, 3e-5, 1e-4], [8, 16, 32, 64], [64, 128, 256], [8, 16, 32]))[:args.max_configs]:
+        actual = copy.deepcopy(cfg)
+        actual.setdefault("env", {}).update(group_size=group, batch_size=batch)
+        actual.setdefault("tinker", {}).update(lora_rank=rank, learning_rate=lr)
+        digest = hashlib.sha256(json.dumps(actual, sort_keys=True).encode()).hexdigest()
+        config_path = output / f"config_{digest[:16]}.yaml"
+        config_path.write_text(yaml.safe_dump(actual, sort_keys=False))
+        for seed in args.seeds:
+            manifest = output / "attempts" / f"{digest}_{seed}.json"
+            command = [sys.executable, str(runner), "--manifest", str(manifest),
+                       "--config-hash", digest, "--seed", str(seed), "--",
+                       sys.executable, str(training_script), "--config", str(config_path), "--seed", str(seed)]
+            commands.append(shell_command(command))
+            entries.append({"config_hash": digest, "seed": seed, "backend": args.backend,
+                            "command": command, "attempt_manifest": str(manifest)})
+    plan = {"protocol": "grpo-sweep-pilot-v2", "backend": args.backend,
+            "stage": "pilot", "screening": "requires held-out validation before expansion",
+            "confirmation_seeds": "must be selected independently after screening",
+            "training_started": False, "planned_attempts": entries}
+    (output / "sweep_manifest.json").write_text(json.dumps(plan, indent=2)+"\n")
+    script = output / args.run_script_name
+    script.write_text("#!/bin/bash\nset -euo pipefail\n" + "\n".join(
+        "printf '%s\\n' " + shlex.quote("Running: " + command) + "\n" + command for command in commands)+"\n")
+    os.chmod(script, 0o700)
+    print(f"Generated {len(entries)} planned attempts for {args.backend}; no training launched. Script: {script}")
+    return plan
 
-    print(f"Generating exhaustive sweep configurations based on {args.base_config}")
 
-    for lr, rank, bs, gs in product(learning_rates, lora_ranks, batch_sizes, group_sizes):
-        # Constraints: batch_size must be a multiple of group_size
-        if bs % gs != 0:
-            continue
-            
-        # Copy base config
-        cfg = yaml.safe_load(yaml.dump(base_cfg))  # deep copy
-        
-        # Ensure env and tinker sections exist
-        if "env" not in cfg:
-            cfg["env"] = {}
-        if "tinker" not in cfg:
-            cfg["tinker"] = {}
-
-        cfg["env"]["group_size"] = gs
-        cfg["env"]["batch_size"] = bs
-        cfg["tinker"]["lora_rank"] = rank
-        cfg["tinker"]["learning_rate"] = lr
-        
-        # Give it a unique run name for wandb
-        base_name = cfg["tinker"].get("wandb_run_name", "grpo-sweep")
-        run_name = f"{base_name}-lr{lr}-lora{rank}-bs{bs}-gs{gs}"
-        cfg["tinker"]["wandb_run_name"] = run_name
-        cfg["tinker"]["wandb_group"] = "grpo-exhaustive-sweep"
-
-        config_filename = f"config_lr{lr}_lora{rank}_bs{bs}_gs{gs}.yaml"
-        config_filepath = os.path.join(args.output_dir, config_filename)
-        
-        with open(config_filepath, "w") as f:
-            yaml.dump(cfg, f, default_flow_style=False, sort_keys=False)
-            
-        count += 1
-        # Add to run script
-        # Assuming the generated bash script will be run from the repo root or atropos dir,
-        # we provide the relative path to the config file.
-        # But to be safe, we can use absolute paths or relative to execution dir.
-        cmd = f"python3 platform_tinker/atropos/train_grpo_unsloth.py --config {config_filepath} --seed 42"
-        run_commands.append(cmd)
-
-    print(f"Generated {count} valid configurations.")
-
-    run_script_path = os.path.join(args.output_dir, args.run_script_name)
-    with open(run_script_path, "w") as f:
-        f.write("#!/bin/bash\n")
-        f.write("# Auto-generated exhaustive hyperparameter sweep script\n")
-        f.write("set -euo pipefail\n\n")
-        f.write("echo 'Starting exhaustive hyperparameter sweep...'\n\n")
-        for cmd in run_commands:
-            f.write(f"echo 'Running: {cmd}'\n")
-            f.write(f"{cmd}\n")
-            f.write("echo '---------------------------------------------------'\n\n")
-
-    os.chmod(run_script_path, 0o755)
-    print(f"Run script written to {run_script_path}")
-    print(f"To execute the sweep, run: bash {run_script_path}")
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

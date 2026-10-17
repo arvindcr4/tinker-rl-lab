@@ -1,0 +1,3 @@
+# Candidate backend contract only; this is not a validated GPU image lock.
+# The separate platform_hybrid Modal launcher still uses its own 0.8.4 path.
+openrlhf==0.8.0

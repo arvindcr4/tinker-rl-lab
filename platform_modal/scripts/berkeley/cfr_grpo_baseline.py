@@ -1,72 +1,23 @@
 #!/usr/bin/env python3
-"""
-CFR-vs-GRPO baseline analysis on Pillar-3 group-size data
-==========================================================
+"""Retrospective group-size analogies and an iid Bernoulli sanity check.
 
-Maps Noam Brown's multi-agent AI framework (F25 L7) onto the GRPO group-baseline.
-
-Verified citations (arXiv, 2026-07-04):
-  - Brown & Sandholm, "Superhuman AI for multiplayer poker" (Pluribus), Science 2019
-  - Brown, Bakhtin, Lerer, Gong, "ReBeL" arXiv:2007.13544 (2020)
-  - Gray, Lerer, Bakhtin, Brown, "Human-Level Performance in No-Press Diplomacy
-    via Equilibrium Search" arXiv:2010.02923 (2020, ICLR 2021)
-
-Core mapping:
-  - GRPO baseline     = (1/G) Σ_i r_i          (fixed Monte Carlo)
-  - CFR/ReBeL baseline= V_φ(s, I)             (learned value head)
-  - ZVF (zero-variance fraction) = P[all G rollouts agree]
-  - Bounded cone      = multi-player saturation (Pluribus)
-
-Pre-registered hypotheses on real iter127 Pillar-3 data:
-  H1: GRPO baseline ≡ CFR external-sampling baseline under binary reward
-      — both reduce to (1/G) Σ_i r_i (Brown 2020 §4.2 equivalence).
-      Predicted: ZVF(GRPO) = ZVF(CFR-external) to within O(G·p·(1-p)) noise.
-
-  H2: Pluribus multi-player scaling predicts bounded cone at G ≥ 2·G*
-      — Pluribus used 64+ samples/node for 6-player NLHE and found
-        further samples offered no additional value.
-      Predicted: G=64 ≤ G=32 at all T (DECISIVE if 4/4 non-positive).
-
-  H3: ReBeL public-belief-state compression predicts Δ(G=32→64) → 0
-      — at convergence, the public belief state (≈prompt+group_history)
-        needs only enough samples to lock in the equilibrium.
-      Predicted: |Δ(G=32→64)| × T grows sub-linearly (saturates).
-
-  H4: CFR equilibrium = zero-advantage group = ZVF → 0
-      — Brown-Sandholm 2019 Theorem 1: MCCFR regret → 0 ⟺ Nash.
-      Translated: at saturation, all rollouts in a group agree.
-      Predicted: mean_zvf (from iter107) drops 0.838 (G=2) → 0.631 (G=16)
-                 and would reach ≈0 at infinite compute.
-
-  H5: CDH bridge (B-SYNTH row 12 + ReBeL value network):
-      — ReBeL uses a learned V_φ → CDH row 12 found PPO critic increases
-        gradient-reward coupling by 19.5% vs GRPO's stateless baseline.
-      Predicted: the G-axis "learned baseline" overhead should manifest
-                 as larger |ρ(Δg, Δr)| at the smallest G.
-
-Reads:
-  platform_hybrid/experiments/results/group_size_iter127_{joint_fit,optimal_g,
-  bounded_cone,complementarity,summary}.tsv
-  platform_hybrid/experiments/results/group_size_iter107_returns_to_compute.tsv
-  platform_hybrid/experiments/results/group_size_effect.tsv
-
-Outputs (under platform_hybrid/experiments/results/berkeley/):
-  cfr_grpo_analytical_equivalence.tsv
-  cfr_grpo_bounded_cone.tsv
-  cfr_grpo_zvf_decay.tsv
-  cfr_grpo_cdh_bridge.tsv
-  cfr_grpo_summary.json
+No CFR algorithm is implemented. Agreement within every group means ZVF=1.
+At fixed G, p**G+(1-p)**G approaches one as p approaches zero or one.
+Changes across G do not establish learning, convergence or Nash equilibrium.
 """
 
 from __future__ import annotations
-import csv, json, math, os, sys, datetime
+import csv, json, math, sys, datetime
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-RES = ROOT / "experiments" / "results"
-OUT = RES / "berkeley"
-OUT.mkdir(parents=True, exist_ok=True)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT, RESULTS_DIR
+from _review01_contracts import OUTPUT_ROOT, evidence_metadata, require_inputs, write_artifact_metadata, json_ready
+ROOT = WORKTREE = REPO_ROOT
+RES = RESULTS = RESULTS_DIR
+OUT = OUTPUT_ROOT / "cfr_grpo_baseline"
+
 
 def _read_tsv(path: Path) -> list[dict]:
     if not path.exists():
@@ -76,20 +27,15 @@ def _read_tsv(path: Path) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# H1: analytical GRPO ≡ CFR external-sampling baseline under binary reward
+# H1: iid Bernoulli zero-contrast probability sanity check
 # ---------------------------------------------------------------------------
-def h1_analytical_equivalence(G_values, n_samples=10000, seeds=range(0, 50)):
-    """
-    Both GRPO and CFR-external-sample reduce to (1/G) Σ r_i when rewards are
-    binary.  The ZVF (zero-variance fraction) = P[all G samples agree]
-    = p^G + (1-p)^G, where p = E[r|prompt].
-    """
+def h1_iid_sanity_check(G_values, n_samples=10000, seeds=range(50)):
+    """Synthetic iid samples check P(all rewards agree), not comparative CFR updates."""
     rows = []
     for G in G_values:
         for p in [0.1, 0.3, 0.5, 0.7, 0.9]:
             zvf_theory = p ** G + (1 - p) ** G
-            # Monte-Carlo under GRPO vs CFR-external-sample is identical
-            # because the only randomness is in the G Monte-Carlo outcomes.
+            # Independent Bernoulli draws only; no comparative CFR update is implemented.
             zvf_mc = 0.0
             for s in seeds:
                 import random
@@ -101,8 +47,7 @@ def h1_analytical_equivalence(G_values, n_samples=10000, seeds=range(0, 50)):
                         cnt += 1
                 zvf_mc += cnt / n_samples
             zvf_mc /= len(seeds)
-# advantage-std under GRPO and CFR-ES are both:
-            # std(r_i - b) = sqrt(p(1-p)) when baseline = p
+            # Population SD of a Bernoulli reward centered at its true mean.
             adv_std = math.sqrt(p * (1 - p))
             rows.append({
                 "G": G, "p": p,
@@ -110,7 +55,7 @@ def h1_analytical_equivalence(G_values, n_samples=10000, seeds=range(0, 50)):
                 "zvf_mc": f"{zvf_mc:.4f}",
                 "abs_diff": f"{abs(zvf_theory - zvf_mc):.4f}",
                 "advantage_std_analytic": f"{adv_std:.4f}",
-                "decisive": "yes" if abs(zvf_theory - zvf_mc) < 0.02 else "no",
+                "threshold_met": "yes" if abs(zvf_theory - zvf_mc) < 0.02 else "no",
             })
     return rows
 
@@ -181,11 +126,13 @@ def h3_belief_state_compression():
             acc_G64[T] = emp
     rows = []
     abs_deltas = []
+    observed_Ts = []
     for T in Ts:
         if T in acc_G32 and T in acc_G64:
             d = acc_G64[T] - acc_G32[T]
             abs_d = abs(d)
             abs_deltas.append(abs_d)
+            observed_Ts.append(T)
             rows.append({
                 "T": T,
                 "acc_G32": f"{acc_G32[T]:.4f}",
@@ -194,17 +141,17 @@ def h3_belief_state_compression():
                 "abs_delta": f"{abs_d:.4f}",
                 "abs_delta_x_T_over_1e6": f"{abs_d * T / 1e6:.3f}",
             })
-    # sub-linearity check: |Δ| × T should be monotonic in T / decreasing per-step
-    # We measure log-log slope of |Δ| vs T; sub-linear means slope < 1.0
+    # Fit the stated |delta|*T estimand at its actual observed budgets.
+    # A slope <1 is descriptive sublinearity; complete budget coverage is required.
     if len(abs_deltas) >= 2 and all(d > 0 for d in abs_deltas):
         # Fit slope in log-log
-        log_T = [math.log10(t) for t in Ts[: len(abs_deltas)]]
-        log_d = [math.log10(d) for d in abs_deltas]
+        log_T = [math.log10(t) for t in observed_Ts]
+        log_d = [math.log10(d*t) for d, t in zip(abs_deltas, observed_Ts)]
         n = len(log_T)
         sx = sum(log_T); sy = sum(log_d)
         sxx = sum(x * x for x in log_T); sxy = sum(x * y for x, y in zip(log_T, log_d))
         slope = (n * sxy - sx * sy) / (n * sxx - sx * sx)
-        sublinear = slope < 1.0
+        sublinear = len(observed_Ts) == len(Ts) and slope < 1.0
     else:
         slope = float("nan")
         sublinear = False
@@ -212,7 +159,7 @@ def h3_belief_state_compression():
 
 
 # ---------------------------------------------------------------------------
-# H4: equilibrium = ZVF → 0 (mean_zvf decay)
+# H4: descriptive ZVF across group sizes, not convergence
 # ---------------------------------------------------------------------------
 def h4_zvf_decay():
     """
@@ -250,7 +197,7 @@ def h4_zvf_decay():
                 else "no"
             ),
         })
-    monotonic = all(
+    monotonic = len(per_G) >= 2 and all(
         per_G[i]["mean_zvf"] < per_G[i - 1]["mean_zvf"]
         for i in range(1, len(per_G))
     )
@@ -320,24 +267,28 @@ def h5_cdh_bridge():
 # Main
 # ---------------------------------------------------------------------------
 def main():
+    inputs = [RES / name for name in ["group_size_iter127_joint_fit.tsv", "group_size_iter127_bounded_cone.tsv", "group_size_effect.tsv"]]
+    require_inputs(*inputs)
+    metadata = evidence_metadata("iid_synthetic_sanity_check_and_retrospective_group_size_descriptions", inputs, kind="mixed_synthetic_and_retrospective")
+    OUT.mkdir(parents=True, exist_ok=True)
     t0 = datetime.datetime.now(datetime.timezone.utc).isoformat()
     print(f"[cfr_grpo] start {t0}")
 
     # ---- H1 ----
-    h1 = h1_analytical_equivalence([2, 4, 8, 16, 32])
-    h1_path = OUT / "cfr_grpo_analytical_equivalence.tsv"
+    h1 = h1_iid_sanity_check([2, 4, 8, 16, 32])
+    h1_path = OUT / "cfr_grpo_iid_sanity_check.tsv"
     with h1_path.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(h1[0].keys()), delimiter="\t")
         w.writeheader(); w.writerows(h1)
-    h1_decisive = sum(1 for r in h1 if r["decisive"] == "yes")
+    h1_decisive = sum(1 for r in h1 if r["threshold_met"] == "yes")
     h1_total = len(h1)
-    print(f"[h1] GRPO ≡ CFR-ES analytical: {h1_decisive}/{h1_total} decisive")
+    print(f"[h1] iid Bernoulli probability sanity check: {h1_decisive}/{h1_total} decisive")
 
     # ---- H2 ----
     h2_rows, n_nonpos, n_total = h2_bounded_cone()
     h2_path = OUT / "cfr_grpo_bounded_cone.tsv"
     with h2_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h2_rows[0].keys()), delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(h2_rows[0].keys()) if h2_rows else ["status"], delimiter="\t")
         w.writeheader(); w.writerows(h2_rows)
     h2_decisive = (n_nonpos == n_total and n_total >= 3)
     print(f"[h2] Pluribus bounded cone: {n_nonpos}/{n_total} non-positive")
@@ -346,7 +297,7 @@ def main():
     h3_rows, slope, sublinear = h3_belief_state_compression()
     h3_path = OUT / "cfr_grpo_belief_state_compression.tsv"
     with h3_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h3_rows[0].keys()), delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(h3_rows[0].keys()) if h3_rows else ["status"], delimiter="\t")
         w.writeheader(); w.writerows(h3_rows)
     h3_decisive = sublinear
     print(f"[h3] ReBeL belief-state compression: slope={slope:.3f} sublinear={sublinear}")
@@ -355,22 +306,25 @@ def main():
     h4_rows, monotonic = h4_zvf_decay()
     h4_path = OUT / "cfr_grpo_zvf_decay.tsv"
     with h4_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h4_rows[0].keys()), delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(h4_rows[0].keys()) if h4_rows else ["status"], delimiter="\t")
         w.writeheader(); w.writerows(h4_rows)
     h4_decisive = monotonic and len(h4_rows) >= 3
-    print(f"[h4] ZVF equilibrium decay: monotonic={monotonic}")
+    print(f"[h4] ZVF across group sizes: monotonic={monotonic}")
 
     # ---- H5 ----
     h5_rows, cdh_consistent = h5_cdh_bridge()
     h5_path = OUT / "cfr_grpo_cdh_bridge.tsv"
     with h5_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h5_rows[0].keys()), delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(h5_rows[0].keys()) if h5_rows else ["status"], delimiter="\t")
         w.writeheader(); w.writerows(h5_rows)
     h5_decisive = cdh_consistent
     print(f"[h5] CDH bridge (ReBeL value network): max-residual-at-G=4={cdh_consistent}")
 
     # ---- summary ----
     summary = {
+        **metadata,
+        "comparative_CFR_update_implemented": False,
+        "mechanistic_analogy_status": "untested",
         "ts": t0,
         "iter": 19,
         "lecture": "F25 L7 Noam Brown (multi-agent AI / Libratus / Pluribus / ReBeL)",
@@ -382,33 +336,33 @@ def main():
         },
         "all_verified_via": "export.arxiv.org/api/query + arxiv.org/abs/<id>",
         "hypotheses": {
-            "H1_GRPO_eq_CFR_ES": {
-                "rows": len(h1), "decisive": h1_decisive,
-                "verdict": "DECISIVE" if h1_decisive == h1_total else "PARTIAL",
+            "H1_iid_Bernoulli_sanity_check": {
+                "rows": len(h1), "threshold_met": h1_decisive,
+                "verdict": "DESCRIPTIVE_THRESHOLD" if h1_decisive == h1_total else "PARTIAL",
                 "max_abs_diff": max(float(r["abs_diff"]) for r in h1),
             },
             "H2_bounded_cone_Pluribus": {
                 "non_positive": n_nonpos, "total": n_total,
-                "verdict": "DECISIVE" if h2_decisive else "NULL",
+                "verdict": "DESCRIPTIVE_THRESHOLD" if h2_decisive else "NULL",
             },
             "H3_belief_state_compression": {
-                "slope_log_delta_vs_log_T": f"{slope:.4f}",
+                "slope_log_abs_delta_times_T_vs_log_T": f"{slope:.4f}",
                 "sublinear": sublinear,
-                "verdict": "DECISIVE" if h3_decisive else "NULL",
+                "verdict": "INCOMPLETE" if len(h3_rows) != 4 else "DESCRIPTIVE_THRESHOLD" if h3_decisive else "THRESHOLD_NOT_MET",
             },
-            "H4_equilibrium_ZVF_decay": {
+            "H4_descriptive_ZVF_across_group_sizes": {
                 "monotonic": monotonic,
                 "rows": len(h4_rows),
-                "verdict": "DECISIVE" if h4_decisive else "NULL",
+                "verdict": "DESCRIPTIVE_THRESHOLD" if h4_decisive else "NULL",
             },
             "H5_CDH_bridge_ReBeL": {
                 "max_residual_at_smallest_G": cdh_consistent,
                 "rows": len(h5_rows),
-                "verdict": "DECISIVE" if h5_decisive else "NULL",
+                "verdict": "DESCRIPTIVE_THRESHOLD" if h5_decisive else "NULL",
             },
         },
         "verdict_counts": {
-            "DECISIVE": sum([h1_decisive == h1_total, h2_decisive,
+            "DESCRIPTIVE_THRESHOLD": sum([h1_decisive == h1_total, h2_decisive,
                              h3_decisive, h4_decisive, h5_decisive]),
             "TOTAL": 5,
         },
@@ -427,7 +381,8 @@ def main():
         ],
     }
     out_json = OUT / "cfr_grpo_summary.json"
-    out_json.write_text(json.dumps(summary, indent=2))
+    out_json.write_text(json.dumps(json_ready(summary), indent=2, allow_nan=False))
+    write_artifact_metadata(OUT, metadata)
     print(f"[cfr_grpo] wrote {out_json.relative_to(ROOT)}")
     print(f"[cfr_grpo] verdict: {summary['verdict_counts']}")
 

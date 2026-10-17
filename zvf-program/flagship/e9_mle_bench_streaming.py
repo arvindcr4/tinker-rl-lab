@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 from collections.abc import Mapping, Set
 from datetime import datetime, timezone
@@ -260,10 +261,8 @@ def repair_known_runtime_error(solution_code: str, stderr: str) -> str:
         and "y_pred = model.predict_proba(X_test)[:, 1]" in solution_code
         and "text_col = 'comment_text'" in solution_code
     ):
-        return solution_code.replace(
-            "y_train = train['target'].values",
-            "y_train = (train['target'].values >= 0.5).astype(int)",
-            1,
+        raise LaunchGateError(
+            "semantic repair blocked: continuous targets cannot be thresholded without an explicit benchmark policy"
         )
     stanford_train_expand = """for _, row in train.iterrows():
     for i in range(row['seq_scored']):
@@ -1122,6 +1121,8 @@ def _money(value: Any, field: str) -> Decimal:
         result = Decimal(str(value))
     except (InvalidOperation, ValueError) as exc:
         raise LaunchGateError(f"{field} is not a decimal amount") from exc
+    if not result.is_finite():
+        raise LaunchGateError(f"{field} must be finite")
     if result < 0:
         raise LaunchGateError(f"{field} is negative")
     return result
@@ -1192,12 +1193,18 @@ def build_run_receipt(
 
     if "score" not in native_grade:
         raise LaunchGateError("native grader did not return a competition score")
+    raw_score = native_grade.get("score")
+    if raw_score is not None and (
+        isinstance(raw_score, bool) or not isinstance(raw_score, (int, float))
+        or not math.isfinite(raw_score)
+    ):
+        raise LaunchGateError("native competition score must be finite numeric or null")
     agent_execution_failed = native_grade.get("agent_execution_failed") is True
     valid_grade = (
         native_grade.get("score") is not None and native_grade.get("valid_submission") is not False
     )
     receipt: dict[str, Any] = {
-        "schema_version": "pavlov-e9-modal-streaming-v1",
+        "schema_version": "pavlov-e9-modal-streaming-v2",
         "recorded_at_utc": datetime.now(timezone.utc).isoformat(),
         "competition_id": competition_id,
         "status": (

@@ -621,6 +621,9 @@ def sweep_all_problems(
     finding, never a benchmark result.
     """
 
+    if isinstance(workers, bool) or not isinstance(workers, int) or workers <= 0:
+        raise ValueError("workers must be a positive integer")
+
     started = time.time()
     per_dataset: dict[str, Any] = {}
     all_results: list[dict[str, Any]] = []

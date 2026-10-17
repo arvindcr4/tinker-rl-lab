@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -956,6 +957,17 @@ def _task_split_gate(
     ), selected
 
 
+def validate_native_score(grades: Any) -> float:
+    """Validate the native numeric result; do not invent an undocumented range."""
+    scoring = grades.get("scoring_results") if isinstance(grades, Mapping) else None
+    score = scoring.get("final_score") if isinstance(scoring, Mapping) else None
+    if isinstance(score, bool) or not isinstance(score, (int, float)):
+        raise RuntimeError("native grader score must be numeric")
+    if not math.isfinite(score):
+        raise RuntimeError("native grader score must be finite")
+    return float(score)
+
+
 def _native_verifier_gate(archipelago_dir: Path) -> Gate:
     grading_dir = archipelago_dir / DEFAULT_NATIVE_VERIFIER_PATH
     required_paths = (
@@ -987,6 +999,13 @@ def _native_verifier_gate(archipelago_dir: Path) -> Gate:
             text=True,
             stderr=subprocess.STDOUT,
         ).strip()
+        status = subprocess.check_output(
+            ["git", "-C", str(archipelago_dir), "status", "--porcelain", "--untracked-files=all"],
+            text=True, stderr=subprocess.STDOUT,
+        )
+        if status.strip():
+            return Gate("native_verifier", "BLOCKED",
+                        {"reason": "checkout contains local modifications"})
         tree = subprocess.check_output(
             ["git", "-C", str(archipelago_dir), "ls-tree", "-r", "HEAD", "--", "grading"],
             text=True,
@@ -2070,11 +2089,7 @@ def _launch_official_archipelago(
         grades = (
             json.loads(grades_path.read_text(encoding="utf-8")) if grades_path.is_file() else None
         )
-        score = (
-            grades.get("scoring_results", {}).get("final_score")
-            if isinstance(grades, Mapping)
-            else None
-        )
+        score = validate_native_score(grades)
         wandb_run.log(
             {
                 "e5/return_code": return_code,
@@ -2105,6 +2120,8 @@ def _launch_official_archipelago(
         "run_dir": str(run_dir),
         "log_path": str(log_path),
         "grades_path": str(grades_path),
+        "grades_sha256": sha256_bytes(grades_path.read_bytes()),
+        "native_score_validation": "finite-numeric-v2",
         "environment": environment_receipt,
         "wandb": {"run_id": wandb_run.id, "run_url": wandb_run.url, "mode": "online"},
         "bridge": {

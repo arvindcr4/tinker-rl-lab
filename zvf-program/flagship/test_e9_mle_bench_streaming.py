@@ -285,16 +285,8 @@ model = LogisticRegression(C=1.0)
 model.fit(X_train, y_train)
 y_pred = model.predict_proba(X_test)[:, 1]"""
 
-        repaired = repair_known_runtime_error(
-            source,
-            "ValueError: Unknown label type: continuous. Maybe you are trying to fit "
-            "a classifier, which expects discrete classes on a regression target with "
-            "continuous values.",
-        )
-
-        self.assertIn("y_train = (train['target'].values >= 0.5).astype(int)", repaired)
-        self.assertIn("model = LogisticRegression(C=1.0)", repaired)
-        self.assertIn("y_pred = model.predict_proba(X_test)[:, 1]", repaired)
+        with self.assertRaisesRegex(LaunchGateError, "semantic repair blocked"):
+            repair_known_runtime_error(source, "ValueError: Unknown label type: continuous")
 
     def test_selects_stanford_per_position_features_and_targets(self) -> None:
         source = """import numpy as np

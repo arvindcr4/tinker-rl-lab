@@ -46,7 +46,7 @@ try:
 except ImportError:  # pragma: no cover - direct execution fallback
     from pavlov_trust import load_trust_root
 
-SCHEMA_VERSION = "e13-openreward-games-receipt-v1"
+SCHEMA_VERSION = "e13-openreward-games-receipt-v2"
 PROVIDER_GRANT_SCHEMA = "e13-openreward-provider-grant-v1"
 E13_PROVIDER_REQUEST_SCHEMA = "e13-provider-execution-request-v1"
 E13_PROVIDER_RESULT_SCHEMA = "e13-provider-signed-result-v1"
@@ -285,6 +285,13 @@ def prove_seed_separation(train: SplitManifest, evaluation: SplitManifest) -> Se
     if train.split == evaluation.split:
         violations.append(f"train and eval refer to the same split name {train.split!r}")
 
+    # This policy is specific to Wordle; other environments require their own authority.
+    if train.environment.lower() == "envcommons/wordle":
+        if any(t.seed >= 10000 for t in train.tasks):
+            violations.append("Wordle training seeds must be below 10000")
+        if any(t.seed < 10000 for t in evaluation.tasks):
+            violations.append("Wordle evaluation seeds must be offset by 10000")
+
     shared_instances = tuple(sorted(train.instance_keys & evaluation.instance_keys))
     if shared_instances:
         violations.append(
@@ -492,6 +499,10 @@ def build_receipt(
         "score": score,
         "score_withheld_because": gate_failures,
         "episodes_verified": len(outcomes),
+        "episodes_rejected": sum(1 for o in outcomes if not o.accepted),
+        "assigned_task_count": separation.eval_instance_count if separation else None,
+        "official_metric_denominator": None,
+        "denominator_policy": "provider-native metric required; rejected episodes remain visible",
         "episodes_accepted": sum(1 for o in outcomes if o.accepted),
         "seed_separation": separation.as_dict() if separation is not None else None,
         "evidence": dict(evidence or {}),
@@ -876,6 +887,8 @@ def collect_e13_provider_signed_result(
         "grant_fingerprint": verified["grant_fingerprint"],
         "request_fingerprint": request_fingerprint,
         "provider_signed": True,
+        "evidence_basis": "trusted-provider-signed-assertions",
+        "external_receipts_independently_verified": False,
     }
 
 

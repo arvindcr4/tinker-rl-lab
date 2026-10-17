@@ -36,7 +36,7 @@ from _p8_common import (  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 TRAIN = ROOT / "fraud_data.csv"
 TEST = ROOT / "test_data.csv"
-OUT = ROOT / "experiments" / "results" / "p5p8"
+OUT = ROOT / "experiments" / "results" / "p5p8/corrected-review20-v2"
 FIG = OUT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -70,13 +70,14 @@ def expected_cost(p, y, L, c_inv=C_INV, c_sense=C_SENSE):
     pays 0 for sensing.
     """
     # Cost-optimal threshold: alert if (p >= L / (L + c_inv)) i.e. p >= tau_star
-    tau = L / (L + c_inv)
+    from _review_policy import alert_threshold
+    tau = alert_threshold(c_inv, L)
     alert = p >= tau
     n = len(p)
     n_alerts = int(alert.sum())
     n_misses = int(((y == 1) & (~alert)).sum())
     cost_alerts = c_inv * n_alerts
-    cost_sense = c_sense * n_alerts  # cost is per-row-of-input whether alert or not;
+    cost_sense = c_sense * n  # cost is per-row-of-input whether alert or not;
     # for simplicity apply only when alerted (LLM is queried at decision time
     # only for rows under review).
     cost_misses = L * n_misses
@@ -87,7 +88,8 @@ def per_bootstrap_diff(y_te, p_te_20, p_te_24, L, c_sense=C_SENSE):
     """Paired bootstrap CI on (cost_24full - cost_20raw) per L value."""
     rng = np.random.default_rng(BOOT_SEED)
     n = len(y_te)
-    tau = L / (L + C_INV)
+    from _review_policy import alert_threshold
+    tau = alert_threshold(C_INV, L)
     diffs = []
     for _ in range(N_BOOT):
         idx = rng.integers(0, n, size=n)
@@ -99,7 +101,7 @@ def per_bootstrap_diff(y_te, p_te_20, p_te_24, L, c_sense=C_SENSE):
         n_miss_20 = int(((y_b == 1) & (~a_20)).sum())
         n_miss_24 = int(((y_b == 1) & (~a_24)).sum())
         cost_20 = C_INV * n_alerts_20 + 0 * n_alerts_20 + L * n_miss_20
-        cost_24 = C_INV * n_alerts_24 + c_sense * n_alerts_24 + L * n_miss_24
+        cost_24 = C_INV * n_alerts_24 + c_sense * n + L * n_miss_24
         diffs.append((cost_24 - cost_20) / n)  # per-decision cost delta
     diffs = np.array(diffs)
     return float(diffs.mean()), float(np.quantile(diffs, 0.025)), float(np.quantile(diffs, 0.975))
@@ -135,7 +137,8 @@ def main():
         auc_24 = roc_auc_score(y_te, p_te_24)
         print(f"  sigma={sigma:.3f}: XGB-24full AUC={auc_24:.4f}")
         for L in L_GRID:
-            tau = L / (L + C_INV)
+            from _review_policy import alert_threshold
+            tau = alert_threshold(C_INV, L)
             cost_20 = expected_cost(p_te_20, y_te, L, c_sense=0.0)
             cost_24 = expected_cost(p_te_24, y_te, L, c_sense=C_SENSE)
             rows.append({

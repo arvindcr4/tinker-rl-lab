@@ -37,7 +37,7 @@ import xgboost as xgb
 ROOT = Path(__file__).resolve().parents[2]
 TRAIN = ROOT / "fraud_data.csv"
 TEST = ROOT / "test_data.csv"
-OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
 OUT.mkdir(parents=True, exist_ok=True)
 
 V20 = [f"V{i}" for i in range(1, 21)]
@@ -76,33 +76,11 @@ def load_scores():
 
 
 def optimal_cut(score, y, C_inv, L):
-    """argmin over all rank cutoffs of C_inv*alerts + L*missed. Returns dict."""
-    N = len(y)
-    P = int(y.sum())
-    order = np.argsort(-score, kind="mergesort")     # descending score
-    ys = y[order]
-    ss = score[order]
-    cum_tp = np.concatenate([[0], np.cumsum(ys)])     # cum_tp[k] = TP in top-k
-    k = np.arange(N + 1)
-    alerts = k
-    tp = cum_tp
-    fn = P - tp
-    det_cost = C_inv * alerts + L * fn                # detection term (USD-total)
-    kstar = int(np.argmin(det_cost))
-    # threshold = score of the last alerted row (kstar-th); k=0 -> tau>max (alert none)
-    if kstar == 0:
-        tau = float(ss[0]) + 1e-9
-    elif kstar >= N:
-        tau = float(ss[-1])
-    else:
-        tau = float(ss[kstar - 1])
-    tp_star = int(tp[kstar])
-    return {
-        "kstar": kstar, "tau": tau, "alert_rate": kstar / N,
-        "recall": tp_star / P if P else 0.0,
-        "tp": tp_star, "fp": kstar - tp_star, "fn": P - tp_star,
-        "det_cost_per_dec": det_cost[kstar] / N,
-    }
+    from _review_policy import optimal_threshold
+    row = optimal_threshold(score, y, C_inv, L)
+    row["det_cost_per_dec"] = row["cost_per_dec"]
+    return row
+
 
 
 def cost_at_threshold(score, y, tau, C_inv, L, c_sense):

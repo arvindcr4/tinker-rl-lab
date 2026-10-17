@@ -44,7 +44,7 @@ from _p8_common import (  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 TRAIN = ROOT / "fraud_data.csv"
 TEST = ROOT / "test_data.csv"
-OUT = ROOT / "experiments" / "results" / "p5p8"
+OUT = ROOT / "experiments" / "results" / "p5p8/corrected-review20-v2"
 FIG = OUT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -69,30 +69,10 @@ FEATS = {
 
 
 def argmin_cost(scores, y, c_inv, L, c_sense):
-    """Return (tau_star, cost_star_per_dec, tp_at_star, fp_at_star, fn_at_star).
+    from _review_policy import optimal_threshold
+    r = optimal_threshold(scores, y, c_inv, L, c_sense)
+    return r["tau"], r["cost_per_dec"], r["tp"], r["fp"], r["fn"]
 
-    Vectorized: sort once, sweep rank cutoffs with a cumulative TP sum.
-    cost(k) = (c_inv * k + L * (pos - tp_cum[k]) + c_sense * N) / N
-    """
-    n = len(y)
-    pos = int(y.sum())
-    if pos == 0 or n == 0:
-        return 1.0, c_sense, 0, 0, 0
-    order = np.argsort(-scores, kind="stable")
-    y_sorted = y[order]
-    s_sorted = scores[order]
-    # Cumulative TPs along the rank-1..N sweep
-    tp_cum = np.cumsum(y_sorted)
-    k_arr = np.arange(1, n + 1)
-    cost_arr = (c_inv * k_arr + L * (pos - tp_cum) + c_sense * n) / n
-    best_k = int(np.argmin(cost_arr))  # 0-based
-    best_cost = float(cost_arr[best_k])
-    best_tp = int(tp_cum[best_k])
-    best_fp = int((best_k + 1) - best_tp)
-    best_fn = int(pos - best_tp)
-    # tau_star: smallest score at cutoff k (we alert on scores >= this)
-    tau = float(s_sorted[best_k])
-    return tau, best_cost, best_tp, best_fp, best_fn
 
 
 def oracle_cost_per_dec(y, c_inv, c_sense):

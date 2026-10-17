@@ -59,7 +59,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scri
 from _paths import REPO_ROOT  # noqa: E402
 WORK = REPO_ROOT
 N2 = WORK / 'platform_hybrid/experiments/results/n2_reward_tensor_resume'
-OUT = WORK / 'platform_hybrid/experiments/results/p5p8'
+OUT = WORK / 'platform_hybrid/experiments/results/p5p8/corrected-review20-v2'
 OUT.mkdir(parents=True, exist_ok=True)
 FIG = OUT / 'figures'
 FIG.mkdir(parents=True, exist_ok=True)
@@ -175,11 +175,11 @@ def main():
                     g_zvf70 = 16
                 else:
                     g_zvf70 = G_BASE
-                zvf_zvf70 = iid_zvf(p_hat, g_zvf70)
+                zvf_zvf70_prompt = iid_zvf(p_hat, g_zvf70)
 
                 # Dualformer-Auto at per-prompt level
                 g_dual = dualformer_g(p_hat)
-                zvf_dual = iid_zvf(p_hat, g_dual)
+                zvf_dual_prompt = iid_zvf(p_hat, g_dual)
 
                 # Hybrid (iter-31): if step is in saturation band
                 # (zvf >= tau + delta = 0.90), de-escalate to G_des=4;
@@ -191,7 +191,7 @@ def main():
                     g_hybrid = 16
                 else:
                     g_hybrid = G_BASE
-                zvf_hybrid = iid_zvf(p_hat, g_hybrid)
+                zvf_hybrid_prompt = iid_zvf(p_hat, g_hybrid)
 
                 # Regime label
                 regime = classify_prompt(k)
@@ -215,9 +215,9 @@ def main():
                     'g_dual': g_dual,
                     'g_hybrid': g_hybrid,
                     'zvf_baseline': round(zvf_base, 4),
-                    'zvf_zvf70': round(zvf_zvf70, 4),
-                    'zvf_dual': round(zvf_dual, 4),
-                    'zvf_hybrid': round(zvf_hybrid, 4),
+                    'zvf_zvf70': round(zvf_zvf70_prompt, 4),
+                    'zvf_dual': round(zvf_dual_prompt, 4),
+                    'zvf_hybrid': round(zvf_hybrid_prompt, 4),
                 })
 
                 step_baseline_g.append(g_base)
@@ -225,9 +225,9 @@ def main():
                 step_dual_g.append(g_dual)
                 step_hybrid_g.append(g_hybrid)
                 step_zvf_baseline.append(zvf_base)
-                step_zvf_zvf70.append(zvf_zvf70)
-                step_zvf_dual.append(zvf_dual)
-                step_zvf_hybrid.append(zvf_hybrid)
+                step_zvf_zvf70.append(zvf_zvf70_prompt)
+                step_zvf_dual.append(zvf_dual_prompt)
+                step_zvf_hybrid.append(zvf_hybrid_prompt)
 
             # Per-step row: sum G, mean zvf across prompts
             sb_sum = sum(step_baseline_g)

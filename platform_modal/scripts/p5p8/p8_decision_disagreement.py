@@ -266,7 +266,7 @@ for w in WIDTHS:
         p_20raw,    # use cheap backbone
     )
     n_llm_calls = int(((p_20raw >= lo) & (p_20raw <= hi)).sum())
-    cost_per = (n_llm_calls * 0.0010 + (n_test - n_llm_calls) * 0.0001) / n_test
+    cost_per = (n_llm_calls * 0.0010 + n_test * 0.0001) / n_test
     auc = float(np.argsort(composite).argsort()[yte == 1].mean()) / max(1, (yte == 0).sum())  # rough AUC
     # simpler AUC via Mann-Whitney
     pos = composite[yte == 1]; neg = composite[yte == 0]
@@ -276,7 +276,8 @@ for w in WIDTHS:
     auc = (ranks[:n_pos].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg)
     p_at_2, r_at_2, f1_at_2 = precision_recall_f1(composite, yte, 2.0)
     n_alert_2 = max(1, int(round(2.0 / 100 * n_test)))
-    cost_caught = (cost_per * n_test) / max(1, int((np.argsort(-composite)[:n_alert_2][yte[np.argsort(-composite)[:n_alert_2]] == 1]).sum()))
+    n_caught = int(yte[np.argsort(-composite)[:n_alert_2]].sum())
+    cost_caught = (cost_per * n_test) / n_caught if n_caught else None
     sel_rows.append({"width": w, "n_llm_calls": n_llm_calls,
                      "frac_llm": n_llm_calls / n_test,
                      "auc": float(auc),

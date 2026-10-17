@@ -60,7 +60,7 @@ import xgboost as xgb
 ROOT = Path(__file__).resolve().parents[2]
 TRAIN = ROOT / "fraud_data.csv"
 TEST = ROOT / "test_data.csv"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8/corrected-review20-v2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 RANDOM_SEED = 42
 BOOT_SEED = 2026
@@ -157,11 +157,13 @@ def hybrid_op_point(
     top llm_coverage scored by full tree (LLM sensor paid)."""
     n = len(y)
     k_review = max(1, int(round(top_frac * n)))
-    k_llm = max(1, int(round(llm_coverage * n)))
+    k_llm = max(0, min(n, int(round(llm_coverage * n))))
     # Stage 1: score every row by base
     order = np.argsort(-scores_base, kind="stable")
-    review_idx = order[:k_review]
     llm_idx = order[:k_llm]
+    composite = scores_base.copy()
+    composite[llm_idx] = scores_full[llm_idx]
+    review_idx = np.argsort(-composite, kind="stable")[:k_review]
     y_pred_top = np.zeros(n, dtype=np.int32)
     y_pred_top[review_idx] = 1
     tp = int(((y_pred_top == 1) & (y == 1)).sum())

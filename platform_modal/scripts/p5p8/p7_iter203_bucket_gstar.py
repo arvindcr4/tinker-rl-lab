@@ -55,7 +55,7 @@ from _paths import REPO_ROOT  # noqa: E402
 from _stats import log_beta as lbeta  # noqa: E402
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
-OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
+OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review20-v2"
 METHODS = ("grpo", "aero", "gift", "areal")
 G_BASE = 8
 G_CANDIDATES = (2, 4, 8, 12, 16, 24, 32)
@@ -71,7 +71,7 @@ def beta_binom_cdf(k: int, n: int, alpha: float, beta: float) -> float:
     s = 0.0
     for j in range(k + 1):
         log_p = (lbeta(alpha + j, beta + (n - j)) - lbeta(j + 1, n - j + 1)
-                 - lbeta(alpha, beta))
+                 - lbeta(alpha, beta) - math.log(n + 1))
         s += math.exp(log_p)
     return min(max(s, 0.0), 1.0)
 
@@ -100,7 +100,7 @@ def gu_post(p_hat: float, g_base: int, g_new: int,
     if lo > hi:
         return 0.0
     p_lo = beta_binom_cdf(lo - 1, g_new, a_post, b_post) if lo > 0 else 0.0
-    p_hi = 1.0 - beta_binom_cdf(g_new, g_new, a_post, b_post)
+    p_hi = beta_binom_cdf(g_new - 1, g_new, a_post, b_post)
     return max(0.0, min(1.0, p_hi - p_lo))
 
 
@@ -194,10 +194,11 @@ def main():
             for prompt_idx, vec in enumerate(prompt_vecs[:N_PROMPTS]):
                 k = int(round(sum(vec[:G_BASE])))
                 g_star = optimal_gstar_post(k, G_BASE, target)
-                cr = contrast_restored_bucket(k, G_BASE) if g_star != G_BASE else 0.0
+                cr = gu_post(k / G_BASE, G_BASE, g_star) - gu_post(k / G_BASE, G_BASE, G_BASE)
                 rows_per_obs.append({
                     "method": m, "step": step_idx,
                     "prompt_index": prompt_idx, "k": k,
+                    "target_status": "target_met" if gu_post(k/G_BASE, G_BASE, g_star) >= target else "target_unreachable",
                     "g_star": g_star, "contrast_restored": cr,
                     "cost_ratio": g_star / G_BASE,
                 })
@@ -235,7 +236,7 @@ def main():
             "mean_contrast_restored": sum(r["contrast_restored"] for r in m_rows) / n,
             "mean_cost_ratio": sum(r["cost_ratio"] for r in m_rows) / n,
             "n_buckets_with_benefit": len(set(
-                k for r in m_rows
+                r["k"] for r in m_rows
                 if r["contrast_restored"] > 1e-9
             )),
         }
@@ -342,7 +343,7 @@ def main():
             "mean_contrast_restored": sum(r["contrast_restored"] for r in rows_per_obs) / len(rows_per_obs),
             "mean_cost_ratio": sum(r["cost_ratio"] for r in rows_per_obs) / len(rows_per_obs),
             "n_buckets_with_benefit_global": len(set(
-                k for r in rows_per_obs if r["contrast_restored"] > 1e-9
+                r["k"] for r in rows_per_obs if r["contrast_restored"] > 1e-9
             )),
         },
         "verdicts": {

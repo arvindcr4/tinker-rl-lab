@@ -40,7 +40,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_mo
 from _paths import REPO_ROOT  # noqa: E402
 WORK = REPO_ROOT
 N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
-OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 G_BASE = 8
@@ -188,7 +188,7 @@ def bootstrap_ci(values: list[float], B: int, seed: int,
         return 0.0, 0.0, 0.0
     means = []
     for _ in range(B):
-        sample = [values[rng.randint(0, n - 1)]] * n
+        sample = [values[rng.randint(0, n - 1)] for _ in range(n)]
         means.append(sum(sample) / n)
     means.sort()
     lo = means[int(B * alpha / 2)]
@@ -220,8 +220,7 @@ def paired_bootstrap_diff_ci(a: list[float], b: list[float], B: int,
     pt = sum(a) / n - sum(b) / n
     lo = diffs[int(B * alpha / 2)]
     hi = diffs[int(B * (1 - alpha / 2))]
-    p_two = sum(1 for d in diffs if d > 0) / B
-    p_two = 2 * min(p_two, 1 - p_two)
+    p_two = None  # Percentile bootstrap is not a null-based hypothesis test.
     return pt, lo, hi, p_two
 
 

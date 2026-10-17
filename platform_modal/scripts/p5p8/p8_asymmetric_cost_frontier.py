@@ -33,7 +33,7 @@ from _p8_common import (  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 TRAIN = ROOT / "fraud_data.csv"
 TEST = ROOT / "test_data.csv"
-OUT = ROOT / "experiments" / "results" / "p5p8"
+OUT = ROOT / "experiments" / "results" / "p5p8/corrected-review20-v2"
 FIG = OUT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -58,23 +58,15 @@ FEATS = {
 
 
 def cost_per_dec(p, y, C_inv, L, c_sense):
-    """Vectorised expected cost per decision at the cost-optimal threshold.
+    """Per-input sensing plus per-alert investigation and missed-positive loss."""
+    from _review_policy import alert_threshold
+    tau_star = alert_threshold(C_inv, L)
+    alerts = p >= tau_star
+    tp = int((alerts & (y == 1)).sum())
+    fp = int((alerts & (y == 0)).sum())
+    fn = int(((~alerts) & (y == 1)).sum())
+    return c_sense + (C_inv*(tp+fp)+L*fn)/len(y), tau_star, tp, fp, fn
 
-    Cost = c_sense + (C_inv * (tp+fp) + L * fn) / N
-    where tp/fp/fn are computed from argmax(C_inv) threshold sweep:
-    pick rank cutoff p_t such that the per-decision cost is minimised.
-    For C_inv > 0 the optimal alert policy is: alert iff p >= L / (L + C_inv).
-    """
-    N = len(y)
-    if L <= 0 or C_inv <= 0:
-        # degenerate: alert always or never; return constant cost
-        return c_sense + C_inv * (1.0) * (p >= 0.5).mean() if C_inv > 0 else c_sense
-    tau_star = L / (L + C_inv)
-    alerts = (p >= tau_star).astype(np.int32)
-    tp = int(((alerts == 1) & (y == 1)).sum())
-    fp = int(((alerts == 1) & (y == 0)).sum())
-    fn = int(((alerts == 0) & (y == 1)).sum())
-    return c_sense + (C_inv * (tp + fp) + L * fn) / N, tau_star, tp, fp, fn
 
 
 def boot_delta(scores, y, c_inv, L, n_boot=N_BOOT, seed=BOOT_SEED):

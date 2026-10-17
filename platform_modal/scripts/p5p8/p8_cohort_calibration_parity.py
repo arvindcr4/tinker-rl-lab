@@ -50,7 +50,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 DATA_DIR = str(REPO_ROOT)
-OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8"
+OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
 TRAIN = f"{DATA_DIR}/fraud_data.csv"
 TEST = f"{DATA_DIR}/test_data.csv"
 
@@ -317,7 +317,7 @@ def main():
     print(f"  Amount quintile cuts: {[round(c, 3) for c in cuts['amount']]}")
 
     print("[3/5] Training two XGB backbones (20raw, 24full) ...")
-    p20 = predict_proba(fit_gbt(tr_X, tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED),
+    p20 = predict_proba(fit_gbt([row[:20] for row in tr_X], tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED),
                         [r[:20] for r in te_X])
     p24 = predict_proba(fit_gbt(tr_X, tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED + 1),
                         te_X)

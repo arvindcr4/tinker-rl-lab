@@ -28,6 +28,8 @@ import concurrent.futures
 import os
 import sys
 import threading
+import tempfile
+import shutil
 import time
 import unittest
 from pathlib import Path
@@ -47,7 +49,7 @@ class SDKWallTests(unittest.TestCase):
     def setUp(self):
         support.require_module(self)
         name = self.id().rsplit(".", 1)[-1][:48]
-        self.workdir = Path(tempfile_dir(), f"e1_wave10_sdk_{name}_{os.getpid()}")
+        self.workdir = Path(tempfile.mkdtemp(prefix=f"e1_wave10_sdk_{name}_"))
         self.workdir.mkdir(parents=True, exist_ok=True)
         self.addCleanup(self._restore_dir_permissions)
         self.addCleanup(self._remove_workdir)
@@ -63,15 +65,7 @@ class SDKWallTests(unittest.TestCase):
             pass
 
     def _remove_workdir(self):
-        for entry in list(self.workdir.iterdir()):
-            try:
-                entry.unlink()
-            except OSError:
-                pass
-        try:
-            self.workdir.rmdir()
-        except OSError:
-            pass
+        shutil.rmtree(self.workdir, ignore_errors=True)
 
     def _kill_leaked_groups(self):
         for pgid in self._pgids:

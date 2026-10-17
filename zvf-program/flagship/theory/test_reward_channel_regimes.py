@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import unittest
 
-from .reward_channel_regimes import E1_SOURCE_SHA256, regime_receipt, verify_e1_source
+from .reward_channel_regimes import E1_SOURCE_SHA256, HISTORICAL_E1_SOURCE_SHA256, regime_receipt, verify_e1_source
 
 
 class RewardChannelRegimeTests(unittest.TestCase):
     def test_frozen_e1_source_hash_is_verified(self) -> None:
         path = verify_e1_source()
+        self.assertNotEqual(E1_SOURCE_SHA256, HISTORICAL_E1_SOURCE_SHA256)
         self.assertTrue(path.name == "e1_grpo_confirmatory.py")
-        self.assertEqual(E1_SOURCE_SHA256, "986811e3e78fe86ffcbede4a98599ada167ff1975b3341eef391eb2b2e7fe8c6")
+        self.assertEqual(HISTORICAL_E1_SOURCE_SHA256, "986811e3e78fe86ffcbede4a98599ada167ff1975b3341eef391eb2b2e7fe8c6")
 
     def test_primary_reward_observations_are_identical(self) -> None:
         receipt = regime_receipt()

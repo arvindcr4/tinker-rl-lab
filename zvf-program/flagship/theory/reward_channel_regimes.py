@@ -6,7 +6,11 @@ import hashlib
 import re
 from pathlib import Path
 
-E1_SOURCE_SHA256 = "986811e3e78fe86ffcbede4a98599ada167ff1975b3341eef391eb2b2e7fe8c6"
+HISTORICAL_E1_SOURCE_SHA256 = "986811e3e78fe86ffcbede4a98599ada167ff1975b3341eef391eb2b2e7fe8c6"
+
+# Candidate source adds execution-identity receipt fields; historical pin stays immutable.
+E1_SOURCE_SHA256 = "0933f1f15e4e666aaa738423ca8e788c8ec8d7bd9bb5e62df43b180f0c423d45"
+ANALOGUE_PROTOCOL_ID = "reward-channel-witness-v2-execution-identity"
 
 
 def _repo_root() -> Path:
@@ -62,6 +66,8 @@ def regime_receipt(group_size: int = 8) -> dict[str, object]:
         "reward_code_version": "matched",
     }
     return {
+        "protocol_id": ANALOGUE_PROTOCOL_ID,
+        "historical_source_sha256": HISTORICAL_E1_SOURCE_SHA256,
         "claim_scope": "conditional action ambiguity after all-zero rewards; local analogue only",
         "production_calibration_validated": False,
         "source": {

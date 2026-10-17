@@ -36,16 +36,16 @@ Inputs (real, measured, no fabrication):
         Qwen2.5-0.5B / arithmetic, G in {2,4,8,16}, 3 seeds.
 
 Outputs:
-    platform_hybrid/experiments/results/group_size_iter91_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter91_summary_v2.tsv
         Three blocks (Pareto, iso-cost, bootstrap CI) as long-form
         key/value TSV plus a 'finding' column.
-    platform_hybrid/experiments/results/group_size_iter91_pareto.tsv
+    platform_hybrid/experiments/results/group_size_iter91_pareto_v2.tsv
         Per-T best G and best accuracy with envelope gaps.
-    platform_hybrid/experiments/results/group_size_iter91_isocost.tsv
+    platform_hybrid/experiments/results/group_size_iter91_isocost_v2.tsv
         T_needed(target, G) and the Pareto-min T_needed(target).
-    platform_hybrid/experiments/results/group_size_iter91_bootstrap.tsv
+    platform_hybrid/experiments/results/group_size_iter91_bootstrap_v2.tsv
         Per-T bootstrap R(2.5/50/97.5).
-    figures/group_size_iter91.pdf
+    figures/group_size_iter91_v2.pdf
         Three-panel figure: (A) Pareto envelope, (B) iso-cost
         frontier, (C) bootstrap retention curve vs Wu claim.
 
@@ -161,14 +161,10 @@ def iso_cost(rows, target_grid):
     for tgt in target_grid:
         per_g = {}
         for G in by_G:
-            accs = [r["acc"] for r in rows if r["G"] == G]
-            # Use log-T linear interpolation on accuracy (rough but
-            # deterministic and monotone-ish on this grid).
-            T_needed = None
-            for t, a in zip(Ts, accs):
-                if a >= tgt:
-                    T_needed = t
-                    break
+            from _review24_statistics import first_crossing
+            cells = [r for r in rows if r["G"] == G]
+            crossing = first_crossing([math.log10(r["T_M"]) for r in cells], [r["acc"] for r in cells], tgt)
+            T_needed = None if crossing is None else 10 ** crossing
             per_g[G] = T_needed
         feasible = {G: T for G, T in per_g.items() if T is not None}
         if feasible:
@@ -339,7 +335,7 @@ def _write_kv(rows, out_path, header_first=("metric", "value")):
 
 def write_outputs(pareto, iso, boot):
     # pareto.tsv
-    with (RESULTS / "group_size_iter91_pareto.tsv").open("w", newline="") as f:
+    with (RESULTS / "group_size_iter91_pareto_v2.tsv").open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["T_M", "G_star", "acc_star", "worst_G", "worst_acc",
                     "envelope_gap_pp", "envelope_gap_at_G4_pp"])
@@ -350,7 +346,7 @@ def write_outputs(pareto, iso, boot):
                         f"{r['envelope_gap_at_G4_pp']:.2f}"])
 
     # isocost.tsv
-    with (RESULTS / "group_size_iter91_isocost.tsv").open("w", newline="") as f:
+    with (RESULTS / "group_size_iter91_isocost_v2.tsv").open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["target_acc", "G_star", "T_needed_M_star",
                     "T_needed_M_G4", "T_needed_M_G8", "T_needed_M_G16",
@@ -372,7 +368,7 @@ def write_outputs(pareto, iso, boot):
                         is not None else "NA"])
 
     # bootstrap.tsv
-    with (RESULTS / "group_size_iter91_bootstrap.tsv").open("w", newline="") as f:
+    with (RESULTS / "group_size_iter91_bootstrap_v2.tsv").open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["T_M", "R_point", "R_lo", "R_med", "R_hi",
                     "p_below_wu_976", "p_below_equivalence_80",
@@ -431,7 +427,7 @@ def write_outputs(pareto, iso, boot):
             ),
         })
 
-    with (RESULTS / "group_size_iter91_summary.tsv").open("w", newline="") as f:
+    with (RESULTS / "group_size_iter91_summary_v2.tsv").open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["metric", "value", "finding"])
         for r in rows:
@@ -477,7 +473,7 @@ def main():
               f"P(R<0.80)={r['p_below_equivalence_80']:.3f}")
 
     # Save figure
-    fig_path = FIG / "group_size_iter91.pdf"
+    fig_path = FIG / "group_size_iter91_v2.pdf"
     render_figure(pareto, iso, boot, fig_path)
     print(f"\nFigure written: {fig_path.relative_to(REPO)}")
 

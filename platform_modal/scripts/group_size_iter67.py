@@ -33,14 +33,8 @@ def solve_min_T_for_acc(target_acc: float, log_t_by_G: dict[int, list[float]],
     best_G: int | None = None
     best_log_T: float | None = None
     for G, log_t in log_t_by_G.items():
-        accs = acc_by_G[G]
-        log_T_at_cross: float | None = None
-        for i in range(len(log_t) - 1):
-            a0, a1 = accs[i], accs[i + 1]
-            t0, t1 = log_t[i], log_t[i + 1]
-            if (a0 - target_acc) * (a1 - target_acc) <= 0 and (a1 - a0) != 0:
-                log_T_at_cross = t0 if a1 == a0 else t0 + ((target_acc - a0) / (a1 - a0)) * (t1 - t0)
-                break
+        from _review24_statistics import first_crossing
+        log_T_at_cross = first_crossing(log_t, acc_by_G[G], target_acc)
         if log_T_at_cross is None:
             continue
         if best_log_T is None or log_T_at_cross < best_log_T:
@@ -140,9 +134,9 @@ def main() -> None:
             for r in dicts:
                 w.writerow(r)
 
-    write_tsv(RES / "group_size_iter67_iso_acc_frontier.tsv", iaf_rows)
-    write_tsv(RES / "group_size_iter67_iaf_ratios.tsv", ratio_rows)
-    write_tsv(RES / "group_size_iter67_se_width.tsv", se_rows)
+    write_tsv(RES / "group_size_iter67_iso_acc_frontier_v2.tsv", iaf_rows)
+    write_tsv(RES / "group_size_iter67_iaf_ratios_v2.tsv", ratio_rows)
+    write_tsv(RES / "group_size_iter67_se_width_v2.tsv", se_rows)
 
     # Headline summary
     headline: dict[str, object] = {
@@ -191,7 +185,7 @@ def main() -> None:
         r["exceeds_literature_ratio"] == "yes" for r in se_rows
         if isinstance(r["G_ratio_max"], (int, float)))
 
-    write_tsv(RES / "group_size_iter67_iaf_summary.tsv",
+    write_tsv(RES / "group_size_iter67_iaf_summary_v2.tsv",
               [{"metric": k, "value": v} for k, v in headline.items()])
 
     meta = {
@@ -201,12 +195,12 @@ def main() -> None:
             "platform_hybrid/experiments/results/group_size_token_normalized.tsv",
         ],
         "outputs": [
-            "platform_hybrid/experiments/results/group_size_iter67_iso_acc_frontier.tsv",
-            "platform_hybrid/experiments/results/group_size_iter67_iaf_ratios.tsv",
-            "platform_hybrid/experiments/results/group_size_iter67_se_width.tsv",
-            "platform_hybrid/experiments/results/group_size_iter67_iaf_summary.tsv",
-            "figures/group_size_iter67_iaf.pdf",
-            "figures/group_size_iter67_iaf.png",
+            "platform_hybrid/experiments/results/group_size_iter67_iso_acc_frontier_v2.tsv",
+            "platform_hybrid/experiments/results/group_size_iter67_iaf_ratios_v2.tsv",
+            "platform_hybrid/experiments/results/group_size_iter67_se_width_v2.tsv",
+            "platform_hybrid/experiments/results/group_size_iter67_iaf_summary_v2.tsv",
+            "figures/group_size_iter67_iaf_v2.pdf",
+            "figures/group_size_iter67_iaf_v2.png",
         ],
         "method": "Iso-Accuracy Frontier (IAF): for each target accuracy α, the "
                   "minimum token budget at which each G ∈ {4, 8, 16, 32, 64} "
@@ -218,7 +212,7 @@ def main() -> None:
             "still bounds the structurally-equivalent regime in our setup.",
         "headline_metrics": {k: v for k, v in headline.items()},
     }
-    (RES / "group_size_iter67_iter_meta.json").write_text(json.dumps(meta, indent=2))
+    (RES / "group_size_iter67_iter_meta_v2.json").write_text(json.dumps(meta, indent=2))
 
     # Plot
     fig, ax = plt.subplots(1, 2, figsize=(11, 4.5))
@@ -261,8 +255,8 @@ def main() -> None:
     ax[1].set_title("Wasted-token ratio W(α, G)")
     fig.colorbar(im, ax=ax[1], label="wasted-token ratio")
     fig.tight_layout()
-    fig.savefig(FIG / "group_size_iter67_iaf.pdf")
-    fig.savefig(FIG / "group_size_iter67_iaf.png", dpi=130)
+    fig.savefig(FIG / "group_size_iter67_iaf_v2.pdf")
+    fig.savefig(FIG / "group_size_iter67_iaf_v2.png", dpi=130)
     plt.close(fig)
 
     print("[iter67] headline summary:")

@@ -113,6 +113,8 @@ def progress_window_icca(L: np.ndarray, R: np.ndarray, K: int,
 #   Length-quantile ICCA (mirror of iter104)
 # ===========================================================================
 
+from _review24_statistics import conditional_ccf, stable_seed
+
 def length_quantile_icca(L: np.ndarray, R: np.ndarray, K: int,
                          n_q: int) -> dict[str, Any]:
     """Mirror of iter104: bin time-steps by RANK of L (not R)."""
@@ -131,14 +133,9 @@ def length_quantile_icca(L: np.ndarray, R: np.ndarray, K: int,
     for q_idx in range(n_q):
         mask = bins == q_idx
         n_in = int(mask.sum())
-        if n_in < 4:
-            out["q"][q_idx] = {"size": n_in, "bwd": 0.0, "fwd": 0.0,
-                               "bwd_signed": 0.0, "fwd_signed": 0.0,
-                               "ccf": [0.0] * (2 * K + 1)}
-            continue
-        cc = ccf_at_lags(e_L[mask], e_R[mask], K=K)
+        cc, pair_counts = conditional_ccf(e_L, e_R, mask, K)
         out["q"][q_idx] = {
-            "size": n_in,
+            "size": n_in, "pair_counts": pair_counts,
             "bwd": float(np.sum(np.abs(cc[:K]))),
             "fwd": float(np.sum(np.abs(cc[K + 1:]))),
             "bwd_signed": float(np.sum(cc[:K])),
@@ -182,7 +179,7 @@ def main(argv: list[str] | None = None) -> int:
             {"seed": int(r["seed"]), "n": int(r["n"]), "windows": recs}
         )
 
-    write_tsv("length_bias_iter108_perrun_progress.tsv", progress_perrun,
+    write_tsv("length_bias_iter108_perrun_progress_v2.tsv", progress_perrun,
               ["task", "algo", "seed", "n_total", "window", "n_in_window",
                "phi_L", "phi_R", "bwd", "fwd", "bwd_signed", "fwd_signed"])
 
@@ -198,7 +195,7 @@ def main(argv: list[str] | None = None) -> int:
                 paired_prog_rows.append({"task": task, "window": w_idx,
                                           "side": side,
                                           **paired_bootstrap_delta(g, d, B=B, seed=0x10C8)})
-    write_tsv("length_bias_iter108_paired_progress.tsv", paired_prog_rows,
+    write_tsv("length_bias_iter108_paired_progress_v2.tsv", paired_prog_rows,
               ["task", "window", "side", "delta", "ci_lo", "ci_hi", "p", "n"])
 
     # trend (Spearman) of the per-window |CCF| delta across window index
@@ -227,7 +224,7 @@ def main(argv: list[str] | None = None) -> int:
                 "spearman_rho_drgrpo": float(sp_r.statistic),
                 "spearman_p_drgrpo": float(sp_r.pvalue),
             })
-    write_tsv("length_bias_iter108_trend_progress.tsv", trend_prog_rows,
+    write_tsv("length_bias_iter108_trend_progress_v2.tsv", trend_prog_rows,
               ["task", "side", "vals_gr_q0", "vals_gr_q_last",
                "vals_dr_q0", "vals_dr_q_last", "delta_q0", "delta_q_last",
                "spearman_rho_delta_vs_window", "spearman_p_delta_vs_window",
@@ -256,7 +253,7 @@ def main(argv: list[str] | None = None) -> int:
             for f in ("size", "bwd", "fwd", "bwd_signed", "fwd_signed"):
                 row[f"q{q}_{f}"] = qq[f]
         len_rows.append(row)
-    write_tsv("length_bias_iter108_summary_length.tsv", len_rows, len_keys)
+    write_tsv("length_bias_iter108_summary_length_v2.tsv", len_rows, len_keys)
 
     # paired Dr.GR - GR delta per (task, q, side)
     paired_len_rows = []
@@ -268,7 +265,7 @@ def main(argv: list[str] | None = None) -> int:
                 d = [float(seeds_d[s]["q"][q][side]) for s in common]
                 paired_len_rows.append({"task": task, "q": q, "side": side,
                                          **paired_bootstrap_delta(g, d, B=B, seed=0x10C8)})
-    write_tsv("length_bias_iter108_paired_length.tsv", paired_len_rows,
+    write_tsv("length_bias_iter108_paired_length_v2.tsv", paired_len_rows,
               ["task", "q", "side", "delta", "ci_lo", "ci_hi", "p", "n"])
 
     # share ratios & log2(q=4/q=0)
@@ -290,7 +287,7 @@ def main(argv: list[str] | None = None) -> int:
                 "share_fwd_q4": float(fwd_q[-1] / tot_f),
                 "log2_bwd_q4_q0": float(np.log2((bwd_q[-1] + eps) / (bwd_q[0] + eps))),
             })
-    write_tsv("length_bias_iter108_trend_length.tsv", trend_len_rows,
+    write_tsv("length_bias_iter108_trend_length_v2.tsv", trend_len_rows,
               ["task", "algo", "share_bwd_q0", "share_bwd_q4",
                "share_fwd_q0", "share_fwd_q4", "log2_bwd_q4_q0"])
 
@@ -299,7 +296,7 @@ def main(argv: list[str] | None = None) -> int:
             "n_runs": len(runs),
             "tasks": sorted(set(t for _, t in runs)),
             "algos": sorted(set(r["algo"] for r, _ in runs))}
-    out_path = os.path.join(RESULTS, "length_bias_iter108_meta.json")
+    out_path = os.path.join(RESULTS, "length_bias_iter108_meta_v2.json")
     with open(out_path, "w") as fh:
         json.dump(meta, fh, indent=2)
     print(f"[iter108] wrote {out_path}")

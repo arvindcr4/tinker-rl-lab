@@ -30,12 +30,12 @@ Inputs:
   platform_hybrid/experiments/results/group_size_token_normalized.tsv
 
 Outputs:
-  platform_hybrid/experiments/results/group_size_iter75_scaling.tsv     per-budget c(T), k(T), bootstrap CI
-  platform_hybrid/experiments/results/group_size_iter75_hypothesis.tsv   which H0 is rejected per budget
-  platform_hybrid/experiments/results/group_size_iter75_extrapolate.tsv  counterfactual c(T) at T_ext
-  platform_hybrid/experiments/results/group_size_iter75_summary.tsv      headline rollup
-  figures/group_size_iter75_scaling.pdf
-  figures/group_size_iter75_scaling.png
+  platform_hybrid/experiments/results/group_size_iter75_scaling_v2.tsv     per-budget c(T), k(T), bootstrap CI
+  platform_hybrid/experiments/results/group_size_iter75_hypothesis_v2.tsv   which H0 is rejected per budget
+  platform_hybrid/experiments/results/group_size_iter75_extrapolate_v2.tsv  counterfactual c(T) at T_ext
+  platform_hybrid/experiments/results/group_size_iter75_summary_v2.tsv      headline rollup
+  figures/group_size_iter75_scaling_v2.pdf
+  figures/group_size_iter75_scaling_v2.png
 """
 from __future__ import annotations
 
@@ -72,7 +72,7 @@ def fit_power_law(
     """
     Gs_arr = np.asarray(Gs, dtype=float)
     y = np.asarray(acc, dtype=float)
-    sig = np.asarray([(lo + hi) / 2 for lo, hi in zip(ci_lo, ci_hi)], dtype=float)
+    sig = np.asarray([(hi - lo) / (2*1.96) for lo, hi in zip(ci_lo, ci_hi)], dtype=float)
     sig = np.where(sig > 0, sig, 0.01)
     w = 1.0 / sig ** 2
 
@@ -128,63 +128,32 @@ def bootstrap_ci(
     Gs: list[int], acc: list[float], ci_lo: list[float], ci_hi: list[float],
     n_boot: int = N_BOOT, seed: int = RNG_SEED,
 ) -> tuple[float, float, float, tuple[float, float], tuple[float, float]]:
-    """Bootstrap a, b, c by resampling acc within per-row CI.
+    """Parametric sensitivity from summary 95% intervals, refitting same estimator.
 
-    Each row contributes a sample acc_i ~ N(acc_i, sigma_i^2) with sigma_i =
-    (ci_hi - ci_lo)/2; the resampled (acc*_i) form a new vector; we refit
-    acc(G) = a - b * G^(-c) on the resampled vector using only c (slope of
-    log-log regression in the monotone regime).
+    These are not seed-bootstrap confidence intervals. Correlations between
+    summary estimates are unknown; no calibrated hypothesis rejection follows.
     """
-    Gs_arr = np.asarray(Gs, dtype=float)
-    sig = np.asarray([(lo + hi) / 2 for lo, hi in zip(ci_lo, ci_hi)], dtype=float)
-    sig = np.where(sig > 0, sig, 0.01)
+    sig = np.asarray([(hi-lo)/(2*1.96) for lo,hi in zip(ci_lo,ci_hi)])
+    if np.any(sig < 0) or not np.all(np.isfinite(sig)):
+        raise ValueError("invalid summary intervals")
     rng = np.random.default_rng(seed)
-
-    a_hat, b_hat, c_hat, _ = fit_power_law(Gs, acc, ci_lo, ci_hi)
-
-    # Quick bootstrap: refit ONLY c via linear regression in log space.  We
-    # use the empirical acc_gap = acc - max(acc) (which is always >= 0 for the
-    # points other than G_max) and regress log|gap| vs log(G_max/G).
-    c_boot: list[float] = []
-    b_boot: list[float] = []
-    a_boot: list[float] = []
-    G_max = float(np.max(Gs_arr))
-    x = (G_max / Gs_arr - 1.0)
-
+    a_hat,b_hat,c_hat,_ = fit_power_law(Gs,acc,ci_lo,ci_hi)
+    fits=[]
     for _ in range(n_boot):
-        acc_j = rng.normal(np.asarray(acc), sig)
-        # Re-fit via the 3-param procedure (slow but correct); to keep CI
-        # tractable we use a fast constrained OLS on log-gap.
-        acc_gap_j = acc_j - np.max(acc_j)
-        # For monotone regime, acc_gap(G) <= 0 for all G < G_max; take absolute value.
-        gap_abs = np.abs(acc_gap_j)
-        mask = (gap_abs > 0.005)
-        if mask.sum() >= 3 and (x[mask] > 0).all():
-            try:
-                lx = np.log(x[mask])
-                ly = np.log(gap_abs[mask])
-                slope, intercept = np.polyfit(lx, ly, 1)
-                c_boot.append(float(slope))
-                b_boot.append(float(np.exp(intercept)))
-            except (ValueError, np.linalg.LinAlgError, RuntimeWarning):
-                continue
-        # Boot a: just track the max of resampled acc
-        a_boot.append(float(np.max(acc_j)))
-
-    if len(c_boot) < 100:
-        return a_hat, b_hat, c_hat, (c_hat, c_hat), (b_hat, b_hat)
-    c_lo, c_hi = (float(np.percentile(c_boot, 2.5)), float(np.percentile(c_boot, 97.5)))
-    b_lo, b_hi = (float(np.percentile(b_boot, 2.5)), float(np.percentile(b_boot, 97.5)))
-    a_lo, a_hi = (float(np.percentile(a_boot, 2.5)), float(np.percentile(a_boot, 97.5)))
-    return a_hat, b_hat, c_hat, (c_lo, c_hi), (b_lo, b_hi)
+        sample=rng.normal(np.asarray(acc),sig)
+        fit=fit_power_law(Gs,sample.tolist(),ci_lo,ci_hi)
+        if not all(np.isfinite(fit)):
+            raise ValueError("sensitivity fit failed; partial draws cannot certify interval")
+        fits.append(fit)
+    if len(fits)<2:
+        raise ValueError("need two sensitivity draws")
+    fits=np.asarray(fits)
+    return a_hat,b_hat,c_hat,tuple(np.quantile(fits[:,2],[.025,.975])),tuple(np.quantile(fits[:,1],[.025,.975]))
 
 
 def test_null(c_hat: float, c_ci: tuple[float, float], null_c: float) -> tuple[bool, str]:
-    """Test H0: c = null_c.  Reject iff null_c outside the 95% CI."""
-    lo, hi = c_ci
-    outside = null_c < lo or null_c > hi
-    p = "REJECT" if outside else "FAIL-TO-REJECT"
-    return outside, p
+    """Summary-CI sensitivity cannot deliver calibrated null rejection."""
+    return False, "NOT_TESTED: requires predeclared null fit and sampling model"
 
 
 def main() -> None:
@@ -393,11 +362,11 @@ def main() -> None:
     }
 
     # Persist
-    write_tsv(RES / "group_size_iter75_scaling.tsv", fit_rows)
-    write_tsv(RES / "group_size_iter75_hypothesis.tsv", hypoth_rows)
-    write_tsv(RES / "group_size_iter75_extrapolate.tsv", extra_rows)
-    write_tsv(RES / "group_size_iter75_egt.tsv", egt_rows)
-    write_tsv(RES / "group_size_iter75_summary.tsv",
+    write_tsv(RES / "group_size_iter75_scaling_v2.tsv", fit_rows)
+    write_tsv(RES / "group_size_iter75_hypothesis_v2.tsv", hypoth_rows)
+    write_tsv(RES / "group_size_iter75_extrapolate_v2.tsv", extra_rows)
+    write_tsv(RES / "group_size_iter75_egt_v2.tsv", egt_rows)
+    write_tsv(RES / "group_size_iter75_summary_v2.tsv",
               [{"metric": k, "value": v} for k, v in headline.items()])
 
     meta = {
@@ -408,13 +377,13 @@ def main() -> None:
             "platform_hybrid/experiments/results/group_size_iter43_eff_zvf.tsv",
         ],
         "outputs": [
-            "platform_hybrid/experiments/results/group_size_iter75_scaling.tsv",
-            "platform_hybrid/experiments/results/group_size_iter75_hypothesis.tsv",
-            "platform_hybrid/experiments/results/group_size_iter75_extrapolate.tsv",
-            "platform_hybrid/experiments/results/group_size_iter75_egt.tsv",
-            "platform_hybrid/experiments/results/group_size_iter75_summary.tsv",
-            "figures/group_size_iter75_scaling.pdf",
-            "figures/group_size_iter75_scaling.png",
+            "platform_hybrid/experiments/results/group_size_iter75_scaling_v2.tsv",
+            "platform_hybrid/experiments/results/group_size_iter75_hypothesis_v2.tsv",
+            "platform_hybrid/experiments/results/group_size_iter75_extrapolate_v2.tsv",
+            "platform_hybrid/experiments/results/group_size_iter75_egt_v2.tsv",
+            "platform_hybrid/experiments/results/group_size_iter75_summary_v2.tsv",
+            "figures/group_size_iter75_scaling_v2.pdf",
+            "figures/group_size_iter75_scaling_v2.png",
         ],
         "method": (
             "Per-budget fit of acc_gap(G) = -k * (G_max/G - 1)^c on G in {4,8,16,32} "
@@ -427,7 +396,7 @@ def main() -> None:
         ),
         "headline_metrics": {k: v for k, v in headline.items()},
     }
-    (RES / "group_size_iter75_iter_meta.json").write_text(json.dumps(meta, indent=2))
+    (RES / "group_size_iter75_iter_meta_v2.json").write_text(json.dumps(meta, indent=2))
 
     # ---- Plot ----
     fig, ax = plt.subplots(1, 3, figsize=(15, 4.5))
@@ -504,8 +473,8 @@ def main() -> None:
     ax[2].grid(True, alpha=0.3)
 
     fig.tight_layout()
-    fig.savefig(FIG / "group_size_iter75_scaling.pdf")
-    fig.savefig(FIG / "group_size_iter75_scaling.png", dpi=140)
+    fig.savefig(FIG / "group_size_iter75_scaling_v2.pdf")
+    fig.savefig(FIG / "group_size_iter75_scaling_v2.png", dpi=140)
     plt.close(fig)
 
     print("[iter75] fitted (a, b, c) at the 4 observed budgets (with 95% boot CI on c):")

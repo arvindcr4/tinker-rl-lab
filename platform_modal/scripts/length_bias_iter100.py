@@ -60,10 +60,10 @@ platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json  (gsm8k_cot,    n
 
 OUTPUTS
 -------
-platform_hybrid/experiments/results/length_bias_iter100_perrun.tsv   (one row per run)
-platform_hybrid/experiments/results/length_bias_iter100_paired.tsv   (one row per (task,key))
-platform_hybrid/experiments/results/length_bias_iter100_summary.tsv  (task-level aggregates)
-platform_hybrid/experiments/results/length_bias_iter100_meta.json    (run configuration)
+platform_hybrid/experiments/results/length_bias_iter100_perrun_v2.tsv   (one row per run)
+platform_hybrid/experiments/results/length_bias_iter100_paired_v2.tsv   (one row per (task,key))
+platform_hybrid/experiments/results/length_bias_iter100_summary_v2.tsv  (task-level aggregates)
+platform_hybrid/experiments/results/length_bias_iter100_meta_v2.json    (run configuration)
 
 USAGE
 -----
@@ -211,12 +211,12 @@ def fit_var1(L: np.ndarray, R: np.ndarray) -> dict[str, Any]:
         "cumul_impulse_R_to_L": float(C[0, 1]) if not np.isnan(C).any() else np.nan,
         "cumul_diag_self_L": float(C[0, 0]) if not np.isnan(C).any() else np.nan,
         "cumul_diag_self_R": float(C[1, 1]) if not np.isnan(C).any() else np.nan,
-        "fevd_R_from_L_h1": float(fevd_R_from_L[1]),
-        "fevd_R_from_L_h4": float(fevd_R_from_L[4]) if hmax >= 4 else np.nan,
-        "fevd_R_from_L_h8": float(fevd_R_from_L[8]) if hmax >= 8 else np.nan,
-        "fevd_L_from_R_h1": float(fevd_L_from_R[1]),
-        "fevd_L_from_R_h4": float(fevd_L_from_R[4]) if hmax >= 4 else np.nan,
-        "fevd_L_from_R_h8": float(fevd_L_from_R[8]) if hmax >= 8 else np.nan,
+        "fevd_R_from_L_h1": float(fevd_R_from_L[0]),
+        "fevd_R_from_L_h4": float(fevd_R_from_L[3]) if hmax >= 4 else np.nan,
+        "fevd_R_from_L_h8": float(fevd_R_from_L[7]) if hmax >= 8 else np.nan,
+        "fevd_L_from_R_h1": float(fevd_L_from_R[0]),
+        "fevd_L_from_R_h4": float(fevd_L_from_R[3]) if hmax >= 4 else np.nan,
+        "fevd_L_from_R_h8": float(fevd_L_from_R[7]) if hmax >= 8 else np.nan,
         "cumul_fevd_R_from_L": cum_R_from_L,
         "cumul_fevd_L_from_R": cum_L_from_R,
         "Sigma_LL": float(Sigma[0, 0]),

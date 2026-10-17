@@ -27,11 +27,11 @@ We answer with three deliverables:
 Inputs:
   platform_hybrid/experiments/results/group_size_token_normalized.tsv
 Outputs:
-  platform_hybrid/experiments/results/group_size_iter87_crossover.tsv
-  platform_hybrid/experiments/results/group_size_iter87_isoflop.tsv
-  platform_hybrid/experiments/results/group_size_iter87_retention_slope.tsv
-  platform_hybrid/experiments/results/group_size_iter87_summary.tsv
-  platform_hybrid/experiments/results/group_size_iter87_meta.json
+  platform_hybrid/experiments/results/group_size_iter87_crossover_v2.tsv
+  platform_hybrid/experiments/results/group_size_iter87_isoflop_v2.tsv
+  platform_hybrid/experiments/results/group_size_iter87_retention_slope_v2.tsv
+  platform_hybrid/experiments/results/group_size_iter87_summary_v2.tsv
+  platform_hybrid/experiments/results/group_size_iter87_meta_v2.json
   figures/group_size_iter87.{pdf,png}
 """
 
@@ -95,7 +95,9 @@ def linear_interp(x_pts: list[float], y_pts: list[float], y_target: float) -> fl
 
 def compute_crossover(table: dict, g_small: int, g_large: int) -> dict:
     """For (g_small, g_large), compute the retention curve and crossover budgets."""
-    T_values = sorted({T for (T, _) in table.keys()})
+    T_values = sorted({T for T,g in table if g == g_small} & {T for T,g in table if g == g_large})
+    if len(T_values) < 2:
+        raise ValueError("need at least two common group-budget cells")
     logT = [math.log10(T) for T in T_values]
     R_vals: list[float] = []
     R_lo: list[float] = []
@@ -150,7 +152,7 @@ def compute_crossover(table: dict, g_small: int, g_large: int) -> dict:
 
 def write_crossover_tsv(pairs: list[dict]) -> Path:
     """One row per (g_small, g_large) per threshold; wide-format TSV."""
-    out = RESULTS / "group_size_iter87_crossover.tsv"
+    out = RESULTS / "group_size_iter87_crossover_v2.tsv"
     thr_keys = [(0.95, "T_R95"), (0.90, "T_R90"), (0.85, "T_R85"), (0.80, "T_R80")]
     cols = ["g_small", "g_large", "slope_dR_per_log10T", "intercept_at_log10T_5"]
     for _, name in thr_keys:
@@ -180,7 +182,7 @@ def write_crossover_tsv(pairs: list[dict]) -> Path:
 
 def write_isoflop_tsv(pairs: list[dict], table: dict) -> Path:
     """Long-format TSV: one row per (g_small, g_large, T)."""
-    out = RESULTS / "group_size_iter87_isoflop.tsv"
+    out = RESULTS / "group_size_iter87_isoflop_v2.tsv"
     cols = ["g_small", "g_large", "T_tokens", "log10T",
             "acc_small", "acc_large", "R", "R_lo", "R_hi",
             "gu_small", "gu_large"]
@@ -206,7 +208,7 @@ def write_slope_tsv(pairs: list[dict]) -> Path:
     """One row per pair: slope of R vs log10(T), plus decomposition into
     early-budget (T<=4M) and late-budget (T>=4M) halves.
     """
-    out = RESULTS / "group_size_iter87_retention_slope.tsv"
+    out = RESULTS / "group_size_iter87_retention_slope_v2.tsv"
     cols = ["g_small", "g_large", "slope_dR_per_log10T_overall",
             "slope_dR_per_log10T_early_1to4M",
             "slope_dR_per_log10T_late_4to64M",
@@ -237,7 +239,7 @@ def write_slope_tsv(pairs: list[dict]) -> Path:
 
 def write_summary_tsv(pairs: list[dict]) -> Path:
     """One row per pair: headline numbers for the paper."""
-    out = RESULTS / "group_size_iter87_summary.tsv"
+    out = RESULTS / "group_size_iter87_summary_v2.tsv"
     cols = ["g_small", "g_large",
             "R_at_1M", "R_at_64M",
             "slope_dR_per_log10T",
@@ -518,14 +520,14 @@ def main() -> int:
     fig.suptitle("Iter 87 -- Pillar 3 (G=4 vs G=32): Crossover-Budget Test for Wu et al. (2025) Two-Octave Equivalence",
                  fontsize=11)
     fig.tight_layout(rect=[0, 0, 1, 0.97])
-    out_png = FIGURES / "group_size_iter87.png"
-    out_pdf = FIGURES / "group_size_iter87.pdf"
+    out_png = FIGURES / "group_size_iter87_v2.png"
+    out_pdf = FIGURES / "group_size_iter87_v2.pdf"
     fig.savefig(out_png, dpi=160)
     fig.savefig(out_pdf)
     plt.close(fig)
     # Mirror to paper/figures
-    (PAPER_FIGURES / "group_size_iter87.png").write_bytes(out_png.read_bytes())
-    (PAPER_FIGURES / "group_size_iter87.pdf").write_bytes(out_pdf.read_bytes())
+    (PAPER_FIGURES / "group_size_iter87_v2.png").write_bytes(out_png.read_bytes())
+    (PAPER_FIGURES / "group_size_iter87_v2.pdf").write_bytes(out_pdf.read_bytes())
     log(f"wrote {out_png}")
     log(f"wrote {out_pdf}")
 
@@ -551,7 +553,7 @@ def main() -> int:
             "T_crossover_R85_tokens": hp["crossovers"]["T_crossover_R85_tokens"],
             "T_crossover_R80_tokens": hp["crossovers"]["T_crossover_R80_tokens"],
         }
-    out_meta = RESULTS / "group_size_iter87_meta.json"
+    out_meta = RESULTS / "group_size_iter87_meta_v2.json"
     out_meta.write_text(json.dumps(meta, indent=2))
     log(f"wrote {out_meta}")
     return 0

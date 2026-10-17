@@ -19,7 +19,7 @@ import sys as _contract_sys
 from pathlib import Path as _ContractPath
 if len(_ContractPath(__file__).resolve().parents) > 3:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
-from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage, wave6_spec
+from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage, wave6_spec, wave6_failure_receipt, validated_sample_sequences
 
 
 import atexit
@@ -136,8 +136,11 @@ def run_one(exp):
         flush=True,
     )
 
+    specification = wave6_spec({**exp, "steps": steps})
     logging_errors = []
     wb_run = None
+    run_id = None
+    step_rewards, step_log = [], []
     t0 = time.time()
     try:
         rng = random.Random(seed)
@@ -194,7 +197,6 @@ def run_one(exp):
             loss = torch.stack(losses).mean()
             return loss, {"loss": loss.item()}
 
-        step_rewards, step_log = [], []
         examples = list(gsm8k)
         rng.shuffle(examples)
 
@@ -223,12 +225,13 @@ def run_one(exp):
                     sampling_params=sp,
                 ).result()
 
+                sequences = validated_sample_sequences(resp, group_size)
                 rews = [
                     reward_fn(
                         tok.decode(list(r.tokens), skip_special_tokens=True),
                         ans,
                     )
-                    for r in resp.sequences
+                    for r in sequences
                 ]
                 mr = sum(rews) / len(rews)
                 sr = (
@@ -241,7 +244,7 @@ def run_one(exp):
                 advs = [(r - mr) / sr for r in rews]
                 batch_r.extend(rews)
 
-                for r_seq, adv in zip(resp.sequences, advs):
+                for r_seq, adv in zip(sequences, advs):
                     rid = list(r_seq.tokens)
                     fid = pid + rid
                     tid = fid[1:]
@@ -340,7 +343,7 @@ def run_one(exp):
 
         result = {
             **completion_receipt(steps, len(step_rewards), run_id, final_ckpt.path),
-            **wave6_spec({**exp, "steps": steps}),
+            **specification,
             "logging_errors": logging_errors,
             "scorer_id": SCORER_ID,
             "objective_id": "group_standardized_pg_response_sum_v3",
@@ -400,6 +403,11 @@ def run_one(exp):
         except Exception:
             pass
         return {
+            **wave6_failure_receipt(
+                {**exp, "steps": steps}, e, successful_updates=len(step_rewards),
+                run_id=run_id, reward_trace=step_rewards, step_log=step_log,
+            ),
+            "logging_errors": logging_errors,
             "tag": tag,
             "sweep": exp["sweep"],
             "model": MODEL,
@@ -494,12 +502,9 @@ def launch(max_parallel=6):
             except Exception as e:
                 exp = futures[fut]
                 results.append(
-                    {
-                        "tag": exp["tag"],
-                        "sweep": exp["sweep"],
-                        "status": "crashed",
-                        "error": str(e),
-                    }
+                    wave6_failure_receipt(
+                        {**exp, "steps": exp.get("steps", STEPS)}, e, status="crashed"
+                    )
                 )
             # Incremental save
             _save(results, exps)

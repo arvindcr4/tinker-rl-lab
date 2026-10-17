@@ -17,7 +17,7 @@ import sys as _contract_sys
 from pathlib import Path as _ContractPath
 if len(_ContractPath(__file__).resolve().parents) > 4:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
-from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, content_hash, experiment_spec, validate_resume, stable_seed
+from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, content_hash, experiment_spec, validate_resume, stable_seed, validated_sample_sequences
 
 
 import argparse
@@ -225,21 +225,23 @@ def gsm_reward(response, answer):
     return score_gsm8k(response, answer)
 
 
-_CODE_FENCE = re.compile(r"```(?:python)?\s*(.*?)```", re.DOTALL)
+_CODE_FENCE = re.compile(r"```(?:python)?[ \t]*(?:\r?\n)?(.*?)```", re.DOTALL)
 
 
 def extract_code(text: str) -> str:
     m = _CODE_FENCE.search(text)
     text = m.group(1) if m else text
     text = re.sub(r"```", "", text)
-    return text.strip()
+    # Body-only completions depend on their leading indentation.
+    return text.strip("\r\n")
 
 
 def humaneval_script(prompt, completion, test_code, entry_point):
     if not entry_point.isidentifier():
         raise ValueError("Invalid HumanEval entry point")
     code = extract_code(completion)
-    full = code if "def " in code[:200] else prompt + "\n" + code
+    defines_entry_point = re.search(r"(?m)^(?:async )?def\s+" + re.escape(entry_point) + r"\s*\(", code)
+    full = code if defines_entry_point else prompt + "\n" + code
     prelude = "import math\nimport re\nimport sys\nfrom typing import *"
     return prelude + "\n" + full + "\n\n" + test_code + "\n\n" + f"check({entry_point})\n"
 
@@ -304,6 +306,11 @@ def score_completion(task_slice: str, ex: dict[str, Any], completion: str) -> fl
 
 
 def metric_summary(reward_groups: list[list[float]], length_groups: list[list[int]], G: int) -> dict[str, float]:
+    if (G <= 0 or not reward_groups or len(reward_groups) != len(length_groups)
+            or any(len(group) != G for group in reward_groups)
+            or any(len(group) != G or any(length <= 0 for length in group)
+                   for group in length_groups)):
+        raise ValueError("Complete fixed-size nonempty reward and length groups required")
     rewards = [r for group in reward_groups for r in group]
     lengths = [l for group in length_groups for l in group]
     n_groups = len(reward_groups)
@@ -549,6 +556,8 @@ class Campaign:
         pool = list(self.examples[cell.task_slice])
         rng.shuffle(pool)
         selected = pool[:PROMPTS_PER_CELL]
+        if not selected or len(selected) != PROMPTS_PER_CELL:
+            raise ValueError("Fixed prompt population incomplete")
         sc = await asyncio.to_thread(lambda: self.svc.create_sampling_client(base_model=cell.model))
         sp = T.SamplingParams(max_tokens=cell.max_tokens, temperature=cell.temperature, top_p=cell.top_p, seed=stable_seed(cell.id))
 
@@ -571,6 +580,7 @@ class Campaign:
                         num_samples=cell.group_size,
                         sampling_params=sp.model_copy(update={"seed": stable_seed(cell.id, ids)}),
                     )
+                    validated_sample_sequences(resp, cell.group_size)
                     break
                 except Exception:
                     if attempt == 2:
@@ -579,7 +589,7 @@ class Campaign:
                     await asyncio.sleep(2 * (attempt + 1))
             rewards: list[float] = []
             lengths: list[int] = []
-            for seq in resp.sequences:
+            for seq in validated_sample_sequences(resp, cell.group_size):
                 tokens = list(seq.tokens)
                 text = tok.decode(tokens, skip_special_tokens=True)
                 rewards.append(score_completion(cell.task_slice, ex, text))

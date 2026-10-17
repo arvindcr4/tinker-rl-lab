@@ -8,7 +8,7 @@ import sys as _contract_sys
 from pathlib import Path as _ContractPath
 if len(_ContractPath(__file__).resolve().parents) > 3:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
-from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage
+from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage, validated_sample_sequences
 
 
 import atexit
@@ -182,14 +182,15 @@ def run_experiment(exp):
                 sp = T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95, seed=stable_seed(seed, step, pid))
                 resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=group_size, sampling_params=sp).result()
 
-                rews = [reward_fn(tok.decode(list(r.tokens), skip_special_tokens=True), ans) for r in resp.sequences]
+                sequences = validated_sample_sequences(resp, group_size)
+                rews = [reward_fn(tok.decode(list(r.tokens), skip_special_tokens=True), ans) for r in sequences]
                 mr = sum(rews) / len(rews)
                 sr = (sum((r - mr)**2 for r in rews) / len(rews))**0.5 + 1e-8
                 advs = [(r - mr) / sr for r in rews]
                 batch_r.extend(rews)
                 batch_zvf_list.append(1.0 if all(abs(r - mr) < 1e-6 for r in rews) else 0.0)
 
-                for r_seq, adv in zip(resp.sequences, advs):
+                for r_seq, adv in zip(sequences, advs):
                     rid = list(r_seq.tokens)
                     fid = pid + rid
                     tid = fid[1:]

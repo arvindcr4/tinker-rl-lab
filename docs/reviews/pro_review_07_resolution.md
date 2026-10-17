@@ -67,3 +67,37 @@ An added subprocess-failure regression exposed that this installed W&B version l
 3. Shared scoring and prompt-group diagnostics wired into the reviewed primary paths
 4. Failure, identity, export and report evidence are fail-closed instead of silently promoted
 5. Controlled multi-framework training/final evaluation skipped as explicitly outside authorization; it requires the missing resolved environment/provider evidence and an isolated code evaluator before expansion
+
+## Independent runtime-audit follow-up
+
+The initial regression set missed several production edge cases. A separate follow-up commit repairs all confirmed runtime reproductions without altering historical artifacts:
+
+| Finding | Follow-up fix | Offline production-path evidence |
+|---|---|---|
+| 9 | Conflicting explicit `tinker_run_id` / `training_run_id` aliases are quarantined for both candidate owners. Matching aliases or a sole valid alias can own one run only; malformed aliases fail closed | Actual `correlate` tests assert no shared metric/URL for conflicting or malformed owners, with positive controls |
+| 10 | Wave6 initialization failures, late failures and launcher/resumer worker crashes now retain v3 specifications; known progress/traces are retained and crash progress remains unknown | Actual `run_one`, `launch`, `wave6_resume.main` and `_compute_rerun_plan` tests verify retryability, original horizon and observed update count |
+| 10 | Live resume without a saved training state refuses before initialization, preserving the original receipt bytes; a restart needs a new attempt tag | Actual `run` test forbids dataset/W&B initialization and checks original bytes unchanged |
+| 10 | N8 smoke/full outputs have independent immutable manifest bindings; existing shared legacy manifests are validated read-only, not overwritten | Actual `run_all` alternates smoke/full attempts and verifies both bindings, existing samples and legacy bytes; an orphan manifest also rejects changed treatment |
+| 7, 8 | Mega rejects missing prompt groups, empty/under/overfilled completion groups and empty completion tokens before complete artifacts. Campaign/Wave6 enforce the same response cardinality. N8 validates each chunk and stages it before accumulation | Actual `Campaign._run_with_sem`/`run_cell`, Campaign/Wave6 training functions and N8 `process_prompt` tests assert no invalid optimizer update/completed row; bounded recovery admits only complete chunks |
+| 14 | HumanEval body-only/fenced-body indentation and nested helper definitions are retained | Assembly compile-only tests for all three forms reach the explicit unavailable-isolation blocker; no generated code executes |
+
+These are validity/evidence repairs within v3, documented in the protocol amendment. The provider/runtime-evidence and trusted-isolation limitations above remain unchanged.
+
+Follow-up validation (all offline; fake service boundaries):
+
+```text
+/tmp/tinker-review-venv/bin/python -m pytest -q tests/test_modal_common.py tests/reviews/test_hybrid_core_review.py tests/reviews/test_hybrid_public_evidence_paths.py tests/test_pro_review_02_modal_analysis.py tests/reviews/test_hybrid_framework_review.py --disable-warnings --maxfail=3
+292 passed, 1 warning
+
+/tmp/tinker-review-venv/bin/python -m pytest -q tests/reviews/test_hybrid_framework_review.py --disable-warnings --maxfail=3
+71 passed (35 additional runtime-audit regressions)
+
+/tmp/tinker-review-venv/bin/python -m compileall -q platform_hybrid/experiments/framework_contracts.py platform_hybrid/experiments/tinker-runs tests/reviews/test_hybrid_framework_review.py
+PASS
+
+/tmp/tinker-review-venv/bin/python -m ruff check --isolated --select F821,F822,F823 $(git diff --name-only -- '*.py') --output-format concise
+All checks passed
+
+git diff --check
+PASS
+```

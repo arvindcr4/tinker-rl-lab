@@ -289,6 +289,20 @@ def fetch_wandb(entity: str) -> tuple[list[str], list[dict[str, Any]]]:
     return projects, runs
 
 
+def training_owner(run: dict[str, Any]) -> str | None:
+    """Return the sole consistent explicit owner, never a matching alias alone."""
+    config = run.get("config", {})
+    owners = []
+    for key in ("tinker_run_id", "training_run_id"):
+        value = config.get(key)
+        if value is None:
+            continue
+        if not isinstance(value, str) or not TINKER_ID_RE.fullmatch(value.strip()):
+            return None
+        owners.append(value.strip().lower())
+    return owners[0] if owners and len(set(owners)) == 1 else None
+
+
 def correlate(
     tinker_runs: list[dict[str, Any]],
     wandb_runs: list[dict[str, Any]],
@@ -311,8 +325,7 @@ def correlate(
         if matches:
             model = normalize_model(tinker_run.get("base_model"))
             model_ok = model and all(normalize_model(m.get("model")) == model for m in matches)
-            owners = [m for m in matches if any(
-                m.get("config", {}).get(k) == run_id for k in ("tinker_run_id", "training_run_id"))]
+            owners = [m for m in matches if training_owner(m) == run_id]
             verified = model_ok and len(owners) == 1 and len(matches) == 1
             match_info[run_id] = {
                 "matches": matches,

@@ -42,3 +42,14 @@ Historical effective configs, source/provider image digests, immutable model/tok
 ## Source artifacts found in the full checkout
 
 The review bundle omitted files that are present in the full checkout. `framework_config_dumps/` contains nominal YAMLs with placeholder model hashes and managed nulls; these are not linked initialized-runtime receipts. The delegated Tinker GSM8K preset requests G4, batch 2 and LR 3e-5 before the wrapper's model/steps/seed overrides; its source hash and requested values are now retained. SkyRL's source YAML has duplicate trainer keys and declares Qwen2.5-1.5B-Instruct while the wrapper is labelled Qwen3-8B. The wrapper now rejects duplicate keys or model mismatch before launching. Existing YAML artifacts are preserved unchanged.
+
+## Independent runtime-audit amendment
+
+These guards enforce v3 validity; they do not change the objective, scorer, requested population or reinterpret stored results.
+
+- All populated explicit W&B owner aliases must contain the same full training ID. Conflicting aliases cannot own either run or transfer metrics to them
+- Wave 6 failures and process crashes carry the same v3 requested specification as successful receipts, so compatible attempts remain retryable. Observed in-worker progress is retained; process-crash progress is unavailable, not invented as zero
+- Live `--resume` without a saved training-state URI fails before initialization or artifact mutation. A fresh start requires a new attempt tag; old traces cannot be mixed into a restart
+- N8 binds each output stream to its own `passrates.spec.json` or `passrates_smoke.spec.json`. Existing shared manifests are read-only legacy evidence, accepted only after exact specification validation. Even an empty stream's existing manifest cannot be replaced with a different treatment
+- Campaign, Wave 6, N8 and Mega require exactly the requested number of nonempty completions per sampling response. Malformed responses are failures, never zero-valued completed observations. N8 and Mega may use their existing bounded retries; partial response contents never accumulate toward a valid group. Mega also requires the fixed prompt count and aligned reward/length vectors
+- HumanEval assembly retains body-only completion indentation, including fenced blocks and nested helper definitions. Both full-function and body-only fixtures are compile-checked only; execution remains blocked pending a trusted isolated evaluator

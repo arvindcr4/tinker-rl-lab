@@ -17,7 +17,7 @@ import sys as _contract_sys
 from pathlib import Path as _ContractPath
 if len(_ContractPath(__file__).resolve().parents) > 4:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
-from platform_hybrid.experiments.framework_contracts import experiment_spec, validate_resume, content_hash, SCORER_ID, stable_seed, score_gsm8k
+from platform_hybrid.experiments.framework_contracts import experiment_spec, validate_resume, content_hash, SCORER_ID, stable_seed, score_gsm8k, validated_sample_sequences
 
 
 import argparse
@@ -115,11 +115,16 @@ async def process_prompt(
                 try:
                     resp = await sc.sample_async(prompt=model_input, num_samples=c,
                         sampling_params=sp.model_copy(update={"seed": stable_seed(args.seed, prompt_id, len(rewards))}))
-                    for seq in resp.sequences:
+                    sequences = validated_sample_sequences(resp, c)
+                    chunk_rewards = []
+                    chunk_tokens = 0
+                    for seq in sequences:
                         text = tokenizer.decode(list(seq.tokens), skip_special_tokens=True)
-                        total_completion_tokens += len(seq.tokens)
+                        chunk_tokens += len(seq.tokens)
                         score = extract_and_score(text, gold)
-                        rewards.append(int(score))
+                        chunk_rewards.append(int(score))
+                    rewards.extend(chunk_rewards)
+                    total_completion_tokens += chunk_tokens
                     success = True
                     break
                 except Exception as e:
@@ -178,13 +183,21 @@ async def run_all(args):
     passrates_file = out_dir / passrates_fname
     
     specification = experiment_spec({**vars(args), "scorer_id": SCORER_ID})
-    manifest_path = out_dir / "experiment_spec.json"
-    if passrates_file.exists():
-        if not manifest_path.exists():
-            raise ValueError("Legacy samples lack immutable specification")
+    # Each sample file owns a separate immutable binding, including smoke runs.
+    manifest_path = passrates_file.with_suffix(".spec.json")
+    if manifest_path.exists():
         validate_resume(specification, json.loads(manifest_path.read_text()))
     else:
-        manifest_path.write_text(json.dumps(specification, indent=2))
+        if passrates_file.exists():
+            legacy_manifest = out_dir / "experiment_spec.json"
+            if not legacy_manifest.exists():
+                raise ValueError("Legacy samples lack immutable specification")
+            validate_resume(specification, json.loads(legacy_manifest.read_text()))
+        try:
+            with manifest_path.open("x") as manifest:
+                manifest.write(json.dumps(specification, indent=2))
+        except FileExistsError:
+            validate_resume(specification, json.loads(manifest_path.read_text()))
     done_ids = set()
     state = {
         "prompts_done": 0,

@@ -169,6 +169,20 @@ def objective_identity(requested):
     }
 
 
+def validated_sample_sequences(response, expected_count):
+    """Reject malformed fixed-G responses before grading or updating a model."""
+    if not isinstance(expected_count, int) or expected_count <= 0:
+        raise ValueError("Expected sample count must be positive")
+    sequences = list(getattr(response, "sequences", None) or [])
+    if len(sequences) != expected_count:
+        raise ValueError(
+            f"Incomplete fixed sample population: expected {expected_count}, got {len(sequences)}"
+        )
+    if any(not getattr(sequence, "tokens", None) for sequence in sequences):
+        raise ValueError("Empty sampled completion in fixed sample population")
+    return sequences
+
+
 def completion_receipt(
     requested_updates, successful_updates, trainer_run_id, final_checkpoint, *, error=None
 ):
@@ -315,6 +329,24 @@ def wave6_spec(exp):
             "train_unembed": True,
         }
     )
+
+
+def wave6_failure_receipt(exp, error, *, status="failed", successful_updates=None,
+                          run_id=None, reward_trace=None, step_log=None):
+    """Bind retryable failures to the same resolved treatment as successful runs.
+
+    A worker-process crash has unknown progress, not an observed zero updates.
+    """
+    return {
+        **wave6_spec(exp),
+        **completion_receipt(exp["steps"], successful_updates, run_id, None, error=str(error)),
+        "tag": exp["tag"],
+        "sweep": exp["sweep"],
+        "status": status,
+        "error": str(error),
+        "reward_trace": reward_trace,
+        "step_log": step_log,
+    }
 
 
 def read_tinker_preset(path, name="gsm8k"):

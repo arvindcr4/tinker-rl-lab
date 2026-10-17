@@ -145,9 +145,10 @@ def run(args: argparse.Namespace) -> dict:
             print(f"[{tag}] resuming from step {resume_step} "
                   f"state={resume_state_path}", flush=True)
         else:
-            prior = None
-            print(f"[{tag}] no train_state_path in {output_path}; starting fresh",
-                  flush=True)
+            raise RuntimeError(
+                f"Cannot resume {output_path}: no train_state_path; "
+                "use a new attempt tag to restart without overwriting prior evidence"
+            )
 
     wb = None
     if not getattr(args, "no_wandb", False):

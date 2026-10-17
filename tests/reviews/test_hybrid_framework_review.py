@@ -710,3 +710,326 @@ def test_delegated_sources_are_inspected_not_inferred(tmp_path):
     wrong.write_text("trainer:\n  policy:\n    model:\n      path: other-model\n")
     with pytest.raises(ValueError, match="does not match"):
         c.read_skyrl_recipe(wrong)
+
+
+@pytest.mark.parametrize("ownership", ["conflicting", "matching", "single", "malformed"])
+def test_registry_explicit_owner_aliases_must_be_unique_and_consistent(ownership):
+    module = load("tinker-runs/tinker_wandb_registry.py")
+    a = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa:train:0"
+    b = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb:train:0"
+    runs = [dict(training_run_id=rid, base_uuid=rid.split(":")[0],
+                 base_model="Qwen/base", normalized_model="qwen/base") for rid in (a, b)]
+    config = {"tinker_run_id": a}
+    if ownership != "single":
+        config["training_run_id"] = {"conflicting": b, "matching": a, "malformed": [a]}[ownership]
+    wandb = dict(referenced_tinker_ids=[a, b], referenced_uuids=[], model="Qwen/base",
+                 config=config, summary={"reward": 0.9}, url="https://wandb.invalid/same-run",
+                 normalized_model="qwen/base")
+    first, second = module.correlate(runs, [wandb], 30)
+    if ownership in {"matching", "single"}:
+        assert first["provenance_verified"] is True
+        assert first["final_metric"] == 0.9
+    else:
+        assert first["provenance_verified"] is False
+        assert first["wandb_url"] is first["final_metric"] is None
+    assert second["provenance_verified"] is False
+    assert second["wandb_url"] is second["final_metric"] is None
+
+
+def offline_training_module(monkeypatch, relative, training=None):
+    """Import full training modules while replacing every external boundary."""
+    import datasets
+    import wandb
+
+    monkeypatch.setitem(sys.modules, "codecarbon", None)
+    monkeypatch.setenv("WANDB_API_KEY", "offline-test-placeholder")
+    install_fake_provider(monkeypatch, training or FakeTraining())
+    monkeypatch.setattr(datasets, "load_dataset", lambda *a, **kw: [{"question": "q", "answer": "#### 1"}])
+    monkeypatch.setattr(wandb, "login", lambda **kw: None)
+    monkeypatch.setattr(wandb, "init", lambda **kw: None)
+    return load(relative)
+
+
+def test_current_wave6_initialization_failure_is_retryable(monkeypatch):
+    module = offline_training_module(monkeypatch, "tinker-runs/wave6_ablations.py")
+    resume = load("tinker-runs/wave6_resume.py")
+    exp = resume._compute_rerun_plan({}, 32, 0.8, 2, 30)[0]
+
+    def fail():
+        raise RuntimeError("synthetic initialization failure")
+
+    monkeypatch.setattr(module, "_load_gsm8k", fail)
+    failed = module.run_one(exp)
+    assert failed["status"] == "failed"
+    assert failed["successful_updates"] == 0
+    assert failed["completion_contract_satisfied"] is False
+    c.validate_resume(c.wave6_spec(exp), failed)
+    assert exp in resume._compute_rerun_plan({exp["tag"]: failed}, 32, 0.8, 2, 30)
+
+
+class CrashedExecutor:
+    def __init__(self, **kwargs):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+    def submit(self, *args):
+        class Crash:
+            def result(self):
+                raise RuntimeError("synthetic process crash")
+        return Crash()
+
+
+def test_wave6_launch_worker_crash_keeps_retryable_spec(monkeypatch):
+    module = offline_training_module(monkeypatch, "tinker-runs/wave6_ablations.py")
+    resume = load("tinker-runs/wave6_resume.py")
+    exp = module.build_experiments()[0]
+    monkeypatch.setattr(module, "build_experiments", lambda: [exp])
+    monkeypatch.setattr(module, "ProcessPoolExecutor", CrashedExecutor)
+    monkeypatch.setattr(module, "as_completed", lambda futures: futures)
+    monkeypatch.setattr(module, "_save", lambda *a, **kw: None)
+    failed, = module.launch()
+    assert failed["status"] == "crashed"
+    assert failed["successful_updates"] is None
+    assert exp["tag"] in {e["tag"] for e in resume._compute_rerun_plan(
+        {exp["tag"]: failed}, 32, 0.8, 2, module.STEPS)}
+
+
+def test_wave6_resume_worker_crashes_remain_retryable(monkeypatch, tmp_path):
+    module = load("tinker-runs/wave6_resume.py")
+    path = tmp_path / "wave6.json"
+    path.write_text(json.dumps({"metadata": {"steps": 30}, "runs": []}))
+    monkeypatch.setenv("WAVE6_RESULTS_PATH", str(path))
+    monkeypatch.setattr(sys, "argv", ["wave6_resume.py", "1"])
+    monkeypatch.setitem(sys.modules, "wave6_ablations", SimpleNamespace(run_one=lambda exp: None))
+    monkeypatch.setattr(module, "ProcessPoolExecutor", CrashedExecutor)
+    monkeypatch.setattr(module, "as_completed", lambda futures: futures)
+    module.main()
+    saved = json.loads(path.read_text())
+    assert len(saved["runs"]) == 12
+    assert all(r["status"] == "crashed" and r["successful_updates"] is None for r in saved["runs"])
+    assert len(module._compute_rerun_plan({r["tag"]: r for r in saved["runs"]}, 32, 0.8, 2, 30)) == 12
+
+
+def test_live_resume_without_checkpoint_leaves_original_bytes_untouched(monkeypatch, tmp_path):
+    module = load("tinker-runs/live_zvf_probe.py")
+    install_fake_provider(monkeypatch, FakeTraining())
+    monkeypatch.setattr(module, "RESULTS_DIR", tmp_path)
+    monkeypatch.setattr(module, "ROOT", tmp_path)
+    monkeypatch.setattr(module, "load_env_file", lambda p: None)
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("No initialization should occur without a resumable checkpoint")
+
+    monkeypatch.setattr(module, "load_gsm8k_examples", forbidden)
+    import wandb
+    monkeypatch.setattr(wandb, "init", forbidden)
+    args = probe_args(resume=True, no_wandb=False)
+    spec = c.experiment_spec({k: v for k, v in vars(args).items() if k not in {"resume", "tag", "no_wandb"}})
+    prior = {**spec, "status": "failed", "run_id": "old:train:0", "reward_trace": [0.5],
+             "step_log": [{"step": 1, "reward": 0.5}]}
+    path = tmp_path / "test.json"
+    before = json.dumps(prior, indent=3).encode()
+    path.write_bytes(before)
+    with pytest.raises(RuntimeError, match="no train_state_path.*new attempt tag"):
+        module.run(args)
+    assert path.read_bytes() == before
+    assert set(tmp_path.iterdir()) == {path}
+
+
+def n8_args(tmp_path, **changes):
+    return argparse.Namespace(**{**dict(out_dir=str(tmp_path), smoke=False, k=64,
+        model="test/model", n_prompts=78, temperature=0.8, top_p=0.95, max_tokens=512,
+        seed=42, chunk_size=16, concurrency=1), **changes})
+
+
+def test_n8_smoke_does_not_replace_full_manifest_or_break_full_resume(monkeypatch, tmp_path):
+    import asyncio
+    module = load("tinker-runs/scripts/n8_passrate_spectrum_20260704.py")
+    normal = n8_args(tmp_path)
+    spec = c.experiment_spec({**vars(normal), "scorer_id": c.SCORER_ID})
+    legacy = tmp_path / "experiment_spec.json"
+    before = json.dumps(spec, indent=3)
+    legacy.write_text(before)
+    samples = tmp_path / "passrates.jsonl"
+    sample_bytes = json.dumps({"prompt_id": "old", "k_obtained": 64, "p_hat": 0.5}) + "\n"
+    samples.write_text(sample_bytes)
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("synthetic dataset stop before providers")
+
+    monkeypatch.setattr(module, "load_dataset", fail)
+    smoke = n8_args(tmp_path, smoke=True, k=4, n_prompts=2, chunk_size=4)
+    for args in (smoke, normal, smoke, normal):
+        with pytest.raises(RuntimeError, match="synthetic dataset stop"):
+            asyncio.run(module.run_all(args))
+    assert legacy.read_text() == before
+    assert samples.read_text() == sample_bytes
+    c.validate_resume(spec, json.loads((tmp_path / "passrates.spec.json").read_text()))
+    smoke_spec = c.experiment_spec({**vars(smoke), "scorer_id": c.SCORER_ID})
+    c.validate_resume(smoke_spec, json.loads((tmp_path / "passrates_smoke.spec.json").read_text()))
+
+
+def test_n8_orphaned_mode_manifest_is_not_overwritten(monkeypatch, tmp_path):
+    import asyncio
+    module = load("tinker-runs/scripts/n8_passrate_spectrum_20260704.py")
+    args = n8_args(tmp_path)
+    before = json.dumps(c.experiment_spec({**vars(args), "scorer_id": c.SCORER_ID}))
+    manifest = tmp_path / "passrates.spec.json"
+    manifest.write_text(before)
+    with pytest.raises(ValueError, match="specification mismatch"):
+        asyncio.run(module.run_all(n8_args(tmp_path, k=32)))
+    assert manifest.read_text() == before
+
+
+@pytest.mark.parametrize("relative", ["wave6_ablations.py", "campaign_v2.py"])
+@pytest.mark.parametrize("count,empty_tokens", [(0, False), (1, False), (3, False), (2, True)])
+def test_training_rejects_wrong_group_population_before_optimizer(monkeypatch, relative, count, empty_tokens):
+    tc = FakeTraining()
+    tc.sample = lambda *a, **kw: Done(SimpleNamespace(sequences=[
+        SimpleNamespace(tokens=[] if empty_tokens else [1], logprobs=[-1.0]) for _ in range(count)]))
+    module = offline_training_module(monkeypatch, "tinker-runs/" + relative, tc)
+    exp = dict(tag="audit", model="test/model", sweep="baseline", wave="audit", rank=32,
+               temperature=0.8, batch=1, steps=1, group_size=2, seed=42, lr=1e-5)
+    result = module.run_one(exp) if relative.startswith("wave6") else module.run_experiment(exp)
+    assert result["status"] == "failed"
+    assert "sample population" in result["error"]
+    assert tc.updates == 0
+    assert tc.data == []
+
+
+@pytest.mark.parametrize("count,empty_tokens", [(0, False), (1, False), (3, False), (2, True)])
+def test_mega_rejects_wrong_group_population_without_completed_artifacts(monkeypatch, tmp_path, count, empty_tokens):
+    import asyncio
+    from types import MethodType
+    module = load("tinker-runs/scripts/mega_cell_campaign_20260704.py")
+    monkeypatch.setattr(module, "STOP_PATH", tmp_path / "STOP")
+    monkeypatch.setattr(module, "PROMPTS_PER_CELL", 1)
+
+    async def no_sleep(*args):
+        pass
+
+    monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
+    async def sample_async(**kwargs):
+        return SimpleNamespace(sequences=[SimpleNamespace(tokens=[] if empty_tokens else [1]) for _ in range(count)])
+    async def tokenizer_async(model):
+        return SimpleNamespace(encode=lambda *a, **kw: [9, 8], decode=lambda *a, **kw: "1")
+    rows, failures = [], []
+    async def write_outputs(cell, row, *args):
+        rows.append(row)
+    async def record_failure(cell, reason):
+        failures.append(reason)
+    state = SimpleNamespace(args=SimpleNamespace(max_prompt_tokens=1024, cell_timeout_sec=10),
+        stop_requested=False, completed=0, failed=0,
+        examples={"gsm8k_easy": [{"question": "q", "answer": "1", "source_idx": 0}]},
+        svc=SimpleNamespace(create_sampling_client=lambda **kw: SimpleNamespace(sample_async=sample_async)),
+        token_lock=asyncio.Lock(), cumulative_tokens=0, tokenizer_for_async=tokenizer_async,
+        _write_cell_outputs=write_outputs, _record_failure=record_failure,
+        wandb=SimpleNamespace(log_cell=lambda *a: pytest.fail("Malformed cell cannot be logged as complete")))
+    state.run_cell = MethodType(module.Campaign.run_cell, state)
+    asyncio.run(module.Campaign._run_with_sem(state, module.Cell("test/model", "gsm8k_easy", 2, 0.8, 42), asyncio.Semaphore(1)))
+    assert state.completed == 0
+    assert state.failed == 1
+    assert failures and not rows
+
+
+@pytest.mark.parametrize("completion", [
+    "    return a + b\n",
+    "```python\n    return a + b\n```",
+    "    def helper():\n        return a + b\n    return helper()\n",
+])
+def test_humaneval_body_completion_keeps_indentation_and_is_not_executed(completion):
+    module = load("tinker-runs/scripts/mega_cell_campaign_20260704.py")
+    from platform_hybrid.experiments.research_contracts import IsolatedEvaluatorUnavailable
+    prompt = 'def add(a, b):\n    """Return the sum."""\n'
+    tests = "def check(f):\n    assert f(1, 2) == 3"
+    compile(module.humaneval_script(prompt, completion, tests, "add"), "<assembly-only>", "exec")
+    with pytest.raises(IsolatedEvaluatorUnavailable):
+        module.run_humaneval_test(prompt, completion, tests, "add")
+
+
+def test_wave6_late_failure_retains_observed_trace_and_retry_identity(monkeypatch):
+    tc = FakeTraining()
+    original_sample = tc.sample
+    calls = []
+
+    def sample(*args, **kwargs):
+        calls.append(True)
+        if len(calls) == 2:
+            raise RuntimeError("synthetic failure after one update")
+        return original_sample(*args, **kwargs)
+
+    tc.sample = sample
+    module = offline_training_module(monkeypatch, "tinker-runs/wave6_ablations.py", tc)
+    exp = dict(tag="late", sweep="baseline", rank=32, temperature=0.8, batch=1,
+               steps=2, group_size=2, seed=42, lr=1e-5)
+    result = module.run_one(exp)
+    c.validate_resume(c.wave6_spec(exp), result)
+    assert result["status"] == "failed"
+    assert result["successful_updates"] == tc.updates == 1
+    assert result["trainer_run_id"] == tc.model_id
+    assert len(result["reward_trace"]) == len(result["step_log"]) == 1
+    assert result["completion_contract_satisfied"] is False
+
+
+@pytest.mark.parametrize("pool_count", [0, 1])
+def test_mega_incomplete_prompt_pool_stops_before_sampler(monkeypatch, pool_count):
+    import asyncio
+    module = load("tinker-runs/scripts/mega_cell_campaign_20260704.py")
+    monkeypatch.setattr(module, "PROMPTS_PER_CELL", 2)
+    async def tokenizer_async(model):
+        return None
+    state = SimpleNamespace(tokenizer_for_async=tokenizer_async,
+        examples={"gsm8k_easy": [{"question": "q", "answer": "1"}] * pool_count},
+        svc=SimpleNamespace(create_sampling_client=lambda **kw: pytest.fail("Incomplete pool cannot sample")))
+    with pytest.raises(ValueError, match="Fixed prompt population incomplete"):
+        asyncio.run(module.Campaign.run_cell(state, module.Cell("test/model", "gsm8k_easy", 2, 0.8, 42)))
+
+
+@pytest.mark.parametrize("rewards,lengths", [([], []), ([[]], [[]]), ([[1]], [[1]]),
+                                           ([[0, 1]], [[1]]), ([[0, 1]], [[1, 0]])])
+def test_mega_metrics_reject_incomplete_vectors(rewards, lengths):
+    module = load("tinker-runs/scripts/mega_cell_campaign_20260704.py")
+    with pytest.raises(ValueError, match="fixed-size nonempty"):
+        module.metric_summary(rewards, lengths, 2)
+
+
+@pytest.mark.parametrize("recover", [False, True])
+def test_n8_chunks_validate_each_response_without_accumulating_partial_samples(monkeypatch, tmp_path, recover):
+    import asyncio
+    import tinker.types as T
+    module = load("tinker-runs/scripts/n8_passrate_spectrum_20260704.py")
+    counts = iter([1, 3, 2, 2]) if recover else itertools.cycle([1, 3])
+    calls = []
+    async def sample_async(**kwargs):
+        count = next(counts)
+        calls.append(count)
+        return SimpleNamespace(sequences=[SimpleNamespace(tokens=[1]) for _ in range(count)])
+    async def no_sleep(*args):
+        pass
+    monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
+    monkeypatch.setattr(module.wandb, "log", lambda *a, **kw: None)
+    path = tmp_path / "samples.jsonl"
+    state = dict(prompts_done=0, completions_done=0, sum_p=0.0, p_hats=[])
+    args = n8_args(tmp_path, k=4, n_prompts=1, chunk_size=2)
+    task = module.process_prompt("item", "question", "1", args,
+        SimpleNamespace(encode=lambda *a, **kw: [9], decode=lambda *a, **kw: "1"),
+        SimpleNamespace(sample_async=sample_async),
+        T.SamplingParams(max_tokens=8, temperature=0.8), asyncio.Semaphore(1),
+        asyncio.Lock(), path, state)
+    if recover:
+        asyncio.run(task)
+        row = json.loads(path.read_text())
+        assert calls == [1, 3, 2, 2]
+        assert row["k_obtained"] == row["n_correct"] == state["completions_done"] == 4
+        assert row["rewards"] == [1, 1, 1, 1]
+    else:
+        with pytest.raises(RuntimeError, match="Incomplete fixed sample population"):
+            asyncio.run(task)
+        assert not path.exists()
+        assert state["prompts_done"] == state["completions_done"] == 0
+        assert len(calls) == 8

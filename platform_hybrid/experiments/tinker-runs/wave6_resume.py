@@ -5,7 +5,7 @@ import sys as _contract_sys
 from pathlib import Path as _ContractPath
 if len(_ContractPath(__file__).resolve().parents) > 3:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
-from platform_hybrid.experiments.framework_contracts import wave6_spec, validate_resume, require_completed
+from platform_hybrid.experiments.framework_contracts import wave6_spec, validate_resume, require_completed, wave6_failure_receipt
 
 
 import json
@@ -107,12 +107,7 @@ def main():
             except Exception as e:
                 exp = futures[fut]
                 new_results.append(
-                    {
-                        "tag": exp["tag"],
-                        "sweep": exp["sweep"],
-                        "status": "crashed",
-                        "error": str(e),
-                    }
+                    wave6_failure_receipt(exp, e, status="crashed")
                 )
 
     # Merge: only successful reruns replace existing entries.

@@ -5,7 +5,8 @@ import with inert stand-ins so that function runs as plain Python on the Colab V
 stamps each result with where it ran (Modal used A10G; Colab runs are disclosed as such).
 
 On a Colab session (after uploading this file and the Modal script to /content):
-  colab exec -s NAME -f colab_run_arms.py --timeout 30000 --env RUNS=ppo:4096,ppo_8x8:42 [--env SMOKE=1]
+  colab exec -s NAME -f colab_run_arms.py --timeout 30000 --env RUNS=ppo:4096,ppo_8x8:42 [--env SMOKE=1] [--env PARALLEL=4]
+PARALLEL>1 trains that many runs at once on the GPU, one process each (logs in /content/logs/).
 Results: /content/results/samestack_gsm8k_v2s[_smoke]/<arm>_s<seed>.json and _texts.json.gz
 """
 
@@ -20,6 +21,7 @@ import types
 
 SCRIPT = "/content/modal_samestack_gsm8k_cot_v2.py"
 RESULTS = "/content/results"
+SELF = "/content/colab_run_arms.py"  # uploaded copy; `colab exec -f` runs code in the kernel without __file__
 
 
 def install_modal_stub():
@@ -73,8 +75,46 @@ def environment():
     }
 
 
+def run_parallel(items, n):
+    # Tensors peak at ~14 GiB per run, but the caching allocator keeps growing past 20 GiB unless capped,
+    # so each child gets a hard 1/n share of the GPU (GPU_MEM_FRACTION) and n is sized to that peak.
+    total = int(subprocess.run(["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
+                               capture_output=True, text=True).stdout.split()[0]) / 1024
+    n = max(1, min(n, int(total // float(os.environ.get("GPU_GB_PER_RUN", "18")))))
+    print(f"parallel runs: {n} ({total:.0f} GiB GPU)", flush=True)
+    os.makedirs("/content/logs", exist_ok=True)
+    pending, live, failed, ticks = list(items), [], [], 0
+    while pending or live:
+        while pending and len(live) < n:
+            item = pending.pop(0)
+            log = open(f"/content/logs/{item.replace(':', '_s')}.log", "w")
+            env = {**os.environ, "RUNS": item, "PARALLEL": "1", "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
+                   "GPU_MEM_FRACTION": f"{0.97 / n:.3f}"}
+            live.append((item, subprocess.Popen([sys.executable, SELF], env=env, stdout=log, stderr=subprocess.STDOUT)))
+        time.sleep(20)
+        ticks += 1
+        if ticks % 30 == 0:  # every ~10 min: GPU memory and utilisation, to size PARALLEL
+            q = "--query-gpu=memory.used,memory.total,utilization.gpu"
+            print("GPU", subprocess.run(["nvidia-smi", q, "--format=csv,noheader"], capture_output=True, text=True).stdout.strip(),
+                  f"live={len(live)} pending={len(pending)}", flush=True)
+        for item, proc in [x for x in live if x[1].poll() is not None]:
+            live.remove((item, proc))
+            tail = open(f"/content/logs/{item.replace(':', '_s')}.log").read().strip().splitlines()[-1:]
+            print(f"{'FINISHED' if proc.returncode == 0 else 'FAILED'} {item}: {tail}", flush=True)
+            if proc.returncode:
+                failed.append(item)
+    if failed:
+        sys.exit(f"failed runs: {failed}")
+
+
 def main():
+    items = os.environ["RUNS"].split(",")
     ensure_packages()
+    if int(os.environ.get("PARALLEL", "1")) > 1 and len(items) > 1:
+        return run_parallel(items, int(os.environ["PARALLEL"]))
+    if os.environ.get("GPU_MEM_FRACTION"):
+        import torch
+        torch.cuda.set_per_process_memory_fraction(float(os.environ["GPU_MEM_FRACTION"]))
     install_modal_stub()
     spec = importlib.util.spec_from_file_location("samestack_v2", SCRIPT)
     mod = importlib.util.module_from_spec(spec)
@@ -84,7 +124,7 @@ def main():
     sub = "samestack_gsm8k_v2s_smoke" if smoke else "samestack_gsm8k_v2s"
     env = environment()
     print(json.dumps(env), flush=True)
-    for item in os.environ["RUNS"].split(","):
+    for item in items:
         arm, seed = item.split(":")
         t0 = time.time()
         r = mod.run_arm(arm, int(seed), smoke=smoke)

@@ -16,7 +16,7 @@ export default function Viva() {
     {
       q: "Table 6.2 is provisional. Why should we accept the GRPO vs PPO conclusion?",
       a: <>Over the {s.n} completed paired seeds, GRPO G = 8 minus PPO is {sgn(s.md)} with 95% CI [{sgn(s.lo)}, {sgn(s.hi)}], and TOST at ±0.02 gives p = {pfmt(s.tost)}. The conclusion is limited to "no detectable GRPO advantage on this configuration". PPO has {nSeeds("ppo")} of {SS.seeds_planned} seeds and the exposure-matched arm is pending, so the result is labelled provisional rather than final. The earlier +0.050 gap came from a 200-token cap and a cold critic; PPO ended below its own start.</>,
-      go: [["samestack", "GRPO vs PPO"]],
+      go: [["samestack", "GRPO vs PPO"], ...(DATA.platform ? [["platform", "Platform calibration"]] : [])],
     },
     {
       q: "Is ZVF a contribution, or just the known binomial identity?",

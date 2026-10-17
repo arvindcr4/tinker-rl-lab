@@ -57,7 +57,7 @@ def load_effect_surface() -> pd.DataFrame:
 
 
 def load_retention_fit() -> pd.DataFrame:
-    return pd.read_csv(RES / "group_size_iter19_retention_fit.tsv", sep="\t")
+    return pd.read_csv(RES / "group_size_iter19_retention_fit_v2.tsv", sep="\t")
 
 
 # ---------------------------------------------------------------------------
@@ -179,7 +179,8 @@ def build_phase_grid(effect: pd.DataFrame) -> pd.DataFrame:
             interp.append({"G": int(G),
                            "T_tokens": float(np.exp(logt)),
                            "acc_pred": float(acc),
-                           "is_input_grid_point": bool(np.any(np.isclose(Ts, np.exp(logt), rtol=0.1)))})
+                           "is_input_grid_point": False  # interpolated values are predictions, even near input coordinates
+                           })
     return pd.DataFrame(interp)
 
 
@@ -223,7 +224,7 @@ def pareto_crossings(effect: pd.DataFrame) -> pd.DataFrame:
         diffs = acc_b - acc_a  # positive means Gb wins
         # Interpolate to find first T where diff crosses 0.02 (2pp)
         # Linear in log-T
-        sign_change = []
+        sign_change = [float(T_axis[0])] if diffs[0] >= .02 else []
         for i in range(len(diffs) - 1):
             if diffs[i] < 0.02 and diffs[i + 1] >= 0.02:
                 # interpolate
@@ -238,7 +239,7 @@ def pareto_crossings(effect: pd.DataFrame) -> pd.DataFrame:
         rows.append({
             "G_a": Ga,
             "G_b": Gb,
-            "direction": f"G={Gb} overtakes G={Ga} at large T" if diffs[-1] > diffs[0] else f"G={Ga} dominates G={Gb}",
+            "direction": f"G={Gb} dominates G={Ga}" if np.all(diffs > 0) else (f"G={Ga} dominates G={Gb}" if np.all(diffs < 0) else "mixed or tied ordering"),
             "T_crossover_tokens": round(sign_change[0], 0) if sign_change else None,
             "diff_T1M_pct": round(float(diffs[0]) * 100, 2),
             "diff_T64M_pct": round(float(diffs[-1]) * 100, 2),
@@ -248,7 +249,7 @@ def pareto_crossings(effect: pd.DataFrame) -> pd.DataFrame:
 
 
 def write_crossings_tex(crossings: pd.DataFrame, path: Path) -> None:
-    """Write the compact TeX table consumed by group_size_iter23.tex."""
+    """Write the compact TeX table consumed by group_size_iter23_v2.tex."""
     lines = [
         r"\begin{tabular}{rrrrr}",
         r"\toprule",
@@ -373,42 +374,42 @@ def main():
 
     # Deliverable 1: T_critical
     t_crit = fit_t_critical(g4_g32)
-    t_crit.to_csv(out_dir / "group_size_iter23_t_critical.tsv", sep="\t", index=False)
-    print("[iter23] Wrote group_size_iter23_t_critical.tsv")
+    t_crit.to_csv(out_dir / "group_size_iter23_t_critical_v2.tsv", sep="\t", index=False)
+    print("[iter23] Wrote group_size_iter23_t_critical_v2.tsv")
     for _, r in t_crit.iterrows():
         print(f"  thr={r.abs_delta_threshold:.0%}: T_c={r.T_critical_tokens} tokens, "
               f"CI [{r.T_ci_low}, {r.T_ci_high}] :: {r.interpretation[:80]}")
 
     # Deliverable 2: phase grid
     phase = build_phase_grid(effect)
-    phase.to_csv(out_dir / "group_size_iter23_phase.tsv", sep="\t", index=False)
-    print(f"[iter23] Wrote group_size_iter23_phase.tsv  ({len(phase)} cells)")
+    phase.to_csv(out_dir / "group_size_iter23_phase_v2.tsv", sep="\t", index=False)
+    print(f"[iter23] Wrote group_size_iter23_phase_v2.tsv  ({len(phase)} cells)")
 
     # Deliverable 3: Pareto frontier
     pareto = pareto_frontier(effect)
-    pareto.to_csv(out_dir / "group_size_iter23_pareto.tsv", sep="\t", index=False)
-    print("[iter23] Wrote group_size_iter23_pareto.tsv")
+    pareto.to_csv(out_dir / "group_size_iter23_pareto_v2.tsv", sep="\t", index=False)
+    print("[iter23] Wrote group_size_iter23_pareto_v2.tsv")
     for _, r in pareto.iterrows():
         print(f"  T={r.T_tokens/1e6:.0f}M: G_best={r.G_best_acc}, acc={r.best_acc:.3f}")
 
     # Deliverable 3b: Pareto crossings
     crossings = pareto_crossings(effect)
-    crossings.to_csv(out_dir / "group_size_iter23_crossings.tsv", sep="\t", index=False)
+    crossings.to_csv(out_dir / "group_size_iter23_crossings_v2.tsv", sep="\t", index=False)
     write_crossings_tex(
         crossings,
-        out_dir / "group_size_iter23_crossings.tsv_typesetter",
+        out_dir / "group_size_iter23_crossings_v2.tsv_typesetter",
     )
-    print(f"[iter23] Wrote group_size_iter23_crossings.tsv  ({len(crossings)} pairs)")
+    print(f"[iter23] Wrote group_size_iter23_crossings_v2.tsv  ({len(crossings)} pairs)")
 
     # Deliverable 4: anti-herding
     anti = anti_herding_simulation()
-    anti.to_csv(out_dir / "group_size_iter23_antiherding.tsv", sep="\t", index=False)
-    print(f"[iter23] Wrote group_size_iter23_antiherding.tsv  ({len(anti)} p_eff rows)")
+    anti.to_csv(out_dir / "group_size_iter23_antiherding_v2.tsv", sep="\t", index=False)
+    print(f"[iter23] Wrote group_size_iter23_antiherding_v2.tsv  ({len(anti)} p_eff rows)")
 
     anti_summary = anti_herding_summary(anti)
-    anti_summary.to_csv(out_dir / "group_size_iter23_antiherding_summary.tsv",
+    anti_summary.to_csv(out_dir / "group_size_iter23_antiherding_summary_v2.tsv",
                         sep="\t", index=False)
-    print("[iter23] Wrote group_size_iter23_antiherding_summary.tsv")
+    print("[iter23] Wrote group_size_iter23_antiherding_summary_v2.tsv")
 
     # ---- figure ----
     try:
@@ -506,7 +507,7 @@ def main():
         ax[3].set_ylim(0, 0.70)
 
         plt.tight_layout()
-        fig_path = fig_dir / "group_size_iter23.pdf"
+        fig_path = fig_dir / "group_size_iter23_v2.pdf"
         plt.savefig(fig_path, bbox_inches="tight")
         plt.close()
         print(f"[iter23] Wrote {fig_path}")
@@ -535,7 +536,7 @@ def main():
             f"T_critical={r.T_critical_tokens/1e6:.2f}M tokens for |Δ|>={thr:.0%} "
             f"between G=4 and G=32 (Wu 2025 equivalence breaks; "
             f"asymptote |Δ|→{r.a_hat:.3f}, τ={r.tau_hat_tokens/1e6:.2f}M).",
-            "platform_hybrid/experiments/results/group_size_iter23_t_critical.tsv"
+            "platform_hybrid/experiments/results/group_size_iter23_t_critical_v2.tsv"
         )
 
     # 2. Pareto frontier
@@ -545,7 +546,7 @@ def main():
         f"At T=64M tokens the compute-optimal G on Qwen3-8B/GSM8K is G={g4_at_64}. "
         f"Inverted-U apex shifts monotonically to larger G as T grows (G*=8 at T=1M, "
         f"G*=16 at T=4M, G*=32 at T=64M).",
-        "platform_hybrid/experiments/results/group_size_iter23_pareto.tsv"
+        "platform_hybrid/experiments/results/group_size_iter23_pareto_v2.tsv"
     )
 
     # 3. Crossover
@@ -556,7 +557,7 @@ def main():
             f"G=4 → G=32: Δ_pct goes from {r['diff_T1M_pct']:+.2f}pp at T=1M to "
             f"{r['diff_T64M_pct']:+.2f}pp at T=64M — the Wu 2025 G=2≈G=16 equivalence "
             f"translates cleanly to G=4≈G=32 only at the smallest compute budgets.",
-            "platform_hybrid/experiments/results/group_size_iter23_crossings.tsv"
+            "platform_hybrid/experiments/results/group_size_iter23_crossings_v2.tsv"
         )
 
     # 4. Anti-herding
@@ -569,7 +570,7 @@ def main():
         f"{p_feasible:.0%} of the frontier). "
         f"Invention: a per-step presence penalty tuned to p_eff could recover "
         f"G=32 yield at G=4 FLOPs.",
-        "platform_hybrid/experiments/results/group_size_iter23_antiherding.tsv"
+        "platform_hybrid/experiments/results/group_size_iter23_antiherding_v2.tsv"
     )  # noqa: E501
 
     if os.environ.get("TINKER_SKIP_LEDGER"):

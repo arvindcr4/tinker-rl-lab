@@ -44,46 +44,6 @@ def _stream(objs):
     return out
 
 
-def write_pdf(path, objs, page_objs, page_w=595, page_h=420):
-    # objs: list of _Obj; page_objs: list of obj indices that are pages
-    with open(path, "wb") as f:
-        out = [b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"]
-        offsets = [0]
-        # Reserve obj numbers 1..N
-        n = max(o.n for o in objs) + 1
-        # Build content streams first to know lengths
-        content_streams = {}
-        for o in objs:
-            if o.lines and "/Length" not in (o.lines[0] if o.lines else ""):
-                s = "\n".join(o.lines)
-                content_streams[o.n] = s
-        # Write objects
-        for i in range(1, n):
-            f.write(f"{i} 0 obj\n".encode())
-            if i in content_streams:
-                s = content_streams[i]
-                f.write(f"<< /Length {len(s)} >>\nstream\n".encode())
-                f.write(s.encode("latin-1"))
-                f.write(b"\nendstream\nendobj\n")
-            else:
-                f.write(b"endobj\n")
-            offsets.append(f.tell())
-        # xref
-        xref_pos = f.tell()
-        f.write(f"xref\n0 {n}\n0000000000 65535 f \n".encode())
-        for off in offsets[1:n]:
-            f.write(f"{off:010d} 00000 n \n".encode())
-        # trailer
-        f.write(
-            f"trailer\n<< /Size {n} /Root 1 0 R >>\nstartxref\n{xref_pos}\n%%EOF\n".encode()
-        )
-
-
-# ---------------------------------------------------------------------------
-# Plotter: 2-panel landscape, no external deps
-# ---------------------------------------------------------------------------
-
-
 def _new_pdf_page(lines, w=842, h=595):
     """Wrap plot lines into a single PDF page stream."""
     # Default font: Helvetica 10pt
@@ -114,7 +74,7 @@ def _panel_left(top=540, bottom=80, left=70, right=420):
         lines.append(f"BT /F1 7 Tf {x-4:.1f} {bottom-10:.1f} Td ({Gx}) Tj ET")
     # Plot 4 budget curves
     rows = []
-    with open(RES / "group_size_iter51_reward_vs_G.tsv") as f:
+    with open(RES / "group_size_iter51_reward_vs_G_v2.tsv") as f:
         header = f.readline().rstrip("\n").split("\t")
         for line in f:
             row = dict(zip(header, line.rstrip("\n").split("\t")))
@@ -177,7 +137,7 @@ def _panel_right(top=540, bottom=80, left=460, right=812):
         lines.append(f"BT /F1 7 Tf {x-12:.1f} {bottom-10:.1f} Td (T={b}M) Tj ET")
     # Read retention from lit_compare
     rows = []
-    with open(RES / "group_size_iter51_lit_compare.tsv") as f:
+    with open(RES / "group_size_iter51_lit_compare_v2.tsv") as f:
         header = f.readline().rstrip("\n").split("\t")
         for line in f:
             rows.append(dict(zip(header, line.rstrip("\n").split("\t"))))
@@ -196,7 +156,7 @@ def _panel_right(top=540, bottom=80, left=460, right=812):
         lines.append(f"{c} rg {x-4:.1f} {y-4:.1f} 8 8 re f")
     # Read peak shift; show as bar annotations along bottom
     pk = []
-    with open(RES / "group_size_iter51_peak_shift.tsv") as f:
+    with open(RES / "group_size_iter51_peak_shift_v2.tsv") as f:
         header = f.readline().rstrip("\n").split("\t")
         for line in f:
             pk.append(dict(zip(header, line.rstrip("\n").split("\t"))))
@@ -216,13 +176,13 @@ def main():
     left = _panel_left()
     right = _panel_right()
     body = _new_pdf_page(left + right)
-    out = FIG / "group_size_iter51.pdf"
+    out = FIG / "group_size_iter51_v2.pdf"
     # Single-page: just write raw stream
     with open(out, "wb") as f:
         f.write(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
         body_bytes = body.encode("latin-1")
         # 3 objects: catalog, pages, content
-        offsets = [0]
+        offsets = [f.tell()]
         f.write(b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n")
         offsets.append(f.tell())
         f.write(b"2 0 obj\n<< /Type /Pages /Count 1 /Kids [3 0 R] >>\nendobj\n")
@@ -234,7 +194,6 @@ def main():
         f.write(b"\nendstream\nendobj\n")
         offsets.append(f.tell())
         f.write(b"5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n")
-        offsets.append(f.tell())
         xref_pos = f.tell()
         f.write(b"xref\n0 6\n0000000000 65535 f \n")
         for off in offsets:
@@ -243,9 +202,9 @@ def main():
         f.write(f"{xref_pos}\n".encode())
         f.write(b"%%EOF\n")
     # Mirror to paper/figures
-    with open(out, "rb") as fin, open(PAPER_FIG / "group_size_iter51.pdf", "wb") as fout:
+    with open(out, "rb") as fin, open(PAPER_FIG / "group_size_iter51_v2.pdf", "wb") as fout:
         fout.write(fin.read())
-    print(f"Wrote {out} and {PAPER_FIG / 'group_size_iter51.pdf'}")
+    print(f"Wrote {out} and {PAPER_FIG / 'group_size_iter51_v2.pdf'}")
 
 
 if __name__ == "__main__":

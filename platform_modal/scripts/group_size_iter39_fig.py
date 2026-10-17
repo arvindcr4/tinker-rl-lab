@@ -17,18 +17,21 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 def main() -> None:
     # Load iter39 outputs.
-    rows = read_tsv(RESULTS / "group_size_iter39_t_critical.tsv")
-    claim = {r["claim"]: r for r in read_tsv(RESULTS / "group_size_iter39_claim_strength.tsv")}
+    rows = read_tsv(RESULTS / "group_size_iter39_t_critical_v2.tsv")
+    claim = {r["claim"]: r for r in read_tsv(RESULTS / "group_size_iter39_claim_strength_v2.tsv")}
 
     # ----- Panel 1: Retention curve + exponential fit + T* -----
     fig, axes = plt.subplots(1, 3, figsize=(13.5, 4.0))
 
     ax = axes[0]
     iter31_row = next(r for r in rows if r["pair"] == "G=4 vs G=32" and r["source"] == "iter31_iso_token")
-    T = np.array([1.0, 4.0, 16.0, 64.0])  # M tokens
-    R_obs = np.array([0.9762, 0.8333, 0.75, 0.7273])
-    R_lo = np.array([0.8444, 0.7536, 0.6897, 0.6703])
-    R_hi = np.array([1.1282, 0.9206, 0.8148, 0.7882])
+    observations=read_tsv(RESULTS / "group_size_iter31_iso_token_v2.tsv")
+    observations=sorted(observations,key=lambda r:float(r["T_tokens"]))
+    if not observations: raise ValueError("missing retention observations")
+    T=np.array([float(r["T_tokens"])/1e6 for r in observations])
+    R_obs=np.array([float(r["retention"]) for r in observations])
+    R_lo=np.array([float(r["retention_ci_low"]) for r in observations])
+    R_hi=np.array([float(r["retention_ci_high"]) for r in observations])
     T_dense = np.linspace(0.5, 64, 200)
     R_inf = float(iter31_row["R_inf_exp"])
     Tau = float(iter31_row["Tau_M"])
@@ -39,7 +42,7 @@ def main() -> None:
     ax.fill_between(T_dense, R_fit, alpha=0.20, color="C0")
     ax.plot(T_dense, R_fit, color="C0", label=f"Exp fit: $R_\\infty={R_inf:.3f}$, $\\tau={Tau:.2f}$M")
     ax.errorbar(T, R_obs, yerr=[R_obs - R_lo, R_hi - R_obs], fmt="o", color="C0",
-                capsize=3, label="Measured (iter 31)")
+                capsize=3, label="Input retention (iter 31; provenance in source)")
     ax.axhline(0.976, color="C3", linestyle="--", label="Wu 2025 97.6% threshold")
     ax.axvline(T_star, color="C2", linestyle=":", label=f"$T^*={T_star:.2f}$M ({T_star_lo:.2f}-{T_star_hi:.2f}M)")
     ax.fill_betweenx([0, 1.2], T_star_lo, T_star_hi, color="C2", alpha=0.15)
@@ -72,14 +75,15 @@ def main() -> None:
 
     # ----- Panel 3: Claim strength audit -----
     ax = axes[2]
-    n_pass = int(claim["n_cells_above_wu_in_CI"]["value"])
-    n_total = int(claim["n_cells_above_wu_in_CI"]["denominator"])
+    n_pass = int(claim["n_cells_point_above_wu"]["value"])
+    n_total = int(claim["n_cells_point_above_wu"]["denominator"])
     n_tost = int(claim["n_cells_tost_equivalent_eps0.02"]["value"])
     ci_lo = float(claim["pass_fraction_bootstrap_CI_low"]["value"])
     ci_hi = float(claim["pass_fraction_bootstrap_CI_high"]["value"])
-    cats = ["Wu 97.6%\nin 95% CI", "TOST equiv.\n($\\epsilon{=}0.02$)", "Worst cell\npasses Wu?"]
+    cats = ["Point retention\nat least 97.6%", "TOST equiv.\n($\\epsilon{=}0.02$)", "Worst cell\npasses Wu?"]
+    if n_total <= 0: raise ValueError("empty claim grid")
     vals = [n_pass / n_total, n_tost / n_total,
-            1.0 if claim["worst_cell_upper_CI_excludes_Wu"]["value"] == "True" else 0.0]
+            0.0 if claim["worst_cell_upper_CI_excludes_Wu"]["value"] == "True" else 1.0]
     colors = ["C0", "C1", "C2" if vals[2] == 1.0 else "C3"]
     bars = ax.bar(cats, vals, color=colors, alpha=0.7)
     ax.axhline(0.5, color="grey", linestyle=":", label="50% reference")
@@ -90,7 +94,7 @@ def main() -> None:
         elif i == 1:
             txt = f"{n_tost}/{n_total}"
         else:
-            txt = "NO" if v == 1.0 else "yes"
+            txt = "YES" if v == 1.0 else "NO"
         ax.text(b.get_x() + b.get_width() / 2, v + 0.02, txt,
                 ha="center", va="bottom", fontsize=8)
     ax.set_ylabel("Fraction")
@@ -99,8 +103,8 @@ def main() -> None:
     ax.legend(loc="upper right", fontsize=8)
 
     plt.tight_layout()
-    out_pdf = FIG_DIR / "group_size_iter39.pdf"
-    out_png = FIG_DIR / "group_size_iter39.png"
+    out_pdf = FIG_DIR / "group_size_iter39_v2.pdf"
+    out_png = FIG_DIR / "group_size_iter39_v2.png"
     fig.savefig(out_pdf, bbox_inches="tight")
     fig.savefig(out_png, bbox_inches="tight", dpi=120)
     plt.close(fig)

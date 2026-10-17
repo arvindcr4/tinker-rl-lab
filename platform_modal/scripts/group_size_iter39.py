@@ -18,15 +18,15 @@ Three analyses, building on iter 31 (iso-token TOST) and iter 35 (pair sweep):
        (upper CI bound) -- is 0.976 still in play?
 
 Inputs (read-only, sourced from existing results):
-  - platform_hybrid/experiments/results/group_size_iter31_iso_token.tsv
-  - platform_hybrid/experiments/results/group_size_iter35_pair_sweep.tsv
+  - platform_hybrid/experiments/results/group_size_iter31_iso_token_v2.tsv
+  - platform_hybrid/experiments/results/group_size_iter35_pair_sweep_v2.tsv
   - platform_hybrid/experiments/results/group_size_token_normalized.tsv
 
 Outputs:
-  - platform_hybrid/experiments/results/group_size_iter39_t_critical.tsv
-  - platform_hybrid/experiments/results/group_size_iter39_aic.tsv
-  - platform_hybrid/experiments/results/group_size_iter39_claim_strength.tsv
-  - platform_hybrid/experiments/results/group_size_iter39_summary.tsv
+  - platform_hybrid/experiments/results/group_size_iter39_t_critical_v2.tsv
+  - platform_hybrid/experiments/results/group_size_iter39_aic_v2.tsv
+  - platform_hybrid/experiments/results/group_size_iter39_claim_strength_v2.tsv
+  - platform_hybrid/experiments/results/group_size_iter39_summary_v2.tsv
 """
 from __future__ import annotations
 
@@ -70,33 +70,19 @@ def write_tsv(path: Path, header: list[str], rows: list[dict]) -> None:
 # ---------------------------------------------------------------------------
 def fit_exponential(T: np.ndarray, R: np.ndarray) -> tuple[float, float, float]:
     """Fit R(T) = R_inf + (1-R_inf) * exp(-T/Tau), minimize SSE."""
-    # Closed-form candidate: R_inf = min(R), Tau = OLS-on-log-residual.
-    R_inf = float(np.min(R))
-    R0 = float(np.max(R))
-    if R_inf >= R0:
-        R_inf = R0 - 0.01
-    resid = R - R_inf
-    mask = resid > 0
-    if mask.sum() < 2:
-        return R_inf, 1e6, 1.0
-    log_resid = np.log(resid[mask])
-    T_m = T[mask]
-    # log(R - R_inf) = log(1-R_inf) - T/Tau  => OLS
-    x = T_m
-    y = log_resid
-    A = np.vstack([np.ones_like(x), -x]).T
-    coef, *_ = np.linalg.lstsq(A, y, rcond=None)
-    log_A, slope = coef[0], coef[1]
-    if slope <= 1e-9:
-        slope = 1e-9
-    Tau = 1.0 / slope
-    pred = R_inf + (1.0 - R_inf) * np.exp(-T / Tau)
-    sse = float(np.sum((R - pred) ** 2))
-    return R_inf, Tau, sse
+    from scipy.optimize import least_squares
+    T=np.asarray(T,float); R=np.asarray(R,float)
+    if len(T)<2 or not np.all(np.isfinite(T)) or not np.all(np.isfinite(R)):
+        raise ValueError("need finite retention observations")
+    scale=max(float(np.max(T)),1.)
+    def residual(p): return p[0]+(1-p[0])*np.exp(-(T/scale)/p[1])-R
+    fit=least_squares(residual,[max(0,min(.99,float(R.min()))),.5],bounds=([0,1e-9],[1,1e6]))
+    if not fit.success: raise ValueError("exponential fit failed")
+    return float(fit.x[0]),float(fit.x[1]*scale),float(np.sum(fit.fun**2))
 
 
 def fit_sigmoid(T: np.ndarray, R: np.ndarray) -> tuple[float, float, float, float, float]:
-    """Fit R(T) = R_inf + (R_max - R_inf) / (1 + exp(-(T - T0)/k))."""
+    """Fit R(T) = R_inf + (R_max - R_inf) / (1 + exp((T - T0)/k))."""
     R_inf = float(np.min(R))
     R_max = float(np.max(R))
     if R_inf >= R_max:
@@ -106,7 +92,7 @@ def fit_sigmoid(T: np.ndarray, R: np.ndarray) -> tuple[float, float, float, floa
     best = (R_inf, R_max, T_min, T_max, np.inf)
     for T0 in np.linspace(T_min, T_max, 12):
         for k in np.geomspace(1e5, 1e8, 12):
-            sig = 1.0 / (1.0 + np.exp(-(T - T0) / k))
+            sig = 1.0 / (1.0 + np.exp(np.clip((T - T0) / k,-700,700)))
             pred = R_inf + (R_max - R_inf) * sig
             sse = float(np.sum((R - pred) ** 2))
             if sse < best[4]:
@@ -139,7 +125,7 @@ def aic(sse: float, n: int, k_params: int) -> float:
 def bootstrap_ci(values: np.ndarray, q: float = 0.025) -> tuple[float, float]:
     if len(values) == 0:
         return float("nan"), float("nan")
-    return float(np.quantile(values, q)), float(np.quantile(values, 1 - q))
+    return float(np.quantile(values, q, method="inverted_cdf")), float(np.quantile(values, 1 - q, method="inverted_cdf"))
 
 
 def bootstrap_t_critical(
@@ -165,9 +151,6 @@ def bootstrap_t_critical(
     # Guarantee lo <= hi for downstream display.
     if ci_lo > ci_hi:
         ci_lo, ci_hi = ci_hi, ci_lo
-    # Also clip infinite values to a sensible upper bound for display.
-    if not math.isfinite(ci_hi):
-        ci_hi = float(T_obs.max() * 100.0)
     return T_star, ci_lo, ci_hi
 
 
@@ -206,7 +189,7 @@ def fit_and_audit_pair(
 # ---------------------------------------------------------------------------
 def main() -> None:
     # Load iter31 iso-token (G=4 vs G=32, 4 budgets).
-    f31 = RESULTS / "group_size_iter31_iso_token.tsv"
+    f31 = RESULTS / "group_size_iter31_iso_token_v2.tsv"
     _, rows31 = read_tsv(f31)
     T31 = np.array([float(r["T_tokens"]) for r in rows31])
     R31 = np.array([float(r["retention"]) for r in rows31])
@@ -214,7 +197,7 @@ def main() -> None:
     R31_hi = np.array([float(r["retention_ci_high"]) for r in rows31])
 
     # Load iter35 pair sweep (40 cells).
-    f35 = RESULTS / "group_size_iter35_pair_sweep.tsv"
+    f35 = RESULTS / "group_size_iter35_pair_sweep_v2.tsv"
     _, rows35 = read_tsv(f35)
 
     # ---- Analysis 1: critical-budget detection ----
@@ -252,7 +235,7 @@ def main() -> None:
             **audit,
         })
     header = list(audit_rows[0].keys())
-    write_tsv(RESULTS / "group_size_iter39_t_critical.tsv", header, audit_rows)
+    write_tsv(RESULTS / "group_size_iter39_t_critical_v2.tsv", header, audit_rows)
 
     # ---- Analysis 2: per-pair AIC ranking (exp vs sigmoid) ----
     aic_rows = []
@@ -277,7 +260,7 @@ def main() -> None:
             "delta_AIC_sig_minus_exp": round(aic_sig - aic_exp, 3),
         })
     header = list(aic_rows[0].keys())
-    write_tsv(RESULTS / "group_size_iter39_aic.tsv", header, aic_rows)
+    write_tsv(RESULTS / "group_size_iter39_aic_v2.tsv", header, aic_rows)
 
     # ---- Analysis 3: claim-strength audit ----
     # (a) Fraction of 40 cells passing Wu at Fieller-conservative 95% CI.
@@ -308,7 +291,7 @@ def main() -> None:
     n_above_wu = sum(1 for r in rows35 if r["above_wu_97_6pct"] == "True")
 
     claim_rows = [
-        {"claim": "n_cells_above_wu_in_CI", "value": n_above_wu, "denominator": n_total, "fraction": n_above_wu / n_total},
+        {"claim": "n_cells_point_above_wu", "value": n_above_wu, "denominator": n_total, "fraction": n_above_wu / n_total},
         {"claim": "n_cells_tost_equivalent_eps0.02", "value": n_tost_002, "denominator": n_total, "fraction": n_tost_002 / n_total},
         {"claim": "worst_cell_G4_vs_G32_T64M_R", "value": R_worst, "denominator": "", "fraction": ""},
         {"claim": "worst_cell_upper_CI_minus_Wu_threshold", "value": round(gap_to_Wu, 4), "denominator": "", "fraction": ""},
@@ -318,7 +301,7 @@ def main() -> None:
         {"claim": "pass_fraction_significantly_below_half", "value": bool(frac_hi < 0.5), "denominator": "", "fraction": ""},
     ]
     header = list(claim_rows[0].keys())
-    write_tsv(RESULTS / "group_size_iter39_claim_strength.tsv", header, claim_rows)
+    write_tsv(RESULTS / "group_size_iter39_claim_strength_v2.tsv", header, claim_rows)
 
     # ---- Summary ----
     summary = {
@@ -336,7 +319,7 @@ def main() -> None:
         "worst_cell_G4_vs_G32_T64M": {"R": R_worst, "R_upper_CI": R_worst_hi, "above_Wu": gap_to_Wu >= 0},
         "claim_significantly_below_50pct_pass": bool(frac_hi < 0.5),
     }
-    with (RESULTS / "group_size_iter39_summary.json").open("w") as f:
+    with (RESULTS / "group_size_iter39_summary_v2.json").open("w") as f:
         json.dump(summary, f, indent=2)
     # Also a TSV one-rollup for the paper.
     one_row = [
@@ -346,7 +329,7 @@ def main() -> None:
     ]
     one_row.append({"metric": "iter35_pass_fraction_CI95", "value": f"[{frac_lo:.4f}, {frac_hi:.4f}]"})
     write_tsv(
-        RESULTS / "group_size_iter39_summary.tsv",
+        RESULTS / "group_size_iter39_summary_v2.tsv",
         ["metric", "value"],
         one_row,
     )

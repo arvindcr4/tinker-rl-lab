@@ -25,17 +25,17 @@ budget T*.  Iter 47 builds on that with three fresh analyses that target
 
 Deliverables (4 TSV + 1 paper section + 1 figure):
 
-    platform_hybrid/experiments/results/group_size_iter47_critical_T.tsv
+    platform_hybrid/experiments/results/group_size_iter47_critical_T_v2.tsv
         12 rows: 4 G_a values x 3 retention targets.  Log-linear T* fit
         with bootstrap CI.
-    platform_hybrid/experiments/results/group_size_iter47_monotonicity.tsv
+    platform_hybrid/experiments/results/group_size_iter47_monotonicity_v2.tsv
         5 rows: per-G_a Kendall's tau with bootstrap CI on iso-token
         retention vs budget.
-    platform_hybrid/experiments/results/group_size_iter47_diff_Tstar.tsv
+    platform_hybrid/experiments/results/group_size_iter47_diff_Tstar_v2.tsv
         9 rows: 3 difficulty bins x 3 retention targets.  Per-bin T*.
-    platform_hybrid/experiments/results/group_size_iter47_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter47_summary_v2.tsv
         Single rollup with 11 headline numbers.
-    paper/sections/group_size_iter47.tex + figures/group_size_iter47.pdf.
+    paper/sections/group_size_iter47_v2.tex + figures/group_size_iter47_v2.pdf.
 """
 from __future__ import annotations
 
@@ -108,15 +108,6 @@ def retention_per_cell(rows: list[dict]) -> list[dict]:
     return cells
 
 
-def bootstrap_retention_ci(cells_at_t: list[dict], G: int, T: int,
-                            anchor_acc: float, n_boot: int = N_BOOT) -> tuple[float, float, float]:
-    """Bootstrap CI on R(G, T) treating per-(G,T) row accuracy as the mean and
-    using the cell's CI half-width as sigma (we don't have per-seed SD for
-    every cell, so this is a parametric bootstrap)."""
-    cell = next(c for c in cells_at_t if c["G"] == G and c["T"] == T)
-    acc = cell["acc"]
-    ci_low = float(next(r for r in cells_at_t if r["G"] == G and r["T"] == T)["acc"])  # placeholder
-    return acc / anchor_acc, acc / anchor_acc, acc / anchor_acc
 
 
 # ---------------------------------------------------------------------------
@@ -220,7 +211,7 @@ def main_critical_T(cells: list[dict]) -> list[dict]:
                         r["T_star_ci_high_M"] = round(float(np.quantile(arr, 0.975)), 4)
                         break
 
-    write_tsv(RES / "group_size_iter47_critical_T.tsv",
+    write_tsv(RES / "group_size_iter47_critical_T_v2.tsv",
               ["G_a", "R_target", "slope", "intercept",
                "T_star_M_tokens", "T_star_ci_low_M", "T_star_ci_high_M",
                "bracketed_by_M", "direction"], rows)
@@ -295,7 +286,7 @@ def main_monotonicity(cells: list[dict]) -> list[dict]:
             "monotone": "yes" if monotone else "no",
             "direction": "decreasing" if tau < 0 else "increasing",
         })
-    write_tsv(RES / "group_size_iter47_monotonicity.tsv",
+    write_tsv(RES / "group_size_iter47_monotonicity_v2.tsv",
               ["G_a", "n_budgets", "budgets_M", "R_at_Ts",
                "kendall_tau", "tau_ci_low", "tau_ci_high",
                "monotone", "direction"], rows)
@@ -369,7 +360,7 @@ def main_diff_Tstar(cells: list[dict]) -> list[dict]:
                 "slope": round(float(slope), 4),
                 "direction": "decreasing" if slope < 0 else "increasing",
             })
-    write_tsv(RES / "group_size_iter47_diff_Tstar.tsv",
+    write_tsv(RES / "group_size_iter47_diff_Tstar_v2.tsv",
               ["bin", "R_target", "n_T_used", "T_star_M_tokens",
                "bracketed_by_M", "slope", "direction"], rows)
     return rows
@@ -405,7 +396,7 @@ def main_summary(crit_rows: list[dict], mono_rows: list[dict],
 
     # Wu claim operational verdict: at what ratio (T / T*) does Wu break?
     rows.append({"metric": "wu_claim_operational_verdict",
-                  "value": "Holds at T<=1M (1/1 brackets), breaks at T=4M (0/4 bins inside Wu 97.6% CI)."})
+                  "value": f"Exploratory grid summary: {len(crit_rows)} threshold rows, {len(diff_rows)} stratum rows; no universal retention claim inferred."})
 
     # Monotonicity direction counts.
     n_inc = sum(1 for r in mono_rows if r["direction"] == "increasing")
@@ -413,7 +404,7 @@ def main_summary(crit_rows: list[dict], mono_rows: list[dict],
     rows.append({"metric": "n_Ga_increasing_tau", "value": n_inc})
     rows.append({"metric": "n_Ga_decreasing_tau", "value": n_dec})
 
-    write_tsv(RES / "group_size_iter47_summary.tsv",
+    write_tsv(RES / "group_size_iter47_summary_v2.tsv",
               ["metric", "value"], rows)
     return rows
 

@@ -42,20 +42,20 @@ Inputs (real, measured, no fabrication):
 
 Outputs (real artifacts):
 
-  platform_hybrid/experiments/results/group_size_iter15_equivalence.tsv
+  platform_hybrid/experiments/results/group_size_iter15_equivalence_v2.tsv
       Paired TOST + Cohen's d matrix for (G_a, G_b) in
       {(2,4),(2,8),(2,16),(4,8),(4,16),(8,16)} on the per-seed
       last-10-step mean_reward, with three epsilon values.
 
-  platform_hybrid/experiments/results/group_size_iter15_snr.tsv
+  platform_hybrid/experiments/results/group_size_iter15_snr_v2.tsv
       Per-G SNR on per-step advantage_variance (and on abs
       mean_advantage).  Tests sqrt(G) scaling vs flat scaling.
 
-  platform_hybrid/experiments/results/group_size_iter15_retained_dpo.tsv
+  platform_hybrid/experiments/results/group_size_iter15_retained_dpo_v2.tsv
       Per-(G_a, G_b) test of whether the measured difference is
       consistent with the Wu 2025 97.6% retention claim.
 
-  figures/group_size_iter15.pdf  (and .png)
+  figures/group_size_iter15_v2.pdf  (and .png)
       Three-panel figure:
         (A) last-10-step mean_reward vs G with TOST equivalence
             bands at epsilon=0.02 and the Wu 2025 retention band.
@@ -150,23 +150,11 @@ def tost_pvalue(
     n = diff.size
     if n < 2:
         return float("nan")
-    rng = np.random.default_rng(RNG_SEED)
-    idx = rng.integers(0, n, size=(b_boot, n))
-    boot = diff[idx].mean(axis=1)
-    se = boot.std(ddof=1)
-    if se == 0:
-        # No variance -> use raw sign test
-        m = diff.mean()
-        if abs(m) >= epsilon:
-            return 1.0
-        return 0.0
-    from scipy.stats import norm  # local import to keep top-level lean
-
-    z_low = (diff.mean() + epsilon) / se
-    z_high = (diff.mean() - epsilon) / se
-    p_low = float(1.0 - norm.cdf(z_low))
-    p_high = float(norm.cdf(z_high))
-    return max(p_low, p_high)
+    se = diff.std(ddof=1)/math.sqrt(n)
+    if se==0:
+        return 0.0 if abs(diff.mean())<epsilon else 1.0
+    from scipy.stats import t
+    return float(max(t.sf((diff.mean()+epsilon)/se,n-1), t.cdf((diff.mean()-epsilon)/se,n-1)))
 
 
 def snr(values: np.ndarray) -> float:
@@ -190,29 +178,21 @@ def load_sweep() -> dict:
 
 
 def per_seed_last10_mean_reward(sweep: dict) -> dict[int, np.ndarray]:
-    """Return {G: array of per-seed last-10-step mean_reward}, length 3."""
-    out: dict[int, list[float]] = {g: [] for g in G_VALUES}
-    for run in sweep["runs"]:
-        g = int(run["group_size"])
-        if g not in out:
-            continue
-        step_log = run["step_log"]
-        if not step_log:
-            continue
-        last10 = step_log[-10:] if len(step_log) >= 10 else step_log
-        out[g].append(float(np.mean([s["mean_reward"] for s in last10])))
-    return {g: np.asarray(v, dtype=float) for g, v in out.items()}
+    """Matched seed means in deterministic order; excludes incomplete seed sets."""
+    from _review23_statistics import paired_seed_values
+    arrays,_=paired_seed_values(sweep["runs"],G_VALUES,lambda r: np.mean([v["mean_reward"] for v in r["step_log"][-10:]]))
+    return arrays
 
 
 def per_step_advantage_variance(sweep: dict) -> dict[int, np.ndarray]:
-    """Return {G: array of per-step advantage_variance, pooled over seeds}."""
+    """Return {G: array of per-run mean advantage_variance; independent seed units}."""
     out: dict[int, list[float]] = {g: [] for g in G_VALUES}
     for run in sweep["runs"]:
         g = int(run["group_size"])
         if g not in out:
             continue
-        for s in run["step_log"]:
-            out[g].append(float(s["advantage_variance"]))
+        if run["step_log"]:
+            out[g].append(float(np.mean([step["advantage_variance"] for step in run["step_log"]])))
     return {g: np.asarray(v, dtype=float) for g, v in out.items()}
 
 
@@ -227,7 +207,7 @@ def load_g4_vs_g32_tsv() -> list[dict]:
 # ---------------------------------------------------------------------------
 
 def write_equivalence_tsv(sweep: dict) -> Path:
-    out_path = RESULTS / "group_size_iter15_equivalence.tsv"
+    out_path = RESULTS / "group_size_iter15_equivalence_v2.tsv"
     seed_means = per_seed_last10_mean_reward(sweep)
     rows = []
     pairs = list(combinations(G_VALUES, 2))
@@ -268,7 +248,7 @@ def write_equivalence_tsv(sweep: dict) -> Path:
 
 
 def write_snr_tsv(sweep: dict) -> Path:
-    out_path = RESULTS / "group_size_iter15_snr.tsv"
+    out_path = RESULTS / "group_size_iter15_snr_v2.tsv"
     av = per_step_advantage_variance(sweep)
     rows = []
     for g in G_VALUES:
@@ -306,7 +286,7 @@ def write_snr_tsv(sweep: dict) -> Path:
 
 def write_retained_dpo_tsv() -> Path:
     """Per-budget G=4 vs G=32 retention test against Wu 2025 97.6%."""
-    out_path = RESULTS / "group_size_iter15_retained_dpo.tsv"
+    out_path = RESULTS / "group_size_iter15_retained_dpo_v2.tsv"
     rows = []
     for r in load_g4_vs_g32_tsv():
         diff = float(r["diff_a_minus_b"])
@@ -440,9 +420,9 @@ def build_figure(
     fig.suptitle("iter 15 — Pillar 3: sharp test of Wu 2025 DPO-equivalence",
                  y=1.02, fontsize=11)
     fig.tight_layout()
-    out_pdf = FIG / "group_size_iter15.pdf"
+    out_pdf = FIG / "group_size_iter15_v2.pdf"
     fig.savefig(out_pdf, bbox_inches="tight")
-    fig.savefig(FIG / "group_size_iter15.png", dpi=150, bbox_inches="tight")
+    fig.savefig(FIG / "group_size_iter15_v2.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
     return out_pdf
 

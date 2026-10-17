@@ -37,20 +37,20 @@ Inputs (real, measured):
 
 Outputs (real artifacts):
 
-  platform_hybrid/experiments/results/group_size_iter19_retention_fit.tsv
+  platform_hybrid/experiments/results/group_size_iter19_retention_fit_v2.tsv
       Fit parameters (slope, intercept, R^2) and per-T prediction
       for retention at T values outside the measured grid.
 
-  platform_hybrid/experiments/results/group_size_iter19_retention_pred.tsv
+  platform_hybrid/experiments/results/group_size_iter19_retention_pred_v2.tsv
       Predicted retention-vs-T curve with 95% CI on the prediction.
 
-  platform_hybrid/experiments/results/group_size_iter19_isog_savings.tsv
+  platform_hybrid/experiments/results/group_size_iter19_isog_savings_v2.tsv
       Per-(budget, G_target) Iso-G rollout cost vs static G=32.
 
-  platform_hybrid/experiments/results/group_size_iter19_isog_savings_summary.tsv
+  platform_hybrid/experiments/results/group_size_iter19_isog_savings_summary_v2.tsv
       Single-row summary: mean Iso-G saving across budgets.
 
-  figures/group_size_iter19.pdf  (and .png)
+  figures/group_size_iter19_v2.pdf  (and .png)
       Three-panel figure:
         (A) Retention-vs-log-T curve with fit and Wu 97.6% band.
         (B) Iso-G G_min(p_bin) vs static G=32, herding penalty overlay.
@@ -69,7 +69,7 @@ scale at which the variance-reduction regime crosses over.
 This is a sigmoid-in-log-T curve fit by ordinary least squares on
 the four measured points.  No fabrication: R_0 is fixed at the
 Wu 97.6% claim, R_inf and tau are free, and the fit is reported
-with R^2 and bootstrap 95% CI.
+with R^2 and uniform-summary sensitivity envelope.
 """
 from __future__ import annotations
 
@@ -183,7 +183,7 @@ def fit_retention(T: np.ndarray, R_emp: np.ndarray, R_0_fixed: float,
 def bootstrap_retention_fit(T: np.ndarray, R_emp: np.ndarray, R_0_fixed: float,
                             ci_low: np.ndarray, ci_high: np.ndarray,
                             B: int = BOOT_B, seed: int = RNG_SEED) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Bootstrap 95% CI on (R_inf, tau) by drawing from per-point interval."""
+    """Uniform-summary sensitivity envelope on (R_inf, tau) by drawing from per-point interval."""
     rng = np.random.default_rng(seed)
     n = len(T)
     R_infs = []
@@ -240,11 +240,6 @@ def main() -> None:
                      for r in rows])
     R_hi = np.array([float(r["acc_G_a_ci_high"]) / max(1e-9, float(r["acc_G_b"]))
                      for r in rows])
-    # Symmetrize retention CI to a centered band (a conservative envelope
-    # for bootstrap resampling).
-    R_lo = np.clip(R_emp - (R_emp - R_lo) * 0.5, 0, 1)
-    R_hi = R_emp + (R_hi - R_emp) * 0.5
-
     # ------------------------------------------------------------------
     # Fit the retention model.
     # ------------------------------------------------------------------
@@ -253,7 +248,7 @@ def main() -> None:
     ss = float(np.sum((R_emp - R_fit) ** 2))
     R2 = 1.0 - ss / float(np.sum((R_emp - np.mean(R_emp)) ** 2))
 
-    # Bootstrap 95% CI on R_inf, tau.
+    # Uniform-summary sensitivity envelope on R_inf, tau.
     R_infs_boot, taus_boot, R_infs_ci = bootstrap_retention_fit(
         T_emp, R_emp, WU_RETENTION_CLAIM, R_lo, R_hi
     )
@@ -261,14 +256,9 @@ def main() -> None:
     # Predict at a denser grid.
     T_pred = np.logspace(np.log10(T_emp.min()), np.log10(T_emp.max() * 1.5), 24)
     R_pred = sigmoid_logT(T_pred, R_inf_hat, tau_hat, WU_RETENTION_CLAIM)
-    R_pred_low = sigmoid_logT(
-        T_pred, R_infs_ci[0], np.percentile(taus_boot, 2.5), WU_RETENTION_CLAIM
-    )
-    R_pred_high = sigmoid_logT(
-        T_pred, R_infs_ci[1], np.percentile(taus_boot, 97.5), WU_RETENTION_CLAIM
-    )
-    R_pred_low = np.minimum(R_pred_low, R_pred)
-    R_pred_high = np.maximum(R_pred_high, R_pred)
+    # Preserve joint parameter draws; percentiles are sensitivity envelopes.
+    joint_predictions=np.asarray([sigmoid_logT(T_pred,r,t,WU_RETENTION_CLAIM) for r,t in zip(R_infs_boot,taus_boot)])
+    R_pred_low,R_pred_high=np.quantile(joint_predictions,[.025,.975],axis=0)
 
     # Output the fit summary.
     fit_header = ["model", "R_0_fixed_at", "R_inf_hat", "R_inf_ci_low",
@@ -286,7 +276,7 @@ def main() -> None:
         round(R2, 6),
         len(T_emp),
     ]]
-    write_tsv(RESULTS / "group_size_iter19_retention_fit.tsv", fit_header, fit_rows)
+    write_tsv(RESULTS / "group_size_iter19_retention_fit_v2.tsv", fit_header, fit_rows)
 
     pred_header = ["T_tokens", "T_M_tokens", "retention_pred", "ret_pred_low",
                    "ret_pred_high", "is_measured", "above_wu_97_6"]
@@ -298,7 +288,7 @@ def main() -> None:
             round(float(R_pred[i]), 4),
             round(float(R_pred_low[i]), 4),
             round(float(R_pred_high[i]), 4),
-            "yes" if any(np.isclose(T, Te, rtol=0.05) for Te in T_emp) else "no",
+            "no (model_prediction)",
             "yes" if R_pred[i] >= 0.976 else "no",
         ])
     # Append the measured points as well.
@@ -313,7 +303,7 @@ def main() -> None:
             "yes" if R_emp[i] >= 0.976 else "no",
         ])
     pred_rows.sort(key=lambda r: r[0])
-    write_tsv(RESULTS / "group_size_iter19_retention_pred.tsv", pred_header, pred_rows)
+    write_tsv(RESULTS / "group_size_iter19_retention_pred_v2.tsv", pred_header, pred_rows)
 
     # ------------------------------------------------------------------
     # Iso-G rollout savings: aggregate empirical G_min from
@@ -361,27 +351,8 @@ def main() -> None:
             tot_isog_emp += n * max(2, G_min_emp[p_lo])
         sav_emp = (1.0 - tot_isog_emp / tot_static) * 100.0 if tot_static else 0.0
         sav_iid = (1.0 - tot_isog_iid / tot_static) * 100.0 if tot_static else 0.0
-        # The empirical CI is anchored on the per-bin herding penalty
-        # (delta_div).  We propagate by sampling per-bin G_min from a
-        # piecewise-uniform CI proportional to the CI on delta_div.
-        # Use the published single delta_div measurement per p_bin as
-        # the point estimate; widen by +/-0.03 absolute (relative to
-        # published per-bin SD).
-        savs_lo = []
-        savs_hi = []
-        for _ in range(200):
-            tot_isog_emp_b = 0
-            for p_lo, (_, n) in p_bin_n.items():
-                jitter = rng.uniform(-0.03, 0.03)
-                gm = max(2, int(round(
-                    G_min_iid[p_lo] * (1.0 + 0.5 * jitter)
-                )))
-                gm = max(2, gm)
-                tot_isog_emp_b += n * gm
-            sav_b = (1.0 - tot_isog_emp_b / tot_static) * 100.0 if tot_static else 0.0
-            savs_lo.append(sav_b)
-            savs_hi.append(sav_b)
-        sav_lo_q, sav_hi_q = float(np.percentile(savs_lo, 2.5)), float(np.percentile(savs_hi, 97.5))
+        # No independent observations support an empirical savings interval.
+        sav_lo_q, sav_hi_q = float("nan"), float("nan")
         comment = ("Iso-G matches static" if abs(sav_emp) < 1.0
                    else "Iso-G saves rollouts")
         isog_rows_out.append([
@@ -393,7 +364,7 @@ def main() -> None:
             round(sav_hi_q, 2),
             comment,
         ])
-    write_tsv(RESULTS / "group_size_iter19_isog_savings.tsv", isog_header, isog_rows_out)
+    write_tsv(RESULTS / "group_size_iter19_isog_savings_v2.tsv", isog_header, isog_rows_out)
 
     # Per-Y_target savings table (the more interpretable framing: at a
     # given Y_target, Iso-G's G_min_per_bin is smaller than G_static on
@@ -441,7 +412,7 @@ def main() -> None:
             Y_target,
             savs[4], savs[8], savs[16], savs[32], savs[64],
         ])
-    write_tsv(RESULTS / "group_size_iter19_isog_savings_per_y.tsv",
+    write_tsv(RESULTS / "group_size_iter19_isog_savings_per_y_v2.tsv",
               sav_per_y_header, sav_per_y_rows)
 
     # Single-row summary: focus on the headline Iso-G comparison at
@@ -469,7 +440,7 @@ def main() -> None:
              "scale static G past the frontier Y=0.5 G_min"),
         ],
     ]
-    write_tsv(RESULTS / "group_size_iter19_isog_savings_summary.tsv",
+    write_tsv(RESULTS / "group_size_iter19_isog_savings_summary_v2.tsv",
               summary_header, summary_rows)
 
     # ------------------------------------------------------------------
@@ -535,8 +506,8 @@ def main() -> None:
     ax.set_xticks([0.5, 0.6, 0.7, 0.8, 0.9])
 
     fig.tight_layout()
-    fig.savefig(FIG / "group_size_iter19.pdf")
-    fig.savefig(FIG / "group_size_iter19.png", dpi=120)
+    fig.savefig(FIG / "group_size_iter19_v2.pdf")
+    fig.savefig(FIG / "group_size_iter19_v2.png", dpi=120)
     plt.close(fig)
 
     # Console summary.

@@ -42,11 +42,11 @@ Inputs:
     platform_hybrid/experiments/results/zvf_iter114_delta_d.tsv
 
 Outputs:
-    platform_hybrid/experiments/results/group_size_iter115_tost.tsv
-    platform_hybrid/experiments/results/group_size_iter115_zvf_linkage.tsv
-    platform_hybrid/experiments/results/group_size_iter115_compute_cost.tsv
-    platform_hybrid/experiments/results/group_size_iter115_summary.tsv
-    figures/group_size_iter115.pdf
+    platform_hybrid/experiments/results/group_size_iter115_tost_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter115_zvf_linkage_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter115_compute_cost_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter115_summary_v2.tsv
+    figures/group_size_iter115_v2.pdf
 
 Sharpest claims:
     (1) TOST at delta_eq=0.024 (Wu's bound) demonstrates equivalence
@@ -151,25 +151,30 @@ def tost_equivalence(iso: list[dict], delta_eq: float) -> list[dict]:
         s32 = (float(row32["heldout_acc_ci_high"]) - float(row32["heldout_acc_ci_low"])) / (2 * 1.96)
         a4_draws = rng.normal(a4, s4, N_BOOT)
         a32_draws = rng.normal(a32, s32, N_BOOT)
-        delta_draws = a32_draws - a4_draws
+        if np.any(a32_draws <= 0):
+            raise ValueError("relative retention sensitivity requires positive denominators")
+        delta_draws = 1.0 - a4_draws / a32_draws
         mean_d = float(delta_draws.mean())
         se_d = float(delta_draws.std())
         p_lower = float((delta_draws <= -delta_eq).mean())
         p_upper = float((delta_draws >= +delta_eq).mean())
         p_tost = max(p_lower, p_upper)
-        ci_lo, ci_hi = np.percentile(delta_draws, [2.5, 97.5])
+        ci_lo, ci_hi = np.percentile(delta_draws, [5, 95])
         demonstrates_equiv = p_tost < 0.05
         if demonstrates_equiv:
             verdict = "EQUIVALENCE demonstrated (|Delta|<=bound consistent with data)"
-        elif mean_d > delta_eq:
+        elif ci_lo > delta_eq:
             verdict = f"FAILS equivalence (Delta=+{mean_d:.3f} > +{delta_eq})"
-        elif mean_d < -delta_eq:
+        elif ci_hi < -delta_eq:
             verdict = f"FAILS equivalence (Delta={mean_d:.3f} < -{delta_eq})"
         else:
             verdict = "INCONCLUSIVE (CI spans bound)"
         out.append({
             "budget_tokens": T,
             "delta_eq_bound": delta_eq,
+            "estimand": "one_minus_small_over_large_accuracy_ratio",
+            "interval_level": 0.90,
+            "method": "independent_normal_summary_sensitivity",
             "delta_mean": round(mean_d, 4),
             "delta_se": round(se_d, 4),
             "delta_ci_lo": round(float(ci_lo), 4),
@@ -501,25 +506,25 @@ def main() -> None:
     cost = compute_cost(iso)
     summary = make_summary(tost_all, linkage, cost)
 
-    write_tsv(RES / "group_size_iter115_tost.tsv", tost_all,
-              ["budget_tokens", "delta_eq_bound", "delta_mean", "delta_se",
+    write_tsv(RES / "group_size_iter115_tost_v2.tsv", tost_all,
+              ["budget_tokens", "estimand", "interval_level", "method", "delta_eq_bound", "delta_mean", "delta_se",
                "delta_ci_lo", "delta_ci_hi", "p_lower_one_sided",
                "p_upper_one_sided", "p_tost", "demonstrates_equivalence",
                "ci_inside_equiv_bound", "verdict"])
-    write_tsv(RES / "group_size_iter115_zvf_linkage.tsv", linkage,
+    write_tsv(RES / "group_size_iter115_zvf_linkage_v2.tsv", linkage,
               ["budget_tokens", "acc_G4", "acc_G32",
                "retention_G4_over_G32", "GU_G4", "GU_G32",
                "GU_ratio_G4_over_G32", "interpretation"])
-    write_tsv(RES / "group_size_iter115_compute_cost.tsv", cost,
+    write_tsv(RES / "group_size_iter115_compute_cost_v2.tsv", cost,
               ["target_acc", "T_star_G4_tokens", "T_star_G8_tokens",
                "T_star_G16_tokens", "T_star_G32_tokens",
                "T_star_G64_tokens", "gpu_hr_G4", "gpu_hr_G32",
                "usd_G4", "usd_G32", "ratio_G4_over_G32_tokens",
                "extra_gpu_hr_G4_vs_G32", "extra_usd_G4_vs_G32"])
-    write_tsv(RES / "group_size_iter115_summary.tsv", summary,
+    write_tsv(RES / "group_size_iter115_summary_v2.tsv", summary,
               ["metric_kind", "metric_key", "headline"])
 
-    make_figure(tost_all, linkage, cost, FIG / "group_size_iter115.pdf")
+    make_figure(tost_all, linkage, cost, FIG / "group_size_iter115_v2.pdf")
 
     print("=== Iter 115 TOST (delta_eq=0.024 = Wu bound) ===")
     for r in tost_all:

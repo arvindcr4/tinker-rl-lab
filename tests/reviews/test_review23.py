@@ -62,3 +62,74 @@ def test_contamination_requires_real_inputs(tmp_path):
     result=subprocess.run([sys.executable,str(SCRIPTS/'contamination_check.py')],cwd=tmp_path,capture_output=True)
     assert result.returncode != 0
     assert b'actual --train-texts' in result.stderr
+
+def test_paired_seed_means_ignore_input_order():
+    m=load('group_size_iter15')
+    runs=[{'group_size':g,'seed':s,'step_log':[{'mean_reward':v+g/100}]} for g in m.G_VALUES for s,v in [(1,.2),(2,.8),(3,.5)]]
+    a=m.per_seed_last10_mean_reward({'runs':runs})
+    b=m.per_seed_last10_mean_reward({'runs':list(reversed(runs))})
+    for g in m.G_VALUES: assert (a[g]==b[g]).all()
+    with pytest.raises(ValueError):m.per_seed_last10_mean_reward({'runs':runs+[runs[0]]})
+
+def test_reward_quadratic_matches_seeds():
+    m=load('group_size_iter135')
+    runs=[{'group_size':g,'seed':s,'mean_reward_train':v+g/100,'last10_avg':v+g/100,'mean_zvf':.4} for g in [2,4,8,16] for s,v in [(1,.2),(2,.5),(3,.7)]]
+    a=m.reward_quadratic({'runs':runs})
+    b=m.reward_quadratic({'runs':list(reversed(runs))})
+    assert a==b
+
+def test_checksum_missing_and_short_corpora_not_pass(tmp_path):
+    m=load('contamination_check')
+    (tmp_path/'result.json').write_text('{}')
+    assert m.check_results_integrity(str(tmp_path))['flag']=='INCOMPLETE'
+    assert m.check_ngram_overlap([],[])['flag']=='INCOMPLETE'
+    assert m.check_ngram_overlap(['same short'],['same short'])['flag']=='FAIL'
+    assert m.check_ngram_overlap(['a b'],['c d'])['flag']=='INCOMPLETE'
+
+def test_yaml_validation_never_prints_partial_rows(tmp_path,capsys):
+    m=load('_reviewer_points_extract')
+    file=tmp_path/'review.yaml';file.write_text('weaknesses:\n  - id: first\n    marker: ok\n  - id: second\n')
+    assert m.main(str(file))==1
+    assert capsys.readouterr().out==''
+
+def test_retention_model_recovers_exponential():
+    import numpy as np
+    m=load('group_size_iter39')
+    t=np.array([1e6,4e6,16e6,64e6]);y=.6+.4*np.exp(-t/10e6)
+    r,tau,sse=m.fit_exponential(t,y)
+    assert r==pytest.approx(.6,abs=1e-5)
+    assert tau==pytest.approx(10e6,rel=1e-5)
+    assert sse<1e-12
+
+def test_convergence_uses_logged_steps(tmp_path):
+    import csv
+    m=load('group_size_elevated');m.RESULTS=tmp_path
+    path=m.write_convergence_tsv({'runs':[{'group_size':4,'seed':1,'step_log':[{'step':10,'mean_reward':.1},{'step':20,'mean_reward':.6}]}]})
+    rows=list(csv.DictReader(path.open(),delimiter='\t'))
+    assert rows[0]['first_step']=='20'
+    assert rows[-1]['first_step']=='never' and rows[-1]['observation_horizon']=='20'
+
+def test_native_retention_reference_self_is_identically_one():
+    m=load('group_size_iter27')
+    runs=[{'group_size':g,'seed':s,'step_log':[{'mean_reward':v}]} for g in m.G_VALUES for s,v in [(1,.3),(2,.8),(3,.6)]]
+    df=m.per_g_master({'runs':runs})
+    assert (df['retention_ci_low']==1).all()
+    assert (df['retention_ci_high']==1).all()
+
+def test_pareto_sign_not_trend():
+    import pandas as pd
+    m=load('group_size_iter23')
+    rows=[{'G':g,'T_tokens':t,'acc':a} for t in [1,4,16,64] for g,a in [(4,.3),(32,.8)]]
+    result=m.pareto_crossings(pd.DataFrame(rows)).iloc[0]
+    assert result['direction']=='G=32 dominates G=4'
+    assert result['T_crossover_tokens']==1
+
+def test_unbounded_crossing_interval_preserved():
+    import numpy as np
+    m=load('group_size_iter39')
+    assert m.bootstrap_ci(np.array([1,2,float('inf')]))[1] == float('inf')
+
+def test_ratio_above_one_not_clipped(tmp_path):
+    m=load('group_size_iter63');m.EFFECT_TSV=tmp_path/'historical.tsv'
+    m.append_to_effect_tsv([(1e6,1.2,1.1,1.3)], [0], (1.2,0,1,(0,0,0)), (1.2,0,1,(0,0,0)), (1.2,1.2,1e6,1,(0,0,0),(0,0,0)),False,False)
+    assert '1.2' in (tmp_path/'group_size_iter63_retention_fits_v2.tsv').read_text().splitlines()[1]

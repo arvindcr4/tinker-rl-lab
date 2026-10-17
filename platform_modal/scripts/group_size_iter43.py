@@ -27,20 +27,20 @@ G=2~=G=16 retention 97.6% is FALSE on GSM8K at broad scale):
 
 Deliverables (each computed from existing TSVs -- no fabrication):
 
-    platform_hybrid/experiments/results/group_size_iter43_eff_zvf.tsv
+    platform_hybrid/experiments/results/group_size_iter43_eff_zvf_v2.tsv
         25 rows: 5 G values x 5 token budgets.
         Per-cell ZVF-theoretical retention, measured retention, and the
         ZVF-driven component of any retention gap.
 
-    platform_hybrid/experiments/results/group_size_iter43_difficulty.tsv
+    platform_hybrid/experiments/results/group_size_iter43_difficulty_v2.tsv
         15 rows: 5 G values x 3 difficulty bins (low/mid/high).
         Per-bin effective-equivalence score.
 
-    platform_hybrid/experiments/results/group_size_iter43_flop_tost.tsv
+    platform_hybrid/experiments/results/group_size_iter43_flop_tost_v2.tsv
         10 rows: 5 ordered (G_a, G_b) pairs.
         FLOP-matched retention with bootstrap CI and TOST test.
 
-    platform_hybrid/experiments/results/group_size_iter43_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter43_summary_v2.tsv
         Single-rollup table of headline findings for the paper section.
 """
 from __future__ import annotations
@@ -121,9 +121,11 @@ def main_eff_zvf(token_norm: list[dict]) -> None:
         by_T.setdefault(r["T_tokens"], []).append(r)
     enriched = []
     for T, grp in by_T.items():
-        max_acc = max(r["acc"] for r in grp)
+        reference_G = max(r["G"] for r in grp)
+        max_acc = next(r["acc"] for r in grp if r["G"] == reference_G)
         for r in grp:
             r["retention_vs_max_G"] = round(r["acc"] / max_acc, 4)
+            r["reference_G"] = reference_G
             # ZVF-driven prediction: if retention scales linearly with
             # contrastive yield, retention_R = GU_th / max(GU_th at this T).
             max_gu = max(rr["gu_theoretical"] for rr in grp)
@@ -132,7 +134,7 @@ def main_eff_zvf(token_norm: list[dict]) -> None:
             r["zvf_residual"] = round(r["retention_vs_max_G"] - r["zvf_implied_retention"], 4)
             enriched.append(r)
     header = list(enriched[0].keys())
-    write_tsv(RES / "group_size_iter43_eff_zvf.tsv", header, enriched)
+    write_tsv(RES / "group_size_iter43_eff_zvf_v2.tsv", header, enriched)
     print(f"[iter43/eff_zvf] Wrote {len(enriched)} rows")
     # Diagnostic
     for r in enriched[:5]:
@@ -177,7 +179,7 @@ def main_difficulty(token_norm: list[dict]) -> None:
                 "acc": round(acc, 4),
                 "difficulty_bin": bin_label,
             })
-    write_tsv(RES / "group_size_iter43_difficulty.tsv",
+    write_tsv(RES / "group_size_iter43_difficulty_v2.tsv",
               ["T_tokens", "G", "acc", "difficulty_bin"], rows)
     print(f"[iter43/difficulty] Wrote {len(rows)} rows")
     # Compute, per (G, bin), the mean acc across budgets.
@@ -268,7 +270,7 @@ def main_flop_tost(token_norm: list[dict]) -> None:
             }
             rows.append(row)
     header = list(rows[0].keys())
-    write_tsv(RES / "group_size_iter43_flop_tost.tsv", header, rows)
+    write_tsv(RES / "group_size_iter43_flop_tost_v2.tsv", header, rows)
     print(f"[iter43/flop_tost] Wrote {len(rows)} rows")
     # Headline: how many cells pass TOST at each eps?
     for e in eps_levels:
@@ -310,7 +312,7 @@ def main_summary(token_norm: list[dict], eff_rows: list[dict], diff_rows: list[d
             "value": r["retention"],
             "frac": "",
         })
-    write_tsv(RES / "group_size_iter43_summary.tsv", ["metric", "value", "frac"], summary_rows)
+    write_tsv(RES / "group_size_iter43_summary_v2.tsv", ["metric", "value", "frac"], summary_rows)
     print(f"[iter43/summary] Wrote {len(summary_rows)} headline metrics")
 
 
@@ -321,11 +323,11 @@ def main() -> None:
 
     # Run each sub-analysis, capturing row lists for the summary.
     main_eff_zvf(rows)
-    _, eff_rows = read_tsv(RES / "group_size_iter43_eff_zvf.tsv")
+    _, eff_rows = read_tsv(RES / "group_size_iter43_eff_zvf_v2.tsv")
     main_difficulty(rows)
-    _, diff_rows = read_tsv(RES / "group_size_iter43_difficulty.tsv")
+    _, diff_rows = read_tsv(RES / "group_size_iter43_difficulty_v2.tsv")
     main_flop_tost(rows)
-    _, tost_rows = read_tsv(RES / "group_size_iter43_flop_tost.tsv")
+    _, tost_rows = read_tsv(RES / "group_size_iter43_flop_tost_v2.tsv")
     main_summary(rows, eff_rows, diff_rows, tost_rows)
 
 

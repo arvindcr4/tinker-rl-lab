@@ -18,7 +18,7 @@ sharply different worlds are compatible with the 4 observed points:
     LIMIT EQUIVALENCE:  R(T) → R_∞ > 0 (say 0.5+)  as T → ∞
 
 These predict entirely different behaviour at T = 256M and beyond.
-We bootstrap B = 2000 resamples (drawing R_i from a Fieller CI on the
+We bootstrap B = 2000 resamples (drawing R_i from a marginal-endpoint ratio envelope CI on the
 G=4/G=32 individual CIs) and fit three candidate forms:
 
     (i)   Linear in log T:        R = a + b·log10(T/M)
@@ -26,22 +26,22 @@ G=4/G=32 individual CIs) and fit three candidate forms:
     (iii) Asymptotic exponential: R = R_∞ + (R_0 - R_∞)·exp(-T/τ)
 
 For each form we record point estimate, R², AIC (k = 2 predictive
-parameters each), extrapolated R(256M) with BCa CI, and asymptotic
-R_∞ with BCa CI for form (iii).
+parameters each), extrapolated R(256M) with parametric sensitivity percentile CI, and asymptotic
+R_∞ with parametric sensitivity percentile CI for form (iii).
 
 Inputs (read-only):
     platform_hybrid/experiments/results/group_size_token_normalized.tsv
-    platform_hybrid/experiments/results/group_size_iter59_equivalence.tsv
+    platform_hybrid/experiments/results/group_size_iter59_equivalence_v2.tsv
 
 Outputs:
     platform_hybrid/experiments/results/group_size_effect.tsv       (APPENDED; historical rows preserved)
-    platform_hybrid/experiments/results/group_size_iter63_linear_fits.tsv
-    platform_hybrid/experiments/results/group_size_iter63_power_fits.tsv
-    platform_hybrid/experiments/results/group_size_iter63_asymptotic_fits.tsv
-    platform_hybrid/experiments/results/group_size_iter63_summary.tsv
-    platform_hybrid/experiments/results/group_size_iter63_iter_meta.json
-    figures/group_size_iter63_retention_decay.pdf
-    figures/group_size_iter63_retention_decay.png
+    platform_hybrid/experiments/results/group_size_iter63_linear_fits_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter63_power_fits_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter63_asymptotic_fits_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter63_summary_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter63_iter_meta_v2.json
+    figures/group_size_iter63_retention_decay_v2.pdf
+    figures/group_size_iter63_retention_decay_v2.png
 """
 from __future__ import annotations
 
@@ -60,16 +60,16 @@ RES = REPO / "experiments" / "results"
 FIG = REPO / "figures"
 
 TOKEN_TSV = RES / "group_size_token_normalized.tsv"
-EQ_TSV    = RES / "group_size_iter59_equivalence.tsv"
+EQ_TSV    = RES / "group_size_iter59_equivalence_v2.tsv"
 
 EFFECT_TSV = RES / "group_size_effect.tsv"
-OUT_LINEAR = RES / "group_size_iter63_linear_fits.tsv"
-OUT_POWER  = RES / "group_size_iter63_power_fits.tsv"
-OUT_ASYMP  = RES / "group_size_iter63_asymptotic_fits.tsv"
-OUT_SUMM   = RES / "group_size_iter63_summary.tsv"
-OUT_META   = RES / "group_size_iter63_iter_meta.json"
-FIG_PDF    = FIG / "group_size_iter63_retention_decay.pdf"
-FIG_PNG    = FIG / "group_size_iter63_retention_decay.png"
+OUT_LINEAR = RES / "group_size_iter63_linear_fits_v2.tsv"
+OUT_POWER  = RES / "group_size_iter63_power_fits_v2.tsv"
+OUT_ASYMP  = RES / "group_size_iter63_asymptotic_fits_v2.tsv"
+OUT_SUMM   = RES / "group_size_iter63_summary_v2.tsv"
+OUT_META   = RES / "group_size_iter63_iter_meta_v2.json"
+FIG_PDF    = FIG / "group_size_iter63_retention_decay_v2.pdf"
+FIG_PNG    = FIG / "group_size_iter63_retention_decay_v2.png"
 
 B_BOOT = 2000
 SEED   = 63
@@ -214,7 +214,7 @@ def main() -> None:
     token_rows = load_token_grid()
     budgets = sorted({r["budget"] for r in token_rows})
 
-    # Build per-budget Fieller CI for R using G=4 / G=32 individual CIs.
+    # Build per-budget marginal-endpoint ratio envelope CI for R using G=4 / G=32 individual CIs.
     R_obs_with_CI: list[tuple[float, float, float]] = []
     Ts: list[float] = []
     xs_log: list[float] = []
@@ -226,25 +226,19 @@ def main() -> None:
         g32 = next(r for r in token_rows if r["budget"] == T and r["G"] == 32)
         R_lo = g4["ci_lo"] / g32["ci_hi"]
         R_hi = g4["ci_hi"] / g32["ci_lo"]
-        R_lo = max(EPS, min(1-EPS, R_lo))
-        R_hi = max(EPS, min(1-EPS, R_hi))
+        R_lo = max(EPS, R_lo)
+        R_hi = max(EPS, R_hi)
         R_obs_with_CI.append((float(T), R_pt, R_lo))
         Ts.append(float(T))
         xs_log.append(math.log10(T_m))
         rs_pt.append(R_pt)
 
-    # Bootstrap draws.
-    samples: list[list[float]] = [[] for _ in R_obs_with_CI]
-    for _ in range(B_BOOT):
-        for i, (_, _, hi_lo_R) in enumerate(R_obs_with_CI):
-            # treat obs as 3-tuple: (T, R_pt, R_lo). hi is index 0 of (lo, hi)
-            pass
     # rebuild as 4-tuples
     R_obs_4t = []
     for T, R_pt, R_lo in R_obs_with_CI:
         g4 = next(r for r in token_rows if r["budget"] == int(T) and r["G"] == 4)
         g32 = next(r for r in token_rows if r["budget"] == int(T) and r["G"] == 32)
-        R_hi = max(EPS, min(1-EPS, g4["ci_hi"] / g32["ci_lo"]))
+        R_hi = max(EPS, g4["ci_hi"] / g32["ci_lo"])
         R_obs_4t.append((T, R_pt, R_lo, R_hi))
     samples = [[] for _ in R_obs_4t]
     for _ in range(B_BOOT):
@@ -277,7 +271,7 @@ def main() -> None:
             la, lb, _, _ = fit_linear_logT(xs_log, rb)
             lin_a_b.append(la); lin_b_b.append(lb)
             r256 = la + lb*math.log10(256)
-            lin_R256_b.append(max(EPS, min(1-EPS, r256)))
+            lin_R256_b.append(max(EPS, r256))
             lin_R256_full_b.append(r256)
         except Exception:
             pass
@@ -285,7 +279,7 @@ def main() -> None:
             pc, pb, _, _ = fit_power_law(xs_log, rb)
             pow_c_b.append(pc); pow_b_b.append(pb)
             r256 = pc * (256**pb)
-            pow_R256_b.append(max(EPS, min(1-EPS, r256)))
+            pow_R256_b.append(max(EPS, r256))
             pow_R256_full_b.append(r256)
         except Exception:
             pass
@@ -293,7 +287,7 @@ def main() -> None:
             ri, r0, tau, _ = fit_asymptotic(Ts, rb)
             asy_Rinf_b.append(ri); asy_tau_b.append(tau)
             asy_Rinf_inf_b.append(ri)
-            asy_R256_b.append(max(EPS, min(1-EPS, ri + (r0 - ri)*math.exp(-256e6/tau))))
+            asy_R256_b.append(max(EPS, ri + (r0 - ri)*math.exp(-256e6/tau)))
         except Exception:
             pass
 
@@ -306,10 +300,10 @@ def main() -> None:
     #
     # HARD DIVERGENCE:    the linear / power extrapolation at T = 256M is
     #                     *substantially below* the operational-equivalence
-    #                     threshold AND its BCa CI is *below 0.7 too*.
+    #                     threshold AND its parametric sensitivity percentile CI is *below 0.7 too*.
     #                     i.e. R(T) is on a path to ~0.
     # LIMIT EQUIVALENCE:  the asymptotic R_∞ is *substantially above 0*
-    #                     AND its BCa lower bound is at least 0.4.
+    #                     AND its parametric sensitivity percentile lower bound is at least 0.4.
     #                     i.e. R(T) asymptotes to a non-trivial floor.
     hard_div_at_256 = (lin_R256_ci[1] < 0.70) and (pow_R256_ci[1] < 0.70) \
                       and (lin_R256_ci[2] < 0.85) and (pow_R256_ci[2] < 0.85)
@@ -385,17 +379,17 @@ def main() -> None:
          ["linear", "power", "asymptotic"][min(range(3),
              key=lambda i: [aic_lin, aic_pow, aic_asy][i])]),
         ("best_AIC_value", min(aic_lin, aic_pow, aic_asy)),
-        ("linear_R_at_T256M_point", max(EPS, min(1-EPS, a_pt + b_pt*math.log10(256)))),
-        ("power_R_at_T256M_point", max(EPS, min(1-EPS, c_pt * (256**beta_pt)))),
+        ("linear_R_at_T256M_point", max(EPS, a_pt + b_pt*math.log10(256))),
+        ("power_R_at_T256M_point", max(EPS, c_pt * (256**beta_pt))),
         ("asymptotic_R_infinity_point", Rinf_pt),
         ("asymptotic_R_at_T256M_point",
-         max(EPS, min(1-EPS, Rinf_pt + (R0_pt - Rinf_pt)*math.exp(-256e6/tau_pt)))),
-        ("linear_R_at_T256M_BCa_lo", lin_R256_ci[0]),
-        ("linear_R_at_T256M_BCa_hi", lin_R256_ci[2]),
-        ("power_R_at_T256M_BCa_lo", pow_R256_ci[0]),
-        ("power_R_at_T256M_BCa_hi", pow_R256_ci[2]),
-        ("asymptotic_R_infinity_BCa_lo", asy_Rinf_inf_ci[0]),
-        ("asymptotic_R_infinity_BCa_hi", asy_Rinf_inf_ci[2]),
+         max(EPS, Rinf_pt + (R0_pt - Rinf_pt)*math.exp(-256e6/tau_pt))),
+        ("linear_R_at_T256M_parametric sensitivity percentile_lo", lin_R256_ci[0]),
+        ("linear_R_at_T256M_parametric sensitivity percentile_hi", lin_R256_ci[2]),
+        ("power_R_at_T256M_parametric sensitivity percentile_lo", pow_R256_ci[0]),
+        ("power_R_at_T256M_parametric sensitivity percentile_hi", pow_R256_ci[2]),
+        ("asymptotic_R_infinity_parametric sensitivity percentile_lo", asy_Rinf_inf_ci[0]),
+        ("asymptotic_R_infinity_parametric sensitivity percentile_hi", asy_Rinf_inf_ci[2]),
         ("HARD_DIVERGENCE_at_T256M_CI_low_gt_0p05", hard_div_at_256),
         ("LIMIT_EQUIVALENCE_Rinf_CI_low_gt_0p10", limit_equiv_inf),
         ("n_bootstrap", B_BOOT),
@@ -413,11 +407,11 @@ def main() -> None:
     TT = [T/1e6 for T in Ts]
     ax.errorbar(TT, rs_pt, yerr=[err_lo, err_hi],
                 fmt="o", color="black", capsize=3,
-                label=r"observed $R(T)$ (Fieller 95% CI)")
+                label=r"observed $R(T)$ (marginal-endpoint ratio envelope 95% CI)")
     Tg = [10**(0.04*x) for x in range(0, 95)] + [256.0]
-    lin_curve = [max(EPS, min(1, a_pt + b_pt*math.log10(t))) for t in Tg]
-    pow_curve = [max(EPS, min(1, c_pt * (t**beta_pt))) for t in Tg]
-    asy_curve = [max(EPS, min(1, Rinf_pt + (R0_pt - Rinf_pt)*math.exp(-t*1e6/tau_pt))) for t in Tg]
+    lin_curve = [max(EPS, a_pt + b_pt*math.log10(t)) for t in Tg]
+    pow_curve = [max(EPS, c_pt * (t**beta_pt)) for t in Tg]
+    asy_curve = [max(EPS, Rinf_pt + (R0_pt - Rinf_pt)*math.exp(-t*1e6/tau_pt)) for t in Tg]
     ax.plot(Tg, lin_curve, "--", color="#1f77b4",
             label=fr"linear in $\log_{{10}}T$: $R={a_pt:.3f}{b_pt:+.3f}\log_{{10}}(T/\mathrm{{M}})$  ($R^2={R2_lin:.3f}$, AIC$\,{aic_lin:.1f}$)")
     ax.plot(Tg, pow_curve, ":", color="#ff7f0e",
@@ -463,8 +457,8 @@ def main() -> None:
             ["linear", "power", "asymptotic"][min(range(3),
                 key=lambda i: [aic_lin, aic_pow, aic_asy][i])],
         "asymptotic_R_infinity_point": Rinf_pt,
-        "asymptotic_R_infinity_BCa_lo": asy_Rinf_inf_ci[0],
-        "asymptotic_R_infinity_BCa_hi": asy_Rinf_inf_ci[2],
+        "asymptotic_R_infinity_parametric sensitivity percentile_lo": asy_Rinf_inf_ci[0],
+        "asymptotic_R_infinity_parametric sensitivity percentile_hi": asy_Rinf_inf_ci[2],
         "HARD_DIVERGENCE_at_T256M_CI_low_gt_0p05": bool(hard_div_at_256),
         "LIMIT_EQUIVALENCE_Rinf_CI_low_gt_0p10": bool(limit_equiv_inf),
         "n_bootstrap": B_BOOT,
@@ -494,8 +488,8 @@ def main() -> None:
             ["linear", "power", "asymptotic"][min(range(3),
                 key=lambda i: [aic_lin, aic_pow, aic_asy][i])],
         "asymptotic_R_infinity_point": Rinf_pt,
-        "asymptotic_R_infinity_BCa_lo": asy_Rinf_inf_ci[0],
-        "asymptotic_R_infinity_BCa_hi": asy_Rinf_inf_ci[2],
+        "asymptotic_R_infinity_parametric sensitivity percentile_lo": asy_Rinf_inf_ci[0],
+        "asymptotic_R_infinity_parametric sensitivity percentile_hi": asy_Rinf_inf_ci[2],
         "HARD_DIVERGENCE_at_T256M_CI_low_gt_0p05": bool(hard_div_at_256),
         "LIMIT_EQUIVALENCE_Rinf_CI_low_gt_0p10": bool(limit_equiv_inf),
         "n_bootstrap": B_BOOT,
@@ -508,8 +502,8 @@ def main() -> None:
     print(f"  linear  : R = {a_pt:.4f} + {b_pt:.4f}·log10(T/M)   R²={R2_lin:.3f}  AIC={aic_lin:.2f}")
     print(f"  power   : R = {c_pt:.4f}·T^({beta_pt:+.4f})          R²={R2_pow:.3f}  AIC={aic_pow:.2f}")
     print(f"  asymp   : R_∞={Rinf_pt:.4f}, R_0={R0_pt:.4f}, τ={tau_pt/1e6:.2f}M  R²={R2_asy:.3f}  AIC={aic_asy:.2f}")
-    print(f"  R(256M): linear BCa CI {lin_R256_ci}  power BCa CI {pow_R256_ci}")
-    print(f"  R_∞   BCa CI = ({asy_Rinf_inf_ci[0]:.4f}, {asy_Rinf_inf_ci[1]:.4f}, {asy_Rinf_inf_ci[2]:.4f})")
+    print(f"  R(256M): linear parametric sensitivity percentile CI {lin_R256_ci}  power parametric sensitivity percentile CI {pow_R256_ci}")
+    print(f"  R_∞   parametric sensitivity percentile CI = ({asy_Rinf_inf_ci[0]:.4f}, {asy_Rinf_inf_ci[1]:.4f}, {asy_Rinf_inf_ci[2]:.4f})")
     print(f"  best AIC form  = {meta_clean['best_AIC_form']}")
     print(f"  HARD_DIVERGENCE={hard_div_at_256},  LIMIT_EQUIVALENCE={limit_equiv_inf}")
 
@@ -535,9 +529,9 @@ def append_to_effect_tsv(R_obs_4t, xs_log, lin, pow, asy, hard_div, limit_equiv)
                     "R_observed", "R_observed_CI_lo", "R_observed_CI_hi",
                     "linear_R_fit", "power_R_fit", "asymptotic_R_fit"])
         for (T, R_pt, R_lo, R_hi), xl in zip(R_obs_4t, xs_log):
-            lin_fit = max(EPS, min(1-EPS, a_pt + b_pt*xl))
-            pow_fit = max(EPS, min(1-EPS, c_pt * (10**xl)**beta_pt))
-            asy_fit = max(EPS, min(1-EPS, Rinf_pt + (R0_pt - Rinf_pt)*math.exp(-T/tau_pt)))
+            lin_fit = max(EPS, a_pt + b_pt*xl)
+            pow_fit = max(EPS, c_pt * (10**xl)**beta_pt)
+            asy_fit = max(EPS, Rinf_pt + (R0_pt - Rinf_pt)*math.exp(-T/tau_pt))
             w.writerow([T, xl, R_pt, R_lo, R_hi, lin_fit, pow_fit, asy_fit])
     temporary.replace(output)
 

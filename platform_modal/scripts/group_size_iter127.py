@@ -34,12 +34,12 @@ Inputs:
     platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv
 
 Outputs:
-    platform_hybrid/experiments/results/group_size_iter127_joint_fit.tsv
-    platform_hybrid/experiments/results/group_size_iter127_optimal_g.tsv
-    platform_hybrid/experiments/results/group_size_iter127_bounded_cone.tsv
-    platform_hybrid/experiments/results/group_size_iter127_complementarity.tsv
-    platform_hybrid/experiments/results/group_size_iter127_summary.tsv
-    figures/group_size_iter127.pdf
+    platform_hybrid/experiments/results/group_size_iter127_joint_fit_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter127_optimal_g_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter127_bounded_cone_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter127_complementarity_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter127_summary_v2.tsv
+    figures/group_size_iter127_v2.pdf
 """
 from __future__ import annotations
 import json
@@ -88,7 +88,7 @@ def joint_loglog_fit(df: pd.DataFrame) -> dict:
     sigma2 = (resid @ resid) / max(n - p, 1)
     cov = sigma2 * XtXi
     se = np.sqrt(np.diag(cov))
-    r2 = 1.0 - (resid @ resid) / max(np.var(y) * (n - 1), 1e-12)
+    r2 = 1.0 - (resid @ resid) / max(np.sum((y - y.mean()) ** 2), 1e-12)
     t_stat = beta / se
     p_val = 2 * stats.t.sf(np.abs(t_stat), df=n - p)
 
@@ -97,7 +97,7 @@ def joint_loglog_fit(df: pd.DataFrame) -> dict:
 
     # RSS breakdown
     rss = float(resid @ resid)
-    tss = float(np.var(y) * (n - 1))
+    tss = float(np.sum((y - y.mean()) ** 2))
 
     # Joint contrast: b vs 0, c vs 0 (signed against "more G/T -> lower err")
     contrast_G_pos = {"b_name": "b (coeff on log10 G)",
@@ -212,8 +212,7 @@ def bounded_cone(df: pd.DataFrame) -> dict:
         g32 = sub[sub["G"] == 32].iloc[0]
         g64 = sub[sub["G"] == 64].iloc[0]
         diff = float(g64["heldout_acc_mean"] - g32["heldout_acc_mean"])
-        within_ci = (g32["heldout_acc_ci_low"] <= g64["heldout_acc_mean"] <= g32["heldout_acc_ci_high"]) or \
-                    (g64["heldout_acc_ci_low"] <= g32["heldout_acc_mean"] <= g64["heldout_acc_ci_high"])
+        within_ci = max(g32["heldout_acc_ci_low"],g64["heldout_acc_ci_low"]) <= min(g32["heldout_acc_ci_high"],g64["heldout_acc_ci_high"])
         rows.append({
             "T": int(T),
             "acc_G32": float(g32["heldout_acc_mean"]),
@@ -224,14 +223,14 @@ def bounded_cone(df: pd.DataFrame) -> dict:
         })
 
     signs = [r["sign_flip"] for r in rows]
-    all_non_pos = all(s == "non_positive" for s in signs)
+    all_non_pos = bool(signs) and all(s == "non_positive" for s in signs)
 
     return {
         "by_T": rows,
         "n_T": len(rows),
         "n_non_positive": sum(1 for s in signs if s == "non_positive"),
         "bounded_cone_supported": all_non_pos,
-        "statement": "G=64 acc <= G=32 acc at every T in {{1M,4M,16M,64M}} (all {n}/{n} non-positive)".format(n=len(rows)),
+        "statement": f"Observed G64-G32 differences: {sum(s == 'non_positive' for s in signs)}/{len(rows)} non-positive; supported={all_non_pos}",
     }
 
 
@@ -456,12 +455,12 @@ def main() -> None:
     cone = bounded_cone(df)
     comp = complementarity(df)
 
-    write_joint(RES / "group_size_iter127_joint_fit.tsv", joint)
-    write_optimal(RES / "group_size_iter127_optimal_g.tsv", opt)
-    write_cone(RES / "group_size_iter127_bounded_cone.tsv", cone)
-    write_complementarity(RES / "group_size_iter127_complementarity.tsv", comp)
-    write_summary(RES / "group_size_iter127_summary.tsv", joint, opt, cone, comp)
-    write_figure(FIG / "group_size_iter127.pdf", joint, opt, cone, comp, df)
+    write_joint(RES / "group_size_iter127_joint_fit_v2.tsv", joint)
+    write_optimal(RES / "group_size_iter127_optimal_g_v2.tsv", opt)
+    write_cone(RES / "group_size_iter127_bounded_cone_v2.tsv", cone)
+    write_complementarity(RES / "group_size_iter127_complementarity_v2.tsv", comp)
+    write_summary(RES / "group_size_iter127_summary_v2.tsv", joint, opt, cone, comp)
+    write_figure(FIG / "group_size_iter127_v2.pdf", joint, opt, cone, comp, df)
 
     print(f"[iter127] joint fit R^2 = {joint['fit_quality']['R2']:.3f}")
     print(f"[iter127] G*(T) slope = {opt['log_log_fit']['slope_per_decade_T']:+.3f}/decade")

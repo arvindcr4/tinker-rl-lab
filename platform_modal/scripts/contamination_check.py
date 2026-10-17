@@ -158,7 +158,13 @@ def check_ngram_overlap(
             contaminated_count += 1
 
     mean_overlap = float(np.mean(overlap_fractions)) if overlap_fractions else 0.0
-    flag = "FAIL" if mean_overlap > 0.05 else "PASS"   # >5% overlap triggers warning
+    exact_overlap = bool({v.strip().lower() for v in train_texts} & {v.strip().lower() for v in test_texts})
+    if exact_overlap or mean_overlap > .05:
+        flag="FAIL"
+    elif not train_ngram_set or len(overlap_fractions) < len(test_texts) or not test_texts:
+        flag="INCOMPLETE"
+    else:
+        flag="PASS"
 
     return {
         "check": f"ngram_overlap_n{n}",
@@ -167,6 +173,8 @@ def check_ngram_overlap(
         "test_docs": len(test_texts),
         "mean_overlap_fraction": round(mean_overlap, 4),
         "contaminated_test_docs": contaminated_count,
+        "test_docs_with_ngrams": len(overlap_fractions),
+        "short_test_docs": len(test_texts)-len(overlap_fractions),
         "flag": flag,
     }
 
@@ -298,7 +306,7 @@ def check_results_integrity(results_dir: str) -> Dict:
         if sidecar.exists():
             expected_hash = sidecar.read_text().strip()
             match = actual_hash == expected_hash
-            status = "OK" if match else "TAMPERED"
+            status = "OK" if match else "CHECKSUM_MISMATCH"
         else:
             status = "UNVERIFIED"
 
@@ -308,8 +316,8 @@ def check_results_integrity(results_dir: str) -> Dict:
             "status": status,
         })
 
-    tampered = [f for f in file_status if f["status"] == "TAMPERED"]
-    flag = "FAIL" if tampered else ("PASS" if file_status else "SKIP")
+    tampered = [f for f in file_status if f["status"] == "CHECKSUM_MISMATCH"]
+    flag = "FAIL" if tampered else ("PASS" if file_status and all(f["status"] == "OK" for f in file_status) else "INCOMPLETE")
 
     return {
         "check": "results_integrity",
@@ -339,6 +347,8 @@ def generate_report(check_results: List[Dict], output_path: str) -> None:
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "overall_flag": "PASS" if overall_pass else "FAIL",
         "checks": check_results,
+        "scope": "synthetic_demonstration" if any(r.get("reason") == "synthetic demonstration is not evidence" for r in check_results) else "supplied_texts_and_integrity",
+        "benchmark_contamination_assessed": overall_pass,
         "methodology": {
             "ngram_sizes": [8, 13],
             "references": [

@@ -10,15 +10,15 @@ matters on canonical training budgets, decomposes the retention gap into
 Pillar 2's ZVF framework to predict when the DPO-equivalence claim breaks.
 
 Deliverables (all real, re-aggregated from existing TSVs):
-  platform_hybrid/experiments/results/group_size_iter31_iso_token.tsv
+  platform_hybrid/experiments/results/group_size_iter31_iso_token_v2.tsv
       Per-(G, T) iso-token retention matrix with TOST verdict at eps=0.02.
-  platform_hybrid/experiments/results/group_size_iter31_wu_audit.tsv
+  platform_hybrid/experiments/results/group_size_iter31_wu_audit_v2.tsv
       Cell-by-cell audit of the Wu 97.6% claim across both easy-task
       (Qwen2.5-0.5B arithmetic) and hard-task (Qwen3-8B GSM8K) regimes.
-  platform_hybrid/experiments/results/group_size_iter31_zvf_coupling.tsv
+  platform_hybrid/experiments/results/group_size_iter31_zvf_coupling_v2.tsv
       ZVF x G coupling table: how does the per-G advantage variance
       scaling predict the retention gap measured at broader scale?
-  platform_hybrid/experiments/results/group_size_iter31_summary.tsv
+  platform_hybrid/experiments/results/group_size_iter31_summary_v2.tsv
       One-row-per-regime summary with verdict string and effect size.
 
 No fabrication: every number is sourced from an existing TSV.
@@ -50,11 +50,11 @@ def load_g4_vs_g32() -> pd.DataFrame:
 
 
 def load_synthesis() -> pd.DataFrame:
-    return pd.read_csv(RES / "group_size_iter27_synthesis.tsv", sep="\t")
+    return pd.read_csv(RES / "group_size_iter27_synthesis_v2.tsv", sep="\t")
 
 
 def load_snr() -> pd.DataFrame:
-    return pd.read_csv(RES / "group_size_iter15_snr.tsv", sep="\t")
+    return pd.read_csv(RES / "group_size_iter15_snr_v2.tsv", sep="\t")
 
 
 def load_zvf_sweep() -> pd.DataFrame:
@@ -62,7 +62,7 @@ def load_zvf_sweep() -> pd.DataFrame:
 
 
 def load_fit() -> pd.DataFrame:
-    return pd.read_csv(RES / "group_size_iter19_retention_fit.tsv", sep="\t")
+    return pd.read_csv(RES / "group_size_iter19_retention_fit_v2.tsv", sep="\t")
 
 
 # ---------------------------------------------------------------------------
@@ -90,19 +90,15 @@ def iso_token_tost() -> pd.DataFrame:
         # R = a / b; approximate 95% CI on R via Fieller.
         # R_lo = (a - bhi)/(b - ahi) type bounds clipped to [0,1].
         R_lo = max(0.0, a_lo / max(b_hi, 1e-9))
-        R_hi = min(1.5, a_hi / max(b_lo, 1e-9))
+        R_hi = a_hi / max(b_lo, 1e-9)
         R = a / b
-        # TOST p-values: assume normal diff with se = (diff_hi - diff_lo) / (2*1.96)
-        se = max((diff_hi - diff_lo) / (2 * 1.96), 1e-9)
-        z_low = (diff - EPS_TOST) / se   # H0: diff <= -eps
-        z_high = (diff + EPS_TOST) / se  # H0: diff >= +eps
-        # p_one_sided_low = Phi(z_low) ; p_one_sided_high = 1 - Phi(z_high)
-        from math import erf, sqrt
-        def pnorm(x: float) -> float:
-            return 0.5 * (1.0 + erf(x / sqrt(2.0)))
-        p_low = pnorm(z_low)
-        p_high = 1.0 - pnorm(z_high)
-        tost_p = max(p_low, p_high)
+        # Exploratory normal approximation for the displayed ratio band.
+        if b_lo <= 0 or b <= 0:
+            raise ValueError("ratio requires positive reference interval")
+        se = max((R_hi-R_lo)/(2*1.96),1e-9)
+        from statistics import NormalDist
+        cdf=NormalDist().cdf
+        tost_p=max(cdf((WU_RETENTION-EPS_TOST-R)/se),cdf((R-WU_RETENTION-EPS_TOST)/se))
         # Verdict
         is_equiv = tost_p < 0.05
         # Wu claim check
@@ -119,13 +115,15 @@ def iso_token_tost() -> pd.DataFrame:
             "retention": round(R, 4),
             "retention_ci_low": round(R_lo, 4),
             "retention_ci_high": round(R_hi, 4),
+            "estimand": "accuracy_ratio_Gsmall_over_Glarge",
+            "inference": "summary_interval_normal_sensitivity",
             "tost_p_eps0.02": round(tost_p, 6),
             "tost_equivalent": bool(is_equiv),
             "wu_97_6_in_CI": bool(ci_includes_wu),
             "above_wu_97_6pct": bool(R >= WU_RETENTION),
         })
     df = pd.DataFrame(rows)
-    out_path = RES / "group_size_iter31_iso_token.tsv"
+    out_path = RES / "group_size_iter31_iso_token_v2.tsv"
     df.to_csv(out_path, sep="\t", index=False)
     return df
 
@@ -195,7 +193,7 @@ def wu_audit(syn: pd.DataFrame) -> pd.DataFrame:
         },
     ]
     df = pd.DataFrame(rows)
-    out_path = RES / "group_size_iter31_wu_audit.tsv"
+    out_path = RES / "group_size_iter31_wu_audit_v2.tsv"
     df.to_csv(out_path, sep="\t", index=False)
     return df
 
@@ -276,7 +274,7 @@ def zvf_coupling(syn: pd.DataFrame) -> pd.DataFrame:
             ),
         })
     df = pd.DataFrame(rows)
-    out_path = RES / "group_size_iter31_zvf_coupling.tsv"
+    out_path = RES / "group_size_iter31_zvf_coupling_v2.tsv"
     df.to_csv(out_path, sep="\t", index=False)
     return df
 
@@ -322,7 +320,7 @@ def write_summary(iso: pd.DataFrame, audit: pd.DataFrame, zvf: pd.DataFrame) -> 
             "detail": f"gap from Wu 97.6% baseline to measured minimum: {100*(WU_RETENTION-float(hard_row['retention_min'])):.1f}pp",
         },
     ])
-    out_path = RES / "group_size_iter31_summary.tsv"
+    out_path = RES / "group_size_iter31_summary_v2.tsv"
     summary.to_csv(out_path, sep="\t", index=False)
     return out_path
 
@@ -337,9 +335,9 @@ def main() -> None:
     audit = wu_audit(syn)
     zvf = zvf_coupling(syn)
     summary_path = write_summary(iso, audit, zvf)
-    print(f"wrote {RES / 'group_size_iter31_iso_token.tsv'} ({len(iso)} rows)")
-    print(f"wrote {RES / 'group_size_iter31_wu_audit.tsv'} ({len(audit)} rows)")
-    print(f"wrote {RES / 'group_size_iter31_zvf_coupling.tsv'} ({len(zvf)} rows)")
+    print(f"wrote {RES / 'group_size_iter31_iso_token_v2.tsv'} ({len(iso)} rows)")
+    print(f"wrote {RES / 'group_size_iter31_wu_audit_v2.tsv'} ({len(audit)} rows)")
+    print(f"wrote {RES / 'group_size_iter31_zvf_coupling_v2.tsv'} ({len(zvf)} rows)")
     print(f"wrote {summary_path}")
 
 

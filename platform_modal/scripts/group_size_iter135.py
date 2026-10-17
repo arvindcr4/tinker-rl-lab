@@ -38,12 +38,12 @@ combining three concrete tests:
 Outputs (5 TSVs + 1 figure, all derived from existing measured
 data -- no fabrication):
 
-  platform_hybrid/experiments/results/group_size_iter135_native_wu.tsv
-  platform_hybrid/experiments/results/group_size_iter135_threshold_tstar.tsv
-  platform_hybrid/experiments/results/group_size_iter135_zvf_mech_link.tsv
-  platform_hybrid/experiments/results/group_size_iter135_reward_quad.tsv
-  platform_hybrid/experiments/results/group_size_iter135_summary.tsv
-  figures/group_size_iter135.pdf
+  platform_hybrid/experiments/results/group_size_iter135_native_wu_v2.tsv
+  platform_hybrid/experiments/results/group_size_iter135_threshold_tstar_v2.tsv
+  platform_hybrid/experiments/results/group_size_iter135_zvf_mech_link_v2.tsv
+  platform_hybrid/experiments/results/group_size_iter135_reward_quad_v2.tsv
+  platform_hybrid/experiments/results/group_size_iter135_summary_v2.tsv
+  figures/group_size_iter135_v2.pdf
 """
 from __future__ import annotations
 
@@ -108,12 +108,19 @@ def native_wu_claim(sweep: dict) -> list[dict]:
     for r in runs:
         g = int(r["group_size"])
         s = int(r["seed"])
-        per_seed_acc.setdefault(s, {})[g] = float(r["heldout_acc"])
+        if g in per_seed_acc.setdefault(s, {}):
+            raise ValueError(f"duplicate group/seed {g}/{s}")
+        value=float(r["heldout_acc"])
+        if not math.isfinite(value) or not 0<=value<=1:
+            raise ValueError("invalid held-out accuracy")
+        per_seed_acc[s][g] = value
 
     seeds_sorted = sorted(per_seed_acc.keys())
     pairs = []
     for s in seeds_sorted:
         if 2 in per_seed_acc[s] and 16 in per_seed_acc[s]:
+            if per_seed_acc[s][16] <= 0:
+                raise ValueError("undefined zero-reference retention")
             pairs.append((per_seed_acc[s][2], per_seed_acc[s][16]))
 
     out: list[dict] = []
@@ -278,7 +285,7 @@ def zvf_mech_link(rows: list[dict], sweep: dict) -> list[dict]:
             "headline": (
                 f"ZVF drops {z_drop:+.4f} (from {z2:.4f} to {z16:.4f}) "
                 f"as G grows 2->16 on Qwen2.5-0.5B / arithmetic "
-                f"(3 seeds); {z_drop/z2*100:+.1f}% absolute loss of within-group contrast"
+                f"(3 seeds); {z_drop/z2*100:+.1f}% decrease in ZVF, hence increased within-group contrast"
             ),
         })
 
@@ -321,20 +328,21 @@ def zvf_mech_link(rows: list[dict], sweep: dict) -> list[dict]:
 def reward_quadratic(sweep: dict) -> list[dict]:
     """Quadratic + linear fit of reward_mean on log10(G), with
     bootstrap CIs. The original Wu et al. 2025 claim is that G=2
-    is already enough -- so the reward curve should be FLAT. If
-    it is monotonically increasing, Wu is wrong. Quadratic tests
+    retains performance under its original protocol; a nonflat curve alone
+    does not refute retention. This exploratory quadratic tests
     for diminishing returns."""
     out: list[dict] = []
     runs = sweep["runs"]
-    rewards_by_G = {}
-    last10_by_G = {}
-    for r in runs:
-        G = int(r["group_size"])
-        # Use last10_avg as reward proxy (mean reward in last 10 steps)
-        # or fall back to mean_reward_train
-        v = float(r.get("mean_reward_train", r.get("last10_avg", 0.0)))
-        rewards_by_G.setdefault(G, []).append(v)
-        last10_by_G.setdefault(G, []).append(float(r.get("last10_avg", 0.0)))
+    from _review23_statistics import paired_seed_values
+    groups=sorted({int(r["group_size"]) for r in runs})
+    def reward_value(r):
+        if "mean_reward_train" in r: return r["mean_reward_train"]
+        if "last10_avg" in r: return r["last10_avg"]
+        raise ValueError("missing training reward; cannot substitute zero")
+    rewards_by_G, shared_seeds=paired_seed_values(runs,groups,reward_value)
+    if len(shared_seeds)<2 or len(groups)<2:
+        return [{"metric_kind":"unavailable","metric_key":"paired_seeds","headline":"Need two common seeds and two groups"}]
+    last10_by_G = rewards_by_G
     Gs = sorted(rewards_by_G.keys())
     means = np.array([float(np.mean(rewards_by_G[g])) for g in Gs])
     ses = np.array([float(np.std(rewards_by_G[g], ddof=1) / math.sqrt(len(rewards_by_G[g]))) for g in Gs])
@@ -407,7 +415,7 @@ def reward_quadratic(sweep: dict) -> list[dict]:
             "headline": (
                 f"Paired reward diff G=16 - G=2: {d_mean:+.4f} +/- {d_se:.4f}, "
                 f"bootstrap 95% CI [{d_lo:+.4f},{d_hi:+.4f}], "
-                f"one-sided p (H0: diff<=0) = {one_sided_p:.4f}"
+                f"bootstrap_fraction_diff_le0 = {one_sided_p:.4f}"
             ),
         })
 
@@ -442,9 +450,9 @@ def reward_quadratic(sweep: dict) -> list[dict]:
         "headline": (
             f"Log-log fit log10(mean_zvf) = {intercept_z:.4f} + {slope_z:+.4f}*log10(G), R^2={r2_z:.4f}; "
             f"linear fit mean_zvf = {intercept_lin:.4f} + {slope_lin:+.4f}*log10(G), R^2={r2_lin:.4f}; "
-            f"observed log-log slope={slope_z:+.3f} (theory: -1.0 i.i.d. Bernoulli); "
+            f"observed log-log slope={slope_z:+.3f}; IID slope depends on p and G; "
             f"observed linear slope={slope_lin:+.3f} per decade of G "
-            f"(anti-herding delta_div makes |slope| << 1.0 on log-log scale)"
+            f"(descriptive association; dependence mechanism unidentifiable here)"
         ),
     })
 
@@ -480,15 +488,15 @@ def main() -> None:
             f"(A) native-Wu G=2~=G=16 on this benchmark, "
             f"(B) extrapolated T* for retention < 50%, "
             f"(C) ZVF mechanism cross-link. "
-            f"See group_size_iter135_native_wu.tsv / _threshold_tstar.tsv / _zvf_mech_link.tsv / _reward_quad.tsv."
+            f"See group_size_iter135_native_wu_v2.tsv / _threshold_tstar.tsv / _zvf_mech_link.tsv / _reward_quad.tsv."
         ),
     })
 
-    write_tsv(native, RESULTS / "group_size_iter135_native_wu.tsv")
-    write_tsv(tstar, RESULTS / "group_size_iter135_threshold_tstar.tsv")
-    write_tsv(zlink, RESULTS / "group_size_iter135_zvf_mech_link.tsv")
-    write_tsv(rquad, RESULTS / "group_size_iter135_reward_quad.tsv")
-    write_tsv(summary, RESULTS / "group_size_iter135_summary.tsv")
+    write_tsv(native, RESULTS / "group_size_iter135_native_wu_v2.tsv")
+    write_tsv(tstar, RESULTS / "group_size_iter135_threshold_tstar_v2.tsv")
+    write_tsv(zlink, RESULTS / "group_size_iter135_zvf_mech_link_v2.tsv")
+    write_tsv(rquad, RESULTS / "group_size_iter135_reward_quad_v2.tsv")
+    write_tsv(summary, RESULTS / "group_size_iter135_summary_v2.tsv")
 
     # Figure: 4-panel
     try:
@@ -571,10 +579,10 @@ def main() -> None:
     fig.suptitle("Iter 135 -- Pillar 3: G=4 vs G=32, Native Wu, Threshold T*, ZVF link")
     fig.tight_layout()
     FIGS.mkdir(parents=True, exist_ok=True)
-    fig.savefig(FIGS / "group_size_iter135.pdf")
-    fig.savefig(FIGS / "group_size_iter135.png", dpi=120)
+    fig.savefig(FIGS / "group_size_iter135_v2.pdf")
+    fig.savefig(FIGS / "group_size_iter135_v2.png", dpi=120)
     plt.close(fig)
-    print(f"[iter135] wrote {FIGS / 'group_size_iter135.pdf'}")
+    print(f"[iter135] wrote {FIGS / 'group_size_iter135_v2.pdf'}")
 
 
 if __name__ == "__main__":

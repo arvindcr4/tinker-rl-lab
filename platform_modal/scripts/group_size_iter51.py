@@ -4,15 +4,15 @@
 Inputs (read-only):
   platform_hybrid/experiments/results/group_size_token_normalized.tsv   (4 budgets x 5 G)
   platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv          (4 G rows from n=3 seeds)
-  platform_hybrid/experiments/results/group_size_iter43_summary.tsv     (Wu retention at 4 budgets)
+  platform_hybrid/experiments/results/group_size_iter43_summary_v2.tsv     (Wu retention at 4 budgets)
 
 Outputs (TSVs, written to platform_hybrid/experiments/results/):
-  group_size_iter51_reward_vs_G.tsv          reward/G curve per budget
-  group_size_iter51_broader_tost.tsv         G=4 vs G=32 TOST at 4 budgets x 4 epsilons
-  group_size_iter51_peak_shift.tsv            argmax G as fn of budget
-  group_size_iter51_wu_loglinear.tsv          per-budget log-linear fit + Wu 2025 intersect
-  group_size_iter51_lit_compare.tsv           Wu 2025 G=2~G=16 vs our G=4~G=32 retention
-  group_size_iter51_summary.tsv               headline rollup
+  group_size_iter51_reward_vs_G_v2.tsv          reward/G curve per budget
+  group_size_iter51_broader_tost_v2.tsv         G=4 vs G=32 TOST at 4 budgets x 4 epsilons
+  group_size_iter51_peak_shift_v2.tsv            argmax G as fn of budget
+  group_size_iter51_wu_loglinear_v2.tsv          per-budget log-linear fit + Wu 2025 intersect
+  group_size_iter51_lit_compare_v2.tsv           Wu 2025 G=2~G=16 vs our G=4~G=32 retention
+  group_size_iter51_summary_v2.tsv               headline rollup
 """
 from __future__ import annotations
 
@@ -83,7 +83,7 @@ def bootstrap_diff_ci(a, b, stat_fn=lambda x: x[0] - x[1], B=2000, seed=SEED):
     for _ in range(B):
         ai = rng.integers(0, len(a), len(a))
         bi = rng.integers(0, len(b), len(b))
-        diffs.append(stat_fn([a[ai].mean() - b[bi].mean()]))
+        diffs.append(stat_fn([a[ai].mean(), b[bi].mean()]))
     diffs = sorted(diffs)
     lo = diffs[int(B * 0.025)]
     hi = diffs[min(int(B * 0.975), B - 1)]
@@ -359,7 +359,7 @@ def main():
     # A
     rvg = reward_vs_G(rows)
     write_tsv(
-        RES / "group_size_iter51_reward_vs_G.tsv",
+        RES / "group_size_iter51_reward_vs_G_v2.tsv",
         [
             "T_tokens",
             "G",
@@ -373,12 +373,12 @@ def main():
         ],
         rvg,
     )
-    print(f"Wrote group_size_iter51_reward_vs_G.tsv ({len(rvg)} rows)")
+    print(f"Wrote group_size_iter51_reward_vs_G_v2.tsv ({len(rvg)} rows)")
 
     # B
     tost = broaden_tost(rows)
     write_tsv(
-        RES / "group_size_iter51_broader_tost.tsv",
+        RES / "group_size_iter51_broader_tost_v2.tsv",
         [
             "T_tokens",
             "G_a",
@@ -394,12 +394,12 @@ def main():
         ],
         tost,
     )
-    print(f"Wrote group_size_iter51_broader_tost.tsv ({len(tost)} rows)")
+    print(f"Wrote group_size_iter51_broader_tost_v2.tsv ({len(tost)} rows)")
 
     # C
     pk = peak_shift(rows)
     write_tsv(
-        RES / "group_size_iter51_peak_shift.tsv",
+        RES / "group_size_iter51_peak_shift_v2.tsv",
         [
             "T_tokens",
             "argmax_G",
@@ -411,21 +411,21 @@ def main():
         ],
         pk,
     )
-    print(f"Wrote group_size_iter51_peak_shift.tsv ({len(pk)} rows)")
+    print(f"Wrote group_size_iter51_peak_shift_v2.tsv ({len(pk)} rows)")
 
     # D
     wu = wu_loglinear(rows)
     write_tsv(
-        RES / "group_size_iter51_wu_loglinear.tsv",
+        RES / "group_size_iter51_wu_loglinear_v2.tsv",
         ["G", "slope", "intercept", "R2", "target_acc", "log10T_at_target", "T_at_target_M"],
         wu,
     )
-    print(f"Wrote group_size_iter51_wu_loglinear.tsv ({len(wu)} rows)")
+    print(f"Wrote group_size_iter51_wu_loglinear_v2.tsv ({len(wu)} rows)")
 
     # E
     lit = literature_compare(rows)
     write_tsv(
-        RES / "group_size_iter51_lit_compare.tsv",
+        RES / "group_size_iter51_lit_compare_v2.tsv",
         [
             "T_tokens",
             "wu_2025_paper",
@@ -440,12 +440,12 @@ def main():
         ],
         lit,
     )
-    print(f"Wrote group_size_iter51_lit_compare.tsv ({len(lit)} rows)")
+    print(f"Wrote group_size_iter51_lit_compare_v2.tsv ({len(lit)} rows)")
 
     # F
     summ = summarize(rows, pk, tost, lit, wu)
-    write_tsv(RES / "group_size_iter51_summary.tsv", ["metric", "value"], summ)
-    print(f"Wrote group_size_iter51_summary.tsv ({len(summ)} rows)")
+    write_tsv(RES / "group_size_iter51_summary_v2.tsv", ["metric", "value"], summ)
+    print(f"Wrote group_size_iter51_summary_v2.tsv ({len(summ)} rows)")
 
     # ----- console headline -----
     print("\n=== Iter 51 Headline ===")

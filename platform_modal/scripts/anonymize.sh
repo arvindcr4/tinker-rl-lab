@@ -40,6 +40,18 @@ rsync -av --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' \
     "${SOURCE_DIR}/" "${STAGING_DIR}/"
 
 cd "${STAGING_DIR}"
+# Full identifier mappings precede generic username mappings.
+find . -type f \( -name "*.md" -o -name "*.py" -o -name "*.yaml" -o -name "*.yml" -o -name "*.tex" -o -name "*.txt" \) \
+    -exec sed -i -e 's|https://github.com/arvindcr4/tinker-rl-lab|https://anonymous.4open.science/r/tinker-rl-lab|g' \
+    -e 's|https://github.com/pes-llm-research/tinker-rl-lab|https://anonymous.4open.science/r/tinker-rl-lab|g' \
+    -e 's|pes-llm-research/tinker-rl-|anonymous/tinker-rl-|g' \
+    -e 's/ArvindCR/Anonymous/g' {} +
+while IFS= read -r -d '' file; do
+    renamed="${file//ArvindCR/Anonymous}"
+    [[ ! -e "$renamed" ]] || { echo "Anonymized filename collision" >&2; exit 2; }
+    mv -- "$file" "$renamed"
+done < <(find . -depth -name '*ArvindCR*' -print0)
+
 
 # 2. Remove / replace author identifiers
 echo "[2/6] Removing author identifiers..."

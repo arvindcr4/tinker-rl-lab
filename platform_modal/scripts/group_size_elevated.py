@@ -306,7 +306,7 @@ def write_convergence_tsv(sweep: dict) -> Path:
     """
     out = RESULTS / "group_size_convergence.tsv"
     cols = ["G", "seed", "threshold", "first_step", "reached",
-            "last_step_mean_reward"]
+            "last_step_mean_reward", "observation_horizon"]
     rows_out = []
     by_G_seed: dict[int, dict[int, list[dict]]] = {}
     for run in sweep["runs"]:
@@ -319,13 +319,14 @@ def write_convergence_tsv(sweep: dict) -> Path:
                 first_step = None
                 for t, mr in enumerate(mean_rewards):
                     if mr >= X:
-                        first_step = t
+                        first_step = int(steps[t]["step"])
                         break
                 rows_out.append({
                     "G": G, "seed": seed, "threshold": X,
                     "first_step": first_step if first_step is not None else "never",
                     "reached": "yes" if first_step is not None else "no",
                     "last_step_mean_reward": round(mean_rewards[-1], 4),
+                    "observation_horizon": int(steps[-1]["step"]),
                 })
     with open(out, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")

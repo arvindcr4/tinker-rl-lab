@@ -33,12 +33,12 @@ Inputs:
         T in {1M, 4M, 16M, 64M}, accuracy +/- 95% CI.
 
 Outputs:
-    platform_hybrid/experiments/results/group_size_iter107_bootstrap_delta.tsv
-    platform_hybrid/experiments/results/group_size_iter107_iso_acc_budget.tsv
-    platform_hybrid/experiments/results/group_size_iter107_returns_to_compute.tsv
-    platform_hybrid/experiments/results/group_size_iter107_wu_broader_audit.tsv
-    platform_hybrid/experiments/results/group_size_iter107_summary.tsv
-    figures/group_size_iter107.pdf
+    platform_hybrid/experiments/results/group_size_iter107_bootstrap_delta_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter107_iso_acc_budget_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter107_returns_to_compute_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter107_wu_broader_audit_v2.tsv
+    platform_hybrid/experiments/results/group_size_iter107_summary_v2.tsv
+    figures/group_size_iter107_v2.pdf
 
 Sharpest claim: On Qwen3-8B / GSM8K, the Wu et al. (2025) "It Takes
 Two" G=2 ~= G=16 claim fails the BROADER test (G=4 vs G=32 at scale)
@@ -99,7 +99,7 @@ def write_tsv(path: Path, rows: list[dict], header: list[str]) -> None:
             fh.write("\t".join(str(r.get(c, "")) for c in header) + "\n")
 
 
-# (A) Bootstrap paired Delta -------------------------------------------------
+# (A) Independent-normal summary sensitivity Delta -------------------------------------------------
 
 def bootstrap_paired_delta(iso: list[dict]) -> list[dict]:
     rng = np.random.default_rng(RNG_SEED)
@@ -119,7 +119,7 @@ def bootstrap_paired_delta(iso: list[dict]) -> list[dict]:
         delta_draws = a32_draws - a4_draws
         lo, hi = np.percentile(delta_draws, [2.5, 97.5])
         p_le_zero = float((delta_draws <= 0).mean())
-        p_wu = float((delta_draws <= -(1 - WU_RETENTION) * a32).mean())
+        p_wu = float(((WU_RETENTION*a32_draws-a4_draws) <= 0).mean())
         out.append({
             "budget_tokens": T,
             "delta_acc_G32_minus_G4": round(float(delta_draws.mean()), 4),
@@ -128,8 +128,8 @@ def bootstrap_paired_delta(iso: list[dict]) -> list[dict]:
             "delta_boot_se": round(float(delta_draws.std()), 4),
             "p_le_zero": round(p_le_zero, 4),
             "p_under_wu_implied_delta": round(p_wu, 4),
-            "rejects_wu_zero_at_001": p_le_zero < 0.001,
-            "rejects_wu_zero_at_01": p_le_zero < 0.01,
+            "rejects_wu_zero_at_001": p_wu < 0.001,
+            "rejects_wu_zero_at_01": p_wu < 0.01,
         })
     return out
 
@@ -322,12 +322,12 @@ def make_figure(iso: list[dict], boot: list[dict], iso_acc: list[dict],
                  ls=":", label="iter103 Gaussian propagation")
     axes[0].axhline(0, color="black", ls="-", lw=0.8,
                     label="Wu zero-difference")
-    axes[0].axhline(-(1 - WU_RETENTION), color="red", ls="--", lw=1.0,
-                    label=f"wu-implied Delta at 0.976 retention ({(1-WU_RETENTION):+.3f})")
+    thresholds=[(1-WU_RETENTION)*float(next(r for r in iso if int(r["budget_tokens"])==T and int(r["G"])==32)["heldout_acc_mean"]) for T in sorted({int(r["budget_tokens"]) for r in iso})]
+    axes[0].plot(Ts,thresholds,color="red",ls="--",label="0.024 × reference accuracy")
     axes[0].set_xscale("log")
     axes[0].set_xlabel("Token budget T (M)")
     axes[0].set_ylabel("Delta accuracy (G=32 - G=4)")
-    axes[0].set_title("(L) Bootstrap paired Delta vs Wu zero-difference")
+    axes[0].set_title("(L) Independent-normal summary sensitivity Delta vs Wu zero-difference")
     axes[0].legend(fontsize=7.5, loc="upper left")
     axes[0].grid(True, alpha=0.3)
 
@@ -394,31 +394,31 @@ def main() -> None:
     combined = combined_verdict(iso, boot, iso_acc, rc)
     summary = summarize(boot, iso_acc, rc, combined)
 
-    write_tsv(RES / "group_size_iter107_bootstrap_delta.tsv", boot,
+    write_tsv(RES / "group_size_iter107_bootstrap_delta_v2.tsv", boot,
               ["budget_tokens", "delta_acc_G32_minus_G4", "delta_boot_ci_low",
                "delta_boot_ci_high", "delta_boot_se",
                "p_le_zero", "p_under_wu_implied_delta",
                "rejects_wu_zero_at_001", "rejects_wu_zero_at_01"])
-    write_tsv(RES / "group_size_iter107_iso_acc_budget.tsv", iso_acc,
+    write_tsv(RES / "group_size_iter107_iso_acc_budget_v2.tsv", iso_acc,
               ["target_acc", "T_star_G4", "T_star_G4_in_range",
                "T_star_G8", "T_star_G8_in_range",
                "T_star_G16", "T_star_G16_in_range",
                "T_star_G32", "T_star_G32_in_range",
                "T_star_G64", "T_star_G64_in_range",
                "R_compute_G4_over_G32", "rejects_wu_compute_equiv"])
-    write_tsv(RES / "group_size_iter107_returns_to_compute.tsv", rc,
+    write_tsv(RES / "group_size_iter107_returns_to_compute_v2.tsv", rc,
               ["G", "R_C_1M_to_4M", "R_C_4M_to_16M", "R_C_16M_to_64M",
                "R_C_late_only_16M_to_64M", "R_C_3window_mean"])
-    write_tsv(RES / "group_size_iter107_wu_broader_audit.tsv", combined,
+    write_tsv(RES / "group_size_iter107_wu_broader_audit_v2.tsv", combined,
               ["budget_tokens", "acc_G4", "acc_G32",
                "retention_G4_over_G32", "delta_boot", "delta_boot_ci_low",
                "delta_boot_ci_high", "p_le_zero", "rejects_wu_at_001",
                "R_compute_at_acc070", "R_C_late_ratio_G32_over_G4",
                "fails_wu_combined"])
-    write_tsv(RES / "group_size_iter107_summary.tsv", summary,
+    write_tsv(RES / "group_size_iter107_summary_v2.tsv", summary,
               ["metric_kind", "metric_key", "headline"])
 
-    make_figure(iso, boot, iso_acc, rc, FIG / "group_size_iter107.pdf")
+    make_figure(iso, boot, iso_acc, rc, FIG / "group_size_iter107_v2.pdf")
 
     print("=== Iter 107 bootstrap paired Delta ===")
     for b in boot:

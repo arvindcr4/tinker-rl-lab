@@ -233,7 +233,7 @@ def test_generated_model_name_cannot_inject_source(tmp_path):
 
     model = 'test-model"""\nINJECTED_SENTINEL = 123\n"""'
     script = generate_trl_train_script(
-        TRLConfig(model={"model_name": model}, data={"train_data": ["dummy"]}),
+        TRLConfig(execution_contract="scientific", model={"model_name": model}, data={"train_data": ["dummy"]}),
         tmp_path / "train.py",
     )
     tree = ast.parse(script)

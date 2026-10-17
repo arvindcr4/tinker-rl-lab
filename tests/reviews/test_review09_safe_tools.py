@@ -296,7 +296,7 @@ def test_replacement_rejects_e9_success_on_failed_return_code():
     passing["rc"], failing["rc"] = 1, 0
     d["n_errors_or_timeouts"] = sum(r["rc"] != 0 for r in d["per_task"])
     d["n_graded"] = d["n_attempted"] - d["n_errors_or_timeouts"]
-    with pytest.raises(ValueError, match="success recorded"):
+    with pytest.raises(ValueError, match="successful task has a nonzero return code"):
         evidence.check_replacement("E9", d)
 
 

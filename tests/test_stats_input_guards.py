@@ -18,11 +18,11 @@ def test_bootstrap_ci_empty_raises():
         stats.compute_bootstrap_ci(np.array([]))
 
 
-def test_bootstrap_ci_single_value_collapses():
+def test_bootstrap_ci_single_value_has_unestimable_uncertainty():
     mean, lo, hi = stats.compute_bootstrap_ci(np.array([0.75]))
     assert mean == pytest.approx(0.75)
-    assert lo == pytest.approx(0.75)
-    assert hi == pytest.approx(0.75)
+    assert np.isnan(lo)
+    assert np.isnan(hi)
 
 
 def test_welch_ttest_single_observation_raises():
@@ -82,7 +82,7 @@ def test_plot_learning_curves_empty_raises(tmp_path):
         )
 
 
-def test_load_multi_seed_results_skips_bad_dirs(tmp_path):
+def test_load_multi_seed_results_rejects_bad_dirs(tmp_path):
     exp = tmp_path / "exp"
     good = exp / "seed_1"
     bad = exp / "seed_notanint"
@@ -92,6 +92,5 @@ def test_load_multi_seed_results_skips_bad_dirs(tmp_path):
         f.write(json.dumps({"reward/mean": 1.0}) + "\n\n")
     with open(bad / "m.jsonl", "w") as f:
         f.write(json.dumps({"reward/mean": 0.0}) + "\n")
-    out = stats.load_multi_seed_results(str(tmp_path), "exp")
-    assert list(out.keys()) == [1]
-    assert out[1] == [{"reward/mean": 1.0}]
+    with pytest.raises(ValueError, match="Invalid seed directory"):
+        stats.load_multi_seed_results(str(tmp_path), "exp")

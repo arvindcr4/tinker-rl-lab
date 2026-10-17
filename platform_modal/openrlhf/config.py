@@ -3,9 +3,9 @@ OpenRLHF Configuration for tinker-rl-lab
 """
 
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 import yaml
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 
 
 class OpenRLHFModelConfig(BaseModel):
@@ -17,6 +17,7 @@ class OpenRLHFModelConfig(BaseModel):
     use_flash_attention: bool = True
     load_in_8bit: bool = False
     load_in_4bit: bool = False
+    lora_rank: int = Field(default=0, ge=0)
 
 
 class OpenRLHFOptimizerConfig(BaseModel):
@@ -61,6 +62,19 @@ class OpenRLHFConfig(BaseModel):
     """Complete OpenRLHF training configuration"""
     model_config = ConfigDict(extra="forbid")
 
+    execution_contract: Literal["candidate-0.8.0", "native-0.8.4"] = "candidate-0.8.0"
+
+    @model_validator(mode="before")
+    @classmethod
+    def contract_defaults(cls, values):
+        # Defaults are versioned; an explicit user setting is never rewritten.
+        if isinstance(values, dict) and values.get("execution_contract") == "native-0.8.4":
+            values = dict(values)
+            for name, default in {"epochs": 20, "train_batch_size": 1024,
+                                  "max_steps": None, "eval_interval": 5}.items():
+                values.setdefault(name, default)
+        return values
+
     model: OpenRLHFModelConfig = Field(default_factory=OpenRLHFModelConfig)
     optimizer: OpenRLHFOptimizerConfig = Field(default_factory=OpenRLHFOptimizerConfig)
     algorithm: OpenRLHFAlgorithmConfig = Field(default_factory=OpenRLHFAlgorithmConfig)
@@ -69,7 +83,6 @@ class OpenRLHFConfig(BaseModel):
     # Training settings
     epochs: int = 1  # optimizer epochs per rollout
     train_batch_size: int = 128  # completions, not prompts
-    rollout_batch_size: int = 8
     micro_batch_size: int = 1
     # LIMITATION: default seed path is N=1 unless callers parameterize multi-seed.
     seed: int = 42
@@ -77,8 +90,16 @@ class OpenRLHFConfig(BaseModel):
     max_steps: Optional[int] = 30  # optimizer updates, not reward observations
     wall_timeout_s: int = 7200
 
+    # Native mode requires whole prompt/global batches per rollout.
+    # Explicit dataset budget; this is not an optimizer-step budget.
+    max_samples: int = Field(default=240, gt=0, le=500)
+    rollout_batch_size: int = Field(default=8, gt=0)
+    remote_rm_url: Optional[str] = None
+
     # Ray cluster settings
     num_gpus: int = 1
+    # Legacy compatibility fields: native mode accepts only these defaults.
+    # They do not control native placement or periodic evaluation/checkpoints.
     num_workers: int = 1
     num_actors: int = 1
     actor_num_gpus: int = 1
@@ -90,6 +111,8 @@ class OpenRLHFConfig(BaseModel):
     project_name: str = "openrlhf-tinker"
     run_name: Optional[str] = None
     wandb_entity: Optional[str] = None
+    # Explicit opt-in: native W&B suppresses TensorBoard in v0.8.4.
+    log_to_wandb: bool = False
 
     # vLLM settings
     inference_backend: str = "vllm"

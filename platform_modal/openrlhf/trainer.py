@@ -1,4 +1,4 @@
-"""Fail-closed, versioned OpenRLHF 0.8.0 GRPO launcher.
+"""Fail-closed, explicitly versioned OpenRLHF GRPO launchers.
 
 Simulation is opt-in and has a different schema. This driver does not claim
 objective equivalence with another framework. No checkpoint is uploaded here.
@@ -14,6 +14,7 @@ import os
 import platform
 import re
 import shlex
+from importlib import metadata, util
 import subprocess
 import sys
 import time
@@ -64,7 +65,10 @@ class OpenRLHFTrainer:
 
     async def setup(self) -> None:
         if not self.dry_run:
-            validate_backend()
+            if self.config.execution_contract == "native-0.8.4":
+                _validate_native_runtime(local_metrics=not self.config.log_to_wandb)
+            else:
+                validate_backend()
 
     async def run(self) -> dict:
         if self.dry_run:
@@ -83,6 +87,8 @@ def validate_backend() -> None:
 
 def effective_config(config: OpenRLHFConfig) -> dict:
     """Reject treatments this driver cannot implement; derive integer work budgets."""
+    if config.execution_contract != "candidate-0.8.0":
+        raise ValueError("effective_config requires execution_contract=candidate-0.8.0")
     numeric = [config.algorithm.gamma, config.algorithm.lam, config.algorithm.epsilon,
                config.algorithm.kl_coef, config.algorithm.temperature, config.learning_rate,
                config.optimizer.beta1, config.optimizer.beta2, config.optimizer.eps,
@@ -195,8 +201,13 @@ def cli_preflight(cmd: list[str], env: dict, cwd: Path) -> None:
         raise RuntimeError(f"Pinned backend CLI rejects flags: {sorted(missing)}")
 
 
-def _prepare_gsm8k_500_jsonl(out_path: str, *, tokenizer, revision: str | None, rows=None) -> str:
+def _prepare_gsm8k_500_jsonl(out_path: str, *, tokenizer=None, revision: str | None = None, rows=None) -> str:
     """Native tokenizer formatting with exact identities; never substitute empty labels."""
+    if tokenizer is None and revision is None and rows is None:
+        from .inputs import materialize_gsm8k
+        return materialize_gsm8k(out_path, GSM8K_SYSTEM_PROMPT)
+    if tokenizer is None:
+        raise ValueError("Candidate inputs require an explicit tokenizer")
     if not revision or revision in {"main", "master"}:
         raise ValueError("A pinned GSM8K dataset revision is required")
     if rows is None:
@@ -318,7 +329,8 @@ def runtime_metadata() -> dict:
             "precision": "bf16", "worker_seed_derivation": "backend_defined_unverified"}
 
 
-def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str | None = None) -> dict:
+def _run_candidate_training(config: OpenRLHFConfig, output_dir: str | None = None) -> dict:
+    config = config.model_copy(deep=True)
     effective = effective_config(config)
     validate_backend()
     if not os.environ.get("WANDB_API_KEY"):
@@ -375,6 +387,105 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str | None = None)
         raise
     finally:
         atomic_json(run_dir / "attempt.json", manifest)
+
+
+def _validate_native_runtime(local_metrics: bool) -> str:
+    """Check the versioned contract before dataset or output side effects."""
+    try:
+        version = metadata.version("openrlhf")
+    except metadata.PackageNotFoundError as exc:
+        raise RuntimeError("Native training requires OpenRLHF v0.8.4 + Ray + vLLM") from exc
+    if version != "0.8.4":
+        raise RuntimeError(
+            f"Unsupported OpenRLHF version {version!r}; command targets exactly 0.8.4"
+        )
+    if local_metrics and util.find_spec("tensorboard") is None:
+        raise RuntimeError("Local native metrics require tensorboard; install it before training")
+    return version
+
+
+def _run_native_training(
+    config: OpenRLHFConfig,
+    # An existing path is rejected and mkdir uses exist_ok=False before writes.
+    output_dir: str = "/tmp/openrlhf-run",  # noqa: S108
+) -> dict:
+    """Launch the validated native command; record execution, not inferred metrics.
+
+    A successful subprocess does not establish a reward trace or held-out gain.
+    The native CLI owns any optional W&B logging. This wrapper does not retrieve
+    runs by display name, start a second run, or publish checkpoints.
+    """
+    from .command import build_openrlhf_command
+    from .budget import plan_native_budget
+    from .metrics import read_native_metrics
+    from .inputs import inspect_native_input, bind_reference_input, ensure_input_unchanged
+
+    # The caller may reuse or mutate its config while a long-running subprocess
+    # executes. Bind validation, launch arguments, metrics and receipt to one
+    # independent snapshot, including nested model/optimizer/data settings.
+    config = config.model_copy(deep=True)
+    output = Path(output_dir).resolve()
+    data_path = str(output / "gsm8k500.jsonl")
+    # Validate before importing providers, downloading data, or creating output.
+    cmd = build_openrlhf_command(config, data_path, str(output))
+    if output.exists():
+        raise FileExistsError("Choose a fresh output directory; existing artifacts are preserved")
+    version = _validate_native_runtime(local_metrics=not config.log_to_wandb)
+    try:
+        import openrlhf  # type: ignore  # noqa: F401
+    except ImportError as exc:
+        raise RuntimeError("Native training requires OpenRLHF v0.8.4 + Ray + vLLM") from exc
+    output.mkdir(parents=True, exist_ok=False)
+    _prepare_gsm8k_500_jsonl(data_path)
+    input_artifact = bind_reference_input(inspect_native_input(data_path))
+    env = os.environ.copy()
+    env["PYTHONPATH"] = ""
+    start = time.time()
+    # A nonzero exit must never produce a successful result or publish a model.
+    subprocess.run(cmd, cwd=str(output), env=env, check=True)
+    ensure_input_unchanged(data_path, input_artifact)
+    result = {
+        "framework": "openrlhf",
+        "mode": "real",
+        "model": config.model_name,
+        "algorithm": "GRPO",
+        "seed": config.seed,
+        "group_size": config.algorithm.sample_num,
+        "learning_rate": config.learning_rate,
+        "steps": None,
+        "optimizer_steps": None,
+        "budget_plan": plan_native_budget(config),
+        "input_artifact": input_artifact,
+        "max_samples": config.max_samples,
+        "reward_trace": [],
+        "metrics_status": "not_collected",
+        "task": "gsm8k-500",
+        "duration_s": time.time() - start,
+        "subprocess_exit": 0,
+        "openrlhf_version": version,
+        "config": config.to_dict(),
+    }
+    if config.log_to_wandb:
+        result["metrics_reason"] = "native_wandb_selected_no_local_metrics"
+    else:
+        result.update(
+            read_native_metrics(
+                str(output),
+                config.run_name or "openrlhf-grpo",
+                expected_rollouts=result["budget_plan"]["planned_rollouts"],
+            )
+        )
+    (output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
+    return result
+
+
+def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str | None = None) -> dict:
+    """Dispatch only the explicitly selected backend contract; never simulate."""
+    if config.execution_contract == "native-0.8.4":
+        return _run_native_training(config, output_dir or "/tmp/openrlhf-run")  # noqa: S108 - exclusively reserved before writes
+    if config.execution_contract == "candidate-0.8.0":
+        return _run_candidate_training(config, output_dir)
+    raise ValueError("Unsupported OpenRLHF execution_contract")
 
 
 def run(config: OpenRLHFConfig, *, dry_run: bool = False, output_dir: str | None = None) -> dict:

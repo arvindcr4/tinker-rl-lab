@@ -2,8 +2,8 @@
 
 Usage::
 
-    python -m tinkerrl.grpo_cli --preset tooluse_synth --steps 200
-    python -m tinkerrl.grpo_cli --preset gsm8k --model Qwen/Qwen3-8B --seed 137
+    python -m platform_tinker.tinkerrl.grpo_cli --preset tooluse_synth --steps 200
+    python -m platform_tinker.tinkerrl.grpo_cli --preset gsm8k --model Qwen/Qwen3-8B --seed 137
 
 Presets encode the experiment configurations that used to live in separate
 ``grpo_*.py`` files.  The short ``--preset`` parameter selects one; CLI flags
@@ -13,6 +13,8 @@ override individual fields.
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict
+import hashlib
 import json
 import os
 import sys
@@ -40,6 +42,9 @@ from .grpo import (
     make_pavlov_non_xlam_dataset,
     make_xlam_dataset,
     run_grpo,
+    _strict_json_object,
+    _redact_error,
+    _CheckpointLockError,
 )
 
 
@@ -238,18 +243,42 @@ REWARD_MAP = {
 }
 
 
-def _build_dataset(args: argparse.Namespace, config: GRPOConfig) -> Any:
+def _dataset_request(args: argparse.Namespace, config: GRPOConfig) -> tuple[Any, Dict[str, Any]]:
+    """Validate adapter selection without loading data or contacting a service."""
     dataset_name = args.dataset or args.preset
     factory = DATASET_FACTORIES.get(dataset_name)
     if factory is None:
         raise SystemExit(f"Unknown dataset preset: {dataset_name}")
-    if dataset_name in {"tooluse_xlam", "pavlov_xlam"}:
+    inherited_revision = PRESETS.get(args.preset, {}).get("dataset_revision")
+    if (
+        not getattr(args, "json_config", None)
+        and args.dataset
+        and args.dataset != args.preset
+        and getattr(args, "dataset_revision", None) is None
+        and inherited_revision is not None
+        and config.dataset_revision == inherited_revision
+        and DATASET_FACTORIES.get(args.preset) is not factory
+    ):
+        raise ValueError(
+            "dataset override would reuse another adapter's inherited revision; "
+            "pass --dataset-revision explicitly or supply a matching JSON config"
+        )
+    if dataset_name in {"tooluse_xlam", "pavlov_xlam", "gsm8k"}:
         if config.dataset_revision is not None:
-            return factory(seed=config.seed, revision=config.dataset_revision)
-        return factory(seed=config.seed)
-    if dataset_name in {"gsm8k", "pavlov_portfolio"}:
-        return factory(seed=config.seed)
-    return factory()
+            return factory, {"seed": config.seed, "revision": config.dataset_revision}
+        return factory, {"seed": config.seed}
+    if dataset_name == "pavlov_portfolio":
+        if config.dataset_revision not in (None, PAVLOV_NON_XLAM_DATASET_REVISION):
+            raise ValueError("dataset revision must match the pinned portfolio composite")
+        return factory, {"seed": config.seed}
+    if config.dataset_revision is not None:
+        raise ValueError("dataset revision is unsupported for this dataset adapter")
+    return factory, {}
+
+
+def _build_dataset(args: argparse.Namespace, config: GRPOConfig) -> Any:
+    factory, kwargs = _dataset_request(args, config)
+    return factory(**kwargs)
 
 
 def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str, Any]:
@@ -317,8 +346,10 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
 
 def build_config(args: argparse.Namespace) -> GRPOConfig:
     if args.json_config:
-        data = json.loads(args.json_config.read_text())
-        config = GRPOConfig(**data)
+        data = _strict_json_object(args.json_config.read_text(encoding="utf-8"))
+        if data is None:
+            raise ValueError("JSON config must be one object with unique keys and finite numbers")
+        config = GRPOConfig(**_apply_overrides(data, args))
         config.validate_tracking()
         config.validate_campaign_gate()
         return config
@@ -335,7 +366,7 @@ def build_config(args: argparse.Namespace) -> GRPOConfig:
 
 def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="python -m tinkerrl.grpo_cli",
+        prog="python -m platform_tinker.tinkerrl.grpo_cli",
         description="Consolidated GRPO experiment runner.",
     )
     parser.add_argument(
@@ -344,13 +375,26 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         default="tooluse_synth",
         help="Experiment preset (default: tooluse_synth).",
     )
-    parser.add_argument("--json-config", type=Path, help="Path to a JSON config file.")
+    parser.add_argument(
+        "--json-config",
+        type=Path,
+        help="GRPO hyperparameters in JSON; dataset/reward selection still follows CLI flags.",
+    )
+    parser.add_argument(
+        "--check-config",
+        action="store_true",
+        help="Check local config and adapter selection only; print JSON without credentials or network.",
+    )
     parser.add_argument("--dataset", help="Dataset preset (overrides --preset default).")
     parser.add_argument("--reward", help="Reward adapter (overrides --preset default).")
     # overrides
     parser.add_argument("--name", help="Experiment name.")
     parser.add_argument("--model")
-    parser.add_argument("--model-revision", dest="model_revision")
+    parser.add_argument(
+        "--model-revision",
+        dest="model_revision",
+        help="Tokenizer revision request and run metadata; does not pin managed provider weights.",
+    )
     parser.add_argument("--lora-rank", dest="lora_rank", type=int)
     parser.add_argument("--steps", type=int)
     parser.add_argument("--group-size", dest="group_size", type=int)
@@ -410,11 +454,80 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _selected_reward_name(args: argparse.Namespace) -> str:
+    reward_name = args.reward or args.dataset or args.preset
+    if reward_name not in REWARD_MAP:
+        raise SystemExit(f"Unknown reward: {reward_name!r}.  Choose from {sorted(REWARD_MAP)}")
+    return str(reward_name)
+
+
+def _configuration_check(args: argparse.Namespace) -> Dict[str, Any]:
+    reward_name = _selected_reward_name(args)
+    config = build_config(args)
+    _dataset_request(args, config)
+    encoded = json.dumps(asdict(config), sort_keys=True, allow_nan=False).encode()
+    # Whitelist numeric/boolean knobs: never echo full config, endpoint, owner,
+    # private model identifiers, experiment names or filesystem paths.
+    effective = {
+        key: getattr(config, key)
+        for key in (
+            "num_seeds",
+            "seed",
+            "batch_size",
+            "group_size",
+            "lr",
+            "temperature",
+            "top_p",
+            "max_prompt_tokens",
+            "max_response_tokens",
+            "resume",
+            "evaluate_heldout",
+            "gspo_enabled",
+            "gspo_update_epochs",
+            "nll_aux_enabled",
+            "nll_aux_coef",
+            "dynamic_sampling",
+            "dynamic_sampling_max_resamples",
+            "seed_sampling",
+            "critic_enabled",
+            "critic_pretrain_batches",
+            "critic_updates_per_step",
+            "hf_public",
+        )
+    }
+    effective.update(
+        steps_per_seed=config.steps,
+        total_configured_steps=config.steps * config.num_seeds,
+        save_every=config.effective_save_every(),
+    )
+    return {
+        "schema_version": 1,
+        "status": "config_checks_passed",
+        "scope": "Local config and adapter selection only; no dataset, tokenizer, credentials, network, provider or scientific verification.",
+        "not_checked": [
+            "dataset_contents",
+            "tokenizer",
+            "credentials",
+            "provider_availability",
+            "tracking_export",
+            "scientific_validity",
+        ],
+        "config_sha256": hashlib.sha256(encoded).hexdigest(),
+        "dataset": args.dataset or args.preset,
+        "reward": reward_name,
+        "effective": effective,
+    }
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     args = _parse_args(argv)
     if args.help_overrides:
         # argparse --help covers this; kept for discoverability.
         args = _parse_args(["--help"])
+        return 0
+
+    if args.check_config:
+        print(json.dumps(_configuration_check(args), sort_keys=True, allow_nan=False))
         return 0
 
     if "TINKER_API_KEY" not in os.environ:
@@ -424,9 +537,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # The reward follows the dataset actually trained on; an unknown name
     # fails before any dataset load instead of silently scoring with
     # ToolCallReward (fixed 2026-10-03).
-    reward_name = args.reward or args.dataset or args.preset
-    if reward_name not in REWARD_MAP:
-        raise SystemExit(f"Unknown reward: {reward_name!r}.  Choose from {sorted(REWARD_MAP)}")
+    reward_name = _selected_reward_name(args)
     config = build_config(args)
     dataset = _build_dataset(args, config)
     reward = REWARD_MAP[reward_name]()
@@ -466,5 +577,18 @@ def legacy_main(preset: str, argv: Optional[List[str]] = None) -> int:
     return main(["--preset", preset, *forwarded])
 
 
+def cli_entrypoint(argv: Optional[List[str]] = None) -> int:
+    """Keep common shell input/I/O errors readable; library main still raises."""
+    try:
+        return main(argv)
+    except (OSError, TypeError, ValueError, _CheckpointLockError) as exc:
+        print(f"ERROR: {_redact_error(exc)}", file=sys.stderr)
+        print(
+            "Inspect supported options with python -m platform_tinker.tinkerrl.grpo_cli --help",
+            file=sys.stderr,
+        )
+        return 1
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(cli_entrypoint())

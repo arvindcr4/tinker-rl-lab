@@ -12,7 +12,7 @@ import contextlib
 import json
 import types
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 import torch
@@ -27,7 +27,15 @@ from platform_tinker.tinkerrl.grpo import (
     make_gspo_loss_fn,
 )
 
-from tests._shared_fakes import HfApi, _Future, _Tokenizer, _config, _example, make_fake_run
+from tests._shared_fakes import (
+    HfApi,
+    _Future,
+    _Tokenizer,
+    _config,
+    _example,
+    make_fake_run,
+    mocked_tinker_export,
+)
 
 PROMPT = [11, 12, 13, 14, 15]
 PROMPT_LP = -5.0  # trainer logprob on prompt positions
@@ -132,7 +140,7 @@ def _runtime(monkeypatch, *, sample_fn=None, seeded=False):
     monkeypatch.delenv("WANDB_MODE", raising=False)
     monkeypatch.delenv("WANDB_DISABLED", raising=False)
     monkeypatch.delenv("HF_PUSH", raising=False)
-    holder = {"params": [], "grads": [], "metrics": [], "logs": []}
+    holder = {"params": [], "grads": [], "metrics": [], "logs": [], "optim_calls": 0}
     run = SimpleNamespace(id="wandb-cal", mode="online", summary={}, logs=holder["logs"])
     run.log = lambda payload: holder["logs"].append(payload) or True
     run.finish = Mock()
@@ -174,6 +182,7 @@ def _runtime(monkeypatch, *, sample_fn=None, seeded=False):
             return _Future(SimpleNamespace(metrics=dict(metrics)))
 
         def optim_step(self, _params):
+            holder["optim_calls"] += 1
             return _Future(None)
 
         def save_state(self, name, overwrite):
@@ -209,16 +218,8 @@ def _runtime(monkeypatch, *, sample_fn=None, seeded=False):
     modules = {"wandb": wandb, "huggingface_hub": hf, "tinker": tinker, "tinker.types": tt}
     from tests._shared_fakes import temporary_modules
 
-    with temporary_modules(modules):
-        with patch.object(
-            grpo,
-            "subprocess",
-            SimpleNamespace(
-                run=Mock(return_value=SimpleNamespace(returncode=0)),
-                CalledProcessError=grpo.subprocess.CalledProcessError,
-            ),
-        ):
-            yield holder
+    with temporary_modules(modules), mocked_tinker_export():
+        yield holder
 
 
 def _run(config, dataset=None, logs=None):
@@ -230,6 +231,23 @@ def _run(config, dataset=None, logs=None):
         _Tokenizer(tokens=PROMPT, decode_first_only=True),
         logger=(logs.append if logs is not None else (lambda _m: None)),
     )
+
+
+def test_gspo_nonfinite_unclipped_objective_prevents_optimizer_step(tmp_path, monkeypatch):
+    def stale_sampler(_prompt, _num_samples, _sampling_params):
+        return SimpleNamespace(
+            sequences=[
+                _seq([1, 7], logprobs=[-1000.0, -1000.0]),
+                _seq([2, 7], logprobs=[-1000.0, -1000.0]),
+            ]
+        )
+
+    with _runtime(monkeypatch, sample_fn=stale_sampler) as holder:
+        with pytest.raises(ValueError, match="GSPO objective is non-finite"):
+            _run(_config(tmp_path, name="overflow", gspo_enabled=True))
+    assert holder["optim_calls"] == 0
+    assert holder["grads"] == []
+    assert not (tmp_path / "overflow_seed42.json").exists()
 
 
 # ------------------------------------------------- (1) prompt mask, every path

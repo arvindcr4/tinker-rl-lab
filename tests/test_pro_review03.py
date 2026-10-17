@@ -296,12 +296,15 @@ def test_training_failure_propagates():
 def test_critic_files_are_immutable_and_step_identified(tmp_path):
     config = grpo.GRPOConfig(name="test", checkpoint_dir=str(tmp_path))
     critic = torch.nn.Linear(2, 1)
-    first = grpo._save_critic(config, 42, critic, step=1)
-    original = Path(first["path"]).read_bytes()
-    second = grpo._save_critic(config, 42, critic, step=2)
-    assert first["path"] != second["path"]
-    assert Path(first["path"]).read_bytes() == original
-    assert torch.load(second["path"], weights_only=True)["step"] == 2
+    optimizer = torch.optim.Adam(critic.parameters())
+    first = grpo._save_critic(config, 42, critic, optimizer, step=1)
+    first_path = grpo._critic_checkpoint_path(config, 42, first)
+    original = first_path.read_bytes()
+    second = grpo._save_critic(config, 42, critic, optimizer, step=2)
+    second_path = grpo._critic_checkpoint_path(config, 42, second)
+    assert first_path != second_path
+    assert first_path.read_bytes() == original
+    assert torch.load(second_path, weights_only=True)["step"] == 2
 
 
 def test_manifest_changes_with_actual_examples_and_grader():
@@ -551,7 +554,9 @@ def test_completed_resume_rejects_changed_task(tmp_path):
             logger=lambda _: None,
         )
         changed = grpo.InMemoryDataset(train=[grpo.TrainingExample("q", 99)])
-        with pytest.raises(ValueError, match="experiment inputs"):
+        with pytest.raises(
+            (ValueError, RuntimeError), match="experiment inputs|training input fingerprint"
+        ):
             grpo._run_one_seed(
                 config, changed, grpo.ExactMathReward(), runtime["tokenizer"], logger=lambda _: None
             )

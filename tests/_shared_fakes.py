@@ -18,11 +18,29 @@ from __future__ import annotations
 
 import contextlib
 import importlib.util
+import contextlib
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
+
+
+@contextlib.contextmanager
+def mocked_tinker_export():
+    """Stub provider export, preserving unrelated local subprocess probes."""
+    real_run = subprocess.run
+
+    def without_export(command, *args, **kwargs):
+        if isinstance(command, list) and command[:3] == [sys.executable, "-m", "tinker.cli"]:
+            return SimpleNamespace(returncode=0)
+        return real_run(command, *args, **kwargs)
+
+    with patch.object(subprocess, "run", side_effect=without_export) as mocked:
+        yield mocked
+
 
 __all__ = [
     "HfApi",
@@ -34,6 +52,7 @@ __all__ = [
     "fast_settings",
     "load_module",
     "make_fake_run",
+    "mocked_tinker_export",
 ]
 
 
@@ -157,3 +176,18 @@ def fast_settings():
     from hypothesis import HealthCheck, settings
 
     return settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+
+
+def write_native_input_fixture(path, *, rows=500, label="42"):
+    """Write local synthetic chat-message rows, never fetch a provider dataset."""
+    source = Path(path)
+    source.parent.mkdir(parents=True, exist_ok=True)
+    row = {
+        "prompt": [
+            {"role": "system", "content": "Synthetic math fixture"},
+            {"role": "user", "content": "Return a number inside \\boxed{}."},
+        ],
+        "label": label,
+    }
+    source.write_text((json.dumps(row) + "\n") * rows, encoding="utf-8")
+    return str(source)

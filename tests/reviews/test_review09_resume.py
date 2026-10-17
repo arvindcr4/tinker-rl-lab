@@ -179,6 +179,9 @@ def execute(tmp_path, interrupted=False, mutation=None):
 def test_genuine_interruption_matches_uninterrupted_parameters_optimizer_rng_and_trace(tmp_path):
     full = execute(tmp_path / "full")
     resumed = execute(tmp_path / "resumed", interrupted=True)
+    # Each artifact is config-bound to its own checkpoint directory; numerical
+    # state and random streams must nevertheless match bit for bit.
+    assert full["critic"].pop("config_sha256") != resumed["critic"].pop("config_sha256")
     equal_nested(full, resumed)
     assert len(full["prompts"]) == 4
     assert len(set(map(tuple, full["prompts"]))) > 1

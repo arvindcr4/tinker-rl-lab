@@ -131,6 +131,13 @@ def paired_metric(record, trained, base, difference_key, binary=True, staged_rou
         prefix = "discordant_" if "discordant_b_trained_only" in record else ""
         same(count(record[prefix + "b_trained_only"]), b, "trained-only discordances")
         same(count(record[prefix + "c_base_only"]), c, "base-only discordances")
+        # Both spellings are supported, but an unused alias must not contradict
+        # the counts established by the actual paired outcomes.
+        for alias_prefix in ("", "discordant_"):
+            for field, computed in (("b_trained_only", b), ("c_base_only", c)):
+                alias = alias_prefix + field
+                if alias in record:
+                    same(count(record[alias]), computed, f"discordance alias {alias}")
         same(record["mcnemar_exact_p"], p, "McNemar exact p", digits=4)
 
 
@@ -252,6 +259,10 @@ def check_replacement(lane, d):
         for field, expected in (("attempted", n), ("graded", graded), ("resolved", success)):
             same(sum(count(p[field]) for p in parts), expected, f"E1 partition {field}")
         for part in [*parts, d["prior_waves_separate_not_pooled"]]:
+            require(
+                count(part["resolved"]) <= count(part["graded"]),
+                "E1 partition resolved exceeds graded",
+            )
             same(
                 count(part["attempted"]),
                 count(part["graded"])
@@ -301,6 +312,10 @@ def check_replacement(lane, d):
         same(sum(values(rows, "correct", binary=True)), success, "E2 task successes")
         same(sum(r["status"] == "completed" for r in rows), graded, "E2 graded count")
         require(
+            all(not r["correct"] or r["status"] == "completed" for r in rows),
+            "E2 correct task must be completed (graded)",
+        )
+        require(
             dict(Counter(f"{r['status']}/{r['end']}" for r in rows)) == d["outcome_breakdown"],
             "E2 completion partition mismatch",
         )
@@ -324,18 +339,27 @@ def check_replacement(lane, d):
         for part in parts:
             require(
                 0 <= count(part["passes"]) <= count(part["n"]) and part["n"] > 0,
-                "E5 impossible subset counts",
+                "E5 subset successes exceed task count or impossible subset counts",
             )
             same(part["pass1"], part["passes"] / part["n"], "E5 subset pass1", digits=4)
     elif lane == "E6":
         pending = count(d["n_ungraded_judge_unavailable"])
         same(graded + pending, n, "E6 graded+ungraded")
         require(count(d["n_errors"]) <= graded, "E6 error count exceeds graded")
+        require(
+            d["n_errors"] + success <= graded,
+            "E6 errors and successes exceed graded",
+        )
         secondary = d["secondary"]
         parts = list(secondary["per_split"].values())
         require(len(parts) == 5, "E6 split partition changed")
         for field, expected in (("n", n), ("success", success), ("judge_pending", pending)):
             same(sum(count(p[field]) for p in parts), expected, f"E6 split {field}")
+        for part in parts:
+            require(
+                part["success"] + part["judge_pending"] <= part["n"],
+                "E6 split successes and pending exceed task count",
+            )
         same(secondary["score_over_graded_only"], success / graded, "E6 graded score", digits=4)
         same(
             secondary["score_upper_bound_if_all_ungraded_passed"],
@@ -351,7 +375,7 @@ def check_replacement(lane, d):
         for row in rows:
             require(type(row["rc"]) is int, "E9 return code must be an integer")
             require(
-                not row["success"] or row["rc"] == 0, "E9 success recorded for an ungraded task"
+                not row["success"] or row["rc"] == 0, "E9 successful task has a nonzero return code; ungraded task"
             )
         errors = sum(r["rc"] != 0 for r in rows)
         same(count(d["n_errors_or_timeouts"]), errors, "E9 errors")

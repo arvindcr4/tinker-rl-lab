@@ -6,4 +6,4 @@ The explicitly named `legacy_*` modules retain the separate PR10/11 historical p
 
 These are distinct contracts, not interchangeable analyses. In particular, canonical exact grading/degenerate-limit statistics and legacy last-box/zero-variance rules may differ. Neither legacy receipts nor legacy publication outputs substitute for canonical completion validation, final-analysis eligibility, or verified equivalence. Tests target each named contract explicitly rather than changing expectations to conceal their differences.
 
-No stored experimental results, thesis artifacts, generated demo artifacts, `platform_calibration.py`, or `Platform.jsx` are rewritten by this integration. The pre-existing platform display's inference limitations remain outside this repair.
+No stored experimental results, generated thesis artifacts, generated demo artifacts, `platform_calibration.py`, or `Platform.jsx` are rewritten by this integration. The pre-existing platform display's inference limitations remain outside this repair.

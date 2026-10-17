@@ -1,0 +1,48 @@
+{
+  "kind": "unsigned_public_git_reanalysis_not_execution_attestation",
+  "source_commit": "9b3d256061cfeb03946fb70b84bf7a9dee81abc3",
+  "source_path": "experiments/results/campaign/results.json",
+  "source_sha256": "be62ea368d08bc771885a55af455f05636278fd50c9ce13f90fd7b8c07dddaeb",
+  "metric": "heldout_after - heldout_before",
+  "group_size": 4,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "arms": {
+    "baseline": {
+      "n": 3,
+      "mean": 0.027777777777777752,
+      "population_sd_ddof0": 0.10393492741038726,
+      "sample_sd_ddof1": 0.1272937693043289
+    },
+    "curriculum": {
+      "n": 3,
+      "mean": -0.027777777777777807,
+      "population_sd_ddof0": 0.14163943093313291,
+      "sample_sd_ddof1": 0.17347216662217774
+    }
+  },
+  "paired_curriculum_minus_baseline": {
+    "n": 3,
+    "mean": -0.05555555555555556,
+    "population_sd_ddof0": 0.17123372230469375,
+    "sample_sd_ddof1": 0.20971762320196521
+  },
+  "pooled_six_G4_rows": {
+    "n": 6,
+    "mean": -2.7755575615628914e-17,
+    "population_sd_ddof0": 0.1272937693043289,
+    "sample_sd_ddof1": 0.13944333775567927
+  },
+  "all_nine_rows_mixing_group_sizes": {
+    "n": 9,
+    "mean": 0.027777777777777773,
+    "population_sd_ddof0": 0.11111111111111112,
+    "sample_sd_ddof1": 0.11785113019775793
+  },
+  "mean_of_arm_population_sds": 0.12278717917176009,
+  "signed_record_sd": 0.12,
+  "conclusion": "Aggregation scope and estimator of signed SD remain unbound; do not change reports_ci or strict gate."
+}

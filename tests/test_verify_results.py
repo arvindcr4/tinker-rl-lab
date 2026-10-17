@@ -54,6 +54,37 @@ def test_multi_seed_log_checks_every_seed(tmp_path):
     assert "1/2 experiments within tolerance" in r.stdout
 
 
+def test_duplicate_seed_blocks_are_all_unverified(tmp_path):
+    (tmp_path / "gsm8k_qwen3_8b.log").write_text(_cli_log(0.344, 0.625) * 2)
+    result = _run(tmp_path)
+    assert result.returncode == 1
+    assert "duplicate experiment/seed identity" in result.stderr
+    assert "0/2 experiments within tolerance" in result.stdout
+
+
+def test_duplicate_seed_across_json_and_log_is_unverified(tmp_path):
+    (tmp_path / "gsm8k_qwen3_8b.log").write_text(_cli_log(0.344, 0.625))
+    (tmp_path / "copy.json").write_text(
+        json.dumps(
+            {"experiment": "GSM8K_QWEN3_8B_seed_042", "seed": "042", "last10": 0.344, "peak": 0.625}
+        )
+    )
+    result = _run(tmp_path, "--strict")
+    assert result.returncode == 1
+    assert "duplicate experiment/seed identity" in result.stderr
+    assert "0/2 experiments within tolerance" in result.stdout
+
+
+def test_distinct_seeds_with_seed_independent_reference_are_not_duplicates(tmp_path):
+    (tmp_path / "gsm8k_qwen3_8b.log").write_text(
+        _cli_log(0.344, 0.625, 42) + _cli_log(0.344, 0.625, 123)
+    )
+    args = write_expected(tmp_path, {"last10": 0.344, "peak": 0.625, "seed_independent": True})
+    result = _run(tmp_path, *args)
+    assert result.returncode == 0, result.stderr
+    assert "2/2 experiments within tolerance" in result.stdout
+
+
 def test_legacy_percent_format_still_parsed(tmp_path):
     (tmp_path / "gsm8k_qwen3_8b_s42.log").write_text(
         "Last-10 avg accuracy: 34.4%\nPeak accuracy:        62.5%\n"

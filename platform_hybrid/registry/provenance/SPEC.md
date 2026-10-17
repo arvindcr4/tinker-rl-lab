@@ -245,3 +245,11 @@ python platform_hybrid/registry/provenance/minreport.py verify \
 The last public key must already be trusted through an independent distribution
 process; copying a key from an untrusted record is not sufficient. A diagnostic
 run or a valid signature alone is never publication approval.
+
+## Integration with native-contract input guards
+
+The native-contract branch's typed-section, nonempty-hash, distinct-integer-seed,
+and explicit-Boolean guards remain enforced by the v2 schema and artifact checks.
+Full reward-function hashes and `data_ref` remain mandatory; v1 partial hashes,
+legacy compact reporting forms, or unsigned diagnostics cannot bypass the v2
+publication gate. Historical records are inspected without migration or edits.

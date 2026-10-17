@@ -160,10 +160,12 @@ def test_new_reporting_does_not_claim_zero_seed_uncertainty(tmp_path):
     table = stats.generate_results_table(
         {"only_one": np.array([0.8])}, str(tmp_path / "result.tex")
     )
-    assert table.iloc[0]["95% CI"] == "unavailable (n < 2)"
-    assert "SE unavailable" in table.iloc[0]["Accuracy (mean ± SE)"]
-    # Historical numerical helper remains explicitly separate from report policy.
-    assert stats.compute_bootstrap_ci([0.8]) == (0.8, 0.8, 0.8)
+    assert "not estimable" in table.iloc[0]["95% CI"]
+    assert "SE not estimable" in table.iloc[0]["Accuracy (mean ± SE)"]
+    # The numerical helper now also marks single-seed uncertainty as unestimable.
+    mean, low, high = stats.compute_bootstrap_ci([0.8])
+    assert mean == 0.8
+    assert np.isnan(low) and np.isnan(high)
 
 
 def test_hash_seed_metadata_never_claims_runtime_activation():

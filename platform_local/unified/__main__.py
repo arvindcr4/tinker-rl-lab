@@ -135,6 +135,19 @@ Examples:
         help="Training JSON file; repeat to provide multiple files",
     )
 
+    parser.add_argument("--trl-contract", choices=["native", "scientific"], default="native",
+                        help="Explicit TRL reward/output contract; scientific uses versioned numeric grading")
+
+    parser.add_argument(
+        "--reward-callable",
+        metavar="MODULE:ATTRIBUTE",
+        help="Explicit task reward callable for native TRL; no default reward is supplied",
+    )
+    parser.add_argument(
+        "--output-dir",
+        help="Fresh native TRL output directory (must not already exist)",
+    )
+
     parser.add_argument(
         "--generate-script",
         type=Path,
@@ -182,7 +195,6 @@ Examples:
             parser.error("--total-token-budget requires local/Colab TRL or TRL script generation")
         # P1: SFT warm-up ablation: Match total sampled/training tokens
         total_samples = args.total_token_budget / args.tokens_per_sample
-        # Assuming gradient_accumulation_steps=4 (default in config) for rough step match
         effective_batch_size = args.batch_size * args.gradient_accumulation_steps
         max_steps = max(1, int(total_samples / effective_batch_size))
         print(f"[Estimated budget; not enforced] Requested tokens: {args.total_token_budget} tokens")
@@ -206,9 +218,13 @@ Examples:
         if args.framework != "trl":
             parser.error("--generate-script requires --framework trl")
         if args.algorithm != "grpo":
-            parser.error("TRL scientific script generation/execution supports --algorithm grpo only")
+            parser.error(
+                "Pinned TRL 1.2.0 script generation/execution supports --algorithm grpo only"
+            )
         if not args.train_data:
             parser.error("TRL script generation/execution requires at least one --train-data path")
+        if args.trl_contract == "native" and (not args.reward_callable or not args.output_dir):
+            parser.error("Native TRL requires --reward-callable and a fresh --output-dir")
         if args.no_peft and (args.load_in_4bit or args.load_in_8bit):
             parser.error("quantized training cannot be combined with --no-peft")
 
@@ -219,7 +235,9 @@ Examples:
             from trl_integrations.config import TRLConfig
             from trl_integrations.trainer import generate_trl_train_script
 
+        spec = launcher._resolve_spec()
         config = TRLConfig(
+            execution_contract=args.trl_contract,
             model={
                 "model_name": args.model,
                 "use_peft": not args.no_peft,
@@ -230,14 +248,23 @@ Examples:
                 "load_in_8bit": args.load_in_8bit,
             },
             optimizer={"learning_rate": args.lr},
-            algorithm={"algorithm": args.algorithm, "kl_coef": 0.0},
+            algorithm={
+                "algorithm": args.algorithm,
+                "kl_coef": spec.beta,
+                "num_generations": spec.num_generations,
+                "epsilon_low": spec.epsilon_low,
+                "epsilon_high": spec.epsilon_high,
+            },
             data={
                 "train_data": args.train_data,
                 "train_batch_size": args.batch_size,
                 "gradient_accumulation_steps": args.gradient_accumulation_steps,
+                "max_response_length": spec.max_completion_length,
             },
             epochs=1,
             seed=args.seed,
+            reward_callable=args.reward_callable,
+            output_dir=args.output_dir,
             max_steps=max_steps,
             project_name=args.wandb_project,
             deepspeed=args.deepspeed,

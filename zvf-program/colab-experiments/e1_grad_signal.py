@@ -11,7 +11,7 @@ Fixes over the pilot:
     to separate "wrong" from "format-gated" (the confound the paper flags).
   * Multi-seed aggregation.
 
-Theory test (Pillar 2 / T3): grad signal should track S = p(1-p), an INVERTED-U,
+Exploratory evolving-policy gradient association (not a frozen-policy theory test): grad signal should track S = p(1-p), an INVERTED-U,
 not GU=1-ZVF (which is monotone in difficulty). We report both correlations.
 
 Run:  colab run --gpu T4 --timeout 900 e1_grad_signal.py
@@ -82,11 +82,7 @@ def grad_norm(model):
     return sum(p.grad.detach().float().pow(2).sum().item()
                for p in model.parameters() if p.grad is not None) ** 0.5
 
-def pearson(xs, ys):
-    n = len(xs); mx = sum(xs) / n; my = sum(ys) / n
-    cov = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
-    sx = sum((x - mx) ** 2 for x in xs) ** 0.5; sy = sum((y - my) ** 2 for y in ys) ** 0.5
-    return cov / (sx * sy) if sx and sy else float("nan")
+from protocol_stats import pearson, clustered_correlation
 
 all_rows = []
 for seed in SEEDS:
@@ -120,10 +116,10 @@ for seed in SEEDS:
             opt.step()
             p = sum(rewards_all) / len(rewards_all)
             zvf = zv / BATCH
-            row = {"seed": seed, "step": step, "difficulty": diff, "p": round(p, 3),
-                   "zvf": round(zvf, 3), "gu": round(1 - zvf, 3),
-                   "erf": round(sum(fmt_all) / len(fmt_all), 3),
-                   "p1mp": round(p * (1 - p), 4), "grad_norm": round(gn, 3),
+            row = {"seed": seed, "step": step, "difficulty": diff, "p": p,
+                   "zvf": zvf, "gu": 1-zvf,
+                   "erf": sum(fmt_all)/len(fmt_all),
+                   "p1mp": p*(1-p), "grad_norm": gn,
                    "signal_per_rollout": round(gn / (BATCH * G), 4)}
             all_rows.append(row)
             print(f"[e1] s{seed} st{step:2d} {diff:10s} p={p:.2f} ZVF={zvf:.2f} "
@@ -134,9 +130,9 @@ gn_all = [r["grad_norm"] for r in all_rows]
 summary = {
     "experiment": "E1_grad_signal", "model": MODEL, "seeds": SEEDS,
     "n_steps": len(all_rows),
-    "pearson_gradnorm_vs_p1mp": round(pearson([r["p1mp"] for r in all_rows], gn_all), 3),
-    "pearson_gradnorm_vs_GU":   round(pearson([r["gu"] for r in all_rows], gn_all), 3),
-    "pearson_gradnorm_vs_ERF":  round(pearson([r["erf"] for r in all_rows], gn_all), 3),
+    "pearson_gradnorm_vs_p1mp": clustered_correlation(all_rows, "p1mp", "grad_norm"),
+    "pearson_gradnorm_vs_GU":   clustered_correlation(all_rows, "gu", "grad_norm"),
+    "pearson_gradnorm_vs_ERF":  clustered_correlation(all_rows, "erf", "grad_norm"),
     "by_difficulty": {d: {
         "mean_p": round(statistics.mean([r["p"] for r in all_rows if r["difficulty"] == d]), 3),
         "mean_ZVF": round(statistics.mean([r["zvf"] for r in all_rows if r["difficulty"] == d]), 3),

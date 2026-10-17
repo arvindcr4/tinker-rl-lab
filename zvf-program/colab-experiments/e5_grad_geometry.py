@@ -1,6 +1,6 @@
-"""E5 (Pillar 2, theory): does the GRPO gradient signal track p(1-p)?
+"""E5 exploratory geometry probe; not binary-GRPO theory conformance.
 
-Design choices that make the measurement sound:
+Declared interventions and selection limitations:
   * MAX_NEW=128 + parser returns None when '####' is absent: a 24-token cap truncated
     reasoning -> spurious 0 reward -> low-p starved of live groups.
   * Population-standardized advantage (r - rbar)/sd from the PILOT estimate of each
@@ -190,6 +190,10 @@ def main():
                            "mean_snr": round(statistics.mean(r["snr"] for r in b), 4),
                            "mean_len": round(statistics.mean(r["mean_len"] for r in b), 1)}
     result = {"experiment": "E5_grad_geometry", "model": MODEL, "seed": SEED,
+              "protocol_version": "colab-exploratory-v2",
+              "claim_scope": "exploratory_geometry_only",
+              "theory_conformance_established": False,
+              "selection": "pilot_sd_filter_then_live_groups",
               "method": "per-group regression; continuous reward; population-standardized advantage",
               "reward": "continuous_partial_credit", "advantage": "population_standardized_pilot",
               "max_new": MAX_NEW, "few_shot": True, "length_normalized": True,

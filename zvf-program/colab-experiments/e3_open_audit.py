@@ -11,15 +11,15 @@ Arms (all share old-policy logprob caching + 2 inner epochs so ratio/clip engage
   drgrpo          : adv=(r-mean)  [NO /std], symmetric clip 0.2
   dapo            : adv=(r-mean)/(std+eps), asymmetric clip [0.2, 0.28],
                     dynamic sampling (resample zero-variance groups)
-  grpo_adaptiveG  : grpo + zvf-triage controller raises G when recent ZVF high
+  threshold_adaptiveG  : grpo + experimental two-observation threshold policy raises G when recent ZVF high
 
 Run:  colab run --gpu T4 --timeout 1200 e3_open_audit.py
 """
 import argparse
-import json, os, re, random, statistics, tempfile
+import json, os, re, random, statistics, tempfile, time
 from pathlib import Path
 
-ARM_NAMES = ["grpo", "drgrpo", "dapo", "grpo_adaptiveG"]
+ARM_NAMES = ["grpo", "drgrpo", "dapo", "threshold_adaptiveG"]
 
 
 def parse_args():
@@ -234,6 +234,8 @@ def upload_checkpoint(model, optimizer, result, tracking_run):
         }
 
 def run(arm, seed):
+    started = time.monotonic()
+    generated_tokens = training_tokens = updates = sampled_groups = 0
     random.seed(seed); torch.manual_seed(seed)
     tracking_run = None
     if TRACK_REMOTE:
@@ -256,8 +258,8 @@ def run(arm, seed):
         if tracking_run:
             tracking_run.log({"eval/heldout_pre": pre}, step=0)
         for step in range(1, STEPS + 1):
-            if arm == "grpo_adaptiveG" and len(recent_zvf) >= 2 and statistics.mean(recent_zvf[-2:]) > 0.4:
-                g = min(GMAX, g + 2)                         # zvf-triage: escalate G under collapse
+            if arm == "threshold_adaptiveG" and len(recent_zvf) >= 2 and statistics.mean(recent_zvf[-2:]) > 0.4:
+                g = min(GMAX, g + 2)                         # threshold policy, not packaged ZVFController
             groups, zv = [], 0
             for _ in range(BATCH):
                 q, gold = problem()
@@ -265,6 +267,8 @@ def run(arm, seed):
                 while True:
                     pids, gens, rewards, old = gen_group(model, prompt_of(q), gold, g)
                     rollouts += g
+                    sampled_groups += 1
+                    generated_tokens += int((gens != PAD).sum().item())
                     adv = advantages(rewards, arm)
                     if adv is not None or arm != "dapo" or tries >= 2:
                         break
@@ -281,9 +285,10 @@ def run(arm, seed):
                             continue
                         new = seq_logprob(model, pids, gens[i], grad=True)
                         if new is not None and old[i] is not None:
+                            training_tokens += int((gens[i] != PAD).sum().item())
                             losses.append(clipped_loss(new, old[i], a, arm))
                 if losses:
-                    torch.stack(losses).sum().backward(); opt.step()
+                    torch.stack(losses).sum().backward(); opt.step(); updates += 1
             zvf = zv / BATCH
             recent_zvf.append(zvf)
             # rough mean reward proxy: recompute correctness count from last groups not stored; track via zvf-comp
@@ -299,7 +304,10 @@ def run(arm, seed):
         post = heldout_acc(model, evalset)
         out = {"arm": arm, "seed": seed, "heldout_pre": round(pre, 3), "heldout_post": round(post, 3),
                "heldout_delta": round(post - pre, 3), "mean_zvf": round(statistics.mean(t["zvf"] for t in traj), 3),
-               "final_G": g, "total_rollouts": rollouts}
+               "final_G": g, "total_rollouts": rollouts,
+               "protocol_version": "colab-exploratory-v2", "budget_contract": "fixed_outer_steps_unmatched_compute",
+               "matched_compute": False, "generated_tokens": generated_tokens, "training_tokens": training_tokens,
+               "actual_updates": updates, "sampled_groups": sampled_groups, "wall_seconds": time.monotonic()-started}
         remote = upload_checkpoint(model, opt, out, tracking_run) if tracking_run else {}
         out.update(remote)
         if tracking_run:

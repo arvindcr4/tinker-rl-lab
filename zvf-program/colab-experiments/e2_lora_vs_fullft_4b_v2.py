@@ -5,7 +5,7 @@ Differences from the v0.9 E2 run (which saturated immediately):
 - 5 seeds (0-4) instead of 3 — proper std-dev reporting
 - 80 steps instead of 40 — harder task needs more training to diverge
 - Held-out N=100 instead of 50 — tighter CI on the heldout_delta estimate
-- Harder task: 3-digit x 2-digit multiplication (a in [100,999], b in [11,99])
+- Harder task: 3-digit addition (a and b in [100,999])
   - avoids the saturation regime that a+b in [11,60] produced for Qwen3-4B-2507
 - Larger group G=8 instead of 6 — more within-group samples per step
 - Batch=2 instead of 4 — full-FT on 4B + AdamW + 80GB-A100 means batch=2
@@ -25,12 +25,12 @@ Then persist:
 
 Compares against v1 (results/e2_lora_vs_fullft_4b.json):
   v1: a+b in [11,60]  -> all arms saturate to ceiling; LoRA wins by +0.06
-  v2: a*b in [100,999]x[11,99] -> not saturated; expect different ranking
+  v2: a+b in [100,999] -> not saturated; expect different ranking
 """
 import json, re, random, statistics, subprocess, sys
 
 # peft pulls torchao as a dep; 0.10.0 is incompatible with Colab's torch.
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U", "peft", "torchao>=0.16"], check=False)
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "peft", "torchao>=0.16"], check=True)
 
 import torch, torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -48,7 +48,7 @@ DEV = "cuda" if torch.cuda.is_available() else "cpu"
 
 print(f"[e2-prod-v2] MODEL={MODEL} SEEDS={SEEDS} STEPS={STEPS} HELDOUT_N={HELDOUT_N}", flush=True)
 print(f"[e2-prod-v2] BATCH={BATCH} G={G} MAX_NEW={MAX_NEW} LR_LORA={LR_LORA} LR_FULL={LR_FULL}", flush=True)
-print(f"[e2-prod-v2] task: a*b in [100,999]x[11,99]; LORA_TARGETS={LORA_TARGETS}", flush=True)
+print(f"[e2-prod-v2] task: a+b in [100,999]; LORA_TARGETS={LORA_TARGETS}", flush=True)
 print(f"[e2-prod-v2] device={DEV}", flush=True)
 
 tok = AutoTokenizer.from_pretrained(MODEL)
@@ -62,7 +62,7 @@ def problem():
     """3-digit + 3-digit addition: middle-difficulty task.
 
     v1 was a+b in [11,60] -> saturated to ceiling in 1-3 steps (no signal).
-    v2 first attempt was a*b in [100,999]x[11,99] (3-digit x 2-digit) ->
+    v2 first attempt was a+b in [100,999] (3-digit x 2-digit) ->
     heldout_pre=0.000, ZVF=1.0 the entire run because Qwen3-4B-2507 can't
     generate any correct 3-digit x 2-digit completions with sampling at
     temperature 1.0.
@@ -241,4 +241,7 @@ summary = {
         aggregate(lora_arms)["mean_heldout_delta"]
         - aggregate(full_arms)["mean_heldout_delta"], 3),
 }
+from protocol_stats import fingerprint
+summary["runtime_fingerprint"] = fingerprint(__file__, {k:v for k,v in globals().copy().items() if k.isupper() and isinstance(v,(int,float,str,list,dict))})
+summary["evidence_tier"] = "legacy_pilot_variant"
 print("E2_RESULT " + json.dumps(summary), flush=True)

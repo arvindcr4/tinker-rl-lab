@@ -109,8 +109,8 @@ class StatisticsTests(unittest.TestCase):
                 arm: {
                     "controlled_delta": 0.001,
                     "ci95": [-0.0045, 0.00675],
-                    "achieved_mde_80": 0.008667,
-                    "verdict": "DISAPPEARS" if arm == "dapo" else "INCONCLUSIVE",
+                    "achieved_mde_80": 0.0101158932289,
+                    "verdict": "INCONCLUSIVE",
                 }
                 for arm in aggregate_audit.LATEX_ARM_NAMES
             },
@@ -118,8 +118,13 @@ class StatisticsTests(unittest.TestCase):
         rendered = aggregate_audit.render_latex_results(report)
         self.assertIn(r"\newcommand{\AuditDAPODelta}{+0.00100}", rendered)
         self.assertIn(r"\newcommand{\AuditDAPOCILow}{-0.00450}", rendered)
-        self.assertIn(r"\newcommand{\AuditDAPOMDE}{0.00867}", rendered)
-        self.assertIn(r"\newcommand{\AuditDAPOVerdict}{DISAPPEARS}", rendered)
+        self.assertIn(r"\newcommand{\AuditDAPOMDE}{0.01012}", rendered)
+        self.assertIn(r"\newcommand{\AuditDAPOVerdict}{INCONCLUSIVE}", rendered)
+
+    def test_exact_mde_above_margin_cannot_disappear(self):
+        self.assertEqual(aggregate_audit.verdict(
+            (-0.0045, 0.00675), (-0.004, 0.006), 0.0101158932289,
+            0.01, None, difference_rejected=False), "INCONCLUSIVE")
 
     def test_latex_results_reject_incomplete_aggregate(self):
         with self.assertRaisesRegex(aggregate_audit.AuditError, "COMPLETE"):

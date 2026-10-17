@@ -1,3 +1,4 @@
+# ruff: noqa: S101 -- pytest assertions are intentional test checks
 """Offline synthetic counterexamples, never benchmark results."""
 import json
 import pytest

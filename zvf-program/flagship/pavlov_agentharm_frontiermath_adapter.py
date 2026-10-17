@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import argparse
 import os
@@ -471,7 +472,7 @@ def _validate_receipt_fields(suite_id: str, receipt: Mapping[str, Any]) -> list[
         max_usd = budget.get("maximum_usd")
         if not isinstance(max_usd, (int, float)):
             max_usd = budget.get("max_usd")
-        if not isinstance(max_usd, (int, float)) or max_usd <= 0:
+        if isinstance(max_usd, bool) or not isinstance(max_usd, (int, float)) or not math.isfinite(max_usd) or max_usd <= 0:
             errors.append(f"{suite_id}: budget_receipt.maximum_usd must be a positive number")
         if _placeholder(
             _first_value(budget, ("receipt_id", "authorization_id", "id", "sha256", "hash"))

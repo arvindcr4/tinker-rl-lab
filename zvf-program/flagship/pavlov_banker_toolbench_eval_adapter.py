@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any
 
 
-SCHEMA_VERSION = "pavlov-banker-toolbench-eval-boundary-v1"
+SCHEMA_VERSION = "pavlov-banker-toolbench-eval-boundary-v2"
 SUITE_ID = "banker_toolbench_eval"
 ROLE = "primary_eval"
 SPLIT_DESCRIPTION = "held-out evaluation tasks"
@@ -492,7 +492,7 @@ def build_banker_toolbench_eval_boundary(
     boundary = {
         "schema_version": SCHEMA_VERSION,
         "status": "READY" if not errors else "BLOCKED",
-        "boundary_status": "READY" if not (task_errors or environment_errors or artifact_errors or verifier_errors) else "BLOCKED",
+        "boundary_status": "READY" if not errors else "BLOCKED",
         "launch_authorized": False,
         "launches_any_job": False,
         "suite_id": SUITE_ID,

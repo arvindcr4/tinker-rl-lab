@@ -19,13 +19,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
 
-SCHEMA_VERSION = "pavlov-api-bank-rlvr-train-boundary-v1"
+SCHEMA_VERSION = "pavlov-api-bank-rlvr-train-boundary-v2"
 SUITE_ID = "api_bank_rlvr_train"
 ROLE = "train"
 TRAIN_ROLE = ROLE
@@ -568,8 +569,9 @@ def _validate_budget(budget_gate: Mapping[str, Any] | None) -> tuple[dict[str, A
         errors.append("budget gate status must be AUTHORIZED_TINKER_ONLY")
     if budget_gate.get("provider") != "Tinker":
         errors.append("budget gate provider must be Tinker")
-    if budget_gate.get("paid_jobs_may_launch") is not True:
-        errors.append("budget gate must explicitly authorize paid_jobs_may_launch")
+    authorized = budget_gate.get("budget_authorized", budget_gate.get("paid_jobs_may_launch")) is True
+    if not authorized:
+        errors.append("budget gate must explicitly record budget_authorized")
     for key in ("maximum_usd", "operational_cap_usd", "safety_reserve_usd", "authorized_at"):
         if key not in budget_gate or budget_gate[key] in (None, "", []):
             errors.append(f"budget gate is missing {key}")
@@ -595,6 +597,14 @@ def _validate_budget(budget_gate: Mapping[str, Any] | None) -> tuple[dict[str, A
         errors.append("budget operational cap plus safety reserve exceeds maximum_usd")
     if _looks_placeholder(budget_gate.get("authorized_at")):
         errors.append("budget authorized_at is placeholder or unrecorded")
+    for field in ("maximum_usd", "operational_cap_usd", "safety_reserve_usd"):
+        amount = budget_gate.get(field)
+        if isinstance(amount, bool) or not isinstance(amount, (int, float)) or not math.isfinite(amount):
+            errors.append(f"budget {field} must be finite numeric")
+    # Legacy input means campaign-owner budget permission, never adapter launch.
+    normalized["budget_authorized"] = authorized
+    normalized["paid_jobs_may_launch"] = False
+    normalized["adapter_may_launch"] = False
     normalized["launch_authorized"] = False
     normalized["launches_any_job"] = False
     return normalized, errors

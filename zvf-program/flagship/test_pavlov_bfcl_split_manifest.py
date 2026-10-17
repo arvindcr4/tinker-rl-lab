@@ -187,7 +187,7 @@ class BFCLSplitManifestBoundaryTests(unittest.TestCase):
     def test_validate_record_helper_matches_status(self) -> None:
         ready = split_validator.build_split_manifest_record(_valid_manifest())
         self.assertEqual(
-            split_validator.validate_split_manifest_record(ready),
+            split_validator.validate_split_manifest_record(ready, _valid_manifest()),
             [],
         )
 

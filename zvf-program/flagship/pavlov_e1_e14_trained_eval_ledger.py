@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 from typing import Any
@@ -54,6 +55,48 @@ def _blockers(receipt: dict[str, Any]) -> list[str]:
     return values
 
 
+# Only independently implemented native-result validators belong here. Metadata
+# boundaries and reference harnesses are deliberately not scoring validators.
+SUITE_RESULT_VALIDATORS: dict[str, Any] = {}
+
+
+def validate_suite_result(lane: str, source: dict[str, Any], training: dict[str, Any], checkpoint: dict[str, Any]) -> list[str]:
+    validator = SUITE_RESULT_VALIDATORS.get(lane)
+    if validator is None:
+        return [f"{lane}: no supported native model-result validator"]
+    errors = list(validator(source))
+    if source.get("status") not in {"COMPLETE", "SCORED"} or source.get("is_model_score") is not True:
+        errors.append("source is not a completed model result")
+    score = source.get("score")
+    if isinstance(score, bool) or not isinstance(score, (int, float)) or not math.isfinite(score):
+        errors.append("model score must be finite numeric")
+    expected = {
+        "training_run_id": training.get("run_id"),
+        "sampler_path": training.get("sampler_path"),
+        "checkpoint_commit": checkpoint.get("commit_sha"),
+        "checkpoint_revision": checkpoint.get("revision"),
+        "model_identity": checkpoint.get("repo_url"),
+    }
+    model = source.get("model")
+    if not isinstance(model, dict) or any(not value or model.get(key) != value for key, value in expected.items()):
+        errors.append("result does not bind the final training checkpoint identity")
+    return errors
+
+
+def suite_log_metrics(index: int, row: dict[str, Any]) -> dict[str, Any]:
+    metrics = {
+        "suite/index": index,
+        "suite/model_executed": int(row["model_executed"]),
+        "suite/is_model_score": int(row["is_model_score"]),
+        "suite/status": row["status"],
+        f"suite/{row['lane']}/model_executed": int(row["model_executed"]),
+        f"suite/{row['lane']}/is_model_score": int(row["is_model_score"]),
+    }
+    if row["is_model_score"]:
+        metrics["suite/score"] = row["score"]
+    return metrics
+
+
 def build_ledger(training_receipt_path: Path) -> dict[str, Any]:
     training = json.loads(training_receipt_path.read_text(encoding="utf-8"))
     if training.get("status") != "completed" or training.get("final_status") != "success":
@@ -69,10 +112,9 @@ def build_ledger(training_receipt_path: Path) -> dict[str, Any]:
         if not path.is_file():
             raise FileNotFoundError(f"missing {lane} receipt: {path}")
         source = json.loads(path.read_text(encoding="utf-8"))
-        model_executed = lane == "E11" and source.get("is_model_score") is True
+        validation_errors = validate_suite_result(lane, source, result, final_checkpoint)
+        model_executed = not validation_errors
         score = source.get("score") if model_executed else None
-        if score is None and model_executed:
-            score = (source.get("pass_at_1") or {}).get("corrected", {}).get("pass_at_1")
         rows.append(
             {
                 "lane": lane,
@@ -83,7 +125,7 @@ def build_ledger(training_receipt_path: Path) -> dict[str, Any]:
                 "score": score,
                 "source_status": source.get("status") or source.get("final_status"),
                 "source_evidence_class": source.get("evidence_class"),
-                "blockers": [] if model_executed and score is not None else _blockers(source),
+                "blockers": [] if model_executed and score is not None else sorted(set(_blockers(source) + validation_errors)),
                 "receipt_path": relative,
                 "receipt_sha256": _sha256(path),
                 "evaluated_sampler": (
@@ -93,7 +135,7 @@ def build_ledger(training_receipt_path: Path) -> dict[str, Any]:
         )
 
     return {
-        "schema_version": "pavlov-e1-e14-trained-ledger-v1",
+        "schema_version": "pavlov-e1-e14-trained-ledger-v2",
         "status": "PARTIAL",
         "claim_boundary": (
             "Only rows with is_model_score=true are benchmark results; blocked and harness-only "
@@ -137,17 +179,7 @@ def main() -> int:
         config={"training": ledger["training"], "claim_boundary": ledger["claim_boundary"]},
     )
     for index, row in enumerate(ledger["suites"]):
-        run.log(
-            {
-                "suite/index": index,
-                "suite/model_executed": int(row["model_executed"]),
-                "suite/is_model_score": int(row["is_model_score"]),
-                "suite/score": row["score"] if row["score"] is not None else 0.0,
-                f"suite/{row['lane']}/model_executed": int(row["model_executed"]),
-                f"suite/{row['lane']}/is_model_score": int(row["is_model_score"]),
-            },
-            step=index,
-        )
+        run.log(suite_log_metrics(index, row), step=index)
     ledger["wandb"] = {"run_id": run.id, "url": run.url, "project": run.project}
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")

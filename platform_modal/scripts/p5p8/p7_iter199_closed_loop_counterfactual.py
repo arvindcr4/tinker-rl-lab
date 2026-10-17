@@ -7,7 +7,7 @@ training path, using the per-prompt k_p (empirical success rate at G=8) as
 the latent p_hat fixed across all steps.
 
 Prior veins measured "one-shot" decisions at a single fired step
-(iter-179, iter-192). This iter simulates the **closed-loop trajectory** —
+(iter-179, iter-192). This iter simulates the **open-loop fixed-initial-probability trajectory** —
 what would the controller have done step-by-step for all 40 steps, what
 would the cumulative restored contrast and rollout cost be?
 
@@ -42,7 +42,7 @@ Aggregates (40-step):
     - net_benefit = mean_contrast − 0.5 × (mean_cost − 1.0)
 
 Hypotheses (falsifiable):
-    H1 — AG8 has lower mean_zvf than BASE on all 4 methods (closed-loop)
+    H1 — AG8 has lower mean_zvf than BASE on all 4 methods (open-loop fixed-initial-probability)
     H2 — AG8 has higher mean_contrast than BASE on all 4 methods
     H3 — AG8 has lower mean_cost than STATIC16 (saving), with CI95 > 0
     H4 — AG8 has ≥0 net_benefit vs STATIC16 (= contrast − 0.5 × cost_infl)
@@ -68,7 +68,7 @@ from _paths import REPO_ROOT  # noqa: E402
 from _p5p7_common import load_tensors_b  # noqa: E402
 WORKTREE = str(REPO_ROOT)
 DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
-OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8/corrected-review19-v2")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 METHODS = ["grpo", "aero", "gift", "areal"]
@@ -130,7 +130,7 @@ def choose_g_ag8(step_zvf, g_n_grid):
 
 def choose_g_hyb(step_zvf, g_n_grid):
     """Hybrid: pick smallest G in grid that restores ≥ 0.005 contrast at
-    E_zvf under closed-loop projection (vs BASE). Returns G_BASE=8 if no
+    E_zvf under open-loop fixed-initial-probability projection (vs BASE). Returns G_BASE=8 if no
     candidate clears."""
     if step_zvf < TAU_TRIGGER:
         return G_BASE
@@ -139,7 +139,7 @@ def choose_g_hyb(step_zvf, g_n_grid):
 
 
 def simulate_trajectory(method_tensors, policy, g_n_grid=()):
-    """Simulate closed-loop trajectory under `policy`. Returns (g_seq, proj_zvf_seq).
+    """Simulate open-loop fixed-initial-probability trajectory under `policy`. Returns (g_seq, proj_zvf_seq).
 
     `proj_zvf_seq[t]` is the binomial-projected expected ZVF at step t given
     policy's choice of G_t — this is for the cost-effective analysis only;
@@ -356,7 +356,7 @@ def main():
         "ts": "2026-07-06",
         "iter": 199,
         "pillar": "P7",
-        "vein": "(a) closed-loop trajectory counterfactual",
+        "vein": "(a) open-loop fixed-initial-probability trajectory counterfactual",
         "settings": {
             "G_BASE": G_BASE,
             "G_N_STATIC": G_N_STATIC,
@@ -375,7 +375,7 @@ def main():
             "H5_AG_HYB_more_contrast_than_AG8_4of4": 0,
         },
         "per_method": [
-            {"method": m, "policy": r["policy"],
+            {"method": r["method"], "policy": r["policy"],
              "mean_proj_zvf": r["mean_proj_zvf"],
              "mean_proj_contrast": r["mean_proj_contrast"],
              "mean_cost": r["mean_cost"],

@@ -37,9 +37,9 @@ from pathlib import Path
 
 from _p5p7_common import bernoulli_z, load_tensors_a
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 N2_DIR = ROOT / "experiments" / "results" / "n2_reward_tensor_resume"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8/corrected-review19-v2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 METHODS = ["grpo", "aero", "gift", "areal"]
@@ -107,7 +107,7 @@ def boot_ci(values, n_boot=BOOT_N, seed=BOOT_SEED):
         samp = [values[rng.randrange(n)] for _ in range(n)]
         boots.append(statistics.mean(samp))
     boots.sort()
-    return boots[100], boots[1900], statistics.mean(values)
+    return boots[int(.025 * len(boots))], boots[min(len(boots)-1, int(.975 * len(boots)))], statistics.mean(values)
 
 
 def aggregate_step(decisions):
@@ -236,10 +236,10 @@ def main():
             "n_methods": 4,
             "mean_cost_ratio": statistics.mean(costs),
             "sd_cost_ratio": statistics.pstdev(costs),
-            "ci95_sd_cost_lo": boot_cost_sd[100], "ci95_sd_cost_hi": boot_cost_sd[1900],
+            "ci95_sd_cost_lo": boot_cost_sd[int(.025 * len(boot_cost_sd))], "ci95_sd_cost_hi": boot_cost_sd[min(len(boot_cost_sd)-1, int(.975 * len(boot_cost_sd)))],
             "mean_retention": statistics.mean(rets),
             "sd_retention": statistics.pstdev(rets),
-            "ci95_sd_ret_lo": boot_ret_sd[100], "ci95_sd_ret_hi": boot_ret_sd[1900],
+            "ci95_sd_ret_lo": boot_ret_sd[int(.025 * len(boot_ret_sd))], "ci95_sd_ret_hi": boot_ret_sd[min(len(boot_ret_sd)-1, int(.975 * len(boot_ret_sd)))],
         })
     with open(OUT_DIR / "p7_iter163_cross_method_sd.tsv", "w") as f:
         cols = ["controller", "n_methods", "mean_cost_ratio", "sd_cost_ratio",
@@ -273,8 +273,8 @@ def main():
                 boot_dcr.append(statistics.mean([diffs_cr[i] for i in idx]))
                 boot_dcost.append(statistics.mean([diffs_cost[i] for i in idx]))
             boot_dcr.sort(); boot_dcost.sort()
-            lo_cr, hi_cr = boot_dcr[100], boot_dcr[1900]
-            lo_cost, hi_cost = boot_dcost[100], boot_dcost[1900]
+            lo_cr, hi_cr = boot_dcr[int(.025 * len(boot_dcr))], boot_dcr[min(len(boot_dcr)-1, int(.975 * len(boot_dcr)))]
+            lo_cost, hi_cost = boot_dcost[int(.025 * len(boot_dcost))], boot_dcost[min(len(boot_dcost)-1, int(.975 * len(boot_dcost)))]
             # strict dominance: cost_lower AND retention_higher (CI excludes 0)
             sd_retention = hi_cr < 0  # C4 retention LOWER than c → c dominates
             sd_cost = hi_cost < 0     # C4 cost LOWER than c → C4 cheaper

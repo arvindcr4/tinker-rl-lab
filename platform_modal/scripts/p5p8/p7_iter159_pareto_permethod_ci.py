@@ -50,7 +50,7 @@ from _p5p7_common import bernoulli_z, c_unified_c4, is_boundary  # noqa: E402
 WORKTREE = REPO_ROOT
 TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 HELDOUT = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
-OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8/corrected-review19-v2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---- Controller parameters (matching iter-147 source) ----
@@ -111,11 +111,12 @@ CONTROLLERS = [
 # Bootstrap primitives
 # ---------------------------------------------------------------------------
 def lcg_boot_indices(n: int, rng_state: list[int]) -> list[int]:
-    out = []
-    for _ in range(n):
-        rng_state[0] = (rng_state[0] * 1103515245 + 12345) & 0x7FFFFFFF
-        out.append(rng_state[0] % n)
-    return out
+    """Compatibility interface backed by a standard RNG, not LCG low bits."""
+    import random
+    if not isinstance(rng_state[0], random.Random):
+        rng_state[0] = random.Random(rng_state[0])
+    return [rng_state[0].randrange(n) for _ in range(n)]
+
 
 
 def mean(xs: list[float]) -> float:

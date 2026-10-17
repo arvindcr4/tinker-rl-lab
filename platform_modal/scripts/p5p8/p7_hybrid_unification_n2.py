@@ -60,9 +60,9 @@ from _p5p7_common import c3_hybrid
 # ----------------------------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 N2_DIR = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
-OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 TAU = 0.7           # primary zvf-triage threshold

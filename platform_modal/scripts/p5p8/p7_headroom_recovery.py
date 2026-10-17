@@ -49,10 +49,10 @@ import math
 import random
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 N2_DIR = ROOT / "experiments" / "results" / "n2_reward_tensor_resume"
 N10_DIR = ROOT / "experiments" / "results" / "n10_seed_expansion"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8/corrected-review19-v2"
 
 METHODS = ("grpo", "aero", "gift", "areal")
 G_BASE = 8

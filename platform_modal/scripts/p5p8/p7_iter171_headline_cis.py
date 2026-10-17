@@ -15,7 +15,7 @@ from _paths import REPO_ROOT  # noqa: E402
 from _p5p7_common import load_tensors_b  # noqa: E402
 WORKTREE = str(REPO_ROOT)
 DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
-OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8/corrected-review19-v2")
 os.makedirs(OUT_DIR, exist_ok=True)
 METHODS = ["grpo", "aero", "gift", "areal"]
 G_MENU = [2, 4, 8, 16]; G_BASE = 8; N_PROMPTS = 16
@@ -34,7 +34,7 @@ def _bci(v, stat_fn=statistics.mean, alpha=0.05, rng=None):
         idx = [rng.randrange(n) for _ in range(n)]
         boots.append(stat_fn([v[i] for i in idx]))
     boots.sort()
-    return (pt, boots[int(alpha/2*B)], boots[int((1-alpha/2)*B)], B)
+    return (pt, boots[int(alpha/2*B)], boots[int((1-alpha/2)*B)], n)
 
 
 def tost_paired(a, b, bound=TOST_BOUND, rng=None):
@@ -54,7 +54,7 @@ def headline_cis(tensors):
             if not vals:
                 continue
             pt, lo, hi, n = _bci(vals)
-            rows.append({"method": m, "metric": metric, "n": n,
+            rows.append({"method": m, "metric": metric, "n": n, "bootstrap_replicates": B,
                          "point": round(pt, 4), "lo": round(lo, 4),
                          "hi": round(hi, 4), "ci_hw": round((hi-lo)/2.0, 4)})
     return rows
@@ -150,7 +150,7 @@ def eval_ctrl(steps, cfn):
         g_per_p = cfn(s, ps)
         rs_ = rp_ = n_deg = 0; cg = 0.0
         for i, r in enumerate(rewards):
-            y_b = 1.0 if 0 < sum(r) < G_BASE else 0.0
+            y_b = 1.0 - ps[i]**G_BASE - (1.0-ps[i])**G_BASE
             gi = max(2, min(g_per_p[i], 32))
             y_n = 1.0 - (ps[i]**gi) - ((1.0-ps[i])**gi)
             cg += y_n - y_b
@@ -220,7 +220,7 @@ def cross_paper_consistency(ctrl_rows, y_rows):
                      "claim": "observed Y(G=8) > iid-projected Y(G=16) [anti-herding bonus]",
                      "evidence_metric": "y_G8_pt > y_proj_G16_pt",
                      "observed": f"Y_obs(G=8)={g8:.4f}, Y_iid(G=16)={g16:.4f}",
-                     "consistent": bool(g8 > g16)})
+                     "consistent": None, "status": "NOT_EVALUATED"})
     return rows
 
 
@@ -281,7 +281,7 @@ def main():
                             "H4_zvf_triage_contrast_gain_exceeds_fixed_g_baseline": h4,
                             "H5_zvf_triage_cost_hi_below_150_all_methods": h5,
                             "H6_cross_paper_consistency_full_pass": h6,
-                            "H7_observed_y_at_g8_exceeds_iid_projection_at_g16": h7}}
+                            "H7_observed_y_at_g8_exceeds_iid_projection_at_g16": None}}
     with open(os.path.join(OUT_DIR, "p7_iter171_summary.json"), "w") as fh:
         json.dump(summary, fh, indent=2)
     print(f"[iter171] H1={h1} H2={h2} H3={h3} H3b={h3b} H4={h4} H5={h5} H6={h6} H7={h7}")

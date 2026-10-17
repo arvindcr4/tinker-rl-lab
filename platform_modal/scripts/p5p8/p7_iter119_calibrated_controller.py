@@ -406,14 +406,8 @@ def main() -> None:
     avg_saving_pct = 0.5 * (n2_saving_pct + n10_saving_pct)
 
     n2_mean_reward_g8 = sum(r["reward_mean"] for r in n2_rows) / len(n2_rows)
-    # CCC reward approximation: weighted by predicted mean reward at new G
-    n2_ccc_pred_reward = sum(
-        # when CCC reduces G, reward shifts toward fast-mode accuracy (iter131 row 01)
-        # linear interpolation: G<G_obs -> +0.001 per G step (cap 0.005)
-        r["reward_mean"] + min(0.005, max(-0.005,
-            0.001 * (r["G_obs"] - r["G_ccc"])))
-        for r in n2_rows
-    ) / len(n2_rows)
+    # Controller reward requires an independently measured outcome.
+    n2_ccc_pred_reward = None
     n10_mean_reward_g8 = sum(r["reward"] for r in n10_rows) / len(n10_rows)
 
     # H3: CCC net benefit vs best of {STATIC_G8, STATIC_G16, DUALFORMER, ADAPTIVE_G*}
@@ -539,15 +533,14 @@ def main() -> None:
                 ),
             },
             "H2_ccc_preserves_97pct_of_baseline_reward": {
-                "pass": (n2_ccc_pred_reward / max(n2_mean_reward_g8, 1e-9)) >= 0.97,
+                "pass": None, "status": "NOT_EVALUATED",
                 "n2_mean_reward_static_g8": n2_mean_reward_g8,
                 "n2_mean_reward_ccc_predicted": n2_ccc_pred_reward,
                 "n2_preservation_ratio": (
-                    n2_ccc_pred_reward / max(n2_mean_reward_g8, 1e-9)
+                    None
                 ),
                 "interpretation": (
-                    "Predicted reward_mean under CCC is >= 97% of STATIC_G8 "
-                    "mean. CCC does not regress training accuracy."
+                    "Controller accuracy is not measured by this retrospective replay."
                 ),
             },
             "H3_ccc_pareto_85pct_no_worse_than_worst_on_at_least_one_dataset": {

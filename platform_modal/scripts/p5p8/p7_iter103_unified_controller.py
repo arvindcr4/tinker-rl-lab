@@ -39,8 +39,8 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_mo
 from _paths import REPO_ROOT  # noqa: E402
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
-OUT = WORKTREE / "platform_hybrid/experiments" / "experiments" / "results" / "p5p8"
-OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
+OUT = WORKTREE / "platform_hybrid/experiments" / "experiments" / "results" / "p5p8/corrected-review19-v2"
+OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review19-v2"
 OUT.mkdir(parents=True, exist_ok=True)
 METHODS = ("grpo", "aero", "gift", "areal")
 THRESHOLDS = (0.50, 0.60, 0.70, 0.80, 0.90)
@@ -140,23 +140,8 @@ def decide_g(per_p, step_zvf, step_pcd, tau, mode):
             fired = True
         return gs, fired
     if mode == "C4":
-        # UCC + AlphaProof gamma*=0 EXPLICIT calibration:
-        # The trigger decision uses the RAW current step zvf (gamma*=0 in
-        # AlphaProof terms -- "full discount across steps").
-        # C3 uses the SAME rule (gamma*=0 is implicit when we read the raw
-        # step_zvf). To make C4 a MEANINGFUL contrast, we instead use a
-        # 3-step trailing mean (gamma=1 in AlphaProof terms -- "no discount"),
-        # which is the antipode of gamma*=0.  The comparison C3 vs C4 tests
-        # the AlphaProof gamma*=0 finding at the Pillar 3 trigger level.
-        gs = dualformer_auto_g(per_p)
-        fired = False
-        # NOTE: caller provides step_zvf; if it has been windowed upstream,
-        # C3 will see the windowed value.  For the C4 path we read the RAW
-        # step zvf via the per_p sequence (it is identical at this layer).
-        # To produce a CONTRAST we use the 3-step windowed mean here:
-        # the per-prompt tier choice is unchanged, but the trigger threshold
-        # is replaced with a 3-step mean (handled in main loop).
-        return gs, fired
+        # Caller supplies the trailing-average statistic for this variant.
+        return decide_g(per_p, step_zvf, step_pcd, tau, "C3")
     raise ValueError(f"unknown mode {mode}")
 
 

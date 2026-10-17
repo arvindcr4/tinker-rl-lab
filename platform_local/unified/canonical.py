@@ -13,10 +13,11 @@ intentionally out of scope.
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass, replace
+import hashlib
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 PREREGISTRATION = REPO_ROOT / "zvf-program" / "next-submission" / "preregistration.json"
 FRAMEWORK_DUMPS = REPO_ROOT / "platform_hybrid" / "experiments" / "framework_config_dumps"
 
@@ -51,6 +52,19 @@ class CanonicalSpec:
     epsilon_high: float = 0.2
     max_completion_length: int = 1024
     seed: int = 211
+    protocol: str = "unified-resolved-v2"
+
+    @property
+    def spec_hash(self):
+        return hashlib.sha256(json.dumps(self.as_dict(), sort_keys=True).encode()).hexdigest()
+
+    def __post_init__(self):
+        if not self.model or not self.task or not self.algorithm:
+            raise ValueError("Model, task and algorithm must be nonempty")
+        for key in ("training_steps", "num_generations", "per_device_train_batch_size", "gradient_accumulation_steps", "lora_rank", "max_completion_length"):
+            value = getattr(self, key)
+            if type(value) is not int or value <= 0:
+                raise ValueError(f"{key} must be a positive integer")
 
     def framework_config_path(self, framework: str) -> Path | None:
         """Per-framework equivalence config (the 4-framework dump), if present."""
@@ -62,22 +76,28 @@ class CanonicalSpec:
 
 
 def load_spec() -> CanonicalSpec:
-    """Return the canonical spec, best-effort overriding from preregistration.json.
+    """Resolve represented fields from the versioned preregistration, fail closed.
 
-    Fully defensive: any structural drift in the JSON falls back to the dataclass
-    defaults (which are themselves the Layer-B truth).
+    This dispatch schema is NOT the entire frozen scientific protocol. Fields
+    outside it (decoder, dataset revisions, runtime locks) require adapter parity
+    validation before any result can be called a canonical reproduction.
     """
-    spec = CanonicalSpec()
-    if not PREREGISTRATION.exists():
-        return spec
-    try:
-        data = json.loads(PREREGISTRATION.read_text())
-        overrides = {
-            "model": data.get("included_model") or data.get("model"),
-            "training_steps": data.get("training_steps"),
-            "num_generations": data.get("num_generations"),
-        }
-        clean = {k: v for k, v in overrides.items() if v is not None}
-        return replace(spec, **clean)
-    except Exception:
-        return spec
+    data = json.loads(PREREGISTRATION.read_text())
+    if data.get("schema_version") != "aiml-next-preregistration-v1":
+        raise ValueError("Unsupported preregistration schema")
+    t = data["treatment"]
+    return CanonicalSpec(model=t["model"], training_steps=t["training_steps"],
+        num_generations=t["num_generations"], per_device_train_batch_size=t["per_device_train_batch_size"],
+        gradient_accumulation_steps=t["gradient_accumulation_steps"],
+        max_completion_length=t["max_completion_length"], learning_rate=t["optimizer"]["learning_rate"],
+        lora_rank=t["adapter"]["r"], lora_alpha=t["adapter"]["lora_alpha"],
+        lora_target_modules=t["adapter"]["target_modules"], beta=t["objective"]["beta"],
+        epsilon_low=t["objective"]["epsilon"], epsilon_high=t["objective"]["epsilon_high"])
+
+
+def require_supported_overrides(spec, supported=()):
+    expected = load_spec().as_dict()
+    unsupported = [key for key, value in spec.as_dict().items()
+                   if key not in supported and key != "protocol" and value != expected[key]]
+    if unsupported:
+        raise ValueError("Backend cannot honor overrides: " + ", ".join(unsupported))

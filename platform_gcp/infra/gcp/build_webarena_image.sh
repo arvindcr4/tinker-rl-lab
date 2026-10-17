@@ -13,9 +13,21 @@ set -euo pipefail
 : "${BUILDER_MACHINE_TYPE:=n2-standard-8}"
 : "${WEBARENA_TAR_GCS_BUCKET:=}"
 BUILDER_NAME="webarena-builder-$$"
-REPO_DIR="$(cd "$(dirname "$0")"/../.. && pwd)"
+REPO_DIR="$(cd "$(dirname "$0")"/../../.. && pwd)"
 
 echo "==> Project: $GCP_PROJECT  Zone: $GCP_ZONE  Disk: ${BUILDER_DISK_GB}GB"
+test -d "$REPO_DIR/platform_gcp/infra/gcp/webarena-compose" || { echo "Missing compose inputs" >&2; exit 1; }
+test -f "$REPO_DIR/platform_gcp/infra/gcp/webarena-compose/load_images.sh" || exit 1
+# Validate all local immutable inputs before provisioning a builder.
+: "${WEBARENA_SHA256_MANIFEST:?Provide reviewed archive hashes}"
+: "${WEBARENA_SHA256_ANCHOR:?Provide the independent manifest digest}"
+: "${KIWIX_IMAGE:?Provide a digest-pinned Kiwix image}"
+: "${TINKER_REPO_REVISION:?Provide a full reviewed Tinker commit}"
+: "${WEBARENA_REPO_REVISION:?Provide a full reviewed WebArena commit}"
+[[ "$TINKER_REPO_REVISION" =~ ^[a-f0-9]{40}$ && "$WEBARENA_REPO_REVISION" =~ ^[a-f0-9]{40}$ ]] || exit 2
+[[ "$WEBARENA_SHA256_ANCHOR" =~ ^[a-f0-9]{64}$ ]] || exit 2
+[[ "$KIWIX_IMAGE" =~ ^ghcr.io/kiwix/kiwix-serve@sha256:[a-f0-9]{64}$ ]] || exit 2
+printf '%s  %s\n' "$WEBARENA_SHA256_ANCHOR" "$WEBARENA_SHA256_MANIFEST" | sha256sum -c -
 gcloud config set project "$GCP_PROJECT"
 
 echo "==> Creating builder VM..."
@@ -45,6 +57,7 @@ gcloud compute scp --recurse \
   "$BUILDER_NAME:/tmp/webarena-compose" \
   --zone="$GCP_ZONE"
 
+gcloud compute scp "$WEBARENA_SHA256_MANIFEST" "$BUILDER_NAME:/tmp/webarena-compose/image-sha256.txt" --zone="$GCP_ZONE"
 cat > /tmp/webarena_setup.sh <<SETUP
 #!/usr/bin/env bash
 set -euo pipefail
@@ -79,7 +92,8 @@ sudo /opt/tinker/bin/playwright install chromium
 
 # Clone tinker-rl-lab for startup script to use
 sudo rm -rf /opt/tinker-rl-lab
-sudo git clone --depth 1 https://github.com/arvindcr4/tinker-rl-lab /opt/tinker-rl-lab || true
+sudo git clone --no-checkout https://github.com/pes-llm-research/tinker-rl-lab /opt/tinker-rl-lab
+sudo git -C /opt/tinker-rl-lab checkout --detach "$TINKER_REPO_REVISION"
 
 # Stage WebArena compose dir
 sudo mkdir -p /opt/webarena-compose
@@ -89,12 +103,17 @@ sudo cp -r /tmp/webarena-compose/* /opt/webarena-compose/
 sudo rm -rf /opt/webarena-homepage
 sudo git clone --depth 1 --filter=blob:none --sparse \\
   https://github.com/web-arena-x/webarena /tmp/wa-src
+sudo git -C /tmp/wa-src fetch origin "$WEBARENA_REPO_REVISION"
+sudo git -C /tmp/wa-src checkout --detach "$WEBARENA_REPO_REVISION"
 (cd /tmp/wa-src && sudo git sparse-checkout set environment_docker/webarena-homepage)
 sudo mv /tmp/wa-src/environment_docker/webarena-homepage /opt/webarena-homepage
 sudo rm -rf /tmp/wa-src
 
 # Download + load WebArena docker images (~5 min from GCS, ~30 min from CMU)
-sudo WEBARENA_TAR_GCS_BUCKET="${WEBARENA_TAR_GCS_BUCKET}" bash /opt/webarena-compose/load_images.sh
+sudo WEBARENA_TAR_GCS_BUCKET="${WEBARENA_TAR_GCS_BUCKET}" \
+  WEBARENA_SHA256_MANIFEST=/opt/webarena-compose/image-sha256.txt \
+  WEBARENA_SHA256_ANCHOR="$WEBARENA_SHA256_ANCHOR" KIWIX_IMAGE="$KIWIX_IMAGE" \
+  bash /opt/webarena-compose/load_images.sh
 
 echo "==> setup complete"
 SETUP

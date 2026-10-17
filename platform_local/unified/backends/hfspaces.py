@@ -20,7 +20,7 @@ class HFSpacesBackend(Backend):
         return LaunchPlan(
             backend="hfspaces",
             framework=framework,
-            command=f"python {_FETCH} --framework {framework} --task {spec.task}",
+            argv=["python", _FETCH, "--framework", framework, "--task", spec.task],
             driver_file=_FETCH,
             output="Gradio dashboard tab (Live Results) in the Space",
             env=["HF_TOKEN", "WANDB_API_KEY"],

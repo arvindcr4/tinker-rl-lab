@@ -22,7 +22,7 @@ class ColabBackend(InProcessBackend):
         return LaunchPlan(
             backend="colab",
             framework=framework,
-            command=f"python {_DRIVER} --framework {framework} --model {spec.model}",
+            argv=["python", _DRIVER, "--framework", framework, "--model", spec.model, "--algorithm", spec.algorithm, "--task", spec.task, "--seed", str(spec.seed), "--epochs", str(spec.training_steps)],
             driver_file=_DRIVER,
             output="platform_tinker/atropos/checkpoints/ (session-ephemeral)",
             env=["HF_TOKEN", "WANDB_API_KEY"],

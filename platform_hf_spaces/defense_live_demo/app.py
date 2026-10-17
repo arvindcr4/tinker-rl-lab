@@ -11,6 +11,7 @@ import gradio as gr
 from huggingface_hub import InferenceClient
 
 from offline_verify import verify
+from serving_policy import reserve_call
 
 
 ROOT = Path(__file__).resolve().parent
@@ -119,8 +120,11 @@ def deterministic_tool_fallback(reason: str) -> tuple[str, str, str]:
 def hosted_tool_call(prompt: str) -> tuple[str, str, str]:
     if not HF_TOKEN:
         return deterministic_tool_fallback("HF_TOKEN is not configured in this Space")
+    denial = reserve_call(prompt)
+    if denial:
+        return deterministic_tool_fallback(denial)
     try:
-        client = InferenceClient(provider="auto", api_key=HF_TOKEN)
+        client = InferenceClient(provider="auto", api_key=HF_TOKEN, timeout=30)
         response = client.chat.completions.create(
             model=ROUTER_MODEL,
             messages=[
@@ -162,8 +166,8 @@ def hosted_tool_call(prompt: str) -> tuple[str, str, str]:
             "The linked project LoRA is training evidence, while the live serving model is named explicitly above."
         )
         return status, json.dumps(executed, indent=2), explanation
-    except Exception as exc:
-        return deterministic_tool_fallback(f"hosted call failed: {type(exc).__name__}: {exc}")
+    except Exception:
+        return deterministic_tool_fallback("hosted_request_failed")
 
 
 MATH_FALLBACK_QUESTION = (
@@ -185,8 +189,11 @@ def hosted_math(prompt: str) -> tuple[str, str]:
             "⚠️ **DETERMINISTIC FALLBACK** — `HF_TOKEN` is not configured. The fixed defense example is shown below.",
             MATH_FALLBACK_ANSWER,
         )
+    denial = reserve_call(prompt)
+    if denial:
+        return "Static evidence mode: " + denial, MATH_FALLBACK_ANSWER
     try:
-        client = InferenceClient(provider="auto", api_key=HF_TOKEN)
+        client = InferenceClient(provider="auto", api_key=HF_TOKEN, timeout=30)
         response = client.chat.completions.create(
             model=ROUTER_MODEL,
             messages=[
@@ -201,9 +208,9 @@ def hosted_math(prompt: str) -> tuple[str, str]:
         )
         answer = response.choices[0].message.content
         return f"✅ **LIVE HF ROUTER** — response from `{ROUTER_MODEL}`", answer
-    except Exception as exc:
+    except Exception:
         return (
-            f"⚠️ **DETERMINISTIC FALLBACK** — hosted call failed: `{type(exc).__name__}: {exc}`",
+            "⚠️ **DETERMINISTIC FALLBACK** — hosted_request_failed",
             MATH_FALLBACK_ANSWER,
         )
 
@@ -245,11 +252,11 @@ def fetch_live_results(framework: str, task: str):
     try:
         data = fetch_all(framework or "trl", task or "gsm8k")
         return (
-            "✅ Fetched — any source showing an `error` field was unreachable.",
+            "Results status: " + data["status"],
             _json.dumps(data, indent=2, default=str),
         )
-    except Exception as e:  # pragma: no cover
-        return f"⚠️ fetch failed: {e}", "{}"
+    except Exception:  # pragma: no cover
+        return "⚠️ Results unavailable", "{}"
 
 
 with gr.Blocks(title="Tinker RL Defense Demo", css=CSS) as demo:

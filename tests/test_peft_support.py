@@ -96,8 +96,9 @@ def test_generated_grpo_script_is_valid_and_wires_quantized_prompt_tuning(tmp_pa
     assert "bnb_4bit_compute_dtype=COMPUTE_DTYPE" in script
     assert "quantized=quantization_config is not None" in script
     assert "BOXED_MARKER = '\\\\boxed{'" in script
-    assert "get_last_checkpoint(trainer_config.output_dir)" in script
-    assert "trainer.train(resume_from_checkpoint=last_checkpoint)" in script
+    assert "get_last_checkpoint" not in script
+    assert "trainer.train(resume_from_checkpoint=resume)" in script
+    assert "Checkpoint manifest differs" in script
 
 
 def test_generated_bitfit_script_avoids_full_model_checkpoints(tmp_path):
@@ -124,7 +125,7 @@ def test_generator_rejects_missing_data_and_incomplete_algorithms(tmp_path):
         algorithm={"algorithm": "dpo"},
         data={"train_data": ["preferences.json"]},
     )
-    with pytest.raises(NotImplementedError, match="GRPO and iDPO"):
+    with pytest.raises(NotImplementedError, match="GRPO only"):
         generate_trl_train_script(dpo_config, tmp_path / "dpo.py")
 
 
@@ -198,16 +199,13 @@ def test_generated_grpo_script_defaults_to_symmetric_clip(tmp_path):
     assert "epsilon_high=0.2," in script
 
 
-def test_generated_idpo_script_omits_clip_range(tmp_path):
-    script = generate_trl_train_script(
-        TRLConfig(
-            algorithm={"algorithm": "idpo"},
-            data={"train_data": ["train.json"]},
-        ),
-        tmp_path / "idpo.py",
-    )
-    compile(script, str(tmp_path / "idpo.py"), "exec")
-    assert "epsilon" not in script
+def test_generated_idpo_script_requires_a_dedicated_reward_adapter(tmp_path):
+    with pytest.raises(NotImplementedError, match="GRPO only"):
+        generate_trl_train_script(
+            TRLConfig(algorithm={"algorithm": "idpo"}, data={"train_data": ["train.json"]}),
+            tmp_path / "idpo.py",
+        )
+    assert not (tmp_path / "idpo.py").exists()
 
 
 def test_ppo_trainer_warns_when_clip_is_decoupled():

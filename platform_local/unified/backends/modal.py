@@ -25,7 +25,8 @@ class ModalBackend(Backend):
         return LaunchPlan(
             backend="modal",
             framework=framework,
-            command=f"modal run {driver}",
+            argv=["modal", "run", driver],
+            blocked_reason="Legacy Modal driver runs a fixed sweep, not this resolved experiment; parameterized adapter required",
             driver_file=driver,
             output="Modal volume 'tinker-results' + /home/user/workspace/elevation_outputs/",
             env=["MODAL_TOKEN_ID", "MODAL_TOKEN_SECRET", "HF_TOKEN", "WANDB_API_KEY"],

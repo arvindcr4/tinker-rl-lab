@@ -3,6 +3,13 @@
 # docker-load them, and verify tags match docker-compose.yaml expectations.
 # Run ONCE during GCP image build (~30 min + ~25GB disk).
 set -euo pipefail
+: "${WEBARENA_SHA256_MANIFEST:?Provide a reviewed archive SHA-256 manifest}"
+: "${WEBARENA_SHA256_ANCHOR:?Provide its independently reviewed SHA-256 digest}"
+: "${KIWIX_IMAGE:?Provide ghcr.io/kiwix/kiwix-serve@sha256:DIGEST}"
+[[ "$WEBARENA_SHA256_ANCHOR" =~ ^[a-f0-9]{64}$ ]] || exit 2
+[[ "$KIWIX_IMAGE" =~ ^ghcr.io/kiwix/kiwix-serve@sha256:[a-f0-9]{64}$ ]] || exit 2
+MANIFEST=$(realpath "$WEBARENA_SHA256_MANIFEST")
+printf '%s  %s\n' "$WEBARENA_SHA256_ANCHOR" "$MANIFEST" | sha256sum -c -
 
 WORK=${WORK:-/opt/webarena-images}
 GCS_BUCKET=${WEBARENA_TAR_GCS_BUCKET:-}
@@ -16,18 +23,9 @@ declare -A IMAGES=(
   [gitlab-populated-final-port8023.tar]="https://archive.org/download/webarena-env-gitlab-image/gitlab-populated-final-port8023.tar"
 )
 
-# CMU direct-download fallback (faster on GCP if archive.org is slow)
-declare -A CMU_MIRROR=(
-  [shopping_final_0712.tar]="http://metis.lti.cs.cmu.edu/webarena-images/shopping_final_0712.tar"
-  [shopping_admin_final_0719.tar]="http://metis.lti.cs.cmu.edu/webarena-images/shopping_admin_final_0719.tar"
-  [postmill-populated-exposed-withimg.tar]="http://metis.lti.cs.cmu.edu/webarena-images/postmill-populated-exposed-withimg.tar"
-  [gitlab-populated-final-port8023.tar]="http://metis.lti.cs.cmu.edu/webarena-images/gitlab-populated-final-port8023.tar"
-)
-
 download_one() {
   local name="$1"
   local url="$2"
-  local mirror="$3"
   if [ -f "$name" ]; then
     echo "[skip] $name already present"
     return 0
@@ -38,18 +36,18 @@ download_one() {
       mv "$name.part" "$name"
       return 0
     fi
-    echo "[gcs-fail] falling back to CMU mirror"
+    echo "[gcs-fail] trying authenticated HTTPS source"
   fi
   echo "[download] $name <- $url"
-  if ! curl -fL --retry 3 -o "$name.part" "$url"; then
-    echo "[mirror] $name <- $mirror"
-    curl -fL --retry 3 -o "$name.part" "$mirror"
-  fi
+  curl --proto '=https' --proto-redir '=https' -fL --retry 3 -o "$name.part" "$url"
   mv "$name.part" "$name"
 }
 
 for name in "${!IMAGES[@]}"; do
-  download_one "$name" "${IMAGES[$name]}" "${CMU_MIRROR[$name]}"
+  download_one "$name" "${IMAGES[$name]}"
+  expected=$(awk -v target="$name" '$2 == target || $2 == "*" target { print $1 }' "$MANIFEST")
+  [[ "$expected" =~ ^[a-f0-9]{64}$ ]] || { echo "Missing/ambiguous trusted archive digest" >&2; exit 2; }
+  printf '%s  %s\n' "$expected" "$name" | sha256sum -c -
   echo "[load] $name"
   sudo docker load --input "$name"
   echo "[cleanup] $name (free disk)"
@@ -61,7 +59,9 @@ echo "=== Loaded images ==="
 sudo docker images | grep -E 'shopping_final|shopping_admin|postmill|gitlab-populated' || true
 
 # Also pull kiwix-serve from Docker Hub (small, ~50MB)
-sudo docker pull ghcr.io/kiwix/kiwix-serve:latest
+sudo docker pull "$KIWIX_IMAGE"
+# Compose resolves this local alias to the digest-pinned bytes loaded above.
+sudo docker tag "$KIWIX_IMAGE" ghcr.io/kiwix/kiwix-serve:latest
 
 # Build a tiny homepage image (assumes /opt/webarena-homepage/ is provisioned from the repo)
 if [ -d /opt/webarena-homepage ]; then

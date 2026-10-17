@@ -62,7 +62,7 @@ import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 STAGING = ROOT / "blind_review" / "tinker-rl-lab-anon"
 TARBALL = ROOT / "blind_review" / "tinker-rl-lab-anon.tar.gz"
 LOG = ROOT / "blind_review" / "code_changes.log"
@@ -323,34 +323,41 @@ class ChangeLog:
         self.totals[label] = self.totals.get(label, 0) + count
 
 
-def _git_archive_into(dst: Path) -> None:
-    """Copy the current working tree (tracked files + newly added paper_anon
-    and blind_review/) into ``dst``. We use ``git ls-files --cached`` so only
-    tracked files are exported — untracked scratch can never leak into the
-    bundle.
-    """
+def _git_archive_into(dst: Path, revision: str | None = None) -> None:
+    """Export only regular blobs from an explicit reviewed immutable commit."""
+    if not revision or not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise ValueError("An explicit reviewed full commit SHA is required")
     dst.mkdir(parents=True, exist_ok=True)
-    result = subprocess.run(
-        ["git", "ls-files", "--cached"],
-        cwd=ROOT,
-        stdout=subprocess.PIPE,
-        text=True,
-        check=True,
-    )
-    for rel in result.stdout.splitlines():
-        rel = rel.strip()
-        if not rel:
+    listing = subprocess.check_output(["git", "ls-tree", "-rz", revision], cwd=ROOT)
+    for entry in listing.split(b"\0"):
+        if not entry:
             continue
-        src = ROOT / rel
-        if not src.is_file():
+        metadata, raw_path = entry.split(b"\t", 1)
+        mode, kind, oid = metadata.decode().split()
+        rel = raw_path.decode("utf-8")
+        parts = Path(rel).parts
+        if Path(rel).is_absolute() or ".." in parts:
+            raise ValueError("Export path escapes repository")
+        if mode == "120000":
+            raise ValueError("Symlinks require separate reviewed inclusion; export blocked")
+        if mode not in ("100644", "100755") or kind != "blob":
+            raise ValueError("Non-regular Git object cannot be inspected")
+        if _excluded(rel):
             continue
-        tgt = dst / rel
-        tgt.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, tgt)
+        target = dst / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(subprocess.check_output(["git", "cat-file", "blob", oid], cwd=ROOT))
 
 
 def _excluded(relpath: str) -> bool:
     parts = Path(relpath).parts
+    name = Path(relpath).name.lower()
+    if (name == ".env" or name.startswith(".env.") or name in {"credentials", "credentials.json", "id_rsa", "id_ed25519"}
+            or Path(relpath).suffix.lower() in {".pem", ".key", ".p12", ".pfx"}):
+        return True
+    # Uninspectable content is excluded, including previously allowed binaries.
+    if Path(relpath).suffix.lower() not in TEXT_EXTS or Path(relpath).suffix.lower() in BINARY_EXTS:
+        return True
     if any(part in EXCLUDE_DIRS for part in parts):
         return True
     if _IDENT_PATH_RE.search(relpath):
@@ -410,16 +417,19 @@ def _rewrite_notebook(text: str) -> tuple[str, list[tuple[str, int]]]:
 def _rewrite_file(path: Path, relpath: str, log: ChangeLog) -> None:
     if _is_binary(path):
         log.skipped_binary.append(relpath)
+        path.unlink()
         return
     ext = path.suffix.lower()
     name = path.name
     if ext not in TEXT_EXTS and name not in {"LICENSE", "Dockerfile"}:
         log.skipped_unknown_ext.append(relpath)
+        path.unlink()
         return
     try:
         data = path.read_text(encoding="utf-8")
     except UnicodeDecodeError:
         log.skipped_binary.append(relpath)
+        path.unlink()
         return
 
     if ext == ".ipynb":
@@ -515,6 +525,7 @@ def _post_scan(root: Path) -> list[str]:
         try:
             data = path.read_bytes()
         except OSError:
+            leaks.append(rel)
             continue
         # Decode as latin-1 so we can grep binary files (e.g. pptx/zip XML)
         # without raising on non-utf-8 bytes. This still catches identifying
@@ -523,7 +534,9 @@ def _post_scan(root: Path) -> list[str]:
             text = data.decode("utf-8", errors="ignore")
         except Exception:
             text = data.decode("latin-1", errors="ignore")
-        if pattern.search(text):
+        credential = re.search(r"(?:hf_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)", text)
+        assignment = re.search(r"(?im)^\s*(?:[A-Z_]*(?:API_KEY|TOKEN|PASSWORD|SECRET))\s*=\s*['\"]?[A-Za-z0-9_/-]{8,}", text)
+        if _excluded(rel) or path.is_symlink() or credential or assignment or pattern.search(text):
             leaks.append(rel)
             continue
         if _deep_scan(path, pattern):
@@ -531,36 +544,29 @@ def _post_scan(root: Path) -> list[str]:
     return leaks
 
 
+def _credential_scan(root: Path) -> None:
+    """Require a maintained scanner; never print matched credential values."""
+    scanner = shutil.which("gitleaks")
+    if scanner is None:
+        raise RuntimeError("Packaging blocked: gitleaks is required for credential scanning")
+    result = subprocess.run([scanner, "dir", "--no-banner", "--redact", "--exit-code", "2", str(root)],
+                            capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError("Packaging blocked: credential scan failed or detected potential credentials; review locally with redaction")
+
+
 def main() -> None:
     # 1. Fresh staging tree from tracked files only, so we never export
     #    uncommitted or untracked content.
     if STAGING.exists():
         shutil.rmtree(STAGING)
-    _git_archive_into(STAGING)
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--revision", required=True, help="Reviewed full commit SHA")
+    args = parser.parse_args()
+    _git_archive_into(STAGING, args.revision)
 
-    # 2. Copy in the anonymised paper so the tarball has a compile-ready tex.
-    anon_tex = ROOT / "paper" / "main_anon.tex"
-    (STAGING / "paper").mkdir(exist_ok=True, parents=True)
-    shutil.copy2(anon_tex, STAGING / "paper" / "main_anon.tex")
-    # Copy style files / figures / bib that the anonymous paper depends on.
-    for rel in [
-        "paper/neurips_2025.sty",
-        "paper/neurips_2026.sty",
-        "paper/references.bib",
-    ]:
-        src = ROOT / rel
-        if src.exists():
-            shutil.copy2(src, STAGING / rel)
-    # Keep the figures directory for paper build.
-    figs_src = ROOT / "paper" / "figures"
-    figs_dst = STAGING / "paper" / "figures"
-    if figs_src.exists() and not figs_dst.exists():
-        shutil.copytree(figs_src, figs_dst)
-    tikz_src = ROOT / "paper" / "tikz"
-    tikz_dst = STAGING / "paper" / "tikz"
-    if tikz_src.exists() and not tikz_dst.exists():
-        shutil.copytree(tikz_src, tikz_dst)
-
+    # Never overlay uncommitted working-tree paper, figure or style content.
     log = ChangeLog()
 
     # 3. Drop excluded files / directories.
@@ -589,6 +595,8 @@ def main() -> None:
             TARBALL.unlink()
         print("Aborting: no tarball was produced.", file=sys.stderr)
         sys.exit(2)
+
+    _credential_scan(STAGING)
 
     # 6. Build tarball.
     if TARBALL.exists():

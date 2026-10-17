@@ -1,68 +1,170 @@
-"""Verify staged Colab same-stack v2 runs, then copy them into the canonical results directory.
+"""Strict same-stack evidence gate. Historical bundles require revalidation.
 
-Checks per staged run: full (non-smoke) config identical to the Modal runs apart from platform, 1,319 graded
-items, completions present, and the execution environment recorded. As a hardware-drift control, the base
-model's per-item greedy answers on Colab (L4) are compared with the Modal (A10G) base answers, which are
-identical across all 27 Modal runs.
-
-Usage: python3 platform_colab/samestack_v2/verify_and_merge.py [--merge]
-Writes reports/project_finish_2026-10-11/validation/samestack_v2/colab_runs_check.json
+Merging requires a pinned item manifest, independent completion regrading, and an
+explicit hardware pooling policy. Reports alone never establish equivalence.
 """
 
+import argparse
 import gzip
+import hashlib
 import json
+import math
 import pathlib
+import re
 import shutil
-import sys
+import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 STAGE = ROOT / "platform_hybrid/experiments/results/samestack_gsm8k_v2s_colab"
 CANON = ROOT / "platform_hybrid/experiments/results/samestack_gsm8k_v2s"
 OUT = ROOT / "reports/project_finish_2026-10-11/validation/samestack_v2/colab_runs_check.json"
 CONFIG_KEYS = ("model", "n_steps", "k_epochs", "lr", "max_new", "n_gen", "n_eval")
+GROUPS = {"grpo_g8": 8, "grpo_g2": 2, "ppo": 1, "ppo_8x8": 8}
 
 
 def load(path):
-    return json.loads(path.read_text().replace("NaN", "null"))
+    return json.loads(
+        path.read_text(),
+        parse_constant=lambda v: (_ for _ in ()).throw(ValueError("Non-finite JSON")),
+    )
 
 
-def main():
-    ref = load(CANON / "grpo_g8_s42.json")
-    ref_txt = json.loads(gzip.open(CANON / "grpo_g8_s42_texts.json.gz", "rt").read())
-    report, ok_all = {"reference": "grpo_g8_s42 (Modal A10G)", "runs": {}}, True
-    for path in sorted(STAGE.glob("*_s*.json")):
-        r, name = load(path), path.stem
-        txt_path = STAGE / f"{name}_texts.json.gz"
-        txt = json.loads(gzip.open(txt_path, "rt").read()) if txt_path.exists() else None
-        same_pre = sum(a == b for a, b in zip(r["pre_correct"], ref["pre_correct"]))
-        same_text = sum(a == b for a, b in zip(txt["pre"], ref_txt["pre"])) if txt else None
-        checks = {
-            "not_smoke": r.get("smoke") is False,
-            "config_matches_modal": all(r.get(k) == ref.get(k) for k in CONFIG_KEYS),
-            "items_graded_1319": len(r["post_correct"]) == len(r["pre_correct"]) == 1319,
-            "completions_present": txt is not None and len(txt["post"]) == 1319,
-            "environment_recorded": "execution_environment" in r,
-            "not_already_canonical": not (CANON / path.name).exists() or load(CANON / path.name) == r,
-        }
-        ok = all(checks.values())
-        ok_all &= ok
-        report["runs"][name] = {
-            "checks": checks, "ok": ok, "pre_acc": r["heldout_pre_acc"], "post_acc": r["heldout_post_acc"],
-            "base_items_same_verdict_as_modal": same_pre, "base_texts_identical_to_modal": same_text,
-            "base_acc_modal": ref["heldout_pre_acc"], "gpu": r.get("execution_environment", {}).get("gpu"),
-        }
-        print(f"{'OK ' if ok else 'BAD'} {name}: post={r['heldout_post_acc']:.4f} pre={r['heldout_pre_acc']:.4f} "
-              f"(Modal base {ref['heldout_pre_acc']:.4f}); base verdicts same as Modal on {same_pre}/1319, "
-              f"identical base texts {same_text}/1319" + ("" if ok else f"  {checks}"))
-    OUT.write_text(json.dumps(report, indent=1) + "\n")
-    if "--merge" in sys.argv:
-        if not ok_all:
-            sys.exit("not merging: a staged run failed its checks")
-        for path in sorted(STAGE.glob(f"*_s*")):
-            shutil.copy2(path, CANON / path.name)
-        print(f"merged {len(list(STAGE.glob('*_s*.json')))} runs into {CANON.relative_to(ROOT)}")
-    sys.exit(0 if ok_all else 1)
+def validate_result(name, result, texts, reference, items=None):
+    match = re.fullmatch(r"(grpo_g8|grpo_g2|ppo|ppo_8x8)_s([0-9]+)", name)
+    arm = match[1] if match else None
+    n = reference.get("n_eval")
+    pre, post = result.get("pre_correct", []), result.get("post_correct", [])
+    binary = lambda v: type(v) is int and v in (0, 1)
+    grades_valid = (
+        isinstance(pre, list)
+        and isinstance(post, list)
+        and type(n) is int
+        and n > 0
+        and len(pre) == len(post) == n
+        and all(binary(v) for v in pre + post)
+    )
+    text_valid = isinstance(texts, dict) and all(
+        isinstance(texts.get(k), list)
+        and len(texts[k]) == n
+        and all(isinstance(t, str) and t.strip() for t in texts[k])
+        for k in ("pre", "post")
+    )
+    env = result.get("execution_environment") or result.get("env") or {}
+    logs = result.get("step_log", [])
+    checks = {
+        "filename_identity": bool(
+            match and result.get("arm") == arm and result.get("seed") == int(match[2])
+        ),
+        "not_smoke": result.get("smoke") is False,
+        "config_matches": all(result.get(k) == reference.get(k) for k in CONFIG_KEYS),
+        "group_matches": bool(arm and result.get("group") == GROUPS[arm]),
+        "critic_matches": bool(
+            arm
+            and (
+                (isinstance(result.get("critic"), dict) and bool(result["critic"]))
+                if arm and arm.startswith("ppo")
+                else bool(arm) and result.get("critic") is None
+            )
+        ),
+        "actual_steps": isinstance(logs, list)
+        and len(logs) == reference.get("n_steps")
+        and [row.get("step") for row in logs if isinstance(row, dict)]
+        == list(range(reference.get("n_steps", 0))),
+        "binary_grade_cardinality": grades_valid,
+        "completion_cardinality": text_valid,
+        "substantive_environment": isinstance(env, dict)
+        and all(isinstance(env.get(k), str) and env[k].strip() for k in ("gpu", "python", "torch")),
+        "accuracy_recomputed": grades_valid
+        and all(
+            type(result.get(k)) in (int, float)
+            and math.isfinite(result[k])
+            and abs(result[k] - sum(v) / n) < 1e-12
+            for k, v in (("heldout_pre_acc", pre), ("heldout_post_acc", post))
+        ),
+        "pinned_item_identity": bool(
+            items and result.get("item_ids") == [item["id"] for item in items] and len(items) == n
+        ),
+    }
+    checks["independent_regrade"] = False
+    if checks["pinned_item_identity"] and text_valid:
+        from platform_local.trl_integrations.scientific import numeric_answer
+
+        def grade(text, gold):
+            boxes = re.findall(r"\\boxed\{([^{}]+)\}", text)
+            return int(
+                bool(boxes)
+                and numeric_answer(boxes[-1]) is not None
+                and numeric_answer(boxes[-1]) == numeric_answer(gold)
+            )
+
+        checks["independent_regrade"] = all(
+            [grade(t, item["answer"]) for t, item in zip(texts[key], items)] == vector
+            for key, vector in (("pre", pre), ("post", post))
+        )
+    return checks
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--merge", action="store_true")
+    parser.add_argument("--item-manifest", type=pathlib.Path)
+    parser.add_argument("--item-manifest-sha256")
+    parser.add_argument("--pooling-policy", type=pathlib.Path)
+    args = parser.parse_args(argv)
+    items = None
+    if args.item_manifest:
+        if hashlib.sha256(args.item_manifest.read_bytes()).hexdigest() != args.item_manifest_sha256:
+            raise ValueError("Item manifest must match an independently reviewed digest")
+        items = load(args.item_manifest)["items"]
+    reference = load(CANON / "grpo_g8_s42.json")
+    report = {
+        "schema": "colab-verification-v2",
+        "runs": {},
+        "pooling": "stratified_by_recorded_hardware",
+    }
+    accepted = []
+    paths = sorted(STAGE.glob("*_s*.json"))
+    for path in paths:
+        result = load(path)
+        text_path = path.with_name(path.stem + "_texts.json.gz")
+        try:
+            with gzip.open(text_path, "rt") as handle:
+                texts = json.load(handle)
+        except (OSError, ValueError):
+            texts = None
+        checks = validate_result(path.stem, result, texts, reference, items)
+        report["runs"][path.stem] = {"checks": checks, "ok": all(checks.values())}
+        if all(checks.values()):
+            accepted.append((path, text_path))
+    ok = bool(paths) and len(accepted) == len(paths)
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(json.dumps(report, indent=2) + "\n")
+    if args.merge:
+        if not ok or not args.pooling_policy:
+            raise ValueError(
+                "Merging requires complete regraded bundles and an explicit hardware pooling policy"
+            )
+        policy = load(args.pooling_policy)
+        if not policy.get("calibration") or policy.get("mode") != "stratified_by_recorded_hardware":
+            raise ValueError("Pooling policy must specify calibration and hardware stratification")
+        # Publish one complete directory atomically, never partially overwrite canonical files.
+        parent = CANON / "verified_bundles"
+        parent.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=parent, prefix=".staging-") as temp:
+            bundle = pathlib.Path(temp) / "bundle"
+            bundle.mkdir()
+            for pair in accepted:
+                for path in pair:
+                    shutil.copyfile(path, bundle / path.name)
+            (bundle / "verification.json").write_text(json.dumps(report, sort_keys=True))
+            (bundle / "pooling_policy.json").write_text(json.dumps(policy, sort_keys=True))
+            digest = hashlib.sha256(json.dumps(report, sort_keys=True).encode()).hexdigest()
+            target = parent / digest
+            if target.exists():
+                raise FileExistsError("Verified bundle already exists; it was not overwritten")
+            bundle.rename(target)
+    return 0 if ok else 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

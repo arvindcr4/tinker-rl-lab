@@ -14,11 +14,11 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import hashlib
 import logging
 import os
 import random
 import re
-import shutil
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -134,64 +134,31 @@ def _run_cmd(cmd: List[str], cwd: Optional[Path] = None, env: Optional[Dict[str,
 
 
 def ensure_repo(repo_dir: Path, repo_url: str, branch: Optional[str] = None) -> None:
-    """Clone or update the Echoverse repo.
-
-    If the checkout becomes inconsistent, fall back to a clean clone.
-    """
+    """Update without ever deleting or resetting a caller-owned checkout."""
     if repo_dir.exists():
-        LOG.info("Echoverse repo exists at %s; updating.", repo_dir)
-        fetch_cmd = ["git", "-C", str(repo_dir), "fetch", "origin", "--prune"]
-        rc, out = _run_cmd(fetch_cmd)
-        if rc != 0:
-            LOG.warning("git fetch failed in %s:\n%s", repo_dir, out.strip())
-            LOG.info("Falling back to fresh clone.")
-            shutil.rmtree(repo_dir)
-        elif branch:
-            rc, out = _run_cmd(
-                ["git", "-C", str(repo_dir), "rev-parse", "--verify", f"refs/heads/{branch}"]
-            )
-            if rc != 0:
-                LOG.info("Target local branch %s not present; attempting remote branch checkout.", branch)
-                rc, out = _run_cmd(
-                    [
-                        "git",
-                        "-C",
-                        str(repo_dir),
-                        "checkout",
-                        "-B",
-                        branch,
-                        f"origin/{branch}",
-                    ]
-                )
-                if rc != 0:
-                    LOG.warning("Remote branch checkout failed:\n%s", out.strip())
-                    LOG.info("Falling back to fresh clone.")
-                    shutil.rmtree(repo_dir)
-            else:
-                rc, out = _run_cmd(["git", "-C", str(repo_dir), "checkout", branch])
-                if rc != 0:
-                    LOG.warning("Failed to checkout branch %s:\n%s", branch, out.strip())
-                else:
-                    rc, out = _run_cmd(["git", "-C", str(repo_dir), "pull", "--ff-only", "origin", branch])
-                    if rc != 0:
-                        LOG.warning("git pull failed for %s:\n%s", branch, out.strip())
-                        LOG.info("Falling back to fresh clone.")
-                        shutil.rmtree(repo_dir)
-        else:
-            rc, out = _run_cmd(["git", "-C", str(repo_dir), "pull", "--ff-only"])
-            if rc != 0:
-                LOG.warning("git pull failed:\n%s", out.strip())
-                LOG.info("Falling back to fresh clone.")
-                shutil.rmtree(repo_dir)
-
-    if not repo_dir.exists():
-        clone_cmd = ["git", "clone"]
+        commands = [["git", "-C", str(repo_dir), "fetch", "origin", "--prune"]]
         if branch:
-            clone_cmd.extend(["--branch", branch])
-        clone_cmd.extend([repo_url, str(repo_dir)])
-        rc, out = _run_cmd(clone_cmd)
-        if rc != 0:
-            raise RuntimeError(f"Failed to clone Echoverse repo ({repo_url}).\n{out}")
+            commands += [["git", "-C", str(repo_dir), "checkout", branch]]
+        commands += [["git", "-C", str(repo_dir), "pull", "--ff-only"]]
+        for command in commands:
+            rc, _ = _run_cmd(command)
+            if rc:
+                raise RuntimeError("Echoverse update failed; existing checkout preserved")
+        return
+    cmd = ["git", "clone"]
+    if branch:
+        cmd += ["--branch", branch]
+    rc, _ = _run_cmd(cmd + [repo_url, str(repo_dir)])
+    if rc:
+        raise RuntimeError("Echoverse clone failed; partial checkout preserved for inspection")
+
+
+# Positive allowlist: endpoints, paths and future credential options stay private.
+PUBLIC_CONFIG_FIELDS = ("envs", "seeds", "agent", "agent_model", "max_rounds",
+                        "concurrency", "limit_per_env_seed", "skip_verify")
+
+def public_config(args: argparse.Namespace) -> dict:
+    return {key: getattr(args, key) for key in PUBLIC_CONFIG_FIELDS if hasattr(args, key)}
 
 
 def _db_exists_for_env(env_dir: Path) -> bool:
@@ -380,8 +347,6 @@ def batch_run(
         user,
         "--agent-model",
         args.agent_model,
-        "--agent-api-key",
-        args.agent_api_key,
         "--max-rounds",
         str(args.max_rounds),
         "--system",
@@ -399,9 +364,21 @@ def batch_run(
     if args.headful:
         cmd.append("--headful")
 
+    # The external harness must explicitly implement this contract. Never fall
+    # back to count-only selection or a credential-bearing command argument.
+    rc, help_text = _run_cmd(["python", "-m", "harness.eval.batch", "--help"], cwd=repo_dir)
+    if rc or "--task-ids-file" not in help_text or "--agent-api-key-env" not in help_text:
+        raise RuntimeError("Harness needs --task-ids-file and --agent-api-key-env support before execution")
+    manifest = run_root.parent / f"{run_id}.tasks.json"
+    manifest.write_text(json.dumps(task_ids), encoding="utf-8")
+    cmd += ["--task-ids-file", str(manifest), "--agent-api-key-env", "ECHOVERSE_AGENT_API_KEY"]
+    child_env = os.environ.copy()
+    child_env["ECHOVERSE_AGENT_API_KEY"] = args.agent_api_key
     start = time.time()
     LOG.info("Running harness batch: env=%s seed=%s task_count=%d", env_name, seed, len(task_ids))
-    rc, out = _run_cmd(cmd, cwd=repo_dir)
+    rc, out = _run_cmd(cmd, cwd=repo_dir, env=child_env)
+    if args.agent_api_key and args.agent_api_key != "not-needed":
+        out = out.replace(args.agent_api_key, "[REDACTED]")
     runtime = time.time() - start
     if rc != 0:
         LOG.error("Batch run failed for env=%s seed=%s:\n%s", env_name, seed, out.strip())
@@ -509,7 +486,7 @@ def summarize_and_log_wandb(results: List[RunResult], args: argparse.Namespace) 
         return
 
     run_name = f"{args.run_name_prefix}-{int(time.time())}"
-    config = vars(args).copy()
+    config = public_config(args)
     config["env_count"] = len({(r.env, r.seed) for r in results})
     wandb.init(
         project=args.wandb_project,
@@ -655,7 +632,10 @@ def run_matrix(args: argparse.Namespace) -> List[RunResult]:
             if args.limit_per_env_seed and len(task_ids) > args.limit_per_env_seed:
                 task_ids = task_ids[: args.limit_per_env_seed]
 
-            run_id = f"{env_name}_seed{seed}_n{len(task_ids)}"
+            identity = {"tasks": task_ids, "seed": seed, "config": public_config(args),
+                        "endpoint": args.agent_base_url, "endpoints": args.agent_base_urls}
+            digest = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:16]
+            run_id = f"{env_name}_seed{seed}_{digest}"
             rc, batch_runtime, batch_output, run_root = batch_run(
                 repo_dir=repo_dir,
                 env_name=env_name,
@@ -741,7 +721,7 @@ def _parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     parser.add_argument("--agent-base-url", default=None)
     parser.add_argument("--agent-base-urls", default=None)
     parser.add_argument("--agent-model", default="Fara1.5-9B")
-    parser.add_argument("--agent-api-key", default="not-needed")
+    parser.add_argument("--agent-api-key-env", default="ECHOVERSE_AGENT_API_KEY", help="Environment variable containing the agent credential; never pass its value on the CLI")
     parser.add_argument("--max-rounds", type=int, default=120)
     parser.add_argument("--concurrency", type=int, default=None)
     parser.add_argument("--headful", action="store_true")
@@ -780,6 +760,9 @@ def _parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(list(argv) if argv is not None else None)
+    if not re.fullmatch(r"[A-Z_][A-Z0-9_]*", args.agent_api_key_env):
+        parser.error("--agent-api-key-env must name an environment variable")
+    args.agent_api_key = os.environ.get(args.agent_api_key_env, "not-needed")
 
     args.agent_base_urls = (
         [u.strip() for u in args.agent_base_urls.split(",") if u.strip()]
@@ -802,12 +785,12 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     )
     if args.dry_run:
         LOG.info("DRY-RUN requested. Planned command arguments:")
-        print(json.dumps(vars(args), indent=2))
+        print(json.dumps(public_config(args), indent=2))
         return 0
 
     results = run_matrix(args)
     summarize_and_log_wandb(results, args)
-    return 0
+    return int(not results or any(r.batch_rc != 0 or r.errors for r in results))
 
 
 if __name__ == "__main__":

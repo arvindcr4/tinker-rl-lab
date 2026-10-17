@@ -38,3 +38,21 @@ python app.py
 ```
 
 `HF_TOKEN` is optional. Without it, both interactive inference tabs remain usable through explicitly labeled, precomputed defense fallbacks.
+
+
+## Review-10 serving and evidence gates
+
+The default is static evidence even when HF_TOKEN is configured. Live inference
+requires explicit `LIVE_INFERENCE_POLICY=bounded_public`, an absolute persistent
+`LIVE_BUDGET_DB`, and `LIVE_TOTAL_CALL_LIMIT` between 1 and 100. The cap is a
+persistent lifetime call count, reserved before requests, not a currency budget.
+Use a shared quota service for independent replicas; separate databases do not
+form a global cap. Inputs are limited to 4096 characters and requests time out
+at 30 seconds. This policy was tested offline only and was not enabled.
+
+Offline PASS now requires `EVIDENCE_MANIFEST_PATH` and an independently trusted
+`EVIDENCE_MANIFEST_SHA256`. No trusted release manifest was supplied by review10,
+so absent anchors return FAIL. Live result fetching requires a reviewed
+`results_index.json` with exact framework/task/model-revision/seed/protocol
+identities and pinned source locations. Missing indices report unavailable;
+previous broad project listings are not relabeled as requested experiments.

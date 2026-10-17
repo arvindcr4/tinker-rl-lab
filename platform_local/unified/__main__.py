@@ -51,7 +51,7 @@ Examples:
     )
 
     parser.add_argument(
-        "--model", "-m", type=str, default="Qwen/Qwen2.5-1.5B-Instruct", help="Model name or path"
+        "--model", "-m", type=str, default="Qwen/Qwen3-8B", help="Model name or path"
     )
 
     parser.add_argument(
@@ -67,15 +67,15 @@ Examples:
         "--epochs",
         "-e",
         type=int,
-        default=20,
-        help="Number of training epochs (overridden by --total-token-budget)",
+        default=30,
+        help="Optimizer-step budget (legacy --epochs name); explicit overrides use unified-resolved-v2",
     )
 
     parser.add_argument(
         "--total-token-budget",
         type=int,
         default=None,
-        help="Target total sampled/training tokens (P1 causal ablation). Overrides epochs.",
+        help="Estimated sampled-token budget only; computes steps and does not enforce observed tokens",
     )
 
     parser.add_argument(
@@ -94,7 +94,7 @@ Examples:
 
     parser.add_argument("--lr", type=float, default=1e-6, help="Learning rate")
 
-    parser.add_argument("--lora-rank", type=int, default=32, help="LoRA rank")
+    parser.add_argument("--lora-rank", type=int, default=16, help="LoRA rank")
 
     parser.add_argument(
         "--peft-method",
@@ -142,7 +142,7 @@ Examples:
         help="Write a runnable TRL GRPO script instead of running the smoke scaffold",
     )
 
-    parser.add_argument("--batch-size", type=int, default=8, help="Training batch size")
+    parser.add_argument("--batch-size", type=int, default=2, help="Training batch size")
 
     parser.add_argument(
         "--wandb-project", type=str, default="unified-rl", help="WandB project name"
@@ -152,6 +152,9 @@ Examples:
         "--dry-run", action="store_true", help="Print config and exit without training"
     )
 
+    parser.add_argument("--task", default="gsm8k")
+    parser.add_argument("--seed", type=int, default=211)
+    parser.add_argument("--gradient-accumulation-steps", type=int, default=8)
     args = parser.parse_args()
 
     # Create launcher
@@ -161,13 +164,15 @@ Examples:
     launcher.model = args.model
     launcher.algorithm = args.algorithm
     launcher.epochs = args.epochs
+    launcher.task = args.task
+    launcher.seed = args.seed
     launcher.use_peft = not args.no_peft
     launcher.peft_method = args.peft_method
     launcher.dry_run = args.dry_run
     launcher.train_data = list(args.train_data)
     launcher.wandb_project = args.wandb_project
 
-    max_steps = -1
+    max_steps = args.epochs
     if args.total_token_budget is not None:
         if args.total_token_budget <= 0 or args.tokens_per_sample <= 0 or args.batch_size <= 0:
             parser.error("token budget, tokens per sample and batch size must be positive")
@@ -178,13 +183,18 @@ Examples:
         # P1: SFT warm-up ablation: Match total sampled/training tokens
         total_samples = args.total_token_budget / args.tokens_per_sample
         # Assuming gradient_accumulation_steps=4 (default in config) for rough step match
-        effective_batch_size = args.batch_size * 4
+        effective_batch_size = args.batch_size * args.gradient_accumulation_steps
         max_steps = max(1, int(total_samples / effective_batch_size))
-        print(f"[P1 Ablation] Matching token budget: {args.total_token_budget} tokens")
+        print(f"[Estimated budget; not enforced] Requested tokens: {args.total_token_budget} tokens")
         print(
-            f" -> Computed max_steps: {max_steps} (assuming batch size {args.batch_size}, 4 grad accum, ~{args.tokens_per_sample} tokens/sample)"
+            f" -> Computed max_steps: {max_steps} (assuming batch size {args.batch_size}, {args.gradient_accumulation_steps} grad accum, ~{args.tokens_per_sample} tokens/sample)"
         )
 
+    from dataclasses import replace
+    launcher.spec = replace(launcher._resolve_spec(), learning_rate=args.lr,
+                            lora_rank=args.lora_rank, per_device_train_batch_size=args.batch_size,
+                            gradient_accumulation_steps=args.gradient_accumulation_steps,
+                            training_steps=max_steps)
     # Dry-run is handled inside launcher.run() (prints the resolved LaunchPlan).
     if args.dry_run and not args.generate_script:
         launcher.run()
@@ -195,8 +205,8 @@ Examples:
     ):
         if args.framework != "trl":
             parser.error("--generate-script requires --framework trl")
-        if args.algorithm not in ("grpo", "idpo"):
-            parser.error("TRL script generation/execution supports --algorithm grpo or idpo")
+        if args.algorithm != "grpo":
+            parser.error("TRL scientific script generation/execution supports --algorithm grpo only")
         if not args.train_data:
             parser.error("TRL script generation/execution requires at least one --train-data path")
         if args.no_peft and (args.load_in_4bit or args.load_in_8bit):
@@ -220,12 +230,14 @@ Examples:
                 "load_in_8bit": args.load_in_8bit,
             },
             optimizer={"learning_rate": args.lr},
-            algorithm={"algorithm": args.algorithm},
+            algorithm={"algorithm": args.algorithm, "kl_coef": 0.0},
             data={
                 "train_data": args.train_data,
                 "train_batch_size": args.batch_size,
+                "gradient_accumulation_steps": args.gradient_accumulation_steps,
             },
-            epochs=args.epochs,
+            epochs=1,
+            seed=args.seed,
             max_steps=max_steps,
             project_name=args.wandb_project,
             deepspeed=args.deepspeed,

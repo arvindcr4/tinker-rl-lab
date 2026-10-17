@@ -67,7 +67,7 @@ class UnifiedLauncher:
         self.framework = None
         self.model = None
         self.algorithm = "grpo"
-        self.epochs = 20
+        self.epochs = 30
         self.config = None
         self.trl_config = None  # Validated CLI config shared by generation and execution.
         self.use_peft = True
@@ -82,19 +82,19 @@ class UnifiedLauncher:
         print("\n" + "=" * 60)
         print("  Unified RL Training Launcher")
         print("=" * 60)
-        print(f"\nAvailable Frameworks:")
+        print("\nAvailable Frameworks:")
         for key, desc in self.FRAMEWORKS.items():
             marker = "→" if key == self.framework else " "
             print(f"  {marker} {key:12s} - {desc}")
-        print(f"\nAvailable Algorithms:")
+        print("\nAvailable Algorithms:")
         for key, desc in self.ALGORITHMS.items():
             marker = "→" if key == self.algorithm else " "
             print(f"  {marker} {key:12s} - {desc}")
-        print(f"\nAvailable Backends:")
+        print("\nAvailable Backends:")
         for key, desc in self.BACKENDS.items():
             marker = "→" if key == self.backend else " "
             print(f"  {marker} {key:10s} - {desc}")
-        print(f"\nSelected:")
+        print("\nSelected:")
         print(f"  Framework: {self.framework}")
         print(f"  Backend:  {self.backend}")
         print(f"  Model: {self.model}")
@@ -111,7 +111,23 @@ class UnifiedLauncher:
             return self.spec
         from platform_local.unified.canonical import load_spec
 
-        self.spec = load_spec()
+        from dataclasses import replace
+        base = load_spec()
+        overrides = {"model": self.model or base.model, "algorithm": self.algorithm,
+                     "training_steps": self.epochs, "task": getattr(self, "task", base.task),
+                     "seed": getattr(self, "seed", base.seed)}
+        if self.trl_config is not None:
+            c = self.trl_config
+            overrides.update(model=c.model_name, algorithm=c.algorithm.algorithm,
+                training_steps=c.max_steps if c.max_steps > 0 else self.epochs,
+                learning_rate=c.optimizer.learning_rate, lora_rank=c.model.lora_rank,
+                lora_alpha=c.model.lora_alpha, beta=c.algorithm.kl_coef,
+                epsilon_low=c.algorithm.epsilon_low, epsilon_high=c.algorithm.epsilon_high,
+                max_completion_length=c.data.max_response_length,
+                per_device_train_batch_size=c.data.train_batch_size,
+                gradient_accumulation_steps=c.data.gradient_accumulation_steps,
+                num_generations=c.num_generations, seed=c.seed)
+        self.spec = replace(base, **overrides)
         return self.spec
 
     def run(self):
@@ -193,9 +209,7 @@ class UnifiedLauncher:
         var is present.
         """
         import os
-        import subprocess
 
-        spec = self._resolve_spec()
         print("\n[SKYRL] SkyRL tx (self-hosted Tinker API server)")
         cfg = "platform_hybrid/skyrl/configs/grpo_gsm8k.yaml"
         checkout = os.environ.get("SKYRL_CHECKOUT")
@@ -206,12 +220,9 @@ class UnifiedLauncher:
                 f"and run the recipe at {cfg}. (The Tinker-cloud equivalent is "
                 "`--framework tinker`, which runs in-process via grpo_cli.)"
             )
-        subprocess.run(
-            ["uv", "run", "--extra", "gpu", "--extra", "tinker", "-m", "skyrl.tinker.api"],
-            cwd=checkout,
-            check=True,
+        raise NotImplementedError(
+            "SkyRL API server alone does not train. A reviewed readiness/client/receipt adapter is required."
         )
-        return TrainingResult("skyrl", spec.model, self.algorithm, spec.training_steps, [], [])
 
     def _run_tinker(self) -> TrainingResult:
         """Run Tinker (Atropos / GRPO-CLI) training in-process.
@@ -267,13 +278,15 @@ class UnifiedLauncher:
                 algorithm=VERLAlgorithmConfig(algorithm=self.algorithm),
             )
             trainer = VERLTrainer(config)
-            asyncio.run(trainer.run())
+            receipt = asyncio.run(trainer.run())
+            if not isinstance(receipt, dict) or type(receipt.get("final_step")) is not int:
+                raise RuntimeError("verl did not return an actual completed-step receipt")
 
             return TrainingResult(
                 framework="verl",
                 model=self.model,
                 algorithm=self.algorithm,
-                final_step=self.epochs,
+                final_step=receipt["final_step"],
                 reward_history=[],
                 loss_history=[],
             )
@@ -355,17 +368,30 @@ class UnifiedLauncher:
             optimizer={"learning_rate": spec.learning_rate},
             algorithm={
                 "algorithm": self.algorithm,
+                "kl_coef": spec.beta,
                 "epsilon_low": spec.epsilon_low,
                 "epsilon_high": spec.epsilon_high,
             },
-            data={"train_data": train_data},
-            epochs=self.epochs,
+            data={"train_data": train_data, "train_batch_size": spec.per_device_train_batch_size,
+                  "gradient_accumulation_steps": spec.gradient_accumulation_steps,
+                  "max_response_length": spec.max_completion_length},
+            epochs=1, max_steps=spec.training_steps, seed=spec.seed,
+            num_generations=spec.num_generations,
             project_name=getattr(self, "wandb_project", "unified-rl"),
         )
-        script = os.path.join(tempfile.mkdtemp(), "train_trl.py")
-        generate_trl_train_script(config, script)
-        print(f"[TRL] generated {script}; executing")
         import subprocess
-
-        subprocess.run([sys.executable, script], check=True)
-        return TrainingResult("trl", self.model or spec.model, self.algorithm, self.epochs, [], [])
+        import json
+        from pathlib import Path
+        with tempfile.TemporaryDirectory(prefix="unified-trl-") as scratch:
+            script = str(Path(scratch) / "train_trl.py")
+            receipt_path = Path(scratch) / "receipt.json"
+            generate_trl_train_script(config, script)
+            env = os.environ.copy()
+            env["TRL_RECEIPT_PATH"] = str(receipt_path)
+            repo_root = str(Path(__file__).resolve().parents[2])
+            env["PYTHONPATH"] = repo_root + os.pathsep + env.get("PYTHONPATH", "")
+            subprocess.run([sys.executable, script], check=True, env=env)
+            receipt = json.loads(receipt_path.read_text())
+            if receipt.get("status") != "completed" or receipt.get("simulated") is not False or type(receipt.get("final_step")) is not int:
+                raise RuntimeError("Missing valid completed training receipt")
+        return TrainingResult("trl", spec.model, spec.algorithm, receipt["final_step"], [], [])

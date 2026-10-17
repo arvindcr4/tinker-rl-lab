@@ -99,6 +99,11 @@ class TRLConfig(BaseModel):
     eval_interval: int = 5
     save_interval: int = 10
     max_steps: int = -1  # -1 for epochs
+    seed: int = 211
+    num_generations: int = Field(default=8, ge=2)
+    output_root: str = "./checkpoints"
+    resume_from_checkpoint: Optional[str] = None
+    simulator: bool = False
 
     # Hardware
     num_gpus: int = 1

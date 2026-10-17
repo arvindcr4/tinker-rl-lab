@@ -2,6 +2,7 @@
 
 import contextlib
 import io
+import json
 import os
 from pathlib import Path
 import sys
@@ -98,13 +99,18 @@ def invoke_trl(extra=(), generate=False):
     argv += list(extra)
     if generate:
         argv += ["--generate-script", "synthetic-not-written.py"]
+    def completed_training(cmd, **kwargs):
+        # Protocol v2 only accepts actual trainer receipts, even in mocked tests.
+        Path(kwargs["env"]["TRL_RECEIPT_PATH"]).write_text(json.dumps({
+            "status": "completed", "simulated": False, "final_step": 4,
+        }))
+
     with (
         patch.dict(sys.modules, {driver.__name__: driver}),
         patch.object(sys, "argv", argv),
         patch.object(UnifiedLauncher, "run", lambda self: self._run_trl()),
         patch.object(UnifiedLauncher, "_resolve_spec", return_value=CanonicalSpec()),
-        patch("tempfile.mkdtemp", return_value="synthetic-not-created"),
-        patch("subprocess.run") as run,
+        patch("subprocess.run", side_effect=completed_training) as run,
         contextlib.redirect_stdout(io.StringIO()),
     ):
         main()
@@ -136,13 +142,14 @@ def test_direct_trl_preserves_budget_and_cli_settings(backend):
             "synthetic-ds.json",
         ]
     )
-    assert config["max_steps"] == 8
+    assert config["max_steps"] == 4
+    assert config["data"]["gradient_accumulation_steps"] == 8
     assert config["data"]["train_batch_size"] == 2
     assert config["optimizer"]["learning_rate"] == 0.0002
     assert config["model"]["lora_rank"] == 7
     assert config["model"]["peft_num_virtual_tokens"] == 12
     assert config["deepspeed"] == "synthetic-ds.json"
-    assert config["epochs"] == 3
+    assert config["epochs"] == 1  # step budget, not an unbounded epoch proxy
 
 
 def test_trl_generation_and_direct_execution_share_configuration():
@@ -180,8 +187,10 @@ def test_invalid_or_unsupported_budget_rejected_before_launch(extra):
     assert failure.value.code == 2
 
 
-def test_direct_trl_preserves_supported_idpo_algorithm():
-    assert invoke_trl(["--algorithm", "idpo"])["algorithm"]["algorithm"] == "idpo"
+def test_direct_trl_rejects_idpo_without_a_scientific_reward_adapter():
+    with pytest.raises(SystemExit) as failure:
+        invoke_trl(["--algorithm", "idpo"])
+    assert failure.value.code == 2
 
 
 @pytest.mark.parametrize("extra", [["--algorithm", "ppo"], ["--no-peft", "--load-in-4bit"]])

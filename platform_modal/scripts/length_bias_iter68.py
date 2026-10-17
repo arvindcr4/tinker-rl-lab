@@ -15,11 +15,11 @@ Negative control: arithmetic_easy should show no meaningful divergence (both
 algos converge to L ~ 4 by step 5).
 
 Outputs:
-  platform_hybrid/experiments/results/length_bias_iter68_first_div.tsv
-  platform_hybrid/experiments/results/length_bias_iter68_volatility.tsv
-  platform_hybrid/experiments/results/length_bias_iter68_reversals.tsv
-  platform_hybrid/experiments/results/length_bias_iter68_summary.tsv
-  platform_hybrid/experiments/results/length_bias_iter68_meta.json
+  platform_hybrid/experiments/results/length_bias_iter68_first_div_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter68_volatility_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter68_reversals_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter68_summary_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter68_meta_v2.json
 """
 from __future__ import annotations
 
@@ -199,11 +199,11 @@ def reversal_rate_conditional(steps: List[dict], reward_sign: int) -> float:
 
 
 def trajectory_auc(L_a: List[float], L_b: List[float]) -> float:
-    """Area between L_a and L_b curves (trapezoid), positive = L_a above L_b."""
+    """Signed area on unit-spaced observations, review25-v2 (trapezoid), positive = L_a above L_b."""
     n = min(len(L_a), len(L_b))
     if n < 2:
         return float("nan")
-    return sum(0.5 * (abs(L_a[t] - L_b[t]) + abs(L_a[t + 1] - L_b[t + 1])) for t in range(n - 1))
+    return sum(0.5 * ((L_a[t] - L_b[t]) + (L_a[t + 1] - L_b[t + 1])) for t in range(n - 1))
 
 
 def analyse(experiment: str, runs: Dict[Tuple[str, int], List[dict]], algo_a: str, algo_b: str) -> dict:
@@ -339,11 +339,11 @@ def analyse(experiment: str, runs: Dict[Tuple[str, int], List[dict]], algo_a: st
 def main() -> None:
     os.makedirs(OUT_DIR, exist_ok=True)
     out_paths = dict(
-        first_div=os.path.join(OUT_DIR, "length_bias_iter68_first_div.tsv"),
-        vol=os.path.join(OUT_DIR, "length_bias_iter68_volatility.tsv"),
-        rev=os.path.join(OUT_DIR, "length_bias_iter68_reversals.tsv"),
-        raw=os.path.join(OUT_DIR, "length_bias_iter68_per_run.tsv"),
-        summary=os.path.join(OUT_DIR, "length_bias_iter68_summary.tsv"),
+        first_div=os.path.join(OUT_DIR, "length_bias_iter68_first_div_v2.tsv"),
+        vol=os.path.join(OUT_DIR, "length_bias_iter68_volatility_v2.tsv"),
+        rev=os.path.join(OUT_DIR, "length_bias_iter68_reversals_v2.tsv"),
+        raw=os.path.join(OUT_DIR, "length_bias_iter68_per_run_v2.tsv"),
+        summary=os.path.join(OUT_DIR, "length_bias_iter68_summary_v2.tsv"),
     )
     meta = {"experiments": []}
     # GSM8K CoT
@@ -358,8 +358,8 @@ def main() -> None:
     write_tsv(out_paths["rev"], res_gsm["rev"] + res_arith["rev"])
     write_tsv(out_paths["raw"], res_gsm["raw"] + res_arith["raw"])
     write_tsv(out_paths["summary"], res_gsm["summary"] + res_arith["summary"])
-    out_paths["auc"] = os.path.join(OUT_DIR, "length_bias_iter68_auc.tsv")
-    out_paths["rev_cond"] = os.path.join(OUT_DIR, "length_bias_iter68_rev_cond.tsv")
+    out_paths["auc"] = os.path.join(OUT_DIR, "length_bias_iter68_auc_v2.tsv")
+    out_paths["rev_cond"] = os.path.join(OUT_DIR, "length_bias_iter68_rev_cond_v2.tsv")
     write_tsv(out_paths["auc"], res_gsm["auc"] + res_arith["auc"])
     write_tsv(out_paths["rev_cond"], res_gsm["rev_cond"] + res_arith["rev_cond"])
     # summary rows for AUC and conditional reversals
@@ -404,7 +404,7 @@ def main() -> None:
         summary_rows=res_arith["summary"],
     ))
     meta["outputs"] = out_paths
-    with open(os.path.join(OUT_DIR, "length_bias_iter68_meta.json"), "w") as fh:
+    with open(os.path.join(OUT_DIR, "length_bias_iter68_meta_v2.json"), "w") as fh:
         json.dump(meta, fh, indent=2)
     print("[iter68] wrote:", json.dumps(out_paths, indent=2))
     # print headline

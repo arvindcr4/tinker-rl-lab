@@ -30,12 +30,12 @@ Two complementary deliverables:
     halves). Dr.GRPO should reach half-life earlier.
 
 Outputs (5 TSVs):
-  platform_hybrid/experiments/results/length_bias_iter56_rho_slopes.tsv
-  platform_hybrid/experiments/results/length_bias_iter56_grpo_vs_drgrpo.tsv
-  platform_hybrid/experiments/results/length_bias_iter56_cumulative_tax.tsv
-  platform_hybrid/experiments/results/length_bias_iter56_phase_portrait.tsv
-  platform_hybrid/experiments/results/length_bias_iter56_half_life.tsv
-  platform_hybrid/experiments/results/length_bias_iter56_summary.tsv
+  platform_hybrid/experiments/results/length_bias_iter56_rho_slopes_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter56_grpo_vs_drgrpo_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter56_cumulative_tax_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter56_phase_portrait_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter56_half_life_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter56_summary_v2.tsv
 
 Reads:
   platform_hybrid/experiments/results/drgrpo_vs_grpo.json      (arithmetic_easy: 5 seeds)
@@ -87,6 +87,23 @@ def load_runs(path: Path, task: str) -> list[dict]:
     return out
 
 
+def write_grains(name, per_run, comparison):
+    """Stage both validated, single-grain schemas before replacing v2 files."""
+    staged = []
+    try:
+        for grain, rows in (("per_run", per_run), ("comparison", comparison)):
+            fields = sorted(set().union(*(row.keys() for row in rows))) if rows else []
+            path = RES / f"length_bias_iter56_{name}_{grain}_v2.tsv"
+            temporary = path.with_suffix(".tmp")
+            staged.append((temporary, path))
+            write_tsv(temporary, rows, fieldnames=fields)
+        for temporary, path in staged:
+            temporary.replace(path)
+    finally:
+        for temporary, _ in staged:
+            temporary.unlink(missing_ok=True)
+
+
 def main() -> None:
     random.seed(RNG_SEED)
     rng = random.Random(RNG_SEED)
@@ -111,7 +128,7 @@ def main() -> None:
             "intercept": round(intercept, 8),
             "n_steps": len(rho),
         })
-    write_tsv(RES / "length_bias_iter56_rho_slopes.tsv", rho_rows,
+    write_tsv(RES / "length_bias_iter56_rho_slopes_v2.tsv", rho_rows,
               fieldnames=list(rho_rows[0].keys()))
 
     # ---- A.2 Paired GRPO vs Dr.GRPO bootstrap on d rho/dt per task
@@ -145,7 +162,7 @@ def main() -> None:
                     else "inconclusive"
                 ),
             })
-    write_tsv(RES / "length_bias_iter56_grpo_vs_drgrpo.tsv", paired_rows,
+    write_tsv(RES / "length_bias_iter56_grpo_vs_drgrpo_v2.tsv", paired_rows,
               fieldnames=list(paired_rows[0].keys()))
 
     # ---- B. Cumulative token tax per (task, algo, seed)
@@ -156,7 +173,8 @@ def main() -> None:
         if R0 <= 0:
             tax_rows.append({"task": r["task"], "algo": r["algo"], "seed": r["seed"],
                              "cumulative_tax": 0.0, "cumulative_tax_norm": 0.0,
-                             "L_baseline_last": 0.0, "L_actual_last": round(L[-1], 4)})
+                             "L_baseline_last": float("nan"), "L_actual_last": round(L[-1], 4),
+                             "R_first": R0, "R_last": R[-1]})
             continue
         # baseline L*(t) = L_0 * (R_t / R_0) -- length needed to keep rho constant
         L_star = [L[0] * (R[i] / R0) for i in range(len(R))]
@@ -196,13 +214,7 @@ def main() -> None:
             "ci_hi": boot["ci_hi"],
             "p_le0": boot["p_le0"],
         })
-    write_tsv(RES / "length_bias_iter56_cumulative_tax.tsv",
-              tax_rows + tax_paired,
-              fieldnames=list((tax_rows + tax_paired)[0].keys())
-              if (tax_rows + tax_paired) else
-              ["task", "algo", "seed", "cumulative_tax",
-               "cumulative_tax_norm", "L_baseline_last", "L_actual_last",
-               "R_first", "R_last"])
+    write_grains("cumulative_tax", tax_rows, tax_paired)
 
     # ---- C. Length phase portrait centroid per (task, algo)
     portrait_rows = []
@@ -250,12 +262,7 @@ def main() -> None:
                 "ci_hi": boot["ci_hi"],
                 "p_le0": boot["p_le0"],
             })
-    write_tsv(RES / "length_bias_iter56_phase_portrait.tsv",
-              portrait_rows + pp_paired,
-              fieldnames=list((portrait_rows + pp_paired)[0].keys())
-              if (portrait_rows + pp_paired) else
-              ["task", "algo", "seed", "n_pts", "centroid_L",
-               "centroid_dL", "rms_radius", "L_first", "L_last"])
+    write_grains("phase_portrait", portrait_rows, pp_paired)
 
     # ---- D. rho half-life: time to rho drop to rho_0 / 2
     hl_rows = []
@@ -309,12 +316,7 @@ def main() -> None:
                 "ci_hi": boot["ci_hi"],
                 "p_le0": boot["p_le0"],
             })
-    write_tsv(RES / "length_bias_iter56_half_life.tsv",
-              hl_rows + hl_paired,
-              fieldnames=list((hl_rows + hl_paired)[0].keys())
-              if (hl_rows + hl_paired) else
-              ["task", "algo", "seed", "rho_0", "rho_half", "t_half",
-               "rho_final", "rho_final_over_rho0", "halved"])
+    write_grains("half_life", hl_rows, hl_paired)
 
     # ---- Summary rollup
     summary_rows = []
@@ -379,7 +381,7 @@ def main() -> None:
                 else "inconclusive"
             ),
         })
-    write_tsv(RES / "length_bias_iter56_summary.tsv", summary_rows,
+    write_tsv(RES / "length_bias_iter56_summary_v2.tsv", summary_rows,
               fieldnames=list(summary_rows[0].keys()))
 
     print("=== iter56 reward-per-token efficiency summary ===")

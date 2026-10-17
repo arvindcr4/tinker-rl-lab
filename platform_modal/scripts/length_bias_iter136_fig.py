@@ -46,14 +46,31 @@ def bootstrap_paired_diff_ci(gr: np.ndarray, dr: np.ndarray, n_boot: int = 5000,
     return float(np.quantile(boot_means, 0.025)), float(np.quantile(boot_means, 0.975))
 
 
+def seed_observations(per_run, hypotheses):
+    """Index distinct observations; duplicate run identities are invalid evidence."""
+    indexed = {}
+    for row in per_run:
+        for name, (metric, _) in hypotheses.items():
+            key = (row["task"], row["algo"], int(row["seed"]), name)
+            if key in indexed:
+                raise ValueError(f"duplicate observation: {key}")
+            indexed[key] = float(row[metric])
+    return indexed
+
+
 def main():
     meta = json.load(open(os.path.join(RES, "length_bias_iter136_meta.json")))
     per_run = read_tsv(os.path.join(RES, "length_bias_iter136_step_coupling.tsv"))
     paired = read_tsv(os.path.join(RES, "length_bias_iter136_paired_tests.tsv"))
 
     tasks = ["arithmetic_easy", "gsm8k_cot"]
-    task_to_seeds = {t: sorted({int(r["seed"]) for r in per_run if r["task"] == t})
-                     for t in tasks}
+    task_to_seeds = {
+        t: sorted({int(r["seed"]) for r in per_run if r["task"] == t and r["algo"] == "grpo"}
+                  & {int(r["seed"]) for r in per_run if r["task"] == t and r["algo"] == "dr_grpo"})
+        for t in tasks
+    }
+    if any(len(seeds) < 2 for seeds in task_to_seeds.values()):
+        raise ValueError("need at least two matched seeds per task")
 
     # Build per-task, per-hypothesis arrays
     hyp_to_keys = {
@@ -62,10 +79,7 @@ def main():
         "H3_late efficiency": ("late_eff", "larger"),
         "H4_ZVF-length link": ("rho_dZ_dL", "lessneg"),
     }
-    by_seed: dict[tuple[str, str, str], tuple[float, float]] = {}
-    for r in per_run:
-        for h_name, (k, _) in hyp_to_keys.items():
-            by_seed[(r["task"], r["algo"], h_name)] = float(r[k])
+    by_seed = seed_observations(per_run, hyp_to_keys)
 
     fig, axes = plt.subplots(2, 2, figsize=(13, 9))
 
@@ -80,8 +94,8 @@ def main():
         ci_hi = []
         for h_name, _ in hyp_to_keys.items():
             seeds = task_to_seeds[task]
-            gr = np.array([by_seed[(task, "grpo", h_name)] for s in seeds], dtype=float)
-            dr = np.array([by_seed[(task, "dr_grpo", h_name)] for s in seeds], dtype=float)
+            gr = np.array([by_seed[(task, "grpo", s, h_name)] for s in seeds], dtype=float)
+            dr = np.array([by_seed[(task, "dr_grpo", s, h_name)] for s in seeds], dtype=float)
             delta = dr - gr
             d = float(delta.mean() / (np.std(delta, ddof=1) + 1e-9))
             lo, hi = bootstrap_paired_diff_ci(gr, dr, rng=rng)
@@ -129,7 +143,7 @@ def main():
     for ti, task in enumerate(tasks):
         seeds = task_to_seeds[task]
         for ai, algo in enumerate(["grpo", "dr_grpo"]):
-            vals = [by_seed[(task, algo, h_name)] for s in seeds]
+            vals = [by_seed[(task, algo, s, h_name)] for s in seeds]
             x = bar_x[ti] + (ai - 0.5) * width
             for j, v in enumerate(vals):
                 ax.scatter(x, v, color=colors[ai], alpha=0.6, s=30, zorder=3)
@@ -152,7 +166,7 @@ def main():
     for ti, task in enumerate(tasks):
         seeds = task_to_seeds[task]
         for ai, algo in enumerate(["grpo", "dr_grpo"]):
-            vals = [by_seed[(task, algo, h_name)] for s in seeds]
+            vals = [by_seed[(task, algo, s, h_name)] for s in seeds]
             x_jitter = ti + (ai - 0.5) * 0.18
             for v in vals:
                 ax.scatter(x_jitter + rng_d.uniform(-0.04, 0.04),
@@ -164,11 +178,11 @@ def main():
     ax.set_title("D. H4 ZVF-length co-movement; >0 = ZVF falls with length shrink")
 
     fig.suptitle("Iter 136 — Step-level trajectory coupling (Δreward, Δlength): "
-                 "8/8 paired tests in predicted direction, global p=0.0039",
+                 "paired seed observations (review25-v2)",
                  fontsize=12, fontweight="bold")
     fig.tight_layout()
-    out_pdf = os.path.join(FIG, "length_bias_iter136.pdf")
-    out_png = os.path.join(FIG, "length_bias_iter136.png")
+    out_pdf = os.path.join(FIG, "length_bias_iter136_v2.pdf")
+    out_png = os.path.join(FIG, "length_bias_iter136_v2.png")
     fig.savefig(out_pdf, bbox_inches="tight")
     fig.savefig(out_png, bbox_inches="tight", dpi=120)
     print(f"Saved {out_pdf}")

@@ -31,11 +31,11 @@ Reads:
   platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json (gsm8k_cot: 3 seeds)
 
 Outputs (5 TSVs):
-  platform_hybrid/experiments/results/length_bias_iter60_elasticity.tsv
-  platform_hybrid/experiments/results/length_bias_iter60_curvature.tsv
-  platform_hybrid/experiments/results/length_bias_iter60_iso_band.tsv
-  platform_hybrid/experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv
-  platform_hybrid/experiments/results/length_bias_iter60_summary.tsv
+  platform_hybrid/experiments/results/length_bias_iter60_elasticity_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter60_curvature_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter60_iso_band_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter60_grpo_vs_drgrpo_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter60_summary_v2.tsv
 """
 from __future__ import annotations
 import json
@@ -143,7 +143,7 @@ def fit_quadratic_R_of_L(R: list[float], L: list[float]) -> dict:
     d = det3(AtA)
     if abs(d) < 1e-12:
         return {"a": 0.0, "L_star": float("nan"), "b": 0.0,
-                "R_max": 0.0, "R2": 0.0, "n_pts": n}
+                "R_max": float("nan"), "R2": float("nan"), "n_pts": n, "optimum_identified": False}
     cof = [[0.0] * 3 for _ in range(3)]
     cof[0][0] = AtA[1][1] * AtA[2][2] - AtA[1][2] * AtA[2][1]
     cof[0][1] = -(AtA[1][0] * AtA[2][2] - AtA[1][2] * AtA[2][0])
@@ -159,9 +159,9 @@ def fit_quadratic_R_of_L(R: list[float], L: list[float]) -> dict:
     alpha, beta, gamma = x
     # R = a*(L-L*)^2 + b ==> alpha=a, -2 a L*=beta => L*=-beta/(2 a)
     a = alpha
-    if abs(a) < 1e-12:
+    if a >= -1e-12:
         L_star = float("nan")
-        R_max = max(R)
+        R_max = float("nan")
     else:
         L_star = -beta / (2.0 * a)
         R_max = gamma - beta * beta / (4.0 * a)  # max of the parabola
@@ -171,13 +171,13 @@ def fit_quadratic_R_of_L(R: list[float], L: list[float]) -> dict:
     ss_tot = sum((R[i] - sum(R) / n) ** 2 for i in range(n))
     R2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
     return {"a": a, "L_star": L_star, "b": gamma,
-            "R_max": R_max, "R2": R2, "n_pts": n}
+            "R_max": R_max, "R2": R2, "n_pts": n, "optimum_identified": _is_finite(L_star)}
 
 
 def iso_reward_band(R: list[float], L: list[float],
                     delta: float = ISO_DELTA) -> dict:
     """Range of L values where R >= R_max - delta."""
-    R_max = max(R)
+    R_max = float("nan")
     threshold = R_max - delta
     in_band = [(R[i] >= threshold, L[i]) for i in range(len(R))]
     if not any(b for b, _ in in_band):
@@ -233,7 +233,7 @@ def main() -> None:
             "R_first": round(R[0], 4),
             "R_last": round(R[-1], 4),
         })
-    write_tsv(RES / "length_bias_iter60_elasticity.tsv", elast_rows,
+    write_tsv(RES / "length_bias_iter60_elasticity_v2.tsv", elast_rows,
               fieldnames=list(elast_rows[0].keys()))
 
     # ---- B. Quadratic R(L) fit per (algo, seed)
@@ -253,7 +253,7 @@ def main() -> None:
             "L_first": round(L[0], 4),
             "L_last": round(L[-1], 4),
         })
-    write_tsv(RES / "length_bias_iter60_curvature.tsv", curv_rows,
+    write_tsv(RES / "length_bias_iter60_curvature_v2.tsv", curv_rows,
               fieldnames=list(curv_rows[0].keys()))
 
     # ---- C. Iso-reward length band
@@ -270,7 +270,7 @@ def main() -> None:
             "R_max": round(b["R_max"], 4),
             "delta": b["delta"],
         })
-    write_tsv(RES / "length_bias_iter60_iso_band.tsv", band_rows,
+    write_tsv(RES / "length_bias_iter60_iso_band_v2.tsv", band_rows,
               fieldnames=list(band_rows[0].keys()))
 
     # ---- Paired bootstrap across (A), (B), (C)
@@ -315,10 +315,11 @@ def main() -> None:
             common = sorted(set(grpo) & set(drgrpo))
             if not common:
                 continue
-            gv = [float(grpo[s][metric]) if grpo[s][metric] != "nan" else 0.0
-                  for s in common]
-            dv = [float(drgrpo[s][metric]) if drgrpo[s][metric] != "nan" else 0.0
-                  for s in common]
+            common = [s for s in common if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))]
+            if len(common) < 2:
+                continue  # no identifiable paired comparison; never impute an optimum
+            gv = [float(grpo[s][metric]) for s in common]
+            dv = [float(drgrpo[s][metric]) for s in common]
             boot = paired_bootstrap(gv, dv, N_BOOT, rng)
             interp = "inconclusive"
             if metric == "L_star" and boot["mean_diff"] > 0 and boot["ci_lo"] > 0:
@@ -345,10 +346,11 @@ def main() -> None:
             common = sorted(set(grpo) & set(drgrpo))
             if not common:
                 continue
-            gv = [float(grpo[s][metric]) if grpo[s][metric] != "nan" else 0.0
-                  for s in common]
-            dv = [float(drgrpo[s][metric]) if drgrpo[s][metric] != "nan" else 0.0
-                  for s in common]
+            common = [s for s in common if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))]
+            if len(common) < 2:
+                continue  # no identifiable paired comparison; never impute an optimum
+            gv = [float(grpo[s][metric]) for s in common]
+            dv = [float(drgrpo[s][metric]) for s in common]
             boot = paired_bootstrap(gv, dv, N_BOOT, rng)
             interp = "inconclusive"
             if metric == "width" and boot["mean_diff"] > 0 and boot["ci_lo"] > 0:
@@ -364,7 +366,7 @@ def main() -> None:
                 "p_le0": boot["p_le0"],
                 "interpretation": interp,
             })
-    write_tsv(RES / "length_bias_iter60_grpo_vs_drgrpo.tsv", paired,
+    write_tsv(RES / "length_bias_iter60_grpo_vs_drgrpo_v2.tsv", paired,
               fieldnames=list(paired[0].keys()))
 
     # ---- Summary rollup -- the strongest cross-task findings
@@ -381,7 +383,7 @@ def main() -> None:
             "p_le0": p["p_le0"],
             "interpretation": p["interpretation"],
         })
-    write_tsv(RES / "length_bias_iter60_summary.tsv", summary_rows,
+    write_tsv(RES / "length_bias_iter60_summary_v2.tsv", summary_rows,
               fieldnames=list(summary_rows[0].keys()))
 
     print("=== iter60 length elasticity summary ===")

@@ -31,15 +31,15 @@ classifiers = [
 
 dependencies = [
     # E1 frozen-runtime lock (see execution-notes.md); pinned for reproducibility.
-    "numpy==2.2.6",
-    "torch==2.7.1",
-    "transformers==5.5.4",
-    "datasets==4.8.4",
-    "huggingface-hub==1.11.0",
-    "wandb==0.21.0",
-    "gymnasium==1.2.3",
-    "tinker==0.24.1",
-    "codecarbon==3.2.8",
+    "numpy==2.4.6",
+    "torch==2.14.1",
+    "transformers==5.19.0",
+    "datasets==5.1.0",
+    "huggingface-hub==2.1.1",
+    "wandb==0.30.0",
+    "gymnasium==1.4.0",
+    "tinker==0.32.0",
+    "codecarbon==3.3.1",
     "pydantic>=2.13.0,<3.0.0",
 ]
 
@@ -48,11 +48,11 @@ tinkerrl = "platform_local.unified.__main__:main"
 
 [project.optional-dependencies]
 trl = [
-    "transformers==5.5.4",
-    "trl==1.2.0",
-    "datasets==4.8.4",
-    "peft==0.19.1",
-    "accelerate==1.13.0",
+    "transformers==5.19.0",
+    "trl==1.14.2",
+    "datasets==5.1.0",
+    "peft==0.21.2",
+    "accelerate==1.15.0",
 ]
 sb3 = [
     "stable-baselines3>=2.8.0,<3.0.0",
@@ -68,18 +68,18 @@ d3rlpy = [
 ]
 eval = [
     "fschat==0.2.36",
-    "openai==2.45.0",
+    "openai==3.26.0",
 ]
 all = [
-    "accelerate==1.13.0",
+    "accelerate==1.15.0",
     "d3rlpy>=2.8.0,<2.9.0",
     "fschat==0.2.36",
-    "openai==2.45.0",
-    "peft==0.19.1",
+    "openai==3.26.0",
+    "peft==0.21.2",
     "stable-baselines3>=2.8.0,<3.0.0",
     "tensorboard>=2.14.0",
     "tianshou>=2.0.0,<2.1.0",
-    "trl==1.2.0",
+    "trl==1.14.2",
 ]
 dev = [
     "build>=1.2",
@@ -92,7 +92,7 @@ dev = [
     # Required so `utils.stats` can be imported by the test-core job
     # (utils/stats.py uses pandas / matplotlib / seaborn for the
     # per-experiment analysis tooling).
-    "pandas>=2.3.0,<2.4.0",
+    "pandas>=2.3.0,<3.1.0",
     "matplotlib>=3.11.0,<4.0.0",
     "scipy>=1.17.0,<2.0.0",
     "seaborn>=0.13.0,<0.14.0",

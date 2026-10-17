@@ -569,11 +569,15 @@ def _normalise_records(records: Any) -> tuple[list[str], list[dict[str, Any]]]:
         if len(repos_for_record) > 1:
             errors.append(f"{record_prefix} must use a single Hugging Face repository")
 
+        finals = [item for item in checkpoint_run_entries if item["kind"] == "final"]
         final_revision = None
-        for item in checkpoint_run_entries:
-            if item["kind"] == "final":
-                if final_revision is None or item["step"] >= 0:
-                    final_revision = item["revision"]
+        if finals:
+            max_step = max(item["step"] for item in finals)
+            revisions = {item["revision"] for item in finals if item["step"] == max_step}
+            if len(revisions) != 1:
+                errors.append(f"{record_prefix}: conflicting final checkpoint revisions")
+            else:
+                final_revision = next(iter(revisions))
 
         if run_id in run_by_id:
             errors.append(f"duplicate run_id {run_id!r} in record set")

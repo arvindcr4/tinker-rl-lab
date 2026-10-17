@@ -174,9 +174,11 @@ def _result(
     heldout: bool = False,
     **updates,
 ) -> dict:
-    metrics = {"task_success": "0.500000", "state_integrity": "1.000000"}
+    metrics = {"composite_score": 100.0, "pass_at_1": 1.0}
     result = {
         "receipt_id": "result-receipt-001",
+        "boundary_sha256": sha256_digest(build_sdab_boundary(_boundary_spec())),
+        "task_grades": [{"task_id": task_id, "feature_correctness": 1., "operational_correctness": 1., "engineering_correctness": 1., "attempt": 1} for task_id in _boundary_spec()["task_ids"]],
         "status": status,
         "started_at": "2026-08-09T00:00:00Z",
         "metrics": metrics,
@@ -376,10 +378,8 @@ class SdabResultReceiptTests(unittest.TestCase):
         self.assertEqual(receipt["heldout_missing_receipts"], list(REQUIRED_HELDOUT_RECEIPTS))
 
     def test_completed_heldout_claim_requires_every_distinct_immutable_receipt(self) -> None:
-        receipt = build_result_receipt(self.boundary, _result(heldout=True), "wandb")
-        self.assertTrue(receipt["receipt_proven_heldout"])
-        self.assertEqual(receipt["heldout_missing_receipts"], [])
-        self.assertEqual(set(receipt["heldout_receipts"]), set(REQUIRED_HELDOUT_RECEIPTS))
+        with self.assertRaisesRegex(SdabBoundaryError, "authenticated result attestation"):
+            build_result_receipt(self.boundary, _result(heldout=True), "wandb")
         duplicate = _result(heldout=True)
         duplicate["heldout_receipts"]["license"]["receipt_id"] = duplicate["heldout_receipts"]["split"]["receipt_id"]
         with self.assertRaisesRegex(SdabBoundaryError, "distinct"):
@@ -529,7 +529,7 @@ class SdabResultReceiptTests(unittest.TestCase):
         self.assertEqual(validate_result_receipt(self.boundary, _result(), "wandb"), [])
         errors = validate_result_receipt(self.boundary, {"status": "completed"}, "wandb")
         self.assertEqual(len(errors), 1)
-        self.assertIn("receipt_id", errors[0])
+        self.assertIn("boundary binding", errors[0])
 
 
 class SdabCliTests(unittest.TestCase):

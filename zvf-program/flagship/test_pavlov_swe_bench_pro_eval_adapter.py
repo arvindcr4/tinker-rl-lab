@@ -230,7 +230,7 @@ def _result(manifest: dict[str, Any]) -> dict[str, Any]:
         "verifier_receipt": {
             "kind": "swe_bench_pro_official",
             "fail_to_pass_passed": True,
-            "pass_to_pass_passed": True,
+            "pass_to_pass_passed": resolved == len(task_ids),
         },
     }
 
@@ -476,7 +476,7 @@ class SweBenchProEvalAdapterTests(unittest.TestCase):
             validate_result_receipt(result, manifest)
 
         result = _result(manifest)
-        result["verifier_receipt"]["pass_to_pass_passed"] = False
+        result["verifier_receipt"]["pass_to_pass_passed"] = not result["verifier_receipt"]["pass_to_pass_passed"]
         with self.assertRaises(BoundaryValidationError):
             validate_result_receipt(result, manifest)
 

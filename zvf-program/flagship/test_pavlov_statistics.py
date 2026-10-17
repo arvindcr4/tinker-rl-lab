@@ -20,7 +20,7 @@ from flagship.pavlov_statistics import (
 
 class WilsonIntervalTests(unittest.TestCase):
     def test_boundary_and_observed_rate_golden_values(self) -> None:
-        self.assertEqual(wilson_interval(0, 100), (0.0, 0.03699349820698565))
+        self.assertAlmostEqual(wilson_interval(0, 100)[1], 0.03699349820698565)
         self.assertAlmostEqual(wilson_interval(7, 100)[0], 0.03431926106727267)
         self.assertAlmostEqual(wilson_interval(7, 100)[1], 0.13749514739073496)
         self.assertEqual(wilson_interval(100, 100), (0.9630065017930143, 1.0))

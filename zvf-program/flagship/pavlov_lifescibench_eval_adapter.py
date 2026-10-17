@@ -18,6 +18,7 @@ import argparse
 import base64
 import hashlib
 import json
+import math
 import re
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
@@ -34,7 +35,7 @@ except ImportError:  # Direct execution from this directory remains offline-safe
 
 
 SCHEMA_VERSION = "pavlov-lifescibench-e8-boundary-v1"
-RECEIPT_SCHEMA_VERSION = "pavlov-lifescibench-e8-result-receipt-v1"
+RECEIPT_SCHEMA_VERSION = "pavlov-lifescibench-e8-result-receipt-v2"
 SUITE_ID = "lifescibench_eval"
 ROLE = "primary_eval"
 SPLIT = "evaluation"
@@ -487,6 +488,14 @@ def build_heldout_proof(
 
     train = _mapping(train_manifest, "train_manifest")
     evaluation = _mapping(eval_manifest, "eval_manifest")
+    for manifest, label in ((train, "train"), (evaluation, "eval")):
+        rows = manifest.get("rows")
+        if not isinstance(rows, list) or not rows or any(not isinstance(row, Mapping) for row in rows):
+            raise LifeSciBenchSchemaError(f"{label} manifest rows required")
+        if manifest.get("manifest_hash") != task_manifest_hash(rows):
+            raise LifeSciBenchSchemaError(f"{label} manifest hash does not match rows")
+        if len({row.get("task_id") for row in rows}) != len(rows):
+            raise LifeSciBenchSchemaError(f"{label} duplicate task IDs")
     train_hash = train.get("manifest_hash")
     eval_hash = evaluation.get("manifest_hash")
     if not isinstance(train_hash, str) or _SHA256_RE.fullmatch(train_hash) is None:
@@ -529,6 +538,8 @@ def build_heldout_proof(
             f"train/evaluation families overlap: {shared_families[:5]}"
         )
     proof: dict[str, Any] = {
+        "train_manifest": train,
+        "eval_manifest": evaluation,
         "train_split_manifest_hash": train_hash,
         "eval_split_manifest_hash": eval_hash,
         "disjoint_task_ids": True,
@@ -714,6 +725,7 @@ def build_synthetic_fixture() -> dict[str, Any]:
             "artifact_digest": _synthetic_digest(f"artifact::{row['task_id']}"),
             # Always False: the fixture must never look like a measurement.
             "task_success": False,
+            "reward": 0.0, "action_count": 0,
         }
         for row in eval_manifest["rows"]
     ]
@@ -1307,6 +1319,13 @@ def validate_e8_receipt(
         heldout_valid = False
     else:
         proof = dict(heldout)
+        try:
+            rebuilt = build_heldout_proof(train_manifest=proof.get("train_manifest", {}), eval_manifest=proof.get("eval_manifest", {}))
+            if rebuilt != proof:
+                raise LifeSciBenchSchemaError("heldout proof differs from verified manifests")
+        except LifeSciBenchSchemaError as exc:
+            errors.append(str(exc))
+            heldout_valid = False
         for field_name in (
             "train_split_manifest_hash",
             "eval_split_manifest_hash",
@@ -1412,7 +1431,7 @@ def validate_e8_receipt(
                 for field_name in ("observation_hash", "action_hash", "state_hash", "artifact_digest"):
                     if not _digest(row_data.get(field_name), f"episode_rows[{index}].{field_name}", errors):
                         native_valid = False
-                if row_data.get("task_success") not in (True, False):
+                if type(row_data.get("task_success")) is not bool:
                     errors.append(f"episode_rows[{index}].task_success must be boolean")
                     native_valid = False
                 if row_data.get("domain") not in ALLOWED_DOMAINS:
@@ -1457,6 +1476,19 @@ def validate_e8_receipt(
                             raise InvalidOperation
                     except (InvalidOperation, ValueError):
                         errors.append(f"wandb.metrics.{metric_name} must be finite")
+
+    if _is_mapping(wandb) and _is_mapping(native) and isinstance(native.get("episode_rows"), list) and native["episode_rows"]:
+        episode_rows = native["episode_rows"]
+        measures = {"eval/lifescibench_success_rate": "task_success", "eval/lifescibench_reward_mean": "reward", "eval/lifescibench_action_count_mean": "action_count"}
+        for metric, field in measures.items():
+            values = [row.get(field) for row in episode_rows if isinstance(row, Mapping)]
+            valid = len(values) == len(episode_rows) and all(type(v) is bool if field == "task_success" else type(v) in (int, float) and math.isfinite(v) and v >= 0 and (v <= 1 if field == "reward" else float(v).is_integer()) for v in values)
+            supplied = wandb.get("metrics", {}).get(metric)
+            if not valid or type(supplied) not in (int, float) or not math.isclose(float(supplied), sum(values)/len(values), abs_tol=1e-9):
+                errors.append(f"{metric} does not match native episode outcomes")
+        for row in episode_rows:
+            if isinstance(row, Mapping) and type(row.get("reward")) in (int, float) and row.get("task_success") is not (row["reward"] >= .7):
+                errors.append("task success must follow the 70% rubric threshold")
 
     tinker_valid = _validate_evidence_block(
         data.get("tinker"), name="tinker", required_fields=TINKER_REQUIRED_FIELDS, errors=errors

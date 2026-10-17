@@ -187,11 +187,10 @@ def newcombe_paired_risk_difference_interval(
 ) -> tuple[float, float]:
     """Return Newcombe's hybrid-score interval for ``candidate - base``.
 
-    This is the standard hybrid construction: Wilson score intervals are
-    calculated for both paired marginal proportions and combined as
-    ``d ± sqrt(marginal half-widths squared)``.  The paired rows determine the
-    risk-difference orientation and sample size; the exact McNemar test remains
-    the paired hypothesis test reported alongside this interval.
+    Paired method 10 combines marginal Wilson intervals using the
+    continuity-corrected phi coefficient. At a zero marginal variance the
+    correlation is defined as zero. This v2 calculation replaces the former
+    unpaired marginal construction; historical exported intervals are not edited.
     """
 
     base_values, candidate_values = _paired_binary(base, candidate)
@@ -206,11 +205,20 @@ def newcombe_paired_risk_difference_interval(
         candidate_successes, trials, confidence=confidence
     )
     difference = candidate_proportion - base_proportion
+    joint = sum(b and c for b, c in zip(base_values, candidate_values)) / trials
+    denominator = math.sqrt(base_proportion * (1-base_proportion) * candidate_proportion * (1-candidate_proportion))
+    # Newcombe method 10 uses the continuity-corrected phi coefficient.
+    covariance = joint - base_proportion*candidate_proportion
+    corrected = max(0.0, abs(covariance) - .5/trials)
+    rho = math.copysign(corrected, covariance) / denominator if denominator else 0.0
+    rho = min(1.0, max(-1.0, rho))
     lower = difference - math.sqrt(
         (candidate_proportion - candidate_low) ** 2 + (base_high - base_proportion) ** 2
+        - 2*rho*(candidate_proportion-candidate_low)*(base_high-base_proportion)
     )
     upper = difference + math.sqrt(
         (candidate_high - candidate_proportion) ** 2 + (base_proportion - base_low) ** 2
+        - 2*rho*(candidate_high-candidate_proportion)*(base_proportion-base_low)
     )
     return max(-1.0, lower), min(1.0, upper)
 

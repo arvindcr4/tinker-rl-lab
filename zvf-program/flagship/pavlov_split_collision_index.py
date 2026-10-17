@@ -551,6 +551,8 @@ def _normalise_record(
     errors.extend(f"{suite_id}: {error}" for error in task_errors)
     owner_entries: list[dict[str, Any]] = []
     for role, hashes in task_lists:
+        if not component and role != explicit_role:
+            errors.append(f"{suite_id}: task-list role disagrees with suite role")
         for position, digest in enumerate(hashes):
             owner_entries.append(
                 {

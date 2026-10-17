@@ -267,7 +267,9 @@ class TinkerOpenAIBridge:
             ):
                 raise RuntimeError("bridge authorization cap exhausted")
             return self.ledger.reserve(
-                uuid.uuid4().hex, projected_usd, identity=self.identity["run_manifest_sha256"]
+                uuid.uuid4().hex,
+                projected_usd,
+                identity=request_identity or self.identity["run_manifest_sha256"],
             )
         except (ValueError, RuntimeError) as exc:
             raise HTTPException(status_code=402, detail=str(exc)) from exc

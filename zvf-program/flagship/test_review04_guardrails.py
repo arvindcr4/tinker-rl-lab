@@ -211,6 +211,76 @@ class Review04Tests(unittest.TestCase):
         )
         self.assertGreater(result, Decimal(100))
 
+    def test_rejected_receipt_allowance_cannot_hide_token_cost(self):
+        for quote in ("rejected_run_allowance_usd", "estimated_cost_usd"):
+            with self.subTest(quote=quote):
+                raw = {
+                    "status": "rejected",
+                    "model": self.budget["model"],
+                    quote: ".01",
+                    "sample_tokens": 100_000_000,
+                }
+                self.assertEqual(budget.validate_receipt(raw, self.budget), [])
+                result = budget.build_ledger(
+                    self.budget, [raw], projection={"cost_usd": 1}, portfolio_contract=None
+                )
+                self.assertEqual(result["projected_usd"], Decimal("134.50"))
+                self.assertEqual(result["status"], "REJECT")
+
+    def test_projection_combines_all_nested_and_alias_token_evidence(self):
+        for projection in (
+            {"cost_usd": ".01", "tokens": {}, "sample_tokens": 100_000_000},
+            {"cost_usd": ".01", "sample_tokens": 0, "completion_tokens": 100_000_000},
+            {"cost_usd": ".01", "sample_tokens": 100_000_000, "tokens": {"sample_tokens": 0}},
+            {"cost_usd": ".01", "sample_tokens": 0, "tokens": {"completion_tokens": 100_000_000}},
+            {"completion_tokens": 100_000_000},
+            {"tokens": {"estimated_cost_usd": "133.50"}},
+        ):
+            with self.subTest(projection=projection):
+                self.assertEqual(
+                    budget._projection_cost(self.budget, projection), Decimal("133.50")
+                )
+                result = budget.build_ledger(
+                    self.budget, [], projection=projection, portfolio_contract=None
+                )
+                self.assertEqual(result["projected_usd"], Decimal("133.50"))
+                self.assertEqual(result["status"], "REJECT")
+
+    def test_projection_validates_even_masked_aliases(self):
+        for invalid in (-1, True, "NaN", "Infinity"):
+            for projection in (
+                {"cost_usd": 1, "sample_tokens": 0, "completion_tokens": invalid},
+                {"cost_usd": 1, "sample_tokens": invalid, "tokens": {}},
+                {"cost_usd": 1, "tokens": {"cost_usd": invalid}},
+            ):
+                with self.subTest(projection=projection):
+                    with self.assertRaises(budget.BudgetError):
+                        budget._projection_cost(self.budget, projection)
+                    with self.assertRaises(budget.BudgetError):
+                        budget.build_ledger(
+                            self.budget, [], projection=projection, portfolio_contract=None
+                        )
+
+    def test_cost_per_step_quote_never_erases_token_evidence(self):
+        for estimate in (
+            budget.estimate_cost,
+            budget.estimate_conservative_cost,
+            budget.project_cost,
+        ):
+            for quote, expected in ((".01", "133.50"), ("200", "200")):
+                with self.subTest(estimate=estimate.__name__, quote=quote):
+                    self.assertEqual(
+                        estimate(
+                            self.budget, sample_tokens=100_000_000, steps=1, cost_per_step_usd=quote
+                        ),
+                        Decimal(expected),
+                    )
+            self.assertEqual(
+                estimate(self.budget, steps=2, cost_per_step_usd=".01"), Decimal(".02")
+            )
+            with self.assertRaises(budget.BudgetError):
+                estimate(self.budget, steps=1, cost_per_step_usd=".01", max_output_tokens=-1)
+
     def test_ledger_missing_state_and_transaction_failure_and_idempotency(self):
         path = self.root / "ledger.sqlite"
         with self.assertRaises(RuntimeError):
@@ -804,6 +874,12 @@ class Review04Tests(unittest.TestCase):
         self.assertEqual(obj.ledger.snapshot()["reserved_usd"], "2")
         self.assertEqual(obj.ledger.snapshot()["estimated_usd"], "1")
         self.assertEqual(obj.ledger.snapshot()["charged_usd"], "0")
+        with obj.ledger._transaction() as db:
+            stored_identity = db.execute(
+                "SELECT identity FROM requests WHERE id=?", (result["reservation_id"],)
+            ).fetchone()[0]
+        self.assertEqual(stored_identity, result["request_identity_sha256"])
+        self.assertNotEqual(stored_identity, obj.identity["run_manifest_sha256"])
 
     def test_rejected_ready_fixture_fails_even_when_all_other_receipts_are_valid(self):
         contract = bundle.load_contract()

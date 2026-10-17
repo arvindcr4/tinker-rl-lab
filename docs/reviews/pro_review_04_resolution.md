@@ -30,9 +30,16 @@ Base: `baaeae72`; branch: `fix/pro-review-slice04-work`. This is a prospective v
 - D7 P2 — **PARTLY FIXED**: Frozen normalization schema rejects outcome-fitted parameters, missing/error policy is incomplete, and graded plateaus recheck rather than claim informativeness. Prospective suite-level rejection/reporting and bounded task-success history are documented. Suite margins and executable full clustered statistical guards require approved empirical analysis, so scientific claims remain blocked.
 - D8 P2 — **PARTLY FIXED**: Theory/witness state conditional action ambiguity for the all-zero observation and explicitly disclaim production calibration/equivalence from source hashing. Wrong-answer witness and finite algebra are fixed. A versioned control suite through the real reward path, injected-failure detection/error rates and costs was not run or invented.
 
+## Follow-up audit of `4513a542`
+
+- Finding 3, rejected-receipt precedence — **FIXED**: Reject allowances, explicit estimates, token costs and recorded commitments are conservatively maximized; either a $.01 allowance or $.01 estimate with 100 million sample tokens now retains $133.50 and rejects a further $1 proposal at $134.50 in the standalone ledger.
+- Finding 3, projection representations — **FIXED**: Empty nested token objects and cheap first aliases cannot hide expensive top-level, nested or alternate values. Every supported representation is validated; aliases are conservatively maximized. The end-to-end `_projection_parts` wrapper now preserves that estimate rather than reselecting the cheaper explicit quote. Tests cover the exact reported cases, nested/top-level conflicts, alias-only inputs and masked invalid values.
+- Finding 3, direct per-step estimator — **FIXED**: `estimate_cost`, `estimate_conservative_cost` and `project_cost` calculate both token evidence and the per-step quote before taking their maximum; invalid token bounds no longer escape validation through the quote's former early return.
+- Finding 4/D4, bridge request identity — **FIXED LOCALLY**: SQLite stores the request hash (which includes serving identity, exact prompt hash and generation settings), rather than discarding it for the shared serving-manifest hash. The mocked sampling/tracking-failure test checks the actual persisted row against the returned request hash; deployment/reconciliation limitations remain as above.
+
 ## Verification
 
-- **148 tests run: 145 passed, 3 explicitly skipped** using the existing CPU environment plus its already installed system cryptography/FastAPI packages; Modal imports use decoration-only mocks and Tinker sampling tests use mocks
+- **152 tests run: 149 passed, 3 explicitly skipped** using the existing CPU environment plus its already installed system cryptography/FastAPI packages; Modal imports use decoration-only mocks and Tinker sampling tests use mocks
 - Regression modules: `flagship.test_review04_guardrails`, existing budget/bundle/campaign/completion-gate/Modal-readiness/bridge/protocol tests, theory tests, and S1 reference/receipt tests
 - The three skipped tests depend on omitted historical `E1_E14_Terminal_Status_2026-08-29.json` and `E3_E14_EXTERNAL_FOLLOWUP_RECEIPT_2026-08-29.json`; synthetic audit regressions independently cover declarations, bounds and exact input hashes
 - `compileall` over flagship passed; `git diff --check` passed

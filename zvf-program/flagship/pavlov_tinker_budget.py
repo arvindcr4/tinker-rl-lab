@@ -388,25 +388,30 @@ def estimate_cost(
             raise BudgetError("train_tokens_per_step and tokens_per_step disagree")
     if train_tokens_per_step is None:
         train_tokens_per_step = tokens_per_step
-    if cost_per_step_usd is not None:
-        return _decimal(cost_per_step_usd, "cost_per_step_usd") * _integer(steps, "steps")
+    step_cost = (
+        _decimal(cost_per_step_usd, "cost_per_step_usd") * _integer(steps, "steps")
+        if cost_per_step_usd is not None
+        else Decimal("0")
+    )
     if train_tokens_per_step is not None:
         train += _integer(train_tokens_per_step, "train_tokens_per_step") * _integer(steps, "steps")
     if max_prompt_tokens is not None:
         prefill += _integer(max_prompt_tokens, "max_prompt_tokens") * _integer(samples, "samples")
     if max_output_tokens is not None:
         sample += _integer(max_output_tokens, "max_output_tokens") * _integer(samples, "samples")
-    if _integer(steps, "steps") and not train:
+    if _integer(steps, "steps") and not train and cost_per_step_usd is None:
         # A budget can provide an explicit cost-per-step in a custom projection
         # (handled by _projection_cost); a bare step count is never enough.
         raise BudgetError("projected steps require projected train tokens or train_tokens_per_step")
-    return estimate_token_cost(
+    token_cost = estimate_token_cost(
         budget,
         prefill_tokens=prefill,
         cached_prefill_tokens=cached,
         sample_tokens=sample,
         train_tokens=train,
     )
+    # Both are total-work estimates. A cheap quote cannot erase explicit work.
+    return max(step_cost, token_cost)
 
 
 # Readable aliases for callers that use the wording from the contract.
@@ -895,60 +900,43 @@ def load_receipt(
 def _projection_cost(
     budget: Mapping[str, Any], projection: Mapping[str, Any], *, field: str = "projection"
 ) -> Decimal:
-    explicit = max(
-        (
-            _extract_number(projection, (key,), field) or Decimal("0")
-            for key in (
-                "cost_usd",
-                "projected_cost_usd",
-                "conservative_cost_usd",
-                "estimated_cost_usd",
-            )
-        ),
-        default=Decimal("0"),
-    )
     nested_tokens = projection.get("tokens")
     if nested_tokens is not None and not isinstance(nested_tokens, Mapping):
         raise BudgetError(f"{field}.tokens must be an object")
-    source = nested_tokens if isinstance(nested_tokens, Mapping) else projection
-    prefill = source.get("prefill_tokens", source.get("prompt_tokens", 0))
-    cached = source.get("cached_prefill_tokens", source.get("cached_prompt_tokens", 0))
-    sample = source.get("sample_tokens", source.get("completion_tokens", 0))
-    train = source.get("train_tokens", source.get("training_tokens", 0))
-    steps = source.get("steps", source.get("training_steps", 0))
-    per_step = source.get("train_tokens_per_step", source.get("tokens_per_step"))
-    samples = source.get("samples", source.get("examples", 0))
-    max_prompt = source.get("max_prompt_tokens", source.get("max_input_tokens"))
-    max_output = source.get("max_output_tokens", source.get("max_response_tokens"))
-    cost_per_step = _extract_number(
-        source, ("cost_per_step_usd", "usd_per_step"), f"{field}.cost_per_step_usd"
-    )
-    per_step_cost = (
-        (cost_per_step * _integer(steps, f"{field}.steps"))
-        if cost_per_step is not None
-        else Decimal("0")
+    # All representations are evidence. An empty/cheap nested section or the
+    # first alias must never hide expensive top-level/alternate token counts.
+    sources = [projection] + ([nested_tokens] if isinstance(nested_tokens, Mapping) else [])
+
+    def maximum(keys, *, integer=False, default=None):
+        parse = _integer if integer else _decimal
+        values = [
+            parse(source[key], f"{field}.{key}")
+            for source in sources
+            for key in keys
+            if key in source
+        ]
+        return max(values) if values else default
+
+    explicit = maximum(
+        ("cost_usd", "projected_cost_usd", "conservative_cost_usd", "estimated_cost_usd"),
+        default=Decimal("0"),
     )
     token_cost = estimate_cost(
         budget,
-        prefill_tokens=_integer(prefill, f"{field}.prefill_tokens"),
-        cached_prefill_tokens=_integer(cached, f"{field}.cached_prefill_tokens"),
-        sample_tokens=_integer(sample, f"{field}.sample_tokens"),
-        train_tokens=_integer(train, f"{field}.train_tokens"),
-        steps=0
-        if cost_per_step is not None and per_step is None
-        else _integer(steps, f"{field}.steps"),
-        train_tokens_per_step=None
-        if per_step is None
-        else _integer(per_step, f"{field}.train_tokens_per_step"),
-        samples=_integer(samples, f"{field}.samples"),
-        max_prompt_tokens=None
-        if max_prompt is None
-        else _integer(max_prompt, f"{field}.max_prompt_tokens"),
-        max_output_tokens=None
-        if max_output is None
-        else _integer(max_output, f"{field}.max_output_tokens"),
+        prefill_tokens=maximum(("prefill_tokens", "prompt_tokens"), integer=True, default=0),
+        cached_prefill_tokens=maximum(
+            ("cached_prefill_tokens", "cached_prompt_tokens"), integer=True, default=0
+        ),
+        sample_tokens=maximum(("sample_tokens", "completion_tokens"), integer=True, default=0),
+        train_tokens=maximum(("train_tokens", "training_tokens"), integer=True, default=0),
+        steps=maximum(("steps", "training_steps"), integer=True, default=0),
+        train_tokens_per_step=maximum(("train_tokens_per_step", "tokens_per_step"), integer=True),
+        cost_per_step_usd=maximum(("cost_per_step_usd", "usd_per_step")),
+        samples=maximum(("samples", "examples"), integer=True, default=0),
+        max_prompt_tokens=maximum(("max_prompt_tokens", "max_input_tokens"), integer=True),
+        max_output_tokens=maximum(("max_output_tokens", "max_response_tokens"), integer=True),
     )
-    return max(explicit or Decimal("0"), per_step_cost, token_cost)
+    return max(explicit, token_cost)
 
 
 def _receipt_breakdown(
@@ -1009,12 +997,35 @@ def _receipt_breakdown(
         )
     )
     if status in REJECTED_STATUSES:
-        if allowance is None:
-            allowance = estimated if estimated is not None else token_estimate
+        allowance = max(
+            (
+                value
+                for value in (
+                    allowance,
+                    estimated,
+                    base_estimate,
+                    token_estimate,
+                    _receipt_explicit_cost(
+                        receipt,
+                        (
+                            "total_reserved_ceiling_usd",
+                            "reserved_cost_usd",
+                            "remaining_estimate_usd",
+                            "conservative_pending_usd",
+                            "pending_cost_usd",
+                        ),
+                        "rejected_commitment",
+                    ),
+                )
+                if value is not None
+            ),
+            default=None,
+        )
         if allowance is None:
             raise BudgetError(f"{source}: rejected receipt has no conservative allowance")
-        # A rejected run's estimate is an allowance, not an additional pending
-        # charge.  Explicit live billing remains known and is added separately.
+        # Rejected work still incurred its recorded work. An explicit small
+        # allowance cannot suppress larger token or reservation evidence.
+        # Live billing is retained separately until final reconciliation.
         pending = allowance
     else:
         # v2: estimates are total ceilings unless explicitly named remaining.
@@ -1340,21 +1351,10 @@ def _projection_parts(
         "conservative_cost_usd",
         "estimated_cost_usd",
     )
-    token_keys = (
-        "prefill_tokens",
-        "cached_prefill_tokens",
-        "sample_tokens",
-        "train_tokens",
-        "training_tokens",
-        "steps",
-        "samples",
-        "tokens",
-    )
     explicit_cost = _extract_number(projection, direct_keys, "projection.cost_usd")
-    token_cost = _projection_cost(budget, projection, field="projection") if any(
-        key in projection
-        for key in token_keys
-    ) else None
+    # Validate every supported alias, including aliases absent from the old
+    # token-key shortlist. Keep the conservative result through this wrapper.
+    evidence_cost = _projection_cost(budget, projection, field="projection")
     suite_total = sum(suite_costs.values(), Decimal("0"))
     domain_total = sum(domain_costs.values(), Decimal("0"))
     if suite_costs and domain_costs and suite_total != domain_total:
@@ -1364,17 +1364,17 @@ def _projection_parts(
         )
     allocation_total = suite_total or domain_total
     if explicit_cost is not None:
-        if allocation_total and explicit_cost != allocation_total:
+        direct_cost = max(explicit_cost, evidence_cost)
+        if allocation_total and direct_cost != allocation_total:
             raise BudgetError(
                 "projection cost_usd disagrees with suite/domain allocation"
             )
-        direct_cost = explicit_cost
-    elif token_cost is not None:
+    elif evidence_cost:
         if allocation_total:
             raise BudgetError(
                 "projection token inputs and suite/domain allocation are ambiguous"
             )
-        direct_cost = token_cost
+        direct_cost = evidence_cost
     else:
         direct_cost = allocation_total
     suite_reservation_total = sum(suite_reservations.values(), Decimal("0"))

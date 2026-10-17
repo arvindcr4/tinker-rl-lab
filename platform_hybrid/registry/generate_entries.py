@@ -7,9 +7,8 @@ records where it came from:
 
   status  logged    value read from a results/log artifact   source  <path>#<json key>
           code      constant in the pinned run script         source  <path>@<commit>:L<n>
-          default   argparse/library default in the pinned    source  <path>@<commit>:L<n>
-                    script; the launcher command is not in
-                    the repo, so the default is assumed
+          default   resolved default with runtime evidence    source  <path>@<commit>:L<n>
+                    (unobserved CLI/library defaults remain unknown)
           inferred  derived by a stated rule                  source  rule text
           unknown   not derivable from any source in the repo source  why
 
@@ -30,6 +29,8 @@ import ast
 import copy
 import hashlib
 import json
+import math
+import statistics
 import pathlib
 import re
 import subprocess
@@ -40,8 +41,10 @@ ROOT = HERE.parents[1]
 ENTRIES = HERE / "entries"
 CHANGES = HERE / "regen_changes.json"
 GENERATOR = "platform_hybrid/registry/generate_entries.py"
+GENERATOR_VERSION = "registry-generation-v3"
+REWARD_FINGERPRINT_VERSION = "python-reward-assignment-and-module-v2"
 sys.path.insert(0, str(HERE))
-from query import FIELDS, KNOWN_STATUSES  # noqa: E402
+from query import FIELDS, KNOWN_STATUSES, badge, manifest_view, strict_json_loads, COVERAGE_VERSION, ITEMS, validate_record
 
 
 # ---------------------------------------------------------------- sources
@@ -59,7 +62,7 @@ class Src:
         self.text = data.decode()
         self.lines = self.text.splitlines()
         self._tree = ast.parse(self.text) if path.endswith(".py") else None
-        self.json = json.loads(self.text) if path.endswith(".json") else None
+        self.json = strict_json_loads(self.text) if path.endswith(".json") else None
 
     @property
     def artifact(self) -> str:
@@ -81,10 +84,76 @@ class Src:
     def cell(self, pattern, value=None, *, group=None, cast=None, status="code", note=None):
         """Field value anchored at the first line matching `pattern`."""
         line, m = self.find(pattern)
+        if status == "default":
+            return unknown(f"unresolved default at {self.ref(line)}; "
+                           + (note or "no effective launch/runtime configuration"))
         if value is None:
             value = m.group(group or 1)
             value = cast(value) if cast else value
+        elif m.groups() and isinstance(value, str):
+            raise ValueError(f"derive descriptions from captured values at {self.ref(line)}")
+        elif m.groups() and (isinstance(value, (int, float, list, tuple))
+                             and not isinstance(value, bool)):
+            # A matching anchor alone cannot certify a hard-coded numeric value.
+            try:
+                actual = [ast.literal_eval(g) for g in m.groups()]
+            except (ValueError, SyntaxError) as exc:
+                raise SystemExit(f"nonliteral numeric anchor at {self.ref(line)}") from exc
+            expected = list(value) if isinstance(value, (list, tuple)) else [value]
+            if actual != expected:
+                raise SystemExit(f"source assumption mismatch at {self.ref(line)}: "
+                                 f"expected {expected!r}, found {actual!r}")
+        elif status == "code":
+            # A regex without captured values proves only source location.
+            # Preserve semantic annotations as conditional interpretations.
+            status = "inferred"
+            note = "semantic source interpretation; value not mechanically extracted; " + (note or "")
         return mk(value, status, self.ref(line), note)
+
+    def keyword_cell(self, call_name, keyword):
+        """Extract a literal keyword from an actual AST call, never a supplied value."""
+        matches = []
+        for node in ast.walk(self._tree):
+            if isinstance(node, ast.Call) and ast.get_source_segment(self.text, node.func) == call_name:
+                matches.extend(kw for kw in node.keywords if kw.arg == keyword)
+        if len(matches) != 1:
+            raise SystemExit(f"expected one {call_name} {keyword} in {self.path}")
+        kw = matches[0]
+        try:
+            value = ast.literal_eval(kw.value)
+        except (ValueError, SyntaxError) as exc:
+            raise SystemExit(f"nonliteral {call_name} {keyword} at {self.ref(kw.lineno)}") from exc
+        return mk(value, "code", self.ref(kw.lineno))
+
+    def optimizer_betas(self):
+        first, second = self.keyword_cell("T.AdamParams", "beta1"), self.keyword_cell("T.AdamParams", "beta2")
+        return mk([first["value"], second["value"]], "code",
+                  first["source"] + "; " + second["source"])
+
+    def prompts_per_step(self):
+        batch = self.keyword_cell("GRPOConfig", "generation_batch_size")
+        group = self.keyword_cell("GRPOConfig", "num_generations")
+        if (type(batch["value"]) is not int or type(group["value"]) is not int
+                or group["value"] <= 0 or batch["value"] % group["value"]):
+            raise SystemExit("generation batch size must be an integer multiple of group size")
+        return mk(batch["value"] // group["value"], "code",
+                  batch["source"] + "; " + group["source"],
+                  "generation_batch_size / num_generations")
+
+    def assignment_src(self, name):
+        nodes = [n for n in ast.walk(self._tree) if isinstance(n, ast.Assign)
+                 and any(isinstance(t, ast.Name) and t.id == name for t in n.targets)]
+        if not nodes:
+            raise ValueError(f"missing assignment to {name}")
+        nodes.sort(key=lambda node: node.lineno)
+        return "\n".join(ast.get_source_segment(self.text, node) for node in nodes), nodes[0].lineno
+
+    def reward_fingerprint(self):
+        assignment, line = self.assignment_src("rewards")
+        # Full module conservatively captures helper/constants and transformations,
+        # including dependencies a narrow reward expression would omit.
+        return mk(sha_of(REWARD_FINGERPRINT_VERSION, assignment, self.func_src("parse"), self.text),
+                  "code", self.ref(line), REWARD_FINGERPRINT_VERSION)
 
     def _func(self, name: str):
         for node in ast.walk(self._tree):
@@ -115,7 +184,13 @@ class Src:
 
 
 def mk(value, status, source, note=None):
-    assert status in KNOWN_STATUSES + ("unknown",), status
+    if status not in KNOWN_STATUSES + ("unknown",):
+        raise ValueError(f"Unsupported evidence status: {status}")
+    if status == "default":
+        # Existing extractors have no resolved launch or pinned-library evidence.
+        # Keep the source/default description, but never treat it as an observation.
+        status, value = "unknown", None
+        note = "unresolved default; " + (note or "effective runtime value not recorded")
     if status == "unknown":
         value = None
     out = {"value": value, "status": status, "source": source}
@@ -136,12 +211,22 @@ def sha_of(*parts: str) -> str:
     return hashlib.sha256("\x1f".join(parts).encode()).hexdigest()
 
 
+def outcome_evidence(src, keypath, computation_version="extract-json-number-v1"):
+    """Lineage for extraction, not an invented claim about upstream computation."""
+    return {"source": f"{src.path}#{keypath}", "input_sha256": src.sha256,
+            "computation_version": computation_version,
+            "note": "source-reported statistic; upstream computation not independently reproduced"}
+
+
 def variant_rule(model):
+    if not model:
+        return unknown("checkpoint name is not reported")
     name = model.split("/")[-1].lower()
-    if "base" in name:
+    if re.search(r"(?:^|[-_.])base(?:$|[-_.])", name):
         return inferred("base", f"checkpoint name '{model}' carries a -Base suffix")
-    return inferred("instruct", f"checkpoint name '{model}' has no -Base suffix "
-                                "(post-trained release)")
+    if re.search(r"(?:^|[-_.])instruct(?:$|[-_.])", name) or name.endswith(("-inst", "-it")):
+        return inferred("instruct", f"checkpoint name '{model}' explicitly identifies an instruct release")
+    return unknown(f"checkpoint name '{model}' does not establish base/instruct variant")
 
 
 # ---------------------------------------------------- exhibit (a): Qwen3-8B
@@ -211,7 +296,7 @@ def fc_family():
         "kl.estimator": mk("none", "code", c2.ref(loss_ref)),
         "optimizer.name": c2.cell(r"T\.AdamParams\(", "adam (tinker AdamParams)"),
         "optimizer.lr": fc.key(f"{p}.learning_rate"),
-        "optimizer.betas": c2.cell(r"beta1=([\d.]+), beta2=([\d.]+)", [0.9, 0.95]),
+        "optimizer.betas": c2.optimizer_betas(),
         "optimizer.eps": c2.cell(r"eps=([\de.-]+)\)", cast=float),
         "optimizer.weight_decay": unknown("not set; AdamParams default unresolved"),
         "lora.rank": c2.cell(r"create_lora_training_client\(base_model=model, rank=(\d+)", cast=int),
@@ -227,6 +312,7 @@ def fc_family():
         telemetry=(False, False, f"train/reward only ({c2.ref(c2.find(r'wb_run.log')[0])}); "
                                  "per-step ZVF logging was added 2026-06-14, after this run"),
         outcomes={"mean_last10_train_reward": fc.json["frameworks"][i]["last10_avg"]},
+        outcome_provenance={"mean_last10_train_reward": outcome_evidence(fc, f"{p}.last10_avg")},
         notes=("Tinker campaign_v2 wave-1 run (experiment_id campaign_v2_w1_qwen3-8b-base). "
                "Custom REINFORCE loss via forward_backward_custom: no ratio, no clip, no KL; "
                "2 prompts x 8 samples, LoRA rank 32, temp 0.8, 512 tokens. "
@@ -268,8 +354,7 @@ def fc_family():
         "decoding.temperature": unknown(lib),
         "decoding.top_p": unknown(lib),
         "decoding.max_tokens": trl.cell(r"max_completion_length=(\d+)", cast=int),
-        "batch.prompts_per_step": trl.cell(r"generation_batch_size=(\d+)", 1,
-                                           note="generation_batch_size 8 / num_generations 8"),
+        "batch.prompts_per_step": trl.prompts_per_step(),
         "batch.samples_per_prompt": trl.cell(r"num_generations=(\d+)", cast=int),
         "batch.group_schedule": trl.cell(r"num_generations=", "fixed"),
         "train.steps": trl.cell(r"max_steps=(\d+)", cast=int),
@@ -295,7 +380,7 @@ def fc_family():
         "lora.rank": trl.cell(r"r=(\d+), lora_alpha=", cast=int),
         "lora.alpha": trl.cell(r"lora_alpha=(\d+)", cast=int),
         "lora.dropout": trl.cell(r"lora_dropout=([\d.]+)", cast=float),
-        "lora.targets": trl.cell(r"target_modules=\[", ["k_proj", "o_proj", "q_proj", "v_proj"]),
+        "lora.targets": trl.keyword_cell("LoraConfig", "target_modules"),
         "seeds": mk([fc.json["frameworks"][i]["seed"]], "logged", f"{fc.path}#{p}.seed",
                     "script sets no seed; TrainingArguments default seed=42"),
     }
@@ -305,6 +390,7 @@ def fc_family():
         model=model, task="gsm8k", seeds=rc["seeds"]["value"],
         telemetry=(False, False, "TRL log_history reward only; no ZVF/GU logging in the script"),
         outcomes={"mean_last10_train_reward": fc.json["frameworks"][i]["last10_avg"]},
+        outcome_provenance={"mean_last10_train_reward": outcome_evidence(fc, f"{p}.last10_avg")},
         notes=("TRL GRPOTrainer run on Modal H100 (experiment_id modal_trl_trl_qwen3_8b). "
                "Post-trained Qwen3-8B with the tokenizer chat template, boxed-only reward, "
                "train[:500], 1 prompt x 8 samples, LoRA r32/a64/drop0.05. Loss/KL/decoding "
@@ -324,16 +410,51 @@ def fc_family():
             "eval.metric": mk(TRAIN_LAST10, "logged", f"{fc.path}#metric", fc.json["metric"]),
             "seeds": mk([fc.json["frameworks"][i]["seed"]], "logged", f"{fc.path}#{p}.seed"),
         }
-        out[eid] = dict(run_config=rc, sources=[fc], keep_min_report=True,
-                        notes=("DRY RUN: framework_comparison.json mode='dryrun' -- the reward "
-                               "trace is a seeded synthetic fallback; no training ran. min_report "
-                               "is the intended config from the YAML dump, not an observed run."))
+        out[eid] = dict(
+            run_config={"execution.mode": rc["execution.mode"]}, intended_config=rc,
+            sources=[fc], label="grpo",
+            framework={"name": fw.lower(), "version": None, "openness": "open"},
+            model=None, task=None, seeds=None,
+            telemetry=(None, None, None), outcomes={},
+            synthetic_diagnostics={"description": "seeded fallback only; no training executed"},
+            notes="DRY RUN: synthetic diagnostics only; intended configuration is not execution evidence.")
     return out
 
 
 # ------------------------------------------------ exhibit (b): h2h2 Tinker cells
 TRAIN_LAST10 = "mean sampled train reward over last 10 steps"
 H2H_ARMS = ("grpo", "drgrpo", "dapo", "gspo")
+
+
+def h2h_outcomes(runs):
+    seeds, rewards, zvfs = [], [], []
+    for src in runs:
+        run = src.json
+        seed = run.get("seed")
+        if type(seed) is not int or seed in seeds or run.get("status") != "completed":
+            raise ValueError("H2H requires distinct completed seed runs")
+        seeds.append(seed)
+        trace, log = run.get("reward_trace"), run.get("step_log")
+        if (not isinstance(trace, list) or len(trace) < 10 or not isinstance(log, list)
+                or len(trace) != len(log) or len(log) != run.get("steps")):
+            raise ValueError("H2H run lacks complete per-step outcomes")
+        for step, row in enumerate(log, 1):
+            if row.get("step") != step or row.get("reward") != trace[step - 1]:
+                raise ValueError("H2H step identity/reward mismatch")
+        values = trace + [row.get("zvf") for row in log]
+        if any(type(x) not in (int, float) or not math.isfinite(x) or not 0 <= x <= 1 for x in values):
+            raise ValueError("invalid H2H outcome")
+        rewards.append(statistics.mean(trace[-10:]))
+        zvfs.append(statistics.mean(row["zvf"] for row in log))
+    if not seeds:
+        raise ValueError("H2H requires completed seed artifacts")
+    outcomes = {"mean_last10_train_reward": statistics.mean(rewards), "mean_zvf": statistics.mean(zvfs)}
+    evidence = {key: {"input_artifacts": [src.artifact for src in runs],
+                      "computation_version": "mean-of-seed-last10-reward-and-full-zvf-v1",
+                      "source": "per-run reward_trace and step_log", "seeds": seeds,
+                      "execution_binding": "unknown; historical logs lack execution receipts"}
+                for key in outcomes}
+    return outcomes, evidence
 
 
 def h2h_family():
@@ -350,8 +471,10 @@ def h2h_family():
         r0 = runs[0]
         for k in ("model", "rank", "group_size", "batch", "lr", "temperature", "steps", "difficulty"):
             vals = {json.dumps(r.json[k]) for r in runs}
-            assert len(vals) == 1, (arm, k, vals)
-        assert all(r.json["status"] == "completed" for r in runs)
+            if len(vals) != 1:
+                raise ValueError(f"Inconsistent {arm} {k}: {vals}")
+        if not all(r.json["status"] == "completed" for r in runs):
+            raise ValueError(f"Incomplete source run for {arm}")
         model = r0.json["model"]
         dflt = "cell_runner argparse default; the sweep launcher command is not in the repo"
         rc = {
@@ -366,9 +489,8 @@ def h2h_family():
                                                  note="sha256(SYSTEM_PROMPT \\x1f QUESTION_SUFFIX)"),
             "prompt.chat_template": cell.cell(r'f"<\|im_start\|>system', "manual-chatml"),
             "data.dataset": cell.cell(r'load_dataset\("openai/gsm8k", "main"', "openai/gsm8k:main"),
-            "data.subset": mk(f"train, '{r0.json['difficulty']}' reasoning-step tercile, first 256 after seeded shuffle",
-                              "logged", f"{r0.path}#difficulty",
-                              f"example_limit 256 is the {dflt} ({cell.ref(cell.find(r'--example-limit')[0])})"),
+            "data.subset": unknown(f"difficulty={r0.json['difficulty']!r} is logged at {r0.path}#difficulty; "
+                                   f"example_limit is not logged and the launch command is absent"),
             "data.selection": probe.cell(r"batch_examples = rng\.sample", "seeded rng.sample per step"),
             "eval.metric": mk(TRAIN_LAST10, "logged",
                               f"{summ.path}#by_arm.{arm}.mean_last10_reward"),
@@ -387,8 +509,7 @@ def h2h_family():
             "batch.group_schedule": probe.cell(r"num_samples=args\.group", "fixed"),
             "train.steps": r0.key("steps"),
             "train.sampler_refresh": cell.cell(r'--save-every", type=int, default=(\d+)',
-                                               "every 5 steps, no importance correction",
-                                               status="default", note=dflt),
+                                               cast=int, status="default", note=dflt),
             "loss.objective": mk("reinforce: -A_i * sum_t logp, mean over sequences", "code", probe.ref(base_loss)),
             "loss.importance_ratio": mk("none", "code", probe.ref(base_loss), "custom loss uses raw log-probs; no ratio"),
             "loss.clip": mk("none", "code", probe.ref(base_loss)),
@@ -405,7 +526,7 @@ def h2h_family():
             "kl.estimator": mk("none", "code", probe.ref(base_loss)),
             "optimizer.name": probe.cell(r"T\.AdamParams\(", "adam (tinker AdamParams)"),
             "optimizer.lr": r0.key("lr"),
-            "optimizer.betas": probe.cell(r"beta2=0\.95", [0.9, 0.95]),
+            "optimizer.betas": probe.optimizer_betas(),
             "optimizer.eps": probe.cell(r"eps=([\de.-]+),", cast=float),
             "optimizer.weight_decay": unknown("not set; AdamParams default unresolved"),
             "lora.rank": r0.key("rank"),
@@ -445,13 +566,13 @@ def h2h_family():
                 ("delta_drgrpo", "length_normalization", "implemented",
                  f"baseline loss is already an unnormalized sum ({probe.ref(base_loss)})"),
             ]
-        s = summ.json["by_arm"][arm]
+        derived_outcomes, derived_evidence = h2h_outcomes(runs)
         out[f"tinker_{arm}_qwen3.5-4b_gsm8k"] = dict(
             run_config=rc, sources=[probe, cell, summ] + runs, label=arm,
             framework={"name": "tinker", "version": None, "openness": "managed"},
             model=model, task="gsm8k", seeds=rc["seeds"]["value"], deltas=deltas,
             telemetry=(True, True, f"step_log zvf/gu per step ({r0.path}#step_log)"),
-            outcomes={"mean_last10_train_reward": s["mean_last10_reward"], "mean_zvf": s["mean_zvf"]},
+            outcomes=derived_outcomes, outcome_provenance=derived_evidence,
             notes=(f"12-cell Tinker head-to-head, '{arm}' arm (3 seeds). cell_runner surrogate on the "
                    "in-repo REINFORCE loop: no ratio, no KL, sequence-sum log-probs over prompt+completion. "
                    + {"dapo": "'dapo' = advantage clip [-2,3] only; none of DAPO's four components.",
@@ -471,7 +592,6 @@ def e3_family():
     e3 = Src("zvf-program/colab-experiments/e3_open_audit.py", "71e6f09ee")
     res = Src("zvf-program/colab-experiments/results/e3_open_audit.json")
     _, pline = e3.func_sha("parse")
-    _, rm = e3.find(r"rewards = \[1\.0 if parse\(t\) == gold")
     _, um = e3.find(r'"content": f"(Compute \{q\}\..*?)"\}')
     cline = e3.find(r"def clipped_loss")[0]
     ratio = e3.find(r"ratio = torch\.exp\(new_lp - old_lp\.detach\(\)\)")[0]
@@ -485,8 +605,7 @@ def e3_family():
             "checkpoint.variant": variant_rule(model),
             "checkpoint.revision": unknown(f"unpinned from_pretrained ({e3.ref(e3.find(r'AutoModelForCausalLM.from_pretrained')[0])})"),
             "reward.id": mk("after-####-first-integer|exact", "code", e3.ref(pline)),
-            "reward.fn_sha256": mk(sha_of(e3.func_src("parse"), rm.group(0)), "code", e3.ref(pline),
-                                   "sha256(parse() source \\x1f the reward line)"),
+            "reward.fn_sha256": e3.reward_fingerprint(),
             "prompt.template_sha256": mk(sha_of("", um.group(1)), "code",
                                          e3.ref(e3.find(r'"content": f"Compute')[0]),
                                          "sha256('' \\x1f user template); no system prompt"),
@@ -570,6 +689,10 @@ def e3_family():
             telemetry=(True, False, f"per-step post-filter ZVF in traj ({e3.ref(e3.find(r'traj.append')[0])})"),
             outcomes={"mean_zvf": a["mean_zvf"], "heldout_delta": a["mean_heldout_delta"],
                       "rollouts": int(a["mean_rollouts"])},
+            outcome_provenance={
+                "mean_zvf": outcome_evidence(res, f"by_arm.{arm}.mean_zvf"),
+                "heldout_delta": outcome_evidence(res, f"by_arm.{arm}.mean_heldout_delta"),
+                "rollouts": outcome_evidence(res, f"by_arm.{arm}.mean_rollouts", "extract-json-number-int-cast-v1")},
             schedule=("adaptive" if arm == "grpo_adaptiveG" else "fixed"),
             notes=("E3 open audit on Colab T4: Qwen2.5-0.5B-Instruct full fine-tune, synthetic a+b, "
                    "3 prompts x G=4, 10 steps x 2 inner epochs, sequence-level PPO-clip ratio, no KL. "
@@ -583,19 +706,20 @@ def e3_family():
 # ------------------------------------------------------------- entry builder
 def to_min_report(rc, old, spec):
     """Derive the MIN-REPORT block from run_config (unknown -> null)."""
-    v = {k: (c["value"] if c["status"] != "unknown" else None) for k, c in rc.items()}
+    v = {k: (c["value"] if c["status"] in KNOWN_STATUSES else None) for k, c in rc.items()}
     clip_lo = clip_hi = None
     m = re.fullmatch(r"ratio\[([\d.]+),([\d.]+)\]", str(v.get("loss.clip")))
     if m:
         clip_lo, clip_hi = round(1 - float(m.group(1)), 6), round(float(m.group(2)) - 1, 6)
     ratio = v.get("loss.importance_ratio")
     dyn = v.get("loss.dynamic_sampling")
-    per_zvf, per_gu, tsrc = spec["telemetry"]
+    per_zvf, per_gu, tsrc = spec.get("telemetry", (None, None, None))
     heldout = v.get("eval.heldout")
     return {
         "loss_form": {
             "importance_ratio_level": ratio,
             "clip_eps_low": clip_lo, "clip_eps_high": clip_hi,
+            "clipping_applied": False if v.get("loss.clip") == "none" else True if m else None,
             "length_normalization": v.get("loss.length_normalization"),
             "advantage_normalization": v.get("loss.advantage_norm"),
             "token_mask": v.get("loss.token_mask"),
@@ -610,52 +734,95 @@ def to_min_report(rc, old, spec):
         "telemetry": {"per_step_zvf": per_zvf, "per_step_gu": per_gu, "source": tsrc},
         "group_size_schedule": {
             "initial_g": v.get("batch.samples_per_prompt"),
-            "schedule": spec.get("schedule", "fixed"),
-            "adaptation_rule": (v.get("batch.group_schedule") if spec.get("schedule") == "adaptive" else "none"),
+            "schedule": spec.get("schedule", "fixed" if v.get("batch.group_schedule") == "fixed" else None),
+            "adaptation_rule": (v.get("batch.adaptation_rule") if spec.get("schedule") == "adaptive"
+                                else "none" if v.get("batch.group_schedule") == "fixed" else None),
         },
         "heldout_split": {
             "disjoint_from_reward_env": None,
+            "n": None,
             "description": ("no held-out evaluation in the run script" if heldout == "none" else heldout),
         },
-        "decontamination": {"performed": False, "parser_robustness_probe": False},
+        "decontamination": {
+            key: (evidence["value"] if isinstance(evidence, dict)
+                  and evidence.get("status") in KNOWN_STATUSES
+                  and evidence.get("source") and type(evidence.get("value")) is bool else None)
+            for key in ("performed", "parser_robustness_probe")
+            for evidence in [spec.get("decontamination", {}).get(key)]
+        },
     }
 
 
 def build(eid, spec, old):
-    new = copy.deepcopy(old)
-    rc = spec["run_config"]
+    # Only explicit human annotation namespaces survive; generated claims never
+    # become their own regeneration inputs.
+    new = {"record_type": "stack", "id": eid, "schema_version": "registry-v3"}
+    if old.get("provenance", {}).get("manual_annotations"):
+        new["provenance"] = {"manual_annotations": copy.deepcopy(old["provenance"]["manual_annotations"])}
+    rc = copy.deepcopy(spec["run_config"])
+    if "batch.adaptation_rule" not in rc:
+        schedule = rc.get("batch.group_schedule", {})
+        if schedule.get("value") == "fixed":
+            rc["batch.adaptation_rule"] = mk("none", schedule["status"], schedule["source"])
+        elif spec.get("schedule") == "adaptive":
+            rc["batch.adaptation_rule"] = copy.deepcopy(schedule)
+            rc["batch.group_schedule"] = mk("adaptive", schedule["status"], schedule["source"])
+
+    if "effective_manifest" in spec:
+        new["effective_manifest"] = copy.deepcopy(spec["effective_manifest"])
+        rc.update(manifest_view(spec["effective_manifest"], "spec#effective_manifest"))
     for k in rc:
-        assert k in FIELDS, (eid, k)
-    new["run_config"] = {k: rc[k] for k in FIELDS if k in rc}
+        if k not in FIELDS:
+            raise ValueError(f"Unknown configuration field for {eid}: {k}")
+    new["run_config"] = {k: rc.get(k, unknown("not recorded in source artifacts")) for k in FIELDS}
+    if "intended_config" in spec:
+        new["intended_config"] = copy.deepcopy(spec["intended_config"])
+    if "synthetic_diagnostics" in spec:
+        new["synthetic_diagnostics"] = copy.deepcopy(spec["synthetic_diagnostics"])
     srcs = []
     for s in spec["sources"]:
         if s.artifact not in srcs:
             srcs.append(s.artifact)
     new["provenance"] = {"source_artifacts": srcs,
-                         "wandb": old.get("provenance", {}).get("wandb"),
-                         "date_recorded": old.get("provenance", {}).get("date_recorded"),
-                         "generated_by": GENERATOR}
+                         "wandb": spec.get("wandb"),
+                         "date_recorded": spec.get("date_recorded"),
+                         "generator_version": GENERATOR_VERSION,
+                         "execution_binding": "unknown: inspected source is not an execution receipt",
+                         "generated_by": GENERATOR,
+                         "outcome_provenance": copy.deepcopy(spec.get("outcome_provenance", {})),
+                         "manual_annotations": copy.deepcopy(old.get("provenance", {}).get("manual_annotations", {}))}
+    # Generated outcomes are a clean projection of current evidence. Historic
+    # controller estimates, CIs and other annotations must not leak through.
+    new["outcomes"] = copy.deepcopy(spec.get("outcomes", {}))
     new["notes"] = spec["notes"] + " Generated by generate_entries.py; do not hand-edit."
-    if spec.get("keep_min_report"):
-        return new
-    if spec.get("label"):
-        new["label_claimed"] = spec["label"]
+    new["label_claimed"] = spec.get("label") or "grpo"
     new["framework"] = spec["framework"]
     new["model"], new["task"], new["seeds"] = spec["model"], spec["task"], spec["seeds"]
-    new["min_report"] = to_min_report(rc, old["min_report"], spec)
+    new["min_report"] = to_min_report(rc, {}, spec)
     new["variant_deltas_applied"] = [
         {"delta_id": d, "component": c, "status": st, "note": n} for d, c, st, n in spec.get("deltas", [])]
-    out = dict(old.get("outcomes") or {})
-    out.update(spec.get("outcomes", {}))
-    cov = dict(out.get("coverage") or {})
+    out = new["outcomes"]
     mr = new["min_report"]
-    cov["min_report_coverage"] = round(sum(any(x is not None for x in mr[i].values()) for i in mr) / 7, 4)
     vd = new["variant_deltas_applied"]
-    cov["declared_deltas_coverage"] = (round(sum(d["status"] in ("implemented", "surrogate") for d in vd) / len(vd), 4)
-                                       if vd else 0.0)
-    cov["audit_source"] = GENERATOR
+    # Versioned names distinguish item presence, leaf reporting and actual
+    # implementation. Explicit documented absence is complete reporting.
+    cov = {
+        "item_presence_coverage_v3": round(sum(score > 0 for score in badge(new)[1].values()) / len(ITEMS), 4),
+        "reported_leaf_coverage_v3": sum(badge(new)[1].values()) / len(ITEMS),
+        "coverage_version": COVERAGE_VERSION,
+        "declared_delta_reporting_completeness_v2": (round(sum(d["status"] in ("implemented", "surrogate", "absent") for d in vd) / len(vd), 4) if vd else None),
+        "declared_delta_implementation_fraction_v1": (round(sum(d["status"] == "implemented" for d in vd) / len(vd), 4) if vd else None),
+        "declared_delta_surrogate_fraction_v1": (round(sum(d["status"] == "surrogate" for d in vd) / len(vd), 4) if vd else None),
+        "audit_source": GENERATOR,
+    }
     out["coverage"] = cov
-    new["outcomes"] = out
+    new["provenance"]["coverage_provenance"] = {
+        "source": f"{GENERATOR}#build",
+        "input_sha256": hashlib.sha256(json.dumps(
+            {"min_report": mr, "variant_deltas_applied": vd},
+            sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
+        "computation_version": "registry-coverage-v3",
+    }
     return new
 
 
@@ -687,8 +854,9 @@ def main(argv=None):
     changes, stale = {}, []
     for eid, spec in sorted(specs.items()):
         path = ENTRIES / f"{eid}.json"
-        old = json.loads(path.read_text())
+        old = strict_json_loads(path.read_text())
         new = build(eid, spec, old)
+        validate_record(new, strict_json_loads((HERE / "schema.json").read_text()))
         if new != old:
             stale.append(eid)
         if args.check:

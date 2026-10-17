@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/tinker-rl-lab/grpo-registry/schema.json",
+  "$id": "https://github.com/tinker-rl-lab/grpo-registry/schema-v3.json",
   "title": "GRPO-Registry record",
   "description": "A machine-readable catalog record for a group-relative RL (GRPO-family) training stack, or for a variant-delta (the set of changes a named GRPO variant makes to the base algorithm). Field convention: JSON null means UNREPORTED; explicit false / 0.0 / 'none' means reported-as-absent. The MIN-REPORT auditor scores reporting coverage, not configuration virtue.",
   "oneOf": [
@@ -204,7 +204,7 @@
                 "object",
                 "null"
               ],
-              "description": "Iter-62: self-reported coverage of the entry's reporting blocks. All fields nullable; null = not yet audited. min_report_coverage is the fraction of7 MIN-REPORT items with at least one sub-field populated. declared_deltas_coverage is the fraction of variant_deltas_applied entries with status in {implemented, surrogate}. measured_coverage is variant: measured_rows / delta_components, or stack: outcomes_fields_populated / 5. ci_method_present mirrors outcomes.ci_method being non-null. audit_source is the script path that produced the block.",
+              "description": "Iter-62: self-reported coverage of the entry's reporting blocks. All fields nullable; null = not yet audited. min_report_coverage is the fraction of7 MIN-REPORT items with at least one sub-field populated. declared_deltas_coverage is the fraction of variant_deltas_applied entries with status in {implemented, surrogate}. measured_coverage is variant: measured_rows / delta_components, or stack: outcomes_fields_populated / 5. ci_method_present mirrors outcomes.ci_method being non-null. audit_source is the script path that produced the block. Versioned metrics below supersede ambiguous legacy names for newly generated entries; reporting completeness is independent of implementation presence.",
               "properties": {
                 "min_report_coverage": {
                   "type": [
@@ -241,6 +241,66 @@
                     "string",
                     "null"
                   ]
+                },
+                "min_report_item_presence_v1": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Fraction of seven MIN-REPORT items with at least one reported leaf; false and zero count as reported."
+                },
+                "min_report_leaf_mean_v2": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Equal-weight mean of each MIN-REPORT item reported-leaf fraction (badge/100 before badge rounding)."
+                },
+                "declared_delta_reporting_completeness_v2": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Fraction of declared delta rows whose status is implemented, surrogate or absent. Unknown is unreported. Null when no rows exist."
+                },
+                "declared_delta_implementation_fraction_v1": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Fraction of declared delta rows with status implemented, excluding surrogate and absent. Null when no rows exist."
+                },
+                "declared_delta_surrogate_fraction_v1": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Fraction of declared delta rows with status surrogate. Null when no rows exist."
+                },
+                "item_presence_coverage_v3": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Fraction of seven items with at least one reported substantive schema leaf; source/description excluded."
+                },
+                "reported_leaf_coverage_v3": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Equal-weight mean of seven schema-defined substantive leaf fractions; explicit disabled clipping makes epsilons inapplicable."
+                },
+                "coverage_version": {
+                  "const": "reported-substantive-leaf-mean-v3"
                 }
               },
               "additionalProperties": false
@@ -320,7 +380,7 @@
                 "object",
                 "null"
               ],
-              "description": "Iter-70: per-(method × trigger × threshold) controller savings predictions for the iter-51 adaptive-G controller on this stack. All fields nullable; null = not yet audited. Sourced from iter-67 p7_antiherding_controller_cf_summary.tsv.",
+              "description": "Iter-70: per-(method \u00d7 trigger \u00d7 threshold) controller savings predictions for the iter-51 adaptive-G controller on this stack. All fields nullable; null = not yet audited. Sourced from iter-67 p7_antiherding_controller_cf_summary.tsv.",
               "properties": {
                 "panel": {
                   "$ref": "#/$defs/nullable_string"
@@ -401,6 +461,19 @@
           "additionalProperties": {
             "$ref": "#/$defs/run_config_cell"
           }
+        },
+        "effective_manifest": {
+          "type": "object",
+          "description": "Observed effective runtime manifest. Explicit catalogue keys and supported nested paths override legacy configuration; missing values remain unknown."
+        },
+        "intended_config": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/run_config_cell"
+          }
+        },
+        "synthetic_diagnostics": {
+          "type": "object"
         }
       },
       "additionalProperties": false
@@ -460,6 +533,10 @@
             "sampling_dynamic_filter": {
               "$ref": "#/$defs/nullable_boolean",
               "description": "Iter-32 extension: whether the sampler applies dynamic filtering (e.g. DAPO dynamic_sampling)."
+            },
+            "clipping_applied": {
+              "$ref": "#/$defs/nullable_boolean",
+              "description": "False explicitly disables ratio clipping; epsilon fields are then inapplicable"
             }
           },
           "required": [
@@ -568,6 +645,10 @@
             },
             "description": {
               "$ref": "#/$defs/nullable_string"
+            },
+            "n": {
+              "$ref": "#/$defs/nullable_integer",
+              "description": "Number of saved held-out example identifiers; null when unverified"
             }
           },
           "required": [
@@ -773,7 +854,7 @@
             "object",
             "null"
           ],
-          "description": "Iter-70: per-(trigger × threshold) controller savings predictions for the variant on the N2 same-stack corpus. Inherits from the variant's measured method; predictions carry the iter-67 saved_per_fire and savings_per_rollout paired-bootstrap estimates.",
+          "description": "Iter-70: per-(trigger \u00d7 threshold) controller savings predictions for the variant on the N2 same-stack corpus. Inherits from the variant's measured method; predictions carry the iter-67 saved_per_fire and savings_per_rollout paired-bootstrap estimates.",
           "properties": {
             "panel": {
               "$ref": "#/$defs/nullable_string"
@@ -1129,7 +1210,7 @@
         "source"
       ],
       "additionalProperties": false,
-      "description": "One derived run field with provenance. status: logged (results/log artifact, source <path>#<key>), code (constant in the pinned run script, source <path>@<commit>:L<n>), default (argparse/library default in the pinned script; launcher not in repo), inferred (stated rule), unknown (not derivable; value must be null).",
+      "description": "One derived run field with provenance. logged means observed artifact; code means extracted pinned implementation; default requires resolved runtime evidence, never an absent launch command; inferred requires a stated supported rule; unknown requires value=null.",
       "properties": {
         "value": {},
         "status": {

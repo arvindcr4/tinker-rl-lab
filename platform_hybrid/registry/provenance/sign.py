@@ -1,278 +1,235 @@
 #!/usr/bin/env python3
-"""Tamper-evident signing for the P5 provenance protocol (SPEC Phase-2).
+"""Versioned, fail-closed Ed25519 provenance signatures.
 
-Provides detached signatures over provenance-record JSON so that any
-post-hoc mutation of a record is detectable.
-
-Signing backend (best -> fallback):
-  1. ed25519 via the `cryptography` library  -> a real public-key signature.
-  2. HMAC-SHA256                              -> a symmetric MAC. NOTE: a MAC is
-     NOT a public-key signature; anyone holding the secret key can forge it. It
-     still gives tamper-evidence against parties without the key, but it does
-     not provide non-repudiation. The .sig file records which backend was used.
-
-Canonicalization: records are serialized with json.dumps(sort_keys=True,
-separators=(",",":")) so that signing/verification are insensitive to key
-ordering and whitespace but sensitive to every value.
-
-CLI:
-  python sign.py keygen               # create keypair under ./keys/
-  python sign.py sign   <record.json> # write detached <record.json>.sig
-  python sign.py verify <record.json> # verify against <record.json>.sig
-  python sign.py demo   [<record>]    # sign+verify+tamper demonstration
+No automatic key creation, algorithm fallback, embedded-key trust, or key rotation.
+Use ``keygen --key-dir NEW_DIRECTORY`` to provision a distinct signing identity.
+The signing primitive authenticates JSON; publication additionally requires the
+schema and evidence checks in ``minreport.audit_file``.
 """
 from __future__ import annotations
 
+import argparse
 import base64
 import hashlib
-import hmac
 import json
 import os
-import sys
 from pathlib import Path
+import sys
 
 HERE = Path(__file__).resolve().parent
 KEY_DIR = HERE / "keys"
 PRIV_ED = KEY_DIR / "provenance_ed25519.key"
 PUB_ED = KEY_DIR / "provenance_ed25519.pub"
-HMAC_KEY = KEY_DIR / "provenance_hmac.key"
-DEFAULT_RECORD = HERE / "campaign.provenance.json"
-
-# ---------------------------------------------------------------------------
-# Backend detection
-# ---------------------------------------------------------------------------
+PROTOCOL = "P5-PROVENANCE-SIG/2.0"
+CANONICALIZATION = "python-json-sortkeys-ascii/1.0"
+BACKEND = "ed25519"
+DOMAIN = b"P5-PROVENANCE-SIG/2.0\x00"
 try:
-    from cryptography.hazmat.primitives.asymmetric.ed25519 import (
-        Ed25519PrivateKey,
-        Ed25519PublicKey,
-    )
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
     from cryptography.hazmat.primitives import serialization
-
     HAVE_ED25519 = True
-except Exception:  # pragma: no cover - exercised only when lib missing
+except ImportError:  # Never downgrade to a MAC when the dependency is absent.
     HAVE_ED25519 = False
 
-BACKEND = "ed25519" if HAVE_ED25519 else "hmac-sha256"
+
+try:
+    from ..json_protocol import canonical_bytes, load_json, strict_json_loads as strict_json_loads
+except ImportError:  # Direct script invocation.
+    sys.path.insert(0, str(HERE.parent))
+    from json_protocol import canonical_bytes, load_json, strict_json_loads as strict_json_loads
 
 
-# ---------------------------------------------------------------------------
-# Canonicalization / digest
-# ---------------------------------------------------------------------------
-def canonical_bytes(record: dict) -> bytes:
-    """Deterministic byte serialization of a record."""
-    return json.dumps(record, sort_keys=True, separators=(",", ":")).encode("utf-8")
+def _require_ed25519():
+    if not HAVE_ED25519:
+        raise RuntimeError("Ed25519 requires cryptography; no weaker fallback is permitted")
 
 
-# ---------------------------------------------------------------------------
-# Key management
-# ---------------------------------------------------------------------------
-def keygen(force: bool = False) -> None:
-    KEY_DIR.mkdir(parents=True, exist_ok=True)
-    if HAVE_ED25519:
-        if PRIV_ED.exists() and not force:
-            print(f"[keygen] ed25519 key already exists: {PRIV_ED} (use force to overwrite)")
-            return
-        priv = Ed25519PrivateKey.generate()
-        priv_bytes = priv.private_bytes(
-            encoding=serialization.Encoding.Raw,
-            format=serialization.PrivateFormat.Raw,
-            encryption_algorithm=serialization.NoEncryption(),
-        )
-        pub_bytes = priv.public_key().public_bytes(
-            encoding=serialization.Encoding.Raw,
-            format=serialization.PublicFormat.Raw,
-        )
-        PRIV_ED.write_bytes(base64.b64encode(priv_bytes))
-        PUB_ED.write_bytes(base64.b64encode(pub_bytes))
-        os.chmod(PRIV_ED, 0o600)
-        print(f"[keygen] backend=ed25519")
-        print(f"[keygen] private key -> {PRIV_ED} (mode 600)")
-        print(f"[keygen] public  key -> {PUB_ED}")
-    else:
-        if HMAC_KEY.exists() and not force:
-            print(f"[keygen] hmac key already exists: {HMAC_KEY}")
-            return
-        secret = os.urandom(32)
-        HMAC_KEY.write_bytes(base64.b64encode(secret))
-        os.chmod(HMAC_KEY, 0o600)
-        print("[keygen] backend=hmac-sha256 (MAC, not a public-key signature)")
-        print(f"[keygen] secret key -> {HMAC_KEY} (mode 600)")
+def _paths(key_dir=None):
+    if key_dir is None:
+        return KEY_DIR, PRIV_ED, PUB_ED
+    directory = Path(key_dir)
+    return directory, directory / PRIV_ED.name, directory / PUB_ED.name
 
 
-def _load_ed_private() -> "Ed25519PrivateKey":
-    raw = base64.b64decode(PRIV_ED.read_bytes())
-    return Ed25519PrivateKey.from_private_bytes(raw)
+def _exclusive_write(path, data, mode):
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+    fd = os.open(path, flags, mode)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(data)
+        stream.flush()
+        os.fsync(stream.fileno())
 
 
-def _load_ed_public() -> "Ed25519PublicKey":
-    raw = base64.b64decode(PUB_ED.read_bytes())
-    return Ed25519PublicKey.from_public_bytes(raw)
+def key_fingerprint(raw_public_key):
+    return "sha256:" + hashlib.sha256(raw_public_key).hexdigest()
 
 
-def _load_hmac_secret() -> bytes:
-    return base64.b64decode(HMAC_KEY.read_bytes())
+def keygen(force=False, key_dir=None):
+    """Create a new identity only; even force cannot replace a trust anchor."""
+    _require_ed25519()
+    if force:
+        raise ValueError("in-place rotation is forbidden; choose a new --key-dir")
+    directory, private_path, public_path = _paths(key_dir)
+    if any(os.path.lexists(path) for path in (private_path, public_path)):
+        raise FileExistsError("key generation refuses to replace either existing key")
+    if directory.is_symlink():
+        raise ValueError("key directory must not be a symlink")
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+    if directory.stat().st_mode & 0o077:
+        raise PermissionError("key directory must have mode 0700 before provisioning")
+    private = Ed25519PrivateKey.generate()
+    private_raw = private.private_bytes(serialization.Encoding.Raw,
+                                        serialization.PrivateFormat.Raw,
+                                        serialization.NoEncryption())
+    public_raw = private.public_key().public_bytes(serialization.Encoding.Raw,
+                                                   serialization.PublicFormat.Raw)
+    fingerprint = key_fingerprint(public_raw)
+    archive = directory / (fingerprint.replace(":", "-") + ".pub")
+    # Exclusive opens protect against racing writers and existing symlinks. A
+    # failure leaves any newly created files intact for explicit operator review.
+    _exclusive_write(private_path, base64.b64encode(private_raw), 0o600)
+    _exclusive_write(public_path, base64.b64encode(public_raw), 0o644)
+    _exclusive_write(archive, base64.b64encode(public_raw), 0o644)
+    return fingerprint
 
 
-def _ensure_keys() -> None:
-    missing = not (PRIV_ED if HAVE_ED25519 else HMAC_KEY).exists()
-    if missing:
-        # A fresh keypair cannot verify against the committed public key, so
-        # never rotate silently.
-        print(
-            "WARNING: signing key not found; generating a NEW keypair. Signatures "
-            "made now will not verify against the previously committed public key.",
-            file=sys.stderr,
-        )
-        keygen()
+def _decode_key(path):
+    return base64.b64decode(Path(path).read_bytes(), validate=True)
 
 
-# ---------------------------------------------------------------------------
-# Core sign / verify on an in-memory record
-# ---------------------------------------------------------------------------
-def sign_record(record: dict) -> dict:
-    """Return a detached signature envelope for a record dict."""
-    _ensure_keys()
-    msg = canonical_bytes(record)
-    if HAVE_ED25519:
-        sig = _load_ed_private().sign(msg)
-        sig_b64 = base64.b64encode(sig).decode("ascii")
-    else:
-        sig = hmac.new(_load_hmac_secret(), msg, hashlib.sha256).digest()
-        sig_b64 = base64.b64encode(sig).decode("ascii")
-    return {
-        "spec": "P5-PROVENANCE-SIG/1.0",
-        "backend": BACKEND,
-        "is_public_key_signature": HAVE_ED25519,
-        "digest_sha256": hashlib.sha256(msg).hexdigest(),
-        "signature_b64": sig_b64,
-        "caveat": None
-        if HAVE_ED25519
-        else "HMAC-SHA256 is a symmetric MAC, not a public-key signature; "
-        "holders of the secret key can forge it (no non-repudiation).",
+def _load_ed_private(key_dir=None):
+    _require_ed25519()
+    return Ed25519PrivateKey.from_private_bytes(_decode_key(_paths(key_dir)[1]))
+
+
+def _load_ed_public(trusted_key):
+    _require_ed25519()
+    raw = trusted_key if isinstance(trusted_key, bytes) else _decode_key(trusted_key)
+    return Ed25519PublicKey.from_public_bytes(raw), raw
+
+
+def _ensure_keys(key_dir=None):
+    """Validate an existing pair; never generate or alter keys while signing."""
+    directory, private_path, public_path = _paths(key_dir)
+    if not private_path.is_file() or not public_path.is_file():
+        raise FileNotFoundError("both signing keys must exist; provision a new identity explicitly")
+    if directory.is_symlink() or private_path.is_symlink() or public_path.is_symlink():
+        raise ValueError("signing keys and directory must not be symlinks")
+    if directory.stat().st_mode & 0o077 or private_path.stat().st_mode & 0o077:
+        raise PermissionError("signing requires directory 0700 and private key 0600")
+    private = _load_ed_private(key_dir)
+    derived = private.public_key().public_bytes(serialization.Encoding.Raw,
+                                                serialization.PublicFormat.Raw)
+    if derived != _decode_key(public_path):
+        raise ValueError("private key does not match the configured public trust anchor")
+    return private, derived
+
+
+def _payload(record, protected):
+    return DOMAIN + canonical_bytes({"protected": protected, "record": record})
+
+
+def sign_record(record, key_dir=None):
+    """Low-level JSON authentication, not evidence validation or publication."""
+    if type(record) is not dict:
+        raise ValueError("a signed record must be a JSON object")
+    message = canonical_bytes(record)
+    private, public = _ensure_keys(key_dir)
+    protected = {
+        "spec": PROTOCOL,
+        "canonicalization": CANONICALIZATION,
+        "algorithm": BACKEND,
+        "key_id": key_fingerprint(public),
+        "digest_sha256": hashlib.sha256(message).hexdigest(),
     }
+    return {"protected": protected,
+            "signature_b64": base64.b64encode(private.sign(_payload(record, protected))).decode("ascii")}
 
 
-def verify_record(record: dict, envelope: dict) -> bool:
-    """Verify an in-memory record against a signature envelope."""
-    msg = canonical_bytes(record)
-    # Digest guard first (fast, and catches the common tamper case).
-    if envelope.get("digest_sha256") != hashlib.sha256(msg).hexdigest():
-        return False
-    sig = base64.b64decode(envelope["signature_b64"])
-    backend = envelope.get("backend", BACKEND)
-    if backend == "ed25519":
-        if not HAVE_ED25519:
-            raise RuntimeError("ed25519 signature present but cryptography lib unavailable")
-        try:
-            _load_ed_public().verify(sig, msg)
-            return True
-        except Exception:
+def verify_record(record, envelope, trusted_key=None, allowed_algorithms=("ed25519",)):
+    """Verify against caller-supplied trust; the envelope never selects trust."""
+    try:
+        if trusted_key is None or type(record) is not dict or type(envelope) is not dict:
             return False
-    elif backend == "hmac-sha256":
-        expected = hmac.new(_load_hmac_secret(), msg, hashlib.sha256).digest()
-        return hmac.compare_digest(expected, sig)
-    else:
-        raise ValueError(f"unknown backend: {backend}")
+        if set(envelope) != {"protected", "signature_b64"}:
+            return False
+        header = envelope["protected"]
+        if type(header) is not dict or set(header) != {
+            "spec", "canonicalization", "algorithm", "key_id", "digest_sha256"
+        }:
+            return False
+        if (header["spec"] != PROTOCOL or header["canonicalization"] != CANONICALIZATION
+                or header["algorithm"] != "ed25519"
+                or header["algorithm"] not in allowed_algorithms):
+            return False
+        public, raw = _load_ed_public(trusted_key)
+        if header["key_id"] != key_fingerprint(raw):
+            return False
+        if header["digest_sha256"] != hashlib.sha256(canonical_bytes(record)).hexdigest():
+            return False
+        signature = base64.b64decode(envelope["signature_b64"], validate=True)
+        public.verify(signature, _payload(record, header))
+        return True
+    except Exception:
+        return False
 
 
-# ---------------------------------------------------------------------------
-# File-level operations
-# ---------------------------------------------------------------------------
-def sig_path(record_path: Path) -> Path:
-    return record_path.with_suffix(record_path.suffix + ".sig")
+def sig_path(record_path):
+    path = Path(record_path)
+    return path.with_name(path.name + ".sig")
 
 
-def sign_file(record_path: Path) -> Path:
-    record = json.loads(record_path.read_text())
-    envelope = sign_record(record)
+def sign_file(record_path, key_dir=None):
+    """Sign only records satisfying the publication evidence policy."""
+    try:
+        from . import minreport
+    except ImportError:  # Direct script invocation.
+        import minreport
+    record = load_json(record_path)
+    report = minreport.verify(record)
+    if not report["evidence_valid"]:
+        failed = [check["msg"] for check in report["checks"] if check["level"] != "PASS"]
+        raise ValueError("record is not publication-ready: " + "; ".join(failed))
+    envelope = sign_record(record, key_dir)
     out = sig_path(record_path)
-    out.write_text(json.dumps(envelope, indent=2) + "\n")
+    _exclusive_write(out, (json.dumps(envelope, indent=2, allow_nan=False) + "\n").encode(), 0o644)
     return out
 
 
-def verify_file(record_path: Path) -> bool:
-    record = json.loads(record_path.read_text())
-    envelope = json.loads(sig_path(record_path).read_text())
-    return verify_record(record, envelope)
+def verify_file(record_path, trusted_key=None, allowed_algorithms=("ed25519",)):
+    try:
+        return verify_record(load_json(record_path), load_json(sig_path(record_path)),
+                             trusted_key, allowed_algorithms)
+    except (ValueError, OSError):
+        return False
 
 
-# ---------------------------------------------------------------------------
-# Demonstration of tamper-evidence
-# ---------------------------------------------------------------------------
-def demo(record_path: Path) -> int:
-    print("=" * 68)
-    print("P5 PROVENANCE TAMPER-EVIDENCE DEMONSTRATION")
-    print("=" * 68)
-    print(f"backend            : {BACKEND}")
-    print(f"public-key sig     : {HAVE_ED25519}")
-    print(f"record             : {record_path}")
-    _ensure_keys()
-
-    record = json.loads(record_path.read_text())
-
-    # 1) Sign
-    out = sign_file(record_path)
-    print(f"\n[1] SIGNED  -> {out}   (signed OK)")
-
-    # 2) Verify pristine
-    ok = verify_file(record_path)
-    print(f"[2] VERIFY  original record -> {'PASS' if ok else 'FAIL'}")
-    if not ok:
-        print("    unexpected: pristine record failed verification")
-        return 1
-
-    # 3) Tamper in memory and re-verify against the same signature
-    envelope = json.loads(sig_path(record_path).read_text())
-    tampered = json.loads(json.dumps(record))  # deep copy
-    # mutate one meaningful field
-    field_before = tampered["provenance"]["git_sha"]
-    tampered["provenance"]["git_sha"] = "deadbeef"  # forged commit
-    print(f"\n[3] TAMPER  provenance.git_sha: {field_before!r} -> 'deadbeef' (in memory)")
-    ok_tampered = verify_record(tampered, envelope)
-    print(f"    VERIFY  tampered record -> {'PASS' if ok_tampered else 'FAIL'}")
-
-    print("\n" + "-" * 68)
-    if ok and not ok_tampered:
-        print("RESULT: signed OK, original verify PASS, tamper -> FAIL  ✓")
-        return 0
-    print("RESULT: tamper-evidence check did NOT behave as expected  ✗")
-    return 1
-
-
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
-def _usage() -> int:
-    print(__doc__)
-    return 2
-
-
-def main(argv: list[str]) -> int:
-    if not argv:
-        return _usage()
-    cmd = argv[0]
-    if cmd == "keygen":
-        keygen(force="--force" in argv or "force" in argv[1:])
-        return 0
-    if cmd == "sign":
-        if len(argv) < 2:
-            print("usage: sign.py sign <record.json>")
-            return 2
-        out = sign_file(Path(argv[1]))
-        print(f"signed OK -> {out}")
-        return 0
-    if cmd == "verify":
-        if len(argv) < 2:
-            print("usage: sign.py verify <record.json>")
-            return 2
-        ok = verify_file(Path(argv[1]))
-        print(f"verify -> {'PASS' if ok else 'FAIL'}")
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    key_parser = commands.add_parser("keygen")
+    key_parser.add_argument("--key-dir", type=Path)
+    sign_parser = commands.add_parser("sign")
+    sign_parser.add_argument("record", type=Path)
+    sign_parser.add_argument("--key-dir", type=Path)
+    verify_parser = commands.add_parser("verify")
+    verify_parser.add_argument("record", type=Path)
+    verify_parser.add_argument("--trusted-key", type=Path, required=True)
+    args = parser.parse_args(argv)
+    try:
+        if args.command == "keygen":
+            print(f"created identity {keygen(key_dir=args.key_dir)}")
+            return 0
+        if args.command == "sign":
+            print(f"signed -> {sign_file(args.record, args.key_dir)}")
+            return 0
+        ok = verify_file(args.record, args.trusted_key)
+        print("signature -> " + ("PASS (Ed25519; evidence not audited)" if ok else "FAIL"))
         return 0 if ok else 1
-    if cmd == "demo":
-        rec = Path(argv[1]) if len(argv) > 1 else DEFAULT_RECORD
-        return demo(rec)
-    return _usage()
+    except (ValueError, OSError, RuntimeError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:]))
+    raise SystemExit(main())

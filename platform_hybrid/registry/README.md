@@ -18,7 +18,7 @@ and variant deltas. This directory is the deliverable of the resource paper
   (aero/gift/areal/ngrpo/cppo/mcgrpo/es/scafgrpo); iter 15 verified the 8 new
   citations.
 - `generate_entries.py` — regenerates stack entries from run sources (see Usage).
-- `query.py` — stdlib-only reference CLI: `list`, `query`, `badge`,
+- `query.py` — schema-validating reference CLI: `list`, `query`, `badge`,
   `stackdiff`.
 
 ## Schema invariants enforced (post iter-26 stress test)
@@ -29,11 +29,10 @@ They are now closed:
 1. `variant_delta_record.id` carries the same `^[a-z0-9][a-z0-9_.-]*$`
    pattern as `stack_record.id` (previously: no pattern check on the
    variant-delta side).
-2. Every leaf under each of the 7 MIN-REPORT items is in the item's
-   `required` list, so a "leaf dropped" entry fails schema validation
-   instead of silently passing (previously: leaves were optional; the
-   iter-14 audit's per-leaf coverage was a value-null check, not a
-   key-presence check).
+2. Core leaves under the 7 MIN-REPORT items are required. Later additive
+   leaves remain optional for historical compatibility, but the v3 badge uses
+   every substantive schema leaf as a fixed denominator. Deleting a leaf
+   cannot improve the score. Source/description metadata earns no credit.
 3. `variant_deltas_applied[].delta_id` is constrained by an `enum` that
    enumerates every `registry/entries/delta_*.json` stem. When a new delta
    is added, run
@@ -54,7 +53,10 @@ not configuration virtue.
 
 ## Usage
 
-Stdlib only (`validate` / `validate-strict` additionally need `jsonschema`).
+All registry commands require `jsonschema` and validate records before indexing.
+Duplicate JSON properties, nonfinite numbers, duplicate record IDs and repeated
+delta declarations fail. Historical amendments are explicitly classified by
+filename and digest in `sidecars.json`; arbitrary discriminator-less JSON fails.
 Paths resolve from the script location, so run from anywhere — e.g. the repo root:
 
 ```bash
@@ -81,7 +83,7 @@ either side never raises the level. The verdict is the maximum severity:
 | R4 | algorithm | `loss.*` (objective, ratio, clip, aggregation, advantage norm, token mask, length norm, dynamic sampling, reward shaping, inner epochs), `kl.*`, variant-delta rows declared on both sides |
 | R3 | hyperparameter / budget | `decoding.*`, `batch.*`, `train.{steps,sampler_refresh}`, `data.{subset,selection}`, `optimizer.*`, `lora.*` |
 | R2 | runtime | `trainer.name`, `runtime.{backend,precision}`, `reward.fn_sha256` (byte-level implementation hash; the semantic `reward.id` is R5) |
-| R1 | nuisance | `trainer.version`, `seeds` |
+| R1 | seed / version / reporting | `trainer.version`, `seeds` |
 | R0 | no known differences | — |
 
 Missing information is reported separately:
@@ -89,15 +91,25 @@ Missing information is reported separately:
 - `coverage` — fraction of compared fields known on both sides;
 - `unknown` — each field unknown on one or both sides, with its severity, and
   `max hidden severity` (the worst level that could still be hiding);
-- `UNDERSPECIFIED` — `coverage < 0.8`, or any R5 field unknown (except
-  `checkpoint.revision`, which no run script in this repo pins);
-- `undeclared` — a variant-delta row present on one side only. It is neither a
-  difference nor counted in coverage (a baseline lists no deltas).
+- `UNDERSPECIFIED` — `coverage < 0.8`, or any R5 field unknown, including
+  checkpoint revision
+- `undeclared` — a unilateral delta declaration, counted as unknown R4 evidence
+  in the union-of-declarations coverage denominator
+- `comparable` — independently false when required fields or declarations are
+  unresolved, defaults/inferences are needed, or an implementation/version
+  difference needs semantic review
+- `evidence_coverage` — observed (`logged`), source-defined (`code`), assumed
+  (`default`, `inferred`, legacy `registry`), and unresolved fractions, each
+  divided by the full catalogue
 
 `checkpoint.id` and `data.dataset` are compared after stripping trailing
 parenthetical annotations, lowercasing, and aliasing `gsm8k` -> `openai/gsm8k:main`
 (hand-entered values carry free text). Exit status is 0; pass `--exit-level` to
-exit with the R-level (0..5) for scripted gating.
+exit with the R-level when different, or exit 6 for R0 without established
+comparability (including empty/all-unknown populations). R-levels classify
+fields; they do not measure causal effect. Version and reward implementation
+changes require semantic review irrespective of their descriptive R-level.
+Integers and finite floats are compared exactly, with no display rounding.
 
 Field values come from an entry's `run_config` when present, otherwise from its
 hand-entered top-level fields and `min_report` (JSON null = unknown).
@@ -112,14 +124,43 @@ results JSONs) and writes, per field, `{value, status, source}`:
 |---|---|---|
 | `logged` | read from a results/log artifact | `<path>#<json key>` |
 | `code` | constant in the pinned run script | `<path>@<commit>:L<n>` |
-| `default` | argparse/library default; launcher not in repo | `<path>@<commit>:L<n>` |
+| `default` | explicitly recorded assumption; conditional comparison only | `<path>@<commit>:L<n>` |
 | `inferred` | stated rule (e.g. `-Base` suffix) | rule text |
 | `unknown` | not derivable (value null) | reason |
 
 `provenance.source_artifacts` lists each source with its full sha256.
-The generator fails if an anchor regex no longer matches. `--check` (also run by
-the tests) fails if entries on disk are stale. `regen_changes.json` records the
+The generator fails if an anchor regex no longer matches or a numeric
+assertion contradicts captured values. Numeric optimizer settings use AST
+extraction; unresolved launcher/library defaults remain unknown. Semantic labels
+anchored only by a regex location are marked inferred, so comparisons relying
+on them are conditional until independently established.
+`--check` fails if entries on disk are stale. `regen_changes.json` records the
 leaf-level before/after against the hand-written versions.
+
+Generation v3 rebuilds the entire generated projection, including outcomes,
+from source specifications. Only the explicit `provenance.manual_annotations`
+namespace survives. Every comparison field is populated, with explicit unknowns
+where evidence is absent; generated records never fall back to legacy MIN-REPORT.
+Dry-run plans live in `intended_config`; execution identities stay unknown and
+synthetic diagnostics are separate. Disabled ratio clipping uses
+`clipping_applied: false` with null, inapplicable epsilons. Unsupported
+decontamination assertions stay null.
+
+The reward fingerprint `python-reward-assignment-and-module-v2` hashes complete
+AST reward assignments, the parser, and the full source module conservatively.
+H2H aggregate rewards and ZVF are recomputed from distinct completed per-seed
+logs with input digests. Other extracted summary statistics identify their
+upstream computation as unreproduced. Selected source hashes do not prove that
+historical executions used those bytes; absent execution receipts remain unknown.
+
+`reported_leaf_coverage_v3` is the mean of seven per-item substantive-leaf
+fractions, exactly the unrounded badge divided by 100.
+`item_presence_coverage_v3` is the fraction of seven items with any substantive
+leaf reported. These are reporting completeness metrics, not scientific rigor.
+
+The 12 historical generated entries are preserved unchanged during this code
+review. They deliberately fail the v3 freshness check until a separately
+reviewed migration is authorized; no new evidence is inferred for them.
 
 | Entries | Run sources |
 |---|---|
@@ -139,3 +180,22 @@ are still hand-entered and carry no `run_config`.
 | `trl/verl/openrlhf/tinker_grpo_qwen3-8b_gsm8k` | generated (see above). The `experiments/framework_config_dumps/*.yaml` previously cited describe neither the Tinker nor the TRL run (e.g. LoRA rank 16 / temp 0.7 / 384 tokens vs rank 32 / 512 tokens actually used) and carry a placeholder `model_sha256` |
 | `colab-open_*_e3` | generated (see above) — toy scale, directional |
 | `tinker_{grpo,drgrpo,dapo,gspo}_qwen3.5-4b_gsm8k` | generated (see above), 3 seeds/arm |
+
+## Fail-closed audit snapshots
+
+`validate-strict` requires successful child execution, a unique temporary audit,
+the exact current schema/entry/sidecar input digest, and the current validator
+protocol/version and implementation digest. Missing or malformed output fails.
+`--include-warn` uses the same decision for printed verdict and exit status.
+
+`measured-coverage`, `coverage`, and `antiherding` only reuse cached output with a
+`registry-report-cache-v1` receipt binding input manifest, output bytes and
+producer digest. Legacy caches have no freshness assurance and fail explicitly.
+Use `--refresh` to recompute in a temporary isolated copy; stored results,
+registry entries, schemas and credentials are not rewritten. Output identifies
+the precise snapshot digest. This establishes reporting freshness, not validity
+of the original experimental claims or the historical statistical methods.
+
+For authenticated publication, use the v2 file-level gate described in
+[`provenance/SPEC.md`](provenance/SPEC.md). A reporting badge never substitutes
+for trusted authentication, full evidence verification, or statistical analysis.

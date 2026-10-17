@@ -435,3 +435,24 @@ def test_empty_substantive_values_and_boolean_aliases_are_rejected(publication, 
     mutation(record)
     authenticated_rewrite(publication, record)
     assert not mr.audit_file(publication["path"], publication["public"])["accepted"]
+
+
+
+def test_authenticated_boolean_config_cannot_equal_numeric_declaration(publication):
+    record=copy.deepcopy(publication['record'])
+    config=record['provenance']['resolved_config']
+    config['min_report_rl']['sampler_backend']['temperature']=True
+    record['provenance']['config_hash']=mr.object_digest(config)
+    for reference in record['evidence']['runs']:
+        path=publication['root']/reference['path'];doc=sign.load_json(path)
+        doc['config_hash']=record['provenance']['config_hash']
+        reference.update(write_json(path,doc))
+    path=publication['root']/record['evidence']['analysis']['path'];doc=sign.load_json(path)
+    doc['input_run_sha256']=[ref['sha256'] for ref in record['evidence']['runs']]
+    record['evidence']['analysis'].update(write_json(path,doc))
+    authenticated_rewrite(publication,record)
+    audit=mr.audit_file(publication['path'],publication['public'])
+    assert audit['authenticated'] and not audit['accepted']
+    assert not audit['evidence_valid']
+    with pytest.raises(ValueError,match='not publication-ready'):
+        sign.sign_file(publication['path'],publication['key_dir'])

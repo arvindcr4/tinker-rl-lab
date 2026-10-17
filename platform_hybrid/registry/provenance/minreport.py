@@ -429,7 +429,10 @@ def _checks(record):
         config_ok = False
     add(config_ok, 2, "full config_hash verified against embedded resolved configuration", "resolved configuration or full config_hash missing/mismatched")
     try:
-        claims_ok = (type(config) is dict and mr == canonical_min_report(config)
+        resolved_claims = canonical_min_report(config) if type(config) is dict else None
+        resolved_record = dict(record, min_report_rl=resolved_claims)
+        claims_ok = (type(config) is dict and not _schema_errors(resolved_record)
+                     and sign.canonical_bytes(mr) == sign.canonical_bytes(resolved_claims)
                      and pv.get("code_file") == config.get("code_file")
                      and pv.get("data_ref") == config.get("data_ref", config.get("data")))
     except (ValueError, TypeError, KeyError):

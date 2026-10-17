@@ -752,6 +752,11 @@ def cmd_validate_strict(args):
         print("CI GATE: FAIL (registry inputs changed during schema validation)", file=sys.stderr)
         return 1
     digest = registry_manifest_sha256(manifest)
+    try:
+        producer_digest = hashlib.sha256(target.read_bytes()).hexdigest()
+    except OSError as exc:
+        print(f"CI GATE: FAIL (validator unavailable: {exc})", file=sys.stderr)
+        return 1
     with tempfile.TemporaryDirectory(prefix="registry-strict-") as work:
         audit_json = pathlib.Path(work) / "audit.json"
         try:
@@ -774,7 +779,8 @@ def cmd_validate_strict(args):
                 raise ValueError("audit must be an object")
             if audit.get("validator_version") != VALIDATOR_VERSION:
                 raise ValueError("unrecognized validator version")
-            if audit.get("validator_sha256") != hashlib.sha256(target.read_bytes()).hexdigest():
+            if (audit.get("validator_sha256") != producer_digest
+                    or hashlib.sha256(target.read_bytes()).hexdigest() != producer_digest):
                 raise ValueError("validator implementation identity mismatch")
             if (audit.get("input_manifest") != manifest
                     or audit.get("input_sha256") != digest

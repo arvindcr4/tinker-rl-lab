@@ -364,3 +364,12 @@ def test_real_strict_validator_joins_delta_record_ids_not_filenames(tmp_path):
     result=subprocess.run([sys.executable,str(reg/'query.py'),'validate-strict'],capture_output=True,text=True)
     assert result.returncode!=0 and 'CI GATE: PASS' not in result.stdout
     assert 'orphan_delta_id' in result.stdout
+
+
+
+def test_producer_replacement_during_run_cannot_pass(registry,monkeypatch):
+    def changed(argv,**kwargs):
+        Path(argv[1]).write_text('raise RuntimeError("replacement producer")')
+        return audit_runner(registry)(argv,**kwargs)
+    monkeypatch.setattr(subprocess,'run',changed)
+    assert q.cmd_validate_strict(SimpleNamespace(include_warn=False))==1

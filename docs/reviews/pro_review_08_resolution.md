@@ -66,3 +66,8 @@ Independent-audit follow-up: the strict producer now resolves delta references
 against validated record IDs, never filename stems. A real subprocess regression
 rejects a `delta_dapo.json` file declaring `delta_aero` when a stack references the
 missing `delta_dapo` ID. Historical files remain untouched.
+The authenticated resolved-configuration comparison now validates the candidate
+MIN-REPORT block against the shared schema and compares canonical bytes, preventing
+Python's `True == 1.0` equality from accepting a changed sampler configuration.
+The strict gate pins producer bytes before launch and requires both the receipt
+and post-run file to match, rejecting a producer replaced during execution.

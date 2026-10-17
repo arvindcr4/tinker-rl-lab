@@ -28,6 +28,8 @@ import re
 import subprocess
 import sys
 from dataclasses import MISSING, asdict, dataclass, field, fields, replace
+from decimal import Decimal, InvalidOperation
+from fractions import Fraction
 from pathlib import Path
 from typing import (
     Any,
@@ -3028,24 +3030,50 @@ def _boxed_candidates(response: str) -> List[str]:
     return boxes
 
 
-def _numeric_equal(candidate: str, answer: str, *, tolerance: float = 0.01) -> bool:
-    """Return True when two answer strings match exactly or numerically."""
-    if candidate == answer:
-        return True
+def _exact_number(value: str) -> Fraction:
+    """Parse finite decimals/integers/rationals without binary float rounding."""
+    fraction = re.fullmatch(r"\\frac\{([^{}]+)\}\{([^{}]+)\}", value)
+    parts = fraction.groups() if fraction else value.split("/")
+    if len(parts) not in (1, 2):
+        raise ValueError("expected a number or a rational")
+    numbers = []
+    for part in parts:
+        number = Decimal(part)
+        if not number.is_finite():
+            raise ValueError("nonfinite answer")
+        # Bound conversion before allocating an integer for an extreme exponent.
+        if len(number.as_tuple().digits) > 10000 or abs(number.as_tuple().exponent) > 10000:
+            raise ValueError("numeric answer exceeds precision limit")
+        numbers.append(Fraction(number))
+    return numbers[0] if len(numbers) == 1 else numbers[0] / numbers[1]
+
+
+def _numeric_equal(candidate: str, answer: str, *, tolerance: float = 0.0) -> bool:
+    """Exact finite comparison, or an explicitly configured absolute tolerance.
+
+    Tolerance is interpreted as its decimal spelling, not a binary-float delta.
+    Identical symbolic answers are supported, but nonfinite numeric spellings
+    and invalid numeric fractions never receive credit through that fallback.
+    """
     try:
-        return (
-            math.isfinite(float(candidate))
-            and math.isfinite(float(answer))
-            and abs(float(candidate) - float(answer)) <= tolerance
-        )
-    except (ValueError, TypeError):
+        margin = _exact_number(str(tolerance))
+        if margin < 0:
+            return False
+        left, right = _exact_number(candidate), _exact_number(answer)
+        return abs(left - right) <= margin
+    except InvalidOperation:
+        # Preserve exact symbolic answers (e.g. "x"), not NaN/Inf or invalid
+        # numeric expressions. The latter raise ValueError/ZeroDivisionError.
+        nonfinite = r"(?<![A-Za-z])[-+]?(?:s?nan[0-9]*|inf(?:inity)?)(?![A-Za-z])"
+        return candidate == answer and not re.search(nonfinite, candidate, re.I)
+    except (ValueError, TypeError, ZeroDivisionError, OverflowError):
         return False
 
 
 class MathReward:
     """Scores math completions: boxed answer > last number > partial credit."""
 
-    version = "math-shaped-final-box-v2"
+    version = "math-shaped-exact-numeric-v3"
 
     def __init__(self, numeric_tolerance: float = 0.0):
         if not math.isfinite(numeric_tolerance) or numeric_tolerance < 0:
@@ -3069,11 +3097,8 @@ class MathReward:
         all_nums = re.findall(r"[-+]?\d*\.?\d+", response)
         if all_nums:
             last = all_nums[-1].replace(",", "")
-            try:
-                if abs(float(last) - float(answer)) <= self.numeric_tolerance:
-                    return 1.0
-            except (ValueError, TypeError):
-                pass
+            if _numeric_equal(last, answer, tolerance=self.numeric_tolerance):
+                return 1.0
 
         if any(c in response for c in "+-*/="):
             return 0.1
@@ -3083,7 +3108,7 @@ class MathReward:
 class ExactMathReward:
     """Binary boxed-or-final-number reward used by held-out math benchmarks."""
 
-    version = "authoritative-last-box-v2"
+    version = "authoritative-last-box-exact-numeric-v3"
 
     def score(self, response: str, example: TrainingExample) -> float:
         answer = "" if example.target is None else str(example.target)

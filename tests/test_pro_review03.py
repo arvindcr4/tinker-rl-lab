@@ -581,3 +581,136 @@ def test_supplied_configuration_schema_is_complete(path):
     if path.name.startswith("browsergym_"):
         assert cfg.browsergym_env_ids
         assert cfg.browsergym_max_browser_steps == (4 if "miniwob" in path.name else 8)
+
+
+@pytest.fixture
+def actual_tool_use_module(monkeypatch):
+    """Import the actual environment with optional integrations stubbed out."""
+    import importlib.util
+    from types import ModuleType
+
+    dataset_module = ModuleType("datasets")
+    dataset_module.load_dataset = Mock(side_effect=AssertionError("no dataset access permitted"))
+    monkeypatch.setitem(sys.modules, "datasets", dataset_module)
+    for name in ("atroposlib", "atroposlib.envs", "atroposlib.envs.base"):
+        module = ModuleType(name)
+        module.__path__ = []
+        monkeypatch.setitem(sys.modules, name, module)
+    base = sys.modules["atroposlib.envs.base"]
+    base.BaseEnv = object
+    base.BaseEnvConfig = base.APIServerConfig = NS
+    base.ScoredDataGroup = dict
+    spec = importlib.util.spec_from_file_location(
+        "review03_actual_tool_use",
+        ATROPOS / "tinker_atropos/environments/tool_use_tinker.py",
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("reward_version", ["v1", "v2"])
+@pytest.mark.parametrize(
+    "response,expected",
+    [
+        ('{"tool":"lookup","arguments":{"query":"France"}}', 1.0),
+        (' \n {"tool":"lookup","arguments":{"query":"France"}}\t ', 1.0),
+        (
+            '{"tool":"lookup","arguments":{"query":"France"}}\n{"tool":"other","arguments":{}}',
+            0.0,
+        ),
+        ('{"tool":"lookup","arguments":{"query":"France"}} trailing answer', 0.0),
+        ('Call {"tool":"lookup","arguments":{"query":"France"}}', 0.0),
+        ('```json\n{"tool":"lookup","arguments":{"query":"France"}}\n```', 0.0),
+        ('[{"tool":"lookup","arguments":{"query":"France"}}]', 0.0),
+        ('{"tool":"lookup","tool":"other","arguments":{"query":"France"}}', 0.0),
+        ("null", 0.0),
+        ('{"tool":"lookup","arguments":{"query":NaN}}', 0.0),
+    ],
+)
+def test_actual_tool_environment_requires_single_whole_json_object(
+    actual_tool_use_module, monkeypatch, reward_version, response, expected
+):
+    module = actual_tool_use_module
+    monkeypatch.setattr(module, "_REWARD_VERSION", reward_version)
+    env = object.__new__(module.ToolUseEnv)
+    env.config = NS(group_size=1, max_token_length=128)
+    env.percent_correct_buffer = []
+    example = {
+        "system": "Respond with exactly one JSON object.",
+        "user": "Look up France",
+        "expected_tool": "lookup",
+        "expected_args": {"query": "France"},
+    }
+    # Exercise both real environment scoring paths, not a copied helper.
+    env.server = NS(
+        chat_completion=AsyncMock(return_value=NS(choices=[NS(message=NS(content=response))]))
+    )
+    assert asyncio.run(env.rollout_and_score_eval(example))["score"] == expected
+    rollout = {
+        **example,
+        "messages": [{"role": "assistant", "content": response}],
+        "tokens": [1, 2],
+        "masked_tokens": [-100, 2],
+        "logprobs": [-1.0, -2.0],
+    }
+    assert asyncio.run(env.score([rollout]))["scores"] == [expected]
+
+
+@pytest.mark.parametrize("boxed", [False, True])
+@pytest.mark.parametrize(
+    "candidate,target,expected",
+    [
+        ("9007199254740993", "9007199254740992", 0.0),
+        ("9007199254740992", "9007199254740993", 0.0),
+        ("-9007199254740993", "-9007199254740992", 0.0),
+        ("9007199254740993", "9007199254740993", 1.0),
+        ("9007199254740993.00000000000000000001", "9007199254740993", 0.0),
+        (
+            "123456789012345678901234567890.12345678901234567891",
+            "123456789012345678901234567890.12345678901234567890",
+            0.0,
+        ),
+        (
+            "123456789012345678901234567890.12345678901234567890",
+            "123456789012345678901234567890.1234567890123456789",
+            1.0,
+        ),
+        ("9.007199254740993e15", "9007199254740993", 1.0),
+        ("1/3", "2/6", 1.0),
+        ("1/3", "0.3333333333333333333333333333333333", 0.0),
+        (r"\frac{1}{2}", "0.5", 1.0),
+        ("1/0", "1/0", 0.0),
+        ("1e10001", "1e10001", 0.0),
+    ],
+)
+def test_exact_math_never_rounds_distinct_numbers(candidate, target, expected, boxed):
+    response = rf"\boxed{{{candidate}}}" if boxed else candidate
+    assert grpo.ExactMathReward().score(response, grpo.TrainingExample("q", target)) == expected
+
+
+@pytest.mark.parametrize("boxed", [False, True])
+@pytest.mark.parametrize(
+    "value", ["NaN", "nan", "sNaN", "NaN123", "Inf", "-Inf", "+Infinity", "-Infinity"]
+)
+def test_exact_math_rejects_nonfinite_even_identical_targets(value, boxed):
+    response = rf"\boxed{{{value}}}" if boxed else value
+    assert grpo.ExactMathReward().score(response, grpo.TrainingExample("q", value)) == 0.0
+    assert grpo.ExactMathReward().score(response, grpo.TrainingExample("q", "0")) == 0.0
+
+
+@pytest.mark.parametrize(
+    "candidate,target,tolerance,expected",
+    [
+        ("9007199254740993", "9007199254740992", 0.01, 0.3),
+        ("9007199254740993.01", "9007199254740993", 0.01, 1.0),
+        ("9007199254740993.01000000000000001", "9007199254740993", 0.01, 0.3),
+        ("42.005", "42", 0.01, 1.0),
+        ("42.02", "42", 0.01, 0.3),
+    ],
+)
+def test_shaped_math_absolute_tolerance_uses_exact_decimal_difference(
+    candidate, target, tolerance, expected
+):
+    reward = grpo.MathReward(numeric_tolerance=tolerance)
+    assert reward.score(rf"\boxed{{{candidate}}}", grpo.TrainingExample("q", target)) == expected

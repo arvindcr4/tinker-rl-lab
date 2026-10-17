@@ -41,9 +41,9 @@ SYSTEM_PROMPT = (
 
 
 def _parse_tool_call(text: str) -> Optional[Dict]:
-    from tinker_atropos.grading import extract_json_object
+    from tinker_atropos.grading import parse_json_object
 
-    return extract_json_object(text)
+    return parse_json_object(text)
 
 
 def _score_tool_call(predicted: Optional[Dict], expected_name: str, expected_args: Dict) -> float:
@@ -169,6 +169,7 @@ class ToolUseEnv(BaseEnv):
     """
 
     name = "tool_use"
+    reward_protocol = "single-json-object-v3"
 
     def __init__(self, config, server_configs, slurm=True, testing=False):
         super().__init__(config, server_configs, slurm, testing)

@@ -1,4 +1,4 @@
-"""Structured correctness helpers, protocol v2 (case- and JSON-type-aware)."""
+"""Structured correctness helpers, protocol v3 (whole-response, case- and JSON-type-aware)."""
 
 import json
 from dataclasses import dataclass
@@ -18,7 +18,7 @@ def json_value_equal(left, right):
     return type(left) is type(right) and left == right
 
 
-def extract_json_object(text):
+def _json_decoder():
     def pairs(items):
         result = {}
         for key, value in items:
@@ -30,7 +30,29 @@ def extract_json_object(text):
     def invalid(value):
         raise ValueError("nonfinite JSON value")
 
-    decoder = json.JSONDecoder(object_pairs_hook=pairs, parse_constant=invalid)
+    return json.JSONDecoder(object_pairs_hook=pairs, parse_constant=invalid)
+
+
+def parse_json_object(text):
+    """Require exactly one JSON object, allowing only surrounding whitespace."""
+    if not isinstance(text, str):
+        return None
+    try:
+        value = _json_decoder().decode(text.strip())
+        return value if isinstance(value, dict) else None
+    except (ValueError, TypeError):
+        return None
+
+
+def extract_json_object(text):
+    """Extract an embedded call only for protocols explicitly allowing prose.
+
+    Single-call responses must use ``parse_json_object`` instead. This helper
+    permits a trailing final answer in the alternative tool-and-answer task.
+    """
+    if not isinstance(text, str):
+        return None
+    decoder = _json_decoder()
     start = text.find("{")
     if start < 0:
         return None

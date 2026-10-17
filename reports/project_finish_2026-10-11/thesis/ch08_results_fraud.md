@@ -2,7 +2,7 @@
 
 **Scope statement.** This appendix reports a side study. It uses synthetic data and sits outside the RL contribution of this thesis. The dataset is generated with scikit-learn's `make_classification`; the language-model arm is trained by supervised fine-tuning, not by reinforcement learning; and no result in this appendix is used to support any GRPO, PPO, ZVF, group-size or campaign claim elsewhere in the report (source: platform_hybrid/paper/archive/absorbed/P08_fraud/sections/p8_intro.tex). The study is retained, in condensed form, as the P8 slot of the internal report series and as one worked example of measuring a claimed capability rather than accepting its label.
 
-The study compares a gradient-boosted tree with a fine-tuned language model on credit-card fraud detection. Its conclusion is that the tree keeps the real-time scoring seat, and that the language model's plausible roles lie in tasks the tree cannot perform at all.
+The study compares a gradient-boosted tree with a fine-tuned language model on credit-card fraud detection. The tree remains the provisional scoring choice for this prototype; comparative production latency, calibration and economic superiority were not established.
 
 ## F.1 Dataset, splits, and the two arms
 
@@ -32,11 +32,11 @@ The two AUCs sit on different held-out splits, so this is not a like-for-like ra
 
 ## F.3 Why the scoring seat stays with the tree
 
-Four operational arguments hold even at AUC parity (source: platform_hybrid/paper/archive/absorbed/P08_fraud/sections/p8_scorer.tex):
+Four operational considerations require separate deployment validation (source: platform_hybrid/paper/archive/absorbed/P08_fraud/sections/p8_scorer.tex):
 
-- **Latency.** Card authorisation needs a score within tens of milliseconds; the tree takes about 6 ms per 10,000 rows, against roughly 300 ms for a language-model pass.
+- **Latency.** Card authorisation needs a score within tens of milliseconds; the recorded tree batch takes about 6 ms per 10,000 rows, while a language-model pass is roughly 300 ms. Different batch and serving boundaries prevent a comparable per-request latency conclusion.
 - **Cost.** The released cost table puts the synchronous language-model path at about 35 times the per-transaction cost of the tree path (source: platform_hybrid/paper/archive/absorbed/P08_fraud/sections/p8_evidence.tex).
-- **Calibration.** Downstream threshold and expected-loss rules consume the score as a probability; verbalised language-model confidences are poorly calibrated.
+- **Calibration.** Downstream threshold and expected-loss rules consume the score as a probability; comparative calibration was not measured between these arms and cannot be inferred from their model classes.
 - **Prompt injection.** A model that reads attacker-controlled text fields in a synchronous decision loop opens an injection channel that a tree scoring numbers does not have.
 
 \clearpage
@@ -49,8 +49,8 @@ Four operational arguments hold even at AUC parity (source: platform_hybrid/pape
 |---|---|---|
 | Aggregate-only tree (stand-in for a language-model "sensor") vs 24-feature tree | Worse on every axis: AUC −0.0245 [−0.0320, −0.0174], accuracy −0.0135 [−0.0160, −0.0109], Brier +0.0109 [0.0099, 0.0120] | p5p8/p8_headline_cis.tsv |
 | Adding the four aggregates to the 20 raw features | AUC +0.0002 [−0.0002, 0.0007], within noise | p5p8/p8_headline_cis.tsv |
-| Leakage caveat | Tables reporting AUC 0.998–0.999 fit on `fraud_data.csv` and score a subset of it; they are within-protocol relative comparisons only. The leakage-free split gives 0.7955 | p8_evidence.tex |
-| Cost per fraud caught ($0.50/alert, $100 missed-fraud loss) | Raw features $2.68; sensor-augmented $3.28; sensor-only $14.92; the sensor never pays for itself in the 25-cell (σ, L) grid | p8_evidence.tex |
+| Leakage caveat | Tables reporting AUC 0.998–0.999 fit on `fraud_data.csv` and score a subset of it; they are in-sample implementation diagnostics; shared leakage does not make a relative comparison unbiased. The leakage-free split gives 0.7955 | p8_evidence.tex |
+| Cost per fraud caught ($0.50/alert, $100 missed-fraud loss) | Raw features $2.68; sensor-augmented $3.28; sensor-only $14.92; the recorded in-sample 25-cell (σ, L) grid shows no sensor saving under those assumptions, without establishing deployment economics | p8_evidence.tex |
 | Sensor-noise break-even | $5.29 (oracle), $26.44 (σ ≤ 0.02), $36.40 (σ = 0.05) | p8_noisy_sensor.tex |
 
 : Supporting P8 measurements. Bracketed ranges are paired-bootstrap 95% intervals. The first row reports sensor minus full-feature performance; the AUC and accuracy intervals are reversed and reordered from the source's full-feature-minus-sensor convention. Source files are under `platform_hybrid/experiments/results/` and `platform_hybrid/paper/archive/absorbed/P08_fraud/sections/`.

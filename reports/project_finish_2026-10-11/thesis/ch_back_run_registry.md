@@ -219,7 +219,7 @@ artefact records a group size per run. Δ is the change in held-out accuracy.
 | `hard_curriculum/curriculum-hard-s0…s2` | Tinker → W&B `study logging group` (`hard-curriculum`) | Qwen/Qwen3.5-4B | GRPO + curriculum filter | 6 *default* | GSM8K hard-learnable pool (40 of 300 probed) | 0–2 | 10 | 3 runs; mean Δ 0.0000; zero-loss fraction 0.0 |
 | `p4_surprise/{sum,mean,surprise}-s0…s1` | Tinker → W&B `study logging group` (`p4-surprise`) | Qwen/Qwen3.5-4B | GRPO, loss variant | 4 *default* | GSM8K | 0–1 | 8 | 6 runs; mean Δ +0.1250 (sum) / 0.0000 (mean) / +0.0417 (surprise) |
 | `p1_layerfreeze/result.json` | Colab L4 | Qwen/Qwen2.5-1.5B-Instruct | — (gradient probe, no optimizer steps) | — | — | — | 5 | 1 run; step-1 predicts final top-layer set at overlap 1.0; top-25% concentration 0.476 |
-| `p1_layerfreeze/scaled_4seed_result.json` | Colab L4 | Qwen/Qwen2.5-3B-Instruct | GRPO | 4 | GSM8K (24 problems) | 0–3 | 10 | 4 runs; overlap 0.0833 ± 0.0481 — approximately chance; concentration 0.3908 |
+| `p1_layerfreeze/scaled_4seed_result.json` | Colab L4 | Qwen/Qwen2.5-3B-Instruct | GRPO | 4 | GSM8K (24 problems) | 0–3 | 10 | 4 runs; overlap 0.0833 ± 0.0481 — below the simple 0.25 reference, not evidence of general anticorrelation; concentration 0.3908 |
 | `p1_layerfreeze/freeze_flop_result.json` | Colab L4 | Qwen/Qwen2.5-1.5B-Instruct | GRPO (step-1-frozen arm) | — | — | 0–1 | — | 4 runs, full and frozen arms; frozen arm gains 0.0000 against 0.0625 at 60.7% of the parameter count |
 | `p1_layerfreeze/emergence_result.json` | Colab L4 | Qwen/Qwen2.5-1.5B-Instruct | GRPO (step-1 layer selection) | — | — | 0–1 | — | 2 runs; mean step-1 overlap 0.643 |
 
@@ -235,7 +235,7 @@ FINDINGS warning that `zero_loss_frac` was invalid (an empty-metrics-dict bug,
 "since fixed") belongs to the nine-run batch, not to that file. Second, the P1
 layer-freeze block has the same shape: the two-seed 3B pass (overlap
 0.1111 ± 0.0000) is superseded by the four-seed pass (0.0833 ± 0.0481), and
-both sit near chance, so the toy-scale overlap of 1.0 must not be read as a
+the larger-model overlap is below the simple independent 0.25 reference, so the toy-scale overlap of 1.0 must not be read as a
 transferable layer-selection signal. Third, the two single-seed training
 blocks flagged SUSPECT by independent verification (kimi, 2026-07-06) are
 superseded by the multi-seed blocks above: the curriculum opening's +0.05

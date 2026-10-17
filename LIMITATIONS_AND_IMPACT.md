@@ -73,8 +73,7 @@ swap the schema to teach the model to emit jailbreak prompts or invoke an
 attacker‑controlled tool. Mitigations:
 
 - We release **adapters only**, not merged weights. The
-  safety‑trained instruct checkpoint must be applied separately so that
-  instruct‑layer guardrails stay active.
+  required base checkpoint remains identifiable and the adaptation separable. This does not establish preservation of safety behavior in the combined model.
 - Model cards state explicitly that tool‑use adapters are trained on a
   narrow synthetic schema and have **not** been safety‑evaluated for
   open‑ended function calling.
@@ -129,10 +128,10 @@ transparency but was not paid out of pocket. Dollar figures are USD.
 | Modal H100 | PPO baselines (Qwen3‑8B, Llama‑3.1‑8B) | 2 | \$12–18 |
 | Modal H100 | KL‑tracking run (failed gradient bug) | 1 | \$2–4 |
 | Google Colab Pro (T4) | 0.5B–3B QLoRA SFT+GRPO | — | \$10/person |
-| NVIDIA L4 (TRL baseline) | Qwen2.5‑0.5B GSM8K, 10 seeds × 125 steps | 5 | \$3–5 |
+| NVIDIA L4 (TRL baseline) | Qwen2.5‑0.5B GSM8K, 5 runs × 125 steps (seed identities require ledger reconciliation) | 5 | \$3–5 |
 | HuggingFace Hub | Model + adapter hosting | — | \$0 |
 | Weights & Biases | Experiment tracking (academic tier) | — | \$0 |
-| **Total authors' out‑of‑pocket** | | | **\$130–140** |
+| **Total authors' out‑of‑pocket** | | | **Unreconciled: numeric rows sum to \$147–177 before Colab; overlaps/credits unverified** |
 
 **In‑kind compute (valued, not paid):**
 
@@ -284,8 +283,7 @@ abstract algorithmic specification. A reader asking "why does Tinker GRPO
 reach a pooled last‑10 GSM8K training reward of 99.9% (4B–235B models)
 while open‑source TRL GRPO reaches 73.4% (Qwen2.5‑0.5B)" cannot answer
 that from our data — these are training rewards, not held‑out accuracy,
-and model size and implementation are confounded; seed variance is the
-only candidate explanation we can rule out.
+and model size and implementation are confounded. Seed variance is not excluded by these heterogeneous runs.
 
 We therefore:
 
@@ -335,10 +333,8 @@ Modal timeouts, KL‑tracking bug, W&B step‑level data loss).
   this scale. Asymptotic claims are unsupported.
 - **Single‑seed Tinker experiments.** Each Tinker configuration ran once
   due to cost. No variance estimates, no significance tests on Tinker
-  data. Henderson et al. (2018) recommends ≥10 seeds; we hit this bar only
-  for the TRL baseline and the held‑out GSM8K evaluation.
-- **10 seeds on held‑out GSM8K.** Patterson et al. (2024) recommend 10+
-  seeds for reliable RL comparisons. Compute constraints forced us to 5.
+  data. A ten-seed recommendation is not evidence that this cohort attained it.
+- **Held-out GSM8K cohorts differ.** The v1 comparison has five seeds; the provisional v2 record has ten GRPO seeds per arm and seven completed PPO seeds. Evaluation items and resamples are not independent training seeds; see REPRODUCE.md for campaign-specific accounting.
 - **Bootstrap CI assumes i.i.d.** Correlations from shared initialisation
   or data ordering could narrow true confidence intervals.
 - **30B MoE scaling analysis uses 3 seeds** due to compute constraints.
@@ -384,9 +380,7 @@ region‑average, not marginal; reported CO₂ is order‑of‑magnitude.
 
 ## 8. Positive Impacts
 
-- **Democratising RL post‑training research.** Total out‑of‑pocket cost of
-  ~\$130 demonstrates that rigorous RL post‑training benchmarking is
-  feasible for under‑resourced groups. The repository ships Docker
+- **Democratising RL post‑training research.** The unreconciled cost rows do not establish an affordability headline. The repository ships Docker
   images, cost‑annotated run logs, and step‑by‑step `REPRODUCE.md`
   instructions.
 - **Improving reproducibility standards.** The multi‑seed protocol, the
@@ -397,12 +391,7 @@ region‑average, not marginal; reported CO₂ is order‑of‑magnitude.
 - **Fair cross‑library comparison.** Standardised reward functions and
   hyperparameter mappings reduce confounding variables between TRL,
   Tinker, veRL, OpenRLHF, and SkyRL.
-- **Platform‑dependent variance as a first‑class variable.** By running
-  identical configurations on a closed API (Tinker) and an open cloud
-  (Modal H100 + veRL), we surface implementation‑framework effects
-  quantitatively (pooled last‑10 training reward: TRL 73.4% on
-  Qwen2.5‑0.5B vs. Tinker 99.9% on 4B–235B models, *p*=0.0014; model
-  size is confounded with framework).
+- **Heterogeneous platform observations.** Training rewards differ between TRL on Qwen2.5‑0.5B and Tinker on 4B–235B models. Checkpoint, scale and implementation differ, so the comparison does not identify a framework effect.
 
 ---
 
@@ -410,8 +399,7 @@ region‑average, not marginal; reported CO₂ is order‑of‑magnitude.
 
 - All released model checkpoints are LoRA adapters over already‑released
   base models (Qwen, Llama, DeepSeek, Nemotron, Kimi, GPT‑OSS) and do
-  **not** introduce new safety risks beyond those already present in the
-  base models.
+  may change safety behavior; adapter packaging and low rank do not bound behavioral divergence. Open-ended tool-use safety has not been evaluated.
 - Each adapter has a **model card** documenting intended use, training
   data, training hardware, known limitations, and licence.
 - The benchmark focuses on **verifiable** reward domains (math,

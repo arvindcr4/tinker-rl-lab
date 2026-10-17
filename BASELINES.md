@@ -1,5 +1,7 @@
 # TinkerRL Baselines: Floor and Ceiling Reference
 
+**Evidence status:** this document proposes reference baselines and protocols, not a measurement ledger. Unless a result artifact is linked, numerical model/human/nearest-neighbor values are unverified estimates; participant counts describe a proposed protocol, not completed recruitment. Human performance is a reference, not a mathematical ceiling. Exact random expectations require the stated prediction distribution and an in-range target. Validate all comparisons on a common evaluation protocol before using them as controls.
+
 Establishing performance bounds is critical for meaningful benchmark evaluation
 (Agarwal et al., "Deep Reinforcement Learning at the Edge of the Statistical Precipice," NeurIPS 2021).
 
@@ -8,7 +10,7 @@ Establishing performance bounds is critical for meaningful benchmark evaluation
 | Baseline | Accuracy | Notes |
 |---|---|---|
 | Random (uniform) | 0.50% | 1/(2×99+1) = 1/199 ≈ 0.50% |
-| Random (range-aware) | ~1.0% | Sampling from [2, 198] |
+| Random (range-aware) | 0.508% | Analytical expectation for uniform sampling from the 197 integers in [2, 198] |
 | Constant prediction | ~1.0% | Always predicting the mean (100) |
 | Nearest-neighbor | ~5% | Memorize and match closest seen pair |
 | Human (college-level) | ~99.5% | Near-perfect on simple addition |
@@ -38,7 +40,7 @@ Establishing performance bounds is critical for meaningful benchmark evaluation
 | Human (college-level) | ~95% | With time to work through problems |
 
 ### Floor: Random / GPT-2 few-shot (~0–2%)
-### Ceiling: Human performance (~95%)
+### Estimated human reference (~95%; not a ceiling)
 
 ## Distillation Task (Response Shortening)
 

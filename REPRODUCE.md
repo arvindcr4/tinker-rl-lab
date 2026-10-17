@@ -1,5 +1,7 @@
 # Reproducing tinker-rl-lab results
 
+**Replay boundary:** the current v2 primary records require access to the named Modal volume; a public clone alone cannot recompute them. Stored-score recomputation, completion regrading, inference and training are separate verification levels. Verify run configuration and evaluation identity before pairing; the compact replay below validates numeric records but cannot authenticate missing provenance. Trainer-output conversion to the §D statistics JSONL layout remains an incomplete manual step. Run shell recipes with `set -euo pipefail` (and use `bash -o pipefail` inside Docker pipelines) so training failures cannot be hidden by `tee`. No command here authorizes paid execution.
+
 Copy-pasteable commands for reviewers. Every command marked **[offline]** was run
 on a laptop (CPU, no API keys) with the timing shown; commands marked **[costed]**
 need a GPU or a paid API and state the hardware and hours.
@@ -22,6 +24,7 @@ There is no frozen release tag for the current work (`v1.0.0-neurips-2026` was
 never pushed). Record the exact commit you ran instead of a placeholder:
 
 ```bash
+set -euo pipefail
 git rev-parse HEAD                   # paste this hash into your report
 git status --porcelain | head        # must be empty for a clean reproduction
 git describe --tags --always --dirty # human-readable, e.g. v3.0-neurips-submission-NNN-gabcdef
@@ -39,6 +42,7 @@ Parts A–C offline need only Python ≥ 3.11 and the standard library. The test
 needs the project venv:
 
 ```bash
+set -euo pipefail
 uv venv .venv --python 3.12 && source .venv/bin/activate && uv pip install -r requirements.txt
 source .venv/bin/activate     # smoke_test.sh calls bare `pytest`; without the venv step 3 fails on `import torch`
 bash platform_modal/scripts/smoke_test.sh      # [offline] 6 checks
@@ -72,6 +76,7 @@ functions, loaded via `ast` so neither Modal nor torch is imported. Save as
 `/tmp/samestack_replay.py` and run from the repo root:
 
 ```bash
+set -euo pipefail
 cat > /tmp/samestack_replay.py <<'PY'
 import ast, glob, itertools, json, math, os, sys
 SRC = "platform_hybrid/experiments/modal/modal_samestack_gsm8k_cot_v2.py"
@@ -88,15 +93,30 @@ if sys.argv[1] == "v1":
 else:
     runs = [json.load(open(f)) for f in glob.glob(os.path.join(sys.argv[2], "*_s*.json"))]
     primary = [("grpo_g8", "ppo"), ("grpo_g8", "ppo_8x8"), ("grpo_g8", "grpo_g2")]
+if not runs:
+    raise ValueError("No result records found")
 post = {}
+seen = set()
 for r in runs:
+    key = (r["arm"], r["seed"])
+    if key in seen:
+        raise ValueError(f"Duplicate arm/seed: {key}")
+    seen.add(key)
+    for field in ("heldout_pre_acc", "heldout_post_acc"):
+        value = r[field]
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not 0 <= value <= 1:
+            raise ValueError(f"Invalid {field}: {key}")
     post.setdefault(r["arm"], {})[r["seed"]] = r["heldout_post_acc"]
 for a, v in sorted(post.items()):
     pre = [r["heldout_pre_acc"] for r in runs if r["arm"] == a]
     print(f"{a:8s} n={len(v):2d} pre={sum(pre)/len(pre):.4f} post={sum(v.values())/len(v):.4f}")
 cs = {f"{x}-{y}": paired(post[x], post[y]) for x, y in primary
       if x in post and y in post and len(set(post[x]) & set(post[y])) >= 2}
-hp = holm({k: c["p_two_sided"] for k, c in cs.items()})
+family = [f"{x}-{y}" for x, y in primary]
+hp = holm({k: cs[k]["p_two_sided"] if k in cs else 1.0 for k in family})
+for k in family:
+    if k not in cs:
+        print(f"{k}: NOT_RUN; declared-family analysis incomplete")
 for k, c in cs.items():
     print(f"{k:16s} n={c['n_seeds']:2d} diff={c['mean_diff']:+.4f} "
           f"CI95=[{c['ci95'][0]:+.4f},{c['ci95'][1]:+.4f}] p_t={c['p_two_sided']:.4f} "
@@ -111,7 +131,7 @@ mkdir -p /tmp/v2s && (cd /tmp/v2s && modal volume get tinkerrl-results samestack
 python3 /tmp/samestack_replay.py v2 /tmp/v2s/samestack_gsm8k_v2s      # 0.03 s
 ```
 
-Expected output:
+Historical output (preserved v2 snapshot; the repaired replay retains the full registered family and therefore changes Holm-adjusted output, not the underlying results):
 
 ```
 # v1
@@ -124,8 +144,7 @@ grpo_g8-grpo_g2  n=10 diff=+0.0079 CI95=[+0.0002,+0.0156] p_t=0.0452 signflip=0.
 
 Notes. (1) v1 PPO post-training accuracy (0.195) is below its base (0.200), so
 the v1 +0.050 is "GRPO learned, PPO did not", not an estimator comparison; the
-exact sign-flip p (0.0625) is the honest small-n test. (2) The replay's Holm is
-over the contrasts that exist. The pre-registered v2 family has three contrasts;
+exact sign-flip p (0.0625) is the honest small-n test. (2) The historical output above used available contrasts only; the repaired replay keeps missing contrasts as internal p=1 placeholders, displays NOT_RUN, and retains the pre-registered v2 family of three contrasts;
 with m=3 the Holm-adjusted p values are 0.28 (g8−ppo) and 0.14 (g8−g2).
 (3) Item-level regrading: each `<arm>_s<seed>_texts.json.gz` holds the greedy
 completions; re-score them with the script's `\boxed{}` extractor to audit the
@@ -134,12 +153,13 @@ stored per-item correctness (`pre_correct`/`post_correct` in `<arm>_s<seed>.json
 ### A.2 Full reruns  [costed]
 
 ```bash
+set -euo pipefail
 # v1 — 15 runs (3 arms × 5 seeds), Modal A10G; ~3.5 A10G-h total, ~14 min/run
-cd platform_hybrid && modal run experiments/modal/modal_samestack_gsm8k_cot.py
+(cd platform_hybrid && modal run experiments/modal/modal_samestack_gsm8k_cot.py)
 
 # v2 — 40 runs (4 arms × 10 seeds), Modal A10G; ~42–48 min/run, ~29 A10G-h total
-cd platform_hybrid && modal run experiments/modal/modal_samestack_gsm8k_cot_v2.py --smoke   # 4 tiny runs first
-cd platform_hybrid && modal run experiments/modal/modal_samestack_gsm8k_cot_v2.py
+((cd platform_hybrid && modal run experiments/modal/modal_samestack_gsm8k_cot_v2.py) --smoke)   # 4 tiny runs first
+(cd platform_hybrid && modal run experiments/modal/modal_samestack_gsm8k_cot_v2.py)
 
 # v2 on any single GPU without Modal (Colab A100/L4/T4-high-RAM or a local CUDA box):
 pip install "torch>=2.3" "transformers>=4.46" "peft>=0.13" "datasets>=3.0" "numpy<2" accelerate safetensors
@@ -164,6 +184,7 @@ the 200×8 binary reward matrix per seed (Qwen3-8B via Tinker sampling, G=8,
 T=1.0). ZVF is the fraction of prompts whose 8 rewards are all equal.
 
 ```bash
+set -euo pipefail
 python3 - <<'PY'
 import json
 R = "platform_hybrid/experiments/results/"
@@ -180,12 +201,13 @@ PY
 Expected: `ZVF=0.130 / 0.190 / 0.155` (matches `tinker_gsm8k_zvf_summary.json`,
 mean 0.158). Interpretation for the paper: ZVF is, to first order, the binomial
 identity mean_i h_G(p_i) over per-prompt solve rates; the pooled single-p
-prediction (≈0.05) is too low only because prompts are heterogeneous.
+prediction (≈0.05) is lower than the observed values. Heterogeneous latent prompt probabilities raise expected degeneracy under conditional independence; these counts do not uniquely identify heterogeneity rather than dependence or batch effects. Plug-in estimates also have finite-sample error.
 
 Regenerating the tensors is **[costed]** (Tinker API, Qwen3-8B, 200×8 samples
 per seed, a few minutes and < $1 per seed):
 
 ```bash
+set -euo pipefail
 export TINKER_API_KEY=...
 python3 platform_hybrid/experiments/tinker_direct_eval.py --model Qwen/Qwen3-8B \
     --n-problems 200 --group-size 8 --temperature 1.0 --seed 42 \
@@ -199,6 +221,7 @@ Offline snapshot  **[offline, 0.04 s]** — the repo stores a W&B export of 940 
 `platform_hybrid/experiments/results/tinker_wandb_registry/wandb_runs.jsonl`:
 
 ```bash
+set -euo pipefail
 python3 - <<'PY'
 import json, statistics as st
 from collections import defaultdict
@@ -220,6 +243,7 @@ Expected: `zvf-audit runs: 368; with summary mean_zvf: 350`, from Qwen3-32B
 Live re-aggregation (needs read access to the W&B project; network, no GPU):
 
 ```bash
+set -euo pipefail
 WANDB_API_KEY=... python3 platform_hybrid/experiments/tinker-runs/wandb_zvf_audit_agg.py
 # writes platform_hybrid/experiments/tinker-runs/results/zvf_audit_summary.{json,md}
 ```
@@ -242,6 +266,7 @@ the repo root or from `platform_hybrid/`. Its CLI is `query.py <subcommand> [arg
 and `query.py <subcommand> --help` the arguments. The subcommands the paper uses:
 
 ```bash
+set -euo pipefail
 R=platform_hybrid/registry/query.py
 python3 $R list                                  # [offline] one line per stack entry
 python3 $R validate                              # [offline] schema check over every entry
@@ -259,6 +284,7 @@ protocol), a verdict line, field coverage, and an `UNDERSPECIFIED` flag when few
 `query.py stackdiff --help`):
 
 ```bash
+set -euo pipefail
 python3 $R stackdiff --sources tinker_grpo_qwen3-8b_gsm8k trl_grpo_qwen3-8b_gsm8k  # provenance path for each field
 python3 $R stackdiff -v tinker_grpo_qwen3-8b_gsm8k trl_grpo_qwen3-8b_gsm8k         # also list unknown fields
 python3 $R stackdiff --all                                                          # R-level distribution over all stack pairs
@@ -295,6 +321,7 @@ Tolerance for reruns: **±5 pp** on last-10 and **±10 pp** on peak (§D.8).
 ### D.0 One-command reviewer flow
 
 ```bash
+set -euo pipefail
 docker build \
   --build-arg GIT_COMMIT=$(git rev-parse HEAD) \
   --build-arg GIT_REF=$(git rev-parse --abbrev-ref HEAD) \
@@ -304,7 +331,7 @@ docker run --rm tinker-rl-lab:repro bash platform_modal/scripts/smoke_test.sh   
 docker run --rm -e TINKER_API_KEY tinker-rl-lab:repro bash platform_modal/scripts/smoke_test.sh   # [costed] ~8 min, < $0.25
 docker run --gpus all --rm -e TINKER_API_KEY -e WANDB_API_KEY -e HF_TOKEN \
     -v $(pwd)/results:/workspace/tinker-rl-lab/results tinker-rl-lab:repro \
-    bash -c 'python platform_tinker/grpo_gsm8k_base.py --model Qwen/Qwen3-8B --seed 42 --rank 32 \
+    bash -o pipefail -c 'python platform_tinker/grpo_gsm8k_base.py --model Qwen/Qwen3-8B --seed 42 --rank 32 \
         --steps 30 --group 8 --batch 2 --lr 1e-5 --tag gsm8k_qwen3_8b_s42 2>&1 | tee results/gsm8k_qwen3_8b_s42.log'
                                                                        # [costed] Tinker API, ~5 h wall
 python utils/verify_results.py --results-dir results/ \
@@ -325,6 +352,7 @@ Expected per-seed block at the end of the training log (printed by
 #### D.1.1 Option A — Docker (recommended)
 
 ```bash
+set -euo pipefail
 git clone https://github.com/arvindcr4/tinker-rl-lab.git
 cd tinker-rl-lab
 git rev-parse HEAD        # record this; see "Pin the revision you reproduce"
@@ -342,6 +370,7 @@ Build tested on: Docker 24.x, nvidia-container-toolkit ≥ 1.14, NVIDIA driver �
 #### D.1.2 Option B — Local virtualenv
 
 ```bash
+set -euo pipefail
 python3.11 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 # Optional: install the project so "tinkerrl" CLI shortcuts work
@@ -368,6 +397,7 @@ A template lives in [`.env.example`](./.env.example).
 ### D.2 The 10-minute smoke test  (reviewer entry-point)
 
 ```bash
+set -euo pipefail
 bash platform_modal/scripts/smoke_test.sh                   # [offline] 6/6 checks, 67 s on an M-series laptop (2026-10-16)
 TINKER_API_KEY=... bash platform_modal/scripts/smoke_test.sh # ~8 min — live Tinker wire-protocol
 ```
@@ -398,6 +428,7 @@ table; see `ARTIFACT.md §4.3`). The headline single-seed run uses `seed=42`.
 #### D.3.2 Command
 
 ```bash
+set -euo pipefail
 for SEED in 42 123 456 789 1024; do
     python platform_tinker/grpo_gsm8k_base.py \
         --model Qwen/Qwen3-8B \
@@ -452,6 +483,7 @@ row above.
 #### D.3.4 Aggregating the 5-seed run
 
 ```bash
+set -euo pipefail
 python utils/stats.py \
     --results-dir results/ \
     --experiment  gsm8k_qwen3_8b \
@@ -478,6 +510,7 @@ before running this step.
 #### D.4.1 Group-size ablation (compendium Table 2 Group-Size block, archived `main.tex:605-610`)
 
 ```bash
+set -euo pipefail
 for G in 2 4 8 16; do
     python platform_tinker/grpo_gsm8k_base.py \
         --model Qwen/Qwen3-8B --seed 42 --rank 32 \
@@ -506,6 +539,7 @@ per-seed YAML configs (`gsm8k_qwen_8b_seed{1,2,3}.yaml`, which set
 `data_seed` 137 / 256 / 512 rather than the §D.3.1 seed list).
 
 ```bash
+set -euo pipefail
 cd platform_tinker/atropos
 pip install -e .   # installs the tinker_atropos package the env server imports
 # Terminal 1 — Atropos rollout server (installed by atroposlib)
@@ -525,6 +559,7 @@ Same environment as §D.4.2 (run from `platform_tinker/atropos/`). One seed per
 config; there is no seed override flag.
 
 ```bash
+set -euo pipefail
 cd platform_tinker/atropos
 for CFG in gsm8k_qwen_0_6b gsm8k_qwen_1_7b gsm8k_qwen_4b \
            gsm8k_qwen_8b   gsm8k_qwen_14b \
@@ -536,6 +571,7 @@ done
 #### D.4.4 Modal H100 PPO baselines
 
 ```bash
+set -euo pipefail
 modal run platform_modal/scripts/modal_run_experiments.py
 ```
 
@@ -548,6 +584,7 @@ selector.
 #### D.4.5 Cross-library RL baselines (arithmetic env)
 
 ```bash
+set -euo pipefail
 for exp in platform_hybrid/experiments/implementations/{trl_grpo_math,sb3_ppo_math,\
 cleanrl_ppo_math,tianshou_ppo_math}.py; do
     bash platform_modal/scripts/run_seeds.sh "python $exp" 42 123 456 789 1024
@@ -559,6 +596,7 @@ done
 ### D.5 Figures and tables
 
 ```bash
+set -euo pipefail
 # 1. Per-experiment mean / SE / bootstrap CI over results/<exp>/seed_<N>/*.jsonl
 python utils/stats.py --results-dir results/ \
        --bootstrap-samples 10000 --output-dir analysis/
@@ -570,8 +608,7 @@ python platform_modal/scripts/make_paper_figures.py
 ```
 
 `utils/stats.py` accepts `--format {latex,csv,both}` and `--rliable`, but its
-`main()` does not currently act on either; it prints the summary only. LaTeX
-tables come from `generate_results_table()` in the same module when imported.
+`--format` writes the requested CSV/LaTeX outputs; `--rliable` fails explicitly when unsupported. See §D.3.4 for the repaired contract.
 
 ---
 
@@ -614,6 +651,7 @@ Exact shas are recorded in [`ARTIFACT.md §3.4`](./ARTIFACT.md).
 ### D.8 Verifying results
 
 ```bash
+set -euo pipefail
 python utils/verify_results.py \
     --results-dir results/ \
     --expected-results platform_hybrid/paper/expected_results.json \

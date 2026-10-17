@@ -1,5 +1,7 @@
 # Deep Dive: `.claude/skills/experiment-design/scripts/design_experiments.py`
 
+**Static generated summary, unverified; execution_evidence: false.** This report does not establish an executed experiment or outcomes. Planning/source inspection must not be represented as experimental measurement. Exact reviewed commit and source digest are not recorded.
+
 > AntiVibe &middot; compact mode &middot; 2026-10-03 &middot; source: `.claude/skills/experiment-design/scripts/design_experiments.py` (252 lines)
 
 ## Overview

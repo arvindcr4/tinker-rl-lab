@@ -1,5 +1,7 @@
 # Deep Dive: `.claude/skills/antivibe/scripts/analyze-code.sh`
 
+**Static generated summary, unverified; execution_evidence: false.** This report does not establish an executed experiment or outcomes. Planning/source inspection must not be represented as experimental measurement. Exact reviewed commit and source digest are not recorded.
+
 > AntiVibe &middot; compact mode &middot; 2026-10-03 &middot; source: `.claude/skills/antivibe/scripts/analyze-code.sh` (90 lines)
 
 ## Overview

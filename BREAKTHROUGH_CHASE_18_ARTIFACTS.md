@@ -93,7 +93,7 @@ architecture contributions without being new learning algorithms.
 | ID | Architectural role | Algorithmic or systems novelty | Maturity | Breakthrough-chase decision |
 |---|---|---|---|---|
 | **P01** | Cross-scale identifiability and collapse audit | No new optimizer. The defensible contribution is falsifying an estimable universal GRPO scaling law on this corpus and exposing the Nemotron collapse as a separate phase. | Bounded empirical | Keep as thesis evidence and a negative-results donor; not a flagship algorithm. |
-| **P02** | Mechanical GRPO starvation sensor | ZVF is the frequency of flat reward groups, with exact binary identity `pass@G - p^G = 1 - ZVF`. The accounting is useful but algebraically simple and now close to active prior art. | Executed diagnostic | Keep as the sensor layer; remove any “first diagnostic” framing. |
+| **P02** | Mechanical GRPO starvation sensor | ZVF is the frequency of flat reward groups, with exact binary identity `observed pass@G - observed all-correct fraction = 1 - observed ZVF`. The accounting is useful but algebraically simple and now close to active prior art. | Executed diagnostic | Keep as the sensor layer; remove any “first diagnostic” framing. |
 | **P03** | Group-size/cost study | The conditional `(1-ZVF)/sqrt(G)` utility and matched-token G2/G16 panel are useful, but the optimum is objective- and cohort-specific. Reconstructed G32 is not algorithmic evidence. | Mixed direct/reconstructed | Donate the matched-token panel; require a direct multi-seed sweep before any control claim. |
 | **P04** | Length-normalization boundary test | No new method. It bounds where GRPO and Dr.GRPO are indistinguishable under a 200-token cap. | Bounded empirical | Keep as a falsification/boundary chapter, not a main-track novelty claim. |
 | **P05** | Minimum reportable stack contract | The 7+1 reporting standard turns hidden trainer choices into a declared experimental treatment. This is methodological architecture. | Implemented/evidence-backed | Merge into the survival-artifact contribution; avoid a separate algorithm paper. |
@@ -107,7 +107,7 @@ architecture contributions without being new learning algorithms.
 | **R05** | ZVF calibration and reliability theory | Binomial calibration and rollout-to-informative-group budgets are correct and useful. The proved proxy optimum ties at G2/G3, so the theory explicitly fails to identify an adaptive set-point. | Proved conditional theory | Keep as calibration/limits, not controller justification. |
 | **R06** | Condensed stack-reporting position | No independent technical contribution beyond P05. | Derivative | Merge/retire after extracting concise policy language. |
 | **R07** | Condensed living registry | No independent technical contribution beyond P06. | Derivative | Merge into the released registry documentation. |
-| **R08** | Single-stack treatment-survival protocol | Strongest current architecture: shared stack, declared overrides, preregistered verdicts, complete remote evidence, and independent reconciliation. DAPO disappears; the other variants remain inconclusive. | Executed | Core of the publishable artifact/methodology contribution. Keep the single-stack boundary explicit. |
+| **R08** | Single-stack treatment-survival protocol | Strongest current architecture: shared stack, declared overrides, preregistered verdicts, complete remote evidence, and independent reconciliation. The corrected exact-t analysis classifies all four arms as INCONCLUSIVE; no disappearing effect is established. | Executed | Core of the publishable artifact/methodology contribution. Keep the single-stack boundary explicit. |
 | **U01** | 239-page evidence compendium | No independent method; high reuse and historical residue. | Archive/derivative | Freeze as internal source archive. Never route as a venue manuscript. |
 | **N01** | Cross-algorithm signal-survival formalism and TRIAGE-RL | PAM/GSR/EGM/root-ZUF plus cause-specific root routing is the most distinctive algorithmic composition. The zero-update implication is exact; positive EGM is only a proxy. No PPO/SAO controller outcome exists yet. | Implemented instrumentation; proposed controller | Highest-upside flagship core, contingent on the preregistered matched-budget campaign. |
 
@@ -127,9 +127,7 @@ Why it is differentiated:
   `NOT_TESTED`; they are not normalized away.
 - Every accepted unit binds the plan, corpus, source hashes, W&B run, private
   HF commit, checkpoint manifests, final adapter, and held-out evidence hashes.
-- The completed E1 audit gives a concrete scientific result: DAPO's reported
-  gain disappears on the frozen shared stack; the other arms are
-  inconclusive rather than falsely declared equivalent.
+- The corrected exact-t E1 audit classifies all four variant arms as INCONCLUSIVE. It supports treatment-verification methodology, not a demonstrated disappearance of DAPO's gain.
 
 The novelty is a **treatment-verification architecture** for RL post-training.
 It is strongest as an artifact, benchmark methodology, or reproducibility
@@ -306,7 +304,7 @@ Internal authoritative surfaces:
 Corpus integrity at the starting point: 18 canonical roots, 328 unique included
 source files, all roots compiling, and explicit derivative/evidence-reuse
 boundaries. The current R08 aggregate is `COMPLETE` with eight paired seeds:
-DAPO `DISAPPEARS`; GSPO, Dr.GRPO, and AERO `INCONCLUSIVE`.
+all four arms `INCONCLUSIVE` under the corrected exact-t analysis. The earlier DAPO `DISAPPEARS` verdict is superseded.
 **(Superseded 2026-08-02: all four arms are `INCONCLUSIVE` under the corrected
 exact-t analysis — see `zvf-program/audit/STATISTICAL_REANALYSIS.md`.)**
 

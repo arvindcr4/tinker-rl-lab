@@ -1,5 +1,7 @@
 # ACM Submission Checklist
 
+**Revision status:** historical report/checklist; checked boxes do not certify the current tree or every campaign. Source commit and evidence-manifest binding must be supplied for a new release; pending that binding, status is unverified for current release. Preserve historical manifests unchanged. See REPRODUCE.md for current campaign-specific access and seed limitations.
+
 Pre-submission checklist for ACM venues (KDD, SIGIR, CIKM, WWW, CHI, etc.).  
 Based on [ACM Author Submission Guidelines](https://www.acm.org/publications/authors/submissions) and [ACM Artifact Review and Badging v1.1](https://www.acm.org/publications/policies/artifact-review-and-badging-current).
 

@@ -1,5 +1,7 @@
 # Current project status — 11 October 2026
 
+**Revision status:** historical report/checklist; checked boxes do not certify the current tree or every campaign. Source commit and evidence-manifest binding must be supplied for a new release; pending that binding, status is unverified for current release. Preserve historical manifests unchanged. See REPRODUCE.md for current campaign-specific access and seed limitations.
+
 Read the [current runtime review and manuscript errata](reports/runtime_followup_2026-10-11/MANUSCRIPT_ERRATA.md) alongside the frozen thesis. These corrections supersede its stale launcher and completion statements; they do not certify a training run.
 
 The latest additive export is the [317-page public review thesis and editable sources](reports/public_revision_2026-10-11/README.md). See its [completion assessment](reports/public_revision_2026-10-11/COMPLETION_ASSESSMENT.md) for tests and remaining scientific, execution and approval limits.

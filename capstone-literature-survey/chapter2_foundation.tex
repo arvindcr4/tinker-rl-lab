@@ -34,6 +34,7 @@
 
 %% ---------- Tables ----------
 \usepackage{booktabs}
+\usepackage{enumitem}
 
 %% ---------- Algorithms ----------
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
@@ -128,7 +129,7 @@ The RLHF pipeline, popularised by InstructGPT \citep{ouyang2022instructgpt},
 established a three-stage recipe---supervised fine-tuning, reward-model
 training, and reinforcement-learning-based policy optimisation---that
 transformed how practitioners align LLMs with human preferences.  We begin
-in Section~\ref{sec:rlhf-pipeline} by reviewing this pipeline in detail,
+in Section~\ref{sec:rlhf} by reviewing this pipeline in detail,
 since every subsequent algorithmic advance discussed in this chapter can be
 understood as an attempt to simplify, stabilise, or scale one or more of
 its stages.
@@ -147,7 +148,7 @@ eliminates the value function by computing advantages relative to a group
 of sampled completions, thereby reducing memory requirements and simplifying
 the training loop.  The DeepSeek-R1 effort \citep{deepseek2025r1}
 subsequently demonstrated that GRPO can elicit sophisticated multi-step
-reasoning in large-scale models.  Section~\ref{sec:policy-optimisation}
+reasoning in large-scale models.  Section~\ref{sec:ppo}
 traces this algorithmic lineage, formalises each objective, and analyses the
 trade-offs that make GRPO an attractive choice for resource-constrained
 scaling experiments.
@@ -173,11 +174,11 @@ chain-of-thought prompting strategies \citep{wei2022chainofthought}, these
 benchmarks provide a controlled test-bed for measuring whether
 reinforcement-learning-based fine-tuning genuinely improves a model's
 capacity for step-by-step reasoning rather than superficial pattern
-matching.  Section~\ref{sec:benchmarks} describes these datasets, their
+matching.  Section~\ref{sec:math-benchmarks} describes these datasets, their
 evaluation protocols, and the metrics we adopt.
 
 \paragraph{Related scaling studies.}
-Finally, Section~\ref{sec:related-scaling} surveys prior work that has
+Finally, Section~\ref{sec:scaling-laws} surveys prior work that has
 investigated how RLHF and its variants behave as a function of model
 size, dataset scale, and compute budget.  These studies provide important
 baselines and methodological precedents for our own systematic exploration
@@ -192,4 +193,15 @@ grounding our study in this foundation, we aim to make the design choices,
 trade-offs, and results of our GRPO scaling experiments both transparent
 and reproducible.
 
+\input{section_2_2_rlhf}
+\input{section_2_3_ppo}
+\input{section_2_4_dpo}
+\input{section_2_5_grpo}
+\input{section_2_6_deepseek_r1}
+\input{section2_7_peft}
+\input{section_2_8_mathematical_reasoning_benchmarks}
+\input{section_2_9_related_work_rl_reasoning}
+\input{section_2_10_infrastructure_rl_training}
+\input{section_2_11_scaling_laws}
+\bibliography{references}
 \end{document}

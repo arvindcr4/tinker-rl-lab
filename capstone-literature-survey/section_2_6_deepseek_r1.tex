@@ -44,7 +44,7 @@ training.\footnote{The v1 preprint reports 71.0\%; the revised Nature version (v
 reports 77.9\% after extended training.} With majority-vote consensus decoding
 (cons@64), the score reaches 86.7\%---significantly surpassing the average performance
 of human competitors. On MATH-500, DeepSeek-R1-Zero achieves 95.9\% pass@1 accuracy. These gains are achieved with a training configuration of 16
-sampled outputs per question, a group size of 512, a learning rate of $3 \times
+sampled outputs per question ($G=16$), 32 questions per step (512 outputs per update, revised R1 report), a learning rate of $3 \times
 10^{-6}$, and a KL coefficient of 0.001, over approximately 10{,}400 policy update
 steps.
 

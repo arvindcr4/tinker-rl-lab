@@ -58,7 +58,7 @@ parameters and data:
 where $E$ represents an irreducible loss term and $\alpha \approx 0.34$,
 $\beta \approx 0.28$.  Under a fixed compute budget $C \propto 6ND$ (the
 standard FLOPs approximation for Transformer training), the optimal allocation
-scales both $N$ and $D$ proportionally with $C$.  This analysis revealed that
+has $N^*(C)\propto C^{\beta/(\alpha+\beta)}$ and $D^*(C)\propto C^{\alpha/(\alpha+\beta)}$.  This analysis revealed that
 many contemporary models---including the original GPT-3 (175B parameters
 trained on 300B tokens)---were significantly \emph{undertrained} relative to
 their parameter count.  The authors validated their prediction by training
@@ -129,7 +129,7 @@ The effect of \emph{group size} $G$---the number of completions sampled per
 prompt in GRPO---represents a scaling dimension unique to group-based RL
 methods.  Larger groups yield more stable advantage estimates by providing
 richer within-group reward statistics, but increase per-step compute linearly.
-DeepSeek-R1 used $G = 64$ for its large-scale training, while academic
+DeepSeekMath used $G = 64$; the revised DeepSeek-R1-Zero report uses $G = 16$ for its large-scale training, while academic
 reproductions have found that values between 8 and 32 offer a practical
 trade-off between variance reduction and compute cost.
 
@@ -250,3 +250,5 @@ larger RL-trained models generate longer and more effective reasoning traces,
 this would constitute evidence that model scale and learned test-time compute
 allocation are complementary rather than substitutable resources in the
 mathematical reasoning domain.
+
+\paragraph{Scope of this historical proposal.} Comparisons between specified checkpoints under one recipe do not isolate parameter count from checkpoint history. Existing systematic scaling studies are relevant prior work. A GRPO-only sweep cannot establish a distillation crossover without comparable distillation arms.

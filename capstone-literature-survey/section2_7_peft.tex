@@ -54,7 +54,7 @@ and injecting a trainable low-rank decomposition:
 \begin{equation}
   \label{eq:lora-weight}
   \mathbf{W} = \mathbf{W}_0 + \Delta\mathbf{W}
-             = \mathbf{W}_0 + \mathbf{B}\mathbf{A},
+             = \mathbf{W}_0 + \frac{\alpha}{r}\mathbf{B}\mathbf{A},
 \end{equation}
 where $\mathbf{B} \in \mathbb{R}^{d \times r}$ and
 $\mathbf{A} \in \mathbb{R}^{r \times k}$, with the rank
@@ -64,7 +64,7 @@ $r \ll \min(d, k)$.
 During the forward pass, the output of the adapted layer is computed as:
 \begin{equation}
   \label{eq:lora-forward}
-  \mathbf{h} = \mathbf{W}_0 \mathbf{x} + \mathbf{B}\mathbf{A}\mathbf{x}
+  \mathbf{h} = (\mathbf{W}_0 + \Delta\mathbf{W})\mathbf{x}
              = \mathbf{W}_0 \mathbf{x}
                + \frac{\alpha}{r}\,\mathbf{B}\mathbf{A}\mathbf{x},
 \end{equation}
@@ -93,7 +93,7 @@ at inference time}.  Once training is complete, the low-rank matrices can
 be absorbed into the pre-trained weight:
 \begin{equation}
   \label{eq:lora-merge}
-  \mathbf{W}_{\text{merged}} = \mathbf{W}_0 + \mathbf{B}\mathbf{A}.
+  \mathbf{W}_{\text{merged}} = \mathbf{W}_0 + \frac{\alpha}{r}\mathbf{B}\mathbf{A}.
 \end{equation}
 The merged weight $\mathbf{W}_{\text{merged}}$ has the same dimensions as
 $\mathbf{W}_0$, so the deployed model incurs identical computational cost
@@ -308,15 +308,7 @@ reference policy and making single-GPU GRPO training feasible for
 models at the 7B scale.
 
 \paragraph{Regularization effect.}
-The low-rank constraint imposed by LoRA acts as an implicit regularizer
-on the policy update.  Because the adaptation $\Delta\mathbf{W} =
-\mathbf{B}\mathbf{A}$ is restricted to a rank-$r$ subspace, the policy
-cannot deviate arbitrarily from $\pi_{\text{ref}}$, which complements
-the explicit KL penalty in GRPO.  Empirically, this dual regularization
-(low-rank constraint plus KL penalty) has been observed to reduce reward
-hacking---the phenomenon where the policy exploits reward model
-weaknesses rather than genuinely improving on the target
-task~\citep{hu2021lora, dettmers2023qlora}.
+Low rank restricts the update subspace, not its norm or behavioral divergence. Even a rank-one update can have arbitrarily large norm. Neither adapter-only packaging nor low rank guarantees preservation of safety behavior; KL control and empirical safety evaluation are separate requirements.
 
 \paragraph{Efficient multi-task and iterative training.}
 In iterative GRPO pipelines where the policy is periodically updated and

@@ -47,6 +47,26 @@ def require_empirical(record):
     return record
 
 
+def inherit_evidence(record, parent, *, inherit_missing=True):
+    """Preserve explicit provenance across container loaders, including vetoes.
+
+    A containing simulation/ineligible/failed artifact cannot be promoted by a
+    nested row. Missing metadata is never filled with an empirical default.
+    Identity fields remain row-local unless explicitly supplied by the parent.
+    """
+    result = dict(record)
+    expected = {"execution_kind": "empirical", "measured": True,
+                "claim_eligible": True, "status": "completed"}
+    for field in (*expected, "run_id", "receipt_id"):
+        if inherit_missing and field in parent:
+            result.setdefault(field, parent[field])
+    for field, value in expected.items():
+        if field in parent and (parent[field] is not value if isinstance(value, bool)
+                                else parent[field] != value):
+            result[field] = parent[field]
+    return result
+
+
 def measured_observations(records, endpoint):
     values, seen = [], set()
     for record in records:

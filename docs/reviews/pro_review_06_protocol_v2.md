@@ -180,3 +180,27 @@ HumanEval candidate construction includes prompt, completion, tests and
 isolation and a deadline. A subprocess, restricted globals dictionary, or
 thread timeout is not that isolation. No generated candidate was executed in
 this repair or its tests.
+
+
+### Public loader provenance and prompt failures
+
+Legacy report entrypoints now enforce the v2 receipt boundary directly. Container
+simulation/ineligibility/failure flags are restrictive and cannot be overridden by
+a nested row. Held-out checkpoint summaries need the evaluation's own completed
+empirical receipt and matching saved checkpoint ID; training receipts cannot fill
+missing evaluation provenance. An unknown held-out denominator stays unknown.
+
+Paired prompt reports require eligible control and treatment evaluation receipts.
+Only explicit correct/incorrect/wrong grader statuses are binary observations.
+Timeout, missing, service error, unknown status and explicitly unmeasured outcomes
+remain missing. One common measured prompt intersection is applied to every arm,
+with original per-arm statuses and exclusion reasons in `measurement_exclusions`.
+The resulting prompt-conditional estimates do not establish independent-run
+causal effects. A shared scalar baseline is only descriptive in the legacy
+base/instruct table; matched independent-run inference uses `measured_analysis`.
+
+When a historical lagged record lacks a run ID, canonical record content supplies
+a conservative deduplication key, independent of source file and traversal path.
+Explicit seed/config/attempt differences remain distinct. Identical unidentified
+independent runs cannot be certified as separate observations; durable run IDs
+are required for empirical inference, whose legacy entrypoint remains disabled.

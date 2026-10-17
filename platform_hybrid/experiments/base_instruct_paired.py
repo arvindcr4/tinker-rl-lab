@@ -1,12 +1,10 @@
-"""Paired base-vs-instruct enumeration under strictly identical conditions.
+"""Receipt-gated descriptive base-vs-instruct enumeration.
 
-Addresses reviewer items W9 / W11 / Q4. Enumerates every
-{model} x {base, instruct} x {pre-RL, post-RL} tuple available in the
-repository, computes train-acc / held-out-acc / ZVF@100 / seed-count per
-tuple, runs a paired t-test + Benjamini-Hochberg correction across the
-tuples where both pre and post are available, emits a TSV at
-experiments/results/base_instruct_paired.tsv, and prints the LaTeX body
-of the paired-comparison table in paper/sections/base_vs_instruct_paired.tex.
+Enumerates {model} x {base, instruct} x {pre-RL, post-RL} observations.
+Missing, simulated and ineligible records do not contribute metrics or counts.
+A shared scalar pre-RL control does not identify independent matched pairs;
+paired p-values are unavailable in this legacy summary. Use measured_analysis
+with a prespecified comparison family and matched run receipts for inference.
 
 Graceful degradation: every input source is wrapped in try/except; when a
 source is missing the tuple is still emitted with a 'source-missing' tag so
@@ -25,6 +23,9 @@ import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+sys.path.insert(0, str(next(p for p in Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import require_empirical, inherit_evidence, EvidenceUnavailable
 
 REPO = Path(__file__).resolve().parents[1]
 MASTER = REPO / "experiments" / "master_results.json"
@@ -65,14 +66,14 @@ def load_master() -> List[Dict[str, Any]]:
     j = _safe_json(MASTER)
     if not j:
         return []
-    return j.get("experiments", []) or []
+    return [inherit_evidence(r, j) for r in j.get("experiments", []) or []]
 
 
 def load_heldout_top10() -> List[Dict[str, Any]]:
     j = _safe_json(HELDOUT_TOP10)
     if not j:
         return []
-    return j.get("results", []) or []
+    return [inherit_evidence(r, j) for r in j.get("results", []) or []]
 
 
 def load_base_control() -> Optional[Dict[str, Any]]:
@@ -95,8 +96,36 @@ def load_heldout_5seed() -> List[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 def _match_model(row: Dict[str, Any], model_id: str) -> bool:
-    mid = row.get("model") or row.get("model_source") or ""
+    mid = row.get("model") or row.get("model_source") or row.get("config", {}).get("model") or ""
     return mid.lower() == model_id.lower()
+
+
+def _eligible(row):
+    try:
+        require_empirical(row)
+    except EvidenceUnavailable:
+        return False
+    return True
+
+
+def _eligible_unique(rows):
+    """Exclude unverified artifacts; copies do not become independent seeds."""
+    selected, seen = [], set()
+    for row in rows:
+        if not _eligible(row):
+            continue
+        identity = row["run_id"]
+        if identity in seen:
+            raise EvidenceUnavailable(f"Duplicate experimental unit: {identity}")
+        seen.add(identity)
+        selected.append(row)
+    return selected
+
+
+def _accuracy(value):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value) if math.isfinite(value) and 0 <= value <= 1 else None
 
 
 def train_metrics(master: List[Dict[str, Any]], model_id: str) -> Dict[str, Any]:
@@ -106,6 +135,8 @@ def train_metrics(master: List[Dict[str, Any]], model_id: str) -> Dict[str, Any]
     zvf_tail: List[float] = []
     seeds: List[int] = []
     for r in master:
+        if not _eligible(r):
+            continue
         if not _match_model(r, model_id):
             continue
         if r.get("task") not in ("gsm8k",):
@@ -161,11 +192,12 @@ def heldout_base_metric(
     matches = [
         r for r in heldout_top10
         if r.get("model", "").lower() == base_id.lower()
-        and r.get("status") == "completed"
+        and _eligible(r)
+        and _accuracy(r.get("heldout_accuracy")) is not None
     ]
     if matches:
         post_acc = _mean([float(r["heldout_accuracy"]) for r in matches])
-        post_n_seeds = len({(r.get("experiment_id"), r.get("seed")) for r in matches})
+        post_n_seeds = len({r["run_id"] for r in matches})
     return {"pre_rl": pre_acc, "post_rl": post_acc, "n_seeds": post_n_seeds}
 
 
@@ -179,17 +211,17 @@ def heldout_instruct_metric(
     pre_acc = None
     post_acc = None
     post_accs_per_seed: List[float] = []
-    # Pre-RL for instruct: same base control (the base Qwen3-8B is identical to instruct for
-    # greedy HF inference on GSM8K because the instruct tokenizer shares the base; this is
-    # a conservative proxy until a dedicated instruct control lands -- flagged in TSV).
-    if base_control and family == "Qwen3-8B":
+    # Only a receipt naming the actual instruct checkpoint is a control.
+    if base_control and _eligible(base_control) and _match_model(base_control, inst_id):
         s = base_control.get("summary", {})
-        pre_acc = float(s.get("accuracy")) if s.get("accuracy") is not None else None
+        pre_acc = _accuracy(s.get("accuracy"))
     # Post-RL: 5-seed instruct sweep.
     if family == "Qwen3-8B":
         for j in heldout_5seed:
+            if not _eligible(j) or not _match_model(j, inst_id):
+                continue
             s = j.get("summary", {})
-            acc = s.get("accuracy")
+            acc = _accuracy(s.get("accuracy"))
             if acc is not None:
                 post_accs_per_seed.append(float(acc))
         if post_accs_per_seed:
@@ -313,10 +345,12 @@ def bh_correct(pvals: List[float]) -> List[float]:
 # ---------------------------------------------------------------------------
 
 def build_rows() -> List[Dict[str, Any]]:
-    master = load_master()
-    heldout_top10 = load_heldout_top10()
+    master = _eligible_unique(load_master())
+    heldout_top10 = _eligible_unique(load_heldout_top10())
     base_control = load_base_control()
-    heldout_5seed = load_heldout_5seed()
+    if base_control is not None and not _eligible(base_control):
+        base_control = None
+    heldout_5seed = _eligible_unique(load_heldout_5seed())
 
     if not master:
         print("[warn] experiments/master_results.json missing or unparseable", file=sys.stderr)
@@ -372,17 +406,9 @@ def build_rows() -> List[Dict[str, Any]]:
     # Paired differences + tests
     pvals_raw: List[float] = []
     for r in rows:
-        # Delta held-out (post-RL minus pre-RL). For instruct with per-seed data, a real paired t-test.
-        if r["heldout_per_seed"] and r["heldout_pre_rl"] is not None:
-            d = [a - float(r["heldout_pre_rl"]) for a in r["heldout_per_seed"]]
-            t, p = paired_t_test(d)
-            # LIMITATION (review): Failure to prove generalization. The held-out gains
-            # are not statistically significant (e.g., p=0.26). We need larger evaluation sets
-            # or more seeds to rigorously prove generalized reasoning uplift.
-            r["delta_heldout"] = _mean(d)
-            r["paired_t"] = t
-            r["paired_p"] = p
-        elif r["heldout_post_rl"] is not None and r["heldout_pre_rl"] is not None:
+        # One shared scalar control is not a set of independent paired controls.
+        # Keep descriptive differences; matched-run inference lives in measured_analysis.
+        if r["heldout_post_rl"] is not None and r["heldout_pre_rl"] is not None:
             r["delta_heldout"] = float(r["heldout_post_rl"]) - float(r["heldout_pre_rl"])
             r["paired_t"] = float("nan")
             r["paired_p"] = float("nan")
@@ -444,7 +470,7 @@ def print_latex(rows: List[Dict[str, Any]]) -> None:
             return f"{v:.3f}"
         return str(v)
     for r in rows:
-        tag = "CI" if r["n_seeds"] >= 5 else "d.o."
+        tag = "d.o."  # descriptive observations; seed count alone supplies no CI
         print(" & ".join([
             r["family"], r["ckpt"], tag,
             cell(r["train_pre_rl"]),

@@ -112,7 +112,7 @@ def test_c2_measured_099_not_replaced_by_trace_surrogates():
         "reward_trace": [0.1, 0.9],
         "last10_avg": 0.5,
     }
-    rows = sh.group_checkpoints([exp], {"run": {"heldout_accuracy": 0.99, "heldout_n": 100}})
+    rows = sh.group_checkpoints([exp], {"run": empirical("run", checkpoint_id="saved", heldout_accuracy=0.99, heldout_n=100)})
     flat = sum(rows.values(), [])
     assert len(flat) == 1 and flat[0]["_heldout_acc"] == 0.99
     assert not sh.group_checkpoints([exp], {})
@@ -466,7 +466,7 @@ def test_c16_prompt_pairing_rejects_positionally_different_sets():
 def test_c16_base_group_filter_enforced():
     mod = functions(
         "base_instruct_paired.py",
-        ["train_metrics", "_match_model"],
+        ["train_metrics", "_match_model", "_eligible"],
         _mean=lambda x: sum(x) / len(x),
     )
     assert (

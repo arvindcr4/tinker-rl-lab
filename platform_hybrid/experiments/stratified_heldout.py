@@ -6,7 +6,7 @@ from __future__ import annotations
 import sys as _sys
 from pathlib import Path as _Path
 _sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
-from platform_hybrid.experiments.research_contracts import require_empirical, EvidenceUnavailable
+from platform_hybrid.experiments.research_contracts import require_empirical, inherit_evidence, EvidenceUnavailable
 
 
 import argparse
@@ -70,26 +70,26 @@ CONDITIONS = [
 
 def load_master():
     with MASTER.open() as f:
-        return json.load(f)
+        data = json.load(f)
+    return {**data, "experiments": [inherit_evidence(r, data) for r in data.get("experiments", [])]}
 
 
 def load_heldout_map():
-    """Map experiment_id -> heldout_accuracy from the P1 evaluation."""
+    """Retain evaluation receipts verbatim; container exclusions are inherited."""
     if not HELDOUT.exists():
         return {}
     with HELDOUT.open() as f:
         data = json.load(f)
     out = {}
     for r in data.get("results", []):
-        ha = r.get("heldout_accuracy")
-        if ha is None or r.get("status") == "blocked":
-            continue
-        out[r["experiment_id"]] = {
-            "heldout_accuracy": ha,
-            "heldout_n": r.get("heldout_n", 500),
-            "training_last10_avg": r.get("training_last10_avg"),
-            "status": r.get("status", "completed"),
-        }
+        row = inherit_evidence(r, data)
+        key = row.get("checkpoint_id") or row.get("experiment_id")
+        if not key:
+            raise EvidenceUnavailable("Held-out evaluation identity required")
+        for identity in {key, row.get("experiment_id")} - {None}:
+            if identity in out and out[identity] != row:
+                raise EvidenceUnavailable(f"Ambiguous held-out evaluation: {identity}")
+            out[identity] = row
     return out
 
 
@@ -104,21 +104,34 @@ def group_checkpoints(experiments, heldout_map):
         checkpoints = exp.get("checkpoints") or []
         # A measured final endpoint is one observation, not one per trace step.
         if not checkpoints and exp_id in heldout_map:
-            checkpoints = [{"checkpoint_id": heldout_map[exp_id].get("checkpoint_id", exp_id),
+            checkpoints = [{"checkpoint_id": heldout_map[exp_id].get("checkpoint_id"),
                             "last10_avg": exp.get("last10_avg", 0), "evaluation": heldout_map[exp_id]}]
         for checkpoint in checkpoints:
             cid = checkpoint.get("checkpoint_id") or checkpoint.get("checkpoint_path")
-            if not cid:
-                raise EvidenceUnavailable("Saved checkpoint identity required")
-            evaluation = checkpoint.get("evaluation") or heldout_map.get(cid, {})
+            # Training provenance can veto an evaluation, but cannot supply a
+            # missing evaluation receipt or promote a bare endpoint to measured.
+            evaluation = inherit_evidence(checkpoint.get("evaluation") or heldout_map.get(cid, {}),
+                                          checkpoint, inherit_missing=False)
+            evaluation = inherit_evidence(evaluation, exp, inherit_missing=False)
             acc = evaluation.get("heldout_accuracy")
-            measured = (acc is not None and evaluation.get("status", "completed") == "completed"
-                        and evaluation.get("execution_kind", "empirical") != "simulation"
-                        and evaluation.get("measured", True) is True)
+            reason = None
+            try:
+                require_empirical(evaluation)
+                if not cid or evaluation.get("checkpoint_id") != cid:
+                    raise EvidenceUnavailable("Matching saved checkpoint identity required")
+                if isinstance(acc, bool) or not isinstance(acc, (int, float)) or not math.isfinite(acc) or not 0 <= acc <= 1:
+                    raise EvidenceUnavailable("Finite held-out accuracy in [0, 1] required")
+                n = evaluation.get("heldout_n")
+                if n is not None and (type(n) is not int or n <= 0):
+                    raise EvidenceUnavailable("Held-out count must be a positive integer when supplied")
+            except EvidenceUnavailable as exc:
+                reason = str(exc)
+            measured = reason is None
             grouped[condition].append({"experiment_id": cid, "parent_experiment_id": exp_id,
                 "checkpoint_id": cid, "last10_avg": checkpoint.get("last10_avg", exp.get("last10_avg", 0)),
                 "_heldout_measured": measured, "_heldout_acc": acc if measured else None,
-                "_heldout_n": evaluation.get("heldout_n") if measured else None})
+                "_heldout_n": evaluation.get("heldout_n") if measured else None,
+                "_evaluation_receipt": evaluation, "_exclusion_reason": reason})
     return grouped
 
 
@@ -269,7 +282,7 @@ def run(protocols, seed):
                 "n_measured": e["n_measured"],
                 "sparse": str(e["sparse"]).lower(),
                 "interval_type": "none_descriptive_checkpoint_mean",
-                "source": "measured_heldout_only",
+                "source": "measured_heldout_only" if e["n_measured"] else "no_eligible_heldout_measurements",
             })
 
     return rows_out

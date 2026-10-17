@@ -128,7 +128,7 @@ def load_runs() -> list[RunData]:
         except json.JSONDecodeError:
             continue
 
-        for subpath, rec in walk_records(data):
+        for _subpath, rec in walk_records(data):
             step_data = extract_step_data(rec)
             if step_data is None:
                 continue
@@ -136,8 +136,11 @@ def load_runs() -> list[RunData]:
             model = str(rec.get("model_short") or rec.get("model") or "unknown")
             task = str(rec.get("task") or "unknown")
             run_id = str(rec.get("run_id") or "")
-            tag = str(rec.get("tag") or rec.get("experiment") or "")
-            key = run_id or json.dumps([tag, model, task, rec.get("seed"), rec.get("rank"), rec.get("lr"), rec.get("group_size"), rec.get("temperature"), rec.get("attempt_id"), str(source), subpath], sort_keys=True)
+            # A file location is not an experimental unit. Without a durable
+            # run_id, conservatively identify exact record content: copies in
+            # master/consolidated files or multiple positions collapse while
+            # explicit seed/config/attempt distinctions remain in the key.
+            key = ("run_id:" + run_id) if run_id else "record:" + json.dumps(rec, sort_keys=True, separators=(",", ":"))
 
             if key in seen:
                 continue

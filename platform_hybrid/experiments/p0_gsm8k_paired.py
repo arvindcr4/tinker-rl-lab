@@ -18,8 +18,12 @@ from __future__ import annotations
 import json
 import math
 import random
+import sys
 from collections import Counter
 from pathlib import Path
+
+sys.path.insert(0, str(next(p for p in Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import require_empirical, EvidenceUnavailable, PROTOCOL_VERSION
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE_FILE = ROOT / "reports/final/gsm8k_base_control_200.json"
@@ -32,15 +36,35 @@ OUT_JSON = OUT_DIR / "p0_gsm8k_paired.json"
 OUT_MD = ROOT / "experiments/p0_gsm8k_paired.md"
 
 
-def load_passfail(path: Path) -> list[tuple[int, int]]:
-    d = json.load(open(path))
-    out = []
+class PassFailObservations(list):
+    """Prompt-score pairs, with None for unmeasured outcomes and original status."""
+
+    def __init__(self, pairs, statuses, receipt):
+        super().__init__(pairs)
+        self.statuses = statuses
+        self.receipt = receipt
+
+
+def load_passfail(path: Path) -> PassFailObservations:
+    with path.open() as stream:
+        d = json.load(stream)
+    require_empirical(d)
+    out, statuses = [], {}
     for ex in d["examples"]:
         idx = ex["idx"]
-        status = ex.get("status", "")
-        correct = 1 if status == "correct" else 0
+        if idx in statuses:
+            raise ValueError("Duplicate prompt IDs")
+        status = ex.get("status") or "missing_status"
+        # Only explicit grader outcomes are accuracy measurements. Service and
+        # evaluation failures remain missing, never incorrect answers.
+        correct = {"correct": 1, "incorrect": 0, "wrong": 0}.get(status)
+        if (ex.get("measured", True) is not True
+                or ex.get("claim_eligible", True) is not True
+                or ex.get("execution_kind", "empirical") != "empirical"):
+            correct = None
+        statuses[idx] = status
         out.append((idx, correct))
-    return out
+    return PassFailObservations(out, statuses, d)
 
 
 def align(base, grpo, prompt_order=None):
@@ -53,6 +77,9 @@ def align(base, grpo, prompt_order=None):
         prompt_order = sorted(bmap)
     if len(set(prompt_order)) != len(prompt_order) or any(i not in bmap or i not in gmap for i in prompt_order):
         raise ValueError("Invalid common prompt order")
+    if any(type(values[i]) is not int or values[i] not in (0, 1)
+           for values in (bmap, gmap) for i in prompt_order):
+        raise ValueError("Unmeasured or invalid outcome in common prompt order")
     return [bmap[i] for i in prompt_order], [gmap[i] for i in prompt_order]
 
 
@@ -105,6 +132,8 @@ def contingency(b, g):
 
 
 def analyze_pair(b, g, label):
+    if not b or len(b) != len(g) or any(type(v) is not int or v not in (0, 1) for v in [*b, *g]):
+        raise ValueError("Nonempty aligned measured binary outcomes required")
     ct = contingency(b, g)
     b10 = ct["base_correct_grpo_wrong"]
     b01 = ct["base_wrong_grpo_correct"]
@@ -139,16 +168,32 @@ def majority_correct_indicator(seed_g):
 
 
 def main():
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
     base = load_passfail(BASE_FILE)
     seed_results = []
     seed_aligned = []
     base_aligned_any = None
 
     loaded = [(sf, load_passfail(sf)) for sf in SEED_FILES]
-    prompt_order = sorted(set(dict(base)).intersection(*(set(dict(g)) for _, g in loaded)))
+    if not loaded:
+        raise EvidenceUnavailable("At least one independently identified GRPO evaluation required")
+    arms = [(BASE_FILE, base), *loaded]
+    if len({data.receipt["run_id"] for _, data in arms}) != len(arms):
+        raise EvidenceUnavailable("Duplicate evaluation run_id across paired arms")
+    measured_sets = [{idx for idx, score in data if score is not None} for _, data in arms]
+    prompt_order = sorted(set.intersection(*measured_sets))
     if not prompt_order:
-        raise ValueError("No common held-out prompt IDs")
+        raise EvidenceUnavailable("No common measured held-out prompt IDs")
+    all_ids = set.union(*(set(dict(data)) for _, data in arms))
+    excluded_ids = sorted(all_ids - set(prompt_order))
+    measurement_exclusions = {
+        str(path): {str(idx): {
+            "status": data.statuses.get(idx, "missing_prompt"),
+            "measured": dict(data).get(idx) is not None,
+            "reason": ("unmeasured_outcome" if idx in data.statuses and dict(data).get(idx) is None
+                       else "missing_prompt" if idx not in data.statuses else "excluded_in_another_arm"),
+        } for idx in excluded_ids}
+        for path, data in arms
+    }
     for sf, grpo in loaded:
         b, g = align(base, grpo, prompt_order)
         if base_aligned_any is None:
@@ -163,19 +208,23 @@ def main():
     mean_seed = [sum(s[i] for s in seed_aligned) / len(seed_aligned) for i in range(n)]
     diffs = [mean_seed[i] - base_aligned_any[i] for i in range(n)]
     mean_diff = sum(diffs) / n
-    var = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1)
-    se = math.sqrt(var / n)
-    t_stat = mean_diff / se if se > 0 else 0.0
-    p_t = math.erfc(abs(t_stat) / math.sqrt(2))
+    var = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1) if n > 1 else None
+    se = math.sqrt(var / n) if var is not None else None
+    # No normal-approximation test is identified for a singleton or zero variance.
+    t_stat = mean_diff / se if se is not None and se > 0 else None
+    p_t = math.erfc(abs(t_stat) / math.sqrt(2)) if t_stat is not None else None
 
     out = {
-        "description": "Paired GSM8K held-out test: base Qwen3-8B vs GRPO LoRA (5 seeds)",
-        "base_file": str(BASE_FILE.relative_to(ROOT)),
-        "seed_files": [str(s.relative_to(ROOT)) for s in SEED_FILES],
+        "description": f"Paired GSM8K held-out test: control vs GRPO ({len(loaded)} recorded runs)",
+        "protocol_version": PROTOCOL_VERSION,
+        "base_file": str(BASE_FILE),
+        "seed_files": [str(s) for s in SEED_FILES],
+        "evaluation_receipts": [{k: data.receipt[k] for k in ("run_id", "receipt_id")} for _, data in arms],
         "per_seed": seed_results,
         "prompt_order": prompt_order,
         "excluded_base_prompt_ids": sorted(set(dict(base)) - set(prompt_order)),
         "excluded_seed_prompt_ids": {sf.stem: sorted(set(dict(g)) - set(prompt_order)) for sf, g in loaded},
+        "measurement_exclusions": measurement_exclusions,
         "majority_correct_indicator": mv_result,
         "continuous_mean_indicator_paired_t": {
             "n": n,
@@ -185,13 +234,15 @@ def main():
             "p_two_sided_normal_approx": p_t,
         },
     }
-    OUT_JSON.write_text(json.dumps(out, indent=2) + "\n")
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    OUT_JSON.write_text(json.dumps(out, indent=2, allow_nan=False) + "\n")
 
     lines = [
         "# P0-A: Paired GSM8K held-out test",
         "",
-        f"Source: `{BASE_FILE.relative_to(ROOT)}` (base) + 5 `gsm8k_heldout_seed*.json` (GRPO).",
+        f"Source: `{BASE_FILE}` (control) + {len(loaded)} recorded GRPO evaluations.",
         f"n = {mv_result['n']} paired prompts.",
+        f"Excluded {len(excluded_ids)} prompt IDs consistently across all arms; status/reasons are in the JSON measurement_exclusions report.",
         "",
         "## Per-seed paired McNemar",
         "",
@@ -219,11 +270,11 @@ def main():
         f"- McNemar exact two-sided p: **{mv_result['mcnemar_exact_p']:.4f}**",
         f"- McNemar χ² (continuity-corrected) p: {mv_result['mcnemar_chi2_p']:.4f}",
         "",
-        "## Paired test on per-prompt mean-of-5-seeds indicator",
+        "## Paired test on per-prompt mean-of-recorded-runs indicator",
         "",
         f"- mean Δ (continuous): {out['continuous_mean_indicator_paired_t']['mean_delta_indicator']:+.4f}",
-        f"- t = {out['continuous_mean_indicator_paired_t']['t_stat']:.3f}, "
-        f"p = {out['continuous_mean_indicator_paired_t']['p_two_sided_normal_approx']:.3f} "
+        f"- t = {t_stat if t_stat is not None else 'unavailable'}, "
+        f"p = {p_t if p_t is not None else 'unavailable'} "
         "(paired t, normal approx, two-sided)",
         "",
         "## Interpretation",

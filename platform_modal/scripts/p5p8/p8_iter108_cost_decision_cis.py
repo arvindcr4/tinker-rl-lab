@@ -36,7 +36,7 @@ from _p8_common import (  # noqa: E402
     auc_p8 as auc,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 
 SEED = 20260705
@@ -114,7 +114,7 @@ def eval_rule(p_cheap, p_llm, y, rule, k_top):
 
 def boot_pair_cost(scores_a, scores_b, y, k_pct, B, seed):
     """Paired-row bootstrap on (n_caught_at_K, cost_per_decision, cost_per_caught)
-    for rule A vs rule B; returns mean and 95% percentile CI on (b - a)."""
+    for rule A vs rule B; returns recall-difference replicates (A - B); no cost CI is computed."""
     rng = np.random.default_rng(seed)
     n = len(y); k = max(1, int(round(k_pct / 100 * n)))
     base = np.zeros(B)
@@ -128,7 +128,7 @@ def boot_pair_cost(scores_a, scores_b, y, k_pct, B, seed):
         npos = max(1, int(yb.sum()))
         ra = int(yb[top_a].sum()) / npos
         rb = int(yb2[top_b].sum()) / npos
-        delta_recall[b] = rb - ra
+        delta_recall[b] = ra - rb
     return delta_recall
 
 

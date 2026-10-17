@@ -182,7 +182,7 @@ def cost_per_caught(scores, labels, k_pct, cost_per_decision):
     order = sorted(range(n), key=lambda i: -scores[i])
     top = order[:k]
     tp = sum(1 for i in top if labels[i] == 1)
-    total_cost = k * cost_per_decision
+    total_cost = n * cost_per_decision
     return total_cost / tp if tp else float("inf"), tp, k
 
 

@@ -67,10 +67,7 @@ def load_data():
     return (Xtr_raw, Xtr_full, ytr, Xte_raw, Xte_full, yte)
 
 def flip_labels(y, eps, rng):
-    """Flip epsilon fraction of labels. Preserve the overall positive rate
-    by flipping positives to negative AND negatives to positive at the same
-    rate (this keeps class prevalence close but does not strictly preserve it
-    for finite N)."""
+    """Symmetric label noise; expected prevalence eps + (1-2*eps)*prevalence."""
     if eps == 0.0:
         return y.copy()
     n = len(y)
@@ -91,24 +88,11 @@ def fit_predict(Xtr, ytr, Xte, seed):
     return clf.predict_proba(Xte)[:, 1]
 
 def tau_star(yscores, y, c_inv, c_sense, l_miss, k_max=None):
-    """Iter-28 cost-optimal threshold rule. Returns tau* and the minimum total
-    cost over all possible cutoff rank positions."""
-    n = len(y)
-    if k_max is None:
-        k_max = n
-    order = np.argsort(-yscores)
-    y_sorted = y[order]
-    cum_tp = np.cumsum(y_sorted)
-    cum_fp = np.cumsum(1 - y_sorted)
-    cum_fn = (cum_tp[-1] - cum_tp)
-    total_cost = (
-        c_sense * n
-        + c_inv * (cum_tp + cum_fp)
-        + l_miss * cum_fn
-    )
-    best = np.argmin(total_cost)
-    tau_at_best = yscores[order[best]]
-    return float(tau_at_best), float(total_cost[best])
+    """Retrospective oracle >= threshold, including none and complete ties."""
+    from _review_policy import optimal_threshold
+    r = optimal_threshold(yscores, y, c_inv, l_miss, c_sense, max_alerts=k_max)
+    return r["tau"], r["total_cost"]
+
 
 def ece_10(yscores, y):
     bins = np.linspace(0, 1, 11)
@@ -164,7 +148,7 @@ def paired_bootstrap_gap(m_a, m_b, y, score_a, score_b, rng, n_boot=N_BOOT):
             "mean": float(arr.mean()),
             "ci_lo": float(np.quantile(arr, 0.025)),
             "ci_hi": float(np.quantile(arr, 0.975)),
-            "p_excludes_zero": bool((arr.min() > 0) or (arr.max() < 0)),
+            "p_excludes_zero": bool((np.quantile(arr,.025) > 0) or (np.quantile(arr,.975) < 0)),
         }
     return out
 
@@ -227,7 +211,7 @@ def main():
         flip_records.append({
             "epsilon": eps,
             "n_train_pos_original": int(ytr.sum()),
-            "n_train_pos_noisy": int(sum((1 if not (flip_labels(ytr, eps, np.random.default_rng(SEED+int(eps*1e6)))==ytr).any() else 1 for _ in [0]))),  # not used
+            "n_train_pos_noisy": int(flip_labels(ytr, eps, np.random.default_rng(SEED+int(eps*1e6))).sum()),  # not used
         })
     # (Skip noisy n_flips since we don't store them; use simpler per-eps summary)
     simple = []
@@ -315,7 +299,7 @@ def main():
         "pillar": "P8",
         "seed_main": SEED,
         "n_boot": N_BOOT,
-        "epsilon_grid": list(EPS_GRID),
+        "epsilon_grid": list(EPS_GRID), "noise_protocol": "symmetric_label_noise_changes_prevalence", "label_noise_counts": flip_records,
         "c_inv_canonical_USD": C_INV_CANON,
         "L_canonical_USD": L_CANON,
         "c_sense_USD": C_SENSE,

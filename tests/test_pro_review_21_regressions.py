@@ -78,3 +78,34 @@ def test_tied_auc_and_ap_are_permutation_invariant():
         assert ns[fn]([.5,.5],[1,0]) == .5
     ns=functions('p8_iter140_sensor_feat_realistic',np=np,G_THR=.001)
     assert ns['pr_auc_at_mask'](np.array([.5,.5]),np.array([1,0]),1) == .5
+
+
+def test_calibration_slope_binomial_contract():
+    ns=functions('p8_iter180_calibration_slope_curvature',np=np)
+    y=np.array([1]+[0]*9+[0]+[1]*9)
+    slope,intercept=ns['reliability_slope'](y,np.array([.1]*10+[.9]*10))
+    assert slope==pytest.approx(1,abs=1e-5) and intercept==pytest.approx(0,abs=1e-5)
+    assert np.isnan(ns['reliability_slope'](np.array([0,1]),np.array([.5,.5]))[0])
+
+
+def test_input_inference_cost_and_uniform_alert_fairness():
+    ns=functions('p8_single_sensor_ablation',np=np)
+    assert ns['cost_per_caught']([1]+[0]*99,[1]+[0]*99,2,.01)[0]==1
+    ns=functions('p8_subgroup_alert_fairness',np=np,N_BOOT=100,BOOT_SEED=42)
+    rows=[dict(n_alert_bin=2,recall_bin=.5,precision_bin=.5,p_bin=.02,alert_rate_bin=.02,n_pos_bin=2,n_bin=100)]*5
+    assert ns['heterogeneity_summary'](rows)['l1_alert_rate_gap_vs_global']==0
+
+
+def test_schema_failure_preserves_original(tmp_path):
+    import json
+    import jsonschema
+    entries=tmp_path/'entries'; entries.mkdir()
+    schema={'type':'object','required':['required_key'],'$defs':{'stack_record':{'properties':{'variant_deltas_applied':{'items':{'properties':{'delta_id':{'type':'string'}}}}}}}}
+    target=tmp_path/'schema.json'; original=json.dumps(schema); target.write_text(original)
+    (entries/'delta_a.json').write_text('{}')
+    ns=functions('regenerate_schema_delta_enum',json=json,jsonschema=jsonschema,SCH=target,ENT=entries,sys=sys)
+    with pytest.raises(SystemExit): ns['main']()
+    assert target.read_text()==original
+    ns['jsonschema']=None
+    with pytest.raises(RuntimeError): ns['main']()
+    assert target.read_text()==original

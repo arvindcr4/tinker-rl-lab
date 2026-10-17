@@ -225,12 +225,12 @@ def main():
         valid = ~np.isnan(gaps)
         if valid.sum() == 0:
             continue
-        total = float(np.nansum(gaps))  # negative if 24full beats 20raw overall
+        total = float(np.nansum([n_per_decile[x["decile"]] * max(-x["gap"], 0) for x in per_decile_lift]))  # negative if 24full beats 20raw overall
         for x in per_decile_lift:
             if np.isnan(x["gap"]) or total == 0:
                 share = np.nan
             else:
-                share = float(x["gap"] / total)
+                share = float(n_per_decile[x["decile"]] * max(-x["gap"],0) / total)
             attrib_rows.append({
                 "decile": x["decile"], "cost_ratio": c,
                 "gap": x["gap"], "share": share,
@@ -311,8 +311,8 @@ def main():
         for d in range(N_DECILES)
     ])
     valid_g = gaps_c100[~np.isnan(gaps_c100)]
-    has_stronger = bool(np.any(valid_g < agg_gap_c100))
-    has_weaker = bool(np.any(valid_g > agg_gap_c100))
+    has_stronger = bool(np.any(np.diff(valid_g) < 0))
+    has_weaker = bool(np.any(np.diff(valid_g) > 0))
     h2_pass = has_stronger and has_weaker
 
     # H3: Per-decile lift attribution at c=10000 — top-1 decile (by most-negative

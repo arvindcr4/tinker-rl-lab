@@ -50,7 +50,7 @@ from _p8_common import (  # noqa: E402
     downsample_positives,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 SEED = 20260706
 N_BOOT = 1000
@@ -115,7 +115,7 @@ def bootstrap_acd(fire_grad, n_test_q, cost_xgb=COST_XGB, cost_llm=0.0010,
     for bi in range(n_boot):
         idx = rng.integers(0, len(fire_grad), len(fire_grad))
         n_llm_s = int(fire_grad[idx].sum())
-        cpd_grad = (n_test_q * cost_xgb + n_llm_s * (cost_llm - cost_xgb)) / n_test_q
+        cpd_grad = (n_test_q * cost_xgb + n_llm_s * cost_llm) / n_test_q
         ratios[bi] = cpd_grad / cost_xgb
     return float(ratios.mean()), float(np.percentile(ratios, 2.5)), float(np.percentile(ratios, 97.5))
 
@@ -127,7 +127,7 @@ def sweet_spot_price(fire_grad, n_test_q, n_pos_recalled_xgb,
     if n_llm == 0:
         return float("inf")
     pos_caught = n_pos_recalled_xgb
-    return float(cost_xgb * pos_caught / n_llm)
+    return 0.0 if n_pos_recalled_xgb > 0 else float("nan")  # additive cascade, equal catches assumed
 
 
 def main():
@@ -174,9 +174,9 @@ def main():
             })
             for tier_name, cost_llm in LLM_PRICE_TIERS:
                 cpd_xgb = COST_XGB
-                cpd_grad = (n_te * COST_XGB + n_llm * (cost_llm - COST_XGB)) / n_te
+                cpd_grad = (n_te * COST_XGB + n_llm * cost_llm) / n_te
                 cppr_xgb = (n_te * COST_XGB) / max(1, pos_caught_xgb)
-                cppr_grad = (n_te * COST_XGB + n_llm * (cost_llm - COST_XGB)) / max(1, pos_caught_xgb)
+                cppr_grad = (n_te * COST_XGB + n_llm * cost_llm) / max(1, pos_caught_xgb)
                 acd = cpd_grad / cpd_xgb
                 acd_mean, acd_lo, acd_hi = bootstrap_acd(
                     fire_grad, n_te, COST_XGB, cost_llm, N_BOOT, SEED)

@@ -313,7 +313,7 @@ def main() -> None:
                 p24 = p_24_noisy_cache[sigma]
                 for k_pct in (1.5, 2.0, 3.0):
                     ci = stratified_pair_bootstrap(
-                        y_st, st, p_20[mask], p24[mask], k_pct, 0.0, 0.0035,
+                        y_st, st, p24[mask], p_20[mask], k_pct, 0.0035, 0.0,
                     )
                     boot_rows.append(dict(
                         axis=axis_name, stratum=int(s),

@@ -15,7 +15,7 @@ def alert_threshold(investigation_cost, miss_loss):
     return investigation_cost / miss_loss if miss_loss > 0 else math.inf
 
 
-def optimal_threshold(scores, labels, investigation_cost, miss_loss, sensing_cost=0):
+def optimal_threshold(scores, labels, investigation_cost, miss_loss, sensing_cost=0, max_alerts=None):
     """Exact >= threshold policy including no-alert/all-alert, preserving ties."""
     if len(scores) != len(labels) or not len(labels):
         raise ValueError('nonempty aligned scores and labels required')
@@ -33,6 +33,8 @@ def optimal_threshold(scores, labels, investigation_cost, miss_loss, sensing_cos
         if i+1 < n and pairs[i+1][0] == score:
             continue
         k = i+1
+        if max_alerts is not None and k > max_alerts:
+            continue
         total = investigation_cost*k + miss_loss*(positives-tp) + sensing_cost*n
         if total < best['total_cost']:
             best = dict(tau=float(score), tp=tp, fp=k-tp, fn=positives-tp,

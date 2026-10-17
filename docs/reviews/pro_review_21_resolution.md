@@ -28,3 +28,13 @@ Protocol corrected-review21-v2; historical inputs/results are unchanged. All val
 
 ## Validation
 Synthetic tests check identity OOF mapping, isotonic direction/ties/gaps/bounds, own-label exclusion for both simple and stacked calibration, precision .1 versus erroneous .01, identity paired policy differences, bounded total recall loss, actual second-stage decision changes and per-input costs, low-score thresholds, independent row noise, and tied ROC AUC/AP. Existing review19/20 regressions are run together with this suite. sklearn is required for corrected calibration/ranking helpers.
+
+## Follow-up repairs (supersede matching open items above)
+- R8–R9: iter108 recall contrast is A-minus-B (doc no longer claims cost-CI implementation); iter96 passes full-minus-raw cost; iter180 labels match pre-minus-iso arithmetic. Gradient bootstrap reuses paired indices, records conditional/exploratory scope, derives its narrative from results and runs behind main()
+- R12: binomial-logistic calibration slope/intercept replaces OLS on transformed labels; constant scores, separation and fit failures return unavailable. Misnamed curvature helper is renamed calibration gap
+- R13: single-sensor inference charges all inputs. Iter124/148 additive-screening ledger and equal-catch breakeven price are consistent (zero incremental affordable price when catches are assumed equal); actual outcome improvement remains unavailable
+- R15–R16: mislabel optimizer enforces no-alert/tied-block/k_max policy; alert budgets are labelled as alert budgets, and iter188 flagged fraction includes TP+FP
+- R18–R19: information-strength simulation adds independent train/test observation noise and reports standalone sensor AUC; mislabeling is accurately identified as symmetric noise with realized positive counts; CI exclusion uses exported percentile limits
+- R21–R22: decile nonmonotonicity tests adjacent changes; positive-savings shares use population-weighted positive reductions; alert fairness compares within-bin rates with global rate
+- R26: schema regeneration requires validation, validates proposed schema and every entry before atomic replacement, preserves original on failure; repository root corrected
+New regressions check calibrated grouped slope=1, constant-score unavailability, all-input cost, equal-rate zero fairness gap, and schema failure/no-validator preservation.

@@ -121,9 +121,9 @@ def min_cost(s, y, c):
     return float(costs[i]), float(th[i])
 
 
-def catch_at_fp(s, y, fp_budget=0.01):
+def recall_at_alert_budget(s, y, alert_budget=0.01):
     n = s.shape[0]
-    k = max(1, int(round(n * fp_budget)))
+    k = max(1, int(round(n * alert_budget)))
     top_idx = np.argsort(-s)[:k]
     return float(y[top_idx].sum()) / max(1, int((y == 1).sum()))
 
@@ -166,7 +166,7 @@ def main():
                     s = s_full[chosen]  # restrict to subsample rows
                     mc, ot = min_cost(s, ys, C_DEFAULT)
                     minc[(fset, rate, sd, rr)] = (mc, ot)
-                    catch[(fset, rate, sd, rr)] = catch_at_fp(s, ys, 0.01)
+                    catch[(fset, rate, sd, rr)] = recall_at_alert_budget(s, ys, 0.01)
             print(f"  rate={rate:.4f} rr={rr} eff_rate={eff_rate:.4f} n={int(ys.shape[0])}", flush=True)
 
     # ----- TSV: per-(fset, rate, seed, resample) min-cost + catch -----

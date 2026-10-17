@@ -319,7 +319,7 @@ def main():
     print("[3/5] Training two XGB backbones (20raw, 24full) ...")
     p20 = predict_proba(fit_gbt([row[:20] for row in tr_X], tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED),
                         [r[:20] for r in te_X])
-    p24 = predict_proba(fit_gbt(tr_X, tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED + 1),
+    p24 = predict_proba(fit_gbt(tr_X, tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED),
                         te_X)
     p20 = p20.tolist()
     p24 = p24.tolist()

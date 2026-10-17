@@ -311,7 +311,7 @@ def main() -> None:
 def _dominance_switch(boot_df: pd.DataFrame) -> dict:
     """Find the K at which 24full starts strictly dominating 20raw on recall gap."""
     sub = boot_df[(boot_df["model_a"] == "24full") & (boot_df["model_b"] == "20raw")].sort_values("K_pct")
-    first_strictly_dominant = sub[sub["ci_excludes_zero"] == "YES"]
+    first_strictly_dominant = sub[sub["ci_lo"] > 0]
     if len(first_strictly_dominant) == 0:
         return {"24full_strictly_dominates_20raw_at_no_K": True}
     first_row = first_strictly_dominant.iloc[0]

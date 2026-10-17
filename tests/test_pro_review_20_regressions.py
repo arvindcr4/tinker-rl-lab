@@ -61,3 +61,21 @@ def test_actual_cost_denominator_and_zero_catches():
     assert ns['compute_dollar_at_k'](m,'24full')[0] == pytest.approx(1.0535)
     m['tp']=0
     assert ns['compute_dollar_at_k'](m,'24full')[1] is None
+
+
+def test_posterior_append_and_equal_threshold_legacy_policy():
+    import math
+    lb=lambda a,b:math.lgamma(a)+math.lgamma(b)-math.lgamma(a+b)
+    ns=functions('p7_posterior_predictive',betaln=lb)
+    assert ns['restore_prob'](0)==pytest.approx(8/17)
+    assert ns['restore_prob'](4)==0
+    ns=functions('p7_unified_controller_bank',G_DES=4,G_ESC=16,RNG_SEED=42,N_BOOT=100)
+    assert ns['replay_unified']([.8],.7,.7)==[16]
+
+
+def test_transfer_cost_actual_horizon_and_missing_calibration(tmp_path):
+    ns=functions('p7_threshold_transfer',G_ESC=16,RNG=42)
+    assert ns['cost_ratio_for']([True])==2
+    ns=functions('p7_n10_replication',WORK=tmp_path)
+    with pytest.raises(ValueError,match='missing per-seed'):
+        ns['fit_contrast_regression']()

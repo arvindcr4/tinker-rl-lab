@@ -41,7 +41,7 @@ from _p5p7_common import load_tensors_d  # noqa: E402
 from _stats import bootstrap_ci_statmean, log_beta as betaln  # noqa: E402
 WORKTREE = REPO_ROOT
 TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
-OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 METHODS = ("grpo", "aero", "gift", "areal")
@@ -68,10 +68,14 @@ def bb_postpred(k: int, n: int, yp: int, gp: int, alpha: float = 1.0, beta: floa
 
 
 def restore_prob(k: int, n: int = G_BASE, gp: int = G_NEW) -> float:
-    """P(not degenerate at G'=gp) = 1 - P(Y'=0) - P(Y'=gp)."""
-    p0 = bb_postpred(k, n, 0, gp)
-    pgp = bb_postpred(k, n, gp, gp)
-    return max(0.0, min(1.0, 1.0 - p0 - pgp))
+    """Newly restored contrast after appending gp-n completions."""
+    if not 0 <= k <= n or gp < n:
+        raise ValueError("invalid observed/target group")
+    if 0 < k < n or gp == n:
+        return 0.0
+    extra = gp-n
+    return max(0.0, min(1.0, 1-bb_postpred(k,n,0 if k==0 else extra,extra)))
+
 
 
 def midrange_prob(k: int, n: int = G_BASE, alpha: float = 1.0, beta: float = 1.0) -> float:
@@ -119,7 +123,7 @@ def main():
                 "zvf_obs": step_rec["zvf"], "reward_mean": step_rec["reward_mean"],
                 "mean_restore_prob": statistics.mean(step_restore),
                 "mean_midrange_prob": statistics.mean(step_midrange),
-                "n_k0": k_dist[0], "n_k8": k_dist[8],
+                "n_k0": sum(sum(r)==0 for r in step_rec["rewards"]), "n_k8": sum(sum(r)==G_BASE for r in step_rec["rewards"]),
             })
         # Controller A: Bayesian at tau_post (per-prompt, currently degenerate)
         restore_bayes_pareto = {}

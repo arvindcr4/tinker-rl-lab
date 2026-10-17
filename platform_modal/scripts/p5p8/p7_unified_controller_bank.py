@@ -56,7 +56,7 @@ from _stats import bootstrap_ci_rng  # noqa: E402
 ROOT = REPO_ROOT
 N10_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n10_seed_expansion"
 N2_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
-OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review20-v2"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # Stack-conditional constants used by the controller family.
@@ -132,7 +132,7 @@ def replay_unified(zvfs: list[float], tau_esc: float, tau_des: float) -> list[in
     """Per-step G_t decisions: de-escalate / escalate / baseline."""
     out = []
     for z in zvfs:
-        if z >= tau_des:
+        if tau_des > tau_esc and z >= tau_des:
             out.append(G_DES)
         elif z >= tau_esc:
             out.append(G_ESC)

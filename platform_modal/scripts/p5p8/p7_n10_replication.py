@@ -28,7 +28,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scri
 from _paths import REPO_ROOT  # noqa: E402
 WORK = REPO_ROOT
 N10 = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
-OUT = WORK / "platform_hybrid/experiments/results/p5p8"
+OUT = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
 
 N10_SEEDS = [42, 179, 316, 453, 590]
 G_BASE = 8                       # N10 base group size (all 5 seeds)
@@ -75,48 +75,34 @@ def expected_k_from_reward(reward_mean, G):
 
 
 def fit_contrast_regression():
-    """Empirical contrast-restoration model: predict ZVF@16 from ZVF@8 using
-    groupsize_zvf_sweep.tsv (3 seeds × G ∈ {2,4,8,16}).
-    ZVF DROPS when G doubles → controller's intervention reduces ZVF and
-    restores contrast. We report the absolute contrast-restoration |ΔZVF| =
-    ZVF@8 - ZVF@16 as the positive benefit per fired step.
-    """
-    sweep_path = WORK / "platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv"
-    if sweep_path.exists():
-        by_g = {}
-        se_by_g = {}
-        with sweep_path.open() as f:
-            header = f.readline().rstrip("\n").split("\t")
-            for line in f:
-                parts = line.rstrip("\n").split("\t")
-                d = dict(zip(header, parts))
-                try:
-                    g = int(d["G"])
-                    z = float(d["mean_zvf"])
-                    se = float(d["heldout_acc_se"])
-                except (KeyError, ValueError):
-                    continue
-                by_g[g] = z
-                se_by_g[g] = se
-        if 8 in by_g and 16 in by_g:
-            delta = by_g[8] - by_g[16]
-            se_delta = math.sqrt(se_by_g.get(8, 0.003) ** 2
-                                 + se_by_g.get(16, 0.006) ** 2)
-            return {
-                "type": "empirical_groupsize_sweep",
-                "zvf_g8_emp": by_g[8],
-                "zvf_g16_emp": by_g[16],
-                "delta_zvf_abs": delta,
-                "delta_zvf_se": se_delta,
-                "delta_zvf_lo": delta - 1.96 * se_delta,
-                "delta_zvf_hi": delta + 1.96 * se_delta,
-                "n_seeds_at_each_g": 3,
-            }
-    return {"type": "fallback_shift",
-            "zvf_g8_emp": 0.69, "zvf_g16_emp": 0.63,
-            "delta_zvf_abs": 0.06, "delta_zvf_se": 0.01,
-            "delta_zvf_lo": 0.04, "delta_zvf_hi": 0.08,
-            "n_seeds_at_each_g": 0}
+    """Require paired per-seed ZVF contrasts; never substitute accuracy SE."""
+    import csv
+    path = WORK / "platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv"
+    if not path.exists():
+        raise ValueError("UNAVAILABLE: missing per-seed ZVF calibration")
+    groups = {}
+    with path.open() as f:
+        for row in csv.DictReader(f, delimiter="\t"):
+            if "seed" not in row:
+                raise ValueError("UNAVAILABLE: calibration lacks seed identity")
+            g = int(row["G"])
+            if g not in (8,16): continue
+            key = (row["seed"], g)
+            if key in groups: raise ValueError("duplicate seed/group calibration")
+            groups[key] = float(row["mean_zvf"])
+    seeds = sorted({seed for seed,g in groups if (seed,8) in groups and (seed,16) in groups})
+    if len(seeds) < 2:
+        raise ValueError("UNAVAILABLE: at least two paired ZVF calibration seeds required")
+    import statistics
+    differences = [groups[(seed,8)]-groups[(seed,16)] for seed in seeds]
+    delta = statistics.mean(differences)
+    se = statistics.stdev(differences) / math.sqrt(len(seeds))
+    return dict(type="paired_seed_zvf_calibration", zvf_g8_emp=statistics.mean(groups[(seed,8)] for seed in seeds),
+                zvf_g16_emp=statistics.mean(groups[(seed,16)] for seed in seeds),
+                delta_zvf_abs=delta, delta_zvf_se=se, delta_zvf_lo=delta-1.96*se,
+                delta_zvf_hi=delta+1.96*se, n_seeds_at_each_g=len(seeds),
+                uncertainty_status="normal_approximation_calibration_only", per_seed_differences=differences)
+
 
 
 # -------------------------------------------------------- main simulation ---

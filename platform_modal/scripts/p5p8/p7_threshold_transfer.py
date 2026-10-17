@@ -40,7 +40,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_mo
 from _paths import REPO_ROOT  # noqa: E402
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
-OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
+OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review20-v2"
 METHODS = ("grpo", "aero", "gift", "areal")
 THRESHOLDS = (0.50, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90)
 G_BASE = 8
@@ -101,12 +101,10 @@ def fires(step, tau):
 
 
 def cost_ratio_for(fires_seq):
-    """Total rollouts used under the controller over a 40-step trajectory."""
     if not fires_seq:
-        return 1.0
-    n_fires = sum(fires_seq)
-    rollouts = (N_STEPS - n_fires) * N_PROMPTS * G_BASE + n_fires * N_PROMPTS * G_ESC
-    return rollouts / BASELINE_ROLLOUTS
+        return float("nan")
+    return sum(G_ESC if fire else G_BASE for fire in fires_seq) / (len(fires_seq)*G_BASE)
+
 
 
 # ---------------------------------------------------------------------------
@@ -260,14 +258,14 @@ def transfer_penalty_table(steps, curves):
         source_best = pick_best(source)
         for target in METHODS:
             target_best = pick_best(target)
-            if source_best is None and target_best is None:
+            if source_best is None or target_best is None:
                 # both methods have no savings at any threshold; report
                 # trivial zero-penalty cell.
                 rows.append({
                     "source": source, "target": target,
                     "tau_used": "n/a", "tau_target_opt": "n/a",
-                    "cost_used": "1.0000", "cost_target_opt": "1.0000",
-                    "transfer_penalty": "+0.0000",
+                    "cost_used": None, "cost_target_opt": None,
+                    "transfer_penalty": None, "status": "no_feasible_source_or_target_threshold",
                 })
                 continue
             # If source has no candidate, fall back to target's best τ
@@ -283,7 +281,7 @@ def transfer_penalty_table(steps, curves):
                 "tau_target_opt": f"{target_best:.2f}" if target_best else "n/a",
                 "cost_used": f"{ratio_use:.4f}",
                 "cost_target_opt": f"{ratio_target_opt:.4f}",
-                "transfer_penalty": f"{penalty:+.4f}",
+                "transfer_penalty": f"{penalty:+.4f}", "status": "feasible",
             })
     return rows
 

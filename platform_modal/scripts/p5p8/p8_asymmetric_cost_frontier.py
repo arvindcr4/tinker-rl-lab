@@ -205,8 +205,8 @@ def main():
     n_4swins_4s_vs_24_cheaper = n_4swins_4s_vs_24
 
     # Cells where 24full is cheaper than 4sensor with significant CI exclusion
-    n_24full_cheaper_than_4sensor_ci = int(boot["ci_excl_zero_24_vs_4s"].sum())
-    n_24full_cheaper_than_20raw_ci = int(boot["ci_excl_zero_24_vs_20"].sum())
+    n_24full_cheaper_than_4sensor_ci = int((boot["delta_24_vs_4s_ci975"] < 0).sum())
+    n_24full_cheaper_than_20raw_ci = int((boot["delta_24_vs_20_ci975"] < 0).sum())
 
     summary = {
         "C_inv_grid": C_INV_GRID,

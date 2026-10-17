@@ -24,3 +24,12 @@ Corrected analyses use corrected-review20-v2 output directories. No stored resul
 
 ## Validation
 CPU synthetic regressions cover normalized beta-binomial probability, nontrivial G selection, unsupported cross-prompt pooling, forty-step all-zero saturation aggregation, cost direction, tie/no-alert replay, real second-stage influence, actual cost denominators and zero catches. Training, provider queries and paid jobs were not run.
+
+## Follow-up repairs (supersede matching open items above)
+- Posterior-predictive restoration now uses the append experiment and excludes already mixed groups; per-step endpoint counts reset correctly. Cost-efficiency consumes the versioned corrected producer
+- Unified controller equal thresholds recover escalation-only behavior
+- Threshold transfer uses actual trajectory length; missing feasible source/target threshold exports unavailable penalty instead of zero or target-selected fallback
+- N10 calibration rejects missing/aggregate-only evidence and requires unique paired seed/G ZVF rows; accuracy SE and synthetic fallback removed. Exported calibration interval remains a named normal approximation, and downstream trajectory/calibration uncertainty combination remains open
+- Alert-volume recall dominance and asymmetric-cost significant savings require the favorable CI direction
+- Cohort raw/full fits use matched seeds; noise calibration uses actual evaluation population size
+Additional regressions cover append posterior probability, equal-threshold escalation, actual one-step cost ratio and missing-calibration rejection.

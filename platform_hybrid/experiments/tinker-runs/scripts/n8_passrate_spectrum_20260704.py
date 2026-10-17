@@ -13,6 +13,13 @@ Usage:
 """
 from __future__ import annotations
 
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 4:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
+from platform_hybrid.experiments.framework_contracts import experiment_spec, validate_resume, content_hash, SCORER_ID, stable_seed, score_gsm8k
+
+
 import argparse
 import asyncio
 import json
@@ -68,26 +75,8 @@ def get_args():
         
     return args
 
-def extract_and_score(completion: str, gold: str) -> float:
-    matches = re.findall(r'\\boxed\{([^}]+)\}', completion)
-    cand_str = None
-    if matches:
-        cand_str = matches[-1]
-    else:
-        num_matches = re.findall(r'[-+]?\d[\d,]*\.?\d*', completion)
-        if num_matches:
-            cand_str = num_matches[-1]
-            
-    if cand_str is None:
-        return 0.0
-        
-    cand_str = cand_str.strip().replace(',', '').replace('$', '').replace(' ', '')
-    try:
-        cand_val = float(cand_str)
-        gold_val = float(gold)
-        return 1.0 if abs(cand_val - gold_val) < 0.01 else 0.0
-    except ValueError:
-        return 1.0 if cand_str.lower() == gold.lower() else 0.0
+def extract_and_score(completion, gold):
+    return score_gsm8k(completion, gold)
 
 async def process_prompt(
     prompt_id: int, 
@@ -124,7 +113,8 @@ async def process_prompt(
             backoff_times = [2, 4, 8]
             for attempt in range(4):
                 try:
-                    resp = await sc.sample_async(prompt=model_input, num_samples=c, sampling_params=sp)
+                    resp = await sc.sample_async(prompt=model_input, num_samples=c,
+                        sampling_params=sp.model_copy(update={"seed": stable_seed(args.seed, prompt_id, len(rewards))}))
                     for seq in resp.sequences:
                         text = tokenizer.decode(list(seq.tokens), skip_special_tokens=True)
                         total_completion_tokens += len(seq.tokens)
@@ -142,9 +132,8 @@ async def process_prompt(
                 logger.error(f"Failed to get {c} samples for prompt {prompt_id} after 4 attempts.")
                 
         k_obtained = len(rewards)
-        if k_obtained == 0:
-            logger.error(f"Prompt {prompt_id} got 0 samples.")
-            return
+        if k_obtained != k_requested:
+            raise RuntimeError(f"Incomplete fixed sample population for {prompt_id}: {k_obtained}/{k_requested}")
 
         n_correct = sum(rewards)
         p_hat = n_correct / k_obtained
@@ -188,6 +177,14 @@ async def run_all(args):
     analysis_fname = "analysis_smoke.json" if args.smoke else "analysis.json"
     passrates_file = out_dir / passrates_fname
     
+    specification = experiment_spec({**vars(args), "scorer_id": SCORER_ID})
+    manifest_path = out_dir / "experiment_spec.json"
+    if passrates_file.exists():
+        if not manifest_path.exists():
+            raise ValueError("Legacy samples lack immutable specification")
+        validate_resume(specification, json.loads(manifest_path.read_text()))
+    else:
+        manifest_path.write_text(json.dumps(specification, indent=2))
     done_ids = set()
     state = {
         "prompts_done": 0,
@@ -201,6 +198,8 @@ async def run_all(args):
             for line in f:
                 if not line.strip(): continue
                 data = json.loads(line)
+                if data.get("k_obtained") != args.k or data["prompt_id"] in done_ids:
+                    raise ValueError("Incomplete or duplicate saved prompt population")
                 done_ids.add(data["prompt_id"])
                 state["prompts_done"] += 1
                 state["completions_done"] += data["k_obtained"]
@@ -226,12 +225,13 @@ async def run_all(args):
         
     tasks = []
     for idx, item in enumerate(ds):
-        if idx in done_ids:
+        item_id = content_hash({"question": item["question"], "answer": item["answer"]})
+        if item_id in done_ids:
             continue
             
         gold = item['answer'].split('####')[-1].strip().replace(',', '')
         question = item['question']
-        tasks.append(process_prompt(idx, question, gold, args, tokenizer, sc, sp, sem, file_lock, passrates_file, state))
+        tasks.append(process_prompt(item_id, question, gold, args, tokenizer, sc, sp, sem, file_lock, passrates_file, state))
         
     if tasks:
         await asyncio.gather(*tasks)

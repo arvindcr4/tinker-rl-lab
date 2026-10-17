@@ -294,15 +294,7 @@ def _get_tokenizer(model: str):
         try:
             tok = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
         except Exception as e:
-            fallback = _TOKENIZER_FALLBACKS.get(model)
-            if not fallback:
-                raise
-            print(
-                f"[heldout] tokenizer load failed for {model} ({e.__class__.__name__}); "
-                f"falling back to {fallback}",
-                flush=True,
-            )
-            tok = AutoTokenizer.from_pretrained(fallback, trust_remote_code=True)
+            raise RuntimeError(f"Tokenizer identity unavailable for {model}; unverified fallback forbidden") from e
         _TOKENIZER_CACHE[model] = tok
     return tok
 
@@ -340,9 +332,13 @@ def evaluate_checkpoint(
 
     def score_one(idx: int, question: str, answer: str) -> dict:
         pid = build_prompt(question)
-        resp = sc.sample(
-            T.ModelInput.from_ints(pid), num_samples=1, sampling_params=sp
-        ).result()
+        for attempt in range(3):
+            try:
+                resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=1, sampling_params=sp).result()
+                break
+            except Exception:
+                if attempt == 2:
+                    raise
         seq = resp.sequences[0]
         toks = list(seq.tokens)
         text = tok.decode(toks, skip_special_tokens=True)
@@ -373,13 +369,13 @@ def evaluate_checkpoint(
                 out = {
                     "idx": i,
                     "answer": problems[i][1],
-                    "reward": 0.0,
+                    "reward": None,
                     "completion_tokens": 0,
                     "completion": None,
                     "error": f"{type(e).__name__}: {e}",
                 }
             per_problem[i] = out
-            correct += int(out["reward"] >= 1.0)
+            correct += int(out["reward"] is not None and out["reward"] >= 1.0)
             tok_total += out.get("completion_tokens", 0)
             done += 1
             if done % 50 == 0 or done == len(problems):
@@ -391,7 +387,11 @@ def evaluate_checkpoint(
 
     elapsed = time.time() - t0
     n = len(problems)
-    acc = correct / n if n else 0.0
+    if not n or any(p.get("error") for p in per_problem):
+        return {"status": "incomplete", "checkpoint": rec.checkpoint, "heldout_n": n,
+                "heldout_accuracy": None, "heldout_correct": None, "per_problem": per_problem,
+                "evidence_error": "fixed_evaluation_incomplete", "claim_eligible": False}
+    acc = correct / n
     lo, hi = _wilson_ci(correct, n)
 
     result = EvalResult(
@@ -424,7 +424,7 @@ def evaluate_checkpoint(
         f"({correct}/{n}) CI95=[{lo:.3f},{hi:.3f}]  {elapsed:.0f}s",
         flush=True,
     )
-    return asdict(result)
+    return {**asdict(result), "status": "completed", "scorer_id": "gsm8k-final-visible-box-or-number-v3"}
 
 
 # ---------------------------------------------------------------------------
@@ -531,7 +531,7 @@ def run(
                     "error": f"{type(e).__name__}: {e}",
                     "heldout_n": 0,
                     "heldout_correct": 0,
-                    "heldout_accuracy": 0.0,
+                    "heldout_accuracy": None,
                 }
 
         with ThreadPoolExecutor(max_workers=max_ckpt_workers) as ex:
@@ -547,7 +547,7 @@ def run(
     heldout_rank = {
         id(r): i + 1
         for i, r in enumerate(
-            sorted(results, key=lambda r: r.get("heldout_accuracy", 0.0), reverse=True)
+            sorted(results, key=lambda r: (r.get("heldout_accuracy") if r.get("heldout_accuracy") is not None else -1), reverse=True)
         )
     }
     for r in results:
@@ -557,7 +557,7 @@ def run(
     # problems evaluated (``len(problems)``) rather than the requested ``n``
     # so the metadata stays consistent with per-checkpoint ``heldout_n`` when
     # ``load_heldout_gsm8k`` skips rows or ``n`` exceeds the available split.
-    valid = [r for r in results if r.get("heldout_n")]
+    valid = [r for r in results if r.get("status") == "completed" and r.get("heldout_accuracy") is not None]
     actual_n = len(problems)
     summary = {
         "n_checkpoints": len(results),
@@ -668,7 +668,7 @@ if _MODAL_AVAILABLE and os.environ.get("MODAL_EVAL_DISABLE_APP") != "1":
             "numpy",
         )
         .env({"WANDB_PROJECT": WANDB_PROJECT, "WANDB_ENTITY": WANDB_ENTITY})
-        .add_local_python_source("_modal_common")
+        .add_local_python_source("_modal_common", "platform_hybrid")
     )
     app = modal.App("tinker-rl-heldout-eval", image=image)
 

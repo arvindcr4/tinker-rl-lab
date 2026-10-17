@@ -1,64 +1,115 @@
-"""Parallel consolidation: push all completed h2h adapters to one HF repo, ~5 at a
-time, each to its own branch. Idempotent (skips branches already uploaded),
-retries on the Tinker->HF timeout. Requires env HF_TOKEN, TINKER_API_KEY.
+"""Explicit adapter export with immutable source/destination receipts.
+
+Importing this module never reads credentials or mutates a remote repository.
+Legacy unverified results are refused rather than silently exported as v3.
 """
-import json, glob, re, subprocess, os, time
+from __future__ import annotations
+import argparse
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from huggingface_hub import HfApi
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from platform_hybrid.experiments.framework_contracts import (
+    export_branch, export_identity, require_completed, content_hash,
+)
 
 REPO = "arvindcr4/zvf-h2h-qwen3.5-4b"
+ROOT = Path(__file__).resolve().parent / "results"
 TINKER = ".venv/bin/tinker"
-api = HfApi(token=os.environ["HF_TOKEN"])
-api.create_repo(REPO, private=True, exist_ok=True, repo_type="model")
+
 
 def branch_of(tag):
-    m = re.search(r"h2h2_([a-z]+)_.*_(s\d+)_", tag)
-    return f"{m.group(1)}-{m.group(2)}"
+    return export_branch(tag)
 
-cells = {}
-for f in sorted(glob.glob("experiments/tinker-runs/results/week_h2h/*.json")):
-    try: d = json.load(open(f))
-    except Exception: continue
-    if d.get("status") == "completed" and d.get("checkpoint"):
-        cells.setdefault(d["tag"], d)
 
-def push(tag, d):
-    br, ck = branch_of(tag), d["checkpoint"]
+def file_hashes(info):
+    hashes = {}
+    for item in info.siblings or []:
+        if item.rfilename in {"adapter_model.safetensors", "adapter_config.json"}:
+            lfs = item.lfs
+            digest = (lfs.get("sha256") if isinstance(lfs, dict) else getattr(lfs, "sha256", None))
+            digest = digest or item.blob_id
+            if not digest:
+                raise ValueError("Export file hash unavailable")
+            hashes[item.rfilename] = digest
+    if set(hashes) != {"adapter_model.safetensors", "adapter_config.json"}:
+        raise ValueError("Complete adapter weights/config missing")
+    return hashes
+
+
+def push(tag, record, *, api, repo=REPO, download=None):
+    from huggingface_hub import hf_hub_download
+    download = download or hf_hub_download
+    require_completed(record)
+    source = export_identity(record)
+    # Include source spec + checkpoint; same display tag can have distinct attempts.
+    branch = branch_of(tag + "-" + content_hash(source))
     try:
-        if "adapter_model.safetensors" in api.list_repo_files(REPO, revision=br):
-            return (br, "skip")
+        info = api.model_info(repo, revision=branch, files_metadata=True)
+        receipt = json.loads(Path(download(repo, "export_receipt.json", revision=info.sha,
+                                           token=os.environ.get("HF_TOKEN"))).read_text())
+        if receipt.get("source") == source and receipt.get("file_hashes") == file_hashes(info):
+            return {"branch": branch, "status": "verified", "revision": info.sha,
+                    "source": source, "file_hashes": receipt["file_hashes"]}
     except Exception:
-        pass
-    api.create_branch(REPO, branch=br, exist_ok=True)
-    for _ in range(3):
-        subprocess.run([TINKER, "checkpoint", "push-hf", ck, "--repo", REPO,
-                        "--revision", br, "--no-model-card", "--commit-message", tag],
-                       env=os.environ, capture_output=True, text=True)
-        try:
-            if "adapter_model.safetensors" in api.list_repo_files(REPO, revision=br):
-                return (br, "ok")
-        except Exception:
-            pass
-        time.sleep(3)
-    return (br, "FAIL")
+        pass  # Missing or mismatched receipt is not an idempotent success.
+    api.create_branch(repo, branch=branch, exist_ok=True)
+    subprocess.run([TINKER, "checkpoint", "push-hf", source["checkpoint"], "--repo", repo,
+                    "--revision", branch, "--no-model-card", "--commit-message", tag],
+                   env=os.environ, capture_output=True, text=True, check=True)
+    info = api.model_info(repo, revision=branch, files_metadata=True)
+    receipt = {"source": source, "file_hashes": file_hashes(info), "weights_commit": info.sha}
+    commit = api.upload_file(path_or_fileobj=json.dumps(receipt, sort_keys=True).encode(),
+                             path_in_repo="export_receipt.json", repo_id=repo, revision=branch,
+                             commit_message="Record verified export source and file hashes")
+    verified = api.model_info(repo, revision=commit.oid, files_metadata=True)
+    if verified.sha != commit.oid or file_hashes(verified) != receipt["file_hashes"]:
+        raise ValueError("Destination hashes changed during export")
+    return {**receipt, "branch": branch, "revision": commit.oid, "status": "verified"}
 
-print(f"[parallel] {len(cells)} cells -> {REPO}", flush=True)
-done = []
-with ThreadPoolExecutor(max_workers=5) as ex:
-    futs = {ex.submit(push, t, d): t for t, d in cells.items()}
-    for fu in as_completed(futs):
-        r = fu.result(); done.append(r); print("[push]", r, flush=True)
 
-rows = "\n".join(f"| `{branch_of(t)}` | {d.get('tag')} | {d.get('last10_avg')} |"
-                 for t, d in sorted(cells.items()))
-readme = ("---\nbase_model: Qwen/Qwen3.5-4B\nlibrary_name: peft\n"
-          "tags: [lora, grpo, drgrpo, dapo, gspo, gsm8k, zvf]\n---\n"
-          "# ZVF head-to-head LoRA adapters (Qwen3.5-4B, GSM8K)\n\n"
-          "GRPO / Dr.GRPO / DAPO / GSPO LoRA rank-16 adapters, one per **branch**. "
-          "Load base model + `peft`, select branch via `revision=`.\n\n"
-          f"| branch | run | last10 reward |\n|---|---|---|\n{rows}\n")
-api.upload_file(path_or_fileobj=readme.encode(), path_in_repo="README.md",
-                repo_id=REPO, revision="main", commit_message="index of run branches")
-ok = [b for b, s in done if s == "ok"]; sk = [b for b, s in done if s == "skip"]; fa = [b for b, s in done if s == "FAIL"]
-print(f"OK={len(ok)} SKIP={len(sk)} FAIL={fa}", flush=True)
-print("REPO: https://huggingface.co/" + REPO, flush=True)
+def load_cells(root=ROOT):
+    cells = {}
+    for path in sorted((root / "week_h2h").glob("*.json")) + sorted(root.glob("h2h2_*.json")):
+        record = json.loads(path.read_text())
+        if record.get("status") != "completed" or not record.get("tag"):
+            continue
+        tag = record["tag"]
+        if tag in cells and cells[tag] != record:
+            raise ValueError(f"Conflicting export records for {tag}")
+        cells[tag] = record
+    return cells
+
+
+def main(max_workers=5):
+    from huggingface_hub import HfApi
+    api = HfApi(token=os.environ["HF_TOKEN"])
+    cells = load_cells()
+    # Validate all source identities before creating any remote objects.
+    for record in cells.values():
+        require_completed(record)
+        export_identity(record)
+    api.create_repo(REPO, private=True, exist_ok=True, repo_type="model")
+    receipts, failures = [], []
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        pending = {pool.submit(push, tag, record, api=api): tag for tag, record in cells.items()}
+        for future in as_completed(pending):
+            try:
+                receipts.append(future.result())
+            except Exception as exc:
+                failures.append({"tag": pending[future], "error": str(exc)})
+    # Index only verified immutable revisions; failed destinations are not linked.
+    lines = ["# Verified adapter exports", "", "Methods are identified in source receipts; historical labels are not equivalence claims.", ""]
+    for r in receipts:
+        lines.append(f"- [{r['branch']}](https://huggingface.co/{REPO}/tree/{r['revision']})")
+    api.upload_file(path_or_fileobj="\n".join(lines).encode(), path_in_repo="README.md", repo_id=REPO,
+                    revision="main", commit_message="Index verified immutable exports")
+    print(json.dumps({"verified": receipts, "failed": failures}, indent=2))
+
+
+if __name__ == "__main__":
+    main()

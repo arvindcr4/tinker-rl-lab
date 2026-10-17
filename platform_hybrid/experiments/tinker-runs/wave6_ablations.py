@@ -15,6 +15,13 @@ Shared baseline is run once and re-used across all three sweeps.
 Output: experiments/tinker-runs/results/wave6_ablations.json
 """
 
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 3:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
+from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage, wave6_spec
+
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -33,7 +40,7 @@ import sys
 import time
 import traceback
 import warnings
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 import torch
@@ -74,7 +81,7 @@ RESULTS_PATH = os.environ.get(
         "experiments",
         "tinker-runs",
         "results",
-        "wave6_ablations.json",
+        "wave6_ablations_v3.json",
     ),
 )
 
@@ -108,26 +115,8 @@ def _load_gsm8k():
     return _GSM8K_CACHE
 
 
-def reward_fn(response: str, answer: str) -> float:
-    response = response.strip()
-    boxed = re.findall(r"\\boxed\{([^}]+)\}", response)
-    for b in boxed:
-        b_clean = b.strip().replace(",", "").replace(" ", "")
-        try:
-            if abs(float(b_clean) - float(answer)) < 0.01:
-                return 1.0
-        except Exception:
-            if b_clean == answer:
-                return 1.0
-    all_nums = re.findall(r"[-+]?\d[\d,]*\.?\d*", response)
-    if all_nums:
-        last = all_nums[-1].replace(",", "")
-        try:
-            if abs(float(last) - float(answer)) < 0.01:
-                return 1.0
-        except Exception:
-            pass
-    return 0.0
+def reward_fn(response, answer):
+    return score_gsm8k(response, answer)
 
 
 # ── One GRPO run ────────────────────────────────────────────────────
@@ -147,10 +136,11 @@ def run_one(exp):
         flush=True,
     )
 
+    logging_errors = []
     wb_run = None
     t0 = time.time()
     try:
-        random.seed(seed)
+        rng = random.Random(seed)
         torch.manual_seed(seed)
 
         gsm8k = _load_gsm8k()
@@ -160,19 +150,7 @@ def run_one(exp):
         # W&B
         try:
             import wandb
-            try:
-                if not getattr(wandb, '_vram_patched', False):
-                    _old_log = wandb.log
-                    def _vram_log(data, *args, **kwargs):
-                        if torch.cuda.is_available():
-                            data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                            data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
-                            torch.cuda.reset_peak_memory_stats()
-                        _old_log(data, *args, **kwargs)
-                    wandb.log = _vram_log
-                    wandb._vram_patched = True
-            except ImportError:
-                pass
+            # No process-global W&B log monkeypatch. Managed VRAM is unavailable.
 
             if WANDB_KEY:
                 wandb.login(key=WANDB_KEY, relogin=True)
@@ -193,9 +171,10 @@ def run_one(exp):
                     "wave": "6-sensitivity",
                     "sweep": exp["sweep"],
                 },
-                reinit=True,
+                reinit="create_new",
             )
         except Exception as e:
+            logging_errors.append(str(e))
             print(f"  [{tag}] W&B init failed: {e}", flush=True)
 
         # Tinker client — LoRA rank varies here
@@ -211,17 +190,17 @@ def run_one(exp):
         _advs = []
 
         def loss_fn(data, lp):
-            losses = [(-_advs[i] * lp[i].sum()) for i in range(len(lp))]
+            losses = [(-_advs[i] * response_logprobs(data[i], lp[i]).sum()) for i in range(len(lp))]
             loss = torch.stack(losses).mean()
             return loss, {"loss": loss.item()}
 
         step_rewards, step_log = [], []
         examples = list(gsm8k)
-        random.shuffle(examples)
+        rng.shuffle(examples)
 
         for step in range(steps):
             # batch controls how many GSM8K prompts per GRPO step
-            batch_examples = random.sample(examples, min(batch, len(examples)))
+            batch_examples = rng.sample(examples, min(batch, len(examples)))
             all_data, all_advs, batch_r = [], [], []
             zero_var_prompts = 0
 
@@ -236,7 +215,7 @@ def run_one(exp):
                     pid = pid[:1024]
 
                 sp = T.SamplingParams(
-                    max_tokens=512, temperature=temperature, top_p=0.95
+                    max_tokens=512, temperature=temperature, top_p=0.95, seed=stable_seed(seed, step, pid)
                 )
                 resp = sc.sample(
                     T.ModelInput.from_ints(pid),
@@ -265,18 +244,9 @@ def run_one(exp):
                 for r_seq, adv in zip(resp.sequences, advs):
                     rid = list(r_seq.tokens)
                     fid = pid + rid
-                    tid = fid[1:] + [0]
+                    tid = fid[1:]
                     all_data.append(
-                        T.Datum(
-                            model_input=T.ModelInput.from_ints(fid),
-                            loss_fn_inputs={
-                                "target_tokens": T.TensorData(
-                                    data=tid,
-                                    dtype="int64",
-                                    shape=[len(tid)],
-                                )
-                            },
-                        )
+                        aligned_datum(T, pid, rid)
                     )
                     all_advs.append(adv)
 
@@ -330,11 +300,11 @@ def run_one(exp):
                             "train/zvf": zvf,
                         }
                     )
-                except Exception:
-                    pass
+                except Exception as logging_error:
+                    logging_errors.append(str(logging_error))
 
             # Refresh sampler every 10 steps (as campaign_v2)
-            if (step + 1) % 10 == 0:
+            if True:  # v3: sampler refresh after every update
                 ckpt = tc.save_weights_for_sampler(
                     name=f"s{step+1}"
                 ).result()
@@ -369,12 +339,17 @@ def run_one(exp):
         )
 
         result = {
+            **completion_receipt(steps, len(step_rewards), run_id, final_ckpt.path),
+            **wave6_spec({**exp, "steps": steps}),
+            "logging_errors": logging_errors,
+            "scorer_id": SCORER_ID,
+            "objective_id": "group_standardized_pg_response_sum_v3",
+            "sampler_refresh_every": 1,
             "tag": tag,
             "sweep": exp["sweep"],
             "model": MODEL,
             "model_short": MODEL_SHORT,
             "task": "gsm8k",
-            "status": "completed",
             "seed": seed,
             "rank": rank,
             "temperature": temperature,
@@ -511,7 +486,7 @@ def launch(max_parallel=6):
     )
 
     results = []
-    with ThreadPoolExecutor(max_workers=max_parallel) as ex:
+    with ProcessPoolExecutor(max_workers=max_parallel) as ex:
         futures = {ex.submit(run_one, e): e for e in exps}
         for fut in as_completed(futures):
             try:

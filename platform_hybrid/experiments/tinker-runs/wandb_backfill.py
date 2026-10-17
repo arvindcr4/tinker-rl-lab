@@ -19,6 +19,13 @@ Auth: ambient (netrc / WANDB_API_KEY). Nothing here trains or samples.
 
 from __future__ import annotations
 
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 3:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
+from platform_hybrid.experiments.framework_contracts import content_hash
+
+
 import json
 import sys
 from pathlib import Path
@@ -55,16 +62,19 @@ def flat_scalars(obj: dict, prefix: str = "", depth: int = 0) -> dict:
     return out
 
 
-def existing_names(api: wandb.Api, project: str) -> set[str]:
-    try:
-        return {r.name for r in api.runs(f"{ENTITY}/{project}", per_page=500)}
-    except Exception:
-        return set()
+def existing_names(api, project):
+    """Immutable source/content IDs, not mutable display names."""
+    return {r.config.get("source_identity") for r in api.runs(f"{ENTITY}/{project}", per_page=500)
+            if r.config.get("source_identity")}
 
 
 def log_file(project: str, name: str, path: Path, tags: list[str],
              notes: str, existing: set[str]) -> bool:
-    if name in existing:
+    import hashlib
+    source_uri = path.resolve().as_uri()
+    source_digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    identity = content_hash({"source_uri": source_uri, "sha256": source_digest})
+    if identity in existing:
         print(f"[skip] {project}/{name} (exists)", flush=True)
         return False
     try:
@@ -74,9 +84,12 @@ def log_file(project: str, name: str, path: Path, tags: list[str],
         return False
     cfg = flat_scalars(data if isinstance(data, dict) else {})
     cfg["backfill"] = True
+    cfg["source_identity"] = identity
+    cfg["source_uri"] = source_uri
+    cfg["source_sha256"] = source_digest
     cfg["source_path"] = str(path.relative_to(REPO))
     run = wandb.init(entity=ENTITY, project=project, name=name, tags=tags,
-                     notes=notes, config=cfg, reinit=True,
+                     notes=notes, config=cfg, reinit="create_new",
                      settings=wandb.Settings(silent=True))
     numeric = {k: v for k, v in cfg.items() if isinstance(v, (int, float))
                and not isinstance(v, bool)}
@@ -86,6 +99,7 @@ def log_file(project: str, name: str, path: Path, tags: list[str],
     art.add_file(str(path))
     run.log_artifact(art)
     run.finish()
+    existing.add(identity)
     print(f"[logged] {project}/{name}", flush=True)
     return True
 

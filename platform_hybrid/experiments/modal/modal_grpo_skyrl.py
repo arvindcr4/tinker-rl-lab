@@ -34,7 +34,7 @@ image = (
     )
     .apt_install("git", "build-essential")
     .env({"CUDA_HOME": "/usr/local/cuda"})
-    .pip_install("packaging", "wheel", "ninja", "setuptools", "uv")
+    .pip_install("packaging", "wheel", "ninja", "setuptools", "uv", "pyyaml")
     .run_commands(
         # Clone the pinned SkyRL release the config's entrypoint lives in.
         f"git clone --depth 1 --branch {SKYRL_TAG} "
@@ -72,6 +72,16 @@ def run_skyrl_qwen3_8b():
     REPO = "/root/tinker-rl-lab"
     CONFIG = f"{REPO}/platform_hybrid/skyrl/configs/grpo_gsm8k.yaml"
 
+    import sys
+    sys.path.insert(0, REPO)
+    from platform_hybrid.experiments.framework_contracts import read_skyrl_recipe
+    try:
+        source = read_skyrl_recipe(CONFIG)
+    except (ValueError, OSError) as error:
+        return {"framework": "skyrl", "status": "blocked", "last10_avg": None,
+                "evidence_error": str(error), "completion_contract_satisfied": False,
+                "comparison_contract_satisfied": False}
+
     # The recipe command documented at the top of grpo_gsm8k.yaml.
     cmd = [
         "uv", "run", "--extra", "vllm",
@@ -87,10 +97,19 @@ def run_skyrl_qwen3_8b():
 
     return {
         "framework": "skyrl",
+        "requested_config": source["requested_config"],
+        "source_sha256": source["source_sha256"],
+        "status": "failed" if proc.returncode else "unverified",
+        "completion_contract_satisfied": False,
         "mode": "real",
+        "protocol_version": "framework-comparison-v3",
+        "comparison_mode": "native_framework_recipe",
+        "comparison_contract_satisfied": False,
+        "claim_supported": False,
+        "resolved_config_status": "unavailable_until_adapter_initialization",
         "model": "Qwen/Qwen3-8B",
         "algorithm": "GRPO",
-        "seed": 211,
+        "seed": source["requested_config"].get("trainer", {}).get("seed"),
         "task": "gsm8k",
         "platform": "modal-h100",
         "duration_s": duration,

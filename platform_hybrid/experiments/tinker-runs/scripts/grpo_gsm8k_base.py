@@ -2,6 +2,13 @@
 Usage: python grpo_gsm8k_base.py --model Qwen/Qwen3-8B --seed 137 --rank 32 --steps 50
 """
 
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 4:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
+from platform_hybrid.experiments.framework_contracts import aligned_datum, response_logprobs, PROTOCOL_VERSION, stable_seed
+
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -29,7 +36,7 @@ parser.add_argument("--batch", type=int, default=2)
 parser.add_argument("--tag", default="")
 args = parser.parse_args()
 
-random.seed(args.seed)
+rng = random.Random(args.seed)
 torch.manual_seed(args.seed)
 
 MODEL = args.model
@@ -57,7 +64,7 @@ for row in ds:
     )
     examples.append((prompt, answer))
 
-random.shuffle(examples)
+rng.shuffle(examples)
 print(f"[{EXP}] {len(examples)} GSM8K examples | model={MODEL} seed={args.seed} rank={RANK} lr={LR}")
 
 # ── Reward: binary exact match on \\boxed{} or final number ─────────────
@@ -87,13 +94,13 @@ def reward(response, answer):
 # ── GRPO ─────────────────────────────────────────────────────────────────
 _adv = []
 def loss_fn(data, lp):
-    losses = [(-_adv[i] * lp[i].sum()) for i in range(len(lp))]
+    losses = [(-_adv[i] * response_logprobs(data[i], lp[i]).sum()) for i in range(len(lp))]
     loss = torch.stack(losses).mean()
     return loss, {"loss": loss.item()}
 
 print(f"[{EXP}] Connecting to Tinker...")
 svc = tinker.ServiceClient(base_url=None)
-tc = svc.create_lora_training_client(base_model=MODEL, rank=RANK)
+tc = svc.create_lora_training_client(base_model=MODEL, rank=RANK, seed=args.seed)
 tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
 w0 = tc.save_weights_for_sampler(name="s0").result()
 sc = tc.create_sampling_client(model_path=w0.path)
@@ -105,7 +112,7 @@ zero_loss_steps = 0
 zero_reward_steps = 0
 
 for step in range(STEPS):
-    batch = random.sample(examples, args.batch)
+    batch = rng.sample(examples, args.batch)
     all_data, all_advs, batch_r = [], [], []
 
     for prompt_text, ans in batch:
@@ -122,11 +129,8 @@ for step in range(STEPS):
         for r, a in zip(resp.sequences, advs):
             rid = list(r.tokens)
             fid = pid + rid
-            tid = fid[1:] + [0]
-            all_data.append(T.Datum(
-                model_input=T.ModelInput.from_ints(fid),
-                loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)])}
-            ))
+            tid = fid[1:]
+            all_data.append(aligned_datum(T, pid, rid))
             all_advs.append(a)
 
     if not all_data:
@@ -146,8 +150,9 @@ for step in range(STEPS):
 
     print(f"[{EXP}] {step + 1:3d}/{STEPS} | loss={loss_val:.4f} | reward={avg:.3f} | acc={avg*100:.1f}%")
 
-    if (step + 1) % SAVE_EVERY == 0:
-        tc.save_state(name=f"s{step + 1}")
+    if True:  # v3 current-policy sampler; persistence is separately gated
+        if (step + 1) % SAVE_EVERY == 0:
+            tc.save_state(name=f"s{step + 1}")
         ckpt = tc.save_weights_for_sampler(name=f"s{step + 1}").result()
         sc = tc.create_sampling_client(model_path=ckpt.path)
         print(f"[{EXP}]   -> ckpt s{step + 1}")

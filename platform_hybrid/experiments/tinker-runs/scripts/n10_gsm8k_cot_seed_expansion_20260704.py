@@ -11,6 +11,13 @@ Usage:
   python n10_gsm8k_cot_seed_expansion_20260704.py --seeds 8 --steps 30
 """
 
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 4:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
+from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage
+
+
 import argparse
 import json
 import os
@@ -29,8 +36,8 @@ from datasets import load_dataset
 from transformers import AutoTokenizer
 
 REPO = "/home/claude/tinker-rl-lab"
-RESULTS_DIR = os.path.join(REPO, "experiments", "results", "n10_seed_expansion")
-os.makedirs(RESULTS_DIR, exist_ok=True)
+RESULTS_DIR = os.path.join(REPO, "experiments", "results", "n10_seed_expansion_v3")
+
 
 DEFAULTS = {
     "model": "Qwen/Qwen3.5-4B",
@@ -44,7 +51,6 @@ DEFAULTS = {
     "max_tokens": 256,
     "max_prompt_tokens": 1024,
     "k_epochs": 2,
-    "clip": 0.2,
     "n_eval": 128,
 }
 
@@ -79,25 +85,8 @@ def load_gsm8k(seed: int):
     return train, test
 
 
-def reward_fn(response: str, answer: str) -> float:
-    response = response.strip()
-    for b in re.findall(r'\\boxed\{([^}]+)\}', response):
-        b_clean = b.strip().replace(",", "").replace(" ", "")
-        try:
-            if abs(float(b_clean) - float(answer)) < 0.01:
-                return 1.0
-        except Exception:
-            if b_clean == answer:
-                return 1.0
-    nums = re.findall(r'[-+]?\d[\d,]*\.?\d*', response)
-    if nums:
-        last = nums[-1].replace(",", "")
-        try:
-            if abs(float(last) - float(answer)) < 0.01:
-                return 1.0
-        except Exception:
-            pass
-    return 0.0
+def reward_fn(response, answer):
+    return score_gsm8k(response, answer)
 
 
 def run_arm(algo: str, seed: int, args) -> dict:
@@ -105,7 +94,7 @@ def run_arm(algo: str, seed: int, args) -> dict:
     exp_tag = f"n10_{algo}_s{seed}"
     print(f"\n{'='*70}\n[{exp_tag}] START algo={algo} seed={seed}\n{'='*70}")
 
-    random.seed(seed)
+    rng = random.Random(seed)
     np.random.seed(seed)
 
     train_examples, test_examples = load_gsm8k(seed)
@@ -130,16 +119,18 @@ def run_arm(algo: str, seed: int, args) -> dict:
                 "lr": args.lr,
                 "max_tokens": args.max_tokens,
                 "k_epochs": args.k_epochs,
-                "clip": args.clip,
+                "objective_id": "n10_unclipped_is_response_normalized_v3",
+                "ratio_clip": None,
+                "scorer_id": SCORER_ID,
             },
             tags=["N10", "gsm8k_cot", "seed-expansion", algo, "20260704"],
-            reinit=True,
+            reinit="create_new",
         )
         wandb_run_path = f"{wb.entity}/{wb.project}/{wb.id}"
     print(f"[{exp_tag}] WANDB_RUN_PATH={wandb_run_path}", flush=True)
 
     svc = tinker.ServiceClient(base_url=None)
-    tc = svc.create_lora_training_client(base_model=args.model, rank=args.rank)
+    tc = svc.create_lora_training_client(base_model=args.model, rank=args.rank, seed=seed)
     tok = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
 
     # Build tokenized train/test pools
@@ -159,12 +150,14 @@ def run_arm(algo: str, seed: int, args) -> dict:
 
     w0 = tc.save_weights_for_sampler(name=f"{exp_tag}_s0").result()
     sc = tc.create_sampling_client(model_path=w0.path)
+    sampler_uri = w0.path
 
     def sample_responses(sc, pid, num_samples):
         sp = T.SamplingParams(
             max_tokens=args.max_tokens,
             temperature=args.temp,
             top_p=args.top_p,
+            seed=stable_seed(seed, step, pid),
         )
         try:
             return sc.sample(T.ModelInput.from_ints(pid), num_samples=num_samples, sampling_params=sp).result()
@@ -173,6 +166,7 @@ def run_arm(algo: str, seed: int, args) -> dict:
             return sc.sample(T.ModelInput.from_ints(pid), num_samples=num_samples, sampling_params=sp).result()
 
     step_log = []
+    successful_updates = 0
     t0 = time.time()
     train_iter = iter(train_pool)
 
@@ -182,20 +176,27 @@ def run_arm(algo: str, seed: int, args) -> dict:
             try:
                 batch.append(next(train_iter))
             except StopIteration:
-                random.seed(seed + step)
-                random.shuffle(train_pool)
+                rng.seed(seed + step)
+                rng.shuffle(train_pool)
                 train_iter = iter(train_pool)
                 batch.append(next(train_iter))
 
         all_data, batch_rewards = [], []
         group_zvf_count = 0
         all_lengths = []
+        rollout_groups = []
 
         for pid, ans in batch:
             resp = sample_responses(sc, pid, args.group)
+            if len(resp.sequences) != args.group:
+                raise RuntimeError("Incomplete requested sample group")
             rews = [reward_fn(tok.decode(list(r.tokens), skip_special_tokens=True), ans) for r in resp.sequences]
             lens = [len(list(r.tokens)) for r in resp.sequences]
             all_lengths.extend(lens)
+            rollout_groups.append({"prompt_token_hash": experiment_spec({"tokens": pid})["config_hash"],
+                                   "sampler_uri": sampler_uri,
+                                   "completions": [{"text": tok.decode(list(r.tokens), skip_special_tokens=True), "reward": reward}
+                                                   for r, reward in zip(resp.sequences, rews, strict=True)]})
 
             mr = sum(rews) / len(rews)
             sr = (sum((r - mr) ** 2 for r in rews) / len(rews)) ** 0.5 + 1e-8
@@ -211,17 +212,10 @@ def run_arm(algo: str, seed: int, args) -> dict:
             batch_rewards.extend(rews)
 
             for r, a in zip(resp.sequences, advs):
-                if a == 0:
-                    continue
                 rid = list(r.tokens)
                 full = pid + rid
-                # Effective advantage implements per-response normalization:
-                #   GRPO    : average over response tokens (constant adv -> -mean(adv * logp))
-                #   Dr.GRPO : divide by MAX_NEW (adv * len(rid)/MAX_NEW -> -sum(adv*logp)/MAX_NEW)
-                if algo == "dr_grpo":
-                    a_eff = a * len(rid) / args.max_tokens
-                else:
-                    a_eff = a
+                a_eff = token_advantage(a, len(rid), args.max_tokens, algo,
+                                        len(batch) * args.group)
                 all_data.append(T.Datum(
                     model_input=T.ModelInput.from_ints(full[:-1]),
                     loss_fn_inputs={
@@ -239,15 +233,14 @@ def run_arm(algo: str, seed: int, args) -> dict:
                     }
                 ))
 
-        if not all_data:
-            print(f"[{exp_tag}] no data at step {step}; skipping")
-            continue
+        update_applied = bool(all_data) and group_zvf_count < len(batch)
 
         loss_val = None
-        for ep in range(args.k_epochs):
+        for ep in range(args.k_epochs if update_applied else 0):
             try:
                 result = tc.forward_backward(data=all_data, loss_fn="importance_sampling").result()
                 tc.optim_step(T.AdamParams(learning_rate=args.lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
+                successful_updates += 1
                 metrics = result.metrics
                 if hasattr(metrics, "get"):
                     loss_val = metrics.get("loss", None)
@@ -263,8 +256,7 @@ def run_arm(algo: str, seed: int, args) -> dict:
             except Exception as e:
                 print(f"[{exp_tag}] train step {step} epoch {ep} failed: {e}")
                 traceback.print_exc()
-                if ep == 0:
-                    break
+                raise
 
         avg_reward = sum(batch_rewards) / len(batch_rewards) if batch_rewards else 0.0
         zvf = group_zvf_count / len(batch) if batch else 0.0
@@ -272,10 +264,15 @@ def run_arm(algo: str, seed: int, args) -> dict:
 
         step_log.append({
             "step": step + 1,
+            "rollout_step": step + 1,
+            "optimizer_step": successful_updates,
+            "update_applied": update_applied,
+            "skip_reason": None if update_applied else "zero_advantage_groups",
             "loss": loss_val,
             "reward": avg_reward,
             "zvf": zvf,
             "mean_len": mean_len,
+            "rollout_groups": rollout_groups,
         })
 
         if wb is not None:
@@ -288,20 +285,25 @@ def run_arm(algo: str, seed: int, args) -> dict:
 
         print(f"[{exp_tag}] {step+1:3d}/{args.steps} | reward={avg_reward:.3f} | zvf={zvf:.3f} | len={mean_len:.1f}")
 
-        if (step + 1) % max(args.steps // 3, 5) == 0:
+        if update_applied:
             try:
                 ckpt = tc.save_weights_for_sampler(name=f"{exp_tag}_s{step+1}").result()
                 sc = tc.create_sampling_client(model_path=ckpt.path)
+                sampler_uri = ckpt.path
             except Exception as e:
-                print(f"[{exp_tag}] checkpoint refresh failed: {e}")
+                raise RuntimeError("Sampler refresh failed; cannot use stale policy") from e
+
+    final_checkpoint = None
 
     # Final held-out evaluation (greedy)
     def heldout_eval():
+        nonlocal final_checkpoint
         try:
             final_ckpt = tc.save_weights_for_sampler(name=f"{exp_tag}_final").result()
+            final_checkpoint = final_ckpt.path
             final_sc = tc.create_sampling_client(model_path=final_ckpt.path)
         except Exception:
-            final_sc = sc
+            raise
         sp_greedy = T.SamplingParams(max_tokens=args.max_tokens, temperature=0.0, top_p=1.0)
         correct = []
         for pid, ans in test_pool:
@@ -311,7 +313,7 @@ def run_arm(algo: str, seed: int, args) -> dict:
                 correct.append(1.0 if reward_fn(text, ans) == 1.0 else 0.0)
             except Exception as e:
                 print(f"[{exp_tag}] eval sample failed: {e}")
-                correct.append(0.0)
+                raise RuntimeError("Fixed held-out evaluation incomplete") from e
         return sum(correct) / len(correct) if correct else 0.0
 
     heldout_acc = heldout_eval()
@@ -320,6 +322,16 @@ def run_arm(algo: str, seed: int, args) -> dict:
     last10 = [s["reward"] for s in step_log[-10:]]
     first5 = [s["reward"] for s in step_log[:5]]
     summary = {
+        **experiment_spec({**vars(args), "algo": algo, "seed": seed}),
+        **completion_receipt(args.steps * args.k_epochs, successful_updates, tc.model_id, final_checkpoint),
+        "rollout_complete": len(step_log) == args.steps,
+        "protocol_version": PROTOCOL_VERSION,
+        "objective_id": "n10_unclipped_is_response_normalized_v3",
+        "requested_updates": args.steps * args.k_epochs,
+        "successful_updates": successful_updates,
+        "rollout_steps": len(step_log),
+        "scorer_id": SCORER_ID,
+        "ratio_clip": None,
         "experiment": "N10",
         "algo": algo,
         "seed": seed,
@@ -334,7 +346,7 @@ def run_arm(algo: str, seed: int, args) -> dict:
         "n_eval": len(test_pool),
         "first5_avg_reward": sum(first5) / len(first5) if first5 else 0.0,
         "last10_avg_reward": sum(last10) / len(last10) if last10 else 0.0,
-        "mean_zvf": sum(s["zvf"] for s in step_log) / len(step_log) if step_log else 0.0,
+        "mean_zvf": sum(s["zvf"] for s in step_log) / len(step_log) if step_log else None,
         "mean_len_first5": sum(s["mean_len"] for s in step_log[:5]) / min(5, len(step_log)) if step_log else 0.0,
         "mean_len_last5": sum(s["mean_len"] for s in step_log[-5:]) / min(5, len(step_log)) if step_log else 0.0,
         "elapsed_seconds": time.time() - t0,
@@ -344,6 +356,7 @@ def run_arm(algo: str, seed: int, args) -> dict:
         "timestamp": datetime.now().isoformat(),
     }
 
+    os.makedirs(RESULTS_DIR, exist_ok=True)
     out_path = os.path.join(RESULTS_DIR, f"{exp_tag}.json")
     with open(out_path, "w") as f:
         json.dump(summary, f, indent=2)
@@ -376,7 +389,6 @@ def main():
     parser.add_argument("--max-tokens", type=int, default=DEFAULTS["max_tokens"])
     parser.add_argument("--max-prompt-tokens", type=int, default=DEFAULTS["max_prompt_tokens"])
     parser.add_argument("--k-epochs", type=int, default=DEFAULTS["k_epochs"])
-    parser.add_argument("--clip", type=float, default=DEFAULTS["clip"])
     parser.add_argument("--n-eval", type=int, default=DEFAULTS["n_eval"])
     parser.add_argument("--seeds", type=int, default=8)
     parser.add_argument("--seed-base", type=int, default=42)
@@ -415,7 +427,9 @@ def main():
                 manifest["runs"].append({
                     "algo": algo,
                     "seed": seed,
-                    "status": "ok",
+                    "status": summary["status"],
+                    "requested_updates": summary["requested_updates"],
+                    "successful_updates": summary["successful_updates"],
                     "last10_avg_reward": summary["last10_avg_reward"],
                     "heldout_acc": summary["heldout_acc"],
                     "wandb_run_path": summary["wandb_run_path"],

@@ -59,7 +59,7 @@ image = (
     .env({
         "WANDB_PROJECT": "tinker-rl-lab-world-class",
     })
-    .add_local_python_source("_modal_common")
+    .add_local_python_source("_modal_common", "platform_hybrid")
 )
 
 
@@ -96,7 +96,7 @@ def run_openrlhf_qwen3_8b():
     os.makedirs(WORK, exist_ok=True)
 
     # Initialize W&B
-    wandb.init(
+    run = wandb.init(
         project=PROJECT,
         name=RUN_NAME,
         tags=["openrlhf-grpo", "modal-h100", "qwen3-8b"],
@@ -128,7 +128,7 @@ def run_openrlhf_qwen3_8b():
     async def get_reward(payload: dict):
         queries = payload.get("query", [])
         labels = payload.get("label", [])
-        rewards = [boxed_only_reward(q, l) for q, l in zip(queries, labels)]
+        rewards = [boxed_only_reward(q, l) for q, l in zip(queries, labels, strict=True)]
         return {"rewards": rewards}
 
     threading.Thread(
@@ -178,24 +178,29 @@ def run_openrlhf_qwen3_8b():
     start = time.time()
     env = os.environ.copy()
     env["PYTHONPATH"] = ""
+    from uuid import uuid4
+    trainer_run_id = uuid4().hex
+    env["WANDB_RUN_ID"] = trainer_run_id
     proc = subprocess.run(cmd, cwd=WORK, env=env)
     duration = time.time() - start
     print(f"[openrlhf] subprocess exit={proc.returncode} in {duration:.1f}s")
+
+    if proc.returncode:
+        run.finish(exit_code=1)
+        return {"framework": "openrlhf", "status": "failed", "subprocess_exit": proc.returncode,
+                "successful_updates": None, "requested_updates": 30, "trainer_run_id": trainer_run_id,
+                "final_checkpoint": None, "last10_avg": None, "evidence_error": "trainer_subprocess_failed",
+                "completion_contract_satisfied": False, "comparison_contract_satisfied": False}
 
     # ---- pull reward trace from W&B ----
     reward_trace = []
     wandb_url = None
     try:
         api = wandb.Api()
-        runs = api.runs(
-            f"{api.default_entity}/{PROJECT}",
-            {"display_name": RUN_NAME},
-        )
-        if runs:
-            wandb_url = runs[0].url
-            hist = runs[0].history(
-                keys=["train/reward_mean", "reward/mean", "critic/rewards/mean"],
-            )
+        api_run = api.run(f"{run.entity}/{PROJECT}/{trainer_run_id}")
+        wandb_url = api_run.url
+        hist = api_run.history(keys=["train/reward_mean", "reward/mean", "critic/rewards/mean"])
+        if hist is not None:
             for col in ("train/reward_mean", "reward/mean", "critic/rewards/mean"):
                 if col in hist.columns:
                     reward_trace = [float(x) for x in hist[col].dropna().tolist()]
@@ -203,9 +208,16 @@ def run_openrlhf_qwen3_8b():
     except Exception as exc:
         print(f"[openrlhf] could not fetch W&B history: {exc}")
 
-    last10 = float(np.mean(reward_trace[-10:])) if len(reward_trace) >= 10 else float(np.mean(reward_trace or [0]))
-    peak = float(max(reward_trace or [0]))
-    first5 = float(np.mean(reward_trace[:5])) if reward_trace else 0.0
+    if not reward_trace:
+        run.finish(exit_code=1)
+        return {"framework": "openrlhf", "status": "partial", "last10_avg": None,
+                "trainer_run_id": trainer_run_id, "successful_updates": None,
+                "requested_updates": 30, "final_checkpoint": None,
+                "evidence_error": "reward_history_missing", "completion_contract_satisfied": False,
+                "comparison_contract_satisfied": False}
+    last10 = float(np.mean(reward_trace[-10:]))
+    peak = float(max(reward_trace))
+    first5 = float(np.mean(reward_trace[:5]))
 
     wandb.log({
         "final_peak": peak,
@@ -233,6 +245,17 @@ def run_openrlhf_qwen3_8b():
     return {
         "framework": "OpenRLHF",
         "mode": "real",
+        "status": "partial",
+        "successful_updates": None,
+        "requested_updates": 30,
+        "trainer_run_id": trainer_run_id,
+        "evidence_error": "observed_updates_and_checkpoint_unverified",
+        "completion_contract_satisfied": False,
+        "protocol_version": "framework-comparison-v3",
+        "comparison_mode": "native_framework_recipe",
+        "comparison_contract_satisfied": False,
+        "claim_supported": False,
+        "resolved_config_status": "unavailable_until_adapter_initialization",
         "model": MODEL,
         "algorithm": "GRPO",
         "seed": 42,

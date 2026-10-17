@@ -64,84 +64,53 @@ def hf_get(path: str, token: str, raw: bool = False):
     return body.decode("utf-8", "replace") if raw else json.loads(body)
 
 
-def normalize_run_id(rid: str) -> str:
-    return rid if ":train:" in rid else rid + ":train:0"
+def normalize_run_id(rid):
+    """Never invent a training suffix for an ambiguous UUID."""
+    return rid.lower()
 
 
-def harvest_hf(token: str) -> list[dict]:
-    models = hf_get(f"/api/models?author={AUTHOR}&limit=200", token)
-    repos = [m["modelId"] for m in models if "tinker" in m["modelId"].lower()]
-    print(f"[hf] scanning {len(repos)} tinker-named model repos", flush=True)
-    records: list[dict] = []
-    for repo in sorted(repos):
+def harvest_hf(token):
+    from huggingface_hub import HfApi, hf_hub_download
+    api = HfApi(token=token)
+    records = []
+    for model in api.list_models(author=AUTHOR):
+        repo = model.id
         try:
-            info = hf_get(f"/api/models/{repo}?blobs=false", token)
-        except Exception as ex:
-            print(f"[hf] WARN cannot stat {repo}: {ex}", flush=True)
-            continue
-        files = [s["rfilename"] for s in info.get("siblings", [])]
-        # small metadata files only: README + any json under 1 level deep
-        targets = [f for f in files
-                   if f.lower().endswith((".md", ".json")) and f.count("/") <= 1]
-        ids: set[str] = set()
-        model_labels: set[str] = set()
-        for fname in targets[:12]:
-            try:
-                text = hf_get(f"/{repo}/raw/main/{fname}", token, raw=True)
-            except Exception:
-                continue
-            for m in RUN_ID_RE.finditer(text):
-                ids.add(normalize_run_id(m.group(1)))
-            if fname.lower().endswith(".json"):
-                try:
-                    obj = json.loads(text)
-                    for key in ("model", "base_model", "model_id", "model_name"):
-                        v = obj.get(key) if isinstance(obj, dict) else None
-                        if isinstance(v, str):
-                            model_labels.add(v)
-                except Exception:
-                    pass
-        card = (info.get("cardData") or {})
-        base = card.get("base_model")
-        if isinstance(base, str):
-            model_labels.add(base)
-        elif isinstance(base, list):
-            model_labels.update(x for x in base if isinstance(x, str))
-        records.append({
-            "hf_repo": repo,
-            "private": bool(info.get("private")),
-            "tinker_run_ids": sorted(ids),
-            "hf_model_labels": sorted(model_labels),
-            "files_scanned": len(targets),
-        })
-        print(f"[hf] {repo}: {len(ids)} run id(s), labels={sorted(model_labels)}",
-              flush=True)
+            refs = api.list_repo_refs(repo)
+            revisions = {r.target_commit for r in [*refs.branches, *refs.tags]}
+            for revision in sorted(revisions):
+                files = api.list_repo_files(repo, revision=revision)
+                targets = [f for f in files if f.lower().endswith((".md", ".json"))]
+                for filename in targets:
+                    record = {"hf_repo": repo, "revision": revision, "source_file": filename,
+                              "tinker_run_ids": [], "hf_model_labels": [],
+                              "files_requested": 1, "files_fetched": 0, "files_failed": 0,
+                              "files_scanned": 0, "coverage": "partial", "evidence_role": "textual_reference"}
+                    try:
+                        path = hf_hub_download(repo, filename, revision=revision, token=token)
+                        text = Path(path).read_text()
+                        record["tinker_run_ids"] = sorted({normalize_run_id(m[1]) for m in RUN_ID_RE.finditer(text) if ":train:" in m[1]})
+                        if filename.endswith(".json"):
+                            obj = json.loads(text)
+                            if isinstance(obj, dict):
+                                record["hf_model_labels"] = sorted({obj[k] for k in ("model", "base_model", "model_id", "model_name") if isinstance(obj.get(k), str)})
+                                record["evidence_role"] = obj.get("evidence_role", "textual_reference")
+                        record.update(files_fetched=1, files_scanned=1, coverage="metadata_file_complete")
+                    except Exception as exc:
+                        record.update(files_failed=1, error=str(exc))
+                    records.append(record)
+        except Exception as exc:
+            records.append({"hf_repo": repo, "tinker_run_ids": [], "hf_model_labels": [],
+                            "files_scanned": 0, "coverage": "partial", "error": str(exc)})
     return records
 
 
-def canon(model: str) -> str:
-    """Canonical model key: lowercase, strip org prefix, drop ALL
-    non-alphanumerics (matches wandb 'normalized_model' style), and treat a
-    trailing 'base' as the same checkpoint family (HF repo naming drops/keeps
-    it inconsistently — surfaced via labels, not treated as a hard conflict)."""
-    m = (model or "").split("/")[-1].lower()
-    m = re.sub(r"[^a-z0-9]", "", m)
-    return re.sub(r"base$", "", m)
+def canon(model):
+    return (model or "").strip().lower()
 
 
-def labels_consistent(a: str, b: str) -> bool:
-    """True when two model labels plausibly denote the same checkpoint.
-    Prefix tolerance absorbs W&B shorthand truncation (e.g. 'llama318b' for
-    'Llama-3.1-8B-Instruct', 'qwen3235ba22b' for
-    'Qwen3-235B-A22B-Instruct-2507'). Minimum-length guard avoids trivial
-    prefixes. Cross-family labels (kimik2thinking vs qwen38b) never match."""
-    ca, cb = canon(a), canon(b)
-    if not ca or not cb:
-        return False
-    if ca == cb:
-        return True
-    shorter, longer = sorted((ca, cb), key=len)
-    return len(shorter) >= 6 and longer.startswith(shorter)
+def labels_consistent(a, b):
+    return bool(canon(a) and canon(a) == canon(b))
 
 
 def main() -> None:
@@ -186,26 +155,26 @@ def main() -> None:
         if hf_hits:
             if not hf_labels:
                 hf_consistent = "no_label"
-            elif any(labels_consistent(lb, tinker_model) for lb in hf_labels):
+            elif all(labels_consistent(lb, tinker_model) for lb in hf_labels):
                 hf_consistent = "consistent"
             else:
                 hf_consistent = "conflict"
 
         wb_hits = wandb_by_run.get(rid, [])
-        wb_models = sorted({wr.get("normalized_model") or wr.get("model") or ""
+        wb_models = sorted({wr.get("model") or ""
                             for wr in wb_hits} - {""})
         wandb_consistent = ""
         if wb_hits:
             if not wb_models:
                 wandb_consistent = "no_label"
-            elif any(labels_consistent(m, tinker_model) for m in wb_models):
+            elif all(labels_consistent(m, tinker_model) for m in wb_models):
                 wandb_consistent = "consistent"
             else:
                 wandb_consistent = "conflict"
 
         method = row["match_method"]
-        if method == "exact_tinker_id":
-            if wandb_consistent in ("consistent", "no_label", ""):
+        if method == "verified_training_owner":
+            if wandb_consistent == "consistent":
                 resolution = ("confirmed_wandb_hf" if hf_consistent == "consistent"
                               else "confirmed_wandb")
             else:  # wandb conflict

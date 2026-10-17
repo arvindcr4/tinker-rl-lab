@@ -1,5 +1,5 @@
 """Modal GRPO Campaign: Run TRL-based GRPO baselines on H100.
-Provides framework comparison: Tinker GRPO vs TRL GRPO on the same models.
+Native-recipe comparison only; controlled framework equivalence is unverified.
 """
 import modal, os, json
 
@@ -10,10 +10,11 @@ app = modal.App("tinker-rl-trl-grpo")
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install(
-        "torch>=2.1", "transformers>=4.40", "datasets", "trl>=1.0",
+        "torch>=2.1", "transformers>=4.40", "datasets", "trl==1.1.0",
         "peft", "accelerate", "bitsandbytes", "scipy",
         "numpy", "pandas", "wandb", "huggingface_hub",
     )
+    .add_local_python_source("platform_hybrid")
     .env({
         "WANDB_PROJECT": "tinker-rl-lab-world-class",
     })
@@ -35,6 +36,7 @@ TRL_EXPERIMENTS = [
 def run_trl_grpo(tag: str, model_id: str, model_short: str):
     """Run TRL GRPOTrainer on Modal H100 for framework comparison."""
     import torch, wandb, json, re, time
+    from platform_hybrid.experiments.framework_contracts import score_batch, SCORER_ID, experiment_spec
     try:
         import torch, wandb
         if not getattr(wandb, '_vram_patched', False):
@@ -74,7 +76,7 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
     
     # Load GSM8K
     dataset = load_dataset("openai/gsm8k", "main", split="train[:500]")
-    eval_dataset = load_dataset("openai/gsm8k", "main", split="test[:100]")
+    eval_dataset = load_dataset("openai/gsm8k", "main", split="train[500:600]")
     
     SYSTEM_PROMPT = "You are a math assistant. Solve step by step, then give your final answer inside \\boxed{}."
     
@@ -100,37 +102,9 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
         if m:
             answers[row["question"]] = m.group(1).replace(",", "").strip()
     
-    def reward_function(completions, **kwargs):
-        """Reward: 1.0 if boxed answer matches, else 0.0"""
-        prompts = kwargs.get("prompts", [])
-        rewards = []
-        for i, completion in enumerate(completions):
-            text = completion[0]["content"] if isinstance(completion, list) else str(completion)
-            # Try to find the question from prompts
-            question = ""
-            if i < len(prompts):
-                for msg in prompts[i]:
-                    if msg.get("role") == "user":
-                        question = msg["content"].replace(" Give a numerical answer inside \\boxed{}.", "")
-                        break
-            
-            expected = answers.get(question, "")
-            
-            boxed = re.findall(r'\\boxed\{([^}]+)\}', text)
-            reward = 0.0
-            for b in boxed:
-                b_clean = b.strip().replace(",", "")
-                try:
-                    if expected and abs(float(b_clean) - float(expected)) < 0.01:
-                        reward = 1.0
-                        break
-                except:
-                    if b_clean == expected:
-                        reward = 1.0
-                        break
-            rewards.append(reward)
-        return rewards
-    
+    def reward_function(completions, answer=None, **kwargs):
+        return score_batch(completions, answer)
+
     # GRPO Config
     peft_config = LoraConfig(
         r=32, lora_alpha=64,
@@ -141,6 +115,10 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
     training_args = GRPOConfig(
         output_dir=f"/tmp/trl-grpo-{tag}",
         learning_rate=1e-5,
+        loss_type="grpo",
+        beta=0.0,
+        seed=42,
+        data_seed=42,
         per_device_train_batch_size=8,
         per_device_eval_batch_size=8,
         num_generations=8,  # group size
@@ -153,8 +131,8 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
         eval_steps=5,
         save_strategy="steps",
         save_steps=5,
-        load_best_model_at_end=True,
-        metric_for_best_model="eval_reward/mean",
+        load_best_model_at_end=False,
+        metric_for_best_model="eval_reward",
         report_to="wandb",
         bf16=True,
         gradient_accumulation_steps=1,
@@ -174,9 +152,16 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
         eval_dataset=eval_dataset,
         reward_funcs=reward_function,
         peft_config=peft_config,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=3)],
+        callbacks=[],
     )
     
+    resolved_config = training_args.to_dict()
+    resolved_config.pop("hub_token", None)
+    resolved_peft = {k: sorted(v) if isinstance(v, set) else v for k, v in peft_config.to_dict().items()}
+    specification = experiment_spec({"framework": "trl", "model": model_id, "training": resolved_config,
+                                     "peft": resolved_peft, "scorer_id": SCORER_ID,
+                                     "train_split": "train[:500]", "dev_split": "train[500:600]",
+                                     "selection_rule": "final_checkpoint", "test_exposure": False})
     print(f"  Starting training for {tag}...")
     start = time.time()
     trainer.train()
@@ -186,11 +171,22 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
     metrics = trainer.state.log_history
     rewards = [m.get("reward", 0) for m in metrics if "reward" in m]
     
-    peak = max(rewards) if rewards else 0
+    if not rewards:
+        raise RuntimeError("Reward telemetry missing; no zero-result substitute")
+    peak = max(rewards)
     last10 = np.mean(rewards[-10:]) if len(rewards) >= 10 else np.mean(rewards) if rewards else 0
     first5 = np.mean(rewards[:5]) if rewards else 0
     
     result = {
+        **specification,
+        "resolved_config": resolved_config,
+        "comparison_mode": "native_framework_recipe",
+        "comparison_contract_satisfied": False,
+        "scorer_id": SCORER_ID,
+        "requested_updates": 30,
+        "successful_updates": trainer.state.global_step,
+        "selection_rule": "final_checkpoint",
+        "test_exposure": False,
         "tag": tag, "model": model_id, "model_short": model_short,
         "method": "TRL-GRPO", "task": "gsm8k", "platform": "modal_h100",
         "peak_reward": float(peak), "last10_avg": float(last10),

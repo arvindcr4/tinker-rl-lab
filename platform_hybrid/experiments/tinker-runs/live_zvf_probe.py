@@ -9,6 +9,13 @@ without relaunching the full ablation campaign.
 
 from __future__ import annotations
 
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 3:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
+from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage
+
+
 import argparse
 import json
 import math
@@ -32,8 +39,8 @@ QUESTION_SUFFIX = " Provide the final numerical answer inside \\boxed{}."
 _ADVS: list[float] = []
 # Module-level flag toggling the per-group /std normalization at line ~517.
 # Default True matches vanilla GRPO / importance_sampling. Dr.GRPO (cell_runner.py
-# loss arm "drgrpo") sets this to False to remove the length bias introduced
-# by dividing by std, i.e. A = (r - mean) instead of A = (r - mean) / std.
+# loss arm "drgrpo") sets this to False for centered advantages. This custom
+# PG surrogate is not the canonical fixed-token-normalized Dr.GRPO objective.
 _ADV_NORMALIZE_STD: bool = True
 
 
@@ -53,32 +60,12 @@ def load_env_file(path: Path) -> None:
             os.environ[key] = value
 
 
-def reward_fn(response: str, answer: str) -> float:
-    response = response.strip()
-    boxed = re.findall(r"\\boxed\{([^}]+)\}", response)
-    # Parser v2 (2026-07-11): score only the LAST boxed value (the final
-    # answer); accepting ANY boxed match let intermediate boxed steps produce
-    # false positives.
-    for item in boxed[-1:]:
-        cleaned = item.strip().replace(",", "").replace(" ", "")
-        try:
-            if abs(float(cleaned) - float(answer)) < 0.01:
-                return 1.0
-        except ValueError:
-            if cleaned == answer:
-                return 1.0
-    nums = re.findall(r"[-+]?\d[\d,]*\.?\d*", response)
-    if nums:
-        try:
-            if abs(float(nums[-1].replace(",", "")) - float(answer)) < 0.01:
-                return 1.0
-        except ValueError:
-            pass
-    return 0.0
+def reward_fn(response, answer):
+    return score_gsm8k(response, answer)
 
 
 def loss_fn(data, logprobs_list):
-    losses = [(-_ADVS[i] * logprobs_list[i].sum()) for i in range(len(logprobs_list))]
+    losses = [(-_ADVS[i] * response_logprobs(data[i], logprobs_list[i]).sum()) for i in range(len(logprobs_list))]
     loss = losses[0] if len(losses) == 1 else __import__("torch").stack(losses).mean()
     return loss, {"loss": loss.item()}
 
@@ -117,7 +104,6 @@ def run(args: argparse.Namespace) -> dict:
     import tinker.types as T
     from transformers import AutoTokenizer
 
-    random.seed(args.seed)
     torch.manual_seed(args.seed)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -126,13 +112,19 @@ def run(args: argparse.Namespace) -> dict:
     t0 = time.time()
     output_path = RESULTS_DIR / f"{tag}.json"
 
+    if output_path.exists() and not getattr(args, "resume", False):
+        raise FileExistsError("Use a new attempt tag or explicit compatible resume; existing artifacts are immutable")
+
     # --resume: pick up from the last save_state checkpoint recorded in the
     # existing result JSON; weights + Adam state are restored server-side.
+    specification = experiment_spec({k: v for k, v in vars(args).items()
+                                     if k not in {"resume", "tag", "no_wandb"}})
     prior: dict | None = None
     resume_step = 0
     resume_state_path: str | None = None
     if getattr(args, "resume", False) and output_path.exists():
         prior = json.loads(output_path.read_text())
+        validate_resume(specification, prior)
         if prior.get("status") == "completed":
             print(f"[{tag}] already completed; nothing to resume", flush=True)
             return prior
@@ -168,6 +160,8 @@ def run(args: argparse.Namespace) -> dict:
                 id=(prior or {}).get("wandb_run_id") or None,
                 resume="allow" if prior else None,
                 config={
+                    **specification,
+                    **objective_identity(getattr(args, "loss", "grpo")),
                     "model": args.model, "seed": args.seed, "rank": args.rank,
                     "group_size": args.group, "batch": args.batch, "lr": args.lr,
                     "temperature": args.temperature, "steps": args.steps,
@@ -176,7 +170,7 @@ def run(args: argparse.Namespace) -> dict:
                 },
                 tags=["live", getattr(args, "loss", "grpo")],
                 settings=wandb.Settings(silent=True),
-                reinit=True,
+                reinit="create_new",
             )
             print(f"[{tag}] W&B live: {wb.url}", flush=True)
         except Exception as exc:
@@ -184,6 +178,13 @@ def run(args: argparse.Namespace) -> dict:
             wb = None
 
     result: dict = {
+        **specification,
+        **objective_identity(getattr(args, "loss", "grpo")),
+        "scorer_id": SCORER_ID,
+        "sampler_refresh_every": 1,
+        "training_state_save_every": args.save_every,
+        "artifact_upload_every": None,
+        "resolved_config": {"provider_internals": {"unavailable": "managed service"}},
         "tag": tag,
         "status": "started",
         "model": args.model,
@@ -205,6 +206,9 @@ def run(args: argparse.Namespace) -> dict:
     elif prior:
         result["wandb_run_id"] = prior.get("wandb_run_id")
     if prior:
+        result["reward_trace"] = list(prior.get("reward_trace", []))
+        result["step_log"] = list(prior.get("step_log", []))
+        output_path.with_suffix(".prior.json").write_text(json.dumps(prior, indent=2) + "\n")
         result["resumed_at"] = started_at
         result["resumed_from_step"] = resume_step
         result["train_state_path"] = resume_state_path
@@ -226,7 +230,7 @@ def run(args: argparse.Namespace) -> dict:
         if prior and resume_state_path:
             tc = svc.create_training_client_from_state_with_optimizer(resume_state_path)
         else:
-            tc = svc.create_lora_training_client(base_model=args.model, rank=args.rank)
+            tc = svc.create_lora_training_client(base_model=args.model, rank=args.rank, seed=args.seed)
         result["run_id"] = tc.model_id
         output_path.write_text(json.dumps(result, indent=2) + "\n")
 
@@ -234,6 +238,9 @@ def run(args: argparse.Namespace) -> dict:
         initial = tc.save_weights_for_sampler(name=f"s{resume_step}").result()
         sc = tc.create_sampling_client(model_path=initial.path)
         result["initial_sampler"] = initial.path
+        result["sampler_uri"] = initial.path
+        result["tokenizer_identity"] = {"repository": args.model, "revision": getattr(tok, "init_kwargs", {}).get("_commit_hash"), "template": "manual-chatml-v1"}
+        result["dataset_items_hash"] = experiment_spec({"examples": examples})["config_hash"]
 
         step_rewards: list[float] = list((prior or {}).get("reward_trace", []))[:resume_step]
         step_log: list[dict] = list((prior or {}).get("step_log", []))[:resume_step]
@@ -250,6 +257,7 @@ def run(args: argparse.Namespace) -> dict:
             batch_rewards: list[float] = []
             batch_comp_lens: list[int] = []
             zero_var_prompts = 0
+            rollout_groups = []
 
             for prompt, answer in batch_examples:
                 prompt_ids = tok.encode(prompt, add_special_tokens=False)
@@ -262,17 +270,22 @@ def run(args: argparse.Namespace) -> dict:
                     max_tokens=args.max_tokens,
                     temperature=args.temperature,
                     top_p=args.top_p,
-                    seed=args.seed * 1_000_003 + step * 1_009 + len(all_data),
+                    seed=stable_seed(args.seed, step, prompt_ids),
                 )
                 sampled = sc.sample(
                     T.ModelInput.from_ints(prompt_ids),
                     num_samples=args.group,
                     sampling_params=sampling,
                 ).result()
+                if len(sampled.sequences) != args.group:
+                    raise RuntimeError("Incomplete requested sample group")
+                rollout_groups.append({"prompt_token_hash": experiment_spec({"tokens": prompt_ids})["config_hash"],
+                                       "sampler_uri": result["sampler_uri"], "completions": []})
                 rewards: list[float] = []
                 for sequence in sampled.sequences:
                     text = tok.decode(list(sequence.tokens), skip_special_tokens=True)
                     rewards.append(reward_fn(text, answer))
+                    rollout_groups[-1]["completions"].append({"text": text, "reward": rewards[-1], "tokens": list(sequence.tokens)})
                     batch_comp_lens.append(len(sequence.tokens))
 
                 mean_reward = sum(rewards) / len(rewards)
@@ -288,18 +301,7 @@ def run(args: argparse.Namespace) -> dict:
                     # next-token alignment; old `+ [0]` trained a spurious
                     # token-0 target at the final position (fixed 2026-07-11)
                     target_ids = full_ids[1:]
-                    all_data.append(
-                        T.Datum(
-                            model_input=T.ModelInput.from_ints(full_ids[:-1]),
-                            loss_fn_inputs={
-                                "target_tokens": T.TensorData(
-                                    data=target_ids,
-                                    dtype="int64",
-                                    shape=[len(target_ids)],
-                                )
-                            },
-                        )
-                    )
+                    all_data.append(aligned_datum(T, prompt_ids, response_ids))
                     all_advs.append(
             (reward - mean_reward) if not _ADV_NORMALIZE_STD
             else (reward - mean_reward) / std_reward
@@ -328,6 +330,10 @@ def run(args: argparse.Namespace) -> dict:
             step_log.append(
                 {
                     "step": step + 1,
+                    "rollout_step": step + 1,
+                    "optimizer_step": step + 1,
+                    "update_applied": True,
+                    "rollout_groups": rollout_groups,
                     "reward": avg_reward,
                     "loss": loss_value,
                     "zvf": zvf,
@@ -351,12 +357,15 @@ def run(args: argparse.Namespace) -> dict:
                     "mean_comp_len": _e.get("mean_comp_len"),
                 }, step=step + 1)
 
-            if (step + 1) % args.save_every == 0:
+            if True:  # current-policy sampler, separate from persistence
                 weights = tc.save_weights_for_sampler(name=f"s{step+1}").result()
                 sc = tc.create_sampling_client(model_path=weights.path)
                 result["latest_sampler"] = weights.path
+                result["sampler_uri"] = weights.path
+            if (step + 1) % args.save_every == 0:
                 state = tc.save_state(name=f"state_s{step+1}", overwrite=True).result()
                 result["train_state_path"] = state.path
+                result["training_state_uri"] = state.path
                 result["train_state_step"] = step + 1
 
             result.update(
@@ -374,7 +383,7 @@ def run(args: argparse.Namespace) -> dict:
         last10 = step_rewards[-10:]
         result.update(
             {
-                "status": "completed",
+                **completion_receipt(args.steps, len(step_log), tc.model_id, final_weights.path),
                 "checkpoint": final_weights.path,
                 "reward_trace": step_rewards,
                 "step_log": step_log,

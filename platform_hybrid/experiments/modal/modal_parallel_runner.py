@@ -20,7 +20,7 @@ base_image = (
         "WANDB_PROJECT": "tinker-rl-lab-world-class",
     })
 )
-image = base_image.add_local_python_source("_modal_common")
+image = base_image.add_local_python_source("_modal_common", "platform_hybrid")
 
 # ── Helper: upload results to HF Hub ─────────────────────────────────────
 def _upload_hf(exp_tag, model_id, results, method="grpo"):
@@ -80,7 +80,7 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
 
     wandb.login(key=os.environ["WANDB_API_KEY"])
     wandb.init(project="tinker-rl-lab-world-class", name=exp,
-               config={"model": model_name, "method": "ppo_reinforce", "task": "gsm8k",
+               config={"model": model_name, "method": "success_filtered_sft_best_of_4", "task": "gsm8k",
                         "seed": seed, "steps": steps, "platform": "modal_h100",
                         "gpu": "H100"},
                tags=["modal", "ppo", "gsm8k", "h100", model_name.split("/")[-1]])
@@ -170,7 +170,7 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
 
     last10 = step_rewards[-10:]
     result = {
-        "experiment": exp, "model": model_name, "method": "ppo_reinforce", "task": "gsm8k",
+        "experiment": exp, "model": model_name, "method": "success_filtered_sft_best_of_4", "task": "gsm8k",
         "seed": seed, "steps": steps, "platform": "modal_h100",
         "first5_avg": sum(step_rewards[:5])/5 if len(step_rewards)>=5 else 0,
         "last10_avg": sum(last10)/len(last10) if last10 else 0,
@@ -184,7 +184,7 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
 
 
 # ── Experiment 2: Full HumanEval evaluation ──────────────────────────────
-@app.function(image=base_image.pip_install("human-eval").add_local_python_source("_modal_common"), gpu="H100", timeout=7200,
+@app.function(image=base_image.pip_install("human-eval").add_local_python_source("_modal_common", "platform_hybrid"), gpu="H100", timeout=7200,
               secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")])
 def run_humaneval_eval(model_name: str = "Qwen/Qwen3-8B", num_samples: int = 5):
     import torch, json, wandb, os

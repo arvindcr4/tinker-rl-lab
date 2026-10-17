@@ -1,69 +1,48 @@
 #!/usr/bin/env python3
 """Resume Wave 6 — rerun only the runs missing from wave6_ablations.json."""
 
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 3:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
+from platform_hybrid.experiments.framework_contracts import wave6_spec, validate_resume, require_completed
+
+
 import json
 import os
 import sys
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 
-def _compute_rerun_plan(existing, base_rank, base_temp, base_batch):
-    """Return list of experiments whose tags are not yet completed."""
-    to_rerun = []
-
-    for t in [0.2, 0.4, 0.6, 0.8, 1.0]:
-        tag = (
-            f"w6_base_r{base_rank}_t{base_temp}_b{base_batch}"
-            if t == base_temp
-            else f"w6_temp{t}_r{base_rank}_b{base_batch}"
-        )
-        if existing.get(tag, {}).get("status") != "completed":
-            to_rerun.append(
-                {
-                    "tag": tag,
-                    "sweep": "temperature",
-                    "rank": base_rank,
-                    "temperature": t,
-                    "batch": base_batch,
-                }
-            )
-
-    for r in [4, 8, 16, 32, 64]:
-        tag = (
-            f"w6_base_r{base_rank}_t{base_temp}_b{base_batch}"
-            if r == base_rank
-            else f"w6_rank{r}_t{base_temp}_b{base_batch}"
-        )
-        if existing.get(tag, {}).get("status") != "completed":
-            to_rerun.append(
-                {
-                    "tag": tag,
-                    "sweep": "rank",
-                    "rank": r,
-                    "temperature": base_temp,
-                    "batch": base_batch,
-                }
-            )
-
-    for b in [1, 2, 4, 8]:
-        tag = (
-            f"w6_base_r{base_rank}_t{base_temp}_b{base_batch}"
-            if b == base_batch
-            else f"w6_batch{b}_r{base_rank}_t{base_temp}"
-        )
-        if existing.get(tag, {}).get("status") != "completed":
-            to_rerun.append(
-                {
-                    "tag": tag,
-                    "sweep": "batch",
-                    "rank": base_rank,
-                    "temperature": base_temp,
-                    "batch": b,
-                }
-            )
-
-    return to_rerun
+def _compute_rerun_plan(existing, base_rank, base_temp, base_batch, steps=30):
+    candidates = {}
+    for sweep, values, key in (("temperature", [.2, .4, .6, .8, 1.], "temperature"),
+                                ("rank", [4, 8, 16, 32, 64], "rank"),
+                                ("batch", [1, 2, 4, 8], "batch")):
+        for value in values:
+            exp = {"rank": base_rank, "temperature": base_temp, "batch": base_batch,
+                   "steps": steps, "sweep": sweep, key: value}
+            if exp["rank"] == base_rank and exp["temperature"] == base_temp and exp["batch"] == base_batch:
+                tag = f"w6_base_r{base_rank}_t{base_temp}_b{base_batch}"
+            elif sweep == "temperature":
+                tag = f"w6_temp{value}_r{base_rank}_b{base_batch}"
+            elif sweep == "rank":
+                tag = f"w6_rank{value}_t{base_temp}_b{base_batch}"
+            else:
+                tag = f"w6_batch{value}_r{base_rank}_t{base_temp}"
+            candidates.setdefault(tag, {**exp, "tag": tag})
+    plan = []
+    for tag, exp in candidates.items():
+        saved = existing.get(tag)
+        if saved:
+            # Do not overwrite/reuse legacy or incompatible experiments under the same identity.
+            validate_resume(wave6_spec(exp), saved)
+            if saved.get("status") == "completed":
+                require_completed(saved)
+                continue
+        plan.append(exp)
+    return plan
 
 
 def main():
@@ -76,7 +55,7 @@ def main():
         "experiments",
         "tinker-runs",
         "results",
-        "wave6_ablations.json",
+        "wave6_ablations_v3.json",
     )
     results_path = os.environ.get("WAVE6_RESULTS_PATH", default_results)
 
@@ -98,7 +77,10 @@ def main():
     base_temp = base.get("temperature", 0.8)
     base_batch = base.get("batch", 2)
 
-    to_rerun = _compute_rerun_plan(existing, base_rank, base_temp, base_batch)
+    steps = data.get("metadata", {}).get("steps")
+    if not isinstance(steps, int) or steps <= 0:
+        raise ValueError("Original campaign training horizon is required")
+    to_rerun = _compute_rerun_plan(existing, base_rank, base_temp, base_batch, steps)
 
     if not to_rerun:
         print("Nothing to rerun — every sweep entry is already completed.")
@@ -117,7 +99,7 @@ def main():
 
     new_results = []
     max_parallel = int(sys.argv[1]) if len(sys.argv) > 1 else 6
-    with ThreadPoolExecutor(max_workers=max_parallel) as ex:
+    with ProcessPoolExecutor(max_workers=max_parallel) as ex:
         futures = {ex.submit(run_one, e): e for e in to_rerun}
         for fut in as_completed(futures):
             try:
@@ -209,7 +191,7 @@ def main():
             "model": "Qwen/Qwen3-8B",
             "task": "gsm8k",
             "seed": 42,
-            "steps": 30,
+            "steps": steps,
             "group_size": 8,
             "lr": 1e-5,
             "baseline": {

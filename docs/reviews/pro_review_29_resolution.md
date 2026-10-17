@@ -19,6 +19,16 @@ by candidate hazard/decision consumers rather than relabeled as new evidence.
 - P1.11 — partly: pooled row correlation intervals are withheld without independent cluster IDs; descriptive correlations remain. The supplied finding is cut off; no missing remedy or independent-cluster evidence is invented.
 - Missing continuation — skipped: remaining finding text and five-first list were not supplied.
 
-Validation: `python -m pytest -q tests/test_pro_review_29.py`: 16 passed.
+Validation: `python -m pytest -q tests/test_pro_review_29.py`: 25 passed, plus 7 production-main tests after the independent audit.
 Changed scripts parse; Ruff undefined-name checks pass. Imports of iter82/86 no
 longer execute historical file reads/writes. Tests use synthetic data only.
+
+
+## Independent audit follow-up
+
+- Producer and consumers now retain unique trace IDs including group size; same-seed G arms never collapse into one trajectory.
+- Missing per-step held-out accuracy, cross-prompt aggregates and training-reward proxies are explicitly excluded with reasons, not stamped as independent accuracy endpoints.
+- Source step gaps, duplicate identities, nonfinite inputs and empty eligible pools fail before analysis. Shared paths bind the normal producer/consumer chain.
+- Plots use the recorded versioned composite, respecting warm-up and naming accuracy failure correctly. Late alarms retain missed-collapse cost while counting remaining observed steps saved.
+- All-censored episode cohorts have unavailable rates and no best/worst ranking; invalid probabilities cannot loop indefinitely.
+- Retained in-memory main-to-main tests exercise exact TSV fields, pairing identities, censoring, missing-endpoint quarantine and late-stop accounting without writing historical artifacts.

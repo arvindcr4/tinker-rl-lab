@@ -74,15 +74,15 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-ROOT = Path(__file__).resolve().parents[1]
-RES = ROOT / "experiments" / "results"
+ROOT = Path(__file__).resolve().parents[2]
+RES = ROOT / "platform_hybrid" / "experiments" / "results"
 FIG = ROOT / "figures"
 RES.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
 
 # Reuse the iter26 loaders + classifier so we stay byte-compatible with
 # the existing zvf_summary.tsv rows.
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "platform_modal" / "scripts"))
 import zvf_diagnostic as zd  # type: ignore
 
 

@@ -30,9 +30,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-ROOT = Path(__file__).resolve().parent.parent
-SRC  = ROOT / "experiments" / "results" / "variance_mitigation.tsv"
-OUT  = ROOT / "experiments" / "results"
+ROOT = Path(__file__).resolve().parents[2]
+SRC  = ROOT / "platform_hybrid" / "experiments" / "results" / "variance_mitigation.tsv"
+OUT  = ROOT / "platform_hybrid" / "experiments" / "results"
 FIG  = ROOT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -77,6 +77,10 @@ def detect_episodes(trace):
 
     An episode without a full follow-up window is censored, not sustained.
     """
+    if any(not math.isfinite(d["zvf"]) or not 0 <= d["zvf"] <= 1 or not math.isfinite(d["ha"]) or not 0 <= d["ha"] <= 1 for d in trace):
+        raise ValueError("finite ZVF and accuracy probabilities required")
+    if any(b["step"] != a["step"] + 1 for a,b in zip(trace,trace[1:])):
+        raise ValueError("consecutive observation steps required")
     episodes = []
     i = 0
     while i < len(trace):
@@ -167,17 +171,18 @@ def main():
         for m, b in by_method.items():
             ne, nr = b["n_ep"], b["n_rec"]
             ns     = ne - nr
-            rec    = nr / ne if ne else 0.0
+            rec    = nr / ne if ne else None
             nna    = len([1 for (mm, _), tr in traces.items()
                           if mm == m and not detect_episodes(tr)])
             tc     = sum(1 for (mm, _) in traces if mm == m)
-            w.writerow([m, ne, nr, ns, f"{rec:.4f}", nna, tc, b["n_censored"]])
+            w.writerow([m, ne, nr, ns, "NA" if rec is None else f"{rec:.4f}", nna, tc, b["n_censored"]])
             rows.append((m, ne, nr, ns, rec, nna, tc))
     # Headline summary
     total_ep  = sum(r[1] for r in rows)
     total_rec = sum(r[2] for r in rows)
     total_sus = sum(r[3] for r in rows)
-    pooled_rec = (total_rec / total_ep) if total_ep else 0.0
+    pooled_rec = (total_rec / total_ep) if total_ep else None
+    valid_rows = [r for r in rows if r[4] is not None]
     never_tr   = sum(r[5] for r in rows)
     summary ={
         "protocol_id": "zvf-episodes-v2-onset-window-censoring",
@@ -187,14 +192,14 @@ def main():
         "n_pooled_episodes":      total_ep,
         "n_pooled_recovered":     total_rec,
         "n_pooled_sustained":     total_sus,
-        "pooled_recovery_rate":   round(pooled_rec, 4),
+        "pooled_recovery_rate":   round(pooled_rec, 4) if pooled_rec is not None else None,
         "tau":                    TAU,
         "k_recover":              K_RECOVER,
-        "best_method_recovery":   max(rows, key=lambda r: r[4])[0] if rows else None,
-        "best_recovery_rate":     round(max((r[4] for r in rows), default=0.0), 4),
-        "worst_method_recovery":  min(rows, key=lambda r: r[4])[0] if rows else None,
-        "worst_recovery_rate":    round(min((r[4] for r in rows), default=0.0), 4),
-        "by_method_recovery":     {r[0]: round(r[4], 4) for r in rows},
+        "best_method_recovery":   max(valid_rows, key=lambda r: r[4])[0] if valid_rows else None,
+        "best_recovery_rate":     round(max(r[4] for r in valid_rows), 4) if valid_rows else None,
+        "worst_method_recovery":  min(valid_rows, key=lambda r: r[4])[0] if valid_rows else None,
+        "worst_recovery_rate":    round(min(r[4] for r in valid_rows), 4) if valid_rows else None,
+        "by_method_recovery":     {r[0]: round(r[4], 4) if r[4] is not None else None for r in rows},
     }
     with open(OUT / "zvf_iter90_summary.tsv", "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
@@ -206,9 +211,12 @@ def main():
                 w.writerow([k, v])
     with open(OUT / "zvf_iter90_summary.json", "w") as f:
         json.dump(summary, f, indent=2)
+    # No estimable denominator: do not plot or rank an invented zero rate.
+    if pooled_rec is None:
+        return summary
     # Plot
-    methods = [r[0] for r in rows]
-    rates   = [r[4] for r in rows]
+    methods = [r[0] for r in valid_rows]
+    rates   = [r[4] for r in valid_rows]
     plt.figure(figsize=(8, 4))
     order = sorted(range(len(methods)), key=lambda i: rates[i])
     plt.barh([methods[i] for i in order],

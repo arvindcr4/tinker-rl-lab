@@ -37,14 +37,16 @@ Seed for any resampling: 20260703.
 from __future__ import annotations
 
 import json
+import hashlib
 import math
 import os
+from pathlib import Path
 import statistics
 import sys
 from collections import defaultdict
 from datetime import datetime, timezone
 
-RESULTS = "platform_hybrid/experiments/results"
+RESULTS = str(Path(__file__).resolve().parents[2] / "platform_hybrid/experiments/results")
 NOW = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 PROTOCOL_ID = "zvf-ews-v2-independent-endpoint-warmup"
 SEED = 20260703
@@ -177,7 +179,7 @@ def load_groupsize_sweep() -> list[dict]:
                 "step": int(s.get("step", 0)),
                 "zvf": float(s.get("zvf", 0.0)),
                 "reward_mean": float(s.get("mean_reward", 0.0)),
-                "heldout_acc": float(s.get("heldout_acc", run.get("last10_avg", 0.0))),
+                "heldout_acc": float(s["heldout_acc"]) if s.get("heldout_acc") is not None else None,
                 "collapse": 0,
             })
         if not rows:
@@ -205,6 +207,7 @@ def load_tinker_gsm8k() -> list[dict]:
         per = d.get("per_problem", [])
         out.append({
             "source": "tinker_gsm8k_zvf",
+            "endpoint_unavailable": "cross-prompt aggregate is not a heldout time series",
             "method": "tinker_gsm8k",
             "seed": str(seed),
             "n_steps": 1,  # single-shot experiment
@@ -256,6 +259,7 @@ def load_tool_use_anchors() -> list[dict]:
         rows.sort(key=lambda r: r["step"])
         out.append({
             "source": "bfclv4_tool_use",
+            "endpoint_unavailable": "training reward proxy is not heldout accuracy",
             "method": "tool_use",
             "seed": seed,
             "n_steps": len(rows),
@@ -288,6 +292,10 @@ def per_step_features(trace: dict) -> list[dict]:
         return []
 
     warmup = W
+    if any(s.get("step") != i for i,s in enumerate(steps)):
+        raise ValueError("complete consecutive steps starting at zero required")
+    if not all(isinstance(v,(int,float)) and math.isfinite(v) and 0 <= v <= 1 for v in zvf_series + held_series):
+        raise ValueError("finite observed ZVF and per-step heldout accuracy required")
     baseline_mean = sum(zvf_series[:warmup]) / warmup if n >= warmup else None
     out_rows = []
 
@@ -427,13 +435,29 @@ def main() -> int:
 
     # Compute per-step EWS features for every trace that has step data.
     enriched: list[dict] = []
+    excluded_traces = []
+    seen_trace_ids = set()
     for tr in traces:
+        identity = {key: tr.get(key) for key in ("source", "method", "seed", "group_size")}
+        tr["trace_id"] = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
+        if tr["trace_id"] in seen_trace_ids:
+            raise ValueError("duplicate trace identity")
+        seen_trace_ids.add(tr["trace_id"])
+        reason = tr.get("endpoint_unavailable")
+        if reason is None and any(step.get("heldout_acc") is None for step in tr["steps"]):
+            reason = "missing per-step heldout accuracy; terminal training reward cannot substitute"
+        if reason:
+            excluded_traces.append(dict(identity, trace_id=tr["trace_id"], reason=reason))
+            continue
         feats = per_step_features(tr)
         if not feats:
             continue
         tr["features"] = feats
         tr["t_fail"] = find_failure(feats)
         enriched.append(tr)
+
+    if not enriched:
+        raise ValueError("no eligible observed heldout-accuracy traces: " + json.dumps(excluded_traces))
 
     # 1) per-step features dump
     per_step_rows: list[dict] = []
@@ -455,6 +479,8 @@ def main() -> int:
                 "zvf_stuck": r["zvf_stuck"],
                 "alarm_eligible": int(r["alarm_eligible"]),
                 "protocol_id": PROTOCOL_ID,
+                "trace_id": tr["trace_id"],
+                "group_size": tr.get("group_size"),
                 "h_run": r["h_run"],
                 "ar1": r["ar1"],
                 "cusum": r["cusum"],
@@ -469,7 +495,7 @@ def main() -> int:
             "source", "method", "seed", "step", "zvf", "heldout_acc",
             "held_mean_10", "is_failure", "h_run", "ar1", "cusum",
             "variance_ratio", "kurtosis", "composite_ews",
-            "accuracy_failure", "zvf_stuck", "alarm_eligible", "protocol_id",
+            "accuracy_failure", "zvf_stuck", "alarm_eligible", "protocol_id", "trace_id", "group_size",
         ],
         header_comment=(
             "# Pillar 2 iter78 per-step EWS features.\n"
@@ -771,6 +797,7 @@ def main() -> int:
     # 8) meta
     meta = {
         "iter": 78, "protocol_id": PROTOCOL_ID,
+        "excluded_traces": excluded_traces,
         "baseline": "first W observations; alarms disabled until step W",
         "endpoint": "accuracy_failure",
         "inference_status": "retrospective selected-threshold descriptive analysis; no prospective validation",

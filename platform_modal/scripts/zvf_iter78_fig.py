@@ -1,7 +1,7 @@
 """Iter 78 figure — ZVF EWS protocol panel.
 
 4-panel figure:
-  (1) Per-method lead-time bar chart (mean +/- SE) at the recommended
+  (1) Per-method lead-time bar chart (mean only; uncertainty unavailable) at the recommended
       threshold.
   (2) GRPO seed-0 trace: ZVF (top), EWS components (middle), alarm +
       failure markers (bottom). The canonical EWS-success anchor.
@@ -30,6 +30,7 @@ import csv
 import json
 import math
 import os
+from pathlib import Path
 import statistics
 from collections import defaultdict
 
@@ -37,9 +38,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-RESULTS = "platform_hybrid/experiments/results"
-FIG_DIR = "figures"
-PAPER_FIG_DIR = "paper/figures"
+RESULTS = str(Path(__file__).resolve().parents[2] / "platform_hybrid/experiments/results")
+FIG_DIR = str(Path(__file__).resolve().parents[2] / "figures")
+PAPER_FIG_DIR = str(Path(__file__).resolve().parents[2] / "paper/figures")
 
 
 def read_tsv(path: str) -> tuple[list[str], list[list[str]]]:
@@ -107,7 +108,7 @@ def panel_grpo_trace(ax, per_step: list[dict]) -> None:
     # Find first alarm
     t_alarm = None
     for r in grpo:
-        comp = max(r["ar1"], r["cusum"], r["h_run"] / 10.0)
+        comp = r["composite_ews"]
         if comp > 0.50:
             t_alarm = r["step"]
             break
@@ -122,7 +123,7 @@ def panel_grpo_trace(ax, per_step: list[dict]) -> None:
             break
     if t_fail is not None:
         ax.axvline(t_fail, color="black", linestyle="-", lw=1.0,
-                   label=f"stuck t={t_fail}")
+                   label=f"accuracy failure t={t_fail}")
     ax.set_xlabel("step")
     ax.set_ylabel("value")
     ax.set_title("(2) GRPO seed 0: EWS components + alarm/failure")
@@ -140,13 +141,13 @@ def panel_aero_trace(ax, per_step: list[dict]) -> None:
     aero = sorted(aero, key=lambda r: r["step"])
     steps = [r["step"] for r in aero]
     zvf = [r["zvf"] for r in aero]
-    comp = [max(r["ar1"], r["cusum"], r["h_run"] / 10.0) for r in aero]
+    comp = [r["composite_ews"] for r in aero]
     ax.plot(steps, zvf, color="#1f77b4", label="ZVF", lw=1.0)
     ax.plot(steps, comp, color="#d62728", label="composite EWS", lw=1.0)
     ax.axhline(0.50, color="gray", linestyle=":", lw=0.5)
     t_alarm = None
     for r in aero:
-        c = max(r["ar1"], r["cusum"], r["h_run"] / 10.0)
+        c = r["composite_ews"]
         if c > 0.50:
             t_alarm = r["step"]
             break
@@ -160,10 +161,10 @@ def panel_aero_trace(ax, per_step: list[dict]) -> None:
                    label=f"alarm t={t_alarm}")
     if t_fail is not None:
         ax.axvline(t_fail, color="black", linestyle="-", lw=1.0,
-                   label=f"stuck t={t_fail}")
+                   label=f"accuracy failure t={t_fail}")
     ax.set_xlabel("step")
     ax.set_ylabel("value")
-    ax.set_title("(3) AERO seed 0: protocol works on a healthy library")
+    ax.set_title("(3) AERO seed 0: observed EWS and accuracy endpoint")
     ax.legend(loc="upper left", fontsize=7)
     ax.set_ylim(-0.05, 1.1)
 
@@ -188,8 +189,8 @@ def main() -> int:
     _, raw_per = read_tsv(os.path.join(RESULTS, "zvf_iter78_per_step_features.tsv"))
     per_step = []
     for r in raw_per:
-        if len(r) < 14:
-            continue
+        if len(r) < 18 or r[17] != "zvf-ews-v2-independent-endpoint-warmup":
+            raise ValueError("Figure requires versioned explicit-endpoint features")
         try:
             per_step.append({
                 "source": r[0], "method": r[1], "seed": r[2],

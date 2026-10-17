@@ -24,7 +24,7 @@ def test_spearman_undefined(x,y):
 
 
 def trace(z, a):
-    return {'steps':[{'zvf':v,'heldout_acc':h} for v,h in zip(z,a)]}
+    return {'steps':[{'step':i,'zvf':v,'heldout_acc':h} for i,(v,h) in enumerate(zip(z,a))]}
 
 
 def test_endpoints_are_independent():
@@ -91,3 +91,45 @@ def test_pooled_correlation_does_not_invent_independent_clusters(tmp_path):
 def test_cli_modules_have_no_import_time_execution():
     importlib.import_module('zvf_iter82')
     importlib.import_module('zvf_iter86')
+
+
+@pytest.mark.parametrize('method,panel', [('grpo','panel_grpo_trace'),('aero','panel_aero_trace')])
+def test_figure_alarm_uses_versioned_recorded_composite(method,panel):
+    producer=importlib.import_module('zvf_iter78')
+    figure=importlib.import_module('zvf_iter78_fig')
+    rows=producer.per_step_features(trace([1.0]*25,[.8]*25))
+    for row in rows:
+        row.update(source='variance_mitigation',method=method,seed='0',composite_ews=producer.composite_ews(row))
+    ax=Mock();getattr(figure,panel)(ax,rows)
+    alarms=[call.args[0] for call in ax.axvline.call_args_list if call.kwargs.get('label','').startswith('alarm')]
+    assert alarms==[producer.find_alarm(rows,.5)]==[10]
+
+
+@pytest.mark.parametrize('value',[float('nan'),float('inf'),-1.,2.])
+def test_episode_nonfinite_or_invalid_inputs_reject(value):
+    m=importlib.import_module('zvf_iter90')
+    with pytest.raises(ValueError):m.detect_episodes([{'step':0,'zvf':value,'ha':.8}])
+
+
+def test_all_censored_main_does_not_publish_zero_rate(tmp_path,monkeypatch):
+    m=importlib.import_module('zvf_iter90')
+    monkeypatch.setattr(m,'OUT',tmp_path);monkeypatch.setattr(m,'FIG',tmp_path)
+    monkeypatch.setattr(m,'load_traces',lambda:{('a',0):[{'step':i,'zvf':1.,'ha':.8} for i in range(2)]})
+    result=m.main()
+    assert result['n_censored']==1 and result['pooled_recovery_rate'] is None
+    assert result['best_method_recovery'] is None and result['by_method_recovery']=={'a':None}
+
+
+def test_feature_generation_rejects_unobserved_step_gaps():
+    m=importlib.import_module('zvf_iter78')
+    with pytest.raises(ValueError,match='consecutive'):
+        m.per_step_features({'steps':[{'step':0,'zvf':0.,'heldout_acc':.8},{'step':2,'zvf':1.,'heldout_acc':0.}]})
+
+
+def test_groupsize_loader_does_not_repeat_terminal_training_reward(tmp_path,monkeypatch):
+    import json
+    m=importlib.import_module('zvf_iter78');monkeypatch.setattr(m,'RESULTS',str(tmp_path))
+    (tmp_path/'groupsize_zvf_sweep.json').write_text(json.dumps({'runs':[{'seed':0,'group_size':2,'last10_avg':.01,'step_log':[{'step':0,'zvf':1.,'mean_reward':.01}]}]}))
+    row=m.load_groupsize_sweep()[0]
+    assert row['steps'][0]['heldout_acc'] is None
+    with pytest.raises(ValueError,match='per-step heldout'):m.per_step_features(row)

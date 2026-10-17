@@ -32,8 +32,8 @@ from collections import defaultdict
 from pathlib import Path
 
 def main():
-    ROOT = Path(__file__).resolve().parent.parent
-    RES = ROOT / "experiments" / "results"
+    ROOT = Path(__file__).resolve().parents[2]
+    RES = ROOT / "platform_hybrid" / "experiments" / "results"
     FIG = ROOT / "figures"
     RES.mkdir(parents=True, exist_ok=True)
     FIG.mkdir(parents=True, exist_ok=True)
@@ -62,11 +62,14 @@ def main():
     traces = defaultdict(lambda: {"method": "", "step": [], "zvf": [], "acc": [],
                                   "is_failure": [], "composite": []})
     for r in feat_rows:
-        key = (r["source"], r["method"], r["seed"])
+        key = (r["source"], r["method"], r["seed"], r["trace_id"])
         t = traces[key]
         t["method"] = r["method"]
         t["source"] = r["source"]
-        t["step"].append(int(r["step"]))
+        step = int(r["step"])
+        if t["step"] and step != t["step"][-1] + 1:
+            raise ValueError("duplicate or nonconsecutive step within trace")
+        t["step"].append(step)
         t["zvf"].append(float(r["zvf"]))
         t["acc"].append(float(r["heldout_acc"]))
         if r.get("protocol_id") != PROTOCOL_ID:
@@ -74,9 +77,12 @@ def main():
         t["is_failure"].append(int(r["accuracy_failure"]))
         t["composite"].append(float(r["composite_ews"]))
 
+    if not traces:
+        raise ValueError("no eligible versioned traces")
+
     # Compute t_fail and trace-level descriptors
     trace_table = []
-    for (source, method, seed), t in sorted(traces.items()):
+    for (source, method, seed, trace_id), t in sorted(traces.items()):
         n = len(t["step"])
         zvf_seq = t["zvf"]
         acc_seq = t["acc"]
@@ -120,6 +126,7 @@ def main():
         alive_comp = [c for c, f in zip(comp_seq, fail_seq) if f == 0]
         mean_comp = sum(alive_comp) / len(alive_comp) if alive_comp else 0.0
         trace_table.append({
+            "trace_id": trace_id,
             "source": source,
             "method": method,
             "seed": seed,
@@ -142,15 +149,15 @@ def main():
     # is 0..39; for tool_use 0..4; for tinker 0. We need a single per-step hazard,
     # so we pool only across the variance_mitigation traces (consistent length).
     HORIZON = 300
-    VM_TRACES = [(s, m, sd) for (s, m, sd) in traces if s == "variance_mitigation"]
+    VM_TRACES = [(s, m, sd, tid) for (s, m, sd, tid) in traces if s == "variance_mitigation"]
 
 
     def compute_hazard_by_method(thresh=ALARM_THRESH):
         """For each method, return arrays of t, h_alarm(t), h_noalarm(t)."""
         by_method = defaultdict(lambda: {"alarm_num": [0] * HORIZON, "alarm_den": [0] * HORIZON,
                                           "noalarm_num": [0] * HORIZON, "noalarm_den": [0] * HORIZON})
-        for (source, method, seed) in VM_TRACES:
-            t = traces[(source, method, seed)]
+        for (source, method, seed, trace_id) in VM_TRACES:
+            t = traces[(source, method, seed, trace_id)]
             zvf_seq = t["zvf"]
             fail_seq = t["is_failure"]
             stp_seq = t["step"]
@@ -264,7 +271,7 @@ def main():
                                   for h in header) + "\n")
 
     write_tsv(RES / "zvf_iter82_traces.tsv", trace_table,
-              ["source", "method", "seed", "n_steps", "t_fail", "failed", "mean_zvf",
+              ["source", "method", "seed", "trace_id", "n_steps", "t_fail", "failed", "mean_zvf",
                "peak_zvf", "zvf_run_max", "zvf_iat", "acc_pre_drift", "mean_acc",
                "mean_composite_ews", "zvf_quartile"])
     write_tsv(RES / "zvf_iter82_hazard_ratio.tsv", hr_table,

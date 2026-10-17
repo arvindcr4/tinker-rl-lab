@@ -32,8 +32,8 @@ import math
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-ROOT = Path(__file__).resolve().parents[1]
-RES = ROOT / "experiments" / "results"
+ROOT = Path(__file__).resolve().parents[2]
+RES = ROOT / "platform_hybrid" / "experiments" / "results"
 FIG = ROOT / "figures"
 FIG.mkdir(parents=True, exist_ok=True)
 
@@ -85,7 +85,7 @@ def load_matrix() -> Dict[str, List[List[float]]]:
 def load_bfcl_seed0() -> Tuple[List[int], List[float]]:
     # Load raw per-step zvf directly from bfclv4 tool_use seed 0
     steps, zvfs = [], []
-    with (ROOT / "experiments" / "results" / "bfclv4_tool_use.tsv").open() as fh:
+    with (ROOT / "platform_hybrid" / "experiments" / "results" / "bfclv4_tool_use.tsv").open() as fh:
         for line in fh:
             if line.startswith("seed\t"):
                 continue

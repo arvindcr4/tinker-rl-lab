@@ -35,8 +35,8 @@ from collections import defaultdict
 from pathlib import Path
 
 def main():
-    ROOT = Path(__file__).resolve().parent.parent
-    RES = ROOT / "experiments" / "results"
+    ROOT = Path(__file__).resolve().parents[2]
+    RES = ROOT / "platform_hybrid" / "experiments" / "results"
     FIG = ROOT / "figures"
     RES.mkdir(parents=True, exist_ok=True)
     FIG.mkdir(parents=True, exist_ok=True)
@@ -54,11 +54,14 @@ def main():
                 header = s.split("\t")
                 continue
             r = dict(zip(header, s.split("\t")))
-            key = (r["source"], r["method"], r["seed"])
+            key = (r["source"], r["method"], r["seed"], r["trace_id"])
             t = traces[key]
             t["method"] = r["method"]
             t["source"] = r["source"]
-            t["step"].append(int(r["step"]))
+            step = int(r["step"])
+            if t["step"] and step != t["step"][-1] + 1:
+                raise ValueError("duplicate or nonconsecutive step within trace")
+            t["step"].append(step)
             t["zvf"].append(float(r["zvf"]))
             t["acc"].append(float(r["heldout_acc"]))
             t["held_mean_10"].append(float(r["held_mean_10"]))
@@ -67,6 +70,8 @@ def main():
             t["is_failure"].append(int(r["accuracy_failure"]))
 
     POOL_KEYS = [k for k, t in traces.items() if t["source"] == "variance_mitigation"]
+    if not POOL_KEYS:
+        raise ValueError("no eligible pool traces; cannot select a stopping policy")
     OOP_KEYS = [k for k, t in traces.items() if t["source"] != "variance_mitigation"]
     N_STEPS = {k: max(t["step"]) + 1 if t["step"] else 0 for k, t in traces.items()}
     TAUS = [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70]
@@ -96,14 +101,14 @@ def main():
         counts = {"correct_stop": 0, "false_stop": 0, "missed": 0, "late_alarm": 0, "none": 0}
         trace_results = []
         for key in pool_keys:
-            source, method, seed = key
+            source, method, seed, trace_id = key
             t = traces[key]
             cls, t_stop, t_fail, lead = classify(tau, k_persist, t)
             counts[cls] += 1
             n_steps = N_STEPS[key]
-            save = max(0, n_steps - t_stop - 1) if cls in ("correct_stop", "false_stop") and t_stop is not None else 0
+            save = max(0, n_steps - t_stop - 1) if cls in ("correct_stop", "false_stop", "late_alarm") and t_stop is not None else 0
             trace_results.append({
-                "source": source, "method": method, "seed": seed,
+                "source": source, "method": method, "seed": seed, "trace_id": trace_id,
                 "class": cls, "t_stop": -1 if t_stop is None else t_stop,
                 "t_fail": -1 if t_fail is None else t_fail,
                 "lead_time": -1 if lead is None else lead,
@@ -127,7 +132,7 @@ def main():
                 "compute_saved_steps": save_total, "compute_saved_frac": save_frac,
             })
         for r in trace_res:
-            trace_cache[(r["source"], r["method"], r["seed"], tau)] = r
+            trace_cache[(r["source"], r["method"], r["seed"], r["trace_id"], tau)] = r
 
 
     # ---------- 4. Per-C_ratio optimal tau at K=1 (pooled) ----------
@@ -156,14 +161,14 @@ def main():
         best = min(costs, key=lambda r: C_REF * r[1] + r[2])
         rows_kp, save_total_kp = [], 0
         for key in POOL_KEYS:
-            source, method, seed = key
+            source, method, seed, trace_id = key
             t = traces[key]
             cls, t_stop, _, _ = classify(best[0], kp, t)
             n_steps = N_STEPS[key]
-            save = max(0, n_steps - t_stop - 1) if cls in ("correct_stop", "false_stop") and t_stop is not None else 0
+            save = max(0, n_steps - t_stop - 1) if cls in ("correct_stop", "false_stop", "late_alarm") and t_stop is not None else 0
             save_total_kp += save
             rows_kp.append({
-                "source": source, "method": method, "seed": seed, "class": cls,
+                "source": source, "method": method, "seed": seed, "trace_id": trace_id, "class": cls,
                 "t_stop": -1 if t_stop is None else t_stop,
                 "t_fail": -1, "lead_time": -1, "n_steps": n_steps,
                 "compute_saved": save,
@@ -190,13 +195,13 @@ def main():
     HEADLINE_K, HEADLINE_TAU = headline["k_persist"], headline["tau_optimal_at_C10"]
     savings_rows = []
     for key in POOL_KEYS:
-        source, method, seed = key
+        source, method, seed, trace_id = key
         t = traces[key]
         cls, t_stop, t_fail, lead = classify(HEADLINE_TAU, HEADLINE_K, t)
         n_steps = N_STEPS[key]
-        save = max(0, n_steps - t_stop - 1) if cls in ("correct_stop", "false_stop") and t_stop is not None else 0
+        save = max(0, n_steps - t_stop - 1) if cls in ("correct_stop", "false_stop", "late_alarm") and t_stop is not None else 0
         savings_rows.append({
-            "source": source, "method": method, "seed": seed, "class": cls,
+            "source": source, "method": method, "seed": seed, "trace_id": trace_id, "class": cls,
             "t_stop": -1 if t_stop is None else t_stop,
             "t_fail": -1 if t_fail is None else t_fail,
             "lead_time": -1 if lead is None else lead,
@@ -208,7 +213,7 @@ def main():
     # ---------- 6. OOP traces: classify under both iter78 and strict ----------
     oop_rows = []
     for key in OOP_KEYS:
-        source, method, seed = key
+        source, method, seed, trace_id = key
         t = traces[key]
         res_iter78 = classify(HEADLINE_TAU, HEADLINE_K, t)
         strict_trace = dict(t, accuracy_failure=[int(hm < 0.10) for hm in t["held_mean_10"]])
@@ -216,7 +221,7 @@ def main():
         t_fail_strict = -1 if strict_fail is None else strict_fail
         t_stop_strict = -1 if strict_stop is None else strict_stop
         oop_rows.append({
-            "source": source, "method": method, "seed": seed,
+            "source": source, "method": method, "seed": seed, "trace_id": trace_id,
             "class_iter78": res_iter78[0],
             "t_stop_iter78": -1 if res_iter78[1] is None else res_iter78[1],
             "t_fail_iter78": -1 if res_iter78[2] is None else res_iter78[2],
@@ -260,13 +265,13 @@ def main():
                "Source: platform_modal/scripts/zvf_iter86.py"])
 
     write_tsv(RES / "zvf_iter86_compute_savings.tsv", savings_rows,
-              ["source", "method", "seed", "class", "t_stop", "t_fail",
+              ["source", "method", "seed", "trace_id", "class", "t_stop", "t_fail",
                "lead_time", "n_steps", "compute_saved"],
               [f"Pillar 2 iter86 per-trace counterfactual at selected K={HEADLINE_K}, tau={HEADLINE_TAU}.",
                "Source: platform_modal/scripts/zvf_iter86.py"])
 
     write_tsv(RES / "zvf_iter86_oop_applied.tsv", oop_rows,
-              ["source", "method", "seed", "class_iter78", "t_stop_iter78",
+              ["source", "method", "seed", "trace_id", "class_iter78", "t_stop_iter78",
                "t_fail_iter78", "class_strict", "t_stop_strict", "t_fail_strict"],
               [f"Pillar 2 iter86 OOP classification at selected K={HEADLINE_K}, tau={HEADLINE_TAU}.",
                "class_iter78 = iter78 is_failure. class_strict = held_mean_10<0.10.",

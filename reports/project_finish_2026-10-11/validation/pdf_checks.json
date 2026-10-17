@@ -1,0 +1,14 @@
+{
+  "schema": "pes-review-pdf-check-v1",
+  "pdf": "Thesis_Report_ArvindCR_2026-10-11_REVIEW.pdf",
+  "sha256": "69ff9d9ab9a7ed2ab8b60fc221565f5e4fb64fc7abf6aec4171e6b58dcf539db",
+  "bytes": 1724602,
+  "pages": 320,
+  "outside_page_bounds": [],
+  "replacement_character_pages": [],
+  "missing_required_text": [],
+  "bbox_control_characters_removed_for_xml_parse": 2,
+  "visual_review": "PASS",
+  "scope": "Poppler text and physical-page bounds. This check does not authenticate scientific results, certify accessibility or replace visual inspection.",
+  "visual_review_scope": "16 October 2026: rendered pages for the revision record, AI declaration, abstract, Table 1.1, Table 6.2 and surrounding \u00a76.5.5 text, \u00a77.1\u20137.2 stack-exhibit and stackdiff text and Table A.8 inspected as images by the assistant; other pages covered by the automated text/bounds check only. Not a full-page human read."
+}

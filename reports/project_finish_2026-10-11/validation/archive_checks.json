@@ -1,0 +1,98 @@
+{
+  "schema": "pes-review-archive-acceptance-v1",
+  "status": "PASS",
+  "archive": "TinkerRL_PES_Review_2026-10-11.zip",
+  "sha256": "690494dd33d5b99994650a3da2cdc1b63b7766de844f454f8dcfbf67ff4f3aa4",
+  "bytes": 20554437,
+  "checks": [
+    {
+      "check": "repository manifest",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "stdout": "{\n  \"status\": \"PASS\",\n  \"files\": 201,\n  \"failures\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "check": "ZIP CRC and safe paths",
+      "status": "PASS",
+      "entries": 202
+    },
+    {
+      "check": "extracted manifest",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "stdout": "{\n  \"status\": \"PASS\",\n  \"files\": 201,\n  \"failures\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "check": "extracted demo self-tests",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "stdout": "",
+      "stderr": "test_hash_mismatch_is_rejected (test_demo.ArtifactTests.test_hash_mismatch_is_rejected) ... ok\ntest_recorded_artifact_contract (test_demo.ArtifactTests.test_recorded_artifact_contract) ... ok\ntest_equal_reward_group_has_zero_advantages (test_demo.GroupMathTests.test_equal_reward_group_has_zero_advantages) ... ok\ntest_fixture_contract (test_demo.GroupMathTests.test_fixture_contract) ... ok\ntest_mixed_binary_group_has_unit_advantages (test_demo.GroupMathTests.test_mixed_binary_group_has_unit_advantages) ... ok\ntest_json_and_html_are_deterministic (test_demo.OutputTests.test_json_and_html_are_deterministic) ... ok\ntest_live_json_extraction (test_demo.OutputTests.test_live_json_extraction) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 0.002s\n\nOK\n"
+    },
+    {
+      "check": "extracted offline demo",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "stdout": "TinkerRL MTech Defense Demo\nMode: offline\nMechanism fixture: PASS (4 groups, ZVF=0.500, GU=0.500)\nRecorded artifact: PASS (80 rewards, mean=0.6875, ZVF=0.3000)\nArtifact SHA-256: c56b85e04f1a9a043e84d63101fa3be1eea4d37e9823eba6410be2a2481cd59d\nJSON report: /private/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/pes-colab-final-w376e36v/submission/demo/output/demo_report.json\nHTML dashboard: /private/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/pes-colab-final-w376e36v/submission/demo/output/demo_report.html\nClaim boundary: Mechanism and integrity demonstration only; no new scientific or model-performance claim.\nDEMO STATUS: PASS\n",
+      "stderr": ""
+    },
+    {
+      "check": "extracted registry comparison",
+      "exit_code": 5,
+      "expected_exit_code": 5,
+      "stdout": "stackdiff colab-open_dapo_e3 vs tinker_dapo_qwen3.5-4b_gsm8k\n  shared claimed label: 'dapo'\n  [R5] checkpoint.id: 'Qwen/Qwen2.5-0.5B-Instruct' -> 'Qwen/Qwen3.5-4B'\n  [R5] reward.id: 'after-####-first-integer|exact' -> 'boxed-any|last-number-fallback|abs-tol-0.01'\n  [R5] prompt.template_sha256: 'c3f2c9b9b9b3a3383dde3df8c10c4e3a3c9caf2c4e9f30b2e89243309925cb0f' -> 'eef537d66c25b088babf9c9b619e8ea60a39b2e02def9f67703d85ebb1df9afb'\n  [R5] prompt.chat_template: 'hf-apply_chat_template' -> 'manual-chatml'\n  [R5] data.dataset: 'synthetic a+b, a,b in [11,60]' -> 'openai/gsm8k:main'\n  [R5] eval.metric: 'greedy held-out accuracy delta (post - pre)' -> 'mean sampled train reward over last 10 steps'\n  [R5] eval.heldout: '20 problems from the training generator (not enforced disjoint)' -> 'none'\n  [R4] loss.objective: 'ppo-clip on sequence log-prob ratio, summed over sequences' -> 'reinforce: -A_i * sum_t logp, mean over sequences'\n  [R4] loss.importance_ratio: 'sequence' -> 'none'\n  [R4] loss.clip: 'ratio[0.8,1.28]' -> 'advantage[-2,3]'\n  [R4] loss.token_mask: 'completion-only' -> 'none (prompt+completion targets; spurious token-0 final target)'\n  [R4] loss.dynamic_sampling: 'resample zero-variance groups up to 2 retries, then drop' -> False\n  [R4] loss.inner_epochs: 2 -> 1\n  [R4] delta.delta_dapo:clip_higher: 'implemented' -> 'absent'\n  [R4] delta.delta_dapo:dynamic_sampling: 'surrogate' -> 'absent'\n  [R3] decoding.temperature: 1.0 -> 0.8\n  [R3] decoding.max_tokens: 40 -> 512\n  [R3] batch.prompts_per_step: 3 -> 2\n  [R3] batch.samples_per_prompt: 4 -> 8\n  [R3] train.steps: 10 -> 15\n  [R3] train.sampler_refresh: 'every step (on-policy; old log-probs cached for inner epochs)' -> 'every 5 steps, no importance correction'\n  [R3] data.subset: 'generated on the fly' -> \"train, 'medium' reasoning-step tercile, first 256 after seeded shuffle\"\n  [R3] data.selection: 'fresh random problem per group' -> 'seeded rng.sample per step'\n  [R3] optimizer.name: 'adamw (torch)' -> 'adam (tinker AdamParams)'\n  [R3] optimizer.lr: 2e-06 -> 1e-05\n  [R3] optimizer.betas: [0.9, 0.999] -> [0.9, 0.95]\n  [R3] lora.rank: 'full-ft' -> 16\n  [R2] trainer.name: 'e3-open-loop (hand-written torch)' -> 'tinker'\n  [R2] runtime.backend: 'hf-transformers generate (single process)' -> 'tinker-managed sampler'\n  [R2] reward.fn_sha256: '06febc0d3857d18097fc00d37a692800c356d85b8d7b8fa601ccea65fce8dbf9' -> '87dba71ceab0b6566f10de47826417c94f33f92029a6cbcbecf16d4f5fe797c0'\n  [R1] seeds: [0, 1] -> [42, 123, 456]\nverdict: R5 outcome-critical differences (checkpoint, reward, prompt/chat template, dataset, eval protocol, execution mode)\ncoverage: 0.87 of compared fields known on both sides; 7 unknown (max hidden severity R5)\nlabel-flip risk: the shared label does not pin the stack;\n  do not attribute outcome differences to the label.\n",
+      "stderr": ""
+    },
+    {
+      "check": "extracted same-stack v2 replay",
+      "status": "PASS",
+      "contrasts": {
+        "g8-ppo": 0.007581501137225126,
+        "g8-g2": 0.007884761182714185,
+        "g2-ppo": 0.00043322863641281906
+      },
+      "regrade_disagreements": 0
+    },
+    {
+      "check": "extracted frozen source replay",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "stdout": "{\"status\": \"PASS\", \"effective_pairs\": 17, \"synthetic_cells\": 9, \"measured_runs\": 22}\n",
+      "stderr": ""
+    },
+    {
+      "check": "extracted analysis acceptance tests",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "stdout": "",
+      "stderr": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.024s\n\nOK\n"
+    },
+    {
+      "check": "replayed result versus delivered Colab result",
+      "status": "PASS",
+      "numeric_tolerance": 1e-12
+    },
+    {
+      "check": "thesis source inventory",
+      "status": "PASS",
+      "files": 79
+    },
+    {
+      "check": "deliberate tamper rejected",
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "stdout": "{\n  \"status\": \"FAIL\",\n  \"files\": 201,\n  \"failures\": [\n    {\n      \"path\": \"reports/project_finish_2026-10-11/README.md\",\n      \"error\": \"content mismatch\"\n    }\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "check": "frozen publication paths unchanged",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "scope": "Exact archive extraction, manifest and source-inventory verification, offline demo, registry example (revised CLI, --exit-level), same-stack v2 replay and re-grade, frozen Colab analysis replay and tamper rejection. No remote execution or original scientific authenticity claim."
+}

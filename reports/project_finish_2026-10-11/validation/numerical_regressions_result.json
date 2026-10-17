@@ -1,0 +1,20 @@
+{
+  "command": [
+    "uv",
+    "run",
+    "--no-sync",
+    "--with",
+    "hypothesis==6.168.3",
+    "python",
+    "-m",
+    "pytest",
+    "tests/test_properties_stats.py",
+    "tests/test_stats_input_guards.py",
+    "tests/test_samestack_statistics.py",
+    "-q",
+    "-rxX"
+  ],
+  "returncode": 1,
+  "duration_seconds": 22.38,
+  "log": "reports/project_finish_2026-10-11/validation/numerical_regressions.log"
+}

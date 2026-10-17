@@ -119,17 +119,17 @@ provenance-conflicted.
 | P1-C1 | 20 — [operational identifier withheld] | Tinker (managed) + W&B | 5 GSM8K anchors: Qwen3.5-4B, Qwen3-8B, Llama-3.1-8B-Instruct, Nemotron-120B, DeepSeek-V3.1 | — | — | GSM8K | 1 per anchor (seed 42) / 20–30 | No held-out metric on the exact-linked runs; the claim rests on training-reward traces | C |
 | P1-C2 | 1 — [operational identifier withheld] (HF-arbitrated) | Tinker (managed) + HF adapter | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16` (MoE, A12B active) | — | — | `frontier_gsm8k` | 1 (seed 42) / 20 | Peak 0.875, last-10 0.1625, zero-reward step fraction 0.55 (11/20); no held-out metric | C |
 | P2-C1 | 80 local rows pooled to 23 cells | Local analysis pool (no W&B) | Heterogeneous; Qwen3-8B at G = 8 among the listed rows | — | — | GSM8K | up to 3 per source row / 30–600 | Historical source: Spearman 0.56, point-biserial 0.62 (n = 23); actually 17 finite, 9 synthetic; measured interpretation withdrawn | C |
-| P2-C2 | 80 (as P2-C1) | as P2-C1 | as P2-C1 | — | — | GSM8K | as P2-C1 | Spearman ρ = 0.27, bootstrap 95% CI [−0.37, 0.88] (historical n = 23; actually 17 finite, 9 synthetic; mixed outcome) | C |
+| P2-C2 | 80 (as P2-C1) | as P2-C1 | as P2-C1 | — | — | GSM8K | as P2-C1 | Spearman ρ = 0.27, bootstrap 95% CI [−0.37, 0.88] (historical n = 23; actually 17 finite, 9 synthetic; mixed outcome; withdrawn; 8 non-simulated cells: ρ = −0.37, p = 0.36) | C |
 | P3-C1 | 12 — [operational identifier withheld] | W&B-managed open trainer; no Tinker identity | Qwen/Qwen3.5-4B | — | 2, 4, 8, 16 | — (saturated arithmetic regime; dataset not recorded) | 3 per G (seeds 0, 1, 2) / 8 | Mean held-out Δ: G=2 +0.0000, G=4 +0.0000, G=8 −0.0625, G=16 +0.0000; evaluation size not logged | C |
 | P3-C2 | 5 — [operational identifier withheld] | W&B, sampling only | — (G = 32 cells) | — | 32 | — | 5 cells / 0 optimizer steps | No matched G = 4/G = 32 training replication; the comparison cannot be executed | X |
 | P4-C1 | 6 — `local:drgrpo_gsm8k_cot:grpo:seed42` | Local | Qwen/Qwen2.5-1.5B-Instruct as mapped (abstract says Qwen3-8B) — conflict | GRPO / Dr.GRPO | — | GSM8K CoT | 3 per arm (42, 123, 456) / 30 | GRPO 0.2017→0.2633 (Δ +0.0617); Dr.GRPO 0.2050→0.2550 (Δ +0.0500); n = 200/seed | X |
 | P5-C1 | 2 — [operational identifier withheld], [identifier withheld] | Tinker-managed versus TRL backend | Qwen/Qwen3-8B-Base versus Qwen/Qwen3-8B — confounded | GRPO / TRL-GRPO | 8 | GSM8K | 1 per backend (seed 42) / 30 | Final/last-10 training reward 0.050→0.856; no held-out metric | X |
 | P5-C2 | 2 — [identifier withheld], [identifier withheld] | Open trainer versus managed stack | Qwen2.5-0.5B-Instruct versus Qwen3.5-4B (declared non-consistent exhibit) | DAPO label versus asymmetric-clip surrogate | — | — | 2 open versus 3 managed / not logged (open), 15 (managed) | Mean ZVF 0.00 versus 0.58; no comparable held-out metric | C |
-| P5-C3 | 1 — [identifier withheld] | Managed summary | Qwen/Qwen3.5-4B | Four algorithm labels | — | — | 3 per arm (42, 123, 456) / 15 | Last-10 reward band 0.710–0.744 (width 0.034); no held-out metric | C |
+| P5-C3 | 1 — [identifier withheld] | Managed summary | Qwen/Qwen3.5-4B | Four algorithm labels | — | — | 3 per arm (42, 123, 456) / 15 | Last-10 reward band 0.710–0.744 (width 0.034); no held-out metric; not an equivalence result (TOST fails; §7.1) | C |
 | P6-C1 | 48 registry entries | Registry (schema validation) | N/A | N/A | N/A | N/A | N/A | 44/48 entries pass schema validation in the later claim-to-run snapshot (`claim_to_run_table.tsv`, which adds amendment entries); the 31/31 of §7.2 is the 31 records shipped with P6 | R |
 | P6-C2 (source-identity audit) | Private source reconciliation omitted | Cross-source metadata | N/A | N/A | N/A | N/A | Not a training or evaluation study | Unresolved attribution limits retained; no public inventory claim | R |
-| P7-C1 | 368 — [operational identifier withheld] | W&B only (0 exact Tinker IDs) | Qwen3-4B-Instruct-2507 (113), Llama-3.2-3B (112), Llama-3.2-1B (107), 3 further models (36) | — | 4, 8, 16 (also 6) | — (prompt and tokenizer families `llama3`, `qwen3_instruct` recorded, not datasets) | 10 logged labels (0–9) / 2–12 | ZVF U-shape reproduced; no held-out metric in the W&B summaries | C |
-| P7-C2 | 1 — [identifier withheld] | W&B (Colab) | Qwen/Qwen2.5-0.5B-Instruct | — | — | — | 3 (0, 1, 2) in one aggregate / 30 | Gradient magnitude versus p(1−p): Pearson r = +0.71 | C |
+| P7-C1 | 368 — [operational identifier withheld] | W&B only (0 exact Tinker IDs) | Qwen3-4B-Instruct-2507 (113), Llama-3.2-3B (112), Llama-3.2-1B (107), 3 further models (36) | — | 4, 8, 16 (also 6) | — (prompt and tokenizer families `llama3`, `qwen3_instruct` recorded, not datasets) | 10 logged labels (0–9) / 2–12 | ZVF U-shape observed (nine model labels; largely the binomial identity plus difficulty heterogeneity, §6.3.3); no held-out metric in the W&B summaries | C |
+| P7-C2 | 1 — [identifier withheld] | W&B (Colab) | Qwen/Qwen2.5-0.5B-Instruct | — | — | — | 3 (0, 1, 2) in one aggregate / 30 | Gradient magnitude versus p(1−p): Pearson r = +0.71 (scalar only; not recomputable) | C |
 | P7-C3 | 1 — [identifier withheld] | W&B (Colab) | Qwen/Qwen2.5-0.5B-Instruct | Adaptive-G versus fixed recipes | — | — | 1 per arm / not logged | Adaptive-G held-out Δ +0.575; mean ZVF 0.23; 186 rollouts | C |
 | P8-C1 | 1 — `local:qp8_fraud:xgboost:seed42` | Local (XGBoost) | Gradient-boosted trees (200 estimators, depth 6) | — | N/A | Synthetic card-fraud: 50,000 rows; 10,000-row held-out split | random_state 42 / 200 estimators | AUC 0.7955 on the 10,000-row held-out split | C |
 | P8-C2 | 1 — [operational identifier withheld] | Tinker (managed SFT) | Qwen/Qwen3.5-4B | SFT row serialisation (no KL, no reference policy) | N/A | Row-to-text serialisations; 500-row positive-enriched held-out subset | 1 (seed 0) / 63 minibatches | AUC 0.482675, accuracy 0.792 (n = 500) — near chance | C |
@@ -246,7 +246,7 @@ file retains only two of its twelve entries, so the W&B group is its record.
 
 ### A.3.2 Same-stack rerun on the unsaturated configuration {#m1b-run-registry}
 
-The rerun of §6.5.5 was executed on Modal on 2 October 2026 by
+The first version (v1, superseded) of the rerun of §6.5.5 was executed on Modal on 2 October 2026 by
 `platform_hybrid/experiments/modal/modal_samestack_gsm8k_cot.py`: 15 runs, one
 A10G each, about 14 minutes of training per run. Per-run results, including
 per-item pre- and post-training correctness and step logs, are in
@@ -260,7 +260,18 @@ No W&B run was logged.
 | `samestack_gsm8k/grpo_g2_s{…}` | Modal A10G, local trainer | Qwen/Qwen2.5-1.5B-Instruct | GRPO | 2 | GSM8K (test 200) | 5 seeds | 30 | post 0.230–0.280, mean 0.250 |
 | `samestack_gsm8k/ppo_s{…}` | Modal A10G, local trainer | Qwen/Qwen2.5-1.5B-Instruct | PPO, value head | — | GSM8K (test 200) | 5 seeds | 30 | post 0.160–0.215, mean 0.195 |
 
-: Same-stack rerun on the unsaturated configuration (§6.5.5).
+: Same-stack rerun v1 on the unsaturated configuration (§6.5.5); superseded by v2 below.
+
+The v2 rerun (`platform_hybrid/experiments/modal/modal_samestack_gsm8k_cot_v2.py`; 512-token cap, warm-started probe critic, boxed-only reward, full 1,319-item test split, stored greedy completions) ran on Modal A10G from 3 October 2026, about 42–46 minutes per run. Per-run JSON files and stored completions are in `platform_hybrid/experiments/results/samestack_gsm8k_v2s/`, pulled from the `tinkerrl-results` Modal volume; the analysis script and output are in `reports/project_finish_2026-10-11/validation/samestack_v2/`. The table is provisional: three PPO seeds and the ten-seed exposure-matched `ppo_8x8` arm were still running at this revision.
+
+| Run identifier | Stack / platform | Model | Algo | G | Dataset | Seed | Steps | Outcome / status |
+|---|---|---|---|---|---|---|---|---|
+| `samestack_gsm8k_v2s/grpo_g8_s{42,…,7777}` | Modal A10G, local trainer | Qwen/Qwen2.5-1.5B-Instruct | GRPO | 8 | GSM8K (test 1,319) | 10 seeds | 30 | post mean 0.699 (SD 0.005) from 0.655 |
+| `samestack_gsm8k_v2s/grpo_g2_s{…}` | Modal A10G, local trainer | Qwen/Qwen2.5-1.5B-Instruct | GRPO | 2 | GSM8K (test 1,319) | 10 seeds | 30 | post mean 0.691 (SD 0.008) from 0.655 |
+| `samestack_gsm8k_v2s/ppo_s{42,…,3141}` | Modal A10G, local trainer | Qwen/Qwen2.5-1.5B-Instruct | PPO, warm-started probe critic | — | GSM8K (test 1,319) | 7 of 10 seeds | 30 | post mean 0.690 (SD 0.008) from 0.654; seeds 4096, 5555, 7777 pending |
+| `samestack_gsm8k_v2s/ppo_8x8_s{…}` | Modal A10G, local trainer | Qwen/Qwen2.5-1.5B-Instruct | PPO, 8 prompts × 8, learned baseline | 8 | GSM8K (test 1,319) | 0 of 10 seeds | 30 | pending |
+
+: Same-stack rerun v2 on the unsaturated configuration (§6.5.5, Table 6.2); provisional.
 
 ## A.4 E1–E14 evaluation campaign lanes
 
@@ -369,9 +380,10 @@ different corpus, not a different count of the same one.
 |---|---|---|---|
 | P1 cross-scale roster | 70+ | Runs across seven RL libraries and five model families; 12 of them are the fitted anchors | Chapter 6 §6.2 |
 | Instrumented roster (P8 workshop source) | 79 | The instrumented roster of `paper_P8_workshop.tex`, 0.6B to ~671B | Chapter 4 §4.1 |
-| P5 audit corpus | 790 | The corpus from which the 368-run audit is drawn (`p5_stack.tex`); its relation to the ledger is not recorded | Chapter 7 §7.1 |
+| P5 audit corpus | 790 | The corpus from which the 368-run audit is drawn (`p7_appendix_derivations.tex`, §Provenance of the empirical tables); its relation to the ledger is not recorded | Chapter 7 §7.1 |
 | Mega-campaign cells | 98 | Sampling-only cells of `mega_20260704` | Chapter 7 §7.1 |
 | E1–E14 actor training | 1 | The 40-step `pavlov_portfolio` run of August 2026, after the ledger cut-off | Chapter 8 §8.1.1 |
-| Unsaturated same-stack rerun | 15 | Three arms × five seeds on Modal, 2 October 2026 (§A.3.2) | Chapter 6 §6.5.5 |
+| Unsaturated same-stack rerun | 15 | v1: three arms × five seeds on Modal, 2 October 2026 (§A.3.2); superseded | Chapter 6 §6.5.5 |
+| Unsaturated same-stack rerun v2 | 27 completed | GRPO G8 and G2 × 10 seeds, PPO × 7 seeds; 3 PPO and 10 `ppo_8x8` runs pending (§A.3.2) | Chapter 6 §6.5.5 |
 
 : Run totals quoted in this report and the corpus each one counts.

@@ -1,6 +1,11 @@
 # PES evaluation review pack
 
-Prepared 11 October 2026 for Arvind C R's M.Tech Project Phase 2 evaluation.
+Prepared 11 October 2026 for Arvind C R's M.Tech Project Phase 2 evaluation; corrected 16 October 2026.
+
+> **Author approval required — AI-tool declaration.** On 16 October 2026 the thesis's "Declaration on the Use of AI Tools" was redrafted by an AI agent to name the agentic tools the repository records (Claude Code agent teams, Codex, Grok CLI, Muse CLI, Antigravity/Gemini, `agy`, `squad`, Kimi, Jev, ChatGPT Pro, Gemini Deep Think) and agents launching cloud jobs. It is a draft. Arvind C R must check it against the actual workflow and PES policy wording, and approve or correct it, before any submission.
+
+> **Provisional numbers.** The v2 same-stack GRPO-vs-PPO figures (thesis Table 6.2) use 7 of 10 PPO seeds; the exposure-matched PPO arm is pending. See `validation/samestack_v2/README.md` for the update path.
+
 
 Start with the [corrected thesis](thesis/Thesis_Report_ArvindCR_2026-10-11_REVIEW.pdf),
 the [12-slide defense](defense/TinkerRL_PES_Defense_2026-10-11.pptx), and the
@@ -12,6 +17,16 @@ controlled comparisons, and bounded benchmark evidence. It includes a Colab rean
 training or benchmark results and makes no prediction about the awarded grade.
 
 ## What changed
+
+16 October 2026, after a publication-readiness audit (interpretations changed; no stored measurement changed):
+
+- Superseded the unsaturated GRPO G8 − PPO gap (+0.050; 200-token cap, cold critic, PPO below its start, Holm sign-flip p = 0.19) with the v2 rerun: +0.0076 [−0.0034, +0.0185], equivalent within ±0.02 (TOST p = 0.016); G8 − G2 +0.0079, Holm p = 0.14. Provisional. Thesis §6.5.5 (new Table 6.2), Table 1.1, §9.3, abstract, appendices A and E, deck slides 4, 5, 6 (notes), 10 and 12, brief, viva answers and reviewer guide. Analysis scripts and outputs: `validation/samestack_v2/`.
+- Restated the ZVF U-shape and 92.3% escalation share as largely following from the binomial identity, prompt-difficulty heterogeneity and reward level; nine model labels, not six; +0.71 marked unrecomputable; ρ = 0.27 marked withdrawn wherever it appears (−0.37, p = 0.36, on the eight non-simulated cells); the "anti-herding" δ_div analysis and the +0.1224 residual withdrawn as sign-guaranteed; contemporaneous prior work cited (arXiv 2605.21125, 2605.07689).
+- Decomposed the 17× stack exhibit (checkpoint change alone 64%), declared the DAPO pair non-comparable, showed the 0.034 band is not equivalence, corrected the registry count to 28, described the revised `stackdiff` with its actual CLI output, and stated the `stackdiff` limits; noted the in-progress registry revision without evaluating it.
+- Corrected five citations (Hochlehnert, Cobbe, Lightman claim removed, Nimmaturi and Tan locations verified against the PDFs), added Stiennon's arXiv identifier, marked the capstone survey unpublished.
+- Redrafted the AI-tool declaration (author approval required; see the note above).
+
+11 October 2026:
 
 - Incorporated the five numerical and provenance corrections from the 4 October draft.
 - Corrected the Jensen argument, undefined kappa, bootstrap identity, layer-overlap

@@ -1,5 +1,9 @@
 # Phase 2 defense brief
 
+> **Numbers marked v2 are provisional (16 October 2026).** Three PPO seeds and the exposure-matched `ppo_8x8` arm are still running. Single source: thesis Table 6.2 and `validation/samestack_v2/v2_analysis.json`. Update the v2 line below, slide 5, `DEFENSE_PREP.md` and `REVIEWER_GUIDE.md` together.
+>
+> **v2:** GRPO G8 − PPO +0.8 pp [−0.3, +1.9], seven paired seeds, equivalent within ±2 pp (TOST p = 0.016); G8 − G2 +0.8 pp [+0.02, +1.6], ten seeds, Holm p = 0.14; G2 − PPO +0.04 pp; base 0.654.
+
 Twelve minutes of talk, ninety seconds of demo, then questions. Use the included corrected review deck. It now shows the implemented registry comparison and ownership boundary, with the prompt budget and inferential qualifications aligned to the thesis. Its measured scores are unchanged.
 
 Do not present `platform_hybrid/sem 4 work/submissions/mtech-final-review/Arvind_MTech_Thesis_Review.pptx`.
@@ -15,13 +19,13 @@ Do not present `platform_hybrid/sem 4 work/submissions/mtech-final-review/Arvind
 **3:30 Four answers.**
 
 - ZVF is recomputable; predictive validity was not established.
-- Algorithm labels are unanswered at this budget.
-- One manifest pair is flagged by `stackdiff` with no training rerun. Whether that flag matters for outcomes was not tested beyond that pair.
+- Algorithm labels: no detectable GRPO advantage over PPO once the token cap and critic are fixed.
+- `stackdiff` flags both stack exhibits from records alone: R5 on checkpoint, reward and template. It is a reporting check; 342 of 378 pairs are underspecified.
 - Governance produced receipts and a terminal state for every lane, not a training delta.
 
-**5:00 The one number they will remember.** Unsaturated Qwen2.5-1.5B, GSM8K-CoT, five paired seeds: GRPO at group size 8 minus an untuned-critic PPO is +5.0 percentage points, interval [+1.5, +8.5]. Paired t p = 0.016. Exact sign-flip p = 0.0625. The critic was not tuned, prompt exposure differed, and the token cap can bind. On saturated 0.5B addition both methods are at about 0.99, paired difference −0.002, p = 0.374. Group size 8 minus 2 on the unsaturated rerun is −0.5 percentage points and resolves neither a difference nor equivalence at ±0.02.
+**5:00 The result that changed.** Unsaturated Qwen2.5-1.5B, GSM8K-CoT. The first rerun (v1) showed GRPO at group size 8 ahead of PPO by +5.0 percentage points. It had two flaws: a 200-token cap that bound (the base model scored 0.200) and a cold, untuned critic, so the PPO arm ended below its start (0.195). Holm-adjusted sign-flip p was 0.19. The corrected v2 rerun uses a 512-token cap, a warm-started critic, the full 1,319 test items and an independent re-grade that agrees on every item. Result: GRPO G8 minus PPO is +0.8 points, interval [−0.3, +1.9], equivalent within ±2 points. All arms gain about 4 points from 0.654. Say it plainly: once the cap and critic were fixed there was no detectable GRPO advantage. Three PPO seeds and the exposure-matched PPO arm are still running. On saturated 0.5B addition both methods are at about 0.99, paired difference −0.002, p = 0.374.
 
-**7:00 Implementation.** Show the actual manifest comparison. Both records say DAPO, but the open record states KL coefficient 0.0 while the managed record leaves it null. `stackdiff` reports R5 because a differing field is unreported. This demonstrates the implemented reporting check, not a predicted outcome difference. The exact offline command and expected exit code 5 are in `REGISTRY_EXAMPLE.md`.
+**7:00 Implementation.** Show the actual manifest comparison. Both records say DAPO, but `stackdiff` reports R5 on checkpoint, reward, template, dataset and evaluation metric, at coverage 0.87. On the 17× Tinker-versus-TRL pair it reports R5 on checkpoint, reward and template, at coverage 0.58, which is exactly the confound that pair hid. Levels come only from known differing fields; missing fields show up as coverage. Across 378 pairs: R0 39, R2 1, R3 10, R4 26, R5 302, with 342 underspecified because 16 entries are hand-entered. This is a reporting check, not a predicted outcome difference. The command and expected output are in `REGISTRY_EXAMPLE.md`.
 
 **8:15 Campaign.** Read four rows and then the prohibition. VerilogEval 129/312. 150 of 183 failures are extraction failures, plausibly related to the 1,024-token cap with thinking on; no per-sample finish reason was recorded, so the cause is unproven. Omni-MATH 2,271/4,428 = 51.29% with two unjudged rows counted as failures; 51.31% is the judged-row figure. Capped answers are right 34.5% of the time, uncapped 85.9%. SWE-bench Pro 2/731, and 593 of 713 patches were corrupt before any test ran. These are harness scores, not capability scores. WebArena 90/812 is a lower bound because 108 judge tasks were ungraded. AgentDojo 88/97 = 0.907 is benign utility, Wilson interval [0.833, 0.950]. Do not average the rows. The small paired base-versus-trained table is inconclusive in every lane.
 
@@ -29,7 +33,7 @@ Do not present `platform_hybrid/sem 4 work/submissions/mtech-final-review/Arvind
 
 **10:15 Contribution.** The diagnostic, the eight-item minimum report, and the ledger with named gates. Novelty, if asked: a search through July 2026 found no equivalent GRPO run datasheet with rollout provenance. That is bounded, not a proof of absence.
 
-**11:00 Limitations and next study.** Small seed counts and missing execution records limit inference. Some client custom-loss loops are inspectable, while historical managed internals remain incomplete. The next comparison needs a tuned PPO critic, matched prompt exposure and token budget, fixed evaluation items, and a prespecified power rationale.
+**11:00 Limitations and next study.** Small seed counts and missing execution records limit inference. Some client custom-loss loops are inspectable, while historical managed internals remain incomplete. The v2 rerun already fixed the critic, cap and evaluation items; the remaining step is the exposure-matched PPO arm. For the registry, the next study is a matched Base/Instruct × harness experiment that tests whether `stackdiff` predicts which gaps come from the harness.
 
 **11:40 Demo.** Then stop.
 
@@ -50,13 +54,19 @@ Rechecked on 11 October 2026: the demo self-test passed (7 tests). In the full r
 
 ## Answers to have cold
 
-**Did GRPO beat PPO?** Not as a general result. Ceiling null on 0.5B addition. One suggestive gap against an untuned critic on 1.5B GSM8K-CoT, paired t p = 0.016, exact sign-flip p = 0.0625. Holm family p = 0.25 is audit H7, the iter-136 efficiency contrast, not this gap.
+**Did GRPO beat PPO?** No. Ceiling null on 0.5B addition. On 1.5B GSM8K-CoT the v1 gap of +5.0 points came from a binding 200-token cap and a cold critic; the corrected v2 rerun gives +0.8 points [−0.3, +1.9], equivalent within ±2 points (TOST p = 0.016), provisional at seven PPO seeds. v2 could detect a 1.5-point difference at n = 7 and rejects a 5-point one (p ≈ 4 × 10⁻⁵). Holm family p = 0.25 is audit H7, the iter-136 efficiency contrast, not this comparison.
+
+**Is the U-shape in ZVF a finding?** Mostly not. ZVF is close to the average of p^G + (1 − p)^G over prompts of varying difficulty. On the stored Qwen3-8B tensors a beta-binomial with intraclass correlation 0.16 predicts 0.170 against 0.158 observed. The audit has nine model labels, not six. The 92.3% all-correct escalation share is what the reward level predicts (91.5%), and no controller ran in that trace. Advantage Collapse Rate (arXiv 2605.21125) and Gradient Starvation (arXiv 2605.07689) study the same quantity.
+
+**Is the 17× Tinker-versus-TRL swing a backend effect?** No. On the same Tinker harness, switching Base to Instruct alone accounts for 64% of the gap (0.856 to 0.338). Reward function, template, decoding, batch, data, loss and optimiser also differ, and TRL logged reward 0.0 on 25 of 30 steps.
+
+**Do the four labels tie within 0.034?** The band is not equivalence. Three seeds per arm give a seed SD of 0.105; TOST fails at every margin up to ±0.15. Paired by seed, the seed explains 96% of the variance.
 
 **What did GRPO do to Qwen3-8B on held-out GSM8K?** The Instruct checkpoint scores 82.0% before RL and 83.3% after. The +1.3 points are not significant, p = 0.26. That 82.0% is the same Instruct checkpoint, not a separate base model.
 
 **Are the methods equivalent?** No. A null at accuracy 0.99 cannot separate no effect from no headroom. The group-size TOST at ±0.02 does not pass for G = 16 versus G = 2 (p = 0.056).
 
-**Does ZVF predict accuracy?** Predictive validity was not established. The historical analysis mixes synthetic cells and heterogeneous targets, including late training reward, so it cannot validate held-out prediction. ZVF describes unavailable group-relative signal, including all-correct and all-wrong groups; it does not establish a universal absence of association with outcome.
+**Does ZVF predict accuracy?** Predictive validity was not established. On the eight non-simulated cells the old correlation is ρ = −0.37 (p = 0.36), the opposite sign. The historical analysis mixes synthetic cells and heterogeneous targets, including late training reward, so it cannot validate held-out prediction. ZVF describes unavailable group-relative signal, including all-correct and all-wrong groups; it does not establish a universal absence of association with outcome.
 
 **Why is standard deviation zero for a perfect group?** Relative advantages need differences inside the group. Equal rewards supply none.
 
@@ -84,7 +94,7 @@ Rechecked on 11 October 2026: the demo self-test passed (7 tests). In the full r
 
 ## Still not something a rebuild can finish
 
-- Read the PDF and approve the claims, the authorship line, and the AI-tool declaration.
+- Read the PDF and approve the claims, the authorship line, and the expanded AI-tool declaration drafted on 16 October 2026 (it now names the agentic tools; see the README note).
 - Guide, Head of Department, and examiner signatures. The prepared certificate is not an approval.
 - Institutional similarity certificate, portal format, and the upload itself.
 - WebArena regrade: the native judge model is retired, so a regrade would be a different judge.

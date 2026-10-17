@@ -1,0 +1,90 @@
+{
+  "protocol_sha256": "dec40d5d2af887ef797c0a81c48a4b223efcc2afb007c313bb178555fa79e303",
+  "schema_version": 1,
+  "sources": [
+    {
+      "extraction": "verbatim numeric TSV",
+      "retained_file": "zvf_summary.tsv",
+      "retained_sha256": "69c7fe7fd82f3b55863993bb088f175ba71ffeef1a1aa1f0a1bf905f5ce98375",
+      "source_path": "platform_hybrid/experiments/results/zvf_summary.tsv",
+      "source_sha256": "69c7fe7fd82f3b55863993bb088f175ba71ffeef1a1aa1f0a1bf905f5ce98375"
+    },
+    {
+      "extraction": "verbatim numeric TSV",
+      "retained_file": "zvf_failure_correlation.tsv",
+      "retained_sha256": "6e0a1c81050179782b3f0627e6c8bf250b81a49d413e7b4866f39a820f35a2ca",
+      "source_path": "platform_hybrid/experiments/results/zvf_failure_correlation.tsv",
+      "source_sha256": "6e0a1c81050179782b3f0627e6c8bf250b81a49d413e7b4866f39a820f35a2ca"
+    },
+    {
+      "extraction": "verbatim numeric TSV",
+      "retained_file": "zvf_iter26_residual.tsv",
+      "retained_sha256": "6271ef71be8ebe2971f62afec0d8ef8a514dda347c2a058350d7d936ba46b44c",
+      "source_path": "platform_hybrid/experiments/results/zvf_iter26_residual.tsv",
+      "source_sha256": "6271ef71be8ebe2971f62afec0d8ef8a514dda347c2a058350d7d936ba46b44c"
+    },
+    {
+      "extraction": "all runs, indexed in source order; experiment/model/seed/heldout_acc/last10_avg/mean_zvf; group_size defaults to source runner G=8; algo defaults grpo; all step/mean_reward/zvf values; no source summary",
+      "retained_file": "groupsize_zvf_sweep_selected.json",
+      "retained_sha256": "ac62d1a921edf6fc27aae281439bafb10b0be5648c9d02b28f17e4f1258f286a",
+      "source_path": "platform_hybrid/experiments/results/groupsize_zvf_sweep.json",
+      "source_sha256": "4aefae380f2cf3eb02848d210631a096f1344f24050da468be75dedbd41fb4e1"
+    },
+    {
+      "extraction": "all runs, indexed in source order; experiment/model/seed/heldout_acc/last10_avg/mean_zvf; group_size defaults to source runner G=8; algo defaults grpo; all step/mean_reward/zvf values; no source summary",
+      "retained_file": "drgrpo_vs_grpo_selected.json",
+      "retained_sha256": "9e509318a6c7c91511bb5f7bf602e1c72d06c7498a9d6255b17b0e251bd628ae",
+      "source_path": "platform_hybrid/experiments/results/drgrpo_vs_grpo.json",
+      "source_sha256": "dfabe8e5a034b3069d5dfe39ef4d70d096b5dc32fdb163ce140f1274ae2d9a3f"
+    },
+    {
+      "extraction": "source lines 301-380; evidence only, not executed",
+      "retained_file": "variance_mitigation_integration_301_380.txt",
+      "retained_sha256": "8dc4ee9e1ddb01d7cf504a59120b4b5e9c84decc58e9382fd254aae53c2a7c76",
+      "source_path": "platform_hybrid/experiments/variance_mitigation_integration.py",
+      "source_sha256": "fd1f21109e51b40341891ee95dd92053540e6bc0b7591e0f99fe7807f3606e38"
+    },
+    {
+      "extraction": "source lines 109-413; evidence only, not executed",
+      "retained_file": "zvf_diagnostic_109_413.txt",
+      "retained_sha256": "25d734313a649457375365942a821da7993cfa29b46849c92798aaa81340ce2b",
+      "source_path": "platform_modal/scripts/zvf_diagnostic.py",
+      "source_sha256": "4c7a167eb4a9ae27f6578912a0194e4e4f939355d8d32f67c31dbcafffca79b5"
+    },
+    {
+      "extraction": "source lines 740-849; evidence only, not executed",
+      "retained_file": "zvf_diagnostic_740_849.txt",
+      "retained_sha256": "8ba4ac414686c2572c6bb5fda34491d73d49d1e76d328ec428b6b9fe8ba4c1d8",
+      "source_path": "platform_modal/scripts/zvf_diagnostic.py",
+      "source_sha256": "4c7a167eb4a9ae27f6578912a0194e4e4f939355d8d32f67c31dbcafffca79b5"
+    },
+    {
+      "extraction": "source lines 54-154; evidence only, not executed",
+      "retained_file": "zvf_iter26_residual_54_154.txt",
+      "retained_sha256": "36f5c6dc75f718f0ec7a12f155befa0e1edd4a91a6937dd79945ea304f988405",
+      "source_path": "platform_modal/scripts/zvf_iter26_residual.py",
+      "source_sha256": "088cc37e7129f9e4b48a5654dd7868df96febbdbe6030e39fa9361518cf3b68a"
+    },
+    {
+      "extraction": "source lines 191-216; evidence only, not executed",
+      "retained_file": "modal_groupsize_zvf_sweep_191_216.txt",
+      "retained_sha256": "477b5e1f6ff622b22d32ddf215b6a21156f4f7cb438fc1c0a9666e0261beb701",
+      "source_path": "platform_hybrid/experiments/modal/modal_groupsize_zvf_sweep.py",
+      "source_sha256": "df3893a8080f94883dbc27297f811f977510bca9d6063d166c0344fd30638e27"
+    },
+    {
+      "extraction": "source lines 173-191; evidence only, not executed",
+      "retained_file": "modal_drgrpo_vs_grpo_173_191.txt",
+      "retained_sha256": "c339c45704a582472c4f222d54da476c4be9a8ea69ac7ca3fe767728d194e421",
+      "source_path": "platform_hybrid/experiments/modal/modal_drgrpo_vs_grpo.py",
+      "source_sha256": "09b1f29f220bb91f7169e9d79b9ae83e79e77486c67d603fb913712de3d9f7d9"
+    },
+    {
+      "extraction": "verbatim numeric TSV; all rows including duplicates",
+      "retained_file": "variance_mitigation.tsv",
+      "retained_sha256": "0dd17df618e0889d9cd815c01435b03d545e0d3c7dc485febe93157d10834e55",
+      "source_path": "platform_hybrid/experiments/results/variance_mitigation.tsv",
+      "source_sha256": "0dd17df618e0889d9cd815c01435b03d545e0d3c7dc485febe93157d10834e55"
+    }
+  ]
+}

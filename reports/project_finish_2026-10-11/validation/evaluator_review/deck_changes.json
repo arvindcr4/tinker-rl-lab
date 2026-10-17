@@ -1,0 +1,332 @@
+[
+  {
+    "slide": 2,
+    "kind": "textbox",
+    "before": "Hold the stack fixed. Change one factor.",
+    "after": "Research question and project scope"
+  },
+  {
+    "slide": 2,
+    "kind": "textbox",
+    "before": "If the stack also moves, the number is not an algorithm result. That rule is applied twice.",
+    "after": "Which differences survive a recorded, controlled comparison, and which remain confounded?"
+  },
+  {
+    "slide": 2,
+    "kind": "textbox",
+    "before": "What does GRPO do?",
+    "after": "Diagnostics and controlled studies"
+  },
+  {
+    "slide": 2,
+    "kind": "textbox",
+    "before": "Libraries, scales, group sizes, length, and a reporting standard. Only Tinker and TRL produced completed runs, and they used different base checkpoints.",
+    "after": "P1–P7 study training signal, comparison design and reporting. P8 is a supervised synthetic-fraud side study. Framework runs completed on Tinker and TRL with different checkpoints."
+  },
+  {
+    "slide": 2,
+    "kind": "textbox",
+    "before": "One Tinker-trained checkpoint, 40 steps, fourteen native suites. Scores describe that checkpoint. They are not a post-training delta.",
+    "after": "One Tinker-trained checkpoint, 40 steps, fourteen evaluation lanes. Every score names its actual scope. Unavailable original contracts remain blocked."
+  },
+  {
+    "slide": 3,
+    "kind": "textbox",
+    "before": "vs held-out outcome, n = 23",
+    "after": "Pooled table, n = 23"
+  },
+  {
+    "slide": 3,
+    "kind": "textbox",
+    "before": "Three stored GSM8K tensors (Qwen3-8B, sampling only) reproduce 0.130, 0.190 and 0.155, pooled 0.1583. After mean reward is regressed out, r = +0.21, n = 17, and that interval crosses zero.",
+    "after": "Three measured sampling-only GSM8K tensors reproduce ZVF 0.130, 0.190 and 0.155 (pooled 0.1583). The 23-cell association pools heterogeneous records; projection membership is unresolved."
+  },
+  {
+    "slide": 4,
+    "kind": "textbox",
+    "before": "Four questions, at the strength of the evidence",
+    "after": "Research questions and findings"
+  },
+  {
+    "slide": 6,
+    "kind": "textbox",
+    "before": "What the evidence does not support",
+    "after": "Implementation: a recorded manifest comparison"
+  },
+  {
+    "slide": 6,
+    "kind": "textbox",
+    "before": "No scaling law",
+    "after": "1. Retained inputs"
+  },
+  {
+    "slide": 6,
+    "kind": "textbox",
+    "before": "Flat fit over about 2.4 orders of magnitude. Scale is collinear with the recipe. Single-seed anchors.",
+    "after": "Reward tensors feed ZVF telemetry. Run manifests record loss settings, model, sampler, split and missing fields."
+  },
+  {
+    "slide": 6,
+    "kind": "textbox",
+    "before": "No length-bias finding",
+    "after": "2. Actual DAPO records"
+  },
+  {
+    "slide": 6,
+    "kind": "textbox",
+    "before": "In the controlled comparison, completion length drifts shorter. GRPO and Dr. GRPO are indistinguishable on held-out gain.",
+    "after": "Open record: KL coefficient = 0.0. Managed record: KL coefficient = null (unreported). Equal algorithm labels do not resolve that difference."
+  },
+  {
+    "slide": 6,
+    "kind": "textbox",
+    "before": "No group-size optimum",
+    "after": "3. Working CLI result"
+  },
+  {
+    "slide": 6,
+    "kind": "textbox",
+    "before": "G = 2 through 16 are not separable on the three-seed sweep. G = 16 versus G = 2 fails equivalence at ±0.02 (TOST p = 0.056).",
+    "after": "stackdiff returns R5: a differing field is unreported. This is a reporting-risk flag, not a predicted score change."
+  },
+  {
+    "slide": 6,
+    "kind": "textbox",
+    "before": "No decisive audit headline",
+    "after": "4. Recorded outputs"
+  },
+  {
+    "slide": 6,
+    "kind": "textbox",
+    "before": "Seven audited headlines: none decisive, one suggestive (H7, iter-136 efficiency). Holm on that family of eight moves the p to 0.25. That is not the +5.0 pp gap.",
+    "after": "The registry retains the comparison. The campaign ledger binds scores to scope, coverage and terminal state. Missing evidence stays visible."
+  },
+  {
+    "slide": 7,
+    "kind": "textbox",
+    "before": "Campaign scores are checkpoint scores",
+    "after": "Campaign scores by stated scope"
+  },
+  {
+    "slide": 7,
+    "kind": "textbox",
+    "before": "Do not average these rows. Denominators count different things. The paired base-versus-trained comparison, 5 to 151 items per lane, is inconclusive in every lane. Original contracts and replacement scopes stay in separate columns.",
+    "after": "Each row names its original or replacement scope. Denominators count different things, so no cross-suite average is reported. Small paired base-versus-trained comparisons remain inconclusive."
+  },
+  {
+    "slide": 8,
+    "kind": "textbox",
+    "before": "C1 draws a boundary. It does not repair the score.",
+    "after": "C1: frozen endpoint and reference audit"
+  },
+  {
+    "slide": 8,
+    "kind": "textbox",
+    "before": "17.19%. Wilson interval 9.88–28.21%. Parser v2. Not changed after review.",
+    "after": "After 8 parser-zero answers, at least one reference match in 24 fresh draws.\n\nDeterministic first-64 cohort; 17.19%. The interval is descriptive."
+  },
+  {
+    "slide": 9,
+    "kind": "textbox",
+    "before": "What I will defend as the contribution",
+    "after": "Individual contribution and inherited foundation"
+  },
+  {
+    "slide": 9,
+    "kind": "textbox",
+    "before": "A diagnostic",
+    "after": "Signal diagnostics"
+  },
+  {
+    "slide": 9,
+    "kind": "textbox",
+    "before": "ZVF and pairwise contrast density, recomputable from stored tensors, with the association stated at the width of its interval.",
+    "after": "I implemented and audited ZVF and contrast-density reporting from stored rewards. The group-normalization algebra is inherited."
+  },
+  {
+    "slide": 9,
+    "kind": "textbox",
+    "before": "A minimum report",
+    "after": "Reporting implementation"
+  },
+  {
+    "slide": 9,
+    "kind": "textbox",
+    "before": "Eight items: seven manifest fields and one evaluation item. A label without its stack is not an experimental specification.",
+    "after": "I developed the eight-item report, machine-readable registry and stack comparison. Slide 6 shows the implemented R5 check."
+  },
+  {
+    "slide": 9,
+    "kind": "textbox",
+    "before": "A ledger with gates",
+    "after": "Campaign and ownership"
+  },
+  {
+    "slide": 9,
+    "kind": "textbox",
+    "before": "Every campaign lane has a terminal state and a reopen condition. Missing, simulated, and measured results stay distinct.",
+    "after": "Semester 3: shared harness and baseline integrations. My Semester 4: research studies, campaign ledger and thesis. Results retain their evidence limits."
+  },
+  {
+    "slide": 10,
+    "kind": "textbox",
+    "before": "The four pushes I expect",
+    "after": "Limitations and the next controlled experiment"
+  },
+  {
+    "slide": 10,
+    "kind": "textbox",
+    "before": "No family reaches Henderson’s ten seeds. Single-seed Tinker figures are descriptive. The open-source contrasts use three to eight.",
+    "after": "Open-source contrasts use three to eight seeds. Single-seed Tinker results are descriptive. Narrow effects need a larger, powered study."
+  },
+  {
+    "slide": 10,
+    "kind": "textbox",
+    "before": "Closed trainer",
+    "after": "Execution visibility"
+  },
+  {
+    "slide": 10,
+    "kind": "textbox",
+    "before": "Tinker’s server-side loss, normalisation and hardware are not visible. Those results are the platform’s GRPO, not an abstract algorithm.",
+    "after": "Some client custom-loss loops are inspectable. Historical managed losses, server execution and hardware remain incompletely recorded."
+  },
+  {
+    "slide": 10,
+    "kind": "textbox",
+    "before": "Power",
+    "after": "Next comparison"
+  },
+  {
+    "slide": 10,
+    "kind": "textbox",
+    "before": "Inconclusive is the result at this n. I will not upgrade it to “no effect” in the room.",
+    "after": "Tune and warm up the PPO critic. Match prompt exposure and token budgets, lock evaluation tasks, and increase paired seeds."
+  },
+  {
+    "slide": 11,
+    "kind": "textbox",
+    "before": "Ninety seconds, then stop",
+    "after": "Offline demonstration"
+  },
+  {
+    "slide": 11,
+    "kind": "textbox",
+    "before": "demo.sh --self-test\ndemo.sh\n\nOpen the HTML file directly if the port is busy.\n\nIf the SHA fails, show the failure. Do not skip it.",
+    "after": "From the repository or ZIP root:\n\ncd submission/demo\n./demo.sh --self-test\n./demo.sh\n\nOpen output/demo_report.html.\nIf integrity fails, show the failure."
+  },
+  {
+    "slide": 12,
+    "kind": "textbox",
+    "before": "The measurements are informative.\nThe algorithmic levers, at this budget,\nare noise-limited.",
+    "after": "An auditable workflow for RL studies\nwith explicit evidence limits"
+  },
+  {
+    "slide": 12,
+    "kind": "textbox",
+    "before": "A label without its stack is not a result I will defend.",
+    "after": "Delivered: recomputable diagnostics, an inspectable registry and a campaign ledger. The strongest training contrast remains baseline-specific."
+  },
+  {
+    "slide": 7,
+    "kind": "table",
+    "row": 1,
+    "column": 0,
+    "after": "VerilogEval (original)"
+  },
+  {
+    "slide": 7,
+    "kind": "table",
+    "row": 1,
+    "column": 2,
+    "after": "150/183 failures were extraction failures. Token-cap causality is unquantified."
+  },
+  {
+    "slide": 7,
+    "kind": "table",
+    "row": 2,
+    "column": 0,
+    "after": "Omni-MATH (replacement)"
+  },
+  {
+    "slide": 7,
+    "kind": "table",
+    "row": 3,
+    "column": 0,
+    "after": "SWE-bench Pro (original)"
+  },
+  {
+    "slide": 7,
+    "kind": "table",
+    "row": 4,
+    "column": 0,
+    "after": "WebArena (replacement)"
+  },
+  {
+    "slide": 7,
+    "kind": "table",
+    "row": 5,
+    "column": 0,
+    "after": "AgentDojo benign (replacement)"
+  },
+  {
+    "slide": 1,
+    "kind": "notes",
+    "before": "Open by naming the degree and the rule, not the infrastructure. Say: this is a measurement thesis. The algorithmic levers I could test are mostly noise-limited. I will show what survived, and I will say what I am not claiming. Public revision dated 11 October 2026. Do not use the September review deck.\nEvaluation review copy dated 11 October 2026. Source thesis: reports/project_finish_2026-10-11/thesis/Thesis_Report_ArvindCR_2026-10-11_REVIEW.pdf. No new training or benchmark evaluation was performed for this deck.",
+    "after": "Open with the problem and the concrete deliverable. I developed a workflow to measure group-relative learning signal, disclose comparison conditions and bind benchmark results to their scope. Semester 3 supplied the shared harness; Semester 4 is my individual continuation. No new training result was generated by this evaluator revision. Sources: thesis §1.4–1.6 and PROJECT_HISTORY.md."
+  },
+  {
+    "slide": 2,
+    "kind": "notes",
+    "before": "Source: thesis §9.1 and §9.3. If asked whether this is a finished seven-library benchmark, the answer is no. Comparative framework claims stop at the completed runs.",
+    "after": "Source: thesis §1.4–1.6. P1–P7 are RL diagnosis/reporting studies; P8 is a supervised synthetic-fraud side study. Fourteen lanes do not mean fourteen completed original contracts. A common checkpoint does not eliminate serving, parser or scope differences. No complete seven-library comparison is claimed."
+  },
+  {
+    "slide": 3,
+    "kind": "notes",
+    "before": "RQ1. Chapter 6 §6.3.4. The three tensors are sampling-only, G = 8, 200 problems per seed, not a training delta. Pooled ZVF is 0.1583. The residual after mean reward is r = +0.21, 95% CI [−0.31, +0.62], n = 17. ZVF measures group-relative advantage-signal starvation. Predictive validity was not established. KL, auxiliary losses and optimizer state may still affect updates. High ZVF is also what mastery looks like.",
+    "after": "RQ1. Chapter 6 §6.3.4. The three tensors are sampling-only, G = 8, 200 problems per seed, not a training delta. Pooled ZVF is 0.1583. The residual after mean reward is r = +0.21, 95% CI [−0.31, +0.62], n = 17. ZVF measures group-relative advantage-signal starvation. Predictive validity was not established. KL, auxiliary losses and optimizer state may still affect updates. High ZVF is also what mastery looks like.\nThe n=23 table pools heterogeneous records and membership of simulation-projection rows is unresolved. It is not a separately established measured-only cohort. This is a descriptive association from that table, not validated predictive performance."
+  },
+  {
+    "slide": 6,
+    "kind": "notes",
+    "before": "H7 is the iter-136 late-training efficiency contrast. Its uncorrected sign-flip is 0.0625, and Holm across the family of eight raises that p to 0.25. The +5.0 pp GSM8K gap on the previous slide is a different contrast with the same sign-flip p. Do not merge them. If an examiner quotes an older slide that says 99.9% Tinker versus 73.4% TRL, stop them. Those are training rewards on different model sizes. The same-model pair still mixes Base and Instruct checkpoints. §9.2.",
+    "after": "Sources: thesis §5.6 and §7.2; platform_hybrid/registry/query.py; entries/colab-open_dapo_e3.json; entries/tinker_dapo_qwen3.5-4b_gsm8k.json. The exact CLI was rerun locally on 11 October 2026 and returned R5 with process exit code 5, by design. Example: reference_kl.kl_beta is 0.0 vs null. Other differences also contribute. The records describe different tasks and incomplete configurations, so this is an implemented provenance comparison, not an outcome-controlled experiment. Registry records can contain internal inconsistencies; stackdiff does not authenticate upstream execution or resolve them."
+  },
+  {
+    "slide": 7,
+    "kind": "notes",
+    "before": "These are harness scores. VerilogEval: 150 extraction failures may reflect the token cap with thinking on; per-sample finish reasons were not recorded, so this cause is unproven; same adapter 33/50 thinking off at 4,096 tokens vs 23/50 on a 50-item subset, engine and temperature also changed. Omni-MATH: capped answers 34.5% correct, uncapped 85.9%, confounded by difficulty. SWE-bench Pro: 593 of 713 patches failed git apply as corrupt hunks, so tests ran on the unpatched base; Wilson interval 0.08% to 0.99%. Table C.3 is the status table if they want every lane. Six original contracts are CLOSED_EXTERNAL: SDAB, BinaryAudit payload, LifeSciBench package, AgentHarm, AppBench, FrontierMath. Say the reopen condition, not a pending label.",
+    "after": "These are harness scores. VerilogEval: 150 extraction failures may reflect the token cap with thinking on; per-sample finish reasons were not recorded, so this cause is unproven; same adapter 33/50 thinking off at 4,096 tokens vs 23/50 on a 50-item subset, engine and temperature also changed. Omni-MATH: capped answers 34.5% correct, uncapped 85.9%, confounded by difficulty. SWE-bench Pro: 593 of 713 patches failed git apply as corrupt hunks, so tests ran on the unpatched base; Wilson interval 0.08% to 0.99%. Table C.3 is the status table if they want every lane. Six original contracts are CLOSED_EXTERNAL: SDAB, BinaryAudit payload, LifeSciBench package, AgentHarm, AppBench, FrontierMath. Say the reopen condition, not a pending label.\nVisible table corrected: original vs replacement scope names are explicit and the E11 causal attribution is withdrawn. Source: thesis Chapter 8 and Appendix D. No stored score changed."
+  },
+  {
+    "slide": 8,
+    "kind": "notes",
+    "before": "The cohort is not a random benchmark sample. Assistant review is not independent human validation. The witnesses reject certainty from eight equal wrong numbers on this checkpoint. They are not a gradient, a training gain, or a controller result. Santana's first successful number came from an incorrect argument.",
+    "after": "The cohort is not a random benchmark sample. Assistant review is not independent human validation. The witnesses reject certainty from eight parser-zero answers on this checkpoint. They are not a gradient, a training gain, or a controller result. Santana's first successful number came from an incorrect argument.\nFrozen event: after eight initial parser-zero answers, at least one of 24 fresh responses matches the reference under parser v2. Cohort: deterministic first 64 eligible questions. Wilson 95% interval 9.88–28.21% is descriptive, not a population recovery estimate. The assistant-reviewed three numerical witnesses are separate."
+  },
+  {
+    "slide": 9,
+    "kind": "notes",
+    "before": "The novelty sentence, if asked: a targeted search through July 2026 did not find an equivalent GRPO-specific machine-readable run datasheet with rollout provenance. That is an evidence-bounded claim, not a proof that none exists. §9.3.",
+    "after": "Sources: PROJECT_HISTORY.md, platform_hybrid/sem 4 work/PROVENANCE.md, thesis §1.6 and §9.3. The six-person Semester 3 project supplied the shared runtime and baseline work. My individual Semester 4 contribution is the research direction, diagnostic/reporting studies, registry/controller analyses, expanded evaluation and thesis. Internal reports P1–P8 are not eight accepted publications. AI assistance is declared. The minimum reporting standard is a bounded integration contribution, not invention of group normalization."
+  },
+  {
+    "slide": 10,
+    "kind": "notes",
+    "before": "Threat table 9.1 if they want the full list. Horizons are 30–50 steps for the Tinker runs: no asymptotic claim. Environmental accounting is uncertain because Tinker exposes no hardware telemetry.",
+    "after": "Thesis §9.2–9.4. Client-side custom-loss loops can be inspected; missing historical execution and managed internals are different limits. No fixed seed threshold guarantees power. The next comparison needs a protocol and power rationale before results are observed. These steps are future work, not measured gains."
+  },
+  {
+    "slide": 11,
+    "kind": "notes",
+    "before": "Commands live in submission/demo/DEFENSE_RUNBOOK.md. Fallback folder: submission/demo/defense_fallback. The 68.75% figure on the dashboard is the mean of 80 recorded binary rewards in one artifact. It is not a benchmark accuracy.",
+    "after": "From repository or extracted ZIP root: cd submission/demo; ./demo.sh --self-test; ./demo.sh. Open output/demo_report.html. The seven standard-library tests and default mode require no network. The 68.75% dashboard mean is from 80 recorded binary rewards in one artifact. It is not benchmark accuracy. The optional registry example is documented in the evaluator guide; its expected exit code is 5 for R5. No missing fallback folder is required."
+  },
+  {
+    "slide": 12,
+    "kind": "notes",
+    "before": "Stop. Do not add a new claim in the last thirty seconds. If the first question is hostile, answer the number, then the limit, then stop.",
+    "after": "Close on delivered implementation and the strongest bounded finding: +5.0 percentage points against an untuned PPO baseline in five paired seeds. The exact sign-flip p-value is 0.0625, and prompt exposure differs. The next work is a tuned, exposure-matched, larger paired study. Invite questions without adding a new result."
+  }
+]

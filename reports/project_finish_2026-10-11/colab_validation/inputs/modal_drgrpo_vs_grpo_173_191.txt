@@ -1,0 +1,19 @@
+173: 
+174:     # held-out greedy eval
+175:     model.eval()
+176:     correct, total = 0, 200
+177:     held = sample(total)
+178:     for i in range(0, total, 32):
+179:         ch = held[i:i + 32]
+180:         e = tok([mp(a, b) for (a, b) in ch], return_tensors="pt", padding=True).to(device)
+181:         with torch.no_grad():
+182:             g = model.generate(**e, max_new_tokens=MAX_NEW, do_sample=False, pad_token_id=tok.pad_token_id)
+183:         for t, (a, b) in zip(tok.batch_decode(g[:, e["input_ids"].shape[1]:], skip_special_tokens=True), ch):
+184:             if parse(t) is not None and parse(t) == a + b:
+185:                 correct += 1
+186:     import numpy as _np
+187:     res = {"experiment": "drgrpo_vs_grpo", "algo": algo, "seed": seed, "model": MODEL,
+188:            "heldout_acc": correct / total, "last10_avg": float(_np.mean([s["mean_reward"] for s in step_log[-10:]])),
+189:            "mean_comp_len": float(_np.mean([s["mean_comp_len"] for s in step_log])),
+190:            "mean_zvf": float(_np.mean([s["zvf"] for s in step_log])),
+191:            "elapsed_seconds": time.time() - t0, "step_log": step_log}

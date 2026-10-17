@@ -1,0 +1,88 @@
+{
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "commands": {
+    "git_head": {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "returncode": 0,
+      "stdout": "643f8f0e70b7c5d2c027902cadd21fb7a440f31a\n",
+      "stderr": ""
+    },
+    "git_branch": {
+      "command": [
+        "git",
+        "branch",
+        "--show-current"
+      ],
+      "returncode": 0,
+      "stdout": "main\n",
+      "stderr": ""
+    },
+    "git_status_initial": {
+      "command": [
+        "git",
+        "status",
+        "--short"
+      ],
+      "returncode": 0,
+      "stdout": "?? .mypy_cache/\n?? package-lock.json\n?? reports/project_finish_2026-10-11/\n",
+      "stderr": ""
+    },
+    "python_locked": {
+      "command": [
+        "uv",
+        "run",
+        "--no-sync",
+        "python",
+        "-c",
+        "import sys; print(sys.version); print(sys.executable)"
+      ],
+      "returncode": 0,
+      "stdout": "3.12.13 (main, Mar 10 2026, 18:18:07) [Clang 21.1.4 ]\n/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.venv/bin/python\n",
+      "stderr": ""
+    },
+    "tool_versions": {
+      "command": [
+        "uv",
+        "run",
+        "--no-sync",
+        "python",
+        "-c",
+        "import importlib.metadata as m; print(\"\\n\".join(n+\"=\"+m.version(n) for n in (\"pytest\",\"pytest-cov\",\"ruff\",\"mypy\",\"numpy\",\"torch\",\"tinker\")))"
+      ],
+      "returncode": 0,
+      "stdout": "pytest=9.1.1\npytest-cov=7.1.0\nruff=0.16.10\nmypy=2.4.0\nnumpy=2.2.6\ntorch=2.7.1\ntinker=0.24.1\n",
+      "stderr": ""
+    },
+    "tectonic": {
+      "command": [
+        "tectonic",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "Tectonic 0.17.0\n",
+      "stderr": ""
+    },
+    "pandoc": {
+      "command": [
+        "pandoc",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "pandoc 3.11\nFeatures: +server +lua\nScripting engine: Lua 5.4\nUser data directory: /Users/arvind/.pandoc\nCopyright (C) 2006-2025 John MacFarlane. Web:  https://pandoc.org\nThis is free software; see the source for copying conditions. There is no\nwarranty, not even for merchantability or fitness for a particular purpose.\n",
+      "stderr": ""
+    },
+    "gitleaks": {
+      "command": [
+        "gitleaks",
+        "version"
+      ],
+      "returncode": 0,
+      "stdout": "8.30.1\n",
+      "stderr": ""
+    }
+  }
+}

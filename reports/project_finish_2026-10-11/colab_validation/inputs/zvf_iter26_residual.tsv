@@ -1,0 +1,13 @@
+# Iter 26 Pillar 2: residualised ZVF finding
+# Per-slice table: n_pooled, naive r(ZVF, last10),
+# r(reward, last10) (the confounder), and
+# r(residual(last10 ~ reward), ZVF) -- the residualised
+# partial correlation that isolates the ZVF contribution.
+# Bootstrap CIs use B=2000 percentile resamples.
+# Source: scripts/zvf_iter26_residual.py
+slice	n_pooled	naive_r	naive_lo	naive_hi	reward_r	residual_r	residual_lo	residual_hi
+pooled_all_per_experiment	17	+0.217	-0.300	+0.946	+0.994	+0.205	-0.324	+0.592
+pooled_variance_mitigation_per_methodseed	9	+0.742	+0.377	+0.989	+0.099	+0.795	+0.544	+0.997
+method_level_variance_mitigation	9	-0.219	-0.887	+0.794	+0.955	+0.798	+0.475	+0.941
+method_level_variance_mitigation_no_drift	5	-0.643	-1.000	+0.939	+0.987	+0.612	-1.000	+1.000
+groupsize_sweep	4	NA	NA	NA	NA	NA	NA	NA

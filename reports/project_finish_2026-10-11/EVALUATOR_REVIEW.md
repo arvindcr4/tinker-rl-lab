@@ -36,10 +36,23 @@ The subsequent executable source audit resolves the previously uncertain correla
 
 ## Remaining questions to prepare for
 
-The historical studies still have small seed counts, residual confounding, an untuned PPO critic, missing execution sources and some assistant-reviewed references. Those limitations require better experiments or new evidence, not stronger wording. Rehearse why they narrow each conclusion and what concrete follow-up would address them.
+The historical studies still have small seed counts, residual confounding, missing execution sources and some assistant-reviewed references. The untuned-critic PPO comparison is superseded by the v2 rerun (see below). Those limitations require better experiments or new evidence, not stronger wording. Rehearse why they narrow each conclusion and what concrete follow-up would address them.
 
 The current PDF is a review copy. Required personal submission fields, author approval, signatures, certificates and portal requirements remain subject to the institution's actual process. The project materials do not establish that those steps have been completed.
 
 The updated [defense preparation](DEFENSE_PREP.md) includes answers about kappa, Jensen's inequality and clustered evaluation. Use those answers to explain the corrections candidly if an examiner compares versions.
 
 The same correction was propagated through the literature and methods chapters, contribution summary, research-question schematic, errata and viva answers. The synthetic nine-method panel is labelled as such at first mention. A contradictory plateau-timing sentence was replaced by the historical short-lead observation with its unvalidated monitoring scope. The objective map remains unnumbered so the canonical table and existing Table 1.1 references agree.
+
+## Publication-readiness corrections (16 October 2026)
+
+An assistant-run publication-readiness audit rechecked the three headline claims against raw records. The corrections below change interpretations, not stored measurements.
+
+| Finding | Correction |
+|---|---|
+| The unsaturated GRPO G8 − PPO gap (+0.050) rested on a binding 200-token cap and a cold critic; PPO ended below its start (0.195 < 0.200); Holm sign-flip p = 0.19. | Superseded by the v2 rerun (512-token cap, warm-started critic, 1,319 items, 100% re-grade agreement): +0.0076 [−0.0034, +0.0185], equivalent within ±0.02 (TOST p = 0.016). Provisional: 3 PPO seeds and the exposure-matched arm pending. Thesis §6.5.5 Table 6.2, Table 1.1, §9.3, appendices, deck slides 4, 5, 10 and 12, brief and viva answers. |
+| ZVF U-shape and escalation asymmetry presented as support for the P7 theory. | Restated as largely the binomial identity plus prompt-difficulty heterogeneity (beta-binomial ICC 0.16 predicts 0.170 vs 0.158); nine model labels, not six; 92.3% predicted by reward level (91.5%), no controller ran; +0.71 unrecomputable; "anti-herding" δ_div and +0.1224 withdrawn (sign-guaranteed, E = +0.105 under i.i.d.); ρ = 0.27 becomes −0.37 (p = 0.36) on 8 non-simulated cells. Prior work cited: arXiv 2605.21125, 2605.07689. |
+| Stack exhibits read as stack effects. | 17× decomposed (checkpoint alone 64% on one harness; further confounds listed); DAPO pair declared non-comparable; 0.034 band not equivalence (TOST fails); registry holds 28 stack entries, not 20; the revised `stackdiff` (48 fields, known-difference levels, 29 tests) is described and its corpus output quoted. |
+| Citation errors. | Hochlehnert et al. describe evaluation sensitivity, not reward hacking; Cobbe et al. figures distinguish the fine-tuned baseline (~35%) from verification (~55%); uncited MATH-500 99% removed; Nimmaturi (abstract, p. 1) and Tan (Appendix B.2) verified against the PDFs; Stiennon arXiv:2009.01325 added; the internal capstone survey is marked unpublished. |
+| AI-tool declaration understated agentic use. | Expanded draft names Claude Code, Codex, Grok CLI, Muse CLI, Antigravity/Gemini, agy, squad, Kimi, Jev, ChatGPT Pro and Gemini Deep Think, and agents launching cloud jobs. Requires author approval. |
+

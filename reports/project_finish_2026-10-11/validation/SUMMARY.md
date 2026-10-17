@@ -68,3 +68,14 @@ tests. Those logs are historical; the current records above are authoritative.
 Checks establish local software behavior and document consistency. They do not
 authenticate every historical run, independently validate every scientific claim,
 certify native PowerPoint rendering, or complete institutional submission.
+
+## 16 October 2026 correction
+
+- `tools/audit_thesis_numbers.py --check`: overall PASS (registered occurrences unchanged; v1 values retained and labelled superseded).
+- `thesis/build_thesis.py`: built, 320 pages; the only hyperref warning (`@table.1.1 already defined`) also occurs when the 11 October sources are rebuilt.
+- `check_pdf.py`: no out-of-bounds words, no replacement characters, no missing required text; PDF sha256 `69ff9d9ab9a7ed2ab8b60fc221565f5e4fb64fc7abf6aec4171e6b58dcf539db`.
+- Deck: five slides edited, all twelve re-rendered (`deck_work/rev16/`).
+- `validation/samestack_v2/`: v1 recompute and v2 analysis reproduce the figures in thesis Tables 6.1–6.2 from the repository data.
+- Registry: the bundled `query.py` and entries are the revised 16 October version. `stackdiff --all` gives 378 pairs, R0 39 / R2 1 / R3 10 / R4 26 / R5 302, with 342 underspecified; `tests/test_registry_stackdiff.py` reports 29 passed. The registry example's expected output (R5 outcome-critical, coverage 0.87, exit 0) is updated.
+- `tools/build_pes_review_pack.py` and `verify_review_pack.py` were rerun after these edits. `validation/colab_followup/accept_archive.py` was rerun on the rebuilt archive (`archive_checks.json`), including a replay of the v2 analysis from the extracted files.
+

@@ -71,6 +71,8 @@ This public derivative omits operational and account identifiers, access corresp
 
 The C1 extension (Sections 1.5, 4.6, 7.5, 9.3 and B.13; Appendix G) retains the frozen 11/64 endpoint (17.19\%; Wilson 95\% interval 9.88--28.21\%) beside three conservatively corroborated numerical witnesses on the same denominator. Reference errors, ambiguities and unit mismatches limit interpretation; neither count is a training gain. The ledger retains classifications, hashes and disagreements, and historical V2 remains separate. Appendix H maps the evidence and distinguishes bundled content from retained external sources. Appendix A corrects registry scope and P11 evidence-tier wording without changing experimental values.
 
+A 16 October 2026 correction follows a publication-readiness audit. The unsaturated same-stack GRPO-versus-PPO gap (Section 6.5.5) is superseded by a rerun with a 512-token cap and a warm-started critic that finds no detectable GRPO advantage; its figures are provisional while three PPO seeds and an exposure-matched arm complete. The ZVF U-shape and escalation asymmetry are restated as largely following from the binomial identity and reward level, with contemporaneous prior work cited. The stack exhibits are decomposed or bounded, the registry count and \texttt{stackdiff} limitations are stated, five citations are corrected, and the AI-tool declaration is expanded. Appendix E lists the changes.
+
 \chapter*{Declaration}
 \addcontentsline{toc}{chapter}{Declaration}
 \thispagestyle{plain}
@@ -105,48 +107,63 @@ work/PROVENANCE.md}.
 \end{tabular}
 
 %---------------------------------------------------------------------
-% NEEDS AUTHOR CONFIRMATION: drafted from the tools recorded in the repository
-% (git Co-Authored-By trailers, frontier_synthesis_*.tex, curriculum_opening/
-% FINDINGS.md, zvf-program/jev_lab/, thesis_review_2026-09-27/). Confirm the
-% list is complete and matches PES policy wording before submission.
+% NEEDS AUTHOR APPROVAL (16 October 2026 draft): expanded from the tools
+% recorded in the repository (git author and Co-Authored-By records; AGENTS.md,
+% GEMINI.md, PARALLEL_SESSIONS_COORDINATION.md, WORKFLOW.md;
+% frontier_synthesis_*.tex; curriculum_opening/FINDINGS.md; zvf-program/jev_lab/).
+% The author must confirm the list is complete and matches PES policy wording.
 \chapter*{Declaration on the Use of AI Tools}
 \addcontentsline{toc}{chapter}{Declaration on the Use of AI Tools}
 \thispagestyle{plain}
 
-The following AI tools were used in this work, as recorded in the project
-repository.
+AI tools were used extensively in this work, including autonomous coding
+agents that edited the repository, ran analyses and launched cloud jobs. The
+uses recorded in the project repository are listed below.
 
 \begin{itemize}
-\item \textbf{Coding and writing assistants.} Anthropic Claude models and
-OpenAI Codex were used to write and revise code, analysis scripts and
-documents, including drafts of this report. Commits they contributed carry a
-\texttt{Co-Authored-By} trailer in the git history.
+\item \textbf{Agentic coding and writing.} Anthropic Claude models through
+Claude Code (including multi-agent teams and background subagents) and OpenAI
+Codex wrote and revised a large share of the code, analysis scripts and documents,
+including drafts and revisions of this report and the defence materials. These
+agents often ran autonomously with permission prompts disabled. Commits they
+authored or co-authored carry a Claude, Codex or other agent attribution in
+the git history; a small number of commits are attributed to Factory Droid,
+claude-flow and MiniMax agents.
+\item \textbf{Parallel agent sessions.} Several agent sessions worked on the
+repository at the same time under a recorded ownership log: xAI Grok CLI
+(defence preparation and statistical audit), Muse CLI (code consolidation and
+test suites), Claude Code (audits and experiment replication) and Google
+Antigravity with Gemini models (coordination and test maintenance), coordinated
+with the \texttt{squad} multi-agent tool. Gemini 3.1 Pro also reviewed build
+and verification code through the \texttt{agy} command-line tool.
+\item \textbf{Experiment execution.} Agents prepared and launched training and
+evaluation jobs on Modal, Tinker and Colab, including the replication run
+reported in Section 6.5.5, and pulled their results. The resulting
+measurements come from those executed runs.
+\item \textbf{Literature work.} Agent pipelines (hyperresearch and similar)
+searched, fetched and summarised literature, and checked references against
+arXiv and Crossref. Citations in this report were checked against the cited
+sources, but not every reference was read in full by the author.
 \item \textbf{Frontier-model synthesis.} ChatGPT Pro Extended and Gemini Deep
 Think produced proposed derivations and reasoning recorded in
 \texttt{platform\_hybrid/paper/sections/frontier\_synthesis\_*.tex}, which those
 documents mark as not being experiments. Where this report uses such a result,
 it states its own derivation (Chapter 6 \S6.3.3).
-\item \textbf{Independent verification.} An LLM verification pass (Kimi,
-6 July 2026) reviewed two single-seed results and flagged both as
-\textsc{suspect}; both were then re-tested and reported as nulls (Chapter 6
-\S6.4.3).
+\item \textbf{Independent verification and review.} An LLM verification pass
+(Kimi, 6 July 2026) flagged two single-seed results as \textsc{suspect}; both
+were re-tested and reported as nulls (Chapter 6 \S6.4.3). The pre-defence
+self-review of 27 September 2026, the October evaluation review and the
+16 October 2026 publication-readiness audit were carried out by AI agents.
 \item \textbf{Evaluation triage.} The Jev (TypeSafe) judgment harness was used
 in the E1--E14 ledger only for classification, faithfulness and value
 ordering, never for arithmetic (Chapter 4 \S4.5).
-\item \textbf{Review.} The pre-defence self-review of 27 September 2026 and the
-revision of this report that followed it were AI-assisted.
-\item \textbf{Submission preparation.} An AI coding assistant helped revise
-reporting language, harden build and test scripts, check stored arithmetic,
-and inspect the final PDF. Gemini 3.1 Pro reviewed the build and verification
-code through the \texttt{agy} command-line tool. This preparation ran no new
-training or benchmark evaluations and changed no stored experimental results.
 \end{itemize}
 
-No AI assistant generated experimental data: every reported measurement comes
-from an executed run or evaluation recorded in the repository, and simulated
-values are labelled as simulations. The research direction,
-the experimental design, the choice of claims and their final wording are the
-author's responsibility.
+No AI tool fabricated experimental data: every reported measurement comes from
+an executed run or evaluation recorded in the repository, and simulated values
+are labelled as simulations. AI assistance does not transfer responsibility.
+The research direction, the choice of claims, their final wording and any
+remaining errors are the author's responsibility.
 
 %---------------------------------------------------------------------
 \chapter*{Acknowledgement}
@@ -195,16 +212,18 @@ label-flip risk between two runs from their records alone.
 from reward curves across twelve fitted anchors. A same-stack PPO/GRPO
 contrast (0.992 against 0.990, $p = 0.374$, five seeds) and a group-size sweep
 find no detectable difference on saturated, in-distribution arithmetic draws;
-neither establishes equivalence or an optimum. On an unsaturated GSM8K rerun, GRPO exceeds an
-untuned-critic PPO by 5.0 points (paired-$t$ 95\% CI $[1.5, 8.5]$;
-$p=0.016$, exact sign-flip $p=0.0625$ at five seeds), a suggestive
-configuration-specific result; $G = 2$ and $G = 8$ show no detectable
-difference, without establishing equivalence. ZVF is recomputable, but its
+neither establishes equivalence or an optimum. On an unsaturated GSM8K rerun, an initial 5.0-point GRPO advantage over an
+untuned-critic PPO under a binding 200-token cap did not survive a corrected
+rerun (512-token cap, warm-started critic, 1,319 test items): GRPO minus PPO
+is $+0.8$ points (95\% CI $[-0.3, +1.9]$), equivalent within $\pm 2$ points
+(provisional; seven PPO seeds), and $G = 8$ versus $G = 2$ is not significant
+after multiplicity adjustment. ZVF, studied concurrently as advantage collapse, is recomputable, but its
 predictive validity is unestablished: the historical pooled association mixes
 simulation and measured records with inconsistent outcome definitions. An adaptive group-size controller
 derived from ZVF reports zero rescue under a plug-in counterfactual model;
-92\% of its escalations target observed all-correct groups, without proving
-latent certainty or impossibility of recovery with fresh rollouts.
+92\% of its escalations target observed all-correct groups, a share the
+reward level alone predicts, without proving latent certainty or
+impossibility of recovery with fresh rollouts.
 
 \textbf{(4) An evaluation-governance protocol.} One lightly trained actor
 (Qwen3.6-35B-A3B with a LoRA adapter, 40 training steps) is evaluated on

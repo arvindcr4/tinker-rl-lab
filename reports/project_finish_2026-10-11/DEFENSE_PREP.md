@@ -16,7 +16,7 @@ Then state the ownership boundary: “Semester 3 established the shared environm
 | 0:45–2:00 | Separate the two instruments: controlled P1–P8 studies ask what changes when a factor changes; E1–E14 asks what one checkpoint scores under named contracts. | The experiment/campaign distinction. Only Tinker and TRL completed the compared framework runs; this is not a completed seven-library benchmark. |
 | 2:00–3:30 | Explain GRPO's within-group comparison. Equal rewards give no relative advantage whether every answer is right or wrong. That motivates ZVF. | Eight equal rewards; then the stored-tensor values 0.130, 0.190, 0.155. ZVF measures signal availability, not accuracy. |
 | 3:30–5:00 | Show the implementation contribution: an eight-item minimum report, registry comparison, and named benchmark terminal states. | One stack difference and one receipt. Describe what each field prevents an evaluator from confusing. |
-| 5:00–7:00 | Give the strongest controlled result with its limitation in the same sentence. | Five paired seeds: GRPO G8 − untuned PPO = +5.0 pp, paired-t CI [+1.5, +8.5], p = 0.016; exact sign-flip p = 0.0625. No general algorithm ranking. |
+| 5:00–7:00 | Give the controlled result that changed, and why. | v1 (+5.0 pp) had a binding 200-token cap and a cold critic (PPO 0.195 < base 0.200; Holm sign-flip p = 0.19). v2 (provisional): GRPO G8 − PPO +0.8 pp [−0.3, +1.9], seven paired seeds, equivalent within ±2 pp (TOST p = 0.016); G8 − G2 +0.8 pp [+0.02, +1.6], ten seeds, Holm p = 0.14; G2 − PPO +0.04 pp; base 0.654. No detectable GRPO advantage. |
 | 7:00–8:15 | Demonstrate the actual registry comparison on slide 6. Explain the difference between an explicitly zero KL coefficient and an unreported value. | Open DAPO record: 0.0; managed DAPO record: null. The implemented CLI returns R5. See [the reproducible example](defense/REGISTRY_EXAMPLE.md). |
 | 8:15–9:30 | Use two campaign rows to explain why the harness matters. | VerilogEval 129/312 with 150 extraction failures among 183 failures. WebArena 90/812 with 108 ungraded tasks. No average across suites and no causal training claim. |
 | 9:30–10:15 | Introduce C1 as a diagnostic of sampling and reference quality. | Frozen 11/64 and three separate numerical witnesses. The selected cohort is deterministic and review was assistant-assisted. |
@@ -49,9 +49,11 @@ If integrity validation fails, show the failure and inspect the input difference
 
 **What is original here?** The integration of a recomputable group-signal diagnostic, stack-conditioned reporting and registry, and an evaluation ledger with explicit scope and terminal states. The novelty claim for the GRPO-specific datasheet is bounded by the recorded literature search through July 2026; it is not proof that no related work exists.
 
-**Did GRPO beat PPO?** Only a suggestive, baseline-specific gap on the unsaturated 1.5B study: +5.0 pp against a minimal untuned critic. Five paired seeds give t-test p = 0.016 but exact sign-flip p = 0.0625, so I do not claim general superiority.
+**Did GRPO beat PPO?** No. The first unsaturated rerun showed +5.0 pp against a cold, untuned critic under a binding 200-token cap; its PPO arm finished below its start. The corrected v2 rerun (512-token cap, warm-started critic, 1,319 items) gives +0.8 pp [−0.3, +1.9], equivalent within ±2 pp, provisional at seven PPO seeds with the exposure-matched arm pending.
 
-**Why can two valid tests disagree?** The parametric test uses assumptions about the paired-difference distribution. With five pairs, an exact two-sided sign-flip test cannot give less than 2/32 = 0.0625 even when all differences point the same way.
+**Why did you drop the +5.0 pp result?** Because the rerun that removed its two design flaws did not reproduce it. With five pairs the v1 exact sign-flip test could not go below 2/32 = 0.0625, and after Holm adjustment it was 0.19; v2 has enough power to detect a 1.5 pp difference and found none.
+
+**Is ZVF new?** No. Contemporaneous work names the same quantity the Advantage Collapse Rate (arXiv 2605.21125) and analyses it as gradient starvation (arXiv 2605.07689). Its U-shape across reward levels is largely the binomial identity plus prompt-difficulty heterogeneity. My contribution is recomputing it from stored tensors and the reporting around it.
 
 **Why are the null results useful?** They identify what this design cannot resolve and prevent a saturated task or small sample from being presented as proof of equivalence. They also identify the concrete change needed in the next experiment.
 
@@ -94,7 +96,7 @@ If integrity validation fails, show the failure and inspect the input difference
 
 **Why is ZVF a contribution if its formula is simple?** The algebra explains the mechanism. The implementation contribution is logging it consistently, recomputing it from stored rewards, relating it to other recorded quantities, and demonstrating where its interpretation fails. I do not claim to have invented group normalization.
 
-**Do equal generations imply a fair compute comparison?** No. The unsaturated study uses 8 prompts times 8 completions for GRPO and 64 prompts times 1 for PPO. Both generate 64 completions per step, but prompt exposure, response length and optimizer work can differ. The result remains configuration-specific.
+**Do equal generations imply a fair compute comparison?** No. The unsaturated study uses 8 prompts times 8 completions for GRPO and 64 prompts times 1 for PPO. Both generate 64 completions per step, but prompt exposure, response length and optimizer work can differ. The v2 design adds an exposure-matched PPO arm (8 × 8); it is still running.
 
 **Does the C1 Wilson interval estimate a population recovery rate?** No. It summarizes the frozen proportion under a binomial calculation. The deterministic first-64 selection and uncertain references prevent a general population claim. The 11 frozen events and three conservative numerical witnesses remain separate.
 

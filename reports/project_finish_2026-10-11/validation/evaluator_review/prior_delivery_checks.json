@@ -1,0 +1,92 @@
+{
+  "schema": "pes-review-delivery-check-v1",
+  "status": "PASS",
+  "date": "2026-10-11",
+  "base_commit": "643f8f0e70b7c5d2c027902cadd21fb7a440f31a",
+  "scope": "Local software and document checks; no historical training rerun, human scientific approval or institutional submission.",
+  "full_suite": {
+    "command": "COVERAGE_FILE=reports/project_finish_2026-10-11/validation/.coverage_delivery uv run --no-sync --with hypothesis==6.168.3 python -m pytest tests/ -q -rsx --cov --cov-config=.coveragerc --cov-report=term",
+    "exit_code": 0,
+    "passed": 979,
+    "skipped": 1,
+    "expected_failures": 1,
+    "coverage_percent": 81.84,
+    "coverage_threshold_percent": 77.0,
+    "log": {
+      "path": "reports/project_finish_2026-10-11/validation/delivery_full_coverage.log",
+      "bytes": 7966,
+      "sha256": "55e77a8297b7732b4d4046a1f57218bd8559d12f90c8d4cf48ff2d1b973a6266"
+    }
+  },
+  "static_gates": {
+    "command": "make lint format-check typecheck lock-check docs-check secrets",
+    "exit_code": 0,
+    "log": {
+      "path": "reports/project_finish_2026-10-11/validation/delivery_static.log",
+      "bytes": 2567,
+      "sha256": "35cfaabe62a1864926a6849aabeedc7ed72323b9e4150a5d4f04e2e594e3ab38"
+    }
+  },
+  "number_audit": {
+    "status": "PASS",
+    "registered_occurrences": 937,
+    "passing": 915,
+    "context_only": 22,
+    "printed_count_only_calculations": 34,
+    "regression_tests": 14
+  },
+  "independent_final_numerical_review": {
+    "status": "PASS",
+    "targeted_tests_passed": 47,
+    "additional_nonfinite_combinations_rejected": 18,
+    "reviewer": "separate read-only assistant context"
+  },
+  "source_files": [
+    {
+      "path": "platform_hybrid/experiments/modal/modal_samestack_gsm8k_cot_v2.py",
+      "bytes": 22898,
+      "sha256": "d95b0d2c0245c1512bd812d5fa6369a8fff56c8d7106b809b9850ad72164c689"
+    },
+    {
+      "path": "utils/stats.py",
+      "bytes": 15330,
+      "sha256": "43bef23baa5612ea31a2f3e691b7c0ee5b6fe00a74dfb8322e228e94b88b7b13"
+    },
+    {
+      "path": "tools/audit_thesis_numbers.py",
+      "bytes": 106677,
+      "sha256": "d4c7b89bbbaa4017064b37c7072d5bb67f1e8c500af493ec0a0ae1f65e7d9df5"
+    },
+    {
+      "path": "tools/build_pes_review_pack.py",
+      "bytes": 4506,
+      "sha256": "9d59024bffffade031ea6b8c8554d10f648f9eeb24d07b0b7409316ddfdee8c0"
+    },
+    {
+      "path": "tests/test_samestack_statistics.py",
+      "bytes": 3251,
+      "sha256": "568c84d1951803ec47774b4647430e892b246c44e506b27ed0b4262a9b3fcf3e"
+    },
+    {
+      "path": "tests/test_audit_thesis_numbers.py",
+      "bytes": 6541,
+      "sha256": "86c543a32598b18cf1825186c10c3ffd2fc49bdbcefe2443d3922f988238725e"
+    },
+    {
+      "path": "tests/test_properties_stats.py",
+      "bytes": 11652,
+      "sha256": "b7c3998478fb9edb96bb634ecc985b7e72b1cf2be7985a07d087b1f887d3da2d"
+    },
+    {
+      "path": "tests/test_stats_input_guards.py",
+      "bytes": 3199,
+      "sha256": "2a7d635c74684f2affaffb885bc7bb473895c8bf618f427e926186a3c5f2852a"
+    }
+  ],
+  "review_boundaries": [
+    "Sampled PDF visual review and automated all-page bounds/text checks.",
+    "All twelve slide images reviewed; native PowerPoint not tested.",
+    "Cross-family agent unavailable; supported-model independent reviewer used.",
+    "Detailed logs stay in the checkout; compact receipts are bundled."
+  ]
+}

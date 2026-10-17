@@ -1,0 +1,98 @@
+[
+  {
+    "slide": 1,
+    "kind": "notes",
+    "before": "Open by naming the degree and the rule, not the infrastructure. Say: this is a measurement thesis. The algorithmic levers I could test are mostly noise-limited. I will show what survived, and I will say what I am not claiming. Public revision dated 3 October 2026. Do not use the September review deck.",
+    "after": "Open by naming the degree and the rule, not the infrastructure. Say: this is a measurement thesis. The algorithmic levers I could test are mostly noise-limited. I will show what survived, and I will say what I am not claiming. Public revision dated 11 October 2026. Do not use the September review deck."
+  },
+  {
+    "slide": 2,
+    "kind": "textbox",
+    "before": "UE20CS972  ·  Phase 2 defense  ·  3 October 2026",
+    "after": "UE20CS972  ·  Phase 2 defense  ·  11 October 2026"
+  },
+  {
+    "slide": 3,
+    "kind": "textbox",
+    "before": "Solved prompts spend compute and teach nothing",
+    "after": "Equal rewards supply no group-relative signal"
+  },
+  {
+    "slide": 3,
+    "kind": "textbox",
+    "before": "UE20CS972  ·  Phase 2 defense  ·  3 October 2026",
+    "after": "UE20CS972  ·  Phase 2 defense  ·  11 October 2026"
+  },
+  {
+    "slide": 3,
+    "kind": "notes",
+    "before": "RQ1. Chapter 6 §6.3.4. The three tensors are sampling-only, G = 8, 200 problems per seed, not a training delta. Pooled ZVF is 0.1583. The residual after mean reward is r = +0.21, 95% CI [−0.31, +0.62], n = 17. ZVF is a diagnostic of advantage-signal starvation, not a predictor. High ZVF is also what mastery looks like.",
+    "after": "RQ1. Chapter 6 §6.3.4. The three tensors are sampling-only, G = 8, 200 problems per seed, not a training delta. Pooled ZVF is 0.1583. The residual after mean reward is r = +0.21, 95% CI [−0.31, +0.62], n = 17. ZVF measures group-relative advantage-signal starvation. Predictive validity was not established. KL, auxiliary losses and optimizer state may still affect updates. High ZVF is also what mastery looks like."
+  },
+  {
+    "slide": 4,
+    "kind": "textbox",
+    "before": "UE20CS972  ·  Phase 2 defense  ·  3 October 2026",
+    "after": "UE20CS972  ·  Phase 2 defense  ·  11 October 2026"
+  },
+  {
+    "slide": 5,
+    "kind": "textbox",
+    "before": "One gap is suggestive. It is not a PPO result.",
+    "after": "Same-stack comparison with an untuned PPO critic"
+  },
+  {
+    "slide": 5,
+    "kind": "textbox",
+    "before": "The critic was untuned. Prompt exposure differed: 16 prompts × 8 completions for GRPO, against 128 prompts for PPO. The 200-token cap can still bind.\n\nOn the saturated 0.5B addition task both methods sit at 0.99. Paired difference −0.002, p = 0.374. A null at the ceiling cannot separate no effect from no headroom.\n\nG = 8 versus G = 2 on the unsaturated rerun is −0.005, interval crossing both zero and the ±0.02 equivalence margin.",
+    "after": "The critic was untuned. Prompt exposure differed: 8 prompts × 8 completions for GRPO, against 64 prompts × 1 for PPO. The 200-token cap can still bind.\n\nOn the saturated 0.5B addition task both methods sit at 0.99. Paired difference −0.002, p = 0.374. A null at the ceiling cannot separate no effect from no headroom.\n\nG = 8 versus G = 2 on the unsaturated rerun is −0.005, interval crossing both zero and the ±0.02 equivalence margin."
+  },
+  {
+    "slide": 5,
+    "kind": "textbox",
+    "before": "UE20CS972  ·  Phase 2 defense  ·  3 October 2026",
+    "after": "UE20CS972  ·  Phase 2 defense  ·  11 October 2026"
+  },
+  {
+    "slide": 6,
+    "kind": "textbox",
+    "before": "UE20CS972  ·  Phase 2 defense  ·  3 October 2026",
+    "after": "UE20CS972  ·  Phase 2 defense  ·  11 October 2026"
+  },
+  {
+    "slide": 7,
+    "kind": "textbox",
+    "before": "UE20CS972  ·  Phase 2 defense  ·  3 October 2026",
+    "after": "UE20CS972  ·  Phase 2 defense  ·  11 October 2026"
+  },
+  {
+    "slide": 7,
+    "kind": "notes",
+    "before": "These are harness scores. VerilogEval: the 150 extraction failures come from the token cap with thinking on, not format; same adapter 33/50 thinking off at 4,096 tokens vs 23/50 on a 50-item subset, engine and temperature also changed. Omni-MATH: capped answers 34.5% correct, uncapped 85.9%, confounded by difficulty. SWE-bench Pro: 593 of 713 patches failed git apply as corrupt hunks, so tests ran on the unpatched base; Wilson interval 0.08% to 0.99%. Table C.3 is the status table if they want every lane. Six original contracts are CLOSED_EXTERNAL: SDAB, BinaryAudit payload, LifeSciBench package, AgentHarm, AppBench, FrontierMath. Say the reopen condition, not a pending label.",
+    "after": "These are harness scores. VerilogEval: 150 extraction failures may reflect the token cap with thinking on; per-sample finish reasons were not recorded, so this cause is unproven; same adapter 33/50 thinking off at 4,096 tokens vs 23/50 on a 50-item subset, engine and temperature also changed. Omni-MATH: capped answers 34.5% correct, uncapped 85.9%, confounded by difficulty. SWE-bench Pro: 593 of 713 patches failed git apply as corrupt hunks, so tests ran on the unpatched base; Wilson interval 0.08% to 0.99%. Table C.3 is the status table if they want every lane. Six original contracts are CLOSED_EXTERNAL: SDAB, BinaryAudit payload, LifeSciBench package, AgentHarm, AppBench, FrontierMath. Say the reopen condition, not a pending label."
+  },
+  {
+    "slide": 8,
+    "kind": "textbox",
+    "before": "UE20CS972  ·  Phase 2 defense  ·  3 October 2026",
+    "after": "UE20CS972  ·  Phase 2 defense  ·  11 October 2026"
+  },
+  {
+    "slide": 9,
+    "kind": "textbox",
+    "before": "UE20CS972  ·  Phase 2 defense  ·  3 October 2026",
+    "after": "UE20CS972  ·  Phase 2 defense  ·  11 October 2026"
+  },
+  {
+    "slide": 10,
+    "kind": "textbox",
+    "before": "UE20CS972  ·  Phase 2 defense  ·  3 October 2026",
+    "after": "UE20CS972  ·  Phase 2 defense  ·  11 October 2026"
+  },
+  {
+    "slide": 11,
+    "kind": "textbox",
+    "before": "UE20CS972  ·  Phase 2 defense  ·  3 October 2026",
+    "after": "UE20CS972  ·  Phase 2 defense  ·  11 October 2026"
+  }
+]

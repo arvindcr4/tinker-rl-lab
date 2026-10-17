@@ -1,0 +1,56 @@
+[
+  {
+    "slide": 3,
+    "kind": "textbox",
+    "before": "Range across measured runs",
+    "after": "Selected measured cohort means"
+  },
+  {
+    "slide": 3,
+    "kind": "textbox",
+    "before": "ρ = 0.27",
+    "after": "9 / 17"
+  },
+  {
+    "slide": 3,
+    "kind": "textbox",
+    "before": "Pooled table, n = 23",
+    "after": "Finite cells are synthetic"
+  },
+  {
+    "slide": 3,
+    "kind": "textbox",
+    "before": "CI crosses 0",
+    "after": "Prediction untested"
+  },
+  {
+    "slide": 3,
+    "kind": "textbox",
+    "before": "[−0.37, 0.88]",
+    "after": "Historical outcome mixes metrics"
+  },
+  {
+    "slide": 3,
+    "kind": "textbox",
+    "before": "Three measured sampling-only GSM8K tensors reproduce ZVF 0.130, 0.190 and 0.155 (pooled 0.1583). The 23-cell association pools heterogeneous records; projection membership is unresolved.",
+    "after": "Three measured sampling-only GSM8K tensors reproduce ZVF 0.130, 0.190 and 0.155 (pooled 0.1583). A Colab source audit resolves the mixed provenance behind the historical correlation."
+  },
+  {
+    "slide": 4,
+    "kind": "textbox",
+    "before": "Recomputable. Association with held-out accuracy is not distinguishable from zero.",
+    "after": "Recomputable. The pooled correlation mixes synthetic rows and outcome definitions, so predictive validity remains unestablished."
+  },
+  {
+    "slide": 3,
+    "kind": "notes",
+    "before": "RQ1. Chapter 6 §6.3.4. The three tensors are sampling-only, G = 8, 200 problems per seed, not a training delta. Pooled ZVF is 0.1583. The residual after mean reward is r = +0.21, 95% CI [−0.31, +0.62], n = 17. ZVF measures group-relative advantage-signal starvation. Predictive validity was not established. KL, auxiliary losses and optimizer state may still affect updates. High ZVF is also what mastery looks like.\nThe n=23 table pools heterogeneous records and membership of simulation-projection rows is unresolved. It is not a separately established measured-only cohort. This is a descriptive association from that table, not validated predictive performance.",
+    "after": "RQ1. Source: thesis §6.3.4 and colab_validation/result.json, inputs/manifest.json and execution_receipt.json. The frozen Python analysis ran through Colab CLI on a clean CPU runtime, with identical findings locally. The historical report counted 23 pooled cells, but six missing-ZVF cells were dropped: 17 effective pairs remain, nine synthetic. All 5,540 variance-mitigation rows reproduce the deterministic generator; duplicates are disclosed. The old rho is descriptive of mixed metrics, not held-out predictive validation. The residual n17 analysis uses the same mixed cohort and mixed source outcomes including late training reward. The three GSM8K tensors are sampling-only, G8,200 problems per seed; their pooled ZVF remains0.1583. Equal reward removes the group-relative advantage signal, but KL, auxiliary losses and optimizer state can still affect updates. No new model training occurred in this Colab reanalysis."
+  },
+  {
+    "slide": 4,
+    "kind": "notes",
+    "before": "These four sentences are the abstract of the defense. If time is cut, stay on this slide and the next two. Source: §9.3. RQ3 is one manifest pair only. Do not say stackdiff predicts a score change.",
+    "after": "Sources: thesis §9.3 and colab_validation/result.json. RQ1: algebra and diagnostic recomputation are supported; predictive validity is unestablished because the historical pooled analysis mixed synthetic rows and target metrics. This is not evidence that prediction is impossible. RQ2 remains baseline-specific and limited by prompt exposure and critic tuning. RQ3 tests one manifest pair and does not predict score changes. RQ4 evaluates a trained checkpoint without establishing a training delta."
+  }
+]

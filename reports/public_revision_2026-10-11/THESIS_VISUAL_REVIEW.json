@@ -1,0 +1,25 @@
+{
+  "utc": "2026-10-11T08:19:19.579832+00:00",
+  "current_pdf_sha256": "83d8ee3a73a7073f17b80d260595b2d11a27f8d750c369b784326d94734980e0",
+  "pages": 317,
+  "coverage": "291 page-body pixel arrays match previously visually inspected renders, excluding bottom45/700 pixels.26 remaining full-page renders inspected on3 contact sheets. Geometry and navigation separately checked for all317 pages.",
+  "closer_inspection_pages": [
+    84,
+    94,
+    111,
+    248,
+    255
+  ],
+  "closer_inspection": "1600-pixel renders inspected; diagram brackets, native-first denominator captions, dense glossary and campaign appendix opening fit.",
+  "deck": "Current slide18 re-rendered and inspected; the other19 slide bodies are unchanged from the reviewed edition.",
+  "limits": "Layout/extraction checks are not a word-by-word reread, scientific proof, native PowerPoint test or accessibility certification. The source-reference appendix retains a short final entry page.",
+  "previous_pdf_sha256": "d1b82f41fb69c5142fcc2e524708062940f71de0c0da78be77010cbdfe559f3a",
+  "last_rebuild_comparison": {
+    "full_page_rgb_arrays_unchanged": 316,
+    "changed_pages": [
+      45
+    ],
+    "changed_page_visually_inspected": true,
+    "scope": "All 317 renders compared against preceding reviewed edition at 700-pixel maximum dimension; only literature page 45 changed and was visually inspected."
+  }
+}

@@ -63,9 +63,9 @@ def test_normaldist_cdf_matches_erf_closure_bitwise():
 
 
 def test_auroc_argsort_ranks_tie_example_and_bootstrap():
-    # Ties are ranked in argsort order, not averaged (a known quirk kept for provenance).
+    # Ties contribute half a win and do not depend on input order.
     assert ac.auroc_argsort_ranks(np.array([1, 0, 0, 1]), np.full(4, 0.5)) == 0.5
-    assert ac.auroc_argsort_ranks(np.array([0, 1]), np.array([0.5, 0.5])) == 1.0
+    assert ac.auroc_argsort_ranks(np.array([0, 1]), np.array([0.5, 0.5])) == 0.5
     assert np.isnan(ac.auroc_argsort_ranks(np.array([1, 1]), np.array([0.1, 0.2])))
     y = np.array([0, 0, 1, 1, 0, 1])
     s = np.array([0.1, 0.4, 0.35, 0.8, 0.2, 0.9])

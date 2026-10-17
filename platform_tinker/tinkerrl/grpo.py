@@ -631,10 +631,18 @@ def normalize_rewards(
     loss never length-normalizes, so the paper's length-norm removal has
     no counterpart here.
     """
+    if not all(math.isfinite(r) for r in rewards):
+        raise ValueError("rewards must be finite")
+    if not unbiased and (not math.isfinite(epsilon) or epsilon <= 0):
+        raise ValueError("epsilon must be finite and positive for standardized advantages")
     n = len(rewards)
     if n == 0:
         return []
-    mean_r = sum(rewards) / n
+    # Exactly tied rewards carry no policy signal, including fractional ties
+    # whose naive sum/mean can otherwise introduce an epsilon-amplified residue.
+    if all(r == rewards[0] for r in rewards):
+        return [0.0] * n
+    mean_r = math.fsum(rewards) / n
     if unbiased:
         return [r - mean_r for r in rewards]
     std_r = (sum((r - mean_r) ** 2 for r in rewards) / n) ** 0.5 + epsilon
@@ -688,6 +696,10 @@ def normalize_advantages_global(
     needed).  If every entry is excluded, statistics fall back to the full
     vector so the call still returns aligned values.
     """
+    if not all(math.isfinite(r) for r in rewards):
+        raise ValueError("rewards must be finite")
+    if not unbiased and (not math.isfinite(epsilon) or epsilon <= 0):
+        raise ValueError("epsilon must be finite and positive for standardized advantages")
     n = len(rewards)
     if n == 0:
         return []
@@ -698,7 +710,7 @@ def normalize_advantages_global(
             raise ValueError(f"exclude must pair 1:1 with rewards, got {len(exclude)} for {n}")
         basis_idx = [i for i, drop in enumerate(exclude) if not drop]
     basis = [rewards[i] for i in basis_idx] or list(rewards)
-    mean_b = sum(basis) / len(basis)
+    mean_b = basis[0] if all(r == basis[0] for r in basis) else math.fsum(basis) / len(basis)
     centered = [r - mean_b for r in rewards]
     if unbiased:
         return centered

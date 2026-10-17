@@ -156,12 +156,12 @@ def verify_bundle_unchanged(source, staged, record):
 
 def build_environment(stage, tectonic_bundle=None):
     require(os.name == "posix", "this wrapper requires POSIX process groups (Linux or macOS)")
-    native = {name: shutil.which(name) for name in ("pandoc", "tectonic")}
-    missing = [name for name, path in native.items() if path is None]
+    discovered = {name: shutil.which(name) for name in ("pandoc", "tectonic")}
+    missing = [name for name, path in discovered.items() if path is None]
     require(
         not missing, f"missing native tool(s): {', '.join(missing)}; add approved tools to PATH"
     )
-    native = {name: os.path.abspath(path) for name, path in native.items()}
+    native = {name: os.path.abspath(path) for name, path in discovered.items() if path is not None}
     native_path = os.pathsep.join(
         os.path.abspath(entry or os.curdir)
         for entry in os.environ.get("PATH", os.defpath).split(os.pathsep)

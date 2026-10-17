@@ -28,6 +28,8 @@ import math
 import random
 import re
 import statistics
+import sys
+from decimal import Decimal
 import subprocess
 import tempfile
 from collections import Counter
@@ -37,6 +39,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 THESIS = "reports/public_revision_2026-10-04/thesis"
+C1_LEDGER = "reports/public_revision_2026-10-03/thesis/c1_case_ledger.csv"
 RES = "platform_hybrid/experiments/results"
 SEC = "platform_hybrid/paper/sections"
 SMALL = "outputs/e1_e14_small_scale_2026-09-26"
@@ -103,6 +106,8 @@ def sha256(rel: str) -> str:
 
 
 def wilson(k, n, pct=False):
+    if not (math.isfinite(k) and math.isfinite(n) and n > 0 and 0 <= k <= n):
+        raise ValueError("Wilson requires 0 <= k <= n and n > 0")
     p = k / n
     centre = (p + Z95**2 / (2 * n)) / (1 + Z95**2 / n)
     half = Z95 * math.sqrt(p * (1 - p) / n + Z95**2 / (4 * n * n)) / (1 + Z95**2 / n)
@@ -119,15 +124,21 @@ def mcnemar(pairs):
 
 def signflip_p(diffs):
     """Exact two-sided sign-flip p for the mean of paired differences."""
-    obs = abs(sum(diffs))
-    hits = sum(
-        abs(sum(s * d for s, d in zip(signs, diffs))) >= obs - 1e-12
+    diffs = list(diffs)
+    if not diffs or not all(math.isfinite(d) for d in diffs):
+        raise ValueError("sign-flip requires nonempty finite differences")
+    obs = abs(math.fsum(diffs))
+    totals = (
+        abs(math.fsum(s * d for s, d in zip(signs, diffs)))
         for signs in itertools.product((1, -1), repeat=len(diffs))
     )
+    hits = sum(total >= obs or math.isclose(total, obs, rel_tol=1e-12) for total in totals)
     return hits / 2 ** len(diffs)
 
 
 def holm(ps):
+    if any(not math.isfinite(p) or not 0 <= p <= 1 for p in ps):
+        raise ValueError("Holm requires finite probabilities in [0, 1]")
     order = sorted(range(len(ps)), key=ps.__getitem__)
     out, running = [0.0] * len(ps), 0.0
     for rank, i in enumerate(order):
@@ -137,6 +148,10 @@ def holm(ps):
 
 
 def fisher_ci(r, n):
+    if not math.isfinite(r) or not -1 <= r <= 1 or not math.isfinite(n) or n <= 3:
+        raise ValueError("Fisher interval requires -1 <= r <= 1 and n > 3")
+    if abs(r) == 1:
+        return r, r
     z, se = math.atanh(r), 1 / math.sqrt(n - 3)
     return math.tanh(z - Z95 * se), math.tanh(z + Z95 * se)
 
@@ -189,7 +204,7 @@ def m16():
 
 
 def c1_ledger():
-    rows = list(csv.DictReader(text(f"{THESIS}/c1_case_ledger.csv").splitlines()))
+    rows = list(csv.DictReader(text(C1_LEDGER).splitlines()))
     n = len(rows)
     events = sum(r["frozen_primary_event"] == "True" for r in rows)
     corr = sum(r["conservative_corroborated_numeric_recovery"] == "True" for r in rows)
@@ -675,7 +690,7 @@ def claims():
         "ch07",
         ["11 / 64", "17.19%", "9.88-28.21%", "3 / 64", "4.69%", "87 / 4,096", "64 / 87"],
         "R",
-        [f"{THESIS}/c1_case_ledger.csv"],
+        [C1_LEDGER],
         lambda: (
             lambda c: [
                 f"{c['events']} / {c['n']}",
@@ -698,7 +713,7 @@ def claims():
             "| Total | 64 |",
         ],
         "R",
-        [f"{THESIS}/c1_case_ledger.csv"],
+        [C1_LEDGER],
         lambda: (
             lambda c: [
                 f"| Clear wrong reference final value | {c['cat']['clear_wrong_gold']} |",
@@ -1289,6 +1304,10 @@ MONTHS = (
     "December",
 )
 NOTES = {
+    "§6.1 η² sum": "Arithmetic on the four rounded marginal eta-squared summaries in _shared_methods.tex; not a rerun of ANOVA on the 42 underlying experiments.",
+    "§6 registry bootstrap CI": "Stored P2-C2 heldout_metric summary only; bootstrap sampling and raw-row reconstruction are not rerun by this claim.",
+    "§6 historical Welch test": "Historical p=0.7605 transcription from REPRODUCE.md, not a recomputed Welch test or the current paired same-stack result.",
+    "§6 SNR ratios": "Ratios calculated from stored G=2 and G=16 snr_advantage_variance summaries; not a fresh SNR estimate from raw trajectories.",
     "Table A.5 evidence tiers": "claim_to_run_table.tsv records P1-C2 as X; the thesis rectifies it to C "
     "because the Nemotron identity was arbitrated against the HF adapter (Table A.5 P1-C2 row).",
     "§6.5.3 seed-paired mechanism contrasts": "Differences are Dr. GRPO minus GRPO, paired by task "
@@ -1315,6 +1334,8 @@ def audit_arm(arm):
 def paired_t(diffs):
     from scipy import stats
 
+    if len(diffs) < 2 or not all(math.isfinite(d) for d in diffs):
+        raise ValueError("paired t interval requires at least two finite differences")
     n = len(diffs)
     m, sd = statistics.mean(diffs), statistics.stdev(diffs)
     half = stats.t.ppf(0.975, n - 1) * sd / math.sqrt(n)
@@ -1496,9 +1517,50 @@ def git_tag(tag):
     return f"commit `{h}` dated {int(d[8:])} {MONTHS[int(d[5:7]) - 1]} {d[:4]}"
 
 
+def registered_wording(chapter, legacy, corrected):
+    """Select one explicitly registered wording; altered numbers remain failures."""
+    return corrected if corrected in text(f"{THESIS}/{CHAPTERS[chapter]}") else legacy
+
+
+def e14_registry_row(e):
+    """Keep accepted-set and all-disposition denominators distinct in each edition."""
+    if "native accepted-set accuracy" in text(f"{THESIS}/{CHAPTERS['appA']}"):
+        return (
+            "{}/{} accepted ({:.6f}%); native accepted-set accuracy {}/{} = {:.6f}%; "
+            "all-disposition diagnostic {}/{} = {:.6f}%"
+        ).format(
+            e["accepted"],
+            e["n"],
+            pct(e["accepted"], e["n"]),
+            e["correct"],
+            e["accepted"],
+            pct(e["correct"], e["accepted"]),
+            e["correct"],
+            e["n"],
+            pct(e["correct"], e["n"]),
+        )
+    return (
+        "{}/{} accepted ({:.6f}%); accuracy {}/{} = {:.6f}% "
+        "(official scorer {:.6f}% on {} judged rows)"
+    ).format(
+        e["accepted"],
+        e["n"],
+        pct(e["accepted"], e["n"]),
+        e["correct"],
+        e["n"],
+        pct(e["correct"], e["n"]),
+        pct(e["correct"], e["accepted"]),
+        e["accepted"],
+    )
+
+
 def code_rows():
     """Table 4.2: (row tail as printed, runner, regexes that must all match the runner)."""
-    t42 = "| 32 | 1e-5 (actor); 3e-5 default | 4 (actor); 8 default | 40 (actor) |"
+    t42 = registered_wording(
+        "ch04",
+        "| 32 | 1e-5 (actor); 3e-5 default | 4 (actor); 8 default | 40 (actor) |",
+        "| 32 | 1e-5 (actor preset); 3e-5 default | 4 (actor preset); 8 default | 40 (actor preset) |",
+    )
     trl = "| 32 in code, 16 in dump | 1e-5 | 8 | 30 |"
     dumps = "platform_hybrid/experiments/framework_config_dumps"
     return [
@@ -1806,17 +1868,45 @@ def a8_rows():
             b["cc"] + b["spec"], pct(b["cc"] + b["spec"], 312), b["cc"], b["spec"], n=2 * b["n"]
         ),
         "{}/{} episodes; {:.6f}% progression".format(t["E13"][1], t["E13"][0], t["E13"][2]),
-        "{}/{} accepted ({:.6f}%); accuracy {}/{} = {:.6f}% (official scorer {:.6f}% on {} judged rows)".format(
-            e["accepted"],
-            e["n"],
-            pct(e["accepted"], e["n"]),
-            e["correct"],
-            e["n"],
-            pct(e["correct"], e["n"]),
-            pct(e["correct"], e["accepted"]),
-            e["accepted"],
-        ),
+        e14_registry_row(e),
         "{n}/{n} trials, mean reward {}".format(e4["mean_reward"], n=e4["n_trials"]),
+    ]
+
+
+def marginal_eta_sum():
+    source = text(f"{SEC}/_shared_methods.tex")
+    # Bind to the four labeled factors, not unrelated decimal tokens.
+    values = []
+    for label in (
+        "library/framework",
+        "training algorithm",
+        "family explains",
+        "model scale explains",
+    ):
+        value = rx(re.escape(label) + r".{0,30}?= ([0-9.]+)", source, 1)
+        values.append(Decimal(value))
+    return [f"These four values sum to {sum(values):.6f}"]
+
+
+def registry_bootstrap_ci():
+    rows = [
+        r for r in tsv(f"{RES}/claim_to_run/claim_to_run_table.tsv") if r["claim_id"] == "P2-C2"
+    ]
+    if len(rows) != 1:
+        raise ValueError("expected exactly one P2-C2 registry row")
+    interval = rx(r"bootstrap 95% CI (\[[^]]+\])", rows[0]["heldout_metric"], 1)
+    return [f"the registry's bootstrap 95% CI is {interval}"]
+
+
+def snr_ratios():
+    rows = {
+        int(r["G"]): float(r["snr_advantage_variance"])
+        for r in tsv(f"{RES}/group_size_iter27_synthesis.tsv")
+    }
+    ratio = rows[16] / rows[2]
+    return [
+        f"about {100 * ratio / math.sqrt(16 / 2):.6f}% of the √G ideal",
+        f"about {100 * (ratio - 1):.6f}% above a flat baseline",
     ]
 
 
@@ -1853,19 +1943,28 @@ def claims_ext():
         "§6.1 η² sum",
         "ch06",
         ["These four values sum to 1.897"],
-        "A",
-        [],
-        lambda: [f"These four values sum to {0.546 + 0.558 + 0.471 + 0.322:.6f}"],
+        "R",
+        [f"{SEC}/_shared_methods.tex"],
+        marginal_eta_sum,
+    )
+    yield (
+        "§6 registry bootstrap CI",
+        "ch06",
+        ["the registry's bootstrap 95% CI is [−0.37, 0.88]"],
+        "S",
+        [f"{RES}/claim_to_run/claim_to_run_table.tsv"],
+        registry_bootstrap_ci,
+    )
+    yield (
+        "§6 SNR ratios",
+        "ch06",
+        ["about 52% of the √G ideal", "about 48% above a flat baseline"],
+        "R",
+        [f"{RES}/group_size_iter27_synthesis.tsv"],
+        snr_ratios,
     )
     for name, tok, src in (
-        (
-            "registry bootstrap CI",
-            "the registry's bootstrap 95% CI is [−0.37, 0.88]",
-            f"{RES}/claim_to_run/claim_to_run_table.tsv",
-        ),
         ("historical Welch test", "p = 0.7605", "REPRODUCE.md"),
-        ("SNR fraction", "about 52% of the √G ideal", f"{SEC}/p3_abstract.tex"),
-        ("SNR above flat", "about 48% above a flat baseline", f"{SEC}/group_size_iter27.tex"),
         (
             "superseded ε statement",
             "The earlier ≤0.4% ε-sensitivity statement",
@@ -2065,7 +2164,6 @@ def claims_ext():
             ]
         )(Counter("C" if r["claim_id"] == "P1-C2" else r["evidence_tier"] for r in claim_rows())),
     )
-    fraud = tsv(f"{RES}/quick_20260704/qp8_fraud.tsv")[0]
     yield (
         "Table A.5 recomputed outcomes",
         "appA",
@@ -2104,7 +2202,10 @@ def claims_ext():
                     fw["TRL"]["last10_avg"], fw["Tinker"]["last10_avg"]
                 ),
                 rx(r"\d+/\d+ entries pass", cr["P6-C1"]["heldout_metric"]),
-                "AUC {} on the {:,}-row".format(fraud["auc"], int(fraud["n"])),
+                "AUC {} on the {:,}-row".format(
+                    tsv(f"{RES}/quick_20260704/qp8_fraud.tsv")[0]["auc"],
+                    int(tsv(f"{RES}/quick_20260704/qp8_fraud.tsv")[0]["n"]),
+                ),
                 "| P7-C1 | {} —".format(len(cr["P7-C1"]["run_ids"].split(";"))),
             ]
         )(
@@ -2255,9 +2356,17 @@ def claims_ext():
             "**1967/1967 COMPLETE**",
             "10/34 = 0.294 task success",
             "97/97 tasks completed, utility 88/97 = 0.907",
-            "**312/312 = 129/312 pass@1 (41.35%)**; 67/156 completion + 62/156 spec-to-RTL",
+            registered_wording(
+                "appA",
+                "**312/312 = 129/312 pass@1 (41.35%)**; 67/156 completion + 62/156 spec-to-RTL",
+                "**312/312 evaluated; 129/312 pass@1 (41.35%)**; 67/156 completion + 62/156 spec-to-RTL",
+            ),
             "255/255 episodes; 26.1% progression",
-            "4426/4428 accepted (99.95%); accuracy 2271/4428 = 51.29% (official scorer 51.31% on 4426 judged rows)",
+            registered_wording(
+                "appA",
+                "4426/4428 accepted (99.95%); accuracy 2271/4428 = 51.29% (official scorer 51.31% on 4426 judged rows)",
+                "4426/4428 accepted (99.95%); native accepted-set accuracy 2271/4426 = 51.31%; all-disposition diagnostic 2271/4428 = 51.29%",
+            ),
             "100/100 trials, mean reward 0.0",
         ],
         "R",
@@ -2319,7 +2428,13 @@ def claims_ext():
     yield (
         "Table A.10 named-run total",
         "appA",
-        ["This appendix names 105 runs individually"],
+        [
+            registered_wording(
+                "appA",
+                "This appendix names 105 runs individually",
+                "The following historical subtotal contains 105 registry entries",
+            )
+        ],
         "A",
         [],
         lambda: [f"This appendix names {4 + 20 + 12 + 46 + 23} runs individually"],
@@ -2331,7 +2446,13 @@ def claims_ext():
 def tost_p(diffs, margin):
     from scipy import stats
 
+    if len(diffs) < 2 or not all(math.isfinite(d) for d in diffs):
+        raise ValueError("TOST requires at least two finite differences")
+    if not math.isfinite(margin) or margin <= 0:
+        raise ValueError("TOST margin must be positive and finite")
     n, m, sd = len(diffs), statistics.mean(diffs), statistics.stdev(diffs)
+    if sd == 0:
+        return 0.0 if abs(m) < margin else (0.5 if abs(m) == margin else 1.0)
     se = sd / math.sqrt(n)
     return max(stats.t.sf((m + margin) / se, n - 1), stats.t.cdf((m - margin) / se, n - 1))
 
@@ -2583,7 +2704,7 @@ def prose_claims(ch):
                 re.sub(r"^results/", f"{RES}/", re.sub(r"^sections/", f"{SEC}/", p))
                 for p in re.findall(r"`([\w./-]+/[\w.-]+\.\w+)`", span)
             ]
-            paths = list(dict.fromkeys(p for p in paths if "/" in p and (ROOT / p).is_file()))
+            paths = list(dict.fromkeys(p for p in paths if "/" in p))
             if not paths:
                 continue
             if "corrected" in span or "Table E.1" in span:
@@ -2600,43 +2721,79 @@ def prose_claims(ch):
 # ---------------------------------------------------------------- evaluation
 def norm_num(token):
     s = token.strip().replace("−", "-").replace(",", "").rstrip("%").lstrip("+")
-    return float(s), len(s.split(".")[1]) if "." in s else 0
+    value = Decimal(s)
+    exponent = value.as_tuple().exponent
+    if not value.is_finite() or not isinstance(exponent, int):
+        raise ValueError("number must be finite")
+    return float(value), -exponent
 
 
-NUM = re.compile(r"[-−+]?\d[\d,]*(?:\.\d+)?")
+NUM = re.compile(r"[-−+]?(?:\d[\d,]*(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?")
 
 
 def numbers_agree(token, computed):
-    """Same numbers in the same order, each within half a unit of the token's last printed digit."""
+    """Compare decimal values within half a unit of the last printed digit."""
     want, got = NUM.findall(token), NUM.findall(computed)
     if len(want) != len(got) or not want:
         return False
     for w, g in zip(want, got):
-        wv, digits = norm_num(w)
-        if abs(norm_num(g)[0] - wv) > 0.5 * 10**-digits + 1e-6:
+        wv = Decimal(w.replace("−", "-").replace(",", ""))
+        gv = Decimal(g.replace("−", "-").replace(",", ""))
+        exponent = wv.as_tuple().exponent
+        if not isinstance(exponent, int):
+            return False
+        tolerance = Decimal("0.5") * Decimal(10) ** exponent
+        if abs(gv - wv) > tolerance:
             return False
     return True
 
 
 def in_source(token, source):
-    """Every number of the token occurs in the source, ignoring TeX/markdown decoration."""
+    """Each numeric value must occur in the source; signs and exponents matter."""
     flat = re.sub(r"\\[,;: ]", " ", source)
     flat = re.sub(r"[\\$~{}]", "", flat).replace("−", "-")
-    flat = re.sub(r"(?<=\d),(?=\d{3}(?!\d))", "", flat)
-    return all(
-        re.search(
-            r"(?<![\d.])"
-            + re.escape(n.replace("−", "-").replace(",", "").lstrip("+"))
-            + (r"0*(?![\d])" if "." in n else r"(?![\d])"),
-            flat,
-        )
-        for n in NUM.findall(token)
+    flat = re.sub(r"(?<=\d)--(?=\d)", "–", flat)
+    wanted = NUM.findall(token)
+    if not wanted:
+        return token in flat
+    values = {Decimal(n.replace(",", "")) for n in NUM.findall(flat)}
+    return all(Decimal(n.replace("−", "-").replace(",", "")) in values for n in wanted)
+
+
+# Only these exact section/token pairs may inherit a named explicit claim.
+# A stored summary or transcription never becomes a general chapter-wide
+# numeric whitelist, and the inherited method is recorded on the prose row.
+PROSE_BINDINGS = {
+    ("§6.1 prose", "1.897"): "§6.1 η² sum",
+    ("§6.2.3 prose", "0.7605"): "§6 historical Welch test",
+    ("§6.3.4 prose", "−0.37"): "§6 registry bootstrap CI",
+    ("§6.3.4 prose", "0.88"): "§6 registry bootstrap CI",
+    ("§6.4.1 prose", "52%"): "§6 SNR ratios",
+    ("§6.4.1 prose", "48%"): "§6 SNR ratios",
+}
+
+
+def bound_prose_evidence(group, token, chapter, groups):
+    name = PROSE_BINDINGS.get((group, token))
+    return next(
+        (
+            g
+            for g in groups
+            if g["group"] == name
+            and g["chapter"] == chapter
+            and g["status"] == "PASS"
+            and any(in_source(token, r["token"]) for r in g["tokens"] if r["result"] == "PASS")
+        ),
+        None,
     )
 
 
 def evaluate():
+    # A second audit in this process must observe edited files and new evidence.
+    for reader in (text, J, jsonl, expand, sha256, e14, e11_boot):
+        reader.cache_clear()
     chapters = {k: text(f"{THESIS}/{v}") for k, v in CHAPTERS.items()}
-    groups = []
+    groups: list[dict[str, Any]] = []
     verified: dict[str, list[str]] = {}
     for group, ch, tokens, method, artifacts, compute in itertools.chain(
         claims(), claims_ext(), prose_claims("ch06")
@@ -2662,7 +2819,10 @@ def evaluate():
         if method in ("R", "S", "A", "C") and not missing:
             try:
                 values = compute()
+                if len(values) != len(tokens):
+                    raise ValueError("computed value count does not match registered tokens")
             except (KeyError, ValueError, TypeError, IndexError, ZeroDivisionError, OSError) as exc:
+                values = None
                 record["error"] = f"{type(exc).__name__}: {exc}"
         for i, tok in enumerate(tokens):
             row = {"token": tok, "in_chapter": tok in chapters[ch]}
@@ -2675,7 +2835,14 @@ def evaluate():
                     "PASS" if any(in_source(tok, text(a)) for a in artifacts) else "FAIL"
                 )
                 if method == "P" and row["result"] == "FAIL":
-                    if any(tok in v for v in verified.get(ch, [])):
+                    binding = bound_prose_evidence(group, tok, CHAPTERS[ch], groups)
+                    if binding is not None:
+                        row["result"] = "PASS"
+                        row["source_binding"] = {
+                            k: binding[k] for k in ("group", "method", "artifacts")
+                        }
+                        row["note"] = binding.get("note", "explicit section-specific claim binding")
+                    elif any(in_source(tok, v) for v in verified.get(ch, [])):
                         row["result"] = "PASS"
                         row["note"] = "verified by an explicit recomputation in this chapter"
                     elif tok in PROSE_DEFINITIONS:
@@ -2699,13 +2866,12 @@ def evaluate():
                 elif isinstance(v, str):
                     row["result"] = "PASS" if v == tok or numbers_agree(tok, v) else "FAIL"
                 else:
-                    want, digits = norm_num(tok)
-                    row["result"] = "PASS" if abs(v - want) <= 0.5 * 10**-digits + 1e-9 else "FAIL"
+                    row["result"] = "PASS" if numbers_agree(tok, str(v)) else "FAIL"
             if not row["in_chapter"]:
                 row["result"] = "FAIL"
                 row["note"] = "token not found verbatim in chapter"
             record["tokens"].append(row)
-            if row["result"] == "PASS" and method != "P":
+            if row["result"] == "PASS" and method == "R":
                 verified.setdefault(ch, []).append(tok)
         results = {r["result"] for r in record["tokens"]}
         if "FAIL" in results:
@@ -2826,14 +2992,16 @@ def appendix(groups, report_name):
         gs = rows[loc]
         arts = list({a["path"]: a for g in gs for a in g["artifacts"]}.values())
         toks = [r for g in gs for r in g["tokens"]]
-        bad = sum(r["result"] in ("FAIL", "ARTIFACT_MISSING") for r in toks)
+        bad = sum(r["result"] == "FAIL" for r in toks)
+        missing = sum(r["result"] == "ARTIFACT_MISSING" for r in toks)
         unbound = sum(r["result"] == "UNBOUND" for r in toks)
         skipped = sum(r["result"] == "NOT_CHECKED" for r in toks)
         passed = sum(r["result"] == "PASS" for r in toks)
         context = sum(r["result"] == "CONTEXT" for r in toks)
         parts = [f"{passed} pass"] * bool(passed)
         parts += [f"{context} context"] * bool(context)
-        parts += [f"{bad} failed or missing"] * bool(bad) + [f"{unbound} unbound"] * bool(unbound)
+        parts += [f"{bad} failed"] * bool(bad) + [f"{unbound} unbound"] * bool(unbound)
+        parts += [f"{missing} evidence unavailable"] * bool(missing)
         parts += [f"{skipped} not checked"] * bool(skipped)
         methods = "".join(sorted({g["method"] for g in gs}, key="RSCTPAW".index))
         artifact = f"`{short_path([a['path'] for a in arts])}`" if arts else "—"
@@ -2848,6 +3016,15 @@ def appendix(groups, report_name):
         "",
     ]
     return "\n".join(out)
+
+
+def overall_status(groups):
+    results = {r["result"] for g in groups for r in g["tokens"]}
+    if "FAIL" in results:
+        return "FAIL"
+    if not results or results - {"PASS", "CONTEXT"}:
+        return "INCOMPLETE"
+    return "PASS"
 
 
 def main(argv=None):
@@ -2881,16 +3058,16 @@ def main(argv=None):
             reader.cache_clear()
         groups = evaluate()
         appendix_text = appendix(groups, args.json.name)
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+        print(f"audit error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 2
     finally:
         THESIS = original_thesis
     summary = audit_summary(groups)
     report = {
         "schema_version": "thesis-number-provenance-v1",
-        "status": "FAIL"
-        if any(
-            summary[key] for key in ("failed_checks", "unbound_values", "missing_artifact_values")
-        )
-        else "PASS",
+        "status": overall_status(groups),
+        "token_counts": dict(Counter(r["result"] for g in groups for r in g["tokens"])),
         "scope": (
             "Selected registered numeric tokens versus local artifacts or printed inputs, under the "
             "named check methods; context and withheld values are not independently checked. "
@@ -2904,8 +3081,12 @@ def main(argv=None):
     rendered = json.dumps(report, indent=2, ensure_ascii=False) + "\n"
     for pattern, replacement in REDACT.items():
         rendered = re.sub(pattern, replacement, rendered)
-    args.json.write_text(rendered, encoding="utf-8")
-    args.appendix.write_text(appendix_text, encoding="utf-8")
+    try:
+        args.json.write_text(rendered, encoding="utf-8")
+        args.appendix.write_text(appendix_text, encoding="utf-8")
+    except OSError as exc:
+        print(f"audit output error: {exc}", file=sys.stderr)
+        return 2
     for g in groups:
         bad = [r for r in g["tokens"] if r["result"] not in ("PASS", "CONTEXT", "NOT_CHECKED")]
         print(f"{g['status']:<16} {g['method']} {g['group']}")

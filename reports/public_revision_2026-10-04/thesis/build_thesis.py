@@ -114,9 +114,9 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
     ],
     "ch04_methodology.md": [
         ("fig_attribution",
-         "The attribution design. Exactly one factor of the training stack is "
-         "varied while the remainder is held fixed, so a measured difference "
-         "cannot be attributed to an unstated framework difference.",
+         "The intended attribution design varies one factor of the training stack "
+         "while aiming to hold the remainder fixed. Known checkpoint and prompt-exposure "
+         "differences limit achieved causal isolation.",
          "fig:attribution", ["Design Commitment", "Methodology"]),
         ("fig_zvf_definition",
          "Definition of the Zero-Variance Fraction. One prompt produces $G$ "
@@ -148,7 +148,7 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "destinations each record flows to.",
          "fig:telemetry", ["Telemetry", "Methodology"]),
         ("fig_four_pillars",
-         "The four de-confound pillars. Each holds the whole stack fixed and "
+         "The four intended de-confound pillars. Each aims to hold the whole stack fixed and "
          "varies exactly one factor. In Pillar~2 all nine rows of the method "
          "panel, vanilla GRPO included, are a "
          "declared simulation projection (Chapter~6).",
@@ -197,8 +197,8 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "fig:harness", ["Harness", "Implementation"]),
         ("fig_receipt_pipeline",
          "The evidence chain from sealed request through execution and native "
-         "grading to a deterministic ledger check. A break anywhere in the "
-         "chain means no number is reported for that lane. Upper row: the chain; "
+         "grading to a deterministic ledger check. Breaks in the "
+         "chain require explicit source and provenance limits for retained historical summaries. Upper row: the intended chain; "
          "the 11/11 PASS badge is the 2026-09-19 deterministic ledger check of eleven named claims, not of every figure "
          "(\\texttt{LEDGER\\_CODE\\_CHECK\\_2026-09-19.json}). Lower row: the E1 "
          "wave-10 recovery, where the lost execution source stops the chain.",
@@ -311,8 +311,8 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "LAB-Bench public split, per-category accuracy, all 1{,}967 questions "
          "graded across eight categories. Each bar is correct/total for one "
          "category (labels give the counts). Accuracy is strongly "
-         "category-dependent, so no pooled cross-category average is drawn or "
-         "claimed. CloningScenarios is a historically reported zero (0/33). "
+         "category-dependent; the figure displays category rates rather than an aggregate bar. "
+         "CloningScenarios is a historically reported zero (0/33). "
          "The original diagnostic file was recovered and byte-verified on "
          "3 October (Appendix B); its aggregate counts agree with these bars.",
          "fig:e8", ["LAB-Bench", "E8", "complete scopes"]),

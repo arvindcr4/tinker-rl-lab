@@ -1,0 +1,135 @@
+\documentclass[border=6pt]{standalone}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,decorations.pathreplacing,patterns,pgfplots.groupplots}
+\tikzset{
+  blk/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=blue!6,
+              minimum height=8mm, minimum width=20mm, align=center, font=\small},
+  io/.style={rectangle, rounded corners=6pt, draw=black!70, thick, fill=green!8,
+             minimum height=8mm, align=center, font=\small},
+  proc/.style={rectangle, draw=black!70, thick, fill=orange!10, minimum height=8mm,
+               align=center, font=\small},
+  dec/.style={diamond, aspect=2, draw=black!70, thick, fill=yellow!15, align=center, font=\footnotesize},
+  warnbox/.style={rectangle, rounded corners=2pt, draw=red!60!black, thick, fill=red!7,
+                  minimum height=8mm, align=center, font=\small},
+  oklbox/.style={rectangle, rounded corners=2pt, draw=green!45!black, thick, fill=green!8,
+                 minimum height=8mm, align=center, font=\small},
+  ar/.style={-{Latex[length=2mm]}, thick},
+  arl/.style={-{Latex[length=2mm]}, thick, dashed, draw=black!55},
+  lbl/.style={font=\footnotesize\itshape, text=black!60},
+}
+\definecolor{good}{RGB}{34,139,34}
+\definecolor{bad}{RGB}{178,34,34}
+\definecolor{warn}{RGB}{218,165,32}
+\definecolor{pesblue}{RGB}{0,45,98}
+\definecolor{complete}{RGB}{30,125,79}
+\definecolor{partial}{RGB}{176,106,0}
+\definecolor{blocked}{RGB}{166,43,43}
+\newcommand{\gl}[1]{{\tiny\color{black!75}#1}}
+% --- figure-local styles -------------------------------------------------
+% Canvas ~14 cm wide -> prints at ~0.97; smallest text \scriptsize (~6.8 pt).
+\tikzset{
+  q/.style={dec, minimum width=4.9cm, minimum height=1.9cm, text width=2.9cm,
+            inner sep=1pt, font=\footnotesize},
+  leaf/.style={rectangle, rounded corners=2pt, thick, draw=black!70, fill=white,
+               text width=3.05cm, minimum height=2.55cm, inner sep=2.5pt,
+               align=center, anchor=north, font=\footnotesize},
+  leafc/.style={leaf, draw=complete!75!black, fill=complete!8},
+  leafp/.style={leaf, draw=partial!75!black, fill=partial!8, dashed},
+  leafb/.style={leaf, draw=blocked!75!black, fill=blocked!8,
+                postaction={pattern=north east lines, pattern color=blocked!15}},
+  root/.style={blk, text width=5.4cm, inner sep=3pt},
+  countb/.style={oklbox, text width=3.3cm, inner sep=2.5pt, font=\scriptsize,
+                 align=center, anchor=north},
+  sw/.style={draw=black!70, thick, minimum width=3.2mm, minimum height=3.2mm,
+             inner sep=0pt},
+  swl/.style={font=\scriptsize, anchor=west, text=black!85},
+  gl/.style={font=\scriptsize, align=center, text=black!80},
+  yesno/.style={lbl, fill=white, inner sep=1pt, font=\footnotesize\itshape},
+}
+\renewcommand{\gl}[1]{{\scriptsize\color{black!80}#1}}
+\begin{document}
+\begin{tikzpicture}[x=1cm,y=1cm]
+
+% ===================== ROOT =====================
+\node[root] (ROOT) at (0.1,0)
+  {\textbf{Lane (E1--E14)} --- classified once, from the ledger of record};
+
+% ===================== decisions =====================
+\node[q] (D1) at (0.3,-1.85) {Coverage full and every gate cleared?};
+\node[q] (D2) at (0.3,-4.35) {Any local or paid path left?};
+\node[q] (D3) at (0.3,-6.85) {Which gate blocks the result?};
+\draw[ar] (ROOT.south -| D1.north) -- (D1.north);
+
+% ===================== count box + legend (right, top) =====================
+\node[countb] (CNT) at (5.35,0.25)
+  {\textbf{17 lane-states over 14 lanes}\\[1pt]
+   E8, E10 and E14 hold two states each: original-contract and
+   replacement-scope rows are separate};
+\node[sw, fill=complete!30] (s1) at (3.85,-1.95) {};
+\node[swl] at (4.05,-1.95) {resolved --- no open gate};
+\node[sw, fill=partial!30, dashed, draw=partial!75!black] (s2) at (3.85,-2.40) {};
+\node[swl] at (4.05,-2.40) {gate pending / partial};
+\node[sw, pattern=north east lines, pattern color=blocked!60, draw=blocked!75!black] (s3) at (3.85,-2.85) {};
+\node[swl] at (4.05,-2.85) {closed --- no path};
+
+% ===================== Q1 yes -> two COMPLETE leaves (left) =====================
+\node[leafc, anchor=north] (L1) at (-4.85,-0.35)
+  {\textbf{\texttt{COMPLETE}}\\[2pt]
+   E8-public,\\ E10-benign, E11\\[2pt]
+   \gl{verified full-coverage native results; no open gate}};
+\node[leafc, anchor=north] (L2) at (-4.85,-3.10)
+  {\textbf{\texttt{COMPLETE\_}\allowbreak\texttt{TERMINAL\_NOTE}}\\[2pt]
+   E14 (replacement)\\[2pt]
+   \gl{native protocol; two unjudged rows; both denominators reported}};
+\coordinate (yb) at (-2.75,-1.85);
+\draw[thick] (D1.west) -- (yb);
+\draw[ar] (yb) |- (L1.east);
+\draw[ar] (yb) |- (L2.east);
+\node[yesno, anchor=south] at ($(D1.west)!0.5!(yb)$) {yes};
+
+% Q1 no -> Q2
+\draw[ar] (D1.south) -- (D2.north) node[yesno, midway, right=1pt] {no};
+
+% ===================== Q2 no -> CLOSED_EXTERNAL (right) =====================
+\node[leafb, anchor=west] (L3) at (3.75,-4.35)
+  {\textbf{\texttt{CLOSED\_}\allowbreak\texttt{EXTERNAL}}\\[2pt]
+   E3, E7, E8-private, E10-private, E12, E14-private\\[2pt]
+   \gl{one written closure record per lane-state}};
+\draw[ar] (D2.east) -- (L3.west) node[yesno, midway, above=1pt] {no};
+
+% Q2 yes -> Q3
+\draw[ar] (D2.south) -- (D3.north) node[yesno, midway, right=1pt] {yes};
+
+% ===================== Q3 -> four leaves =====================
+\foreach \x in {-4.95,-1.6,1.75,5.1}
+  \draw[ar] (D3.south) -- (\x,-8.55);
+
+\node[leafp] (L4) at (-4.95,-8.55)
+  {\textbf{\texttt{PENDING\_QUOTA}}\\[2pt]
+   E6, E9 (19 Sep)\\[1pt]
+   \gl{gate: AWS quota only; no amendment needed. Both scored on GCP, 27 Sep}};
+\node[leafp] (L5) at (-1.6,-8.55)
+  {\textbf{\texttt{AMENDMENT\_}\allowbreak\texttt{ACCEPTED\_}\allowbreak\texttt{LAUNCH\_}\allowbreak\texttt{PENDING}}\\[2pt]
+   E2, E13 (19 Sep)\\[1pt]
+   \gl{amendment accepted; launch awaits technical chain and preflight. Both scored 27 Sep}};
+\node[leafp] (L6) at (1.75,-8.55)
+  {\textbf{\texttt{REBUILD\_}\allowbreak\texttt{READY\_}\allowbreak\texttt{LAUNCH\_}\allowbreak\texttt{PENDING}}\\[2pt]
+   E1 wave10, E5 successor27 (19 Sep)\\[1pt]
+   \gl{chain rebuild in flight; launch follows. Both scored 27 Sep}};
+\node[leafp, solid] (L7) at (5.1,-8.55)
+  {\textbf{\texttt{CLOSED\_PARTIAL}}\\[2pt]
+   E4\\[2pt]
+   \gl{partial scientific scope; no complete validated suite result}};
+
+% ===================== source line =====================
+\node[anchor=north west, align=left, text width=13.6cm, font=\scriptsize, text=black!80]
+  at (-6.5,-11.3)
+  {{\itshape Source:} \texttt{finish/Pending\_Experiments.md}, ``Terminal-state vocabulary'',
+   19 Sep 2026 --- the seven states shown are that table's full documented vocabulary, with the
+   lane assignments of that date. The six lanes in the three pending leaves were all run and scored
+   on 27 Sep 2026 under the lead's receipt (Chapter 8); the vocabulary itself is unchanged.};
+
+\end{tikzpicture}
+\end{document}

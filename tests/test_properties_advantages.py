@@ -68,21 +68,10 @@ def test_constant_binary_groups_give_exactly_zero_and_are_degenerate(rs, unbiase
 def test_constant_groups_are_degenerate_and_near_zero(value, n):
     rs = [value] * n
     assert grpo.is_degenerate_group(rs)
-    # Standardized mode divides float-rounding residue by epsilon; bounded, not zero.
-    assert all(abs(a) <= 1e-6 for a in grpo.normalize_rewards(rs))
-    assert all(abs(a) <= 1e-12 for a in grpo.normalize_rewards(rs, unbiased=True))
+    assert grpo.normalize_rewards(rs) == [0.0] * n
+    assert grpo.normalize_rewards(rs, unbiased=True) == [0.0] * n
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "FINDING (grpo.normalize_rewards): a constant non-binary group is not "
-        "exactly zero: sum(rs)/n rounds (0.1*3/3 != 0.1), and the standardized "
-        "path divides the ~1e-17 residue by epsilon=1e-8 -> ~-1.4e-9 advantages. "
-        "Harmless in magnitude; exact zero would need math.fsum or a degenerate "
-        "short-circuit."
-    ),
-)
 def test_constant_fractional_group_is_exactly_zero():
     assert grpo.normalize_rewards([0.1, 0.1, 0.1]) == [0.0, 0.0, 0.0]
 
@@ -236,3 +225,42 @@ def test_gspo_first_epoch_scores_only_response_tokens(batch):
     loss.backward()
     for p, lp in zip(prompt, lps):
         assert torch.all(lp.grad[:p] == 0)
+
+
+@pytest.mark.parametrize("unbiased", [False, True])
+def test_constant_global_basis_preserves_excluded_alignment(unbiased):
+    rs = [0.1, 0.1, 0.1, 0.2]
+    result = grpo.normalize_advantages_global(
+        rs, unbiased=unbiased, exclude=[False, False, False, True]
+    )
+    assert result[:3] == [0.0] * 3
+    assert result[3] == pytest.approx(0.1 if unbiased else 0.1 / 1e-8)
+    assert (
+        grpo.normalize_advantages_global([0.1] * 3, unbiased=unbiased, exclude=[True] * 3)
+        == [0.0] * 3
+    )
+
+
+@FAST
+@given(st.floats(min_value=-1e3, max_value=1e3, allow_nan=False), st.integers(1, 50), st.booleans())
+def test_constant_advantages_are_exactly_zero(value, n, unbiased):
+    rs = [value] * n
+    assert grpo.normalize_rewards(rs, unbiased=unbiased) == [0.0] * n
+    assert grpo.normalize_advantages_global(rs, unbiased=unbiased) == [0.0] * n
+
+
+@pytest.mark.parametrize("invalid", [math.inf, -math.inf, math.nan])
+@pytest.mark.parametrize("unbiased", [False, True])
+def test_advantage_normalizers_reject_nonfinite_even_when_tied_or_excluded(invalid, unbiased):
+    with pytest.raises(ValueError, match="rewards must be finite"):
+        grpo.normalize_rewards([invalid, invalid], unbiased=unbiased)
+    with pytest.raises(ValueError, match="rewards must be finite"):
+        grpo.normalize_advantages_global([0.1, invalid], unbiased=unbiased, exclude=[False, True])
+
+
+@pytest.mark.parametrize("epsilon", [0.0, -1.0, math.inf, -math.inf, math.nan])
+def test_standardized_normalizers_require_positive_finite_epsilon(epsilon):
+    for normalize in (grpo.normalize_rewards, grpo.normalize_advantages_global):
+        with pytest.raises(ValueError, match="epsilon must be finite and positive"):
+            normalize([0.1, 0.1], epsilon=epsilon)
+        assert normalize([0.1, 0.1], epsilon=epsilon, unbiased=True) == [0.0, 0.0]

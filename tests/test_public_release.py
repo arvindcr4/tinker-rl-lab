@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from tools import check_public_release as release
 
@@ -197,6 +198,11 @@ class SourceDefinitionTests(unittest.TestCase):
                 "copied_definitions_verified": 1,
             },
         )
+
+    def test_unavailable_source_segment_fails_closed(self):
+        with patch.object(release.ast, "get_source_segment", return_value=None):
+            with self.assertRaisesRegex(ValueError, "unavailable copied source segment"):
+                release.verify_source_definitions(self.root)
 
     def test_whitespace_change_inside_definition_is_detected(self):
         (self.package / "example.py").write_text(self.source.replace("return 7", "return  7"))

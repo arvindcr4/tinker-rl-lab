@@ -341,6 +341,19 @@ def generate_trl_train_script(config: TRLConfig, output_path: str = "train_trl.p
         )
     else:
         clip_lines = ""
+    # Keep replacement fields simple for Python 3.11 (before PEP 701).
+    trl_import = (
+        "from trl import GRPOConfig, GRPOTrainer"
+        if algorithm == "grpo"
+        else "from trl import OnlineDPOConfig, OnlineDPOTrainer"
+    )
+    push_to_hub = getattr(
+        config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False)
+    )
+    hub_model_id = getattr(
+        config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None)
+    )
+    deepspeed_line = f"deepspeed={config.deepspeed!r}," if config.deepspeed else ""
     script = f'''"""
 TRL GRPO Training Script
 Generated for config: {config.model_name}
@@ -351,11 +364,7 @@ import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from transformers.trainer_utils import get_last_checkpoint
-{
-        "from trl import GRPOConfig, GRPOTrainer"
-        if algorithm == "grpo"
-        else "from trl import OnlineDPOConfig, OnlineDPOTrainer"
-    }
+{trl_import}
 from platform_local.unified.peft_utils import apply_peft_method, save_bitfit_checkpoint
 
 # Configuration
@@ -373,16 +382,8 @@ COMPUTE_DTYPE = torch.bfloat16 if BF16 else (torch.float16 if FP16 else torch.fl
 REPORT_TO = {config.report_to!r}
 PROJECT_NAME = {config.project_name!r}
 RUN_NAME = {config.run_name!r}
-PUSH_TO_HUB = {
-        getattr(
-            config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False)
-        )!r
-    }
-HUB_MODEL_ID = {
-        getattr(
-            config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None)
-        )!r
-    }
+PUSH_TO_HUB = {push_to_hub!r}
+HUB_MODEL_ID = {hub_model_id!r}
 
 import wandb
 if "wandb" in REPORT_TO:
@@ -511,7 +512,7 @@ trainer_config = {"GRPOConfig" if algorithm == "grpo" else "OnlineDPOConfig"}(
     save_steps={config.save_interval},
     push_to_hub=PUSH_TO_HUB,
     hub_model_id=HUB_MODEL_ID,
-    {f'deepspeed="{config.deepspeed}",' if config.deepspeed else ""}
+    {deepspeed_line}
 )
 
 # Trainer

@@ -26,6 +26,55 @@ PCD = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(PCD)
 
 
+def assert_recomputed_equal(case, actual, expected):
+    """Permit last-bit float variation; keep structure, counts and hashes exact."""
+    if isinstance(expected, dict):
+        case.assertIsInstance(actual, dict)
+        case.assertEqual(actual.keys(), expected.keys())
+        for key in expected:
+            assert_recomputed_equal(case, actual[key], expected[key])
+    elif isinstance(expected, list):
+        case.assertIsInstance(actual, list)
+        case.assertEqual(len(actual), len(expected))
+        for got, want in zip(actual, expected):
+            assert_recomputed_equal(case, got, want)
+    elif isinstance(expected, float):
+        case.assertIsInstance(actual, float)
+        case.assertTrue(math.isclose(actual, expected, rel_tol=1e-12, abs_tol=1e-15))
+    elif isinstance(expected, str) and any(c in expected.lower() for c in ".e"):
+        try:
+            got, want = float(actual), float(expected)
+        except (ValueError, TypeError):
+            case.assertEqual(actual, expected)
+        else:
+            case.assertTrue(math.isclose(got, want, rel_tol=1e-12, abs_tol=1e-15))
+    else:
+        case.assertIs(type(actual), type(expected))
+        case.assertEqual(actual, expected)
+
+
+class TestRecomputedComparison(unittest.TestCase):
+    def test_accepts_cross_version_last_bit_float_variation(self):
+        assert_recomputed_equal(
+            self, {"delta": 2.984163854913291e-7}, {"delta": 2.984163853525512e-7}
+        )
+
+    def test_rejects_material_changes_counts_and_hashes(self):
+        for got, want in [(0.21, 0.2), (600, 601), ("hash-a", "hash-b"), ("0.21", "0.20")]:
+            with self.subTest(got=got, want=want), self.assertRaises(AssertionError):
+                assert_recomputed_equal(self, got, want)
+
+    def test_rejects_nonfinite_values_and_changed_structure(self):
+        for got, want in [
+            (float("nan"), 0.0),
+            ("inf", "1.0"),
+            ([0.1], [0.1, 0.2]),
+            ({"a": 1}, {"b": 1}),
+        ]:
+            with self.subTest(got=got, want=want), self.assertRaises(AssertionError):
+                assert_recomputed_equal(self, got, want)
+
+
 class TestZvfDefinitions(unittest.TestCase):
     def test_population_and_sample_variance_are_distinct(self):
         self.assertEqual(PCD.pvar([0.0, 1.0]), 0.25)
@@ -190,9 +239,15 @@ class TestStoredGroupRecomputation(unittest.TestCase):
             self.assertEqual(PCD.main(["--results-dir", str(RESULTS), "--output-dir", workdir]), 0)
             for name in names:
                 with self.subTest(name=name):
-                    self.assertEqual(
-                        (Path(workdir) / name).read_bytes(), (RESULTS / name).read_bytes()
-                    )
+                    # Python 3.11/3.12 use different summation implementations:
+                    # last-bit float text is not a cross-version integrity claim.
+                    if name.endswith(".json"):
+                        load = lambda path: json.loads(path.read_text())
+                    else:
+                        load = lambda path: list(
+                            csv.DictReader(path.read_text().splitlines(), delimiter="\t")
+                        )
+                    assert_recomputed_equal(self, load(Path(workdir) / name), load(RESULTS / name))
             self.assertFalse((Path(workdir) / "pcd_vs_zvf_summary.tsv").exists())
             with (Path(workdir) / "pcd_vs_zvf_recomputed_summary.tsv").open() as handle:
                 summary = {

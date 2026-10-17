@@ -15,6 +15,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+from typing import Any
 import re
 import sys
 
@@ -476,8 +477,10 @@ def _check(root):
         require(len({case[key] for case in cases}) == selected, f"duplicate case {key}")
     event_indices = [case["selected_index"] for case in cases if case["frozen_primary_event"]]
     exact([event["selected_index"] for event in events], event_indices, "ordered event identities")
-    responses, screen_responses, follow_responses = [], [], []
-    partitions = Counter()
+    responses: list[dict[str, Any]] = []
+    screen_responses: list[dict[str, Any]] = []
+    follow_responses: list[dict[str, Any]] = []
+    partitions: Counter[str] = Counter()
     for event in events:
         index = event["selected_index"]
         case = cases[index]
@@ -631,7 +634,7 @@ def _check(root):
     )
     check_summary_references(summary, cases)
     defects = summary["conservative_corroborated_defects"]
-    members = []
+    members: list[int] = []
     for key in (
         "wrong_final_value_under_stated_or_ordinary_model",
         "inconsistent_discrete_premises_with_reference_error",
@@ -646,7 +649,7 @@ def _check(root):
         "defect union",
     )
     output = summary["event_output_review"]
-    for key, expected in {
+    for key, expected_count in {
         "events": len(events),
         "initial_raw_responses": len(screen_responses),
         "fresh_primary_success_raw_responses": len(follow_responses),
@@ -654,7 +657,7 @@ def _check(root):
         "all_extractions_faithful": True,
         "all_uncapped": True,
     }.items():
-        exact(output[key], expected, f"response summary.{key}")
+        exact(output[key], expected_count, f"response summary.{key}")
     exact(
         output["first_numeric_status_on_38_matches"],
         dict(Counter(row["reconciled_numeric_status"] for row in follow_responses)),

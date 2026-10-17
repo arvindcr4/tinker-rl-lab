@@ -73,41 +73,30 @@ def rolling(seq, k):
 
 
 def detect_episodes(trace):
-    """Return list of dicts: {start, end, len_alarm,
-                                recovered: bool, recovery_step or None}."""
-    episodes, cur = [], None
-    n = len(trace)
-    ha_roll = rolling([d["ha"] for d in trace], ROLL)
-    for i, d in enumerate(trace):
-        alarmed = d["zvf"] > TAU
-        if alarmed and cur is None:
-            cur = {"start": i, "end": i}
-        elif alarmed and cur is not None:
-            cur["end"] = i
-        elif not alarmed and cur is not None:
-            j = i
-            recovered_within = False
-            recovery_step = None
-            while j < min(n, cur["end"] + 1 + K_RECOVER):
-                if j >= n:
-                    break
-                if trace[j]["zvf"] <= TAU:
-                    recovered_within = True
-                    recovery_step = j
-                    break
-                j += 1
-            cur["len_alarm"]      = cur["end"] - cur["start"] + 1
-            cur["recovered"]      = recovered_within
-            cur["recovery_step"]  = recovery_step
-            cur["ha_at_alarm"]    = trace[cur["start"]]["ha"]
-            episodes.append(cur)
-            cur = None
-    if cur is not None:
-        cur["len_alarm"]      = cur["end"] - cur["start"] + 1
-        cur["recovered"]      = False
-        cur["recovery_step"]  = None
-        cur["ha_at_alarm"]    = trace[cur["start"]]["ha"]
-        episodes.append(cur)
+    """ZVF exit within K_RECOVER steps of onset, not accuracy recovery.
+
+    An episode without a full follow-up window is censored, not sustained.
+    """
+    episodes = []
+    i = 0
+    while i < len(trace):
+        if trace[i]["zvf"] <= TAU:
+            i += 1
+            continue
+        start = i
+        while i < len(trace) and trace[i]["zvf"] > TAU:
+            i += 1
+        end = i - 1
+        exit_index = i if i < len(trace) else None
+        recovered = exit_index is not None and exit_index - start <= K_RECOVER
+        censored = not recovered and len(trace) - 1 < start + K_RECOVER
+        episodes.append({
+            "start": start, "end": end, "len_alarm": end - start + 1,
+            "recovered": None if censored else recovered,
+            "censored": censored, "estimand": "zvf_exit_within_five_from_onset",
+            "recovery_step": exit_index if recovered else None,
+            "ha_at_alarm": trace[start]["ha"],
+        })
     return episodes
 
 
@@ -123,15 +112,15 @@ def main():
     with open(OUT / "zvf_iter90_episodes.tsv", "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["method", "seed", "start", "end", "len_alarm",
-                    "recovered", "recovery_step", "ha_at_alarm"])
+                    "recovered", "recovery_step", "ha_at_alarm", "censored", "estimand"])
         for (m, s), tr in traces.items():
             for ep in detect_episodes(tr):
                 w.writerow([m, s, ep["start"], ep["end"], ep["len_alarm"],
-                            int(ep["recovered"]),
+                            "NA" if ep["recovered"] is None else int(ep["recovered"]),
                             -1 if ep["recovery_step"] is None else ep["recovery_step"],
-                            f"{ep['ha_at_alarm']:.6f}"])
+                            f"{ep['ha_at_alarm']:.6f}", int(ep["censored"]), ep["estimand"]])
     # Per-method recovery rate + per-cat post-ha delta
-    by_method   = defaultdict(lambda: {"n_ep": 0, "n_rec": 0, "ha_post_rec": [],
+    by_method   = defaultdict(lambda: {"n_ep": 0, "n_rec": 0, "n_censored": 0, "ha_post_rec": [],
                                         "ha_post_sus": [], "ha_never": []})
     for (m, s), tr in traces.items():
         ep = detect_episodes(tr)
@@ -141,6 +130,9 @@ def main():
         if not seen_alarm:
             b["ha_never"].extend([d["ha"] for d in tr if d["step"] >= 5])
         for e in ep:
+            if e["censored"]:
+                b["n_censored"] += 1
+                continue
             b["n_ep"] += 1
             if e["recovered"]:
                 b["n_rec"] += 1
@@ -171,7 +163,7 @@ def main():
     with open(OUT / "zvf_iter90_recovery.tsv", "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["method", "n_episodes", "n_recovered", "n_sustained",
-                    "recovery_rate", "n_never_alarmed_traces", "trajectory_count"])
+                    "recovery_rate", "n_never_alarmed_traces", "trajectory_count", "n_censored"])
         for m, b in by_method.items():
             ne, nr = b["n_ep"], b["n_rec"]
             ns     = ne - nr
@@ -179,7 +171,7 @@ def main():
             nna    = len([1 for (mm, _), tr in traces.items()
                           if mm == m and not detect_episodes(tr)])
             tc     = sum(1 for (mm, _) in traces if mm == m)
-            w.writerow([m, ne, nr, ns, f"{rec:.4f}", nna, tc])
+            w.writerow([m, ne, nr, ns, f"{rec:.4f}", nna, tc, b["n_censored"]])
             rows.append((m, ne, nr, ns, rec, nna, tc))
     # Headline summary
     total_ep  = sum(r[1] for r in rows)
@@ -188,6 +180,9 @@ def main():
     pooled_rec = (total_rec / total_ep) if total_ep else 0.0
     never_tr   = sum(r[5] for r in rows)
     summary ={
+        "protocol_id": "zvf-episodes-v2-onset-window-censoring",
+        "estimand": "ZVF exit, not accuracy recovery",
+        "n_censored": sum(b["n_censored"] for b in by_method.values()),
         "n_traces":               len(traces),
         "n_pooled_episodes":      total_ep,
         "n_pooled_recovered":     total_rec,

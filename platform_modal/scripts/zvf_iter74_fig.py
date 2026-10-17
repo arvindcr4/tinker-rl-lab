@@ -28,6 +28,7 @@ of every other figure in this repo).
 from __future__ import annotations
 
 import csv
+import math
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -186,7 +187,7 @@ def main() -> None:
         xs = [min(ah), max(ah)]
         ys = [slope * x + intercept for x in xs]
         ax.plot(xs, ys, color="grey", linestyle="--", linewidth=1,
-                label=f"Pearson r(per-method n=9)\n= -0.77 (CI [-0.98,-0.12])")
+                label=f"OLS fit; Pearson r={num / math.sqrt(dx * sum((y - my)**2 for y in l10)) if dx > 0 and sum((y - my)**2 for y in l10) > 0 else float('nan'):.2f}, n={n}")
         ax.legend(loc="upper right", fontsize=8)
     ax.set_xlabel("absorbing_H")
     ax.set_ylabel("last10_acc (heldout acc, last 10 steps)")

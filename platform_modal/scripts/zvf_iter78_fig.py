@@ -69,21 +69,18 @@ def to_float(x: str) -> float:
 def panel_leadtime(ax, leadtime_rows: list[dict]) -> None:
     methods = []
     means = []
-    ses = []
     for r in leadtime_rows:
         if r["mean_lead_time"] == "NA":
             continue
         methods.append(r["method"])
         means.append(float(r["mean_lead_time"]))
-        ses.append(float(r["max_lead_time"]) - float(r["min_lead_time"]))
     order = sorted(range(len(methods)), key=lambda i: means[i], reverse=True)
     methods = [methods[i] for i in order]
     means = [means[i] for i in order]
-    ses = [ses[i] for i in order]
     colors = ["#d62728" if m == "grpo" else "#1f77b4" for m in methods]
-    ax.barh(methods, means, xerr=[m * 0.05 for m in means], color=colors)
+    ax.barh(methods, means, color=colors)  # no trace-level data: no invented uncertainty
     ax.set_xlabel("mean lead time (steps)")
-    ax.set_title("(1) Per-method EWS lead time at th=0.50")
+    ax.set_title("(1) Selected-threshold mean lead time; uncertainty unavailable")
     ax.invert_yaxis()
     for i, m in enumerate(means):
         ax.text(m + 1, i, f"{m:.1f}", va="center", fontsize=8)

@@ -203,7 +203,7 @@ def trajectory_direction(vals: Sequence[float]) -> Tuple[float, float, float]:
 
 def _pearson(xs: Sequence[float], ys: Sequence[float]) -> float:
     n = len(xs)
-    if n < 3:
+    if len(xs) != len(ys) or n < 3 or not all(math.isfinite(v) for v in [*xs, *ys]):
         return float("nan")
     mx = statistics.fmean(xs)
     my = statistics.fmean(ys)
@@ -217,7 +217,7 @@ def _pearson(xs: Sequence[float], ys: Sequence[float]) -> float:
 
 def _spearman(xs: Sequence[float], ys: Sequence[float]) -> float:
     n = len(xs)
-    if n < 3:
+    if len(xs) != len(ys) or n < 3 or not all(math.isfinite(v) for v in [*xs, *ys]):
         return float("nan")
 
     def _rank(vs: Sequence[float]) -> List[float]:
@@ -234,7 +234,7 @@ def _spearman(xs: Sequence[float], ys: Sequence[float]) -> float:
             i = j
         return ranks
 
-    return _pearson(_rank(xs), _rank(xs)) and _pearson(_rank(xs), _rank(ys))
+    return _pearson(_rank(xs), _rank(ys))
 
 
 def bootstrap_ci(
@@ -652,26 +652,28 @@ def write_severity_corr(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str,
         pooled.append((float(mz), int(sev)))
     zvfs = [p[0] for p in pooled]
     sevs = [p[1] for p in pooled]
-    pear, (plo, phi) = bootstrap_ci(zvfs, sevs, _pearson, B=2000, seed=11)
-    spear, (slo, shi) = bootstrap_ci(zvfs, sevs, _spearman, B=2000, seed=22)
+    pear, spear = _pearson(zvfs, sevs), _spearman(zvfs, sevs)
+    # Pooled rows lack verified independent run/cluster identities.
+    # Do not fabricate replication by resampling them as independent.
+    plo = phi = slo = shi = float("nan")
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w") as fh:
         fh.write("# Pillar 2 Iter 70: mean_zvf vs severity_score correlation\n")
         fh.write(
             "# severity_score 0..3 (0=ok, 1=drift, 2=collapse, 3=full_collapse).\n"
-            "# Bootstrap CIs are B=2000 percentile resamples over the pooled\n"
-            "# (zvf, severity) rows. Source: platform_modal/scripts/zvf_iter70.py\n"
+            "# CIs withheld: independent run/cluster identities are not verified.\n"
+            "# Descriptive pooled (zvf, severity) association. Source: platform_modal/scripts/zvf_iter70.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(("test", "n_pooled_rows", "rho", "ci_lo", "ci_hi", "method"))
         writer.writerow((
             "mean_zvf vs severity", len(pooled), _fmt(pear),
-            _fmt(plo), _fmt(phi), "Pearson + 95% bootstrap CI",
+            _fmt(plo), _fmt(phi), "Pearson descriptive; CI unavailable",
         ))
         writer.writerow((
             "mean_zvf vs severity", len(pooled), _fmt(spear),
-            _fmt(slo), _fmt(shi), "Spearman + 95% bootstrap CI",
+            _fmt(slo), _fmt(shi), "Spearman descriptive; CI unavailable",
         ))
     return {
         "n": len(pooled), "pearson": pear, "spearman": spear,

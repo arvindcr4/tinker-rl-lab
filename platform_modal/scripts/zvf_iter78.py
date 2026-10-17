@@ -46,6 +46,7 @@ from datetime import datetime, timezone
 
 RESULTS = "platform_hybrid/experiments/results"
 NOW = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+PROTOCOL_ID = "zvf-ews-v2-independent-endpoint-warmup"
 SEED = 20260703
 W = 10                 # trailing window for EWS features
 STUCK_W = 20           # window to detect "stuck" failure
@@ -286,7 +287,8 @@ def per_step_features(trace: dict) -> list[dict]:
     if n == 0:
         return []
 
-    baseline_mean = sum(zvf_series[: max(1, n // 4)]) / max(1, n // 4)
+    warmup = W
+    baseline_mean = sum(zvf_series[:warmup]) / warmup if n >= warmup else None
     out_rows = []
 
     cur_H_run = 0
@@ -306,7 +308,7 @@ def per_step_features(trace: dict) -> list[dict]:
             max_H_run = cur_H_run
 
         rho = ar1_coef(w)
-        cs = cusum_step(w, baseline_mean=baseline_mean, k=0.05)
+        cs = cusum_step(w, baseline_mean=baseline_mean, k=0.05) if t >= warmup and baseline_mean is not None else 0.0
         vr = variance_ratio(w)
         kurt = window_kurt(w)
 
@@ -327,7 +329,10 @@ def per_step_features(trace: dict) -> list[dict]:
             "zvf": zvf_t,
             "heldout_acc": held_t,
             "held_mean_10": held_mean,
-            "is_failure": is_failure,
+            "zvf_stuck": is_failure,
+            "accuracy_failure": int(held_mean < 0.10),
+            "is_failure": int(held_mean < 0.10),  # versioned compatibility alias
+            "alarm_eligible": t >= warmup,
             "h_run": cur_H_run,
             "h_run_frac": cur_H_run / W,
             "ar1": rho,
@@ -352,6 +357,8 @@ def composite_ews(row: dict) -> float:
     alarm on persistence, not anti-persistence). CUSUM has no upper bound
     so we additionally min-composite at 1.0.
     """
+    if not row.get("alarm_eligible", False):
+        return 0.0
     ar1c = max(0.0, row["ar1"])
     cs = min(1.0, row["cusum"])
     hrf = min(1.0, row["h_run_frac"])
@@ -365,9 +372,11 @@ def find_alarm(features: list[dict], threshold: float) -> int | None:
     return None
 
 
-def find_failure(features: list[dict]) -> int | None:
+def find_failure(features: list[dict], endpoint: str = "accuracy_failure") -> int | None:
+    if endpoint not in {"accuracy_failure", "zvf_stuck"}:
+        raise ValueError("Select an explicit failure endpoint")
     for r in features:
-        if r["is_failure"] == 1:
+        if r[endpoint] == 1:
             return r["step"]
     return None
 
@@ -442,6 +451,10 @@ def main() -> int:
                 "heldout_acc": r["heldout_acc"],
                 "held_mean_10": r["held_mean_10"],
                 "is_failure": r["is_failure"],
+                "accuracy_failure": r["accuracy_failure"],
+                "zvf_stuck": r["zvf_stuck"],
+                "alarm_eligible": int(r["alarm_eligible"]),
+                "protocol_id": PROTOCOL_ID,
                 "h_run": r["h_run"],
                 "ar1": r["ar1"],
                 "cusum": r["cusum"],
@@ -456,6 +469,7 @@ def main() -> int:
             "source", "method", "seed", "step", "zvf", "heldout_acc",
             "held_mean_10", "is_failure", "h_run", "ar1", "cusum",
             "variance_ratio", "kurtosis", "composite_ews",
+            "accuracy_failure", "zvf_stuck", "alarm_eligible", "protocol_id",
         ],
         header_comment=(
             "# Pillar 2 iter78 per-step EWS features.\n"
@@ -526,7 +540,7 @@ def main() -> int:
         ],
         header_comment=(
             "# Pillar 2 iter78 per-(method, threshold) alarm sweep.\n"
-            "# t_fail = first t with mean(zvf[max(0,t-19)..t+1]) >= 0.50 (stuck).\n"
+            "# t_fail = first t with trailing-10 mean heldout accuracy < 0.10.\n"
             "# EWS = max(ar1, cusum, h_run_frac). Alarm when composite > threshold.\n"
             "# Source: platform_modal/scripts/zvf_iter78.py"
         ),
@@ -695,12 +709,12 @@ def main() -> int:
             "rationale": "union-style composite; any channel above threshold trips",
         },
         {
-            "rule_id": "R3_stuck_fail_def",
+            "rule_id": "R3_accuracy_fail_def",
             "method": "ALL",
-            "threshold": f"mean(zvf[max(0,t-{STUCK_W-1})..t+1]) >= {STUCK_CUTOFF}",
+            "threshold": "mean(heldout_acc[max(0,t-9)..t+1]) < 0.10",
             "true_alarm_rate": "NA",
             "miss_rate": "NA",
-            "rationale": f"{STUCK_W}-step rolling ZVF lock-in failure criterion",
+            "rationale": "accuracy endpoint independent of ZVF; lock-in retained separately",
         },
         {
             "rule_id": "R4_per_method",
@@ -719,7 +733,7 @@ def main() -> int:
         header_comment=(
             "# Pillar 2 iter78 recommended ZVF EWS protocol.\n"
             "# R1: global recommended threshold; R2: composite definition;\n"
-            "# R3: stuck failure criterion; R4: per-method fallback.\n"
+            "# R3: independent accuracy criterion; R4: per-method fallback.\n"
             "# Source: platform_modal/scripts/zvf_iter78.py"
         ),
     )
@@ -756,7 +770,10 @@ def main() -> int:
 
     # 8) meta
     meta = {
-        "iter": 78,
+        "iter": 78, "protocol_id": PROTOCOL_ID,
+        "baseline": "first W observations; alarms disabled until step W",
+        "endpoint": "accuracy_failure",
+        "inference_status": "retrospective selected-threshold descriptive analysis; no prospective validation",
         "pillar": "P2-ZVF",
         "ts": NOW,
         "seed": SEED,

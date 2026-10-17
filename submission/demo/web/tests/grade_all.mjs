@@ -55,8 +55,11 @@ function disagreementCause(result, gold) {
 const count = (object, key) => { object[key] = (object[key] || 0) + 1; };
 
 export function auditStoredScores({ resultsDir, goldPath }) {
-  const gold = JSON.parse(readFileSync(goldPath, "utf8")).test
-    .map((t) => t.answer.split("####").pop().trim());
+  const items = JSON.parse(readFileSync(goldPath, "utf8")).test;
+  if (!Array.isArray(items) || items.length === 0 || items.some((item) => typeof item?.answer !== "string")) {
+    throw new Error("gold corpus must contain nonempty answer records");
+  }
+  const gold = items.map((t) => t.answer.split("####").pop().trim());
   if (gold.some((answer) => toNum(answer) === null)) throw new Error("gold answers must be finite exact numbers with valid grouping");
   const files = readdirSync(resultsDir).filter((f) => /_s\d+\.json$/.test(f)).sort();
   const report = {
@@ -82,6 +85,13 @@ export function auditStoredScores({ resultsDir, goldPath }) {
     } catch (error) {
       report.invalid_inputs.push({ file, reason: error.message });
       continue;
+    }
+    if (!run || typeof run !== "object" || Array.isArray(run) || !texts || typeof texts !== "object" || Array.isArray(texts)) {
+      report.invalid_inputs.push({ file, reason: "run and sidecar must be objects" });
+      continue;
+    }
+    if (run.n_eval !== undefined && (!Number.isInteger(run.n_eval) || run.n_eval !== gold.length)) {
+      report.invalid_inputs.push({ file, reason: "declared n_eval does not match gold denominator" });
     }
     report.runs_checked++;
     const row = { file, completions: 0, disagreements: 0, stored_correct_now_incorrect: 0, stored_incorrect_now_correct: 0,

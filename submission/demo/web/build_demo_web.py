@@ -156,17 +156,42 @@ def examples(seed=42, per_pattern=4, results_dir=None):
             "per_pattern": per_pattern, "items": items}
 
 
-def grader_check(results_dir=None):
-    """Run the in-page grader over every stored completion (tests/grade_all.mjs) and record the result."""
-    try:
-        out = subprocess.run(["node", str(HERE / "tests/grade_all.mjs"), "--json", "--report-only", "--results-dir", str(results_dir or V2), "--gold-path", str(GOLD)], capture_output=True, text=True)
-        report = json.loads(out.stdout)
-        report["audit_exit_code"] = out.returncode
-        return report
-    except (OSError, json.JSONDecodeError) as error:
-        return {"status": "unavailable", "coverage_complete": False, "completions": 0, "runs": 0,
-                "disagreements": None, "missing": [str(error)]}
+def validate_grader_report(report):
+    """A publication audit must prove complete coverage and zero disagreements."""
+    if not isinstance(report, dict) or report.get("grading_spec_id") != "boxed-exact-rational-v2":
+        raise ValueError("grader audit: missing or unsupported grading specification")
+    counts = ("runs", "runs_checked", "expected_items_per_phase", "completions", "disagreements",
+              "stored_correct_now_incorrect", "stored_incorrect_now_correct")
+    if any(type(report.get(k)) is not int or report[k] < 0 for k in counts):
+        raise ValueError("grader audit: invalid count schema")
+    if report.get("historical_scores_mutated") is not False:
+        raise ValueError("grader audit: immutable-score contract missing")
+    if report.get("coverage_complete") is not True or any(
+        report.get(k) != [] for k in ("missing_sidecars", "invalid_inputs", "length_mismatches", "invalid_scores")
+    ):
+        raise ValueError("grader audit: incomplete or invalid coverage")
+    if (report["runs"] == 0 or report["expected_items_per_phase"] == 0
+            or report["runs_checked"] != report["runs"]
+            or report["completions"] != 2 * report["runs"] * report["expected_items_per_phase"]):
+        raise ValueError("grader audit: inconsistent coverage denominators")
+    if any(report[k] != 0 for k in counts[-3:]):
+        raise ValueError("grader audit: stored-score disagreements detected")
+    return report
 
+
+def grader_check(results_dir=None):
+    """Fail closed before publishing evidence; diagnostic report-only audits stay separate."""
+    try:
+        out = subprocess.run(["node", str(HERE / "tests/grade_all.mjs"), "--json", "--results-dir", str(results_dir or V2), "--gold-path", str(GOLD)], capture_output=True, text=True)
+    except OSError as error:
+        raise RuntimeError(f"grader audit could not run: {error}") from error
+    if out.returncode != 0:
+        raise RuntimeError(f"grader audit failed (exit {out.returncode}): {out.stderr or out.stdout}")
+    try:
+        report = validate_grader_report(json.loads(out.stdout))
+    except (ValueError, TypeError) as error:
+        raise RuntimeError(f"grader audit rejected: {error}") from error
+    return {**report, "audit_exit_code": out.returncode}
 
 
 def samestack_v1():

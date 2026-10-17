@@ -14,20 +14,20 @@ const identity = ["run_id", "arm", "seed", "environment", "environment_hash", "s
 export function analysisModel(data) {
   const raw = data.analysis;
   const analysis = raw?.schema_version === 1 ? raw : null;
-  const runs = data.samestack?.runs || [];
-  const selections = analysis?.selected_runs || [];
+  const runs = Array.isArray(data.samestack?.runs) ? data.samestack.runs : [];
+  const selections = Array.isArray(analysis?.selected_runs) ? analysis.selected_runs : [];
   const selectedRuns = selections.flatMap((s) => {
-    if (s.completion_bundle_validated !== true) return [];
+    if (!s || s.completion_bundle_validated !== true) return [];
     if (!identity.every((k) => k === "seed" ? Number.isInteger(s[k]) : typeof s[k] === "string" && s[k].length > 0)) return [];
-    const matches = runs.filter((r) => r.completion_bundle_validated === true && identity.every((k) => r[k] === s[k]));
+    const matches = runs.filter((r) => r?.completion_bundle_validated === true && identity.every((k) => r[k] === s[k]));
     return matches.length === 1 ? matches : [];
   });
   const selectionValid = selectedRuns.length === selections.length &&
-    new Set(selections.map((r) => r.run_id)).size === selections.length &&
+    new Set(selections.map((r) => r?.run_id)).size === selections.length &&
     (!analysis || analysis.completion?.selected === selections.length);
   const plan = analysis?.plan || {};
   const bindingsValid = ["environment", "environment_hash", "shared_stack_hash", "protocol_hash", "ordered_test_item_hash"]
-    .every((k) => typeof plan[k] === "string" && plan[k].length > 0 && selections.every((r) => r[k] === plan[k]));
+    .every((k) => typeof plan[k] === "string" && plan[k].length > 0 && selections.every((r) => r?.[k] === plan[k]));
   const familyValid = Array.isArray(plan.primary_contrast_ids) &&
     plan.primary_contrast_ids.length === PRIMARY_IDS.length && PRIMARY_IDS.every((id) => plan.primary_contrast_ids.includes(id));
   const alpha = probability(plan.alpha) && plan.alpha > 0 ? plan.alpha : 0.05;
@@ -40,18 +40,23 @@ export function analysisModel(data) {
     const exploratory = !PRIMARY_IDS.includes(id);
     const c = (exploratory ? analysis?.exploratory_contrasts : analysis?.primary_contrasts)?.[id];
     const [a, b] = CONTRAST_ARMS[id];
-    const pairs = c?.pairs || [];
-    const pairValid = pairs.length === c?.n && pairs.every((pair) => {
+    const pairs = Array.isArray(c?.pairs) ? c.pairs : [];
+    const pairValid = pairs.length === c?.n && pairs.every((pair, index) => {
+      if (!pair || pair.seed !== c.seeds?.[index]) return false;
       const x = selectedRuns.find((r) => r.run_id === pair.a_run_id);
       const y = selectedRuns.find((r) => r.run_id === pair.b_run_id);
       return x && y && x.arm === a && y.arm === b && x.seed === pair.seed && y.seed === pair.seed &&
         ["environment", "environment_hash", "shared_stack_hash", "protocol_hash", "ordered_test_item_hash"].every((k) => x[k] === y[k]);
     });
     const valid = c && Number.isInteger(c.n) && c.n >= 2 && pairValid &&
-      c.seeds?.length === c.n && new Set(c.seeds).size === c.n &&
-      c.diffs?.length === c.n && c.diffs.every(finite) && finite(c.mean) &&
-      Array.isArray(c.t_ci) && c.t_ci.length === 2 && c.t_ci.every(finite) &&
-      Array.isArray(c.tost_ci90) && c.tost_ci90.length === 2 && c.tost_ci90.every(finite) && selectionValid && bindingsValid;
+      Array.isArray(c.seeds) && c.seeds.length === c.n && c.seeds.every(Number.isInteger) && new Set(c.seeds).size === c.n &&
+      Array.isArray(c.diffs) && c.diffs.length === c.n && c.diffs.every(finite) && finite(c.mean) &&
+      Array.isArray(c.t_ci) && c.t_ci.length === 2 && c.t_ci.every(finite) && c.t_ci[0] <= c.mean && c.mean <= c.t_ci[1] &&
+      Array.isArray(c.tost_ci90) && c.tost_ci90.length === 2 && c.tost_ci90.every(finite) && c.tost_ci90[0] <= c.mean && c.mean <= c.tost_ci90[1] &&
+      [c.p_t, c.tost_p].every(probability) &&
+      (c.p_signflip === null || probability(c.p_signflip)) &&
+      (exploratory || ([c.holm_p_t, c.holm_tost_p].every(probability) &&
+        (c.holm_p_signflip === null || probability(c.holm_p_signflip)))) && selectionValid && bindingsValid;
     const stats = valid ? {
       n: c.n, md: c.mean, lo: c.t_ci[0], hi: c.t_ci[1],
       eqLo: c.tost_ci90[0], eqHi: c.tost_ci90[1], p: c.p_t, sf: c.p_signflip,

@@ -273,3 +273,29 @@ test("historical audit validates grouping in both completions and unmodified gol
     assert.equal(readFileSync(runPath, "utf8"), original);
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });
+
+test("audit rejects empty gold, malformed records, unequal arrays and declared denominator drift", () => {
+  const directory = mkdtempSync(join(tmpdir(), "samestack-alignment-"));
+  try {
+    const goldPath = join(directory, "gold.json");
+    const runPath = join(directory, "demo_s1.json");
+    const sidecar = join(directory, "demo_s1_texts.json.gz");
+    const audit = () => auditStoredScores({ resultsDir: directory, goldPath });
+    writeFileSync(goldPath, JSON.stringify({ test: [] }));
+    assert.throws(audit, /nonempty/);
+    writeFileSync(goldPath, JSON.stringify({ test: [{ answer: "#### 42" }] }));
+    for (const [record, texts] of [
+      [null, {}], [{}, null],
+      [{ pre_correct: [], post_correct: [1] }, { pre: ["\\boxed{42}"], post: ["\\boxed{42}"] }],
+      [{ pre_correct: [1], post_correct: [1] }, { pre: ["\\boxed{42}", "extra"], post: ["\\boxed{42}"] }],
+      [{ n_eval: 2, pre_correct: [1], post_correct: [1] }, { pre: ["\\boxed{42}"], post: ["\\boxed{42}"] }],
+      [{ pre_correct: [1], post_correct: [2] }, { pre: ["\\boxed{42}"], post: ["\\boxed{42}"] }],
+    ]) {
+      writeFileSync(runPath, JSON.stringify(record));
+      writeFileSync(sidecar, gzipSync(JSON.stringify(texts)));
+      const result = audit();
+      assert.equal(result.coverage_complete, false, JSON.stringify({ record, texts }));
+      assert.ok(result.invalid_inputs.length + result.length_mismatches.length + result.invalid_scores.length > 0);
+    }
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});

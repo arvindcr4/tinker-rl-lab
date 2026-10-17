@@ -79,3 +79,32 @@ test('descriptive rows use each arm own pre-score and retain duplicate seed reco
   assert.ok(Math.abs(rows[1].gain + .2) < 1e-12);
   assert.deepEqual(armRows([]), []);
 });
+
+test('malformed or misaligned inference fields cannot produce a confirmatory badge', () => {
+  const changes = [
+    (c) => { c.seeds = [2, 1]; },
+    (c) => { c.seeds = '12'; },
+    (c) => { c.diffs = { length: 2 }; },
+    (c) => { c.pairs = {}; },
+    (c) => { c.pairs[0] = null; },
+    (c) => { c.t_ci = [.1, -.1]; },
+    (c) => { c.tost_ci90 = [1, 2]; },
+    (c) => { c.tost_p = NaN; },
+    (c) => { c.p_t = -1; },
+    (c) => { c.holm_p_t = 2; },
+  ];
+  for (const change of changes) {
+    const d = fixture(); change(d.analysis.primary_contrasts['g8-ppo']);
+    const c = analysisModel(d).contrasts[0];
+    assert.equal(c.stats, null);
+    assert.equal(c.equivalent, false);
+  }
+});
+
+test('exploratory contrasts retain raw inference without invented adjusted tests', () => {
+  const d = fixture(), c = d.analysis.exploratory_contrasts['g2-ppo'];
+  delete c.holm_p_t; delete c.holm_p_signflip; delete c.holm_tost_p;
+  const model = analysisModel(d).contrasts[3];
+  assert.equal(model.stats.p, 1);
+  assert.equal(model.equivalent, false);
+});

@@ -35,6 +35,52 @@ def synthetic_bundle(directory, record, texts):
 
 
 class ExportTests(unittest.TestCase):
+    @staticmethod
+    def passing_report():
+        return dict(grading_spec_id="boxed-exact-rational-v2", historical_scores_mutated=False,
+                    runs=1, runs_checked=1, expected_items_per_phase=2, completions=4,
+                    disagreements=0, stored_correct_now_incorrect=0, stored_incorrect_now_correct=0,
+                    coverage_complete=True, missing_sidecars=[], invalid_inputs=[],
+                    length_mismatches=[], invalid_scores=[])
+
+    def test_grader_check_requires_successful_process_and_valid_report(self):
+        report = self.passing_report()
+        with patch.object(export.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, json.dumps(report), "")) as run:
+            self.assertEqual(export.grader_check()["audit_exit_code"], 0)
+            self.assertNotIn("--report-only", run.call_args.args[0])
+        for code, stdout in [(1, json.dumps(report)), (2, json.dumps(report)), (0, "not json"), (0, "[]"), (0, "null")]:
+            with self.subTest(code=code, stdout=stdout), patch.object(export.subprocess, "run", return_value=subprocess.CompletedProcess([], code, stdout, "failure")):
+                with self.assertRaises(RuntimeError):
+                    export.grader_check()
+        with patch.object(export.subprocess, "run", side_effect=OSError("node unavailable")):
+            with self.assertRaisesRegex(RuntimeError, "could not run"):
+                export.grader_check()
+
+    def test_grader_schema_rejects_disagreements_even_with_exit_zero(self):
+        changes = [dict(disagreements=1), dict(stored_correct_now_incorrect=1),
+                   dict(coverage_complete=False), dict(completions=3), dict(runs_checked=0),
+                   dict(runs=0, runs_checked=0, completions=0), dict(expected_items_per_phase=0, completions=0),
+                   dict(disagreements=False), dict(disagreements="0"), dict(invalid_inputs=["bad"]),
+                   dict(historical_scores_mutated=True), dict(grading_spec_id="old")]
+        for change in changes:
+            report = {**self.passing_report(), **change}
+            with self.subTest(change=change), patch.object(export.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, json.dumps(report), "")):
+                with self.assertRaises(RuntimeError):
+                    export.grader_check()
+
+    def test_failed_audit_never_overwrites_existing_export(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            target = pathlib.Path(tmp) / "data.json"
+            target.write_text("existing evidence")
+            with patch.object(sys, "argv", ["build_demo_web.py", "--output", str(target)]), \
+                    patch.object(export, "samestack", return_value=({}, {})), \
+                    patch.object(export, "samestack_v1", return_value=None), \
+                    patch.object(export, "examples", return_value={}), \
+                    patch.object(export.subprocess, "run", return_value=subprocess.CompletedProcess([], 1, "disagreement", "")):
+                with self.assertRaisesRegex(RuntimeError, "audit failed"):
+                    export.main()
+            self.assertEqual(target.read_text(), "existing evidence")
+
     def test_examples_preserve_gold_grouping_for_the_exact_grader(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = pathlib.Path(tmp)

@@ -40,7 +40,7 @@ for d in sys.argv[2:]:
     for f in sorted(glob.glob(os.path.join(d, "*_s*.json"))):
         r = json.loads(open(f).read().replace("NaN", "null"))
         r["_file"] = f
-        r["_base_state"] = hashlib.sha1(bytes(r["pre_correct"])).hexdigest()[:8]
+        r["_base_state"] = hashlib.sha1(bytes(r["pre_correct"]), usedforsecurity=False).hexdigest()[:8]
         key = (family(r), r["arm"], r["seed"])
         if key in runs:
             sys.exit(f"duplicate run {key}: {runs[key]['_file']} and {f}")

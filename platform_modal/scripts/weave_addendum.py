@@ -10,7 +10,7 @@ import re
 import shutil
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "platform_tinker/reports/final/capstone_final_report.md"
 FRAG_DIR = ROOT / "platform_tinker/reports/final/addendum"
 BACKUP = REPORT.with_suffix(".md.bak")
@@ -66,9 +66,13 @@ def append_to_section(text: str, start_pat: str, end_pat: str, payload: str) -> 
     return text[:cut] + payload + text[cut:]
 
 
-def main() -> None:
-    shutil.copy2(REPORT, BACKUP)
-    txt = REPORT.read_text()
+MARKER = "<!-- weave-addendum:review27-v2 -->"
+
+
+def transform(txt: str) -> str:
+    """Pure idempotent splice; marker denotes this frozen fragment version."""
+    if MARKER in txt:
+        return txt
 
     # --- F-8 Related Work extension → insert §2.7 and §2.8 right before "## 3. Methodology"
     f8 = strip_top_h3(read_fragment("08-related-work-integration.md"))
@@ -239,20 +243,34 @@ def main() -> None:
         txt, count=1, flags=re.MULTILINE,
     )
 
-    REPORT.write_text(txt)
-    print(f"wrote {REPORT} ({len(txt.splitlines())} lines). backup at {BACKUP}")
+    return MARKER + "\n" + txt
+
+
+def main() -> None:
+    original=REPORT.read_text()
+    updated=transform(original)
+    if updated==original:
+        return
+    if not BACKUP.exists():
+        shutil.copy2(REPORT,BACKUP)
+    temporary=REPORT.with_suffix(".tmp")
+    temporary.write_text(updated)
+    temporary.replace(REPORT)
 
 
 def _extract_between(blob: str, start_needle: str, end_needle: str) -> str:
     a = blob.find(start_needle)
     b = blob.find(end_needle, a + len(start_needle))
     assert a >= 0 and b >= 0, f"missing {start_needle!r} or {end_needle!r}"
+    a=blob.rfind("\n",0,a)+1
+    b=blob.rfind("\n",0,b)+1
     return blob[a:b]
 
 
 def _extract_from(blob: str, needle: str) -> str:
     a = blob.find(needle)
     assert a >= 0, f"missing {needle!r}"
+    a=blob.rfind("\n",0,a)+1
     return blob[a:]
 
 

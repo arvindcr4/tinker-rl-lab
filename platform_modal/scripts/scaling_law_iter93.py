@@ -29,12 +29,12 @@ References (verified):
   - nimmaturi2025predictive (arXiv:2507.18014) -- compared family.
 
 Outputs:
-  platform_hybrid/experiments/results/scaling_law_iter93_headtohead.tsv      (5 families x 12 anchors x 5 metrics)
+  platform_hybrid/experiments/results/scaling_law_iter93_headtohead_v2.tsv      (5 families x 12 anchors x 5 metrics)
   platform_hybrid/experiments/results/scaling_law_iter93_ar1.tsv             (AR(1) per anchor: phi, ci_lo, ci_hi, ci_covers_zero)
-  platform_hybrid/experiments/results/scaling_law_iter93_winners.tsv         (per-anchor + aggregate winners by 5 criteria)
-  platform_hybrid/experiments/results/scaling_law_iter93_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter93_winners_v2.tsv         (per-anchor + aggregate winners by 5 criteria)
+  platform_hybrid/experiments/results/scaling_law_iter93_meta_v2.json
   figures/scaling_law_iter93.{pdf,png}
-  paper/sections/scaling_law_iter93.tex
+  paper/sections/scaling_law_iter93_v2.tex
 """
 from __future__ import annotations
 
@@ -245,7 +245,7 @@ def _fit_predict(t, y, family):
 def _forecast_last_k(y_full, t_full, family, k=4):
     n = len(y_full)
     if n <= k + 2:
-        return float("nan"), np.array([])
+        return float("nan"), float("nan")
     idx_train = np.arange(0, n - k)
     t_tr, y_tr = t_full[idx_train], y_full[idx_train]
     t_te = t_full[n - k:]
@@ -253,7 +253,7 @@ def _forecast_last_k(y_full, t_full, family, k=4):
     try:
         params, _ = _fit_predict(t_tr, y_tr, family)
     except Exception:
-        return float("nan"), np.array([])
+        return float("nan"), float("nan")
     if family == "ar1":
         preds = _predict_ar1(y_tr, params, t_te)
     else:
@@ -339,7 +339,7 @@ def main() -> None:
                     label, params_b, n, fam, NPARAMS[fam],
                     "nan", "nan", "nan", "nan", "nan", "nan", "nan", "nan",
                 ])
-    _write_tsv(RESULTS_DIR / "scaling_law_iter93_headtohead.tsv", head_cols, head_rows)
+    _write_tsv(RESULTS_DIR / "scaling_law_iter93_headtohead_v2.tsv", head_cols, head_rows)
 
     # ---- AR(1) bootstrap-CI per anchor ------------------------------------
     ar1_cols = ["model", "params_B", "n_steps", "phi_hat", "phi_lo", "phi_hi",
@@ -411,7 +411,7 @@ def main() -> None:
             lbl, winner_fam, n_wins, anchor_count,
             ",".join(FAMILIES), per_family_str,
         ])
-    _write_tsv(RESULTS_DIR / "scaling_law_iter93_winners.tsv", win_cols, win_rows)
+    _write_tsv(RESULTS_DIR / "scaling_law_iter93_winners_v2.tsv", win_cols, win_rows)
 
     # ---- meta + figure ---------------------------------------------------
     n_ar1_signif_pos = sum(1 for r in ar1_rows if str(r[9]) == "True")
@@ -429,7 +429,7 @@ def main() -> None:
             for aggregated_for_crit in [aggregated]
         },
     }
-    (RESULTS_DIR / "scaling_law_iter93_meta.json").write_text(json.dumps(meta, indent=2))
+    (RESULTS_DIR / "scaling_law_iter93_meta_v2.json").write_text(json.dumps(meta, indent=2))
 
     # ---- figure: 4 panels (RMSE, LOOCV, AR1 phi CI, forecast MAE) --------
     fig, axs = plt.subplots(2, 2, figsize=(12, 8))
@@ -508,9 +508,9 @@ def main() -> None:
         fontsize=12,
     )
     fig.tight_layout()
-    fig.savefig(FIG_DIR / "scaling_law_iter93.pdf", bbox_inches="tight")
-    fig.savefig(FIG_DIR / "scaling_law_iter93.png", bbox_inches="tight", dpi=120)
-    fig.savefig(PAPER_FIG / "scaling_law_iter93.pdf", bbox_inches="tight")
+    fig.savefig(FIG_DIR / "scaling_law_iter93_v2.pdf", bbox_inches="tight")
+    fig.savefig(FIG_DIR / "scaling_law_iter93_v2.png", bbox_inches="tight", dpi=120)
+    fig.savefig(PAPER_FIG / "scaling_law_iter93_v2.pdf", bbox_inches="tight")
     plt.close(fig)
     print("wrote figures/scaling_law_iter93.{pdf,png}")
 

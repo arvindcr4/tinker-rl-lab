@@ -36,7 +36,7 @@ Inputs (real, measured):
         12 runs x 40 steps of per-step ZVF; G in {2,4,8,16}.
 
 Outputs:
-    platform_hybrid/experiments/results/zvf_contrastive_yield.tsv
+    platform_hybrid/experiments/results/zvf_contrastive_yield_v2.tsv
         Per-problem decomposition rows (p_x, ZVF_obs, ZVF_iid, delta_div,
         Y, iso_g_target).
     platform_hybrid/experiments/results/zvf_iso_yield_sizing.tsv
@@ -44,7 +44,7 @@ Outputs:
         per-quintile mean G.
     platform_hybrid/experiments/results/zvf_yield_vs_static.tsv
         Static-G vs Iso-G expected gradient-flow summary on GSM8K.
-    figures/zvf_contrastive_yield.pdf
+    figures/zvf_contrastive_yield_v2.pdf
         Two-panel figure: (left) Y(p, G) curves vs p for G in
         {2,4,8,16} with measured (p, Y) scatter overlaid; (right)
         iso-G sizing curve G(p) for Y_target in {0.6, 0.8, 0.95}.
@@ -79,21 +79,10 @@ def per_problem_zvf_iid(p: float, G: int) -> float:
     return p ** G + (1.0 - p) ** G
 
 
-def iso_g(p: float, Y_target: float) -> int:
-    """Smallest G such that iid-Y(p, G) >= Y_target."""
-    if p <= 0.0 or p >= 1.0:
-        # Degenerate prompts (always-wrong or always-correct) need G >= 1;
-        # they produce no gradient signal regardless of G.
-        return 1
-    y_target = max(min(Y_target, 1.0 - 1e-9), 1e-9)
-    # iid-Y(p, G) = 1 - p**G - (1-p)**G. For the tail (p near 0 or 1),
-    # max(p, 1-p)**G dominates 1 - Y_target.
-    log_inv = math.log(1.0 - y_target)
-    denom = math.log(max(p, 1.0 - p))
-    if denom == 0:
-        return 1
-    G_needed = math.ceil(log_inv / denom)
-    return max(1, G_needed)
+def iso_g(p: float, Y_target: float):
+    """Exact IID contrast-yield solver (review27-v2); inf means infeasible."""
+    from _review27_contracts import exact_iso_g
+    return exact_iso_g(p, Y_target)
 
 
 def load_tinker_per_problem() -> List[Dict[str, Any]]:
@@ -106,7 +95,9 @@ def load_tinker_per_problem() -> List[Dict[str, Any]]:
         for p in data["per_problem"]:
             rewards = list(p["rewards"])
             assert len(rewards) == G, (seed, len(rewards), G)
-            k = sum(int(r) for r in rewards)
+            if not all(isinstance(r, (int,float)) and math.isfinite(r) and r in (0,1) for r in rewards):
+                raise ValueError("binary rewards required; cannot coerce fractional rewards")
+            k = sum(rewards)
             p_x = k / G
             zvf_obs = 1.0 if (k == 0 or k == G) else 0.0
             zvf_iid = per_problem_zvf_iid(p_x, G)
@@ -198,8 +189,8 @@ def write_contrastive_yield(
             "#   source      tinker_gsm8k | groupsize_zvf_sweep | groupsize_zvf_sweep_agg\n"
             "#   seed, problem_id|step, G, k|p_x, zvf_obs, zvf_iid, delta_div, Y_obs\n"
             "# zvf_iid  = p**G + (1-p)**G (Bernoulli-collision baseline).\n"
-            "# delta_div = zvf_iid - zvf_obs (structural diversity bonus;\n"
-            "#            POSITIVE delta_div proves the sampler anti-herds).\n"
+            "# delta_div = zvf_iid - zvf_obs (same-sample plug-in residual;\n"
+            "#            Plug-in residual is descriptive only; it cannot identify anti-herding).\n"
             "# Source: platform_modal/scripts/zvf_contrastive_yield.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
@@ -334,9 +325,9 @@ def write_yield_vs_static(
             {
                 "Y_target": Y_target,
                 "static_G": static_g,
-                "Y_static_observed": Y_static,
+                "Y_static_iid_plugin": Y_static,
                 "Y_iso_target": Y_target,
-                "Y_iso_realised": Y_iso,
+                "Y_iso_iid_plugin": Y_iso,
                 "iso_G_mean": G_iso_mean,
                 "iso_G_max": G_iso_max,
                 "n_problems": len(tinker),
@@ -346,9 +337,9 @@ def write_yield_vs_static(
     with out_path.open("w") as fh:
         fh.write(
             "# Pillar 2 Contrastive Yield: static-G=8 vs Iso-G on Qwen3-8B/GSM8K.\n"
-            "# Y_static_observed = mean over the 600-problem slice of\n"
+            "# Y_static_iid_plugin = mean over the 600-problem slice of\n"
             "#   1 - [p_x**G + (1-p_x)**G] at G = static_G.\n"
-            "# Y_iso_realised    = same mean after sizing G per-prompt via Iso-G\n"
+            "# Y_iso_iid_plugin    = same mean after sizing G per-prompt via Iso-G\n"
             "#   (G(p, Y_target)) so the iid baseline meets Y_target uniformly.\n"
             "# Source: platform_modal/scripts/zvf_contrastive_yield.py\n"
         )
@@ -357,9 +348,9 @@ def write_yield_vs_static(
             (
                 "Y_target",
                 "static_G",
-                "Y_static_observed",
+                "Y_static_iid_plugin",
                 "Y_iso_target",
-                "Y_iso_realised",
+                "Y_iso_iid_plugin",
                 "iso_G_mean",
                 "iso_G_max",
                 "n_problems",
@@ -370,9 +361,9 @@ def write_yield_vs_static(
                 (
                     r["Y_target"],
                     r["static_G"],
-                    f"{r['Y_static_observed']:.4f}",
+                    f"{r['Y_static_iid_plugin']:.4f}",
                     r["Y_iso_target"],
-                    f"{r['Y_iso_realised']:.4f}",
+                    f"{r['Y_iso_iid_plugin']:.4f}",
                     f"{r['iso_G_mean']:.2f}",
                     r["iso_G_max"],
                     r["n_problems"],
@@ -490,19 +481,24 @@ def main() -> int:
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
 
+    if args.self_test:
+        assert iso_g(.5,.6)==3
+        assert math.isinf(iso_g(0,.6))
+        assert per_problem_zvf_iid(.5,2)==.5
+        print("synthetic numerical self-test passed; no artifacts written")
+        return 0
+
     tinker = load_tinker_per_problem()
     sweep = load_groupsize_sweep_per_step()
     rows = tinker + sweep
 
-    if args.self_test:
-        rows = rows[:50]
 
-    cy = write_contrastive_yield(rows, RESULTS / "zvf_contrastive_yield.tsv")
+    cy = write_contrastive_yield(rows, RESULTS / "zvf_contrastive_yield_v2.tsv")
     iso = write_iso_yield_sizing(rows, RESULTS / "zvf_iso_yield_sizing.tsv")
     yvs = write_yield_vs_static(rows, RESULTS / "zvf_yield_vs_static.tsv")
     fig = write_figure(
         rows,
-        FIG_DIR / "zvf_contrastive_yield.pdf",
+        FIG_DIR / "zvf_contrastive_yield_v2.pdf",
         iso["quintiles"],
     )
 
@@ -518,8 +514,8 @@ def main() -> int:
     for r in yvs["rows"]:
         print(
             f"[zvf-yield]   Y_target={r['Y_target']:.2f}  "
-            f"Y_static={r['Y_static_observed']:.4f}  "
-            f"Y_iso={r['Y_iso_realised']:.4f}  "
+            f"Y_static={r['Y_static_iid_plugin']:.4f}  "
+            f"Y_iso={r['Y_iso_iid_plugin']:.4f}  "
             f"iso_G_mean={r['iso_G_mean']:.2f}  "
             f"iso_G_max={r['iso_G_max']}"
         )

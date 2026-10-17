@@ -32,12 +32,12 @@ Concretely this iteration answers four sharp questions:
       R_max ~ P^ap * C^ac (interpret ac as the data-epoch exponent)?
 
 Outputs (5 artefacts):
-  platform_hybrid/experiments/results/scaling_law_iter49_two_param.tsv
-  platform_hybrid/experiments/results/scaling_law_iter49_loo_residuals.tsv
-  platform_hybrid/experiments/results/scaling_law_iter49_phase_residual.tsv
-  platform_hybrid/experiments/results/scaling_law_iter49_optimal_anchor.tsv
-  platform_hybrid/experiments/results/scaling_law_iter49_predictions.tsv
-  paper/sections/scaling_law_iter49.tex
+  platform_hybrid/experiments/results/scaling_law_iter49_two_param_v2.tsv
+  platform_hybrid/experiments/results/scaling_law_iter49_loo_residuals_v2.tsv
+  platform_hybrid/experiments/results/scaling_law_iter49_phase_residual_v2.tsv
+  platform_hybrid/experiments/results/scaling_law_iter49_optimal_anchor_v2.tsv
+  platform_hybrid/experiments/results/scaling_law_iter49_predictions_v2.tsv
+  paper/sections/scaling_law_iter49_v2.tex
   figures/scaling_law_iter49.{pdf,png}
 """
 
@@ -54,7 +54,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
-SRC = REPO / "experiments" / "results" / "scaling_law_iter45_compute_proxy.tsv"
+SRC = REPO / "experiments" / "results" / "scaling_law_iter45_compute_proxy_v2.tsv"
 PHASE_SRC = REPO / "experiments" / "results" / "scaling_law_iter33_phase_score.tsv"
 RESULTS = REPO / "experiments" / "results"
 FIG_DIR = REPO / "figures"
@@ -109,6 +109,8 @@ def load_iter45():
                 r[k] = float(v)
             except (ValueError, TypeError):
                 pass
+    if not rows or any(r.get("evidence_kind") != "measured_trace_fit" for r in rows):
+        raise ValueError("requires measured-trace fits with provenance; reconstructed/legacy summaries rejected")
     return rows
 
 
@@ -130,7 +132,7 @@ def main() -> None:
     phase_of = load_phase()
 
     # Filter to good fits with R_max > 0
-    recs = [r for r in rows if r.get("fit_ok", False) and r["R_max"] > 0]
+    recs = [r for r in rows if r.get("fit_ok") in (True, "True", "true", 1) and r["R_max"] > 0]
     log_p = np.array([r["log10_P"] for r in recs])
     log_c = np.array([r["log10_C"] for r in recs])
     rmax = np.array([r["R_max"] for r in recs])
@@ -161,7 +163,7 @@ def main() -> None:
         })
 
     fields1 = list(fit_rows[0].keys())
-    with open(RESULTS / "scaling_law_iter49_two_param.tsv", "w", newline="") as f:
+    with open(RESULTS / "scaling_law_iter49_two_param_v2.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields1, delimiter="\t")
         w.writeheader()
         w.writerows(fit_rows)
@@ -189,7 +191,7 @@ def main() -> None:
         })
 
     fields2 = list(loo_rows[0].keys())
-    with open(RESULTS / "scaling_law_iter49_loo_residuals.tsv", "w", newline="") as f:
+    with open(RESULTS / "scaling_law_iter49_loo_residuals_v2.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields2, delimiter="\t")
         w.writeheader()
         w.writerows(loo_rows)
@@ -210,7 +212,7 @@ def main() -> None:
             "note": "LOO |residual| from two-param joint fit",
         })
     fields3 = list(phase_rows[0].keys())
-    with open(RESULTS / "scaling_law_iter49_phase_residual.tsv", "w", newline="") as f:
+    with open(RESULTS / "scaling_law_iter49_phase_residual_v2.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields3, delimiter="\t")
         w.writeheader()
         w.writerows(phase_rows)
@@ -237,7 +239,7 @@ def main() -> None:
             "winner_arch": recs[winner]["arch"],
         })
     fields4 = list(optimal_rows[0].keys())
-    with open(RESULTS / "scaling_law_iter49_optimal_anchor.tsv", "w", newline="") as f:
+    with open(RESULTS / "scaling_law_iter49_optimal_anchor_v2.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields4, delimiter="\t")
         w.writeheader()
         w.writerows(optimal_rows)
@@ -287,7 +289,7 @@ def main() -> None:
         },
     ]
     fields5 = list(pred_rows[0].keys())
-    with open(RESULTS / "scaling_law_iter49_predictions.tsv", "w", newline="") as f:
+    with open(RESULTS / "scaling_law_iter49_predictions_v2.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields5, delimiter="\t")
         w.writeheader()
         w.writerows(pred_rows)
@@ -309,7 +311,7 @@ def main() -> None:
     lo_line = np.linspace(0, max(rmax) * 1.05, 100)
     ax.plot(lo_line, lo_line, "--", color="black", alpha=0.5, label="y=x")
     ax.set_xlabel("LOO predicted R_max (two-param OLS)")
-    ax.set_ylabel("measured R_max")
+    ax.set_ylabel("R_max fitted to measured traces")
     ax.set_title(f"Iter49: two-param LOO R^2={r2_full:.2f}, RMSE={rmse_loo:.2f}")
     ax.grid(alpha=0.3)
 
@@ -346,8 +348,8 @@ def main() -> None:
     ax.grid(alpha=0.3, which="both")
 
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "scaling_law_iter49.png", dpi=160)
-    plt.savefig(FIG_DIR / "scaling_law_iter49.pdf")
+    plt.savefig(FIG_DIR / "scaling_law_iter49_v2.png", dpi=160)
+    plt.savefig(FIG_DIR / "scaling_law_iter49_v2.pdf")
     plt.close()
 
     # ---- summary ----

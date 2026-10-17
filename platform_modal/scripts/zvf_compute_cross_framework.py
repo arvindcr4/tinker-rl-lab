@@ -62,48 +62,24 @@ OUTPUT_FIELDS = ("step", "zvf", "batch_reward_mean", "n_groups", "K", "framework
 # Canonical ZVF primitive
 # ---------------------------------------------------------------------------
 
-def zvf(rewards_2d, eps: float = DEFAULT_EPS) -> float:
-    """Canonical pseudocode from zvf_pipeline_spec.tex.
+from _review27_contracts import validated_groups
 
-    ``rewards_2d`` is an iterable of iterables, shape ``[num_groups, K]``.
-    Returns the fraction of groups whose sample variance is <= eps.
-    Falls back to pure-python if numpy is unavailable.
+
+def zvf(rewards_2d, eps: float = DEFAULT_EPS) -> float:
+    """Fraction of complete observed groups with sample variance <= eps.
+
+    Ragged groups remain intact. Missing groups/singletons are unavailable.
     """
-    if np is not None:
-        arr = np.asarray(rewards_2d, dtype=float)
-        if arr.ndim != 2 or arr.shape[1] < 2:
-            # degenerate: K<=1 cannot define within-group variance
-            if arr.size == 0:
-                return 0.0
-            return 1.0  # all groups collapse trivially
-        var_per_group = arr.var(axis=-1, ddof=1)
-        return float((var_per_group <= eps).mean())
-    # python fallback
-    groups = list(rewards_2d)
-    if not groups:
-        return 0.0
-    flagged = 0
-    for row in groups:
-        row = list(row)
-        k = len(row)
-        if k < 2:
-            flagged += 1
-            continue
-        mean = sum(row) / k
-        var = sum((v - mean) ** 2 for v in row) / (k - 1)
-        if var <= eps:
-            flagged += 1
-    return flagged / len(groups)
+    if not math.isfinite(eps) or eps < 0:
+        raise ValueError("epsilon must be finite and nonnegative")
+    groups = validated_groups(rewards_2d)
+    variances = [sum((v-sum(row)/len(row))**2 for v in row)/(len(row)-1) for row in groups]
+    return sum(v <= eps for v in variances)/len(groups)
 
 
 def batch_reward_mean(rewards_2d) -> float:
-    if np is not None:
-        arr = np.asarray(rewards_2d, dtype=float)
-        return float(arr.mean()) if arr.size else 0.0
-    flat: List[float] = []
-    for row in rewards_2d:
-        flat.extend(list(row))
-    return sum(flat) / len(flat) if flat else 0.0
+    groups=validated_groups(rewards_2d)
+    return sum(sum(row) for row in groups)/sum(map(len,groups))
 
 
 # ---------------------------------------------------------------------------
@@ -206,20 +182,15 @@ def _get_nested(obj: Any, dotted: str, default: Any = None) -> Any:
 def _as_float_list(x: Any) -> List[float]:
     if x is None:
         return []
-    if isinstance(x, (int, float)):
-        return [float(x)]
-    if isinstance(x, (list, tuple)):
-        out: List[float] = []
-        for v in x:
-            if isinstance(v, (int, float)):
-                out.append(float(v))
-            elif isinstance(v, dict) and "reward" in v:
-                try:
-                    out.append(float(v["reward"]))
-                except Exception:
-                    continue
-        return out
-    return []
+    if not isinstance(x,(list,tuple)):
+        raise ValueError("expected explicit individual reward list")
+    values=[]
+    for item in x:
+        value=item.get("reward") if isinstance(item,dict) else item
+        if isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value):
+            raise ValueError("malformed/nonfinite reward; cannot drop observations")
+        values.append(float(value))
+    return values
 
 
 # ---------------------------------------------------------------------------
@@ -251,21 +222,15 @@ def parse_trl(record: Dict[str, Any]) -> Optional[Tuple[int, List[List[float]]]]
         or record.get("num_rollouts")
     )
     batch_size = record.get("batch_size") or record.get("prompts_per_batch")
-    if group_size is None and batch_size is None:
-        # infer square root fallback
-        group_size = 1
-    if group_size is None and batch_size:
-        group_size = max(1, len(rewards) // int(batch_size))
-    try:
-        group_size = int(group_size) if group_size else 1
-    except Exception:
-        group_size = 1
-    if group_size <= 0 or len(rewards) % group_size != 0:
-        # still best-effort: trim to the nearest multiple of G
-        trim = (len(rewards) // max(group_size, 1)) * max(group_size, 1)
-        rewards = rewards[:trim]
-        if not rewards:
-            return None
+    if group_size is None:
+        if not batch_size or len(rewards) % int(batch_size):
+            raise ValueError("missing or incompatible group identity")
+        group_size = len(rewards) // int(batch_size)
+    if isinstance(group_size,bool) or int(group_size)!=group_size or int(group_size)<2:
+        raise ValueError("invalid group size")
+    group_size=int(group_size)
+    if len(rewards)%group_size:
+        raise ValueError("incomplete reward group; refusing truncation")
     groups = [
         rewards[i : i + group_size] for i in range(0, len(rewards), group_size)
     ]
@@ -296,17 +261,14 @@ def parse_tinker(record: Dict[str, Any]) -> Optional[Tuple[int, List[List[float]
         )
         return None
     by_group: Dict[Any, List[float]] = {}
-    for idx, r in enumerate(rollouts):
-        if not isinstance(r, dict):
-            continue
-        gid = r.get("group_id", r.get("prompt_id", idx))
-        rv = r.get("reward")
-        if rv is None:
-            continue
-        try:
-            by_group.setdefault(gid, []).append(float(rv))
-        except Exception:
-            continue
+    for r in rollouts:
+        if not isinstance(r,dict) or not ("group_id" in r or "prompt_id" in r):
+            raise ValueError("rollout lacks group identity")
+        gid=r.get("group_id",r.get("prompt_id"))
+        if gid is None:
+            raise ValueError("null group identity")
+        reward=_as_float_list([r.get("reward")])[0]
+        by_group.setdefault(gid,[]).append(reward)
     if not by_group:
         return None
     # preserve deterministic order by first-seen group id
@@ -447,20 +409,17 @@ def compute_time_series(
         step, groups = parsed
         if not groups:
             continue
-        # normalise to padded 2D if K varies: use minimum K across groups
-        k_min = min(len(g) for g in groups)
-        if k_min <= 0:
-            continue
-        trimmed = [g[:k_min] for g in groups if len(g) >= k_min]
-        if not trimmed:
-            continue
+        groups=validated_groups(groups)
+        sizes=[len(g) for g in groups]
         rows.append(
             {
                 "step": int(step),
-                "zvf": zvf(trimmed, eps=epsilon),
-                "batch_reward_mean": batch_reward_mean(trimmed),
-                "n_groups": len(trimmed),
-                "K": k_min,
+                "zvf": zvf(groups, eps=epsilon),
+                "batch_reward_mean": batch_reward_mean(groups),
+                "n_groups": len(groups),
+                "K": sizes[0] if len(set(sizes)) == 1 else None,
+                "group_sizes": sizes,
+                "analysis_version": "review27-v2",
                 "framework": framework,
             }
         )

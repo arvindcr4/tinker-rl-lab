@@ -1081,6 +1081,12 @@ def main() -> int:
         "--self-test", action="store_true", help="Run on a small synthetic slice"
     )
     args = parser.parse_args()
+    if args.self_test:
+        assert _pearson([1.,2.,3.],[2.,4.,6.]) > .999
+        assert _pearson([1.,2.,3.],[6.,4.,2.]) < -.999
+        print("synthetic numerical self-test passed; no inputs loaded or artifacts written")
+        return 0
+
 
     rows: List[Dict[str, Any]] = []
     rows += load_tinker_gsm8k()
@@ -1090,16 +1096,6 @@ def main() -> int:
     rows += load_scaling_law_phases()
     rows += load_drgrpo_vs_grpo()
     rows += load_samestack_ppo_grpo()
-
-    # Optional self-test: keep just one representative row per loader.
-    if args.self_test:
-        keep = []
-        seen_exp = set()
-        for r in rows:
-            if r["experiment"] not in seen_exp:
-                keep.append(r)
-                seen_exp.add(r["experiment"])
-        rows = keep
 
     write_summary(rows, args.out_summary)
     by_lib = write_by_library(rows, args.out_by_library)

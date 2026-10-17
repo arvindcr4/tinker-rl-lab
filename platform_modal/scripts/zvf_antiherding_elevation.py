@@ -7,7 +7,7 @@ in [0.13, 0.23]: "high-temperature autoregressive sampling inherently anti-herds
 measured structural diversity bonus."
 
 Direct measurement on the same data sources the spec calls out
-(zvf_contrastive_yield.tsv) shows this is FALSE in a regime-dependent way:
+(zvf_contrastive_yield_v2.tsv) shows this is FALSE in a regime-dependent way:
 
   - tinker_gsm8k (Qwen3-8B / GSM8K, real reasoning):   mean_delta_div = +0.1224
                                                        (anti-herding, 84% positive)
@@ -57,7 +57,7 @@ FIG_DIR = REPO_ROOT / "figures"
 
 
 def load_decomposition(path: Path) -> List[Dict[str, Any]]:
-    """Load the long-form zvf_contrastive_yield.tsv rows.
+    """Load the long-form zvf_contrastive_yield_v2.tsv rows.
 
     Skip the 4 header lines; columns are tab-separated.
     """
@@ -109,6 +109,8 @@ def bootstrap_mean(
     return (point, (lo, hi))
 
 
+from _review27_contracts import stable_seed
+
 def write_falsification_tsv(
     rows: List[Dict[str, Any]], out_path: Path
 ) -> Dict[str, Any]:
@@ -128,12 +130,12 @@ def write_falsification_tsv(
     with out_path.open("w") as fh:
         fh.write("# Pillar 2 cross-source anti-herding falsification\n")
         fh.write(
-            "# delta_div = zvf_iid(p, G) - zvf_obs; POSITIVE means anti-herding\n"
+            "# delta_div = zvf_iid(p, G) - zvf_obs; sign does not identify anti-herding\n"
             "# (sampler produces more contrast than independent draws),\n"
-            "# NEGATIVE means herding (mode collapse / correlated rollouts).\n"
+            "# residuals need independently estimated prompt probabilities.\n"
             "# Bootstrap CIs: B=2000 percentile resamples over per-problem\n"
             "# rows (one row per (source, seed, problem_id)). CIs whose sign\n"
-            "# disagrees with the point estimate are decisive evidence of a\n"
+            "# are descriptive only and cannot establish dependence.\n"
             "# cross-source sign reversal in delta_div.\n"
             "# Source: platform_modal/scripts/zvf_antiherding_elevation.py\n"
         )
@@ -154,11 +156,11 @@ def write_falsification_tsv(
         )
         for src, src_rows in sorted(by_source.items()):
             dvals = [r["delta_div"] for r in src_rows]
-            mean_d, (lo, hi) = bootstrap_mean(dvals, B=2000, seed=hash(src) & 0xFFFF)
+            mean_d, (lo, hi) = bootstrap_mean(dvals, B=2000, seed=stable_seed(20260704, src))
             n = len(dvals)
             frac_pos = sum(1 for v in dvals if v > 0) / n if n else float("nan")
             med = statistics.median(dvals) if n else float("nan")
-            verdict = "anti-herd" if lo > 0 else ("herd" if hi < 0 else "AMBIGUOUS")
+            verdict = "UNIDENTIFIED: same-sample or aggregate plug-in residual"
             writer.writerow(
                 (
                     src,
@@ -209,49 +211,33 @@ def empirical_isog_curve(
     bins = [(i / 10.0, (i + 1) / 10.0) for i in range(10)]
     rows_binned: List[Dict[str, Any]] = []
     for lo, hi in bins:
-        cell = [r for r in src_rows if lo <= r["p_x"] < hi]
+        cell = [r for r in src_rows if lo <= r["p_x"] < hi or (hi == 1.0 and r["p_x"] == 1.0)]
         if not cell:
             continue
         mean_d = statistics.fmean(r["delta_div"] for r in cell)
         mean_p = statistics.fmean(r["p_x"] for r in cell)
         n = len(cell)
         for Yt in Y_targets:
-            # Empirical ZVF(p, G) ~ iid(p, G) - mean_delta_div, clamped to
-            # [0, 1]. Find smallest G such that 1 - empirical_ZVF >= Yt.
-            for G_test in range(1, 65):
-                pG = mean_p ** G_test + (1 - mean_p) ** G_test
-                emp_zvf = max(0.0, min(1.0, pG - mean_d))
-                if 1 - emp_zvf >= Yt:
-                    rows_binned.append(
-                        {
-                            "source": source,
-                            "p_lo": lo,
-                            "p_hi": hi,
-                            "p_mean": mean_p,
-                            "mean_delta_div": mean_d,
-                            "n": n,
-                            "Y_target": Yt,
-                            "G_iid": _iso_g_iid(mean_p, Yt),
-                            "G_empirical": G_test,
-                            "delta_G": G_test - _iso_g_iid(mean_p, Yt),
-                        }
-                    )
-                    break
+            observed_by_g = {}
+            for row in cell:
+                observed_by_g.setdefault(row["G"], []).append(row["Y_obs"] if "Y_obs" in row else 1-row["zvf_obs"])
+            candidates=[g for g,ys in observed_by_g.items() if statistics.fmean(ys)>=Yt]
+            selected=min(candidates) if candidates else float("inf")
+            iid=_iso_g_iid(mean_p,Yt)
+            rows_binned.append({
+                "source":source,"p_lo":lo,"p_hi":hi,"p_mean":mean_p,
+                "mean_delta_div":mean_d,"n":n,"Y_target":Yt,
+                "G_iid":iid,"G_empirical":selected,
+                "delta_G": selected-iid if math.isfinite(selected) and math.isfinite(iid) else float("nan"),
+                "status":"observed_grid_descriptive" if candidates else "not_observed_feasible",
+            })
     return rows_binned
 
 
-def _iso_g_iid(p: float, Y_target: float) -> int:
-    """Same as zvf_contrastive_yield.iso_g; duplicated here to keep the
-    artifact script self-contained.
-    """
-    if p <= 0.0 or p >= 1.0:
-        return 1
-    y_target = max(min(Y_target, 1.0 - 1e-9), 1e-9)
-    log_inv = math.log(1.0 - y_target)
-    denom = math.log(max(p, 1.0 - p))
-    if denom == 0:
-        return 1
-    return max(1, math.ceil(log_inv / denom))
+def _iso_g_iid(p: float, Y_target: float):
+    """Exact IID contrast-yield solver (review27-v2); inf means infeasible."""
+    from _review27_contracts import exact_iso_g
+    return exact_iso_g(p, Y_target)
 
 
 def write_empirical_isog_tsv(
@@ -265,7 +251,7 @@ def write_empirical_isog_tsv(
         fh.write("# Pillar 2 empirical Iso-G sizing (vs theoretical iid iso-G).\n")
         fh.write(
             "# Bins: 10 even-width bins over p in [0, 1]. mean_delta_div from\n"
-            "# zvf_contrastive_yield.tsv for that bin. G_empirical = smallest G\n"
+            "# zvf_contrastive_yield_v2.tsv for that bin. G_empirical = smallest G\n"
             "# such that 1 - (iid(p, G) - mean_delta_div)_clipped >= Y_target.\n"
             "# delta_G > 0 means the empirical sampler NEEDS MORE rollouts than\n"
             "# the iid theory assumes (herding regime); delta_G < 0 means\n"
@@ -438,7 +424,7 @@ def main() -> int:
     parser.add_argument(
         "--in-decomposition",
         type=Path,
-        default=RESULTS / "zvf_contrastive_yield.tsv",
+        default=RESULTS / "zvf_contrastive_yield_v2.tsv",
     )
     parser.add_argument(
         "--out-falsification",

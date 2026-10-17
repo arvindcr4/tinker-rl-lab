@@ -10,6 +10,7 @@ Usage:
 """
 
 import json
+import math
 import sys
 from pathlib import Path
 from typing import Dict, List, Tuple, Any
@@ -53,7 +54,6 @@ FIELD_ALIASES = {
     "steps": "steps_completed",
     "last_10_avg": "last10_avg",
     "last-10": "last10_avg",
-    "final_reward": "peak_reward",
     "url": "source_files",
     "wandb_url": "source_files",
     "wandb_run_url": "source_files",
@@ -71,6 +71,10 @@ def normalize_row(row: Dict) -> Dict:
     normalized = {}
     for key, value in row.items():
         new_key = FIELD_ALIASES.get(key, key)
+        if new_key == "source_files" and key != "source_files" and isinstance(value,str):
+            value=[value]
+        if new_key in normalized and normalized[new_key] != value:
+            raise ValueError(f"conflicting aliases for {new_key}")
         normalized[new_key] = value
     return normalized
 
@@ -89,13 +93,36 @@ def validate_row(row: Dict, row_num: int) -> List[str]:
         if field in row:
             value = row[field]
             if value is None:
-                continue  # Allow None
+                issues.append(f"Row {row_num}: null required field {field}")
+                continue
             if not isinstance(value, expected_type):
                 issues.append(
                     f"Row {row_num}: Field '{field}' has type {type(value).__name__}, "
                     f"expected {expected_type.__name__}"
                 )
     
+    for field in ("paper_claim_ids","source_files"):
+        value=row.get(field)
+        if isinstance(value,list) and any(not isinstance(x,str) or not x.strip() for x in value):
+            issues.append(f"Row {row_num}: invalid {field} member")
+    for field in ("peak_reward","last10_avg","learning_rate"):
+        value=row.get(field)
+        if isinstance(value,bool) or isinstance(value,(int,float)) and not math.isfinite(value):
+            issues.append(f"Row {row_num}: nonfinite/boolean {field}")
+    trace=row.get("reward_trace")
+    if isinstance(trace,list):
+        if not trace or any(isinstance(x,bool) or not isinstance(x,(int,float)) or not math.isfinite(x) for x in trace):
+            issues.append(f"Row {row_num}: invalid reward_trace")
+        else:
+            if row.get("steps_completed") != len(trace):
+                issues.append(f"Row {row_num}: trace/step count mismatch")
+            for key,actual in (("peak_reward",max(trace)),("last10_avg",sum(trace[-10:])/len(trace[-10:]))):
+                value=row.get(key)
+                if isinstance(value,(int,float)) and not math.isclose(value,actual,rel_tol=1e-6,abs_tol=1e-9):
+                    issues.append(f"Row {row_num}: {key} inconsistent with trace")
+    for field in ("run_id","model","method","task","split","status"):
+        if not isinstance(row.get(field),str) or not row[field].strip():
+            issues.append(f"Row {row_num}: empty identity {field}")
     return issues
 
 
@@ -147,7 +174,15 @@ def main():
     print(f"Found {len(rows)} rows")
     
     # Analyze schema
-    analysis = analyze_schema(rows)
+    try:
+        normalized_rows=[normalize_row(row) for row in rows]
+        ids=[row.get("run_id") for row in normalized_rows]
+        if not rows or len(set(ids)) != len(ids):
+            raise ValueError("empty dataset or duplicate run identities")
+        analysis = analyze_schema(rows)
+    except (ValueError,TypeError) as exc:
+        print(f"ERROR: {exc}")
+        return 1
     
     print("\n" + "="*60)
     print("SCHEMA ANALYSIS")

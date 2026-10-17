@@ -25,12 +25,12 @@ template, with bootstrap CIs for the phase boundaries, and contrasts
 the per-architecture composition of phase classes.
 
 Outputs (5 artefacts + 1 fig):
-  platform_hybrid/experiments/results/scaling_law_iter65_phase_pieces.tsv
-  platform_hybrid/experiments/results/scaling_law_iter65_conformity.tsv
-  platform_hybrid/experiments/results/scaling_law_iter65_boundaries.tsv
-  platform_hybrid/experiments/results/scaling_law_iter65_arch_phase.tsv
-  platform_hybrid/experiments/results/scaling_law_iter65_predictions.tsv
-  paper/sections/scaling_law_iter65.tex
+  platform_hybrid/experiments/results/scaling_law_iter65_phase_pieces_v2.tsv
+  platform_hybrid/experiments/results/scaling_law_iter65_conformity_v2.tsv
+  platform_hybrid/experiments/results/scaling_law_iter65_boundaries_v2.tsv
+  platform_hybrid/experiments/results/scaling_law_iter65_arch_phase_v2.tsv
+  platform_hybrid/experiments/results/scaling_law_iter65_predictions_v2.tsv
+  paper/sections/scaling_law_iter65_v2.tex
   figures/scaling_law_iter65.{pdf,png}
 """
 
@@ -254,7 +254,7 @@ def _bootstrap_boundaries(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
     n = len(y)
     if n < 6:
         return {"cp1_lo": -1, "cp1_med": -1, "cp1_hi": -1,
-                "cp2_lo": -1, "cp2_med": -1, "cp2_hi": -1}
+                "cp2_lo": -1, "cp2_med": -1, "cp2_hi": -1, "n_boot_success": 0}
     block = max(2, n // 6)
     cps1, cps2 = [], []
     for _ in range(n_boot):
@@ -272,7 +272,7 @@ def _bootstrap_boundaries(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
             cps2.append(int(j))
     if not cps1:
         return {"cp1_lo": -1, "cp1_med": -1, "cp1_hi": -1,
-                "cp2_lo": -1, "cp2_med": -1, "cp2_hi": -1}
+                "cp2_lo": -1, "cp2_med": -1, "cp2_hi": -1, "n_boot_success": 0}
     return {
         "cp1_lo": int(np.percentile(cps1, 2.5)),
         "cp1_med": int(np.percentile(cps1, 50.0)),
@@ -341,17 +341,17 @@ def main() -> None:
         })
 
     # ---- write per-trace outputs
-    phase_path = RESULTS_DIR / "scaling_law_iter65_phase_pieces.tsv"
+    phase_path = RESULTS_DIR / "scaling_law_iter65_phase_pieces_v2.tsv"
     with phase_path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(phase_rows[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(phase_rows)
-    conformity_path = RESULTS_DIR / "scaling_law_iter65_conformity.tsv"
+    conformity_path = RESULTS_DIR / "scaling_law_iter65_conformity_v2.tsv"
     with conformity_path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(conformity_rows[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(conformity_rows)
-    boundary_path = RESULTS_DIR / "scaling_law_iter65_boundaries.tsv"
+    boundary_path = RESULTS_DIR / "scaling_law_iter65_boundaries_v2.tsv"
     with boundary_path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(boundary_rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -382,7 +382,7 @@ def main() -> None:
             "pci_mean": pci_mean, "pci_median": pci_med,
             "class_counts": ";".join(f"{k}:{v}" for k, v in sorted(cls_counts.items())),
         })
-    arch_path = RESULTS_DIR / "scaling_law_iter65_arch_phase.tsv"
+    arch_path = RESULTS_DIR / "scaling_law_iter65_arch_phase_v2.tsv"
     with arch_path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(arch_phase_rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -473,7 +473,7 @@ def main() -> None:
             "pass_fail": "PASS" if n_drift >= 3 else "FAIL",
         },
     ]
-    pred_path = RESULTS_DIR / "scaling_law_iter65_predictions.tsv"
+    pred_path = RESULTS_DIR / "scaling_law_iter65_predictions_v2.tsv"
     with pred_path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(pred_rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -556,14 +556,14 @@ def main() -> None:
     ax.set_ylabel("phase-conformity index (PCI)")
     ax.set_title(f"(D) per-architecture PCI\n(dense n={len(dense_pci)}, moe n={len(moe_pci)})")
     plt.tight_layout()
-    out_pdf = FIG_DIR / "scaling_law_iter65.pdf"
-    out_png = FIG_DIR / "scaling_law_iter65.png"
+    out_pdf = FIG_DIR / "scaling_law_iter65_v2.pdf"
+    out_png = FIG_DIR / "scaling_law_iter65_v2.png"
     fig.savefig(out_pdf, bbox_inches="tight")
     fig.savefig(out_png, bbox_inches="tight", dpi=130)
     plt.close(fig)
     # mirror to paper/figures/
-    (PAPER_FIG / "scaling_law_iter65.pdf").write_bytes(out_pdf.read_bytes())
-    (PAPER_FIG / "scaling_law_iter65.png").write_bytes(out_png.read_bytes())
+    (PAPER_FIG / "scaling_law_iter65_v2.pdf").write_bytes(out_pdf.read_bytes())
+    (PAPER_FIG / "scaling_law_iter65_v2.png").write_bytes(out_png.read_bytes())
 
     # ---- write LaTeX section
     cls_counts = {}
@@ -746,8 +746,8 @@ into a single geometric statistic.
 
 \begin{figure}[t]
   \centering
-  \IfFileExists{figures/scaling_law_iter65.pdf}{%
-  \includegraphics[width=0.95\linewidth]{figures/scaling_law_iter65.pdf}%
+  \IfFileExists{figures/scaling_law_iter65_v2.pdf}{%
+  \includegraphics[width=0.95\linewidth]{figures/scaling_law_iter65_v2.pdf}%
   }{%
   \fbox{\parbox{0.86\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_law\_iter65.pdf pending regeneration.]}\vspace{1em}}%
   }
@@ -764,7 +764,7 @@ into a single geometric statistic.
   \label{fig:scaling-iter65}
 \end{figure}
 """
-    (PAPER_SEC / "scaling_law_iter65.tex").write_text(sec)
+    (PAPER_SEC / "scaling_law_iter65_v2.tex").write_text(sec)
 
     # ---- console summary
     print(f"phase_class distribution: {class_str}")

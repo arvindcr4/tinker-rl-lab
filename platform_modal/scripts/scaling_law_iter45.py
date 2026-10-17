@@ -23,18 +23,19 @@ Setup:
        a Hoffmann-style prediction: P* ~ C^(1/(alpha+1)).
 
 Outputs (5 artefacts):
-  platform_hybrid/experiments/results/scaling_law_iter45_compute_proxy.tsv   (per-anchor C, R_max)
-  platform_hybrid/experiments/results/scaling_law_iter45_scaling.tsv         (within-stack fits)
-  platform_hybrid/experiments/results/scaling_law_iter45_isocompute.tsv      (iso-compute bands)
-  platform_hybrid/experiments/results/scaling_law_iter45_predictions.tsv     (P1-P3 with pass/fail)
-  platform_hybrid/experiments/results/scaling_law_iter45_summary.tsv         (top-line rollup)
-  paper/sections/scaling_law_iter45.tex                      (paper section)
+  platform_hybrid/experiments/results/scaling_law_iter45_compute_proxy_v2.tsv   (per-anchor C, R_max)
+  platform_hybrid/experiments/results/scaling_law_iter45_scaling_v2.tsv         (within-stack fits)
+  platform_hybrid/experiments/results/scaling_law_iter45_isocompute_v2.tsv      (iso-compute bands)
+  platform_hybrid/experiments/results/scaling_law_iter45_predictions_v2.tsv     (P1-P3 with pass/fail)
+  platform_hybrid/experiments/results/scaling_law_iter45_summary_v2.tsv         (top-line rollup)
+  paper/sections/scaling_law_iter45_v2.tex                      (paper section)
   figures/scaling_law_iter45.{pdf,png}                       (figure)
 """
 
 from __future__ import annotations
 
 import csv
+import json
 import math
 from pathlib import Path
 
@@ -61,25 +62,14 @@ B_BOOT = 400
 
 
 def fit_saturation(n_steps, r_first, r_final, r_mean, r_peak, r_var, early_mean,
-                   late_mean, zero_frac):
-    """Fit R_max, lambda from the same summary statistics iter21/41 use."""
-    n = max(4, int(n_steps))
-    t = np.arange(1, n + 1, dtype=float)
-    # linear interpolation early->late, peak perturbation, Nemotron zero prefix
-    y = np.linspace(early_mean, late_mean, n)
-    peak_idx = max(0, n // 2 - 1)
-    y[peak_idx] = max(y[peak_idx], r_peak)
-    if peak_idx > 0:
-        y[peak_idx - 1] = max(y[peak_idx - 1], 0.5 * (y[peak_idx - 1] + y[peak_idx]))
-    if peak_idx + 1 < n:
-        y[peak_idx + 1] = max(y[peak_idx + 1], 0.5 * (y[peak_idx] + y[peak_idx + 1]))
-    if zero_frac > 0.0:
-        n_zero = int(round(zero_frac * n))
-        y[:n_zero] = 0.0
-    cur = float(np.mean(y))
-    if cur > 1e-9:
-        y = y * (r_mean / cur)
-    y = np.clip(y, 0.0, 1.0)
+                   late_mean, zero_frac, *, observed_trace=None):
+    """Fit only actual ordered rewards; summary reconstruction is not evidence."""
+    if observed_trace is None:
+        return float("nan"),float("nan"),False
+    y=np.asarray(observed_trace,dtype=float)
+    if y.ndim!=1 or len(y)<4 or not np.all(np.isfinite(y)):
+        return float("nan"),float("nan"),False
+    t=np.arange(1,len(y)+1,dtype=float)
     try:
         popt, _ = curve_fit(model_saturation, t, y,
                             p0=[max(0.5, float(r_mean) * 1.5), 0.3],
@@ -145,7 +135,7 @@ def main() -> None:
         rmax, lam, ok = fit_saturation(
             r["n_steps"], r["r_first"], r["r_final"], r["r_mean"],
             r["r_peak"], r["r_var"], r["early_mean"], r["late_mean"],
-            r["zero_frac"],
+            r["zero_frac"], observed_trace=json.loads(r["reward_trace"]) if r.get("reward_trace") else None,
         )
         # Compute proxy in arbitrary units (params_B * n_steps * L_bar).
         # We use this as a monotone proxy for FLOPs (6*P*N*D Hoffmann-style).
@@ -164,9 +154,13 @@ def main() -> None:
             "r_mean": r["r_mean"],
             "zero_frac": r["zero_frac"],
             "fit_ok": ok,
+            "evidence_kind": "measured_trace_fit" if ok else "unavailable",
         })
 
-    with open(RESULTS / "scaling_law_iter45_compute_proxy.tsv", "w", newline="") as f:
+    if not any(r["fit_ok"] for r in comp_rows):
+        raise ValueError("No measured reward traces; summary reconstruction is not permitted")
+
+    with open(RESULTS / "scaling_law_iter45_compute_proxy_v2.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(comp_rows[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(comp_rows)
@@ -204,7 +198,7 @@ def main() -> None:
             "note": "OLS on log10(C) vs R_max; alpha is the slope (compute exponent)",
         })
 
-    with open(RESULTS / "scaling_law_iter45_scaling.tsv", "w", newline="") as f:
+    with open(RESULTS / "scaling_law_iter45_scaling_v2.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(fit_rows[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(fit_rows)
@@ -246,13 +240,13 @@ def main() -> None:
         used.add(best["model"])
 
     if iso_rows:
-        with open(RESULTS / "scaling_law_iter45_isocompute.tsv", "w", newline="") as f:
+        with open(RESULTS / "scaling_law_iter45_isocompute_v2.tsv", "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=list(iso_rows[0].keys()), delimiter="\t")
             w.writeheader()
             w.writerows(iso_rows)
     else:
         # always write something
-        with open(RESULTS / "scaling_law_iter45_isocompute.tsv", "w", newline="") as f:
+        with open(RESULTS / "scaling_law_iter45_isocompute_v2.tsv", "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=["model_a", "params_B_a", "arch_a",
                                               "logC_a", "Rmax_a", "model_b",
                                               "params_B_b", "arch_b", "logC_b",
@@ -320,12 +314,12 @@ def main() -> None:
         })
 
     if pred_rows:
-        with open(RESULTS / "scaling_law_iter45_predictions.tsv", "w", newline="") as f:
+        with open(RESULTS / "scaling_law_iter45_predictions_v2.tsv", "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=list(pred_rows[0].keys()), delimiter="\t")
             w.writeheader()
             w.writerows(pred_rows)
     else:
-        with open(RESULTS / "scaling_law_iter45_predictions.tsv", "w", newline="") as f:
+        with open(RESULTS / "scaling_law_iter45_predictions_v2.tsv", "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=["prediction", "pass", "note"],
                                delimiter="\t")
             w.writeheader()
@@ -357,7 +351,7 @@ def main() -> None:
             if iso_rows else float("nan")
         ),
     }
-    with open(RESULTS / "scaling_law_iter45_summary.tsv", "w", newline="") as f:
+    with open(RESULTS / "scaling_law_iter45_summary_v2.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(summary.keys()), delimiter="\t")
         w.writeheader()
         w.writerow(summary)
@@ -413,8 +407,8 @@ def main() -> None:
         ax2.legend(fontsize=8)
         ax2.grid(alpha=0.3, axis="y")
     fig.tight_layout()
-    fig.savefig(FIG_DIR / "scaling_law_iter45.pdf")
-    fig.savefig(FIG_DIR / "scaling_law_iter45.png", dpi=150)
+    fig.savefig(FIG_DIR / "scaling_law_iter45_v2.pdf")
+    fig.savefig(FIG_DIR / "scaling_law_iter45_v2.png", dpi=150)
     plt.close(fig)
 
     # ---- (7) paper section ----
@@ -508,7 +502,7 @@ def main() -> None:
         f"and the within-stack $\\alpha$ exponents are the operationally "
         f"relevant knobs for selecting the next anchor scale."
     )
-    sec_path = PAPER_SEC / "scaling_law_iter45.tex"
+    sec_path = PAPER_SEC / "scaling_law_iter45_v2.tex"
     sec_path.write_text("\n".join(lines) + "\n")
     print(f"iter45 done. fits_ok={n_ok}/{n_anchors} "
           f"iso_pairs={n_total_iso} preds_pass={n_preds_pass}/{len(pred_rows)}")

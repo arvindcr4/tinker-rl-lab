@@ -270,10 +270,7 @@ class CompletionGateTests(unittest.TestCase):
             "bool_budget": lambda data: data.__setitem__("budget_usd", True),
             "nonfinite_budget": lambda data: data.__setitem__("budget_usd", math.inf),
             "missing_hash": lambda data: data["runtime"].__setitem__("sha256", "not-a-hash"),
-            "duplicate_task": lambda data: data.__setitem__(
-                "tasks",
-                [{"task_id": "same", "split_id": "a"}, {"task_id": "same", "split_id": "b"}],
-            ),
+            "duplicate_task": lambda data: data["tasks"][1].__setitem__("task_id", data["tasks"][0]["task_id"]),
             "path_traversal": lambda data: data["native_grader"].__setitem__(
                 "path", "../grader.py"
             ),
@@ -285,7 +282,9 @@ class CompletionGateTests(unittest.TestCase):
                 manifest = self.load_manifest(manifest_path)
                 mutate(manifest)
                 self.save_manifest(manifest_path, manifest)
-                with self.assertRaises(PackageValidationError):
+                if name != "grant_unknown":
+                    trust_roots = self.sign_manifest(root, manifest_path)
+                with self.assertRaisesRegex(PackageValidationError, "unexpected|suite|grant|budget|sha256|duplicate|path|relative|hash|fields"):
                     validate_package("E3", manifest_path, root, trust_roots)
 
     def test_rejects_file_hash_and_license_text_hash_mismatches(self) -> None:

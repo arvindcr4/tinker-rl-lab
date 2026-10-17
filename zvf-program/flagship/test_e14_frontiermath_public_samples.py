@@ -125,8 +125,8 @@ class TestHostedOfferGuards(unittest.TestCase):
         with self.assertRaises(mod.ScoreProhibited):
             mod.validate_hosted_evaluation_offer(offer)
         offer["provider"] = "not-epoch"
-        with self.assertRaises(mod.ScoreProhibited):
-            mod.validate_hosted_evaluation_offer(offer)
+        with self.assertRaisesRegex(mod.ScoreProhibited, "invalid hosted FrontierMath offer"):
+            mod.validate_hosted_evaluation_offer(offer, trust_root=TEST_ROOT)
 
 
 class TestHostedSignedResults(unittest.TestCase):

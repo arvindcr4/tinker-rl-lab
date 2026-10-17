@@ -105,6 +105,12 @@ def prepare(setup, output):
 
 def validate_manifest(manifest):
     require(manifest.get("schema") == SCHEMA and manifest.get("expected_total") == EXPECTED_TOTAL, "Omni denominator must be 4428")
+    expected_protocol = {"actor_system_prompt": SYSTEM_PROMPT, "actor_prompt_source": manifest["source"]["actor_prompt_source"],
+                         "actor_temperature": 0, "actor_top_p": 1, "actor_max_tokens": 2048,
+                         "judge": "native Omni-Judge, separate model; not GPT-4o leaderboard judge",
+                         "judge_temperature": 0, "judge_max_tokens": 300, "n": 1,
+                         "malformed_judge_policy": "block full score if native parser would skip any row"}
+    require(manifest.get("protocol") == expected_protocol, "native protocol drift")
     tasks = manifest["tasks"]
     require(len(tasks) == EXPECTED_TOTAL and len({t["task_id"] for t in tasks}) == EXPECTED_TOTAL, "incomplete or duplicate task IDs")
     for index, task in enumerate(tasks):
@@ -123,6 +129,7 @@ def verified_prepared(setup, prepared):
     rows = dataset_rows(setup)
     require(set(keys["rows"]) == {t["task_id"] for t in manifest["tasks"]}, "reference rows incomplete")
     for index, (task, row) in enumerate(zip(manifest["tasks"], rows)):
+        require(task["source_row_sha256"] == fingerprint(row), "source row hash drift")
         require(task["task_id"] == task_id(index, row) and keys["rows"][task["task_id"]] == row, "reference row drift")
         require(task["messages"] == [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": row["problem"]}], "answer leakage or problem prompt drift")
     return manifest, keys
@@ -168,10 +175,10 @@ def create_contract(manifest, kind, provenance, wandb, extra_body=None):
     validate_provenance(provenance, kind)
     durable.validate_wandb(wandb)
     extra_body = extra_body or {}
-    require(isinstance(extra_body, dict) and not set(extra_body) & {"model", "messages", "prompt", "n", "temperature", "top_p", "max_tokens", "stop", "stream", "echo"}, "extra body may not override native parameters")
+    require(isinstance(extra_body, dict) and set(extra_body) <= {"chat_template_kwargs"} and (not extra_body or extra_body["chat_template_kwargs"] == {"enable_thinking": False}), "extra body only permits explicit disabled thinking; protocol overrides forbidden")
     require(kind == "actor" or not extra_body, "native judge accepts no chat-template or sampling overrides")
     sampling = {"temperature": 0, "top_p": 1, "max_tokens": 2048 if kind == "actor" else 300, "n": 1}
-    return {"schema": SCHEMA, "kind": kind, "manifest_sha256": fingerprint(manifest), "provenance": provenance,
+    return {"protocol_guard_version": "effective-request-v2", "schema": SCHEMA, "kind": kind, "manifest_sha256": fingerprint(manifest), "provenance": provenance,
             "wandb": wandb, "sampling": sampling, "extra_body": extra_body,
             "runner_sha256": digest(Path(__file__).read_bytes()), "durability_helper_sha256": digest(Path(durable.__file__).read_bytes()),
             "transport": "OpenAI chat completions" if kind == "actor" else "raw OpenAI completions; no second chat template"}

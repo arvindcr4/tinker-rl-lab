@@ -178,7 +178,7 @@ class E9StreamingPlanTests(unittest.TestCase):
     def test_pilot_receipt_never_claims_full_suite_score(self) -> None:
         receipt = build_run_receipt(
             competition_id="spooky-author-identification",
-            native_grade={"score": 0.42, "above_median": True},
+            native_grade={"score": 0.42, "above_median": True, "valid_submission": True, "competition_id": "spooky-author-identification"},
             bridge_health={"hf_commit": "commit", "wandb_url": "https://wandb.ai/run"},
         )
 
@@ -518,17 +518,20 @@ sample.to_csv(SUB, index=False)"""
 train_path = find_file('ru_train*.csv*')
 test_path = find_file('ru_test*.csv*')
 sample_path = find_file('ru_sample_submission*.csv*')
+if True:
     def normalize_unknown(text):
         # Simple rules
         if text.isdigit():
             return text
 """
 
+        compile(source, "<original-fixture>", "exec")
         repaired = repair_known_runtime_error(
             source,
             "AttributeError: 'float' object has no attribute 'isdigit'",
         )
 
+        compile(repaired, "<repaired-fixture>", "exec")
         self.assertIn("if not isinstance(text, str):", repaired)
         self.assertEqual(
             identify_known_deterministic_repair(repaired),
@@ -540,11 +543,13 @@ sample_path = find_file('ru_sample_submission*.csv*')
 train_path = find_file('ru_train*.csv*')
 test_path = find_file('ru_test*.csv*')
 sample_path = find_file('ru_sample_submission*.csv*')
+if True:
     def normalize_unknown(text):
         # Simple rules
         if text.isdigit():
             return text
 """
+        compile(source, "<original-fixture>", "exec")
         repaired = preapply_replay_runtime_repair(
             source,
             {
@@ -556,6 +561,7 @@ sample_path = find_file('ru_sample_submission*.csv*')
             },
         )
 
+        compile(repaired, "<repaired-fixture>", "exec")
         self.assertIn("if not isinstance(text, str):", repaired)
 
     def test_unknown_prior_replay_failure_is_not_mutated(self) -> None:
@@ -573,16 +579,19 @@ sample_path = find_file('ru_sample_submission*.csv*')
 train_path = find_file('ru_train*.csv*')
 test_path = find_file('ru_test*.csv*')
 sample_path = find_file('ru_sample_submission*.csv*')
+if True:
     def normalize_unknown(text):
         if not isinstance(text, str):
             return text
 submission = test[['id', 'after']].copy()
 """
+        compile(source, "<original-fixture>", "exec")
         repaired = repair_known_runtime_error(
             source,
             "KeyError: \"['id'] not in index\"",
         )
 
+        compile(repaired, "<repaired-fixture>", "exec")
         self.assertIn(
             "test['sentence_id'].astype(str) + '_' + test['token_id'].astype(str)",
             repaired,
@@ -682,6 +691,9 @@ submission = test[['id', 'after']].copy()
     def test_repairs_kuzushiji_replay_without_changing_cv2_pipeline(self) -> None:
         source = """import os, glob, zipfile, io, re, numpy as np, pandas as pd, cv2
 unicode_map = {row['Unicode']: i for i, row in unicode_df.iterrows()}
+if True:
+    if True:
+        pass
         feats = extract_features(img)
         X_train_list.append(feats)
         
@@ -689,8 +701,10 @@ unicode_map = {row['Unicode']: i for i, row in unicode_df.iterrows()}
 contours, _ = cv2.findContours(eroded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 clf.fit(X_train, y_train)"""
 
+        compile(source, "<original-fixture>", "exec")
         repaired = repair_known_submission_alignment(source)
 
+        compile(repaired, "<repaired-fixture>", "exec")
         self.assertNotIn("X_train_list.append(feats)", repaired)
         self.assertIn("cv2.findContours", repaired)
         self.assertEqual(
@@ -771,15 +785,20 @@ test_csv_matches = glob.glob(os.path.join(data_dir, 'test*.csv*'))
 sample_csv = glob.glob(os.path.join(data_dir, 'sample*.csv*'))[0]
 test_df = pd.read_csv(test_csv_matches[0]) if test_csv_matches else pd.read_csv(sample_csv)
 unicode_map = {row['Unicode']: i for i, row in unicode_df.iterrows()}
+if True:
+    if True:
         zip_path = os.path.join(data_dir, 'train_images.zip')
         zip_path = os.path.join(data_dir, 'test_images.zip')
         img_path = f'{img_id}.png'
         with z.open(img_path) as f:
+            pass
 contours, _ = cv2.findContours(eroded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 clf.fit(X_train, y_train)"""
 
+        compile(source, "<original-fixture>", "exec")
         repaired = repair_known_submission_alignment(source)
 
+        compile(repaired, "<repaired-fixture>", "exec")
         self.assertNotIn("img_path = f'{img_id}.png'", repaired)
         self.assertIn("img_path = f'{img_id}.jpg'", repaired)
         self.assertEqual(

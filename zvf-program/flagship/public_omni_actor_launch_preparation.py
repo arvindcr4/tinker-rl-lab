@@ -28,7 +28,7 @@ RUNTIME_PINS = {
     "modal_public_portfolio_fast_runtime.py": "1f1c1b6b78c74a25a6e3927094540767ec5511f3a627e9456fc6e58a073a3232",
     "public_colab_runtime_fast.py": "968462cee08c2089b7aec016ba52836505ad898dcf6b7a553b5e0cb1970818dd",
 }
-NATIVE_PINS = {
+ARCHIVED_NATIVE_PINS = {
     "public_omni_math_native.py": "c0409e355efbbb2283658c7b790271d51a659e0704e24ff786edf0958b6c5329",
     "public_portfolio_native.py": "8d0712e467502078103b33dc87e82731c3975b87ab4637e537c44adffaabdd7c",
 }
@@ -68,16 +68,7 @@ def load_verified(name, path):
 
 
 def source_modules():
-    paths = {}
-    for name, expected in {**RUNTIME_PINS, **NATIVE_PINS}.items():
-        directory = ROOT / (".codex-run" if name.startswith("public_colab_") or name == "public_runtime_journal_group_commit.py" else "zvf-program/flagship")
-        path = directory / name
-        require(sha(path.read_bytes()) == expected, f"Frozen source changed: {name}")
-        paths[name] = path
-    load_verified("public_portfolio_native", paths["public_portfolio_native.py"])
-    native = load_verified("public_omni_math_native", paths["public_omni_math_native.py"])
-    fast = load_verified("omni_plan_frozen_fast", paths["public_colab_runtime_fast.py"])
-    return native, fast, paths
+    raise ValueError("Archived canary protocol: current reviewed native sources require a new separately authorized canary; historical source pins are not current-code approval")
 
 
 def check_canary(value, reconciliation, result_sha, pointer, fast):
@@ -240,7 +231,7 @@ def build_plan(args):
     return {"schema": "omni-actor-read-only-launch-preparation-v1", "status": "READY_FOR_ROOT_EXPORT_REVIEW",
             "score": None, "authorization_required": True, "actual_export_performed": False,
             "actual_model_calls": 0, "budget_reserved": False, "created_at": native.now(),
-            "helper_sha256": sha(Path(__file__).read_bytes()), "native_source_sha256": NATIVE_PINS, "runtime_source_sha256": RUNTIME_PINS,
+            "helper_sha256": sha(Path(__file__).read_bytes()), "native_source_sha256": ARCHIVED_NATIVE_PINS, "runtime_source_sha256": RUNTIME_PINS,
             "source_evidence": {str(p): sha(p.read_bytes()) for p in [args.canary, args.reconciliation, args.checkpoint, args.wandb,
                                 args.prepared / "manifest.json", args.prepared / "reference_rows.json", args.journals / "verification.json"]},
             "canary_provider_terminal": reconciliation["app"], "canary_journal_sha256": journal_hashes,

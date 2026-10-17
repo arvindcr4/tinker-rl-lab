@@ -73,7 +73,7 @@ def test_group_summary_intervals_are_not_synthetic_samples():
 
 
 def test_group_real_seed_pairing_and_duplicate_validation():
-    rows = [dict(budget_tokens=1_000_000, G=g, seed=s, heldout_acc=.8) for g in [4, 32] for s in [3, 1, 2]]
+    rows = [dict(budget_tokens=1_000_000, G=g, seed=s, heldout_acc=.8, model_id='model',task_id='task',evaluation_id='eval',comparison_config_id='fixed-config') for g in [4, 32] for s in [3, 1, 2]]
     assert groups.broader_g4_vs_g32(rows)['per_T'][0]['wu_claim_holds'] is True
     with pytest.raises(ValueError, match='duplicate seed'):
         groups.broader_g4_vs_g32(rows+[rows[0]])
@@ -532,3 +532,124 @@ def test_parsed_fields_are_not_automatically_not_applicable(tmp_path, monkeypatc
     monkeypatch.setattr(badge, 'FIG_DIR', tmp_path/'fig')
     result = badge.write_outputs([badge.score_manifest({'cell_id': 'legacy', 'decontamination_notes': 'not performed'})])
     assert result['inventory_counts']['not_applicable'] == 0
+
+
+@pytest.mark.parametrize('manifest,item,field,parser,cells', [
+    ({'group_size_schedule': 'fixed-G=-1'}, 'group_size_schedule', 'initial_g', 'group_size_schedule', {}),
+    ({'sampler_backend_precision': 'unknown'}, 'sampler_backend', 'backend', 'sampler_backend_precision', {}),
+    ({'cell_id': 'x'}, 'sampler_backend', 'temperature', 'cells_tsv', {'x': {'temperature': float('nan')}}),
+    ({'cell_id': 'x'}, 'sampler_backend', 'temperature', 'cells_tsv', {'x': {'temperature': -1}}),
+])
+def test_parsed_and_inventory_values_obey_same_typed_validation(manifest,item,field,parser,cells):
+    assert subfields.classify_subfield(manifest,item,field,parser,cells) == 'AMBIGUOUS'
+    normalized = subfields.normalized_min_report(manifest,cells)
+    assert normalized[item][field] is None
+
+
+def test_valid_parsed_inventory_zero_and_literal_values_agree():
+    parsed = subfields.normalized_min_report({'cell_id': 'x', 'group_size_schedule': 'fixed-G=2'}, {'x': {'temperature': 0.0}})
+    literal = subfields.normalized_min_report({'min_report': {'group_size_schedule': {'initial_g': 2, 'schedule': 'fixed'}, 'sampler_backend': {'temperature': 0.0}}})
+    assert parsed == literal
+
+
+def test_retention_rejects_seed_collision_across_model_task_eval():
+    rows = [dict(budget_tokens=1_000_000,G=g,seed=seed,heldout_acc=.8,
+                 model_id=f'model-{g}',task_id=f'task-{g}',evaluation_id=f'eval-{g}',comparison_config_id='configuration')
+            for g in (4,32) for seed in (1,2,3)]
+    result = groups.broader_g4_vs_g32(rows)['per_T'][0]
+    assert result['matching_status'] == 'mismatched'
+    assert result['wu_claim_holds'] is None and result['n_pairs'] == 0
+    assert result['n_candidate_seed_pairs'] == 3
+    assert math.isnan(result['retention'])
+    assert set(result['noninferiority']['matching']['mismatched_fields']) == {'model','task','evaluation'}
+
+
+@pytest.mark.parametrize('absent', ['all', 'comparison_config_id', 'evaluation_id'])
+def test_retention_missing_identity_is_unknown_not_matched(absent):
+    identities = dict(model_id='model',task_id='task',evaluation_id='eval',comparison_config_id='config')
+    if absent == 'all': identities = {}
+    else: identities.pop(absent)
+    rows = [dict(budget_tokens=1_000_000,G=g,seed=seed,heldout_acc=.8,**identities) for g in (4,32) for seed in (1,2,3)]
+    result = groups.broader_g4_vs_g32(rows)['per_T'][0]
+    assert result['matching_status'] == 'unknown'
+    assert result['wu_claim_holds'] is None and result['n_pairs'] == 0
+    assert math.isnan(result['retention_ci_low'])
+
+
+def test_retention_rejects_mismatched_training_configuration():
+    records = [dict(model_id='model',task_id='task',evaluation_id='eval',comparison_config_id=c) for c in ['one','two']]
+    assert groups.pairing_identity_status(records)['status'] == 'mismatched'
+    records = [dict(model_id='model', task_id='task', evaluation_id='eval', comparison_config_id='same', heldout_ids_sha256=checksum) for checksum in ['a'*64, 'b'*64]]
+    assert groups.pairing_identity_status(records)['mismatched_fields'] == ['heldout_ids_sha256']
+
+
+def test_constant_stack_correlation_and_interval_are_undefined(tmp_path,monkeypatch):
+    import p5_stack_axis_minreport as stack
+    assert math.isnan(stack.spearman([0,0,0],[1,2,3]))
+    assert math.isnan(stack.spearman([1,2,3],[0,0,0]))
+    # Even distinct one-hot cells have a constant observed Hamming vector.
+    assert all(math.isnan(x) for x in cell_distance_spearman_ci(np.eye(4), [0,1,2,3], 10))
+    cells = [dict(cell_id=str(i),G=2,temperature=.5,seed=0,task_slice='task',model_family='model',
+                  zvf=.2*i,mean_reward=.2*i,pcd=i,mean_completion_len=10+i) for i in range(4)]
+    monkeypatch.setattr(stack,'load_cells',lambda: cells)
+    monkeypatch.setattr(stack,'load_manifests',lambda: {str(i): fully_specified_manifest() for i in range(4)})
+    monkeypatch.setattr(stack,'OUT_DIR',tmp_path)
+    monkeypatch.setattr(stack,'N_BOOT',10)
+    stack.main()
+    result = json.loads((tmp_path/'p5_stack_axis_minreport_summary.json').read_text())
+    assert result['spearman_v1']['zvf'] is None
+    assert result['boot_ci']['rho_v1_zvf'] == [None,None,None]
+    assert result['correlation_status']['rho_v1_zvf'] == 'insufficient_data'
+    assert 'insufficient_data' in result['verdict_H2'] and 'undefined' in result['verdict_H4_per_axis']
+
+
+def test_stack_canonical_nested_reports_receive_actual_scores_and_entropy(tmp_path,monkeypatch):
+    import p5_stack_axis_minreport as stack
+    cells = [dict(cell_id=str(i),G=2+i,temperature=.5,seed=i,task_slice='task',model_family='model',
+                  zvf=.2*i,mean_reward=.2*i,pcd=i,mean_completion_len=10+i) for i in range(4)]
+    manifests = {}
+    for i in range(4):
+        manifest = fully_specified_manifest()
+        manifest['cell_id'] = str(i)
+        manifest['min_report']['group_size_schedule']['initial_g'] = i+2
+        manifest['min_report']['heldout_split']['description'] = 'split-' + str(i % 2)
+        manifests[str(i)] = manifest
+        assert badge.score_manifest(manifest)['badge'] == 100
+    monkeypatch.setattr(stack,'load_cells',lambda: cells)
+    monkeypatch.setattr(stack,'load_manifests',lambda: manifests)
+    monkeypatch.setattr(stack,'OUT_DIR',tmp_path)
+    monkeypatch.setattr(stack,'N_BOOT',10)
+    stack.main()
+    result = json.loads((tmp_path/'p5_stack_axis_minreport_summary.json').read_text())
+    assert result['badge_v1_mean'] == 100
+    assert result['v1_total_h_bits'] == pytest.approx(3)
+    assert result['v1_varying_items'] == 2
+    nested = manifests['0']
+    legacy = {mr.ITEM_ALIASES.get(k,k): v for k,v in nested['min_report'].items()}
+    assert subfields.normalized_min_report(nested) == subfields.normalized_min_report(legacy)
+
+
+def test_coverage_summary_prose_tracks_complete_typed_report(tmp_path,monkeypatch):
+    import minreport_coverage as coverage
+    manifest = fully_specified_manifest()
+    trace = tmp_path/'trajectory.json'
+    trace.write_text('[{"step": 0, "zvf": 0.25, "gu": 0.75}]')
+    manifest['min_report']['telemetry'].update(source=str(trace), per_step_zvf=True, per_step_gu=True)
+    monkeypatch.setattr(coverage,'load_manifests',lambda: [manifest])
+    monkeypatch.setattr(coverage,'OUT_DIR',tmp_path)
+    assert coverage.main() == 0
+    result = json.loads((tmp_path/'minreport_summary.json').read_text())
+    assert result['fully_covered_cells'] == 1
+    assert result['per_field_validated_pct']['2:ref_policy_kl'] == 100
+    assert result['ambiguity_flags'] == []
+
+
+def test_coverage_summary_prose_reports_actual_missing_denominator(tmp_path,monkeypatch):
+    import minreport_coverage as coverage
+    monkeypatch.setattr(coverage,'load_manifests',lambda: [{'cell_id': 'missing'}])
+    monkeypatch.setattr(coverage,'OUT_DIR',tmp_path)
+    assert coverage.main() == 0
+    result = json.loads((tmp_path/'minreport_summary.json').read_text())
+    assert len(result['ambiguity_flags']) == 7
+    assert all('1/1 missing' in flag for flag in result['ambiguity_flags'])
+    assert '98' not in str(result['ambiguity_flags'])

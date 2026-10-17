@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 from scipy import stats
 
-STATISTIC_VERSION = "pro-review-02-v2"
+STATISTIC_VERSION = "pro-review-02-v2.1"
 
 
 def finite_json(value):
@@ -92,7 +92,7 @@ def paired_spearman_ci(x, y, n_boot=2000, seed=0):
     values = []
     for _ in range(n_boot):
         idx = rng.integers(len(x), size=len(x))
-        rho = stats.spearmanr(x[idx], y[idx]).statistic
+        rho = spearman_coefficient(x[idx], y[idx])
         if np.isfinite(rho):
             values.append(rho)
     return tuple(np.quantile(values, [.025, .975])) if values else (float("nan"),)*2
@@ -121,6 +121,11 @@ def cell_distance_spearman_ci(fingerprints, outcomes, n_boot=2000, seed=0):
     if fp.ndim != 2 or not np.isfinite(out).all():
         raise ValueError("rectangular fingerprints and finite outcomes required")
     i, j = np.triu_indices(n, 1)
+    # A bootstrap cannot identify a correlation undefined in the observed data.
+    observed_h = (fp[i] != fp[j]).sum(axis=1)
+    observed_d = np.abs(out[i] - out[j])
+    if not math.isfinite(spearman_coefficient(observed_h, observed_d)):
+        return float('nan'), float('nan')
     rng = np.random.default_rng(seed)
     draws = []
     for _ in range(n_boot):
@@ -128,7 +133,7 @@ def cell_distance_spearman_ci(fingerprints, outcomes, n_boot=2000, seed=0):
         h = (fp[idx[i]] != fp[idx[j]]).sum(axis=1)
         d = np.abs(out[idx[i]] - out[idx[j]])
         if np.ptp(h) and np.ptp(d):
-            draws.append(float(stats.spearmanr(h, d).statistic))
+            draws.append(spearman_coefficient(h, d))
     return tuple(np.quantile(draws, [.025, .975])) if draws else (float("nan"),)*2
 
 
@@ -180,3 +185,13 @@ def profile_target_increment(population_size, baseline_profiles):
     if not 0 <= baseline_profiles <= population_size:
         raise ValueError("baseline must be within the population")
     return max(0, math.ceil(population_size / 2) - baseline_profiles)
+
+
+def spearman_coefficient(x, y):
+    """Tie-corrected Spearman point; constant or inadequate data is undefined."""
+    x, y = np.asarray(x, float), np.asarray(y, float)
+    if x.ndim != 1 or x.shape != y.shape:
+        raise ValueError("matched vectors required")
+    if len(x) < 2 or not np.isfinite(x).all() or not np.isfinite(y).all() or not np.ptp(x) or not np.ptp(y):
+        return float("nan")
+    return float(stats.spearmanr(x, y).statistic)

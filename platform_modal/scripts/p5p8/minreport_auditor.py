@@ -35,7 +35,7 @@ Outputs:
 """
 from __future__ import annotations
 
-from _minreport_contract import load_inventory_manifests, inventory_counts, verify_trajectory, verify_manifest_evidence, literal_field, field_report
+from _minreport_contract import load_inventory_manifests, inventory_counts, verify_trajectory, verify_manifest_evidence, literal_field, field_report, VERSION
 from p5_iter205_manifest_minreport_subfield_audit import MIN_REPORT_FIELDS, classify_subfield
 import csv
 import json
@@ -155,7 +155,7 @@ def score_manifest(m: dict) -> dict:
     items = ['loss_form', 'reference_kl', 'sampler_backend', 'telemetry',
              'group_size_schedule', 'heldout_split', 'decontamination']
     out = {'cell_id': m.get('cell_id', m.get('_path', '?')), '_path': m.get('_path', ''),
-           '_corpus': m.get('_corpus', ''), 'per_item': [], 'contract_version': 'minreport-review02-v2'}
+           '_corpus': m.get('_corpus', ''), 'per_item': [], 'contract_version': VERSION}
     total = 0.0
     evidence_checks = verify_manifest_evidence(m, REPO_ROOT)
     out["evidence"] = evidence_checks

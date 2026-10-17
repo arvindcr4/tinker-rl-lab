@@ -10,7 +10,7 @@ import json
 import math
 from pathlib import Path
 
-VERSION = "minreport-review02-v2"
+VERSION = "minreport-review02-v2.1"
 ITEM_ALIASES = {'reference_kl': 'ref_policy_kl', 'sampler_backend': 'sampler_backend_precision',
                 'telemetry': 'per_step_zvf_path', 'decontamination': 'decontamination_notes'}
 BOOL_FIELDS = {'disjoint_from_reward_env', 'performed', 'parser_robustness_probe', 'per_step_zvf',

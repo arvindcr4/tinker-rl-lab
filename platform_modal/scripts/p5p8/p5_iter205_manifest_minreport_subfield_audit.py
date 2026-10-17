@@ -45,7 +45,7 @@ from __future__ import annotations
 import csv
 import json
 import random
-from _minreport_contract import (literal_field, valid_literal, verify_trajectory, PRECISIONS, load_inventory_manifests, inventory_counts)
+from _minreport_contract import (literal_field, valid_literal, verify_trajectory, PRECISIONS, load_inventory_manifests, inventory_counts, field_report, VERSION)
 from collections import defaultdict
 from pathlib import Path
 
@@ -217,50 +217,50 @@ def load_cells_tsv() -> dict:
     return cells
 
 
-def classify_subfield(
-    manifest: dict, item: str, sub_field: str, parser_key: str | None,
-    cells_index: dict,
-) -> str:
-    """Classify a sub-field into one of:
-      EXTRACTABLE_LITERAL  - sub-key present in manifest body with the
-        right type.
-      EXTRACTABLE_PARSED   - not a literal sub-key but unambiguously
-        derivable from a top-level string via the canonical parser.
-      AMBIGUOUS            - multiple plausible parses; requires domain
-        choice; would need operator confirmation.
-      MISSING              - cannot be recovered from the manifest body.
-
-    Returns the classification string.
-    """
-    present, literal = literal_field(manifest, item, sub_field)
+def extract_subfield(manifest, item, sub_field, parser_key, cells_index):
+    """One typed validation gate for literal, parsed and inventory values."""
+    present, value = literal_field(manifest, item, sub_field)
     if present:
-        return 'EXTRACTABLE_LITERAL' if valid_literal(sub_field, literal) else 'AMBIGUOUS'
-    cell_id = manifest.get("cell_id", "")
-    cell_row = cells_index.get(cell_id, {})
+        kind = 'EXTRACTABLE_LITERAL'
+    elif parser_key == 'cells_tsv':
+        cell_row = cells_index.get(manifest.get('cell_id', ''), {})
+        present = sub_field in cell_row
+        value = cell_row.get(sub_field)
+        kind = 'EXTRACTABLE_PARSED'
+    else:
+        raw = manifest.get(parser_key) if parser_key else None
+        parser = PARSERS.get(parser_key)
+        if raw is None or parser is None:
+            return 'MISSING', None
+        parsed = parser(raw) if isinstance(raw, str) else {}
+        present = sub_field in parsed
+        value = parsed.get(sub_field)
+        kind = 'EXTRACTABLE_PARSED'
+        if not present:
+            return 'AMBIGUOUS', None
+    if not present:
+        return 'MISSING', None
+    if not valid_literal(sub_field, value):
+        return 'AMBIGUOUS', None
+    return kind, value
 
-    # Special-case: temperature is in cells_tsv, not the manifest.
-    if parser_key == "cells_tsv":
-        if sub_field == "temperature":
-            if "temperature" in cell_row:
-                return "EXTRACTABLE_PARSED"
-        return "MISSING"
 
-    if parser_key is None:
-        # No parser configured: assume MISSING (audit-mode strict).
-        return "MISSING"
+def classify_subfield(manifest, item, sub_field, parser_key, cells_index):
+    """Reporting recoverability; every source obeys the same typed contract."""
+    return extract_subfield(manifest, item, sub_field, parser_key, cells_index)[0]
 
-    raw = manifest.get(parser_key)
-    if raw is None:
-        return "MISSING"
 
-    parser = PARSERS.get(parser_key)
-    if parser is None:
-        return "MISSING"
-    parsed = parser(raw) if isinstance(raw, str) else {}
+def normalized_min_report(manifest, cells_index=None):
+    """Canonical typed content for fingerprints, independent of source syntax.
 
-    if sub_field in parsed and parsed[sub_field] is not None:
-        return "EXTRACTABLE_PARSED"
-    return "AMBIGUOUS"
+    Unknown/invalid values cannot become distinguishing reported facts. Explicit
+    N/A reasons remain content; source provenance stays in the separate audit.
+    """
+    normalized = {}
+    for item, field, parser_key in MIN_REPORT_FIELDS:
+        kind, value = extract_subfield(manifest, item, field, parser_key, cells_index or {})
+        normalized.setdefault(item, {})[field] = (value if field_report(value)['applicable'] is False else field_report(value)['value']) if kind.startswith('EXTRACTABLE_') else None
+    return normalized
 
 
 def main() -> None:
@@ -457,6 +457,7 @@ def main() -> None:
             })
 
     summary = {
+        "contract_version": VERSION,
         "n_manifests": n_manifests,
         "inventory_counts": inventory_counts(manifests),
         "reporting_contract": "minreport-review02-v2; presence is not verification",

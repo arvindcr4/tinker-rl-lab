@@ -10,7 +10,7 @@ record coverage / missingness / ambiguity. Outputs:
 """
 from __future__ import annotations
 
-from _minreport_contract import load_inventory_manifests, inventory_counts, verify_trajectory
+from _minreport_contract import load_inventory_manifests, inventory_counts, verify_trajectory, VERSION
 from minreport_auditor import score_manifest
 import csv
 import json
@@ -215,6 +215,7 @@ def main() -> int:
                 sub_missing[k] += 1
 
     summary = {
+        "contract_version": VERSION,
         "n_manifests": total_cells,
         "inventory_counts": inventory_counts(rows),
         "per_field_presence_pct": {
@@ -229,11 +230,11 @@ def main() -> int:
         "fully_covered_pct": round(100.0 * fully_covered / total_cells, 1),
         "subfield_missing_counts": dict(sub_missing),
         "ambiguity_flags": [
-            "loss_form='n/a-sampling' is non-standard (suggests pre-RL SFT run included in corpus)",
-            "ref_policy_kl='n/a' may be correct for sampling-only but indistinguishable from bug in manifest emission",
-            "sampler_backend_precision='tinker-closed' is opaque; precision + decoding params not exposed",
-            "decontamination_notes lacks a parser-probe sub-field (item 7 partial coverage)",
-            "0/98 manifests report a concrete ref_policy_kl value (Item 2 is 100% present, 0% validated)",
+            f"Item {item_no} ({name}): {counts['missing']}/{counts['cells_total']} missing, "
+            f"{counts['unrecognized']}/{counts['cells_total']} incomplete or ambiguous typed reports; "
+            f"{counts['validated']}/{counts['cells_total']} fully reported"
+            for (item_no, name, _), counts in sorted(per_field_counts.items())
+            if counts['missing'] or counts['unrecognized']
         ],
     }
     with (OUT_DIR / "minreport_summary.json").open("w") as f:

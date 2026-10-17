@@ -13,7 +13,7 @@ Inputs:  platform_hybrid/experiments/results/groupsize_zvf_sweep.json      (G in
 Outputs: platform_hybrid/experiments/results/group_size_effect.tsv
          figures/group_size.pdf
 
-Analysis protocol pro-review-02-v2:
+Analysis protocol pro-review-02-v2.1:
 A. Descriptive reward and ZVF semilog fits across fixed group sizes.
 B. Ratio-of-means retention at each token budget. Noninferiority is tested
    only from genuine paired seed observations as E[G4] - .976 E[G32] > 0.
@@ -125,10 +125,55 @@ def fit_reward_vs_G(runs):
     }
 
 
+PAIRING_IDENTITY_FIELDS = {
+    'model': ('model_id', 'model_name', 'model'),
+    'task': ('task_id', 'task_name', 'task', 'task_slice'),
+    'evaluation': ('evaluation_id', 'eval_id', 'heldout_ids_sha256', 'evaluation_dataset_id'),
+    # This identity must exclude the varied group size, token budget and seed.
+    'configuration': ('comparison_config_id', 'invariant_config_id'),
+}
+
+
+def pairing_identity_status(records):
+    """Seed equality is meaningful only within declared invariant identities."""
+    missing, mismatched = [], []
+    identity = {}
+    for dimension, aliases in PAIRING_IDENTITY_FIELDS.items():
+        values = []
+        for row in records:
+            candidates = [str(row[key]).strip() for key in aliases if isinstance(row.get(key), str)]
+            candidates = [v for v in candidates if v.lower() not in {'', 'unknown', 'unspecified', 'tbd', 'none', 'null', 'nan', 'n/a'}]
+            if not candidates:
+                missing.append(dimension)
+            else:
+                values.append(candidates[0])
+        if len(set(values)) > 1:
+            mismatched.append(dimension)
+        elif values:
+            identity[dimension] = values[0]
+    # Revisions/splits and other supplied training settings must also agree.
+    optional = ('model_revision', 'tokenizer_revision', 'dataset_revision', 'eval_revision',
+                'evaluation_split', 'heldout_split', 'learning_rate', 'temperature',
+                'optimizer', 'loss_type', 'reward_model', 'training_config',
+                'heldout_ids_sha256', 'evaluation_dataset_id')
+    for key in optional:
+        if any(key in row for row in records):
+            values = [json.dumps(row[key], sort_keys=True) for row in records if key in row and row[key] is not None]
+            if len(values) != len(records):
+                missing.append(key)
+            if len(set(values)) > 1:
+                mismatched.append(key)
+    status = 'mismatched' if mismatched else 'unknown' if missing else 'matched'
+    return dict(status=status, identity=identity, missing_fields=sorted(set(missing)),
+                mismatched_fields=sorted(set(mismatched)))
+
+
 def broader_g4_vs_g32(grid_rows):
     """Budget-specific paired noninferiority; summary CIs are never observations.
 
-    Raw rows require seed and heldout_acc. Summary-only input supplies a point
+    Raw rows require seed, heldout_acc, and matching model/task/evaluation plus
+    invariant comparison_config_id identities. Missing identity means unknown,
+    never a certified pair. Summary-only input supplies a descriptive point
     ratio, with inference explicitly unavailable. Budgets are fixed conditions.
     """
     by_T = {}
@@ -141,7 +186,9 @@ def broader_g4_vs_g32(grid_rows):
         if not all(g in arms for g in (4, 32)):
             continue
         raw = all('seed' in r and 'heldout_acc' in r for g in (4, 32) for r in arms[g])
+        matching = pairing_identity_status([r for g in (4, 32) for r in arms[g]])
         paired = {}
+        common = []
         ret_lo = ret_hi = float("nan")
         if raw:
             for g in (4, 32):
@@ -152,10 +199,11 @@ def broader_g4_vs_g32(grid_rows):
                     paired[g][str(r['seed'])] = float(r['heldout_acc'])
             common = sorted(set(paired[4]) & set(paired[32]))
             aa, bb = [paired[4][k] for k in common], [paired[32][k] for k in common]
-            result = retention_noninferiority(aa, bb)
-            a4 = float(np.mean(aa)) if aa else float('nan')
-            a32 = float(np.mean(bb)) if bb else float('nan')
-            if len(aa) >= 2 and a32 > 0:
+            certified = matching['status'] == 'matched'
+            result = retention_noninferiority(aa, bb) if certified else retention_noninferiority([], [])
+            a4 = float(np.mean(aa)) if certified and aa else float(np.mean(list(paired[4].values())))
+            a32 = float(np.mean(bb)) if certified and bb else float(np.mean(list(paired[32].values())))
+            if certified and len(aa) >= 2 and a32 > 0:
                 rng = np.random.default_rng(T)
                 idx = rng.integers(len(aa), size=(2000, len(aa)))
                 numer, denom = np.asarray(aa)[idx].mean(axis=1), np.asarray(bb)[idx].mean(axis=1)
@@ -166,13 +214,16 @@ def broader_g4_vs_g32(grid_rows):
                 raise ValueError('summary rows must be unique per budget and group')
             a4, a32 = [float(arms[g][0]['heldout_acc_mean']) for g in (4, 32)]
             result = retention_noninferiority([], [])
-        ret = a4 / a32 if a32 > 0 else float('nan')
+        result['matching'] = matching
+        ret = a4 / a32 if a32 > 0 and matching['status'] != 'mismatched' else float('nan')
         rows.append(dict(T_tokens=T, acc_G4=a4, acc_G32=a32, retention=ret,
                          retention_ci_low=ret_lo, retention_ci_high=ret_hi,
                          retention_interval_method='paired_seed_percentile_ratio_of_means' if math.isfinite(ret_lo) else 'unavailable',
                          noninferiority=result, status=result['status'],
+                         matching_status=matching['status'], n_pairs=result['n_pairs'],
+                         n_candidate_seed_pairs=len(common) if raw else None,
                          wu_claim_holds=result.get('noninferior'),
-                         n_unmatched_seeds=(sum(len(paired[g]) for g in (4, 32))-2*len(common)) if raw else None))
+                         n_unmatched_seeds=(sum(len(paired[g]) for g in (4, 32))-2*result['n_pairs']) if raw else None))
     log_Ts = [math.log10(r['T_tokens']) for r in rows]
     rets = [r['retention'] for r in rows]
     rho = float(stats.spearmanr(log_Ts, rets).statistic) if len(rows) > 1 else float('nan')
@@ -183,7 +234,7 @@ def broader_g4_vs_g32(grid_rows):
     return dict(per_T=rows, spearman_rho_retention_vs_logT=rho, spearman_p=float('nan'),
                 linear_slope_per_decade_T=slope, linear_intercept=intercept, linear_r=r_val,
                 linear_p=float('nan'), uncertainty='descriptive fixed-budget trend; no budget-resampling inference',
-                statistic_version='pro-review-02-v2',
+                statistic_version='pro-review-02-v2.1',
                 wu_claim_T_min=min((r['T_tokens'] for r in rows if r['wu_claim_holds']), default=None),
                 wu_claim_T_max_holds=sum(r['wu_claim_holds'] is True for r in rows))
 

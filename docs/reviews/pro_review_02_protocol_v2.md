@@ -1,13 +1,21 @@
 # Modal analysis protocol v2 (Pro review 02)
 
-Version: `pro-review-02-v2`; reporting contract: `minreport-review02-v2`.
+Current version: `pro-review-02-v2.1`; reporting contract: `minreport-review02-v2.1`.
+The v2.1 independent-audit follow-up tightens v2 without regenerating outputs.
 This is a **code/protocol correction**, not a replacement results release.
 No training, paid job, benchmark generation, live W&B request, archived-result
 rewrite, or paper-number refresh was performed for this review.
 
 ## Primary estimands and evidence gates
 
-- **Retention:** at each fixed token budget, align arms by unique seed. The
+- **Retention:** at each fixed token budget, align arms by unique seed only
+  after matching declared model, task, evaluation and invariant configuration
+  identities. `comparison_config_id` (alias `invariant_config_id`) identifies
+  settings excluding the intentionally varied G/budget/seed; supplied revisions,
+  splits and training settings must also agree. Missing identity is `unknown`,
+  conflicting identity is `mismatched`, and neither yields certified pairs or
+  inferential retention. IDs are declarations, not proof of upstream lineage.
+  Candidate seed overlaps and certified pair counts are separate. The
   noninferiority estimand is `E[A] - 0.976 E[B]`, with `A` the smaller group.
   A paired Student-t lower 95% bound must exceed zero. Its displayed two-sided
   interval is 90%, not a mislabeled 95% equivalence interval. `superior` in the
@@ -71,6 +79,12 @@ rewrite, or paper-number refresh was performed for this review.
   for compatibility. A new explicit `block_length>1` supports circular temporal
   blocks; scientific use still needs prespecified block length and stationarity
   assumptions. No generalization claim is added to legacy callers.
+- Literal, parsed-text and cells-inventory values pass the same typed validation
+  before coverage credit. Stack fingerprints use normalized canonical content
+  and actual auditor badges; nested and legacy object representations agree.
+  Constant observed rank vectors yield undefined correlation points **and**
+  intervals, with insufficient-data status and matching narrative labels.
+  Coverage ambiguity prose is generated from current per-item counts.
 - Reported, applicable, and verified are distinct. Typed False and zero are
   complete reports. N/A requires an explicit reason. Unknown is missing
   evidence. Split disjointness is verified from IDs; trajectory verification
@@ -120,7 +134,7 @@ Private loader return shapes in `statistical_rigor_report.py` now retain keyed
 records and exclusions, and its report columns are versioned. The Berkeley
 headline audit uses one canonical result record for TSV, JSON and narrative;
 effect sizes/p-values never occupy confidence-limit fields. Downstream readers
-of these schemas must opt into v2; archived outputs retain historical schemas.
+of these schemas must opt into v2.1; archived outputs retain historical schemas.
 
 ## Remaining validation prerequisites
 

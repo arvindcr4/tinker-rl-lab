@@ -362,9 +362,7 @@ Four further limits apply.
 
 4. **Snapshot scope.** Historical source inventories differ in scope. They are neither current live accounts nor counts of independent experiments, and this public package does not provide a complete inventory replay.
 
-None of this changes a reported result, because every result in Chapters 6–8
-is bound to named artefacts rather than to the registry as a whole. It does
-bound what the registry can be used for: it establishes provenance and
+Named artifacts may preserve an arithmetic result while missing source identity limits attribution to an algorithm or checkpoint. Chapters 6–8 state each claim's verification level; selected audits are not universal verification. The registry records reported provenance and
 identity, shows that the run population is far larger than the reported
 claims, and shows that those claims rest on a small, explicitly tiered subset
 with the P1–P8 empirical rows at Tier C or X and P11 at Tier C under the

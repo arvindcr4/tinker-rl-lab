@@ -100,6 +100,8 @@ def parse_passes_from_claim(claim_text):
 
 
 def main():
+    from review22_contract import require_independent_unit_contract
+    require_independent_unit_contract()
     rows = []
     raw = []
     with PATH_JSONL.open() as f:

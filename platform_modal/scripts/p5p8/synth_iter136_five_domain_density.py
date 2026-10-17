@@ -63,38 +63,10 @@ N_BOOT = 1500
 EPSILON = 0.10  # ECE compliance threshold (the iter-99 / iter-104 canonical 0.10)
 
 
-def density_ci(n_fire, n_total, n_boot=N_BOOT, seed=SEED):
-    """Wilson bootstrap CI on a proportion."""
-    rng = np.random.default_rng(seed)
-    boots = np.empty(n_boot)
-    p = n_fire / n_total
-    for i in range(n_boot):
-        boots[i] = rng.binomial(n_total, p) / n_total
-    return {
-        "rate": p,
-        "lo": float(np.percentile(boots, 2.5)),
-        "hi": float(np.percentile(boots, 97.5)),
-        "n_fire": n_fire,
-        "n_total": n_total,
-    }
+from review22_contract import density_ci
 
 
-def ratio_ci(num, denom, n_boot=N_BOOT, seed=SEED):
-    """Bootstrap CI on a ratio of two Bernoulli rates."""
-    rng = np.random.default_rng(seed)
-    rn = num["rate"]; rd = denom["rate"]
-    nn = num["n_total"]; nd = denom["n_total"]
-    boots = np.empty(n_boot)
-    for i in range(n_boot):
-        n_i = rng.binomial(nn, rn) / max(1, nn)
-        d_i = rng.binomial(nd, rd) / max(1, nd)
-        boots[i] = n_i / max(1e-9, d_i)
-    point = rn / max(1e-9, rd)
-    return {
-        "ratio": point,
-        "lo": float(np.percentile(boots, 2.5)),
-        "hi": float(np.percentile(boots, 97.5)),
-    }
+from review22_contract import ratio_ci
 
 
 def compute_d5_from_iter136(target_rate=0.5, target_cal="iso_per_cohort", eps=EPSILON):
@@ -178,6 +150,8 @@ D4 = density_ci(1867, 2560)       # P7 per-prompt boundary
 
 
 def main():
+    from review22_contract import require_independent_unit_contract
+    require_independent_unit_contract()
     print("[1/3] computing D5 = P8 iso_per_cohort ECE>0.10 at rate=0.5%")
     d5_bundle = compute_d5_from_iter136(target_rate=0.5, target_cal="iso_per_cohort")
     # D5 is computed across 3 cohort × 2 tree × 1 rate = 6 cells, each with up

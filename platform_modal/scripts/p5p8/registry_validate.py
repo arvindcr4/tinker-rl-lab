@@ -135,94 +135,78 @@ def load_n2_tensor_prompts():
                 rec = json.loads(line)
                 key = (rec["method"], rec["seed"], rec["step"])
                 # per-prompt mean over G rollouts
-                out[key] = [sum(g) / len(g) for g in rec["rewards"]]
+                ids = rec.get("prompt_ids")
+                rewards = rec["rewards"]
+                if not isinstance(ids, list) or len(ids) != len(rewards) or len(set(ids)) != len(ids):
+                    raise ValueError("tensor rows require unique explicit prompt_ids aligned to rewards")
+                if key in out: raise ValueError("duplicate method/seed/step")
+                out[key] = {pid: statistics.fmean(g) for pid,g in zip(ids,rewards)}
     return out
 
 
-def bootstrap_paired_diff(a, b, n_boot=1000, seed=0):
-    """Paired bootstrap on the difference a-b over aligned indices. Returns
-    (mean, ci_lo, ci_hi, n). a, b must be aligned."""
-    n = min(len(a), len(b))
-    if n == 0:
-        return float("nan"), float("nan"), float("nan"), 0
-    diffs = [a[i] - b[i] for i in range(n)]
-    mean = sum(diffs) / n
-    # deterministic bootstrap using LCG
-    state = seed or 1
-    rng = []
-    for _ in range(n_boot):
-        state = (state * 1103515245 + 12345) & 0x7FFFFFFF
-        idx = state % n
-        rng.append(diffs[idx])
-    rng.sort()
-    lo = rng[int(0.025 * n_boot)]
-    hi = rng[int(0.975 * n_boot) - 1]
-    return mean, lo, hi, n
+from review22_contract import bootstrap_paired_diff, PROTOCOL_ID
 
 
 def measured_deltas(metrics):
-    """Compute same-stack GRPO vs (AERO/GIFT/AREAL) deltas on last-10 steps."""
-    # align per-step across methods by step number (seed 0 only, all methods use s0)
-    methods = ["grpo", "aero", "gift", "areal"]
-    steps = sorted({k[2] for k in metrics if k[0] == "grpo" and k[1] == 0})
-    # last 10 steps
-    last10 = steps[-10:]
-    out = []
-    for field in ("reward_mean", "zvf", "loss", "mean_len", "cv_len",
-                  "frac_all_zero", "frac_all_one", "pcd", "larq"):
-        for other in ("aero", "gift", "areal"):
-            a = [metrics[("grpo", 0, s)][field] for s in last10]
-            b = [metrics[(other, 0, s)][field] for s in last10]
-            mean, lo, hi, n = bootstrap_paired_diff(a, b, n_boot=2000)
-            out.append({
-                "metric": field,
-                "baseline": "grpo",
-                "variant": other,
-                "n_steps": n,
-                "grpo_mean": round(statistics.mean(a), 4),
-                "variant_mean": round(statistics.mean(b), 4),
-                "paired_delta": round(mean, 4),
-                "ci_lo": round(lo, 4),
-                "ci_hi": round(hi, 4),
-                "ci_excludes_0": "yes" if (lo > 0 or hi < 0) else "no",
-            })
+    """Paired seed means; within-seed last-ten steps are never replications."""
+    fields = ("reward_mean", "zvf", "loss", "mean_len", "cv_len", "frac_all_zero", "frac_all_one", "pcd", "larq")
+    out=[]
+    for other in ("aero", "gift", "areal"):
+        seeds={k[1] for k in metrics if k[0]=="grpo"}
+        if seeds != {k[1] for k in metrics if k[0]==other} or not seeds:
+            raise ValueError("matched nonempty seed identities required")
+        for field in fields:
+            a=[]; b=[]; counts={}
+            for seed in sorted(seeds):
+                steps=sorted(k[2] for k in metrics if k[:2]==("grpo",seed))
+                if steps != sorted(k[2] for k in metrics if k[:2]==(other,seed)):
+                    raise ValueError("same ordered step identities required")
+                selected=steps[-10:]; counts[str(seed)]=len(selected)
+                a.append(statistics.fmean(metrics[("grpo",seed,step)][field] for step in selected))
+                b.append(statistics.fmean(metrics[(other,seed,step)][field] for step in selected))
+            delta=statistics.fmean(x-y for x,y in zip(a,b))
+            lo=hi=None
+            if len(seeds)>=2:
+                _,lo,hi,_=bootstrap_paired_diff(a,b,2000)
+            out.append(dict(metric=field,baseline="grpo",variant=other,n_seeds=len(seeds),
+                n_steps=sum(counts.values()),steps_per_seed=counts,grpo_mean=statistics.fmean(a),
+                variant_mean=statistics.fmean(b),paired_delta=delta,ci_lo=lo,ci_hi=hi,
+                ci_excludes_0=None if lo is None else lo>0 or hi<0,
+                uncertainty_unit="independent seed; independence must be justified",
+                status="descriptive_single_seed" if len(seeds)<2 else "exploratory_seed_bootstrap"))
     return out
 
 
 def measured_per_prompt(prompts):
-    """Per-prompt reward mean over all steps (each prompt gets many steps; we
-    pool by computing each method's mean per prompt across steps it's seen)."""
-    by_method_prompt = {m: {} for m in ("grpo", "aero", "gift", "areal")}
-    for (method, seed, step), per_prompt in prompts.items():
-        if seed != 0:
-            continue
-        for pi, r in enumerate(per_prompt):
-            by_method_prompt[method].setdefault(pi, []).append(r)
-    out = []
-    for m in ("aero", "gift", "areal"):
-        a_means = [sum(by_method_prompt["grpo"][p]) / len(by_method_prompt["grpo"][p])
-                   for p in sorted(by_method_prompt["grpo"])
-                   if p in by_method_prompt["grpo"]]
-        b_means = [sum(by_method_prompt[m][p]) / len(by_method_prompt[m][p])
-                   for p in sorted(by_method_prompt["grpo"])
-                   if p in by_method_prompt[m]]
-        n = min(len(a_means), len(b_means))
-        if n == 0:
-            continue
-        mean, lo, hi, _ = bootstrap_paired_diff(a_means[:n], b_means[:n], n_boot=2000)
-        out.append({
-            "scope": "per_prompt_pooled",
-            "baseline": "grpo",
-            "variant": m,
-            "n_prompts": n,
-            "grpo_mean": round(statistics.mean(a_means), 4),
-            "variant_mean": round(statistics.mean(b_means), 4),
-            "paired_delta": round(mean, 4),
-            "ci_lo": round(lo, 4),
-            "ci_hi": round(hi, 4),
-            "ci_excludes_0": "yes" if (lo > 0 or hi < 0) else "no",
-        })
-    return out
+    """Join explicit (seed,prompt ID), retaining repeated step membership."""
+    grouped={m:{} for m in ("grpo","aero","gift","areal")}
+    for (method,seed,step), values in prompts.items():
+        if not isinstance(values,dict):
+            raise ValueError("explicit prompt IDs required; array position is not identity")
+        for prompt_id,reward in values.items():
+            if not isinstance(prompt_id,str) or not prompt_id or not isinstance(reward,(int,float)) or not math.isfinite(reward):
+                raise ValueError("valid prompt identity and finite reward required")
+            grouped[method].setdefault((seed,prompt_id),{})[step]=reward
+    rows=[]
+    for other in ("aero","gift","areal"):
+        keys=set(grouped['grpo'])
+        if not keys or keys != set(grouped[other]):
+            raise ValueError("same explicit seed/prompt identities required")
+        per_seed={}; counts={}
+        for key in sorted(keys):
+            av,bv=grouped['grpo'][key],grouped[other][key]
+            if av.keys()!=bv.keys(): raise ValueError("same prompt step observations required")
+            per_seed.setdefault(key[0],[]).append((statistics.fmean(av.values()),statistics.fmean(bv.values())))
+            counts[str(key)]=len(av)
+        a=[statistics.fmean(x for x,_ in v) for v in per_seed.values()]
+        b=[statistics.fmean(y for _,y in v) for v in per_seed.values()]
+        lo=hi=None
+        if len(a)>=2: _,lo,hi,_=bootstrap_paired_diff(a,b,2000)
+        rows.append(dict(scope="seed_aggregated_prompt_means",baseline="grpo",variant=other,
+            n_prompts=len(keys),n_seeds=len(a),steps_per_prompt=counts,
+            grpo_mean=statistics.fmean(a),variant_mean=statistics.fmean(b),paired_delta=statistics.fmean(x-y for x,y in zip(a,b)),
+            ci_lo=lo,ci_hi=hi,ci_excludes_0=None if lo is None else lo>0 or hi<0))
+    return rows
 
 
 # ---------------------------------------------------------------------------
@@ -265,7 +249,7 @@ def main():
                 w.writerow(d)
     for d in deltas:
         print(f"  {d['metric']:18s} grpo vs {d['variant']:5s}  "
-              f"Δ={d['paired_delta']:+.4f}  CI=[{d['ci_lo']:+.4f},{d['ci_hi']:+.4f}]  "
+              f"Δ={d['paired_delta']:+.4f}  CI=[{d['ci_lo']},{d['ci_hi']}]  "
               f"sig={d['ci_excludes_0']}")
 
     print()
@@ -274,11 +258,12 @@ def main():
     pp = measured_per_prompt(prompts)
     for d in pp:
         print(f"  {d['baseline']:5s} vs {d['variant']:5s} (n={d['n_prompts']:4d} prompts)  "
-              f"Δ={d['paired_delta']:+.4f}  CI=[{d['ci_lo']:+.4f},{d['ci_hi']:+.4f}]  "
+              f"Δ={d['paired_delta']:+.4f}  CI=[{d['ci_lo']},{d['ci_hi']}]  "
               f"sig={d['ci_excludes_0']}")
 
     if args.write:
         out_json = {
+            "protocol_id": PROTOCOL_ID,
             "schema_check_summary": {
                 "n_total": len(rows),
                 "n_pass": sum(r["schema"] == "PASS" for r in rows),
@@ -289,8 +274,7 @@ def main():
             "measured_deltas_stepwise": deltas,
             "measured_deltas_per_prompt": pp,
             "source": "platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl",
-            "note": "All four methods share the same stack (Tinker-managed sampler, G=8, seed 0); "
-                    "deltas isolate the variant label, not the runtime.",
+            "note": "Descriptive or exploratory contrasts; matching seed/step IDs alone does not establish equivalent executed stacks or causal isolation.",
         }
         (RESULTS / "registry_measured_deltas.json").write_text(
             json.dumps(out_json, indent=2))

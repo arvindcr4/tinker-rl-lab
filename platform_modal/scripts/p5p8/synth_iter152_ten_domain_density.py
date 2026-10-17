@@ -84,6 +84,8 @@ ACD_THRESHOLDS = [1.01, 1.10, 1.50, 2.00, 5.00]
 
 
 def main():
+    from review22_contract import require_independent_unit_contract
+    require_independent_unit_contract()
     # Load iter-148 cost matrix (assumes iter-148 already ran)
     cm_path = RES / "p8_iter148_cost_matrix.tsv"
     if not cm_path.exists():

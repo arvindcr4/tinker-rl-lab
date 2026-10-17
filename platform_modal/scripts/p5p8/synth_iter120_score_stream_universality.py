@@ -97,6 +97,8 @@ def load_n2_tensors(method="grpo"):
 
 
 def main():
+    from review22_contract import require_independent_unit_contract
+    require_independent_unit_contract()
     print(f"[synth120] loading P8 fraud data ...")
     (Xtr, ytr), (Xte, yte) = load_p8_data()
     print(f"[synth120] Xtr={Xtr.shape}, Xte={Xte.shape}, yte_pos={yte.sum()}")
@@ -109,17 +111,13 @@ def main():
     top_k_mask = np.zeros(n_te, dtype=bool)
     top_k_mask[top_k_idx] = True
     # Consecutive-score gradient on the FULL descending-sorted score stream
-    sorted_idx = np.argsort(-p8_scores)
-    sorted_scores = p8_scores[sorted_idx]
-    p8_grad_full = consecutive_gradient(sorted_scores)
-    p8_grad_topk = p8_grad_full[top_k_idx]  # gradients of the top-K rows in sort order
+    from review22_contract import score_gradient_selection
+    sorted_idx, p8_grad_full, p8_grad_topk, p8_grad_band_fire = score_gradient_selection(p8_scores, k_top, G_THR_P8)
     print(f"[synth120] P8 top-K={k_top}, xgb-only recall = "
           f"{int(yte[top_k_idx].sum())}/{int(yte.sum())} = "
           f"{int(yte[top_k_idx].sum())/max(1,int(yte.sum())):.4f}")
 
     # Gradient-band rule fires on top-K AND small gradient
-    p8_grad_band_fire = top_k_mask.copy()
-    p8_grad_band_fire[sorted_idx] = top_k_mask[sorted_idx] & (p8_grad_full < G_THR_P8)
     p8_grad_band_calls = int(p8_grad_band_fire.sum())
     print(f"[synth120] P8 gradient-band n_llm = {p8_grad_band_calls}")
 

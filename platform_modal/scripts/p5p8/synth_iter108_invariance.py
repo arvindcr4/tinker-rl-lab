@@ -50,6 +50,8 @@ def read_tsv(path):
 
 
 def main():
+    from review22_contract import require_independent_unit_contract
+    require_independent_unit_contract()
     # ---- P7 invariance (cross-method tau-transfer) ----
     p7_corr = read_tsv(RES / "p7_iter107b_curve_correlation.tsv")
     p7_corr_boot = read_tsv(RES / "p7_iter107b_curve_correlation_boot.tsv")

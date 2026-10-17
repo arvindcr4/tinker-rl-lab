@@ -121,6 +121,8 @@ def bootstrap_ratio_ci(k1, n1, k2, n2, n_boot=2000, seed=20260705):
 
 
 def main():
+    from review22_contract import require_independent_unit_contract
+    require_independent_unit_contract()
     d6 = load_d6()
     # D6 rates into the domains
     DOMAINS["D6"] = {

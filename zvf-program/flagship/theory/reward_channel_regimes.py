@@ -43,21 +43,27 @@ def exact_reward(completion: str, gold: str, *, marker: str) -> float:
 
 def regime_receipt(group_size: int = 8) -> dict[str, object]:
     """Return matched primary outcomes and one same-path calibration outcome."""
-    if group_size < 2:
+    if isinstance(group_size, bool) or not isinstance(group_size, int) or group_size < 2:
         raise ValueError("group_size must be at least two")
     verify_e1_source()
     gold = "reasoning\n#### 42"
-    primary_completions = [f"attempt {index}\n#### {index}" for index in range(group_size)]
+    primary_completions = [f"attempt {index}\n#### {-index - 1}" for index in range(group_size)]
     calibration = "known-correct control\n#### 42"
     clean_marker, broken_marker = "####", "FINAL:"
     clean_primary = [exact_reward(text, gold, marker=clean_marker) for text in primary_completions]
-    broken_primary = [exact_reward(text, gold, marker=broken_marker) for text in primary_completions]
+    broken_primary = [
+        exact_reward(text, gold, marker=broken_marker) for text in primary_completions
+    ]
+    if clean_primary != broken_primary or clean_primary != [0.0] * group_size:
+        raise RuntimeError("conditional witness requires matched all-zero rewards")
     telemetry = {
         "runtime_error": None,
         "latency_bucket": "normal",
         "reward_code_version": "matched",
     }
     return {
+        "claim_scope": "conditional action ambiguity after all-zero rewards; local analogue only",
+        "production_calibration_validated": False,
         "source": {
             "path": "zvf-program/colab-experiments/e1_grpo_confirmatory.py",
             "sha256": E1_SOURCE_SHA256,

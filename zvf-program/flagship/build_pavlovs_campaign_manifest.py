@@ -3,8 +3,17 @@
 
 from __future__ import annotations
 
+try:
+    from .evidence_v2 import approval_valid
+    from .campaign_plan_v2 import plan_contract, checkpoint_errors, launch_feasibility_errors
+except ImportError:
+    from evidence_v2 import approval_valid
+    from campaign_plan_v2 import plan_contract, checkpoint_errors, launch_feasibility_errors
+
+
 import argparse
 import json
+import math
 import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -135,9 +144,7 @@ _PLACEHOLDER_RECEIPT_VALUES = {
     "budget-receipt",
     "to_be_pinned_before_paid_runs",
 }
-_IMMUTABLE_REVISION_RE = re.compile(
-    r"^(?:sha256:)?[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?$"
-)
+_IMMUTABLE_REVISION_RE = re.compile(r"^(?:sha256:)?[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?$")
 _SHA256_DIGEST_RE = re.compile(r"^(?:sha256:)?[0-9a-fA-F]{64}$")
 _HTTPS_URL_RE = re.compile(r"^https://[^\s]+$")
 
@@ -179,22 +186,9 @@ def _receipt_field(value: Mapping[str, Any], *names: str) -> Any:
     return None
 
 
-def _license_receipt_present(value: Any) -> bool:
-    if isinstance(value, Mapping):
-        receipt_id = _receipt_field(value, "receipt_id", "approval_id", "license_id")
-        digest = _receipt_field(value, "sha256", "hash", "digest")
-        approved = value.get("approved") is True or value.get("signoff") is True
-        return bool(
-            _non_placeholder_text(receipt_id)
-            and (approved or _sha256_digest(digest) or _immutable_revision(receipt_id))
-        )
-    if not _non_placeholder_text(value):
-        return False
-    text = value.strip().lower()
-    return bool(
-        _immutable_revision(value)
-        or _sha256_digest(value)
-        or any(token in text for token in ("approved", "approval", "signoff", "cc-", "apache", "mit", "license:"))
+def _license_receipt_present(value: Any, *, trusted_issuers=None, expected_identity=None) -> bool:
+    return approval_valid(
+        value, "license", trusted_issuers=trusted_issuers, expected_identity=expected_identity
     )
 
 
@@ -229,21 +223,10 @@ def _decontamination_receipt_present(value: Any) -> bool:
     return _sha256_digest(value) or _immutable_revision(value)
 
 
-def _budget_receipt_present(value: Any) -> bool:
-    if isinstance(value, Mapping):
-        identity = _receipt_field(value, "receipt_id", "authorization_id", "sha256", "hash")
-        maximum = value.get("maximum_usd", value.get("max_usd"))
-        authorized = value.get("authorized") is True or str(value.get("status", "")).strip().lower() in {
-            "authorized",
-            "approved",
-        }
-        return bool(
-            _non_placeholder_text(identity)
-            and (_immutable_revision(identity) or _sha256_digest(identity) or authorized)
-            and isinstance(maximum, (int, float))
-            and maximum > 0
-        )
-    return _sha256_digest(value) or _immutable_revision(value)
+def _budget_receipt_present(value: Any, *, trusted_issuers=None, expected_identity=None) -> bool:
+    return approval_valid(
+        value, "budget", trusted_issuers=trusted_issuers, expected_identity=expected_identity
+    )
 
 
 def _wandb_receipt_present(value: Any) -> bool:
@@ -254,44 +237,20 @@ def _wandb_receipt_present(value: Any) -> bool:
     return bool(_non_placeholder_text(run_id) and _https_url(run_url))
 
 
-def _hf_receipt_present(value: Any) -> bool:
+def _hf_receipt_present(value: Any, *, expected_identity=None) -> bool:
     if not isinstance(value, Mapping):
         return False
-    checkpoints = value.get("checkpoints")
-    if not isinstance(checkpoints, list) or not checkpoints:
+    identity = expected_identity
+    if not isinstance(identity, Mapping) or not all(identity.get(k) for k in ("campaign", "run")):
         return False
-    seen: set[tuple[str, str, str]] = set()
-    seen_repo_revisions: set[tuple[str, str]] = set()
-    stages: set[str] = set()
-    for checkpoint in checkpoints:
-        if not isinstance(checkpoint, Mapping):
-            return False
-        repo_url = _receipt_field(checkpoint, "repo_url", "repo", "repository")
-        revision = _receipt_field(checkpoint, "revision", "commit", "sha")
-        checkpoint_url = _receipt_field(
-            checkpoint, "url", "checkpoint_url", "repo_revision_url"
-        )
-        visibility = checkpoint.get("visibility")
-        if not (
-            _https_url(repo_url)
-            and _immutable_revision(revision)
-            and _https_url(checkpoint_url)
-            and visibility in {"public", "private"}
-            and checkpoint.get("safe_public_artifact") is True
-        ):
-            return False
-        stage = str(checkpoint.get("stage", "")).strip().lower()
-        if stage:
-            stages.add(stage)
-        identity = (str(repo_url), str(revision), str(checkpoint_url))
-        repo_revision = (str(repo_url), str(revision))
-        if identity in seen or repo_revision in seen_repo_revisions:
-            return False
-        seen.add(identity)
-        seen_repo_revisions.add(repo_revision)
-    # Initial, periodic, and final artifacts must each be independently
-    # addressable.  Their visibility is chosen per artifact, never hardcoded.
-    return {"initial", "periodic", "final"}.issubset(stages)
+    return not checkpoint_errors(
+        value.get("checkpoints"),
+        stage=value.get("stage", "launch"),
+        expected_identity=identity,
+        scheduled_steps=value.get("scheduled_steps", []),
+        current_step=value.get("current_step", 0),
+        final_step=value.get("final_step", 0),
+    )
 
 
 def _receipt_sources(contract: Mapping[str, Any]) -> list[Mapping[str, Any]]:
@@ -390,10 +349,13 @@ def _model_revision_status(
             ):
                 value = raw
         present = _receipt_present(value, "model_revision")
-        pinned = _immutable_revision(model.get("revision")) or _sha256_digest(
-            model.get("revision")
+        pinned = _immutable_revision(model.get("revision")) or _sha256_digest(model.get("revision"))
+        receipt_revision = (
+            _receipt_field(value, "revision", "model_revision", "sha256", "hash", "digest")
+            if isinstance(value, Mapping)
+            else value
         )
-        per_model[role] = bool(present and pinned)
+        per_model[role] = bool(present and pinned and receipt_revision == model.get("revision"))
         if not per_model[role]:
             missing.append(f"model_revision:{role}")
     return not missing, per_model, missing
@@ -610,93 +572,14 @@ def _suite_registry(contract: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _xlam_only_scope(contract: Mapping[str, Any]) -> bool:
-    explicit = contract.get("xlam_only")
-    if explicit is True:
-        return True
-    for key in ("experiment_scope", "claim_scope", "scope", "status"):
-        value = contract.get(key)
-        if isinstance(value, str) and "xlam" in value.lower() and "only" in value.lower():
-            return True
-    for key in ("claims", "non_claims", "objective"):
-        value = contract.get(key)
-        text = json.dumps(value, sort_keys=True).lower()
-        if "xlam-only" in text or "xlam only" in text:
-            return True
-    return False
+    scope = contract.get("execution_scope", contract.get("experiment_scope", "portfolio"))
+    if scope not in {"portfolio", "xlam_component"}:
+        raise ValueError("execution_scope must be portfolio or xlam_component")
+    return scope == "xlam_component"
 
 
 def _successive_halving_contract() -> dict[str, Any]:
-    arms = [arm_id for arm_id, _ in LR_ARMS]
-    gates = [
-        {
-            "id": "receipt_preflight",
-            "requires": [
-                "every arm has all required immutable provenance receipts",
-                "online W&B initialization is verified before paid work",
-                "every periodic and final checkpoint has an HF publication receipt",
-            ],
-            "on_failure": "BLOCKED; do not allocate a job",
-        },
-        {
-            "id": "short_screening",
-            "requires": [
-                "all three LR arms use the identical immutable train split, seed, sampler, "
-                "reward, and sealed selection slice",
-                "each arm completes the short tracked screening horizon",
-            ],
-            "decision": "select by sealed selection slice perfect-call rate",
-        },
-        {
-            "id": "tie_break",
-            "requires": ["a tie at the primary metric"],
-            "decision": "break ties by strict mean reward, then lower estimated cost",
-        },
-        {
-            "id": "winner_extension",
-            "requires": ["exactly one winner is selected and its receipts remain valid"],
-            "decision": "extend only the winning arm with fixed-interval checkpoints",
-        },
-        {
-            "id": "final_evaluation",
-            "requires": [
-                "the final evaluation split is immutable and disjoint from the sealed selection slice",
-                "the final evaluation split is not consulted during arm selection",
-            ],
-            "decision": (
-                "evaluate the selected arm once; never promote xLAM-only evidence "
-                "to company usefulness"
-            ),
-        },
-    ]
-    return {
-        "method": "successive_halving",
-        "arms": arms,
-        "screening_arm_ids": arms,
-        "screening_learning_rates": [rate for _, rate in LR_ARMS],
-        "short_screening_steps": 10,
-        "checkpoint_steps": [5, 10],
-        "selection_metric": "sealed selection slice perfect-call rate",
-        "selection_rule": "maximize sealed selection slice perfect-call rate",
-        "tie_breakers": ["strict mean reward", "lower estimated cost"],
-        "winner_extension": "extend only the winning arm",
-        "decision_gates": gates,
-        "held_out_separation": {
-            "selection_split": {
-                "name": "sealed_selection_slice",
-                "purpose": "select among the three screening arms",
-                "consulted_during_selection": True,
-                "receipt_required": True,
-            },
-            "final_eval_split": {
-                "name": "primary_eval_final",
-                "purpose": "final unbiased evaluation of the selected arm",
-                "consulted_during_selection": False,
-                "receipt_required": True,
-            },
-            "must_be_disjoint": True,
-            "held_out_label_requires_independent_receipt": True,
-        },
-    }
+    return plan_contract()
 
 
 def build_manifest(contract: dict[str, Any]) -> dict[str, Any]:
@@ -735,9 +618,7 @@ def build_manifest(contract: dict[str, Any]) -> dict[str, Any]:
         }
         train_by_domain = {
             domain: sorted(
-                suite_id
-                for suite_id, suite in training.items()
-                if domain in set(suite["domains"])
+                suite_id for suite_id, suite in training.items() if domain in set(suite["domains"])
             )
             for domain in sorted(required_domains)
         }
@@ -760,11 +641,16 @@ def build_manifest(contract: dict[str, Any]) -> dict[str, Any]:
     if coverage_errors:
         raise ValueError("invalid Pavlov company coverage: " + "; ".join(coverage_errors))
 
-    blockers: list[str] = []
+    blockers: list[str] = launch_feasibility_errors(contract)
     budget = contract["budget_gate"]
     if not budget["paid_jobs_may_launch"]:
         blockers.append("paid jobs disabled pending explicit user budget cap")
-    if not isinstance(budget.get("maximum_usd"), (int, float)) or budget["maximum_usd"] <= 0:
+    if (
+        isinstance(budget.get("maximum_usd"), bool)
+        or not isinstance(budget.get("maximum_usd"), (int, float))
+        or not math.isfinite(budget["maximum_usd"])
+        or budget["maximum_usd"] <= 0
+    ):
         blockers.append("maximum_usd is unset or not positive")
     if any(
         model["revision"] == "TO_BE_PINNED_BEFORE_PAID_RUNS"
@@ -780,29 +666,20 @@ def build_manifest(contract: dict[str, Any]) -> dict[str, Any]:
         contract, all_receipt_suite_ids
     )
     pending_primary_eval_receipts = [
-        suite_id
-        for suite_id in registry["primary_eval_ids"]
-        if suite_id in pending_suite_receipts
+        suite_id for suite_id in registry["primary_eval_ids"] if suite_id in pending_suite_receipts
     ]
     pending_training_receipts = [
-        suite_id
-        for suite_id in registry["training_ids"]
-        if suite_id in pending_suite_receipts
+        suite_id for suite_id in registry["training_ids"] if suite_id in pending_suite_receipts
     ]
     missing_receipts = [
-        receipt_name
-        for receipt_name, _ in REQUIRED_RECEIPTS
-        if not receipt_status[receipt_name]
+        receipt_name for receipt_name, _ in REQUIRED_RECEIPTS if not receipt_status[receipt_name]
     ]
     for receipt_name, description in REQUIRED_RECEIPTS:
         if not receipt_status[receipt_name]:
             blockers.append(f"missing {description} receipt")
     if not receipt_status["license"]:
         blockers.append("dataset and benchmark licenses require recorded sign-off")
-    if not (
-        receipt_status["dataset_revision"]
-        and receipt_status["split_manifest_hash"]
-    ):
+    if not (receipt_status["dataset_revision"] and receipt_status["split_manifest_hash"]):
         blockers.append("dataset revisions and disjoint task-ID hashes require freezing")
     if pending_suite_receipts:
         blockers.append(
@@ -845,8 +722,7 @@ def build_manifest(contract: dict[str, Any]) -> dict[str, Any]:
     )
     structural_held_out_receipt_ready = (
         not any(
-            suite_id in pending_suite_receipts
-            for suite_id in registry["structural_held_out_ids"]
+            suite_id in pending_suite_receipts for suite_id in registry["structural_held_out_ids"]
         )
         and not missing_receipts
         and not budget_status_conflict
@@ -901,13 +777,15 @@ def build_manifest(contract: dict[str, Any]) -> dict[str, Any]:
                 "lr": learning_rate,
                 "learning_rate_label": f"{learning_rate:.0e}".replace("e-0", "e-"),
                 "lr_label": f"{learning_rate:.0e}".replace("e-0", "e-"),
-                "stage": "short_screening",
-                "steps": 10,
+                "stage": "round_1",
+                "plan_id": "pavlov-xlam-component-v2",
+                "steps": 50,
                 "model_role": "primary",
                 "model_id": primary_model.get("model_id"),
-                "training_suite_ids": list(registry["training_ids"]),
-                "primary_eval_suite_ids": list(registry["primary_eval_ids"]),
-                "held_out_suite_ids": list(registry["structural_held_out_ids"]),
+                "training_suite_ids": ["xlam_component"],
+                "primary_eval_suite_ids": [],
+                "selection_suite_ids": ["sealed_selection_slice"],
+                "held_out_suite_ids": [],
                 "required_receipts": [name for name, _ in REQUIRED_RECEIPTS],
                 "wandb": dict(wandb_config),
                 "hf_publication_policy": dict(hf_policy),
@@ -921,8 +799,7 @@ def build_manifest(contract: dict[str, Any]) -> dict[str, Any]:
                     if suite_id in registry["primary_eval_ids"]
                 },
                 "suite_receipt_status": {
-                    suite_id: dict(status)
-                    for suite_id, status in suite_receipt_status.items()
+                    suite_id: dict(status) for suite_id, status in suite_receipt_status.items()
                 },
                 "pending_suite_receipts": list(pending_suite_receipts),
                 "pending_training_receipts": list(pending_training_receipts),
@@ -935,7 +812,7 @@ def build_manifest(contract: dict[str, Any]) -> dict[str, Any]:
     domain_ids = sorted({str(domain) for domain in contract["domains"]})
 
     return {
-        "schema_version": "pavlovs-campaign-manifest-v1",
+        "schema_version": "pavlovs-campaign-manifest-v2",
         "contract_schema_version": contract["schema_version"],
         "status": "BLOCKED" if blockers else "READY",
         "launches_any_job": False,

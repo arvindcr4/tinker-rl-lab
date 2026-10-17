@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from dataclasses import asdict, dataclass
 from typing import Literal, Sequence
 
@@ -36,8 +37,15 @@ class RegimeUtilities:
 
 
 def validate(construction: Construction) -> None:
+    if any(
+        isinstance(n, bool) or not isinstance(n, int)
+        for n in (construction.group_size, construction.additional_samples)
+    ):
+        raise ValueError("group sizes must be non-boolean integers")
     if construction.group_size < 2 or construction.additional_samples < 1:
-        raise ValueError("group sizes must be positive and the observed group must contain two samples")
+        raise ValueError(
+            "group sizes must be positive and the observed group must contain two samples"
+        )
     if not 0 < construction.clean_success_probability < 1:
         raise ValueError("clean success probability must lie strictly between zero and one")
     nonnegative = (
@@ -46,7 +54,9 @@ def validate(construction: Construction) -> None:
         construction.probe_cost,
         construction.repaired_signal_value,
     )
-    if any(value < 0 for value in nonnegative):
+    if any(
+        isinstance(value, bool) or not math.isfinite(value) or value < 0 for value in nonnegative
+    ):
         raise ValueError("values and costs must be nonnegative")
 
 

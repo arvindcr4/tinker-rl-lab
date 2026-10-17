@@ -29,7 +29,7 @@ REPO_ROOT = HERE.parents[1]
 DEFAULT_STATUS = REPO_ROOT / "outputs/E1_E14_Terminal_Status_2026-08-29.json"
 DEFAULT_FOLLOWUP = REPO_ROOT / "outputs/E3_E14_EXTERNAL_FOLLOWUP_RECEIPT_2026-08-29.json"
 DEFAULT_OUTPUT = REPO_ROOT / "outputs/E2_E14_COMPLETION_GATE_2026-08-30.json"
-SCHEMA_VERSION = "e1-e14-completion-gate-v1"
+SCHEMA_VERSION = "e1-e14-completion-gate-v2"
 PACKAGE_SCHEMA_VERSION = "e1-e14-provider-package-v1"
 PROVIDER_GRANT_SCHEMA_VERSION = "e1-e14-provider-grant-v2"
 TRUST_ROOTS_SCHEMA_VERSION = "e1-e14-provider-trust-roots-v2"
@@ -722,7 +722,7 @@ def validate_package(
     }
 
 
-def _verified_exact_source_lanes(status: dict[str, Any]) -> list[dict[str, Any]]:
+def _declared_exact_source_lanes(status: dict[str, Any]) -> list[dict[str, Any]]:
     """Validate the two exact-score assertions made by the audit boundary."""
     raw_lanes = status.get("lanes")
     if not isinstance(raw_lanes, list):
@@ -746,6 +746,7 @@ def _verified_exact_source_lanes(status: dict[str, Any]) -> list[dict[str, Any]]
             isinstance(score, bool)
             or not isinstance(score, (int, float))
             or not math.isfinite(float(score))
+            or not 0 <= float(score) <= 100
         ):
             raise PackageValidationError(
                 f"{lane}: exact-completion claim requires a finite non-boolean score"
@@ -763,14 +764,14 @@ def _verified_exact_source_lanes(status: dict[str, Any]) -> list[dict[str, Any]]
 def audit(
     status_path: Path = DEFAULT_STATUS, followup_path: Path = DEFAULT_FOLLOWUP
 ) -> dict[str, Any]:
-    status = _load_json(status_path)
-    followup = _load_json(followup_path)
+    status_bytes, followup_bytes = status_path.read_bytes(), followup_path.read_bytes()
+    status, followup = json.loads(status_bytes), json.loads(followup_bytes)
     raw_lanes = status.get("lanes")
     if not isinstance(raw_lanes, list):
         raise PackageValidationError("terminal status.lanes must be an array")
     source_lanes = {entry.get("lane"): entry for entry in raw_lanes if isinstance(entry, dict)}
     expected_lanes = set(LANE_SPECS)
-    exact_sources = _verified_exact_source_lanes(status)
+    exact_sources = _declared_exact_source_lanes(status)
     records: list[dict[str, Any]] = []
     for lane, spec in LANE_SPECS.items():
         source = source_lanes.get(lane)
@@ -816,16 +817,20 @@ def audit(
         "mode": "READ_ONLY_AUDIT_NO_NETWORK_NO_SPEND_NO_LAUNCH",
         "supported_evidence_classes": sorted(EVIDENCE_CLASSES),
         "included_lanes": list(LANE_SPECS),
-        "excluded_complete_lanes": ["E11"],
+        "excluded_complete_lanes": [],
+        "excluded_declared_lanes": ["E11"],
         "provider_access_granted": followup.get("provider_response_check", {}).get(
             "provider_access_granted", False
         ),
-        "verified_exact_source_lanes": exact_sources,
+        "declared_exact_source_lanes": exact_sources,
+        "verified_exact_source_lanes": [],
+        "scientific_claim_eligible": False,
+        "input_sha256": {"status": _sha256_bytes(status_bytes), "followup": _sha256_bytes(followup_bytes)},
         "lanes": records,
         "claim_boundary": (
-            "E11 is the only complete exact lane inside the E2--E14 gate; E1 is also "
-            "complete exact but is outside this gate's scope. This receipt reports readiness "
-            "constraints only and all included scores are null."
+            "E1 and E11 are source declarations only. Task coverage, grader evidence and "
+            "checkpoint binding have not been verified by this inventory. This receipt "
+            "cannot establish execution or scientific completion."
         ),
     }
 

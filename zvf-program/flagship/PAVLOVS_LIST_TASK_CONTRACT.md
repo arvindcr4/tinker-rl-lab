@@ -108,3 +108,10 @@ safety reserve because billing telemetry can lag. Hugging Face Jobs and every
 other paid provider remain disabled. Tinker runs still require immutable
 train/eval splits and a local dry run. GSM8K cannot be promoted out of its
 `calibration_only` role.
+
+
+## Prospective analysis amendment v2 (2026-10-17)
+
+For the single recorded training seed, the comparison unit is an independent paired task cluster conditional on fixed base/final checkpoints. The earlier seed-level primary-unit language describes a multi-seed method study, which has not been executed and is not a claim supported here. Do not infer retraining variability from row bootstraps. A multi-seed study requires a separate frozen outer-seed/inner-cluster analysis plan.
+
+The shared prospective phase source is `campaign_plan_v2.py`; it does not rewrite prior experiments. Within-suite clusters must be declared before final evaluation. Reuse each suite's paired resample wherever the suite contributes to several domains, preserving covariance. The scientific claim gate remains blocked until that exact analysis is approved and implemented against immutable execution artifacts.

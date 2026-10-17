@@ -30,6 +30,11 @@ present.
 
 from __future__ import annotations
 
+try:
+    from .evidence_v2 import approval_valid
+except ImportError:
+    from evidence_v2 import approval_valid
+
 import argparse
 import hashlib
 import json
@@ -616,19 +621,28 @@ def _receipt_identity(receipt: Mapping[str, Any]) -> str:
 def _immutable_reference(value: Any, *, allow_plain_string: bool = True) -> bool:
     """Whether an evidence entry is an immutable receipt reference."""
 
-    if isinstance(value, str):
-        return allow_plain_string and bool(value.strip())
-    if not isinstance(value, Mapping):
+    # A digest-shaped string alone is a declaration, not verified evidence.
+    if (
+        not isinstance(value, Mapping)
+        or value.get("immutable") is False
+        or value.get("verified") is False
+    ):
         return False
-    if value.get("immutable") is False or value.get("verified") is False:
+    try:
+        digest = value.get("sha256")
+        path = Path(value["path"])
+        return (
+            isinstance(digest, str)
+            and len(digest) == 64
+            and hashlib.sha256(path.read_bytes()).hexdigest() == digest
+        )
+    except (KeyError, OSError, TypeError, ValueError):
         return False
-    return any(
-        isinstance(value.get(key), str) and value[key].strip()
-        for key in ("receipt_id", "id", "digest", "sha256", "hash", "fingerprint")
-    )
 
 
-def _heldout_evidence(receipt: Mapping[str, Any]) -> dict[str, Any]:
+def _heldout_evidence(
+    receipt: Mapping[str, Any], *, trusted_issuers=None, expected_identity=None
+) -> dict[str, Any]:
     """Extract the five immutable receipts needed for a held-out claim."""
 
     containers: list[tuple[Mapping[str, Any], bool]] = [(receipt, False)]
@@ -647,17 +661,15 @@ def _heldout_evidence(receipt: Mapping[str, Any]) -> dict[str, Any]:
     missing: list[str] = []
     for required, aliases in HELDOUT_RECEIPT_FIELDS.items():
         proven_value: Any = None
-        for container, immutable_container in containers:
+        for container, _immutable_container in containers:
             for alias in aliases:
                 if alias in container:
                     candidate = container[alias]
-                    plain_string_ok = (
-                        immutable_container
-                        or alias.endswith("_receipt")
-                        or alias.startswith("immutable_")
-                    )
-                    if _immutable_reference(
-                        candidate, allow_plain_string=plain_string_ok
+                    if approval_valid(
+                        candidate,
+                        required,
+                        trusted_issuers=trusted_issuers,
+                        expected_identity=expected_identity,
                     ):
                         proven_value = candidate
                         break
@@ -752,15 +764,20 @@ def _receipt_tokens(receipt: Mapping[str, Any]) -> dict[str, int] | None:
     }
 
 
-def _receipt_explicit_cost(receipt: Mapping[str, Any], names: Sequence[str], field: str) -> Decimal | None:
-    value = _extract_number(receipt, names, field)
-    if value is not None:
-        return value
-    for section in ("billing", "cost", "accounting", "projection"):
-        value = _nested_number(receipt, section, names, field)
+def _receipt_explicit_cost(
+    receipt: Mapping[str, Any], names: Sequence[str], field: str
+) -> Decimal | None:
+    values = []
+    for name in names:
+        value = _extract_number(receipt, (name,), field)
         if value is not None:
-            return value
-    return None
+            values.append(value)
+        for section in ("billing", "cost", "accounting", "projection"):
+            value = _nested_number(receipt, section, (name,), field)
+            if value is not None:
+                values.append(value)
+    # Overlapping aliases are ceilings or cumulative observations, not additive.
+    return max(values) if values else None
 
 
 def validate_receipt(
@@ -831,7 +848,9 @@ def validate_receipt(
             "rejected_run_allowance_usd",
         )
         if allowance is None and _receipt_tokens(receipt) is None:
-            errors.append(f"{source}: rejected receipt needs an explicit allowance or token projection")
+            errors.append(
+                f"{source}: rejected receipt needs an explicit allowance or token projection"
+            )
     if (
         status in PENDING_STATUSES
         and _receipt_explicit_cost(
@@ -839,6 +858,9 @@ def validate_receipt(
             (
                 "conservative_pending_usd",
                 "pending_cost_usd",
+                "remaining_estimate_usd",
+                "total_reserved_ceiling_usd",
+                "reserved_cost_usd",
                 "projected_cost_usd",
                 "estimated_cost_usd",
                 "base_eval_estimated_usd",
@@ -873,13 +895,18 @@ def load_receipt(
 def _projection_cost(
     budget: Mapping[str, Any], projection: Mapping[str, Any], *, field: str = "projection"
 ) -> Decimal:
-    explicit = _extract_number(
-        projection,
-        ("cost_usd", "projected_cost_usd", "conservative_cost_usd", "estimated_cost_usd"),
-        field,
+    explicit = max(
+        (
+            _extract_number(projection, (key,), field) or Decimal("0")
+            for key in (
+                "cost_usd",
+                "projected_cost_usd",
+                "conservative_cost_usd",
+                "estimated_cost_usd",
+            )
+        ),
+        default=Decimal("0"),
     )
-    if explicit is not None:
-        return explicit
     nested_tokens = projection.get("tokens")
     if nested_tokens is not None and not isinstance(nested_tokens, Mapping):
         raise BudgetError(f"{field}.tokens must be an object")
@@ -893,21 +920,35 @@ def _projection_cost(
     samples = source.get("samples", source.get("examples", 0))
     max_prompt = source.get("max_prompt_tokens", source.get("max_input_tokens"))
     max_output = source.get("max_output_tokens", source.get("max_response_tokens"))
-    cost_per_step = _extract_number(source, ("cost_per_step_usd", "usd_per_step"), f"{field}.cost_per_step_usd")
-    if cost_per_step is not None:
-        return cost_per_step * _integer(steps, f"{field}.steps")
-    return estimate_cost(
+    cost_per_step = _extract_number(
+        source, ("cost_per_step_usd", "usd_per_step"), f"{field}.cost_per_step_usd"
+    )
+    per_step_cost = (
+        (cost_per_step * _integer(steps, f"{field}.steps"))
+        if cost_per_step is not None
+        else Decimal("0")
+    )
+    token_cost = estimate_cost(
         budget,
         prefill_tokens=_integer(prefill, f"{field}.prefill_tokens"),
         cached_prefill_tokens=_integer(cached, f"{field}.cached_prefill_tokens"),
         sample_tokens=_integer(sample, f"{field}.sample_tokens"),
         train_tokens=_integer(train, f"{field}.train_tokens"),
-        steps=_integer(steps, f"{field}.steps"),
-        train_tokens_per_step=None if per_step is None else _integer(per_step, f"{field}.train_tokens_per_step"),
+        steps=0
+        if cost_per_step is not None and per_step is None
+        else _integer(steps, f"{field}.steps"),
+        train_tokens_per_step=None
+        if per_step is None
+        else _integer(per_step, f"{field}.train_tokens_per_step"),
         samples=_integer(samples, f"{field}.samples"),
-        max_prompt_tokens=None if max_prompt is None else _integer(max_prompt, f"{field}.max_prompt_tokens"),
-        max_output_tokens=None if max_output is None else _integer(max_output, f"{field}.max_output_tokens"),
+        max_prompt_tokens=None
+        if max_prompt is None
+        else _integer(max_prompt, f"{field}.max_prompt_tokens"),
+        max_output_tokens=None
+        if max_output is None
+        else _integer(max_output, f"{field}.max_output_tokens"),
     )
+    return max(explicit or Decimal("0"), per_step_cost, token_cost)
 
 
 def _receipt_breakdown(
@@ -938,8 +979,6 @@ def _receipt_breakdown(
     estimated = _receipt_explicit_cost(
         receipt,
         (
-            "conservative_pending_usd",
-            "pending_cost_usd",
             "conservative_cost_usd",
             "projected_cost_usd",
             "estimated_cost_usd",
@@ -977,41 +1016,74 @@ def _receipt_breakdown(
         # A rejected run's estimate is an allowance, not an additional pending
         # charge.  Explicit live billing remains known and is added separately.
         pending = allowance
-    elif live is not None:
-        pending = Decimal("0")
-    elif estimated is not None:
-        pending = estimated
-    elif base_estimate is not None:
-        pending = base_estimate
-    elif token_estimate is not None:
-        pending = token_estimate
     else:
-        raise BudgetError(f"{source}: receipt has neither live billing nor a conservative estimate")
+        # v2: estimates are total ceilings unless explicitly named remaining.
+        ceiling = max(
+            (
+                x
+                for x in (
+                    estimated,
+                    base_estimate,
+                    token_estimate,
+                    _receipt_explicit_cost(
+                        receipt, ("total_reserved_ceiling_usd", "reserved_cost_usd"), "reservation"
+                    ),
+                )
+                if x is not None
+            ),
+            default=None,
+        )
+        remaining = max(
+            (
+                _receipt_explicit_cost(receipt, (key,), "remaining") or Decimal("0")
+                for key in (
+                    "remaining_estimate_usd",
+                    "conservative_pending_usd",
+                    "pending_cost_usd",
+                )
+            ),
+            default=Decimal("0"),
+        )
+        has_remaining = any(
+            receipt.get(key) is not None
+            for key in ("remaining_estimate_usd", "conservative_pending_usd", "pending_cost_usd")
+        )
+        if status in TERMINAL_STATUSES and receipt.get("billing_final") is True:
+            if live is None:
+                raise BudgetError(f"{source}: final billing requires billed-so-far")
+            pending = Decimal("0")
+        elif ceiling is not None or has_remaining:
+            pending = max(
+                Decimal("0"),
+                (ceiling or Decimal("0")) - (live or Decimal("0")),
+                remaining or Decimal("0"),
+            )
+        else:
+            raise BudgetError(
+                f"{source}: non-final receipt needs a remaining estimate or total reservation"
+            )
 
     is_base_eval = (
         str(receipt.get("schema_version", "")).startswith("pavlov-xlam-eval")
-        or str(receipt.get("stage", "")).lower() in {"heldout-evaluation", "base-evaluation", "base_eval"}
+        or str(receipt.get("stage", "")).lower()
+        in {"heldout-evaluation", "base-evaluation", "base_eval"}
         or receipt.get("kind") in {"base_eval", "base_evaluation"}
         or base_estimate is not None
     )
     if is_base_eval and base_estimate is None:
         base_estimate = estimated if estimated is not None else token_estimate
-    if live is not None and is_base_eval:
-        # A receipt may carry both the estimate and a later billing reconciliation;
-        # keep the estimate visible but do not double charge it.
-        pending = Decimal("0")
     if status in REJECTED_STATUSES:
         base_estimate = Decimal("0")
-    pending_billing = (
-        Decimal("0")
-        if is_base_eval or status in REJECTED_STATUSES
-        else pending
+    pending_billing = Decimal("0") if is_base_eval or status in REJECTED_STATUSES else pending
+    heldout = (
+        _heldout_evidence(receipt)
+        if _receipt_is_primary_eval(receipt, portfolio)
+        else {
+            "proven": False,
+            "missing": tuple(),
+            "receipts": {},
+        }
     )
-    heldout = _heldout_evidence(receipt) if _receipt_is_primary_eval(receipt, portfolio) else {
-        "proven": False,
-        "missing": tuple(),
-        "receipts": {},
-    }
     heldout_proven = bool(heldout["proven"] and status in TERMINAL_STATUSES)
     suite_id = _normalise_suite_id(_receipt_suite(receipt), portfolio)
     return {
@@ -1023,11 +1095,7 @@ def _receipt_breakdown(
         "pending_usd": pending,
         "pending_billing_usd": pending_billing,
         "base_eval_estimated_usd": base_estimate or Decimal("0"),
-        "base_eval_unreconciled_usd": (
-            (base_estimate or Decimal("0"))
-            if is_base_eval and live is None
-            else Decimal("0")
-        ),
+        "base_eval_unreconciled_usd": (pending if is_base_eval else Decimal("0")),
         "rejected_run_allowance_usd": allowance or Decimal("0"),
         "primary_eval": _receipt_is_primary_eval(receipt, portfolio),
         "heldout_receipt_proven": heldout_proven,
@@ -1533,11 +1601,7 @@ def build_ledger(
         if identity in seen_receipts:
             raise BudgetError(f"duplicate receipt: {identity}")
         seen_receipts.add(identity)
-        breakdowns.append(
-            _receipt_breakdown(
-                receipt, budget, source=source, portfolio=portfolio
-            )
-        )
+        breakdowns.append(_receipt_breakdown(receipt, budget, source=source, portfolio=portfolio))
     parts = _projection_parts(budget, projection, portfolio)
     coverage_issues = _coverage_issues(parts, portfolio)
     heldout_proven_ids: set[str] = {
@@ -1547,9 +1611,7 @@ def build_ledger(
     }
 
     known = sum((entry["live_billed_usd"] for entry in breakdowns), Decimal("0"))
-    pending_billing = sum(
-        (entry["pending_billing_usd"] for entry in breakdowns), Decimal("0")
-    )
+    pending_billing = sum((entry["pending_billing_usd"] for entry in breakdowns), Decimal("0"))
     base_eval = sum((entry["base_eval_estimated_usd"] for entry in breakdowns), Decimal("0"))
     base_eval_unreconciled = sum(
         (entry["base_eval_unreconciled_usd"] for entry in breakdowns), Decimal("0")
@@ -1576,13 +1638,10 @@ def build_ledger(
         if missing_heldout:
             reasons.append(
                 "held-out claim requires immutable split/license/task/container/"
-                "decontamination receipts for: "
-                + ", ".join(missing_heldout)
+                "decontamination receipts for: " + ", ".join(missing_heldout)
             )
     if projected > operational:
-        reasons.append(
-            f"projected spend ${projected} exceeds operational cap ${operational}"
-        )
+        reasons.append(f"projected spend ${projected} exceeds operational cap ${operational}")
     if projected > maximum:
         reasons.append(f"projected spend ${projected} exceeds hard cap ${maximum}")
     status = "ALLOW" if not reasons else "REJECT"
@@ -1594,18 +1653,10 @@ def build_ledger(
         "projected",
         "reservation",
     )
-    suite_allocations: dict[str, dict[str, Decimal]] = {
-        category: {} for category in categories
-    }
-    domain_allocations: dict[str, dict[str, Decimal]] = {
-        category: {} for category in categories
-    }
-    unallocated_suite: dict[str, Decimal] = {
-        category: Decimal("0") for category in categories
-    }
-    unallocated_domain: dict[str, Decimal] = {
-        category: Decimal("0") for category in categories
-    }
+    suite_allocations: dict[str, dict[str, Decimal]] = {category: {} for category in categories}
+    domain_allocations: dict[str, dict[str, Decimal]] = {category: {} for category in categories}
+    unallocated_suite: dict[str, Decimal] = {category: Decimal("0") for category in categories}
+    unallocated_domain: dict[str, Decimal] = {category: Decimal("0") for category in categories}
 
     def allocate_receipt(entry: Mapping[str, Any]) -> None:
         suite = entry["suite_id"]
@@ -1636,7 +1687,6 @@ def build_ledger(
                 # Keep an unallocated amount in both ledgers when neither
                 # dimension can own it; this makes omission visible while
                 # preserving exact suite/domain reconciliation.
-                unallocated_suite[category] += amount
                 unallocated_domain[category] += amount
 
     for entry in breakdowns:
@@ -1663,12 +1713,8 @@ def build_ledger(
         unallocated_suite["projected"] += parts["direct_cost_usd"]
         unallocated_domain["projected"] += parts["direct_cost_usd"]
 
-    suite_reservation_total = sum(
-        parts["suite_reservations"].values(), Decimal("0")
-    )
-    domain_reservation_total = sum(
-        parts["domain_reservations"].values(), Decimal("0")
-    )
+    suite_reservation_total = sum(parts["suite_reservations"].values(), Decimal("0"))
+    domain_reservation_total = sum(parts["domain_reservations"].values(), Decimal("0"))
     if parts["suite_reservations"]:
         for suite, amount in parts["suite_reservations"].items():
             _add_amount(suite_allocations["reservation"], suite, amount)
@@ -1714,16 +1760,12 @@ def build_ledger(
     )
     heldout_proven_labels: tuple[str, ...] = tuple(
         label
-        for label, suite_id in (
-            portfolio["primary_eval_suite_labels"].items() if portfolio else ()
-        )
+        for label, suite_id in (portfolio["primary_eval_suite_labels"].items() if portfolio else ())
         if suite_id in heldout_proven_ids
     )
     heldout_pending_labels: tuple[str, ...] = tuple(
         label
-        for label, suite_id in (
-            portfolio["primary_eval_suite_labels"].items() if portfolio else ()
-        )
+        for label, suite_id in (portfolio["primary_eval_suite_labels"].items() if portfolio else ())
         if suite_id in set(heldout_pending_ids)
     )
 
@@ -1742,9 +1784,7 @@ def build_ledger(
     def _label_suite_report(category: str) -> dict[str, Decimal]:
         return {
             label: suite_allocations[category].get(suite_id, Decimal("0"))
-            for label, suite_id in (
-                portfolio["suite_labels"].items() if portfolio else ()
-            )
+            for label, suite_id in (portfolio["suite_labels"].items() if portfolio else ())
         }
 
     portfolio_report: dict[str, Any] | None = None
@@ -1761,10 +1801,7 @@ def build_ledger(
         }
         domain_total_report = {
             domain: sum(
-                (
-                    domain_allocations[category].get(domain, Decimal("0"))
-                    for category in categories
-                ),
+                (domain_allocations[category].get(domain, Decimal("0")) for category in categories),
                 Decimal("0"),
             )
             for domain in portfolio["domains"]
@@ -1791,9 +1828,7 @@ def build_ledger(
             "suite_allocations": {
                 category: _label_suite_report(category) for category in categories
             },
-            "domain_allocations": {
-                category: _domain_report(category) for category in categories
-            },
+            "domain_allocations": {category: _domain_report(category) for category in categories},
             "suite_total_usd": suite_total_report,
             "domain_total_usd": domain_total_report,
             "phase_reservations_usd": dict(parts["phase_reservations"]),

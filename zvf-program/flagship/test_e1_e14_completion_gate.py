@@ -164,10 +164,12 @@ class CompletionGateTests(unittest.TestCase):
     def save_manifest(self, path: Path, manifest: dict[str, object]) -> None:
         path.write_text(json.dumps(manifest), encoding="utf-8")
 
+    @unittest.skipUnless(DEFAULT_STATUS.is_file() and DEFAULT_FOLLOWUP.is_file(), "historical audit artifacts excluded from repository; synthetic v2 regressions cover input validation")
     def test_all_unfinished_lanes_are_enumerated_without_e11(self) -> None:
         receipt = audit(DEFAULT_STATUS, DEFAULT_FOLLOWUP)
         self.assertEqual([row["lane"] for row in receipt["lanes"]], list(LANE_SPECS))
-        self.assertEqual(receipt["excluded_complete_lanes"], ["E11"])
+        self.assertEqual(receipt["excluded_complete_lanes"], [])
+        self.assertEqual(receipt["excluded_declared_lanes"], ["E11"])
         self.assertIn("E1 is also complete exact", receipt["claim_boundary"])
         self.assertIn("outside this gate's scope", receipt["claim_boundary"])
         self.assertTrue(all(row["score"] is None for row in receipt["lanes"]))
@@ -197,6 +199,7 @@ class CompletionGateTests(unittest.TestCase):
         with self.assertRaises(PackageValidationError):
             classify_evidence("PUBLIC_SAMPLE")
 
+    @unittest.skipUnless(DEFAULT_STATUS.is_file() and DEFAULT_FOLLOWUP.is_file(), "historical audit artifacts excluded from repository; synthetic v2 regressions cover input validation")
     def test_audit_cli_writes_receipt_atomically(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "nested" / "receipt.json"
@@ -400,6 +403,7 @@ class CompletionGateTests(unittest.TestCase):
             with self.assertRaisesRegex(PackageValidationError, "must be scoped to E3"):
                 validate_package("E3", manifest_path, root, trust_roots)
 
+    @unittest.skipUnless(DEFAULT_STATUS.is_file() and DEFAULT_FOLLOWUP.is_file(), "historical audit artifacts excluded from repository; synthetic v2 regressions cover input validation")
     def test_audit_rejects_invalid_exact_claim_sources(self) -> None:
         source_status = json.loads(DEFAULT_STATUS.read_text(encoding="utf-8"))
         cases = {

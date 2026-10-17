@@ -254,7 +254,8 @@ def main():
             mag_per_cost = [cm / max(1e-9, cost) for cm, cost in zip(cms, costs)]
 
             cost_mu, cost_lo, cost_hi = bootstrap_ci(costs, B, SEED)
-            ret_mu, ret_lo, ret_hi = bootstrap_ci(retention, B, SEED + 1)
+            from _review_replay import ratio_bootstrap
+            ret_mu, ret_lo, ret_hi = ratio_bootstrap(cms, cm_base, B, SEED + 1)
             mpc_mu, mpc_lo, mpc_hi = bootstrap_ci(mag_per_cost, B, SEED + 2)
 
             pm_rows.append(
@@ -383,7 +384,7 @@ def main():
             ret_x = [cx / max(1e-9, b) for cx, b in zip(cm_x, cm_base)]
             d_ret = [a - b for a, b in zip(ret_c4, ret_x)]
             d_cost = [a - b for a, b in zip(cost_c4, cost_x)]
-            ret_mu, ret_lo, ret_hi = paired_bootstrap_ci(d_ret, B, SEED + 20)
+            ret_mu, ret_lo, ret_hi = ratio_bootstrap([a-b for a,b in zip(cm_c4, cm_x)], cm_base, B, SEED + 20)
             cost_mu, cost_lo, cost_hi = paired_bootstrap_ci(d_cost, B, SEED + 30)
             pb_rows.append(
                 {

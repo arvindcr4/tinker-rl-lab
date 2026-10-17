@@ -55,3 +55,26 @@ def test_identity_gain_and_real_sample_count():
     s = {'rewards': [[0]*4+[1]*4]*16}
     assert ns['eval_ctrl']([s], lambda s, p: [8]*len(p))[3] == [0]
     assert ns['_bci']([0,1,2])[3] == 3
+
+
+def test_ratio_and_conditional_group_gap_estimands():
+    import sys
+    sys.path.insert(0,str(SCRIPTS))
+    from _review_replay import ratio_bootstrap, group_gap_bootstrap, dominance
+    assert ratio_bootstrap([.1,.9],[.2,.8])[0] == 1
+    assert ratio_bootstrap([0,1],[0,1]) == (1,1,1)
+    assert math.isnan(ratio_bootstrap([0],[0])[0])
+    assert group_gap_bootstrap([1,1],[0,0]) == (1,1,1)
+    assert dominance(.1,.2,-.2,-.1)=='C4'
+    assert dominance(-.2,-.1,-.2,-.1)=='UNRESOLVED_OR_TRADEOFF'
+    assert dominance(0,0,0,0)=='UNRESOLVED_OR_TRADEOFF'
+
+
+def test_observed_trigger_and_hybrid_candidate_contract():
+    ns=functions('p7_headroom_recovery', N_BOOT=100,BOOT_SEED=42)
+    rewards=[[0]*8]*10+[[1]+[0]*7]*6
+    assert ns['per_step_zvf'](rewards)==.625
+    ns=functions('p7_iter199_closed_loop_counterfactual',TAU_TRIGGER=.7)
+    assert ns['choose_g_hyb'](.8,[16,32],[.5]*16)==16
+    assert ns['choose_g_hyb'](.8,[16,32],[0]*16)==8
+    with pytest.raises(ValueError): ns['choose_g_hyb'](.8,[16,32])

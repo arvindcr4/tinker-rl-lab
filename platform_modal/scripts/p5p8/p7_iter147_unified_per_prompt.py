@@ -210,8 +210,7 @@ def main():
             header += [f"g_{cname}", f"cm_{cname}", f"cost_{cname}"]
         f.write("\t".join(header) + "\n")
         for c in all_cells:
-            row = [str(c[h]) for h in header if h not in ("is_boundary",)]
-            row.append("1" if c["is_boundary"] else "0")
+            row = [("1" if c[h] else "0") if h == "is_boundary" else str(c[h]) for h in header]
             f.write("\t".join(row) + "\n")
     print(f"Wrote {percell_path}")
 

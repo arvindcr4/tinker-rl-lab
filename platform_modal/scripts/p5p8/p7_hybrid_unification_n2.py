@@ -320,8 +320,8 @@ def main() -> None:
         summary["per_controller_pooled"][ctrl_name] = {
             "n_step_units": len(pooled_per_step[ctrl_name]),
             "mean_G_t": ci["mean"],
-            "mean_G_t_lo": ci["lo"] / N_STEPS,  # per-method total_G mean from per-step CI sum / 40
-            "mean_G_t_hi": ci["hi"] / N_STEPS,
+            "mean_G_t_lo": ci["lo"] / len(pooled_per_step[ctrl_name]),  # pooled mean uses actual sample count
+            "mean_G_t_hi": ci["hi"] / len(pooled_per_step[ctrl_name]),
             "total_G_pooled": ci["sum"],
             "total_G_pooled_lo": ci["lo"],
             "total_G_pooled_hi": ci["hi"],

@@ -60,7 +60,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_mo
 from _paths import REPO_ROOT  # noqa: E402
 WORK = REPO_ROOT
 N10 = WORK / "platform_hybrid/experiments" / "results" / "n10_seed_expansion"
-OUT = WORK / "platform_hybrid/experiments" / "results" / "p5p8"
+OUT = WORK / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review19-v2"
 OUT.mkdir(parents=True, exist_ok=True)
 
 SEED = 20260705
@@ -141,17 +141,8 @@ def main():
             mean_fire = statistics.mean(fire_r)
             mean_nofire = statistics.mean(nofire_r)
             delta_r = mean_fire - mean_nofire
-            # paired-step bootstrap: at each step, contribution is
-            # +reward if FIRE / n_fire, −reward / n_nofire if not.
-            # → an unbiased estimator of (mean_fire − mean_nofire).
-            diffs = []
-            for r in rows:
-                is_fire = r["zvf"] >= tau or (1.0 - r["zvf"]) >= tau
-                diffs.append(
-                    (r["reward"] / n_fire) if is_fire
-                    else (-r["reward"] / n_nofire)
-                )
-            mean_, ci_lo, ci_hi = boot_ci(diffs, N_BOOT, rng)
+            from _review_replay import group_gap_bootstrap
+            mean_, ci_lo, ci_hi = group_gap_bootstrap(fire_r, nofire_r, N_BOOT, rng.randrange(2**32))
             summary_rows.append({
                 "seed": s,
                 "tau": tau,

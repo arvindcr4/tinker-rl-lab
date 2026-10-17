@@ -26,3 +26,12 @@ Protocol: corrected-review19-v2. Historical result artifacts are unchanged and w
 
 ## Validation
 CPU-only function regressions cover append probabilities (8/17), already-mixed groups, small/four-method bootstrap variation, paired identity, inverse roundtrips/domain rejection, identity-controller zero gain, and actual sample count. No training, paid jobs, provider calls, or stored-result edits.
+
+## Follow-up repairs (supersede matching open items above)
+- R5: iter139 now bootstraps conditional FIRE/NO-FIRE group means, preserving the [1,1] constant-group fixture; hybrid pooled mean intervals divide by actual pooled sample count
+- R9–R11: observed ZVF dispatch restored, Pareto dominance directions/ties corrected, iter159 retention and paired retention differences use ratios of aggregate contrast in each replicate (zero baseline is unavailable)
+- R12/R14: iter187 high trigger is >= TAU, posterior entropy subtracts information gain
+- R16/R17: iter199 hybrid evaluates supplied candidates and requires an explicit prompt probability model; missing trigger values fail rather than default to zero; all CI rows precede CI serialization; iter147 TSV follows header order
+- R21: stable digest seeds in granularity replay and iter163; remaining scripts still need migration
+- Exact finite-pool fallback computes actual full-pool contrast instead of returning one
+Additional CPU regressions cover ratio estimands, conditional constant-group gaps, dominance/tradeoff/tie, observed-trigger reproduction and candidate-grid/unsupported-model behavior.

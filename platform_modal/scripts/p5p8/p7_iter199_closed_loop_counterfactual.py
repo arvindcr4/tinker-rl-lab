@@ -128,14 +128,18 @@ def choose_g_ag8(step_zvf, g_n_grid):
     return G_BASE
 
 
-def choose_g_hyb(step_zvf, g_n_grid):
-    """Hybrid: pick smallest G in grid that restores ≥ 0.005 contrast at
-    E_zvf under open-loop fixed-initial-probability projection (vs BASE). Returns G_BASE=8 if no
-    candidate clears."""
+def choose_g_hyb(step_zvf, g_n_grid, p_hats=None):
+    """Smallest supplied action with modeled incremental contrast >= .005."""
     if step_zvf < TAU_TRIGGER:
         return G_BASE
-    # step_zvf >= 0.70 → try smallest first (12), then 16
-    return G_N_GRID_HYB[0]
+    if p_hats is None:
+        raise ValueError("prompt probability model required to evaluate restoration")
+    baseline = expected_contrast(p_hats, G_BASE)
+    for g in sorted(g_n_grid):
+        if g >= G_BASE and expected_contrast(p_hats, g) - baseline >= .005:
+            return g
+    return G_BASE
+
 
 
 def simulate_trajectory(method_tensors, policy, g_n_grid=()):
@@ -159,7 +163,7 @@ def simulate_trajectory(method_tensors, policy, g_n_grid=()):
     g_seq = []
     proj_zvf_seq = []
     for t in range(N_STEPS):
-        obs_zvf = method_tensors[t].get("zvf", 0.0)
+        obs_zvf = method_tensors[t]["zvf"]
         if policy == "BASE":
             g_t = G_BASE
         elif policy == "STATIC16":
@@ -167,7 +171,7 @@ def simulate_trajectory(method_tensors, policy, g_n_grid=()):
         elif policy == "AG8":
             g_t = choose_g_ag8(obs_zvf, G_N_GRID_HYB)
         elif policy == "AG_HYB":
-            g_t = choose_g_hyb(obs_zvf, G_N_GRID_HYB)
+            g_t = choose_g_hyb(obs_zvf, g_n_grid or G_N_GRID_HYB, p_hats)
         else:
             raise ValueError(policy)
         g_seq.append(g_t)
@@ -345,12 +349,6 @@ def main():
 
     fields_ci = ["method", "comparison", "point", "ci_lo", "ci_hi",
                  "n", "B", "excl_zero", "note"]
-    with open(os.path.join(OUT_DIR, "p7_iter199_ci.tsv"), "w") as fh:
-        w = csv.DictWriter(fh, fieldnames=fields_ci, delimiter="\t")
-        w.writeheader()
-        for r in ci_rows:
-            w.writerow(r)
-
     # Build JSON summary
     summary = {
         "ts": "2026-07-06",
@@ -442,6 +440,14 @@ def main():
                 if r["comparison"] == "HYB_minus_AG8_mean_contrast"]
     summary["verdicts"]["H5_AG_HYB_more_contrast_than_AG8_4of4"] = \
         sum(1 for r in hyb_more if r["excl_zero"])
+
+    with open(os.path.join(OUT_DIR, "p7_iter199_ci.tsv"), "w") as fh:
+        w = csv.DictWriter(fh, fieldnames=fields_ci, delimiter="\t")
+        w.writeheader()
+        for r in ci_rows:
+            w.writerow(r)
+
+    summary["cis"] = [dict(r) for r in ci_rows]
 
     with open(os.path.join(OUT_DIR, "p7_iter199_summary.json"), "w") as fh:
         json.dump(summary, fh, indent=2)

@@ -31,6 +31,7 @@ Outputs:
 """
 from __future__ import annotations
 import json
+from _review_replay import stable_seed
 import random
 import statistics
 from pathlib import Path
@@ -221,7 +222,7 @@ def main():
         costs = [agg_mc[(m, c)]["mean_cost_ratio"] for m in METHODS]
         rets = [agg_mc[(m, c)]["mean_contrast_retention"] for m in METHODS]
         # bootstrap CI on SD (B=2000, seed-shifted by controller name)
-        rng = random.Random(BOOT_SEED + hash(c) % 100000)
+        rng = random.Random(BOOT_SEED + stable_seed(c) % 100000)
         boot_cost_sd = []
         boot_ret_sd = []
         for _ in range(BOOT_N):
@@ -265,7 +266,7 @@ def main():
                         for i in range(40)]
             diffs_cost = [d1[i]["cost_ratio"] - d2[i]["cost_ratio"]
                           for i in range(40)]
-            rng = random.Random(BOOT_SEED + hash((m, c)) % 100000)
+            rng = random.Random(BOOT_SEED + stable_seed((m, c)) % 100000)
             boot_dcr = []
             boot_dcost = []
             for _ in range(BOOT_N):
@@ -276,7 +277,7 @@ def main():
             lo_cr, hi_cr = boot_dcr[int(.025 * len(boot_dcr))], boot_dcr[min(len(boot_dcr)-1, int(.975 * len(boot_dcr)))]
             lo_cost, hi_cost = boot_dcost[int(.025 * len(boot_dcost))], boot_dcost[min(len(boot_dcost)-1, int(.975 * len(boot_dcost)))]
             # strict dominance: cost_lower AND retention_higher (CI excludes 0)
-            sd_retention = hi_cr < 0  # C4 retention LOWER than c → c dominates
+            sd_retention = lo_cr > 0  # C4 retention LOWER than c → c dominates
             sd_cost = hi_cost < 0     # C4 cost LOWER than c → C4 cheaper
             paired_rows.append({
                 "method": m, "vs_controller": c,
@@ -287,9 +288,7 @@ def main():
                 "delta_cost": statistics.mean(diffs_cost),
                 "ci95_dcost_lo": lo_cost, "ci95_dcost_hi": hi_cost,
                 "ci_excl0_cost": (lo_cost > 0 or hi_cost < 0),
-                "strict_dominance_of": ("C4" if (sd_retention and sd_cost)
-                                        else ("vs_C" if (not sd_retention and not sd_cost)
-                                              else "PARTIAL")),
+                "strict_dominance_of": __import__("_review_replay").dominance(lo_cr, hi_cr, lo_cost, hi_cost),
             })
     with open(OUT_DIR / "p7_iter163_paired_bootstrap.tsv", "w") as f:
         cols = ["method", "vs_controller", "delta_retention",

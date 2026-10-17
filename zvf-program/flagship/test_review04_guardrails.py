@@ -9,6 +9,7 @@ calls are possible. All signer keys, checkpoint files and ledgers are temporary.
 from __future__ import annotations
 import asyncio
 import copy
+from contextlib import contextmanager
 import hashlib
 import importlib
 import json
@@ -17,6 +18,7 @@ import sqlite3
 import tempfile
 import types
 import unittest
+import warnings
 from decimal import Decimal
 from pathlib import Path
 from unittest.mock import patch
@@ -30,6 +32,17 @@ from flagship import build_pavlovs_campaign_manifest as campaign
 from flagship.s1 import reference, receipt
 from flagship.s1.combine_receipts import combine
 from flagship.theory import action_reversal, reward_channel_regimes
+
+
+@contextmanager
+def captured_warning(category):
+    # unittest.assertWarns scans every sys.modules entry with getattr, which
+    # imports optional backends from Transformers lazy modules in combined runs.
+    with warnings.catch_warnings(record=True) as recorded:
+        warnings.simplefilter("always", category)
+        yield
+    if not any(issubclass(item.category, category) for item in recorded):
+        raise AssertionError(f"Expected {category.__name__}")
 
 
 class DecorationOnly:
@@ -313,7 +326,7 @@ class Review04Tests(unittest.TestCase):
         obj.wandb_run = types.SimpleNamespace(
             log=lambda _: (_ for _ in ()).throw(RuntimeError("tracking down"))
         )
-        with self.assertWarns(UserWarning):
+        with captured_warning(UserWarning):
             obj._track({"event": 1})
 
     def test_negative_and_content_free_approvals_rejected_in_both_builders(self):
@@ -857,7 +870,7 @@ class Review04Tests(unittest.TestCase):
                 side_effect=lambda prompt, output: 2 if output == 10 else 1,
             ),
         ):
-            with self.assertWarns(UserWarning):
+            with captured_warning(UserWarning):
                 result = asyncio.run(
                     obj._complete(
                         messages=[{"role": "user", "content": "x"}],

@@ -818,7 +818,12 @@ def make_grpo_loss_fn(
 
     # v3 treats advantages as immutable observations, never differentiable
     # outputs of the current policy/critic or mutable caller-owned tensors.
-    advantages = tuple(torch.as_tensor(v).detach().clone() for v in advantages)
+    advantages = tuple(
+        torch.as_tensor(v, dtype=None if isinstance(v, torch.Tensor) else torch.float64)
+        .detach()
+        .clone()
+        for v in advantages
+    )
 
     def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:
         if nll_mask is not None and len(nll_mask) != len(logprobs_list):
@@ -827,6 +832,8 @@ def make_grpo_loss_fn(
                 f"{len(nll_mask)} flags for {len(logprobs_list)} responses"
             )
         resp_logprobs = _response_logprobs(logprobs_list, response_lens)
+        if len(advantages) != len(resp_logprobs):
+            raise ValueError("advantages must pair 1:1 with logprobs")
         losses = []
         for i, logprobs in enumerate(resp_logprobs):
             losses.append(-advantages[i].to(logprobs) * logprobs.sum())
@@ -881,9 +888,19 @@ def make_gspo_loss_fn(
 
     # Freeze behavior-policy probabilities and advantages for all update
     # epochs. They are data, not gradient targets (objective contract v3).
-    advantages = tuple(torch.as_tensor(v).detach().clone() for v in advantages)
+    advantages = tuple(
+        torch.as_tensor(v, dtype=None if isinstance(v, torch.Tensor) else torch.float64)
+        .detach()
+        .clone()
+        for v in advantages
+    )
     if old_logprobs is not None:
-        old_logprobs = tuple(torch.as_tensor(v).detach().clone() for v in old_logprobs)
+        old_logprobs = tuple(
+            torch.as_tensor(v, dtype=None if isinstance(v, torch.Tensor) else torch.float64)
+            .detach()
+            .clone()
+            for v in old_logprobs
+        )
 
     def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:
         logprobs_list = _response_logprobs(logprobs_list, response_lens)

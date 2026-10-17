@@ -150,3 +150,18 @@ def test_two_epoch_integration_executes_loss_closure_with_fixed_sampler_probabil
     assert seen[1][2] == [0, 0]
     assert runtime["holder"]["training_client"].optim_count == 2
     assert cfg.protocol_version == "grpo-on-policy-v3"
+
+
+@pytest.mark.parametrize("factory", [grpo.make_grpo_loss_fn, grpo.make_gspo_loss_fn])
+def test_python_advantage_snapshot_preserves_float64_precision(factory):
+    advantage = 0.0699605178105589
+    logprobs = torch.tensor([-1.0], dtype=torch.float64, requires_grad=True)
+    loss, _ = factory([advantage], response_lens=[1])(None, [logprobs])
+    expected = advantage if factory is grpo.make_grpo_loss_fn else -advantage
+    assert loss.item() == pytest.approx(expected, rel=1e-14, abs=1e-15)
+
+
+def test_grpo_rejects_unused_or_missing_advantages():
+    for advantages in ([], [1.0, 2.0]):
+        with pytest.raises(ValueError, match="pair 1:1"):
+            grpo.make_grpo_loss_fn(advantages, response_lens=[1])(None, [torch.tensor([-1.0])])

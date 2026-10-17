@@ -40,7 +40,7 @@ A new `review09-offline.yml` adds:
 
 The existing workflow already includes a checksum-pinned native Tectonic/document-build lane. This patch adds a real figure-rendering test with distinctive synthetic measurements, inspecting rendered annotation values and nonempty PDF/PNG signatures. It does not run CI, install missing local packages, or rebuild published documents locally.
 
-Local environment limitation: Hypothesis is absent from `/tmp/tinker-review-venv`; property groups are therefore listed as not executed locally, not counted as passing. The new CI contract explicitly refuses that situation.
+Follow-up: Hypothesis 6.170.1 was installed in the review environment. Both property modules now run locally. They exposed a precision regression in the new immutable advantage snapshot: Python floats were rounded to float32 before conversion to float64 log probabilities. Snapshotting now preserves input precision and detachment, with deterministic counterexample fixtures. Both property modules plus objective regressions pass (112 tests).
 
 ## Protocol migration
 
@@ -69,4 +69,4 @@ The strict gate currently reports these 11 locations (some are correction discus
 - New targeted fixtures exercise destructive-export prevention, arm/source/order binding, impossible evidence, exact identities, statistics contracts, subprocess hash seeding, harness failure/timeout behavior, objective gradients and actual interruption equivalence
 - Changed Python files: Ruff check and format pass
 - Shell scripts: `bash -n tools/harness/*.sh` passes
-- Full repository suite, Hypothesis groups, native document build, installed-wheel CI lane and paid/live compatibility jobs have not been run locally
+- Full repository suite, native document build, installed-wheel CI lane and paid/live compatibility jobs have not been run locally

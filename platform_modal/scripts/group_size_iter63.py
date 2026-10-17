@@ -518,69 +518,19 @@ def main() -> None:
 # Output helpers
 # --------------------------------------------------------------------------- #
 def append_to_effect_tsv(R_obs_4t, xs_log, lin, pow, asy, hard_div, limit_equiv) -> None:
-    """APPEND iter-63 rows to group_size_effect.tsv without disturbing earlier rows.
+    """Write v2 fit observations separately; never mutate historical EFFECT_TSV.
 
-    Earlier rows are preserved verbatim (header + 33 historical data rows).
-    We append a clearly demarcated "ITER_63_RETENTION_FITS" block.
-
-    Idempotent: re-running the script first strips any prior iter63 markers
-    *and* orphan iter63 fit rows from the file.
+    Parameters and verdicts already have dedicated outputs. This file has one
+    rectangular schema and uses an atomic replace for reruns.
     """
-    # Strip any prior iter63-affiliated block(s) before appending.
-    if EFFECT_TSV.exists():
-        with EFFECT_TSV.open() as f:
-            lines = f.readlines()
-        keep: list[str] = []
-        dropping = False
-        AFFIL = (
-            "# ITER_63_RETENTION_FITS",
-            "# fit parameters",
-            "linear_a\t",
-            "power_c\t",
-            "asymp_R_inf\t",
-            "HARD_DIVERGENCE_at_T256M",
-            "LIMIT_EQUIVALENCE_Rinf_CI_low_gt",
-            "T_tokens\tlog10_T_per_M\tR_observed",
-            "1000000.0\t",
-            "4000000.0\t",
-            "16000000.0\t",
-            "64000000.0\t",
-        )
-        for ln in lines:
-            if any(ln.startswith(prefix) for prefix in AFFIL):
-                dropping = True
-                continue
-            # A truly new iter-63 marker would match the AFFIL list above; once
-            # we see a non-affiliated, non-blank line we stop dropping.
-            if dropping and ln.strip() == "":
-                continue
-            if dropping and not ln.startswith("# ") and not ln.strip().startswith(("1000000.", "4000000.", "16000000.", "64000000.")):
-                dropping = False
-                keep.append(ln)
-                continue
-            if not dropping:
-                keep.append(ln)
-        with EFFECT_TSV.open("w") as f:
-            f.writelines(keep)
-        # Trim trailing blanks to a single newline.
-        try:
-            with EFFECT_TSV.open("rb+") as fb:
-                fb.seek(-1, 2)
-                if fb.read(1) == b"\n":
-                    fb.seek(-1, 2)
-                    fb.truncate()
-        except OSError:
-            pass
-        with EFFECT_TSV.open("a") as f:
-            f.write("\n")
+    output = EFFECT_TSV.with_name("group_size_iter63_retention_fits_v2.tsv")
+    temporary = output.with_suffix(".tmp")
     (a_pt, b_pt, R2_lin, lin_R256_ci) = lin
     (c_pt, beta_pt, R2_pow, pow_R256_ci) = pow
     (Rinf_pt, R0_pt, tau_pt, R2_asy, asy_R256_ci, asy_Rinf_inf_ci) = asy
 
-    with EFFECT_TSV.open("a", newline="") as f:
+    with temporary.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow([])
-        w.writerow(["# ITER_63_RETENTION_FITS"])
         w.writerow(["T_tokens", "log10_T_per_M",
                     "R_observed", "R_observed_CI_lo", "R_observed_CI_hi",
                     "linear_R_fit", "power_R_fit", "asymptotic_R_fit"])
@@ -589,15 +539,7 @@ def append_to_effect_tsv(R_obs_4t, xs_log, lin, pow, asy, hard_div, limit_equiv)
             pow_fit = max(EPS, min(1-EPS, c_pt * (10**xl)**beta_pt))
             asy_fit = max(EPS, min(1-EPS, Rinf_pt + (R0_pt - Rinf_pt)*math.exp(-T/tau_pt)))
             w.writerow([T, xl, R_pt, R_lo, R_hi, lin_fit, pow_fit, asy_fit])
-        w.writerow(["# fit parameters"])
-        w.writerow(["linear_a", f"{a_pt:.6f}", "linear_b", f"{b_pt:.6f}",
-                    "linear_R2", f"{R2_lin:.4f}"])
-        w.writerow(["power_c",  f"{c_pt:.6f}", "power_beta", f"{beta_pt:.6f}",
-                    "power_R2",  f"{R2_pow:.4f}"])
-        w.writerow(["asymp_R_inf", f"{Rinf_pt:.6f}", "asymp_R0", f"{R0_pt:.6f}",
-                    "asymp_tau_M", f"{tau_pt/1e6:.4f}", "asymp_R2", f"{R2_asy:.4f}"])
-        w.writerow(["HARD_DIVERGENCE_at_T256M_CI_low_gt_0p05", str(hard_div)])
-        w.writerow(["LIMIT_EQUIVALENCE_Rinf_CI_low_gt_0p10",  str(limit_equiv)])
+    temporary.replace(output)
 
 
 def write_form_tsv(path: Path, form_name: str, rows: list[tuple[str, float]]) -> None:

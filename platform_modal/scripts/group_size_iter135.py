@@ -137,9 +137,9 @@ def native_wu_claim(sweep: dict) -> list[dict]:
             boots.append(float(arr[idx].mean()))
         lo, hi = float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5))
 
-        # TOST at the Wu bound (97.6% retention) -- paired bootstrap
+        # Descriptive bootstrap noninferiority: mean of paired seed ratios.
         tost_p = float(np.mean(np.array(boots) <= 0.976))
-        # And at a tighter 95% bound
+        # The 95% retention bound is looser.
         tost_p_strict = float(np.mean(np.array(boots) <= 0.95))
 
         out.append({
@@ -148,8 +148,8 @@ def native_wu_claim(sweep: dict) -> list[dict]:
             "headline": (
                 f"Native-Wu pairing G=2 vs G=16: retention={mean_ret:.4f} "
                 f"CI95 [{lo:.4f},{hi:.4f}] (n_paired={len(pairs)}); "
-                f"TOST@0.976 p={tost_p:.4f}; TOST@0.95 p={tost_p_strict:.4f}; "
-                f"wu_native_claim_holds={'True' if tost_p >= 0.95 else 'False'}"
+                f"bootstrap_fraction_below_0.976={tost_p:.4f}; bootstrap_fraction_below_0.95={tost_p_strict:.4f}; "
+                f"wu_native_claim_holds={'True' if np.quantile(boots, 0.05) > 0.976 else 'False'}"
             ),
         })
 

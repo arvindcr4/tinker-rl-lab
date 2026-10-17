@@ -202,13 +202,13 @@ def tost_pvalue(diff: float, ci_low: float, ci_high: float, eps: float) -> float
     Returns a 2-sided p-value approximation: max(2 * Phi(-|diff|/se), cap).
     For TOST, p = max(p_lower, p_upper) where p_lower = P(observed diff < -eps)
     and p_upper = P(observed diff > eps). With a 95% CI [lo, hi] and eps:
-        p_lower = P(diff < -eps) ~ 1 - Phi((-eps - diff)/se)
+        p_lower = P(diff < -eps) ~ Phi((-eps - diff)/se)
         p_upper = P(diff > eps) ~ Phi((diff - eps)/se)
     If both < 0.05, claim equivalence.
     """
     se = max((ci_high - ci_low) / (2 * 1.96), 1e-6)
     norm_cdf = NormalDist().cdf
-    p_lower = 1 - norm_cdf((-eps - diff) / se)
+    p_lower = norm_cdf((-eps - diff) / se)
     p_upper = norm_cdf((diff - eps) / se)
     return max(p_lower, p_upper)
 

@@ -118,7 +118,7 @@ def t_critical_exponential(R_inf: float, Tau: float) -> float:
     """Solve R_inf + (1-R_inf)*exp(-T/Tau) = 0.976 for T."""
     target = WU_THRESHOLD
     if R_inf >= target:
-        return 0.0  # already below at T=0
+        return float("inf")  # asymptote never falls below threshold
     delta = (target - R_inf) / (1.0 - R_inf)
     if delta >= 1.0:
         return 0.0

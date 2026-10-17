@@ -89,7 +89,7 @@ def panel_c(ax, tost_rows: list[dict]) -> None:
         # TOST p = max(p_lower, p_upper)
         p_tost = []
         for eps in eps_levels:
-            p_lower = 1 - norm_cdf((-eps - diff) / se)
+            p_lower = norm_cdf((-eps - diff) / se)
             p_upper = norm_cdf((diff - eps) / se)
             p_tost.append(max(p_lower, p_upper))
         ax.plot(eps_levels, p_tost,

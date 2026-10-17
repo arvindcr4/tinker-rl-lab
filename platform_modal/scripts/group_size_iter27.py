@@ -110,17 +110,22 @@ def per_g_master(sweep: dict) -> pd.DataFrame:
         mean_reward = float(np.mean(per_seed_mean))
         last10 = float(np.mean(per_seed_last10))
         last10_se = float(np.std(per_seed_last10, ddof=1) / math.sqrt(len(per_seed_last10)))
-        retention_vs_g2 = last10 / ref_mean
-        # bootstrap CI on retention_vs_g2
+        # Ratio is small-group/reference-large-group training reward, paired by seed.
+        ref_by_seed = {r["seed"]: r for r in ref_runs}
+        by_seed = {r["seed"]: r for r in runs}
+        if len(ref_by_seed) != len(ref_runs) or len(by_seed) != len(runs):
+            raise ValueError("duplicate seed within group")
+        shared = sorted(ref_by_seed.keys() & by_seed.keys())
+        if not shared:
+            raise ValueError("no shared seed identities")
+        numerator = np.array([np.mean([s["mean_reward"] for s in ref_by_seed[k]["step_log"][-10:]]) for k in shared])
+        denominator = np.array([np.mean([s["mean_reward"] for s in by_seed[k]["step_log"][-10:]]) for k in shared])
+        if np.any(denominator <= 0):
+            raise ValueError("retention denominator must be positive")
+        retention_vs_g2 = float(numerator.mean() / denominator.mean())
         rng = np.random.default_rng(20260702)
-        B = 5000
-        boot = np.empty(B)
-        n = len(ref_last10)
-        m = len(per_seed_last10)
-        for b in range(B):
-            ir = rng.integers(0, n, n)
-            im = rng.integers(0, m, m)
-            boot[b] = float(np.mean(per_seed_last10[im])) / float(np.mean(ref_last10[ir]))
+        indices = rng.integers(0, len(shared), (5000, len(shared)))
+        boot = numerator[indices].mean(axis=1) / denominator[indices].mean(axis=1)
         ci_lo, ci_hi = float(np.quantile(boot, 0.025)), float(np.quantile(boot, 0.975))
         rows.append({
             "G": g,
@@ -129,6 +134,9 @@ def per_g_master(sweep: dict) -> pd.DataFrame:
             "last10_mean_reward": last10,
             "last10_se": last10_se,
             "retention_vs_G2": retention_vs_g2,
+            "numerator_G": 2, "denominator_G": g,
+            "metric": "last10_mean_training_reward",
+            "analysis_version": "review23-v2",
             "retention_ci_low": ci_lo,
             "retention_ci_high": ci_hi,
             "above_wu_97_6pct": retention_vs_g2 >= WU_RETENTION,

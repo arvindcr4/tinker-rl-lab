@@ -333,7 +333,7 @@ def generate_report(check_results: List[Dict], output_path: str) -> None:
     check_results : list of result dicts from each check function
     output_path   : file path for the JSON report
     """
-    overall_pass = all(r.get("flag") in ("PASS", "SKIP") for r in check_results)
+    overall_pass = bool(check_results) and all(r.get("flag") == "PASS" for r in check_results)
 
     report = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -398,7 +398,12 @@ def main():
         "--seeds", type=int, nargs="+", default=[0, 1, 2, 42, 123],
         help="Seeds to use for arithmetic contamination and seed-independence checks"
     )
+    parser.add_argument("--train-texts", help="Actual training texts JSON list")
+    parser.add_argument("--test-texts", help="Actual held-out texts JSON list")
+    parser.add_argument("--demo", action="store_true", help="Synthetic demonstration, never a contamination certification")
     args = parser.parse_args()
+    if not args.demo and not (args.train_texts and args.test_texts):
+        parser.error("provide actual --train-texts and --test-texts, or explicitly select --demo")
 
     all_results = []
 
@@ -412,10 +417,14 @@ def main():
 
     # ------------------------------------------------------------------
     print("\n[2/5] Checking GSM8K n-gram overlap (synthetic demo)...")
-    rng_train = np.random.default_rng(0)
-    rng_test  = np.random.default_rng(999)
-    train_texts = _generate_synthetic_gsm8k(1000, rng_train)
-    test_texts  = _generate_synthetic_gsm8k(200,  rng_test)
+    if args.demo:
+        train_texts = _generate_synthetic_gsm8k(1000, np.random.default_rng(0))
+        test_texts = _generate_synthetic_gsm8k(200, np.random.default_rng(999))
+    else:
+        with open(args.train_texts) as f: train_texts = json.load(f)
+        with open(args.test_texts) as f: test_texts = json.load(f)
+        if any(not isinstance(x, list) or not x or not all(isinstance(v, str) and v.strip() for v in x) for x in (train_texts, test_texts)):
+            parser.error("text inputs must be nonempty JSON lists of nonempty strings")
 
     for n in (8, 13):
         r2 = check_ngram_overlap(train_texts, test_texts, n=n)
@@ -425,14 +434,7 @@ def main():
     # ------------------------------------------------------------------
     print("\n[3/5] Checking exact duplicates...")
     # For arithmetic: generate string representations of problems
-    train_problems = [f"{a}+{b}" for a, b in zip(
-        np.random.default_rng(0).integers(1, 100, 1000),
-        np.random.default_rng(1).integers(1, 100, 1000),
-    )]
-    test_problems = [f"{a}+{b}" for a, b in zip(
-        np.random.default_rng(99).integers(1, 100, 200),
-        np.random.default_rng(100).integers(1, 100, 200),
-    )]
+    train_problems, test_problems = train_texts, test_texts
     r3 = check_exact_duplicates(train_problems, test_problems)
     all_results.append(r3)
     print(f"  Exact cross-split duplicates: {r3['duplicate_count']}  Flag: {r3['flag']}")
@@ -453,12 +455,15 @@ def main():
         print(f"  Files checked: {r5['files_checked']}  Tampered: {len(r5['tampered_files'])}  Flag: {r5['flag']}")
 
     # ------------------------------------------------------------------
+    if args.demo:
+        all_results.append({"flag": "SKIP", "reason": "synthetic demonstration is not evidence"})
     generate_report(all_results, args.output)
 
-    overall = "PASS" if all(r.get("flag") in ("PASS", "SKIP") for r in all_results) else "FAIL"
+    overall = "PASS" if all(r.get("flag") == "PASS" for r in all_results) else "FAIL"
     print(f"\n{'='*50}")
     print(f"  OVERALL CONTAMINATION CHECK: {overall}")
     print(f"{'='*50}\n")
+    raise SystemExit(0 if overall == "PASS" else 1)
 
 
 if __name__ == "__main__":

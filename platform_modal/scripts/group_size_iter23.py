@@ -311,10 +311,12 @@ def anti_herding_simulation() -> pd.DataFrame:
         delta_div_needed = max(0.0, delta_div_needed)
         denom = max(zvf_g4_baseline, 1e-9)
         gain_pct = 100.0 * (zvf_g4_baseline - zvf_g32) / denom
-        if delta_div_needed <= 0.23:
-            feasible = "feasible (no decoder hack)"
+        if zvf_g32 < max(0.0, 4*p - 3, 1 - 4*p):
+            feasible = "unattainable_at_fixed_marginal_p"
+        elif delta_div_needed <= 0.23:
+            feasible = "mathematically_not_excluded; decoder_unvalidated"
         elif delta_div_needed <= 0.45:
-            feasible = "stretch (decoding penalty)"
+            feasible = "mathematically_not_excluded; decoder_unvalidated"
         else:
             feasible = "infeasible (static G wins)"
         rows.append({
@@ -495,7 +497,7 @@ def main():
                            color="#16a085", alpha=0.18, label="feasible (no static G↑)")
         ax[3].fill_between(anti.p_eff, 0, anti.delta_div_needed_total,
                            where=anti.feasible_alpha.str.startswith("stretch"),
-                           color="#e67e22", alpha=0.18, label="stretch (decoding penalty)")
+                           color="#e67e22", alpha=0.18, label="mathematically_not_excluded; decoder_unvalidated")
         ax[3].set_xlabel(r"$p_{eff}$ (effective prompt success probability)")
         ax[3].set_ylabel(r"$\delta_{div}$ amplification needed (total)")
         ax[3].set_title("(d)  Anti-herding injection: how much diversity at G=4?")

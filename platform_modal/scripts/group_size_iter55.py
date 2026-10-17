@@ -209,7 +209,7 @@ def isoyield_pred(rows, eff, zvf_raw):
                 de = de_map[G]
             else:
                 # Extrapolate d_eff from p + delta_div
-                zvf_pred = p**G + (1 - p) ** G - delta_div_mean
+                zvf_pred = p**G + (1 - p) ** G + delta_div_mean
                 zvf_pred = max(0.0, min(1.0, zvf_pred))
                 de = G * (1.0 - zvf_pred)
             steps = per_token_opt_steps(G, T)
@@ -301,7 +301,7 @@ def wu_retention_stepaware(rows, zvf, eff):
         for r in zvf:
             if r["G"] == G:
                 return G * (1.0 - r["mean_zvf"])
-        zvf_pred = p**G + (1 - p) ** G - delta_div_mean
+        zvf_pred = p**G + (1 - p) ** G + delta_div_mean
         zvf_pred = max(0.0, min(1.0, zvf_pred))
         return G * (1.0 - zvf_pred)
 
@@ -317,7 +317,7 @@ def wu_retention_stepaware(rows, zvf, eff):
         g4 = next(r for r in rows if r["T"] == T and r["G"] == 4)
         g32 = next(r for r in rows if r["T"] == T and r["G"] == 32)
         R = g4["acc"] / g32["acc"] if g32["acc"] > 0 else float("nan")
-        pairs.append((T, math.log10(T), math.log(R)))
+        pairs.append((T, math.log(T), math.log(R)))
 
     # Calibration fit on T={1M, 4M}; OLS on the 2-point line gives gamma and c.
     cal = [p for p in pairs if p[0] in (budgets[0], budgets[1])]
@@ -332,7 +332,7 @@ def wu_retention_stepaware(rows, zvf, eff):
     else:
         gamma_cal, logc_cal = float("nan"), float("nan")
     # alpha from c = (de_ratio)^alpha → alpha = log(c) / log(de_ratio)
-    c_cal = 10**logc_cal if not math.isnan(logc_cal) else float("nan")
+    c_cal = math.exp(logc_cal) if not math.isnan(logc_cal) else float("nan")
     alpha_cal = math.log(c_cal) / math.log(de_ratio) if (de_ratio > 0 and de_ratio != 1 and c_cal > 0) else float("nan")
 
     # Also fit free OLS on all 4 points (for comparison)
@@ -343,7 +343,7 @@ def wu_retention_stepaware(rows, zvf, eff):
     sxx, sxy = (x_all * x_all).sum(), (x_all * y_all).sum()
     gamma_all = (n_all * sxy - sx * sy) / (n_all * sxx - sx * sx + 1e-12)
     logc_all = (sy - gamma_all * sx) / n_all
-    c_all = 10**logc_all
+    c_all = math.exp(logc_all)
     alpha_all = math.log(c_all) / math.log(de_ratio) if (de_ratio > 0 and de_ratio != 1 and c_all > 0) else float("nan")
     # R^2 of the free fit
     yhat_all = gamma_all * x_all + logc_all
@@ -356,8 +356,8 @@ def wu_retention_stepaware(rows, zvf, eff):
         g32 = next(r for r in rows if r["T"] == T and r["G"] == 32)
         R_emp = g4["acc"] / g32["acc"] if g32["acc"] > 0 else float("nan")
         # Predicted at this T using calibration (T={1M,4M} only) free model
-        R_pred_cal = 10 ** (gamma_cal * math.log10(T) + logc_cal)
-        R_pred_all = 10 ** (gamma_all * math.log10(T) + logc_all)
+        R_pred_cal = math.exp(gamma_cal * math.log(T) + logc_cal)
+        R_pred_all = math.exp(gamma_all * math.log(T) + logc_all)
         is_cal = T in (budgets[0], budgets[1])
         out.append(
             {
@@ -399,7 +399,7 @@ def wu_retention_model(rows, zvf, eff):
         for r in zvf:
             if r["G"] == G:
                 return G * (1.0 - r["mean_zvf"])
-        zvf_pred = p**G + (1 - p) ** G - delta_div_mean
+        zvf_pred = p**G + (1 - p) ** G + delta_div_mean
         zvf_pred = max(0.0, min(1.0, zvf_pred))
         return G * (1.0 - zvf_pred)
 

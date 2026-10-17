@@ -56,7 +56,7 @@ from _p8_common import (  # noqa: E402
     paired_bootstrap_ci,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 
 
@@ -101,11 +101,11 @@ def make_subsample(Xte, yte, target_rate, rng):
 
 
 def cost_curve(s, y, c):
-    th = np.linspace(0.0, 1.0, N_TH + 1)[1:]
+    th = np.r_[np.inf, np.unique(s)[::-1]]
     n_pos = int((y == 1).sum())
     n_neg = int((y == 0).sum())
     N = n_pos + n_neg
-    costs = np.empty(N_TH)
+    costs = np.empty(len(th))
     for i, t in enumerate(th):
         flagged = (s >= t).astype(np.int32)
         tp = int(((flagged == 1) & (y == 1)).sum())

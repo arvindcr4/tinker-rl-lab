@@ -29,10 +29,10 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 TRAIN = ROOT / "fraud_data.csv"
 TEST = ROOT / "test_data.csv"
-OUT = ROOT / "experiments" / "results" / "p5p8"
+OUT = ROOT / "experiments" / "results" / "p5p8/corrected-review21-v2"
 FIG = OUT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -60,33 +60,12 @@ def fit_tree(X_tr, y_tr):
 
 
 def optimal_cut(score, y, C_inv, L):
-    """argmin over all rank cutoffs of C_inv*alerts + L*missed."""
-    N = len(y)
-    P = int(y.sum())
-    order = np.argsort(-score, kind="mergesort")
-    ys = y[order]
-    ss = score[order]
-    cum_tp = np.concatenate([[0], np.cumsum(ys)])
-    k = np.arange(N + 1)
-    alerts = k
-    tp = cum_tp
-    fn = P - tp
-    det_cost = C_inv * alerts + L * fn
-    kstar = int(np.argmin(det_cost))
-    if kstar == 0:
-        tau = float(ss[0]) + 1e-9
-    elif kstar >= N:
-        tau = float(ss[-1])
-    else:
-        tau = float(ss[kstar - 1])
-    tp_star = int(tp[kstar])
-    alert_pct = kstar / N
-    recall = tp_star / max(P, 1)
-    return {
-        "tau": tau, "kstar": kstar, "tp": tp_star, "fn": int(fn[kstar]),
-        "alert_pct": float(alert_pct), "recall": float(recall),
-        "cost_per_dec": float(det_cost[kstar] / N),
-    }
+    from _review_policy import optimal_threshold
+    r = optimal_threshold(score, y, C_inv, L)
+    r["det_cost_per_dec"] = r["cost_per_dec"]
+    r["alert_pct"] = 100 * r["alert_rate"]
+    return r
+
 
 
 def add_noise(df, cols, sigma, seed):

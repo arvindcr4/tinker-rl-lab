@@ -76,7 +76,7 @@ from _p8_common import (  # noqa: E402
     ALL24,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 FIG = RES / "figures"
 RES.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -101,22 +101,11 @@ def load(path: Path):
 
 
 def auc_roc(scores, labels):
-    pos = [s for s, y in zip(scores, labels) if y == 1]
-    neg = [s for s, y in zip(scores, labels) if y == 0]
-    if not pos or not neg:
+    from sklearn.metrics import roc_auc_score
+    if len(set(labels)) < 2:
         return float("nan")
-    n_pos, n_neg = len(pos), len(neg)
-    # Mann-Whitney U / (n_pos * n_neg)
-    pos_sorted = sorted(pos)
-    neg_sorted = sorted(neg)
-    # Count pairs (n_p, n_g) where n_p > n_g
-    inv = 0
-    j = 0
-    for p in pos_sorted:
-        while j < n_neg and neg_sorted[j] < p:
-            j += 1
-        inv += j
-    return inv / (n_pos * n_neg)
+    return float(roc_auc_score(labels, scores))
+
 
 
 def brier(scores, labels):

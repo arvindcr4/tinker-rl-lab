@@ -52,7 +52,7 @@ from _p8_common import (  # noqa: E402
     load,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 TRAIN = ROOT / "train_data.csv"
 TEST = ROOT / "test_data.csv"
@@ -134,17 +134,10 @@ def p_at_top_k(scores, y, k_pct):
 
 
 def pr_auc_at_mask(scores, y, k_pct):
-    """PR-AUC computed only over test rows actually used (downsampled)."""
-    # Standard PR-AUC via (precision, recall) interpolation over all rows
-    order = np.argsort(-scores)
-    y_sorted = y[order]
-    tp_cum = np.cumsum(y_sorted == 1)
-    pos_total = max(1, int(y.sum()))
-    precision = tp_cum / np.arange(1, len(y) + 1)
-    recall = tp_cum / pos_total
-    # trapezoidal
-    d_recall = np.diff(np.r_[0.0, recall])
-    return float((precision * d_recall).sum())
+    """Average precision (not trapezoidal PR-AUC), tie and permutation invariant."""
+    from sklearn.metrics import average_precision_score
+    return float(average_precision_score(y, scores)) if sum(y) else float("nan")
+
 
 
 def main():

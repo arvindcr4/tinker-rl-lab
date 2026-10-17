@@ -30,7 +30,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 
 RAW20 = [f"V{i}" for i in range(1, 21)]
@@ -51,15 +51,11 @@ def load(path):
 
 
 def auc_roc(scores, labels):
-    pos = sorted(s for s, y in zip(scores, labels) if y == 1)
-    neg = sorted(s for s, y in zip(scores, labels) if y == 0)
-    n_p, n_n = len(pos), len(neg)
-    j, inv = 0, 0
-    for p in pos:
-        while j < n_n and neg[j] < p:
-            j += 1
-        inv += j
-    return inv / (n_p * n_n)
+    from sklearn.metrics import roc_auc_score
+    if len(set(labels)) < 2:
+        return float("nan")
+    return float(roc_auc_score(labels, scores))
+
 
 
 def recall_at_k(scores, labels, k_pct):

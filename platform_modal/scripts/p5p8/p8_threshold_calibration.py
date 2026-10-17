@@ -33,10 +33,10 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 TRAIN = ROOT / "fraud_data.csv"
 TEST = ROOT / "test_data.csv"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8/corrected-review21-v2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 V20 = [f"V{i}" for i in range(1, 21)]

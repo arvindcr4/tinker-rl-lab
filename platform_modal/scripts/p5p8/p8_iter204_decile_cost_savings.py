@@ -62,7 +62,7 @@ from _p8_common import (  # noqa: E402
     paired_bootstrap_ci,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 
 
@@ -104,7 +104,7 @@ def min_cost_on_mask(s, y, mask, c):
     n_total = n_pos + n_neg
     if n_total == 0:
         return np.nan, np.nan
-    th = np.linspace(0.0, 1.0, N_TH + 1)[1:]
+    th = np.r_[np.inf, np.unique(s_sub)[::-1]]
     best_cost = float("inf")
     best_th = float("nan")
     for t in th:

@@ -33,7 +33,7 @@ from _p8_common import (  # noqa: E402
     load,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 
 # 3 downsample seeds. XGB random_state is fixed (matches iter-148).
@@ -71,7 +71,7 @@ def downsample_positives_iter148(X, y, rate_pct, seed):
     using default_rng(seed)."""
     rng = np.random.default_rng(seed)
     n_te = len(y)
-    n_target_pos = max(1, int(round(n_te * rate_pct / 100.0)))
+    n_target_pos = max(0, int(round((y == 0).sum() * (rate_pct / 100.0) / (1 - rate_pct / 100.0))))
     pos_idx = np.where(y == 1)[0]
     neg_idx = np.where(y == 0)[0]
     if len(pos_idx) < n_target_pos:
@@ -137,7 +137,7 @@ def main():
     for seed in DOWNSAMPLE_SEEDS:
         for rate_pct in RATES_PCT:
             # Downsample the TEST set (not train) per iter-148 protocol.
-            Xte, yte = downsample_positives(Xte_full, yte_full, rate_pct, seed)
+            Xte, yte = downsample_positives_iter148(Xte_full, yte_full, rate_pct, seed)
             for fset_name, feats in FEATURE_SETS.items():
                 scores = fit_predict(Xtr, ytr, Xte, feats, XGB_RANDOM_STATE)
                 k = max(1, int(round(K_PCT / 100.0 * len(Xte))))

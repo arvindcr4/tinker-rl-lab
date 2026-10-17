@@ -55,7 +55,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 FIG = RES / "figures"
 RES.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -127,7 +127,7 @@ def add_noise(X_te: np.ndarray, agg_idx: list[int], sigma_mult: float, sd_per: n
     if sigma_mult == 0.0:
         return out
     for j, col in enumerate(agg_idx):
-        out[:, col] = X_te[:, col] + rng.gauss(0.0, sigma_mult * sd_per[j])
+        out[:, col] = X_te[:, col] + np.array([rng.gauss(0.0, sigma_mult * sd_per[j]) for _ in range(len(X_te))])
     return out
 
 

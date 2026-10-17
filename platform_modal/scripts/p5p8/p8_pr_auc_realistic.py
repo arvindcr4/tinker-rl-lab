@@ -43,10 +43,10 @@ import pandas as pd
 import xgboost as xgb
 from sklearn.metrics import average_precision_score, precision_recall_curve
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 TRAIN = ROOT / "fraud_data.csv"
 TEST = ROOT / "test_data.csv"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8/corrected-review21-v2"
 RANDOM_SEED = 42
 BOOT_SEED = 2026
 N_BOOT = 400

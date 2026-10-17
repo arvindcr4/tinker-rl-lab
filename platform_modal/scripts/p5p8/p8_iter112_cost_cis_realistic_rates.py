@@ -40,7 +40,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 SEED = 20260705
 N_BOOT = 1000
@@ -72,10 +72,11 @@ def downsample_pos(y, target, rng):
     Negatives are kept whole. Returns (mask, idx_kept)."""
     pos = np.flatnonzero(y == 1)
     neg = np.flatnonzero(y == 0)
-    n_target_pos = max(1, int(round(target * (len(pos) + len(neg)))))
+    n_target_pos = max(0, int(round(target * len(neg) / (1 - target))))
     n_pos = min(len(pos), n_target_pos)
     sel_pos = rng.choice(pos, size=n_pos, replace=False) if n_pos < len(pos) else pos
-    return np.concatenate([sel_pos, neg]), np.arange(len(y))
+    kept = np.concatenate([sel_pos, neg])
+    return kept, kept.copy()
 
 
 def fit_xgb(X_tr, y_tr, X_te, seed):
@@ -91,14 +92,18 @@ def fit_xgb(X_tr, y_tr, X_te, seed):
 def rule_costs(scores, y_true, n_pos_caught, n_llm_calls):
     """Return ($/dec, $/caught) for this rule on this positive set."""
     n = len(y_true)
-    cpd = (n * COST_XGB + n_llm_calls * (COST_LLM - COST_XGB)) / n
-    cpf = (n * COST_XGB + n_llm_calls * (COST_LLM - COST_XGB)) / max(1, n_pos_caught)
+    cpd = (n * COST_XGB + n_llm_calls * COST_LLM) / n
+    cpf = (n * COST_XGB + n_llm_calls * COST_LLM) / n_pos_caught if n_pos_caught else float("inf")
     return cpd, cpf
 
 
-def apply_rules(scores, y, K_pct):
+def apply_rules(scores, y, K_pct, second_stage_scores=None):
     """Apply xgb-only / gradient-band / absolute-band (mirrors iter-108 logic).
     Returns dict rule -> tuple (n_llm, pos_at_K, cpd, cpf)."""
+    if second_stage_scores is None:
+        raise ValueError("second_stage_scores required; unchanged-score overhead is not a hybrid outcome")
+    if len(second_stage_scores) != len(scores):
+        raise ValueError("second-stage scores must align by row")
     n = len(y)
     K = max(1, int(round(K_pct / 100 * n)))
     # xgb-only
@@ -114,17 +119,17 @@ def apply_rules(scores, y, K_pct):
     top_k[order[:K]] = True
     invoke_g = plateaus & top_k
     n_grad = int(invoke_g.sum())
-    pos_at_K_g = _pos_at_K(scores, y, K)
+    pos_at_K_g = _pos_at_K(np.where(invoke_g, second_stage_scores, scores), y, K)
     cpd_g, cpf_g = rule_costs(scores, y, pos_at_K_g, n_grad)
     # absolute-band
     band = (scores >= 0.5 - W_ABS / 2) & (scores <= 0.5 + W_ABS / 2)
     n_abs = int(band.sum())
-    pos_at_K_a = _pos_at_K(scores, y, K)
-    cpd_a, cpf_a = rule_costs(scores, y, pos_at_K_a, min(n_abs, K))
+    pos_at_K_a = _pos_at_K(np.where(band, second_stage_scores, scores), y, K)
+    cpd_a, cpf_a = rule_costs(scores, y, pos_at_K_a, n_abs)
     return {
-        "xgb_only": (0, pos_at_K_g, cpd_x, cpf_x),
+        "xgb_only": (0, _pos_at_K(scores, y, K), cpd_x, cpf_x),
         "gradient_band": (n_grad, pos_at_K_g, cpd_g, cpf_g),
-        "absolute_band": (min(n_abs, K), pos_at_K_a, cpd_a, cpf_a),
+        "absolute_band": (n_abs, pos_at_K_a, cpd_a, cpf_a),
     }
 
 
@@ -133,12 +138,12 @@ def _pos_at_K(scores, y, K):
     return int(np.sum(y[order[:K]] == 1))
 
 
-def paired_boot_ci(y, scores, rules, n_boot, seed):
+def paired_boot_ci(y, scores, rules, n_boot, seed, second_stage_scores=None):
     """For each pair of rules, paired-row bootstrap on $/dec and $/caught.
     Returns dict (pair -> cpd_delta [ci_lo, ci_hi, excl_zero], cpf_delta ...)."""
     n = len(y)
     rng = np.random.default_rng(seed)
-    base = apply_rules(scores, y, K_PCT)
+    base = apply_rules(scores, y, K_PCT, second_stage_scores)
     pairs = [
         ("gradient_band", "absolute_band"),
         ("gradient_band", "xgb_only"),
@@ -147,7 +152,7 @@ def paired_boot_ci(y, scores, rules, n_boot, seed):
     diffs = {p: {"cpd": [], "cpf": []} for p in pairs}
     for b in range(n_boot):
         idx = rng.integers(0, n, size=n)
-        rb = apply_rules(scores[idx], y[idx], K_PCT)
+        rb = apply_rules(scores[idx], y[idx], K_PCT, second_stage_scores[idx])
         for p in pairs:
             for metric in ("cpd", "cpf"):
                 diffs[p][metric].append(rb[p[0]][2 + (metric == "cpf")]
@@ -198,7 +203,7 @@ def main():
         for tree_name, scores in (("XGB-20raw", p20[mask]),
                                    ("XGB-24full", p24[mask]),
                                    ("XGB-4sensor", p4[mask])):
-            pair_ci, base = paired_boot_ci(y_d, scores, None, N_BOOT, SEED + int(tgt * 1e7))
+            pair_ci, base = paired_boot_ci(y_d, scores, None, N_BOOT, SEED + int(tgt * 1e7), p24[mask])
             for p, ci in pair_ci.items():
                 cpd_excl = ci["cpd_excl_zero"]
                 cpf_excl = ci["cpf_excl_zero"]
@@ -262,7 +267,8 @@ def main():
                             ci_lo=r["cpf_ci_lo"], ci_hi=r["cpf_ci_hi"],
                             excl_zero=r["cpf_excl_zero"]))
     summary = {
-        "iter": 112,
+        "iter": 112, "protocol_version": "review21-v2",
+        "second_stage_kind": "XGB-24full feature proxy; not measured LLM outputs",
         "n_train": int(len(ytr)),
         "n_test": int(len(yte)),
         "rates": RATES,

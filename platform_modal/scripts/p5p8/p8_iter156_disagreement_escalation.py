@@ -64,7 +64,7 @@ from _p8_common import (  # noqa: E402
     downsample_positives,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 SEEDS = [20260706, 20260708, 20260710, 20260712, 20260714]
 N_BOOT = 1000
@@ -143,22 +143,14 @@ def cell_counters(scores, v_mean, y):
 
 
 def bootstrap_escalation(n_lift, n_waste, n_test, n_boot=N_BOOT, seed=20260706):
+    """Conditional fired-set binomial bootstrap; not population routing uncertainty."""
+    total = n_lift + n_waste
+    if total <= 0:
+        return float("nan"), float("nan"), float("nan")
     rng = np.random.default_rng(seed)
-    precs = np.empty(n_boot)
-    for bi in range(n_boot):
-        idx = rng.integers(0, n_test, n_test)
-        # per-row labels: synthesise proportion matching n_lift/n_waste
-        n_pos_s = rng.binomial(n_test, (n_lift + 0.01) / max(1, n_test))
-        n_neg_s = n_test - n_pos_s
-        n_pos_lift = int(round(n_pos_s * n_lift / max(1, n_lift + n_waste)))
-        n_pos_waste = n_pos_s - n_pos_lift
-        # among n_lift + n_waste LLM-only fires
-        total = n_lift + n_waste
-        if total > 0:
-            precs[bi] = n_pos_lift / total
-        else:
-            precs[bi] = 0.0
-    return float(np.mean(precs)), float(np.percentile(precs, 2.5)), float(np.percentile(precs, 97.5))
+    samples = rng.binomial(total, n_lift / total, size=n_boot) / total
+    return n_lift / total, float(np.quantile(samples, .025)), float(np.quantile(samples, .975))
+
 
 
 def main():
@@ -206,11 +198,11 @@ def main():
                 value_rate = n_lift / max(1, c["n_xgb_missed_pos"])
                 esc_prec = n_lift / max(1, n_lift + n_waste)
                 # escalation_cost_per_lift = total LLM cost on disagreement set / n_lift
-                esc_cost = (n_lift + n_waste) * cost_llm / max(1, n_lift)
+                esc_cost = (n_lift + n_waste) * cost_llm / n_lift if n_lift else float("inf")
                 # escalation_value = n_lift * value_per_catch
                 esc_value = n_lift * VALUE_PER_CATCH
                 # breakeven: cost <= value iff cost_per_lift <= value_per_catch
-                breakeven = esc_cost <= VALUE_PER_CATCH
+                breakeven = n_lift > 0 and n_lift * VALUE_PER_CATCH >= (n_lift + n_waste) * cost_llm
                 # bootstrap CI on esc_prec
                 prec_mean, prec_lo, prec_hi = bootstrap_escalation(
                     n_lift, n_waste, d["n_test"], N_BOOT, seed)

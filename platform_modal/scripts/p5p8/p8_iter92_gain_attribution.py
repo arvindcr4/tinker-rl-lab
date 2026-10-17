@@ -199,7 +199,7 @@ def main():
             if d is not None:
                 diffs.append(d)
         if diffs:
-            _, ci_lo, ci_hi = bootstrap_ci(diffs, seed=SEED + k)
+            ci_lo, ci_hi = np.quantile(diffs, [.025, .975])
         else:
             ci_lo, ci_hi = 0.0, 0.0
         curve_rows.append(
@@ -350,17 +350,17 @@ def main():
     fig, axes = plt.subplots(1, 2, figsize=(13, 5))
     ax = axes[0]
     ks = [r["k"] for r in curve_rows]
-    aucs = [r["auc_topk"] for r in curve_rows]
-    ci_lo = [r["auc_topk"] + r["ci_lo"] for r in curve_rows]
-    ci_hi = [r["auc_topk"] + r["ci_hi"] for r in curve_rows]
-    ax.plot(ks, aucs, "o-", color="C0", label="Top-k AUC")
+    aucs = [r["delta_auc_vs_full"] for r in curve_rows]
+    ci_lo = [r["ci_lo"] for r in curve_rows]
+    ci_hi = [r["ci_hi"] for r in curve_rows]
+    ax.plot(ks, aucs, "o-", color="C0", label="Top-k minus full AUC")
     ax.fill_between(ks, ci_lo, ci_hi, color="C0", alpha=0.2, label="95% bootstrap CI")
-    ax.axhline(auc_full, color="k", linestyle="--", label=f"XGB-24full AUC = {auc_full:.4f}")
-    ax.axhline(auc_full - 0.001, color="gray", linestyle=":", label="−0.001 reference")
+    ax.axhline(0, color="k", linestyle="--", label="Full model reference")
+    ax.axhline(-0.001, color="gray", linestyle=":", label="−0.001 reference")
     if knee_k is not None:
         ax.axvline(knee_k, color="red", linestyle="--", label=f"knee k={knee_k}")
     ax.set_xlabel("k (number of top-gain features)")
-    ax.set_ylabel("Held-out AUC")
+    ax.set_ylabel("AUC difference versus full")
     ax.set_title("Cumulative-gain curve (XGB-24full)")
     ax.set_xticks(ks)
     ax.legend(loc="lower right")

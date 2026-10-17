@@ -49,7 +49,7 @@ from _p8_common import (  # noqa: E402
     paired_bootstrap_ci,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 
 FEATURE_SETS = {"20raw": RAW20, "24full": ALL24, "4sensor": AGG4}
@@ -79,20 +79,11 @@ def ece(prob, y, n_bins=10):
 
 
 def auc_quick(s, y):
-    """Mann-Whitney U statistic as AUC.  Vectorised O(n log n)."""
-    pos = s[y == 1]
-    neg = s[y == 0]
-    n_pos, n_neg = len(pos), len(neg)
-    if n_pos == 0 or n_neg == 0:
+    from sklearn.metrics import roc_auc_score
+    if len(set(y)) < 2:
         return float("nan")
-    # combined rank
-    comb = np.concatenate([pos, neg])
-    order = np.argsort(comb, kind="mergesort")
-    ranks = np.empty_like(order, dtype=np.float64)
-    ranks[order] = np.arange(1, len(comb) + 1)
-    sum_ranks_pos = float(ranks[:n_pos].sum())
-    auc = (sum_ranks_pos - n_pos * (n_pos + 1) / 2.0) / (n_pos * n_neg)
-    return float(auc)
+    return float(roc_auc_score(y, s))
+
 
 
 def main():

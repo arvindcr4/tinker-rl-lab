@@ -57,4 +57,3 @@ def canonical_bytes(record):
     _validate_json(record)
     return json.dumps(record, sort_keys=True, separators=(",", ":"),
                       ensure_ascii=True, allow_nan=False).encode("ascii")
-

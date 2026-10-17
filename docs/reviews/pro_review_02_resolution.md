@@ -48,7 +48,7 @@ agent calls, live W&B retrieval, or stored-results changes were performed.
 - Combined targeted run: **205 passed**, with three expected constant-input/numerical-precision warnings; no failures
 - Existing assertions that required fabricated empty/singleton certainty were updated to the corrected, explicit insufficient-data contract
 - Python compilation and Ruff undefined-name/syntax checks cover every changed Python file
-- StateFlow's coordinated review01 suite covers `[0.8] + [1.0] * 39`, censored events, and absent heldout checkpoint evidence; review01 commit `46d16feca75df1b9d128a0111854d408b966db0a` is integrated separately by the parent
+- StateFlow's coordinated review01 suite covers `[0.8] + [1.0] * 39`, censored events, and absent heldout checkpoint evidence; review01 commit `46d16feca75df1b9d128a0111854d408b966db0a` is included in this combined branch
 - Full repository integration tests and cherry-pick conflict resolution belong to the combined review branch; this worktree does not claim an all-repository pass
 
 ## Limitations

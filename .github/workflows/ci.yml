@@ -67,7 +67,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install uv==0.10.11
-          timeout 15m uv sync --locked --extra dev --python python
+          # cleanrl currently adds only the locked TensorBoard dependency.
+          # Exercise real native event-file parsing instead of skipping it.
+          timeout 15m uv sync --locked --extra dev --extra cleanrl --python python
       - name: Type check (mypy)
         run: timeout 5m make typecheck
       - name: uv.lock and requirements-lock.txt are fresh

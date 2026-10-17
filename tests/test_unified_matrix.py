@@ -1,14 +1,14 @@
 """Verification gate for the framework × backend experiment run-code matrix.
 
 Real GPU/Modal/GCP runs are not feasible in CI, so this test gates on what is:
-every (framework, backend) cell resolves to a non-stub ``LaunchPlan`` whose driver
-file exists in the repo, the manifest matches the live backend code, **every cell
-actually dispatches its named framework** (no silent framework swaps), the colab
-path runs in-process (no entry-point recursion), and every cell resolves
-end-to-end through the CLI ``--dry-run``.
+every (framework, backend) cell resolves to a named ``LaunchPlan`` whose driver
+file exists in the repo, the manifest matches the live backend code, every plan
+references its named framework, the Colab dispatch has no entry-point recursion,
+and every cell resolves through the CLI ``--dry-run``. These routing checks do
+not prove canonical configuration fidelity or runnable/completed training; the
+unsupported local/Colab Tinker and SkyRL execution routes fail closed.
 
-This is the concrete check that "all frameworks × all backends have experiment run
-code" (slide 06, Infrastructure).
+The matrix is a plan inventory, not a scientific-equivalence or execution receipt.
 """
 
 from __future__ import annotations
@@ -73,8 +73,8 @@ def test_manifest_matches_live_backends(spec, registry):
             assert cell["driver_file"] == plan.driver_file, f"{be}/{fw} driver drift"
 
 
-def test_each_framework_has_local_run_code(registry):
-    """Every framework has a local in-process path (the _run_* methods are filled)."""
+def test_each_framework_has_local_plan(registry):
+    """Every framework has a named local plan, including unavailable executors."""
     from platform_local.unified.launcher import UnifiedLauncher
 
     launcher = UnifiedLauncher()
@@ -82,8 +82,7 @@ def test_each_framework_has_local_run_code(registry):
     launcher.spec = load_spec()
     for fw in FRAMEWORKS:
         launcher.framework = fw
-        # dispatch_framework must not raise NotImplementedError for the dispatch itself;
-        # local backend plan must resolve.
+        # Inspection must remain available even if execution is unsupported.
         plan = registry["local"].plan(fw, launcher.spec)
         assert plan.driver_file != "?", f"local/{fw}: unresolved driver"
 

@@ -10,7 +10,6 @@ import types
 from dataclasses import asdict
 
 import torch
-from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -27,7 +26,7 @@ from platform_tinker.tinkerrl.grpo import (
     StrictToolCallReward,
 )
 from platform_tinker.tinkerrl.grpo_cli import _build_dataset, _parse_args, build_config
-from tests._shared_fakes import HfApi, _Future, _Tokenizer, _config, _example
+from tests._shared_fakes import HfApi, _Future, _Tokenizer, _config, _example, mocked_tinker_export
 
 
 def _dataset(*examples, test=()):
@@ -160,9 +159,8 @@ def _runtime(monkeypatch, *, metrics=None, sample_fn=None, install_transformers=
         transformers.AutoTokenizer = AutoTokenizer
         modules["transformers"] = transformers
 
-    with patch.dict(sys.modules, modules, clear=False):
-        with patch.object(grpo.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
-            yield holder
+    with patch.dict(sys.modules, modules, clear=False), mocked_tinker_export():
+        yield holder
 
 
 def test_pending_suite_receipt_is_unfrozen():
@@ -431,8 +429,8 @@ def test_huggingface_helpers_cover_import_auth_and_receipt_failures(monkeypatch)
 
     monkeypatch.setenv("HF_REPO_OWNER", "hub-owner")
     prefixed = GRPOConfig(name="n", hf_repo_prefix="Someone/Pretty Name")
-    repo_id = grpo._checkpoint_repo_id(prefixed, "fallback-owner", 3, 4, "tinker://path")
-    assert repo_id.startswith("hub-owner/")
+    repo_id = grpo._checkpoint_repo_id(prefixed, "resolved-owner", 3, 4, "tinker://path")
+    assert repo_id.startswith("resolved-owner/")
     assert "pretty-name" in repo_id
 
     with pytest.raises(RuntimeError, match="receipt missing"):
@@ -492,6 +490,10 @@ def test_empty_dataset_fails_before_wandb(tmp_path):
 
 
 def _completed_config(tmp_path, result):
+    # Build an arithmetically consistent completed-result fixture.
+    result.avg_first5 = grpo._reward_mean(result.reward_trace[:5])
+    result.avg_last10 = grpo._reward_mean(result.reward_trace[-10:])
+    result.peak_reward = max(result.reward_trace)
     config = _config(tmp_path, steps=1)
     _write_prior(
         config,
@@ -508,7 +510,7 @@ def test_completed_receipt_with_checkpoints_returns_without_tinker(tmp_path, mon
         run_id="tinker-done",
         sampler_path="tinker://final",
         reward_trace=[0.5],
-        checkpoint_receipts=[_receipt(step="final")],
+        checkpoint_receipts=[_receipt(step="final", source_path="tinker://final")],
     )
     config = _completed_config(tmp_path, result)
     run = _quiet_run()
@@ -527,6 +529,7 @@ def test_completed_legacy_urls_are_retained(tmp_path, monkeypatch):
     result = GRPORunResult(
         seed=42,
         run_id="tinker-legacy",
+        reward_trace=[0.5],
         checkpoint_urls=["https://huggingface.co/legacy/tree/old"],
     )
     config = _completed_config(tmp_path, result)
@@ -541,14 +544,15 @@ def test_completed_legacy_urls_are_retained(tmp_path, monkeypatch):
 
 
 def test_completed_receipt_without_run_id_fails_closed(tmp_path, monkeypatch):
-    result = GRPORunResult(seed=42, run_id="")
+    result = GRPORunResult(seed=42, run_id="", reward_trace=[0.5])
     config = _completed_config(tmp_path, result)
     run = _quiet_run()
     monkeypatch.setattr(grpo, "_start_wandb", lambda *_args, **_kwargs: run)
     monkeypatch.setattr(grpo, "_preflight_hf", lambda _config: "owner")
     with pytest.raises(RuntimeError, match="no nonempty Tinker run ID"):
         grpo._run_one_seed(config, _dataset(_example()), ExactMathReward(), object())
-    assert run.summary["status"] == "failed"
+    assert run.summary == {}
+    run.finish.assert_not_called()
 
 
 def test_tinker_and_tokenizer_imports_fail_closed(tmp_path, monkeypatch):
@@ -573,7 +577,13 @@ def test_tinker_and_tokenizer_imports_fail_closed(tmp_path, monkeypatch):
 
 def test_resume_uses_saved_optimizer_state(tmp_path, monkeypatch):
     config = _config(tmp_path, steps=1)
-    _write_prior(config, status="started", step=1, train_state_path="tinker://state/resume")
+    _write_prior(
+        config,
+        status="started",
+        step=1,
+        train_state_path="tinker://state/resume",
+        reward_trace=[0.5],
+    )
     logs = []
     with _runtime(monkeypatch):
         result = grpo._run_one_seed(
@@ -619,10 +629,13 @@ def test_critic_masks_truncated_responses_out_of_the_fit(tmp_path, monkeypatch):
             config, _dataset(_example()), ExactMathReward(), _Tokenizer(), logger=lambda _m: None
         )
     assert result.reward_trace
-    assert Path(str(tmp_path)).joinpath(f"{config.name}_seed{config.seed}.critic.pt").exists()
+    receipt = json.loads(grpo._checkpoint_path(config, config.seed).read_text())
+    assert grpo._critic_checkpoint_path(
+        config, config.seed, receipt["critic_state_sha256"]
+    ).exists()
 
 
-def test_fresh_run_pins_revisions_and_scores_heldout(tmp_path, monkeypatch):
+def test_fresh_run_requests_tokenizer_revision_and_scores_heldout(tmp_path, monkeypatch):
     calls = {"heldout": 0}
 
     def sample_fn(prompt, num_samples, sampling_params):
@@ -664,6 +677,88 @@ def test_fresh_run_pins_revisions_and_scores_heldout(tmp_path, monkeypatch):
     assert summary["test/reward"] == 0.5
 
 
+@pytest.mark.parametrize("count", [0, 1, 3])
+def test_partial_or_extra_training_group_fails_before_optimizer(tmp_path, monkeypatch, count):
+    def sample_fn(_prompt, _num_samples, _sampling_params):
+        return SimpleNamespace(sequences=[_Seq([1])] * count)
+
+    config = _config(tmp_path, group_size=2)
+    with _runtime(monkeypatch, sample_fn=sample_fn) as holder:
+        with pytest.raises(ValueError, match="requested group_size=2"):
+            grpo._run_one_seed(config, _dataset(_example()), ExactMathReward(), _Tokenizer())
+    assert "forward" not in holder["events"]
+    assert "optim" not in holder["events"]
+    assert holder["run"].summary["status"] == "failed"
+    assert not grpo._checkpoint_path(config, config.seed).exists()
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+@pytest.mark.parametrize("pretrain", [False, True])
+def test_nonfinite_reward_fails_before_actor_or_critic_update(
+    tmp_path, monkeypatch, value, pretrain
+):
+    reward = SimpleNamespace(score=lambda _text, _example: value)
+    config = _config(tmp_path, critic_enabled=pretrain, critic_pretrain_batches=int(pretrain))
+    with (
+        _runtime(monkeypatch) as holder,
+        patch.object(grpo, "train_critic_step") as critic_update,
+        pytest.raises(ValueError, match="finite numeric score"),
+    ):
+        grpo._run_one_seed(config, _dataset(_example()), reward, _Tokenizer())
+    critic_update.assert_not_called()
+    assert "forward" not in holder["events"]
+    assert "optim" not in holder["events"]
+    assert holder["run"].summary["status"] == "failed"
+
+
+@pytest.mark.parametrize("n", [1, 2])
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+def test_nonfinite_heldout_score_is_counted_as_failure_without_dropping_denominator(
+    tmp_path, monkeypatch, n, value
+):
+    def sample_fn(_prompt, num_samples, _sampling_params):
+        return SimpleNamespace(sequences=[_Seq([1])] * num_samples)
+
+    def score(_text, example):
+        return value if example.metadata.get("invalid_score") else 1.0
+
+    bad = grpo.TrainingExample(prompt="q", target="1", metadata={"invalid_score": True})
+    heldout = [bad] + [_example()] * (n - 1)
+    config = _config(tmp_path, evaluate_heldout=True)
+    with _runtime(monkeypatch, sample_fn=sample_fn) as holder:
+        result = grpo._run_one_seed(
+            config, _dataset(_example(), test=heldout), SimpleNamespace(score=score), _Tokenizer()
+        )
+    assert result.heldout_reward == (n - 1) / n
+    summary = next(item for item in holder["run"].logs if "test/failed_n" in item)
+    assert summary["test/failed_n"] == 1
+    assert summary["test/total_n"] == n
+    assert summary["test/reward_n"] == n
+    assert summary["test/reward"] == (n - 1) / n
+
+
+@pytest.mark.parametrize("count", [0, 2])
+def test_heldout_sampler_cardinality_failure_stays_in_denominator(tmp_path, monkeypatch, count):
+    def sample_fn(_prompt, num_samples, _sampling_params):
+        size = count if num_samples == 1 else num_samples
+        return SimpleNamespace(sequences=[_Seq([1])] * size)
+
+    config = _config(tmp_path, evaluate_heldout=True)
+    with _runtime(monkeypatch, sample_fn=sample_fn) as holder:
+        result = grpo._run_one_seed(
+            config, _dataset(_example(), test=[_example()]), ExactMathReward(), _Tokenizer()
+        )
+    assert result.heldout_reward == 0.0
+    summary = next(item for item in holder["run"].logs if "test/failed_n" in item)
+    assert summary["test/failed_n"] == summary["test/total_n"] == 1
+
+
+@pytest.mark.parametrize("scores", [[float("nan")], [float("inf")], [1.0, float("nan")]])
+def test_heldout_summary_rejects_nonfinite_even_for_one_score(scores):
+    with pytest.raises(ValueError, match="finite numeric score"):
+        grpo.heldout_reward_summary(scores)
+
+
 def test_wandb_failure_receipt_cannot_be_finalized(tmp_path, monkeypatch):
     class Boom(dict):
         def __setitem__(self, key, value):
@@ -676,11 +771,10 @@ def test_wandb_failure_receipt_cannot_be_finalized(tmp_path, monkeypatch):
         grpo._run_one_seed(_config(tmp_path), _dataset(_example()), ExactMathReward(), _Tokenizer())
 
 
-def test_gsm8k_loader_skips_rows_without_a_final_answer():
+def test_gsm8k_loader_preserves_valid_grouped_answers():
     rows = {
         "train": [
             {"question": "What?", "answer": "work #### 1,234"},
-            {"question": "Skip", "answer": "no marker"},
         ],
         "test": [{"question": "Held?", "answer": "#### 7"}],
     }
@@ -1036,3 +1130,15 @@ def test_module_guard_exits_with_main_status(monkeypatch):
     with pytest.raises(SystemExit) as raised:
         runpy.run_module("platform_tinker.tinkerrl.grpo_cli", run_name="__main__")
     assert raised.value.code == 1
+
+
+def test_redact_error_masks_tinker_and_overlapping_configured_credentials(monkeypatch):
+    # Entirely synthetic values; no real credentials are inspected.
+    monkeypatch.setenv("HF_TOKEN", "synthetic-prefix")
+    monkeypatch.setenv("HUGGINGFACE_HUB_TOKEN", "synthetic-other-hub")
+    monkeypatch.setenv("WANDB_API_KEY", "synthetic-other-wandb")
+    monkeypatch.setenv("TINKER_API_KEY", "synthetic-prefix-private-suffix")
+    result = grpo._redact_error(
+        RuntimeError("request failed: synthetic-prefix-private-suffix and synthetic-prefix")
+    )
+    assert result == "request failed: [redacted] and [redacted]"

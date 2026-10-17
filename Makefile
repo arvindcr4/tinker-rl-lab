@@ -54,11 +54,13 @@ lock-check:
 		|| { echo "requirements-lock.txt is stale; run: $(LOCK_EXPORT) -o requirements-lock.txt"; exit 1; }
 
 # Secret scan (gitleaks >= 8.30, `brew install gitleaks`; config .gitleaks.toml).
-# `secrets` scans uncommitted changes (fast). `secrets-history` scans every commit
+# `secrets` scans staged and unstaged tracked diffs (fast); newly added files
+# must be staged to be included. `secrets-history` scans every commit
 # and fails until the two leaked Tinker keys are rotated and fingerprinted in
 # .gitleaksignore (see SECURITY notes).
 GITLEAKS ?= gitleaks
 secrets:
+	$(GITLEAKS) git --pre-commit --staged --config .gitleaks.toml --redact --no-banner .
 	$(GITLEAKS) git --pre-commit --config .gitleaks.toml --redact --no-banner .
 
 secrets-history:

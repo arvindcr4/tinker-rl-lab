@@ -15,6 +15,7 @@ class OpenRLHFModelConfig(BaseModel):
     use_flash_attention: bool = True
     load_in_8bit: bool = False
     load_in_4bit: bool = False
+    lora_rank: int = Field(default=0, ge=0)
 
 
 class OpenRLHFOptimizerConfig(BaseModel):
@@ -67,8 +68,16 @@ class OpenRLHFConfig(BaseModel):
     # LIMITATION: short max_samples/steps yield early-training snapshots only.
     max_steps: Optional[int] = None
 
+    # Native mode requires whole prompt/global batches per rollout.
+    # Explicit dataset budget; this is not an optimizer-step budget.
+    max_samples: int = Field(default=240, gt=0, le=500)
+    rollout_batch_size: int = Field(default=8, gt=0)
+    remote_rm_url: Optional[str] = None
+
     # Ray cluster settings
     num_gpus: int = 1
+    # Legacy compatibility fields: native mode accepts only these defaults.
+    # They do not control native placement or periodic evaluation/checkpoints.
     num_workers: int = 1
     num_actors: int = 1
     actor_num_gpus: int = 1
@@ -79,6 +88,8 @@ class OpenRLHFConfig(BaseModel):
     # Logging
     project_name: str = "openrlhf-tinker"
     run_name: Optional[str] = None
+    # Explicit opt-in: native W&B suppresses TensorBoard in v0.8.4.
+    log_to_wandb: bool = False
 
     # vLLM settings
     inference_backend: str = "vllm"

@@ -3,8 +3,8 @@ OpenRLHF Trainer for tinker-rl-lab
 
 Real GRPO runner for framework-gap comparison. Uses OpenRLHF's Ray + vLLM
 trainer in the "ppo_ray" configuration with advantage_estimator=group_norm
-(i.e. GRPO). Training loop mirrors the TRL/Tinker loops so reward traces are
-comparable apples-to-apples.
+(i.e. GRPO). Runtime settings require explicit validation; historical framework comparisons
+remain confounded and are not repaired by this launcher.
 
 # LIMITATION: framework-gap vs Tinker is confounded by managed defaults (closed-source confound).
 
@@ -14,20 +14,10 @@ clearly marked as such in the returned metrics.
 
 from __future__ import annotations
 
-import atexit
-try:
-    from codecarbon import EmissionsTracker
-    _tracker = EmissionsTracker()
-    _tracker.start()
-    atexit.register(_tracker.stop)
-except ImportError:
-    pass
-
-
 import asyncio
 import json
+from importlib import metadata, util
 import os
-import re
 import subprocess
 import time
 from pathlib import Path
@@ -58,21 +48,19 @@ class OpenRLHFTrainer:
         print(f"{'=' * 60}\n")
 
         try:
-            import openrlhf  # type: ignore  # noqa: F401
+            import openrlhf  # type: ignore
+
             self.mode = "real"
-            print(f"OpenRLHF installed — mode=real, version={getattr(openrlhf, '__version__', 'unknown')}")
+            print(
+                f"OpenRLHF installed — mode=real, version={getattr(openrlhf, '__version__', 'unknown')}"
+            )
         except Exception as exc:
             print(f"OpenRLHF unavailable ({exc!r}); using seeded dryrun fallback.")
             self.mode = "dryrun"
 
     def _dryrun_reward(self, step: int) -> float:
-        """Deterministic seeded fallback for Qwen3-8B/GSM8K-500/G=8/lr=1e-5.
-
-        Calibrated slightly below verl (OpenRLHF's default DAPO-style KL can
-        over-regularize at lr=1e-5 on 30 steps), but above the near-collapse
-        TRL-H100 run. Real Modal numbers overwrite these.
-        """
-        rng = np.random.default_rng(seed=int(self.config.algorithm.kl_coef * 1e6) + 123 + step)
+        """Seeded synthetic trace for plumbing checks, not a training estimate."""
+        rng = np.random.default_rng(np.random.SeedSequence([self.config.seed, step, 123]))
         base = 0.22 + 0.012 * step
         noise = float(rng.normal(0, 0.10))
         return max(0.0, min(1.0, base + noise))
@@ -82,7 +70,8 @@ class OpenRLHFTrainer:
             raise RuntimeError("train_step() is dryrun-only; use run_openrlhf_training().")
         step_start = time.time()
         reward_val = self._dryrun_reward(step)
-        loss_val = 1.0 / (step + 1) + float(np.random.default_rng(step + 10000).normal(0, 0.05))
+        loss_rng = np.random.default_rng(np.random.SeedSequence([self.config.seed, step, 10000]))
+        loss_val = 1.0 / (step + 1) + float(loss_rng.normal(0, 0.05))
         self.reward_history.append(reward_val)
         self.loss_history.append(loss_val)
         print(f"  step={step} loss={loss_val:.4f} reward={reward_val:.4f}")
@@ -102,19 +91,18 @@ class OpenRLHFTrainer:
         await self.setup()
 
         if self.mode == "real":
-            print("Use run_openrlhf_training() for real runs; falling back to dryrun for run().")
-            self.mode = "dryrun"
+            raise RuntimeError("run() is dryrun-only; use run_openrlhf_training() for real runs.")
 
         for step in range(self.config.epochs):
-            try:
-                await self.train_step(step)
-                self.current_step = step + 1
-            except Exception as exc:
-                print(f"Error in step {step}: {exc}")
-                break
+            await self.train_step(step)
+            self.current_step = step + 1
 
         duration = time.time() - self.start_time
-        last10 = float(np.mean(self.reward_history[-10:])) if len(self.reward_history) >= 10 else float(np.mean(self.reward_history or [0]))
+        last10 = (
+            float(np.mean(self.reward_history[-10:]))
+            if len(self.reward_history) >= 10
+            else float(np.mean(self.reward_history or [0]))
+        )
         peak = float(max(self.reward_history or [0]))
         first5 = float(np.mean(self.reward_history[:5])) if self.reward_history else 0.0
 
@@ -133,7 +121,7 @@ class OpenRLHFTrainer:
 
 
 # ---------------------------------------------------------------------------
-# Real driver — invoked by platform_hybrid/experiments/modal/modal_grpo_openrlhf.py on H100.
+# Native driver for explicit local/Ray launches; the historical Modal runner is separate.
 # ---------------------------------------------------------------------------
 
 GSM8K_SYSTEM_PROMPT = (
@@ -142,206 +130,99 @@ GSM8K_SYSTEM_PROMPT = (
 
 
 def _prepare_gsm8k_500_jsonl(out_path: str) -> str:
-    """Materialise GSM8K[:500] in OpenRLHF prompt+label JSONL format."""
-    from datasets import load_dataset  # type: ignore
+    """Materialise validated GSM8K chat messages for the native tokenizer."""
+    from .inputs import materialize_gsm8k
 
-    # LIMITATION: held-out generalization not established for this dryrun/short path.
-    ds = load_dataset("openai/gsm8k", "main", split="train[:500]")
-    out = Path(out_path)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open("w") as f:
-        for row in ds:
-            m = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
-            gt = m.group(1).replace(",", "").strip() if m else ""
-            prompt = (
-                f"<|system|>\n{GSM8K_SYSTEM_PROMPT}\n"
-                f"<|user|>\n{row['question']} Give a numerical answer inside \\boxed{{}}.\n"
-                f"<|assistant|>\n"
-            )
-            f.write(json.dumps({"prompt": prompt, "label": gt}) + "\n")
-    return str(out)
+    return materialize_gsm8k(out_path, GSM8K_SYSTEM_PROMPT)
 
 
-def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrlhf-run") -> Dict[str, Any]:
-    """Real end-to-end OpenRLHF GRPO driver on GSM8K-500.
-
-    OpenRLHF is launched as a subprocess (``python -m openrlhf.cli.train_ppo_ray``)
-    with ``--advantage_estimator group_norm`` to yield GRPO semantics. Reward
-    trace is read back from the W&B run history after the subprocess exits.
-    """
+def _validate_native_runtime(local_metrics: bool) -> str:
+    """Check the versioned contract before dataset or output side effects."""
     try:
-        import wandb  # type: ignore
-        try:
-            import torch, wandb
-            if not getattr(wandb, '_vram_patched', False):
-                _old_log = wandb.log
-                def _vram_log(data, *args, **kwargs):
-                    if torch.cuda.is_available():
-                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
-                        torch.cuda.reset_peak_memory_stats()
-                    _old_log(data, *args, **kwargs)
-                wandb.log = _vram_log
-                wandb._vram_patched = True
-        except ImportError:
-            pass
-        import openrlhf  # type: ignore  # noqa: F401
-    except Exception as exc:
+        version = metadata.version("openrlhf")
+    except metadata.PackageNotFoundError as exc:
+        raise RuntimeError("Native training requires OpenRLHF v0.8.4 + Ray + vLLM") from exc
+    if version != "0.8.4":
         raise RuntimeError(
-            "run_openrlhf_training requires openrlhf + wandb; "
-            "launch via platform_hybrid/experiments/modal/modal_grpo_openrlhf.py"
-        ) from exc
+            f"Unsupported OpenRLHF version {version!r}; command targets exactly 0.8.4"
+        )
+    if local_metrics and util.find_spec("tensorboard") is None:
+        raise RuntimeError("Local native metrics require tensorboard; install it before training")
+    return version
 
-    os.makedirs(output_dir, exist_ok=True)
-    data_path = _prepare_gsm8k_500_jsonl(os.path.join(output_dir, "gsm8k500.jsonl"))
 
-    run_name = config.run_name or "openrlhf-gsm8k-qwen3-8b"
-    os.environ["WANDB_PROJECT"] = os.environ.get(
-        "WANDB_PROJECT", "tinker-rl-lab-world-class"
-    )
+def run_openrlhf_training(
+    config: OpenRLHFConfig,
+    # An existing path is rejected and mkdir uses exist_ok=False before writes.
+    output_dir: str = "/tmp/openrlhf-run",  # noqa: S108
+) -> Dict[str, Any]:
+    """Launch the validated native command; record execution, not inferred metrics.
 
-    # Initialize W&B
-    wandb.init(
-        project=os.environ["WANDB_PROJECT"],
-        name=run_name,
-        tags=["openrlhf-grpo"],
-        config=config.to_dict()
-    )
+    A successful subprocess does not establish a reward trace or held-out gain.
+    The native CLI owns any optional W&B logging. This wrapper does not retrieve
+    runs by display name, start a second run, or publish checkpoints.
+    """
+    from .command import build_openrlhf_command
+    from .budget import plan_native_budget
+    from .metrics import read_native_metrics
+    from .inputs import inspect_native_input, bind_reference_input, ensure_input_unchanged
 
-    # ---- launch OpenRLHF PPO-Ray with group_norm advantage (GRPO) ----
-    # We rely on the reward being baked in via a verifiable reward function
-    # the container will register under --reward_pretrain (see modal_grpo_openrlhf.py).
-    cmd = [
-        "python", "-m", "openrlhf.cli.train_ppo_ray",
-        "--pretrain", config.model_name,
-        "--ref_pretrain", config.model_name,
-        "--prompt_data", data_path,
-        "--input_key", "prompt",
-        "--label_key", "label",
-        "--advantage_estimator", "group_norm",
-        "--n_samples_per_prompt", "8",
-        "--train_batch_size", "8",
-        "--micro_train_batch_size", "1",
-        "--rollout_batch_size", "8",
-        "--micro_rollout_batch_size", "1",
-        "--max_epochs", "1",
-        "--num_episodes", "1",
-        "--prompt_max_len", "512",
-        "--generate_max_len", "512",
-        "--actor_learning_rate", str(config.learning_rate),
-        "--init_kl_coef", str(config.algorithm.kl_coef),
-        "--use_kl_loss",
-        "--kl_estimator", "k3",
-        "--save_steps", "-1",
-        "--logging_steps", "1",
-        # LIMITATION: default horizon is a short snapshot (not full convergence).
-        "--max_samples", "240",  # 30 steps * batch=8
-        "--save_path", os.path.join(output_dir, "ckpt"),
-        "--ckpt_path", os.path.join(output_dir, "ckpt"),
-        "--use_wandb", os.environ.get("WANDB_API_KEY", ""),
-        "--wandb_project", os.environ["WANDB_PROJECT"],
-        "--wandb_run_name", run_name,
-        "--colocate_all_models",
-        "--vllm_num_engines", "1",
-        "--vllm_tensor_parallel_size", "1",
-        "--bf16",
-        "--flash_attn",
-        "--actor_num_gpus_per_node", str(config.num_gpus),
-        "--ref_num_gpus_per_node", str(config.num_gpus),
-        "--remote_rm_url", "verifiable_gsm8k",  # served by modal_grpo_openrlhf.py
-        # LIMITATION: default seed path is N=1 unless callers parameterize multi-seed.
-        "--seed", "42",
-    ]
-    print("[openrlhf] cmd:", " ".join(cmd))
-    # Strip repo root from subprocess PYTHONPATH so python -m openrlhf.cli.*
-    # resolves to the installed pypi package, not the repo's platform_modal/openrlhf/ launcher.
+    # The caller may reuse or mutate its config while a long-running subprocess
+    # executes. Bind validation, launch arguments, metrics and receipt to one
+    # independent snapshot, including nested model/optimizer/data settings.
+    config = config.model_copy(deep=True)
+    output = Path(output_dir).resolve()
+    data_path = str(output / "gsm8k500.jsonl")
+    # Validate before importing providers, downloading data, or creating output.
+    cmd = build_openrlhf_command(config, data_path, str(output))
+    if output.exists():
+        raise FileExistsError("Choose a fresh output directory; existing artifacts are preserved")
+    version = _validate_native_runtime(local_metrics=not config.log_to_wandb)
+    try:
+        import openrlhf  # type: ignore  # noqa: F401
+    except ImportError as exc:
+        raise RuntimeError("Native training requires OpenRLHF v0.8.4 + Ray + vLLM") from exc
+    output.mkdir(parents=True, exist_ok=False)
+    _prepare_gsm8k_500_jsonl(data_path)
+    input_artifact = bind_reference_input(inspect_native_input(data_path))
     env = os.environ.copy()
     env["PYTHONPATH"] = ""
     start = time.time()
-    proc = subprocess.run(cmd, cwd=output_dir, env=env)
-    duration = time.time() - start
-    print(f"[openrlhf] subprocess exit={proc.returncode} in {duration:.1f}s")
-
-    # Pull reward trace from W&B
-    # LIMITATION: ZVF is a symptom metric; also log reward/advantage/entropy.
-    reward_trace: List[float] = []
-    try:
-        import wandb as _wb  # type: ignore
-        try:
-            import torch, wandb
-            if not getattr(wandb, '_vram_patched', False):
-                _old_log = wandb.log
-                def _vram_log(data, *args, **kwargs):
-                    if torch.cuda.is_available():
-                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
-                        torch.cuda.reset_peak_memory_stats()
-                    _old_log(data, *args, **kwargs)
-                wandb.log = _vram_log
-                wandb._vram_patched = True
-        except ImportError:
-            pass
-        api = _wb.Api()
-        runs = api.runs(
-            f"{api.default_entity}/{os.environ['WANDB_PROJECT']}",
-            {"display_name": run_name},
-        )
-        if runs:
-            hist = runs[0].history(keys=["train/reward_mean", "reward/mean", "critic/rewards/mean"])
-            for col in ("train/reward_mean", "reward/mean", "critic/rewards/mean"):
-                if col in hist.columns:
-                    reward_trace = [float(x) for x in hist[col].dropna().tolist()]
-                    break
-    except Exception as exc:
-        print(f"[openrlhf] could not fetch W&B history: {exc}")
-
-    last10 = float(np.mean(reward_trace[-10:])) if len(reward_trace) >= 10 else float(np.mean(reward_trace or [0]))
-    peak = float(max(reward_trace or [0]))
-    first5 = float(np.mean(reward_trace[:5])) if reward_trace else 0.0
-
-    wandb.log({
-        "final_peak": peak,
-        "final_last10": last10,
-        "first5_avg": first5,
-        "duration_s": duration,
-        "subprocess_exit": proc.returncode,
-    })
-    wandb.finish()
-
-    hf_repo_id = os.environ.get("HF_REPO_ID", f"arvindcr4/{run_name}")
-    try:
-        from transformers import AutoModelForCausalLM, AutoTokenizer
-        actor_path = f"{output_dir}/ckpt/_actor" if os.path.exists(f"{output_dir}/ckpt/_actor") else f"{output_dir}/ckpt"
-        if os.path.exists(actor_path):
-            print(f"Loading model from {actor_path} for push_to_hub...")
-            model = AutoModelForCausalLM.from_pretrained(actor_path, torch_dtype="auto")
-            tokenizer = AutoTokenizer.from_pretrained(actor_path)
-            model.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""))
-            tokenizer.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""))
-            print(f"Pushed model to HF: {hf_repo_id}")
-    except Exception as e:
-        print(f"HF push failed: {e}")
-
+    # A nonzero exit must never produce a successful result or publish a model.
+    subprocess.run(cmd, cwd=str(output), env=env, check=True)
+    ensure_input_unchanged(data_path, input_artifact)
     result = {
         "framework": "openrlhf",
         "mode": "real",
         "model": config.model_name,
         "algorithm": "GRPO",
-        "seed": 42,
-        "group_size": 8,
+        "seed": config.seed,
+        "group_size": config.algorithm.sample_num,
         "learning_rate": config.learning_rate,
-        "steps": len(reward_trace),
+        "steps": None,
+        "optimizer_steps": None,
+        "budget_plan": plan_native_budget(config),
+        "input_artifact": input_artifact,
+        "max_samples": config.max_samples,
+        "reward_trace": [],
+        "metrics_status": "not_collected",
         "task": "gsm8k-500",
-        "platform": "modal-h100",
-        "peak_reward": peak,
-        "last10_avg": last10,
-        "first5_avg": first5,
-        "reward_trace": reward_trace,
-        "duration_s": duration,
-        "subprocess_exit": proc.returncode,
+        "duration_s": time.time() - start,
+        "subprocess_exit": 0,
+        "openrlhf_version": version,
+        "config": config.to_dict(),
     }
-    with open(os.path.join(output_dir, "result.json"), "w") as f:
-        json.dump(result, f, indent=2)
+    if config.log_to_wandb:
+        result["metrics_reason"] = "native_wandb_selected_no_local_metrics"
+    else:
+        result.update(
+            read_native_metrics(
+                str(output),
+                config.run_name or "openrlhf-grpo",
+                expected_rollouts=result["budget_plan"]["planned_rollouts"],
+            )
+        )
+    (output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 
 

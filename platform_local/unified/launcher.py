@@ -30,7 +30,7 @@ class TrainingResult:
     framework: str
     model: str
     algorithm: str
-    final_step: int
+    final_step: int | None
     reward_history: list[float]
     loss_history: list[float]
     total_time: float = 0.0
@@ -157,7 +157,11 @@ class UnifiedLauncher:
             return
 
         print("\n" + "=" * 60)
-        print("  Training Complete!")
+        print(
+            "  Training Complete!"
+            if result.final_step is not None
+            else "  Training process finished; optimizer-step completion is unverified"
+        )
         print("=" * 60)
         print(f"\n  Framework: {result.framework}")
         print(f"  Model: {result.model}")
@@ -185,72 +189,25 @@ class UnifiedLauncher:
         sys.exit(1)
 
     def _run_skyrl(self) -> TrainingResult:
-        """Run SkyRL tx training.
-
-        SkyRL tx runs the Tinker API on your own GPUs behind an external SkyRL
-        checkout; it is not pip-installable, so we emit the documented launch
-        sequence (from README §SkyRL) and shell out when an SKYRL_CHECKOUT env
-        var is present.
-        """
-        import os
-        import subprocess
-
-        spec = self._resolve_spec()
-        print("\n[SKYRL] SkyRL tx (self-hosted Tinker API server)")
-        cfg = "platform_hybrid/skyrl/configs/grpo_gsm8k.yaml"
-        checkout = os.environ.get("SKYRL_CHECKOUT")
-        if not checkout:
-            raise NotImplementedError(
-                "SkyRL tx requires an external SkyRL checkout. Set SKYRL_CHECKOUT to "
-                "its path, then: `uv run --extra gpu --extra tinker -m skyrl.tinker.api` "
-                f"and run the recipe at {cfg}. (The Tinker-cloud equivalent is "
-                "`--framework tinker`, which runs in-process via grpo_cli.)"
-            )
-        subprocess.run(
-            ["uv", "run", "--extra", "gpu", "--extra", "tinker", "-m", "skyrl.tinker.api"],
-            cwd=checkout,
-            check=True,
+        """Reject the server-only scaffold as a canonical training executor."""
+        raise NotImplementedError(
+            "SkyRL canonical execution is unavailable: the former route started only "
+            "skyrl.tinker.api, without executing a training recipe or verifying optimizer "
+            "steps. Use --dry-run to inspect the planned cell; an independently configured "
+            "SkyRL server/recipe is not a canonical completion receipt."
         )
-        return TrainingResult("skyrl", spec.model, self.algorithm, spec.training_steps, [], [])
 
     def _run_tinker(self) -> TrainingResult:
-        """Run Tinker (Atropos / GRPO-CLI) training in-process.
-
-        Delegates to the real Tinker SDK loop in
-        ``platform_tinker/tinkerrl/grpo_cli.py`` (preset gsm8k, ExactMathReward).
-        """
+        """Keep the direct baseline available without claiming canonical equivalence."""
         if self.algorithm != "grpo":
             raise ValueError("The Tinker launcher currently supports only algorithm=grpo")
-        import subprocess
-
-        spec = self._resolve_spec()
-        cmd = [
-            sys.executable,
-            "-m",
-            "platform_tinker.tinkerrl.grpo_cli",
-            "--preset",
-            spec.task,
-            "--model",
-            self.model or spec.model,
-            "--steps",
-            str(spec.training_steps),
-            "--seed",
-            str(spec.seed),
-            "--group-size",
-            str(spec.num_generations),
-            "--lr",
-            str(spec.learning_rate),
-            "--lora-rank",
-            str(spec.lora_rank),
-            "--max-response-tokens",
-            str(spec.max_completion_length),
-            "--batch-size",
-            str(spec.per_device_train_batch_size),
-        ]
-        print(f"\n[TINKER] {' '.join(cmd)}")
-        subprocess.run(cmd, check=True)
-        return TrainingResult(
-            "tinker", self.model or spec.model, self.algorithm, spec.training_steps, [], []
+        raise NotImplementedError(
+            "Tinker canonical execution is unavailable: the direct baseline cannot enforce "
+            "the canonical gradient accumulation, token-ratio clipping, KL coefficient, "
+            "LoRA alpha and target-module contract. Inspect the independent baseline with "
+            "python -m platform_tinker.tinkerrl.grpo_cli --preset gsm8k --check-config. "
+            "Use unified --dry-run for planned-cell inspection; neither is evidence of "
+            "canonical algorithm equivalence or completed optimizer steps."
         )
 
     def _run_verl(self) -> TrainingResult:
@@ -287,9 +244,9 @@ class UnifiedLauncher:
 
         Delegates to ``platform_modal/openrlhf/trainer.py:run_openrlhf_training``
         (subprocesses ``openrlhf.cli.train_ppo_ray`` with group-norm advantage)
-        when OpenRLHF + Ray + vLLM are installed; otherwise emits the documented
-        CLI command. The hosted-equivalent path is the MODAL backend
-        (``modal_grpo_openrlhf.py``).
+        when OpenRLHF + Ray + vLLM are installed. The native CLI currently
+        cannot enforce the canonical optimizer-step budget, so it rejects that
+        request before provider work. The historical Modal path is separate.
         """
         if self.algorithm != "grpo":
             raise ValueError("The OpenRLHF launcher currently supports only algorithm=grpo")
@@ -305,21 +262,36 @@ class UnifiedLauncher:
                 "`python -m openrlhf.cli.train_ppo_ray --advantage_estimator group_norm`."
             ) from exc
         config = OpenRLHFConfig(
-            model={"model_name": self.model or spec.model},
+            model={"model_name": self.model or spec.model, "lora_rank": spec.lora_rank},
             optimizer={"learning_rate": spec.learning_rate},
-            algorithm={"algorithm": "grpo", "kl_coef": spec.beta},
+            algorithm={
+                "algorithm": "grpo",
+                "kl_coef": spec.beta,
+                "sample_num": spec.num_generations,
+            },
+            data={"max_response_length": spec.max_completion_length},
+            train_batch_size=spec.per_device_train_batch_size,
             seed=spec.seed,
             max_steps=spec.training_steps,
         )
-        run_openrlhf_training(config, output_dir="./checkpoints/openrlhf")
+        result = run_openrlhf_training(config, output_dir="./checkpoints/openrlhf")
+        if result.get("steps") is None:
+            raise RuntimeError(
+                "OpenRLHF execution finished without verified optimizer-step metrics"
+            )
         return TrainingResult(
-            "openrlhf", config.model_name, self.algorithm, spec.training_steps, [], []
+            "openrlhf",
+            config.model_name,
+            self.algorithm,
+            result["steps"],
+            result.get("reward_trace", []),
+            [],
         )
 
     def _run_trl(self) -> TrainingResult:
         """Run TRL training.
 
-        Generates the checkpoint-resumable GRPO script
+        Generates the explicit-reward, fresh-output GRPO script
         (``trl_integrations.trainer.generate_trl_train_script``) and executes it
         when training data is available; otherwise points the user at
         ``--generate-script`` / the MODAL & GCP TRL drivers, which carry the
@@ -357,8 +329,19 @@ class UnifiedLauncher:
                 "algorithm": self.algorithm,
                 "epsilon_low": spec.epsilon_low,
                 "epsilon_high": spec.epsilon_high,
+                "kl_coef": spec.beta,
+                "num_generations": spec.num_generations,
             },
-            data={"train_data": train_data},
+            data={
+                "train_data": train_data,
+                "train_batch_size": spec.per_device_train_batch_size,
+                "gradient_accumulation_steps": spec.gradient_accumulation_steps,
+                "max_response_length": spec.max_completion_length,
+            },
+            reward_callable=getattr(self, "reward_callable", None),
+            output_dir=getattr(self, "output_dir", None),
+            seed=spec.seed,
+            max_steps=spec.training_steps,
             epochs=self.epochs,
             project_name=getattr(self, "wandb_project", "unified-rl"),
         )
@@ -368,4 +351,5 @@ class UnifiedLauncher:
         import subprocess
 
         subprocess.run([sys.executable, script], check=True)
-        return TrainingResult("trl", self.model or spec.model, self.algorithm, self.epochs, [], [])
+        # A successful subprocess is not an observed optimizer-step receipt.
+        return TrainingResult("trl", config.model_name, config.algorithm.algorithm, None, [], [])

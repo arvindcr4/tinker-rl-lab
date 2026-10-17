@@ -317,35 +317,71 @@ def create_dpo_trainer(model, tokenizer, train_dataset, config: "TRLConfig"):
     return trainer
 
 
+def prepare_trl_run(reward_callable: str, output_dir: str):
+    """Resolve an explicit reward and reserve fresh output; never load a model.
+
+    This validates the pinned Python API only. It does not establish native
+    training correctness or scientific validity of the caller's reward.
+    """
+    from importlib import import_module, metadata
+    import os
+
+    if os.environ.get("WORLD_SIZE", "1") != "1":
+        raise NotImplementedError("Native fresh-output script supports one process only")
+    if metadata.version("trl") != "1.2.0":
+        raise RuntimeError("Native script requires the repository's pinned trl==1.2.0")
+    output = Path(output_dir).expanduser().resolve()
+    if output.exists():
+        raise FileExistsError(f"TRL output already exists; resume is unsupported: {output}")
+    module, separator, attribute = reward_callable.partition(":")
+    if not separator or not module or not attribute:
+        raise ValueError("reward_callable must use module:attribute syntax")
+    reward = getattr(import_module(module), attribute)
+    if not callable(reward):
+        raise TypeError("reward_callable must resolve to a callable")
+    # Exclusive creation prevents two launches from sharing an output directory.
+    output.mkdir(parents=True, exist_ok=False)
+    return reward, str(output)
+
+
 def generate_trl_train_script(config: TRLConfig, output_path: str = "train_trl.py"):
     """Generate a runnable TRL GRPO script from a validated configuration."""
 
     algorithm = config.algorithm.algorithm.lower()
-    if algorithm not in ("grpo", "idpo"):
+    if algorithm != "grpo":
         raise NotImplementedError(
-            "Script generation currently supports GRPO and iDPO (Online DPO) only; "
-            "the previous PPO/DPO branch emitted an incomplete script"
+            "Native script generation supports GRPO only with pinned TRL 1.2.0; "
+            "Online DPO/iDPO and PPO/DPO are unsupported"
         )
     if not config.data.train_data:
         raise ValueError("At least one data.train_data JSON path is required")
-
-    boxed_marker = "\\boxed{"
-    if algorithm == "grpo":
-        # TRL GRPOConfig takes the decoupled DAPO clip; OnlineDPOConfig
-        # takes no clip range, so only GRPO scripts emit it.  epsilon_high
-        # needs a TRL with GRPOConfig.epsilon_high (repo pins trl==1.2.0).
-        clip_lines = (
-            "    # Requires TRL with GRPOConfig.epsilon_high (DAPO Clip-Higher).\n"
-            f"    epsilon={config.algorithm.epsilon_low!r},\n"
-            f"    epsilon_high={config.algorithm.epsilon_high!r},\n"
+    if not config.reward_callable:
+        raise ValueError("An explicit reward_callable='module:attribute' is required")
+    module, separator, attribute = config.reward_callable.partition(":")
+    if (
+        not separator
+        or not all(part.isidentifier() for part in module.split("."))
+        or not attribute.isidentifier()
+    ):
+        raise ValueError("reward_callable must have importable module:attribute syntax")
+    if not config.output_dir:
+        raise ValueError(
+            "An explicit fresh output_dir is required; automatic resume is unsupported"
         )
-    else:
-        clip_lines = ""
-    # Keep replacement fields simple for Python 3.11 (before PEP 701).
-    trl_import = (
-        "from trl import GRPOConfig, GRPOTrainer"
-        if algorithm == "grpo"
-        else "from trl import OnlineDPOConfig, OnlineDPOTrainer"
+    if config.num_gpus != 1:
+        raise NotImplementedError("Native script supports one process/GPU only")
+    if config.model.model_path is not None:
+        raise NotImplementedError(
+            "Native model_path/resume is unsupported; use explicit output_dir"
+        )
+    if config.data.max_prompt_length is not None:
+        raise NotImplementedError("Pinned TRL 1.2.0 does not support max_prompt_length")
+    if config.data.val_data:
+        raise NotImplementedError("Native script evaluation/val_data is not implemented")
+    clip_lines = (
+        "    # Requires TRL with GRPOConfig.epsilon_high (DAPO Clip-Higher).\n"
+        f"    epsilon={config.algorithm.epsilon_low!r},\n"
+        f"    epsilon_high={config.algorithm.epsilon_high!r},\n"
     )
     push_to_hub = getattr(
         config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False)
@@ -363,9 +399,14 @@ import os
 import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from transformers.trainer_utils import get_last_checkpoint
-{trl_import}
+from transformers import set_seed
+from trl import GRPOConfig, GRPOTrainer
 from platform_local.unified.peft_utils import apply_peft_method, save_bitfit_checkpoint
+from platform_local.trl_integrations.trainer import prepare_trl_run
+
+# Explicit fresh-run and task-reward contract, checked before model loading.
+reward_fn, OUTPUT_DIR = prepare_trl_run({config.reward_callable!r}, {config.output_dir!r})
+set_seed({config.seed!r})
 
 # Configuration
 MODEL_NAME = {config.model_name!r}
@@ -376,7 +417,6 @@ LOAD_IN_4BIT = {config.model.load_in_4bit!r}
 LOAD_IN_8BIT = {config.model.load_in_8bit!r}
 BF16 = {config.bf16!r}
 FP16 = {config.fp16!r}
-BOXED_MARKER = {boxed_marker!r}
 COMPUTE_DTYPE = torch.bfloat16 if BF16 else (torch.float16 if FP16 else torch.float32)
 
 REPORT_TO = {config.report_to!r}
@@ -385,8 +425,8 @@ RUN_NAME = {config.run_name!r}
 PUSH_TO_HUB = {push_to_hub!r}
 HUB_MODEL_ID = {hub_model_id!r}
 
-import wandb
 if "wandb" in REPORT_TO:
+    import wandb
     wandb.init(project=PROJECT_NAME, name=RUN_NAME)
 
 
@@ -432,75 +472,25 @@ if USE_PEFT:
 # Data
 train_dataset = load_dataset("json", data_files=TRAIN_FILES, split="train")
 
-# Process Reward Model (PRM) & Diagnostic tracking
-import numpy as np
-import wandb
-
-def prm_reward_fn(completions, prompts=None, **kwargs):
-    """
-    Evaluates step-level fidelity using a Process Reward Model (PRM) approach
-    and tracks Advantage Collapse Rate (ACR) across groups.
-    """
-    def completion_text(completion):
-        if isinstance(completion, str):
-            return completion
-        if isinstance(completion, list) and completion and isinstance(completion[-1], dict):
-            return str(completion[-1].get("content", ""))
-        return str(completion)
-
-    rewards = []
-    lengths = []
-    for completion in completions:
-        text = completion_text(completion).lower()
-        lengths.append(len(text))
-        step_reward = 0.0
-        
-        # PRM intermediate step fidelity (mock logic for step reasoning)
-        steps_found = text.count("step") + text.count("first") + text.count("then")
-        if steps_found > 0:
-            step_reward += min(0.5, 0.1 * steps_found)
-            
-        # Final outcome ORM
-        if BOXED_MARKER in text:
-            step_reward += 0.5
-            
-        rewards.append(step_reward)
-        
-    # Advantage Diagnostics (ACR & Variance & Length Bias)
-    if len(rewards) > 1:
-        variance = np.var(rewards)
-        acr = 1.0 if variance < 1e-4 else 0.0
-        
-        correct_lens = [l for l, r in zip(lengths, rewards) if r > 0.5]
-        incorrect_lens = [l for l, r in zip(lengths, rewards) if r <= 0.5]
-        mean_len_correct = np.mean(correct_lens) if correct_lens else 0.0
-        mean_len_incorrect = np.mean(incorrect_lens) if incorrect_lens else 0.0
-        
-        len_reward_corr = 0.0
-        if correct_lens and incorrect_lens:
-            n1, n0, n = len(correct_lens), len(incorrect_lens), len(lengths)
-            std_y = np.std(lengths)
-            len_reward_corr = ((mean_len_correct - mean_len_incorrect) / (std_y + 1e-8)) * np.sqrt((n1 * n0) / (n * (n - 1)))
-            
-        if wandb.run is not None:
-            wandb.log({{
-                "diagnostics/advantage_variance": variance,
-                "diagnostics/advantage_collapse_rate": acr,
-                "diagnostics/mean_prm_reward": np.mean(rewards),
-                "diagnostics/mean_len_correct": mean_len_correct,
-                "diagnostics/mean_len_incorrect": mean_len_incorrect,
-                "diagnostics/length_reward_corr": len_reward_corr
-            }}, commit=False)
-            
-    return rewards
+# The caller supplies the task-specific reward. No formatting heuristic or
+# unverified correctness/group-collapse diagnostic is substituted here.
 
 # Trainer Config
-trainer_config = {"GRPOConfig" if algorithm == "grpo" else "OnlineDPOConfig"}(
-    output_dir="./checkpoints",
+trainer_config = GRPOConfig(
+    output_dir=OUTPUT_DIR,
     num_train_epochs={config.epochs},
     per_device_train_batch_size={config.data.train_batch_size},
     gradient_accumulation_steps={config.data.gradient_accumulation_steps},
     learning_rate={config.optimizer.learning_rate},
+    adam_beta1={config.optimizer.beta1!r},
+    adam_beta2={config.optimizer.beta2!r},
+    adam_epsilon={config.optimizer.eps!r},
+    weight_decay={config.optimizer.weight_decay!r},
+    beta={config.algorithm.kl_coef!r},
+    num_generations={config.algorithm.num_generations!r},
+    temperature={config.algorithm.temperature!r},
+    max_completion_length={config.data.max_response_length!r},
+    seed={config.seed!r},
     max_grad_norm={config.algorithm.max_grad_norm},
 {clip_lines}    max_steps={config.max_steps},
     bf16=BF16,
@@ -516,20 +506,19 @@ trainer_config = {"GRPOConfig" if algorithm == "grpo" else "OnlineDPOConfig"}(
 )
 
 # Trainer
-trainer = {"GRPOTrainer" if algorithm == "grpo" else "OnlineDPOTrainer"}(
+trainer = GRPOTrainer(
     model=model,
     args=trainer_config,
     train_dataset=train_dataset,
-    reward_funcs=[prm_reward_fn],
+    reward_funcs=[reward_fn],
     processing_class=tokenizer,
 )
 
-last_checkpoint = get_last_checkpoint(trainer_config.output_dir)
-trainer.train(resume_from_checkpoint=last_checkpoint)
+trainer.train(resume_from_checkpoint=None)
 if USE_PEFT and PEFT_METHOD == "bitfit":
     save_bitfit_checkpoint(
         model,
-        "./checkpoints/bitfit_adapter.pt",
+        os.path.join(OUTPUT_DIR, "bitfit_adapter.pt"),
         base_model_name=MODEL_NAME,
     )
 if PUSH_TO_HUB:

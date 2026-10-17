@@ -33,23 +33,17 @@ def test_tinker_rejects_unimplemented_algorithms_before_launch(algorithm):
     run.assert_not_called()
 
 
-def test_tinker_canonical_settings_reach_real_cli_config():
-    from platform_tinker.tinkerrl.grpo_cli import _parse_args, build_config
+def test_tinker_migration_keeps_direct_baseline_config_inspection_offline(capsys):
+    from platform_tinker.tinkerrl.grpo_cli import main as baseline_main
+    import json
 
-    item = launcher("tinker")
-    with patch("subprocess.run") as run:
-        result = item._run_tinker()
-    command = run.call_args.args[0]
-    actual = build_config(_parse_args(command[3:]))
-    assert actual.model == item.model
-    assert actual.group_size == item.spec.num_generations
-    assert actual.lr == item.spec.learning_rate
-    assert actual.lora_rank == item.spec.lora_rank
-    assert actual.max_response_tokens == item.spec.max_completion_length
-    assert actual.batch_size == item.spec.per_device_train_batch_size
-    assert actual.steps == item.spec.training_steps
-    assert actual.seed == item.spec.seed
-    assert result.algorithm == "grpo"
+    with patch("socket.socket.connect", side_effect=AssertionError("network attempted")):
+        assert baseline_main(["--preset", "gsm8k", "--check-config"]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["status"] == "config_checks_passed"
+    assert result["dataset"] == "gsm8k"
+    assert "provider_availability" in result["not_checked"]
+    assert result["effective"]["gspo_enabled"] is False
 
 
 def test_openrlhf_driver_receives_typed_requested_configuration():
@@ -58,7 +52,9 @@ def test_openrlhf_driver_receives_typed_requested_configuration():
     package.__path__ = [str(ROOT / "platform_modal/openrlhf")]
     driver = types.ModuleType("platform_modal.openrlhf.trainer")
     captured = []
-    driver.run_openrlhf_training = lambda config, output_dir: captured.append(config)
+    driver.run_openrlhf_training = lambda config, output_dir: (
+        captured.append(config) or {"steps": 7}
+    )
     with patch.dict(sys.modules, {package.__name__: package, driver.__name__: driver}):
         item = launcher("openrlhf")
         result = item._run_openrlhf()
@@ -67,6 +63,11 @@ def test_openrlhf_driver_receives_typed_requested_configuration():
         assert config.learning_rate == item.spec.learning_rate
         assert config.algorithm.algorithm == "grpo"
         assert config.algorithm.kl_coef == item.spec.beta
+        assert config.algorithm.sample_num == item.spec.num_generations
+        assert config.model.lora_rank == item.spec.lora_rank
+        assert config.data.max_response_length == item.spec.max_completion_length
+        assert config.train_batch_size == item.spec.per_device_train_batch_size
+        assert result.final_step == 7
         assert config.seed == item.spec.seed
         assert config.max_steps == item.spec.training_steps
         assert config.to_dict()["model"]["model_name"] == item.model
@@ -94,6 +95,10 @@ def invoke_trl(extra=(), generate=False):
         "synthetic/model",
         "--train-data",
         "synthetic.json",
+        "--reward-callable",
+        "task_rewards:reward",
+        "--output-dir",
+        "synthetic-fresh-output",
     ]
     argv += list(extra)
     if generate:
@@ -136,13 +141,22 @@ def test_direct_trl_preserves_budget_and_cli_settings(backend):
             "synthetic-ds.json",
         ]
     )
-    assert config["max_steps"] == 8
+    assert config["max_steps"] == 4
     assert config["data"]["train_batch_size"] == 2
     assert config["optimizer"]["learning_rate"] == 0.0002
     assert config["model"]["lora_rank"] == 7
     assert config["model"]["peft_num_virtual_tokens"] == 12
     assert config["deepspeed"] == "synthetic-ds.json"
     assert config["epochs"] == 3
+    assert config["reward_callable"] == "task_rewards:reward"
+    assert config["output_dir"] == "synthetic-fresh-output"
+    assert config["seed"] == CanonicalSpec().seed
+    assert config["algorithm"]["num_generations"] == CanonicalSpec().num_generations
+    assert config["algorithm"]["kl_coef"] == CanonicalSpec().beta
+    assert config["data"]["max_response_length"] == CanonicalSpec().max_completion_length
+    assert (
+        config["data"]["gradient_accumulation_steps"] == CanonicalSpec().gradient_accumulation_steps
+    )
 
 
 def test_trl_generation_and_direct_execution_share_configuration():
@@ -180,8 +194,10 @@ def test_invalid_or_unsupported_budget_rejected_before_launch(extra):
     assert failure.value.code == 2
 
 
-def test_direct_trl_preserves_supported_idpo_algorithm():
-    assert invoke_trl(["--algorithm", "idpo"])["algorithm"]["algorithm"] == "idpo"
+def test_direct_trl_rejects_idpo_with_pinned_backend():
+    with pytest.raises(SystemExit) as failure:
+        invoke_trl(["--algorithm", "idpo"])
+    assert failure.value.code == 2
 
 
 @pytest.mark.parametrize("extra", [["--algorithm", "ppo"], ["--no-peft", "--load-in-4bit"]])

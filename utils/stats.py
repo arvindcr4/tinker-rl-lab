@@ -20,13 +20,22 @@ import json
 import glob
 import argparse
 import math
-from numbers import Real
+import re
+from decimal import Context, Decimal, ROUND_HALF_EVEN, localcontext
+from numbers import Integral, Real
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+
+def _seed_from_directory(folder: str) -> int:
+    name = os.path.basename(folder)
+    if not re.fullmatch(r"seed_[0-9]+", name):
+        raise ValueError(f"Invalid seed directory name: {folder}")
+    return int(name.removeprefix("seed_"))
 
 
 def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List[dict]]:
@@ -43,11 +52,7 @@ def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List
     sources: Dict[int, str] = {}
     pattern = os.path.join(results_dir, experiment, "seed_*", "*.jsonl")
     for filepath in sorted(glob.glob(pattern)):
-        seed_dir = os.path.basename(os.path.dirname(filepath))
-        try:
-            seed = int(seed_dir.replace("seed_", ""))
-        except ValueError:
-            continue
+        seed = _seed_from_directory(os.path.dirname(filepath))
         if seed in sources:
             raise ValueError(
                 f"Ambiguous metric sources for seed {seed}: {sources[seed]} and {filepath}"
@@ -63,8 +68,46 @@ def load_multi_seed_results(results_dir: str, experiment: str) -> Dict[int, List
                 if not isinstance(data, dict):
                     raise ValueError(f"Metric record must be an object: {filepath}")
                 metrics.append(data)
+        if not metrics:
+            raise ValueError(f"Empty metric source for seed {seed}: {filepath}")
         seed_results[seed] = metrics
+    for folder in sorted(glob.glob(os.path.join(results_dir, experiment, "seed_*"))):
+        seed = _seed_from_directory(folder)
+        if not os.path.isdir(folder):
+            raise ValueError(f"Seed source is not a directory: {folder}")
+        if not glob.glob(os.path.join(folder, "*.jsonl")):
+            raise ValueError(f"Missing metric source for seed {seed}: {folder}")
     return seed_results
+
+
+def _finite_mean(values: np.ndarray) -> float:
+    """NumPy's existing mean, with exact-range fallback on sum overflow."""
+    with np.errstate(over="ignore", invalid="ignore"):
+        result = np.mean(values)
+    if np.isfinite(result):
+        return result
+    context = Context(
+        prec=1600 + len(str(len(values))), rounding=ROUND_HALF_EVEN, Emin=-999999, Emax=999999
+    )
+    with localcontext(context):
+        return float(sum((Decimal.from_float(float(v)) for v in values), Decimal(0)) / len(values))
+
+
+def _finite_percentile(values: np.ndarray, percentile: float) -> float:
+    """Preserve NumPy's linear quantile, avoiding overflowing endpoint differences."""
+    with np.errstate(over="ignore", invalid="ignore"):
+        result = np.percentile(values, percentile)
+    if np.isfinite(result):
+        return result
+    ordered = np.sort(values)
+    index = (len(ordered) - 1) * (percentile / 100)
+    left = math.floor(index)
+    right = math.ceil(index)
+    context = Context(prec=1600, rounding=ROUND_HALF_EVEN, Emin=-999999, Emax=999999)
+    with localcontext(context):
+        weight = Decimal.from_float(index - left)
+        a, b = Decimal.from_float(float(ordered[left])), Decimal.from_float(float(ordered[right]))
+        return float(a + (b - a) * weight)
 
 
 def compute_bootstrap_ci(
@@ -83,48 +126,56 @@ def compute_bootstrap_ci(
         rng: NumPy random generator for reproducibility.
 
     Returns:
-        (mean, lower_ci, upper_ci)
+        (mean, lower_ci, upper_ci). With one score, the bounds are NaN:
+        sampling uncertainty cannot be estimated from one seed/run.
     """
     scores = np.asarray(scores, dtype=float).ravel()
     if scores.size == 0:
         raise ValueError("compute_bootstrap_ci requires at least one score")
+    if not np.all(np.isfinite(scores)):
+        raise ValueError("compute_bootstrap_ci requires finite scores")
     if not 0.0 < confidence < 1.0:
         raise ValueError(f"confidence must be in (0, 1), got {confidence}")
+    if isinstance(n_bootstrap, bool) or not isinstance(n_bootstrap, Integral) or n_bootstrap < 1:
+        raise ValueError("n_bootstrap must be a positive integer")
 
     if rng is None:
         rng = np.random.default_rng(42)
 
     n = len(scores)
     if n == 1:
-        # A single observation carries no sampling spread: the CI collapses
-        # to the observation itself instead of bootstrapping noise.
-        mean = float(scores[0])
-        return mean, mean, mean
+        return float(scores[0]), float("nan"), float("nan")
     bootstrap_means = np.array(
-        [np.mean(rng.choice(scores, size=n, replace=True)) for _ in range(n_bootstrap)]
+        [_finite_mean(rng.choice(scores, size=n, replace=True)) for _ in range(n_bootstrap)]
     )
 
     alpha = (1 - confidence) / 2
-    lower = np.percentile(bootstrap_means, 100 * alpha)
-    upper = np.percentile(bootstrap_means, 100 * (1 - alpha))
-    mean = np.mean(scores)
+    lower = _finite_percentile(bootstrap_means, 100 * alpha)
+    upper = _finite_percentile(bootstrap_means, 100 * (1 - alpha))
+    mean = _finite_mean(scores)
 
     return mean, lower, upper
 
 
 def standard_error(scores: np.ndarray, axis: int = 0):
     """
-    Standard error of the mean with an n<2 guard.
+    Standard error of the mean; one observation has unestimable uncertainty.
 
-    ``std(ddof=1)`` is undefined for a single observation, so n<2 reports
-    zero spread instead of NaN. Returns a scalar for 1-D input, an array
-    along ``axis`` otherwise.
+    ``std(ddof=1)`` is undefined for one observation, so n=1 returns NaN,
+    never zero spread. Empty/nonfinite inputs are errors. Returns a scalar
+    for 1-D input, an array along ``axis`` otherwise.
     """
     arr = np.asarray(scores, dtype=float)
-    n = arr.shape[axis] if arr.ndim > 0 else 0
-    if n < 2:
-        zeros = np.zeros_like(np.mean(arr, axis=axis))
-        return zeros.item() if zeros.ndim == 0 else zeros
+    if arr.size == 0:
+        raise ValueError("standard_error requires at least one score")
+    if not np.all(np.isfinite(arr)):
+        raise ValueError("standard_error requires finite scores")
+    if arr.ndim == 0:
+        return float("nan")
+    n = arr.shape[axis]
+    if n == 1:
+        unavailable = np.full_like(np.mean(arr, axis=axis), np.nan)
+        return unavailable.item() if unavailable.ndim == 0 else unavailable
     return np.std(arr, axis=axis, ddof=1) / np.sqrt(n)
 
 
@@ -275,8 +326,11 @@ def plot_learning_curves_with_ci(
     for idx, (algo_name, steps, aligned_curves) in enumerate(prepared):
         mean = np.mean(aligned_curves, axis=0)
         se = standard_error(aligned_curves, axis=0)
-        ax.plot(steps, mean, label=algo_name, color=colors[idx], linewidth=2)
-        ax.fill_between(steps, mean - 1.96 * se, mean + 1.96 * se, alpha=0.2, color=colors[idx])
+        n_seeds = len(aligned_curves)
+        label = algo_name if n_seeds >= 2 else f"{algo_name} (n=1: CI not estimable)"
+        ax.plot(steps, mean, label=label, color=colors[idx], linewidth=2)
+        if n_seeds >= 2:
+            ax.fill_between(steps, mean - 1.96 * se, mean + 1.96 * se, alpha=0.2, color=colors[idx])
     ax.set_xlabel("Training Step" if True in modes else "Observation index", fontsize=12)
     ax.set_ylabel(metric_key, fontsize=12)
     ax.set_title(title, fontsize=14)
@@ -307,11 +361,16 @@ def generate_results_table(
         scores = np.asarray(scores, dtype=float).ravel()
         mean, ci_lower, ci_upper = compute_bootstrap_ci(scores)
         se = standard_error(scores)
+        mean_se = f"{mean:.3f} ± {se:.3f}"
+        interval = f"[{ci_lower:.3f}, {ci_upper:.3f}]"
+        if len(scores) == 1:
+            mean_se = f"{mean:.3f} (SE not estimable)"
+            interval = "not estimable (n=1)"
         rows.append(
             {
                 "Algorithm": algo_name,
-                f"{metric_name} (mean ± SE)": f"{mean:.3f} ± {se:.3f}",
-                "95% CI": f"[{ci_lower:.3f}, {ci_upper:.3f}]",
+                f"{metric_name} (mean ± SE)": mean_se,
+                "95% CI": interval,
                 "Seeds": len(scores),
             }
         )
@@ -394,6 +453,9 @@ def main(argv=None):
     )
     parser.add_argument("--output-dir", type=str, default="paper/figures/")
     parser.add_argument("--format", type=str, choices=["latex", "csv", "both"], default="both")
+    parser.add_argument(
+        "--metric", help="Metric key shared by every seed; otherwise infer a common legacy key"
+    )
     parser.add_argument("--rliable", action="store_true", help="Run rliable aggregate analysis")
     parser.add_argument(
         "--bootstrap-samples", type=int, default=10000, help="Bootstrap resamples for the CI"
@@ -430,31 +492,75 @@ def main(argv=None):
         print(f"Analyzing: {exp}")
         print(f"{'=' * 60}")
 
-        seed_results = load_multi_seed_results(args.results_dir, exp)
+        try:
+            seed_results = load_multi_seed_results(args.results_dir, exp)
+        except ValueError as exc:
+            parser.error(str(exc))
         if not seed_results:
             print(f"  No multi-seed results found for {exp}")
             continue
 
         print(f"  Found {len(seed_results)} seeds: {list(seed_results.keys())}")
 
-        # Extract final scores for each seed
+        # A summary must compare the same quantity at a compatible horizon.
         final_scores = []
-        for metrics_list in seed_results.values():
-            if metrics_list:
-                last_metric = metrics_list[-1]
-                score = last_metric.get(
-                    "reward/mean",
-                    last_metric.get("accuracy", last_metric.get("eval/percent_correct")),
+        common_keys = set.intersection(*(set(rows[-1]) for rows in seed_results.values()))
+        metric = args.metric or next(
+            (
+                key
+                for key in ("reward/mean", "accuracy", "eval/percent_correct")
+                if key in common_keys
+            ),
+            None,
+        )
+        selected_metrics = set()
+        horizons = set()
+        for seed, metrics_list in seed_results.items():
+            last_metric = metrics_list[-1]
+            score = last_metric.get(metric)
+            if (
+                isinstance(score, bool)
+                or not isinstance(score, (int, float))
+                or not np.isfinite(score)
+            ):
+                parser.error(
+                    f"{exp}, seed {seed}: final score must be a finite numeric metric; "
+                    "missing metrics are not zero"
                 )
-                if (
-                    isinstance(score, bool)
-                    or not isinstance(score, (int, float))
-                    or not np.isfinite(score)
-                ):
+            selected_metrics.add(metric)
+            unsupported_steps = {"global_step", "_step", "optimizer_step"}
+            if any(unsupported_steps.intersection(record) for record in metrics_list):
+                parser.error(
+                    f"{exp}, seed {seed}: unsupported step metadata; explicitly normalize "
+                    "the intended horizon to 'step' before aggregation"
+                )
+            has_steps = ["step" in record for record in metrics_list]
+            if any(has_steps):
+                if not all(has_steps):
+                    parser.error(f"{exp}, seed {seed}: inconsistent explicit step metadata")
+                steps = [record["step"] for record in metrics_list]
+                if any(
+                    isinstance(step, bool)
+                    or not isinstance(step, Real)
+                    or not math.isfinite(step)
+                    or step < 0
+                    for step in steps
+                ) or any(b <= a for a, b in zip(steps, steps[1:])):
                     parser.error(
-                        f"{exp}: final score must be a finite numeric metric; missing metrics are not zero"
+                        f"{exp}, seed {seed}: steps must be finite, nonnegative and strictly increasing"
                     )
-                final_scores.append(score)
+                horizons.add(("explicit", steps[-1]))
+            else:
+                horizons.add(("observation_index", len(metrics_list)))
+            final_scores.append(score)
+        if len(selected_metrics) != 1:
+            parser.error(f"{exp}: mixed metric keys across seeds; select a shared --metric")
+        if len(horizons) != 1:
+            parser.error(
+                f"{exp}: incompatible final step or observation-index horizons across seeds"
+            )
+        selected_metric = next(iter(selected_metrics))
+        step_mode, final_step = next(iter(horizons))
 
         if final_scores:
             scores_arr = np.array(final_scores)
@@ -466,16 +572,25 @@ def main(argv=None):
                 {
                     "experiment": exp,
                     "seeds": len(final_scores),
+                    "metric": selected_metric,
+                    "step_mode": step_mode,
+                    "final_step": final_step,
                     "mean": float(mean),
                     "standard_error": float(se),
                     "ci_lower": float(ci_lower),
                     "ci_upper": float(ci_upper),
                     "bootstrap_samples": args.bootstrap_samples,
+                    "uncertainty_status": (
+                        "insufficient_seeds" if len(final_scores) == 1 else "estimated_from_seeds"
+                    ),
                 }
             )
-            print(
-                f"  Final score: {mean:.4f} ± {se:.4f} (95% CI: [{ci_lower:.4f}, {ci_upper:.4f}])"
-            )
+            if len(final_scores) == 1:
+                print(f"  Final score: {mean:.4f} (SE and 95% CI not estimable: n=1)")
+            else:
+                print(
+                    f"  Final score: {mean:.4f} ± {se:.4f} (95% CI: [{ci_lower:.4f}, {ci_upper:.4f}])"
+                )
 
     if not summary_rows:
         parser.error("no nonempty seed results found; no analysis was produced")
@@ -497,20 +612,22 @@ bootstrap_ci = compute_bootstrap_ci
 def compute_iqm(scores: np.ndarray, tau: float = 0.25) -> float:
     """Compute the Interquartile Mean (IQM) of a score array.
 
-    Follows Agarwal et al. (2021), "Deep RL at the Edge of the Statistical
-    Precipice". Drops the top and bottom `tau` fraction of values and returns
-    the mean of the middle (1 - 2*tau) fraction. Default tau=0.25 gives the
-    canonical IQM over the central 50% of scores.
+    Sorts observations and trims floor(n * tau) values from each tail,
+    matching scipy.stats.trim_mean and rliable's rank-trimming convention.
+    Ties are retained according to rank, not quantile-value membership.
+    Default tau=0.25 gives the usual interquartile trimmed mean.
+    Empty input retains the legacy NaN result.
     """
+    if not isinstance(tau, Real) or isinstance(tau, bool) or not 0 <= tau < 0.5:
+        raise ValueError("tau must be in [0, 0.5)")
     arr = np.asarray(scores, dtype=float).ravel()
     if arr.size == 0:
         return float("nan")
-    lo = np.quantile(arr, tau)
-    hi = np.quantile(arr, 1 - tau)
-    mid = arr[(arr >= lo) & (arr <= hi)]
-    if mid.size == 0:
-        return float(np.mean(arr))
-    return float(np.mean(mid))
+    if not np.all(np.isfinite(arr)):
+        raise ValueError("compute_iqm requires finite scores")
+    ordered = np.sort(arr)
+    trim = int(arr.size * tau)
+    return float(np.mean(ordered[trim : arr.size - trim]))
 
 
 if __name__ == "__main__":

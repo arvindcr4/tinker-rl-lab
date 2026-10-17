@@ -18,8 +18,13 @@ Reference entries require ``seed`` plus ``last10``/``peak``, a ``seeds`` mapping
 of seed strings to those metrics, or an explicit ``seed_independent: true``
 declaration supplied by the reference author. Legacy unscoped numbers are retained
 but cannot validate any seed. Only the headline seed 42 is scoped in the defaults;
-other seeds need independently supported references. Unknown or conflicting seed
+other seeds need independently supported references. Experiment tags must match a
+complete reference key apart from a trailing _sN, _seedN or _seed_N suffix;
+unknown group sizes or model variants cannot inherit the headline reference.
+Unknown or conflicting seed
 identities are UNVERIFIED and exit nonzero, never compared with seed 42 by default.
+Repeated experiment/seed identities are also UNVERIFIED, including copies across
+files; duplicate observations cannot count as independent reproduction evidence.
 
 The default tolerances (±5 pts on last-10, ±10 pts on peak) are justified in
 `ARTIFACT.md §6` and `REPRODUCE.md §8`.
@@ -58,6 +63,7 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import math
 import re
@@ -146,17 +152,17 @@ def _parse_result_file(path: Path) -> List[Dict]:
 def _match_key(experiment: str, expected: Dict[str, Dict[str, Any]]) -> Optional[str]:
     """Map a result's 'experiment' tag to an expected-results key.
 
-    Matches by substring, preferring the *longest* matching key so that
-    ``gsm8k_qwen3_8b_base`` doesn't accidentally bind to ``gsm8k_qwen3_8b``.
+    Match the complete identity, allowing only trailing documented seed tags.
+    Unknown group sizes, model variants and prefixes need their own reference.
     """
-    e = experiment.lower()
-    best: Optional[str] = None
     for key in expected:
-        if key.startswith("_"):
-            continue
-        if key in e and (best is None or len(key) > len(best)):
-            best = key
-    return best
+        if not key.startswith("_") and key.lower() == experiment.lower():
+            return key
+    identity = re.sub(r"(?:_(?:s|seed_?)[0-9]+)+$", "", experiment.lower())
+    for key in expected:
+        if not key.startswith("_") and key.lower() == identity:
+            return key
+    return None
 
 
 def _seed(value):
@@ -171,8 +177,8 @@ def _seed(value):
 
 
 def _result_seed(parsed, experiment, filename):
-    tags = re.findall(r"(?:^|_)(?:s|seed_?)([0-9]+)(?=_|$)", experiment)
-    tags += re.findall(r"(?:^|_)(?:s|seed_?)([0-9]+)(?=_|$)", filename)
+    tags = re.findall(r"(?:^|_)(?:s|seed_?)([0-9]+)(?=_|$)", experiment, flags=re.I)
+    tags += re.findall(r"(?:^|_)(?:s|seed_?)([0-9]+)(?=_|$)", filename, flags=re.I)
     identities = {_seed(v) for v in tags}
     if "seed" in parsed:
         identities.add(_seed(parsed["seed"]))
@@ -186,9 +192,13 @@ def _references(expected):
     if not isinstance(expected, dict):
         raise ValueError("expected results must be an object")
     references = {}
+    identities = set()
     for key, spec in expected.items():
         if key.startswith("_"):
             continue
+        if key.lower() in identities:
+            raise ValueError(f"{key}: duplicate case-insensitive experiment identity")
+        identities.add(key.lower())
         if not isinstance(spec, dict):
             raise ValueError(f"{key}: expected result must be an object")
         if "seeds" in spec:
@@ -221,8 +231,9 @@ def _references(expected):
                     isinstance(value, bool)
                     or not isinstance(value, (int, float))
                     or not math.isfinite(value)
+                    or not 0 <= value <= 1
                 ):
-                    raise ValueError(f"{key}: {field} must be finite numeric data")
+                    raise ValueError(f"{key}: {field} must be finite numeric data in [0, 1]")
         references[key] = refs
     return references
 
@@ -248,8 +259,21 @@ def verify(
     if not files:
         print(f"  ! no .json or .log files found under {results_dir}", file=sys.stderr)
         return rows, 1
-    for path in files:
-        parsed_rows = _parse_result_file(path)
+    parsed_files = [(path, _parse_result_file(path)) for path in files]
+    identities: Counter[Tuple[str, Optional[str]]] = Counter()
+    for path, parsed_rows in parsed_files:
+        for parsed in parsed_rows:
+            exp = str(parsed.get("experiment", path.stem))
+            key = _match_key(exp, expected)
+            if key is None:
+                continue
+            try:
+                seed = _result_seed(parsed, exp, path.stem)
+            except (ValueError, TypeError):
+                # The validation pass below reports conflicting/malformed seeds.
+                continue
+            identities[key, seed] += 1
+    for path, parsed_rows in parsed_files:
         if not parsed_rows and _match_key(path.stem, expected):
             raise ValueError(f"{path.name}: expected experiment file has no parseable result")
         for parsed in parsed_rows:
@@ -259,6 +283,11 @@ def verify(
                 continue
             try:
                 seed = _result_seed(parsed, exp, path.stem)
+                if identities[key, seed] > 1:
+                    raise ValueError(
+                        f"duplicate experiment/seed identity: {key}, seed {seed}; "
+                        "supply one unambiguous observation per seed"
+                    )
                 ref_seed = "*" if "*" in references[key] else seed
                 values = references[key].get(ref_seed) if ref_seed is not None else None
                 if values is None:
@@ -270,11 +299,14 @@ def verify(
                     parsed.get("peak", parsed.get("peak_reward")),
                 ]
                 if any(
-                    isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
+                    isinstance(v, bool)
+                    or not isinstance(v, (int, float))
+                    or not math.isfinite(v)
+                    or not 0 <= v <= 1
                     for v in actual
                 ):
                     raise ValueError(
-                        "result metrics must be finite numbers, not missing values, booleans or strings"
+                        "result metrics must be finite numbers in [0, 1], not missing values, booleans or strings"
                     )
                 got_l10, got_peak = map(float, actual)
             except (ValueError, TypeError) as exc:

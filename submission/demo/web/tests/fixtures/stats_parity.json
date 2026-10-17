@@ -1,0 +1,17 @@
+{
+  "description": "Shared JavaScript/Python paired-seed inference regression inputs; differences are proportions, not percentage points",
+  "cases": [
+    {"name": "all zero", "differences": [0, 0, 0, 0, 0], "p": 1, "tost": 0, "sf": 1},
+    {"name": "constant positive", "differences": [0.01, 0.01, 0.01, 0.01, 0.01], "p": 0, "tost": 0, "sf": 0.0625},
+    {"name": "upper equivalence boundary", "differences": [0.02, 0.02, 0.02], "tost": 0.5},
+    {"name": "lower equivalence boundary", "differences": [-0.02, -0.02, -0.02], "tost": 0.5},
+    {"name": "positive 5pp boundary", "differences": [0.05, 0.05, 0.05], "positive5ppP": 0.5},
+    {"name": "above positive 5pp", "differences": [0.06, 0.06, 0.06], "positive5ppP": 1},
+    {"name": "symmetric varied", "differences": [-0.02, -0.01, 0, 0.01, 0.02], "p": 1, "sf": 1},
+    {"name": "five positive pairs", "differences": [0.002, 0.004, 0.006, 0.008, 0.01], "sf": 0.0625},
+    {"name": "mixed close to zero", "differences": [0.007581501137225, -0.003790750568612, 0.001516300227445, 0.004548900682335, -0.006823351023503]},
+    {"name": "tiny magnitudes preserve exact signs", "differences": [1e-20, 2e-20, 3e-20, 4e-20, 5e-20], "sf": 0.0625},
+    {"name": "two pairs", "differences": [-0.02, 0.04]},
+    {"name": "ten pairs", "differences": [-0.01, 0.02, -0.03, 0.04, 0, -0.02, 0.01, 0.03, -0.04, 0.02]}
+  ]
+}

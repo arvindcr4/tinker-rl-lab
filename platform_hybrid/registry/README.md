@@ -68,7 +68,7 @@ python3 platform_hybrid/registry/query.py stackdiff --all [--generated]   # R-le
 python3 platform_hybrid/registry/query.py validate                  # schema
 python3 platform_hybrid/registry/query.py validate-strict           # schema + orphan/source gate
 python3 platform_hybrid/registry/generate_entries.py [--check|--dry-run]
-python3 -m pytest tests/test_registry_stackdiff.py tests/test_provenance.py
+python3 -m pytest tests/test_registry_stackdiff.py tests/test_registry_evidence.py tests/test_provenance.py
 ```
 
 ### stackdiff severity scheme
@@ -79,16 +79,16 @@ either side never raises the level. The verdict is the maximum severity:
 
 | Level | Meaning | Fields |
 |---|---|---|
-| R5 | outcome-critical | `execution.mode`, `checkpoint.{id,variant,revision}`, `reward.id`, `prompt.{template_sha256,chat_template}`, `data.dataset`, `eval.{metric,heldout}` |
+| R5 | outcome-critical | `execution.mode`, `checkpoint.{id,variant,revision}`, `reward.id`, `prompt.{template_sha256,chat_template}`, `data.{dataset,revision,ordered_example_identity}`, `tokenizer.{id,revision}`, `eval.{metric,heldout}` |
 | R4 | algorithm | `loss.*` (objective, ratio, clip, aggregation, advantage norm, token mask, length norm, dynamic sampling, reward shaping, inner epochs), `kl.*`, variant-delta rows declared on both sides |
 | R3 | hyperparameter / budget | `decoding.*`, `batch.*`, `train.{steps,sampler_refresh}`, `data.{subset,selection}`, `optimizer.*`, `lora.*` |
-| R2 | runtime | `trainer.name`, `runtime.{backend,precision}`, `reward.fn_sha256` (byte-level implementation hash; the semantic `reward.id` is R5) |
+| R2 | runtime | `trainer.name`, `runtime.{backend,precision,gpu,environment}`, `implementation.identity`, `reward.fn_sha256` (byte-level implementation hash; the semantic `reward.id` is R5) |
 | R1 | seed / version / reporting | `trainer.version`, `seeds` |
 | R0 | no known differences | — |
 
 Missing information is reported separately:
 
-- `coverage` — fraction of compared fields known on both sides;
+- `coverage` (`stackdiff_known_both_v2`) — fraction of compared fields known on both sides;
 - `unknown` — each field unknown on one or both sides, with its severity, and
   `max hidden severity` (the worst level that could still be hiding);
 - `UNDERSPECIFIED` — `coverage < 0.8`, or any R5 field unknown, including
@@ -101,6 +101,8 @@ Missing information is reported separately:
 - `evidence_coverage` — observed (`logged`), source-defined (`code`), assumed
   (`default`, `inferred`, legacy `registry`), and unresolved fractions, each
   divided by the full catalogue
+- `evidence_complete` — no unknown comparison fields or one-sided delta declarations
+- `matching_requirements.satisfied` — all required fields are observed and equal, with no unresolved declarations, conditional evidence, or implementation differences needing semantic review
 
 `checkpoint.id` and `data.dataset` are compared after stripping trailing
 parenthetical annotations, lowercasing, and aliasing `gsm8k` -> `openai/gsm8k:main`
@@ -111,8 +113,16 @@ fields; they do not measure causal effect. Version and reward implementation
 changes require semantic review irrespective of their descriptive R-level.
 Integers and finite floats are compared exactly, with no display rounding.
 
-Field values come from an entry's `run_config` when present, otherwise from its
-hand-entered top-level fields and `min_report` (JSON null = unknown).
+Observed `effective_manifest` fields override an entry's `run_config`, which
+in turn overrides hand-entered top-level fields and `min_report`. Explicit nulls
+in the manifest override historical assumptions as unknown. The extractor
+supports canonical field names and the shared runtime manifest's `revisions`,
+`hardware.gpu_names`, `environment_hash`, `source`, `generation.train`, and
+ordered `train_item_ids` / `test_item_ids`. A provider name alone is not an
+environment identity, and one ordered split alone is not both split identities.
+`decoding.*` includes top-k and repetition penalty; no absent setting is assumed
+to equal a library default. Per-entry specification coverage is separately
+versioned as `stack_spec_known_fields_v2`.
 
 ### Generated entries (`run_config`)
 
@@ -134,7 +144,8 @@ assertion contradicts captured values. Numeric optimizer settings use AST
 extraction; unresolved launcher/library defaults remain unknown. Semantic labels
 anchored only by a regex location are marked inferred, so comparisons relying
 on them are conditional until independently established.
-`--check` fails if entries on disk are stale. `regen_changes.json` records the
+Batch prompts are calculated from actual generation batch and group sizes, and Adam betas are extracted independently.
+`--check` fails if entries on disk are stale; disposable projections verify idempotence. `regen_changes.json` records the
 leaf-level before/after against the hand-written versions.
 
 Generation v3 rebuilds the entire generated projection, including outcomes,
@@ -199,3 +210,39 @@ of the original experimental claims or the historical statistical methods.
 For authenticated publication, use the v2 file-level gate described in
 [`provenance/SPEC.md`](provenance/SPEC.md). A reporting badge never substitutes
 for trusted authentication, full evidence verification, or statistical analysis.
+
+## Historical v2 coverage migration
+
+The generator does not infer instruct from an absent Base suffix,
+assume an absent launch command used CLI defaults, or report decontamination /
+parser robustness as false without evidence. Unknown remains JSON null.
+Generated outcomes are a deep copy of the current source-derived outcomes;
+old CI/controller statistics are not carried over. Explicit annotations belong
+in `provenance.manual_annotations`. Numeric outcome lineage records a source
+pointer, input SHA-256 and extraction computation version under
+`provenance.outcome_provenance`. This identifies extraction of a source-reported
+statistic, not a new independent reproduction of its upstream computation.
+
+Historical v2 coverage names distinguish the denominators and claims. New
+generation uses the v3 substantive-leaf names above for MIN-REPORT coverage;
+the versioned delta fractions below remain current:
+
+- `min_report_item_presence_v1`: fraction of seven items with any reported leaf
+- `min_report_leaf_mean_v2`: equal-weight mean of each item's reported-leaf
+  fraction under the historical v2 badge definition
+- `declared_delta_reporting_completeness_v2`: fraction of rows documented as
+  implemented, surrogate, or absent; unknown is incomplete reporting
+- `declared_delta_implementation_fraction_v1`: fraction actually marked implemented
+- `declared_delta_surrogate_fraction_v1`: fraction marked surrogate
+
+No declared rows yields null for the three delta fractions. Documented absence
+counts toward reporting completeness and contributes zero implementation
+presence. Coverage inputs and computation version are separately recorded in
+`provenance.coverage_provenance`. Legacy fields remain schema-readable for
+historical records and must not be confused with these versioned definitions.
+
+The code-only review intentionally leaves the twelve historical generated
+records and stored results unchanged. Consequently `generate_entries.py --check`
+reports those records as stale until a separately reviewed regeneration occurs.
+A schema/strict-validation pass establishes structural/source-reference validity,
+not correctness or freshness of every historical scientific claim.

@@ -4,6 +4,7 @@ import Overview from "./views/Overview.jsx";
 import AdvantageLab from "./views/AdvantageLab.jsx";
 import Zvf from "./views/Zvf.jsx";
 import SameStack from "./views/SameStack.jsx";
+import Platform from "./views/Platform.jsx";
 import StackDiff from "./views/StackDiff.jsx";
 import Audit from "./views/Audit.jsx";
 import RealAnswers from "./views/RealAnswers.jsx";
@@ -15,6 +16,7 @@ const VIEWS = [
   ["advantage", "Advantage lab", AdvantageLab],
   ["zvf", "Zero-variance groups", Zvf],
   ["samestack", "GRPO vs PPO", SameStack],
+  ["platform", "Platform calibration", Platform],
   ["answers", "Real answers", RealAnswers],
   ["stackdiff", "Stack diff", StackDiff],
   ["audit", "Evidence audit", Audit],
@@ -38,7 +40,7 @@ export default function App() {
       const i = VIEWS.findIndex(([id]) => id === current());
       if (e.key === "ArrowRight" && i < VIEWS.length - 1) go(VIEWS[i + 1][0]);
       else if (e.key === "ArrowLeft" && i > 0) go(VIEWS[i - 1][0]);
-      else if (/^[1-8]$/.test(e.key)) go(VIEWS[+e.key - 1][0]);
+      else if (/^[1-9]$/.test(e.key)) go(VIEWS[+e.key - 1][0]);
       else if (e.key === "p") setPresent((v) => !v);
     };
     window.addEventListener("hashchange", onHash);
@@ -50,9 +52,10 @@ export default function App() {
 
   const idx = VIEWS.findIndex(([id]) => id === view);
   const View = VIEWS[idx][2], next = VIEWS[idx + 1];
-  const sources = SS.sources.concat(
-    [DATA.samestack_v1, DATA.audit].filter(Boolean).map(({ path, sha256 }) => ({ path, sha256 })),
+  const sources = DATA.manifest?.sources || (SS.sources || []).concat(
+    [DATA.samestack_v1, DATA.platform, DATA.audit].filter(Boolean).map(({ path, sha256 }) => ({ path, sha256 })),
   );
+  const missing = DATA.manifest?.missing || ["Full provenance manifest unavailable in this legacy export"];
 
   return (
     <>
@@ -63,7 +66,7 @@ export default function App() {
         </div>
         {view === "overview" ? <h1>TinkerRL Measurement Lab</h1> : <div className="brand">TinkerRL Measurement Lab</div>}
         {view === "overview" && (
-          <p className="lede">An interactive walk through what the project measured about GRPO post-training: where the learning signal comes from, when it disappears, whether GRPO beats PPO on the same stack, and why a method label does not pin down a training stack. Every number here is recomputed in this page from stored run files.</p>
+          <p className="lede">An interactive walk through what the project measured about GRPO post-training: where the learning signal comes from, when it disappears, whether GRPO beats PPO on the same stack, and why a method label does not pin down a training stack. Validated inference comes from a canonical offline analysis. The browser computes descriptive arm means, ZVF summaries, advantage examples and answer re-grades; registry comparisons and audit summaries are exported offline.</p>
         )}
       </div></header>
       <nav className="tabs" aria-label="Sections"><div className="wrap">
@@ -74,18 +77,20 @@ export default function App() {
       <main className="wrap">
         <View />
         <div className="next-row">
-          <span className="small">Keys: ← → or 1–8 to move, P to present</span>
+          <span className="small">Keys: ← → or 1–9 to move, P to present</span>
           {next && <a className="next" href={`#${next[0]}`}>Next: {next[1]} →</a>}
         </div>
       </main>
       <footer><div className="wrap">
         <details>
-          <summary>Sources ({sources.length} files, SHA-256)</summary>
+          <summary>Provenance ({sources.length} source files, SHA-256)</summary>
           <div className="table-box"><table><tbody>
             {sources.map((s) => (
-              <tr key={s.path}><td className="mono">{s.path}</td><td className="mono">{s.sha256.slice(0, 16)}…</td></tr>
+              <tr key={s.path}><td className="mono">{s.path}</td><td>{s.role || "source"}</td><td className="mono">{s.sha256 || "missing"}</td></tr>
             ))}
           </tbody></table></div>
+          <p className="small">Missing or unverified coverage: {missing.length ? missing.join("; ") : "none reported"}</p>
+          <p className="small">Hashes identify the files read by this export. They do not retrospectively prove an unrecorded training environment or protocol.</p>
         </details>
         <p style={{ marginTop: 10 }}>Built offline from stored results by <span className="mono">submission/demo/web/build_demo_web.py</span>. No model runs in this page, and nothing here is a new measurement. Registry: {SD.entries.length} stacks.</p>
       </div></footer>

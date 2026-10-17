@@ -1,152 +1,153 @@
-"""Stage complete Colab result bundles transactionally; own only new sessions."""
+"""Preserve complete versioned Colab bundles before stopping a session.
 
-import gzip
-import hashlib
+Existing JSON does not skip a run. The remote core checks the current immutable
+protocol/config/source identity before reusing a completed run. This is finished
+artifact reuse, not optimizer/RNG-state recovery of interrupted training.
+Downloads enter a temporary per-run directory. Every advertised file and hash,
+run schema, texts, adapters, and tokenizer must verify before atomic promotion.
+A failed transfer leaves the remote session running for a retry.
+"""
+from __future__ import annotations
+
+import argparse
 import json
 import os
-import pathlib
-import re
+from pathlib import Path, PurePosixPath
 import subprocess
 import sys
 import tempfile
+import zipfile
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
-MODAL_SCRIPT = ROOT / "platform_hybrid/experiments/modal/modal_samestack_gsm8k_cot_v2.py"
+ROOT = Path(__file__).resolve().parents[2]
+HELPERS = ROOT / "platform_hybrid/experiments"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from platform_hybrid.experiments.samestack_contract import completion_path, strict_json_load, validate_completion
+from platform_hybrid.experiments.samestack_protocol import PROTOCOL_HASH, PROTOCOL_ID
+
+MODAL_SCRIPT = HELPERS / "modal/modal_samestack_gsm8k_cot_v2.py"
 RUNNER = ROOT / "platform_colab/samestack_v2/colab_run_arms.py"
-STAGE = ROOT / "platform_hybrid/experiments/results/samestack_gsm8k_v2s_colab"
+STAGE = ROOT / os.environ.get("STAGE_DIR", "platform_hybrid/experiments/results/" + PROTOCOL_ID + "_colab")
 
 
 def colab(*args, check=True):
-    return subprocess.run(
-        ["colab", *args], check=check, timeout=10920 if args[0] == "exec" else 180
-    )
+    print("$ colab", " ".join(str(arg) for arg in args), flush=True)
+    timeout = 180
+    if args and args[0] == "exec":
+        timeout = int(args[args.index("--timeout") + 1]) + 120 if "--timeout" in args else 10920
+    return subprocess.run(["colab", *map(str, args)], check=check, timeout=timeout)
 
 
-def bundle_complete(stage, name):
-    try:
-        receipt = json.loads((stage / f"{name}.complete.json").read_text())
-        expected = {f"{name}.json", f"{name}_texts.json.gz"}
-        return set(receipt["sha256"]) == expected and all(
-            hashlib.sha256((stage / filename).read_bytes()).hexdigest() == digest
-            for filename, digest in receipt["sha256"].items()
-        )
-    except (OSError, ValueError, KeyError, TypeError):
-        return False
+def _safe_inventory(marker, name):
+    if not isinstance(marker, dict) or not isinstance(marker.get("files"), dict) or not marker["files"]:
+        raise ValueError("missing remote artifact inventory")
+    files = marker["files"]
+    for relative, entry in files.items():
+        path = PurePosixPath(relative)
+        if (path.is_absolute() or ".." in path.parts or "\\" in relative
+                or str(path) != relative or not isinstance(entry, dict)
+                or (relative not in (name + ".json", name + "_texts.json.gz")
+                    and not relative.startswith("adapters/" + name + "/"))):
+            raise ValueError(f"unsafe or unrelated artifact path: {relative}")
+    return files
 
 
-class TransferIncomplete(RuntimeError):
-    """Remote artifacts may exist; preserve the session for transfer recovery."""
-
-
-def transfer_bundle(session, name, stage):
-    """Retryable transfer. A completion marker is the atomic visibility boundary."""
+def preserve_run(session, name, stage, *, expected=None, command=colab):
+    """Download and atomically promote one bundle; retain partial files on failure."""
+    stage = Path(stage)
     stage.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(dir=stage, prefix=".transfer-") as tmp:
-        temp = pathlib.Path(tmp)
-        for suffix in (".json", "_texts.json.gz"):
-            proc = colab(
-                "download",
-                "-s",
-                session,
-                f"/content/results/samestack_gsm8k_v2s/{name}{suffix}",
-                str(temp / f"{name}{suffix}"),
-                check=False,
-            )
-            if proc.returncode:
-                if suffix != ".json":
-                    raise TransferIncomplete(
-                        "Completion transfer failed; preserve the session and retry transfer"
-                    )
-                return False
-        try:
-            result = json.loads((temp / f"{name}.json").read_text())
-            with gzip.open(temp / f"{name}_texts.json.gz", "rt") as handle:
-                texts = json.load(handle)
-            arm, seed = name.rsplit("_s", 1)
-            n = result["n_eval"]
-            if (
-                result["arm"] != arm
-                or result["seed"] != int(seed)
-                or result.get("smoke") is not False
-                or type(n) is not int
-                or n <= 0
-                or any(
-                    len(texts.get(k, [])) != n
-                    or any(not isinstance(t, str) or not t.strip() for t in texts[k])
-                    for k in ("pre", "post")
-                )
-            ):
-                raise ValueError("Incomplete or mismatched staging bundle")
-        except (OSError, ValueError, KeyError, TypeError) as exc:
-            raise TransferIncomplete(
-                "Downloaded bundle is incomplete; preserve remote artifacts"
-            ) from exc
-        hashes = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in temp.iterdir()}
-        for path in temp.iterdir():
-            os.replace(path, stage / path.name)
-        marker = stage / f"{name}.complete.json"
-        marker.with_suffix(".tmp").write_text(
-            json.dumps({"schema": "colab-staging-v2", "sha256": hashes})
-        )
-        marker.with_suffix(".tmp").replace(marker)
-        return True
+    temporary = Path(tempfile.mkdtemp(prefix=f".{name}.partial-", dir=stage))
+    remote = f"/content/results/{PROTOCOL_ID}"
+    result_path = temporary / (name + ".json")
+    marker_path = completion_path(result_path)
+    # Marker is downloaded into the private temporary directory, never published
+    # as complete before its contents have independently passed local validation.
+    command("download", "-s", session, f"{remote}/{marker_path.name}", str(marker_path))
+    inventory = _safe_inventory(strict_json_load(marker_path), name)
+    for relative in sorted(inventory):
+        destination = temporary / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        command("download", "-s", session, f"{remote}/{relative}", str(destination))
+    record = validate_completion(result_path, expected=expected)
+    final = stage / name
+    if final.exists():
+        # Preserve prior bundles, including incomplete or differently identified
+        # ones. Never overwrite old evidence while promoting a retry.
+        archived = stage / f".{name}.previous-{os.urandom(6).hex()}"
+        os.replace(final, archived)
+    os.replace(temporary, final)
+    validate_completion(final / result_path.name, expected=expected)
+    return record
+
+
+def drive_session(session, runs, *, stage=STAGE, command=colab, source=None, parallel=1, batch=None, stop_session=True):
+    """Stop only after all requested bundles have been independently preserved."""
+    from platform_colab.samestack_v2.colab_run_arms import parse_runs
+    parsed = parse_runs(",".join(runs))
+    if not parsed:
+        raise ValueError("at least one run is required")
+    batch = parallel if batch is None else batch
+    if parallel < 1 or batch < 1:
+        raise ValueError("parallel and batch must be positive")
+    # Session creation is explicit to the CLI; this helper never guesses by a
+    # substring match against another session's name.
+    source = source or capture_source()
+    expected = {"environment": "colab", "protocol_id": PROTOCOL_ID, "protocol_hash": PROTOCOL_HASH,
+                "source_commit": source["commit"], "source_dirty_hash": source["dirty_hash"]}
+    with tempfile.TemporaryDirectory(prefix="samestack-upload-") as directory:
+        source_path = Path(directory) / "samestack_source.json"
+        source_path.write_text(json.dumps(source, allow_nan=False), encoding="utf-8")
+        archive_path = Path(directory) / "samestack_code.zip"
+        with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
+            for relative in source["source_files"]:
+                local = ROOT / relative
+                if not local.resolve().is_relative_to(ROOT.resolve()) or not local.is_file():
+                    raise ValueError(f"source manifest path unavailable: {relative}")
+                bundle.write(local, relative)
+        uploads = [(archive_path, "/content/samestack_code.zip"),
+                   (RUNNER, "/content/" + RUNNER.name),
+                   (source_path, "/content/samestack_source.json")]
+        for local, remote in uploads:
+            command("upload", "-s", session, str(local), remote)
+        for offset in range(0, len(parsed), batch):
+            group = parsed[offset:offset + batch]
+            waves = -(-len(group) // parallel)
+            # Remote core validates every requested identity; staging never skips runs.
+            command("exec", "-s", session, "-f", str(RUNNER), "--timeout", str(14400 * waves),
+                    "--env", "RUNS=" + ",".join(f"{arm}:{seed}" for arm, seed in group),
+                    "--env", "SMOKE=0", "--env", f"PARALLEL={parallel}")
+            for arm, seed in group:
+                name = f"{arm}_s{seed}"
+                preserve_run(session, name, stage, expected=expected, command=command)
+                print(f"PRESERVED {name}", flush=True)
+    for arm, seed in parsed:
+        validate_completion(Path(stage) / f"{arm}_s{seed}" / f"{arm}_s{seed}.json", expected=expected)
+    if stop_session:
+        command("stop", "-s", session)
+
+
+def capture_source():
+    """Obtain provenance locally before upload; no VM git metadata is invented."""
+    from platform_hybrid.experiments.samestack_manifest import capture_source as capture
+    return capture(ROOT)
 
 
 def main(argv=None):
-    argv = sys.argv[1:] if argv is None else argv
-    session, runs = argv[0], argv[1:]
-    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", session) or any(
-        not re.fullmatch(r"(?:ppo|ppo_8x8|grpo_g8|grpo_g2):[0-9]+", run) for run in runs
-    ):
-        raise ValueError("Invalid exact session/run identity")
-    # No substring lookup: session identifiers are the first field of each CLI row.
-    proc = subprocess.run(
-        ["colab", "sessions"], capture_output=True, text=True, check=True, timeout=60
-    )
-    existing = {line.split()[0] for line in proc.stdout.splitlines() if line.split()}
-    created = False
-    retain_for_recovery = False
-    try:
-        if session not in existing:
-            colab("new", "--gpu", "L4", "-s", session)
-            created = True
-        colab(
-            "upload", "-s", session, str(MODAL_SCRIPT), "/content/modal_samestack_gsm8k_cot_v2.py"
-        )
-        colab("upload", "-s", session, str(RUNNER), "/content/colab_run_arms.py")
-        for run in runs:
-            arm, seed = run.split(":")
-            name = f"{arm}_s{seed}"
-            if bundle_complete(STAGE, name):
-                continue
-            # Try existing remote artifacts before repeating expensive training.
-            if not transfer_bundle(session, name, STAGE):
-                retain_for_recovery = True
-                colab(
-                    "exec",
-                    "-s",
-                    session,
-                    "-f",
-                    str(RUNNER),
-                    "--timeout",
-                    "10800",
-                    "--env",
-                    f"RUNS={run}",
-                    "--env",
-                    "SMOKE=0",
-                )
-                if not transfer_bundle(session, name, STAGE):
-                    raise RuntimeError("Result transfer incomplete; bundle not published")
-            retain_for_recovery = False
-            print(f"STAGED {name}", flush=True)
-    except TransferIncomplete:
-        retain_for_recovery = True
-        raise
-    finally:
-        if created and not retain_for_recovery:
-            colab("stop", "-s", session, check=False)
-    return 0
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("session")
+    parser.add_argument("runs", nargs="+")
+    parser.add_argument("--new", action="store_true", help="create the named session first")
+    parser.add_argument("--stage", type=Path, default=STAGE)
+    parser.add_argument("--gpu", default=os.environ.get("GPU", "L4"))
+    parser.add_argument("--parallel", type=int, default=int(os.environ.get("PARALLEL", "1")))
+    parser.add_argument("--batch", type=int, default=int(os.environ["BATCH"]) if "BATCH" in os.environ else None)
+    args = parser.parse_args(argv)
+    if args.parallel < 1 or (args.batch is not None and args.batch < 1):
+        parser.error("parallel and batch must be positive")
+    if args.new:
+        colab("new", "--gpu", args.gpu, *(["--high-mem"] if args.gpu == "A100" else []), "-s", args.session)
+    drive_session(args.session, args.runs, stage=args.stage, parallel=args.parallel, batch=args.batch, stop_session=args.new)
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

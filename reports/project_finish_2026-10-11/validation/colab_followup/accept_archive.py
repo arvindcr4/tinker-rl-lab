@@ -106,7 +106,7 @@ def main(argv=None):
         run("extracted registry comparison", [sys.executable, "platform_hybrid/registry/query.py", "stackdiff",
             "colab-open_dapo_e3", "tinker_dapo_qwen3.5-4b_gsm8k", "--exit-level"], extracted, expected=5)
         v2 = extracted / REL / "validation/samestack_v2"
-        result = subprocess.run([sys.executable, "-I", str(v2 / "v2_analysis.py"), str(v2),
+        result = subprocess.run([sys.executable, "-I", str(v2 / "legacy_v2_analysis.py"), str(v2),
                                  "platform_hybrid/experiments/results/samestack_gsm8k_v2s",
                                  str(v2 / "gsm8k_test_gold.json"), "--protocol", str(v2 / "publication_protocol_v3.json")],
                                 cwd=extracted, text=True, capture_output=True, timeout=600)

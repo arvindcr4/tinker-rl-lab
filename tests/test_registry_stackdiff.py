@@ -71,8 +71,11 @@ def test_spec_coverage_separates_unknown():
 # --------------------------------------------------------------- stackdiff
 def test_identical_entries_are_r0_full_coverage():
     r = q.stackdiff(stack(), stack())
-    assert r["level"] == 0 and r["differs"] == [] and r["unknown"] == []
-    assert r["coverage"] == 1.0 and not r["underspecified"]
+    assert r["level"] == 0
+    assert r["differs"] == []
+    assert r["unknown"] == []
+    assert r["coverage"] == 1.0
+    assert not r["underspecified"]
 
 
 def test_checkpoint_only_diff_is_r5():
@@ -83,7 +86,8 @@ def test_checkpoint_only_diff_is_r5():
 
 def test_reward_only_diff_is_r5():
     r = q.stackdiff(stack(), stack(reward__id=cell("boxed-only")))
-    assert r["level"] == 5 and [d[0] for d in r["differs"]] == ["reward.id"]
+    assert r["level"] == 5
+    assert [d[0] for d in r["differs"]] == ["reward.id"]
 
 
 def test_reward_hash_only_diff_is_r2():
@@ -91,7 +95,7 @@ def test_reward_hash_only_diff_is_r2():
     assert r["level"] == 2
 
 
-@pytest.mark.parametrize("field,expected", [
+@pytest.mark.parametrize(("field", "expected"), [
     ("loss.clip", 4), ("kl.beta", 4), ("decoding.max_tokens", 3), ("lora.rank", 3),
     ("trainer.name", 2), ("seeds", 1),
 ])
@@ -103,9 +107,11 @@ def test_severity_ladder(field, expected):
 def test_missing_field_is_unknown_not_a_difference():
     b = stack(checkpoint__id=cell(None, "unknown", "not logged"))
     r = q.stackdiff(stack(), b)
-    assert r["level"] == 0 and r["differs"] == []
+    assert r["level"] == 0
+    assert r["differs"] == []
     assert ("checkpoint.id", 5, "b") in r["unknown"]
-    assert r["underspecified"] and r["hidden_max"] == 5
+    assert r["underspecified"]
+    assert r["hidden_max"] == 5
     assert r["coverage"] == pytest.approx(1 - 1 / len(q.FIELDS))
 
 
@@ -122,6 +128,7 @@ def test_revision_unknown_alone_flags_unverified_identity():
     unk = cell(None, "unknown", "unpinned")
     r = q.stackdiff(stack(checkpoint__revision=unk), stack(checkpoint__revision=unk))
     assert r["level"] == 0 and r["underspecified"] and not r["comparable"]
+    assert not r["matching_requirements"]["satisfied"]
     assert ("checkpoint.revision", 5, "both") in r["unknown"]
 
 
@@ -147,7 +154,8 @@ def test_delta_row_unknown_or_one_sided_is_not_a_difference():
     assert r["coverage"] < 1.0 and not r["comparable"]
     b["variant_deltas_applied"] = [{"delta_id": "delta_dapo", "component": "kl_removed", "status": "unknown"}]
     r = q.stackdiff(a, b)
-    assert r["level"] == 0 and ("delta.delta_dapo:kl_removed", 4, "b") in r["unknown"]
+    assert r["level"] == 0
+    assert ("delta.delta_dapo:kl_removed", 4, "b") in r["unknown"]
 
 
 def test_legacy_entry_without_run_config_maps_null_to_unknown():
@@ -177,19 +185,23 @@ def test_exhibit_a_pair_reports_checkpoint_reward_template():
 def test_dapo_pair_reports_task_model_and_absent_dapo_components():
     r = q.stackdiff(entry("colab-open_dapo_e3"), entry("tinker_dapo_qwen3.5-4b_gsm8k"))
     diffs = {d[0]: (d[2], d[3]) for d in r["differs"]}
-    assert r["level"] == 5 and r["same_label"]
+    assert r["level"] == 5
+    assert r["same_label"]
     for f in ("checkpoint.id", "data.dataset", "eval.metric", "batch.samples_per_prompt",
               "train.steps", "reward.id"):
         assert f in diffs, f
     assert diffs["loss.clip"] == ("ratio[0.8,1.28]", "advantage[-2,3]")
     assert diffs["delta.delta_dapo:clip_higher"] == ("implemented", "absent")
     assert r["coverage"] > 0.7 and not r["comparable"]
+    assert r["underspecified"]
+    assert not r["matching_requirements"]["satisfied"]
 
 
 def test_tinker_dapo_entry_is_corrected():
     e = entry("tinker_dapo_qwen3.5-4b_gsm8k")
     lf = e["min_report"]["loss_form"]
-    assert lf["clip_eps_low"] is None and lf["clip_eps_high"] is None
+    assert lf["clip_eps_low"] is None
+    assert lf["clip_eps_high"] is None
     assert lf["sampling_dynamic_filter"] is False
     assert lf["reward_shaping_type"] == "none"
     assert e["run_config"]["loss.clip"]["value"] == "advantage[-2,3]"
@@ -222,7 +234,8 @@ def test_cli_runs_from_repo_root():
     out = subprocess.run([sys.executable, "platform_hybrid/registry/query.py", "stackdiff",
                           "colab-open_dapo_e3", "tinker_dapo_qwen3.5-4b_gsm8k"],
                          cwd=REPO, capture_output=True, text=True, check=True).stdout
-    assert "verdict: R5" in out and "coverage:" in out
+    assert "verdict: R5" in out
+    assert "coverage:" in out
 
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="generator reads pinned git blobs")
@@ -232,6 +245,24 @@ def test_historical_entries_require_explicit_versioned_migration():
     # Historical artifacts are intentionally immutable during review fixes.
     # Freshness must expose the old generator version rather than silently bless it.
     assert rc.returncode == 1 and "stale:" in rc.stdout, rc.stdout + rc.stderr
+
+
+def test_generated_entries_are_stable_after_regeneration(tmp_path, monkeypatch):
+    # Historical evidence is not rewritten as part of a code correction. Test
+    # idempotence and the real --check gate on a disposable reviewed projection.
+    sys.path.insert(0, str(REG))
+    import generate_entries as generator
+    specs = {**generator.fc_family(), **generator.h2h_family(), **generator.e3_family()}
+    for eid, spec in specs.items():
+        new = generator.build(eid, spec, entry(eid))
+        assert generator.build(eid, spec, new) == new
+        (tmp_path / f"{eid}.json").write_text(json.dumps(new))
+    monkeypatch.setattr(generator, "ENTRIES", tmp_path)
+    assert generator.main(["--check"]) == 0
+    broken = tmp_path / f"{next(iter(specs))}.json"
+    rec = json.loads(broken.read_text()); rec["notes"] = "stale"
+    broken.write_text(json.dumps(rec))
+    assert generator.main(["--check"]) == 1
 
 
 def test_identifier_annotations_and_aliases_do_not_count_as_differences():

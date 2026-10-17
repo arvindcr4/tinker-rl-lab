@@ -30,8 +30,8 @@ def module(name, path):
     return result
 
 
-v2 = module('review11_samestack', SAME / 'v2_analysis.py')
-sl = module('review11_stats', SAME / 'stats_lib.py')
+v2 = module('review11_samestack', SAME / 'legacy_v2_analysis.py')
+sl = module('review11_stats', SAME / 'legacy_stats_lib.py')
 gate = module('review11_gate', ROOT / 'reports/project_finish_2026-10-11/validation/colab_followup/accept_archive.py')
 v1 = module('generate_v1', AUDIT / 'generate_v1.py')
 g2 = module('generate_v2', AUDIT / 'generate_v2.py')
@@ -522,7 +522,7 @@ def test_historical_v1_duplicate_run_rejected_under_optimization(tmp_path):
     run={'arm':'grpo_g8','seed':1,'pre_correct':[0]*200,'post_correct':[0]*200,'n_eval':200,
          'heldout_post_acc':0,'step_log':[{'mean_comp_len':1}], 'elapsed_seconds':1}
     put(tmp_path/'samestack_gsm8k_cot_full.json',{'runs':[run,deepcopy(run)]})
-    result=subprocess.run([sys.executable,'-O',str(SAME/'v1_recompute.py'),str(tmp_path)],text=True,capture_output=True)
+    result=subprocess.run([sys.executable,'-O',str(SAME/'legacy_v1_recompute.py'),str(tmp_path)],text=True,capture_output=True)
     assert result.returncode!=0 and 'Duplicate experiment key' in result.stderr
 
 
@@ -582,5 +582,5 @@ def test_all_json_nonfinite_encodings_rejected(tmp_path,raw):
 def test_historical_v1_cli_rejects_invalid_stored_accuracy(tmp_path,bad):
     runs=[{'arm':arm,'seed':seed,'n_eval':200,'pre_correct':[0]*200,'post_correct':[0]*200,'heldout_post_acc':bad,'step_log':[{'mean_comp_len':1.}],'elapsed_seconds':1.} for arm in ['grpo_g8','grpo_g2','ppo'] for seed in [1,2]]
     (tmp_path/'samestack_gsm8k_cot_full.json').write_text(json.dumps({'runs':runs}))
-    result=subprocess.run([sys.executable,str(SAME/'v1_recompute.py'),str(tmp_path)],capture_output=True,text=True)
+    result=subprocess.run([sys.executable,str(SAME/'legacy_v1_recompute.py'),str(tmp_path)],capture_output=True,text=True)
     assert result.returncode!=0 and 'stored_mismatch_seeds' not in result.stdout

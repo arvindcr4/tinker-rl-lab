@@ -63,16 +63,11 @@ def paired(a, b, margin=0.02):
     if isinstance(margin, bool) or not isinstance(margin, numbers.Real) or not math.isfinite(margin) or margin <= 0:
         raise ValueError("margin must be finite and positive")
     seeds = sorted(set(a) & set(b))
+    if len(seeds) < 2:
+        raise ValueError("paired requires at least two shared seeds")
     av, bv = np.asarray([a[s] for s in seeds], float), np.asarray([b[s] for s in seeds], float)
     if not np.isfinite(av).all() or not np.isfinite(bv).all():
         raise ValueError("finite paired differences are required")
-    if len(seeds) < 2:
-        diffs = (av - bv).tolist()
-        return {"status":"insufficient_pairs", "unavailable_reason":"at least two shared seeds required",
-                "n":len(seeds), "seeds":seeds, "diffs":diffs,
-                "mean":float(diffs[0]) if diffs else None, "sd":None, "t_ci":None,
-                "boot_ci":None, "p_t":None, "p_signflip":None, "tost_p":None,
-                "unmatched_a_seeds":sorted(set(a)-set(b)), "unmatched_b_seeds":sorted(set(b)-set(a))}
     d = differences(av - bv)
     n = len(d)
     scale = float(np.max(np.abs(d)))
@@ -82,7 +77,7 @@ def paired(a, b, margin=0.02):
     if not math.isfinite(md) or not math.isfinite(sd):
         raise ValueError("paired summary overflowed; rescale the finite inputs")
     if sd == 0:
-        p_t = None
+        p_t = 1.0 if md == 0 else 0.0
         p_lo = 0.0 if md > -margin else 0.5 if md == -margin else 1.0
         p_hi = 0.0 if md < margin else 0.5 if md == margin else 1.0
         ci95, ci90 = [md, md], [md, md]
@@ -98,19 +93,18 @@ def paired(a, b, margin=0.02):
         raise ValueError("paired confidence interval overflowed; rescale inputs")
     directional_p = float(stats.t.cdf((md - .05) / se, n - 1)) if se else (0.0 if md < .05 else .5 if md == .05 else 1.0)
     upper = float(md + stats.t.ppf(.95, n - 1) * se)
-    return {"difference_ci_95": list(map(float, ci95)) if sd else None, "equivalence_ci_90": list(map(float, ci90)) if sd else None,
+    return {"difference_ci_95": list(map(float, ci95)), "equivalence_ci_90": list(map(float, ci90)),
             "equivalence_margin": float(margin),
             "positive_5pp_test": {"null_hypothesis": "mean >= +0.05", "alternative_hypothesis": "mean < +0.05",
-                                  "p_value": directional_p if sd else None, "upper_bound_95": upper if sd else None,
-                                  "reject_at_0_05": bool(sd and directional_p < .05)},
+                                  "p_value": directional_p, "upper_bound_95": upper,
+                                  "reject_at_0_05": directional_p < .05},
             "n": n, "seeds": seeds, "diffs": d.tolist(), "mean": md, "sd": sd,
             "unmatched_a_seeds": sorted(set(a) - set(b)), "unmatched_b_seeds": sorted(set(b) - set(a)),
-            "t": t, "status": "zero_variance" if sd == 0 else "available",
-            "unavailable_reason": "parametric variance estimate is zero" if sd == 0 else None, "zero_variance": sd == 0, "t_ci": list(map(float, ci95)) if sd else None,
-            "tost_ci90": list(map(float, ci90)) if sd else None, "boot_ci": boot_ci(d), "p_t": p_t,
-            "p_signflip": signflip(d), "tost_margin": float(margin), "tost_p": max(p_lo, p_hi) if sd else None,
-            "tost_lower_p": p_lo if sd else None, "tost_upper_p": p_hi if sd else None,
-            "within_margin_unadjusted": bool(sd and ci90[0] > -margin and ci90[1] < margin)}
+            "t": t, "zero_variance": sd == 0, "t_ci": list(map(float, ci95)),
+            "tost_ci90": list(map(float, ci90)), "boot_ci": boot_ci(d), "p_t": p_t,
+            "p_signflip": signflip(d), "tost_margin": float(margin), "tost_p": max(p_lo, p_hi),
+            "tost_lower_p": p_lo, "tost_upper_p": p_hi,
+            "within_margin_unadjusted": bool(ci90[0] > -margin and ci90[1] < margin)}
 
 
 def holm(ps):

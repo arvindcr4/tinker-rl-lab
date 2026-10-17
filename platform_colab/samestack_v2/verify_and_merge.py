@@ -1,176 +1,156 @@
-"""Strict same-stack evidence gate. Historical bundles require revalidation.
+"""Validate staged bundles without retroactively inventing legacy provenance.
 
-Merging requires a pinned item manifest, independent completion regrading, and an
-explicit hardware pooling policy. Reports alone never establish equivalence.
+A successful merge requires strict JSON, semantic filename/run identity, the
+versioned shared schema, complete artifact hashes and no duplicate identities.
+Legacy or incomplete artifacts are reported unverified and are never rewritten.
+Empty staging is not success. The corrected protocol has its own namespace.
 """
+from __future__ import annotations
 
 import argparse
-import gzip
-import hashlib
 import json
-import math
-import pathlib
-import re
+import os
+from pathlib import Path
 import shutil
+import sys
 import tempfile
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
-STAGE = ROOT / "platform_hybrid/experiments/results/samestack_gsm8k_v2s_colab"
-CANON = ROOT / "platform_hybrid/experiments/results/samestack_gsm8k_v2s"
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from platform_hybrid.experiments.samestack_contract import (
+    completion_path, strict_json_load, validate_completion, validate_run,
+)
+from platform_hybrid.experiments.samestack_protocol import PROTOCOL_HASH, PROTOCOL_ID
+
+STAGE = ROOT / os.environ.get("STAGE_DIR", "platform_hybrid/experiments/results/" + PROTOCOL_ID + "_colab")
+CANON = ROOT / "platform_hybrid/experiments/results" / PROTOCOL_ID
 OUT = ROOT / "reports/project_finish_2026-10-11/validation/samestack_v2/colab_runs_check.json"
-CONFIG_KEYS = ("model", "n_steps", "k_epochs", "lr", "max_new", "n_gen", "n_eval")
-GROUPS = {"grpo_g8": 8, "grpo_g2": 2, "ppo": 1, "ppo_8x8": 8}
 
 
 def load(path):
-    return json.loads(
-        path.read_text(),
-        parse_constant=lambda v: (_ for _ in ()).throw(ValueError("Non-finite JSON")),
-    )
+    return strict_json_load(path)
 
 
-def validate_result(name, result, texts, reference, items=None):
-    match = re.fullmatch(r"(grpo_g8|grpo_g2|ppo|ppo_8x8)_s([0-9]+)", name)
-    arm = match[1] if match else None
-    n = reference.get("n_eval")
-    pre, post = result.get("pre_correct", []), result.get("post_correct", [])
-    binary = lambda v: type(v) is int and v in (0, 1)
-    grades_valid = (
-        isinstance(pre, list)
-        and isinstance(post, list)
-        and type(n) is int
-        and n > 0
-        and len(pre) == len(post) == n
-        and all(binary(v) for v in pre + post)
-    )
-    text_valid = isinstance(texts, dict) and all(
-        isinstance(texts.get(k), list)
-        and len(texts[k]) == n
-        and all(isinstance(t, str) and t.strip() for t in texts[k])
-        for k in ("pre", "post")
-    )
-    env = result.get("execution_environment") or result.get("env") or {}
-    logs = result.get("step_log", [])
-    checks = {
-        "filename_identity": bool(
-            match and result.get("arm") == arm and result.get("seed") == int(match[2])
-        ),
-        "not_smoke": result.get("smoke") is False,
-        "config_matches": all(result.get(k) == reference.get(k) for k in CONFIG_KEYS),
-        "group_matches": bool(arm and result.get("group") == GROUPS[arm]),
-        "critic_matches": bool(
-            arm
-            and (
-                (isinstance(result.get("critic"), dict) and bool(result["critic"]))
-                if arm and arm.startswith("ppo")
-                else bool(arm) and result.get("critic") is None
-            )
-        ),
-        "actual_steps": isinstance(logs, list)
-        and len(logs) == reference.get("n_steps")
-        and [row.get("step") for row in logs if isinstance(row, dict)]
-        == list(range(reference.get("n_steps", 0))),
-        "binary_grade_cardinality": grades_valid,
-        "completion_cardinality": text_valid,
-        "substantive_environment": isinstance(env, dict)
-        and all(isinstance(env.get(k), str) and env[k].strip() for k in ("gpu", "python", "torch")),
-        "accuracy_recomputed": grades_valid
-        and all(
-            type(result.get(k)) in (int, float)
-            and math.isfinite(result[k])
-            and abs(result[k] - sum(v) / n) < 1e-12
-            for k, v in (("heldout_pre_acc", pre), ("heldout_post_acc", post))
-        ),
-        "pinned_item_identity": bool(
-            items and result.get("item_ids") == [item["id"] for item in items] and len(items) == n
-        ),
-    }
-    checks["independent_regrade"] = False
-    if checks["pinned_item_identity"] and text_valid:
-        from platform_local.trl_integrations.scientific import numeric_answer
+def run_paths(directory):
+    """Recognize flat historical records and promoted per-run bundles, not partials."""
+    directory = Path(directory)
+    return sorted(path for path in directory.rglob("*_s*.json")
+                  if not path.name.endswith(".complete.json")
+                  and not any(part.startswith(".") for part in path.relative_to(directory).parts)
+                  and "adapters" not in path.relative_to(directory).parts)
 
-        def grade(text, gold):
-            boxes = re.findall(r"\\boxed\{([^{}]+)\}", text)
-            return int(
-                bool(boxes)
-                and numeric_answer(boxes[-1]) is not None
-                and numeric_answer(boxes[-1]) == numeric_answer(gold)
-            )
 
-        checks["independent_regrade"] = all(
-            [grade(t, item["answer"]) for t, item in zip(texts[key], items)] == vector
-            for key, vector in (("pre", pre), ("post", post))
-        )
-    return checks
+def verify_stage(stage, canonical=None):
+    stage = Path(stage)
+    paths = run_paths(stage)
+    report = {"protocol_id": PROTOCOL_ID, "runs": {}, "staged_count": len(paths),
+              "all_verified": False, "errors": []}
+    seen, run_ids = set(), set()
+    canonical_identities = {}
+    if canonical is not None:
+        for existing in run_paths(canonical):
+            try:
+                existing_record = validate_completion(existing)
+                manifest = existing_record["manifest"]
+                identity = (manifest["environment"], manifest["protocol_hash"],
+                            manifest["ordered_test_item_hash"], existing_record["arm"], existing_record["seed"])
+                if identity in canonical_identities:
+                    report["errors"].append("canonical directory already has duplicate run identities")
+                canonical_identities[identity] = existing
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                report["errors"].append(f"canonical artifact is unverified: {existing.name}: {exc}")
+    for path in paths:
+        label = str(path.relative_to(stage))
+        try:
+            record = load(path)
+            text_path = path.with_name(path.stem + "_texts.json.gz")
+            texts = load(text_path) if text_path.exists() else None
+            checks = validate_run(record, filename=path.name, texts=texts, seen=seen,
+                                  expected={"environment": "colab", "protocol_id": PROTOCOL_ID,
+                                            "protocol_hash": PROTOCOL_HASH})
+            if record.get("smoke") is not False:
+                checks["errors"].append("smoke runs are ineligible for the full-run staging cohort")
+            manifest = record.get("manifest", {})
+            run_id = manifest.get("run_id") if isinstance(manifest, dict) else None
+            if run_id and run_id in run_ids:
+                checks["errors"].append("duplicate run_id")
+            if run_id:
+                run_ids.add(run_id)
+            if not completion_path(path).exists():
+                checks["unverified"].append("artifact completion marker unavailable")
+            else:
+                try:
+                    validate_completion(path, expected={"environment": "colab", "protocol_id": PROTOCOL_ID,
+                                                        "protocol_hash": PROTOCOL_HASH})
+                except (OSError, ValueError, KeyError, TypeError) as exc:
+                    checks["errors"].append(f"artifact completion failed: {exc}")
+            if canonical is not None:
+                destination = Path(canonical) / path.stem / path.name
+                duplicate = canonical_identities.get(checks["identity"])
+                if duplicate is not None and duplicate != destination:
+                    checks["errors"].append("duplicate run identity already exists elsewhere in canonical directory")
+                if destination.parent.exists():
+                    try:
+                        validate_completion(destination)
+                        if load(completion_path(destination)) != load(completion_path(path)):
+                            checks["errors"].append("canonical run identity already exists with different artifacts")
+                    except (OSError, ValueError, KeyError, TypeError):
+                        checks["errors"].append("canonical destination already contains unverified artifacts")
+            checks["valid"] = not checks["errors"]
+            checks["verified"] = checks["valid"] and not checks["unverified"]
+            checks["status"] = "verified" if checks["verified"] else "invalid" if not checks["valid"] else "unverified"
+            report["runs"][label] = checks
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            report["runs"][label] = {"valid": False, "verified": False, "status": "invalid",
+                                     "errors": [str(exc)], "unverified": [], "metrics": {}}
+    if not paths:
+        report["errors"].append("no staged runs; empty staging is not verified success")
+    report["all_verified"] = bool(paths) and not report["errors"] and all(row["verified"] for row in report["runs"].values())
+    return report
+
+
+def merge_verified(stage, canonical):
+    """Copy only independently verified inventories; preserve original staged files."""
+    stage, canonical = Path(stage), Path(canonical)
+    report = verify_stage(stage, canonical)
+    if not report["all_verified"]:
+        raise ValueError("not merging: staged runs are empty, invalid, or unverified")
+    canonical.mkdir(parents=True, exist_ok=True)
+    for path in run_paths(stage):
+        marker = load(completion_path(path))
+        destination = canonical / path.stem
+        if destination.exists():
+            continue  # verify_stage already established byte-identical inventory.
+        temporary = Path(tempfile.mkdtemp(prefix=f".{path.stem}.merge-", dir=canonical))
+        for relative in marker["files"]:
+            target = temporary / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path.parent / relative, target)
+        shutil.copy2(completion_path(path), temporary / completion_path(path).name)
+        validate_completion(temporary / path.name)
+        os.replace(temporary, destination)
+    return report
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--stage", type=Path, default=STAGE)
+    parser.add_argument("--canonical", type=Path, default=CANON)
+    parser.add_argument("--report", type=Path, default=OUT)
     parser.add_argument("--merge", action="store_true")
-    parser.add_argument("--item-manifest", type=pathlib.Path)
-    parser.add_argument("--item-manifest-sha256")
-    parser.add_argument("--pooling-policy", type=pathlib.Path)
     args = parser.parse_args(argv)
-    items = None
-    if args.item_manifest:
-        if hashlib.sha256(args.item_manifest.read_bytes()).hexdigest() != args.item_manifest_sha256:
-            raise ValueError("Item manifest must match an independently reviewed digest")
-        items = load(args.item_manifest)["items"]
-    reference = load(CANON / "grpo_g8_s42.json")
-    report = {
-        "schema": "colab-verification-v2",
-        "runs": {},
-        "pooling": "stratified_by_recorded_hardware",
-    }
-    accepted = []
-    # Completion markers are transfer receipts, never experimental results.
-    # Exclude only the exact known marker grammar: malformed result names must
-    # still enter validation and fail rather than disappear silently.
-    paths = sorted(
-        path
-        for path in STAGE.glob("*_s*.json")
-        if not re.fullmatch(r"(grpo_g8|grpo_g2|ppo|ppo_8x8)_s[0-9]+\.complete\.json", path.name)
-    )
-    for path in paths:
-        result = load(path)
-        text_path = path.with_name(path.stem + "_texts.json.gz")
-        try:
-            with gzip.open(text_path, "rt") as handle:
-                texts = json.load(handle)
-        except (OSError, ValueError):
-            texts = None
-        checks = validate_result(path.stem, result, texts, reference, items)
-        report["runs"][path.stem] = {"checks": checks, "ok": all(checks.values())}
-        if all(checks.values()):
-            accepted.append((path, text_path))
-    ok = bool(paths) and len(accepted) == len(paths)
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(report, indent=2) + "\n")
+    report = verify_stage(args.stage, args.canonical)
+    args.report.parent.mkdir(parents=True, exist_ok=True)
+    args.report.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    for name, row in report["runs"].items():
+        print(f"{row['status'].upper()} {name}: " + "; ".join(row["errors"] + row["unverified"]))
     if args.merge:
-        if not ok or not args.pooling_policy:
-            raise ValueError(
-                "Merging requires complete regraded bundles and an explicit hardware pooling policy"
-            )
-        policy = load(args.pooling_policy)
-        if not policy.get("calibration") or policy.get("mode") != "stratified_by_recorded_hardware":
-            raise ValueError("Pooling policy must specify calibration and hardware stratification")
-        # Publish one complete directory atomically, never partially overwrite canonical files.
-        parent = CANON / "verified_bundles"
-        parent.mkdir(exist_ok=True)
-        with tempfile.TemporaryDirectory(dir=parent, prefix=".staging-") as temp:
-            bundle = pathlib.Path(temp) / "bundle"
-            bundle.mkdir()
-            for pair in accepted:
-                for path in pair:
-                    shutil.copyfile(path, bundle / path.name)
-            (bundle / "verification.json").write_text(json.dumps(report, sort_keys=True))
-            (bundle / "pooling_policy.json").write_text(json.dumps(policy, sort_keys=True))
-            digest = hashlib.sha256(json.dumps(report, sort_keys=True).encode()).hexdigest()
-            target = parent / digest
-            if target.exists():
-                raise FileExistsError("Verified bundle already exists; it was not overwritten")
-            bundle.rename(target)
-    return 0 if ok else 1
+        if not report["all_verified"]:
+            parser.exit(1, "not merging: staged runs are empty, invalid, or unverified\n")
+        merge_verified(args.stage, args.canonical)
+        print(f"merged {report['staged_count']} verified bundles")
+    return 0 if report["all_verified"] else 1
 
 
 if __name__ == "__main__":

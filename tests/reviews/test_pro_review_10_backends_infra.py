@@ -341,7 +341,7 @@ def test_queue_propagates_failure_and_tracks_all_jobs(tmp_path):
 
 
 def test_weak_merge_evidence_is_rejected():
-    gate = load("platform_colab/samestack_v2/verify_and_merge.py", "review10_gate")
+    gate = load("platform_colab/samestack_v2/legacy_verify_and_merge.py", "review10_gate")
     ref = {"n_eval": 4, "n_steps": 2, "model": "m"}
     result = {
         **ref,
@@ -370,7 +370,7 @@ def test_weak_merge_evidence_is_rejected():
 
 
 def test_valid_merge_requires_items_and_regrading():
-    gate = load("platform_colab/samestack_v2/verify_and_merge.py", "review10_gate")
+    gate = load("platform_colab/samestack_v2/legacy_verify_and_merge.py", "review10_gate")
     ref = {"n_eval": 2, "n_steps": 1, "model": "m"}
     result = {
         **ref,
@@ -394,13 +394,13 @@ def test_valid_merge_requires_items_and_regrading():
 
 
 def test_staged_json_alone_is_not_complete(tmp_path):
-    stage = load("platform_colab/samestack_v2/drive_sessions.py", "review10_stage")
+    stage = load("platform_colab/samestack_v2/legacy_drive_sessions.py", "review10_stage")
     (tmp_path / "grpo_g8_s1.json").write_text("{}")
     assert not stage.bundle_complete(tmp_path, "grpo_g8_s1")
 
 
 def test_failed_text_download_never_publishes_marker(monkeypatch, tmp_path):
-    stage = load("platform_colab/samestack_v2/drive_sessions.py", "review10_stage")
+    stage = load("platform_colab/samestack_v2/legacy_drive_sessions.py", "review10_stage")
 
     def download(*args, **kwargs):
         if args[-1].endswith(".json"):
@@ -417,7 +417,7 @@ def test_failed_text_download_never_publishes_marker(monkeypatch, tmp_path):
 
 
 def test_existing_colab_session_not_stopped(monkeypatch, tmp_path):
-    stage = load("platform_colab/samestack_v2/drive_sessions.py", "review10_stage")
+    stage = load("platform_colab/samestack_v2/legacy_drive_sessions.py", "review10_stage")
     monkeypatch.setattr(
         stage.subprocess,
         "run",
@@ -875,7 +875,7 @@ def test_gcp_rejects_wrong_receipt_identity(gcp, monkeypatch):
 
 
 def test_colab_transfer_failure_preserves_new_session(monkeypatch, tmp_path):
-    stage = load("platform_colab/samestack_v2/drive_sessions.py", "review10_stage")
+    stage = load("platform_colab/samestack_v2/legacy_drive_sessions.py", "review10_stage")
     monkeypatch.setattr(stage, "STAGE", tmp_path)
     monkeypatch.setattr(
         stage.subprocess, "run", lambda *a, **k: SimpleNamespace(stdout="", returncode=0)
@@ -1047,7 +1047,7 @@ def test_merge_ignores_completion_marker_but_rejects_malformed_result(monkeypatc
     import gzip
     import hashlib
 
-    gate = load("platform_colab/samestack_v2/verify_and_merge.py", "review10_gate")
+    gate = load("platform_colab/samestack_v2/legacy_verify_and_merge.py", "review10_gate")
     stage, canon = tmp_path / "stage", tmp_path / "canonical"
     stage.mkdir()
     canon.mkdir()

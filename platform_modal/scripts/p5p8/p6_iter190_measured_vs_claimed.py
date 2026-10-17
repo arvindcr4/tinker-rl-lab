@@ -22,6 +22,7 @@ from __future__ import annotations
 import csv
 import glob
 import json
+import math
 import os
 import random
 import statistics
@@ -31,7 +32,7 @@ from pathlib import Path
 WORKTREE = Path(__file__).resolve().parents[2]
 REG = WORKTREE / "registry"
 ENT = REG / "entries"
-RES = WORKTREE / "experiments" / "results" / "p5p8"
+RES = WORKTREE / "experiments" / "results" / "p5p8" / "review18_v2"
 RES.mkdir(parents=True, exist_ok=True)
 N2_TSV = WORKTREE / "experiments" / "results" / "n2_reward_tensor_resume" / "n2_metrics.tsv"
 ZVFRISK_TSV = WORKTREE / "experiments" / "results" / "zvf_iter130_method_risk.tsv"
@@ -41,12 +42,14 @@ SEED = 20260706
 LAST10_STEP_THRESHOLD = 30  # last 10 of 40 steps
 
 
+from _review18_pairing import paired_values
+
+
 def paired_step_bootstrap_pct(a, b, n_boot=N_BOOT, seed=SEED):
     """Paired-step percentile bootstrap CI on mean(b - a). Returns (delta, ci_lo, ci_hi)."""
     rng = random.Random(seed)
-    n = min(len(a), len(b))
-    a = a[:n]
-    b = b[:n]
+    a, b = paired_values(a, b)
+    n = len(a)
     diffs = [bi - ai for ai, bi in zip(a, b)]
     point = sum(diffs) / len(diffs)
     boots = []
@@ -81,10 +84,18 @@ def load_n2():
 
 
 def n2_last10_by_method_metric(rows, metric, step_lo=LAST10_STEP_THRESHOLD):
-    out = defaultdict(list)
+    out = defaultdict(dict)
     for r in rows:
-        if int(r["step"]) >= step_lo:
-            out[r["method"]].append(float(r[metric]))
+        step = int(r["step"])
+        if step_lo <= step < 40:
+            key = (str(r.get("seed", "single_run")), step)
+            if key in out[r["method"]]:
+                raise ValueError("Duplicate N2 step identity")
+            out[r["method"]][key] = float(r[metric])
+    for values in out.values():
+        for seed in {key[0] for key in values}:
+            if {key[1] for key in values if key[0] == seed} != set(range(step_lo, 40)):
+                raise ValueError("Incomplete declared N2 step window")
     return dict(out)
 
 
@@ -104,18 +115,20 @@ def zvf_risk_delta(panel, base_method, method, metric_key):
         return None
     a_val = float(a[metric_key])
     b_val = float(b[metric_key])
+    if not all(math.isfinite(v) for v in (a_val, b_val)):
+        raise ValueError("Nonfinite metric mean")
     delta = b_val - a_val
-    try:
-        sd_a = float(a.get("zvf_risk_sd", "0") or 0)
-        sd_b = float(b.get("zvf_risk_sd", "0") or 0)
-    except Exception:
-        sd_a = sd_b = 0.0
-    n = 5
-    se = ((sd_a ** 2 + sd_b ** 2) / n) ** 0.5 if (sd_a > 0 or sd_b > 0) else 0.0
-    # 95% normal-approx CI
-    ci_lo = delta - 1.96 * se
-    ci_hi = delta + 1.96 * se
-    return delta, ci_lo, ci_hi, n
+    sd_key = metric_key.removesuffix("_mean") + "_sd"
+    n_key = metric_key.removesuffix("_mean") + "_n"
+    # No inference from a different metric or an assumed sample count.
+    if any(sd_key not in r or (n_key not in r and "n_seeds" not in r) for r in (a, b)):
+        return delta, None, None, None
+    sd_a, sd_b = float(a[sd_key]), float(b[sd_key])
+    na, nb = int(a.get(n_key, a.get("n_seeds"))), int(b.get(n_key, b.get("n_seeds")))
+    if min(na, nb) < 2 or min(sd_a, sd_b) < 0 or not all(math.isfinite(x) for x in (sd_a, sd_b)):
+        raise ValueError("Invalid metric-specific uncertainty")
+    se = math.sqrt(sd_a ** 2 / na + sd_b ** 2 / nb)
+    return delta, delta - 1.96 * se, delta + 1.96 * se, min(na, nb)
 
 
 def main():
@@ -150,12 +163,12 @@ def main():
                 "base": base,
                 "method": m,
                 "n": len(mv),
-                "mean_base": statistics.mean(base_vals),
-                "mean_method": statistics.mean(mv),
+                "mean_base": statistics.mean(base_vals.values()),
+                "mean_method": statistics.mean(mv.values()),
                 "delta_method_minus_base": round(d, 6),
-                "ci_low": round(lo, 6),
-                "ci_high": round(hi, 6),
-                "significant": bool(lo > 0 or hi < 0),
+                "ci_low": round(lo, 6) if lo is not None else None,
+                "ci_high": round(hi, 6) if hi is not None else None,
+                "significant": bool(lo > 0 or hi < 0) if lo is not None else None,
                 "data_source": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
                 "ci_method": f"paired_step_bootstrap_pct n_boot={N_BOOT} seed={SEED}",
             })
@@ -180,11 +193,11 @@ def main():
                 "mean_base": float(zvrisk[base][met]),
                 "mean_method": float(zvrisk[m][met]),
                 "delta_method_minus_base": round(d, 6),
-                "ci_low": round(lo, 6),
-                "ci_high": round(hi, 6),
-                "significant": bool(lo > 0 or hi < 0),
+                "ci_low": round(lo, 6) if lo is not None else None,
+                "ci_high": round(hi, 6) if hi is not None else None,
+                "significant": bool(lo > 0 or hi < 0) if lo is not None else None,
                 "data_source": "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
-                "ci_method": f"welch_norm_approx_95pct n=5",
+                "ci_method": "metric_specific_normal_approx_95pct" if lo is not None else "DESCRIPTIVE_ONLY_missing_metric_sd_or_n",
             })
 
     # ----- (C) Walk every delta_*.json: match expected_effects to recomputed pair -----
@@ -227,6 +240,8 @@ def main():
                 ci_hi = rk["ci_high"]
                 sig = rk["significant"]
                 verdict = judge(measured_delta)
+                if sig is None:
+                    verdict = "DESCRIPTIVE_ONLY"
                 if sig is False and verdict == "SUPPORTS":
                     verdict = "SUPPORTS_NS"  # supports direction but not significant
             elif rk is not None:

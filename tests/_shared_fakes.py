@@ -16,6 +16,7 @@ importing this module never adds import-time dependencies to a consumer.
 
 from __future__ import annotations
 
+import contextlib
 import importlib.util
 import json
 import re
@@ -41,9 +42,40 @@ def load_module(name: str, path: Path):
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
+    missing = object()
+    previous = sys.modules.get(name, missing)
     sys.modules[name] = module
-    spec.loader.exec_module(module)
+    parent = str(path.resolve().parent)
+    added_parent = parent not in sys.path
+    if added_parent:
+        sys.path.insert(0, parent)
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        if previous is missing:
+            sys.modules.pop(name, None)
+        else:
+            sys.modules[name] = previous
+        raise
+    finally:
+        if added_parent:
+            sys.path.remove(parent)
     return module
+
+
+@contextlib.contextmanager
+def temporary_modules(mapping):
+    missing = object()
+    previous = {key: sys.modules.get(key, missing) for key in mapping}
+    sys.modules.update(mapping)
+    try:
+        yield
+    finally:
+        for key, value in previous.items():
+            if value is missing:
+                sys.modules.pop(key, None)
+            else:
+                sys.modules[key] = value
 
 
 def embedded_payload(script: str, pattern=r"FILES = json\.loads\((.+)\)\n") -> dict[str, str]:

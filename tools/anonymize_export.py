@@ -10,7 +10,8 @@ and exit 1 if any identifier survives. Nothing is uploaded.
     python3 tools/anonymize_export.py --all      # full tree (minus exclusions)
     python3 tools/anonymize_export.py --out DIR  # other destination
 """
-import argparse, fnmatch, json, os, re, shutil, subprocess, sys
+
+import argparse, ctypes, errno, fnmatch, json, os, re, subprocess, sys, tempfile
 from collections import Counter
 from pathlib import Path
 
@@ -19,13 +20,24 @@ MAX_BIN = 5 * 1024 * 1024
 
 # Default include set (glob patterns over repo-relative paths).
 INCLUDE = [
-    "platform_*/**", "utils/**", "tests/**", "tools/**",
+    "platform_*/**",
+    "utils/**",
+    "tests/**",
+    "tools/**",
     "platform_hybrid/registry/**",
     "platform_hybrid/experiments/results/samestack_*.json",
     "platform_hybrid/experiments/results/tinker_gsm8k_zvf_*.json",
     "platform_hybrid/experiments/results/tinker_wandb_registry/*.jsonl",
-    "REPRODUCE.md", "LICENSE*", "requirements*.txt", "pyproject.toml",
-    "uv.lock", "Dockerfile", "setup.py", "setup.cfg", "conftest.py", ".env.example",
+    "REPRODUCE.md",
+    "LICENSE*",
+    "requirements*.txt",
+    "pyproject.toml",
+    "uv.lock",
+    "Dockerfile",
+    "setup.py",
+    "setup.cfg",
+    "conftest.py",
+    ".env.example",
 ]
 # Default mode keeps only result files from the explicit list above.
 RESULTS_DIR = "platform_hybrid/experiments/results/"
@@ -34,35 +46,97 @@ RESULTS_DIR = "platform_hybrid/experiments/results/"
 _DOC = r"\.(md|pdf|docx?|tex|txt|odt|rtf)$"
 EXCLUDE = [
     ("env", lambda p: re.search(r"(^|/)\.env(?!\.example$)", p)),
-    ("secret", lambda p: re.search(r"(secret|credential|\.netrc|(^|/)netrc|\.pem$|\.key$|(^|/)tokens?\.(json|txt)$)", p, re.I)),
+    (
+        "secret",
+        lambda p: re.search(
+            r"(secret|credential|\.netrc|(^|/)netrc|\.pem$|\.key$|(^|/)tokens?\.(json|txt)$)",
+            p,
+            re.I,
+        ),
+    ),
     ("wandb_dir", lambda p: re.search(r"(^|/)wandb/", p)),
-    ("bulk_dir", lambda p: re.match(r"(platform_[a-z_]+/reports|outputs|dist|archive|reports|submission|finish|deep-dive|research|\.codex[^/]*|\.claude|\.hyperresearch|autoresearch)/", p)),
+    (
+        "bulk_dir",
+        lambda p: re.match(
+            r"(platform_[a-z_]+/reports|outputs|dist|archive|reports|submission|finish|deep-dive|research|\.codex[^/]*|\.claude|\.hyperresearch|autoresearch)/",
+            p,
+        ),
+    ),
     ("nested_archive", lambda p: "/archive/" in p),
-    ("personal_doc", lambda p: re.search(r"(timesheet|payslip|aadhaar|pan_card|offer[_-]?letter|invoice|(^|/|_)cv[_.-])", p, re.I)
-        or re.search(r"(^|/)[^/]*(resume|curriculum)[^/]*" + _DOC, p, re.I)),
-    ("institution_doc", lambda p: re.search(r"(thesis|defen[cs]e|pes[_ -]|phase[0-9]?[_-]?review|viva|capstone|blind_review|university_submission|esa_phase|/submissions/|pes_review|public_documents)", p, re.I)),
+    (
+        "personal_doc",
+        lambda p: (
+            re.search(
+                r"(timesheet|payslip|aadhaar|pan_card|offer[_-]?letter|invoice|(^|/|_)cv[_.-])",
+                p,
+                re.I,
+            )
+            or re.search(r"(^|/)[^/]*(resume|curriculum)[^/]*" + _DOC, p, re.I)
+        ),
+    ),
+    (
+        "institution_doc",
+        lambda p: re.search(
+            r"(thesis|defen[cs]e|pes[_ -]|phase[0-9]?[_-]?review|viva|capstone|blind_review|university_submission|esa_phase|/submissions/|pes_review|public_documents)",
+            p,
+            re.I,
+        ),
+    ),
     ("office_binary", lambda p: re.search(r"\.(pdf|pptx?|docx?|xlsx?|key|odp)$", p, re.I)),
-    ("latex_build", lambda p: re.search(r"\.(aux|log|out|bbl|blg|fls|fdb_latexmk|synctex\.gz|toc|nav|snm)$", p)),
+    (
+        "latex_build",
+        lambda p: re.search(r"\.(aux|log|out|bbl|blg|fls|fdb_latexmk|synctex\.gz|toc|nav|snm)$", p),
+    ),
     ("this_tool", lambda p: p == "tools/anonymize_export.py"),
     ("pycache", lambda p: "__pycache__/" in p or p.endswith(".pyc")),
 ]
 
 # Ordered rewrite rules: (rule_id, pattern, replacement, flags). Order matters.
 RULES = [
-    ("R01_github_url", r"(https?://)?(www\.)?github\.com/arvindcr4/tinker-rl-lab(\.git)?", "https://anonymous.4open.science/r/tinker-rl-lab", re.I),
-    ("R02_github_user", r"(https?://)?(www\.)?github\.com/arvindcr4\b", "https://anonymous.4open.science/r", re.I),
+    (
+        "R01_github_url",
+        r"(https?://)?(www\.)?github\.com/arvindcr4/tinker-rl-lab(\.git)?",
+        "https://anonymous.4open.science/r/tinker-rl-lab",
+        re.I,
+    ),
+    (
+        "R02_github_user",
+        r"(https?://)?(www\.)?github\.com/arvindcr4\b",
+        "https://anonymous.4open.science/r",
+        re.I,
+    ),
     ("R03_wandb_entity", r"arvindcr4[-_]pes[-_]university", "anon-entity", re.I),
-    ("R04_hf_url", r"(https?://)?huggingface\.co/(datasets/|spaces/)?arvindcr4\b", r"https://huggingface.co/\2anon-org", re.I),
+    (
+        "R04_hf_url",
+        r"(https?://)?huggingface\.co/(datasets/|spaces/)?arvindcr4\b",
+        r"https://huggingface.co/\2anon-org",
+        re.I,
+    ),
     ("R05_hf_repo_id", r"\barvindcr4/", "anon-org/", re.I),
-    ("R06_email", r"[A-Za-z0-9._%+\-]+@(gmail\.com|pes\.edu|pesu\.[a-z.]+|pesu\.edu)", "anon@example.org", re.I),
+    (
+        "R06_email",
+        r"[A-Za-z0-9._%+\-]+@(gmail\.com|pes\.edu|pesu\.[a-z.]+|pesu\.edu)",
+        "anon@example.org",
+        re.I,
+    ),
     ("R07_home_path", r"/(Users|home)/arvind\b", "/home/anon", 0),
     ("R07b_any_macos_home", r"/Users/[A-Za-z0-9._\-]+", "/home/anon", 0),
     ("R08_handle", r"arvindcr4", "anon-author", re.I),
     ("R09_full_name", r"\bArvind(\s+C\.?\s*R\.?(?![A-Za-z]))?", "Anonymous Author", re.I),
     ("R09b_name_embedded", r"Arvind(_?C\.?_?R)?", "AnonAuthor", re.I),
-    ("R10_supervisor", r"\b(Dr\.?\s+)?Ramesh(\s+Prakash)?(\s+Guledgudd)?\b|\bGuledgudd\b", "Anonymous Advisor", re.I),
+    (
+        "R10_supervisor",
+        r"\b(Dr\.?\s+)?Ramesh(\s+Prakash)?(\s+Guledgudd)?\b|\bGuledgudd\b",
+        "Anonymous Advisor",
+        re.I,
+    ),
     ("R11_student_id", r"\bPES[0-9][A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{3}\b", "ANON-ID", re.I),
-    ("R12_institution", r"PES\s+University\b|\bPESU\b|\bPES\s+Institute\s+of\s+Technology\b|\bPESIT\b|\bPES\b", "Anonymous Institution", 0),
+    (
+        "R12_institution",
+        r"PES\s+University\b|\bPESU\b|\bPES\s+Institute\s+of\s+Technology\b|\bPESIT\b|\bPES\b",
+        "Anonymous Institution",
+        0,
+    ),
     ("R12b_pes_token", r"(?<![A-Za-z])PESU?(?=[_\-])|(?<=[_\-])PESU?(?![A-Za-z])", "ANONINST", 0),
     ("R13_pes_lower", r"\bpes[-_ ]university\b|\bpesu\b", "anon-institution", re.I),
     ("R14_employer", r"\b(IQVIA|LanceSoft|Fieldglass)\b", "Anonymous Employer", re.I),
@@ -76,17 +150,25 @@ COMPILED = [(rid, re.compile(p, f), r) for rid, p, r, f in RULES]
 # Leak scan (case-insensitive).
 LEAK = re.compile(
     r"arvindcr4|arvind|pes\s*university|\bpesu\b|@gmail|@pes\.edu|guledgudd|"
-    r"(?-i:/Users/)|iqvia|lancesoft|bengaluru|bangalore|\bUE\d{2}CS\d{3}|\bPES[0-9][A-Z]{2}\d", re.I)
-LEAK_BYTES = re.compile(rb"arvind|pes university|@gmail|@pes\.edu|/Users/|iqvia|lancesoft|guledgudd", re.I)
+    r"(?-i:/Users/)|iqvia|lancesoft|bengaluru|bangalore|\bUE\d{2}CS\d{3}|\bPES[0-9][A-Z]{2}\d",
+    re.I,
+)
+LEAK_BYTES = re.compile(
+    rb"arvind|pes university|@gmail|@pes\.edu|/Users/|iqvia|lancesoft|guledgudd", re.I
+)
 
 
 def tracked():
-    out = subprocess.run(["git", "ls-files", "-z"], cwd=ROOT, check=True, capture_output=True).stdout
+    out = subprocess.run(
+        ["git", "ls-files", "-z"], cwd=ROOT, check=True, capture_output=True
+    ).stdout
     return [p for p in out.decode().split("\0") if p]
 
 
 def match_any(p, pats):
-    return any(fnmatch.fnmatch(p, g) or (g.endswith("/**") and p.startswith(g[:-3] + "/")) for g in pats)
+    return any(
+        fnmatch.fnmatch(p, g) or (g.endswith("/**") and p.startswith(g[:-3] + "/")) for g in pats
+    )
 
 
 def rewrite(text, counts):
@@ -97,28 +179,62 @@ def rewrite(text, counts):
     return text
 
 
-def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--all", action="store_true", help="full tree instead of the claim-C include set")
-    ap.add_argument("--out", default=str(ROOT / "dist" / "anon_export"))
-    a = ap.parse_args()
-    out = Path(a.out).resolve()
-    if out == ROOT or ROOT not in out.parents and not a.out.startswith("/"):
-        sys.exit("refusing to write outside a dedicated directory")
-    shutil.rmtree(out, ignore_errors=True)
-    out.mkdir(parents=True)
+def publish_new_directory(staging, destination):
+    """Atomically publish without replacing even an empty concurrent destination.
 
+    Linux renameat2 provides the required no-replace guarantee. Fail closed on
+    platforms without it rather than falling back to a racy exists/rename pair.
+    """
+    libc = ctypes.CDLL(None, use_errno=True)
+    rename = getattr(libc, "renameat2", None)
+    if rename is None:
+        raise OSError(errno.ENOTSUP, "atomic no-replace directory publication unavailable")
+    rename.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+    rename.restype = ctypes.c_int
+    if rename(-100, os.fsencode(staging), -100, os.fsencode(destination), 1):
+        error = ctypes.get_errno()
+        raise OSError(error, os.strerror(error), str(destination))
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--all", action="store_true", help="full tree instead of the claim-C include set"
+    )
+    ap.add_argument("--out", default=str(ROOT / "dist" / "anon_export"))
+    a = ap.parse_args(argv)
+    requested = Path(a.out)
+    if requested.exists() or requested.is_symlink():
+        raise ValueError("Export destination must be a new dedicated directory")
+    out = requested.resolve()
+    root = ROOT.resolve()
+    if out == root or out in root.parents or out.exists() or out.is_symlink():
+        raise ValueError("Export destination must be a new dedicated directory")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".anon-export-", dir=out.parent) as temporary:
+        staging = Path(temporary) / "export"
+        staging.mkdir()
+        result = build_export(staging, a.all)
+        if result == 0:
+            publish_new_directory(staging, out)
+        return result
+
+
+def build_export(out, all_files=False):
     counts, excluded, included = Counter(), Counter(), []
+    destinations = {"ANON_MANIFEST.json"}
     dropped_bin = []
     for p in tracked():
         src = ROOT / p
         if not src.is_file() or src.is_symlink():
             excluded["missing_or_symlink"] += 1
             continue
-        if not a.all and not match_any(p, INCLUDE):
+        if not all_files and not match_any(p, INCLUDE):
             excluded["not_in_include_set"] += 1
             continue
-        if not a.all and p.startswith(RESULTS_DIR) and not match_any(p, INCLUDE[5:8]):
+        if not all_files and p.startswith(RESULTS_DIR) and not match_any(p, INCLUDE[5:8]):
             excluded["result_not_selected"] += 1
             continue
         reason = next((r for r, f in EXCLUDE if f(p)), None)
@@ -127,6 +243,9 @@ def main():
             continue
         data = src.read_bytes()
         dst_rel = rewrite(p, Counter())
+        if dst_rel in destinations:
+            raise ValueError(f"rewritten export destination collision: {dst_rel}")
+        destinations.add(dst_rel)
         dst = out / dst_rel
         try:
             text = data.decode("utf-8")
@@ -149,11 +268,14 @@ def main():
             counts["path_renamed"] += 1
         included.append(dst_rel)
 
-    manifest = {"mode": "all" if a.all else "claim_c_include_set",
-                "n_included": len(included), "files": sorted(included),
-                "excluded_by_reason": dict(excluded.most_common()),
-                "replacements_by_rule": dict(sorted(counts.items())),
-                "rules": [rid for rid, *_ in RULES]}
+    manifest = {
+        "mode": "all" if all_files else "claim_c_include_set",
+        "n_included": len(included),
+        "files": sorted(included),
+        "excluded_by_reason": dict(excluded.most_common()),
+        "replacements_by_rule": dict(sorted(counts.items())),
+        "rules": [rid for rid, *_ in RULES],
+    }
     (out / "ANON_MANIFEST.json").write_text(json.dumps(manifest, indent=1), encoding="utf-8")
 
     residual = []

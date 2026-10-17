@@ -397,9 +397,24 @@ def create_command(
 def instance_status(gcloud: str, *, instance: str, project: str, zone: str) -> str:
     """Only a bound structured NOT_FOUND is absence; failed lookup is unresolved."""
     try:
-        described = subprocess.run([gcloud, "compute", "instances", "describe", instance,
-            f"--project={project}", f"--zone={zone}", "--format=json"], cwd=REPO_ROOT,
-            text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=60)
+        described = subprocess.run(
+            [
+                gcloud,
+                "compute",
+                "instances",
+                "describe",
+                instance,
+                f"--project={project}",
+                f"--zone={zone}",
+                "--format=json",
+            ],
+            cwd=REPO_ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=60,
+        )
     except (subprocess.TimeoutExpired, OSError):
         return "LOOKUP_FAILED"
     try:
@@ -409,7 +424,11 @@ def instance_status(gcloud: str, *, instance: str, project: str, zone: str) -> s
     identity = f"projects/{project}/zones/{zone}/instances/{instance}"
     if described.returncode:
         error = payload.get("error", {})
-        if error.get("code") == 404 and error.get("status") == "NOT_FOUND" and error.get("resource") == identity:
+        if (
+            error.get("code") == 404
+            and error.get("status") == "NOT_FOUND"
+            and error.get("resource") == identity
+        ):
             return "ABSENT"
         return "LOOKUP_FAILED"
     if payload.get("name") != instance or not str(payload.get("selfLink", "")).endswith(identity):
@@ -487,7 +506,10 @@ def remote_exit_code(output: str) -> int | None:
     for line in reversed(output.splitlines()):
         if marker not in line:
             continue
-        value = line.rsplit(marker, 1)[1].strip().split()[0]
+        tokens = line.rsplit(marker, 1)[1].strip().split()
+        if not tokens:
+            return None
+        value = tokens[0]
         try:
             return int(value)
         except ValueError:
@@ -566,22 +588,43 @@ def download_gcs_receipts(
 
 def delete_instance(gcloud: str, *, instance: str, project: str, zone: str) -> dict[str, Any]:
     try:
-        deleted = subprocess.run([gcloud, "compute", "instances", "delete", instance,
-            f"--project={project}", f"--zone={zone}", "--quiet"], cwd=REPO_ROOT,
-            text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False, timeout=60)
+        deleted = subprocess.run(
+            [
+                gcloud,
+                "compute",
+                "instances",
+                "delete",
+                instance,
+                f"--project={project}",
+                f"--zone={zone}",
+                "--quiet",
+            ],
+            cwd=REPO_ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+            timeout=60,
+        )
         code = deleted.returncode
     except (subprocess.TimeoutExpired, OSError):
         code = None
     observed = instance_status(gcloud, instance=instance, project=project, zone=zone)
-    return {"delete_return_code": code, "instance_absent_verified": observed == "ABSENT",
-            "session_absent_verified": observed == "ABSENT", "lookup_outcome": observed,
-            "resource_id": f"projects/{project}/zones/{zone}/instances/{instance}",
-            "observed_at": utc_now()}
+    return {
+        "delete_return_code": code,
+        "instance_absent_verified": observed == "ABSENT",
+        "session_absent_verified": observed == "ABSENT",
+        "lookup_outcome": observed,
+        "resource_id": f"projects/{project}/zones/{zone}/instances/{instance}",
+        "observed_at": utc_now(),
+    }
 
 
 def run_unit(args: argparse.Namespace) -> dict[str, Any]:
     if args.framework != "trl":
-        raise ValueError("alternate frameworks do not implement the frozen preflight contract; no allocation permitted")
+        raise ValueError(
+            "alternate frameworks do not implement the frozen preflight contract; no allocation permitted"
+        )
     common = load_common()
     common.validate_diagnostic_seed(args.seed, json.loads(PROTOCOL.read_text()))
     helpers = common.load_e1_helpers()
@@ -637,10 +680,17 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         "removed_unused_optional_packages": list(REMOVED_UNUSED_OPTIONAL_PACKAGES),
         "source_snapshots": snapshots,
     }
-    request = common.seal_request(request, decoder=common.DECODER_CONTRACT,
-        tracking={"hf_repo_prefix": args.hf_repo_prefix, "wandb_project": args.wandb_project,
-                  "wandb_entity": args.wandb_entity, "wandb_group": args.wandb_group},
-        source_files={p.name: common.sha256_file(p) for p in (REMOTE_SCRIPT, SAMPLER, TRL_ADAPTER)})
+    request = common.seal_request(
+        request,
+        decoder=common.DECODER_CONTRACT,
+        tracking={
+            "hf_repo_prefix": args.hf_repo_prefix,
+            "wandb_project": args.wandb_project,
+            "wandb_entity": args.wandb_entity,
+            "wandb_group": args.wandb_group,
+        },
+        source_files={p.name: common.sha256_file(p) for p in (REMOTE_SCRIPT, SAMPLER, TRL_ADAPTER)},
+    )
     stack_fingerprint = request["stack_fingerprint"]
     receipt_prefix = f"preflight/{request['fingerprint']}"
     request["receipt_bucket"] = RECEIPT_BUCKET
@@ -845,7 +895,9 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
                 timeout_seconds=args.wait_timeout_seconds,
                 poll_seconds=args.poll_seconds,
             )
-            downloaded_result_path = output_dir / "downloads" / request["fingerprint"] / "result.json"
+            downloaded_result_path = (
+                output_dir / "downloads" / request["fingerprint"] / "result.json"
+            )
             gcs_receipt = download_gcs_receipts(
                 gcloud,
                 bucket=RECEIPT_BUCKET,
@@ -899,8 +951,13 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
                     credentials = helpers.load_credentials()
                     manifest, verification = common.verify_remote(credentials, result, request)
                     outcome = common.completed_receipt(
-                        base, result=result, manifest=manifest, verification=verification,
-                        cleanup={}, return_code=0)
+                        base,
+                        result=result,
+                        manifest=manifest,
+                        verification=verification,
+                        cleanup={},
+                        return_code=0,
+                    )
                     # The finally block below attaches the observed deletion result.
                 except Exception as exc:
                     outcome = {
@@ -921,7 +978,9 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
                 "error": str(exc),
             }
         finally:
-            cleanup = delete_instance(gcloud, instance=instance, project=args.project, zone=args.zone)
+            cleanup = delete_instance(
+                gcloud, instance=instance, project=args.project, zone=args.zone
+            )
         outcome["cleanup"] = cleanup
         if not cleanup["instance_absent_verified"]:
             outcome["pre_cleanup_status"] = outcome["status"]
@@ -952,7 +1011,9 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         }
     finally:
         if cleanup is None and (args.wait or sys.exc_info()[0] is not None):
-            cleanup = delete_instance(gcloud, instance=instance, project=args.project, zone=args.zone)
+            cleanup = delete_instance(
+                gcloud, instance=instance, project=args.project, zone=args.zone
+            )
             helpers.atomic_json(output_dir / "cleanup" / f"{instance}.json", cleanup)
 
 

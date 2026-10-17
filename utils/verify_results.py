@@ -144,19 +144,49 @@ def _parse_result_file(path: Path) -> List[Dict]:
 
 
 def _match_key(experiment: str, expected: Dict[str, Dict[str, Any]]) -> Optional[str]:
-    """Map a result's 'experiment' tag to an expected-results key.
+    """Exact identity, removing only a terminal _sN / _seed_N suffix (v2)."""
+    canonical = re.sub(r"_(?:s|seed_?)[0-9]+$", "", experiment)
+    if canonical in expected and not canonical.startswith("_"):
+        return canonical
+    # Legacy aliases must be explicit; never infer a variant by substring.
+    aliases = expected.get("_aliases", {})
+    target = aliases.get(canonical) if isinstance(aliases, dict) else None
+    return target if target in expected and not target.startswith("_") else None
 
-    Matches by substring, preferring the *longest* matching key so that
-    ``gsm8k_qwen3_8b_base`` doesn't accidentally bind to ``gsm8k_qwen3_8b``.
-    """
-    e = experiment.lower()
-    best: Optional[str] = None
-    for key in expected:
-        if key.startswith("_"):
-            continue
-        if key in e and (best is None or len(key) > len(best)):
-            best = key
-    return best
+
+def _metrics(last10, peak):
+    if any(
+        isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
+        for v in (last10, peak)
+    ):
+        raise ValueError(
+            "result metrics must be finite numbers, not missing values, booleans or strings"
+        )
+    if not 0 <= last10 <= peak <= 1:
+        raise ValueError("accuracy metrics require 0 <= last10 <= peak <= 1")
+    return float(last10), float(peak)
+
+
+def _metric_alias(record, names):
+    values = [record[name] for name in names if name in record]
+    if not values or any(
+        isinstance(v, bool)
+        or not isinstance(v, (int, float))
+        or not math.isfinite(v)
+        or not 0 <= v <= 1
+        for v in values
+    ):
+        raise ValueError("result metrics must be finite numbers in [0, 1], across all aliases")
+    if any(value != values[0] for value in values[1:]):
+        raise ValueError(f"conflicting metric aliases: {names}")
+    return values[0]
+
+
+def _result_metrics(record):
+    return _metrics(
+        _metric_alias(record, ("last10_avg", "last10")),
+        _metric_alias(record, ("peak", "peak_reward")),
+    )
 
 
 def _seed(value):
@@ -223,6 +253,7 @@ def _references(expected):
                     or not math.isfinite(value)
                 ):
                     raise ValueError(f"{key}: {field} must be finite numeric data")
+            _result_metrics(values)
         references[key] = refs
     return references
 
@@ -256,27 +287,45 @@ def verify(
             exp = str(parsed.get("experiment", path.stem))
             key = _match_key(exp, expected)
             if not key:
+                if any(
+                    field in parsed for field in ("last10", "last10_avg", "peak", "peak_reward")
+                ):
+                    print(
+                        f"UNVERIFIED {exp}: unknown canonical experiment identity", file=sys.stderr
+                    )
+                    rows.append(
+                        (
+                            exp,
+                            "unknown",
+                            float("nan"),
+                            float("nan"),
+                            float("nan"),
+                            float("nan"),
+                            None,
+                        )
+                    )
+                    failed += 1
                 continue
             try:
                 seed = _result_seed(parsed, exp, path.stem)
+                filename_key = _match_key(path.stem, expected)
+                # A recognizable experiment filename cannot contradict its payload.
+                if filename_key is not None and filename_key != key:
+                    raise ValueError("conflicting experiment identities in filename and payload")
+                if (
+                    path.stem.startswith("gsm8k_")
+                    and re.sub(r"_(?:s|seed_?)[0-9]+$", "", path.stem)
+                    != re.sub(r"_(?:s|seed_?)[0-9]+$", "", exp)
+                    and filename_key != key
+                ):
+                    raise ValueError("conflicting experiment identities in filename and payload")
                 ref_seed = "*" if "*" in references[key] else seed
                 values = references[key].get(ref_seed) if ref_seed is not None else None
                 if values is None:
                     raise ValueError(
                         f"no applicable reference for seed {seed}; supply an explicit seed reference"
                     )
-                actual: List[Any] = [
-                    parsed.get("last10_avg", parsed.get("last10")),
-                    parsed.get("peak", parsed.get("peak_reward")),
-                ]
-                if any(
-                    isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
-                    for v in actual
-                ):
-                    raise ValueError(
-                        "result metrics must be finite numbers, not missing values, booleans or strings"
-                    )
-                got_l10, got_peak = map(float, actual)
+                got_l10, got_peak = _result_metrics(parsed)
             except (ValueError, TypeError) as exc:
                 print(f"UNVERIFIED {exp}: {exc}", file=sys.stderr)
                 rows.append(

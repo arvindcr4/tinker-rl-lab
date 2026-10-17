@@ -22,6 +22,7 @@ def test_requested_formats_and_consistent_summary(tmp_path, output_format, capsy
     seed_file(data, 123, 0.6)
     stats.main(
         [
+            "--legacy-exploratory",
             "--results-dir",
             str(data),
             "--output-dir",
@@ -57,14 +58,34 @@ def test_rliable_rejected_before_output(tmp_path, capsys):
 def test_invalid_final_metric_not_silently_zero(tmp_path, value, capsys):
     seed_file(tmp_path / "data", 42, value)
     with pytest.raises(SystemExit) as exc:
-        stats.main(["--results-dir", str(tmp_path / "data"), "--output-dir", str(tmp_path / "out")])
+        stats.main(
+            [
+                "--legacy-exploratory",
+                "--results-dir",
+                str(tmp_path / "data"),
+                "--output-dir",
+                str(tmp_path / "out"),
+            ]
+        )
     assert exc.value.code == 2
     assert "finite numeric metric" in capsys.readouterr().err
     assert not list((tmp_path / "out").glob("results_table.*"))
 
 
-@pytest.mark.parametrize("extra", [[], ["--bootstrap-samples", "0"], ["--results-dir", "missing"]])
+@pytest.mark.parametrize(
+    "extra",
+    [[], ["--bootstrap-samples", "0"], ["--legacy-exploratory", "--results-dir", "missing"]],
+)
 def test_invalid_or_empty_input_rejected(tmp_path, extra):
     with pytest.raises(SystemExit) as exc:
-        stats.main(["--results-dir", str(tmp_path), "--output-dir", str(tmp_path / "out"), *extra])
+        stats.main(
+            [
+                "--legacy-exploratory",
+                "--results-dir",
+                str(tmp_path),
+                "--output-dir",
+                str(tmp_path / "out"),
+                *extra,
+            ]
+        )
     assert exc.value.code == 2

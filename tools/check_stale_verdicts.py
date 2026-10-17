@@ -15,10 +15,10 @@ when any of the following holds:
 1. the file is explicitly allowlisted below (rule definitions, the correction
    documents themselves, synthetic test fixtures, or dated quarantined run
    directories covered by a SUPERSEDED note);
-2. a quarantine marker (e.g. "superseded", "stale", "former") appears within
-   ``WINDOW`` lines of the occurrence;
-3. the file's first ``BANNER_LINES`` lines carry a correction banner pointing
-   at the reanalysis (covers dated historical entries in status logs).
+2. a quarantine marker (e.g. "superseded", "stale", "former") qualifies the
+   occurrence on the same line;
+3. the occurrence is inside explicitly delimited historical-dapo-2026-08-02
+   start/end comments. Banners never exempt later current claims.
 """
 
 from __future__ import annotations
@@ -101,16 +101,20 @@ def is_allowlisted(relative: str) -> bool:
 
 def find_unmarked_occurrences(path: Path, relative: str) -> list[str]:
     lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-    banner = "\n".join(lines[:BANNER_LINES])
-    if any(marker in banner for marker in BANNER_MARKERS):
-        return []
     problems = []
+    historical = False
     for index, line in enumerate(lines):
+        if "<!-- historical-dapo-2026-08-02:start -->" in line:
+            historical = True
+        if "<!-- historical-dapo-2026-08-02:end -->" in line:
+            historical = False
         if NEEDLE not in line:
             continue
-        lo = max(0, index - WINDOW)
-        hi = min(len(lines), index + WINDOW + 1)
-        context = "\n".join(lines[lo:hi]).lower()
+        if historical:
+            continue
+        # Corrections must describe this occurrence on the same line. Generic
+        # installation banners and nearby unrelated "invalid" text cannot hide it.
+        context = line.lower()
         if any(marker in context for marker in MARKERS):
             continue
         problems.append(f"{relative}:{index + 1}: unmarked stale verdict: {line.strip()[:120]}")

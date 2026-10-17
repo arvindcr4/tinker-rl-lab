@@ -259,6 +259,10 @@ def check_replacement(lane, d):
                 + count(part["empty_patch"]),
                 "E1 outcome partition",
             )
+            require(
+                part["resolved"] <= part["graded"] <= part["attempted"],
+                "E1 impossible partition counts",
+            )
             same(count(part["resolved"]), len(part["resolved_ids"]), "E1 resolved IDs")
             unique(part["resolved_ids"], "E1 resolved IDs")
             for denominator in ("graded", "attempted"):
@@ -270,6 +274,10 @@ def check_replacement(lane, d):
                 )
         for field in ("errors_patch_apply_or_eval", "empty_patch"):
             same(count(d["outcome_counts"][field]), sum(p[field] for p in parts), f"E1 {field}")
+        unique(d["resolved_ids"], "E1 headline resolved task IDs")
+        unique(
+            [i for part in parts for i in part["resolved_ids"]], "E1 cross-wave resolved task IDs"
+        )
         same(success, len(d["resolved_ids"]), "E1 headline resolved IDs")
         require(
             sorted(d["resolved_ids"]) == sorted(i for p in parts for i in p["resolved_ids"]),
@@ -314,6 +322,10 @@ def check_replacement(lane, d):
         same(sum(count(p["n"]) for p in parts), n, "E5 subset counts")
         same(sum(count(p["passes"]) for p in parts), success, "E5 subset successes")
         for part in parts:
+            require(
+                0 <= count(part["passes"]) <= count(part["n"]) and part["n"] > 0,
+                "E5 impossible subset counts",
+            )
             same(part["pass1"], part["passes"] / part["n"], "E5 subset pass1", digits=4)
     elif lane == "E6":
         pending = count(d["n_ungraded_judge_unavailable"])
@@ -336,6 +348,11 @@ def check_replacement(lane, d):
         same(len(rows), n, "E9 per-task count")
         unique([r["task"] for r in rows], "E9 tasks")
         same(sum(values(rows, "success", binary=True)), success, "E9 task successes")
+        for row in rows:
+            require(type(row["rc"]) is int, "E9 return code must be an integer")
+            require(
+                not row["success"] or row["rc"] == 0, "E9 success recorded for an ungraded task"
+            )
         errors = sum(r["rc"] != 0 for r in rows)
         same(count(d["n_errors_or_timeouts"]), errors, "E9 errors")
         same(graded, n - errors, "E9 graded")

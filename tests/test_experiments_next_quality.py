@@ -234,7 +234,7 @@ def test_standalone_checkpoint_is_atomic_and_restartable(tmp_path):
     assert list(tmp_path.glob(".*.tmp")) == []
 
 
-def test_all_expensive_experiments_next_entrypoints_have_resume_contracts():
+def test_expensive_entrypoints_have_resume_inventory_markers():
     for name in (
         "build_pool.py",
         "passk_eval.py",

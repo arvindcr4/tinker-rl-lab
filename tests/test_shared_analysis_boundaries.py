@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 
 from tests._shared_fakes import load_module
+from utils.stats import compute_bootstrap_ci
 
 ROOT = Path(__file__).resolve().parents[1]
 ac = load_module("_analysis_boundaries", ROOT / "platform_modal/scripts/_analysis_common.py")
@@ -18,6 +19,7 @@ st = load_module("_stats_boundaries", ROOT / "platform_modal/scripts/_stats.py")
 @pytest.mark.parametrize("count", [0, -1, 1.5, True])
 def test_bootstraps_reject_invalid_resample_counts(count):
     calls = [
+        lambda: compute_bootstrap_ci([1, 2], n_bootstrap=count),
         lambda: st.bootstrap_ci_mean_pct([1, 2], count, 0.05, 0),
         lambda: st.bootstrap_ci_statmean([1, 2], count, 0),
         lambda: st.bootstrap_ci_rng([1, 2], count, 0.05, random.Random(0)),
@@ -56,7 +58,8 @@ def test_empty_and_singleton_contracts():
     singleton = st.bootstrap_ci_rng([5], 20, 0.05, random.Random(0))
     assert singleton.estimate == 5
     assert singleton.status == "insufficient_data"
-    assert math.isnan(singleton.low) and math.isnan(singleton.high)
+    assert math.isnan(singleton.low)
+    assert math.isnan(singleton.high)
     assert st.bootstrap_ci_statmean([5], 20, 0) == (5, 5, 5)
     assert st.paired_boot_pct([5], [2], 20, 0) == (3, 3, 3, 1)
     with pytest.raises(ValueError, match="nonempty"):

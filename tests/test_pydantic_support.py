@@ -5,6 +5,9 @@ Tests to ensure Pydantic support across all configurations and models in the cod
 from __future__ import annotations
 
 import importlib.util
+import tomllib
+from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
 from pathlib import Path
 import pydantic
 from pydantic import BaseModel, Field, ValidationError
@@ -208,6 +211,26 @@ def test_atropos_types_request_response_schemas():
         ChatMessage()  # type: ignore[call-arg]
 
 
+def active_requirements(path):
+    if path.suffix == ".toml":
+        project = tomllib.loads(path.read_text())["project"]
+        values = list(project.get("dependencies", []))
+        values += [
+            item
+            for entries in project.get("optional-dependencies", {}).values()
+            for item in entries
+        ]
+    else:
+        values = [line.split("#", 1)[0].strip() for line in path.read_text().splitlines()]
+    result = {}
+    for value in values:
+        if not value or value.startswith("-"):
+            continue
+        req = Requirement(value)
+        result.setdefault(canonicalize_name(req.name), []).append(req)
+    return result
+
+
 def test_all_subprojects_use_same_pydantic_and_aligned_lib_versions():
     """Ensure all subprojects and manifests specify the same pydantic constraint and aligned libraries."""
     root_dir = Path(__file__).resolve().parent.parent
@@ -226,10 +249,12 @@ def test_all_subprojects_use_same_pydantic_and_aligned_lib_versions():
 
     for manifest in manifests:
         assert manifest.exists(), f"Manifest {manifest} does not exist"
-        content = manifest.read_text(encoding="utf-8")
-        assert expected_pydantic in content, (
-            f"{manifest.relative_to(root_dir)} does not contain '{expected_pydantic}'"
-        )
+        requirements = active_requirements(manifest)
+        assert "pydantic" in requirements
+        assert all(
+            req.specifier == Requirement(expected_pydantic).specifier
+            for req in requirements["pydantic"]
+        ), manifest
 
     # Check key ML framework version alignment across manifests that declare them
     core_checks = [
@@ -250,9 +275,28 @@ def test_all_subprojects_use_same_pydantic_and_aligned_lib_versions():
         root_dir / "zvf-program" / "zvf-triage" / "pyproject.toml",
         root_dir / "platform_hybrid" / "experiments" / "implementations" / "requirements.txt",
     ]:
-        content = manifest.read_text(encoding="utf-8")
+        requirements = active_requirements(manifest)
         for lib, expected_str in core_checks:
-            if lib in content:
-                assert expected_str in content, (
-                    f"{manifest.relative_to(root_dir)} mentions '{lib}' but does not match expected '{expected_str}'"
-                )
+            if lib in requirements:
+                assert all(
+                    req.specifier == Requirement(expected_str).specifier
+                    for req in requirements[lib]
+                ), manifest
+
+
+@pytest.mark.parametrize(
+    ("extension", "contents"),
+    [
+        (".txt", "pydantic<2\n# pydantic>=2.13.0,<3.0.0\n"),
+        (".toml", '[project]\ndependencies = ["pydantic<2"]\n# pydantic>=2.13.0,<3.0.0\n'),
+    ],
+)
+def test_commented_desired_pins_cannot_hide_incompatible_requirements(
+    tmp_path, extension, contents
+):
+    manifest = tmp_path / ("requirements" + extension)
+    manifest.write_text(contents)
+    active = active_requirements(manifest)
+    assert len(active["pydantic"]) == 1
+    assert active["pydantic"][0].specifier == Requirement("pydantic<2").specifier
+    assert active["pydantic"][0].specifier != Requirement("pydantic>=2.13.0,<3.0.0").specifier

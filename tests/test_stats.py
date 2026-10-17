@@ -76,8 +76,9 @@ class TestComputeIQM(unittest.TestCase):
         scores = np.array([0.0, 0.5, 0.5, 0.5, 1.0])
         self.assertAlmostEqual(compute_iqm(scores), 0.5, places=7)
 
-    def test_iqm_empty_is_nan(self):
-        self.assertTrue(np.isnan(compute_iqm(np.array([]))))
+    def test_iqm_empty_is_rejected(self):
+        with self.assertRaises(ValueError):
+            compute_iqm(np.array([]))
 
 
 class TestLoadMultiSeedResults(unittest.TestCase):

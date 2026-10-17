@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import tempfile
 from pathlib import Path
 import zipfile
 
@@ -18,6 +20,74 @@ def record(path: Path) -> dict:
         "bytes": len(data),
         "sha256": hashlib.sha256(data).hexdigest(),
     }
+
+
+def validate_audit(audit, snapshot):
+    """A PASS is usable only with v2 claim-level and byte-level bindings."""
+    if (
+        audit.get("schema_version") != "thesis-number-provenance-v2"
+        or audit.get("status") != "PASS"
+    ):
+        raise ValueError("A structurally bound v2 thesis audit must pass before packaging")
+    groups = audit.get("groups")
+    bindings = audit.get("source_bindings")
+    if not isinstance(groups, list) or not groups or not isinstance(bindings, list) or not bindings:
+        raise ValueError("audit lacks source/claim bindings")
+    bound = {}
+    for row in bindings:
+        path = row["path"]
+        if path in bound or path not in snapshot:
+            raise ValueError(f"duplicate or missing audit source: {path}")
+        bound[path] = row["sha256"]
+        if hashlib.sha256(snapshot[path]).hexdigest() != row["sha256"]:
+            raise ValueError(f"stale audit source: {path}")
+    for group in groups:
+        chapter = str(Path(audit["thesis_directory"]) / group["chapter"])
+        if chapter not in bound or group.get("status") != "PASS" or not group.get("tokens"):
+            raise ValueError("audit lacks a passing chapter binding")
+        for token in group["tokens"]:
+            if (
+                token.get("result") not in ("PASS", "CONTEXT")
+                or token.get("result") == "PASS"
+                and token.get("manuscript_binding") != "matched"
+            ):
+                raise ValueError("audit has an unbound manuscript claim")
+        for artifact in group["artifacts"]:
+            path = artifact["path"]
+            if any(c in path for c in "*?["):
+                import fnmatch
+
+                matches = sorted(p for p in bound if fnmatch.fnmatch(p, path))
+                digest = hashlib.sha256(
+                    "".join(f"{bound[p]}  {p}\n" for p in matches).encode()
+                ).hexdigest()
+                if not matches or digest != artifact["sha256"]:
+                    raise ValueError("audit artifact glob binding mismatch")
+            elif bound.get(path) != artifact["sha256"]:
+                raise ValueError("audit artifact binding mismatch")
+
+
+def publish_archive(target, snapshot, modes=None):
+    """Write and verify a stable byte snapshot before atomic publication."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=".review-pack-", suffix=".zip", dir=target.parent)
+    os.close(fd)
+    try:
+        with zipfile.ZipFile(temporary, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for name, data in sorted(snapshot.items()):
+                info = zipfile.ZipInfo(name, date_time=(2026, 10, 11, 0, 0, 0))
+                info.compress_type = zipfile.ZIP_DEFLATED
+                info.create_system = 3
+                info.external_attr = (modes or {}).get(name, 0o100644) << 16
+                archive.writestr(info, data)
+        with zipfile.ZipFile(temporary) as archive:
+            if archive.testzip() is not None or any(
+                archive.read(name) != data for name, data in snapshot.items()
+            ):
+                raise ValueError("archive byte verification failed")
+        os.replace(temporary, target)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
 
 
 def main() -> int:
@@ -54,11 +124,7 @@ def main() -> int:
     for name in ("SUMMARY.md", "pdf_checks.json", "deck_checks.json", "delivery_checks.json"):
         selected.add(PACK / "validation" / name)
     # same-stack v2 analysis (thesis §6.5.5, Table 6.2) and the per-run records it reads
-    selected.update(
-        path
-        for path in (PACK / "validation/samestack_v2").iterdir()
-        if path.is_file()
-    )
+    selected.update(path for path in (PACK / "validation/samestack_v2").iterdir() if path.is_file())
     selected.update(
         path
         for path in (ROOT / "platform_hybrid/experiments/results/samestack_gsm8k_v2s").iterdir()
@@ -100,34 +166,54 @@ def main() -> int:
     ):
         selected.add(ROOT / name)
 
-    rows = [record(path) for path in sorted(selected) if path.is_file()]
+    for row in audit.get("source_bindings", []):
+        path = ROOT / row["path"]
+        if path.is_symlink() or not path.resolve().is_relative_to(ROOT.resolve()):
+            raise ValueError("audit source escapes repository")
+        selected.add(path)
+    snapshot = {
+        path.relative_to(ROOT).as_posix(): path.read_bytes()
+        for path in sorted(selected)
+        if path.is_file()
+    }
+    modes = {
+        path.relative_to(ROOT).as_posix(): 0o100755 if path.stat().st_mode & 0o111 else 0o100644
+        for path in selected
+        if path.is_file()
+    }
+    audit_name = (PACK / "thesis/provenance_audit.json").relative_to(ROOT).as_posix()
+    validate_audit(json.loads(snapshot[audit_name]), snapshot)
+    # Visual reviews are checked again against the bytes actually selected.
+    for document, review in ((pdf, "pdf_checks.json"), (deck, "deck_checks.json")):
+        quality = json.loads(snapshot[(PACK / "validation" / review).relative_to(ROOT).as_posix()])
+        if (
+            hashlib.sha256(snapshot[document.relative_to(ROOT).as_posix()]).hexdigest()
+            != quality["sha256"]
+            or quality["visual_review"] != "PASS"
+        ):
+            raise ValueError("document changed after visual review")
+    rows = [
+        {"path": name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+        for name, data in sorted(snapshot.items())
+    ]
     if len(rows) != len(selected):
         raise ValueError("A required review package input is missing")
     manifest_path = PACK / "REVIEW_MANIFEST.json"
     manifest = {
-        "schema": "pes-evaluation-review-v1",
+        "schema": "pes-evaluation-review-v2",
         "date": "2026-10-11",
         "scope": "Review documents, selected evidence, editable thesis sources and offline demo; not full experiment reproduction.",
         "self_excluded": manifest_path.relative_to(ROOT).as_posix(),
         "files": rows,
     }
-    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
-    selected.add(manifest_path)
+    snapshot[manifest_path.relative_to(ROOT).as_posix()] = (
+        json.dumps(manifest, indent=2) + "\n"
+    ).encode()
     target = ROOT / "dist/TinkerRL_PES_Review_2026-10-11.zip"
-    target.parent.mkdir(exist_ok=True)
-    with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for path in sorted(selected):
-            info = zipfile.ZipInfo(
-                path.relative_to(ROOT).as_posix(), date_time=(2026, 10, 11, 0, 0, 0)
-            )
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.create_system = 3
-            mode = 0o100755 if path.stat().st_mode & 0o111 else 0o100644
-            info.external_attr = mode << 16
-            archive.writestr(info, path.read_bytes())
+    publish_archive(target, snapshot, modes)
     digest = hashlib.sha256(target.read_bytes()).hexdigest()
     target.with_suffix(".zip.sha256").write_text(f"{digest}  {target.name}\n")
-    print(json.dumps({"archive": str(target), "files": len(selected), "sha256": digest}, indent=2))
+    print(json.dumps({"archive": str(target), "files": len(snapshot), "sha256": digest}, indent=2))
     return 0
 
 

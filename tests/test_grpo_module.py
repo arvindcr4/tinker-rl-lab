@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import types
 from pathlib import Path
+from tests._shared_fakes import temporary_modules
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -138,7 +139,7 @@ class TestHeldoutRewardSummary(unittest.TestCase):
         self.assertEqual(heldout_reward_summary([]), {})
 
     def test_stats_import_failure_degrades_to_mean_only(self):
-        with patch.dict(sys.modules, {"utils.stats": None}):
+        with temporary_modules({"utils.stats": None}):
             summary = heldout_reward_summary([0.0, 1.0, 1.0, 0.0])
         self.assertEqual(summary["test/reward"], 0.5)
         self.assertEqual(summary["test/reward_n"], 4.0)
@@ -627,7 +628,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         tinker = types.ModuleType("tinker")
         tinker.ServiceClient = service_client
 
-        with patch.dict(sys.modules, {"wandb": wandb, "tinker": tinker}, clear=False):
+        with temporary_modules({"wandb": wandb, "tinker": tinker}):
             with self.assertRaisesRegex(RuntimeError, "W&B online initialization failed"):
                 grpo._run_one_seed(
                     self._config(), self._dataset(), ExactMathReward(), tokenizer=None
@@ -649,7 +650,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         tinker = types.ModuleType("tinker")
         tinker.ServiceClient = service_client
 
-        with patch.dict(sys.modules, {"wandb": wandb, "tinker": tinker}, clear=False):
+        with temporary_modules({"wandb": wandb, "tinker": tinker}):
             with self.assertRaisesRegex(RuntimeError, "no live run ID"):
                 grpo._run_one_seed(
                     self._config(), self._dataset(), ExactMathReward(), tokenizer=None
@@ -758,7 +759,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         hf.HfApi = lambda **_kwargs: api
         completed = SimpleNamespace(returncode=0)
 
-        with patch.dict(sys.modules, {"huggingface_hub": hf}, clear=False):
+        with temporary_modules({"huggingface_hub": hf}):
             with patch.object(grpo, "_preflight_hf", return_value="owner"):
                 with patch.object(grpo.subprocess, "run", return_value=completed) as run:
                     receipt = grpo._publish_checkpoint(
@@ -810,7 +811,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         api.model_info.side_effect = RuntimeError("revision not found")
         hf = types.ModuleType("huggingface_hub")
         hf.HfApi = lambda **_kwargs: api
-        with patch.dict(sys.modules, {"huggingface_hub": hf}, clear=False):
+        with temporary_modules({"huggingface_hub": hf}):
             with patch.object(grpo, "_preflight_hf", return_value="owner"):
                 with patch.object(grpo.subprocess, "run", return_value=SimpleNamespace()):
                     with self.assertRaisesRegex(RuntimeError, "checkpoint verification failed"):
@@ -981,7 +982,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         samples = [e for e in runtime["events"] if e == "sample"]
         self.assertEqual(len(samples), 3)  # 1 pretrain batch + 2 steps
 
-    def test_critic_state_resumes_mid_run(self):
+    def test_critic_legacy_receipt_resume_control_flow(self):
         runtime = self._fake_runtime()
         messages: list[str] = []
         with _temporary_modules(self._fake_modules(runtime)):
@@ -1112,7 +1113,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                             logger=lambda _message: None,
                         )
 
-    def test_critic_pretrain_resume_keeps_example_order(self):
+    def test_critic_pretrain_receipt_resume_keeps_example_order(self):
         dataset = InMemoryDataset(
             train=[
                 TrainingExample(prompt="easy", target="1"),
@@ -1180,9 +1181,23 @@ class TestTrackingFailClosed(unittest.TestCase):
             # A kill mid-save must leave the previous state intact: the
             # write goes to a temp file first, so a failed save cannot
             # truncate the committed one.
-            with patch.object(torch, "save", side_effect=RuntimeError("boom")):
-                with self.assertRaises(RuntimeError):
+            before = critic_path.read_bytes()
+
+            def fail_after_partial_write(payload, destination, **kwargs):
+                if hasattr(destination, "write"):
+                    destination.write(b"partial checkpoint")
+                else:
+                    Path(destination).write_bytes(b"partial checkpoint")
+                raise OSError("injected partial write")
+
+            with patch.object(torch, "save", side_effect=fail_after_partial_write):
+                with self.assertRaises(OSError):
                     grpo._save_critic(config, 42, critic, opt, step=3)
+            self.assertEqual(critic_path.read_bytes(), before)
+            with patch.object(grpo.os, "replace", side_effect=OSError("injected replace failure")):
+                with self.assertRaises(OSError):
+                    grpo._save_critic(config, 42, critic, opt, step=3)
+            self.assertEqual(critic_path.read_bytes(), before)
             payload = torch.load(critic_path, map_location="cpu", weights_only=True)
             self.assertEqual(payload["step"], 2)
 
@@ -1699,7 +1714,7 @@ class TestXLAMDataset(unittest.TestCase):
 
         datasets.load_dataset = fake_load_dataset
         revision = "26d14ebfe18b1f7b524bd39b404b50af5dc97866"
-        with patch.dict(sys.modules, {"datasets": datasets}, clear=False):
+        with temporary_modules({"datasets": datasets}):
             dataset = make_xlam_dataset(seed=809, revision=revision)
 
         self.assertEqual(
@@ -1722,7 +1737,7 @@ class TestXLAMDataset(unittest.TestCase):
             return []
 
         datasets.load_dataset = fake_load_dataset
-        with patch.dict(sys.modules, {"datasets": datasets}, clear=False):
+        with temporary_modules({"datasets": datasets}):
             make_xlam_dataset()
 
         self.assertEqual(calls, [("Salesforce/xlam-function-calling-60k", {"split": "train"})])
@@ -1800,7 +1815,7 @@ class TestPavlovPortfolioDataset(unittest.TestCase):
             e4 = root / "outputs/e4_banker_toolbench/official_repo_ff6db552/native-data"
             e4.mkdir(parents=True)
             (e4 / "tasks.jsonl").write_text('{"task_id":"eval-e4"}\n')
-            with patch.dict(sys.modules, {"datasets": datasets}, clear=False):
+            with temporary_modules({"datasets": datasets}):
                 dataset = make_pavlov_non_xlam_dataset(seed=809, repo_root=root)
 
         self.assertEqual(len(dataset.train_examples()), 512)

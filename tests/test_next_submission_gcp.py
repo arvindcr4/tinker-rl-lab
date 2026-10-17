@@ -132,6 +132,20 @@ def test_serial_receipt_retries_until_final_marker(monkeypatch):
 
 
 def test_remote_exit_code_is_parsed_from_the_final_marker():
-    assert GCP.remote_exit_code("before\nNEXT_PREFLIGHT_EXIT_CODE=0\n") == 0
-    assert GCP.remote_exit_code("before\nNEXT_PREFLIGHT_EXIT_CODE=17\n") == 17
+    assert (
+        GCP.remote_exit_code("before\nNEXT_PREFLIGHT_EXIT_CODE=17\nNEXT_PREFLIGHT_EXIT_CODE=0\n")
+        == 0
+    )
+    assert (
+        GCP.remote_exit_code("before\nNEXT_PREFLIGHT_EXIT_CODE=0\nNEXT_PREFLIGHT_EXIT_CODE=17\n")
+        == 17
+    )
     assert GCP.remote_exit_code("before") is None
+
+
+def test_malformed_or_empty_final_exit_marker_never_uses_earlier_success():
+    for final in ("", "truncated"):
+        assert (
+            GCP.remote_exit_code("NEXT_PREFLIGHT_EXIT_CODE=0\nNEXT_PREFLIGHT_EXIT_CODE=" + final)
+            is None
+        )

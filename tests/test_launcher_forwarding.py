@@ -5,6 +5,7 @@ import io
 import json
 import os
 from pathlib import Path
+from tests._shared_fakes import temporary_modules
 import sys
 import types
 from unittest.mock import patch
@@ -60,7 +61,7 @@ def test_openrlhf_driver_receives_typed_requested_configuration():
     driver = types.ModuleType("platform_modal.openrlhf.trainer")
     captured = []
     driver.run_openrlhf_training = lambda config, output_dir: captured.append(config)
-    with patch.dict(sys.modules, {package.__name__: package, driver.__name__: driver}):
+    with temporary_modules({package.__name__: package, driver.__name__: driver}):
         item = launcher("openrlhf")
         result = item._run_openrlhf()
         config = captured[0]
@@ -76,7 +77,7 @@ def test_openrlhf_driver_receives_typed_requested_configuration():
 
 def test_openrlhf_rejects_unsupported_algorithm_before_driver_import():
     with (
-        patch.dict(sys.modules, {"platform_modal.openrlhf.trainer": None}),
+        temporary_modules({"platform_modal.openrlhf.trainer": None}),
         pytest.raises(ValueError, match="only algorithm=grpo"),
     ):
         launcher("openrlhf", "ppo")._run_openrlhf()
@@ -106,7 +107,7 @@ def invoke_trl(extra=(), generate=False):
         }))
 
     with (
-        patch.dict(sys.modules, {driver.__name__: driver}),
+        temporary_modules({driver.__name__: driver}),
         patch.object(sys, "argv", argv),
         patch.object(UnifiedLauncher, "run", lambda self: self._run_trl()),
         patch.object(UnifiedLauncher, "_resolve_spec", return_value=CanonicalSpec()),

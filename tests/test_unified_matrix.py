@@ -73,23 +73,28 @@ def test_manifest_matches_live_backends(spec, registry):
             assert cell["driver_file"] == plan.driver_file, f"{be}/{fw} driver drift"
 
 
-def test_each_framework_has_local_run_code(registry):
-    """Every framework has a local in-process path (the _run_* methods are filled)."""
+def test_each_framework_dispatches_exact_local_driver(monkeypatch):
     from platform_local.unified.launcher import UnifiedLauncher
 
     launcher = UnifiedLauncher()
-    launcher.dry_run = True  # guard: never actually train
     launcher.spec = load_spec()
-    for fw in FRAMEWORKS:
-        launcher.framework = fw
-        # dispatch_framework must not raise NotImplementedError for the dispatch itself;
-        # local backend plan must resolve.
-        plan = registry["local"].plan(fw, launcher.spec)
-        assert plan.driver_file != "?", f"local/{fw}: unresolved driver"
+    seen = []
+    for name in FRAMEWORKS:
+
+        def driver(selected=name):
+            assert launcher.framework == selected
+            seen.append((selected, launcher.spec))
+            return selected
+
+        monkeypatch.setattr(launcher, f"_run_{name}", driver)
+    for name in FRAMEWORKS:
+        launcher.framework = name
+        assert launcher.dispatch_framework() == name
+    assert seen == [(name, launcher.spec) for name in FRAMEWORKS]
 
 
-def test_each_cell_threads_its_framework(spec, registry):
-    """Every cell must actually dispatch its NAMED framework — no silent swaps.
+def test_each_cell_has_framework_inventory_markers(spec, registry):
+    """Smoke inventory only: remote execution is not established by source markers.
 
     This is the check the original gate was missing: a backend can resolve a cell
     to a real driver file while quietly running a *different* framework (e.g. a

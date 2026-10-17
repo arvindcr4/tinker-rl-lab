@@ -26,8 +26,8 @@ def test_experiments_parse():
     assert not errors, f"Syntax errors in experiments: {errors}"
 
 
-def test_experiments_have_seed():
-    """All TRL experiment files contain seed management."""
+def test_experiments_have_seed_inventory_markers():
+    """Smoke inventory: source mentions seed; this does not establish RNG propagation."""
     files = [path for path in experiment_files() if "trl" in path.name]
     assert files, f"No TRL experiment Python files found in {EXP_DIR}"
     missing = [
@@ -38,5 +38,5 @@ def test_experiments_have_seed():
 
 if __name__ == "__main__":
     test_experiments_parse()
-    test_experiments_have_seed()
+    test_experiments_have_seed_inventory_markers()
     print("All experiment tests passed")

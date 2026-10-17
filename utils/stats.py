@@ -20,7 +20,7 @@ import json
 import glob
 import argparse
 import math
-from numbers import Real
+from numbers import Integral, Real
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -85,7 +85,13 @@ def compute_bootstrap_ci(
     Returns:
         (mean, lower_ci, upper_ci)
     """
-    scores = np.asarray(scores, dtype=float).ravel()
+    scores = np.asarray(scores, dtype=float)
+    if scores.ndim != 1:
+        raise ValueError("compute_bootstrap_ci requires one-dimensional observations")
+    if not np.all(np.isfinite(scores)):
+        raise ValueError("compute_bootstrap_ci requires finite scores")
+    if isinstance(n_bootstrap, bool) or not isinstance(n_bootstrap, Integral) or n_bootstrap < 1:
+        raise ValueError("n_bootstrap must be a positive integer")
     if scores.size == 0:
         raise ValueError("compute_bootstrap_ci requires at least one score")
     if not 0.0 < confidence < 1.0:
@@ -217,7 +223,9 @@ def plot_learning_curves_with_ci(
     title: str = "Learning Curves with 95% Confidence Intervals",
 ):
     """
-    Plot learning curves with shaded normal-approximation bands (±1.96 SE).
+    Plot pointwise 95% Student-t mean bands (independent, approximately normal seeds).
+
+    No uncertainty band is drawn for a single seed; bands are not simultaneous.
 
     Seeds must share strictly increasing step grids. Missing metrics and unequal
     schedules are rejected. Legacy step-less data uses observation indices.
@@ -276,7 +284,13 @@ def plot_learning_curves_with_ci(
         mean = np.mean(aligned_curves, axis=0)
         se = standard_error(aligned_curves, axis=0)
         ax.plot(steps, mean, label=algo_name, color=colors[idx], linewidth=2)
-        ax.fill_between(steps, mean - 1.96 * se, mean + 1.96 * se, alpha=0.2, color=colors[idx])
+        if len(aligned_curves) >= 2:
+            from scipy.stats import t
+
+            critical = t.ppf(0.975, df=len(aligned_curves) - 1)
+            ax.fill_between(
+                steps, mean - critical * se, mean + critical * se, alpha=0.2, color=colors[idx]
+            )
     ax.set_xlabel("Training Step" if True in modes else "Observation index", fontsize=12)
     ax.set_ylabel(metric_key, fontsize=12)
     ax.set_title(title, fontsize=14)
@@ -310,8 +324,12 @@ def generate_results_table(
         rows.append(
             {
                 "Algorithm": algo_name,
-                f"{metric_name} (mean ± SE)": f"{mean:.3f} ± {se:.3f}",
-                "95% CI": f"[{ci_lower:.3f}, {ci_upper:.3f}]",
+                f"{metric_name} (mean ± SE)": f"{mean:.3f} ± {se:.3f}"
+                if len(scores) >= 2
+                else f"{mean:.3f} (SE unavailable)",
+                "95% CI": f"[{ci_lower:.3f}, {ci_upper:.3f}]"
+                if len(scores) >= 2
+                else "unavailable (n < 2)",
                 "Seeds": len(scores),
             }
         )
@@ -386,6 +404,112 @@ def try_rliable_analysis(results: Dict[str, np.ndarray], output_dir: str):
         print("Falling back to bootstrap CI analysis.")
 
 
+METRIC_UNITS = {"accuracy": "fraction", "reward/mean": "reward", "eval/percent_correct": "percent"}
+
+
+def validate_contract(contract):
+    required = {
+        "schema",
+        "metric",
+        "unit",
+        "split",
+        "endpoint_step",
+        "expected_seeds",
+        "protocol_id",
+    }
+    if not isinstance(contract, dict) or not required <= contract.keys():
+        raise ValueError(f"contract requires {sorted(required)}")
+    if contract["schema"] != "stats-measurement-v2":
+        raise ValueError("unsupported measurement schema")
+    if (
+        contract["metric"] not in METRIC_UNITS
+        or contract["unit"] != METRIC_UNITS[contract["metric"]]
+    ):
+        raise ValueError("unsupported metric/unit combination")
+    if any(not isinstance(contract[k], str) or not contract[k] for k in ("split", "protocol_id")):
+        raise ValueError("split and protocol_id must be nonempty strings")
+    if type(contract["endpoint_step"]) is not int or contract["endpoint_step"] < 0:
+        raise ValueError("endpoint_step must be a nonnegative integer")
+    seeds = contract["expected_seeds"]
+    if (
+        not isinstance(seeds, list)
+        or not seeds
+        or any(type(x) is not int or x < 0 for x in seeds)
+        or len(set(seeds)) != len(seeds)
+    ):
+        raise ValueError("expected_seeds must be distinct nonnegative integers")
+
+
+def contract_scores(seed_results, contract=None):
+    """Validate the population, measurement and horizon before reducing any seed."""
+    if not seed_results:
+        raise ValueError("no seed results")
+    if contract is not None:
+        validate_contract(contract)
+        if set(seed_results) != set(contract["expected_seeds"]):
+            raise ValueError("discovered seeds do not match expected seed roster")
+    selected, keys, endpoints, modes = [], set(), set(), set()
+    for seed, rows in sorted(seed_results.items()):
+        if not rows:
+            raise ValueError(f"seed {seed}: empty/incomplete seed file")
+        present = ["step" in row for row in rows]
+        if any(present) != all(present):
+            raise ValueError(f"seed {seed}: missing steps")
+        explicit = all(present)
+        modes.add(explicit)
+        steps = [row["step"] for row in rows] if explicit else list(range(len(rows)))
+        if any(type(step) is not int or step < 0 for step in steps) or any(
+            b <= a for a, b in zip(steps, steps[1:])
+        ):
+            raise ValueError(f"seed {seed}: steps must be strictly increasing integers")
+        endpoints.add(steps[-1])
+        if contract is not None:
+            if not explicit or steps[-1] != contract["endpoint_step"]:
+                raise ValueError(f"seed {seed}: incomplete or incorrect endpoint")
+            key = contract["metric"]
+            for row in rows:
+                if any(row.get(k) != contract[k] for k in ("unit", "split", "protocol_id")):
+                    raise ValueError(f"seed {seed}: measurement metadata differs from contract")
+        else:
+            observed = {k for k in METRIC_UNITS if k in rows[-1]}
+            if len(observed) != 1:
+                raise ValueError(
+                    f"seed {seed}: final score must identify one finite numeric metric"
+                )
+            key = observed.pop()
+        keys.add(key)
+        for row in rows:
+            score = row.get(key)
+            if (
+                isinstance(score, bool)
+                or not isinstance(score, (int, float))
+                or not math.isfinite(score)
+            ):
+                raise ValueError(f"seed {seed}: final score must be a finite numeric metric")
+            if key in {"accuracy", "eval/percent_correct"} and not 0 <= score <= (
+                1 if key == "accuracy" else 100
+            ):
+                raise ValueError(f"seed {seed}: metric outside declared unit domain")
+        selected.append(rows[-1][key])
+    if len(keys) != 1 or len(endpoints) != 1 or len(modes) != 1:
+        raise ValueError("mixed measurements, units or endpoint steps across seeds")
+    metric = next(iter(keys))
+    return selected, {
+        "analysis_schema": "stats-measurement-v2",
+        "metric": metric,
+        "unit": METRIC_UNITS[metric],
+        "split": contract["split"] if contract else "unknown_legacy",
+        "protocol_id": contract["protocol_id"] if contract else "legacy_exploratory",
+        "endpoint_step": next(iter(endpoints)),
+        "expected_seeds": json.dumps(
+            contract["expected_seeds"] if contract else sorted(seed_results)
+        ),
+        "included_seeds": json.dumps(sorted(seed_results)),
+        "excluded_seeds": "[]",
+        "population_status": "contract_complete" if contract else "observed_only_exploratory",
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Statistical analysis for RL experiments")
     parser.add_argument("--results-dir", type=str, default="results/")
@@ -398,6 +522,12 @@ def main(argv=None):
     parser.add_argument(
         "--bootstrap-samples", type=int, default=10000, help="Bootstrap resamples for the CI"
     )
+    parser.add_argument("--contract", help="JSON measurement contract (stats-measurement-v2)")
+    parser.add_argument(
+        "--legacy-exploratory",
+        action="store_true",
+        help="Explicitly analyze observed legacy logs; no completeness claim",
+    )
     args = parser.parse_args(argv)
     if args.rliable:
         parser.error(
@@ -409,9 +539,19 @@ def main(argv=None):
         parser.error("--bootstrap-samples must be positive")
     if not os.path.isdir(args.results_dir):
         parser.error("--results-dir must name an existing directory")
+    contract = None
+    if args.contract:
+        try:
+            with open(args.contract) as source:
+                contract = json.load(source)
+            validate_contract(contract)
+        except (OSError, ValueError, TypeError) as exc:
+            parser.error(f"invalid measurement contract: {exc}")
+    elif not args.legacy_exploratory:
+        parser.error(
+            "--contract is required; use --legacy-exploratory only for observed legacy inputs"
+        )
     summary_rows = []
-
-    os.makedirs(args.output_dir, exist_ok=True)
 
     # Discover experiments
     if args.experiment:
@@ -432,29 +572,14 @@ def main(argv=None):
 
         seed_results = load_multi_seed_results(args.results_dir, exp)
         if not seed_results:
-            print(f"  No multi-seed results found for {exp}")
-            continue
+            parser.error(f"{exp}: no seed results; cannot silently omit an experiment")
 
         print(f"  Found {len(seed_results)} seeds: {list(seed_results.keys())}")
 
-        # Extract final scores for each seed
-        final_scores = []
-        for metrics_list in seed_results.values():
-            if metrics_list:
-                last_metric = metrics_list[-1]
-                score = last_metric.get(
-                    "reward/mean",
-                    last_metric.get("accuracy", last_metric.get("eval/percent_correct")),
-                )
-                if (
-                    isinstance(score, bool)
-                    or not isinstance(score, (int, float))
-                    or not np.isfinite(score)
-                ):
-                    parser.error(
-                        f"{exp}: final score must be a finite numeric metric; missing metrics are not zero"
-                    )
-                final_scores.append(score)
+        try:
+            final_scores, measurement = contract_scores(seed_results, contract)
+        except ValueError as exc:
+            parser.error(f"{exp}: {exc}")
 
         if final_scores:
             scores_arr = np.array(final_scores)
@@ -462,6 +587,8 @@ def main(argv=None):
                 scores_arr, n_bootstrap=args.bootstrap_samples
             )
             se = standard_error(scores_arr)
+            if len(final_scores) < 2:
+                se = ci_lower = ci_upper = float("nan")
             summary_rows.append(
                 {
                     "experiment": exp,
@@ -471,6 +598,11 @@ def main(argv=None):
                     "ci_lower": float(ci_lower),
                     "ci_upper": float(ci_upper),
                     "bootstrap_samples": args.bootstrap_samples,
+                    **measurement,
+                    "uncertainty_status": "available"
+                    if len(final_scores) >= 2
+                    else "unavailable_n_lt_2",
+                    "interval_method": "pointwise_percentile_bootstrap_mean_95pct",
                 }
             )
             print(
@@ -479,6 +611,7 @@ def main(argv=None):
 
     if not summary_rows:
         parser.error("no nonempty seed results found; no analysis was produced")
+    os.makedirs(args.output_dir, exist_ok=True)
     table = pd.DataFrame(summary_rows)
     if args.format in {"csv", "both"}:
         table.to_csv(os.path.join(args.output_dir, "results_table.csv"), index=False)
@@ -502,15 +635,20 @@ def compute_iqm(scores: np.ndarray, tau: float = 0.25) -> float:
     the mean of the middle (1 - 2*tau) fraction. Default tau=0.25 gives the
     canonical IQM over the central 50% of scores.
     """
-    arr = np.asarray(scores, dtype=float).ravel()
-    if arr.size == 0:
-        return float("nan")
-    lo = np.quantile(arr, tau)
-    hi = np.quantile(arr, 1 - tau)
-    mid = arr[(arr >= lo) & (arr <= hi)]
-    if mid.size == 0:
-        return float(np.mean(arr))
-    return float(np.mean(mid))
+    arr = np.asarray(scores, dtype=float)
+    if arr.ndim != 1 or not arr.size or not np.all(np.isfinite(arr)):
+        raise ValueError("IQM requires nonempty finite one-dimensional scores")
+    if (
+        isinstance(tau, bool)
+        or not isinstance(tau, Real)
+        or not math.isfinite(tau)
+        or not 0 <= tau < 0.5
+    ):
+        raise ValueError("tau must be finite and in [0, 0.5)")
+    # Protocol rank-trim-floor-v2: remove floor(n*tau) observations per tail.
+    trim = int(len(arr) * tau)
+    ranked = np.sort(arr)
+    return float(np.mean(ranked[trim : len(ranked) - trim]))
 
 
 if __name__ == "__main__":

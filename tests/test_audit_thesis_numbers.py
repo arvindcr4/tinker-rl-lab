@@ -41,7 +41,10 @@ def test_registry_tokens_are_verbatim_and_current():
     failed = [(g["group"], r) for g in groups for r in g["tokens"] if r["result"] == "FAIL"]
     assert not failed
     assert all(r["in_chapter"] for g in groups for r in g["tokens"])
-    assert any(g["method"] == "R" and g["status"] == "PASS" for g in groups)
+    assert any(
+        g["method"] == "R" and any(r["evidence_result"] == "PASS" for r in g["tokens"])
+        for g in groups
+    )
     for group in groups:
         if any(a["sha256"] is None for a in group["artifacts"]):
             assert group["status"] in {"ARTIFACT_MISSING", "NOT_CHECKED"}
@@ -109,7 +112,18 @@ def mini_registry(monkeypatch, tmp_path, entries, chapter="0.25 0.05 0.9 absent"
     monkeypatch.setattr(audit, "THESIS", "thesis")
     monkeypatch.setattr(audit, "CHAPTERS", {"ch06": "chapter.md"})
     (tmp_path / "thesis").mkdir()
-    (tmp_path / "thesis/chapter.md").write_text(chapter)
+    marked, bindings = [], {}
+    for n, (group, _ch, tokens, _method, _artifacts, _compute) in enumerate(entries):
+        bindings[group] = []
+        for i, token in enumerate(tokens):
+            span = f"fixture-{n}-{i}"
+            bindings[group].append({"span": span, "label": group})
+            if token in chapter:
+                marked.append(f"<!-- claim: {span} -->{group}: {token}<!-- /claim: {span} -->")
+    (tmp_path / "thesis/chapter.md").write_text(chapter + "\n" + "\n".join(marked))
+    (tmp_path / "thesis/claim_bindings.json").write_text(
+        json.dumps({"schema": "thesis-claim-bindings-v2", "claims": bindings})
+    )
     (tmp_path / "source.txt").write_text("0.25")
     monkeypatch.setattr(audit, "claims", lambda: iter(entries))
     monkeypatch.setattr(audit, "claims_ext", lambda: iter(()))
@@ -613,7 +627,8 @@ def test_mechanism_prose_numbers_bind_only_after_successful_recomputation(monkey
         ),
     )
     rows = audit.evaluate()[-1]["tokens"]
-    assert [row["result"] for row in rows[:7]] == ["PASS"] * 7
+    assert all(row["result"] == "UNBOUND" for row in rows[:7])
+    # Historical bare numbers no longer inherit unrelated chapter evidence.
     # An unregistered altered value is never admitted by the new bindings.
     assert rows[-1]["result"] in ("FAIL", "UNBOUND")
 

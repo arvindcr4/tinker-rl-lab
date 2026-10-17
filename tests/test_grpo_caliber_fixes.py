@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import contextlib
 import json
-import sys
 import types
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -200,12 +199,25 @@ def _runtime(monkeypatch, *, sample_fn=None, seeded=False):
     tt.ModelInput = SimpleNamespace(from_ints=lambda values: values)
     tt.TensorData = lambda **kwargs: SimpleNamespace(**kwargs)
     tt.Datum = lambda **kwargs: SimpleNamespace(**kwargs)
-    tt.SamplingParams = _SeededParams if seeded else (lambda **kwargs: SimpleNamespace(**kwargs))
+
+    def unseeded_params(*, max_tokens, temperature, top_p):
+        return SimpleNamespace(max_tokens=max_tokens, temperature=temperature, top_p=top_p)
+
+    tt.SamplingParams = _SeededParams if seeded else unseeded_params
     tt.AdamParams = lambda **kwargs: SimpleNamespace(**kwargs)
     tinker.types = tt
     modules = {"wandb": wandb, "huggingface_hub": hf, "tinker": tinker, "tinker.types": tt}
-    with patch.dict(sys.modules, modules, clear=False):
-        with patch.object(grpo.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
+    from tests._shared_fakes import temporary_modules
+
+    with temporary_modules(modules):
+        with patch.object(
+            grpo,
+            "subprocess",
+            SimpleNamespace(
+                run=Mock(return_value=SimpleNamespace(returncode=0)),
+                CalledProcessError=grpo.subprocess.CalledProcessError,
+            ),
+        ):
             yield holder
 
 
@@ -324,7 +336,7 @@ def test_sampling_is_seeded_per_step_and_index(tmp_path, monkeypatch):
 
 def test_sampling_seed_skipped_when_params_have_no_seed_field(tmp_path, monkeypatch):
     with _runtime(monkeypatch) as holder:
-        _run(_config(tmp_path, name="cal"))
+        _run(_config(tmp_path, name="cal", seed_sampling=True))
     assert all(not hasattr(params, "seed") for params in holder["params"])
 
 

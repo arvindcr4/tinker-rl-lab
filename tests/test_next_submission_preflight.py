@@ -73,10 +73,15 @@ def valid_payload():
         "optimizer_steps": 1,
         "model": "Qwen/Qwen3-8B",
         "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
-        "objective_fingerprint": PREFLIGHT.fingerprint(json.loads(PREFLIGHT.PROTOCOL.read_text())["treatment"]["objective"]),
-        "dataset_bindings": {"training_dataset": "openai/gsm8k", "evaluation_dataset": "openai/gsm8k",
+        "objective_fingerprint": PREFLIGHT.fingerprint(
+            json.loads(PREFLIGHT.PROTOCOL.read_text())["treatment"]["objective"]
+        ),
+        "dataset_bindings": {
+            "training_dataset": "openai/gsm8k",
+            "evaluation_dataset": "openai/gsm8k",
             "training_revision": "740312add88f781978c0658806c59bc2815b9866",
-            "evaluation_revision": "740312add88f781978c0658806c59bc2815b9866"},
+            "evaluation_revision": "740312add88f781978c0658806c59bc2815b9866",
+        },
         "heldout_n": 8,
         "provider": request["provider"],
         "hardware_flavor": request["hardware_flavor"],
@@ -224,7 +229,11 @@ def test_provider_specific_runtime_pins_are_enforced():
 
 def test_result_log_parser_uses_last_marker():
     payload = {"schema_version": "aiml-next-preflight-result-v1"}
-    lines = ["noise", "NEXT_PREFLIGHT_RESULT " + __import__("json").dumps(payload)]
+    lines = [
+        'NEXT_PREFLIGHT_RESULT {"obsolete": true}',
+        "noise",
+        "NEXT_PREFLIGHT_RESULT " + __import__("json").dumps(payload),
+    ]
     assert PREFLIGHT.result_from_log(lines) == payload
 
 
@@ -315,7 +324,9 @@ def test_validate_args_rejects_mixed_launch_and_recovery_modes():
 
 def test_recovery_mode_reconstructs_completed_receipt_from_request(monkeypatch, tmp_path):
     manifest, result, request = valid_payload()
-    result["remote"] = {"hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-contrast_ear-s211-aaaaaaaa"}
+    result["remote"] = {
+        "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-contrast_ear-s211-aaaaaaaa"
+    }
     request.update(
         {
             "schema_version": "aiml-next-preflight-request-v1",
@@ -811,3 +822,11 @@ def test_preflight_class_defaults_to_matrix_infrastructure():
     manifest, result, request = copy.deepcopy(valid_payload())
     request.pop("preflight_class", None)
     PREFLIGHT.validate_manifest(manifest, result, request)
+
+
+@pytest.mark.parametrize("final", ["{", "[]", ""])
+def test_malformed_final_result_marker_never_falls_back_to_earlier(final):
+    with pytest.raises(ValueError, match="Expecting|remote output"):
+        PREFLIGHT.result_from_log(
+            ['NEXT_PREFLIGHT_RESULT {"old": true}', "NEXT_PREFLIGHT_RESULT " + final]
+        )

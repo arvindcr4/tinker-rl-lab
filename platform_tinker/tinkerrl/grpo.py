@@ -345,7 +345,7 @@ class GRPOConfig:
 
     name: str
     experiment_manifest: Optional[Dict[str, Any]] = None
-    protocol_version: str = "grpo-on-policy-v2"
+    protocol_version: str = "grpo-on-policy-v3"
     model: str = "Qwen/Qwen3-8B"
     lora_rank: int = 32
     steps: int = 200
@@ -816,6 +816,10 @@ def make_grpo_loss_fn(
     prompt tokens were previously inside the sum).
     """
 
+    # v3 treats advantages as immutable observations, never differentiable
+    # outputs of the current policy/critic or mutable caller-owned tensors.
+    advantages = tuple(torch.as_tensor(v).detach().clone() for v in advantages)
+
     def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:
         if nll_mask is not None and len(nll_mask) != len(logprobs_list):
             raise ValueError(
@@ -825,7 +829,7 @@ def make_grpo_loss_fn(
         resp_logprobs = _response_logprobs(logprobs_list, response_lens)
         losses = []
         for i, logprobs in enumerate(resp_logprobs):
-            losses.append(-advantages[i] * logprobs.sum())
+            losses.append(-advantages[i].to(logprobs) * logprobs.sum())
         if not losses:
             return torch.tensor(0.0), {"grpo_loss": 0.0, "nll_loss": 0.0}
         loss = torch.stack(losses).mean()
@@ -875,6 +879,12 @@ def make_gspo_loss_fn(
     s_i == 1 and the clip never fired at the default 1 epoch).
     """
 
+    # Freeze behavior-policy probabilities and advantages for all update
+    # epochs. They are data, not gradient targets (objective contract v3).
+    advantages = tuple(torch.as_tensor(v).detach().clone() for v in advantages)
+    if old_logprobs is not None:
+        old_logprobs = tuple(torch.as_tensor(v).detach().clone() for v in old_logprobs)
+
     def _loss_fn(data: Any, logprobs_list: Any) -> Tuple[torch.Tensor, Dict[str, float]]:
         logprobs_list = _response_logprobs(logprobs_list, response_lens)
         if len(advantages) != len(logprobs_list):
@@ -901,16 +911,16 @@ def make_gspo_loss_fn(
                 # of logprobs so gradients flow (length-normalized PG).
                 ratio = torch.exp((logprobs - logprobs.detach()).mean())
             else:
-                old = torch.as_tensor(old_logprobs[i], dtype=logprobs.dtype)
+                old = old_logprobs[i].to(logprobs)
                 if logprobs.shape != old.shape:
                     raise ValueError(
                         "old_logprobs must match new logprobs token-for-token, "
                         f"got {tuple(old.shape)} vs {tuple(logprobs.shape)} on sequence {i}"
                     )
                 ratio = torch.exp((logprobs - old).mean())
-            unclipped = ratio * advantages[i]
+            unclipped = ratio * advantages[i].to(logprobs)
             clipped_ratio = torch.clamp(ratio, 1.0 - epsilon_low, 1.0 + epsilon_high)
-            clipped_term = clipped_ratio * advantages[i]
+            clipped_term = clipped_ratio * advantages[i].to(logprobs)
             if not torch.equal(clipped_ratio, ratio):
                 clipped += 1
             terms.append(torch.min(unclipped, clipped_term))
@@ -2162,7 +2172,7 @@ def _run_one_seed(
                     raise ValueError(
                         "GSPO requires complete behavior probabilities for every response"
                     )
-                for epoch in range(config.gspo_update_epochs):
+                for _epoch in range(config.gspo_update_epochs):
                     loss_fn = make_gspo_loss_fn(
                         all_advs,
                         old_logprobs=sampler_old,

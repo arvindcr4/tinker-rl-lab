@@ -26,7 +26,7 @@ from platform_tinker.tinkerrl.grpo import (
     StrictToolCallReward,
 )
 from platform_tinker.tinkerrl.grpo_cli import _build_dataset, _parse_args, build_config
-from tests._shared_fakes import HfApi, _Future, _Tokenizer, _config, _example
+from tests._shared_fakes import HfApi, _Future, _Tokenizer, _config, _example, temporary_modules
 
 
 def _dataset(*examples, test=()):
@@ -164,8 +164,15 @@ def _runtime(monkeypatch, *, metrics=None, sample_fn=None, install_transformers=
         transformers.AutoTokenizer = AutoTokenizer
         modules["transformers"] = transformers
 
-    with patch.dict(sys.modules, modules, clear=False):
-        with patch.object(grpo.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
+    with temporary_modules(modules):
+        with patch.object(
+            grpo,
+            "subprocess",
+            SimpleNamespace(
+                run=Mock(return_value=SimpleNamespace(returncode=0)),
+                CalledProcessError=grpo.subprocess.CalledProcessError,
+            ),
+        ):
             yield holder
 
 
@@ -305,20 +312,20 @@ def test_start_wandb_rejects_disabled_env_import_and_bad_runs(monkeypatch):
         grpo._start_wandb(config, 0)
 
     monkeypatch.delenv("WANDB_DISABLED", raising=False)
-    with patch.dict(sys.modules, {"wandb": None}):
+    with temporary_modules({"wandb": None}):
         with pytest.raises(RuntimeError, match="W&B dependency is unavailable"):
             grpo._start_wandb(config, 0)
 
     missing = types.ModuleType("wandb")
     missing.init = lambda **_kwargs: None
-    with patch.dict(sys.modules, {"wandb": missing}):
+    with temporary_modules({"wandb": missing}):
         with pytest.raises(RuntimeError, match="no live run"):
             grpo._start_wandb(config, 0)
 
     offline = SimpleNamespace(id="id", mode="offline", summary={}, finish=Mock())
     offline_mod = types.ModuleType("wandb")
     offline_mod.init = lambda **_kwargs: offline
-    with patch.dict(sys.modules, {"wandb": offline_mod}):
+    with temporary_modules({"wandb": offline_mod}):
         with pytest.raises(RuntimeError, match="non-online"):
             grpo._start_wandb(config, 0)
     assert offline.summary["status"] == "failed"
@@ -327,7 +334,7 @@ def test_start_wandb_rejects_disabled_env_import_and_bad_runs(monkeypatch):
     disabled = SimpleNamespace(id="id", mode="online", disabled=True, summary={}, finish=Mock())
     disabled_mod = types.ModuleType("wandb")
     disabled_mod.init = lambda **_kwargs: disabled
-    with patch.dict(sys.modules, {"wandb": disabled_mod}):
+    with temporary_modules({"wandb": disabled_mod}):
         with pytest.raises(RuntimeError, match="disabled run"):
             grpo._start_wandb(config, 0)
     disabled.finish.assert_called_once_with(exit_code=1)
@@ -340,7 +347,7 @@ def test_huggingface_helpers_cover_import_auth_and_receipt_failures(monkeypatch)
     monkeypatch.delenv("HF_TOKEN", raising=False)
     monkeypatch.delenv("HUGGINGFACE_HUB_TOKEN", raising=False)
 
-    with patch.dict(sys.modules, {"huggingface_hub": None}):
+    with temporary_modules({"huggingface_hub": None}):
         with pytest.raises(RuntimeError, match="Hugging Face dependency is unavailable"):
             grpo._make_hf_api()
 
@@ -352,7 +359,7 @@ def test_huggingface_helpers_cover_import_auth_and_receipt_failures(monkeypatch)
 
     token_free = types.ModuleType("huggingface_hub")
     token_free.HfApi = TokenFreeApi
-    with patch.dict(sys.modules, {"huggingface_hub": token_free}):
+    with temporary_modules({"huggingface_hub": token_free}):
         api, _token = grpo._make_hf_api()
     assert api.ok is True
 
@@ -362,7 +369,7 @@ def test_huggingface_helpers_cover_import_auth_and_receipt_failures(monkeypatch)
 
     exploding = types.ModuleType("huggingface_hub")
     exploding.HfApi = ExplodingApi
-    with patch.dict(sys.modules, {"huggingface_hub": exploding}):
+    with temporary_modules({"huggingface_hub": exploding}):
         with pytest.raises(RuntimeError, match="API initialization failed"):
             grpo._make_hf_api()
 
@@ -386,7 +393,7 @@ def test_huggingface_helpers_cover_import_auth_and_receipt_failures(monkeypatch)
 
     whoami_mod = types.ModuleType("huggingface_hub")
     whoami_mod.HfApi = WhoamiApi
-    with patch.dict(sys.modules, {"huggingface_hub": whoami_mod}):
+    with temporary_modules({"huggingface_hub": whoami_mod}):
         WhoamiApi.identity = {"user": {"name": "nested-owner"}}
         assert grpo._preflight_hf(config) == "nested-owner"
         WhoamiApi.identity = {"user": "string-owner"}
@@ -415,7 +422,7 @@ def test_huggingface_helpers_cover_import_auth_and_receipt_failures(monkeypatch)
 
     info_mod = types.ModuleType("huggingface_hub")
     info_mod.HfApi = InfoApi
-    with patch.dict(sys.modules, {"huggingface_hub": info_mod}):
+    with temporary_modules({"huggingface_hub": info_mod}):
         assert grpo._verify_hf_revision("owner/model", "rev") == "deadbeef"
         InfoApi.payload = {"sha": "  "}
         with pytest.raises(RuntimeError, match="no commit SHA"):
@@ -508,7 +515,7 @@ def test_completed_receipt_with_checkpoints_returns_without_tinker(tmp_path, mon
     run = _quiet_run()
     monkeypatch.setattr(grpo, "_start_wandb", lambda *_args, **_kwargs: run)
     monkeypatch.setattr(grpo, "_preflight_hf", lambda _config: "owner")
-    with patch.dict(sys.modules, {"tinker": None}):
+    with temporary_modules({"tinker": None}):
         completed = grpo._run_one_seed(
             config, _dataset(_example()), ExactMathReward(), _Tokenizer()
         )
@@ -553,7 +560,7 @@ def test_tinker_and_tokenizer_imports_fail_closed(tmp_path, monkeypatch):
     run = _quiet_run()
     monkeypatch.setattr(grpo, "_start_wandb", lambda *_args, **_kwargs: run)
     monkeypatch.setattr(grpo, "_preflight_hf", lambda _config: "owner")
-    with patch.dict(sys.modules, {"tinker": None}):
+    with temporary_modules({"tinker": None}):
         with pytest.raises(RuntimeError, match="Tinker dependency is unavailable"):
             grpo._run_one_seed(config, dataset, ExactMathReward(), tokenizer=_Tokenizer())
 
@@ -687,7 +694,7 @@ def test_gsm8k_loader_skips_rows_without_a_final_answer():
 
     datasets = types.ModuleType("datasets")
     datasets.load_dataset = load_dataset
-    with patch.dict(sys.modules, {"datasets": datasets}):
+    with temporary_modules({"datasets": datasets}):
         dataset = grpo.make_gsm8k_dataset(seed=1)
 
     assert [example.target for example in dataset.train_examples()] == ["1234"]
@@ -709,7 +716,7 @@ def test_xlam_loader_skips_malformed_rows():
     ]
     datasets = types.ModuleType("datasets")
     datasets.load_dataset = lambda *_args, **_kwargs: rows
-    with patch.dict(sys.modules, {"datasets": datasets}):
+    with temporary_modules({"datasets": datasets}):
         dataset = grpo.make_xlam_dataset(seed=1)
 
     assert len(dataset.train_examples()) == 1
@@ -816,7 +823,7 @@ def test_pavlov_loader_rejects_missing_overlap_and_bad_counts(tmp_path):
     datasets = load(
         [{"instance_id": "swe-1", "repo": "eval/repo", "base_commit": "f" * 40}], [_swe_row()], []
     )
-    with patch.dict(sys.modules, {"datasets": datasets}):
+    with temporary_modules({"datasets": datasets}):
         with pytest.raises(RuntimeError, match="SWE-Gym contamination"):
             grpo.make_pavlov_non_xlam_dataset(repo_root=root)
 
@@ -827,7 +834,7 @@ def test_pavlov_loader_rejects_missing_overlap_and_bad_counts(tmp_path):
         [_swe_row()],
         [_api_row(7)],
     )
-    with patch.dict(sys.modules, {"datasets": datasets}):
+    with temporary_modules({"datasets": datasets}):
         with pytest.raises(RuntimeError, match="API-Bank contamination"):
             grpo.make_pavlov_non_xlam_dataset(repo_root=root)
 
@@ -838,7 +845,7 @@ def test_pavlov_loader_rejects_missing_overlap_and_bad_counts(tmp_path):
         [_swe_row()],
         [_api_row(1, prompt="[]"), _api_row(2)],
     )
-    with patch.dict(sys.modules, {"datasets": datasets}):
+    with temporary_modules({"datasets": datasets}):
         with pytest.raises(RuntimeError, match="unexpected train/test counts"):
             grpo.make_pavlov_non_xlam_dataset(repo_root=root)
 

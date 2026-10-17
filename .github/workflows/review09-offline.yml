@@ -1,0 +1,66 @@
+name: Offline scientific boundaries
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+permissions:
+  contents: read
+jobs:
+  lightweight-tools:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'pytest>=9.1,<10'
+      - name: Check tools without any ML packages or network
+        run: |
+          python -c 'import importlib.util; assert importlib.util.find_spec("torch") is None'
+          sudo unshare --net "$(command -v python)" -m pytest tests/reviews/test_review09_safe_tools.py tests/reviews/test_review09_harness.py
+          bash -n tools/harness/*.sh
+  scientific-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: |
+          pip install uv==0.10.11
+          uv sync --locked --extra dev --python python
+          .venv/bin/python -c 'import hypothesis'
+      - name: Execute required groups with no network or live credentials
+        run: |
+          sudo unshare --net env -u HF_TOKEN -u HUGGINGFACE_HUB_TOKEN -u WANDB_API_KEY -u TINKER_API_KEY -u OPENAI_API_KEY \
+            "$PWD/.venv/bin/python" -m pytest \
+            tests/test_properties_advantages.py tests/test_properties_stats.py \
+            tests/reviews/test_review09_stats.py tests/reviews/test_review09_objectives.py \
+            tests/reviews/test_review09_resume.py --junitxml=required-scientific-tests.xml
+          .venv/bin/python tools/check_required_test_report.py required-scientific-tests.xml \
+            test_properties_advantages test_properties_stats test_review09_stats test_review09_objectives test_review09_resume
+  installed-wheel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Build and install wheel into an independent environment
+        run: |
+          pip install uv==0.10.11
+          uv build --wheel
+          python tools/check_wheel.py dist/*.whl
+          uv venv "$RUNNER_TEMP/installed-wheel"
+          uv pip install --python "$RUNNER_TEMP/installed-wheel/bin/python" "$(realpath dist/*.whl)[dev]"
+      - name: Import and invoke installed CLI outside checkout, offline
+        working-directory: ${{ runner.temp }}
+        run: |
+          sudo unshare --net "$RUNNER_TEMP/installed-wheel/bin/python" -I -c 'import platform_local.trl_integrations.config, platform_local.unified.launcher, platform_tinker.tinkerrl.grpo, utils.seed, utils.stats'
+          sudo unshare --net "$RUNNER_TEMP/installed-wheel/bin/python" -I -m platform_local.unified --help
+          sudo unshare --net "$RUNNER_TEMP/installed-wheel/bin/tinkerrl" --help

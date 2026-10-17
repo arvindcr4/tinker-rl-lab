@@ -208,7 +208,8 @@ def test_generated_idpo_script_requires_a_dedicated_reward_adapter(tmp_path):
     assert not (tmp_path / "idpo.py").exists()
 
 
-def test_ppo_trainer_warns_when_clip_is_decoupled():
+def test_ppo_trainer_warns_when_clip_is_decoupled(monkeypatch):
+    monkeypatch.setitem(sys.modules, "trl", None)
     from platform_local.trl_integrations.trainer import create_ppo_trainer
 
     config = TRLConfig(algorithm={"algorithm": "ppo", "epsilon_low": 0.2, "epsilon_high": 0.28})
@@ -217,7 +218,8 @@ def test_ppo_trainer_warns_when_clip_is_decoupled():
         create_ppo_trainer(None, None, None, [], config)
 
 
-def test_ppo_trainer_silent_on_symmetric_clip():
+def test_ppo_trainer_silent_on_symmetric_clip(monkeypatch):
+    monkeypatch.setitem(sys.modules, "trl", None)
     import warnings
 
     from platform_local.trl_integrations.trainer import create_ppo_trainer

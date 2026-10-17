@@ -78,6 +78,8 @@ def sign_test(rows, col_a, col_b):
     for r in rows:
         a = r[col_a]
         b = r[col_b]
+        if not math.isfinite(a) or not math.isfinite(b):
+            raise ValueError("sign test requires finite pairs")
         if a > b:
             pos += 1
         elif a < b:
@@ -87,15 +89,9 @@ def sign_test(rows, col_a, col_b):
     n_eff = pos + neg
     if n_eff == 0:
         return {"pos": pos, "neg": neg, "zero": zero, "n_eff": 0, "binom_p": 1.0}
-    # two-sided binom test against 0.5
-    pk = min(pos, neg)
-    # sum_{k=pk..n_eff} C(n_eff, k) * 0.5^k * 0.5^(n_eff-k) = 2 * sum_{k=pk..n_eff} C(n,k) / 2^(n+1)
-    total = 2 ** n_eff
-    p2 = 0
-    for k in range(pk, n_eff + 1):
-        p2 += math.comb(n_eff, k)
-    p2 = p2 / (2 ** n_eff)  # already two-sided (1 - p_exact)
-    return {"pos": pos, "neg": neg, "zero": zero, "n_eff": n_eff, "binom_p": float(p2)}
+    p2 = min(1.0, 2 * sum(math.comb(n_eff, k) for k in range(min(pos, neg) + 1)) / 2**n_eff)
+    return {"pos": pos, "neg": neg, "zero": zero, "n_eff": n_eff,
+            "binom_p": p2, "alternative": "two-sided"}
 
 
 def cohens_d(a, b):
@@ -179,6 +175,8 @@ def tree_baseline(traj, t, gamma=0.5, h=5, mode="forward"):
 def main():
     it127 = read_tsv(IT127_TSV)
     it130 = read_tsv(IT130_TSV)
+    if not it127 or not it130:
+        raise ValueError("INSUFFICIENT_DATA: both independent-run datasets are required")
     print(f"loaded: iter127 n={len(it127)}, iter130 n={len(it130)}")
 
     # ---- Build per-cell iter127 trajectories ----
@@ -214,12 +212,12 @@ def main():
             tree_adv_proxy = sum(tree_rew) / len(tree_rew)
             h1_rows.append({
                 "G": g, "seed": sd, "w": w,
-                "zvf_naive": zvf_naive,
-                "tree_adv_proxy": tree_adv_proxy,
-                "delta_zvf": tree_adv_proxy - zvf_naive,
+                "mean_advantage_variance": zvf_naive,
+                "mean_reward_deviation": tree_adv_proxy,
+                "reward_deviation": tree_adv_proxy,
             })
     write_tsv(OUTDIR / "alphaproof_tree_window.tsv",
-["G", "seed", "w", "zvf_naive", "tree_adv_proxy", "delta_zvf"],
+["G", "seed", "w", "mean_advantage_variance", "mean_reward_deviation", "reward_deviation"],
               h1_rows)
     print(f"H1 wrote alphaproof_tree_window.tsv n={len(h1_rows)}")
 
@@ -229,7 +227,7 @@ def main():
     # baseline (CDH-consistent at small w).
     by_w = defaultdict(list)
     for r in h1_rows:
-        by_w[r["w"]].append(r["delta_zvf"])
+        by_w[r["w"]].append(r["reward_deviation"])
     h1_summary = {}
     for w in sorted(by_w):
         h1_summary[w] = {
@@ -253,8 +251,8 @@ def main():
         by_g_w[(r["G"], r["w"])].append(r)
     g2_w2 = by_g_w[(2, 2)]
     g4_w1 = by_g_w[(4, 1)]
-    seed_to_g2w2 = {r["seed"]: r["tree_adv_proxy"] for r in g2_w2}
-    seed_to_g4w1 = {r["seed"]: r["zvf_naive"] for r in g4_w1}
+    seed_to_g2w2 = {r["seed"]: r["mean_reward_deviation"] for r in g2_w2}
+    seed_to_g4w1 = {r["seed"]: r["mean_reward_deviation"] for r in g4_w1}
     paired = []
     for sd in seed_to_g2w2:
         if sd in seed_to_g4w1:
@@ -268,7 +266,7 @@ def main():
     # prediction: g2_w2 <= g4_w1 (tree-baseline partially substitutes)
     h2_d = cohens_d([p["g2_w2"] for p in paired], [p["g4_w1"] for p in paired])
     h2_neg = sum(1 for p in paired if p["delta"] <= 0)
-    h2_verdict = ("DECISIVE" if h2_neg / len(paired) >= 0.5 and h2_d < 0
+    h2_verdict = "INSUFFICIENT_DATA" if len(paired) < 2 else ("DECISIVE" if h2_neg / len(paired) >= 0.5 and h2_d < 0
                   else "SUGGESTIVE" if h2_neg / len(paired) >= 0.5 else "NULL")
     print(f"H2: g2_w2 vs g4_w1, neg={h2_neg}/{len(paired)} d={h2_d:.3f} -> {h2_verdict}")
 
@@ -287,10 +285,10 @@ def main():
                 tree_rew.append(abs(rew[t] - v))
             mag = sum(tree_rew) / len(tree_rew)
             h3_rows.append({"G": g, "seed": sd, "gamma": gamma,
-                            "mag": mag, "zvf_naive": zvf_naive,
-                            "delta_mag": mag - zvf_naive})
+                            "mag": mag, "mean_advantage_variance": zvf_naive,
+                            "delta_mag": mag - 0.0})
     write_tsv(OUTDIR / "alphaproof_gamma_sweep.tsv",
-              ["G", "seed", "gamma", "mag", "zvf_naive", "delta_mag"], h3_rows)
+              ["G", "seed", "gamma", "mag", "mean_advantage_variance", "delta_mag"], h3_rows)
     by_g = defaultdict(list)
     for r in h3_rows:
         by_g[r["gamma"]].append(r["delta_mag"])
@@ -337,7 +335,7 @@ def main():
     pos_corr = sum(1 for r in h4_rows if r["pearson_zvf_to_treeadv"] > 0)
     h4_strict = sum(1 for r in h4_rows if r["pearson_zvf_to_treeadv"] > 0.5)
     n_total = len(h4_rows)
-    h4_verdict = ("DECISIVE" if pos_corr / n_total >= 0.7
+    h4_verdict = "INSUFFICIENT_DATA" if n_total < 2 else ("DECISIVE" if pos_corr / n_total >= 0.7
                   else "SUGGESTIVE" if pos_corr / n_total >= 0.5 else "NULL")
     print(f"H4: positive Pearson on {pos_corr}/{n_total} (strict>{0.5}: {h4_strict}/{n_total}) -> {h4_verdict}")
 
@@ -358,11 +356,18 @@ def main():
                 "zvf_naive_mean": r["zvf_naive_mean"],
                 "heldout_acc_final": final["heldout_acc"],
             })
-    # Spearman correlation between tree_zvf_proxy and heldout_acc_final across all (m, s)
-    sp = spearman([p["heldout_acc_final"] for p in paired_acc],
-                  [p["tree_zvf_proxy"] for p in paired_acc])
-    sp_naive = spearman([p["heldout_acc_final"] for p in paired_acc],
-                        [p["zvf_naive_mean"] for p in paired_acc])
+    # Stratify by method and window: never duplicate seeds by pooling windows.
+    correlations = []
+    for method in sorted({p["method"] for p in paired_acc}):
+        for window in [2, 5]:
+            cells = [p for p in paired_acc if p["method"] == method and p["w"] == window]
+            if len(cells) >= 3:
+                correlations.append({"method": method, "w": window, "n_seeds": len(cells),
+                    "rho_proxy": spearman([p["heldout_acc_final"] for p in cells], [p["tree_zvf_proxy"] for p in cells]),
+                    "rho_zvf": spearman([p["heldout_acc_final"] for p in cells], [p["zvf_naive_mean"] for p in cells])})
+    # Averages are descriptive only, not pooled-sample inferential estimates.
+    sp = statistics.fmean(c["rho_proxy"] for c in correlations) if correlations else 0.0
+    sp_naive = statistics.fmean(c["rho_zvf"] for c in correlations) if correlations else 0.0
     write_tsv(OUTDIR / "alphaproof_final_acc_corr.tsv",
               ["method", "seed", "w", "tree_zvf_proxy",
                "zvf_naive_mean", "heldout_acc_final"], paired_acc)
@@ -372,8 +377,14 @@ def main():
                   else "NULL")
     print(f"H5: spearman ρ(tree, heldout)={sp:.3f}, ρ(naive, heldout)={sp_naive:.3f} -> {h5_verdict}")
 
+    # Aggregated trajectory proxies cannot establish changes in within-group ZVF.
+    # Do not promote directional heuristics or pooled dependent correlations to evidence.
+    h1_verdict = h3_verdict = h4_verdict = "EXPLORATORY_PROXY_ONLY"
+    h2_verdict = "EXPLORATORY_PROXY_ONLY" if len(paired) >= 2 else "INSUFFICIENT_DATA"
+    h5_verdict = "EXPLORATORY_PROXY_ONLY" if correlations else "INSUFFICIENT_DATA"
     # ---- Evidence summary ----
     summary = {
+        "limitations": "Reward deviation and advantage variance are separate estimands. No ZVF reduction, compute equivalence, stability or inferential claim is established; repeated windows/methods are dependent.",
         "ts": "2026-07-04",
         "iteration": 19,
         "pillar": "B-SP25",
@@ -415,7 +426,8 @@ def main():
              "n_total": n_total, "n_pos_corr": pos_corr, "n_strict": h4_strict,
              "verdict": h4_verdict},
             {"id": "H5", "claim": "ρ(tree-ZVF, final heldout acc) > ρ(naive ZVF, final heldout acc)",
-             "spearman_tree": sp, "spearman_naive": sp_naive,
+             "method_window_seed_correlations": correlations,
+             "mean_descriptive_rho_proxy": sp, "mean_descriptive_rho_zvf": sp_naive,
              "verdict": h5_verdict},
         ],
     }

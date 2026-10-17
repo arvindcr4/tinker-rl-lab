@@ -160,6 +160,8 @@ rescale_maxerr = max(abs(r["rescale_emp"]-r["rescale_pred"]) for r in rows_g)
 # The residual we report is the expected |A_LOO(verifier) - (G/(G-1))*A_naive(reward)|
 # averaged over rollouts and the verifier's Bernoulli noise (exact, 2 outcomes/rollout).
 def verifier_residual(n, k, G, e):
+    if not (2 <= G <= n and 0 <= k <= n and math.isfinite(e) and 0 <= e <= 1):
+        raise ValueError("invalid group or verifier noise")
     tot = 0.0
     for j in range(0, G+1):
         pj = hyper_pmf(n, k, G, j)
@@ -173,13 +175,15 @@ def verifier_residual(n, k, G, e):
                 continue
             others_true_corr = j - c
             others = G - 1
-            # expected verifier-labelled-correct among others:
-            ev_others = others_true_corr*(1-e) + (others - others_true_corr)*e
-            b_loo_v = ev_others/(G-1)
-            a_loo_v = c - b_loo_v                       # true reward c drives update
-            a_naive = c - k/G
-            a_target = (G/(G-1))*a_naive                 # pure-rescale prediction
-            tot += pj * cnt * abs(a_loo_v - a_target)
+            a_target = (G / (G - 1)) * (c - j / G)
+            # Exact convolution: surviving positives and flipped negatives among peers.
+            for positive in range(others_true_corr + 1):
+                p_pos = math.comb(others_true_corr, positive) * (1-e)**positive * e**(others_true_corr-positive)
+                negatives = others - others_true_corr
+                for flipped in range(negatives + 1):
+                    p_neg = math.comb(negatives, flipped) * e**flipped * (1-e)**(negatives-flipped)
+                    a_loo_v = c - (positive + flipped) / others
+                    tot += pj * cnt * p_pos * p_neg * abs(a_loo_v - a_target)
     return tot / G
 
 rows_noise = []

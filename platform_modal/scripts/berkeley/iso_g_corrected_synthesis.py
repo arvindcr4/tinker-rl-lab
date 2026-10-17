@@ -279,7 +279,7 @@ def h5_practitioner_iso_g():
     # The corrected synthesis interprets G_iso_corrected as the minimum
     # contrast-budget; G*_raw is the compute-budget optimum and must
     # be >= G_iso_corrected to satisfy both constraints.
-    G_iso_floor = 4   # contrast-only minimum
+    G_iso_floor = G_iso_corrected  # authoritative corrected policy, no hidden rounding
     rows = []
     n_floor_ok = 0
     for T, G_raw in sorted(g_star.items()):
@@ -289,7 +289,7 @@ def h5_practitioner_iso_g():
         rows.append({
             "T": T,
             "G_raw_GRPO": G_raw,
-            "G_iso_floor_contrast_only": G_iso_floor,
+            "G_iso_corrected_policy": G_iso_floor,
             "delta_G_raw_minus_iso": f"{G_raw - G_iso_floor:+d}",
             "iso_is_lower_bound": ok,
         })

@@ -28,8 +28,8 @@ We answer Q in four pieces:
         Generate N=5 anchor traces from a known scaling law
             R_max(N) = 0.85 - 0.05 * log10(N / 8)
         with per-step noise drawn from the empirical residual distribution of
-        the actual 5-anchor traces.  Re-run the full saturation + BIC pipeline
-        and report how often the synthetic pipeline recovers the planted
+        the actual 5-anchor traces.  Run direct regression on simulated R_max observations (no saturation
+        refits or BIC selection) and report recovery of the planted
         scaling law (R^2 > 0.5 on R_max-vs-N).  Repeat for slope in
         {0.01, 0.025, 0.05, 0.10, 0.20} and n_anchors in {5, 8, 12, 20, 40}.
 
@@ -68,9 +68,9 @@ from _analysis_common import saturation, write_rows_tsv as _write_tsv, ols
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-FIG_DIR.mkdir(exist_ok=True)
+RESULTS_DIR = REPO / "experiments" / "results" / "review26_v2"
+FIG_DIR = REPO / "figures" / "review26_v2"
+FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 MODELS: dict[str, tuple[str, float, str]] = {
     "Qwen3.5-4B":            ("scale_gsm8k_qwen3.5-4b.json",      4.0,   "dense"),
@@ -209,6 +209,7 @@ def assess_recovery(syn: dict, log_n: np.ndarray) -> tuple[float, float]:
 
 
 def main() -> None:
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(SEED)
 
     # ---------- Load traces ----------
@@ -402,22 +403,10 @@ def main() -> None:
         ),
         power_curve=rows_pc,
         frontier_synthesis=(
-            "iter121 Pillar 1 advances from 'no scaling law observed' "
-            "(iter117) to 'no scaling law DETECTABLE at this evidence base'. "
-            "The Spearman test on log10(N) vs (late-early) reward gives "
-            f"rho={rho_obs:.3f} with permutation p={perm_p:.3f} "
-            "(two-sided), confirming the rank-correlation null. The "
-            "effective-compute axis (log10(N * D)) likewise fails to "
-            "reveal scaling: OLS slopes for R_max, peak, mean_reward "
-            "all have wide bootstrap CIs covering zero. The synthetic "
-            "calibration makes the degeneracy explicit: for a planted "
-            "scaling law with slope=0.05 (Chinchilla-class) and n=5 "
-            "anchors, the pipeline recovers the law with probability "
-            "< 0.10; even at n=40 anchors and slope=0.10 recovery "
-            "stays below 0.5 unless the saturation-bound fraction is "
-            "suppressed. Conclusion: the existing 5-anchor pool is "
-            "at least one order of magnitude too small to falsify any "
-            "plausible GRPO scaling hypothesis."
+            "Exploratory protocol review26_v2. Outcome-selected clusters and pair-violation "
+            "counts are descriptive, not independent inferential evidence. Synthetic "
+            "recovery assesses direct regression only; offset fitting does not establish "
+            "identifiability. Historical fixed conclusions are superseded."
         ),
     )
     (RESULTS_DIR / "scaling_law_iter121_meta.json").write_text(

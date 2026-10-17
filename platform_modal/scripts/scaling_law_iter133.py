@@ -14,7 +14,7 @@ short probes <5 steps) and n=12 (all anchors).
 Three concrete deliverables:
 
   (1) Structural-falsification re-test at n=7/10/12.  Monotonicity violation
-      rate, three-phase co-occurrence counts, and Hartigan-dip bimodality of
+      rate, three-phase co-occurrence counts, and descriptive uniform-CDF deviation of
       R_max (mean trace reward is the proxy for R_max on short probes, since
       saturation fit is degenerate for n<=5).
 
@@ -69,9 +69,9 @@ from _analysis_common import saturation, write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-FIG_DIR.mkdir(exist_ok=True)
+RESULTS_DIR = REPO / "experiments" / "results" / "review26_v2"
+FIG_DIR = REPO / "figures" / "review26_v2"
+FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 # Anchors ordered by trace reliability:
 #  - "n>=20" (RELIABLE): long traces suitable for full structural diagnostic.
@@ -179,49 +179,37 @@ def three_phase_diagnostic(rt: list[float]) -> dict:
                 three_phase_full=int(p1 == 1 and p2 == 1 and p3 == 1))
 
 
-def hartigan_dip_bootstrap(values: np.ndarray, rng: np.random.Generator,
-                           n_boot: int = 2000, n_grid: int = 256) -> tuple[float, float]:
-    """Same Silverman-bandwidth approximation as iter125."""
-    x = np.sort(values)
-    n = len(x)
-    if n < 4:
+def uniform_cdf_deviation(values, rng=None, n_boot=0, n_grid=256):
+    """Descriptive distance from a fitted uniform CDF; no unimodality inference.
+
+    The former approximate dip/bootstrap was invalid. A p-value is deliberately
+    unavailable until a validated unimodality protocol is selected.
+    """
+    x = np.sort(np.asarray(values, dtype=float))
+    if len(x) < 2 or not np.isfinite(x).all() or x[-1] == x[0]:
         return float("nan"), float("nan")
-    grid = np.linspace(x[0], x[-1], n_grid)
-    dip_obs = 0.0
-    for g in grid:
-        f_hat = np.searchsorted(x, g, side="right") / n
-        slope = 1.0 / (x[-1] - x[0] + 1e-12)
-        unimodal_cdf = np.clip(slope * (g - x[0]), 0.0, 1.0)
-        idx = np.searchsorted(x, g, side="right") - 1
-        idx = max(0, min(n - 1, idx))
-        dip_obs = max(dip_obs, abs((idx + 1) / n - unimodal_cdf))
-    sigma = float(np.std(values, ddof=1))
-    q75, q25 = np.percentile(values, [75, 25])
-    iqr = q75 - q25
-    h = 0.9 * min(sigma, iqr / 1.34) * n ** (-1 / 5)
-    count_extreme = 0
-    for _ in range(n_boot):
-        idx = rng.integers(0, n, size=n)
-        sample = values[idx] + rng.normal(0, h, size=n)
-        x_s = np.sort(sample)
-        dip_s = 0.0
-        for g in grid:
-            f_hat_s = np.searchsorted(x_s, g, side="right") / n
-            slope_s = 1.0 / (x_s[-1] - x_s[0] + 1e-12)
-            unimodal_cdf_s = np.clip(slope_s * (g - x_s[0]), 0.0, 1.0)
-            idx_s = np.searchsorted(x_s, g, side="right") - 1
-            idx_s = max(0, min(n - 1, idx_s))
-            dip_s = max(dip_s, abs((idx_s + 1) / n - unimodal_cdf_s))
-        if dip_s >= dip_obs:
-            count_extreme += 1
-    p = (count_extreme + 1) / (n_boot + 1)
-    return dip_obs, p
+    u = (x - x[0]) / (x[-1] - x[0])
+    n = len(x)
+    distance = max(np.max(np.arange(1, n + 1) / n - u),
+                   np.max(u - np.arange(n) / n))
+    return float(distance), float("nan")
+
+
+
+def higher_mean_cluster(values, labels):
+    """Cluster IDs have no ordering; ties yield no higher-mean class."""
+    values, labels = np.asarray(values), np.asarray(labels)
+    ids = np.unique(labels)
+    means = np.array([values[labels == i].mean() for i in ids])
+    if len(ids) != 2 or means[0] == means[1]:
+        return np.zeros(len(values), dtype=bool)
+    return labels == ids[np.argmax(means)]
 
 
 def largest_gap_split(values: np.ndarray) -> tuple[int, float]:
     """Return (split_index, gap_size) where split_index is the lower index
     of the largest gap.  Example: values sorted = [0.2, 0.3, 0.8, 0.9] ->
-    split_index=2, gap=0.5."""
+    split_index=1, gap=0.5."""
     s = np.sort(values)
     gaps = np.diff(s)
     loc = int(np.argmax(gaps))
@@ -260,6 +248,7 @@ def kass_raftery_bf(loglik2: float, loglik1: float) -> str:
 # ---------- main ----------
 
 def main() -> None:
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(SEED)
 
     # ---------- Load all anchors ----------
@@ -311,8 +300,7 @@ def main() -> None:
     for n in RELIABLE_ANCHORS:
         rt = traces[n]
         m = monotonicity_violations(rt)
-        p_mono = binomtest(m["n_viol"], m["n_pairs"], 0.05,
-                           alternative="greater").pvalue if m["n_pairs"] > 0 else float("nan")
+        p_mono = float("nan")  # dependent pairs: descriptive only
         mono_rows.append([n, f"{metas[n]['params_B']:.1f}", metas[n]["arch"],
                           len(rt), m["n_viol"], m["n_pairs"],
                           f"{m['violation_rate']:.4f}", f"{m['max_drop']:.4f}",
@@ -327,7 +315,7 @@ def main() -> None:
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter133_monotonicity.tsv",
         ["model", "params_B", "arch", "n_steps",
-         "n_violations", "n_pairs", "violation_rate", "max_drop", "binom_p_vs_0p05"],
+         "n_violations", "n_pairs", "violation_rate", "max_drop", "pair_inference_unavailable"],
         mono_rows,
     )
     _write_tsv(
@@ -353,9 +341,9 @@ def main() -> None:
         incapable_lg = sorted(rmax_vals)[:loc + 1]
         # ward k=2 split
         cl = ward_linkage_split(rmax_vals)
-        cap_mask = cl == 1
+        cap_mask = higher_mean_cluster(rmax_vals, cl)
         # Hartigan dip
-        dip, dip_p = hartigan_dip_bootstrap(rmax_vals, rng, n_boot=N_BOOT)
+        dip, dip_p = uniform_cdf_deviation(rmax_vals, rng, n_boot=N_BOOT)
         # Spearman rho(log N, R_max) within each class (ward cluster)
         ward_classes = sorted(set(cl))
         within_rho = {}
@@ -371,19 +359,12 @@ def main() -> None:
             a = rmax_vals[cl == ward_classes[0]]
             b = rmax_vals[cl == ward_classes[1]]
             gap_obs = abs(a.mean() - b.mean())
-            count_extreme = 0
-            for _ in range(N_BOOT):
-                perm = rng.permutation(rmax_vals)
-                a_p = perm[:len(a)]
-                b_p = perm[len(a):]
-                if abs(a_p.mean() - b_p.mean()) >= gap_obs:
-                    count_extreme += 1
-            p_perm = (count_extreme + 1) / (N_BOOT + 1)
+            p_perm = float("nan")  # groups selected from outcomes; no valid test
         else:
             gap_obs, p_perm = float("nan"), float("nan")
         # Map each model to a class label (largest gap split)
         for n, v in zip(pnames, rmax_vals):
-            cls = "capable" if v >= sorted(rmax_vals)[loc] else "incapable"
+            cls = "capable" if v > sorted(rmax_vals)[loc] else "incapable"
             pool_class_assignments.setdefault(pname, {})[n] = 1 if cls == "capable" else 0
         bimod_rows.append([
             pname, len(pnames), f"{rmax_vals.min():.4f}", f"{rmax_vals.max():.4f}",
@@ -397,7 +378,7 @@ def main() -> None:
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter133_bimodality.tsv",
         ["pool", "n_anchors", "R_max_min", "R_max_max",
-         "largest_gap", "largest_gap_loc", "dip_statistic", "dip_p_value",
+         "largest_gap", "largest_gap_loc", "uniform_cdf_deviation", "unimodality_p_unavailable",
          "ward_class0_mean", "ward_class1_mean", "ward_gap", "perm_p_ward_gap",
          "within_class_spearman"],
         bimod_rows,
@@ -413,7 +394,7 @@ def main() -> None:
         log_n = np.array([math.log10(metas[n]["params_B"]) for n in pnames], dtype=float)
         # Ward cluster assignment is the canonical "capability" label.
         cl = ward_linkage_split(rmax_vals)
-        capable = (cl == 1).astype(float)  # use the higher-mean cluster as "capable"
+        capable = higher_mean_cluster(rmax_vals, cl).astype(float)  # use the higher-mean cluster as "capable"
         n = len(pnames)
         # OLS models (intercept, params_only, capability_only, params+capability,
         # params*capability interaction).
@@ -572,7 +553,7 @@ def main() -> None:
         },
         bimodality_summary=[
             dict(pool=row[0], n=int(row[1]), largest_gap=float(row[4]),
-                 dip=float(row[6]), dip_p=float(row[7]),
+                 uniform_cdf_deviation=float(row[6]), unimodality_p_unavailable=float(row[7]),
                  ward_gap=float(row[10]), perm_p=float(row[11]))
             for row in bimod_rows
         ],
@@ -584,29 +565,10 @@ def main() -> None:
             for row in interaction_rows
         ],
         frontier_synthesis=(
-            f"iter133 Pillar 1 elevates the iter125 capability-bimodality "
-            f"finding from n=5 to n=7/10/12.  At n=10 (the headline pool: "
-            f"7 reliable + 4 short probes), the structural-falsification "
-            f"suite survives: every reliable anchor except Qwen3.5-4B has a "
-            f"monotonicity violation rate above the 5% iid noise floor "
-            f"(binomial p < 0.01), the three-phase hypothesis (arXiv "
-            f"2507.18014) still fails to land on more than a single anchor, "
-            f"and the Ward-k=2 split on R_max cleanly partitions the "
-            f"12 anchors into capable vs incapable clusters with a "
-            f"permutation-test gap of {perm_p_n10:.3f}.  The key sharp "
-            f"sequel is on the AICc/Bayes-factor comparison: at n=5 "
-            f"iter129 reported log BF=-9.53 in favour of params-only over "
-            f"params+capability (Kass-Raftery 'very strong'); at n=10 the "
-            f"same comparison shifts, with capability-only "
-            f"(AICc={aicc_capability_n10:.2f}) outperforming params-only "
-            f"(AICc={aicc_params_n10:.2f}) by AICc delta.  This is the "
-            f"SHARPESTiter133 finding: at n=5 the small sample size hides "
-            f"the capability signal behind the params-only prior, but at "
-            f"n>=7 the capability class (instruct/pretrained pretraining) "
-            f"is the load-bearing axis for R_max -- exactly the pattern "
-            f"the iter121 detection-power verdict predicted would only "
-            f"become visible at n>5.  Seven TSV outputs, 4-panel figure, "
-            f"paper section scaling_law_iter133.tex."
+            "Exploratory protocol review26_v2. Outcome-selected clusters and pair-violation "
+            "counts are descriptive, not independent inferential evidence. Synthetic "
+            "recovery assesses direct regression only; offset fitting does not establish "
+            "identifiability. Historical fixed conclusions are superseded."
         ),
         followon=(
             "iter133 fixes the central iter125/129 caveat (n=5) by "

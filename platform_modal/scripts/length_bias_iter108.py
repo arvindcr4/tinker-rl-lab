@@ -113,7 +113,7 @@ def progress_window_icca(L: np.ndarray, R: np.ndarray, K: int,
 #   Length-quantile ICCA (mirror of iter104)
 # ===========================================================================
 
-from _review24_statistics import conditional_ccf, stable_seed
+from _review24_statistics import conditional_ccf, stable_seed, paired_available as paired_bootstrap_delta
 
 def length_quantile_icca(L: np.ndarray, R: np.ndarray, K: int,
                          n_q: int) -> dict[str, Any]:
@@ -196,7 +196,7 @@ def main(argv: list[str] | None = None) -> int:
                                           "side": side,
                                           **paired_bootstrap_delta(g, d, B=B, seed=0x10C8)})
     write_tsv("length_bias_iter108_paired_progress_v2.tsv", paired_prog_rows,
-              ["task", "window", "side", "delta", "ci_lo", "ci_hi", "p", "n"])
+              ["task", "window", "side", "delta", "ci_lo", "ci_hi", "p", "n", "n_excluded"])
 
     # trend (Spearman) of the per-window |CCF| delta across window index
     trend_prog_rows = []
@@ -244,13 +244,13 @@ def main(argv: list[str] | None = None) -> int:
 
     len_keys = (["task", "algo", "seed", "n"]
                 + [f"q{q}_{f}" for q in range(n_q)
-                   for f in ("size", "bwd", "fwd", "bwd_signed", "fwd_signed")])
+                   for f in ("size", "pair_counts", "bwd", "fwd", "bwd_signed", "fwd_signed")])
     len_rows = []
     for rec in length_perrun:
         row = {k: rec.get(k, "") for k in len_keys}
         for q in range(n_q):
             qq = rec["q"][q]
-            for f in ("size", "bwd", "fwd", "bwd_signed", "fwd_signed"):
+            for f in ("size", "pair_counts", "bwd", "fwd", "bwd_signed", "fwd_signed"):
                 row[f"q{q}_{f}"] = qq[f]
         len_rows.append(row)
     write_tsv("length_bias_iter108_summary_length_v2.tsv", len_rows, len_keys)
@@ -266,7 +266,7 @@ def main(argv: list[str] | None = None) -> int:
                 paired_len_rows.append({"task": task, "q": q, "side": side,
                                          **paired_bootstrap_delta(g, d, B=B, seed=0x10C8)})
     write_tsv("length_bias_iter108_paired_length_v2.tsv", paired_len_rows,
-              ["task", "q", "side", "delta", "ci_lo", "ci_hi", "p", "n"])
+              ["task", "q", "side", "delta", "ci_lo", "ci_hi", "p", "n", "n_excluded"])
 
     # share ratios & log2(q=4/q=0)
     trend_len_rows = []

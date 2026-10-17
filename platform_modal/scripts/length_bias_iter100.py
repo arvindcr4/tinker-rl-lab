@@ -154,14 +154,14 @@ def fit_var1(L: np.ndarray, R: np.ndarray) -> dict[str, Any]:
     # Standard Cholesky-ordered FEVD with order (L, R): shock to L first, then R.
     P = np.linalg.cholesky(Sigma + 1e-12 * np.eye(2)) if rho < 1.0 else None
     hmax = 8
-    fevd_R_from_L = []
-    fevd_L_from_R = []
+    fevd_R_from_L = [float("nan")]*hmax if P is None else []
+    fevd_L_from_R = [float("nan")]*hmax if P is None else []
     cum_R_from_L = 0.0
     cum_L_from_R = 0.0
     cum_R_total = 0.0
     cum_L_total = 0.0
     if P is not None:
-        for h in range(0, hmax + 1):
+        for h in range(0, hmax):
             Psi = np.linalg.matrix_power(K, h)
             # Forecast error at h+1 has variance (Psi @ Sigma @ Psi^T)
             if h == 0:

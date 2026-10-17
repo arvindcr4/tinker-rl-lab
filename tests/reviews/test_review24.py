@@ -62,3 +62,36 @@ def test_quantile_mask_preserves_original_time():
 def test_stable_distinct_seeds():
     assert stable_seed(1,'task',0,'fwd') == stable_seed(1,'task',0,'fwd')
     assert stable_seed(1,'task',0,'fwd') != stable_seed(2,'task',0,'fwd')
+
+def test_ceiling_failures_remain_counted(monkeypatch):
+    m=load('group_size_iter95')
+    monkeypatch.setattr(m,'curve_fit',lambda *a,**k: (_ for _ in ()).throw(RuntimeError('optimizer failed')))
+    rows=[{'G':4,'T':t,'acc':.5,'lo':.4,'hi':.6} for t in [1,2,3]]
+    result=m.fit_ceiling(4,rows=rows)
+    assert result['status']=='failed' and result['reason']=='optimizer failed'
+    assert np.isnan(result['a'])
+    with pytest.raises(ValueError,match='point fit failed'):m.analyse(rows,B=2)
+
+def test_ceiling_sensitivity_fixed_schema_and_no_claim():
+    m=load('group_size_iter95')
+    rows=[{'G':g,'T':t,'acc':a*t/(t+2),'lo':a*t/(t+2)-.001,'hi':a*t/(t+2)+.001} for g,a in [(4,.6),(32,.8)] for t in [1,4,16,64]]
+    result=m.analyse(rows,B=8)
+    assert result['ratio']['estimate']==pytest.approx(.75,abs=1e-4)
+    assert result['ratio']['successful']==8
+    assert result['sampling']=='independent_normal_summary_sensitivity'
+
+def test_fevd_one_step_is_contemporaneous():
+    m=load('length_bias_iter100');rng=np.random.default_rng(19)
+    states=np.zeros((500,2));noise=rng.normal(size=(500,2))
+    K=np.array([[.2,.4],[0,.1]])
+    for i in range(1,len(states)):states[i]=K@states[i-1]+noise[i]
+    result=m.fit_var1(states[:,0],states[:,1])
+    assert result['fevd_L_from_R_h1']==pytest.approx(0,abs=1e-14)
+    assert result['fevd_L_from_R_h4']>.01
+
+def test_missing_ccf_pairs_have_explicit_coverage():
+    from _review24_statistics import paired_available
+    result=paired_available([1,np.nan,2],[2,3,3],B=10,seed=1)
+    assert result['n']==2 and result['n_excluded']==1 and result['delta']==1
+    result=paired_available([np.nan],[1],B=10,seed=1)
+    assert result['n']==0 and np.isnan(result['p'])

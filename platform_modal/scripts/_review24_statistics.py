@@ -46,3 +46,18 @@ def conditional_ccf(x, y, mask, K):
         counts.append(len(a))
         values.append(float(np.corrcoef(a,b)[0,1]) if len(a)>=4 and np.std(a)>0 and np.std(b)>0 else float('nan'))
     return np.asarray(values),counts
+
+
+def paired_available(g, d, B, seed, statistic=np.median):
+    """Exclude unavailable pairs together, retaining explicit coverage counts."""
+    from _analysis_common import paired_bootstrap_delta
+    g,d=np.asarray(g,float),np.asarray(d,float)
+    if g.shape!=d.shape:raise ValueError('unaligned paired observations')
+    valid=np.isfinite(g)&np.isfinite(d)
+    if valid.sum()<2:
+        result={key:float('nan') for key in ('delta','ci_lo','ci_hi','p')}
+        result['n']=int(valid.sum())
+    else:
+        raw=paired_bootstrap_delta(g[valid],d[valid],B=B,seed=seed,statistic=statistic)
+        result={key:raw[key] for key in ('delta','ci_lo','ci_hi','p','n')}
+    return {**result,'n_excluded':int((~valid).sum())}

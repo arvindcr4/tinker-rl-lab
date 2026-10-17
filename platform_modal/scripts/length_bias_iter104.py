@@ -115,7 +115,7 @@ def lag_label(k: int) -> str:
 #  Per-run, per-quantile CCF
 # ---------------------------------------------------------------------------
 
-from _review24_statistics import conditional_ccf, stable_seed
+from _review24_statistics import conditional_ccf, stable_seed, paired_available as paired_bootstrap_delta
 
 def per_run_quantile_icca(L: np.ndarray, R: np.ndarray, K: int,
                           n_q: int) -> dict[str, Any]:
@@ -281,7 +281,7 @@ def main(argv: list[str] | None = None) -> int:
     paired_path = os.path.join(RESULTS, "length_bias_iter104_paired_v2.tsv")
     with open(paired_path, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=["task", "q", "side", "delta",
-                                            "ci_lo", "ci_hi", "p", "n"],
+                                            "ci_lo", "ci_hi", "p", "n", "n_excluded"],
                            delimiter="\t")
         w.writeheader()
         for r in paired_rows:

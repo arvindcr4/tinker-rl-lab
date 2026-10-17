@@ -24,11 +24,11 @@ Inputs:
   platform_hybrid/experiments/results/group_size_iter75_extrapolate.tsv (predicted G4/G32)
 
 Outputs:
-  platform_hybrid/experiments/results/group_size_iter79_retention.tsv
-  platform_hybrid/experiments/results/group_size_iter79_wu_test.tsv
-  platform_hybrid/experiments/results/group_size_iter79_breakpoint.tsv
-  platform_hybrid/experiments/results/group_size_iter79_forecast.tsv
-  platform_hybrid/experiments/results/group_size_iter79_summary.tsv
+  platform_hybrid/experiments/results/group_size_iter79_v2_retention.tsv
+  platform_hybrid/experiments/results/group_size_iter79_v2_wu_test.tsv
+  platform_hybrid/experiments/results/group_size_iter79_v2_breakpoint.tsv
+  platform_hybrid/experiments/results/group_size_iter79_v2_forecast.tsv
+  platform_hybrid/experiments/results/group_size_iter79_v2_summary.tsv
   figures/group_size_iter79.pdf
   figures/group_size_iter79.png
 """
@@ -149,12 +149,14 @@ def compute_retention(tnorm: list[dict]) -> list[dict]:
         l = d[LARGE_G]
         # Ratio (point estimate)
         R = s["acc_mean"] / l["acc_mean"] if l["acc_mean"] > 0 else float("nan")
-        # CI on the ratio via Fieller / delta method (approx)
+        # Worst-case marginal confidence-limit ratio envelope; not Fieller
         s_lo = s["acc_ci_low"]
         s_hi = s["acc_ci_high"]
         l_lo = l["acc_ci_low"]
         l_hi = l["acc_ci_high"]
         # Worst-case (conservative) lower bound on R
+        if l_lo <= 0 or l_hi <= 0:
+            raise ValueError("ratio envelope needs strictly positive reference interval")
         R_lo = s_lo / l_hi
         R_hi = s_hi / l_lo
         out.append({
@@ -200,11 +202,11 @@ def wu_equivalence_test(retention_rows: list[dict]) -> list[dict]:
         rejects_wu = (wu < R_lo) or (wu > R_hi)
         # Direction of break
         if rejects_wu and R < wu:
-            verdict = "rejects_wu_below"
+            verdict = "descriptive_envelope_below_reference"
         elif rejects_wu and R > wu:
-            verdict = "rejects_wu_above"
+            verdict = "descriptive_envelope_above_reference"
         else:
-            verdict = "consistent_with_wu"
+            verdict = "reference_inside_descriptive_envelope"
         out.append({
             "T_tokens": r["T_tokens"],
             "T_M": r["T_M"],
@@ -213,7 +215,7 @@ def wu_equivalence_test(retention_rows: list[dict]) -> list[dict]:
             "retention_CI_hi": R_hi,
             "wu_976": wu,
             "within_wu_CI": within_band,
-            "rejects_wu_at_95": rejects_wu,
+            "rejects_wu_at_95": False,
             "verdict": verdict,
             "break_below_80pct": (r["retention_R"] < EQUIVALENCE_THRESHOLD),
         })
@@ -393,12 +395,7 @@ def make_plots(retention_rows, wu_test_rows, scaling, forecast_rows, outpath):
         ax.grid(True, alpha=0.3)
         ax.legend(loc="upper left", fontsize=8)
 
-    fig.suptitle(
-        "Iter 79 — Pillar 3: Equivalence-regime map.  "
-        "Wu 2025's $R{=}97.6\\%$ claim fails at $T\\!=\\!64$M,breaks "
-        "completely at $T\\!>\\!128$M.",
-        fontsize=10
-    )
+    fig.suptitle("Iter79: exploratory retention grid and model-dependent extrapolation", fontsize=10)
     fig.tight_layout(rect=[0, 0, 1, 0.94])
     fig.savefig(outpath, dpi=140)
     fig.savefig(outpath.with_suffix(".png"), dpi=140)
@@ -438,7 +435,7 @@ def main():
     # 1) Per-row retention
     retention = compute_retention(tnorm)
     print(f"[iter79] Computed retention at {len(retention)} budgets")
-    write_tsv(retention, RESULTS / "group_size_iter79_retention.tsv")
+    write_tsv(retention, RESULTS / "group_size_iter79_v2_retention.tsv")
 
     # 2) Wu equivalence test
     wu_test = wu_equivalence_test(retention)
@@ -447,19 +444,19 @@ def main():
     n_break_80 = sum(1 for r in wu_test if r["break_below_80pct"])
     print(f"[iter79] Wu test: {n_consistent} consistent / {n_reject} reject / "
           f"{n_break_80} below 80%")
-    write_tsv(wu_test, RESULTS / "group_size_iter79_wu_test.tsv")
+    write_tsv(wu_test, RESULTS / "group_size_iter79_v2_wu_test.tsv")
 
     # 3) Breakpoint identification
     bp = find_breakpoint(retention)
     print(f"[iter79] Log-linear R~T: slope={bp[0]['loglinear_slope']:.4f}, "
           f"r={bp[0]['loglinear_pearson_r']:.3f}")
     # bp is a list with 1 dict + 5 dicts (for thresholds)
-    write_tsv(bp, RESULTS / "group_size_iter79_breakpoint.tsv")
+    write_tsv(bp, RESULTS / "group_size_iter79_v2_breakpoint.tsv")
 
     # 4) Forecast
     forecast = forecast_retention(scaling, extrapolate)
     print(f"[iter79] Forecast: {len(forecast)} counterfactual budgets")
-    write_tsv(forecast, RESULTS / "group_size_iter79_forecast.tsv")
+    write_tsv(forecast, RESULTS / "group_size_iter79_v2_forecast.tsv")
 
     # 5) Headline summary
     observed_min_R = min(r["retention_R"] for r in retention)
@@ -506,7 +503,7 @@ def main():
                         for f in forecast if f['T_ext_M'] == 512.0),
                        float('nan'))},
     ]
-    write_summary(summary, RESULTS / "group_size_iter79_summary.tsv")
+    write_summary(summary, RESULTS / "group_size_iter79_v2_summary.tsv")
 
     # 6) Plots
     outpath = FIGS / "group_size_iter79.pdf"
@@ -523,7 +520,7 @@ def main():
                   f"{observed_min_R:.3f} at T={observed_T_min_R:.0f}M and "
                   f"extrapolates below {EQUIVALENCE_THRESHOLD:.0%} by "
                   f"T~128M -- Wu's 97.6% claim holds at T<=1M only."),
-        "evidence_path": "platform_hybrid/experiments/results/group_size_iter79_*.tsv",
+        "evidence_path": "platform_hybrid/experiments/results/group_size_iter79_v2_*.tsv",
         "citation_ok": True,
         "source_paper": "arXiv:2510.00977 (Wu et al. 2025)",
     }

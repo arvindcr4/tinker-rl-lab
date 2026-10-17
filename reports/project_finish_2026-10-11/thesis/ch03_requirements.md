@@ -72,7 +72,7 @@ The test cases below specify checks attached to the requirements. A test specifi
 
 **TC-2 — Recompute the detector metric from raw tensors.** Recompute the Phase-3 detector's area under the ROC curve from raw tensors under five-fold stratified cross-validation. The published figure is an AUROC of $0.84 \pm 0.01$ against $0.43$ for the reward-only comparator (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex). Verifies FR-5 and NFR-3.
 
-**TC-3 — Re-run a matched-budget arm comparison.** Re-run the baseline and the curriculum arm at a matched token budget over three seeds; the Phase-1 result is that both arms average $+0.028$ on the held-out set with no curriculum advantage (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex). Verifies FR-1, FR-2 and FR-6.
+**TC-3 — Re-run a matched-budget arm comparison.** Re-run the baseline and the curriculum arm at a matched token budget over three seeds; the Phase-1 result is that both arms average $+0.028$ on the held-out set with no curriculum advantage (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex). Supports only the executed matched-budget comparison; it does not establish configuration completeness or backend parity for FR-1/FR-2, nor all sweep behavior in FR-6.
 
 **TC-4 — Recompute headline diagnostics.** Recompute each headline diagnostic quoted in a results chapter directly from stored artefacts, with the recomputation recorded next to the published value (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex). Verifies NFR-3.
 
@@ -84,7 +84,7 @@ The test cases below specify checks attached to the requirements. A test specifi
 
 **TC-8 — Build the report from source.** Compile the main report and its supplementary through the full LaTeX chain and flag an empty journal field in the bibliography (source: platform_local/scientific_audit.py). Verifies FR-16.
 
-**TC-9 — Dry-run the completion gate against a declared lane.** Present a provider package to the gate and require it to validate the declaration without executing anything: the expected outcomes are acceptance with the declared evidence class, or a specific refusal naming the missing element. A package must never be reported as a benchmark result by this procedure (source: zvf-program/flagship/e1_e14_completion_gate.py). Verifies FR-13, FR-14 and NFR-7.
+**TC-9 — Dry-run the completion gate against a declared lane.** Present a provider package to the gate and require it to validate the declaration without executing anything: the expected outcomes are acceptance with the declared evidence class, or a specific refusal naming the missing element. A package must never be reported as a benchmark result by this procedure (source: zvf-program/flagship/e1_e14_completion_gate.py). Checks gate-declaration behavior within FR-14/NFR-7; it does not verify FR-13 lane runtime execution.
 
 **TC-10 — Registry query and null discipline.** Query the registry for a labelled entry and its delta record, and confirm that a field absent from the source is returned as unreported rather than as a zero value, and that a same-label pair with divergent behaviour triggers the flip-risk verdict (source: platform_hybrid/paper/paper_P6_registry.tex; source: platform_hybrid/registry/query.py). Verifies FR-9, FR-10, FR-11 and NFR-10.
 

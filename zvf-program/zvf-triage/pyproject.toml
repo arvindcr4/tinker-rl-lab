@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zvf-triage"
-version = "0.1.0"
+version = "0.2.0"
 description = "Zero-Variance Fraction (ZVF) triage callback for GRPO-style RL fine-tuning: a cheap, model-agnostic early-warning diagnostic that detects when group-relative advantage has collapsed to zero gradient signal."
 readme = "README.md"
 requires-python = ">=3.9"

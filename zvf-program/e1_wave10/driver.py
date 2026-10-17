@@ -30,8 +30,10 @@ actor05_session/deployment.json):
 from __future__ import annotations
 
 import argparse
+from attempt_store import claim, transition
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -242,7 +244,23 @@ def generate_one(iid: str, source: dict, identity: dict, args, attempts_root: Pa
                                        seed=args.seed)
     request_bytes = canonical_line(request)
     request_path = directory / "generation_request.json"
+    directory.mkdir(parents=True, exist_ok=True)
+    retained = directory / "generation.json"
+    if (directory / "completed.json").exists() and retained.is_file():
+        receipt = json.loads(retained.read_text())
+        completion = json.loads((directory / "completed.json").read_text())
+        if (receipt.get("request_sha256") != sha256_bytes(request_bytes)
+            or receipt.get("source_sha256") != psml.object_hash(source["files"])
+            or receipt.get("model_identity_sha256") != psml.object_hash(identity)
+            or receipt.get("deployment_ref", {}).get("sha256") != sha256_bytes(Path(args.deployment).read_bytes())
+            or completion.get("receipt_sha256") != sha256_bytes(retained.read_bytes())):
+            raise RuntimeError("completed attempt identity or retained receipt changed")
+        return receipt
+    if list(directory.glob("generation*")):
+        raise RuntimeError("legacy or unresolved generation artifacts require reconciliation before retry")
+    nonce = claim(directory, {"request_sha256": sha256_bytes(request_bytes), "instance_id": iid})
     write_immutable(request_path, request_bytes)
+    transition(directory, nonce, "DISPATCHED", request_sha256=sha256_bytes(request_bytes))
 
     started_at = time.time()
     body, meta = post_chat_completion(args.endpoint, request_bytes, args.api_key,
@@ -270,6 +288,7 @@ def generate_one(iid: str, source: dict, identity: dict, args, attempts_root: Pa
         raise RuntimeError(f"Candidate patch absent from retained response: {iid}")
 
     receipt = {
+        "attempt_nonce": nonce,
         "instance_id": iid,
         "status": status,
         "sample_started": True,
@@ -298,6 +317,7 @@ def generate_one(iid: str, source: dict, identity: dict, args, attempts_root: Pa
         "request_ref": {"path": str(request_path),
                         "sha256": receipt["request_sha256"]},
         "deployment_ref": receipt["deployment_ref"]}))
+    transition(directory, nonce, "COMPLETED", receipt_sha256=sha256_bytes((directory / "generation.json").read_bytes()))
     log(f"{iid} {status} {int((finished_at - started_at) * 1000)}")
     return receipt
 
@@ -318,7 +338,7 @@ def build_native_argv(args, output_dir: Path) -> list[str]:
             "--report-dir", str(output_dir / "reports")]
 
 
-def native_worker() -> int:
+def native_worker(worker_args=None, evaluator_argv=None) -> int:
     """Hidden worker mode: run the eval argv inside the owned process group.
 
     The swebench child inherits this worker's process group (no new session),
@@ -326,12 +346,11 @@ def native_worker() -> int:
     written; the eval returncode is data inside the receipt, never the exit
     status, so an infra-failed eval cannot masquerade as a lost worker.
     """
-    flags = {}
-    for name in ("--native-result-path", "--native-stdout", "--native-stderr"):
-        flags[name] = sys.argv[sys.argv.index(name) + 1]
-    argv = sys.argv[sys.argv.index("--") + 1:]
-    stdout_path, stderr_path = Path(flags["--native-stdout"]), Path(flags["--native-stderr"])
-    result_path = Path(flags["--native-result-path"])
+    if worker_args is None or not evaluator_argv:
+        raise ValueError("native worker needs parsed controls and a nonempty evaluator argv")
+    argv = evaluator_argv
+    stdout_path, stderr_path = worker_args.native_stdout, worker_args.native_stderr
+    result_path = worker_args.native_result_path
     stdout_path.parent.mkdir(parents=True, exist_ok=True)
     started_at = time.time()
     with stdout_path.open("wb") as out, stderr_path.open("wb") as err:
@@ -342,6 +361,7 @@ def native_worker() -> int:
             err.write(f"native worker spawn failure: {exc}\n".encode())
             returncode = None
     bpg.write_durable(result_path, {
+        "attempt_nonce": os.environ.get("TINKER_ATTEMPT_NONCE"),
         "returncode": returncode,
         "started_at": started_at,
         "finished_at": time.time(),
@@ -412,13 +432,17 @@ def parse_args(argv=None):
 
 
 def main() -> int:
-    args, extra = parse_args()
-    if args.native_worker:
-        if extra:
-            print(f"native worker: unrecognized pre-separator arguments: {extra}",
-                  file=sys.stderr)
-            return 2
-        return native_worker()
+    raw = sys.argv[1:]
+    if "--native-worker" in raw:
+        if "--" not in raw:
+            raise ValueError("native worker requires -- before evaluator argv")
+        split = raw.index("--")
+        worker_parser = argparse.ArgumentParser()
+        worker_parser.add_argument("--native-worker", action="store_true")
+        for flag in ("--native-result-path", "--native-stdout", "--native-stderr"):
+            worker_parser.add_argument(flag, type=Path, required=True)
+        return native_worker(worker_parser.parse_args(raw[:split]), raw[split+1:])
+    args, extra = parse_args(raw)
     if extra:
         print(f"unrecognized arguments: {extra}", file=sys.stderr)
         return 2
@@ -486,7 +510,7 @@ def main() -> int:
     write_immutable(output_dir / "wave10_native_execution.json",
                     pretty(native_receipt))
     log_file.close()
-    return 0 if native_receipt.get("status") == "EXITED" else 3
+    return 0 if native_receipt.get("status") == "EXITED" and native_receipt.get("returncode") == 0 else 3
 
 
 if __name__ == "__main__":

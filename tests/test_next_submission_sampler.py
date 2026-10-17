@@ -13,7 +13,7 @@ SAMPLER = load_module("next_submission_sampler", MODULE_PATH)
 
 
 def rollout(reward: float, length: int, prompt: tuple[int, ...] = (10, 11)):
-    return SAMPLER.Rollout(prompt, tuple(range(100, 100 + length)), reward)
+    return SAMPLER.Rollout(prompt, tuple(range(100, 100 + length)), reward, "stop")
 
 
 @pytest.mark.parametrize(
@@ -34,7 +34,7 @@ def test_baseline_requires_and_charges_all_eight_rollouts():
     assert group.generated_rollouts == 8
     assert group.charged_generated_tokens == 37
     assert group.active == (True,) * 8
-    assert group.update_applied is True
+    assert group.update_eligible is True
 
 
 @pytest.mark.parametrize(("reward", "label"), [(0.0, "all_wrong"), (1.0, "all_correct")])
@@ -51,7 +51,7 @@ def test_homogeneous_intervention_stops_at_two_and_emits_no_update(reward, label
     assert group.active == (False,) * 8
     assert group.rewards == (None,) * 8
     assert group.completion_ids == ((2,),) * 8
-    assert group.update_applied is False
+    assert group.update_eligible is False
 
 
 def test_mixed_intervention_expands_to_eight():
@@ -64,7 +64,7 @@ def test_mixed_intervention_expands_to_eight():
     assert group.generated_rollouts == 8
     assert group.charged_generated_tokens == 29
     assert group.active == (True,) * 8
-    assert group.update_applied is True
+    assert group.update_eligible is True
 
 
 def test_homogeneous_intervention_cannot_expand_or_replace():
@@ -113,7 +113,8 @@ def test_telemetry_partitions_groups_and_counts_real_generation():
         "rollout_groups": 3,
         "generated_rollouts": 12,
         "charged_generated_tokens": 42,
-        "updated_groups": 1,
+        "update_eligible_groups": 1,
+        "truncated_generated_rollouts": 0, "unknown_finish_rollouts": 0,
         "all_wrong_fraction": pytest.approx(1 / 3),
         "all_correct_fraction": pytest.approx(1 / 3),
         "mixed_fraction": pytest.approx(1 / 3),

@@ -19,6 +19,8 @@ def contract():
     claims = VERIFIER.load_json(HERE / "claim_ledger.json")
     results = VERIFIER.load_json(HERE / "results_contract.json")
     blueprint = (HERE / "MANUSCRIPT_BLUEPRINT.md").read_text(encoding="utf-8")
+    # Synthetic semantic-contract fixture: the real frozen hash stays unchanged.
+    protocol["bindings"]["power_implementation_sha256"] = VERIFIER.sha256(ROOT / protocol["bindings"]["power_implementation_path"])
     return protocol, claims, results, blueprint
 
 
@@ -34,12 +36,10 @@ def verify(candidate, *, bindings: bool = False):
     )
 
 
-def test_frozen_design_passes_with_hash_bindings(contract):
-    report = verify(contract, bindings=True)
-    assert report["status"] == "NEXT_SUBMISSION_DESIGN_CONTRACT_PASS"
-    assert report["initial_training_units"] == 92
-    assert report["gpu_authorized"] is True
-    assert report["result_claims_authorized"] is False
+def test_revised_sources_require_new_protocol_amendment(contract):
+    original = VERIFIER.load_json(HERE / "preregistration.json")
+    with pytest.raises(VERIFIER.DesignContractError, match="hash drift"):
+        verify((original, *contract[1:]), bindings=True)
 
 
 def test_prospective_math_parser_amendment_is_hash_bound(contract):

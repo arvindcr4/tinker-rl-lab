@@ -205,7 +205,7 @@ class AmendmentTests(unittest.TestCase):
              "--dry-run", "--once"],
             capture_output=True, text=True, timeout=60)
         self.assertEqual(run.returncode, 0, run.stderr)
-        self.assertIn("LIVE", run.stdout)
+        self.assertIn("CANCELLATION_INTENT_ISSUED", run.stdout)  # separate CLI process is an unreconciled supervisor restart
 
     # ---- replay / stale / reflection ----
     def test_replay_stale_and_reflection_rejected(self):
@@ -244,7 +244,7 @@ class AmendmentTests(unittest.TestCase):
         self.h.sup.record_completion_observation(
             lease["deadline_epoch"] - 10, True, True, {"source": "test"})
         terminal = self.h.sup.terminal_receipt()
-        self.assertEqual(terminal["kind"], hs.KIND_CLEANUP_VERIFIED)
+        self.assertIsNone(terminal)
 
     def test_cleanup_late_when_completion_observed_after_deadline(self):
         lease = self.h.arm()
@@ -253,8 +253,7 @@ class AmendmentTests(unittest.TestCase):
         self.h.sup.record_completion_observation(
             lease["deadline_epoch"] + 60, True, True, {"source": "test"})
         terminal = self.h.sup.terminal_receipt()
-        self.assertEqual(terminal["kind"], hs.KIND_CLEANUP_LATE)
-        self.assertTrue(terminal["possible_continuing_charges"])
+        self.assertIsNone(terminal)
 
     def test_cleanup_unverified_when_window_elapses_without_observation(self):
         lease = self.h.arm()
@@ -275,7 +274,7 @@ class AmendmentTests(unittest.TestCase):
         self.h.sup.run_once()
         result = self.h.sup.record_completion_observation(
             self.h.clock.wall, True, False, {"source": "test"})
-        self.assertEqual(result["status"], "OBSERVED_INCOMPLETE")
+        self.assertEqual(result["status"], "MANUAL_ATTESTATION_UNVERIFIED")
         self.assertIsNone(self.h.sup.terminal_receipt())
 
     # ---- static safety: no network surface ----

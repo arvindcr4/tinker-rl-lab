@@ -252,8 +252,7 @@ def test_verl_adapter_no_recognised_reward_tensor_raises():
 def test_verl_adapter_install_without_verl_raises_importerror():
     # verl is not installed in this venv; install() must say so, not silently no-op.
     a = VERLZVFAdapter()
-    if a.verl_available:  # pragma: no cover - verl not expected in test env
-        pytest.skip("verl is installed; ImportError path not exercised")
+    a.verl_available = False  # Exercise the offline path independently of installed extras.
     with pytest.raises(ImportError):
         a.install(object())
 

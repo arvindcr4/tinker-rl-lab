@@ -34,13 +34,14 @@ import csv
 import json
 import os
 import subprocess
+import shlex
 import sys
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
+from run_contract import bind_spec, render_command, result_complete, result_file_complete, claim_attempt
 
 HERE = Path(__file__).resolve().parent
 # Repo root = .../tinker-rl-lab  (this file lives at zvf-program/sweep/)
@@ -104,7 +105,7 @@ def expand_manifest(cfg: dict) -> list[dict]:
     cells: list[dict] = []
 
     def make_cell(block, framework, m, seed, group_size, difficulty, hp, loss, tag):
-        return {
+        cell = {
             "tag": tag,
             "block": block,
             "framework": framework,
@@ -120,7 +121,14 @@ def expand_manifest(cfg: dict) -> list[dict]:
             "lr": hp["lr"],
             "steps": hp["steps"],
             "rank": hp["rank"],
+            "prompt_filter": hp.get("prompt_filter", "none"),
+            "batch_prompts": hp.get("batch_prompts", 2),
+            "max_tokens": hp.get("max_tokens", 512),
+            **{key: hp[key] for key in ("clip_low", "clip_high", "importance_level", "dynamic_sampling")},
         }
+        cell["effective_spec"], cell["run_id"] = bind_spec(cell)
+        cell["tag"] += "_" + cell["run_id"][:12]
+        return cell
 
     # ---- AUDIT block --------------------------------------------------------
     audit = design.get("audit", {})
@@ -147,23 +155,14 @@ def expand_manifest(cfg: dict) -> list[dict]:
     # ---- MATCHED-COMPUTE block ---------------------------------------------
     mc = design.get("matched_compute", {})
     if mc.get("enabled"):
-        # The arm names map to loss configs; matched_compute.py is authoritative
-        # for rollout/token budgets. Here we just enumerate the cells so the
-        # manifest is complete + resumable. We record arm in both loss + tag.
-        for short in mc["models"]:
-            if short not in midx:
-                raise SystemExit(f"matched_compute model '{short}' not in model_families.")
-            m = midx[short]
-            hp = _apply_tier(fixed, tier_overrides, m["tier"])
-            for arm in mc["arms"]:
-                for seed in mc["seeds"]:
-                    g = mc["group_size"]
-                    d = mc["difficulty"]
-                    tag = f"matched_{arm}_{short}_G{g}_{d}_s{seed}"
-                    # Each matched arm runs on the single enabled framework.
-                    cells.append(
-                        make_cell("matched", frameworks[0], m, seed, g, d, hp, arm, tag)
-                    )
+        from matched_compute import build_plan
+        for command in build_plan(cfg)["commands"]:
+            c = command["cell"]
+            m = midx[command["model_short"]]
+            cells.append({**c, "tag": command["tag"], "block": "matched",
+                          "framework": frameworks[0], "family": m["family"],
+                          "model_short": m["short"], "tier": m["tier"],
+                          "effective_spec": command["effective_spec"], "run_id": command["run_id"]})
 
     return cells
 
@@ -200,7 +199,7 @@ def build_command(cfg: dict, cell: dict) -> tuple[str, Path]:
         **cell,
     }
     try:
-        cmd = " ".join(rc["command_template"].split()).format(**subst)
+        cmd = render_command(rc["command_template"], subst)
     except KeyError as e:
         raise SystemExit(
             f"command_template references unknown placeholder {e} for cell {cell['tag']}"
@@ -227,45 +226,11 @@ def load_completed_tags_from_master(cfg: dict) -> set[str]:
     return done
 
 
-def result_json_is_complete(path: Path, planned_steps: int | None = None) -> bool:
-    """A cell counts as done iff its result JSON exists, parses, and is
-    not a partial-run stub or a failure stub. We NEVER infer success
-    from anything but the runner's own file.
-
-    The previous version checked only "status == completed" OR
-    "step_log is present", which silently treated a crashed-mid-write
-    result JSON (file exists with a partial step_log) as done. Now we
-    additionally require that the step_log length matches the planned
-    number of steps when planned_steps is supplied, so a 5-of-30-step
-    crash is not treated as completed.
-    """
-    if not path.exists():
-        return False
+def result_json_is_complete(path: Path, planned_steps: int | None = None, expected_spec=None) -> bool:
     try:
-        with open(path) as f:
-            data = json.load(f)
-    except Exception:
+        return result_file_complete(path, planned_steps, expected_spec)
+    except (OSError, ValueError, TypeError):
         return False
-    status = data.get("status")
-    if status == "completed":
-        # Authoritative: the runner itself reports completed.
-        if planned_steps is not None and planned_steps > 0:
-            step_log = data.get("step_log") or []
-            if len(step_log) < planned_steps:
-                # status="completed" but step_log is short. The
-                # runner's status flag is not trustworthy; mark as
-                # incomplete and let the resume loop re-run the cell.
-                return False
-        return True
-    # Fallback: some runners omit status but write a step_log on success.
-    if status is None and data.get("step_log"):
-        step_log = data["step_log"]
-        if planned_steps is not None and planned_steps > 0:
-            if len(step_log) < planned_steps:
-                # step_log present but truncated (crashed mid-run).
-                return False
-        return True
-    return False
 
 
 # ---------------------------------------------------------------------------
@@ -336,13 +301,7 @@ def write_ledger(path: Path, rows: list[dict]) -> None:
 def run_one(cmd: str, out_json: Path, cell: dict) -> dict:
     started = datetime.now(timezone.utc).isoformat()
     out_json.parent.mkdir(parents=True, exist_ok=True)
-    # Guard against accidental shell metacharacters in cmd.
-    # The substitution sources are the YAML (controlled) + the
-    # audit cell fields (controlled), so this should never fire on
-    # a clean config; the explicit check protects against a
-    # fat-fingered YAML or a future field that lets untrusted input
-    # through. A cell_runner.py that does not want shell features
-    # can use the shlex=False mode by removing shell=True above.
+    # Parse a single argv; shell syntax is never executed.
     if not isinstance(cmd, str):
         raise TypeError(f"cmd must be str, got {type(cmd).__name__}")
     if any(c in cmd for c in ("\n", "\r", "\x00")):
@@ -366,7 +325,14 @@ def run_one(cmd: str, out_json: Path, cell: dict) -> dict:
     minimal_env = {k: v for k, v in _os.environ.items()
                     if k in _always_keep or k in forward}
     try:
-        proc = subprocess.run(cmd, shell=True, cwd=str(REPO_ROOT),
+        nonce, attempt_dir = claim_attempt(out_json, {"command": cmd, "effective_spec": cell.get("effective_spec")})
+    except FileExistsError as exc:
+        return {**_ledger_base(cell, cmd, out_json), "status": "blocked-attempt-reconciliation",
+                "started_at": started, "finished_at": datetime.now(timezone.utc).isoformat(),
+                "returncode": str(exc)}
+    minimal_env["TINKER_ATTEMPT_NONCE"] = nonce
+    try:
+        proc = subprocess.run(shlex.split(cmd), shell=False, cwd=str(REPO_ROOT),
                               timeout=4 * 3600, env=minimal_env)
         rc = proc.returncode
     except subprocess.TimeoutExpired:
@@ -379,7 +345,17 @@ def run_one(cmd: str, out_json: Path, cell: dict) -> dict:
                 "returncode": f"exc:{e}"}
     finished = datetime.now(timezone.utc).isoformat()
     # Status comes from the runner's own file, not from us guessing.
-    ok = rc == 0 and result_json_is_complete(out_json)
+    try:
+        produced = json.loads(out_json.read_text())
+    except (OSError, ValueError):
+        produced = None
+    ok = rc == 0 and result_complete(produced, cell.get("steps"), cell.get("effective_spec"))
+    if ok:
+        data = json.loads(out_json.read_text())
+        ok = data.get("attempt_nonce") == nonce
+        if ok:
+            from attempt_store import transition
+            transition(attempt_dir, nonce, "COMPLETED", result_sha256=__import__("hashlib").sha256(out_json.read_bytes()).hexdigest())
     return {**_ledger_base(cell, cmd, out_json),
             "status": "completed" if ok else "failed",
             "started_at": started, "finished_at": finished, "returncode": rc}
@@ -488,14 +464,12 @@ def main() -> int:
         total_enumerated = len(cells)
 
         # ---- resume: figure out what's already done ----
-        master_done = set() if args.no_resume else load_completed_tags_from_master(cfg)
         pending, skipped = [], []
         for c in cells:
             _, out_json = build_command(cfg, c)
             c["_out_json"] = out_json
             done = (not args.no_resume) and (
-                c["tag"] in master_done
-                or result_json_is_complete(out_json, planned_steps=c.get("steps"))
+                result_json_is_complete(out_json, planned_steps=c.get("steps"), expected_spec=c.get("effective_spec"))
             )
             (skipped if done else pending).append(c)
 
@@ -576,6 +550,7 @@ def main() -> int:
                 "group_size": c["group_size"], "difficulty": c["difficulty"], "lr": c["lr"],
                 "steps": c["steps"], "rank": c["rank"],
                 "result_json": str(out_json), "command": cmd,
+                "effective_spec": c.get("effective_spec"), "run_id": c.get("run_id"),
             })
 
         # ---- always write the manifest (even in dry-run) ----
@@ -631,7 +606,7 @@ def main() -> int:
         print("-" * 78)
         print(f"DONE. {n_ok}/{len(ledger)} cells completed. Ledger: {ledger_path}")
         print("Next: python3 aggregate_sweep.py   (joins ZVF/GU with held-out scores)")
-        return 0
+        return 0 if n_ok == len(ledger) else 1
 
     finally:
         if sweep_lock is not None:

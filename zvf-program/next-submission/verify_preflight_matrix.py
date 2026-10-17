@@ -11,6 +11,9 @@ from pathlib import Path
 import re
 from typing import Any
 
+from preflight_evidence_contract import validate_identity, validate_counts
+import run_preflight as common
+
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_PROTOCOL = HERE / "preregistration.json"
@@ -121,14 +124,6 @@ def _validate_audit(audit: Any, task: str, arm: str, seed: int) -> dict[str, Any
         ),
         "group fractions do not sum to one",
     )
-    require(
-        math.isclose(
-            audit["mixed_fraction"] * audit["rollout_groups"],
-            audit["updated_groups"],
-            abs_tol=1e-9,
-        ),
-        "mixed-group fraction and updated-group count disagree",
-    )
     return audit
 
 
@@ -137,6 +132,12 @@ def validate_receipt(
     protocol: dict[str, Any],
     path: Path,
 ) -> dict[str, Any]:
+    try:
+        validate_identity(receipt)
+    except ValueError as exc:
+        raise PreflightGateError(str(exc)) from exc
+    accepted_revisions = protocol.get("accepted_preflight_protocol_sha256", [sha256(DEFAULT_PROTOCOL)])
+    require(receipt["protocol_sha256"] in accepted_revisions, "unaccepted protocol revision")
     require(
         receipt.get("schema_version") == "aiml-next-preflight-request-v1",
         f"{path.name}: receipt schema drift",
@@ -159,7 +160,11 @@ def validate_receipt(
     cleanup = receipt.get("cleanup")
     require(isinstance(cleanup, dict), f"{path.name}: cleanup receipt missing")
     require(
-        cleanup.get("session_absent_verified") is True,
+        cleanup.get("session_absent_verified") is True or (
+            receipt.get("provider") in ("huggingface_jobs", "kaggle")
+            and cleanup.get("compute_terminal_verified") is True
+            and cleanup.get("resource_id")
+            and cleanup.get("provider_observation") in ("COMPLETE", "COMPLETED")),
         f"{path.name}: provider session absence was not verified",
     )
 
@@ -225,6 +230,12 @@ def validate_receipt(
     )
 
     audit = _validate_audit(payload.get("audit_record"), task, arm, seed)
+    try:
+        applied_update = validate_counts(audit, arm, run_config)
+        common.validate_manifest(manifest, payload, receipt, protocol=protocol,
+                                 expected_source_files=manifest.get("source_files"))
+    except (ValueError, RuntimeError, KeyError, TypeError) as exc:
+        raise PreflightGateError(str(exc)) from exc
     require(audit == manifest.get("audit_record"), f"{path.name}: payload/manifest audit drift")
 
     # A004 window discipline. Receipts predating the amendment carry no
@@ -266,6 +277,8 @@ def validate_receipt(
         isinstance(source_files, dict) and isinstance(bindings, dict),
         f"{path.name}: source provenance missing",
     )
+    require(source_files == receipt["scientific_manifest"].get("source_files"),
+            "observed source differs from retained scientific stack")
     for filename, binding_keys in SOURCE_BINDINGS.items():
         accepted = {
             bindings[key] for key in binding_keys if isinstance(bindings.get(key), str)
@@ -327,7 +340,7 @@ def validate_receipt(
             arm == "contrast_early_stop_g2_to_g8"
             and audit["all_correct_fraction"] + audit["all_wrong_fraction"] > 0
         ),
-        "mixed_update_observed": audit["mixed_fraction"] > 0 and audit["updated_groups"] > 0,
+        "mixed_update_observed": applied_update,
         "updated_groups": audit["updated_groups"],
     }
 

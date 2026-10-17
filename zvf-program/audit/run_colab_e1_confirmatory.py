@@ -513,8 +513,7 @@ def validate_remote_manifest(
         for value in completion_hashes
     ):
         raise RuntimeError("remote manifest held-out trace lacks completion hashes")
-    if len(set(completion_hashes)) != heldout_n:
-        raise RuntimeError("remote manifest held-out completion hashes are not unique")
+    # Repeated output text is legal; split indices above establish example identity.
     correct = sum(row.get("correct") is True for row in trace)
     observed_score = result["audit_record"]["heldout_score"]
     if not math.isclose(correct / heldout_n, observed_score, rel_tol=0.0, abs_tol=1e-12):
@@ -530,7 +529,8 @@ def stack_fingerprint() -> str:
             "amendment_sha256": sha256_file(AMENDMENT),
             "runtime_packages": list(PACKAGE_PINS),
             "accelerator_class": "A100",
-            "trainer_stack": "trl-grpo-transformers-generation-lora-v1",
+            "trainer_stack": "trl-grpo-transformers-generation-lora-v2",
+            "scientific_source_sha256": sha256_file(REMOTE_SCRIPT),
         }
     )
 

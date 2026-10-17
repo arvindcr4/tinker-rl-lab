@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Jev triage battery for the E1-E14 campaign (2026-09-19 restart).
 
-Loads receipt-grounded lane facts, asks Jev two independent judgment
+Historical manually authored fixture: source strings are not reread or verified.
+Loads historical lane assertions, asks Jev two independent judgment
 batteries over the shared state, and records one receipt per battery:
 
   1. next_action_class  — one choice per lane from six crisp classes
@@ -20,7 +21,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from jev_judge import DEFAULT_RECEIPT_DIR, run_ask  # noqa: E402
+from jev_judge import run_ask  # noqa: E402
 
 REPO_ROOT = HERE.parents[1]
 

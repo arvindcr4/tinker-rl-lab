@@ -117,14 +117,14 @@ class ZVFCallback:
 
     # ------------------------------------------------------------------ core API
 
-    def on_step(self, rewards: ArrayLike, group_ids: ArrayLike) -> StepDecision:
+    def on_step(self, rewards: ArrayLike, group_ids: ArrayLike, **observation: Any) -> StepDecision:
         """Process one optimizer step's rollout rewards.
 
         Returns the :class:`StepDecision`. Side effects: logs to the panel (if
         any), fires the configured hooks, and sets ``self.should_stop`` on an
         auto-stop or an ``on_collapse="abort"`` cold-start collapse.
         """
-        decision = self.controller.step(rewards, group_ids)
+        decision = self.controller.step(rewards, group_ids, **observation)
         self.decisions.append(decision)
 
         if self.panel is not None:
@@ -199,9 +199,8 @@ class ZVFCallback:
            ``zvf_log_key`` (default ``"frac_reward_zero_std"`` -- the metric
            ``GRPOTrainer`` already logs, equal to ZVF). When raw rewards are not
            in the log dict, this fraction *is* the batch ZVF; the adapter
-           reconstructs a faithful per-group reward vector that reproduces that
-           exact ZVF and batch mean (``reward_mean_key``) so the full controller
-           path -- regime, adaptive G, auto-stop -- runs on real numbers.
+           preserves those values exactly in a summary-only observation. No
+           per-prompt or training controls are applied from aggregate telemetry.
 
         Args:
             trainer: optional ``GRPOTrainer`` to read ``num_generations`` from.
@@ -252,6 +251,7 @@ def _make_trl_callback(
             self.inner = inner
             self._num_generations = num_generations
             self._trainer = trainer
+            self._last_observed_step = None
 
         def on_train_begin(self, args, state, control, **kwargs):  # noqa: D401
             # Discover the GRPO group size from a wired trainer if available.
@@ -261,11 +261,25 @@ def _make_trl_callback(
         def on_log(self, args, state, control, logs=None, **kwargs):  # noqa: D401
             logs = logs or {}
             self._resolve_num_generations(kwargs)
+            step_id = getattr(state, "global_step", None)
+            if type(step_id) is not int or step_id <= 0 or step_id == self._last_observed_step:
+                return control
             extracted = self._extract_group_rewards(logs, kwargs, state)
             if extracted is None:
-                return control
-            rewards, group_ids = extracted
-            decision = self.inner.on_step(rewards, group_ids)
+                if zvf_log_key not in logs or reward_mean_key not in logs:
+                    return control
+                decision = self.inner.controller.observe_summary(
+                    float(logs[zvf_log_key]), float(logs[reward_mean_key]), step_id=step_id)
+                self.inner.decisions.append(decision)
+                if self.inner.panel is not None:
+                    self.inner.panel.log(decision)
+                if self.inner.on_decision is not None:
+                    self.inner.on_decision(decision)
+            else:
+                rewards, group_ids = extracted
+                decision = self.inner.on_step(rewards, group_ids, step_id=step_id,
+                    prompt_ids=_extract(logs, kwargs, "prompt_ids"))
+            self._last_observed_step = step_id
             if decision.auto_stop or (
                 decision.regime is Regime.COLD_START_COLLAPSE
                 and self.inner.on_collapse == "abort"
@@ -291,24 +305,18 @@ def _make_trl_callback(
             """Return ``(rewards, group_ids)`` numpy arrays, or ``None``.
 
             Path 1: raw per-rollout rewards (block-grouped by num_generations,
-            or by an explicit group_key). Path 2: reconstruct from TRL's logged
-            ``frac_reward_zero_std`` (== ZVF) + mean reward.
+            or by an explicit group_key). Aggregate telemetry is handled
+            separately by the summary-only observation path.
             """
             rewards = _extract(logs, kwargs, reward_key)
             if rewards is not None:
                 rewards = _to_numpy(rewards)
                 group_ids = _extract(logs, kwargs, group_key)
                 if group_ids is not None:
-                    return rewards, _to_numpy(group_ids)
+                    return rewards, np.asarray(group_ids).ravel()
                 return rewards, _infer_group_ids(rewards, self._num_generations)
 
-            # Path 2: TRL's per-step zero-variance fraction is exactly ZVF.
-            zvf_val = logs.get(zvf_log_key)
-            if zvf_val is None:
-                return None
-            mean_reward = logs.get(reward_mean_key, 0.0)
-            n_groups = self._num_generations or 8
-            return _synthesize_from_zvf(float(zvf_val), float(mean_reward), n_groups)
+            return None
 
     return _TRLZVFCallback(zvf_cb)
 
@@ -339,47 +347,10 @@ def _infer_group_ids(rewards: np.ndarray, num_generations: Optional[int]) -> np.
     first ``G`` rewards are prompt 0, the next ``G`` are prompt 1, and so on.
     Falls back to one group per reward when ``num_generations`` is unknown.
     """
-    g = int(num_generations or 1)
-    g = max(1, g)
+    if num_generations is None or num_generations < 2:
+        raise ValueError("raw rewards need explicit group IDs or num_generations >= 2")
+    g = int(num_generations)
     n = int(rewards.shape[0])
+    if n % g:
+        raise ValueError("reward count is not divisible by num_generations")
     return np.array([i // g for i in range(n)])
-
-
-def _synthesize_from_zvf(
-    zvf_val: float, mean_reward: float, n_groups: int, group_size: int = 2
-) -> "tuple[np.ndarray, np.ndarray]":
-    """Reconstruct a per-group reward vector reproducing a given batch ZVF.
-
-    ``GRPOTrainer`` logs ``frac_reward_zero_std`` -- the fraction of prompt
-    groups whose rollout rewards have zero std -- which is exactly the ZVF the
-    controller would compute. When the raw rollouts are unavailable we rebuild a
-    minimal batch with ``n_groups`` groups of ``group_size`` rollouts such that:
-
-    * round(zvf_val * n_groups) groups are zero-variance (set to ``mean_reward``),
-    * the rest carry within-group contrast (split around ``mean_reward``),
-
-    so :func:`core.zvf` on the result equals ``zvf_val`` (to grid resolution) and
-    the batch mean equals ``mean_reward``. The reconstruction is exact for the
-    ZVF and mean; it does not claim to recover the true reward distribution.
-    """
-    n_groups = max(1, int(n_groups))
-    group_size = max(2, int(group_size))
-    n_zero = int(round(zvf_val * n_groups))
-    n_zero = min(max(n_zero, 0), n_groups)
-
-    rewards: List[float] = []
-    group_ids: List[int] = []
-    for g in range(n_groups):
-        if g < n_zero:
-            # Zero-variance group: all rollouts identical -> counts toward ZVF.
-            block = [mean_reward] * group_size
-        else:
-            # Contrast group: symmetric spread about the mean, nonzero variance.
-            lo = max(0.0, mean_reward - 0.5)
-            hi = min(1.0, mean_reward + 0.5)
-            if hi <= lo:  # mean at a boundary; force a tiny spread
-                lo, hi = mean_reward, mean_reward + 1e-3
-            block = [lo, hi] + [mean_reward] * (group_size - 2)
-        rewards.extend(block)
-        group_ids.extend([g] * group_size)
-    return np.asarray(rewards, dtype=float), np.asarray(group_ids)

@@ -204,6 +204,7 @@ class HostedSupervisor:
         self.max_skew_seconds = max_skew_seconds
         self.executor = ModalCancellationStub()
         self._last_wall = None
+        self._boot_id = secrets.token_hex(16)
 
     # ---------- layout ----------
     @property
@@ -238,6 +239,7 @@ class HostedSupervisor:
             "cleanup_reserve_seconds": cleanup_reserve_seconds,
             "max_clock_skew_seconds": self.max_skew_seconds,
             "armed_monotonic": mono,
+            "supervisor_boot_id": self._boot_id,
             "resource": dict(resource),
             "requester": dict(requester or {}),
             "clock_rule": "D = t0 + total_lease_seconds never moves; renewals extend only the short lease",
@@ -272,11 +274,17 @@ class HostedSupervisor:
     def submit_renewal(self, record: dict) -> dict:
         """Validate and durably append one renewal record (write-once per seq)."""
         lease = self.load_lease()
-        wall, _ = self.clock()
+        wall, mono = self.clock()
+        if lease.get("supervisor_boot_id") != self._boot_id:
+            raise SupervisorError("supervisor restart requires cancellation/reconciliation")
         latest = self.latest_verified_renewal(lease)
         expected_seq = (latest["seq"] + 1) if latest else 1
         self._check_renewal(record, lease, wall, expected_seq)
         write_once(self.renewals_dir / f"ren-{record['seq']:010d}.json", record)
+        accepted = {"record": record, "accepted_epoch": wall, "accepted_monotonic": mono,
+                    "supervisor_boot_id": self._boot_id}
+        accepted["signature"] = sign(b"accepted-renewal-v2", self.supervisor_key, accepted)
+        write_once(self.volume / "accepted-renewals" / f"ren-{record['seq']:010d}.json", accepted)
         return {"accepted": True, "seq": record["seq"],
                 "deadline_epoch": lease["deadline_epoch"], "note": "deadline unchanged by renewal"}
 
@@ -310,11 +318,20 @@ class HostedSupervisor:
 
     def latest_verified_renewal(self, lease: dict) -> dict | None:
         best = None
-        if not self.renewals_dir.is_dir():
+        accepted_dir = self.volume / "accepted-renewals"
+        if not accepted_dir.is_dir():
             return None
-        for path in sorted(self.renewals_dir.glob("ren-*.json")):
+        for path in sorted(accepted_dir.glob("ren-*.json")):
             try:
-                record = read(path)
+                accepted = read(path)
+                # The requester signature is insufficient: only supervisor-admitted
+                # sequence/freshness records can extend the lease.
+                signature = accepted.pop("signature", None)
+                if signature != sign(b"accepted-renewal-v2", self.supervisor_key, accepted):
+                    raise SupervisorError("renewal was not admitted by supervisor")
+                if accepted.get("supervisor_boot_id") != lease.get("supervisor_boot_id"):
+                    raise SupervisorError("renewal boot mismatch")
+                record = accepted["record"]
                 # Re-read verifies authenticity only. Wall-freshness and the
                 # early-cleanup cutoff were enforced at submission time; applying
                 # them to historical records would invalidate the whole chain on
@@ -325,7 +342,7 @@ class HostedSupervisor:
             except (SupervisorError, ValueError, OSError, KeyError):
                 continue  # tampered/invalid record cannot extend the lease
             if best is None or record["seq"] > best["seq"]:
-                best = record
+                best = {**record, "accepted_monotonic": accepted["accepted_monotonic"]}
         return best
 
     # ---------- evaluation ----------
@@ -437,6 +454,13 @@ class HostedSupervisor:
         """One poll of the lease volume; may fire intent and terminal receipts."""
         lease = self.load_lease()
         wall, mono = self.clock()
+        if lease.get("supervisor_boot_id") != self._boot_id:
+            if not dry_run:
+                raise NeverExecutedError("live cancellation execution is not implemented")
+            self.fire_cancellation(lease, "SUPERVISOR_RESTART_UNRECONCILED", wall)
+            return {"status": "CANCELLATION_INTENT_ISSUED", "intent": self.intent_receipt(),
+                    "terminal": self.terminal_receipt(), "now_epoch": wall, "monotonic": mono,
+                    "deadline_epoch": lease["deadline_epoch"]}
         if self._rollback_check(wall):
             self._receipt(KIND_ROLLBACK, {
                 "lease_id": lease["lease_id"], "detected_epoch": wall,
@@ -457,14 +481,16 @@ class HostedSupervisor:
             latest = self.latest_verified_renewal(lease)
             expiry = latest["expires_epoch"] if latest else lease["t0_epoch"] + lease["lease_seconds"]
             cutoff = lease["deadline_epoch"] - lease["cleanup_reserve_seconds"]
+            monotonic_cutoff = lease["armed_monotonic"] + lease["total_lease_seconds"] - lease["cleanup_reserve_seconds"]
+            monotonic_expiry = (latest["accepted_monotonic"] if latest else lease["armed_monotonic"]) + lease["lease_seconds"]
             if self.intent_receipt() is not None:
                 status = "CANCELLATION_INTENT_ISSUED"
-            elif wall >= cutoff:
+            elif wall >= cutoff or mono >= monotonic_cutoff:
                 if not dry_run:
                     raise NeverExecutedError("live cancellation execution is not implemented")
                 self.fire_cancellation(lease, "EARLY_CLEANUP_CUTOFF", wall)
                 status = "CANCELLATION_INTENT_ISSUED"
-            elif wall > expiry:
+            elif wall > expiry or mono > monotonic_expiry:
                 if not dry_run:
                     raise NeverExecutedError("live cancellation execution is not implemented")
                 self.fire_cancellation(lease, "LEASE_EXPIRED", wall)
@@ -489,20 +515,13 @@ class HostedSupervisor:
         self._receipt(KIND_OBSERVATION, {
             "lease_id": lease["lease_id"], "observed_epoch": observed_epoch,
             "provider_absent": bool(provider_absent),
-            "billing_closed": bool(billing_closed), "evidence": evidence})
-        deadline = lease["deadline_epoch"]
-        if provider_absent and billing_closed:
-            kind = KIND_CLEANUP_VERIFIED if observed_epoch <= deadline else KIND_CLEANUP_LATE
-            self._receipt(kind, {
-                "lease_id": lease["lease_id"], "observed_epoch": observed_epoch,
-                "deadline_epoch": deadline,
-                "late": kind == KIND_CLEANUP_LATE,
-                "provider_absent": True, "billing_closed": True,
-                "possible_continuing_charges": kind == KIND_CLEANUP_LATE})
-            return self.terminal_receipt()
-        return {"status": "OBSERVED_INCOMPLETE", "provider_absent": provider_absent,
-                "billing_closed": billing_closed,
-                "note": "absence and billing closure need distinct evidence; neither is inferred"}
+            "billing_closed": bool(billing_closed), "evidence": evidence,
+            "observation_source": "manual_attestation_unverified"})
+        # This prototype has no provider-observation adapter. Caller assertions
+        # are manual attestations, never independently verified cleanup.
+        return {"status": "MANUAL_ATTESTATION_UNVERIFIED", "provider_absent": provider_absent,
+                "billing_closed": billing_closed, "possible_continuing_charges": True,
+                "note": "provider-bound retained observations are required for cleanup verification"}
 
 
 def require_resource(resource: dict) -> None:

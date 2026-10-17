@@ -21,8 +21,8 @@ Provenance of each definition (source files in the parent ``tinker-rl-lab`` repo
 * ``group_uniformity`` (a.k.a. GU / "Gradient Utilization") — defined as
   ``GU = 1 - ZVF`` in ``experiments/causal_zvf_experiment.py`` (line 141) and in
   ``paper/.../sections/intro.tex`` ("Gradient Utilization (GU = 1 - ZVF)").
-  GU is the fraction of groups that still carry usable group-relative advantage
-  (non-zero gradient signal).
+  GU is the fraction of groups with reward contrast at the stated tolerance.
+  It does not establish an optimizer update or account for other loss terms.
 
 * ``peak_to_tail_drift`` (PTD) — from ``paper/main_eai_body.tex`` (line 1139)::
 
@@ -78,21 +78,12 @@ def _group_variance(group: Sequence[float]) -> float:
     is treated as zero-variance (variance returned as 0.0, which is <= eps and
     therefore counts toward ZVF).
 
-    NaN/inf guard: if any reward is non-finite (NaN or inf), the group's
-    variance is returned as 0.0. Without this, a parse glitch that
-    produced a single "nan" string in the rewards array would silently
-    poison the entire batch's ZVF (np.var of a vector containing NaN
-    returns NaN, and the comparison NaN <= eps is False, so the
-    group would be silently miscounted as a non-zero-variance
-    group). Counting it as zero-variance and surfacing it via the
-    count of NaN-containing groups is a conservative default; a
-    downstream consumer who wants a strict NaN-as-failure policy can
-    detect the drop in the count via a separate guard.
+    Nonfinite rewards are invalid observations and raise before classification.
     """
     arr = np.asarray(group, dtype=float)
-    if arr.size < 2:
-        return 0.0
     if not np.isfinite(arr).all():
+        raise ValueError("reward observations must be finite")
+    if arr.size < 2:
         return 0.0
     # ddof=1 -> unbiased sample variance (Var_hat in the paper).
     return float(np.var(arr, ddof=1))
@@ -101,18 +92,9 @@ def _group_variance(group: Sequence[float]) -> float:
 def n_nan_groups(rewards: ArrayLike, group_ids: ArrayLike) -> int:
     """Count of groups whose reward array contains at least one NaN/inf.
 
-    Companion to :func:`zvf`: when this is non-zero, the ZVF summary
-    is understating the number of zero-variance groups (those groups
-    are silently counted as zero-variance in the current default).
-    A consumer that wants strict NaN-as-failure should call this and
-    raise.
+    Companion diagnostic for invalid input. ``zvf`` itself raises on any
+    nonfinite group; callers may use this count to explain rejection.
     """
-    rewards = np.asarray(rewards, dtype=float).ravel()
-    group_ids = np.asarray(group_ids).ravel()
-    out = 0
-    for gid, r in zip(group_ids.tolist(), rewards.tolist()):
-        # A non-finite scalar r poisons its group.
-        pass
     # Bucket by group and check finiteness
     groups = _grouped_rewards(rewards, group_ids)
     return sum(
@@ -129,8 +111,8 @@ def zvf(
     """Zero-Variance Fraction over a GRPO batch.
 
     Fraction of prompt-groups whose rollout rewards have (unbiased sample)
-    variance ``<= eps`` -- i.e. groups that contribute zero group-relative
-    advantage and hence zero gradient signal.
+    variance ``<= eps``. This is reward contrast telemetry, not a measurement
+    of the complete loss gradient or optimizer activity.
 
     Source: Eq. (eq:zvf), appendix_zvf_formalization.tex;
     reference impl experiments/causal_zvf_experiment.py::compute_zvf_and_gu.

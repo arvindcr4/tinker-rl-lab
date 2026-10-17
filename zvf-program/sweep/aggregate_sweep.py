@@ -36,6 +36,7 @@ import sys
 from pathlib import Path
 
 import yaml
+from run_contract import result_file_complete
 
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]
@@ -210,9 +211,7 @@ def aggregate(cfg: dict, manifest: dict, block_filter: str | None,
                             if c not in base and c not in ("run_status", "n_steps")}})
             continue
 
-        status = result.get("status")
-        if status is None:
-            status = "completed" if result.get("step_log") else "failed"
+        status = "completed" if result_file_complete(rj, cell.get("steps"), cell.get("effective_spec")) else "failed(contract)"
         zg = extract_zvf_gu(result)
         ho = load_heldout(rj)
         rows.append({

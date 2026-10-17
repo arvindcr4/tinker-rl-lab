@@ -1,0 +1,2 @@
+# CPU-only validated statistical backend; no training dependencies.
+scipy>=1.14,<2

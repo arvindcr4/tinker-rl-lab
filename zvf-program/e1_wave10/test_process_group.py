@@ -127,7 +127,7 @@ class GroupFinalizationTests(unittest.TestCase):
             "exit-0 worker with verified group finalization must succeed, got {!r}".format(outcome),
         )
         self.assertEqual(
-            support.outcome_result(outcome),
+            {k:v for k,v in support.outcome_result(outcome).items() if k != "attempt_nonce"},
             {"returned": True},
             "result.json must be read only after verified group absence",
         )

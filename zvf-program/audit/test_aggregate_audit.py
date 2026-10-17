@@ -147,21 +147,29 @@ class ContractTests(unittest.TestCase):
             )
             + "\n"
         )
-        return {
+        record = {
             "arm": arm,
             "seed": seed,
             "heldout_n": 500,
             "heldout_score": 0.5,
             "last10_reward": 0.4,
             "mean_zvf": 0.2,
-            "mean_gu": 3.0,
+            "mean_gu": 0.8,
             "collapse": False,
             "rollouts": 100,
             "wall_clock_seconds": 60.0,
-            "stack_fingerprint": "sha256:shared-minus-treatment-fields",
+            "stack_fingerprint": "b"*64,
             "treatment_changes": self.prereg["core_stratum"]["arms"][arm]["allowed_changes"],
             "manifest_path": manifest.name,
         }
+        record.update(evidence_class="confirmatory", fingerprint="a"*64,
+                      remote_verification={"hf_repo":"owner/repo", "hf_commit":"c"*40, "wandb":{"state":"finished"}})
+        data = json.loads(manifest.read_text())
+        data.update(evidence_class="confirmatory", audit_record=dict(record),
+                    run_config={"unit_fingerprint": record["fingerprint"],
+                                "stack_fingerprint": record["stack_fingerprint"]})
+        manifest.write_text(json.dumps(data))
+        return record
 
     def test_missing_units_never_emit_verdicts(self):
         with tempfile.TemporaryDirectory() as raw:

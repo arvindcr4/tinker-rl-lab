@@ -31,8 +31,10 @@ class CampaignVerificationTests(unittest.TestCase):
             "fingerprint": "f" * 64,
             "treatment_changes": [],
             "remote": {"wandb_run_id": "run123"},
+            "remote_verification": {"hf_repo":"owner/repo", "hf_commit":"c"*40, "wandb":{"state":"finished"}},
         }
         self.manifest = {
+            "evidence_class": "confirmatory",
             "audit_record": {
                 field: self.record[field] for field in VERIFY.AUDIT_FIELDS
             },

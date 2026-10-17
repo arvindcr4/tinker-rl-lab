@@ -10,6 +10,8 @@ and considers a unit complete only when the verifier has written a strict
 from __future__ import annotations
 
 import argparse
+import hashlib
+from audit_evidence_contract import record_errors
 from datetime import datetime, timezone
 import json
 import math
@@ -211,6 +213,24 @@ def active_backoff_until(
     return max(future, default=None)
 
 
+def campaign_evidence_digest(preregistration, records, result_path_for_unit):
+    hasher = hashlib.sha256(Path(preregistration).read_bytes())
+    for unit, record in sorted(records.items()):
+        hasher.update(json.dumps(record, sort_keys=True).encode())
+        if record and isinstance(record.get("manifest_path"), str):
+            ref = Path(record["manifest_path"])
+            if not ref.is_absolute():
+                ref = result_path_for_unit(unit).parent / ref
+            hasher.update(ref.read_bytes() if ref.is_file() else b"MISSING")
+    return hasher.hexdigest()
+
+
+def completion_exit_code(validated_units, required_units, aggregate_ok):
+    if validated_units != required_units:
+        return None
+    return 0 if aggregate_ok else 1
+
+
 def regenerate_aggregate(*, validated_units: int, required_units: int) -> None:
     """Refresh the fail-closed frozen aggregate from independently valid records."""
     command = [
@@ -342,7 +362,7 @@ def validate_result(
             for value in hashes
         )
         checks["unique_completion_hashes"] = (
-            checks["heldout_hashes"] and len(set(hashes)) == heldout_n
+            checks["heldout_hashes"]
         )
         score = record.get("heldout_score")
         correct = sum(row.get("correct") is True for row in trace if isinstance(row, dict))
@@ -372,6 +392,7 @@ def validate_result(
         checks["hf_repo"] = isinstance(verification.get("hf_repo"), str)
         checks["hf_commit"] = isinstance(verification.get("hf_commit"), str)
     failed = [name for name, passed in checks.items() if not passed]
+    failed.extend(record_errors(record, manifest, heldout_n=heldout_n))
     return (not failed, ", ".join(failed) if failed else None)
 
 
@@ -714,7 +735,6 @@ def choose_launches(
             or unit in active
             or (
                 attempts.get(key, 0) >= max_attempts
-                and unit not in recovery_kinds
             )
         ):
             continue
@@ -922,7 +942,9 @@ def main(argv: list[str] | None = None) -> int:
                 for unit in units
             }
             completed = {unit for unit, (valid, _) in validations.items() if valid}
-            if aggregate_validated_units != len(completed):
+            evidence_digest = campaign_evidence_digest(PREREGISTRATION, records, result_path)
+            aggregate_ok = False
+            if evidence_digest != previous.get("aggregate_evidence_sha256") or len(completed) == len(units):
                 try:
                     regenerate_aggregate(
                         validated_units=len(completed), required_units=len(units)
@@ -931,6 +953,8 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"[aggregate-error] {exc}", file=sys.stderr, flush=True)
                 else:
                     aggregate_validated_units = len(completed)
+                    aggregate_ok = True
+                    previous["aggregate_evidence_sha256"] = evidence_digest
                     print(
                         f"[aggregate] refreshed validated={len(completed)}/{len(units)}",
                         flush=True,
@@ -1099,6 +1123,7 @@ def main(argv: list[str] | None = None) -> int:
                 "last_attempt_epoch": last_attempt_epoch,
                 "credited_failures": sorted(credited_failures),
                 "aggregate_validated_units": aggregate_validated_units,
+                "aggregate_evidence_sha256": previous.get("aggregate_evidence_sha256"),
                 "assignment_backoff_until_epoch": assignment_backoff_until,
                 "dependency_backoff_until_epoch": dependency_backoff_until,
                 "remote_colab_assignments": remote_assignments,
@@ -1124,8 +1149,9 @@ def main(argv: list[str] | None = None) -> int:
                 f"capacity={capacity}",
                 flush=True,
             )
-            if len(completed) == len(units):
-                return 0
+            exit_code = completion_exit_code(len(completed), len(units), aggregate_ok)
+            if exit_code is not None:
+                return exit_code
             if args.status_once or stop_requested:
                 return 0
 

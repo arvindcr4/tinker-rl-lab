@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import functools
+from audit_evidence_contract import record_errors
 import json
 import math
 import random
@@ -138,114 +139,55 @@ def _adaptive_simpson(
     )
 
 
-def _integrate_unit_interval(function: Any, tolerance: float = 1e-11) -> float:
-    lower, upper, middle = 0.0, 1.0, 0.5
-    f_lower = function(lower)
-    f_upper = function(upper)
-    f_middle = function(middle)
-    whole = _simpson(function, lower, upper, f_lower, f_upper, f_middle)
-    return _adaptive_simpson(
-        function,
-        lower,
-        upper,
-        f_lower,
-        f_upper,
-        f_middle,
-        whole,
-        tolerance,
-        24,
-    )
+def _finite(value):
+    value = float(value)
+    if not math.isfinite(value):
+        raise AuditError("nonfinite statistical result")
+    return value
 
 
-def _chi_radius_expectation(degrees_freedom: int, function: Any) -> float:
-    """Integrate an expectation over sqrt(ChiSquare(df)) without SciPy."""
-    log_normalizer = (1.0 - degrees_freedom / 2.0) * math.log(2.0) - math.lgamma(
-        degrees_freedom / 2.0
-    )
-
-    def integrand(unit_value: float) -> float:
-        if unit_value >= 1.0:
-            return 0.0
-        radius = unit_value / (1.0 - unit_value)
-        if radius == 0.0:
-            density = math.exp(log_normalizer) if degrees_freedom == 1 else 0.0
-        else:
-            log_density = (
-                log_normalizer
-                + (degrees_freedom - 1.0) * math.log(radius)
-                - radius * radius / 2.0
-                - 2.0 * math.log1p(-unit_value)
-            )
-            density = 0.0 if log_density < -745.0 else math.exp(log_density)
-        return density * function(radius)
-
-    return _integrate_unit_interval(integrand)
+def _integrate_unit_interval(function, tolerance=1e-11):
+    from scipy.integrate import quad
+    return _finite(quad(function, 0, 1, epsabs=tolerance, points=[i/100 for i in range(1,100)])[0])
 
 
-def _student_t_cdf(value: float, degrees_freedom: int) -> float:
-    scale = math.sqrt(degrees_freedom)
-    return _chi_radius_expectation(
-        degrees_freedom, lambda radius: _normal_cdf(value * radius / scale)
-    )
+def _chi_radius_expectation(degrees_freedom, function):
+    from scipy.stats import chi
+    if degrees_freedom < 1:
+        raise ValueError("positive degrees of freedom required")
+    return _finite(chi.expect(function, args=(degrees_freedom,)))
+
+
+def _student_t_cdf(value, degrees_freedom):
+    from scipy.stats import t
+    return _finite(t.cdf(value, degrees_freedom))
 
 
 @functools.lru_cache(maxsize=None)
-def _student_t_critical(degrees_freedom: int, alpha: float) -> float:
-    target = 1.0 - alpha / 2.0
-    lower, upper = 0.0, 2.0
-    while _student_t_cdf(upper, degrees_freedom) < target:
-        upper *= 2.0
-    for _ in range(55):
-        middle = (lower + upper) / 2.0
-        if _student_t_cdf(middle, degrees_freedom) < target:
-            lower = middle
-        else:
-            upper = middle
-    return (lower + upper) / 2.0
+def _student_t_critical(degrees_freedom, alpha):
+    from scipy.stats import t
+    return _finite(t.ppf(1-alpha/2, degrees_freedom))
 
 
-def _paired_t_power_from_ncp(
-    noncentrality: float, sample_size: int, alpha: float
-) -> float:
-    degrees_freedom = sample_size - 1
-    critical = _student_t_critical(degrees_freedom, alpha)
-    scale = math.sqrt(degrees_freedom)
-    return _chi_radius_expectation(
-        degrees_freedom,
-        lambda radius: _normal_cdf(-critical * radius / scale - noncentrality)
-        + 1.0
-        - _normal_cdf(critical * radius / scale - noncentrality),
-    )
+def _paired_t_power_from_ncp(noncentrality, sample_size, alpha):
+    from scipy.stats import nct
+    critical = _student_t_critical(sample_size-1, alpha)
+    return _finite(nct.cdf(-critical, sample_size-1, noncentrality)
+                   + nct.sf(critical, sample_size-1, noncentrality))
 
 
 @functools.lru_cache(maxsize=None)
-def _student_t_critical_one_sided(degrees_freedom: int, alpha: float) -> float:
-    target = 1.0 - alpha
-    lower, upper = 0.0, 2.0
-    while _student_t_cdf(upper, degrees_freedom) < target:
-        upper *= 2.0
-    for _ in range(55):
-        middle = (lower + upper) / 2.0
-        if _student_t_cdf(middle, degrees_freedom) < target:
-            lower = middle
-        else:
-            upper = middle
-    return (lower + upper) / 2.0
+def _student_t_critical_one_sided(degrees_freedom, alpha):
+    from scipy.stats import t
+    return _finite(t.ppf(1-alpha, degrees_freedom))
 
 
-def paired_t_power_one_sided(
-    standardized_effect: float, sample_size: int, alpha: float
-) -> float:
-    """Exact one-sided paired-t power against a standardized mean effect."""
-    degrees_freedom = sample_size - 1
-    critical = _student_t_critical_one_sided(degrees_freedom, alpha)
-    noncentrality = standardized_effect * math.sqrt(sample_size)
-    scale = math.sqrt(degrees_freedom)
-    return _chi_radius_expectation(
-        degrees_freedom,
-        lambda radius: 1.0
-        - _normal_cdf(critical * radius / scale - noncentrality),
-    )
+def paired_t_power_one_sided(standardized_effect, sample_size, alpha):
+    from scipy.stats import nct
+    if type(sample_size) is not int or sample_size < 2 or not 0 < alpha < 1:
+        raise ValueError("sample_size >= 2 and alpha in (0,1) required")
+    critical = _student_t_critical_one_sided(sample_size-1, alpha)
+    return _finite(nct.sf(critical, sample_size-1, standardized_effect*math.sqrt(sample_size)))
 
 
 def minimum_paired_t_sample_size(
@@ -376,6 +318,8 @@ def validate_records(
             except AuditError as exc:
                 errors.append(str(exc))
             else:
+                errors.extend(f"{path}: {error}" for error in record_errors(
+                    record, manifest_record, heldout_n=heldout_n))
                 trace = manifest_record.get("heldout_trace")
                 if not isinstance(trace, list) or len(trace) != heldout_n:
                     errors.append(
@@ -399,8 +343,7 @@ def validate_records(
                     )
                     if not valid_hashes:
                         errors.append(f"{path}: manifest heldout rows lack valid completion hashes")
-                    elif len(set(hashes)) != heldout_n:
-                        errors.append(f"{path}: manifest completion hashes are not unique")
+
                     correct = sum(
                         row.get("correct") is True
                         for row in trace

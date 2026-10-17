@@ -1,6 +1,5 @@
 """Packaging / shippability sanity checks."""
 
-import importlib.util
 import runpy
 import sys
 from pathlib import Path
@@ -18,7 +17,7 @@ def test_py_typed_marker_present():
 
 
 def test_version_is_exposed():
-    assert zvf_triage.__version__ == "0.1.0"
+    assert zvf_triage.__version__ == "0.2.0"
 
 
 def test_public_api_exports_resolve():

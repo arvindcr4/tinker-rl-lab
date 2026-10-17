@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from audit_evidence_contract import record_errors
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 import json
@@ -74,7 +75,7 @@ def validate_manifest_pair(
     *,
     checkpoint_steps: list[int],
 ) -> list[str]:
-    errors: list[str] = []
+    errors: list[str] = record_errors(record, manifest, heldout_n=record.get("heldout_n", 0))
     if record.get("evidence_class") != "confirmatory":
         errors.append("local evidence_class is not confirmatory")
     for field in ("fingerprint", "stack_fingerprint"):

@@ -7,9 +7,7 @@ outputs/PES_Phase2_Review_2026-09-12/finish/e1_recovery_v6/REVIEW_PACKET.md
 and cleanup_contract_v6.json.
 
 Expected module under test: bounded_procgroup.py in this directory (sibling
-member e1-driver builds it in parallel).  The import below is tolerant: if the
-module is absent, every test that needs it reports unittest.SkipTest with the
-import error instead of erroring.
+member e1-driver builds it in parallel).  Missing or broken imports fail acceptance tests rather than being skipped.
 
 Contract surface expected from bounded_procgroup (behavior, not exact names;
 the adapter below maps common spellings):
@@ -62,18 +60,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
-try:  # tolerant import of the sibling module under test
+try:  # retain missing-module diagnostics; acceptance still fails below
     bounded_procgroup = importlib.import_module("bounded_procgroup")
     IMPORT_ERROR = None
-except BaseException as exc:  # noqa: BLE001 - record any import failure
+except ModuleNotFoundError as exc:
     bounded_procgroup = None
     IMPORT_ERROR = exc
 
 
 def require_module(test: unittest.TestCase):
-    """Skip *test* when bounded_procgroup is absent (skip-if-import-fails)."""
+    """Fail acceptance when the required module cannot be imported."""
     if bounded_procgroup is None:
-        test.skipTest(
+        test.fail(
             "bounded_procgroup not importable from {}: {!r}".format(HERE, IMPORT_ERROR)
         )
     return bounded_procgroup
@@ -347,7 +345,7 @@ before = {
     "group_present": True,
 }
 (d / "t_before.json").write_text(json.dumps(before))
-(d / "result.json").write_text(json.dumps({"returned": True}))
+(d / "result.json").write_text(json.dumps({"returned": True, "attempt_nonce": os.environ.get("TINKER_ATTEMPT_NONCE")}))
 sys.exit(exit_code)
 """
 
@@ -373,8 +371,8 @@ def worker_hang_argv(shape: str, result_dir: Path):
         return [sys.executable, "-B", "-c", code, d]
     if shape == "hang_after_result":
         code = (
-            "import json, sys, time; from pathlib import Path; "
-            "Path(sys.argv[1], 'result.json').write_text(json.dumps({'returned': True})); "
+            "import json, os, sys, time; from pathlib import Path; "
+            "Path(sys.argv[1], 'result.json').write_text(json.dumps({'returned': True, 'attempt_nonce': os.environ.get('TINKER_ATTEMPT_NONCE')})); "
             "time.sleep(60)"
         )
         return [sys.executable, "-B", "-c", code, d]

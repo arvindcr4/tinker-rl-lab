@@ -131,13 +131,10 @@ def completion_text(completion: Any) -> str:
 def parse_marked_integer(text: str) -> int | None:
     if "####" not in text:
         return None
-    match = re.search(r"-?\d[\d,]*", text.rsplit("####", 1)[1])
-    if match is None:
+    tail = text.rsplit("####", 1)[1].strip()
+    if re.fullmatch(r"[+-]?(?:[0-9]+|[0-9]{1,3}(?:,[0-9]{3})+)", tail) is None:
         return None
-    try:
-        return int(match.group(0).replace(",", ""))
-    except ValueError:
-        return None
+    return int(tail.replace(",", ""))
 
 
 def gsm8k_reward(response: str, answer: str) -> float:
@@ -505,22 +502,10 @@ def main(argv: list[str] | None = None) -> int:
             reward_parser=reward_parser,
         ),
     )
-    if args.preflight_class == "seam_verification":
-
-        class StopOnFirstAppliedUpdate(TrainerCallback):
-            """End the run once a mixed group has had its update applied.
-
-            on_step_end fires after the optimizer step, so a stop here means the
-            seam the gate asks about — heterogeneous group, non-degenerate
-            advantages, optimizer update — has actually executed on GPU.
-            """
-
-            def on_step_end(self, args_, state, control, **kwargs):
-                if int(trainer._next_sampler_cumulative.get("updated_groups", 0)) > 0:
-                    control.should_training_stop = True
-                return control
-
-        trainer.add_callback(StopOnFirstAppliedUpdate())
+    from trl_sampler_adapter import make_optimizer_observer
+    trainer.add_callback(make_optimizer_observer(
+        trainer, TrainerCallback, torch,
+        stop_on_applied=args.preflight_class == "seam_verification"))
 
     try:
         trainer.train()
@@ -551,22 +536,28 @@ def main(argv: list[str] | None = None) -> int:
         if wandb_run is None:
             raise RuntimeError("W&B integration did not create a run")
 
+        if cumulative["unknown_finish_rollouts"]:
+            raise RuntimeError("genuine completion finish reasons could not be established")
         sampler_telemetry = {
             "charged_generated_tokens": int(cumulative["charged_generated_tokens"]),
             "generated_rollouts": int(cumulative["generated_rollouts"]),
             "rollout_groups": rollout_groups,
-            "updated_groups": int(cumulative["updated_groups"]),
+            "telemetry_version": "generated-and-optimizer-observed-v2",
+            "update_eligible_groups": int(cumulative["update_eligible_groups"]),
+            "updated_groups": sum(o["update_eligible_groups"] for o in trainer._next_update_observations if o["update_applied"]),
+            "update_observations": trainer._next_update_observations,
+            "truncated_generated_rollouts": int(cumulative["truncated_generated_rollouts"]),
+            "unknown_finish_rollouts": int(cumulative["unknown_finish_rollouts"]),
             "all_wrong_fraction": cumulative["all_wrong_groups"] / rollout_groups,
             "all_correct_fraction": cumulative["all_correct_groups"] / rollout_groups,
             "mixed_fraction": cumulative["mixed_groups"] / rollout_groups,
-            "completion_clipped_fraction": latest_metric(
-                trainer.state.log_history, "completions/clipped_ratio"
-            ),
+            "completion_clipped_fraction": cumulative["truncated_generated_rollouts"] / cumulative["generated_rollouts"],
         }
         run_config = {
             "task": args.task,
             "arm": args.arm,
             "seed": args.seed,
+            "grader_version": "complete-marked-integer-v2",
             "model": MODEL_ID,
             "model_revision": MODEL_REVISION,
             "max_steps": max_steps,

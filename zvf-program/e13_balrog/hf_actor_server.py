@@ -71,20 +71,43 @@ def health():
 @app.post("/v1/chat/completions")
 def chat(body: dict, authorization: str | None = Header(default=None)):
     check(authorization)
-    messages = body.get("messages", [])
-    max_tokens = min(int(body.get("max_tokens", 512)), MAX_NEW_TOKENS_CAP)
-    prompt = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    allowed = {"model", "messages", "max_tokens", "temperature", "top_p", "n", "stream", "chat_template_kwargs"}
+    if set(body) - allowed:
+        raise HTTPException(400, "unsupported generation options: " + ", ".join(sorted(set(body)-allowed)))
+    if body.get("model") != REPO:
+        raise HTTPException(400, "requested model is not the pinned served model")
+    if body.get("temperature", 0) != 0 or body.get("top_p", 1) != 1:
+        raise HTTPException(400, "this actor supports greedy decoding only")
+    if body.get("stream", False) is not False or body.get("n", 1) != 1:
+        raise HTTPException(400, "only one non-streaming completion is supported")
+    max_tokens = body.get("max_tokens", 512)
+    if type(max_tokens) is not int or not 1 <= max_tokens <= MAX_NEW_TOKENS_CAP:
+        raise HTTPException(400, "max_tokens outside supported cap")
+    messages = body.get("messages")
+    if not isinstance(messages, list) or not messages or any(
+        not isinstance(m, dict) or m.get("role") not in ("system", "user", "assistant")
+        or not isinstance(m.get("content"), str) for m in messages):
+        raise HTTPException(400, "messages must be nonempty text chat messages")
+    template = body.get("chat_template_kwargs", {})
+    if not isinstance(template, dict) or set(template)-{"enable_thinking"} or any(type(v) is not bool for v in template.values()):
+        raise HTTPException(400, "unsupported chat template options")
+    ensure_loaded()
+    prompt = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, **template)
     inputs = tok(prompt, return_tensors="pt").to("cuda:0")
     with torch.no_grad():
         out = model.generate(**inputs, max_new_tokens=max_tokens, do_sample=False,
                              pad_token_id=tok.eos_token_id)
-    text = tok.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
+    prompt_tokens = int(inputs["input_ids"].shape[1])
+    completion = out[0][prompt_tokens:]
+    completion_tokens = len(completion)
+    text = tok.decode(completion, skip_special_tokens=True)
+    finish_reason = "stop" if tok.eos_token_id in completion.tolist() else "length"
     return {
         "id": "chatcmpl-" + uuid.uuid4().hex[:8],
         "object": "chat.completion",
         "created": int(time.time()),
         "model": REPO,
         "choices": [{"index": 0, "message": {"role": "assistant", "content": text},
-                     "finish_reason": "stop"}],
-        "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+                     "finish_reason": finish_reason}],
+        "usage": {"prompt_tokens": prompt_tokens, "completion_tokens": completion_tokens, "total_tokens": prompt_tokens+completion_tokens},
     }

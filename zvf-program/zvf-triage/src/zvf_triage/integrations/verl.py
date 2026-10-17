@@ -28,14 +28,15 @@ from typing import Any, Optional, Tuple
 import numpy as np
 
 from .base import ArrayLike, BaseZVFAdapter
+from .. import core
 
 # Candidate keys for the per-token / per-sequence reward tensor inside a verl
 # DataProto.batch, in preference order. token_level_rewards carries the KL
 # penalty folded in; token_level_scores is the raw verifier score; reward_scores
 # / rm_scores / rewards are seen in some verl reward-manager paths.
 _REWARD_KEYS = (
-    "token_level_rewards",
     "token_level_scores",
+    "token_level_rewards",
     "reward_scores",
     "rm_scores",
     "rewards",
@@ -85,6 +86,19 @@ class VERLZVFAdapter(BaseZVFAdapter):
         #: Whether verl itself is importable in this environment (informational).
         self.verl_available = _is_verl_available()
 
+    def process_step(self, batch):
+        decision = super().process_step(batch)
+        tensors = batch.batch
+        ids = batch.non_tensor_batch[self.uid_key]
+        if "token_level_scores" in tensors:
+            decision.verifier_zvf = core.zvf(self._reduce_to_per_sequence(tensors["token_level_scores"]), ids,
+                                              self.callback.controller.var_eps)
+        if "token_level_rewards" in tensors:
+            decision.effective_training_reward_zvf = core.zvf(self._reduce_to_per_sequence(tensors["token_level_rewards"]), ids,
+                                                                self.callback.controller.var_eps)
+        decision.reward_reduction = "token_sum"
+        return decision
+
     # ------------------------------------------------------------ extraction
 
     def _extract_rollout_rewards(self, batch: object) -> Tuple[ArrayLike, ArrayLike]:
@@ -129,9 +143,11 @@ class VERLZVFAdapter(BaseZVFAdapter):
                     f"reward_key {self.reward_key!r} not in verl DataProto.batch "
                     f"(available: {_keys(tensor_batch)})."
                 )
+            self.observed_reward_key = self.reward_key
             return tensor_batch[self.reward_key]
         for key in _REWARD_KEYS:
             if _has_key(tensor_batch, key):
+                self.observed_reward_key = key
                 return tensor_batch[key]
         raise KeyError(
             "no recognised reward tensor in verl DataProto.batch; looked for "
@@ -175,14 +191,14 @@ class VERLZVFAdapter(BaseZVFAdapter):
             )
 
         hook_name = None
-        for candidate in ("compute_advantage", "_compute_advantage", "fit"):
+        for candidate in ("compute_advantage", "_compute_advantage"):
             if hasattr(trainer, candidate):
                 hook_name = candidate
                 break
         if hook_name is None:
             raise AttributeError(
                 "verl trainer exposes no recognised rollout hook "
-                "(compute_advantage / fit). Call process_step(data_proto) "
+                "(compute_advantage / _compute_advantage). Call process_step(data_proto) "
                 "manually from your verl training loop instead."
             )
 

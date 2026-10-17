@@ -70,6 +70,13 @@ def valid_payload():
         "source_commit": request["source_commit"],
         "protocol_sha256": request["protocol_sha256"],
         "max_steps": 1,
+        "optimizer_steps": 1,
+        "model": "Qwen/Qwen3-8B",
+        "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+        "objective_fingerprint": PREFLIGHT.fingerprint(json.loads(PREFLIGHT.PROTOCOL.read_text())["treatment"]["objective"]),
+        "dataset_bindings": {"training_dataset": "openai/gsm8k", "evaluation_dataset": "openai/gsm8k",
+            "training_revision": "740312add88f781978c0658806c59bc2815b9866",
+            "evaluation_revision": "740312add88f781978c0658806c59bc2815b9866"},
         "heldout_n": 8,
         "provider": request["provider"],
         "hardware_flavor": request["hardware_flavor"],
@@ -308,6 +315,7 @@ def test_validate_args_rejects_mixed_launch_and_recovery_modes():
 
 def test_recovery_mode_reconstructs_completed_receipt_from_request(monkeypatch, tmp_path):
     manifest, result, request = valid_payload()
+    result["remote"] = {"hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-contrast_ear-s211-aaaaaaaa"}
     request.update(
         {
             "schema_version": "aiml-next-preflight-request-v1",
@@ -782,7 +790,7 @@ def test_seam_verification_cannot_run_the_matrix_window_max_steps():
     manifest, result, request = seam_payload()
     manifest["run_config"]["max_steps"] = 1
     result["run_config"]["max_steps"] = 1
-    with pytest.raises(RuntimeError, match="run config mismatch"):
+    with pytest.raises(RuntimeError, match="optimizer steps|run config mismatch"):
         PREFLIGHT.validate_manifest(manifest, result, request)
 
 

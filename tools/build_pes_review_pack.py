@@ -53,6 +53,17 @@ def main() -> int:
             selected.add(path)
     for name in ("SUMMARY.md", "pdf_checks.json", "deck_checks.json", "delivery_checks.json"):
         selected.add(PACK / "validation" / name)
+    # same-stack v2 analysis (thesis §6.5.5, Table 6.2) and the per-run records it reads
+    selected.update(
+        path
+        for path in (PACK / "validation/samestack_v2").iterdir()
+        if path.is_file()
+    )
+    selected.update(
+        path
+        for path in (ROOT / "platform_hybrid/experiments/results/samestack_gsm8k_v2s").iterdir()
+        if path.is_file()
+    )
     selected.update(
         {
             ROOT / "PROJECT_HISTORY.md",

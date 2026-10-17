@@ -27,7 +27,14 @@ flip-risk grade R0--R5 of \secref{sec:p5-grades}, and (iii) a CI verdict:
 leaderboard CI job: a pull request adding ``method A beats method B'' must
 attach two manifests whose stackdiff verdict is \textsc{comparable}, or the
 claim is rewritten as stack-conditioned. Appendix~\ref{app:p5-worked} walks
-one diff to its \textsc{not-comparable} verdict.
+one diff to its \textsc{not-comparable} verdict. This grading is a
+specification. The shipped implementation (\texttt{registry/query.py
+stackdiff}, companion Pillar-6 paper) uses a different, field-level mapping:
+R5 outcome-critical (checkpoint, reward, prompt/chat template, dataset,
+evaluation), R4 algorithm, R3 hyperparameters/budget, R2 runtime, R1
+nuisance; the level is computed only from fields known on both sides, and
+unknown fields are reported separately as a coverage score and an
+underspecified flag rather than as R5.
 
 \paragraph{GRPO-Registry (machine-readable stack catalog).} A registry
 mapping algorithm labels to the set of loss-form tuples published under that

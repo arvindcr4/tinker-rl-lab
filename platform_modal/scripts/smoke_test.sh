@@ -98,14 +98,11 @@ ok "seeds"
 
 # -----------------------------------------------------------------------------
 step 3 "$TOTAL" "Unit tests (pytest tests/)"
-if command -v pytest >/dev/null 2>&1; then
-    pytest -q tests/ --maxfail=1 --disable-warnings 2>&1 | tee -a "$SMOKE_LOG"
-    ok "pytest"
-else
+if ! "$PY" -m pytest --version >/dev/null 2>&1; then
     "$PY" -m pip install -q pytest 2>&1 | tee -a "$SMOKE_LOG"
-    pytest -q tests/ --maxfail=1 --disable-warnings 2>&1 | tee -a "$SMOKE_LOG"
-    ok "pytest"
 fi
+"$PY" -m pytest -q tests/ --maxfail=1 --disable-warnings 2>&1 | tee -a "$SMOKE_LOG"
+ok "pytest"
 
 # -----------------------------------------------------------------------------
 step 4 "$TOTAL" "GSM8K dataset load (openai/gsm8k, split=test, first 8 rows)"

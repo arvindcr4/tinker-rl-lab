@@ -114,12 +114,16 @@ def _load_hmac_secret() -> bytes:
 
 
 def _ensure_keys() -> None:
-    if HAVE_ED25519:
-        if not PRIV_ED.exists():
-            keygen()
-    else:
-        if not HMAC_KEY.exists():
-            keygen()
+    missing = not (PRIV_ED if HAVE_ED25519 else HMAC_KEY).exists()
+    if missing:
+        # A fresh keypair cannot verify against the committed public key, so
+        # never rotate silently.
+        print(
+            "WARNING: signing key not found; generating a NEW keypair. Signatures "
+            "made now will not verify against the previously committed public key.",
+            file=sys.stderr,
+        )
+        keygen()
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,374 @@
+{
+ "side": "tinker",
+ "seed": 42,
+ "model": "Qwen/Qwen3-8B",
+ "step_log": [
+  {
+   "step": 0,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Tony decided to rent a small cottage.  The master bedroom an",
+    "Henry drinks 15 bottles of kombucha every month.  Each bottl"
+   ]
+  },
+  {
+   "step": 1,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Zach baked cookies for a bake sale. On Monday he baked 32 co",
+    "Jack has 42 pounds, 11 euros, and 3000 yen. If there are 2 p"
+   ]
+  },
+  {
+   "step": 2,
+   "mean_reward": 0.6875,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Mr. Sanchez found out that 40% of his Grade 5  students got ",
+    "Travis and his brother joined a trick-or-treat event. They c"
+   ]
+  },
+  {
+   "step": 3,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Oliver collects trading cards. He has twice as many Monster ",
+    "Tom wants to visit Barbados.  He needs to get 10 different v"
+   ]
+  },
+  {
+   "step": 4,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Allison went to the craft store with her friend Marie to buy",
+    "In a math test, Mark scored twice as much as the least score"
+   ]
+  },
+  {
+   "step": 5,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Hannah wanted to make an apple pie that would serve 8 people",
+    "Jack cycles from his home to the store. Then he cycles, at t"
+   ]
+  },
+  {
+   "step": 6,
+   "mean_reward": 0.0625,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "In a class of 25 students, students were asked if they like ",
+    "Joe sells ham and cheese sandwiches for $1.50. If a slice of"
+   ]
+  },
+  {
+   "step": 7,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Two friends, Hubert and Ian, are planning to have a pizza pa",
+    "Matt and Blake want to watch every episode of the show The O"
+   ]
+  },
+  {
+   "step": 8,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "A cleaning company produces two sanitizer sprays. One spray ",
+    "A store owner repacked his oils into 200 mL bottles. He was "
+   ]
+  },
+  {
+   "step": 9,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Briar is attending a one-week community empowerment event an",
+    "Simon wanted to buy flowers that his mom could plant for Mot"
+   ]
+  },
+  {
+   "step": 10,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "James binges on Cheezits and eats 3 bags that are 2 ounces e",
+    "Violet is planning a hike through the desert with her dog. V"
+   ]
+  },
+  {
+   "step": 11,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Olly wants to get shoes to protect his pets\u2019 paws. He owns 3",
+    "Quincy just bought a car using a 5 year loan with no interes"
+   ]
+  },
+  {
+   "step": 12,
+   "mean_reward": 0.75,
+   "zvf": 0.5,
+   "mean_len": 501.125,
+   "trunc_frac": 0.8125,
+   "questions": [
+    "Brenda is a vet who needs to spay some cats and twice as man",
+    "An auto shop has a part that Clark needs for $80. Clark buys"
+   ]
+  },
+  {
+   "step": 13,
+   "mean_reward": 0.25,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Liam is teaching art to a group of 10 students. He has 20 ar",
+    "In a week, 450 cars drove through a toll booth. Fifty vehicl"
+   ]
+  },
+  {
+   "step": 14,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Sherry is making banana bread for a bake sale. She wants to ",
+    "There are several cookies in the jar. Taking 1 cookie away w"
+   ]
+  },
+  {
+   "step": 15,
+   "mean_reward": 0.1875,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Sally was at a self-serve candy shop where you scoop candy f",
+    "Since it is Maurice's turn to host this year\u2019s neighborhood "
+   ]
+  },
+  {
+   "step": 16,
+   "mean_reward": 0.625,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Rohan owns a 20-square meter coconut farm. Each square meter",
+    "It\u2019s spring! The gardener at Parc Municipal orders flowers. "
+   ]
+  },
+  {
+   "step": 17,
+   "mean_reward": 0.4375,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Jake decides to go to the beach for a fun day.  It is a 2-ho",
+    "James sells a $500,000 house for 20% over market value.  He "
+   ]
+  },
+  {
+   "step": 18,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Cindy has 37 envelopes. If Cindy gives 3 envelopes to each o",
+    "Laura wants to bake a cake for her mother. She checks the re"
+   ]
+  },
+  {
+   "step": 19,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Jose bought 20,000 square meters of land and needs to divide",
+    "Frank spent 1/5 of his money to buy groceries. He then spent"
+   ]
+  },
+  {
+   "step": 20,
+   "mean_reward": 0.3125,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Mr. Reyansh has a dairy farm with 40 cows. Each cow on the f",
+    "Anna spent 1/4 of her money, and now she has $24 left. How m"
+   ]
+  },
+  {
+   "step": 21,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Patrick buys a season pass for each of his sons to visit the",
+    "Jordan has a new hit song on Spotify. 3 months are left in t"
+   ]
+  },
+  {
+   "step": 22,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Dianne runs a store that sells books.  37% of her 1000 custo",
+    "John wants to finish a show in 5 days.  There are 20 episode"
+   ]
+  },
+  {
+   "step": 23,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Nina has four times more math homework and eight times more ",
+    "There were 25 peaches in each basket. Five baskets of peache"
+   ]
+  },
+  {
+   "step": 24,
+   "mean_reward": 1.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Jack is mad at his neighbors for blasting Taylor Swift all n",
+    "Jeanne wants to ride the Ferris wheel, the roller coaster, a"
+   ]
+  },
+  {
+   "step": 25,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Mr. Dor\u00e9 bought $140 worth of pants, a $43 shirt and a $15 t",
+    "Ali, Peter, and Joey were fishing. The fish Ali caught weigh"
+   ]
+  },
+  {
+   "step": 26,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "If 1 ounce of Dawn liquid soap can make 200,000 bubbles, and",
+    "A hotel has 10 rooms and is currently full. Each room holds "
+   ]
+  },
+  {
+   "step": 27,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Daleyza won a house construction project that involved the c",
+    "Linda bought two coloring books at $4 each, 4 packs of peanu"
+   ]
+  },
+  {
+   "step": 28,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Lena played video games for 3.5 hours last weekend. Her brot",
+    "Jose needs 12 tablespoons of lemon juice to make a dozen of "
+   ]
+  },
+  {
+   "step": 29,
+   "mean_reward": 0.4375,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Danny has a huge fish tank that contains 94 guppies, 76 ange",
+    "If Brooke adds eight balloons to his current 12, and Tracy a"
+   ]
+  }
+ ],
+ "final_sampler_path": "tinker://932c7b50-f12c-5d1c-b3b9-9192739cb079:train:0/sampler_weights/m42_final",
+ "archive_url": "<signed GCS URL redacted; regenerate from final_sampler_path>",
+ "run_id": "932c7b50-f12c-5d1c-b3b9-9192739cb079:train:0",
+ "config": {
+  "steps": 30,
+  "prompts_per_step": 2,
+  "group": 8,
+  "lr": 1e-05,
+  "adam": {
+   "beta1": 0.9,
+   "beta2": 0.95,
+   "eps": 1e-08,
+   "weight_decay": 0.0
+  },
+  "lora": "Tinker rank=32, train_mlp=True, train_attn=True, train_unembed=False (alpha 32, all-linear)",
+  "temp": 0.8,
+  "top_p": 0.95,
+  "max_tokens": 512,
+  "stop": [
+   151645,
+   151643
+  ],
+  "on_policy": "refresh every step",
+  "loss": "-sum_i A_i sum_t logp_t(response) / N; A=(r-mean)/(pop std+1e-8)"
+ },
+ "env": {
+  "backend": "Tinker API",
+  "tinker_sdk": "0.33.1",
+  "python": "3.12.13",
+  "client_host": "Arvinds-MacBook-Pro-342.local",
+  "wallclock_s": 1239.1710541248322,
+  "seeds": {
+   "stream": 42,
+   "lora_init": 42,
+   "sampling": "seed*1000+step*10+j"
+  }
+ }
+}

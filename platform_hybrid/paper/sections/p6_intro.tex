@@ -17,16 +17,17 @@ does this stack actually make to base GRPO, and which of them does my launcher
 actually execute?}
 
 This gap is not cosmetic. Across the \ours{} program we repeatedly measured the
-same algorithm label producing different updates. Holding the visible group
-size, learning rate, data, seed, and label fixed while changing stacks moved
-final GSM8K reward from $85.6\%$ to $5.0\%$. The audit later found that the
-managed stack had also pinned a different base checkpoint, so the $17\times$
-swing is an under-specification exhibit, not a backend-only causal effect.
-Running ``DAPO'' on an open Colab trainer whose dynamic sampling
-demonstrably filters zero-variance groups produced mean ZVF $0.00$; running
-``DAPO'' on a closed managed stack, where only an asymmetric-clip surrogate is
-user-settable, produced mean ZVF $0.58$. Same label, opposite telemetry. When
-labels underdetermine update rules, empirical rankings of ``GRPO vs.\ DAPO
+same algorithm label attached to different experiments. Two runs labelled
+``GRPO, Qwen3-8B, GSM8K, $G{=}8$, lr $10^{-5}$'' reached final reward $85.6\%$
+(Tinker) and $5.0\%$ (TRL). They used different checkpoints (Base vs.\
+Instruct; the checkpoint alone explains $64\%$ of the gap on a
+same-harness rerun) and also differed in reward function, prompt template,
+decoding, batch shape, data subset, and loss/optimizer implementation; the
+``matched'' configuration file describes neither run. Separately, a closed-stack
+arm labelled ``dapo'' was an advantage-clip variant with no dynamic sampling,
+while an open-trainer ``DAPO'' arm ran true dynamic sampling (ZVF $0.00$ by
+construction); within each stack, GRPO$\to$``DAPO'' moved mean ZVF $0.25\to0.00$
+(open) and $0.567\to0.578$ (closed). When labels underdetermine update rules, empirical rankings of ``GRPO vs.\ DAPO
 vs.\ GSPO'' are rankings of stacks, not algorithms---a confound our companion
 pillar papers (P1 scaling, P2 ZVF, P3 group size, P4 length bias) hit from four
 different directions.
@@ -49,7 +50,7 @@ which is exactly where label flips become visible to a script.
 Our contributions are:
 (i) the schema (Section~\ref{sec:p6-schema});
 (ii) verified delta records for DAPO, Dr.~GRPO, and GSPO;
-(iii) twenty seed entries populated from real artifacts of this benchmark---the
+(iii) 28 seed stack entries populated from real artifacts of this benchmark---the
 released per-framework config dumps, an open-trainer audit, a
 managed-runtime head-to-head, a same-stack four-method run, and a five-seed
 risk-index batch (Section~\ref{sec:p6-population});
@@ -57,7 +58,7 @@ risk-index batch (Section~\ref{sec:p6-population});
 tool that converts a pair of entries into a flip-risk verdict on the R0--R5
 ladder (Section~\ref{sec:p6-query}); and
 (v) worked examples in which the registry flags, \emph{before any GPU time is
-spent}, the label-flip risk that our experiments later confirmed empirically
+spent}, the confounds behind the same-label exhibits
 (Section~\ref{sec:p6-worked}).
 
 \subsection{Related Work}
@@ -73,5 +74,5 @@ stack} of an RL fine-tuning run: what loss form, KL handling, and sampling loop
 were in force. Analyses that reduce GRPO variants to a shared functional core
 \citep{wu2025grpodpo} are complementary: they say when two update
 rules are equivalent in theory, while the registry records which rule a stack
-runs in practice. Section~\ref{sec:p6-related-resources} gives a fuller
+runs in practice. Section~\ref{sec:p6-related-resources}\ifdefined\SUBMISSIONBUILD{} (appendix)\fi{} gives a fuller
 comparison.

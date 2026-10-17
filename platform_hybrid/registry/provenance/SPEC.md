@@ -8,8 +8,8 @@ descriptive — nothing checks that a given run actually satisfies it. P5 makes 
 ## The record (`*.provenance.json`)
 1. `min_report_rl` — the seven reportable items (schema `$defs.min_report`): loss form, reference-KL,
    sampler backend, telemetry, group-size schedule, held-out split, decontamination.
-2. `provenance` — cryptographic anchors: `git_sha`, `code_file` + `code_hash`, `reward_fn_hash`,
-   `data_hash`, `config_hash`. These let a third party recompute and confirm nothing drifted.
+2. `provenance` — anchors: `git_sha`, `code_file` + `code_hash` (sha256 of the file, 16-hex prefix), `reward_fn_hash` (full sha256 of the reward function source, recomputed by `verify`), `data_ref` (a dataset label, not a content hash),
+   `config_hash`. These let a third party recompute and confirm nothing drifted. (Before 2026-10-16 `reward_fn_hash` was a copy of `code_hash` and `data_hash` hashed the label string; both placeholders were removed and the two records are no longer covered by their signatures until re-signed.)
 3. `rigor` — `n_seeds`, `seeds`, `reports_heldout`, `heldout_disjoint`, `reports_ci`.
 4. `results` — the reported effect(s).
 

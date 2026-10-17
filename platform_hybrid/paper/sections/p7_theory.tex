@@ -58,11 +58,12 @@ Section~\ref{sec:p7-ushape} acting within a single run).
 decreasing in $G$; hence expected ZVF falls monotonically as group size
 grows, with exponential decay rate $-\ln\max(p, 1-p)$.}
 
-\emph{Empirical check (two independent grids).} First, a model~$\times$~$G$
-grid from the 368-run audit (Table~\ref{tab:p7-modelG}): for every model with
-an interior success rate, measured ZVF falls monotonically in $G$---most
-cleanly for Qwen3-32B ($0.33 \to 0.18 \to 0.08$) and Llama-3.1-8B
-($0.76 \to 0.65 \to 0.47$). The two boundary cases are exactly the ones the
+\emph{Empirical check (two grids, one weak).} First, a model~$\times$~$G$
+grid from the 368-run audit (Table~\ref{tab:p7-modelG}): for the models with
+an interior success rate, measured ZVF falls with $G$---e.g.\ Qwen3-32B
+($0.33 \to 0.18 \to 0.08$) and Llama-3.1-8B ($0.76 \to 0.65 \to 0.47$). These
+cells hold only 1--3 runs each and mix batch sizes (16 and 32) within and
+across cells, so the grid is consistent with T2 but is not a controlled test. The two boundary cases are exactly the ones the
 theory flags: Llama-3.2-1B sits at $p \approx 0$ where $h_G \approx 1$
 regardless of $G$ ($0.98 \to 0.97$), and Qwen3-4B-Instruct sits near
 saturation where the decay rate $-\ln\max(p,1-p)$ is tiny and seed noise
@@ -77,9 +78,11 @@ respect.
 \begin{table}[t]
 \centering
 \caption{T2 check 1: mean ZVF by model and group size $G$ (368-run audit,
-W\&B project \texttt{zvf-audit}). ZVF falls with $G$ wherever the success
-rate is interior; the boundary rows behave as $h_G$ predicts (see text).
-``---'' = cell not run.}
+W\&B project \texttt{zvf-audit}). Runs per cell (batch): Llama-3.2-1B 48/52/--
+(8); Qwen3-4B 51 (8) / 52 (mostly 8) / 3 (16); Llama-3.1-8B 3 (16,32) / 1 (16)
+/ 1 (32); Qwen3-8B 2 (16) / 1 (32) / 2 (16,32); Qwen3-32B 2 (16) / 2 (16,32) /
+1 (16). Step budgets also differ (5 steps at batch 8, 12 otherwise). The
+large-model cells are therefore anecdotal. ``---'' = cell not run.}
 \label{tab:p7-modelG}
 \begin{tabular}{lccc}
 \toprule
@@ -125,7 +128,6 @@ policy-dependent score-function factor.}
 \emph{Empirical check.} Theorem~3 is the load-bearing assumption behind the
 first factor of Eq.~\eqref{eq:p7-S}, and it cannot be checked on the closed
 stack, which does not expose per-group gradients. Section~\ref{sec:p7-e1}
-reports a direct open-backward-pass measurement:
-$\mathrm{corr}(\|\nabla\|, \hat p(1-\hat p)) = +0.71$ on a 0.5B model with
-synthetic arithmetic---consistent in sign and rank with T3, and scoped
-strictly as directional evidence.
+describes a toy open-backward-pass run whose reported correlation cannot be
+recomputed and is largely mechanical; we treat T3 as a modelling assumption
+pending experiment D3.

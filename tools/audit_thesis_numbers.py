@@ -2410,7 +2410,7 @@ def claims_ext():
         "R",
         [
             "platform_hybrid/paper/neurips_2026_variants/paper_P8_workshop.tex",
-            f"{SEC}/p5_stack.tex",
+            f"{SEC}/p7_appendix_derivations.tex",
             f"{STATS}/m18_mantel_summary.json",
             f"{RES}/samestack_gsm8k_cot.json",
         ],
@@ -2420,7 +2420,7 @@ def claims_ext():
                 "79", text("platform_hybrid/paper/neurips_2026_variants/paper_P8_workshop.tex")
             )
             else "absent",
-            "| 790 |" if in_source("790", text(f"{SEC}/p5_stack.tex")) else "absent",
+            "| 790 |" if in_source("790", text(f"{SEC}/p7_appendix_derivations.tex")) else "absent",
             f"| {J(f'{STATS}/m18_mantel_summary.json')['n_cells']} |",
             f"| {len(J(f'{RES}/samestack_gsm8k_cot.json')['runs'])} |",
         ],

@@ -1,3 +1,5 @@
+> **Superseded (2026-10-16):** this audits the April 2026 compendium (`platform_hybrid/paper/archive/absorbed/U01_main_compendium/main.tex`), not the current stack-provenance paper. See [`NEURIPS_CHECKLIST_STACKPROV.md`](NEURIPS_CHECKLIST_STACKPROV.md).
+
 # NeurIPS 2026 Paper Checklist — Final Pass
 
 > Final, honest pass of the NeurIPS 2026 Paper Checklist for *TinkerRL-Bench*

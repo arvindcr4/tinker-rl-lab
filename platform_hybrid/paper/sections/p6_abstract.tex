@@ -5,14 +5,13 @@ and token-level loss; Dr.~GRPO's dropped length and std normalization; GSPO's
 sequence-level importance ratio---live in paper appendices and framework
 defaults, not in any machine-readable form. The consequence, documented across
 the \ours{} pillar papers, is that an algorithm \emph{label} underdetermines the
-\emph{update rule} actually executed: in our audits, swapping the training backend
-under a fixed label---which, undisclosed, also bundled a different base checkpoint,
-so the label alone concealed \emph{both} changes---moved final reward across a
-$17\times$ span between $85.6\%$ and $5.0\%$ (the same exhibit as the Pillar-5
-backend audit, read here in the reverse direction),
-and the same ``DAPO'' label yielded mean ZVF $0.00$ on an open trainer with true
-dynamic sampling but $0.58$ on a closed stack running an asymmetric-clip
-surrogate. These audits motivate \textsc{GRPO-Registry}, a resource that makes
+\emph{update rule} actually executed. In our audits, two runs both labelled
+``GRPO, Qwen3-8B, GSM8K'' reached final reward $85.6\%$ and $5.0\%$ ($17\times$);
+$64\%$ of that gap is an unreported switch from Qwen3-8B (Instruct) to the Base
+checkpoint, and the remainder is confounded by reward function, prompt template,
+decoding, batch shape, data subset, and loss implementation (the same exhibit as
+the Pillar-5 paper). Separately, a closed-stack arm labelled ``dapo'' was an
+advantage-clip variant with no dynamic sampling. These audits motivate \textsc{GRPO-Registry}, a resource that makes
 such discrepancies queryable rather than presenting a new performance result:
 (i) a JSON schema whose stack records carry the seven-field run-manifest block
 of the eight-item MIN-REPORT-RL standard (loss form; reference policy and KL handling;
@@ -20,22 +19,24 @@ sampler/backend/precision \textbf{including base-checkpoint identity: revision/h
 per-step ZVF/GU telemetry; group-size schedule;
 held-out split; decontamination and parser probes), with held-out pass@$k$
 curves recorded as the eighth, evaluation-report requirement, plus per-component
-variant-delta status; (ii) three variant-delta records verified against the
-DAPO, Dr.~GRPO, and GSPO papers; (iii) twenty seed stack entries derived from
+variant-delta status; (ii) variant-delta records, three of them (DAPO, Dr.~GRPO, GSPO) verified
+against their source papers; (iii) 28 seed stack entries derived from
 this benchmark's released config dumps, an open Colab trainer audit, a
 managed-runtime head-to-head, a same-stack four-method run, and a five-seed
 risk-index batch; and (iv) a reference CLI implementing registry
 queries, a 0--100 MIN-REPORT auditor badge, and \texttt{stackdiff}, which maps a
-pair of entries to a flip-risk verdict (R0--R5). On the seed entries the badge
-spans 43--96, and \texttt{stackdiff} flags the open-vs-closed ``DAPO'' pair as
-an R5 label-flip risk from manifests alone. The registry, schema, and CLI are
+pair of entries to a flip-risk level (R0--R5) computed only from fields known
+on both sides, plus a coverage score and an underspecified flag
+(Section~\ref{sec:p6-query}). The idea that undisclosed implementation details
+move RL results is old \citep{henderson2018deep, engstrom2020implementation};
+what we add is a machine-readable record and a diff over it. The registry, schema, and CLI are
 released with the benchmark.
 \paragraph{Venue claim boundary (position-artifact / resource).}
 This is a \emph{machine-readable resource paper}, not a second independent
 ranking of GRPO variants. The $17\times$ same-label exhibit is intentionally
 shared with the companion MIN-REPORT-RL position paper (Pillar~5) and is cited
-here only to motivate the schema; we do not re-claim it as novel empirical
-science. The load-bearing contribution is the seven-field stack schema, seed
+here only to motivate the schema; it is a confounded observation, not a
+backend effect, and we do not re-claim it as empirical science. The load-bearing contribution is the seven-field stack schema, seed
 catalog, auditor badge, and \texttt{stackdiff} tooling. Submission target is a
 position-artifact or datasets/resources track; living-catalog growth is
 post-acceptance community work, not a gate on releasing the schema and seeds.

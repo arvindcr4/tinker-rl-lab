@@ -34,9 +34,10 @@ MIN-REPORT-RL minimum reportable stack:
         cannot distinguish a framework effect from a model swap.
   \item \textbf{telemetry}: whether the stack emits a \emph{per-step} ZVF and
         gradient-utilization ($\mathrm{GU}=1-\mathrm{ZVF}$) trajectory, and
-        from what source. Endpoint summaries are not enough: our 368-run audit
-        found ZVF is U-shaped in accuracy, so a single mean aliases mastery
-        with incapacity (see the companion ZVF pillar paper).
+        from what source. Endpoint summaries are not enough: ZVF is high both
+        when a policy has mastered a prompt and when it cannot solve it
+        ($h_G(p)=h_G(1-p)$), so a single mean aliases mastery with incapacity
+        (see the companion ZVF pillar paper).
   \item \textbf{group_size_schedule}: initial $G$, fixed vs.\ adaptive, and
         the adaptation rule if any.
   \item \textbf{heldout_split}: whether evaluation prompts are disjoint from

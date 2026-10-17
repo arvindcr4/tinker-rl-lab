@@ -37,13 +37,19 @@ cannot inspect; the open reimplementation is the only arm-for-arm auditable
 setting, and cross-stack numbers are quoted only as motivation, never as
 controller evidence.
 
-\emph{Toy-scale gradient evidence.} T3's empirical support is the
-directional E1 result ($+0.71$ on a 0.5B model); the coefficient is not
-expected to transfer, only the sign and ordering.
+\emph{No gradient-level evidence.} T3 has no usable empirical support: the
+E1 correlation cannot be recomputed, rests on about 30 serially dependent
+rows from one run, and is largely mechanical (Section~\ref{sec:p7-e1}).
+
+\emph{Observational population evidence.} The 368-run audit is not a designed
+experiment: model, batch, $G$, and step budget are confounded, and the
+Qwen3-32B $G$ grid has 1--2 runs per cell at mixed batch sizes
+(Section~\ref{sec:p7-audit}).
 
 We also flag a provenance boundary and two scope choices. The 368-run
-audit, the model~$\times$~$G$ grid, the 12-cell head-to-head, and the
-E1/E3 runs are internal program records (W\&B projects \texttt{zvf-audit}
+audit (whose per-step histories we have since pulled and checked in under
+\texttt{experiments/results/publication\_fixes/zvf\_confound/}), the
+model~$\times$~$G$ grid, the 12-cell head-to-head, and the E1/E3 runs are internal program records (W\&B projects \texttt{zvf-audit}
 and \texttt{zvf-colab-experiments}, June 2026): they were run under a
 declared protocol and are summarized faithfully, but they have not passed
 through the released-artifact pipeline that covers the repo-internal

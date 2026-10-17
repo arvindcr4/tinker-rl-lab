@@ -1,0 +1,374 @@
+{
+ "side": "tinker",
+ "seed": 123,
+ "model": "Qwen/Qwen3-8B",
+ "step_log": [
+  {
+   "step": 0,
+   "mean_reward": 0.75,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Two teams are playing in a stadium with a capacity of 2000 p",
+    "Wickham is throwing a huge Christmas party. He invites 30 pe"
+   ]
+  },
+  {
+   "step": 1,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "The dinner bill for 6 friends came to $150. Silas said he wo",
+    "While cultivating a small farm, a farmer spent $50 on corn s"
+   ]
+  },
+  {
+   "step": 2,
+   "mean_reward": 1.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Gus eats 2 eggs-omelet for breakfast.  He has an egg salad s",
+    "Sammy can eat 15 pickle slices.  His twin sister Tammy can e"
+   ]
+  },
+  {
+   "step": 3,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Donald drinks 3 more than twice the number of juice bottles ",
+    "Robby, Jaylen and Miranda are employed at a Cheesecake facto"
+   ]
+  },
+  {
+   "step": 4,
+   "mean_reward": 0.3125,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Lily got a new puppy for her birthday.  She was responsible ",
+    "Ahmed is 11 years old and Fouad is 26 years old. In how many"
+   ]
+  },
+  {
+   "step": 5,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Gretchen read that you should spend 10 minutes walking for e",
+    "A pack of pretzels costs $4, while a pack of chips is 75% mo"
+   ]
+  },
+  {
+   "step": 6,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Maria's test scores are 80, 70, and 90. What score does she ",
+    "Lyra bought a pair of shoes at a 20% discount.  If she paid "
+   ]
+  },
+  {
+   "step": 7,
+   "mean_reward": 0.4375,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "There are 30 students in the general study hall and twice as",
+    "Mary needs school supplies. She has 6 classes and needs 1 fo"
+   ]
+  },
+  {
+   "step": 8,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Carlos and Diego are racing around the block. Carlos runs ar",
+    "Michael bought 6 crates of egg on Tuesday. He gave out 2 cra"
+   ]
+  },
+  {
+   "step": 9,
+   "mean_reward": 0.0625,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Marla has to spend 20 minutes driving one way to her son's s",
+    "Kelly needs school supplies to teach her class for an art pr"
+   ]
+  },
+  {
+   "step": 10,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Samuel is going to the cinema with his brother, Kevin. They ",
+    "The average GPA for 6th graders is 93, the 7th graders is 2 "
+   ]
+  },
+  {
+   "step": 11,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Valerie needs to put stamps on the envelopes she is about to",
+    "James buys a jar of hot sauce.   Each serving is .5 ounces. "
+   ]
+  },
+  {
+   "step": 12,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Pete walks backwards three times faster than Susan walks for",
+    "Jeremy listened to five fewer songs yesterday than today. Ye"
+   ]
+  },
+  {
+   "step": 13,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Charlie can make 5350 steps while running on a 3-kilometer r",
+    "In a basketball game, Jon scored 3 points. Jack scored 5 poi"
+   ]
+  },
+  {
+   "step": 14,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Caroline has 40 pairs of socks. She loses 4 pairs of socks a",
+    "Jake sold 10 more stuffed animals than Thor. Quincy sold ten"
+   ]
+  },
+  {
+   "step": 15,
+   "mean_reward": 1.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Tim owns rental properties.  He decides to replace all the l",
+    "Matthew, the baker, arrives at work early every morning to m"
+   ]
+  },
+  {
+   "step": 16,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "There are 45 children in a classroom. One-third of them are ",
+    "Lionel went to the grocery store and bought 14 boxes of Grah"
+   ]
+  },
+  {
+   "step": 17,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Vann is a veterinarian. Today he is going to be doing dental",
+    "Mancino is tending 3 gardens that each measure 16 feet by 5 "
+   ]
+  },
+  {
+   "step": 18,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Max fills up water balloons for 30 minutes at a rate of 2 wa",
+    "TJ ran a 10K race last Saturday. He ran the first half in 20"
+   ]
+  },
+  {
+   "step": 19,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Roberto is out for a hike. He travels uphill at 2 MPH and do",
+    "Dani has 3 cats; Binkie, Frankie and Spaatz.  Each cat has a"
+   ]
+  },
+  {
+   "step": 20,
+   "mean_reward": 1.0,
+   "zvf": 1.0,
+   "mean_len": 506.0,
+   "trunc_frac": 0.5,
+   "questions": [
+    "Marcus can fit 5 pies in his oven at once. He bakes 7 batche",
+    "In a class of 30 students, the teacher polls the students on"
+   ]
+  },
+  {
+   "step": 21,
+   "mean_reward": 0.875,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "The civic league was hosting a pancake breakfast fundraiser.",
+    "Edmund owns a gift wrapping shop, he uses 18 inches of gift "
+   ]
+  },
+  {
+   "step": 22,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "A big snowstorm caused a large amount of snow to fall onto G",
+    "It takes 15 minutes for Dante to go to Hidden Lake. From Hid"
+   ]
+  },
+  {
+   "step": 23,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "On his farm, Mr. Mathews has goats and sheep in the ratio of",
+    "Bret and a team of 3 co-workers were working late so he orde"
+   ]
+  },
+  {
+   "step": 24,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Bill's roof can bear 500 pounds of weight. If 100 leaves fal",
+    "James has 5 dozen boxes of matches.  Each box contains 20 ma"
+   ]
+  },
+  {
+   "step": 25,
+   "mean_reward": 0.5625,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Jean and her three friends are playing a game of dominoes. T",
+    "Susan walked to the market to buy five dozen peaches.  To ca"
+   ]
+  },
+  {
+   "step": 26,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Chip takes 2 pages of notes every day, 5 days a week, for ea",
+    "Harry wants to build a homemade helium balloon with his son,"
+   ]
+  },
+  {
+   "step": 27,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Sharon wants to get kitchen supplies. She admired Angela's k",
+    "Arnold's collagen powder has 18 grams of protein for every 2"
+   ]
+  },
+  {
+   "step": 28,
+   "mean_reward": 0.5625,
+   "zvf": 0.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Dina has twice as many dolls as Ivy. 2/3 of Ivy's dolls are ",
+    "If Aang caught 7 fish, then Sokka caught 5 fish, and then To"
+   ]
+  },
+  {
+   "step": 29,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Alberto spent $2457 on a new engine for his car. Samara spen",
+    "Jerry had 63 pieces of candy.  He divided them up equally in"
+   ]
+  }
+ ],
+ "final_sampler_path": "tinker://72ce705d-c863-543f-9e47-7ca111ba7978:train:0/sampler_weights/m123_final",
+ "archive_url": "<signed GCS URL redacted; regenerate from final_sampler_path>",
+ "run_id": "72ce705d-c863-543f-9e47-7ca111ba7978:train:0",
+ "config": {
+  "steps": 30,
+  "prompts_per_step": 2,
+  "group": 8,
+  "lr": 1e-05,
+  "adam": {
+   "beta1": 0.9,
+   "beta2": 0.95,
+   "eps": 1e-08,
+   "weight_decay": 0.0
+  },
+  "lora": "Tinker rank=32, train_mlp=True, train_attn=True, train_unembed=False (alpha 32, all-linear)",
+  "temp": 0.8,
+  "top_p": 0.95,
+  "max_tokens": 512,
+  "stop": [
+   151645,
+   151643
+  ],
+  "on_policy": "refresh every step",
+  "loss": "-sum_i A_i sum_t logp_t(response) / N; A=(r-mean)/(pop std+1e-8)"
+ },
+ "env": {
+  "backend": "Tinker API",
+  "tinker_sdk": "0.33.1",
+  "python": "3.12.13",
+  "client_host": "Arvinds-MacBook-Pro-342.local",
+  "wallclock_s": 1229.1096723079681,
+  "seeds": {
+   "stream": 123,
+   "lora_init": 123,
+   "sampling": "seed*1000+step*10+j"
+  }
+ }
+}

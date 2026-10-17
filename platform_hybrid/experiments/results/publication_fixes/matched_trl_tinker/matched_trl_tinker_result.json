@@ -1,0 +1,301 @@
+{
+ "seeds": [
+  42,
+  123,
+  456
+ ],
+ "per_seed": {},
+ "train": {
+  "trl": {
+   "mean_curve": [
+    0.3958333333333333,
+    0.25,
+    0.4375,
+    0.2916666666666667,
+    0.25,
+    0.375,
+    0.3125,
+    0.16666666666666666,
+    0.25,
+    0.3541666666666667,
+    0.2916666666666667,
+    0.2916666666666667,
+    0.3333333333333333,
+    0.2708333333333333,
+    0.4583333333333333,
+    0.375,
+    0.4375,
+    0.3333333333333333,
+    0.5,
+    0.2708333333333333,
+    0.5,
+    0.375,
+    0.2916666666666667,
+    0.3125,
+    0.6041666666666666,
+    0.3125,
+    0.20833333333333334,
+    0.125,
+    0.3333333333333333,
+    0.22916666666666666
+   ],
+   "last10_by_seed": [
+    0.44375,
+    0.25,
+    0.29375
+   ],
+   "first5_by_seed": [
+    0.4,
+    0.325,
+    0.25
+   ],
+   "step0_by_seed": [
+    0.375,
+    0.5,
+    0.3125
+   ],
+   "trunc_by_seed": [
+    NaN,
+    NaN,
+    NaN
+   ]
+  },
+  "tinker": {
+   "mean_curve": [
+    0.4166666666666667,
+    0.16666666666666666,
+    0.5625,
+    0.5,
+    0.3333333333333333,
+    0.5,
+    0.1875,
+    0.3125,
+    0.3333333333333333,
+    0.041666666666666664,
+    0.16666666666666666,
+    0.16666666666666666,
+    0.5833333333333334,
+    0.4166666666666667,
+    0.16666666666666666,
+    0.3958333333333333,
+    0.5416666666666666,
+    0.3541666666666667,
+    0.6666666666666666,
+    0.0,
+    0.4375,
+    0.625,
+    0.3333333333333333,
+    0.16666666666666666,
+    0.6666666666666666,
+    0.1875,
+    0.3333333333333333,
+    0.3333333333333333,
+    0.3958333333333333,
+    0.3125
+   ],
+   "last10_by_seed": [
+    0.375,
+    0.55,
+    0.2125
+   ],
+   "first5_by_seed": [
+    0.4375,
+    0.5125,
+    0.2375
+   ],
+   "step0_by_seed": [
+    0.5,
+    0.75,
+    0.0
+   ],
+   "trunc_by_seed": [
+    0.99375,
+    0.9833333333333333,
+    0.9833333333333333
+   ]
+  },
+  "last10_gap_tinker_minus_trl": {
+   "by_seed": [
+    -0.06874999999999998,
+    0.30000000000000004,
+    -0.08125000000000002
+   ],
+   "mean": 0.05000000000000002,
+   "t_ci95": [
+    -0.4880556410476965,
+    0.5880556410476966
+   ],
+   "boot_seed_step_ci95": [
+    -0.15630208333333329,
+    0.2938020833333326
+   ]
+  },
+  "step0_gap_tinker_minus_trl": {
+   "by_seed": [
+    0.125,
+    0.25,
+    -0.3125
+   ],
+   "note": "same prompts at step 0; 16 samples each"
+  }
+ },
+ "heldout": {
+  "env": {
+   "platform": "google_colab",
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition, 97887 MiB, 580.82.07",
+   "torch": "2.11.0+cu130",
+   "transformers": "5.18.0",
+   "peft": "0.21.1",
+   "python": "3.13.15",
+   "wallclock_s": 782.6649634838104,
+   "decoding": "greedy, 512 new tokens, eos [151645,151643]",
+   "items": "openai/gsm8k main test, first 200 (regex-parsed)"
+  },
+  "base": {
+   "acc": 0.345,
+   "acc_boxed_only": 0.115,
+   "trunc": 0.985
+  },
+  "trl": {
+   "42": {
+    "acc": 0.31,
+    "gain_vs_base": -0.034999999999999976,
+    "acc_boxed_only": 0.105,
+    "trunc": 0.985
+   },
+   "123": {
+    "acc": 0.285,
+    "gain_vs_base": -0.06,
+    "acc_boxed_only": 0.105,
+    "trunc": 0.985
+   },
+   "456": {
+    "acc": 0.27,
+    "gain_vs_base": -0.07499999999999996,
+    "acc_boxed_only": 0.105,
+    "trunc": 0.98
+   }
+  },
+  "tinker": {
+   "42": {
+    "acc": 0.28,
+    "gain_vs_base": -0.06499999999999995,
+    "acc_boxed_only": 0.12,
+    "trunc": 0.985
+   },
+   "123": {
+    "acc": 0.285,
+    "gain_vs_base": -0.06,
+    "acc_boxed_only": 0.115,
+    "trunc": 0.995
+   },
+   "456": {
+    "acc": 0.335,
+    "gain_vs_base": -0.009999999999999953,
+    "acc_boxed_only": 0.135,
+    "trunc": 0.975
+   }
+  },
+  "gap_tinker_minus_trl": {
+   "by_seed": [
+    -0.03,
+    0.0,
+    0.065
+   ],
+   "mean": 0.011666666666666667,
+   "twoway_boot_ci95": [
+    -0.05,
+    0.07833333333333334
+   ],
+   "t_ci95_seed": [
+    -0.1089697038984904,
+    0.13230303723182374
+   ]
+  }
+ },
+ "trl_stream_order_ok": {
+  "42": true,
+  "123": true,
+  "456": true
+ },
+ "env": {
+  "trl_s456": {
+   "platform": "google_colab",
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition, 97887 MiB, 580.82.07",
+   "python": "3.13.15",
+   "torch": "2.11.0+cu130",
+   "transformers": "5.18.0",
+   "trl": "1.16.0",
+   "peft": "0.21.1",
+   "wallclock_s": 900.1794373989105,
+   "seeds": {
+    "stream": 456,
+    "trainer": 456
+   }
+  },
+  "trl_s123": {
+   "platform": "google_colab",
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition, 97887 MiB, 580.82.07",
+   "python": "3.13.15",
+   "torch": "2.11.0+cu130",
+   "transformers": "5.18.0",
+   "trl": "1.16.0",
+   "peft": "0.21.1",
+   "wallclock_s": 1935.7724463939667,
+   "seeds": {
+    "stream": 123,
+    "trainer": 123
+   }
+  },
+  "tinker_s42": {
+   "backend": "Tinker API",
+   "tinker_sdk": "0.33.1",
+   "python": "3.12.13",
+   "client_host": "Arvinds-MacBook-Pro-342.local",
+   "wallclock_s": 1239.1710541248322,
+   "seeds": {
+    "stream": 42,
+    "lora_init": 42,
+    "sampling": "seed*1000+step*10+j"
+   }
+  },
+  "trl_s42": {
+   "platform": "google_colab",
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition, 97887 MiB, 580.82.07",
+   "python": "3.13.15",
+   "torch": "2.11.0+cu130",
+   "transformers": "5.18.0",
+   "trl": "1.16.0",
+   "peft": "0.21.1",
+   "wallclock_s": 1931.0977442264557,
+   "seeds": {
+    "stream": 42,
+    "trainer": 42
+   }
+  },
+  "tinker_s123": {
+   "backend": "Tinker API",
+   "tinker_sdk": "0.33.1",
+   "python": "3.12.13",
+   "client_host": "Arvinds-MacBook-Pro-342.local",
+   "wallclock_s": 1229.1096723079681,
+   "seeds": {
+    "stream": 123,
+    "lora_init": 123,
+    "sampling": "seed*1000+step*10+j"
+   }
+  },
+  "tinker_s456": {
+   "backend": "Tinker API",
+   "tinker_sdk": "0.33.1",
+   "python": "3.12.13",
+   "client_host": "Arvinds-MacBook-Pro-342.local",
+   "wallclock_s": 1239.9474527835846,
+   "seeds": {
+    "stream": 456,
+    "lora_init": 456,
+    "sampling": "seed*1000+step*10+j"
+   }
+  }
+ }
+}

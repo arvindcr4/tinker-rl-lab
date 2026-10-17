@@ -2,16 +2,18 @@
 \section{Discussion and Limitations}
 \label{sec:p6-discussion}
 Four limitations bound what this resource can claim. First, \emph{seed
-breadth}: all twelve stack entries derive from one research program's
+breadth}: all 28 stack entries derive from one research program's
 artifacts. They exercise every schema feature (open/managed, implemented/
 surrogate/absent/unknown, fixed/adaptive $G$, dry-run vs.\ completed), but the
 registry's value at community scale is a hypothesis until external entries
 arrive. Second, \emph{evidence scale}: the open-trainer arms are toy-scale
 Colab runs; we use them as existence proofs that the schema can capture a
 fully-audited stack, and as directional corroboration of the manifest-level
-DAPO diff---not as effect sizes. The larger-scale numbers (the under-specified
-same-label swing and the 368-run U-shape) come from the larger program audits
-reported in the companion pillars. Third, \emph{self-report}: for closed
+DAPO diff---not as effect sizes. The larger-scale observations (the
+under-specified same-label swing and the 368-run per-model ZVF table) come
+from the program audits reported in the companion pillars and are themselves
+confounded (checkpoint and harness for the former; model and configuration
+for the latter). Third, \emph{self-report}: for closed
 stacks the registry records what the operator exposes; the null semantics and
 R5 rung make unauditability visible, but they cannot manufacture the missing
 facts---an entry can be honest and still thin. Fourth, \emph{badge
@@ -20,25 +22,29 @@ is not a correctness proof, not a quality score, and alternative weightings
 would reorder the middle of Table~\ref{tab:p6-entries} (the endpoints are
 robust). We ship the scoring function precisely so disagreements about
 weights can be run, not argued.
+\ifdefined\SUBMISSIONBUILD\else
 \paragraph{Vehicle packaging.}
 In the program's consolidation plan this resource is the appendix/linked
 artifact of the MIN-REPORT-RL position paper when co-submitted, and a
 standalone position-artifact paper when submitted alone. Either packaging is
 valid; neither requires new training runs.
+\fi
 
 \section{Conclusion}
 \label{sec:p6-conclusion}
 GRPO variants are defined by small deltas that current practice scatters
 across appendices, defaults, and closed launchers. Our program's audits show
-why that scattering matters for interpretation: same-label stacks can have
-opposite telemetry and a $17\times$ same-label outcome swing.
+why that scattering matters for interpretation: two runs sharing a label and
+a short hyperparameter table differed by $17\times$ in final reward, and the
+difference traces to an unreported checkpoint switch plus reward, prompt,
+decoding, batch, data, and loss-implementation differences.
 \textsc{GRPO-Registry} is the smallest artifact we could build that makes the
 problem tractable: a schema that
 carries the seven-field run-manifest portion of the eight-item reporting
 standard and per-component
-variant-delta status, twenty seed entries derived from real artifacts, and a
-CLI whose \texttt{stackdiff} turned the open-vs-managed ``DAPO'' pair into an
-explicit label-flip warning from manifests alone. The registry does not make
+variant-delta status, 28 seed stack entries derived from real artifacts, and a
+CLI whose \texttt{stackdiff} lists those confounds field by field, with
+severity, coverage, and an underspecified flag. The registry does not make
 stacks comparable; it makes their incomparability precise, and that is the
 prerequisite for every fair comparison the field wants to run. Schema,
 entries, and tooling are released with the benchmark; the entry format is a

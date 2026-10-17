@@ -44,42 +44,83 @@ over-documenting its sampler while staying silent on its loss form. Second,
 the badge is \emph{outcome-blind}: the \texttt{outcomes} block is excluded, so
 a collapsed run and a converged run with equal reporting earn equal badges.
 The badge answers ``can this stack be audited?''---never ``is this stack
-good?''. On the seed entries the badge spans 43 (the zvf-iter130
-risk-panel entries, which omit loss-form, KL, and group-size-schedule
-disclosure) to 96 (open trainer with explicit negative declarations),
-with the managed-runtime head-to-head at 57 and the open-framework
-config dumps at 60--74 in between (Table~\ref{tab:p6-entries}).
+good?''. Current badge values are listed in Table~\ref{tab:p6-entries}
+(regenerated with \texttt{registry/query.py badge}).
 
-\subsection{\texttt{stackdiff} and the R0--R5 Flip-Risk Ladder}
+\subsection{\texttt{stackdiff} and the R0--R5 Severity Ladder}
 \label{sec:p6-stackdiff}
-\texttt{stackdiff} compares two stack records and reports every differing
-leaf, each tagged with a rung on a flip-risk ladder; the verdict is the
-highest rung triggered:
-
+\texttt{stackdiff} compares two stack records over a fixed catalogue of
+\NFIELDS{} canonical fields (\texttt{FIELDS} in \texttt{registry/query.py}),
+each with a fixed severity, plus the per-variant-delta status rows. Values come
+from an entry's \texttt{run\_config} block when present---written by
+\texttt{registry/generate\_entries.py} from the run sources, with per-field
+provenance (\texttt{logged}, \texttt{code}, \texttt{default},
+\texttt{inferred}, or \texttt{unknown}) and the source location of each
+value---and otherwise from the hand-entered fields:
 \begin{itemize}[leftmargin=1.5em, itemsep=0.1em]
-  \item \textbf{R0} --- identical manifests.
-  \item \textbf{R1} --- nuisance-only differences (metadata, logging).
-  \item \textbf{R2} --- runtime differences: backend, precision, reference
-        placement. Not benign---our same-label audit contains R2 differences
-        plus a base-checkpoint mismatch---but auditable when fully reported.
-  \item \textbf{R3} --- loss-form or KL-handling differences: the update rule
-        itself differs.
-  \item \textbf{R4} --- the variant-delta sets differ: a technique credited to
-        the shared label is \texttt{absent} or merely \texttt{surrogate} on
-        one side. Any cross-stack comparison under the shared label is now at
-        risk of a label flip.
-  \item \textbf{R5} --- unauditable: a differing item is null (unreported) on
-        at least one side, so the flip risk cannot even be bounded.
+  \item \textbf{R5} --- outcome-critical: execution mode, checkpoint id,
+        base/instruct variant and revision, reward function id, prompt
+        template hash and chat template, dataset, evaluation metric and
+        held-out protocol.
+  \item \textbf{R4} --- algorithm: objective, importance ratio, clipping,
+        aggregation, advantage normalization, token mask, length
+        normalization, dynamic sampling, reward shaping, inner epochs, KL
+        reference/coefficient/estimator, and variant-delta status.
+  \item \textbf{R3} --- hyperparameters and budget: decoding, batch shape,
+        group schedule, steps, sampler refresh, data subset and selection,
+        optimizer, LoRA.
+  \item \textbf{R2} --- runtime: trainer, backend, precision, reward-function
+        source hash.
+  \item \textbf{R1} --- nuisance: trainer version, seeds.
 \end{itemize}
+The reported level is the maximum severity over fields that are \emph{known
+on both sides and differ}; in particular, R5 is assigned only from a known,
+differing outcome-critical field. Fields unknown on either side never raise
+the level. They are reported separately as a \emph{coverage} score (fraction
+of compared fields known on both sides), a \emph{hidden severity} (the highest
+rung that could still differ), and an \textsc{underspecified} flag (coverage
+below $0.8$, or any R5 field other than the never-pinned checkpoint revision
+unknown). Checkpoint and dataset identifiers are compared after normalization
+(bracketed notes dropped, case ignored, \texttt{gsm8k} $\equiv$
+\texttt{openai/gsm8k:main}). An earlier version of the tool did not compare
+the model field and emitted R5 whenever a field was null; both behaviours are
+fixed in the version described here.
 
-The ladder is intentionally a \emph{risk} scale, not an effect-size scale: our
-largest observed same-label swing ($17\times$) contained R2 differences and a
-checkpoint mismatch, so it cannot estimate an R2 effect. Such differences are
-diagnosable from complete manifests; R5 says the manifests themselves are
-insufficient. When the verdict reaches R4 or above, the CLI prints an explicit
-warning that outcome differences must not be attributed to the shared
-algorithm label. A companion spec-level tool family (a trainer plugin that
-auto-emits the seven-field run manifest during training, and a LeverTrace check
-that asks whether a cited paper actually reports the lever it is credited for)
-shares this ladder; only \texttt{stackdiff} and the badge are implemented in
-the shipped CLI, and we scope claims accordingly.
+\paragraph{Output on the shipped registry.}
+\texttt{python3 registry/query.py stackdiff --all} over the \NSTACK{} stack
+records (\STACKDIFFNPAIRS{} pairs) reports \STACKDIFFDIST{};
+\STACKDIFFUNDER{} pairs are underspecified (median coverage \COVMED{}). R5
+dominates because the entries span eight base models: checkpoint identity is
+the differing R5 field in nearly every R5 pair. Holding the checkpoint fixed
+shows that the ladder discriminates: the checkpoint-sharing pairs give \SAMECKPT{}. The R0 count needs
+a caveat. All \NRZERO{} R0 pairs fall inside two groups of hand-entered
+entries (sizes \RZEROCLASSES{}: the three N2 Tinker entries and nine
+\texttt{zvf130\_*} entries) whose known fields are identical and whose
+algorithm fields are unknown, at coverage $0.19$--$0.29$; R0 there means
+``no \emph{known} difference'', not ``same stack'', and every such pair is
+flagged underspecified. Collapsing each group to one entry leaves \DEDUPN{}
+entries and \DEDUPALL{}; among checkpoint-sharing pairs, \DEDUPSAME{}. The two
+same-checkpoint R5 pairs are real runs versus dry runs (execution mode).
+Restricted to the \NGEN{} generated entries, \GENPAIRS{}.
+
+On the backend exhibit (\texttt{trl\_grpo\_qwen3-8b\_gsm8k} vs.\
+\texttt{tinker\_grpo\_qwen3-8b\_gsm8k}) the tool reports R5 from checkpoint
+(Instruct vs.\ Base), reward parser, prompt template, and chat template, plus
+R4 (token mask), R3 (batch shape, sampler refresh, data subset and selection,
+optimizer), and R2 (trainer, reward source) differences, at coverage
+\STACKDIFFCOVA{}---the confounds the label hid. On the two ``DAPO'' entries it
+reports R5 (model, task, reward, evaluation) and R4 differences including
+dynamic sampling (present vs.\ absent), at coverage \STACKDIFFCOVB{}
+(Section~\ref{sec:p6-worked-dapo}). The ladder is a \emph{risk} scale, not an
+effect-size scale. When a same-label pair reaches R4 or above, the CLI prints a
+warning that outcome differences must not be attributed to the shared label;
+\texttt{--exit-level} returns the level as the exit code for CI use.
+
+\paragraph{Limitation: hand-entered entries cap coverage.} \NHAND{} of the
+\NSTACK{} stack entries are still hand-entered (no run script was available to
+regenerate them), so most of their fields are unknown; this is why median pair
+coverage is \COVMED{} and why \STACKDIFFUNDER{} pairs are underspecified. The \NGEN{}
+generated entries reach a median pair coverage of $0.85$ among themselves
+(range $0.19$--$0.98$). Only
+\texttt{stackdiff} and the badge are implemented; the manifest-emitting trainer
+plugin and LeverTrace check remain specifications.

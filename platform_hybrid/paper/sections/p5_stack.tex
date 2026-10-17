@@ -26,8 +26,8 @@ reported result. Provenance strata as defined in \secref{sec:p5-results}.}
 \midrule
 1 & Loss form & Ratio level (token/sequence), clip values and asymmetry,
     token mask, advantage normalization, dynamic-sampling status &
-    Same label, opposite ZVF telemetry across loss forms
-    (0.00 vs.\ 0.58, \secref{sec:p5-exhibit-label}); normalization biases
+    A ``DAPO''-labelled arm that ran no dynamic sampling
+    (\secref{sec:p5-exhibit-label}); normalization biases
     \citep{tong2025drgrpo} \\
 2 & Reference policy \& KL & Reference snapshot, KL coefficient and estimator,
     or explicit ``no KL'' &
@@ -35,13 +35,12 @@ reported result. Provenance strata as defined in \secref{sec:p5-results}.}
     \citep{shao2024deepseekmath, yu2025dapo}; silently alters the objective \\
 3 & Sampler / backend / precision & Training backend, sampling engine,
     precision, decoding parameters &
-    $17\times$ same-label outcome flip from a nominal backend comparison
-    that also bundled a different base checkpoint
-    (\secref{sec:p5-exhibit-backend}) \\
+    $17\times$ same-label gap, $64\%$ of it an unreported checkpoint switch
+    and the rest multiply confounded (\secref{sec:p5-exhibit-backend}) \\
 4 & Per-step ZVF/GU trajectory & Per-step zero-variance fraction and gradient
     utilization $\mathrm{GU} = 1-\mathrm{ZVF}$ &
-    ZVF is U-shaped in accuracy (\tableref{tab:p5-ushape}): a mean hides
-    whether signal starved from mastery or incapacity \\
+    High ZVF arises from both mastery and incapacity
+    (\tableref{tab:p5-ushape}): a mean hides which \\
 5 & Group-size schedule & $G$ per step, including adaptive escalation rules &
     ZVF falls systematically with $G$ (\tableref{tab:p5-gsize}); theory:
     $\E[\mathrm{ZVF}] = p^G + (1-p)^G$ at per-prompt accuracy $p$ \\
@@ -105,37 +104,41 @@ the same record.
 \subsection{Item 4: The Per-Step ZVF/GU Trajectory}
 \label{sec:p5-item4}
 A single summary number cannot substitute for the trajectory, because ZVF
-aliases opposite regimes. Across a 368-run audit (Stratum B; drawn from a
-790-run corpus), mean ZVF is U-shaped in accuracy (\tableref{tab:p5-ushape}):
-near-zero-reward runs and near-saturated runs both show ZVF near $0.9$--$1.0$,
-while mid-accuracy runs sit near $0.25$. Theory makes the aliasing exact: with
-per-prompt accuracy $p$ and binary rewards, the expected zero-variance
-indicator is $p^G + (1-p)^G$, symmetric in $p \leftrightarrow 1-p$, and the
-usable signal scales as $p(1-p)$ (validated directionally at toy scale,
-Stratum C: corr(grad\_norm, $p(1-p)$) $= +0.71$ on a 0.5B model with an open
-backward pass---an effect direction, not a publishable effect size). Reporting
+aliases opposite regimes. Theory makes the aliasing exact: with per-prompt
+accuracy $p$ and binary rewards, the expected zero-variance indicator is
+$h_G(p)=p^G + (1-p)^G$, symmetric in $p \leftrightarrow 1-p$, and batch ZVF is
+$\E_i[h_G(p_i)]$ (the Advantage Collapse Rate of \citet{he2026advantage}). In a
+368-run audit (Stratum B; nine model labels), near-zero-reward and
+near-saturated models both show ZVF near $0.95$--$0.97$
+(\tableref{tab:p5-ushape}); the interior rows are confounded with model and
+configuration (batch, $G$, steps), so the table illustrates the aliasing
+rather than establishing a reward effect (confound analysis in the companion
+Pillar-7 paper). Reporting
 the per-step trajectory (and $\mathrm{GU} = 1 - \mathrm{ZVF}$) lets readers
 see \emph{which} arm of the U a run occupied; the companion Pillar-2 paper
 develops the diagnostic and its failure modes in full.
 
 \begin{table}[t]
 \centering
-\caption{ZVF is U-shaped in accuracy (368-run audit; internal program
-records, June 2026). Mean reward and mean ZVF per model; ZVF is high at both
-extremes and lowest mid-scale, so a run's mean ZVF is uninterpretable without
-its accuracy regime.}
+\caption{Per-model ZVF in the 368-run audit (internal program records, June
+2026), all nine model labels, sorted by mean \emph{final-step} training
+reward. ZVF is high at both reward extremes, so a mean ZVF is uninterpretable
+without its accuracy regime. Batch, $G$, and step budget differ by model; the
+rows are not a controlled comparison.}
 \label{tab:p5-ushape}
 \small
 \begin{tabular}{@{}lcc@{}}
 \toprule
-Model & Mean reward & Mean ZVF \\
+Model & Final reward & Mean ZVF \\
 \midrule
 Llama-3.2-1B        & 0.01 & 0.97 \\
 Llama-3.2-3B        & 0.01 & 0.95 \\
 Qwen3-32B           & 0.35 & 0.25 \\
 Qwen3-8B            & 0.50 & 0.29 \\
 Nemotron-30B        & 0.77 & 0.50 \\
+Llama-3.1-8B-Instruct & 0.83 & 0.65 \\
 Qwen3-4B-Instruct   & 0.86 & 0.87 \\
+gpt-oss-20b         & 0.90 & 0.79 \\
 Qwen3-30B-Instruct  & 0.95 & 0.96 \\
 \bottomrule
 \end{tabular}
@@ -145,7 +148,7 @@ Qwen3-30B-Instruct  & 0.95 & 0.96 \\
 \label{sec:p5-item5}
 Group size is a signal-geometry knob, not a throughput knob: larger $G$ lowers
 the probability that a group is degenerate (from the same expression
-$p^G + (1-p)^G$), and the effect is large in practice
+$p^G + (1-p)^G$); our small model~$\times$~$G$ grid is consistent with this
 (\tableref{tab:p5-gsize}). Because adaptive schedules now exist---our
 open-trainer audit escalated $G$ from 4 to 6 to 8 live on ZVF spikes
 (\secref{sec:p5-toolchain})---reporting a single scalar $G$ is no longer
@@ -157,9 +160,9 @@ tan2025scalingrl}.
 \begin{table}[t]
 \centering
 \caption{Mean ZVF by model and group size $G$ (internal program records,
-June 2026; ``--'' = not run). Larger $G$ lowers ZVF where accuracy is
-intermediate, as theory predicts; near the extremes of the U-shape the effect
-compresses.}
+June 2026; ``--'' = not run). The large-model cells hold 1--3 runs each at
+mixed batch sizes (16/32), so they are consistent with, not a test of, the
+prediction that larger $G$ lowers ZVF at intermediate accuracy.}
 \label{tab:p5-gsize}
 \small
 \begin{tabular}{@{}lccc@{}}

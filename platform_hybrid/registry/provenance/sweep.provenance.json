@@ -38,9 +38,9 @@
     "git_sha": "de9bcba",
     "code_file": "experiments/openings/parallel_sweep.py",
     "code_hash": "sha256:b422bb606d042b3b",
-    "reward_fn_hash": "sha256:b422bb606d042b3b",
-    "data_hash": "sha256:8c4bcfcab83f9986",
-    "config_hash": "sha256:47600e84d8bf2969"
+    "reward_fn_hash": "sha256:f72011f6ec865f14667a98678aab40b53ac3eb6596f13d45ee0519e6d95d7f9e",
+    "config_hash": "sha256:47600e84d8bf2969",
+    "data_ref": "openai/gsm8k:main:train"
   },
   "rigor": {
     "n_seeds": 1,

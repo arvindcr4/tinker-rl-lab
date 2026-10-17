@@ -1,0 +1,46 @@
+% =============================================================================
+% STANDALONE PAPER 6 of 7 (SUBMISSION BUILD, ANONYMIZED) -- Resource: GRPO-Registry, a machine-readable catalog
+% of group-relative RL stacks and variant deltas. The artifact this paper
+% describes lives at registry/ (schema.json + entries/*.json + query.py).
+% Reuses shared preamble/author/methods; all other sections are p6_*.
+% Build: tectonic -X compile paper_P6_registry.tex   (anonymous variant: paper_P6_registry_anon.tex)
+% =============================================================================
+\documentclass{article}
+\def\SUBMISSIONBUILD{1}
+% Submission build of Paper 6 (<=9 body pages): cut-list applied; iteration
+% logs and every section resting on the retracted delta_div quantity are
+% excluded. The full paper is paper_P6_registry.tex. Non-anonymous twin:
+% paper_P6_submission.tex (no \ANONYMOUSBUILD).
+\def\ANONYMOUSBUILD{1}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows.meta,positioning,calc}
+\input{sections/_shared_preamble}
+\input{sections/p6_registry_generated}
+\title{GRPO-Registry: A Machine-Readable Catalog of\\
+       Group-Relative RL Stacks and Their Variant Deltas}
+\input{sections/_shared_author_anon}
+\begin{document}
+\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
+\maketitle
+\input{sections/p6_abstract}
+\input{sections/p6_intro}
+\input{sections/p6s_overview}
+\input{sections/p6_schema}
+\input{sections/p6s_population}
+\input{sections/p6_query_auditor}
+\input{sections/p6s_worked_examples}
+\input{sections/p6s_synthesis}
+\input{sections/p6_conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\appendix
+\input{sections/p6_appendix_artifact}
+\input{sections/p6s_appendix_entries}
+\input{sections/p6_related_resources}
+\input{sections/p6_measured_evidence}
+\input{sections/p6_measured_claimed}
+\input{sections/p6_iter190_raw_recompute_audit}
+\input{sections/p6_governance}
+\end{document}

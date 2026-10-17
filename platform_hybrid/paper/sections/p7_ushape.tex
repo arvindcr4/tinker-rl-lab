@@ -2,49 +2,100 @@
 \section{The U-Shape at Population Scale, and Why ZVF Cannot Steer}
 \label{sec:p7-ushape}
 
-\subsection{The 368-run audit}
+\subsection{The 368-run audit, and what it can and cannot show}
 \label{sec:p7-audit}
-Theorem~1 predicts that ZVF, aggregated over a prompt population, is high
-whenever most prompts sit near $p_x \approx 0$ \emph{or} $p_x \approx 1$, and
-low only when the population mass sits at interior difficulty. At population
-scale this is a U-shape of ZVF in accuracy. A 368-run audit (W\&B project
-\texttt{zvf-audit}, drawn from a 790-run corpus spanning seven models)
-confirms it directly (Table~\ref{tab:p7-ushape}): ZVF is
-$0.95$--$0.97$ at \emph{both} extremes of the reward axis---incapable models
-(Llama-3.2-1B/3B at reward $0.01$) and saturated ones (Qwen3-30B-Instruct at
-reward $0.95$)---and bottoms out at $0.25$--$0.29$ in the mid-range of the
-reward axis (mean reward $0.35$--$0.50$), exactly where $p(1-p)$ peaks.
+Theorem~1 is a statement about one prompt. For a population of prompts with
+success probabilities $p_i$ and conditionally i.i.d.\ rollouts, it gives
+$\E[\mathrm{ZVF}]=\E_i[h_G(p_i)]\ge h_G(\bar p)$ (convexity of $h_G$), so batch
+ZVF is high whenever most prompts sit near $p_i\approx0$ \emph{or}
+$p_i\approx1$, and its excess over $h_G(\bar p)$ measures the
+\emph{dispersion} of prompt difficulty. On the 600 GSM8K groups (three seeds,
+$G{=}8$), observed ZVF is $0.158$, $h_8(\bar p)=0.054$, and a beta-binomial
+fit with intra-prompt correlation $0.16$ predicts $0.170$. ZVF is the
+Advantage Collapse Rate of \citet{he2026advantage} up to aggregation
+granularity, and the Jensen excess over the Bernoulli prediction was proved by
+\citet{nie2026gradstarvation}; we claim neither, only the use of ZVF as a
+sampler-control input.
+
+A W\&B audit (project \texttt{zvf-audit}; 368 runs, 350 with a run-level
+summary, 352 with per-step histories) spans \textbf{nine} model labels
+(Table~\ref{tab:p7-ushape}). Sorted by \emph{final-step} training reward,
+per-model mean ZVF is $0.95$--$0.97$ for Llama-3.2-1B/3B (reward $\approx0.01$)
+and Qwen3-30B-A3B-Instruct (reward $0.95$), $0.25$--$0.29$ for Qwen3-32B/8B
+(reward $0.35$--$0.50$), and intermediate for Nemotron-3-Nano-30B
+($0.50$ at $0.77$), Llama-3.1-8B-Instruct ($0.65$ at $0.83$), Qwen3-4B-Instruct
+($0.87$ at $0.86$), and gpt-oss-20b ($0.79$ at $0.90$). An earlier revision
+showed seven of these rows and omitted Llama-3.1-8B-Instruct and gpt-oss-20b.
 
 \begin{table}[t]
 \centering
-\caption{ZVF is U-shaped in accuracy at population scale (368-run audit,
-W\&B project \texttt{zvf-audit}; per-model means, sorted by reward). Both
-ends of the accuracy axis produce near-total signal starvation; the
-interior produces the least.}
+\small
+\caption{Per-model ZVF in the 368-run \texttt{zvf-audit} corpus, sorted by
+mean \emph{final-step} training reward. $n$ = runs with a summary;
+$h_G(p_{\mathrm{step}})$ and excess are step-level means (excess $=$ step ZVF
+$-\,h_G$(step reward)). Batch, $G$, and step budget differ by model (last
+column), so the rows are \emph{not} a controlled comparison. Script:
+\texttt{analysis\_publication\_fixes/zvf\_confound.py}.}
 \label{tab:p7-ushape}
-\begin{tabular}{lcc}
+\begin{tabular}{lrccccl}
 \toprule
-Model & Mean reward & Mean ZVF \\
+Model & $n$ & Final reward & ZVF & $h_G(p_{\mathrm{step}})$ & Excess & Config (batch; steps) \\
 \midrule
-Llama-3.2-1B        & 0.01 & 0.97 \\
-Llama-3.2-3B        & 0.01 & 0.95 \\
-Qwen3-32B           & 0.35 & 0.25 \\
-Qwen3-8B            & 0.50 & 0.29 \\
-Nemotron-30B        & 0.77 & 0.50 \\
-Qwen3-4B-Instruct   & 0.86 & 0.87 \\
-Qwen3-30B-Instruct  & 0.95 & 0.96 \\
+Llama-3.2-1B             & 101 & 0.01 & 0.97 & 0.97 & 0.00 & 8; 3--5 \\
+Llama-3.2-3B             & 106 & 0.01 & 0.95 & 0.94 & 0.00 & 6--32; 2--12 \\
+Qwen3-32B                &   6 & 0.35 & 0.25 & 0.10 & 0.12 & 6--32; 2--12 \\
+Qwen3-8B                 &   6 & 0.50 & 0.29 & 0.09 & 0.19 & 6--32; 2--12 \\
+Nemotron-3-Nano-30B      &   6 & 0.77 & 0.50 & 0.32 & 0.20 & 6--32; 2--12 \\
+Llama-3.1-8B-Instruct    &   6 & 0.83 & 0.65 & 0.48 & 0.19 & 6--32; 2--12 \\
+Qwen3-4B-Instruct-2507   & 107 & 0.86 & 0.87 & 0.47 & 0.41 & 6--32; 2--12 \\
+gpt-oss-20b              &   6 & 0.90 & 0.79 & 0.49 & 0.32 & 6--32; 2--12 \\
+Qwen3-30B-A3B-Instruct   &   6 & 0.95 & 0.96 & 0.64 & 0.31 & 6--32; 2--12 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The U-shape is a success for the theory and a disqualification for the
-statistic. A controller that observes only ZVF $= 0.95$ cannot tell whether
-its policy has mastered the task (stop training, or harden the data) or
-cannot solve it at all (soften the data, or grow $G$)---the two ends demand
-\emph{opposite} interventions. This is the mastery--incapacity aliasing that
-the companion Pillar-2 paper identified descriptively; here it becomes an
-engineering constraint: \emph{ZVF is a fine alarm but a broken steering
+\paragraph{Confound analysis.} The nine rows are not a designed comparison.
+The three small models contribute 314 of 350 runs, and 300 of those ran
+5 steps at batch 8; 30 of the 36 runs of the other six models ran 12 steps at
+batch 16 or 32, with $G$ varying within model. We therefore regressed ZVF on
+model, batch, $G$, learning rate, and reward (linear $+$ quadratic), using
+the pulled step histories
+(\texttt{analysis\_publication\_fixes/zvf\_confound.py}; outputs in
+\texttt{experiments/results/publication\_fixes/zvf\_confound/}).
+At run level ($n=350$, HC3 SEs), a reward quadratic alone gives $R^2=0.42$;
+model identity alone gives $0.87$; model $+$ configuration gives $0.90$; adding
+the reward terms raises this by only $0.012$ (incremental $F=21.6$,
+$p<10^{-8}$). At step level ($n=2{,}004$, SEs clustered by run), model $+$
+batch $+$ $G$ gives $R^2=0.77$, adding reward terms $0.82$, and adding
+$h_G(p_{\mathrm{step}})$ $0.82$. Within models, step ZVF correlates positively
+with $h_G(p_{\mathrm{step}})$ in all nine (pooled within-model
+$r=+0.49$), whereas its correlation with raw reward changes sign across models
+($-0.89$ to $+0.70$). The cross-model U is thus nine points whose
+position is set mostly by model identity and configuration. Because reward
+is itself a property of the model, the regression cannot separate ``low ZVF
+because interior difficulty'' from ``low ZVF because of the Qwen3-32B/8B
+configuration''; the trough is not evidence of a reward effect.
+The model-mean quadratic ($n=9$, $R^2=0.96$) should be read in that light.
+
+\paragraph{What the U-shape still shows.} The \emph{endpoints} follow from the
+identity: models at reward $\approx0$ sit on $h_G$ (excess $0.00$), and models
+near reward $1$ have ZVF near $1$. The interior is dominated by excess over
+$h_G(\bar p)$, i.e.\ difficulty dispersion, which is largest for
+Qwen3-4B-Instruct ($0.41$). A controller that observes only a high ZVF still
+cannot tell mastery (stop or harden the data) from incapacity (soften the data
+or grow $G$), since the two demand \emph{opposite} interventions. This aliasing
+follows from the symmetry $h_G(p)=h_G(1-p)$ and does not need the
+population U to be causal: \emph{ZVF is a usable alarm but a poor steering
 signal.}
+
+\paragraph{Prospective ZVF prediction test (placeholder).}
+% PLACEHOLDER -- ZVF PREDICTION EXPERIMENT (Colab agent running). Results will
+% land in platform_hybrid/experiments/results/publication_fixes/. Replace this
+% paragraph with: per-prompt p_i estimated on an independent sample, predicted
+% batch ZVF = mean_i h_G(p_i) at G in {4,8,16}, observed ZVF, error and CI.
+\textbf{[Placeholder: pre-registered held-out test of
+$\widehat{\mathrm{ZVF}}=\frac1n\sum_i h_G(\hat p_i)$, results pending in
+\texttt{experiments/results/publication\_fixes/}.]}
 
 \subsection{PCD: the pairwise-contrast density}
 \label{sec:p7-pcd}
@@ -91,8 +142,9 @@ do not invalidate the starvation theory, they merely break the ZVF
 One caveat keeps us honest about what PCD is for. On $80$ runs with
 per-run summaries, mean training reward predicts the held-out outcome far
 better (Spearman $\rho = 0.95$) than mean ZVF does ($\rho = 0.56$ on this
-subset; the companion Pillar-2 paper reports $\rho = 0.27$ on its 23-cell
-cross-experiment matrix). PCD is proposed
+subset). The companion Pillar-2 paper's earlier $\rho = 0.27$ on a 23-cell
+matrix is withdrawn (17 finite cells, 9 of them simulation rows, mixed outcome
+definitions) and is not used here. PCD is proposed
 as a \emph{control-loop input}---a live measure of usable contrast---not as
 an outcome predictor; the decisive predictive horse race needs per-group
 reward tensors logged for all anchors, which only the GSM8K runs currently

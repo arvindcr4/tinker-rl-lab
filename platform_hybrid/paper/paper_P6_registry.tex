@@ -3,12 +3,13 @@
 % of group-relative RL stacks and variant deltas. The artifact this paper
 % describes lives at registry/ (schema.json + entries/*.json + query.py).
 % Reuses shared preamble/author/methods; all other sections are p6_*.
-% Build: pdflatex paper_P6_registry ; bibtex paper_P6_registry ; pdflatex x2
+% Build: tectonic -X compile paper_P6_registry.tex   (anonymous variant: paper_P6_registry_anon.tex)
 % =============================================================================
 \documentclass{article}
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows.meta,positioning,calc}
 \input{sections/_shared_preamble}
+\input{sections/p6_registry_generated}
 \title{GRPO-Registry: A Machine-Readable Catalog of\\
        Group-Relative RL Stacks and Their Variant Deltas}
 \input{sections/_shared_author}

@@ -78,7 +78,7 @@ all 80 rows & -- & 0.2964 & 0.4111 & 0.4034 \\
 \end{tabular}
 \caption{Cross-experiment failure counts over the full 80-row
 \texttt{zvf\_summary.tsv} (the per-\emph{seed} long-form). The
-23-cell correlation table in \S\ref{sec:zvf-cross-experiment:corr}
+withdrawn 23-cell correlation in \S\ref{sec:zvf-cross-experiment:corr}
 pools those 80 rows down to one cell per (experiment, model, $G$).
 The five \texttt{scaling\_law\_three\_phase} rows are three-phase
 segmentation summaries; we classify them on their peak/late
@@ -130,26 +130,22 @@ $0.10$--$0.13$, well below the GRPO baseline ($0.48$) on the same
 data; we discuss the implication in
 the companion paper on variance honesty.
 
-\subsection{Correlation With Heldout Outcome}
+\subsection{Correlation With Heldout Outcome (withdrawn)}
 \label{sec:zvf-cross-experiment:corr}
 
-Pooling the 23 cells, we compute the Spearman correlation between
-per-cell mean-ZVF and last-10 averaged heldout accuracy, with
-$B=2000$ percentile-bootstrap confidence intervals over rows (not
-over the autocorrelated per-step rows from the underlying
-time-series). The result is
-$\rho_{\mathrm{Spearman}} = 0.27$ with 95\% bootstrap CI
-$[-0.37, 0.88]$. The interval is wide because $n=23$ and the
-tool-use collapse row is an extreme outlier (ZVF $= 1$, last10 $= 0$).
-
-The point-biserial correlation between mean-ZVF and the
-\texttt{is\_collapse} indicator is
-$\rho_{\mathrm{Pearson}} = 0.62$ / $\rho_{\mathrm{Spearman}}
-= 0.56$ (point estimates, $n=23$). This is the diagnostic
-read of the relationship: across our measurement matrix,
-high-ZVF cells are systematically more likely to fall in the
-\texttt{collapse} bucket, after the failure label is computed
-deterministically from peak-vs-last10 alone.
+An earlier revision reported a Spearman correlation of $\rho=0.27$
+(95\% bootstrap CI $[-0.37,0.88]$) between per-cell mean ZVF and last-10
+outcome over ``23 cells''. \textbf{We withdraw it as a finding.} Only 17
+of the 23 cells carry a finite ZVF; 9 of those 17 are rows of the
+simulation projection \texttt{variance\_mitigation.tsv} (not training
+runs; see the evidence boundary below); 2 are $G{=}1$ tool-use cells whose
+ZVF is $1$ by construction; and the outcome column mixes held-out accuracy,
+training reward, and synthetic-task accuracy across different tasks and
+models. Restricted to the 8 finite non-simulated cells the coefficient is
+$-0.37$ ($p=0.36$), i.e.\ the sign is not even stable. No ZVF--outcome
+association is claimed. The point-biserial association with the
+\texttt{collapse} label ($0.62$) is likewise dominated by the two $G{=}1$
+tool-use cells and is reported only as a description of the table.
 
 \subsection{Cross-Library Diagnostic vs AERO/RL-ZVP}
 \label{sec:zvf-cross-experiment:aero}
@@ -308,143 +304,65 @@ trajectories), and any t-statistic inferred from the $480$
 measurements would be overconfident by roughly an order of
 magnitude.
 
-\subsection{Cross-Source Anti-Herd Falsification of the Contrastive Yield Band}
+\subsection{Group-Level ZVF Versus the Binomial Prediction (corrected)}
 \label{sec:zvf-cross-source-falsification}
 
-A frontier synthesis\note{(ChatGPT Pro Extended + Gemini Deep Think,
-round 2, attribution: ``frontier synthesis'')} of this pillar proposed
-the strict band $\delta_{\mathrm{div}} \in [0.13, 0.23]$ as a
-``measured structural diversity bonus'' introduced by high-temperature
-autoregressive sampling, on the reading that ``empirical ZVF
-under-predicts the i.i.d.\ baseline by $-0.13$ to $-0.23$'' and hence
-the sampler \emph{anti-herds}. Our per-problem decomposition
-$\delta_{\mathrm{div}}(x) = \mathrm{ZVF}_{\mathrm{iid}}(p_x, G) -
-\mathrm{ZVF}_{\mathrm{obs}}(x)$ over $1{,}092$ measured rows
-(\texttt{experiments/results/zvf\_contrastive\_yield.tsv}) shows this
-is regime-dependent rather than uniform.
+An earlier revision reported a ``cross-source anti-herd falsification'':
+a per-problem divergence
+$\delta_{\mathrm{div}}=\mathrm{ZVF}_{\mathrm{iid}}-\mathrm{ZVF}_{\mathrm{obs}}$
+of $+0.1224$ (95\% CI $[+0.112,+0.133]$) on Qwen3-8B/GSM8K and $-0.067$ on
+Qwen2.5-0.5B synthetic arithmetic, read as anti-herding versus herding, and
+derived an ``empirical iso-$G$'' sizing table from it. \textbf{Both the
+reading and the iso-$G$ table are withdrawn.}
 
-\begin{table}[ht]
-\centering
-\small
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{lrrrrl}
-\toprule
-Source & $n$ & mean $\delta_{\mathrm{div}}$ & 95\% boot.\ CI & frac$(\delta_{\mathrm{div}} > 0)$ & verdict \\
-\midrule
-tinker\_gsm8k (real reasoning)        & 600 & $+0.1224$ & $[+0.1116,\,+0.1334]$ & 0.842 & anti-herd \\
-groupsize\_zvf\_sweep (synthetic)     & 480 & $-0.0668$ & $[-0.0786,\,-0.0561]$ & 0.298 & herd \\
-groupsize\_zvf\_sweep\_agg (per-step) &  12 & $-0.2994$ & $[-0.3890,\,-0.2100]$ & 0.000 & herd \\
-\bottomrule
-\end{tabular}%
-}
-\caption{Cross-source $\delta_{\mathrm{div}}$ statistics pooled at the
-per-problem level. Bootstrap CIs use $B{=}2000$ percentile resamples
-over per-problem rows (one row per (source, seed, problem\_id)). The
-\emph{sign reversal}: Qwen3-8B on GSM8K produces rollouts that are
-more diverse than i.i.d.\ Bernoulli draws (anti-herding, $\delta_{\mathrm{div}} > 0$),
-while Qwen2.5-0.5B on synthetic arithmetic produces rollouts that
-are \emph{more correlated} than i.i.d.\ draws (herding, $\delta_{\mathrm{div}} < 0$).
-The frontier claim of a uniform $\delta_{\mathrm{div}} \in [0.13, 0.23]$
-is supported at the lower bound on the real reasoning model
-($+0.1224 \approx 0.13$) but falsified on the synthetic regime and
-across the bootstrap CI.
-Source: \texttt{experiments/results/zvf\_antiherding\_falsification.tsv}.
-}
-\label{tab:zvf-falsification}
-\end{table}
+\paragraph{The GSM8K value is sign-guaranteed.} There, $\mathrm{ZVF}_{\mathrm{iid}}$
+was evaluated at the plug-in $\hat p_x=k_x/G$ from the \emph{same} group:
+$\delta_x=h_G(k_x/G)-\mathbf{1}\{k_x\in\{0,G\}\}$ with
+$h_G(p)=p^G+(1-p)^G$. If $k_x\in\{0,G\}$ both terms are $1$; otherwise the
+indicator is $0$ and $h_G>0$. So $\delta_x\ge0$ for every group, and under
+\emph{exactly} i.i.d.\ Bernoulli rollouts at the observed $\bar p=0.694$ its
+expectation is already $+0.105$. The value says nothing about rollout
+correlation.
 
-The interpretation is consistent with the visibility of high-decision
-boundary in each regime. On real reasoning, the policy is on the
-``learning frontier'' ($p \in [0.2, 0.8]$) for most prompts; sampling
-temperature introduces genuine exploration that escapes the modal
-answer. On a small model trained to near-perfect score on a narrow
-arithmetic distribution, sampling collapses to a mode: rollouts
-correlate, $\mathrm{ZVF}_{\mathrm{obs}}$ EXCEEDS $\mathrm{ZVF}_{\mathrm{iid}}$,
-$\delta_{\mathrm{div}} < 0$.
+\paragraph{The arithmetic sign flip is Jensen.} There, $p$ was the
+\emph{step-mean} reward and $\mathrm{ZVF}_{\mathrm{obs}}$ the step's batch ZVF.
+With heterogeneous prompts and i.i.d.\ rollouts,
+$\E[\mathrm{ZVF}_t]=\E_i[h_G(p_i)]\ge h_G(\bar p_t)$ because $h_G$ is convex,
+so $\delta_t\le0$ is expected without any herding.
 
-\paragraph{The empirical iso-G correction.}
-The Contrastive Yield framing is preserved, but the iso-$G$ sizing
-formula $G_{\mathrm{iid}}(p, Y_{\mathrm{target}}) = \lceil \log(1 - Y_{\mathrm{target}}) /
-\log(\max(p, 1 - p)) \rceil$ uses an assumption that does not hold
-uniformly. Replacing the iid baseline with the empirical one
-$\mathrm{ZVF}_{\mathrm{emp}}(p, G) = \mathrm{ZVF}_{\mathrm{iid}}(p, G) -
-\delta_{\mathrm{div}}$ (clipped to $[0, 1]$) yields the empirical
-iso-$G$ sizing table~\ref{tab:zvf-empirical-isog}; entries appear in
-\texttt{experiments/results/zvf\_empirical\_isog.tsv}. The corrected
-table makes the front-end savings explicit. At
-$Y_{\mathrm{target}} = 0.80$ on Qwen3-8B/GSM8K:
-\begin{itemize}
-\item $p = 0.125$ (hard tail): $G_{\mathrm{iid}} = 13$,
-      $G_{\mathrm{emp}} = 5$ (anti-herding $\delta_{\mathrm{div}} = +0.34$, $\Delta G = -8$).
-\item $p = 0.875$ (easy tail): $G_{\mathrm{iid}} = 13$,
-      $G_{\mathrm{emp}} = 5$ (same $\delta_{\mathrm{div}} = +0.34$, $\Delta G = -8$).
-\item $p \in [0.4, 0.6]$ (frontier): $G_{\mathrm{iid}} \in \{2, 3\}$,
-      $G_{\mathrm{emp}} \in \{3, 4\}$ (anti-herding $\delta_{\mathrm{div}} \approx 0.02$, $\Delta G \in \{0, +1\}$; sampler is approximately iid at the learning frontier).
-\end{itemize}
-On Qwen2.5-0.5B/arithmetic the picture inverts at the frontier:
-$\Delta G = +1$ in every $p$-bin because $\delta_{\mathrm{div}}$ is
-slightly negative, so a static $G = 8$ covers what empirical iso-$G$
-would set at $G = 6$ to $9$ for $Y_{\mathrm{target}} = 0.8$. The
-rollout savings promised by the frontier synthesis do not survive the
-measurement.
+\paragraph{Correct reading.} Batch ZVF is a convex functional of the
+prompt-difficulty distribution, $\E[\mathrm{ZVF}]=\E_i[h_G(p_i)]$; its excess
+over $h_G(\bar p)$ measures the dispersion of $p_i$. On the 600 GSM8K groups
+the observed ZVF is $0.158$, $h_8(\bar p)=0.054$, and a beta-binomial fit
+(intra-prompt correlation $0.160$) predicts $0.170$; the $k$-histogram is
+strongly over-dispersed relative to a single Binomial
+($\chi^2_7=8119$). Because the three seeds drew different problems, prompt
+dispersion cannot be separated from within-prompt correlation with these
+artefacts. Recomputation:
+\texttt{analysis\_publication\_fixes/p2\_delta\_artifact.py} (output in
+\texttt{experiments/results/publication\_fixes/zvf\_confound/}). This is the
+same quantity as the Advantage Collapse Rate~\cite{he2026advantage}; see
+Section~\ref{sec:zvf-cross-experiment:related}.
 
-\paragraph{What this changes for the paper.}
-The Contrastive Yield framing remains a useful diagnostician:
-$\mathrm{ZVF}$ is signal availability, not difficulty; $\mathrm{Y} =
-1 - \mathrm{ZVF}$ is the relevant gradient-flow quantity. The Iso-$G$
-theorem ($G(p) = \lceil \log(1 - Y_{\mathrm{target}}) / \log \max(p, 1 - p) \rceil$)
-still holds \emph{conditioned on the iid assumption}. The elevation
-refutes the unconditional frontier claim and replaces it with an
-empirically calibrated correction. Concretely: on real reasoning
-rollouts the budget can drop by $40\text{--}60\%$ in the tails
-($\Delta G \in \{-4, -8, -16\}$), and on the synthetic regime the
-correction goes the other way -- a static $G = 8$ is approximately
-the right answer at the learning frontier and the tails do not need
-the iid-prescribed oversampling.
+\paragraph{Prospective prediction test (placeholder).}
+% PLACEHOLDER -- ZVF PREDICTION EXPERIMENT (Colab, in progress). Results will
+% land in platform_hybrid/experiments/results/publication_fixes/. Fill with:
+% per-prompt p_i from an independent sample, predicted mean_i h_G(p_i) at
+% several G, observed ZVF, prediction error with CI.
+\textbf{[Placeholder: held-out ZVF prediction experiment, results pending in
+\texttt{experiments/results/publication\_fixes/}.]}
 
-\begin{table}[ht]
-\centering
-\small
-\begin{tabular}{lrrrrrr}
-\toprule
-Source & $p$ bin & mean $\delta_{\mathrm{div}}$ & $Y_{\mathrm{target}}$ & $G_{\mathrm{iid}}$ & $G_{\mathrm{emp}}$ & $\Delta G$ \\
-\midrule
-tinker\_gsm8k          & $0.10$--$0.20$ & $+0.3436$ & $0.80$ & $13$ & $ 5$ & $-8$ \\
-tinker\_gsm8k          & $0.80$--$0.90$ & $+0.3436$ & $0.80$ & $13$ & $ 5$ & $-8$ \\
-tinker\_gsm8k          & $0.50$--$0.60$ & $+0.0078$ & $0.80$ & $ 3$ & $ 4$ & $+1$ \\
-groupsize\_zvf\_sweep  & $0.40$--$0.50$ & $-0.0229$ & $0.80$ & $ 3$ & $ 4$ & $+1$ \\
-groupsize\_zvf\_sweep  & $0.10$--$0.20$ & $+0.0112$ & $0.80$ & $ 9$ & $ 9$ & $ 0$ \\
-\bottomrule
-\end{tabular}
-\caption{Empirical Iso-$G$ correction (selected rows; full table in
-\texttt{experiments/results/zvf\_empirical\_isog.tsv}). Negative
-$\Delta G$ means the empirical sampler needs FEWER rollouts than the
-iid theory assumes (anti-herding); positive $\Delta G$ means it needs
-MORE (herding). The table is the directly testable prediction of the
-Contrastive Yield framing, corrected by data.
-}
-\label{tab:zvf-empirical-isog}
-\end{table}
-
-The full numerical table (one row per (source, $p$-bin, $Y$-target))
-is regenerated from \texttt{scripts/zvf\_antiherding\_elevation.py}
-and is wired into Figure~\ref{fig:zvf-antiherding-falsification}.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\textwidth]{figures/zvf_antiherding_falsification.png}
-\caption{Three-panel cross-source anti-herding falsification. (A)
-Per-source $\delta_{\mathrm{div}}$ histogram: tinker\_gsm8k (green)
-is right-shifted (anti-herding), groupsize\_zvf\_sweep (red) is
-left-shifted (herding). (B) Per-source mean with 95\% bootstrap CI:
-the real-model CI excludes 0, the synthetic CIs also exclude 0 (on
-the negative side), and the aggregate CI extends to $-0.21$, decisively
-rejecting any uniform-positive claim. (C) Empirical-vs-iid iso-$G$
-sizing at $Y_{\mathrm{target}} = 0.80$ on tinker\_gsm8k:
-anti-herding lets the tails drop from $G = 13$ to $G = 5$, while the
-frontier $p \approx 0.5$ stays at $G \in \{3, 4\}$ -- the rollout
-savings the frontier synthesis predicted, but only on the real
-reasoning slice.
-Source: \texttt{figures/zvf\_antiherding\_falsification.pdf}.}
-\label{fig:zvf-antiherding-falsification}
-\end{figure}
+\subsection{Relation to Advantage-Collapse and Difficulty-Filtering Work}
+\label{sec:zvf-cross-experiment:related}
+ZVF is not a new diagnostic. It is equivalent, up to aggregation
+granularity, to the Advantage Collapse Rate~\cite{he2026advantage}, which
+quantifies the same advantage collapse under homogeneous group rewards and is
+reported to predict stagnation and final performance. The corrected reading
+above---true degeneracy exceeds the i.i.d.\ Bernoulli prediction by Jensen's
+inequality---was proved first by~\cite{nie2026gradstarvation}. DARA~\cite{zheng2026dara}
+uses the complementary active-group density to reweight rewards in
+multi-reward RL. DAPO's dynamic sampling~\cite{yu2025dapo}, GRESO's
+pre-rollout skipping~\cite{zhang2026greso}, VCRL's variance-based
+curriculum~\cite{jiang2025vcrl}, and online difficulty
+filtering~\cite{bae2025online} act on it. Our contribution here is limited
+to the measurement artefacts and the corrections above.

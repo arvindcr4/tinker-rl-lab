@@ -1,0 +1,92 @@
+% Paper 6 (GRPO-Registry) worked examples
+\section{Worked Examples}
+\label{sec:p6-worked}
+Both examples below are verbatim CLI runs on the shipped entries.
+
+\subsection{Example 1: \texttt{stackdiff} on the ``DAPO'' Pair}
+\label{sec:p6-worked-dapo}
+The registry contains two stacks claiming the label \texttt{dapo}: the open
+Colab trainer arm and the managed-runtime arm. Diffing them:
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single,
+  breaklines=true, caption={\texttt{stackdiff colab-open_dapo_e3
+  tinker_dapo_qwen3.5-4b_gsm8k} (abridged to 10 of 37 output lines). Regenerate with \texttt{python3 registry/query.py stackdiff}.},
+  label={lst:p6-stackdiff}]
+stackdiff colab-open_dapo_e3 vs tinker_dapo_qwen3.5-4b_gsm8k
+  shared claimed label: 'dapo'
+  [R5] checkpoint.id: 'Qwen/Qwen2.5-0.5B-Instruct' -> 'Qwen/Qwen3.5-4B'
+  [R5] data.dataset: 'synthetic a+b, a,b in [11,60]' -> 'openai/gsm8k:main'
+  [R5] eval.metric: 'greedy held-out accuracy delta (post - pre)' -> 'mean sampled train reward over last 10 steps'
+  [R4] loss.objective: 'ppo-clip on sequence log-prob ratio, summed over sequences' -> 'reinforce: -A_i * sum_t logp, mean over sequences'
+  [R4] loss.clip: 'ratio[0.8,1.28]' -> 'advantage[-2,3]'
+  [R4] loss.dynamic_sampling: 'resample zero-variance groups up to 2 retries, then drop' -> False
+verdict: R5 outcome-critical differences (checkpoint, reward, prompt/chat template, dataset, eval protocol, execution mode)
+coverage: 0.87 of compared fields known on both sides; 7 unknown (max hidden severity R5)
+\end{lstlisting}
+
+The verdict is R5: the two ``DAPO'' entries differ in checkpoint, task,
+reward, prompt template, and evaluation protocol, before any algorithmic
+field is considered. Among the R4 differences, dynamic sampling---the component
+that mechanically drives batch ZVF to zero---is present on the open side and
+absent on the managed side, whose ``dapo'' arm is a REINFORCE-style loss with
+an advantage clip. This is a
+\emph{pre-run} verdict computed from manifests alone. The two arms also differ
+in model, task, $G$, steps, and seeds (all R5/R3 differences), so their ZVF
+values ($0.00$ vs.\ $0.58$) are not a like-for-like comparison, and the
+managed ``dapo'' arm is an advantage-clipping variant rather than DAPO; the
+defensible telemetry is within-stack (GRPO$\to$``DAPO'': $0.25\to0.00$ open,
+$0.567\to0.578$ managed). The general lesson matches the under-specified
+same-label exhibit, where checkpoint, reward, prompt, batch, data, and loss
+fields co-varied as final reward spanned $85.6\% \to 5.0\%$: rankings
+inherit the stack, and \texttt{stackdiff} makes the inheritance legible
+before compute is spent.
+
+\subsection{Pending: Designed Claim-C Experiments}
+\label{sec:p6s-claimc-slot}
+% PLACEHOLDER -- CLAIM-C COLAB EXPERIMENTS. Results will land in
+% platform_hybrid/experiments/results/publication_fixes/. Fill in:
+%  (i) inference-only 2x2: {Qwen3-8B-Base, Qwen3-8B (Instruct)} x {Tinker
+%      harness, TRL harness}, no training; GSM8K accuracy per cell with CIs;
+%      the checkpoint and harness main effects and their interaction.
+%  (ii) matched TRL-vs-Tinker training run: same checkpoint, reward parser,
+%      prompt/chat template, decoding, batch shape, data subset; seeds/steps
+%      as run; last-10 reward and held-out accuracy with CIs.
+%  For both: the stackdiff level/coverage of the matched pair (should be R2 at
+%  high coverage) and whether the residual gap is within seed noise.
+\textbf{[Placeholder --- results pending in
+\texttt{experiments/results/publication\_fixes/}.]} Two designed experiments
+test whether \texttt{stackdiff} localizes the Exhibit-1 gap. (i) An
+inference-only $2\times2$---Qwen3-8B-Base vs.\ Qwen3-8B (Instruct), crossed with
+the Tinker and TRL harnesses (prompt, template, parser, decoding)---separates
+the checkpoint effect from the harness effect without any training. (ii) A
+matched TRL-vs-Tinker training run fixes checkpoint, reward, prompt, decoding,
+batch, and data so that \texttt{stackdiff} reports only runtime (R2)
+differences; any remaining gap is then attributable to the backend. No claim
+in this paper depends on these results.
+
+\subsection{Example 2: ``Which Stacks Report KL Handling?''}
+\label{sec:p6-worked-kl}
+Item 2 (reference policy + KL) is the canonical scattered-in-appendices
+field: defaults differ silently across frameworks ($\beta{=}0.04$ in TRL and
+veRL versus $0.02$ in OpenRLHF, per their own dumps), and DAPO removes the
+term outright. The registry answers in one call:
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single,
+  caption={\texttt{query --item reference_kl} on the seed entries
+  (grouped).}, label={lst:p6-klquery}]
+colab-open_{grpo,drgrpo,dapo,grpo-adaptiveg}   reference_kl=FULL (1.00)
+trl_grpo_qwen3-8b_gsm8k                        reference_kl=FULL (1.00)
+verl_grpo_qwen3-8b_gsm8k                       reference_kl=FULL (1.00)
+openrlhf_grpo_qwen3-8b_gsm8k                   reference_kl=FULL (1.00)
+tinker_{grpo(8B),grpo,dapo,drgrpo,gspo}        reference_kl=PARTIAL (0.33)
+\end{lstlisting}
+
+Seven of twelve stacks fully report KL handling. The instructive cases are the
+two ends: the Colab arms score \texttt{FULL} by \emph{explicitly declaring the
+absence} of a reference policy ($\beta{=}0.0$, estimator \texttt{none})---a
+reported negative is a first-class answer---while all five managed-runtime
+entries are \texttt{PARTIAL} because \texttt{kl.beta} and the estimator are
+\texttt{managed_by_tinker} nulls. A meta-analyst asking ``does KL
+regularization explain the variant ranking?'' learns, in one query, exactly
+which stacks can enter the regression and which must be excluded as
+unauditable on that axis.

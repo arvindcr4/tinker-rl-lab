@@ -1,0 +1,75 @@
+# Hugging Face model cards (pushed 2026-10-16)
+
+Full cards for the two case-study repos are in this directory, plus one E1 example. The E1 and pavlov cards share a template (per-run values come from each repo's `run_manifest.json`).
+Before any repo was published, every file on every ref was scanned for secrets (blob-deduplicated: full download of small files, safetensors headers, the pickle sections of `optimizer.pt`; nothing was unpickled). No secrets were found: `hub_token` is `None` in all 45 `training_args.bin`. All base models are Apache-2.0.
+
+| Repo | Visibility before → after |
+|---|---|
+| [`arvindcr4/pavlov-portfolio-qwen36-seed809-step0-tinker-cf0ad8c1-1f1b-5ff-c94ff15e4b6f`](https://huggingface.co/arvindcr4/pavlov-portfolio-qwen36-seed809-step0-tinker-cf0ad8c1-1f1b-5ff-c94ff15e4b6f) | public → public |
+| [`arvindcr4/pavlov-portfolio-qwen36-seed809-step20-tinker-cf0ad8c1-1f1b-5ff-92c860aa9bec`](https://huggingface.co/arvindcr4/pavlov-portfolio-qwen36-seed809-step20-tinker-cf0ad8c1-1f1b-5ff-92c860aa9bec) | public → public |
+| [`arvindcr4/pavlov-portfolio-qwen36-seed809-step40-tinker-cf0ad8c1-1f1b-5ff-b610a692a428`](https://huggingface.co/arvindcr4/pavlov-portfolio-qwen36-seed809-step40-tinker-cf0ad8c1-1f1b-5ff-b610a692a428) | public → public |
+| [`arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6`](https://huggingface.co/arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6) | public → public |
+| [`arvindcr4/pavlov-xlam-smoke-260809-seed809-step0-aborted`](https://huggingface.co/arvindcr4/pavlov-xlam-smoke-260809-seed809-step0-aborted) | public → public |
+| [`arvindcr4/pavlov-xlam-smoke-seed809-v1-seed809-step0-tinker-70c66902-2548-5c6-0419ecf7b5cd`](https://huggingface.co/arvindcr4/pavlov-xlam-smoke-seed809-v1-seed809-step0-tinker-70c66902-2548-5c6-0419ecf7b5cd) | public → public |
+| [`arvindcr4/pavlov-xlam-smoke-seed809-v2-seed809-step0-tinker-a2888b9a-89a9-589-b1a2edf7b670`](https://huggingface.co/arvindcr4/pavlov-xlam-smoke-seed809-v2-seed809-step0-tinker-a2888b9a-89a9-589-b1a2edf7b670) | public → public |
+| [`arvindcr4/pavlov-xlam-smoke-seed809-v2-seed809-step10-tinker-a2888b9a-89a9-589-a9a012ea23a7`](https://huggingface.co/arvindcr4/pavlov-xlam-smoke-seed809-v2-seed809-step10-tinker-a2888b9a-89a9-589-a9a012ea23a7) | public → public |
+| [`arvindcr4/pavlov-xlam-smoke-seed809-v2-seed809-step5-tinker-a2888b9a-89a9-589-2f6c2444b53b`](https://huggingface.co/arvindcr4/pavlov-xlam-smoke-seed809-v2-seed809-step5-tinker-a2888b9a-89a9-589-2f6c2444b53b) | public → public |
+| [`arvindcr4/pavlov-xlam-smoke-seed809-v2-seed809-stepfinal-tinker-a2888b9a-89a9-589-29eec5ab9f3b`](https://huggingface.co/arvindcr4/pavlov-xlam-smoke-seed809-v2-seed809-stepfinal-tinker-a2888b9a-89a9-589-29eec5ab9f3b) | public → public |
+| [`arvindcr4/pavlov-xlam-smoke-seed809-v3-lr1-seed809-step0-tinker-7aa9c934-0176-520-eef534105fbb`](https://huggingface.co/arvindcr4/pavlov-xlam-smoke-seed809-v3-lr1-seed809-step0-tinker-7aa9c934-0176-520-eef534105fbb) | public → public |
+| [`arvindcr4/pavlov-xlam-smoke-seed809-v3-lr1-seed809-step10-tinker-7aa9c934-0176-520-e160ecdecbcd`](https://huggingface.co/arvindcr4/pavlov-xlam-smoke-seed809-v3-lr1-seed809-step10-tinker-7aa9c934-0176-520-e160ecdecbcd) | public → public |
+| [`arvindcr4/pavlov-xlam-smoke-seed809-v3-lr1-seed809-step5-tinker-7aa9c934-0176-520-ad6a20756a39`](https://huggingface.co/arvindcr4/pavlov-xlam-smoke-seed809-v3-lr1-seed809-step5-tinker-7aa9c934-0176-520-ad6a20756a39) | public → public |
+| [`arvindcr4/pavlov-xlam-smoke-seed809-v4-lr4-seed809-step0-tinker-04f15952-db25-588-5354cf5e9dd8`](https://huggingface.co/arvindcr4/pavlov-xlam-smoke-seed809-v4-lr4-seed809-step0-tinker-04f15952-db25-588-5354cf5e9dd8) | public → public |
+| [`arvindcr4/pavlov-xlam-smoke-seed809-v4-lr4-seed809-step10-tinker-04f15952-db25-588-6eec81320df8`](https://huggingface.co/arvindcr4/pavlov-xlam-smoke-seed809-v4-lr4-seed809-step10-tinker-04f15952-db25-588-6eec81320df8) | public → public |
+| [`arvindcr4/pavlov-xlam-smoke-seed809-v4-lr4-seed809-step5-tinker-04f15952-db25-588-0d15aee3b920`](https://huggingface.co/arvindcr4/pavlov-xlam-smoke-seed809-v4-lr4-seed809-step5-tinker-04f15952-db25-588-0d15aee3b920) | public → public |
+| [`arvindcr4/pavlov-xlam-smoke-seed809-v4-lr4-seed809-stepfinal-tinker-04f15952-db25-588-61d5d33de302`](https://huggingface.co/arvindcr4/pavlov-xlam-smoke-seed809-v4-lr4-seed809-stepfinal-tinker-04f15952-db25-588-61d5d33de302) | public → public |
+| [`arvindcr4/samestack-v2-qwen2.5-1.5b-gsm8k-lora`](https://huggingface.co/arvindcr4/samestack-v2-qwen2.5-1.5b-gsm8k-lora) | (new) → public |
+| [`arvindcr4/tinker-rl-lab-e1-aero-s107-853facf3`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-aero-s107-853facf3) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-aero-s11-0d4c16f9`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-aero-s11-0d4c16f9) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-aero-s11-74c11bce`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-aero-s11-74c11bce) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-aero-s131-bdb898f5`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-aero-s131-bdb898f5) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-aero-s23-3573a421`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-aero-s23-3573a421) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-aero-s37-7547ba19`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-aero-s37-7547ba19) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-aero-s53-bd8d23f9`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-aero-s53-bd8d23f9) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-aero-s71-c73138a3`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-aero-s71-c73138a3) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-aero-s89-201279c6`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-aero-s89-201279c6) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-dapo-s107-f56135ec`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-dapo-s107-f56135ec) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-dapo-s11-b0047cb0`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-dapo-s11-b0047cb0) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-dapo-s11-cae89db8`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-dapo-s11-cae89db8) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-dapo-s11-e629158e`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-dapo-s11-e629158e) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-dapo-s131-95076dd5`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-dapo-s131-95076dd5) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-dapo-s23-c0d53921`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-dapo-s23-c0d53921) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-dapo-s37-605e7589`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-dapo-s37-605e7589) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-dapo-s53-a4c73e0e`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-dapo-s53-a4c73e0e) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-dapo-s71-98b3f510`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-dapo-s71-98b3f510) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-dapo-s89-c0e809d5`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-dapo-s89-c0e809d5) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-drgrpo-s107-e033d448`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-drgrpo-s107-e033d448) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-drgrpo-s11-1f9a8c70`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-drgrpo-s11-1f9a8c70) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-drgrpo-s11-52417d14`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-drgrpo-s11-52417d14) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-drgrpo-s131-31ef6f34`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-drgrpo-s131-31ef6f34) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-drgrpo-s23-63941052`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-drgrpo-s23-63941052) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-drgrpo-s37-5610e4f2`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-drgrpo-s37-5610e4f2) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-drgrpo-s53-1215e9cb`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-drgrpo-s53-1215e9cb) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-drgrpo-s71-918b9a8a`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-drgrpo-s71-918b9a8a) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-drgrpo-s89-faea790b`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-drgrpo-s89-faea790b) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-grpo-s107-5f0a7bf0`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-grpo-s107-5f0a7bf0) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-grpo-s11-4bb501e5`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-grpo-s11-4bb501e5) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-grpo-s11-78393a67`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-grpo-s11-78393a67) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-grpo-s11-8c7e0a2d`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-grpo-s11-8c7e0a2d) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-grpo-s11-90bf6f60`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-grpo-s11-90bf6f60) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-grpo-s11-bf1be43b`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-grpo-s11-bf1be43b) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-grpo-s131-6dd77cf1`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-grpo-s131-6dd77cf1) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-grpo-s23-0057b069`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-grpo-s23-0057b069) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-grpo-s37-54592080`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-grpo-s37-54592080) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-grpo-s53-c13bbc2b`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-grpo-s53-c13bbc2b) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-grpo-s71-f6d81075`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-grpo-s71-f6d81075) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-grpo-s89-2d3a2e89`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-grpo-s89-2d3a2e89) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-gspo-s107-879174ca`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-gspo-s107-879174ca) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-gspo-s11-5f4fc0d3`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-gspo-s11-5f4fc0d3) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-gspo-s11-bf26d8da`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-gspo-s11-bf26d8da) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-gspo-s131-726607de`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-gspo-s131-726607de) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-gspo-s23-1c16ac07`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-gspo-s23-1c16ac07) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-gspo-s37-60e5b791`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-gspo-s37-60e5b791) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-gspo-s53-ada5a2c2`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-gspo-s53-ada5a2c2) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-gspo-s71-10ef44ab`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-gspo-s71-10ef44ab) | public → public |
+| [`arvindcr4/tinker-rl-lab-e1-gspo-s89-3ec7b7f9`](https://huggingface.co/arvindcr4/tinker-rl-lab-e1-gspo-s89-3ec7b7f9) | public → public |
+| [`arvindcr4/zvf-grpo-qwen3.5-4b-gsm8k-s123`](https://huggingface.co/arvindcr4/zvf-grpo-qwen3.5-4b-gsm8k-s123) | private → public |

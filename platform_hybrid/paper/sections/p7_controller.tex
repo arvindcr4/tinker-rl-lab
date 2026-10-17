@@ -80,8 +80,9 @@ lack.
 
 \paragraph{What the controller is for.} The honest summary of
 Table~\ref{tab:p7-e3} is that on a task this well-conditioned, several roads
-lead to similar held-out gains---consistent with the closed-stack 12-cell
-result where all four recipe labels landed within noise. The controller's
+lead to similar held-out gains---as in the closed-stack 12-cell result, where
+the four recipe labels spanned only $0.034$ in last-10 reward (not shown
+equivalent at 3 seeds). The controller's
 value is not a higher ceiling on easy tasks; it is (i) a mechanism that
 targets the failure mode T1/T2 predict for \emph{hard} or drifting prompt
 populations, where fixed-$G$ recipes starve; and (ii) an audit trail: every
@@ -1999,6 +2000,19 @@ $n_{\mathrm{steps}}{=}40$, $n_{\mathrm{prompts}}{=}16$.
 \subsection{Controller trigger $\times$ anti-herding $\delta_{\mathrm{div}}$
 paired counterfactual (iter 67)}
 \label{sec:p7-controller-antiherding}
+
+\paragraph{Retraction notice (2026-10-16).} The ``anti-herding'' quantity
+$\delta_{\mathrm{div}}=\mathrm{ZVF}_{\mathrm{iid}}-\mathrm{ZVF}_{\mathrm{obs}}$
+used here is an estimator artefact. With $\mathrm{ZVF}_{\mathrm{iid}}$
+evaluated at a group's own plug-in $\hat p=k/G$, $\delta_{\mathrm{div}}\ge0$
+for every group by construction; evaluated at a pooled or step-mean $\bar p$,
+$\delta_{\mathrm{div}}\le0$ in expectation by Jensen's inequality ($h_G(p)=p^G+(1-p)^G$
+is convex). It does not measure rollout (anti-)herding. Results in this
+subsection that rank, trigger, or size $G$ on $\delta_{\mathrm{div}}$ are
+withdrawn and kept only as an audit trail. Batch ZVF is $\E_i[h_G(p_i)]$; its
+excess over $h_G(\bar p)$ reflects prompt-difficulty dispersion (see the P2
+correction note).
+
 
 The N2 four-method reward tensors carry a richer statistic than ZVF alone:
 the anti-herding diversity bonus $\delta_{\mathrm{div}} = \mathrm{ZVF}^{\mathrm{iid}}

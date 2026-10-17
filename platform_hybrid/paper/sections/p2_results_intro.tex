@@ -5,11 +5,20 @@ We evaluate ZVF along three axes: its association with training failure, its
 temporal behavior, and its coupling to nuisance variables. Pooling per-experiment
 means across the benchmark (using per-experiment rather than per-step rows, since
 per-step ZVF is autocorrelated), mean ZVF correlates with catastrophic collapse
-at Spearman $\rho = 0.56$ (Pearson point-biserial $0.62$) but with the final held-out accuracy at
-only $\rho \approx 0.27$. The gap is the crux of the pillar: ZVF flags when a run
-has stopped producing within-group signal, yet a low ZVF does not guarantee a
-large held-out gain, because a group can be information-rich and still fail to
-generalize.
+at Spearman $\rho = 0.56$ (Pearson point-biserial $0.62$), an association carried
+largely by two $G{=}1$ tool-use cells whose ZVF is $1$ by construction. An earlier
+revision also reported $\rho \approx 0.27$ with final held-out accuracy; that
+figure is \emph{withdrawn} (17 finite cells, 9 of them simulation rows, mixed
+outcome definitions; Section~\ref{sec:zvf-cross-experiment:corr}). We make no
+claim that ZVF predicts outcome. Likewise withdrawn is the ``anti-herding''
+divergence $\delta_{\mathrm{div}}=+0.1224$ and every quantity derived from it
+(iso-$G$ corrections, $\delta_{\mathrm{div}}$ triggers in later sections): when
+$\mathrm{ZVF}_{\mathrm{iid}}$ is evaluated at the same group's plug-in $\hat p$,
+$\delta_{\mathrm{div}}\ge0$ for every group by construction (and is $+0.105$ in
+expectation under exactly i.i.d.\ rollouts), and when it is evaluated at a pooled
+$\bar p$, $\delta_{\mathrm{div}}\le0$ in expectation by Jensen's inequality.
+Section~\ref{sec:zvf-cross-source-falsification} gives the corrected reading: ZVF
+is a convex functional of the prompt-difficulty distribution.
 
 The subsections that follow develop this picture. We first formalize ZVF and its
 measurement pipeline, then show it is a temporally sticky signal: across 60

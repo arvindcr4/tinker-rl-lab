@@ -9,11 +9,10 @@ they were run under a declared protocol and are summarized faithfully, but
 they have not undergone the full artifact-release pipeline of the \ours{}
 Stratum-A results, and the closed stack involved cannot be independently
 re-executed by readers---an irony we acknowledge and which the manifest
-standard is designed to at least make legible. Second, the gradient-signal
-validation behind item 4's theory ($\mathrm{corr} = +0.71$ between gradient
-norm and $p(1-p)$) is toy-scale---a 0.5B model on synthetic arithmetic with
-an open backward pass---and is directional evidence only; we do not report it
-as an effect size. Third, our evidence is concentrated on GSM8K-style
+standard is designed to at least make legible. Second, item 4's theory has no
+gradient-level support: the earlier toy correlation ($+0.71$) cannot be
+recomputed, rests on about 30 serially dependent rows from one run, and is
+largely mechanical, so we no longer cite it. Third, our evidence is concentrated on GSM8K-style
 verifiable-reward tasks and the GRPO family; the eight-item standard (seven
 run-manifest fields plus pass@$k$ reporting) was chosen for that regime, and
 reward-model-based RLHF stacks may need additional items

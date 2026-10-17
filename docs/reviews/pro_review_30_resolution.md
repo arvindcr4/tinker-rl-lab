@@ -16,3 +16,5 @@ No training, providers, paid jobs, existing results, or generated analyses were 
 - 11 onward: source cuts off mid-sentence (`peak - 4 * sqrt`); missing continuation was not reconstructed or assumed fixed.
 
 Validation: `python -m pytest -q tests/reviews/test_review30_berkeley.py` (8 synthetic CPU tests); compileall of Berkeley sources. Tests extract pure functions to avoid legacy import-time result writers. Remaining scientific work requires measured independent observations, justified estimands and preregistered designs; these edits deliberately do not create experimental evidence.
+
+Post-commit audit: added an end-to-end synthetic residualization regression, corrected the remaining scalar-prediction consumer, and removed obsolete decisive console verdicts and mismatched H1 labels. Review-30 suite now has 9 passing tests.

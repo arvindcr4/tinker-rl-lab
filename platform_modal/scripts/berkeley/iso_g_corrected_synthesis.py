@@ -270,12 +270,10 @@ def h5_practitioner_iso_g():
                 g_star[T] = G
             except (IndexError, ValueError):
                 continue
-    # empirical Iso-G corrected prescription:
-    # mean_G_emp(Y=0.5)=2.56 in iter46; over-herding correction +1 → ~3.56
-    # rounded up to nearest power of 2 → 4
+    # Test the stated empirical median plus correction without hidden rounding.
     G_emp_median = 4
     G_correction = 1
-    G_iso_corrected = G_emp_median + G_correction   # = 5, but bound is the >= floor
+    G_iso_corrected = G_emp_median + G_correction   # = 5, the tested minimum
     # The corrected synthesis interprets G_iso_corrected as the minimum
     # contrast-budget; G*_raw is the compute-budget optimum and must
     # be >= G_iso_corrected to satisfy both constraints.

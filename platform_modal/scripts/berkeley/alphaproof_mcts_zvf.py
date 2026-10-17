@@ -196,17 +196,15 @@ def main():
         traj_sorted = traj
         rew = [t["mean_reward"] for t in traj_sorted]
         adv_orig = [t["advantage_variance"] for t in traj_sorted]
-        # original ZVF = mean advantage_variance
+        # Advantage variance is reported separately; it is not a zero-variance fraction.
         zvf_naive = sum(adv_orig) / len(adv_orig)
         for w in WINDOWS:
             # Look-back window mean of mean_reward
-            tree_vars = []
             tree_rew = []
             for idx in range(len(rew)):
                 lo = max(0, idx - w + 1)
                 window = rew[lo : idx + 1]
                 v = sum(window) / len(window)
-                tree_vars.append(adv_orig[idx])
                 tree_rew.append(abs(rew[idx] - v))
             # tree-advantage proxy: mean of |r - V_tree| within window
             tree_adv_proxy = sum(tree_rew) / len(tree_rew)
@@ -214,35 +212,20 @@ def main():
                 "G": g, "seed": sd, "w": w,
                 "mean_advantage_variance": zvf_naive,
                 "mean_reward_deviation": tree_adv_proxy,
-                "reward_deviation": tree_adv_proxy,
             })
     write_tsv(OUTDIR / "alphaproof_tree_window.tsv",
-["G", "seed", "w", "mean_advantage_variance", "mean_reward_deviation", "reward_deviation"],
+["G", "seed", "w", "mean_advantage_variance", "mean_reward_deviation"],
               h1_rows)
     print(f"H1 wrote alphaproof_tree_window.tsv n={len(h1_rows)}")
 
-    # H1 verdict: pct_negative == 1.0 across all w (tree-baseline smoothing
-    # always reduces tree-advantage proxy). This is the AlphaProof-style
-    # claim: any non-trivial look-back smoothing strictly improves the
-    # baseline (CDH-consistent at small w).
     by_w = defaultdict(list)
     for r in h1_rows:
-        by_w[r["w"]].append(r["reward_deviation"])
-    h1_summary = {}
-    for w in sorted(by_w):
-        h1_summary[w] = {
-            "n": len(by_w[w]),
-            "mean_delta": sum(by_w[w]) / len(by_w[w]),
-            "pct_negative": sum(1 for d in by_w[w] if d < 0) / len(by_w[w]),
-        }
-    all_pct_neg = all(h1_summary[w]["pct_negative"] == 1.0 for w in sorted(by_w))
-    # monotone non-increasing magnitude in w (i.e., mean_delta monotone non-decreasing toward 0)
-    means = [h1_summary[w]["mean_delta"] for w in sorted(by_w)]
-    monotone_mag = all(means[i] >= means[i + 1] for i in range(len(means) - 1))
-    h1_verdict = ("DECISIVE" if all_pct_neg
-                  else "SUGGESTIVE" if sum(h1_summary[w]["pct_negative"] for w in sorted(by_w)) >= 0.7 * len(h1_summary)
-                  else "NULL")
-    print(f"H1: mean Δ by w = {h1_summary}, pct_neg_all_w={all_pct_neg}, monotone_mag={monotone_mag} -> {h1_verdict}")
+        by_w[r["w"]].append(r["mean_reward_deviation"])
+    h1_summary = {w: {"n_runs": len(values), "mean_reward_deviation": statistics.fmean(values),
+        "sd_across_runs": statistics.stdev(values) if len(values) > 1 else None}
+        for w, values in sorted(by_w.items())}
+    h1_verdict = "EXPLORATORY_PROXY_ONLY"
+    print(f"H1: reward deviations by window = {h1_summary} -> {h1_verdict}")
 
     # ---- H2: Compute equivalence (Tree-ZVF(G=2, w=2) ≳ ZVF(G=4, w=1)) ----
     # Compare zvf_naive at G=4 vs tree_adv_proxy at G=2, w=2 paired by seed
@@ -266,8 +249,7 @@ def main():
     # prediction: g2_w2 <= g4_w1 (tree-baseline partially substitutes)
     h2_d = cohens_d([p["g2_w2"] for p in paired], [p["g4_w1"] for p in paired])
     h2_neg = sum(1 for p in paired if p["delta"] <= 0)
-    h2_verdict = "INSUFFICIENT_DATA" if len(paired) < 2 else ("DECISIVE" if h2_neg / len(paired) >= 0.5 and h2_d < 0
-                  else "SUGGESTIVE" if h2_neg / len(paired) >= 0.5 else "NULL")
+    h2_verdict = "INSUFFICIENT_DATA" if len(paired) < 2 else "EXPLORATORY_PROXY_ONLY"
     print(f"H2: g2_w2 vs g4_w1, neg={h2_neg}/{len(paired)} d={h2_d:.3f} -> {h2_verdict}")
 
     # ---- H3: Calibrated γ < 1 reduces ZVF magnitude channel (iter127) ----
@@ -298,8 +280,7 @@ def main():
     h3_neg_at_opt = sum(1 for r in h3_rows if r["gamma"] == gamma_opt and r["delta_mag"] < 0)
     h3_total_at_opt = sum(1 for r in h3_rows if r["gamma"] == gamma_opt)
     # CDH-consistent prediction: gamma_opt < 1.0
-    h3_verdict = ("DECISIVE" if h3_neg_at_opt / max(1, h3_total_at_opt) >= 0.5 and gamma_opt < 1.0
-                  else "SUGGESTIVE" if gamma_opt < 1.0 else "NULL")
+    h3_verdict = "EXPLORATORY_PROXY_ONLY"
     print(f"H3: mean Δmag by γ = {h3_summary}, γ*={gamma_opt}, "
           f"neg_at_opt={h3_neg_at_opt}/{h3_total_at_opt} -> {h3_verdict}")
 
@@ -335,8 +316,7 @@ def main():
     pos_corr = sum(1 for r in h4_rows if r["pearson_zvf_to_treeadv"] > 0)
     h4_strict = sum(1 for r in h4_rows if r["pearson_zvf_to_treeadv"] > 0.5)
     n_total = len(h4_rows)
-    h4_verdict = "INSUFFICIENT_DATA" if n_total < 2 else ("DECISIVE" if pos_corr / n_total >= 0.7
-                  else "SUGGESTIVE" if pos_corr / n_total >= 0.5 else "NULL")
+    h4_verdict = "INSUFFICIENT_DATA" if n_total < 2 else "EXPLORATORY_PROXY_ONLY"
     print(f"H4: positive Pearson on {pos_corr}/{n_total} (strict>{0.5}: {h4_strict}/{n_total}) -> {h4_verdict}")
 
     # ---- H5: Δ(naive vs tree) tracks heldout_acc at final step (iter130) ----
@@ -372,9 +352,7 @@ def main():
               ["method", "seed", "w", "tree_zvf_proxy",
                "zvf_naive_mean", "heldout_acc_final"], paired_acc)
     # prediction: both are positive
-    h5_verdict = ("DECISIVE" if sp > sp_naive > 0
-                  else "SUGGESTIVE" if sp > 0
-                  else "NULL")
+    h5_verdict = "EXPLORATORY_PROXY_ONLY" if correlations else "INSUFFICIENT_DATA"
     print(f"H5: spearman ρ(tree, heldout)={sp:.3f}, ρ(naive, heldout)={sp_naive:.3f} -> {h5_verdict}")
 
     # Aggregated trajectory proxies cannot establish changes in within-group ZVF.
@@ -410,22 +388,22 @@ def main():
             "iter130_variance_mitigation": str(IT130_TSV.relative_to(ROOT)),
         },
         "hypotheses": [
-            {"id": "H1", "claim": "Tree-window ZVF mean Δ <0 for all w (all smoothing strictly helps)",
-             "summary": h1_summary, "all_pct_neg": all_pct_neg, "monotone_mag": monotone_mag,
+            {"id": "H1", "claim": "Descriptive tree-window mean reward deviation; no ZVF inference",
+             "summary": h1_summary,
              "verdict": h1_verdict},
-            {"id": "H2", "claim": "Tree-baseline G=2, w=2 bounds G=4, w=1 (compute equivalence)",
+            {"id": "H2", "claim": "Descriptive reward-deviation contrast across G/window; not compute equivalence",
              "n_paired": len(paired), "neg_delta": h2_neg,
              "cohens_d": h2_d, "sign_test": h2_st,
              "verdict": h2_verdict},
-            {"id": "H3", "claim": "Calibrated γ < 1 reduces magnitude channel (CDH-consistent)",
+            {"id": "H3", "claim": "Descriptive discounted-baseline deviation sweep; no ZVF inference",
              "mean_delta_by_gamma": h3_summary,
              "gamma_optimal": gamma_opt,
              "neg_at_opt": f"{h3_neg_at_opt}/{h3_total_at_opt}",
              "verdict": h3_verdict},
-            {"id": "H4", "claim": "Tree-baseline ZVF sign-stable across 9 methods (Pearson > 0)",
+            {"id": "H4", "claim": "Within-run association of reward-deviation proxy with observed ZVF; not stability",
              "n_total": n_total, "n_pos_corr": pos_corr, "n_strict": h4_strict,
              "verdict": h4_verdict},
-            {"id": "H5", "claim": "ρ(tree-ZVF, final heldout acc) > ρ(naive ZVF, final heldout acc)",
+            {"id": "H5", "claim": "Method/window-specific seed correlations with final accuracy; exploratory",
              "method_window_seed_correlations": correlations,
              "mean_descriptive_rho_proxy": sp, "mean_descriptive_rho_zvf": sp_naive,
              "verdict": h5_verdict},

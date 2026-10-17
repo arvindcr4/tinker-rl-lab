@@ -360,8 +360,7 @@ def residualization():
     # Compute correlations between the two residual sequences
     resid_cap = [a["r_mean"] - (f_cap["intercept"] + f_cap["slope"] * xs_cap[i])
                  for i, a in enumerate(full)]
-    resid_cap_rqs = [a["r_mean"] - (f_cap_rqs["intercept"] + f_cap_rqs["slope"]
-                                     * xs_cap_rqs[i]) for i, a in enumerate(full)]
+    resid_cap_rqs = [a["r_mean"] - f_cap_rqs["predictions"][i] for i, a in enumerate(full)]
     rqs = [a["RQS"] for a in full]
     logN = [a["logN"] for a in full]
     r_rqs_p, p_rqs = pearson(rqs, resid_cap)

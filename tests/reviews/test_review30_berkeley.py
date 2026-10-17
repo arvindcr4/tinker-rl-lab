@@ -85,3 +85,21 @@ def test_corrected_policy_is_tested():
 def test_capability_labels_ordered():
     f = functions('cybench_capability_tiers.py', 'cybench_tier')['cybench_tier']
     assert [f(x) for x in [.1,.3,.6,.9]] == ['C1_Low','C2_Lower','C3_Upper','C4_High']
+
+
+def test_residualization_uses_scalar_multivariable_predictions():
+    ns = functions('eureka_reward_design_quality.py', '_fit_ols', 'residualization')
+    ns.update(RES=Path('res'), OUT=Path('out'))
+    rows = [['model','params_B','r_mean','r_peak','family','zero_frac']]
+    rqs = [['model','rqs']]
+    for i in range(8):
+        capable, quality = i%2, i/10
+        rows.append([str(i), str(i+1), str(.2+.1*capable+.3*quality), '.9', 'qwen' if capable else 'other', '.1'])
+        rqs.append([str(i), str(quality)])
+    ns['_read'] = lambda path: rqs if path.name == 'eureka_rqs_per_anchor.tsv' else rows
+    def scalar_correlation(x,y):
+        assert all(isinstance(float(v), float) for v in y)
+        return 0.,1.
+    ns.update(pearson=scalar_correlation, spearman=scalar_correlation)
+    _, summary = ns['residualization']()
+    assert summary['rss_cap_plus_RQS'] < 1e-20

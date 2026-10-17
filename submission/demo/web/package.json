@@ -1,0 +1,22 @@
+{
+  "name": "tinkerrl-demo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "data": "python3 build_demo_web.py",
+    "dev": "vite",
+    "build": "vite build && node -e \"require('fs').copyFileSync('dist/index.html','tinkerrl_demo.html')\"",
+    "preview": "vite preview",
+    "test": "node tests/grade_all.mjs && python3 tests/test_demo.py"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "4.3.4",
+    "vite": "5.4.11",
+    "vite-plugin-singlefile": "2.0.3"
+  }
+}

@@ -96,9 +96,15 @@ for key in ("stored", "mine"):
     post = {a: {s: x[f"{key}_post"].mean() for s, x in d.items()} for a, d in runs.items()}
     C = {"g8-ppo": paired(post["grpo_g8"], post["ppo"]), "g8-g2": paired(post["grpo_g8"], post["grpo_g2"]),
          "g2-ppo": paired(post["grpo_g2"], post["ppo"])}
-    ht, hs = holm({k: c["p_t"] for k, c in C.items()}), holm({k: c["p_signflip"] for k, c in C.items()})
-    for k in C:
+    if "ppo_8x8" in post:
+        C["g8-ppo_8x8"] = paired(post["grpo_g8"], post["ppo_8x8"])
+    # Holm over the pre-specified primary family (module docstring of the run script) once it is
+    # complete; before the exposure-matched arm existed it ran over the three computed contrasts.
+    fam = ["g8-ppo", "g8-ppo_8x8", "g8-g2"] if "g8-ppo_8x8" in C else ["g8-ppo", "g8-g2", "g2-ppo"]
+    ht, hs = holm({k: C[k]["p_t"] for k in fam}), holm({k: C[k]["p_signflip"] for k in fam})
+    for k in fam:
         C[k]["holm_p_t"], C[k]["holm_p_signflip"] = ht[k], hs[k]
+    R["holm_family"] = fam
     R["contrasts"][key] = C
 
 # also delta-vs-base (post - pre, same run) contrasts as a covariate-adjusted check
@@ -107,7 +113,10 @@ R["contrasts"]["gain_over_own_pre"] = {"g8-ppo": paired(post_d["grpo_g8"], post_
 
 # item-level secondary
 rng = np.random.default_rng(1)
-for k, (x, y) in {"g8-ppo": ("grpo_g8", "ppo"), "g8-g2": ("grpo_g8", "grpo_g2"), "g2-ppo": ("grpo_g2", "ppo")}.items():
+ITEM = {"g8-ppo": ("grpo_g8", "ppo"), "g8-g2": ("grpo_g8", "grpo_g2"), "g2-ppo": ("grpo_g2", "ppo")}
+if "ppo_8x8" in runs:
+    ITEM["g8-ppo_8x8"] = ("grpo_g8", "ppo_8x8")
+for k, (x, y) in ITEM.items():
     seeds = sorted(set(runs[x]) & set(runs[y]))
     X = np.stack([runs[x][s]["stored_post"] for s in seeds])  # seeds x items
     Y = np.stack([runs[y][s]["stored_post"] for s in seeds])

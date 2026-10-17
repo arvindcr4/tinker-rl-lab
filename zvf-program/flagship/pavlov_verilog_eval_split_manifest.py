@@ -170,6 +170,9 @@ def _load_authority(contract_path: str | Path | None = None) -> Mapping[str, Any
     if not isinstance(payload, Mapping):
         raise VerilogEvalSplitManifestError("authority contract must be a JSON object")
 
+    installed = json.loads((base / "pavlovs_domain_contract.json").read_text(encoding="utf-8"))
+    if payload != installed:
+        raise VerilogEvalSplitManifestError("authority must match independently installed contract")
     registry = payload.get("suite_registry")
     if not isinstance(registry, Mapping):
         raise VerilogEvalSplitManifestError("authority contract missing suite_registry")
@@ -193,6 +196,8 @@ def _validate_dataset(value: Any, authority: Mapping[str, Any]) -> tuple[str, st
     if not isinstance(value, Mapping):
         raise VerilogEvalSplitManifestError("dataset must be an object")
     revision = _require_hex40(value.get("revision"), "dataset.revision")
+    if revision != PINNED_REVISION:
+        raise VerilogEvalSplitManifestError("unapproved benchmark revision")
     license_text = _require_text(value.get("license"), "dataset.license")
     source = _require_url(value.get("source"), "dataset.source")
     authoritative_source = _require_url(authority.get("url"), "contract suite url")
@@ -300,7 +305,7 @@ def _validate_decontamination(value: Any) -> dict[str, Any]:
     if isinstance(value, str):
         receipt_id = _require_hex40(value, "decontamination.receipt_id")
         return {
-            "status": "verified",
+            "status": "asserted_unverified",
             "receipt_id": receipt_id,
             "visibility": "private",
             "safe_public_artifact": True,
@@ -321,7 +326,8 @@ def _validate_decontamination(value: Any) -> dict[str, Any]:
             "public decontamination evidence must set safe_public_artifact=True"
         )
     return {
-        "status": status,
+        "status": "asserted_unverified",
+        "reported_status": status,
         "receipt_id": receipt_id,
         "visibility": visibility.lower(),
         "safe_public_artifact": bool(value.get("safe_public_artifact")),
@@ -397,7 +403,7 @@ def build_split_manifest_record(
         if isinstance(scope, Mapping) and scope.get("e_suite_ids"):
             raise VerilogEvalSplitManifestError("manifest scope includes E-suite entries")
 
-        blockers: list[str] = []
+        blockers: list[str] = ["authenticated external decontamination verification is unavailable"]
         _validate_no_network_or_credentials(manifest, blockers)
 
         blockers = sorted(set(blockers))
@@ -605,6 +611,17 @@ def build_task_table(checkout: Path, dataset_name: str) -> list[dict[str, Any]]:
     return table
 
 
+def _verify_checkout_identity(checkout: Path, revision: str) -> None:
+    import subprocess
+    try:
+        head = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
+        dirty = subprocess.check_output(["git", "-C", str(checkout), "status", "--porcelain", "--untracked-files=all"], text=True).strip()
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise VerilogEvalSplitManifestError("checkout provenance cannot be verified") from exc
+    if head != revision or dirty:
+        raise VerilogEvalSplitManifestError("checkout revision mismatch or uncommitted changes")
+
+
 def build_manifest_from_checkout(
     checkout: str | Path,
     *,
@@ -622,6 +639,9 @@ def build_manifest_from_checkout(
     """
 
     checkout = Path(checkout)
+    if revision != PINNED_REVISION or dataset_license != DATASET_LICENSE or tuple(datasets) != tuple(DATASET_NAMES):
+        raise VerilogEvalSplitManifestError("unapproved benchmark revision, license, or dataset roster")
+    _verify_checkout_identity(checkout, revision)
     tasks: list[dict[str, Any]] = []
     per_dataset: dict[str, Any] = {}
     for dataset_name in datasets:

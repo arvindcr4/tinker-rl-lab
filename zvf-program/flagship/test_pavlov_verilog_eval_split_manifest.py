@@ -6,6 +6,7 @@ import hashlib
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from importlib import import_module
 from pathlib import Path
 import sys
@@ -53,7 +54,7 @@ def _valid_manifest() -> dict[str, Any]:
         "category": "code",
         "role": "primary_eval",
         "dataset": {
-            "revision": "a" * 40,
+            "revision": validator.PINNED_REVISION,
             "license": "apache-2.0",
             "source": "https://github.com/NVlabs/verilog-eval",
         },
@@ -79,8 +80,8 @@ def _valid_manifest() -> dict[str, Any]:
 class VerilogEvalSplitManifestBoundaryTests(unittest.TestCase):
     def test_valid_manifest_builds_ready_and_disables_launch(self) -> None:
         report = validator.build_split_manifest_record(_valid_manifest())
-        self.assertEqual(report["status"], "READY")
-        self.assertTrue(report["split_ready"])
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertFalse(report["split_ready"])
         self.assertFalse(report["paid_launch_allowed"])
         self.assertFalse(report["launch"]["allowed"])
         self.assertIn("launch is intentionally disabled", report["launch"]["reasons"])
@@ -170,8 +171,8 @@ class VerilogEvalSplitManifestBoundaryTests(unittest.TestCase):
     def test_dataset_and_receipt_digests_are_deterministic(self) -> None:
         first = validator.build_split_manifest_record(_valid_manifest())
         second = validator.build_split_manifest_record(copy.deepcopy(_valid_manifest()))
-        self.assertEqual(first["status"], "READY")
-        self.assertEqual(second["status"], "READY")
+        self.assertEqual(first["status"], "BLOCKED")
+        self.assertEqual(second["status"], "BLOCKED")
         self.assertEqual(first["task_id_digest"], second["task_id_digest"])
         self.assertEqual(
             first["split_manifest_payload_digest"],
@@ -180,7 +181,7 @@ class VerilogEvalSplitManifestBoundaryTests(unittest.TestCase):
 
     def test_validate_record_helper_matches_status(self) -> None:
         ready = validator.build_split_manifest_record(_valid_manifest())
-        self.assertEqual(validator.validate_split_manifest_record(ready), [])
+        self.assertIn("authenticated external", " ".join(validator.validate_split_manifest_record(ready)))
 
         blocked = validator.build_split_manifest_record({"suite_id": "x"})
         self.assertNotEqual(validator.validate_split_manifest_record(blocked), [])
@@ -190,7 +191,7 @@ class VerilogEvalSplitManifestBoundaryTests(unittest.TestCase):
         try:
             manifest = _valid_manifest()
             temporary.write_text(json.dumps(manifest), encoding="utf-8")
-            self.assertEqual(validator.main(["--manifest", str(temporary)]), 0)
+            self.assertEqual(validator.main(["--manifest", str(temporary)]), 1)
 
             manifest["suite_id"] = "not-verilog"
             temporary.write_text(json.dumps(manifest), encoding="utf-8")
@@ -235,6 +236,9 @@ def _write_synthetic_checkout(root: Path, *, problems: dict[str, list[str]]) -> 
 
 class VerilogEvalSplitManifestBuilderTests(unittest.TestCase):
     def setUp(self) -> None:
+        provenance = patch.object(validator, "_verify_checkout_identity")
+        provenance.start()
+        self.addCleanup(provenance.stop)
         self._temp = tempfile.TemporaryDirectory()
         self.root = Path(self._temp.name)
         self.addCleanup(self._temp.cleanup)
@@ -342,7 +346,7 @@ class VerilogEvalSplitManifestBuilderTests(unittest.TestCase):
                 "safe_public_artifact": True,
             },
         )
-        self.assertEqual(receipt["status"], "READY")
+        self.assertEqual(receipt["status"], "BLOCKED")
         self.assertEqual(receipt["validation"]["split"]["primary_eval"]["count"], 4)
         self.assertFalse(receipt["validation"]["paid_launch_allowed"])
 

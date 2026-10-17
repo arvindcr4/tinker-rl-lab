@@ -276,7 +276,7 @@ class VerilogEvalBoundaryTests(unittest.TestCase):
         manifest["costs"]["total_usd"] = -1
         blocked = validator.build_verilog_eval_boundary_record(manifest)
         self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("cannot be negative" in item for item in blocked["blockers"]))
+        self.assertTrue(any("finite and non-negative" in item for item in blocked["blockers"]))
 
     def test_offline_gate_blocks_network_and_credentials(self) -> None:
         manifest = _valid_manifest()

@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -178,6 +179,9 @@ def _load_authority(contract_path: str | Path | None = None) -> Mapping[str, Any
         raise VerilogEvalBoundaryError(f"authority contract is not valid JSON: {exc}") from exc
     if not isinstance(payload, Mapping):
         raise VerilogEvalBoundaryError("contract must be a JSON object")
+    installed = json.loads((base / "pavlovs_domain_contract.json").read_text(encoding="utf-8"))
+    if payload != installed:
+        raise VerilogEvalBoundaryError("authority must match independently installed contract")
     registry = payload.get("suite_registry")
     if not isinstance(registry, Mapping):
         raise VerilogEvalBoundaryError("contract missing suite_registry")
@@ -474,8 +478,8 @@ def _validate_costs(raw: Any) -> dict[str, Any]:
     total_usd = raw.get("total_usd")
     if not isinstance(total_usd, (int, float)) or isinstance(total_usd, bool):
         raise VerilogEvalBoundaryError("costs.total_usd must be a number")
-    if total_usd < 0:
-        raise VerilogEvalBoundaryError("costs.total_usd cannot be negative")
+    if not math.isfinite(total_usd) or total_usd < 0:
+        raise VerilogEvalBoundaryError("costs.total_usd must be finite and non-negative")
     if raw.get("paid_work") is True:
         raise VerilogEvalBoundaryError("costs.paid_work is not allowed for offline boundary")
     return {"status": status, "total_usd": float(total_usd)}

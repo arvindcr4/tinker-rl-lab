@@ -76,7 +76,17 @@ _E6_TEST_TRUST_ROOT = _e6_test_trust_root()
 
 def validate_webbench_manifest(manifest: object) -> dict[str, object]:
     """Test-only wrapper: production callers must supply --trust-roots/root input."""
-    return _validate_webbench_manifest(manifest, trust_root=_E6_TEST_TRUST_ROOT)
+    from unittest.mock import patch
+    from flagship import pavlov_webbench_eval_adapter as module
+    with patch.object(module, "TRUSTED_PROVIDER_FINGERPRINTS", frozenset({_E6_TEST_TRUST_ROOT["key_fingerprint"]})), patch.object(module, "TRUSTED_RECEIPT_KEYS", {_E6_TEST_TRUST_ROOT["key_id"]: _E6_TEST_TRUST_ROOT["public_key_b64"]}):
+        return _validate_webbench_manifest(manifest, trust_root=_E6_TEST_TRUST_ROOT)
+
+
+def _sign_receipt(record):
+    key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(_E6_TEST_PRIVATE_KEY_B64))
+    payload = {k: v for k, v in record.items() if k != "signature_b64"}
+    record["signature_b64"] = base64.b64encode(key.sign(json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode())).decode()
+    return record
 
 
 def _csv(rows: list[tuple[int, str, str, str]], header: str = CSV_HEADER) -> str:
@@ -102,7 +112,9 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
         }
         if payload_extra:
             payload.update(payload_extra)
-        return {
+        record = {
+            "schema_version": "pavlov-webbench-authenticated-receipt-v2",
+            "key_id": _E6_TEST_TRUST_ROOT["key_id"],
             "receipt_id": f"{number + 1000:040x}"[-40:],
             "digest": receipt_digest(binding, payload),
             "authenticated": True,
@@ -110,6 +122,7 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
             "binding": binding,
             "payload": payload,
         }
+        return _sign_receipt(record)
 
     def _manifest(self) -> dict[str, object]:
         task_ids = ["webbench-task-0001", "webbench-task-0002", "webbench-task-0003"]
@@ -388,6 +401,7 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
         receipt = manifest["task_receipt"]
         receipt["payload"]["task_id_hash"] = "f" * 64
         receipt["digest"] = receipt_digest(receipt["binding"], receipt["payload"])
+        _sign_receipt(receipt)
 
         report = validate_webbench_manifest(manifest)
 
@@ -509,8 +523,8 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
             )
 
         report = json.loads(process.stdout)
-        self.assertEqual(process.returncode, 0)
-        self.assertEqual(report["status"], "READY_PRIMARY_EVAL_PENDING_RECEIPTS")
+        self.assertEqual(process.returncode, 1)
+        self.assertEqual(report["status"], "BLOCKED")
         self.assertFalse(report["receipt_proven_heldout"])
         self.assertNotIn("Traceback", process.stderr)
 
@@ -643,6 +657,8 @@ class WebBenchSplitDerivationTests(unittest.TestCase):
         manifest["split_receipt"]["digest"] = receipt_digest(
             manifest["split_receipt"]["binding"], manifest["split_receipt"]["payload"]
         )
+        _sign_receipt(manifest["task_receipt"])
+        _sign_receipt(manifest["split_receipt"])
 
         report = validate_webbench_manifest(manifest)
         self.assertTrue(report["checks"]["tasks_and_split"], report["blocker_codes"])

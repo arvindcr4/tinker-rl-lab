@@ -594,11 +594,11 @@ def main() -> int:
         seed = tr["seed"]
         src = tr["source"]
         # AR(1) alarm: positive persistence > TH
-        ar1_alarm = next((r["step"] for r in tr["features"] if max(0.0, r["ar1"]) > TH_SINGLE), None)
+        ar1_alarm = next((r["step"] for r in tr["features"] if r["alarm_eligible"] and max(0.0, r["ar1"]) > TH_SINGLE), None)
         # CUSUM alarm
-        cs_alarm = next((r["step"] for r in tr["features"] if r["cusum"] > TH_SINGLE), None)
+        cs_alarm = next((r["step"] for r in tr["features"] if r["alarm_eligible"] and r["cusum"] > TH_SINGLE), None)
         # H-run alarm
-        h_alarm = next((r["step"] for r in tr["features"] if r["h_run_frac"] > TH_SINGLE), None)
+        h_alarm = next((r["step"] for r in tr["features"] if r["alarm_eligible"] and r["h_run_frac"] > TH_SINGLE), None)
         t_fail = tr["t_fail"]
         for channel, t_alarm in [("ar1", ar1_alarm), ("cusum", cs_alarm), ("h_run", h_alarm)]:
             lt = (t_fail - t_alarm) if (t_alarm is not None and t_alarm < t_fail) else "NA"

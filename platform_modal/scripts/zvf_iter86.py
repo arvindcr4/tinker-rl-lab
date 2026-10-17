@@ -185,8 +185,7 @@ def main():
                 min(leads) if leads else 0, max(leads) if leads else 0, len(leads))
 
 
-    # Re-run headline at K_PERSIST=5 tau=0.5 because that's the
-    # fully-recalling max-savings operating point (recompute lead times too).
+    # Select the in-sample cost minimum; this is not external policy validation.
     headline = select_operating_point(k_sens_rows)
     HEADLINE_K, HEADLINE_TAU = headline["k_persist"], headline["tau_optimal_at_C10"]
     savings_rows = []
@@ -322,7 +321,7 @@ def main():
             col = cmap((math.log(c) - cmin) / (cmax - cmin))
             ax.plot(TAUS, ys, marker="o", color=col, label=f"C_ratio={c:g}")
         ax.axvline(HEADLINE_TAU, color="red", linestyle="--", alpha=0.7,
-                   label=f"headline tau={HEADLINE_TAU:g} (K=5)")
+                   label=f"headline tau={HEADLINE_TAU:g} (K={HEADLINE_K})")
         ax.set_xlabel(r"alarm threshold $\tau$")
         ax.set_ylabel(r"total cost = $C_\mathrm{ratio}\,\cdot$false-stop  + missed")
         ax.set_title("ZVF alarm: cost-vs-threshold (K=1, 45 traces)")
@@ -355,7 +354,7 @@ def main():
         ax.set_xticks(range(len(order)))
         ax.set_xticklabels([label[c] for c in order], fontsize=8, rotation=15, ha="right")
         ax.set_ylabel("# traces (variance-mitigation pool)")
-        ax.set_title(f"ZVF alarm counterfactual at K=5, tau={HEADLINE_TAU:g}")
+        ax.set_title(f"ZVF alarm counterfactual at K={HEADLINE_K}, tau={HEADLINE_TAU:g}")
         fig.tight_layout()
         fig.savefig(FIG / "zvf_iter86_savings.pdf")
         fig.savefig(FIG / "zvf_iter86_savings.png", dpi=130)

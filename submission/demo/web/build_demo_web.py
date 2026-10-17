@@ -26,6 +26,7 @@ sys.path.insert(0, str(ANALYSIS_DIR))
 from analysis_plan import analyze_runs, default_plan, shared_stack_fingerprint
 from platform_hybrid.experiments.samestack_contract import validate_completion
 
+PLATFORM = ANALYSIS_DIR / "platform_calibration.json"
 ARMS = ["grpo_g8", "grpo_g2", "ppo", "ppo_8x8"]
 
 sys.path.insert(0, str(ROOT / "platform_hybrid/registry"))
@@ -212,7 +213,7 @@ def provenance(data, plan_path=None):
             else:
                 missing.append(f"Completion bundle excluded: {run['source_path']}: {run['completion_failure']}")
     for path, role in [(GOLD, "ordered gold questions and answers"), (V1, "superseded historical analysis"),
-                       (AUDIT, "audit summary"), (HERE / "build_demo_web.py", "exporter"),
+                       (AUDIT, "audit summary"), (PLATFORM, "historical cross-platform calibration"), (HERE / "build_demo_web.py", "exporter"),
                        (HERE / "package-lock.json", "frontend dependency lock"),
                        (HERE / "package.json", "build commands"),
                        (ROOT / "platform_hybrid/registry/query.py", "registry comparison implementation"),
@@ -273,9 +274,17 @@ def export_data(plan_path=None, results_dir=None):
     plan = json.loads(plan_path.read_text()) if plan_path else default_plan()
     ss, analysis = samestack(plan, results_dir)
     data = {"samestack": ss, "analysis": analysis, "samestack_v1": samestack_v1(),
-            "examples": examples(results_dir=results_dir), "grader_check": grader_check(results_dir), "stackdiff": stackdiff(), "audit": audit()}
+            "examples": examples(results_dir=results_dir), "grader_check": grader_check(results_dir), "stackdiff": stackdiff(), "audit": audit(), "platform": platform()}
     data["manifest"] = provenance(data, plan_path)
     return data
+
+
+def platform():
+    """Cross-platform calibration (Modal A10G vs Colab A100), if platform_calibration.py has been run."""
+    if not PLATFORM.exists():
+        return None
+    d = json.loads(PLATFORM.read_text(), parse_constant=lambda _: None)
+    return {**d, "path": str(PLATFORM.relative_to(ROOT)), "sha256": sha(PLATFORM)}
 
 
 def main():

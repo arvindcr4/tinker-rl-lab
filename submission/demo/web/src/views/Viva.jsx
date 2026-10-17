@@ -17,7 +17,7 @@ export default function Viva() {
     {
       q: "Table 6.2 is provisional. Why should we accept the GRPO vs PPO conclusion?",
       a: <>{s ? <>The canonical artifact contains {s.n} validated pairs with mean difference {sgn(s.md)}, 95% difference CI [{sgn(s.lo)}, {sgn(s.hi)}], and adjusted combined TOST p = {pfmt(s.holmTost)}. </> : <>Validated paired inference is currently unavailable. </>}{c?.decision || "No confirmatory verdict"}. Historical arm means do not establish training gains or equivalence. The fixed primary Holm family has three contrasts, with missing p-values set to 1; G2−PPO-style is exploratory. {MODEL.justified ? `Margin justification: ${MODEL.plan.margin_justification}.` : "The 2 pp equivalence margin has no declared practical justification."} v1 did not adequately support the intended comparison. Several factors changed together in v2, so their causal contributions cannot be separated.</>,
-      go: [["samestack", "GRPO vs PPO"]],
+      go: [["samestack", "GRPO vs PPO"], ...(DATA.platform ? [["platform", "Platform calibration"]] : [])],
     },
     {
       q: "Is ZVF a contribution, or just the known binomial identity?",

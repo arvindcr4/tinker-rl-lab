@@ -16,7 +16,7 @@ HERE = pathlib.Path(__file__).resolve().parent.parent
 ROOT = HERE.parents[2]
 PAGE = "file://" + str(pathlib.Path(os.environ.get("DEMO_PAGE", str(HERE / "dist/index.html"))).resolve())
 DATA = json.loads(pathlib.Path(os.environ.get("DEMO_DATA", str(HERE / "src/data.json"))).read_text())
-VIEWS = ["overview", "advantage", "zvf", "samestack", "answers", "stackdiff", "audit", "viva"]
+VIEWS = ["overview", "advantage", "zvf", "samestack", "platform", "answers", "stackdiff", "audit", "viva"]
 CHROME = os.environ.get("CHROME_PATH") or shutil.which("chromium") or shutil.which("google-chrome")
 if not CHROME:
     candidate = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
@@ -74,6 +74,15 @@ def main():
             page.get_by_role("button", name="v2", exact=True).click()
         results.append(check("no nonfinite values in same-stack display", not re.search(r"\b(?:NaN|Infinity)\b", page.locator("main").inner_text())))
 
+        # Preserve the separate historical platform display and all base accuracies.
+        if DATA.get("platform"):
+            plat = DATA["platform"]
+            want = {f"{state['acc']:.4f}" for platform in plat["platforms"] for state in plat["base"][platform].values()}
+            page.goto(f"{PAGE}#platform")
+            text = page.locator("main section.view").inner_text()
+            results.append(check("platform view shows every exported base accuracy",
+                                 len(want) > 1 and all(value in text for value in want)))
+
         # Re-grading coverage and any disagreement remain visible without changing history.
         page.goto(f"{PAGE}#answers")
         pill = page.locator(".pill", has_text="re-graded").inner_text()
@@ -92,7 +101,7 @@ def main():
         page.goto(f"{PAGE}#overview")
         page.keyboard.press("ArrowRight")
         results.append(check("→ moves to the next view", page.evaluate("location.hash") == "#advantage"))
-        page.keyboard.press("8")
+        page.keyboard.press("9")
         results.append(check("number key jumps to a view", page.evaluate("location.hash") == "#viva"))
         page.keyboard.press("p")
         results.append(check("P toggles presenter mode", "present" in page.evaluate("document.documentElement.className")))

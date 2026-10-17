@@ -23,7 +23,7 @@ from platform_hybrid.experiments.samestack_contract import (
 )
 from platform_hybrid.experiments.samestack_protocol import PROTOCOL_HASH, PROTOCOL_ID
 
-STAGE = ROOT / "platform_hybrid/experiments/results" / (PROTOCOL_ID + "_colab")
+STAGE = ROOT / os.environ.get("STAGE_DIR", "platform_hybrid/experiments/results/" + PROTOCOL_ID + "_colab")
 CANON = ROOT / "platform_hybrid/experiments/results" / PROTOCOL_ID
 OUT = ROOT / "reports/project_finish_2026-10-11/validation/samestack_v2/colab_runs_check.json"
 

@@ -18,7 +18,8 @@ import subprocess
 import sys
 import time
 
-HERE = Path(__file__).resolve()
+SELF = "/content/colab_run_arms.py"
+HERE = Path(globals().get("__file__", SELF)).resolve()
 ROOT = HERE.parents[2] if len(HERE.parents) > 2 else HERE.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -132,10 +133,48 @@ def prepare_bundle(archive="/content/samestack_code.zip", source_path=SOURCE, de
             checked.append((target, data))
         for target, data in checked:
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(data)
+            # Parallel children see the parent-verified bundle. Avoid truncating
+            # identical modules while another child imports them.
+            if not target.is_file() or target.read_bytes() != data:
+                target.write_bytes(data)
     if str(destination) not in sys.path:
         sys.path.insert(0, str(destination))
     return source
+
+
+def run_parallel(items, n):
+    # Tensors peak at ~14 GiB per run, but the caching allocator keeps growing past 20 GiB unless capped,
+    # so each child gets a hard 1/n share of the GPU (GPU_MEM_FRACTION) and n is sized to that peak.
+    total = int(subprocess.run(["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
+                               capture_output=True, text=True).stdout.split()[0]) / 1024
+    n = max(1, min(n, int(total // float(os.environ.get("GPU_GB_PER_RUN", "18")))))
+    print(f"parallel runs: {n} ({total:.0f} GiB GPU)", flush=True)
+    os.makedirs("/content/logs", exist_ok=True)
+    pending, live, failed, ticks = list(items), [], [], 0
+    while pending or live:
+        while pending and len(live) < n:
+            item = pending.pop(0)
+            log = open(f"/content/logs/{item.replace(':', '_s')}.log", "w")
+            env = {**os.environ, "RUNS": item, "PARALLEL": "1", "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
+                   "GPU_MEM_FRACTION": f"{0.97 / n:.3f}"}
+            try:
+                live.append((item, subprocess.Popen([sys.executable, SELF], env=env, stdout=log, stderr=subprocess.STDOUT)))
+            finally:
+                log.close()
+        time.sleep(20)
+        ticks += 1
+        if ticks % 30 == 0:  # every ~10 min: GPU memory and utilisation, to size PARALLEL
+            q = "--query-gpu=memory.used,memory.total,utilization.gpu"
+            print("GPU", subprocess.run(["nvidia-smi", q, "--format=csv,noheader"], capture_output=True, text=True).stdout.strip(),
+                  f"live={len(live)} pending={len(pending)}", flush=True)
+        for item, proc in [x for x in live if x[1].poll() is not None]:
+            live.remove((item, proc))
+            tail = open(f"/content/logs/{item.replace(':', '_s')}.log").read().strip().splitlines()[-1:]
+            print(f"{'FINISHED' if proc.returncode == 0 else 'FAILED'} {item}: {tail}", flush=True)
+            if proc.returncode:
+                failed.append(item)
+    if failed:
+        sys.exit(f"failed runs: {failed}")
 
 
 def main():
@@ -145,6 +184,17 @@ def main():
     runs = parse_runs(os.environ["RUNS"])
     smoke = os.environ.get("SMOKE") == "1"
     ensure_packages()
+    parallel = int(os.environ.get("PARALLEL", "1"))
+    if parallel < 1:
+        raise ValueError("PARALLEL must be positive")
+    if parallel > 1 and len(runs) > 1:
+        return run_parallel([f"{arm}:{seed}" for arm, seed in runs], parallel)
+    if os.environ.get("GPU_MEM_FRACTION"):
+        fraction = float(os.environ["GPU_MEM_FRACTION"])
+        if not math.isfinite(fraction) or not 0 < fraction <= 1:
+            raise ValueError("GPU_MEM_FRACTION must be in (0, 1]")
+        import torch
+        torch.cuda.set_per_process_memory_fraction(fraction)
     module = load_core()
     for name, imported in list(sys.modules.items()):
         if name.startswith("platform_hybrid.experiments.samestack_"):

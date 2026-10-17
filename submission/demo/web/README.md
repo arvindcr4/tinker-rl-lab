@@ -14,7 +14,9 @@ DEMO_DATA=/tmp/samestack-demo.json npm run build
 
 The build writes `dist/index.html` and `tinkerrl_demo.html`. Both are self-contained and open from disk. `npm run data` explicitly replaces `src/data.json` with a new export; it never edits underlying experimental results. Use `--plan /path/to/plan.json` only with a declared versioned analysis plan. Missing historical identity is never inferred from filenames or seed numbers. New runs can be selected with `--results-dir /path/to/environment/protocol` pointing to the leaf directory containing the arm/seed records; completion markers and aggregates are not treated as runs.
 
-Presenter controls: ← / → or 1–8 change views; P toggles larger text. A short route is Advantage lab → GRPO vs PPO-style → Real answers → Stack diff.
+Presenter controls: ← / → or 1–9 change views; P toggles larger text. A short route is Advantage lab → GRPO vs PPO-style → Real answers → Stack diff.
+
+The ninth view retains the historical cross-platform calibration from `platform_calibration.json`, including its input hash in the provenance manifest. Its legacy inference and available-only multiplicity adjustment have not been repaired by the same-stack changes; do not treat its equivalence wording as a validated canonical same-stack conclusion.
 
 ## Scientific contract
 

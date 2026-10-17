@@ -4,6 +4,7 @@ import Overview from "./views/Overview.jsx";
 import AdvantageLab from "./views/AdvantageLab.jsx";
 import Zvf from "./views/Zvf.jsx";
 import SameStack from "./views/SameStack.jsx";
+import Platform from "./views/Platform.jsx";
 import StackDiff from "./views/StackDiff.jsx";
 import Audit from "./views/Audit.jsx";
 import RealAnswers from "./views/RealAnswers.jsx";
@@ -15,6 +16,7 @@ const VIEWS = [
   ["advantage", "Advantage lab", AdvantageLab],
   ["zvf", "Zero-variance groups", Zvf],
   ["samestack", "GRPO vs PPO", SameStack],
+  ["platform", "Platform calibration", Platform],
   ["answers", "Real answers", RealAnswers],
   ["stackdiff", "Stack diff", StackDiff],
   ["audit", "Evidence audit", Audit],
@@ -38,7 +40,7 @@ export default function App() {
       const i = VIEWS.findIndex(([id]) => id === current());
       if (e.key === "ArrowRight" && i < VIEWS.length - 1) go(VIEWS[i + 1][0]);
       else if (e.key === "ArrowLeft" && i > 0) go(VIEWS[i - 1][0]);
-      else if (/^[1-8]$/.test(e.key)) go(VIEWS[+e.key - 1][0]);
+      else if (/^[1-9]$/.test(e.key)) go(VIEWS[+e.key - 1][0]);
       else if (e.key === "p") setPresent((v) => !v);
     };
     window.addEventListener("hashchange", onHash);
@@ -50,7 +52,9 @@ export default function App() {
 
   const idx = VIEWS.findIndex(([id]) => id === view);
   const View = VIEWS[idx][2], next = VIEWS[idx + 1];
-  const sources = DATA.manifest?.sources || SS.sources || [];
+  const sources = DATA.manifest?.sources || (SS.sources || []).concat(
+    [DATA.samestack_v1, DATA.platform, DATA.audit].filter(Boolean).map(({ path, sha256 }) => ({ path, sha256 })),
+  );
   const missing = DATA.manifest?.missing || ["Full provenance manifest unavailable in this legacy export"];
 
   return (
@@ -73,7 +77,7 @@ export default function App() {
       <main className="wrap">
         <View />
         <div className="next-row">
-          <span className="small">Keys: ← → or 1–8 to move, P to present</span>
+          <span className="small">Keys: ← → or 1–9 to move, P to present</span>
           {next && <a className="next" href={`#${next[0]}`}>Next: {next[1]} →</a>}
         </div>
       </main>

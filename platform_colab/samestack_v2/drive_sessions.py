@@ -27,7 +27,7 @@ from platform_hybrid.experiments.samestack_protocol import PROTOCOL_HASH, PROTOC
 
 MODAL_SCRIPT = HELPERS / "modal/modal_samestack_gsm8k_cot_v2.py"
 RUNNER = ROOT / "platform_colab/samestack_v2/colab_run_arms.py"
-STAGE = HELPERS / "results" / (PROTOCOL_ID + "_colab")
+STAGE = ROOT / os.environ.get("STAGE_DIR", "platform_hybrid/experiments/results/" + PROTOCOL_ID + "_colab")
 
 
 def colab(*args, check=True):
@@ -77,12 +77,15 @@ def preserve_run(session, name, stage, *, expected=None, command=colab):
     return record
 
 
-def drive_session(session, runs, *, stage=STAGE, command=colab, source=None):
+def drive_session(session, runs, *, stage=STAGE, command=colab, source=None, parallel=1, batch=None):
     """Stop only after all requested bundles have been independently preserved."""
     from platform_colab.samestack_v2.colab_run_arms import parse_runs
     parsed = parse_runs(",".join(runs))
     if not parsed:
         raise ValueError("at least one run is required")
+    batch = parallel if batch is None else batch
+    if parallel < 1 or batch < 1:
+        raise ValueError("parallel and batch must be positive")
     # Session creation is explicit to the CLI; this helper never guesses by a
     # substring match against another session's name.
     source = source or capture_source()
@@ -103,14 +106,17 @@ def drive_session(session, runs, *, stage=STAGE, command=colab, source=None):
                    (source_path, "/content/samestack_source.json")]
         for local, remote in uploads:
             command("upload", "-s", session, str(local), remote)
-        for arm, seed in parsed:
-            name = f"{arm}_s{seed}"
-            # Always ask the core, which resolves current revisions/config before
-            # testing completion. An existing local JSON never bypasses this step.
-            command("exec", "-s", session, "-f", str(RUNNER), "--timeout", "10800",
-                    "--env", f"RUNS={arm}:{seed}", "--env", "SMOKE=0")
-            preserve_run(session, name, stage, expected=expected, command=command)
-            print(f"PRESERVED {name}", flush=True)
+        for offset in range(0, len(parsed), batch):
+            group = parsed[offset:offset + batch]
+            waves = -(-len(group) // parallel)
+            # Remote core validates every requested identity; staging never skips runs.
+            command("exec", "-s", session, "-f", str(RUNNER), "--timeout", str(14400 * waves),
+                    "--env", "RUNS=" + ",".join(f"{arm}:{seed}" for arm, seed in group),
+                    "--env", "SMOKE=0", "--env", f"PARALLEL={parallel}")
+            for arm, seed in group:
+                name = f"{arm}_s{seed}"
+                preserve_run(session, name, stage, expected=expected, command=command)
+                print(f"PRESERVED {name}", flush=True)
     for arm, seed in parsed:
         validate_completion(Path(stage) / f"{arm}_s{seed}" / f"{arm}_s{seed}.json", expected=expected)
     command("stop", "-s", session)
@@ -126,12 +132,17 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("session")
     parser.add_argument("runs", nargs="+")
-    parser.add_argument("--new", action="store_true", help="create the named L4 session first")
+    parser.add_argument("--new", action="store_true", help="create the named session first")
     parser.add_argument("--stage", type=Path, default=STAGE)
+    parser.add_argument("--gpu", default=os.environ.get("GPU", "L4"))
+    parser.add_argument("--parallel", type=int, default=int(os.environ.get("PARALLEL", "1")))
+    parser.add_argument("--batch", type=int, default=int(os.environ["BATCH"]) if "BATCH" in os.environ else None)
     args = parser.parse_args(argv)
+    if args.parallel < 1 or (args.batch is not None and args.batch < 1):
+        parser.error("parallel and batch must be positive")
     if args.new:
-        colab("new", "--gpu", "L4", "-s", args.session)
-    drive_session(args.session, args.runs, stage=args.stage)
+        colab("new", "--gpu", args.gpu, *(["--high-mem"] if args.gpu == "A100" else []), "-s", args.session)
+    drive_session(args.session, args.runs, stage=args.stage, parallel=args.parallel, batch=args.batch)
 
 
 if __name__ == "__main__":

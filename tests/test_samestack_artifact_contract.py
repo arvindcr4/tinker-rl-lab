@@ -303,3 +303,34 @@ def test_mean_reward_cannot_silently_bypass_summary_recomputation():
     record, texts = synthetic_run()
     record["step_log"][0].pop("mean_reward")
     assert not contract.validate_run(record, texts=texts)["valid"]
+
+
+def test_batched_colab_preserves_each_bundle_before_stop(tmp_path, monkeypatch):
+    source = {"commit": "a" * 40, "dirty_hash": "b" * 64,
+              "source_files": {str(driver.RUNNER.relative_to(driver.ROOT)): contract.sha256_file(driver.RUNNER)}}
+    events = []
+    monkeypatch.setattr(driver, "preserve_run", lambda session, name, *a, **kw: events.append(("preserve", name)))
+    monkeypatch.setattr(driver, "validate_completion", lambda *a, **kw: {})
+    driver.drive_session("SYNTHETIC", ["ppo:42", "grpo_g8:42", "ppo:123"],
+                         stage=tmp_path, source=source, parallel=2, batch=2,
+                         command=lambda *a, **kw: events.append(a))
+    executions = [event for event in events if event[0] == "exec"]
+    assert len(executions) == 2
+    assert "RUNS=ppo:42,grpo_g8:42" in executions[0]
+    assert "PARALLEL=2" in executions[0]
+    assert [event[1] for event in events if event[0] == "preserve"] == ["ppo_s42", "grpo_g8_s42", "ppo_s123"]
+    assert events[-1][0] == "stop"
+
+
+def test_batched_colab_transfer_failure_never_stops_session(tmp_path, monkeypatch):
+    source = {"commit": "a" * 40, "dirty_hash": "b" * 64,
+              "source_files": {str(driver.RUNNER.relative_to(driver.ROOT)): contract.sha256_file(driver.RUNNER)}}
+    events = []
+    def fail(*args, **kwargs):
+        raise OSError("synthetic transfer failure")
+    monkeypatch.setattr(driver, "preserve_run", fail)
+    with pytest.raises(OSError, match="synthetic"):
+        driver.drive_session("SYNTHETIC", ["ppo:42", "grpo_g8:42"],
+                             stage=tmp_path, source=source, parallel=2,
+                             command=lambda *a, **kw: events.append(a))
+    assert not any(event[0] == "stop" for event in events)

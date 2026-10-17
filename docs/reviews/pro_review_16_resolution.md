@@ -15,3 +15,5 @@ Protocol: review16-v2. No saved research results were regenerated or edited. Con
 | 7: declaration credit and model substrings | Unmeasured declarations earn zero with DECLARED_UNVERIFIED status; exact IDs or two explicit cell-slug aliases only | Unmeasured recognized declaration, substring mismatch and punctuation collision |
 
 Validation: `/tmp/tinker-review-venv/bin/python -m pytest -q tests/reviews/test_review16.py` — 7 passed. CPU-only synthetic data; no training, paid jobs, or evidence fabrication. H1 inference and recovery inference deliberately remain unavailable pending genuine supporting data.
+
+Follow-up regression: the H1 main JSON summary also stays descriptive rather than restoring a hard-coded positive headline. Triangulation reads the unchanged registry-consistency source from its original directory while consuming the versioned alignment output. Validation now: 8 passed.

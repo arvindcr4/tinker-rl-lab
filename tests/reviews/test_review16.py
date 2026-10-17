@@ -70,3 +70,15 @@ def test_unmeasured_declaration_and_model_mismatch_no_credit():
     assert m.axis_match('decontam','none',None) == (0.,'DECLARED_UNVERIFIED')
     assert m.axis_match('model','Llama','meta-llama/Llama-3.2-3B')[0] == 0
     assert m.axis_match('model','model-3.2','model-32')[0] == 0
+
+
+def test_h1_summary_does_not_restore_unsupported_headline(tmp_path, monkeypatch):
+    m = load('p5_headline_cis')
+    monkeypatch.setattr(m, 'OUT_DIR', tmp_path)
+    monkeypatch.setattr(m, 'read_sweep', lambda: [dict(G=2,n_seeds=3,mean_zvf=.5,heldout_acc_mean=.4,heldout_acc_se=.01)])
+    monkeypatch.setattr(m, 'read_delta', lambda: [])
+    assert m.main() == 0
+    import json
+    summary = json.loads((tmp_path/'p5_headline_cis.json').read_text())
+    assert 'descriptive only' in summary['interpretation'][0]
+    assert 'CIs do not overlap' not in str(summary)

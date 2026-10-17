@@ -49,7 +49,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
 
 CLAIM_TSV = OUT / "claim_alignment.tsv"
-DELTA_TSV = OUT / "delta_minreport_consistency.tsv"
+DELTA_TSV = OUT.parent / "delta_minreport_consistency.tsv"
 ENTRIES_DIR = REG
 
 ITEMS = [

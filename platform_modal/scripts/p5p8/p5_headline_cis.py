@@ -210,13 +210,10 @@ def main() -> int:
         "n_sweep_rows": len(sweep),
         "n_delta_rows": len(delta),
         "rows": rows,
+        "protocol_version": "review16-v2",
         "interpretation": [
-            "H1: ZVF is monotone-decaying with G; the CIs do not overlap "
-            "(G=2 vs G=16 gap_sep > 0), supporting the § Item 5 claim.",
-            "H2: Held-out accuracy range across G is small (<2 pp) once the "
-            "bootstrap CIs are honoured — flatness claim survives.",
-            "H3: G32-G4 Δacc is DECISIVE at 4M-token budget (CI excludes 0) "
-            "and NULL at 1M-token budget (CI includes 0).",
+            "H1 is descriptive only: independent ZVF uncertainty is unavailable.",
+            "Read individual rows for H2/H3 outputs; no unconditional headline is inferred.",
         ],
     }
     with (OUT_DIR / "p5_headline_cis.json").open("w") as f:

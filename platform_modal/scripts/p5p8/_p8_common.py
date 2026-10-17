@@ -94,12 +94,18 @@ def load_split(train_path, test_path, feats, tree_seed):
 
 
 def auc_p8(scores, y):
-    pos = scores[y == 1]; neg = scores[y == 0]
-    n_pos, n_neg = len(pos), len(neg)
-    if n_pos == 0 or n_neg == 0: return 0.5
-    comb = np.concatenate([pos, neg])
-    ranks = np.argsort(np.argsort(comb)) + 1
-    return float((ranks[:n_pos].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
+    """Tie-aware Mann–Whitney ROC AUC; undefined inputs fail explicitly."""
+    scores, y = np.asarray(scores, dtype=float), np.asarray(y)
+    if scores.ndim != 1 or y.ndim != 1 or len(scores) != len(y):
+        raise ValueError("Expected equally sized one-dimensional scores and labels")
+    if not np.isfinite(scores).all() or not np.isin(y, [0, 1]).all():
+        raise ValueError("Expected finite scores and binary labels")
+    pos, neg = scores[y == 1], np.sort(scores[y == 0])
+    if not len(pos) or not len(neg):
+        raise ValueError("ROC AUC requires both classes")
+    lower = np.searchsorted(neg, pos, side="left")
+    upper = np.searchsorted(neg, pos, side="right")
+    return float(np.mean((lower + upper) / (2 * len(neg))))
 
 
 def recall_at_K(scores, y, k_pct):

@@ -10,6 +10,7 @@ import re
 import tempfile
 
 import wandb
+from audit_sanitizer import sanitize
 
 
 SAFE_CONFIG_KEYS = {
@@ -64,22 +65,22 @@ def main() -> None:
             "config": {
                 key: value
                 for key, value in sorted(dict(run.config or {}).items())
-                if key in SAFE_CONFIG_KEYS
+                if key in SAFE_CONFIG_KEYS and isinstance(value, (str, int, float, bool))
             },
             "summary": {
                 key: value
                 for key, value in sorted(dict(run.summary).items())
-                if key.startswith(("eval/", "final/", "train/"))
-                or key in {"runtime", "_runtime"}
+                if key.startswith(("eval/", "final/", "train/")) or key in {"runtime", "_runtime"}
             },
             "metadata": {
-                key: metadata[key]
-                for key in sorted(metadata)
-                if key in SAFE_METADATA_KEYS
+                key: metadata[key] for key in sorted(metadata) if key in SAFE_METADATA_KEYS
             },
             "files": sorted(file.name for file in run.files()),
-            "history_rows": len(history),
-            "history_keys": sorted({key for row in history for key in row}),
+            "schema_version": 2,
+            "history_complete": False,
+            "history_sampling": "wandb.history default sampling",
+            "sampled_history_rows": len(history),
+            "sampled_history_keys": sorted({key for row in history for key in row}),
         }
         if args.log_excerpts and "output.log" in record["files"]:
             with tempfile.TemporaryDirectory(prefix="wandb-audit-") as tmpdir:
@@ -94,12 +95,9 @@ def main() -> None:
                     flags=re.IGNORECASE,
                 )
             ]
-            redacted = [
-                re.sub(r"wandb_v1_[A-Za-z0-9_-]+", "<REDACTED>", line)
-                for line in matching
-            ]
+            redacted = [re.sub(r"wandb_v1_[A-Za-z0-9_-]+", "<REDACTED>", line) for line in matching]
             record["log_excerpts"] = redacted[:80]
-        print(json.dumps(record, sort_keys=True, default=str))
+        print(json.dumps(sanitize(record), sort_keys=True, default=str))
 
 
 if __name__ == "__main__":

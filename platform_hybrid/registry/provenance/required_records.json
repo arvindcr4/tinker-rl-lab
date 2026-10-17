@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "path": "campaign.provenance.json",
+      "signature_required": true
+    },
+    {
+      "path": "sweep.provenance.json",
+      "signature_required": false
+    }
+  ]
+}

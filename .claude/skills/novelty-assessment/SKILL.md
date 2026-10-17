@@ -89,3 +89,7 @@ formulation, or insight.
 
 ## Related Skills
 - Upstream: [literature-search](../literature-search/)
+
+## Evidence contract v2
+
+A citation must have claim-to-source support: source identity, supporting passage/page, scope, and verification status. Bibliographic existence alone does not verify a claim. Placeholder entries remain unresolved and block publication validation. Novelty judgments may be inconclusive/insufficient_evidence; failed counter-searches are bounded search outcomes, not increased confidence. Credentials must come from environment variables; never read a personal keys.md file. Resolve helpers from the installed skill package and report missing configuration explicitly.

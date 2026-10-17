@@ -12,6 +12,8 @@ import json
 import re
 
 import wandb
+from itertools import islice
+from audit_sanitizer import sanitize
 
 
 SUMMARY_TERMS = ("reward", "held", "acc", "zvf", "last", "eval", "delta")
@@ -37,21 +39,23 @@ def compact_run(run: object) -> dict[str, object]:
         for key in sorted(summary)
         if any(term in key.lower() for term in SUMMARY_TERMS)
     }
-    return {
-        "id": run.id,
-        "name": run.name,
-        "state": run.state,
-        "created_at": run.created_at,
-        "group": run.group,
-        "job_type": run.job_type,
-        "tags": run.tags,
-        "config": {
-            key: config[key]
-            for key in sorted(config)
-            if any(term in key.lower() for term in CONFIG_TERMS)
-        },
-        "summary": selected_summary,
-    }
+    return sanitize(
+        {
+            "id": run.id,
+            "name": run.name,
+            "state": run.state,
+            "created_at": run.created_at,
+            "group": run.group,
+            "job_type": run.job_type,
+            "tags": run.tags,
+            "config": {
+                key: config[key]
+                for key in sorted(config)
+                if key in CONFIG_TERMS and isinstance(config[key], (str, int, float, bool))
+            },
+            "summary": selected_summary,
+        }
+    )
 
 
 def main() -> None:
@@ -64,8 +68,27 @@ def main() -> None:
 
     pattern = re.compile(args.pattern, re.IGNORECASE)
     api = wandb.Api(timeout=90)
-    runs = list(api.runs(f"{args.entity}/{args.project}", per_page=args.limit))
-    print(json.dumps({"project": args.project, "run_count": len(runs)}))
+    if args.limit < 1:
+        parser.error("--limit must be positive")
+    runs = list(
+        islice(
+            api.runs(f"{args.entity}/{args.project}", per_page=min(args.limit, 100)), args.limit + 1
+        )
+    )
+    truncated = len(runs) > args.limit
+    runs = runs[: args.limit]
+    print(
+        json.dumps(
+            sanitize(
+                {
+                    "project": args.project,
+                    "runs_scanned": len(runs),
+                    "complete": not truncated,
+                    "schema_version": 2,
+                }
+            )
+        )
+    )
     for run in runs:
         record = compact_run(run)
         haystack = json.dumps(record, sort_keys=True, default=str)

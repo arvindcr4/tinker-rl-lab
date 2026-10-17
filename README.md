@@ -152,14 +152,10 @@ Features:
 ### Prerequisites
 
 ```bash
-# Create virtual environment
-python3 -m venv tinker-env
-source tinker-env/bin/activate
-
-# Install dependencies
-pip install tinker tinker-cookbook atropos
-# Full dependency set (all integrations, audits, and analysis scripts):
-pip install -r requirements.txt
+# Install uv from its official distribution first, then use the canonical lock:
+uv sync --locked --extra dev
+uv run --no-sync python -c "import tinker"
+# Optional integrations need separate validation. Atropos is atroposlib, not atropos.
 ```
 
 ### Running Tinker Experiments

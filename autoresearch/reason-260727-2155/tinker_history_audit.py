@@ -162,8 +162,10 @@ def main() -> int:
         )
         newest = sorted(
             runs,
-            key=lambda row: parse_time(row.get("last_request_time"))
-            or datetime.min.replace(tzinfo=timezone.utc),
+            key=lambda row: (
+                parse_time(row.get("last_request_time"))
+                or datetime.min.replace(tzinfo=timezone.utc)
+            ),
             reverse=True,
         )[:10]
 
@@ -184,14 +186,16 @@ def main() -> int:
             "sdk_version": getattr(tinker, "__version__", None),
             "run_count": len(runs),
             "checkpoint_count": len(checkpoints),
-            "session_count": len(sessions),
+            "schema_version": 2,
+            "sessions_scanned": len(sessions),
+            "sessions_complete": False,
+            "session_query": {"limit": 100, "offset": 0},
             "run_keys": sorted(runs[0]) if runs else [],
             "session_keys": sorted(sessions[0]) if sessions else [],
             "target_model_count": model_counts[TARGET_MODEL],
             "model_counts_top10": model_counts.most_common(10),
             "run_counts_2026_07_23_to_25": {
-                day: day_counts[day]
-                for day in ("2026-07-23", "2026-07-24", "2026-07-25")
+                day: day_counts[day] for day in ("2026-07-23", "2026-07-24", "2026-07-25")
             },
             "matched_window": [
                 safe
@@ -218,9 +222,7 @@ def main() -> int:
                 }
                 for base_uuid, members in sorted(
                     wide_groups.items(),
-                    key=lambda item: min(
-                        str(row.get("last_request_time", "")) for row in item[1]
-                    ),
+                    key=lambda item: min(str(row.get("last_request_time", "")) for row in item[1]),
                 )
             ],
             "session_window": session_window,

@@ -38,13 +38,13 @@ Generates baselines, ablation matrix, hyperparameter grid, metric selection. Std
 - Tune hyperparameters (learning rate, epochs, batch size)
 - Do NOT change model architecture
 - Test on at least TWO datasets
-- Completion: stable training curves, improvement over Stage 1
+- Completion: planned runs and analyses finished, including negative results
 
 ### Stage 3: Creative Research
 - Explore novel improvements and insights
 - Be creative and think outside the box
 - Test on at least THREE datasets
-- Completion: demonstrated novel improvement
+- Completion: planned valid evaluation finished, regardless of improvement
 
 ### Stage 4: Ablation Studies
 - Systematic component analysis
@@ -80,8 +80,12 @@ Generates baselines, ablation matrix, hyperparameter grid, metric selection. Std
 
 - Always start simple (Stage 1) before complex experiments
 - Each stage builds on the best result from the previous stage
-- Multi-seed evaluation for statistical significance
+- Multi-seed evaluation under the prespecified power/precision plan
 - Document every experiment run in notes.txt
 - Generate figures for training curves and comparisons
 
 ## Related Skills
+
+## Research integrity contract v2 (mandatory)
+
+Select candidates on development/validation outcomes only. Confirmatory test outcomes must remain unavailable to adaptive selection. Freeze method, configuration, split, seed set, endpoint, and analysis before confirmation. Previously inspected test sets are development evidence and must be recorded as such. Completion means all planned valid runs and analyses are finished, including negative and inconclusive outcomes. Mean and standard deviation are descriptive; inference requires a prespecified effect, interval/test, experimental unit, and multiplicity correction. Seed counts follow power or precision targets.

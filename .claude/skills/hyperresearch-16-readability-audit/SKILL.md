@@ -162,3 +162,9 @@ This is the audit trail. If a future review finds a readability problem we shoul
 Return to the entry skill (`hyperresearch`). Mark all todos complete. Tell the user the final report path.
 
 You're done.
+
+## Final review contract v2
+
+All artifacts belong under research/runs/<run_id>/; legacy paths above are logical names relative to that run. Carry run_id, query_sha256 and corpus_sha256 in each artifact. Critic envelopes also carry critic, status (completed/failed), draft_sha256, findings (array only for completed), and error for failures. Never accept legacy bare findings as completed review.
+
+After ALL readability edits in step 16, rerun the integrity and lint checks and required critics against the delivered bytes. Write a schema_version: 2 manifest with tier, run_id, query_sha256, corpus_sha256, final_sha256 and lint_status: passed. Run `python tools/research_review_gate.py --report <final-report> --manifest <run-manifest> --reviews <required-critic-files>` and preserve its receipt. Any failure means review_status: incomplete and prevents a shippable designation. Light tier requires the final hash/lint manifest but no critics. No edit may follow a successful receipt without invalidating it.

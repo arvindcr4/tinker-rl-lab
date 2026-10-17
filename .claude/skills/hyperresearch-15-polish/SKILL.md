@@ -99,7 +99,7 @@ for f in research/critic-findings-dialectic.json \
 done
 ```
 
-If any artifact is missing, the responsible step failed silently. Re-spawn the responsible agent ONCE with the missing output path as its explicit required output. If it fails a second time, write a minimal stub (`{"findings":[]}` for critic files, canonical empty-log schema for patch-log.json / polish-log.json) and log the failure in the run log before proceeding.
+If any artifact is missing, the responsible step failed silently. Re-spawn the responsible agent ONCE with the missing output path as its explicit required output. If it fails a second time, record status: failed, findings: null and the error. Set review_status: incomplete. Never substitute an empty success record; only deliver an explicitly incomplete draft.
 
 ---
 
@@ -143,7 +143,7 @@ The final report lives at `research/notes/final_report_<vault_tag>.md`. The wrap
 ## Exit criterion
 
 - `research/polish-log.json` populated
-- Final integrity gate passed (or stub-filled with documented failure)
+- Final integrity gate passed; failed/missing reviews remain incomplete
 - Lint gate passed
 - `research/notes/final_report_<vault_tag>.md` is the final, shippable artifact
 
@@ -160,3 +160,9 @@ Skill(skill: "hyperresearch-16-readability-audit")
 ```
 
 Step 16 is the final step — readability audit + selective apply. Runs for ALL tiers.
+
+## Final review contract v2
+
+All artifacts belong under research/runs/<run_id>/; legacy paths above are logical names relative to that run. Carry run_id, query_sha256 and corpus_sha256 in each artifact. Critic envelopes also carry critic, status (completed/failed), draft_sha256, findings (array only for completed), and error for failures. Never accept legacy bare findings as completed review.
+
+After ALL readability edits in step 16, rerun the integrity and lint checks and required critics against the delivered bytes. Write a schema_version: 2 manifest with tier, run_id, query_sha256, corpus_sha256, final_sha256 and lint_status: passed. Run `python tools/research_review_gate.py --report <final-report> --manifest <run-manifest> --reviews <required-critic-files>` and preserve its receipt. Any failure means review_status: incomplete and prevents a shippable designation. Light tier requires the final hash/lint manifest but no critics. No edit may follow a successful receipt without invalidating it.

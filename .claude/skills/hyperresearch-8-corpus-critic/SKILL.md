@@ -39,7 +39,7 @@ For each `time_period` entry:
    PYTHONIOENCODING=utf-8 {hpr_path} search "<period> <issuer>" --tag <vault_tag> --include-body -j
    ```
 2. Open the candidate notes (`note show <id> -j`) and verify the document's actual reporting period — the filing must cover the SPECIFIC period named in the prompt, not an adjacent one. A Q1 2025 10-Q does NOT satisfy "Q3 2024" — different period, different tabular data.
-3. **If the period-pinned filing is missing, add it to `research/corpus-critic-gaps.json` as a `priority: critical` gap of type `period-pinned-primary` BEFORE spawning the corpus-critic subagent.** Schema:
+3. **If the period-pinned filing is missing, add it to `research/corpus-preflight-gaps.json` as a `priority: critical` gap of type `period-pinned-primary` BEFORE spawning the corpus-critic subagent.** Schema:
    ```json
    {{
      "type": "period-pinned-primary",
@@ -79,10 +79,10 @@ The targeted fetch wave in the next step will pull these filings BEFORE the corp
      - corpus_tag: <vault_tag>
      - comparisons_path: research/comparisons.md
      - loci_path: research/loci.json
-     - output_path: research/corpus-critic-gaps.json
+     - output_path: research/corpus-agent-gaps.json
    ```
 
-2. **Read the gaps output** (`research/corpus-critic-gaps.json`). Each gap has a `priority` (critical / high) and a `type` (overturning / strengthening / independent-verification).
+2. **Contract v2: merge separate preflight and agent gap outputs** by stable gap ID into `research/corpus-critic-gaps.json`. Assert every mandatory preflight ID survives, preserving its critical priority. Reject missing, duplicate or conflicting IDs before continuing. Read the merged gaps. Each gap has a `priority` (critical / high) and a `type` (overturning / strengthening / independent-verification).
 
 3. **Targeted fetch wave.** Spawn **2–4 fetcher subagents** (Sonnet) to search for and fetch the sources identified in the gaps.
 
@@ -109,7 +109,7 @@ The targeted fetch wave in the next step will pull these filings BEFORE the corp
 
 4. **Assess results.**
    - **Overturning source found:** re-read the relevant committed position from the interim note. If the new source genuinely undercuts it, update `research/comparisons.md` to note the weakened position — the draft will handle it with appropriate calibration. Do NOT re-run the full depth investigation; adjust the position's confidence level.
-   - **Overturning source NOT found:** the committed position gains confidence. Note this in `comparisons.md` — "adversarial search for counter-evidence to [position] returned no substantive challenges."
+   - **Overturning source NOT found:** record only the bounded search outcome; confidence does not automatically increase. Note this in `comparisons.md` — "adversarial search for counter-evidence to [position] returned no substantive challenges."
    - **Strengthening/verification source found:** note the additional support in `comparisons.md`. The draft can assert more confidently.
 
 5. **Log results** to `research/temp/corpus-critic-results.md`:

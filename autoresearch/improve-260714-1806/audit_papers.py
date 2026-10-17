@@ -8,7 +8,6 @@ audit from the repository-mandated Groq/Kimi model. Results are resumable.
 
 from __future__ import annotations
 
-import csv
 import hashlib
 import json
 import os
@@ -17,32 +16,117 @@ import subprocess
 import time
 from pathlib import Path
 
-from groq import Groq
-
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = Path(__file__).resolve().parent
 MODEL = "kimi-k2-0905-preview"
+REQUEST_BUDGET = 0
+REQUESTS_USED = 0
 
 PAPERS = [
-    ("P01", "Scaling laws", "platform_hybrid/paper/paper_P1_scaling.tex", "platform_hybrid/paper/paper_P1_scaling.pdf"),
-    ("P02", "Zero-variance fraction", "platform_hybrid/paper/paper_P2_zvf.tex", "platform_hybrid/paper/paper_P2_zvf.pdf"),
-    ("P03", "Group size", "platform_hybrid/paper/paper_P3_group_size.tex", "platform_hybrid/paper/paper_P3_group_size.pdf"),
-    ("P04", "Length bias", "platform_hybrid/paper/paper_P4_length_bias.tex", "platform_hybrid/paper/paper_P4_length_bias.pdf"),
-    ("P05", "MIN-REPORT-RL", "platform_hybrid/paper/paper_P5_minreport.tex", "platform_hybrid/paper/paper_P5_minreport.pdf"),
-    ("P06", "GRPO registry", "platform_hybrid/paper/paper_P6_registry.tex", "platform_hybrid/paper/paper_P6_registry.pdf"),
-    ("P07", "ZVF controller", "platform_hybrid/paper/paper_P7_zvf_controller.tex", "platform_hybrid/paper/paper_P7_zvf_controller.pdf"),
-    ("P08", "Fraud detection", "platform_hybrid/paper/paper_P8_fraud.tex", "platform_hybrid/paper/paper_P8_fraud.pdf"),
-    ("R01", "ACM benchmark variant", "platform_hybrid/paper/acm_main.tex", "platform_hybrid/paper/acm_main.pdf"),
-    ("R02", "NeurIPS ZVF variant", "platform_hybrid/paper/neurips_2026_variants/main_zvf.tex", "platform_hybrid/paper/neurips_2026_variants/main_zvf.pdf"),
-    ("R03", "NeurIPS workshop artifact", "platform_hybrid/paper/neurips_2026_variants/main_workshop.tex", "platform_hybrid/paper/neurips_2026_variants/main_workshop.pdf"),
-    ("R04", "NeurIPS DNB benchmark", "platform_hybrid/paper/neurips_2026_variants/main_dnb.tex", "platform_hybrid/paper/neurips_2026_variants/main_dnb.pdf"),
+    (
+        "P01",
+        "Scaling laws",
+        "platform_hybrid/paper/paper_P1_scaling.tex",
+        "platform_hybrid/paper/paper_P1_scaling.pdf",
+    ),
+    (
+        "P02",
+        "Zero-variance fraction",
+        "platform_hybrid/paper/paper_P2_zvf.tex",
+        "platform_hybrid/paper/paper_P2_zvf.pdf",
+    ),
+    (
+        "P03",
+        "Group size",
+        "platform_hybrid/paper/paper_P3_group_size.tex",
+        "platform_hybrid/paper/paper_P3_group_size.pdf",
+    ),
+    (
+        "P04",
+        "Length bias",
+        "platform_hybrid/paper/paper_P4_length_bias.tex",
+        "platform_hybrid/paper/paper_P4_length_bias.pdf",
+    ),
+    (
+        "P05",
+        "MIN-REPORT-RL",
+        "platform_hybrid/paper/paper_P5_minreport.tex",
+        "platform_hybrid/paper/paper_P5_minreport.pdf",
+    ),
+    (
+        "P06",
+        "GRPO registry",
+        "platform_hybrid/paper/paper_P6_registry.tex",
+        "platform_hybrid/paper/paper_P6_registry.pdf",
+    ),
+    (
+        "P07",
+        "ZVF controller",
+        "platform_hybrid/paper/paper_P7_zvf_controller.tex",
+        "platform_hybrid/paper/paper_P7_zvf_controller.pdf",
+    ),
+    (
+        "P08",
+        "Fraud detection",
+        "platform_hybrid/paper/paper_P8_fraud.tex",
+        "platform_hybrid/paper/paper_P8_fraud.pdf",
+    ),
+    (
+        "R01",
+        "ACM benchmark variant",
+        "platform_hybrid/paper/acm_main.tex",
+        "platform_hybrid/paper/acm_main.pdf",
+    ),
+    (
+        "R02",
+        "NeurIPS ZVF variant",
+        "platform_hybrid/paper/neurips_2026_variants/main_zvf.tex",
+        "platform_hybrid/paper/neurips_2026_variants/main_zvf.pdf",
+    ),
+    (
+        "R03",
+        "NeurIPS workshop artifact",
+        "platform_hybrid/paper/neurips_2026_variants/main_workshop.tex",
+        "platform_hybrid/paper/neurips_2026_variants/main_workshop.pdf",
+    ),
+    (
+        "R04",
+        "NeurIPS DNB benchmark",
+        "platform_hybrid/paper/neurips_2026_variants/main_dnb.tex",
+        "platform_hybrid/paper/neurips_2026_variants/main_dnb.pdf",
+    ),
     ("R05", "ZVF theory", "zvf-program/theory/zvf_theory.tex", "zvf-program/theory/zvf_theory.pdf"),
-    ("R06", "MIN-REPORT position", "zvf-program/position/min_report_rl.tex", "zvf-program/position/min_report_rl.pdf"),
-    ("R07", "Living GRPO registry", "zvf-program/registry/grpo_registry.tex", "zvf-program/registry/grpo_registry.pdf"),
-    ("R08", "Reproducibility audit", "zvf-program/audit/reproducibility_audit.tex", "zvf-program/audit/reproducibility_audit.pdf"),
-    ("U01", "Umbrella benchmark", "platform_hybrid/paper/main.tex", "platform_hybrid/paper/main.pdf"),
-    ("N01", "Unified signal starvation", "platform_hybrid/paper/unified_signal_starvation/main.tex", "output/pdf/signal-starvation-grpo-ppo-sao.pdf"),
+    (
+        "R06",
+        "MIN-REPORT position",
+        "zvf-program/position/min_report_rl.tex",
+        "zvf-program/position/min_report_rl.pdf",
+    ),
+    (
+        "R07",
+        "Living GRPO registry",
+        "zvf-program/registry/grpo_registry.tex",
+        "zvf-program/registry/grpo_registry.pdf",
+    ),
+    (
+        "R08",
+        "Reproducibility audit",
+        "zvf-program/audit/reproducibility_audit.tex",
+        "zvf-program/audit/reproducibility_audit.pdf",
+    ),
+    (
+        "U01",
+        "Umbrella benchmark",
+        "platform_hybrid/paper/main.tex",
+        "platform_hybrid/paper/main.pdf",
+    ),
+    (
+        "N01",
+        "Unified signal starvation",
+        "platform_hybrid/paper/unified_signal_starvation/main.tex",
+        "output/pdf/signal-starvation-grpo-ppo-sao.pdf",
+    ),
 ]
 
 SYSTEM = """You are a meticulous senior ML/RL paper editor. Read the complete
@@ -60,9 +144,7 @@ def sha256(path: Path) -> str:
 
 
 def pdf_pages(path: Path) -> int:
-    result = subprocess.run(
-        ["pdfinfo", str(path)], check=True, text=True, capture_output=True
-    )
+    result = subprocess.run(["pdfinfo", str(path)], check=True, text=True, capture_output=True)
     match = re.search(r"^Pages:\s+(\d+)", result.stdout, re.MULTILINE)
     if not match:
         raise RuntimeError(f"Could not read page count from {path}")
@@ -98,22 +180,36 @@ def parse_json(raw: str) -> dict[str, object]:
         raise
 
 
-def call_with_retry(client: Groq, messages: list[dict[str, str]]) -> str:
+def call_with_retry(client: object, messages: list[dict[str, str]]) -> str:
+    global REQUESTS_USED
     last_error: Exception | None = None
     for attempt in range(4):
         try:
+            if REQUESTS_USED >= REQUEST_BUDGET:
+                raise ValueError("aggregate request budget exhausted before dispatch")
+            REQUESTS_USED += 1
             completion = client.chat.completions.create(
                 messages=messages,
                 model=MODEL,
                 temperature=0.1,
                 max_tokens=5000,
             )
+            if completion.choices[0].finish_reason != "stop":
+                raise ValueError("incomplete model output")
             return completion.choices[0].message.content or ""
         except Exception as exc:  # network/provider errors vary by SDK version
+            if isinstance(exc, ValueError) or getattr(exc, "status_code", None) in {
+                400,
+                401,
+                403,
+                404,
+                422,
+            }:
+                raise
             last_error = exc
             if attempt == 3:
                 break
-            time.sleep(2 ** attempt)
+            time.sleep(2**attempt)
     raise RuntimeError(f"Groq request failed after retries: {last_error}")
 
 
@@ -150,95 +246,201 @@ COMPLETE PAPER TEXT:
 """
 
 
-def main() -> None:
-    client = Groq(api_key=os.environ["GROQ_API_KEY"], timeout=240.0)
-    inventory: list[dict[str, object]] = []
-    audits: list[dict[str, object]] = []
+SCHEMA_VERSION = 2
+PAPER_KEYS = {
+    "identity",
+    "claim_status",
+    "strongest_contribution",
+    "major_problems",
+    "overlap_and_scope",
+    "consistency_checks",
+    "concrete_edits",
+    "evidence_needed",
+    "verdict",
+}
+CROSS_KEYS = {
+    "canonical_map",
+    "program_contradictions",
+    "shared_edits",
+    "paper_specific_edits",
+    "evidence_firewall",
+    "recommended_order",
+    "completion_checks",
+}
 
-    for index, (identifier, label, tex_rel, pdf_rel) in enumerate(PAPERS, start=1):
-        tex_path, pdf_path = ROOT / tex_rel, ROOT / pdf_rel
-        if not tex_path.exists() or not pdf_path.exists():
-            raise FileNotFoundError(f"Missing root for {identifier}: {tex_path} / {pdf_path}")
 
-        text_path = OUT / "text" / f"{identifier}.txt"
-        audit_path = OUT / "audits" / f"{identifier}.json"
-        text = extract_pdf(pdf_path)
-        text_path.write_text(text)
-        row = {
-            "id": identifier,
-            "label": label,
-            "tex": tex_rel,
-            "pdf": pdf_rel,
-            "pages": pdf_pages(pdf_path),
-            "words": len(text.split()),
-            "characters": len(text),
-            "pdf_sha256": sha256(pdf_path),
+def digest_json(value):
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def validate_audit(value, cross=False):
+    keys = CROSS_KEYS if cross else PAPER_KEYS
+    if not isinstance(value, dict) or set(value) != keys:
+        raise ValueError("audit schema keys mismatch")
+    if cross:
+        if any(not isinstance(v, (dict, list, str)) for v in value.values()):
+            raise ValueError("invalid synthesis field")
+        edits = json.dumps(value["paper_specific_edits"])
+        if any(identifier not in edits for identifier, *_ in PAPERS):
+            raise ValueError("synthesis lacks paper coverage")
+    else:
+        for key in ("identity", "overlap_and_scope"):
+            if not isinstance(value[key], dict):
+                raise ValueError("expected object: " + key)
+        for key in (
+            "claim_status",
+            "major_problems",
+            "consistency_checks",
+            "concrete_edits",
+            "evidence_needed",
+        ):
+            if not isinstance(value[key], list):
+                raise ValueError("expected array: " + key)
+        if not isinstance(value["strongest_contribution"], str) or value["verdict"] not in {
+            "keep",
+            "merge",
+            "venue_variant",
+            "park",
+            "retire",
+        }:
+            raise ValueError("invalid paper verdict/contribution")
+        nested = {
+            "identity": {"title", "one_sentence_thesis", "intended_paper_type"},
+            "overlap_and_scope": {"duplicates", "unique_material", "scope_sentence_to_add"},
         }
-        inventory.append(row)
+        for key, fields in nested.items():
+            if set(value[key]) != fields:
+                raise ValueError("invalid " + key)
+        rows = {
+            "claim_status": {"claim", "status", "evidence_in_paper", "page"},
+            "major_problems": {"severity", "problem", "exact_anchor", "page", "repair"},
+            "consistency_checks": {"topic", "verdict", "exact_anchor", "page"},
+            "concrete_edits": {"priority", "target_anchor", "replacement_or_action", "reason"},
+        }
+        for key, fields in rows.items():
+            if any(not isinstance(row, dict) or set(row) != fields for row in value[key]):
+                raise ValueError("invalid " + key)
+        if any(
+            row["status"]
+            not in {
+                "verified",
+                "algebraic",
+                "descriptive",
+                "proposed",
+                "externally_sourced",
+                "unsupported",
+                "contradicted",
+            }
+            for row in value["claim_status"]
+        ):
+            raise ValueError("invalid claim status")
+        if any(not isinstance(v, str) for v in value["evidence_needed"]):
+            raise ValueError("invalid evidence requirement")
+    return value
 
-        if audit_path.exists():
-            audit = json.loads(audit_path.read_text())
-            print(f"[{index:02d}/{len(PAPERS)}] reuse {identifier}", flush=True)
-        else:
-            print(
-                f"[{index:02d}/{len(PAPERS)}] audit {identifier}: "
-                f"{row['pages']} pages, {row['words']} words",
-                flush=True,
-            )
-            raw = call_with_retry(
-                client,
-                [
-                    {"role": "system", "content": SYSTEM},
-                    {"role": "user", "content": paper_prompt(identifier, label, text)},
-                ],
-            )
-            try:
-                audit = parse_json(raw)
-            except Exception as exc:
-                (OUT / "audits" / f"{identifier}.raw.txt").write_text(raw)
-                audit = {"parse_error": str(exc), "raw_saved": True}
-            audit["paper_id"] = identifier
-            audit["paper_label"] = label
-            audit_path.write_text(json.dumps(audit, indent=2) + "\n")
-        audits.append(audit)
 
-    with (OUT / "inventory.tsv").open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(inventory[0]), delimiter="\t")
-        writer.writeheader()
-        writer.writerows(inventory)
-
-    cross_path = OUT / "cross_paper_audit.json"
-    if not cross_path.exists():
-        compact = json.dumps(audits, ensure_ascii=True)
-        cross_prompt = f"""Synthesize the following 18 complete-paper audits into
-a program-level editorial plan. Return JSON with keys: canonical_map,
-program_contradictions, shared_edits, paper_specific_edits, evidence_firewall,
-recommended_order, and completion_checks. Every paper ID P01-P08, R01-R08,
-U01, and N01 must appear in paper_specific_edits. Preserve the thesis-first
-direction; do not fabricate new results. Prefer editing shared source files
-when several roots include them, but require a paper-specific scope improvement
-for every root.
-
-AUDITS:
-{compact}
-"""
-        print("[19/19] synthesize cross-paper audit", flush=True)
-        raw = call_with_retry(
-            client,
-            [
-                {"role": "system", "content": SYSTEM},
-                {"role": "user", "content": cross_prompt},
-            ],
-        )
+def cached_review(client, directory, prompt, inputs, cross=False):
+    key = digest_json(
+        {
+            "inputs": inputs,
+            "system": SYSTEM,
+            "prompt": prompt,
+            "model": MODEL,
+            "generation": {"temperature": 0.1, "max_tokens": 5000},
+            "schema_version": SCHEMA_VERSION,
+        }
+    )
+    path = directory / (key + ".json")
+    if path.exists():
         try:
-            cross = parse_json(raw)
-        except Exception as exc:
-            (OUT / "cross_paper_audit.raw.txt").write_text(raw)
-            cross = {"parse_error": str(exc), "raw_saved": True}
-        cross_path.write_text(json.dumps(cross, indent=2) + "\n")
+            record = json.loads(path.read_text())
+            if (
+                record["cache_key"] == key
+                and record["status"] == "success"
+                and record["schema_version"] == SCHEMA_VERSION
+            ):
+                return validate_audit(record["audit"], cross)
+        except (ValueError, KeyError, TypeError):
+            pass
+    audit = validate_audit(
+        parse_json(
+            call_with_retry(
+                client, [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}]
+            )
+        ),
+        cross,
+    )
+    directory.mkdir(parents=True, exist_ok=True)
+    # Immutable successful cache entries; temporary sibling prevents partial reads.
+    import tempfile
 
-    print(f"Wrote {OUT / 'inventory.tsv'}", flush=True)
-    print(f"Wrote {cross_path}", flush=True)
+    with tempfile.NamedTemporaryFile(mode="w", dir=directory, delete=False) as handle:
+        json.dump(
+            {
+                "schema_version": SCHEMA_VERSION,
+                "cache_key": key,
+                "status": "success",
+                "audit": audit,
+            },
+            handle,
+            indent=2,
+        )
+        temporary = Path(handle.name)
+    temporary.replace(path)
+    return audit
+
+
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--max-requests",
+        type=int,
+        required=True,
+        help="Authorized aggregate attempts including retries",
+    )
+    args = parser.parse_args()
+    if args.max_requests < 1:
+        parser.error("--max-requests must be positive")
+    global REQUEST_BUDGET, REQUESTS_USED
+    REQUEST_BUDGET, REQUESTS_USED = args.max_requests, 0
+    output = args.output_dir.resolve()
+    if output == OUT.resolve() or OUT.resolve() in output.parents:
+        parser.error("historical audit directory is frozen; choose a new output directory")
+    from groq import Groq
+
+    client = Groq(api_key=os.environ["GROQ_API_KEY"], timeout=240.0)
+    audits = []
+    for identifier, label, _tex_rel, pdf_rel in PAPERS:
+        pdf = ROOT / pdf_rel
+        text = extract_pdf(pdf)
+        if len(text) > 300000:
+            raise ValueError("paper exceeds input-size budget")
+        audit = cached_review(
+            client,
+            output / "audits" / identifier,
+            paper_prompt(identifier, label, text),
+            {"pdf_sha256": sha256(pdf), "text_sha256": hashlib.sha256(text.encode()).hexdigest()},
+        )
+        audits.append({"paper_id": identifier, "audit": audit})
+    cross_prompt = (
+        "Synthesize these audits without adding evidence. Return exactly these keys: "
+        + ", ".join(sorted(CROSS_KEYS))
+        + ". Include every paper ID in paper_specific_edits. AUDITS: "
+        + json.dumps(audits, sort_keys=True)
+    )
+    cached_review(
+        client,
+        output / "synthesis",
+        cross_prompt,
+        {"upstream": [digest_json(audit) for audit in audits]},
+        cross=True,
+    )
+    print(f"Successful content-addressed audit records: {output}")
 
 
 if __name__ == "__main__":

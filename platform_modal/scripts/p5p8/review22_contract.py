@@ -27,29 +27,31 @@ def density_ci(n_fire, n_total, n_boot=1500, seed=0):
     p=n_fire/n_total; z=1.959963984540054
     center=(p+z*z/(2*n_total))/(1+z*z/n_total)
     half=z*math.sqrt(p*(1-p)/n_total+z*z/(4*n_total*n_total))/(1+z*z/n_total)
-    return dict(rate=p,lo=max(0.,center-half),hi=min(1.,center+half),n_fire=n_fire,n_total=n_total,
+    return dict(rate=p,lo=0. if n_fire == 0 else max(0.,center-half),hi=1. if n_fire == n_total else min(1.,center+half),n_fire=n_fire,n_total=n_total,
                 interval_model='independent-binomial Wilson; independence unverified',confirmatory=False)
 
 
 def ratio_ci(num, denom, n_boot=1500, seed=0):
-    """Conservative ratio envelope of 97.5% Wilson intervals (Bonferroni).
+    """Conservative ratio envelope of exact 97.5% Clopper–Pearson intervals.
 
     Valid only under independent-binomial marginal sampling, not certified here.
     Zero denominator is explicitly undefined/infinite, never epsilon-smoothed.
     """
     def interval(d):
         n,k=d['n_total'],d['n_fire']; density_ci(k,n)
-        p=k/n; z=2.241402727604947
-        center=(p+z*z/(2*n))/(1+z*z/n)
-        half=z*math.sqrt(p*(1-p)/n+z*z/(4*n*n))/(1+z*z/n)
-        return max(0.,center-half),min(1.,center+half)
+        from scipy.stats import beta
+        # Each marginal misses with probability <= .025; union bound <= .05.
+        lo=0. if k == 0 else float(beta.ppf(.0125,k,n-k+1))
+        hi=1. if k == n else float(beta.ppf(.9875,k+1,n-k))
+        return lo,hi
+
     nl,nh=interval(num); dl,dh=interval(denom)
     rn,rd=num['n_fire']/num['n_total'],denom['n_fire']/denom['n_total']
     point=rn/rd if rd else (math.inf if rn else math.nan)
     lo,hi=nl/dh if dh else 0.,nh/dl if dl else math.inf
     return {'ratio':point,'lo':lo,'hi':hi,'excludes_1.0':lo>1 or hi<1,
             'outside_practical_band':point<.1 or point>10,
-            'interval_model':'Bonferroni Wilson ratio envelope; sampling assumptions unverified','confirmatory':False}
+            'interval_model':'Bonferroni exact-binomial ratio envelope; sampling assumptions unverified','confirmatory':False}
 
 
 def highest_density(densities, domain='D4'):

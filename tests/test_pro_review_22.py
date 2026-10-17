@@ -76,3 +76,14 @@ def test_simulation_cannot_be_measured_domain():
 @pytest.mark.parametrize('name',['synth_iter108_invariance','synth_iter124_three_domain_density','synth_iter132_four_domain_density','synth_iter136_five_domain_density','synth_iter140_six_domain_density','synth_iter152_ten_domain_density','synth_iter160_twelve_domain_density','synth_iter180_d17_paper_reproducibility'])
 def test_unsupported_publication_fails_before_read_or_write(name):
     with pytest.raises(ValueError,match='Publication blocked'):importlib.import_module(name).main()
+
+
+@pytest.mark.parametrize('n',[10,47,100,1319])
+def test_zero_count_boundaries_are_exact(n):
+    empty=density_ci(0,n)
+    assert empty['lo']==0
+    assert density_ci(n,n)['hi']==1
+    ratio=ratio_ci(density_ci(1,10),empty)
+    assert math.isinf(ratio['ratio']) and math.isinf(ratio['hi'])
+    both=ratio_ci(empty,empty)
+    assert both['lo']==0 and math.isinf(both['hi'])

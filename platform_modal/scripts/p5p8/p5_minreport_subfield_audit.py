@@ -42,8 +42,8 @@ PART B: MINIMUM-VIABLE-EXTENSION (MVE) ANALYSIS
     n_distinct_with_extension      -- distinct (MIN-REPORT X, field-value) tuples
     delta_distinct                 -- gain in distinct profiles
     delta_distinct_pct             -- gain / n_cells
-  Greedy MVE: smallest subset of candidates (in rank order) that lifts
-  distinct profiles to >= n // 2 (the "at least half the cells uniquely
+  Greedy MVE: greedy candidate subset of candidates (in rank order) that lifts
+  distinct profiles to >= n // 2 (the "at least half as many distinct profiles as cells; not uniquely
   identified" bar).
 
 Outputs:
@@ -55,6 +55,7 @@ Outputs:
 """
 from __future__ import annotations
 
+from _minreport_contract import valid_literal
 import csv
 import json
 import math
@@ -101,27 +102,11 @@ SENTINEL_PREFIXES = {
 }
 
 
-def _covered_subfields(item_key: str, value: str) -> list[str]:
-    """Return the sub-fields implicitly populated by this item value.
-
-    Sentinel ("n/a" + optional reason) items contribute zero sub-fields;
-    any non-empty structured value implicitly populates all of the item's
-    sub-fields. This is a CONSERVATIVE reading of the manifest format:
-    the current manifests store ONE STRING per item, so the sub-fields
-    cannot be parsed out independently -- they exist as a conjunction
-    that is either all-present (when the item string is structured) or
-    all-absent (when it's a sentinel).
-    """
-    if value is None:
+def _covered_subfields(item_key: str, value) -> list[str]:
+    """Only explicit typed sub-fields count; arbitrary parent prose does not."""
+    if not isinstance(value, dict):
         return []
-    v = str(value).strip()
-    if not v:
-        return []
-    prefixes = SENTINEL_PREFIXES.get(item_key, [])
-    head = v.split("-", 1)[0]
-    if head in prefixes:
-        return []
-    return SUBFIELDS[item_key]
+    return [sf for sf in SUBFIELDS[item_key] if sf in value and valid_literal(sf, value[sf])]
 
 
 # ----- PART A -----
@@ -149,7 +134,7 @@ def part_a() -> dict:
             for sf in subs:
                 sub_covered[sf] += 1
                 item_sub_covered[item].add(sf)
-                sub_value_counter[sf][value] += 1
+                sub_value_counter[sf][json.dumps(value[sf], sort_keys=True)] += 1
 
     # per-sub-field entropy. For Item-4/5/6/7 we can compute H over the
     # DISTINCT item values (which is what the manifest carries); for Item-1/2/3
@@ -357,7 +342,7 @@ def part_b() -> dict:
     for i, r in enumerate(table_rows, 1):
         r["rank_by_delta_distinct"] = i
 
-    # MVE greedy: smallest cardinality achieving n_distinct >= n/2
+    # MVE greedy: greedy cardinality (minimality not established) achieving n_distinct >= n/2
     def profile_count(field_subset: list[str]) -> tuple[int, float]:
         profiles: list[tuple] = []
         for i in range(n):
@@ -377,7 +362,7 @@ def part_b() -> dict:
         chosen_set = list(chosen)
 
     n_dist_mve, H_mve = profile_count(chosen_set)
-    print(f"  MVE (smallest cardinality, n_distinct >= n/2): {chosen_set} "
+    print(f"  MVE (greedy cardinality (minimality not established), n_distinct >= n/2): {chosen_set} "
           f"-> {n_dist_mve}/{n} distinct, H={H_mve:.4f} bits")
 
     out_tsv = OUT_DIR / "p5_minreport_mve.tsv"
@@ -403,14 +388,17 @@ def part_b() -> dict:
             "content_excl_path_H": round(H_content, 4),
             "n_distinct_minrep_alone": n_distinct_minrep,
             "H_minrep": round(H_minrep, 4),
-            "frac_unique": round(n_distinct_minrep / n, 4),
+            "distinct_profile_ratio": round(n_distinct_minrep / n, 4),
+            "frac_unique": sum(c == 1 for c in content_counter.values()) / n,
         },
         "mve": {
             "extension_fields": chosen_set,
             "n_added_fields": len(chosen_set),
             "n_distinct_with_extension": n_dist_mve,
             "H_with_extension": round(H_mve, 4),
-            "frac_unique_with_extension": round(n_dist_mve / n, 4),
+            "distinct_profile_ratio": round(n_dist_mve / n, 4),
+            "frac_unique_with_extension": sum(c == 1 for c in Counter(tuple(sig_with_ext[f][i] for f in chosen_set) for i in range(n)).values()) / n,
+            "search_method": "greedy; minimality not established",
             "distinct_uplift_pct": round(
                 100.0 * (n_dist_mve - n_distinct_minrep) / n, 2),
         },

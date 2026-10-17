@@ -114,13 +114,19 @@ def collect_registry_entries() -> list[dict]:
     for path in sorted(REG.glob("*.json")):
         try:
             d = json.loads(path.read_text())
-        except Exception:
-            continue
+        except (OSError, ValueError) as exc:
+            d = {"_manifest_status": "invalid", "_error": str(exc)}
         if not isinstance(d, dict):
-            continue
+            d = {"_manifest_status": "invalid", "_error": "record is not an object"}
         d["_path"] = path.name
         entries.append(d)
     return entries
+
+
+def subfield_value(entry, item, sub):
+    mr = entry.get("min_report")
+    block = mr.get(item) if isinstance(mr, dict) else None
+    return block.get(sub) if isinstance(block, dict) else None
 
 
 def per_entry_subfield_audit(entry: dict) -> dict:
@@ -150,15 +156,19 @@ def shannon_entropy_bits(values: list) -> float:
     return h
 
 
+def eligible_stack_entries(entries):
+    return [e for e in entries if e.get('record_type') != 'delta' and not e.get('_path', '').startswith('delta_')]
+
+
 def main() -> None:
     entries = collect_registry_entries()
     print(f"[p6_registry_minreport_audit] loaded {len(entries)} registry entries")
 
-    # Restrict to entries with a min_report block (the 20 stack entries; deltas don't carry one)
-    stack_entries = [e for e in entries if isinstance(e.get("min_report"), dict)]
+    # Eligibility is independent of whether a report exists or is well formed.
+    stack_entries = eligible_stack_entries(entries)
     delta_entries = [e for e in entries if e not in stack_entries]
-    print(f"  stack entries (with min_report): {len(stack_entries)}")
-    print(f"  delta entries (no min_report):   {len(delta_entries)}")
+    print(f"  eligible stack entries: {len(stack_entries)}")
+    print(f"  excluded delta entries:   {len(delta_entries)}")
 
     # PART A: per-sub-field population rate across stack entries
     sub_pop_counts = Counter()
@@ -170,7 +180,7 @@ def main() -> None:
             sub_totals[k] += 1
             if populated:
                 sub_pop_counts[k] += 1
-            sub_values[k].append(entry["min_report"].get(k[0], {}).get(k[1]))
+            sub_values[k].append(subfield_value(entry, *k))
 
     subfield_rows = []
     for item, sub in SUBFIELDS:
@@ -234,7 +244,7 @@ def main() -> None:
             ib = mr.get(item, {}) if isinstance(mr, dict) else {}
             sub_fields_for_item = [s for it, s in SUBFIELDS if it == item]
             per_entry_totals[item] += 1
-            any_pop = any(is_populated(ib.get(s)) for s in sub_fields_for_item)
+            any_pop = any(is_populated(subfield_value(entry, item, s)) for s in sub_fields_for_item)
             if any_pop:
                 per_entry_items[item] += 1
         item_rows.append({
@@ -256,10 +266,13 @@ def main() -> None:
     n_informative_subfields = sum(1 for r in subfield_rows if r["n_unique_values"] >= 2)
     summary = {
         "n_registry_entries": len(entries),
+        "eligibility": "record_type and registry filename, independent of min_report",
+        "missing_min_report": sum(not isinstance(e.get("min_report"), dict) for e in stack_entries),
+        "invalid_records": sum(e.get("_manifest_status") == "invalid" for e in entries),
         "n_stack_entries": len(stack_entries),
         "n_delta_entries": len(delta_entries),
         "headline": {
-            "description": "Per-sub-field population audit on the 20 stack entries at the 22-sub-field granularity",
+            "description": f"Per-sub-field population audit on {len(stack_entries)} eligible stack entries and {len(SUBFIELDS)} sub-fields",
             "n_subfields_audit": len(SUBFIELDS),
             "n_subfields_at_0pct_pop": n_null_subfields,
             "n_subfields_with_2plus_unique_values": n_informative_subfields,

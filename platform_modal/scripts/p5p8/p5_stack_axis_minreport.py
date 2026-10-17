@@ -59,7 +59,11 @@ from pathlib import Path
 
 from _p5p7_common import spearman_v2 as spearman
 
-ROOT = Path(__file__).resolve().parents[2]
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _review02_contracts import sampled_pairs, cell_distance_spearman_ci, finite_json
+from _paths import REPO_ROOT
+ROOT = REPO_ROOT / "platform_hybrid"
 MANIFEST_DIR = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
 CELLS_TSV = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
 OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
@@ -183,7 +187,7 @@ def main():
             cls = "CELL_IDENTIFIER"
             stack_bits = 0.0
         elif n_unique <= 1:
-            cls = "PLACEBO"
+            cls = "CONSTANT_DESCRIPTIVE"
             stack_bits = 0.0
         else:
             cls = "VARYING_STACK_DESCRIPTOR"
@@ -236,15 +240,9 @@ def main():
     cell_ids = [c["cell_id"] for c in cells]
     cell_map = {c["cell_id"]: c for c in cells}
     rng_pairs = random.Random(20260705)
-    pairs = []
-    seen = set()
-    while len(pairs) < N_PAIRS:
-        i, j = rng_pairs.sample(range(n_cells), 2)
-        key = (i, j) if i < j else (j, i)
-        if key in seen:
-            continue
-        seen.add(key)
-        pairs.append(key)
+    pairs = sampled_pairs(n_cells, n_cells*(n_cells-1)//2, seed=20260705)
+    if not pairs:
+        raise ValueError('at least two cells required for pair-distance diagnostics')
     deltas = {
         "zvf":    [abs(cell_map[cell_ids[j]]["zvf"] - cell_map[cell_ids[i]]["zvf"])
                   for i, j in pairs],
@@ -337,23 +335,17 @@ for i, j in pairs],
     # ------------------------------------------------------------------
     n = n_cells
 
-    def boot_spearman(hammings, deltas):
-        boots = []
-        for _ in range(N_BOOT):
-            sh = [hammings[RNG.randrange(n)] for _ in range(n)]
-            sd = [deltas[RNG.randrange(n)] for _ in range(n)]
-            boots.append(spearman(sh, sd))
-        boots.sort()
-        return boots[int(0.025 * N_BOOT)], boots[int(0.975 * N_BOOT) - 1]
-
-    boot_ci = {
-        "rho_v1_zvf": (spearman(h_v1, deltas["zvf"]), *boot_spearman(h_v1, deltas["zvf"])),
-        "rho_v2_zvf": (spearman(h_v2, deltas["zvf"]), *boot_spearman(h_v2, deltas["zvf"])),
-        "rho_v2tn_zvf": (spearman(h_v2tn, deltas["zvf"]), *boot_spearman(h_v2tn, deltas["zvf"])),
-        "rho_v1_reward": (spearman(h_v1, deltas["reward"]), *boot_spearman(h_v1, deltas["reward"])),
-        "rho_v2_reward": (spearman(h_v2, deltas["reward"]), *boot_spearman(h_v2, deltas["reward"])),
-        "rho_v2tn_reward": (spearman(h_v2tn, deltas["reward"]), *boot_spearman(h_v2tn, deltas["reward"])),
-    }
+    # Recompute both distance arrays on the same resampled CELLS. The cell
+    # independence assumption is explicit; correlated experimental blocks need
+    # a block inventory before these can be interpreted as population intervals.
+    def cell_ci(fp, outcome):
+        return cell_distance_spearman_ci([fp(c) for c in cells],
+                                        [c[outcome] for c in cells], N_BOOT, 20260705)
+    boot_ci = {}
+    for label, fp, distances in [('v1', fp_v1, h_v1), ('v2', fp_v2, h_v2),
+                                  ('v2tn', fp_v2_truly_new, h_v2tn)]:
+        for channel, outcome in [('zvf', 'zvf'), ('reward', 'mean_reward')]:
+            boot_ci[f'rho_{label}_{channel}'] = (spearman(distances, deltas[channel]), *cell_ci(fp, outcome))
 
     # ------------------------------------------------------------------
     # OUTPUTS
@@ -381,17 +373,14 @@ for i, j in pairs],
         for item, _ in V2_STACK_ITEMS:
             vals = [str(c[item]) for c in cells]
             h = shannon_entropy_bits(vals)
-            boots = []
-            for _ in range(N_BOOT):
-                sample = [vals[RNG.randrange(n)] for _ in range(n)]
-                boots.append(shannon_entropy_bits(sample))
-            boots.sort()
-            lo = boots[int(0.025 * N_BOOT)]
-            hi = boots[int(0.975 * N_BOOT) - 1]
-            f.write(f"H_bits_{item}\t{h:.4f}\t{lo:.4f}\t{hi:.4f}\n")
+            f.write(f"H_bits_{item}\t{h:.4f}\tNA\tNA\n")
     print(f"wrote {boot_path}")
 
     summary = {
+        "statistic_version": "pro-review-02-v2",
+        "entropy_estimand": "sum_of_marginal_entropies; fixed-campaign descriptive diversity, not joint information",
+        "correlation_uncertainty": "cell-bootstrap sensitivity assuming independent cells; does not cover training-seed or evaluation-example populations",
+        "n_pairs": len(pairs),
         "iter": 73,
         "n_cells": n_cells,
         "v1_total_h_bits": h_v1_total,
@@ -401,7 +390,7 @@ for i, j in pairs],
         "v2_stack_discriminative_h_bits": h_v2_stack_total,
         "v2_truly_new_h_bits": sum(shannon_entropy_bits([str(c[k]) for c in cells])
                                     for k, _ in V2_TRULY_NEW),
-        "v1_placebo_items": sum(1 for p in per_item_v1 if p["classification"] == "PLACEBO"),
+        "v1_placebo_items": sum(1 for p in per_item_v1 if p["classification"] == "CONSTANT_DESCRIPTIVE"),
         "v1_varying_items": sum(1 for p in per_item_v1
                                 if p["classification"] == "VARYING_STACK_DESCRIPTOR"),
         "v2_total_weight_pts": V2_TOTAL_WEIGHT,
@@ -419,20 +408,12 @@ for i, j in pairs],
         "fingerprint_length_v1": len(V1_ITEMS),
         "fingerprint_length_v2": len(V1_ITEMS) + len(V2_STACK_ITEMS),
         "fingerprint_length_v2_tn": len(V1_ITEMS) + len(V2_TRULY_NEW),
-        "verdict_H1": ("v2 stack axes add +%.2f bits (>0); v2 total info budget = "
+        "verdict_H1": ("v2 stack axes add +%.2f bits (>0); v2 sum of marginal entropies = "
                        "%.2f bits (vs v1 %.2f bits), +%.1f%% uplift"
                        % (h_v2_stack_axes, h_v2_total, h_v1_total,
                           100 * (h_v2_total - h_v1_total) / max(h_v1_total, 1e-9))),
-        "verdict_H2": ("v2 fingerprint x |dzvf| rho = %+.4f vs v1 = %+.4f "
-                       "(delta = %+.4f); v2_tn fingerprint rho = %+.4f "
-                       "(delta vs v1 = %+.4f).  Adding ALL 5 axes does NOT "
-                       "strengthen coupling; adding ONLY the 3 truly-new axes "
-                       "(model_family + temperature + seed) WEAKENS coupling by "
-                       "%+.4f.  The 2 redundant axes (task_slice, G) are the "
-                       "ones that drive any v2 coupling strength."
-                       % (rho_v2["zvf"], rho_v1["zvf"], rho_v2["zvf"] - rho_v1["zvf"],
-                          rho_v2tn["zvf"], rho_v2tn["zvf"] - rho_v1["zvf"],
-                          rho_v2tn["zvf"] - rho_v1["zvf"])),
+        "verdict_H2": (f"Observed rho difference: all axes={rho_v2['zvf']-rho_v1['zvf']:+.4f}; "
+                       f"new axes={rho_v2tn['zvf']-rho_v1['zvf']:+.4f}. Descriptive association, not independent explanatory information."),
         "verdict_H3": ("badge uplift is deterministic +%d pts (v2) / +%d pts "
                        "(v2_tn) on every cell; bootstrap CI on per-cell "
                        "uplift is degenerate." % (V2_TOTAL_WEIGHT, V2_TRULY_NEW_WEIGHT)),
@@ -441,7 +422,7 @@ for i, j in pairs],
                                             for k, _ in V2_STACK_ITEMS)),
     }
     summary_path = OUT_DIR / "p5_stack_axis_minreport_summary.json"
-    summary_path.write_text(json.dumps(summary, indent=2))
+    summary_path.write_text(json.dumps(finite_json(summary), indent=2, allow_nan=False))
     print(f"wrote {summary_path}")
     print()
     print("Summary:")

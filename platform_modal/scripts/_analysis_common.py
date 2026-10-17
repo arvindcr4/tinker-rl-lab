@@ -268,14 +268,12 @@ def paired_bootstrap(g: list[float], d: list[float], n_boot: int, rng: random.Ra
     _validate_paired_lengths(g, d)
     diffs = [di - gi for gi, di in zip(g, d)]
     n = len(diffs)
-    if n == 0:
+    if n < 2:
         return {
-            "mean_diff": 0.0,
-            "sd_diff": 0.0,
-            "ci_lo": 0.0,
-            "ci_hi": 0.0,
-            "p_le0": 1.0,
-            "n_pairs": 0,
+            'mean_diff': diffs[0] if n else float('nan'),
+            'sd_diff': float('nan'), 'ci_lo': float('nan'), 'ci_hi': float('nan'),
+            'p_le0': float('nan'), 'n_pairs': n, 'status': 'insufficient_data',
+            'p_le0_interpretation': 'bootstrap_tail_fraction_not_a_null_test_p_value',
         }
     if not all(math.isfinite(value) for value in diffs):
         raise ValueError("paired differences must be finite")
@@ -298,15 +296,23 @@ def paired_bootstrap(g: list[float], d: list[float], n_boot: int, rng: random.Ra
         "ci_lo": round(boots[int(0.025 * n_boot)], 8),
         "ci_hi": round(boots[int(0.975 * n_boot)], 8),
         "p_le0": round((sum(1 for b in boots if b <= 0) + 1) / (n_boot + 1), 4),
+        "p_le0_interpretation": "bootstrap_tail_fraction_not_a_null_test_p_value",
         "n_pairs": n,
     }
+
+
+def exact_sign_pvalue(differences):
+    from scipy.stats import binomtest
+    nonzero = np.asarray(differences)[np.asarray(differences) != 0]
+    return float(binomtest(int((nonzero > 0).sum()), len(nonzero), .5).pvalue) if len(nonzero) else 1.0
 
 
 def paired_bootstrap_delta(g, d, B, seed, statistic=np.median):
     """length_bias_iter96/104/108: paired sign-preserving bootstrap over seed indices.
 
     Resamples ``d - g`` with ``numpy.default_rng(seed)`` and summarizes the
-    resampled statistics with quantile CIs and a two-sided sign p-value.
+    resampled statistics with percentile CIs plus an EXACT two-sided sign test.
+    Ties at zero are excluded from the binomial test; these are distinct procedures.
     """
     _validate_resamples(B)
     _validate_paired_lengths(g, d)
@@ -328,9 +334,12 @@ def paired_bootstrap_delta(g, d, B, seed, statistic=np.median):
     if not math.isfinite(point) or not np.all(np.isfinite(boot)):
         raise ValueError("bootstrap statistic must be finite")
     return {"delta": point,
-            "ci_lo": float(np.quantile(boot, 0.025)),
-            "ci_hi": float(np.quantile(boot, 0.975)),
-            "p": float(min(1.0, 2 * min(np.mean(boot <= 0), np.mean(boot >= 0)))),
+            "ci_lo": float(np.quantile(boot, 0.025)) if n >= 2 else float("nan"),
+            "ci_hi": float(np.quantile(boot, 0.975)) if n >= 2 else float("nan"),
+            "status": "ok" if n >= 2 else "insufficient_data",
+            "p": exact_sign_pvalue(diffs),
+            "p_method": "exact_two_sided_sign_test_zero_ties_excluded",
+            "bootstrap_tail_fraction_two_sided": float(min(1.0, 2 * min(np.mean(boot <= 0), np.mean(boot >= 0)))),
             "n": int(n)}
 
 

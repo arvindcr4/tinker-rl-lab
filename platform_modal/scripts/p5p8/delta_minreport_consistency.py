@@ -268,7 +268,8 @@ def main() -> int:
             "match_rate": round(n_match / n_impl, 4) if n_impl else None,
             "mismatch_rate": round(n_mismatch / n_impl, 4) if n_impl else None,
             "missing_report_rate": round(n_missing / n_impl, 4) if n_impl else None,
-            "consistent_rate": round((n_match + n_missing) / n_impl, 4) if n_impl else None,
+            "checked_count": n_match+n_mismatch,
+            "consistent_rate": round(n_match / (n_match+n_mismatch), 4) if n_match+n_mismatch else None,
         },
         "schema_exposure": {
             "total_components": n_total_components,

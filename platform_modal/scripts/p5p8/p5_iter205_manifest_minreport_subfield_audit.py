@@ -45,6 +45,7 @@ from __future__ import annotations
 import csv
 import json
 import random
+from _minreport_contract import (literal_field, valid_literal, verify_trajectory, PRECISIONS, load_inventory_manifests, inventory_counts)
 from collections import defaultdict
 from pathlib import Path
 
@@ -123,36 +124,23 @@ def parse_group_size_schedule(s: str) -> dict:
 
 
 def parse_sampler_backend_precision(s: str) -> dict:
-    """Parse 'tinker-closed' -> {backend: 'tinker', precision: 'closed'}.
-
-    Returns {} if no match.
-    """
-    out: dict = {}
-    if not s or "-" not in s:
-        return out
-    parts = s.split("-", 1)
-    out["backend"] = parts[0]
-    out["precision"] = parts[1] if len(parts) > 1 else None
-    return out
+    if not isinstance(s, str) or not s:
+        return {}
+    parts = s.split('-', 1)
+    result = {'backend': parts[0]}
+    if len(parts) == 2 and parts[1] in PRECISIONS:
+        result['precision'] = parts[1]
+    return result
 
 
 def parse_heldout_split(s: str) -> dict:
-    """Parse 'gsm8k_easy' -> {description: 'gsm8k_easy',
-    disjoint_from_reward_env: True}.
-
-    Heuristic: heldout split name is disjoint from reward env by definition
-    (otherwise it wouldn't be a heldout).
-    """
-    return {"description": s, "disjoint_from_reward_env": True} if s else {}
+    return {'description': s} if isinstance(s, str) and s else {}
 
 
 def parse_decontamination_notes(s: str) -> dict:
-    """Parse 'gsm8k-train-slice' -> {performed: True,
-    parser_robustness_probe: None}.
-
-    Heuristic: non-empty note indicates decontamination was performed.
-    """
-    return {"performed": bool(s), "parser_robustness_probe": None} if s else {}
+    if not isinstance(s, str):
+        return {}
+    return {'performed': False} if s.strip().lower() in {'not performed', 'not done', 'none'} else {}
 
 
 def parse_loss_form(s: str) -> dict:
@@ -186,13 +174,11 @@ def parse_ref_policy_kl(s: str) -> dict:
 
 
 def parse_per_step_zvf_path(s: str) -> dict:
-    """Parse per_step_zvf_path. Non-empty path means per_step_zvf is True."""
-    out: dict = {}
-    if not s:
-        return out
-    out["per_step_zvf"] = True
-    out["per_step_gu"] = None  # GU not separately logged in mega
-    out["source"] = s
+    result = verify_trajectory(s, WORKTREE)
+    out = {'source': s} if result['reported'] else {}
+    if result['verified']:
+        out['per_step_zvf'] = result['per_step_zvf']
+        out['per_step_gu'] = result['per_step_gu']
     return out
 
 
@@ -209,17 +195,7 @@ PARSERS = {
 
 
 def load_manifests() -> list[dict]:
-    """Load all 98 mega manifests."""
-    rows: list[dict] = []
-    for fp in sorted(MANIFEST_DIR.glob("*.json")):
-        try:
-            with fp.open() as fh:
-                d = json.load(fh)
-                d["_manifest_path"] = str(fp)
-                rows.append(d)
-        except (OSError, json.JSONDecodeError):
-            continue
-    return rows
+    return load_inventory_manifests(MANIFEST_DIR, CELLS_TSV)
 
 
 def load_cells_tsv() -> dict:
@@ -256,6 +232,9 @@ def classify_subfield(
 
     Returns the classification string.
     """
+    present, literal = literal_field(manifest, item, sub_field)
+    if present:
+        return 'EXTRACTABLE_LITERAL' if valid_literal(sub_field, literal) else 'AMBIGUOUS'
     cell_id = manifest.get("cell_id", "")
     cell_row = cells_index.get(cell_id, {})
 
@@ -277,16 +256,9 @@ def classify_subfield(
     parser = PARSERS.get(parser_key)
     if parser is None:
         return "MISSING"
-    parsed = parser(raw)
+    parsed = parser(raw) if isinstance(raw, str) else {}
 
     if sub_field in parsed and parsed[sub_field] is not None:
-        return "EXTRACTABLE_PARSED"
-    # Heuristic: bool fields with True default from non-empty raw also count
-    if sub_field == "performed" and raw:
-        return "EXTRACTABLE_PARSED"
-    if sub_field == "disjoint_from_reward_env" and raw:
-        return "EXTRACTABLE_PARSED"
-    if sub_field == "per_step_zvf" and raw:
         return "EXTRACTABLE_PARSED"
     return "AMBIGUOUS"
 
@@ -295,6 +267,8 @@ def main() -> None:
     manifests = load_manifests()
     cells_index = load_cells_tsv()
     n_manifests = len(manifests)
+    if not n_manifests:
+        raise ValueError("no eligible manifest inventory; audit unavailable")
     print(f"[iter205] Loaded {n_manifests} manifests, {len(cells_index)} cells")
 
     # --- (a) per-sub-field classification ---
@@ -484,6 +458,8 @@ def main() -> None:
 
     summary = {
         "n_manifests": n_manifests,
+        "inventory_counts": inventory_counts(manifests),
+        "reporting_contract": "minreport-review02-v2; presence is not verification",
         "n_subfields": len(MIN_REPORT_FIELDS),
         "n_items": len({it for it, _, _ in MIN_REPORT_FIELDS}),
         "hypotheses": {

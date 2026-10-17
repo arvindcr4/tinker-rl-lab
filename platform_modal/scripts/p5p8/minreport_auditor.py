@@ -35,6 +35,8 @@ Outputs:
 """
 from __future__ import annotations
 
+from _minreport_contract import load_inventory_manifests, inventory_counts, verify_trajectory, verify_manifest_evidence, literal_field, field_report
+from p5_iter205_manifest_minreport_subfield_audit import MIN_REPORT_FIELDS, classify_subfield
 import csv
 import json
 import re
@@ -42,7 +44,10 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+ROOT = REPO_ROOT / "platform_hybrid"
 MANIFEST_DIRS = [
     ROOT / "experiments" / "results" / "mega_20260704" / "manifests",
     ROOT / "experiments" / "results" / "quick_20260704",
@@ -124,33 +129,11 @@ def tier_for(score: float) -> str:
 
 def load_manifests() -> list[dict]:
     out = []
-    for mdir in MANIFEST_DIRS:
-        if not mdir.is_dir():
-            continue
-        for jf in sorted(mdir.glob("*.json")):
-            try:
-                with jf.open() as f:
-                    d = json.load(f)
-            except Exception as e:
-                print(f"warn: bad json {jf}: {e}", file=sys.stderr)
-                continue
-            # Only score files that touch at least one MIN-REPORT key
-            if not any(any(k in d for k in keys)
-                       for _, _, keys, _, _, _ in SCHEMA):
-                continue
-            d["_path"] = jf.name
-            d["_corpus"] = mdir.name
-            m = re.match(
-                r"^(?P<model>[^_]+)_(?P<task>[a-z0-9_]+)_G(?P<G>\d+)_t(?P<t>[\d.]+)_s(?P<s>\d+)_",
-                jf.name,
-            )
-            if m:
-                d["_model_id"] = m.group("model")
-                d["_task_slice"] = m.group("task")
-                d["_G"] = int(m.group("G"))
-                d["_temperature"] = float(m.group("t"))
-                d["_seed"] = int(m.group("s"))
-            out.append(d)
+    for directory in MANIFEST_DIRS:
+        rows = load_inventory_manifests(directory, CELLS_TSV if directory.name == 'manifests' else None)
+        for row in rows:
+            row['_corpus'] = directory.name
+        out.extend(rows)
     return out
 
 
@@ -168,72 +151,36 @@ def sub_coverage(value, trajectory_text, specs):
 
 
 def score_manifest(m: dict) -> dict:
-    out = {
-        "cell_id": m.get("cell_id", m.get("exp", m.get("experiment", m.get("_path", "?")))),
-        "_path": m.get("_path", ""),
-        "_corpus": m.get("_corpus", ""),
-    }
+    """Score explicit reporting coverage, separately exposing verification."""
+    items = ['loss_form', 'reference_kl', 'sampler_backend', 'telemetry',
+             'group_size_schedule', 'heldout_split', 'decontamination']
+    out = {'cell_id': m.get('cell_id', m.get('_path', '?')), '_path': m.get('_path', ''),
+           '_corpus': m.get('_corpus', ''), 'per_item': [], 'contract_version': 'minreport-review02-v2'}
     total = 0.0
-    per_item = []
-    for item_no, name, keys, validators, weight, subs in SCHEMA:
-        raw = None
-        used_key = None
-        for k in keys:
-            if k in m and m[k] is not None:
-                raw = m[k]
-                used_key = k
-                break
-        present = raw is not None and str(raw).strip() != ""
-        validated = bool(present) and any(
-            re.match(v, str(raw), re.IGNORECASE) for v in validators)
-        if not validated:
-            sub_n, sub_k = 0, len(subs)
-        else:
-            trajectory_text = None
-            if item_no == 4:
-                zp = str(raw)
-                zp_full = (ROOT / zp) if not zp.startswith("/") else Path(zp)
-                if zp_full.is_file():
-                    try:
-                        trajectory_text = zp_full.read_text()
-                    except Exception:
-                        trajectory_text = ""
-            sub_n, sub_k = sub_coverage(str(raw), trajectory_text, subs)
-        sub_frac= (0.5 + 0.5 * sub_n / sub_k) if sub_k else 1.0
-        is_na = isinstance(raw, str) and raw.strip().lower().startswith("n/a")
-        honest_na = is_na and any(
-            re.match(v, str(raw), re.IGNORECASE) for v in validators)
-        if honest_na:
-            base = 0.5
-        elif present and validated:
-            base = 1.0
-        elif present:
-            base = 0.25
-        else:
-            base = 0.0
-        item_score = weight * base * sub_frac
-        total += item_score
-        per_item.append({
-            "item_no": item_no,
-            "name": name,
-            "key": used_key or keys[0],
-            "weight": weight,
-            "present": int(present),
-            "validated": int(validated),
-            "honest_na": int(honest_na),
-            "base": round(base, 3),
-            "sub_n": sub_n,
-            "sub_k": sub_k,
-            "sub_frac": round(sub_frac, 3),
-            "item_score": round(item_score, 2),
-            "value": str(raw)[:80] if raw is not None else "",
-        })
-    out["per_item"] = per_item
-    out["badge"] = round(total, 1)
-    out["tier"] = tier_for(total)
-    for k in ("_model_id", "_task_slice", "_G", "_temperature", "_seed"):
+    evidence_checks = verify_manifest_evidence(m, REPO_ROOT)
+    out["evidence"] = evidence_checks
+    out["manifest_status"] = m.get("_manifest_status", "observed")
+    for (number, name, keys, validators, weight, _), item in zip(SCHEMA, items):
+        fields = [(sub, parser) for it, sub, parser in MIN_REPORT_FIELDS if it == item]
+        classes = {sub: classify_subfield(m, item, sub, parser, {}) for sub, parser in fields}
+        covered = sum(c in ('EXTRACTABLE_LITERAL', 'EXTRACTABLE_PARSED') for c in classes.values())
+        score = weight * covered / len(fields)
+        total += score
+        raw = m.get(keys[0])
+        evidence = evidence_checks['trajectory'] if number == 4 else evidence_checks['split'] if number == 6 else {'verified': False}
+        states = {}
+        for sub, _ in fields:
+            present_literal, value = literal_field(m, item, sub)
+            states[sub] = field_report(value) if present_literal else dict(reported=classes[sub]=='EXTRACTABLE_PARSED', applicable=None, verified=False, value=None, status=classes[sub].lower())
+        out['per_item'].append(dict(item_no=number, name=name, key=keys[0], weight=weight,
+                                   present=int(raw is not None or covered > 0), validated=int(covered == len(fields)),
+                                   honest_na=0, base=covered/len(fields), sub_n=covered, sub_k=len(fields),
+                                   sub_frac=covered/len(fields), item_score=round(score, 2),
+                                   value=str(raw)[:80], fields=classes, field_states=states, evidence=evidence))
+    out.update(badge=round(total, 1), tier=tier_for(total))
+    for k in ('_model_id', '_task_slice', '_G', '_temperature', '_seed'):
         if k in m:
-            out[k.lstrip("_")] = m[k]
+            out[k.lstrip('_')] = m[k]
     return out
 
 
@@ -285,6 +232,8 @@ def write_outputs(scored):
     n = len(scored)
     summary = {
         "n_manifests": n,
+        "inventory_counts": {"expected": n, "observed": sum(s["manifest_status"] == "observed" for s in scored), "analyzed": sum(s["manifest_status"] == "observed" for s in scored), "missing": sum(s["manifest_status"] == "missing" for s in scored), "invalid": sum(s["manifest_status"] == "invalid" for s in scored), "contradictory": sum(s["evidence"]["split"].get("contradictory", False) for s in scored), "not_applicable": sum(any(state["applicable"] is False for item in s["per_item"] for state in item["field_states"].values() if state["reported"]) for s in scored)},
+        "reporting_contract": "typed_reporting_coverage_not_scientific_validity",
         "corpus_sizes": {k: len(v) for k, v in by_corpus.items()},
         "badge_mean": round(sum(badges) / max(1, n), 2),
         "badge_median": round(sorted(badges)[n // 2], 2),

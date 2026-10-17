@@ -52,8 +52,11 @@ def test_paired_bootstraps_never_silently_drop_observations(left, right):
 def test_empty_and_singleton_contracts():
     assert math.isnan(st.bootstrap_ci_mean_pct([], 20, 0.05, 0)[0])
     assert st.bootstrap_ci_statmean([], 20, 0) == (0, 0, 0)
-    # Historical singleton policy intentionally differs for this helper.
-    assert st.bootstrap_ci_rng([5], 20, 0.05, random.Random(0)) == (0, 0, 0)
+    # Review02: retain the singleton point, never invent inferential certainty.
+    singleton = st.bootstrap_ci_rng([5], 20, 0.05, random.Random(0))
+    assert singleton.estimate == 5
+    assert singleton.status == "insufficient_data"
+    assert math.isnan(singleton.low) and math.isnan(singleton.high)
     assert st.bootstrap_ci_statmean([5], 20, 0) == (5, 5, 5)
     assert st.paired_boot_pct([5], [2], 20, 0) == (3, 3, 3, 1)
     with pytest.raises(ValueError, match="nonempty"):
@@ -98,7 +101,9 @@ def test_invalid_wilson_parameters(p, n, z):
 
 
 def test_wilson_count_boundaries_and_empty_policy():
-    assert st.wilson_ci(0, 0) == (0, 0, 0)
+    empty = st.wilson_ci(0, 0)
+    assert empty.status == "insufficient_data"
+    assert all(math.isnan(x) for x in empty)
     for k, n in [(1, 0), (-1, 3), (4, 3), (1, -1)]:
         with pytest.raises(ValueError, match="must"):
             st.wilson_ci(k, n)

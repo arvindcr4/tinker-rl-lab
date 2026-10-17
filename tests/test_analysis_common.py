@@ -42,7 +42,7 @@ def test_paired_bootstrap_is_seed_deterministic():
     assert a == b
     assert a["n_pairs"] == 4
     assert a["mean_diff"] == 0.1
-    assert ac.paired_bootstrap([], [], 10, random.Random(0))["p_le0"] == 1.0
+    assert np.isnan(ac.paired_bootstrap([], [], 10, random.Random(0))["p_le0"])
 
 
 def test_auc_rank_and_ccf():

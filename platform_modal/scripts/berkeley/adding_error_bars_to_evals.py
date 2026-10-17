@@ -39,9 +39,14 @@ import statistics
 import random
 from collections import defaultdict
 from pathlib import Path
+import sys
+import numpy as np
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+from _review02_contracts import retention_noninferiority, structured_result, finite_json, result_provenance
 
-ROOT = Path(__file__).resolve().parents[2]
-RESULTS = ROOT / "experiments" / "results"
+ROOT = REPO_ROOT
+RESULTS = ROOT / "platform_hybrid" / "experiments" / "results"
 OUT = RESULTS / "berkeley"
 OUT.mkdir(parents=True, exist_ok=True)
 
@@ -138,18 +143,34 @@ def bootstrap_ci_difference_paired(a, b, B=10000, alpha=0.05, seed=0):
     return statistics.mean(diff), lo, hi, n
 
 
-def ols_slope_with_ci(x, y, B=5000, alpha=0.05, seed=0):
+class SlopeInterval(tuple):
+    """Four-value legacy unpacking plus explicit resampling diagnostics."""
+    def __new__(cls, point, low, high, n, requested, valid):
+        obj = super().__new__(cls, (point, low, high, n))
+        obj.requested_resamples = requested
+        obj.valid_resamples = valid
+        obj.status = 'ok' if all(math.isfinite(v) for v in (point, low, high)) else 'insufficient_data'
+        return obj
+
+
+def ols_slope_with_ci(x, y, B=5000, alpha=0.05, seed=0, *, diagnostics=None):
     """Bootstrap the OLS slope b in y ~ a + b x. Returns mean(boot slope)
     and percentile CI, plus the OLS point estimate for reference."""
+    if len(x) != len(y) or B <= 0 or not 0 < alpha < 1:
+        raise ValueError("matched inputs, positive B, and valid alpha required")
+    if not all(math.isfinite(v) for v in list(x)+list(y)):
+        raise ValueError("finite regression inputs required")
+    if diagnostics is not None:
+        diagnostics.update(requested_resamples=B, valid_resamples=0, status="insufficient_data")
     n = len(x)
     if n < 3:
-        return float("nan"), float("nan"), float("nan"), n
+        return SlopeInterval(float("nan"), float("nan"), float("nan"), n, B, 0)
     mx = statistics.mean(x)
     my = statistics.mean(y)
     num = sum((x[i] - mx) * (y[i] - my) for i in range(n))
     den = sum((x[i] - mx) ** 2 for i in range(n))
     if den == 0:
-        return float("nan"), float("nan"), float("nan"), n
+        return SlopeInterval(float("nan"), float("nan"), float("nan"), n, B, 0)
     b_hat = num / den
     boot = []
     rng = _rng(seed)
@@ -163,33 +184,30 @@ def ols_slope_with_ci(x, y, B=5000, alpha=0.05, seed=0):
         if den_b == 0:
             continue
         boot.append(num_b / den_b)
-    if len(boot) < 100:
-        return b_hat, float("nan"), float("nan"), n
-    boot.sort()
-    lo = boot[int(B * alpha / 2)]
-    hi = boot[int(B * (1 - alpha / 2))]
-    return b_hat, lo, hi, n
+    if diagnostics is not None:
+        diagnostics.update(requested_resamples=B, valid_resamples=len(boot), status="ok" if len(boot) >= 2 else "insufficient_data", method="exploratory_pairs_bootstrap_over_anchors")
+    if len(boot) < 2:
+        return SlopeInterval(b_hat, float("nan"), float("nan"), n, B, len(boot))
+    lo, hi = map(float, np.quantile(boot, [alpha/2, 1-alpha/2]))
+    return SlopeInterval(b_hat, lo, hi, n, B, len(boot))
 
 
 def ci_verdict(lo, hi, null=0.0, equiv_radius=None):
-    """Return one of: DECISIVE (CI excludes null and any equiv region),
-    SUGGESTIVE (CI direction-correct but equiv-region overlaps),
-    NULL (CI includes null)."""
-    if math.isnan(lo) or math.isnan(hi):
+    """Directional interval description; equivalence requires a supplied 90% CI.
+
+    A CI containing the null is inconclusive, never evidence for the null.
+    """
+    if not all(math.isfinite(v) for v in (lo, hi)) or lo > hi:
         return "INSUFFICIENT_DATA"
-    if equiv_radius is None:
-        if lo > null or hi < null:
-            return "DECISIVE"
-        return "NULL"
-    # equiv_radius means "treat anything within +-equiv_radius of null as same"
-    equiv_lo, equiv_hi = null - equiv_radius, null + equiv_radius
-    if hi < equiv_lo or lo > equiv_hi:
-        return "DECISIVE"
-    if lo > equiv_hi and hi > equiv_hi:
-        return "SUGGESTIVE_ABOVE"
-    if hi < equiv_lo and lo < equiv_lo:
-        return "SUGGESTIVE_BELOW"
-    return "NULL"
+    if equiv_radius is not None:
+        if null-equiv_radius <= lo <= hi <= null+equiv_radius:
+            return "EQUIVALENT"
+        if hi < null-equiv_radius:
+            return "INFERIOR"
+        if lo > null+equiv_radius:
+            return "SUPERIOR"
+        return "INCONCLUSIVE"
+    return "SUPERIOR" if lo > null else ("INFERIOR" if hi < null else "INCONCLUSIVE")
 
 
 # ---------- loaders ----------
@@ -373,44 +391,18 @@ def load_iter136_paired():
 # ---------- headline re-derivations ----------
 
 def headline_h1_gu_ratio(sweep, zvf):
-    """H1: GU_ratio(G=4)/GU_ratio(G=32) at T=1M.
-    Sweep has G=2,4,8,16 — no G=32 — but ZVF link has G=4 / G=32 at 4 budgets.
-    Compute CI on the (GU_G4 - GU_G32) difference by re-using the per-G seed
-    means within the sweep (n=3), pooling across budgets for ZVF_G32 via
-    sigma propagation from binary rewards.
-    """
-    # Use ZVF link 4 (T=1M) and re-derive the point GU_ratio by treating G=4
-    # measured on the sweep (heldout) and G=32 from the iter115 cell.
-    # The GU_ratio in the source uses within-rolling ZVF (not heldout acc); we
-    # therefore propagate the ZVF drop onto a per-prompt binary reward model.
-    # For the proxy: GU_ratio = (1 - ZVF_G4) / (1 - ZVF_G32) at fixed T.
-    # We have 3 seeds for G=2,4,8,16 (sweep) and 1 datapoint per budget in
-    # ZVF link (so n=4 budgets). Bootstrap over the 4 budgets to get CI on
-    # the GU_ratio trajectory and report T=1M as the headline.
-    budget_x_ratio = [(r["T"], r["GU_G4"], r["GU_G32"], r["GU_ratio"]) for r in zvf]
-    ratios = [r[3] for r in budget_x_ratio]
-    G4 = [r[1] for r in budget_x_ratio]
-    G32 = [r[2] for r in budget_x_ratio]
-    # Naive bootstrap (n=4)
-    mean, lo, hi, n = bootstrap_ci_mean(ratios, B=10000, seed=13901)
-    # Mean + SE of G4 and G32 separately
-    g4_mean, g4_lo, g4_hi, _ = bootstrap_ci_mean(G4, B=10000, seed=13902)
-    g32_mean, g32_lo, g32_hi, _ = bootstrap_ci_mean(G32, B=10000, seed=13903)
-    return {
-        "headline": "H1 P3 iter115: GU_ratio(G=4/G=32) at T=1M = 5.03 (no CI reported)",
-        "n_budgets_for_CI": n,
-        "point_GU_ratio": zvf[0]["GU_ratio"] if zvf else float("nan"),
-        "CI95_lo": round(lo, 3),
-        "CI95_hi": round(hi, 3),
-        "mean_over_budgets": round(mean, 3),
-        "GU_G4_CI95": [round(g4_lo, 3), round(g4_hi, 3)],
-        "GU_G32_CI95": [round(g32_lo, 3), round(g32_hi, 3)],
-        "width_to_point": round((hi - lo) / max(zvf[0]["GU_ratio"], 1e-6), 3) if zvf else float("nan"),
-        "verdict_vs_1": ci_verdict(lo, hi, null=1.0),
-        "explanation": ("n=4 budgets (iter115) cannot support CI on the ratio per Miller: "
-                        "n<5 anchors -> even 2-sigma bars exceed the point estimate width. "
-                        "For paired-prompt bootstrap we'd need the per-prompt ZVF trace."),
-    }
+    """The T=1M GU ratio, without treating other budgets as replications."""
+    selected = [r for r in zvf if int(r['T']) == 1_000_000]
+    if len(selected) > 1:
+        raise ValueError("duplicate T=1M summary; explicit repeated observations required")
+    point = selected[0]['GU_ratio'] if selected else float('nan')
+    return dict(headline="H1 GU ratio G4/G32 at T=1M", point_GU_ratio=point,
+                n_budgets_for_CI=0, CI95_lo=float('nan'), CI95_hi=float('nan'),
+                mean_over_budgets=float('nan'), GU_G4_CI95=None, GU_G32_CI95=None,
+                width_to_point=float('nan'), verdict_vs_1='INSUFFICIENT_DATA',
+                result=structured_result('GU_G4 / GU_G32 at T=1M', point, unit='ratio',
+                                         method='summary_point_only'),
+                explanation='A single budget summary supports a point only. Matched per-seed or per-example data are required for uncertainty.')
 
 
 def headline_h2_retention_vs_T(zvf):
@@ -421,7 +413,7 @@ def headline_h2_retention_vs_T(zvf):
     logT = [math.log10(t) for t in T]
     b, lo, hi, n = ols_slope_with_ci(logT, R, B=10000, seed=13904)
     return {
-        "headline": "H2 P3 iter131: retention(T) 0.976->0.727 monotonically collapses (no CI on slope)",
+        "headline": "H2 Retention versus fixed token budgets (descriptive trend)",
         "n_T_budgets": n,
         "T_values": T,
         "retention_values": [round(r, 4) for r in R],
@@ -430,8 +422,7 @@ def headline_h2_retention_vs_T(zvf):
         "95%CI_hi": round(hi, 4),
         "width_to_slope": round((hi - lo) / max(abs(b), 1e-6), 3),
         "verdict_negative_slope": ci_verdict(lo, hi, null=0.0),
-        "explanation": ("Bootstrap over n=4 budgets. CI is wide because n=4. The "
-                        "trend direction is decisive; magnitude inference is suspect."),
+        "explanation": "Read the accompanying estimate and interval; this exploratory audit does not establish prospective power or multiplicity-adjusted evidence.",
     }
 
 
@@ -442,43 +433,30 @@ def headline_h3_snr_slope(snr):
     hi = snr["ci_hi"]
     null = 0.5
     return {
-        "headline": "H3 P3 iter123: SNR slope in G = +0.366/decade (THEORY +0.500)",
+        "headline": "H3 SNR slope in G versus theoretical +0.5",
         "n_G": 4,
         "point_slope": b,
         "CI95_lo": lo,
         "CI95_hi": hi,
         "verdict_vs_theory_+0.5": ci_verdict(lo, hi, null=0.5, equiv_radius=0.10),
-        "explanation": ("CI includes 0.500 at 0.10 radius tolerance. Miller would "
-                        "classify this as CONSISTENT-WITH-THEORY (not decisive equivalence)."),
+        "explanation": "Read the accompanying estimate and interval; this exploratory audit does not establish prospective power or multiplicity-adjusted evidence.",
     }
 
 
 def headline_h4_native_wu_paired(nw):
-    """H4: Native-Wu paired test G=2~=G=16 retention 1.0035 CI95 [0.9899, 1.0206]."""
-    if not nw:
-        return {"headline": "H4 missing data", "verdict": "NULL"}
-    r = nw[0]
-    # The CI in the source is already bootstrap via the 3-seed paired design.
-    # Miller would re-check: n=3 paired seeds -> very wide CI, the equivalence
-    # region at 0.97 is FAR below the lower bound so the claim
-    # 'G=2 ~ G=16 (Wu 97.6%)' is rejected on this corpus.
-    return {
-        "headline": "H4 P3 iter135: Native-Wu paired G=2~=G=16 retention 1.0035",
-        "n_paired_seeds": 3,
-        "point_diff": r["diff"],
-        "point_diff_se": r["diff_se"],
-        "CI95_lo": round(r["diff"] - 1.96 * r["diff_se"], 4),
-        "CI95_hi": round(r["diff"] + 1.96 * r["diff_se"], 4),
-        "cohens_d_paired": r["cohens_d"],
-        "verdict_vs_0": ci_verdict(r["diff"] - 1.96 * r["diff_se"], r["diff"] + 1.96 * r["diff_se"], null=0.0, equiv_radius=0.024),
-        "wu_claim_holds_at_97.6pct": (r["diff"] + 1.96 * r["diff_se"]) > -0.024,
-        "explanation": ("n=3 paired seeds; 95% CI on the (G=16 - G=2) diff is "
-                        f"~[{r['diff'] - 1.96 * r['diff_se']:.4f}, "
-                        f"{r['diff'] + 1.96 * r['diff_se']:.4f}]. With equiv-radius 0.024 "
-                        "(Wu 97.6% retention band), the CI straddles -0.024 -> verdict "
-                        "SUGGESTIVE_BELOW per Miller. Wu claim does not extrapolate "
-                        "from this paired sample."),
-    }
+    """Test G2 retention using paired raw observations, not an absolute margin."""
+    r = nw[0] if nw else {}
+    a, b = r.get('paired_acc_G2', []), r.get('paired_acc_G16', [])
+    result = retention_noninferiority(a, b)
+    point = r.get('diff', float('nan'))
+    se = r.get('diff_se', float('nan'))
+    return dict(headline='H4 G2 vs G16 relative-retention noninferiority',
+                n_paired_seeds=len(a), point_diff=point, point_diff_se=se,
+                CI95_lo=float('nan'), CI95_hi=float('nan'),
+                cohens_d_paired=r.get('cohens_d'), verdict_vs_0=result['status'].upper(),
+                **{'wu_claim_holds_at_97.6pct': result.get('noninferior')},
+                result=result,
+                explanation='Noninferiority target E[G2] - 0.976 E[G16]. Summary difference/SE cannot identify the paired scaled-difference variance; raw matched observations required.')
 
 
 def headline_h5_t80_scaling(offset):
@@ -503,9 +481,7 @@ def headline_h5_t80_scaling(offset):
         "95%CI_hi_using_OLS_SE": round(b_hat + 1.96 * (hi - lo) / (2 * 1.96), 4),
         "verdict_vs_0": ci_verdict(lo, hi, null=0.0),
         "t80_ratio_3p_over_2p_mean": round(statistics.mean(t80_3p_over_2p), 1),
-        "explanation": (f"Miller: n={n} anchors -> bootstrap CI is the source of truth. "
-                        f"Slope {b_hat:+.3f}/decade with 95% CI [{lo:+.3f}, {hi:+.3f}]. "
-                        f"({'DECISIVE: slope != 0 at alpha=0.05' if ci_verdict(lo, hi, null=0.0) == 'DECISIVE' else 'NULL: CI includes 0 -> no cross-anchor scaling law'})"),
+        "explanation": "Read the accompanying estimate and interval; this exploratory audit does not establish prospective power or multiplicity-adjusted evidence.",
     }
 
 
@@ -517,15 +493,13 @@ def headline_h6_auroc_zvf(auroc):
     if row is None:
         return {"headline": "H6: AUROC parse failed", "verdict": "INSUFFICIENT_DATA"}
     return {
-        "headline": "H6 P2 iter130: AUROC(zvf_risk_max) = 0.929 [0.83, 1.00]",
+        "headline": "H6 Archived AUROC of ZVF risk",
         "n_seeds_pool": 45 + 2 + 5,  # variance_mitigation + tool_use + scaling_law
         "point_AUROC": round(row["auroc"], 4),
         "95%CI_lo": round(row["ci_lo"], 4),
         "95%CI_hi": round(row["ci_hi"], 4),
         "verdict_vs_0.5": ci_verdict(row["ci_lo"], row["ci_hi"], null=0.5),
-        "explanation": ("Composite-risk AUROC CI excludes 0.5 by a wide margin -> "
-                        "DECISIVE. n=52 includes 3 experiment-pool, not pure seeds; "
-                        "Miller would call for sensitivity to cluster."),
+        "explanation": "Read the accompanying estimate and interval; this exploratory audit does not establish prospective power or multiplicity-adjusted evidence.",
     }
 
 
@@ -541,16 +515,14 @@ def headline_h7_late_eff_dratio(p136):
     delta = r["delta"]
     d = r["cohens_d_paired"]
     return {
-        "headline": "H7 P4 iter136: arithmetic H3 DR-GR late-efficiency delta = +2.68 Cohen's d",
+        "headline": "H7 Paired DR-GR late efficiency difference",
         "n_pairs": r["n_pairs"],
         "delta_mean": round(delta, 4),
         "cohens_d_paired": d,
         "p_param_one_sided": r["p_param"],
         "p_perm_two_sided": r["p_perm"],
         "verdict_one_sided_p005": r["p_param"] < 0.05,
-        "explanation": ("n=5 paired seeds -> Cohen's d=+2.68 (very large) survives Miller's "
-                        "n<10 paired-bootstrap rule; p_param=0.031 (one-sided) -> DECISIVE at "
-                        "alpha=0.05 even at n=5."),
+        "explanation": "Read the accompanying estimate and interval; this exploratory audit does not establish prospective power or multiplicity-adjusted evidence.",
     }
 
 
@@ -570,208 +542,64 @@ def write_tsv(path, rows, header):
 
 
 def main():
-    sweep = load_sweep()
-    zvf = load_zvf_link()
-    snr = load_iter123_snr()
-    nw = load_iter135_nativewu()
-    offset = load_iter137_offset_t80()
-    auroc = load_iter130_auroc()
-    p136 = load_iter136_paired()
-
-    h1 = headline_h1_gu_ratio(sweep, zvf)
-    h2 = headline_h2_retention_vs_T(zvf)
-    h3 = headline_h3_snr_slope(snr)
-    h4 = headline_h4_native_wu_paired(nw)
-    h5 = headline_h5_t80_scaling(offset)
-    h6 = headline_h6_auroc_zvf(auroc)
-    h7 = headline_h7_late_eff_dratio(p136)
-
-    audit_rows = [h1, h2, h3, h4, h5, h6, h7]
-
-    # Flattened table for the audit TSV.
-    header = [
-        "headline", "pillar", "n_for_CI",
-        "point_estimate", "method", "current_SE_or_CI", "propagated_CI95", "width_to_point",
-        "noise_source", "verdict", "explanation"
-    ]
-    flat_rows = []
-    noise_map = {
-        "H1": "cross-budget bootstrap, n=4 (PREDOMINANTLY POINT)",
-        "H2": "cross-budget bootstrap on log10(T) slope, n=4",
-        "H3": "OLS in log-log space, n=4 G points",
-        "H4": "paired seeds, n=3 -> CI via paired diff SE",
-        "H5": "OLS across n=5 anchors (population-level <2*SE -> cannot declare)",
-        "H6": "pooled seeds across 3 experiments (n=45+2+5); cluster-sensitivity needed",
-        "H7": "paired Wilcoxon over (seed, run)-level deltas, n=5 seeds",
-    }
-    pillar_map = {
-        "H1": "P3 (cross-pillar signal)",
-        "H2": "P3 (budget conditionality)",
-        "H3": "P3 (noise mechanism)",
-        "H4": "P3 (Wu claim native test)",
-        "H5": "P1 (cross-scale scaling)",
-        "H6": "P2 (ZVF risk index)",
-        "H7": "P4 (length bias)",
-    }
-    for h in audit_rows:
-        key = h["headline"].split()[0]
-        if key == "H1":
-            r = {
-                "headline": h["headline"],
-                "point_estimate": h["point_GU_ratio"],
-                "propagated_CI95": [h["CI95_lo"], h["CI95_hi"]],
-                "method": "bootstrap over n=4 (T) budgets",
-                "current_SE_or_CI": "NONE REPORTED",
-                "width_to_point": h["width_to_point"],
-                "verdict": h["verdict_vs_1"],
-                "pillar": pillar_map[key],
-                "n_for_CI": h["n_budgets_for_CI"],
-                "noise_source": noise_map[key],
-                "explanation": h["explanation"],
-            }
-        elif key == "H2":
-            r = {
-                "headline": h["headline"],
-                "point_estimate": h["OLS_slope_per_decade_T"],
-                "propagated_CI95": [h["95%CI_lo"], h["95%CI_hi"]],
-                "method": "OLS bootstrap on n=4 (T, retention) cells",
-                "current_SE_or_CI": "NONE (slope point only)",
-                "width_to_point": h["width_to_slope"],
-                "verdict": h["verdict_negative_slope"],
-                "pillar": pillar_map[key],
-                "n_for_CI": h["n_T_budgets"],
-                "noise_source": noise_map[key],
-                "explanation": h["explanation"],
-            }
-        elif key == "H3":
-            r = {
-                "headline": h["headline"],
-                "point_estimate": h["point_slope"],
-                "propagated_CI95": [h["CI95_lo"], h["CI95_hi"]],
-                "method": "OLS log-log space (reused source TSV)",
-                "current_SE_or_CI": f"[{h['CI95_lo']}, {h['CI95_hi']}] (already in source)",
-                "width_to_point": round((h["CI95_hi"] - h["CI95_lo"]) / max(h["point_slope"], 1e-6), 3),
-                "verdict": h["verdict_vs_theory_+0.5"],
-                "pillar": pillar_map[key],
-                "n_for_CI": h["n_G"],
-                "noise_source": noise_map[key],
-                "explanation": h["explanation"],
-            }
-        elif key == "H4":
-            r = {
-                "headline": h["headline"],
-                "point_estimate": h["point_diff"],
-                "propagated_CI95": [h["CI95_lo"], h["CI95_hi"]],
-                "method": "paired diff with normal SE (n=3 seeds)",
-                "current_SE_or_CI": f"+/- {h['point_diff_se']} (source); our CI = +/- 1.96*SE",
-                "width_to_point": round((h["CI95_hi"] - h["CI95_lo"]) / max(abs(h["point_diff"]), 1e-6), 3),
-                "verdict": h["verdict_vs_0"],
-                "pillar": pillar_map[key],
-                "n_for_CI": h["n_paired_seeds"],
-                "noise_source": noise_map[key],
-                "explanation": h["explanation"],
-            }
-        elif key == "H5":
-            r = {
-                "headline": h["headline"],
-                "point_estimate": h["point_slope"],
-                "propagated_CI95": [h["95%CI_lo"], h["95%CI_hi"]],
-                "method": "OLS bootstrap across n=5 anchors (R_max_2p vs log10(N))",
-                "current_SE_or_CI": "NONE (cross-anchor law was OLS-only)",
-                "width_to_point": round((h["95%CI_hi"] - h["95%CI_lo"]) / max(abs(h["point_slope"]), 1e-6), 3) if not math.isnan(h["point_slope"]) else float("nan"),
-                "verdict": h["verdict_vs_0"],
-                "pillar": pillar_map[key],
-                "n_for_CI": h["n_anchors"],
-                "noise_source": noise_map[key],
-                "explanation": h["explanation"],
-            }
-        elif key == "H6":
-            r = {
-                "headline": h["headline"],
-                "point_estimate": h["point_AUROC"],
-                "propagated_CI95": [h["95%CI_lo"], h["95%CI_hi"]],
-                "method": "DeLong-style (or percentile) CI from n=52 pooled seeds",
-                "current_SE_or_CI": f"[{h['95%CI_lo']}, {h['95%CI_hi']}] (already in source)",
-                "width_to_point": round((h["95%CI_hi"] - h["95%CI_lo"]) / max(h["point_AUROC"], 1e-6), 3),
-                "verdict": h["verdict_vs_0.5"],
-                "pillar": pillar_map[key],
-                "n_for_CI": h["n_seeds_pool"],
-                "noise_source": noise_map[key],
-                "explanation": h["explanation"],
-            }
-        elif key == "H7":
-            r = {
-                "headline": h["headline"],
-                "point_estimate": h["delta_mean"],
-                "propagated_CI95": f"cohens_d={h['cohens_d_paired']:+.3f}, p_param={h['p_param_one_sided']}",
-                "method": "paired Wilcoxon + Cohen's d (source)",
-                "current_SE_or_CI": f"p_param={h['p_param_one_sided']}",
-                "width_to_point": float("nan"),
-                "verdict": "DECISIVE (p<0.05)" if h["verdict_one_sided_p005"] else "NULL",
-                "pillar": pillar_map[key],
-                "n_for_CI": h["n_pairs"],
-                "noise_source": noise_map[key],
-                "explanation": h["explanation"],
-            }
-        flat_rows.append(r)
-
-    write_tsv(OUT / "adding_error_bars_audit.tsv", flat_rows, header)
-
-    summary = {
-        "pillar": "B-F25 (Berkeley F25 L8 — Sida Wang; Adding Error Bars to Evals + Measurement of LLM Eval Noises)",
-        "verified_citations": [
-            "Miller, E. (2024). Adding Error Bars to Evals: A Statistical Approach to Language Model Evaluations. arXiv:2411.00640 (cs.CL / stat.AP), 1 Nov 2024.",
-            "Wang, S. et al. (2025). Measuring all the noises of LLM Evals. arXiv:2512.21326 (cs.CL), Dec 2025.",
-        ],
-        "audit_tsv": "platform_hybrid/experiments/results/berkeley/adding_error_bars_audit.tsv",
-        "seven_headline_audit": audit_rows,
-        "aggregate_verdict": {
-            "decisive_count": sum(1 for r in flat_rows if r["verdict"] == "DECISIVE" or (isinstance(r["verdict"], str) and "DECISIVE" in r["verdict"])),
-            "suggestive_count": sum(1 for r in flat_rows if "SUGGESTIVE" in str(r["verdict"])),
-            "null_count": sum(1 for r in flat_rows if r["verdict"] in ("NULL", "SUGGESTIVE_BELOW", "SUGGESTIVE_ABOVE")),
-            "insufficient_count": sum(1 for r in flat_rows if r["verdict"] == "INSUFFICIENT_DATA"),
-        },
-        "key_findings": [
-            "H1 GU_ratio(G=4/G=32) at T=1M = 5.03 is reported as a point estimate in iter115 with NO bootstrap CI; the per-budget variance is ~0.45 around the mean, but with n=4 budgets the 95% CI is dominated by sampling noise — Miller says: report the noise source and a sensitivity flag.",
-            "H2 retention(T) slope = negative (declines as budget grows), but with n=4 budgets the CI includes 0 modestly; the direction-decisive vs magnitude-uncertain split should be explicit.",
-            "H3 SNR slope = +0.366/decade 95% CI [+0.148, +0.583]; this ALREADY satisfies Miller's recipe but the headline should explicitly write 'CI contains theory +0.5 at 0.10 radius tolerance'.",
-            "H4 Native-Wu G=2~G=16 retention=1.0035 CI [0.9899, 1.0206]: paired n=3, CI straddles the equiv-region at 0.976 -> MILLER WOULD DOWNGRADE to SUGGESTIVE (the source already labels this as such but under-prominently).",
-            "H5 iter137 t_80 slope = +0.507 +/- 0.718 with n=5 anchors: CI [-0.901, +1.915] includes 0; 'no scaling law' holds -> headline should say 'DECISIVE null', not just 'no significant slope'.",
-            "H6 iter130 AUROC 0.929 [0.83, 1.00]: properly CI-ed; verdict DECISIVE vs 0.5.",
-            "H7 iter136 H3 Cohen's d=+2.68 / p_param=0.031 at n=5 paired seeds: survives Miller's n<10 paired-bootstrap bar (very large effect + low p). DECISIVE.",
-        ],
-        "recommendation": (
-            "GO. Audit 7 headline numbers across P1/P2/P3/P4. Apply Evan Miller's recipe to every "
-            "claim that lacks an SE or CI: (i) name the noise source (prediction / prompt / seed / "
-            "anchor), (ii) report n explicitly, (iii) compute paired bootstrap where applicable, "
-            "(iv) use the equiv-region test (TOST) for any '~=' claim. Section patch: add a "
-            "'Statistical Rigor' appendix to each paper with the 5-7 most prominent point-estimates "
-            "annotated as DECISIVE / SUGGESTIVE / NULL."
-        ),
-        "evidence_inputs": [
-            "platform_hybrid/experiments/results/groupsize_zvf_sweep.json",
-            "platform_hybrid/experiments/results/group_size_iter115_zvf_linkage.tsv",
-            "platform_hybrid/experiments/results/group_size_iter123_noise_mech.tsv",
-            "platform_hybrid/experiments/results/group_size_iter135_native_wu.tsv",
-            "platform_hybrid/experiments/results/scaling_law_iter137_offset_fit.tsv",
-            "platform_hybrid/experiments/results/zvf_iter130_axis_aurocs.tsv",
-            "platform_hybrid/experiments/results/length_bias_iter136_paired_tests.tsv",
-        ],
-    }
-    with open(OUT / "adding_error_bars_summary.json", "w") as f:
-        json.dump(summary, f, indent=2, default=str)
-
-    # console summary
-    print("== Sida Wang / Evan Miller 'Adding Error Bars to Evals' audit ==")
-    print(f"  audited {len(flat_rows)} headline claims across P1/P2/P3/P4\n")
-    for r in flat_rows:
-        ci = r["propagated_CI95"]
-        print(f"  {r['headline'][:90]}")
-        print(f"    pillar={r['pillar']}  n={r['n_for_CI']}  "
-              f"point={r['point_estimate']}  CI95={ci}  -> {r['verdict']}")
-    print(f"\nagg verdict: {summary['aggregate_verdict']}")
-    print("\nwrote 1 TSV + 1 JSON summary to platform_hybrid/experiments/results/berkeley/")
+    """One structured source for TSV and narrative; absent inputs remain absent."""
+    loaders = [("H1", load_zvf_link), ("H2", load_zvf_link), ("H3", load_iter123_snr),
+               ("H4", load_iter135_nativewu), ("H5", load_iter137_offset_t80),
+               ("H6", load_iter130_auroc), ("H7", load_iter136_paired)]
+    results = []
+    for name, loader in loaders:
+        try:
+            data = loader()
+        except (OSError, ValueError, KeyError) as exc:
+            results.append(dict(headline=name, **structured_result(name, reason=str(exc))))
+            continue
+        if name == "H1":
+            result = headline_h1_gu_ratio({}, data)['result']
+        elif name == "H2":
+            h = headline_h2_retention_vs_T(data)
+            result = structured_result('OLS retention slope per log10 token budget', h['OLS_slope_per_decade_T'],
+                                       unit='ratio per decade tokens', method='fixed-budget descriptive OLS',
+                                       status='descriptive', n_conditions=len(data),
+                                       uncertainty_source='unavailable: budgets are conditions, not replications')
+        elif name == "H3":
+            result = structured_result('SNR slope per log10 group size', data.get('slope'),
+                                       unit='log10 SNR per log10 G', method='archived summary only',
+                                       source_interval=[data.get('ci_lo'), data.get('ci_hi')],
+                                       reason='independent unit and source method need validation; no equivalence test performed')
+        elif name == "H4":
+            result = headline_h4_native_wu_paired(data)['result']
+        elif name == "H5":
+            h = headline_h5_t80_scaling(data)
+            result = structured_result('R_max_2p slope versus log10 model size', h.get('point_slope'),
+                                       unit='reward per decade parameters', method='fixed-anchor descriptive OLS',
+                                       status='descriptive' if data else 'insufficient_data', n_conditions=len(data),
+                                       uncertainty_source='unavailable: anchor selection is not repeated training')
+        elif name == "H6":
+            row = data.get('cross_experiment', {}).get('zvf_risk_max', {})
+            result = structured_result('AUROC of ZVF risk across archived experimental records', row.get('auroc'),
+                                       unit='AUROC', method='archived summary only',
+                                       source_interval=[row.get('ci_lo'), row.get('ci_hi')],
+                                       reason='clustered independent units and original CI method need validation')
+        else:
+            h = headline_h7_late_eff_dratio(data)
+            result = structured_result('paired mean DR-GR late efficiency difference', h.get('delta_mean'),
+                                       unit='source efficiency units', method='summary point only',
+                                       standardized_effect=h.get('cohens_d_paired'),
+                                       reason='paired observations required to estimate a confidence interval')
+        result['headline'] = name
+        results.append(result)
+    # The two artifacts and their prose consume exactly the same result records.
+    header = list(dict.fromkeys(key for result in results for key in result))
+    write_tsv(OUT/'adding_error_bars_audit.tsv', results, header)
+    summary = dict(results=results,
+                   key_findings=[f"{r['headline']}: {r['estimand']} = {r['estimate']} {r['unit']}; status={r['status']}; method={r['method']}" for r in results],
+                   provenance=result_provenance([ITER115_ZVFLINK, ITER123_NOISE, ITER135_NATIVEWU,
+                                                 ITER137_OFFSET, ITER130_AXIS, ITER136_PAIRED],
+                                                uncertainty_method='declared per result; missing observations not simulated'),
+                   archived_outputs_regenerated=False)
+    (OUT/'adding_error_bars_summary.json').write_text(json.dumps(finite_json(summary), indent=2, allow_nan=False))
+    print('\n'.join(summary['key_findings']))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

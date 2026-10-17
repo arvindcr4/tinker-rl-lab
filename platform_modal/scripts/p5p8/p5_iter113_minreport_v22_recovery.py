@@ -46,6 +46,7 @@ from typing import Any
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _review02_contracts import finite_json
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
 MANIFEST_DIR = ROOT / "platform_hybrid/experiments/results/mega_20260704/manifests"
@@ -113,6 +114,9 @@ def load_tensor(cell_id: str) -> dict[str, Any]:
 
 def compute_items_from_tensor(rv: np.ndarray) -> dict[str, float]:
     """Compute Items 14, 15, 17 from reward_vectors (n_prompts, G)."""
+    rv = np.asarray(rv, dtype=float)
+    if rv.ndim != 2 or not all(rv.shape) or not np.isfinite(rv).all() or not np.isin(rv, [0, 1]).all():
+        raise ValueError("nonempty finite binary reward matrix required; missing or scaled rewards unsupported")
     G = rv.shape[1]
     K = rv.sum(axis=1)            # n_prompts success counts
     n = K.shape[0]
@@ -134,27 +138,51 @@ def compute_items_from_tensor(rv: np.ndarray) -> dict[str, float]:
 
 
 def spearman(x: np.ndarray, y: np.ndarray) -> float:
-    """Spearman rank correlation via numpy ranking. Returns nan on degenerate."""
-    n = len(x)
-    if n < 3 or np.std(x) == 0 or np.std(y) == 0:
-        return float("nan")
-    rx = np.argsort(np.argsort(x)).astype(float)
-    ry = np.argsort(np.argsort(y)).astype(float)
-    return float(np.corrcoef(rx, ry)[0, 1])
+    from scipy.stats import spearmanr
+    if len(x) != len(y):
+        raise ValueError('matched vectors required')
+    if len(x) < 3 or np.ptp(x) == 0 or np.ptp(y) == 0:
+        return float('nan')
+    return float(spearmanr(x, y).statistic)
+
+
+def item_emission_counts(items, manifests, cells, recovered_ids):
+    """Count actual fields; source annotations are not evidence of emission."""
+    aliases = {'zvf_per_step': 'per_step_zvf_path'}
+    rows = []
+    for iid, name, status, source in items:
+        key = aliases.get(name, name)
+        emitted = sum(key in m and m[key] is not None and m[key] != '' for m in manifests.values())
+        if source in {'cells', 'manifest_or_cells'}:
+            emitted = sum((key in manifests.get(cid, {}) and manifests[cid][key] is not None)
+                          or (key in c and c[key] is not None and c[key] != '') for cid, c in cells.items())
+        recovered = len(recovered_ids) if source == 'tensor' else emitted
+        rows.append(dict(item_id=iid, item_name=name, schema_status=status,
+                         emit_status='reported' if emitted else 'absent', n_cells_emitted=emitted,
+                         n_cells_recoverable=recovered, recovery_method=source,
+                         harvest_cost='not_measured'))
+    return rows
 
 
 def main() -> int:
     # Load per-cell data
     cell_ids = sorted(p.stem for p in MANIFEST_DIR.glob("*.json"))
     cells = load_cells()
-    assert len(cell_ids) == 98, f"expected 98 manifests, got {len(cell_ids)}"
+    cell_ids = sorted(cells)  # eligibility from the independent inventory
+    manifests = {}
+    missing_inputs = []
 
     per_cell_rows: list[dict[str, Any]] = []
     for cid in cell_ids:
-        m = load_manifest(cid)
-        t = load_tensor(cid)
-        rv = np.asarray(t["reward_vectors"], dtype=float)
-        items = compute_items_from_tensor(rv)
+        try:
+            m = load_manifest(cid)
+            manifests[cid] = m
+            t = load_tensor(cid)
+            rv = np.asarray(t["reward_vectors"], dtype=float)
+            items = compute_items_from_tensor(rv)
+        except (OSError, ValueError, KeyError) as exc:
+            missing_inputs.append({"cell_id": cid, "reason": str(exc)})
+            continue
         c = cells.get(cid, {})
         per_cell_rows.append({
             "cell_id":            cid,
@@ -176,6 +204,8 @@ def main() -> int:
             "manifest_keys":      ",".join(sorted(m.keys())),
         })
 
+    if not per_cell_rows:
+        raise ValueError("no valid reward tensors; recovery unavailable")
     # Save per-cell recovery
     rec_path = OUT_DIR / "p5_iter113_recovery_per_cell.tsv"
     with open(rec_path, "w", newline="") as f:
@@ -204,72 +234,27 @@ def main() -> int:
     rho_item14_item15 = spearman(item14_vals, item15_vals)
     rho_item15_item17 = spearman(item15_vals, item17_vals)
 
-    emit_gap_path = OUT_DIR / "p5_iter113_emit_gap.tsv"
-    with open(emit_gap_path, "w", newline="") as f:
-        wr = csv.writer(f, delimiter="\t")
-        wr.writerow(["item_id", "item_name", "schema_status", "emit_status", "n_cells_emitted", "n_cells_recoverable", "recovery_method", "harvest_cost"])
-        for it in MIN_REPORT_V22:
-            iid, iname, status, source = it
-            if source == "manifest":
-                emit = "yes_live"
-                n_emit = 98
-                n_rec  = 98
-                method = "direct"
-                cost = 0
-            elif source == "manifest_or_cells":
-                emit = "yes_live"
-                n_emit = 98
-                n_rec  = 98
-                method = "direct"
-                cost = 0
-            elif source == "cells":
-                emit = "yes_cells"
-                n_emit = 98
-                n_rec  = 98
-                method = "cells_tsv"
-                cost = 0
-            elif source == "tensor":
-                emit = "ABSENT"  # the GAP
-                n_emit = 0
-                n_rec  = 98
-                method = "deterministic_from_per_step_zvf_path"
-                cost = 0
-            elif source == "schema":
-                emit = "ABSENT"
-                n_emit = 0
-                n_rec  = 0
-                method = "not_recoverable_no_source"
-                cost = float("inf")
-            else:
-                emit = "UNKNOWN"
-                n_emit = 0
-                n_rec  = 0
-                method = "unknown"
-                cost = float("inf")
-            wr.writerow([iid, iname, status, emit, n_emit, n_rec, method, cost])
-
-    # H4 — three-source reconciliation
-    schema_declared = sum(1 for it in MIN_REPORT_V22 if it[2] != "live_NA")
-    live_emitted    = sum(1 for it in MIN_REPORT_V22 if it[3] in {"manifest", "manifest_or_cells", "cells"})
-    recoverable     = sum(1 for it in MIN_REPORT_V22 if it[3] == "tensor")
-    schema_uncovered = schema_declared - live_emitted - recoverable
-    na_sentinels    = sum(1 for it in MIN_REPORT_V22 if it[2] == "live_NA")
-
-    # H1 — declared-but-absent count
-    daa_items = [
-        it[0] for it in MIN_REPORT_V22
-        if it[2] not in {"live_NA"} and it[3] not in {"manifest", "manifest_or_cells", "cells"}
-    ]
-    # H1 — DAA on v2.2 = Items 14, 15, 17 + 18 + 10/11/12 + 03
-    daa_recoverable = [it for it in daa_items if any(it == r[0] for r in [
-        ("Item14",), ("Item15",), ("Item17",)
-    ])]
-    daa_unrecoverable = [it for it in daa_items if it not in {"Item14", "Item15", "Item17"}]
+    emission_rows = item_emission_counts(MIN_REPORT_V22, manifests, cells,
+                                         {r['cell_id'] for r in per_cell_rows})
+    emit_gap_path = OUT_DIR / 'p5_iter113_emit_gap.tsv'
+    with emit_gap_path.open('w', newline='') as f:
+        wr = csv.DictWriter(f, fieldnames=list(emission_rows[0]), delimiter='\t')
+        wr.writeheader()
+        wr.writerows(emission_rows)
+    # Mutually exclusive item categories, measured from validated input fields.
+    emitted_set = {r['item_id'] for r in emission_rows if r['n_cells_emitted'] == len(cell_ids)}
+    recovered_set = {r['item_id'] for r in emission_rows if r['n_cells_recoverable'] == len(cell_ids)} - emitted_set
+    uncovered_set = {it[0] for it in MIN_REPORT_V22} - emitted_set - recovered_set
+    schema_declared = len(MIN_REPORT_V22)
+    live_emitted, recoverable, schema_uncovered = map(len, (emitted_set, recovered_set, uncovered_set))
+    na_sentinels = sum(it[2] == 'live_NA' for it in MIN_REPORT_V22)
+    daa_items = sorted(recovered_set | uncovered_set)
+    daa_recoverable, daa_unrecoverable = sorted(recovered_set), sorted(uncovered_set)
 
     summary = {
-        "n_cells":                 98,
-        "n_manifests":             98,
-        "n_tensor_files":          98,
+        "n_cells":                 len(cell_ids),
+        "n_manifests":             len(manifests),
+        "n_tensor_files":          len(per_cell_rows),
         "schema_declared":         schema_declared,
         "na_sentinels":            na_sentinels,
         "live_emitted":            live_emitted,
@@ -281,7 +266,10 @@ def main() -> int:
         "H1_daa_count":            len(daa_items),
         "H1_daa_recoverable":      len(daa_recoverable),
         "H1_daa_unrecoverable":    len(daa_unrecoverable),
-        "H2_recovery_rate":        "98/98",
+        "H2_recovery_rate":        f"{len(per_cell_rows)}/{len(cell_ids)}",
+        "missing_inputs": missing_inputs,
+        "emission_rows": emission_rows,
+        "construct_warning": "Item14 = G**2 * Item17 - G*p_hat*(1-p_hat) exactly; pooled correlation cannot establish independent information. Homogeneous pooled Bernoulli residual also captures prompt heterogeneity.",
         "H2_zero_harvest":         True,
         "H3_spearman_item14_zvf":  round(rho_item14_zvf, 4),
         "H3_spearman_item14_pcd":  round(rho_item14_pcd, 4),
@@ -296,14 +284,14 @@ def main() -> int:
         "source":                  "platform_modal/scripts/p5p8/p5_iter113_minreport_v22_recovery.py",
     }
     with open(OUT_DIR / "p5_iter113_recovery_summary.json", "w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(finite_json(summary), f, indent=2, allow_nan=False)
 
     # Pretty-print headline summary
-    print(f"[iter-113] n_cells={98}")
+    print(f"[iter-113] n_cells={len(cell_ids)}")
     print(f"[iter-113] H1: declared-but-absent (DAA) items on v2.2 = {len(daa_items)}")
     print(f"[iter-113]     DAA recoverable from per_step_zvf_path: {daa_recoverable}")
     print(f"[iter-113]     DAA unrecoverable (no source):          {daa_unrecoverable}")
-    print(f"[iter-113] H2: recovery rate 98/98, zero harvest cost")
+    print(f"[iter-113] H2: recovery rate {len(per_cell_rows)}/{len(cell_ids)}; compute cost not measured")
     print(f"[iter-113] H3: Item14 vs cells.zvf  rho={rho_item14_zvf:+.4f}")
     print(f"[iter-113]     Item14 vs cells.pcd  rho={rho_item14_pcd:+.4f}")
     print(f"[iter-113]     Item15 vs cells.zvf  rho={rho_item15_zvf:+.4f}")

@@ -30,9 +30,14 @@ import math
 import random
 import statistics
 from pathlib import Path
+import ast
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+from _review02_contracts import finite_json
 
-ROOT = Path(__file__).resolve().parents[2]
-RESULTS = ROOT / "experiments" / "results"
+ROOT = REPO_ROOT
+RESULTS = ROOT / "platform_hybrid" / "experiments" / "results"
 OUT = RESULTS / "berkeley"
 OUT.mkdir(parents=True, exist_ok=True)
 
@@ -45,8 +50,8 @@ random.seed(20260704)
 def bootstrap_ci(values, stat=statistics.mean, n_boot=2000, alpha=0.05):
     """Return (point, lo, hi, half_width, se) of the bootstrap distribution."""
     n = len(values)
-    if n == 0:
-        return (float("nan"),) * 5
+    if n < 2:
+        return (stat(values) if n else float("nan"),) + (float("nan"),)*4
     boots = []
     for _ in range(n_boot):
         sample = [values[random.randrange(n)] for _ in range(n)]
@@ -59,7 +64,9 @@ def bootstrap_ci(values, stat=statistics.mean, n_boot=2000, alpha=0.05):
 
 
 def paired_bootstrap_diff(a, b, n_boot=2000, alpha=0.05):
-    n = min(len(a), len(b))
+    if len(a) != len(b):
+        raise ValueError("paired samples must have equal length")
+    n = len(a)
     if n == 0:
         return (float("nan"),) * 4
     diffs = [ai - bi for ai, bi in zip(a[:n], b[:n])]
@@ -138,6 +145,22 @@ def load_zvf_summary():
     return out
 
 
+def parse_group_table(text):
+    try:
+        rows = json.loads(text)
+    except ValueError:
+        rows = ast.literal_eval(text)
+    if not isinstance(rows, list) or any(not isinstance(r, dict) or not isinstance(r.get('G'), (int, float)) for r in rows):
+        raise ValueError('expected per-G object list')
+    for row in rows:
+        if row['G'] <= 0 or int(row['G']) != row['G']:
+            raise ValueError('positive integer group size required')
+        for key, value in row.items():
+            if isinstance(value, (float, int)) and not math.isfinite(value):
+                raise ValueError('finite result fields required')
+    return rows
+
+
 def load_group_size_effect():
     """Parse platform_hybrid/experiments/results/group_size_effect.tsv -> per-G reward table."""
     p = RESULTS / "group_size_effect.tsv"
@@ -155,7 +178,7 @@ def load_group_size_effect():
             if parts[0] == "A_reward_vs_G" and parts[1] == "per_G_table":
                 # python-list-of-dicts literal; eval safely
                 try:
-                    rows = eval(parts[2])
+                    rows = parse_group_table(parts[2])
                     for row in rows:
                         out[int(row["G"])] = row
                 except Exception:
@@ -215,7 +238,7 @@ def hypothesis_h1(zvf):
         # population-mean over ALL methods × seeds
         all_vals = [v for vals in per_method.values() for v in vals]
         pop_pt, pop_lo, pop_hi, pop_hw, pop_se = bootstrap_ci(all_vals, n_boot=2000)
-        ratio = (best_se / pop_se) if pop_se > 0 else float("inf")
+        ratio = (best_se / pop_se) if pop_se > 0 else float("nan")
         verdict = "DECISIVE" if ratio >= 1.5 else "NULL"
         n_total += 1
         n_decisive += int(verdict == "DECISIVE")
@@ -288,15 +311,7 @@ def hypothesis_h2(audit):
 # H3: Population-checkpoint averaging reduces SE
 # ----------------------------------------------------------------------------
 def hypothesis_h3(zvf, group_size):
-    """For 4 'pillar headlines' (use last10_avg as reward proxy):
-       - Pillar-1: tinker_gsm8k_zvf / scaling_law_three_phase peak
-       - Pillar-2: variance_mitigation mean last10_avg
-       - Pillar-3: group_size_effect per-G last10_reward_mean
-       - Pillar-4: drgrpo_vs_grpo mean reward
-       Compare single-checkpoint SE (one model+seed) vs population SE
-       (average across all available checkpoints). DECISIVE if
-       SE_single / SE_pop >= 1.5 for >= 3/4 pillars.
-    """
+    """Descriptive SD versus bootstrap SEM; not checkpoint/ensemble improvement."""
     pillars = []
 
     # Pillar-1: scaling_law (peak reward per model)
@@ -334,16 +349,16 @@ def hypothesis_h3(zvf, group_size):
     n_decisive = 0
     n_total = len(pillars)
     for name, vals, se_single, se_pop in pillars:
-        ratio = (se_single / se_pop) if se_pop > 0 else float("inf")
-        verdict = "DECISIVE" if ratio >= 1.5 else "NULL"
+        ratio = (se_single / se_pop) if se_pop > 0 else float("nan")
+        verdict = "DESCRIPTIVE_SD_VS_SEM" if math.isfinite(ratio) else "INSUFFICIENT_DATA"
         n_decisive += int(verdict == "DECISIVE")
         rows.append({
             "pillar": name,
             "n_pop": len(vals),
             "pop_mean": sum(vals) / len(vals),
-            "se_single_checkpoint": se_single,
-            "se_population": se_pop,
-            "ratio_se_single_over_pop": ratio,
+            "sd_across_heterogeneous_values": se_single,
+            "bootstrap_sem_of_mean": se_pop,
+            "sd_over_sem": ratio,
             "verdict": verdict,
         })
     return rows, n_decisive, n_total
@@ -446,14 +461,16 @@ def main():
                "signal_to_noise", "row03_verdict",
                "population_extension_verdict"])
     write_tsv("h3_pillar_checkpoint_se", h3_rows,
-              ["pillar", "n_pop", "pop_mean", "se_single_checkpoint",
-               "se_population", "ratio_se_single_over_pop", "verdict"])
+              ["pillar", "n_pop", "pop_mean", "sd_across_heterogeneous_values",
+               "bootstrap_sem_of_mean", "sd_over_sem", "verdict"])
     write_tsv("h4_cross_pillar_tau", h4_rows,
               ["n_methods_common", "methods", "tau_single_eval",
                "tau_population_eval", "pop_lo", "pop_hi", "delta_abs_tau",
                "verdict"])
 
     summary = {
+        "statistic_version": "pro-review-02-v2",
+        "interpretation": "Exploratory descriptive comparisons; heterogeneous-condition bootstrap does not demonstrate policy improvement or population generalization",
         "ts": "2026-07-04",
         "iter": 23,
         "lecture": "F25 L11 Oriol Vinyals (Multi-Agent Systems in the LLM Era)",
@@ -472,12 +489,12 @@ def main():
             },
             "H3_pillar_checkpoint_population": {
                 "n_decisive": h3_dec, "n_total": h3_tot,
-                "verdict": "DECISIVE" if h3_dec >= 3 else "NULL",
+                "verdict": "DESCRIPTIVE_SD_VS_SEM" if h3_tot else "INSUFFICIENT_DATA",
                 "rows": h3_rows,
             },
             "H4_cross_pillar_agreement": {
                 "n_decisive": h4_dec, "n_total": h4_tot,
-                "verdict": "DECISIVE" if h4_dec == h4_tot else "NULL",
+                "verdict": "INSUFFICIENT_DATA" if h4_tot == 0 else ("DESCRIPTIVE_DIRECTION" if h4_dec == h4_tot else "INCONCLUSIVE"),
                 "rows": h4_rows,
             },
         },
@@ -485,11 +502,11 @@ def main():
             "DECISIVE": sum([h1_dec >= max(1, (2 * h1_tot) // 3),
                               h2_dec >= 2,
                               h3_dec >= 3,
-                              h4_dec == h4_tot]),
+                              h4_tot > 0 and h4_dec == h4_tot]),
             "TOTAL": 4,
         },
     }
-    (OUT / "multiact_summary.json").write_text(json.dumps(summary, indent=2))
+    (OUT / "multiact_summary.json").write_text(json.dumps(finite_json(summary), indent=2, allow_nan=False))
     print("OK", json.dumps(summary["verdict_counts"]))
 
 

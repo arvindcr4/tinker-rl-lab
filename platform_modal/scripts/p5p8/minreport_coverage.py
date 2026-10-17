@@ -10,6 +10,8 @@ record coverage / missingness / ambiguity. Outputs:
 """
 from __future__ import annotations
 
+from _minreport_contract import load_inventory_manifests, inventory_counts, verify_trajectory
+from minreport_auditor import score_manifest
 import csv
 import json
 import os
@@ -18,7 +20,10 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+ROOT = REPO_ROOT / "platform_hybrid"
 MANIFEST_DIR = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
 CELLS_TSV = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
 OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
@@ -85,16 +90,7 @@ SUBFIELDS = {
 
 
 def load_manifests() -> list[dict]:
-    out = []
-    for jf in sorted(MANIFEST_DIR.glob("*.json")):
-        try:
-            with jf.open() as f:
-                d = json.load(f)
-            d["_path"] = str(jf.relative_to(ROOT))
-            out.append(d)
-        except Exception as e:
-            print(f"warn: bad json {jf}: {e}", file=sys.stderr)
-    return out
+    return load_inventory_manifests(MANIFEST_DIR, CELLS_TSV)
 
 
 def check_field(item_no, keys, validators, value):
@@ -138,10 +134,12 @@ def main() -> int:
     cell_rows = []
     for r in rows:
         cell_id = r.get("cell_id", r.get("_path", "?"))
-        for item_no, name, keys, validators, severity in SCHEMA:
+        scored = score_manifest(r)
+        for (item_no, name, keys, validators, severity), typed in zip(SCHEMA, scored["per_item"]):
             value = r.get(keys[0])
-            present, validated, sev, note = check_field(item_no, keys, validators, value)
-            sub = score_subfields(value, SUBFIELDS.get(item_no, []))
+            present, validated = bool(typed["present"]), bool(typed["validated"])
+            sev, note = ("ok", "typed reported coverage; verification separate") if validated else ("warn", "missing or ambiguous typed subfields")
+            sub = {name: cls in ("EXTRACTABLE_LITERAL", "EXTRACTABLE_PARSED") for name, cls in typed["fields"].items()}
             cell_rows.append({
                 "cell_id": cell_id,
                 "item_no": item_no,
@@ -149,6 +147,7 @@ def main() -> int:
                 "key": keys[0],
                 "present": int(present),
                 "validated": int(validated),
+                "evidence_verified": int(typed["evidence"]["verified"]),
                 "severity": sev,
                 "value": str(value) if value is not None else "",
                 "note": note,
@@ -207,17 +206,7 @@ def main() -> int:
 
     # Aggregate summary
     total_cells = len(rows)
-    fully_covered = 0
-    for r in rows:
-        if all(
-            r.get(keys[0]) and not str(r.get(keys[0])).lower().startswith("n/a")
-            for _, _, keys, _, _ in SCHEMA
-            if keys[0] != "per_step_zvf_path"  # we check path existence below
-        ):
-            zp = r.get("per_step_zvf_path", "")
-            zp_full = (ROOT / zp).as_posix() if not zp.startswith("/") else zp
-            if os.path.exists(zp_full):
-                fully_covered += 1
+    fully_covered = sum(s['badge'] == 100 and s['evidence']['trajectory']['verified'] for s in map(score_manifest, rows))
 
     sub_missing = defaultdict(int)
     for r in cell_rows:
@@ -227,6 +216,7 @@ def main() -> int:
 
     summary = {
         "n_manifests": total_cells,
+        "inventory_counts": inventory_counts(rows),
         "per_field_presence_pct": {
             f"{k[0]}:{k[2]}": round(100.0 * v["present"] / max(1, v["cells_total"]), 1)
             for k, v in per_field_counts.items()

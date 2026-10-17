@@ -19,8 +19,8 @@ export default function Audit() {
   return (
     <section className="view">
       <div className="panel">
-        <h2>Every printed number has a receipt</h2>
-        <p className="small">The thesis number audit registers each printed value and checks it by a named method: recomputed from raw records (R), from a statistics export (S), transcribed from a source (T), matched against code (C), arithmetic on printed counts (A) or bound to a cited prose source (P). Values whose evidence is not in the public checkout are reported as unavailable, never as passing.</p>
+        <h2>Registered thesis-number audit</h2>
+        <p className="small">The thesis number audit checks selected registered values by a named method: recomputed from raw records (R), from a statistics export (S), transcribed from a source (T), matched against code (C), arithmetic on printed counts (A) or bound to a cited prose source (P). Values whose evidence is not in the public checkout are reported as unavailable, never as passing.</p>
       </div>
       <div className="grid2">
         <div className="panel finding">
@@ -36,7 +36,7 @@ export default function Audit() {
           <div className="legend">
             {PARTS.filter(([k]) => tc[k]).map(([k, c, t]) => <span key={k}><i style={{ background: c }} />{tc[k]} {t}</span>)}
           </div>
-          <p className="small">INCOMPLETE means some evidence is withheld from the public checkout, not that a value disagreed. Source: <span className="mono">{a.path}</span>.</p>
+          <p className="small">INCOMPLETE means some registered evidence is unavailable. Passing a named check does not authenticate source data or verify every numerical thesis claim. The provenance footer reports changed or missing referenced files without rewriting this historical audit. Source: <span className="mono">{a.path}</span>.</p>
         </div>
         <div className="panel">
           <h3>Passing checks by method</h3>

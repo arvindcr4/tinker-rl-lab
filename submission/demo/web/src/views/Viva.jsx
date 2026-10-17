@@ -1,21 +1,22 @@
 import React from "react";
-import { CONTRASTS, DATA, SS, nSeeds, zvfStats } from "../data.js";
+import { CONTRASTS, DATA, MODEL, zvfStats } from "../data.js";
+import { GRADING_SPEC_ID } from "../grade.js";
 import { pct, pfmt, sgn } from "../stats.js";
 
 // The hardest questions two independent reviewers raised on the thesis, answered from the
 // thesis text, each linked to the view that shows the evidence. Numbers are computed, not typed.
 export default function Viva() {
-  const s = CONTRASTS.find((c) => c.a === "grpo_g8" && c.b === "ppo").stats;
-  const z = zvfStats("grpo_g8", 8), ck = DATA.grader_check;
+  const c = CONTRASTS.find((c) => c.id === "g8-ppo"), s = c?.stats;
+  const z = zvfStats("grpo_g8", 8), ck = DATA.grader_check?.grading_spec_id === GRADING_SPEC_ID ? DATA.grader_check : null;
   const QA = [
     {
       q: "What is your individual contribution, given the Semester-3 group work and the AI agents?",
-      a: <>The group built the multi-framework infrastructure and baseline integrations, frozen at tag <span className="mono">capstone-final-2026-04-25</span>. The research direction, the experimental expansion, the statistical analyses, the P1–P8 reports, the registry, the adaptive group-size controller, the fraud study and the E1–E14 campaign are mine. AI agents wrote much of the code and drafts under my direction. Every reported number is tied to a stored run and can be re-checked, as the evidence audit and the re-graded answers show.</>,
+      a: <>The group built the multi-framework infrastructure and baseline integrations, frozen at tag <span className="mono">capstone-final-2026-04-25</span>. The research direction, the experimental expansion, the statistical analyses, the P1–P8 reports, the registry, the adaptive group-size controller, the fraud study and the E1–E14 campaign are mine. AI agents wrote much of the code and drafts under my direction. The evidence audit reports source coverage and gaps. Stored completions can be re-graded without overwriting their historical scores.</>,
       go: [["audit", "Evidence audit"], ["answers", "Real answers"]],
     },
     {
       q: "Table 6.2 is provisional. Why should we accept the GRPO vs PPO conclusion?",
-      a: <>Over the {s.n} completed paired seeds, GRPO G = 8 minus PPO is {sgn(s.md)} with 95% CI [{sgn(s.lo)}, {sgn(s.hi)}], and TOST at ±0.02 gives p = {pfmt(s.tost)}. The conclusion is limited to "no detectable GRPO advantage on this configuration". PPO has {nSeeds("ppo")} of {SS.seeds_planned} seeds and the exposure-matched arm is pending, so the result is labelled provisional rather than final. The earlier +0.050 gap came from a 200-token cap and a cold critic; PPO ended below its own start.</>,
+      a: <>{s ? <>The canonical artifact contains {s.n} validated pairs with mean difference {sgn(s.md)}, 95% difference CI [{sgn(s.lo)}, {sgn(s.hi)}], and adjusted combined TOST p = {pfmt(s.holmTost)}. </> : <>Validated paired inference is currently unavailable. </>}{c?.decision || "No confirmatory verdict"}. Historical arm means do not establish training gains or equivalence. The fixed primary Holm family has three contrasts, with missing p-values set to 1; G2−PPO-style is exploratory. {MODEL.justified ? `Margin justification: ${MODEL.plan.margin_justification}.` : "The 2 pp equivalence margin has no declared practical justification."} v1 did not adequately support the intended comparison. Several factors changed together in v2, so their causal contributions cannot be separated.</>,
       go: [["samestack", "GRPO vs PPO"]],
     },
     {
@@ -35,7 +36,7 @@ export default function Viva() {
     },
     {
       q: "How do we know the grader that produced these accuracies is right?",
-      a: <>An independent balanced-brace parser re-grades every stored completion. In this page a port of it reproduces the stored score on {ck ? `${ck.completions.toLocaleString("en")} answers from ${ck.runs} runs with ${ck.disagreements} disagreements` : "the stored answers"}, and you can test it on any input.</>,
+      a: <>An independent balanced-brace parser re-grades available stored completions and reports missing coverage. In this page the current strict grader checks agreement with historical stored scores on {ck ? `${ck.completions.toLocaleString("en")} answers from ${ck.runs} runs with ${ck.disagreements} disagreements` : "available examples; a full current-specification audit has not been exported"}, and you can test it on any input.</>,
       go: [["answers", "Real answers"]],
     },
   ];
@@ -43,7 +44,7 @@ export default function Viva() {
     <section className="view">
       <div className="panel">
         <h2>Hard questions, answered from the evidence</h2>
-        <p className="small">These are the questions two independent reviewers expected an examiner to ask. Each answer follows the thesis text and links to the view that shows the evidence. The numbers in the answers are computed from the same data as the rest of the page.</p>
+        <p className="small">These are the questions two independent reviewers expected an examiner to ask. Each answer follows the thesis text and links to the view that shows the evidence. Inferential numbers come from the canonical offline analysis; interactive summaries and example grading use exported records.</p>
       </div>
       {QA.map(({ q, a, go }, i) => (
         <div key={i} className="panel qa">

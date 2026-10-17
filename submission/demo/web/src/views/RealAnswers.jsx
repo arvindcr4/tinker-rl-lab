@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from "react";
 import { DATA } from "../data.js";
-import { grade } from "../grade.js";
+import { grade, GRADING_SPEC_ID } from "../grade.js";
 
 const EX = DATA.examples, CHECK = DATA.grader_check;
+const CURRENT_CHECK = CHECK?.grading_spec_id === GRADING_SPEC_ID ? CHECK : null;
 const COLS = [["base", "Base model"], ["grpo_g8", "After GRPO, G = 8"], ["ppo", "After PPO"]];
 const mark = (c) => (c === "1" || c === 1 ? "✓" : "✗");
 
@@ -15,13 +16,13 @@ function Completion({ text, boxed }) {
 }
 
 function GraderProbe() {
-  const [text, setText] = useState("so the answer is \\boxed{\\$1,234.00}");
+  const [text, setText] = useState("so the answer is \\boxed{1234.00}");
   const [gold, setGold] = useState("1234");
   const g = grade(text, gold);
   return (
     <div className="panel finding">
       <h3>Try the grader</h3>
-      <p className="small">The same strict rule scores every answer: take the last <span className="mono">\boxed{"{…}"}</span>, strip units, commas and LaTeX spacing, and compare the number with the gold answer. No box, no credit.</p>
+      <p className="small">The same strict rule scores every answer: take the last <span className="mono">\boxed{"{…}"}</span>, normalize supported formatting, then compare exact rational numbers with the gold answer. Invalid boxes, non-finite values and zero denominators receive no credit. No box, no credit.</p>
       <label className="small" htmlFor="probe-text">Model answer</label>
       <textarea id="probe-text" rows={3} value={text} onChange={(e) => setText(e.target.value)} />
       <div className="row">
@@ -36,7 +37,7 @@ function GraderProbe() {
 
 export default function RealAnswers() {
   const patterns = Object.entries(EX.pattern_counts).sort((a, b) => b[1] - a[1]);
-  const [pattern, setPattern] = useState(EX.items.find((it) => it.pattern === "010")?.pattern ?? patterns[0][0]);
+  const [pattern, setPattern] = useState(EX.items.find((it) => it.pattern === "010")?.pattern ?? patterns[0]?.[0] ?? "");
   const items = EX.items.filter((it) => it.pattern === pattern);
   const [pick, setPick] = useState(0);
   const item = items[Math.min(pick, items.length - 1)];
@@ -46,13 +47,15 @@ export default function RealAnswers() {
     <section className="view">
       <div className="panel">
         <h2>Read the actual answers</h2>
-        <p className="small">Stored greedy answers from seed {EX.seed} on the GSM8K test split: the base model, then the same model after GRPO and after PPO. Each answer is re-graded here, in your browser, by a port of the analysis grader. Pick an outcome pattern; the page shows the first {EX.per_pattern} test items of that pattern, so the examples are fixed by rule rather than chosen by hand.</p>
+        <p className="small">Stored greedy answers from seed {EX.seed} on the GSM8K test split: the base model, then after GRPO and the PPO-style variant. Historical examples are aligned by stored index; absent protocol/item hashes remain unverified and these examples do not establish a paired inferential cohort. Each answer is re-graded here, in your browser, by a port of the analysis grader. Pick an outcome pattern; the page shows the first {EX.per_pattern} test items of that pattern, so the examples are fixed by rule rather than chosen by hand.</p>
         <div className="row" style={{ marginTop: 10 }}>
           <span className={`pill wrap ${regraded.every(Boolean) ? "good" : "bad"}`}>{regraded.filter(Boolean).length}/{regraded.length} shown answers re-graded to their stored score</span>
-          {CHECK && <span className={`pill wrap ${CHECK.disagreements ? "bad" : "good"}`}>{CHECK.completions.toLocaleString("en")} stored answers from {CHECK.runs} runs: {CHECK.disagreements} disagreements</span>}
+          {CURRENT_CHECK ? <span className={`pill wrap ${CURRENT_CHECK.coverage_complete && CURRENT_CHECK.disagreements === 0 ? "good" : "warn"}`}>{CURRENT_CHECK.completions.toLocaleString("en")} stored answers from {CURRENT_CHECK.runs_checked ?? CURRENT_CHECK.runs} runs: {CURRENT_CHECK.disagreements ?? "unknown"} disagreements; coverage {CURRENT_CHECK.coverage_complete ? "complete" : "incomplete"}</span>
+            : <span className="pill wrap warn">Full audit for the current grading specification unavailable; rebuild the export</span>}
         </div>
       </div>
       <div className="panel">
+        <p className="small">Current grading specification: {GRADING_SPEC_ID}. Historical stored scores remain unchanged.</p>
         <h3>All {EX.n.toLocaleString("en")} test items by outcome (base · GRPO · PPO)</h3>
         <div className="table-box"><table>
           <thead><tr><th>Base</th><th>GRPO</th><th>PPO</th><th className="num">Items</th><th>Reading</th></tr></thead>
@@ -68,7 +71,7 @@ export default function RealAnswers() {
           </tbody>
         </table></div>
       </div>
-      <div className="panel">
+      {item ? <div className="panel">
         <div className="row between">
           <h3 style={{ margin: 0 }}>Test item #{item.i} · gold answer <span className="mono">{item.gold}</span></h3>
           <div className="seg">{items.map((it, j) => <button key={it.i} type="button" aria-pressed={it === item} onClick={() => setPick(j)}>#{it.i}</button>)}</div>
@@ -90,6 +93,7 @@ export default function RealAnswers() {
           })}
         </div>
       </div>
+      : <div className="panel">Stored answer examples unavailable for this export.</div>}
       <GraderProbe />
     </section>
   );

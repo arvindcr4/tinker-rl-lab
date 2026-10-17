@@ -13,6 +13,7 @@ Usage:
   python3 registry/query.py drift  # iter-42: schema-anchored `field:` claims
 """
 import argparse
+import hashlib
 import json
 import re
 import pathlib
@@ -39,7 +40,8 @@ FIELDS = {
     "execution.mode": 5, "checkpoint.id": 5, "checkpoint.variant": 5,
     "checkpoint.revision": 5, "reward.id": 5, "prompt.template_sha256": 5,
     "prompt.chat_template": 5, "data.dataset": 5, "eval.metric": 5,
-    "eval.heldout": 5,
+    "eval.heldout": 5, "tokenizer.id": 5, "tokenizer.revision": 5,
+    "data.revision": 5, "data.ordered_example_identity": 5,
     # R4 algorithm
     "loss.objective": 4, "loss.importance_ratio": 4, "loss.clip": 4,
     "loss.aggregation": 4, "loss.advantage_norm": 4, "loss.token_mask": 4,
@@ -48,6 +50,7 @@ FIELDS = {
     "kl.reference_policy": 4, "kl.beta": 4, "kl.estimator": 4,
     # R3 hyperparameters / budget
     "decoding.temperature": 3, "decoding.top_p": 3, "decoding.max_tokens": 3,
+    "decoding.top_k": 3, "decoding.repetition_penalty": 3,
     "batch.prompts_per_step": 3, "batch.samples_per_prompt": 3,
     "batch.group_schedule": 3, "train.steps": 3, "train.sampler_refresh": 3,
     "data.subset": 3, "data.selection": 3,
@@ -56,15 +59,17 @@ FIELDS = {
     "lora.rank": 3, "lora.alpha": 3, "lora.dropout": 3, "lora.targets": 3,
     # R2 runtime
     "trainer.name": 2, "runtime.backend": 2, "runtime.precision": 2,
-    "reward.fn_sha256": 2,
+    "reward.fn_sha256": 2, "runtime.gpu": 2, "runtime.environment": 2,
+    "implementation.identity": 2,
     # R1 nuisance
     "trainer.version": 1, "seeds": 1,
 }
-# Underspecified flag: coverage below this, or any R5 field unknown, except
-# fields in FLAG_EXEMPT (checkpoint.revision is unpinned in every run script in
-# this repo; it is still listed among the unknowns but cannot trigger the flag).
+# All unknown outcome-critical fields, including checkpoint revision, flag
+# underspecification. R0 is not evidence of a matched stack.
 COVERAGE_FLOOR = 0.8
-FLAG_EXEMPT = {"checkpoint.revision"}
+COMPARISON_COVERAGE_VERSION = "stackdiff_known_both_v2"
+SPEC_COVERAGE_VERSION = "stack_spec_known_fields_v2"
+MATCHING_REQUIREMENTS_VERSION = "all_catalogue_fields_v2"
 # run_config status vocabulary; only "unknown" counts as not known.
 KNOWN_STATUSES = ("logged", "code", "default", "inferred")
 
@@ -101,9 +106,9 @@ def _variant(model):
     if not model:
         return None
     name = model.lower().split("/")[-1]
-    if "base" in name:
+    if re.search(r"(?:^|[-_.])base(?:$|[-_.])", name):
         return "base"
-    if "instruct" in name or name.endswith("-inst") or name.endswith("-it"):
+    if re.search(r"(?:^|[-_.])instruct(?:$|[-_.])", name) or name.endswith(("-inst", "-it")):
         return "instruct"
     return None
 
@@ -149,12 +154,73 @@ def legacy_view(rec):
                 "source": "registry entry (hand-entered)"} for k, v in raw.items()}
 
 
+# Explicit mappings only: no model-name guesses, library defaults or absent
+# values are promoted to observations. Both flat catalogue keys and these
+# nested effective-manifest paths are supported.
+MANIFEST_FIELDS = {
+    "checkpoint.id": ("revisions.model.id", "model.id", "model_id"),
+    "checkpoint.revision": ("revisions.model.revision", "model.revision", "model_revision"),
+    "tokenizer.id": ("revisions.tokenizer.id", "tokenizer.id", "tokenizer_id"),
+    "tokenizer.revision": ("revisions.tokenizer.revision", "tokenizer.revision", "tokenizer_revision"),
+    "runtime.gpu": ("hardware.gpu_names", "runtime.gpu", "gpu"),
+    "runtime.environment": ("environment_hash", "runtime.environment"),
+    "runtime.precision": ("hardware.model_dtype", "runtime.precision", "precision"),
+    "data.dataset": ("revisions.dataset.id", "dataset.id", "dataset_id"),
+    "data.revision": ("revisions.dataset.revision", "dataset.revision", "dataset_revision"),
+    "data.ordered_example_identity": ("data.ordered_example_identity",
+                                      "ordered_example_identity", "ordered_example_ids_sha256"),
+    "implementation.identity": ("implementation.identity", "implementation_identity", "source"),
+    "decoding.top_k": ("generation.train.top_k", "generation.top_k", "generation_config.top_k"),
+    "decoding.repetition_penalty": ("generation.train.repetition_penalty", "generation.repetition_penalty", "generation_config.repetition_penalty"),
+    "decoding.temperature": ("generation.train.temperature", "generation.temperature", "generation_config.temperature"),
+    "decoding.top_p": ("generation.train.top_p", "generation.top_p", "generation_config.top_p"),
+    "decoding.max_tokens": ("generation.train.max_new_tokens", "generation.max_new_tokens", "generation_config.max_new_tokens"),
+}
+
+
+def manifest_view(manifest, source="entry#effective_manifest"):
+    """Extract observed configuration from an effective run manifest."""
+    view = {}
+    if not isinstance(manifest, dict):
+        return view
+    missing = object()
+    for field in FIELDS:
+        for path in (field, *MANIFEST_FIELDS.get(field, ())):
+            value = manifest
+            if path in manifest:
+                value = manifest[path]
+            else:
+                for part in path.split("."):
+                    if not isinstance(value, dict) or part not in value:
+                        value = missing
+                        break
+                    value = value[part]
+            if value is not missing:
+                if (field == "implementation.identity" and path == "source"
+                        and isinstance(value, dict)
+                        and (value.get("status") == "unknown"
+                             or not (value.get("source_files") or value.get("commit")))):
+                    value = None
+                view[field] = {"value": value, "status": "logged" if value is not None else "unknown",
+                               "source": f"{source}.{path}"}
+                break
+    if "data.ordered_example_identity" not in view:
+        ids = {k: manifest[k] for k in ("train_item_ids", "test_item_ids") if k in manifest}
+        if len(ids) == 2:
+            # Compare observed ordered lists, not an assumed shared dataset split.
+            view["data.ordered_example_identity"] = {
+                "value": ids, "status": "logged",
+                "source": f"{source}.train_item_ids,test_item_ids"}
+    return view
+
+
 def field_view(rec):
     """Canonical {field: {value, status, source}} over every FIELDS name.
 
     run_config (generated, with provenance) overrides the legacy view."""
     view = legacy_view(rec)
     view.update(rec.get("run_config") or {})
+    view.update(manifest_view(rec.get("effective_manifest")))
     unknown = {"value": None, "status": "unknown", "source": "not recorded"}
     return {f: view.get(f, unknown) for f in FIELDS}
 
@@ -194,12 +260,14 @@ def _norm(x):
         return ("bool", x)  # keep False distinct from 0.0
     if isinstance(x, (int, float)):
         return round(float(x), 12)
+    if isinstance(x, dict):
+        return {k: _norm(v) for k, v in x.items()}
     if isinstance(x, list):
         return [_norm(i) for i in x]
     return x
 
 
-def stackdiff(a, b):
+def stackdiff(a, b, required_fields=None):
     """Pure comparison of two stack records.
 
     Returns a dict with:
@@ -214,6 +282,9 @@ def stackdiff(a, b):
     "unknown" on either side is reported as unknown; a row declared on one
     side only is listed in `undeclared` (never a difference, not in coverage).
     """
+    required = set(FIELDS if required_fields is None else required_fields)
+    if not required <= set(FIELDS):
+        raise ValueError(f"unknown matching requirements: {sorted(required - set(FIELDS))}")
     va, vb = field_view(a), field_view(b)
     differs, unknown, known_both = [], [], 0
     for f, sev in FIELDS.items():
@@ -250,10 +321,21 @@ def stackdiff(a, b):
     coverage = known_both / (len(FIELDS) + n_rows)
     return {"level": max((d[1] for d in differs), default=0),
             "differs": differs, "unknown": unknown, "undeclared": undeclared,
-            "coverage": coverage,
+            "coverage": coverage, "coverage_version": COMPARISON_COVERAGE_VERSION,
+            "no_known_differences": not differs,
+            "evidence_complete": not unknown and not undeclared,
+            "matching_requirements": {
+                "version": MATCHING_REQUIREMENTS_VERSION,
+                "required_fields": sorted(required),
+                "unknown_fields": [f for f, _, _ in unknown if f in required],
+                "differing_fields": [f for f, *_ in differs if f in required],
+                "satisfied": (not any(f in required for f, *_ in unknown + differs)
+                              and not undeclared
+                              and not any(f.startswith("delta.") for f, *_ in unknown + differs)),
+            },
             "hidden_max": max((u[1] for u in unknown), default=0),
             "underspecified": coverage < COVERAGE_FLOOR or any(
-                u[1] == 5 and u[0] not in FLAG_EXEMPT for u in unknown),
+                u[1] == 5 for u in unknown),
             "same_label": a["label_claimed"] == b["label_claimed"]}
 
 
@@ -280,7 +362,7 @@ def cmd_badge(args):
         detail = " ".join(f"{k}={v:.2f}" for k, v in scores.items())
         src = "run_config" if r.get("run_config") else "hand-entered"
         print(f"{rid:40s} badge={total:3d}  spec_coverage={spec_coverage(r):.2f} "
-              f"({src})  {detail}")
+              f"({SPEC_COVERAGE_VERSION}; {src})  {detail}")
 
 
 def cmd_query(args):
@@ -331,10 +413,12 @@ def cmd_stackdiff(args):
             src = f"\n        a: {va[f]['source']}\n        b: {vb[f]['source']}"
         print(f"  [R{sev}] {f}: {x!r} -> {y!r}{src}")
     print(f"verdict: {RISK[r['level']]}")
-    print(f"coverage: {r['coverage']:.2f} of compared fields known on both sides; "
+    print(f"coverage: {r['coverage']:.2f} ({r['coverage_version']}) of compared fields known on both sides; "
           f"{len(r['unknown'])} unknown (max hidden severity R{r['hidden_max']})")
+    print(f"evidence complete: {r['evidence_complete']}; "
+          f"matching requirements satisfied: {r['matching_requirements']['satisfied']}")
     if r["underspecified"]:
-        crit = [u[0] for u in r["unknown"] if u[1] == 5 and u[0] not in FLAG_EXEMPT]
+        crit = [u[0] for u in r["unknown"] if u[1] == 5]
         print("UNDERSPECIFIED: " + (f"outcome-critical fields unknown: {', '.join(crit)}"
                                      if crit else f"coverage < {COVERAGE_FLOOR}"))
     if r["undeclared"]:
@@ -418,7 +502,7 @@ def cmd_drift(args):
     block_leaves = {}
     for item_name, item_def in min_report.items():
         out = set()
-        def walk(o):
+        def walk(o, out=out):
             if not isinstance(o, dict):
                 return
             for k, v in o.items():
@@ -473,7 +557,7 @@ def cmd_drift(args):
     if drifts:
         print()
         print(f"  drift rows ({len(drifts)}):")
-        for d, c, f, v, r in drifts:
+        for d, c, f, v, _r in drifts:
             print(f"    {d:14s} {c:30s} field={f!r:40s} -> {v}")
     return 0
 
@@ -546,6 +630,17 @@ def cmd_health(_):
     return rc
 
 
+def registry_input_manifest(registry):
+    """Content-address the exact registry inputs, including the schema and sidecars."""
+    paths = [registry / "schema.json", *sorted((registry / "entries").glob("*.json"))]
+    return {p.relative_to(registry).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in paths}
+
+
+def registry_manifest_sha256(manifest):
+    return hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
 def cmd_validate_strict(args):
     """Iter-122: integrate the iter-118 strict validator as a CI gate.
 
@@ -569,6 +664,7 @@ def cmd_validate_strict(args):
     except ImportError:
         print("FATAL: jsonschema not installed", file=sys.stderr)
         return 2
+    manifest = registry_input_manifest(HERE)
     schema = json.load(open(HERE / "schema.json"))
     schema_fails = []
     for p in sorted((HERE / "entries").glob("*.json")):
@@ -583,14 +679,42 @@ def cmd_validate_strict(args):
     target = (
         HERE.parents[1] / "platform_modal/scripts/p5p8/p6_iter118_strict_validator.py"
     ).resolve()
-    rc = subprocess.run(
-        [sys.executable, str(target)], cwd=HERE.parent, capture_output=True, text=True
-    )
-    sys.stdout.write(rc.stdout)
-    # Parse the JSON the script wrote.
-    audit_json = HERE / ".." / "experiments" / "results" / "p5p8" / "p6_iter118_strict_audit.json"
-    audit_json = audit_json.resolve()
-    audit = json.loads(audit_json.read_text())
+    # A fresh, unique output prevents a failed producer from blessing a prior audit.
+    import tempfile
+    if registry_input_manifest(HERE) != manifest:
+        print("CI GATE: FAIL (registry inputs changed during schema validation)", file=sys.stderr)
+        return 1
+    digest = registry_manifest_sha256(manifest)
+    with tempfile.TemporaryDirectory(prefix="registry-strict-") as work:
+        audit_json = pathlib.Path(work) / "audit.json"
+        rc = subprocess.run(
+            [sys.executable, str(target), "--registry", str(HERE),
+             "--output", str(audit_json), "--input-sha256", digest],
+            cwd=HERE.parent, capture_output=True, text=True,
+        )
+        sys.stdout.write(rc.stdout)
+        sys.stderr.write(rc.stderr)
+        if rc.returncode:
+            print(f"CI GATE: FAIL (validator exited {rc.returncode})", file=sys.stderr)
+            return rc.returncode if rc.returncode > 0 else 1
+        try:
+            audit = json.loads(audit_json.read_text())
+            if not isinstance(audit, dict):
+                raise ValueError("audit must be an object")
+            if (audit.get("input_manifest") != manifest
+                    or audit.get("input_sha256") != digest
+                    or registry_input_manifest(HERE) != manifest):
+                raise ValueError("audit does not match the current registry input manifest")
+            if not isinstance(audit.get("findings"), list) or not all(
+                    isinstance(f, dict) and f.get("severity") in {"error", "warn", "info"}
+                    for f in audit["findings"]):
+                raise ValueError("invalid audit findings")
+            for key in ("n_stack_entries", "n_deltas"):
+                if type(audit.get(key)) is not int or audit[key] < 0:
+                    raise ValueError(f"invalid audit {key}")
+        except (OSError, ValueError, TypeError) as exc:
+            print(f"CI GATE: FAIL (missing, malformed, or stale audit: {exc})", file=sys.stderr)
+            return 1
     error_findings = [f for f in audit["findings"] if f.get("severity") == "error"]
     warn_findings = [f for f in audit["findings"] if f.get("severity") == "warn"]
     info_findings = [f for f in audit["findings"] if f.get("severity") == "info"]
@@ -603,10 +727,10 @@ def cmd_validate_strict(args):
     print(f"  error_findings      {len(error_findings)}")
     print(f"  warn_findings       {len(warn_findings)}")
     print(f"  info_findings       {len(info_findings)}")
-    if n_errors == 0:
+    if n_errors == 0 and not (args.include_warn and warn_findings):
         print("CI GATE: PASS")
     else:
-        print(f"CI GATE: FAIL ({n_errors} blocking findings)")
+        print(f"CI GATE: FAIL ({n_errors + (len(warn_findings) if args.include_warn else 0)} blocking findings)")
     if args.include_warn:
         return 1 if (n_errors + len(warn_findings)) else 0
     return 1 if n_errors else 0

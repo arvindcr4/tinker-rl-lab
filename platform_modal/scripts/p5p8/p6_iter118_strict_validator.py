@@ -23,11 +23,6 @@ PROJECT_ROOT = WORKTREE / "platform_hybrid"
 REGISTRY = PROJECT_ROOT / "registry"
 RESULTS = PROJECT_ROOT / "experiments" / "results" / "p5p8"
 
-DELTAS = {
-    p.stem
-    for p in (REGISTRY / "entries").glob("delta_*.json")
-    if json.loads(p.read_text()).get("record_type") == "variant_delta"
-}
 MIN_REPORT_ITEMS = ["loss_form", "reference_kl", "sampler_backend",
                     "telemetry", "group_size_schedule", "heldout_split",
                     "decontamination"]
@@ -58,10 +53,25 @@ def source_exists(raw_path):
     return (WORKTREE / path).exists() or (PROJECT_ROOT / path).exists()
 
 
-def main():
+def main(argv=None):
+    global REGISTRY
     ap = __import__("argparse").ArgumentParser(description=__doc__)
     ap.add_argument("--strict", action="store_true", default=True)
-    args = ap.parse_args()
+    ap.add_argument("--registry", type=pathlib.Path, default=REGISTRY)
+    ap.add_argument("--output", type=pathlib.Path,
+                    default=RESULTS / "p6_iter118_strict_audit.json")
+    ap.add_argument("--input-sha256", help="expected content hash of registry inputs")
+    args = ap.parse_args(argv)
+    REGISTRY = args.registry.resolve()
+    sys.path.insert(0, str(WORKTREE / "platform_hybrid" / "registry"))
+    from query import registry_input_manifest, registry_manifest_sha256
+    manifest = registry_input_manifest(REGISTRY)
+    digest = registry_manifest_sha256(manifest)
+    if args.input_sha256 and args.input_sha256 != digest:
+        print("registry input manifest mismatch", file=sys.stderr)
+        return 1
+    deltas = {p.stem for p in (REGISTRY / "entries").glob("delta_*.json")
+              if json.loads(p.read_text()).get("record_type") == "variant_delta"}
 
     findings = []
 
@@ -72,7 +82,7 @@ def main():
             continue
         for vda in rec.get("variant_deltas_applied", []):
             did = vda.get("delta_id")
-            if did and did not in DELTAS:
+            if did and did not in deltas:
                 findings.append({
                     "kind": "orphan_delta_id",
                     "entry": p.stem,
@@ -158,18 +168,23 @@ def main():
                 "fix": "bibkey must be a string",
             })
 
-    RESULTS.mkdir(parents=True, exist_ok=True)
     out_json = {
+        "input_manifest": manifest,
+        "input_sha256": digest,
         "n_findings": len(findings),
         "findings": findings,
-        "n_deltas": len(DELTAS),
+        "n_deltas": len(deltas),
         "n_stack_entries": sum(
             1 for p in (REGISTRY / "entries").glob("*.json")
             if json.loads(p.read_text()).get("record_type") == "stack"),
         "audit_date": "2026-07-14",
         "audit_source": "platform_modal/scripts/p5p8/p6_iter118_strict_validator.py",
     }
-    out_path = RESULTS / "p6_iter118_strict_audit.json"
+    if registry_input_manifest(REGISTRY) != manifest:
+        print("registry inputs changed during validation", file=sys.stderr)
+        return 1
+    out_path = args.output
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(out_json, indent=2))
 
     by_kind = {}
@@ -177,7 +192,7 @@ def main():
         by_kind.setdefault(f["kind"], 0)
         by_kind[f["kind"]] += 1
     print(f"# strict audit: {len(findings)} findings across "
-          f"{out_json['n_stack_entries']} stacks / {len(DELTAS)} deltas")
+          f"{out_json['n_stack_entries']} stacks / {len(deltas)} deltas")
     for k, n in sorted(by_kind.items()):
         print(f"  {k:30s} {n}")
     print(f"  wrote {out_path}")

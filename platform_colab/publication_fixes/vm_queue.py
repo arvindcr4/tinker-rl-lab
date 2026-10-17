@@ -16,8 +16,8 @@ from pathlib import Path
 
 
 def validate_jobs(jobs, concurrency):
-    if type(concurrency) is not int or concurrency < 1:
-        raise ValueError("Concurrency must be positive")
+    if type(concurrency) is not int or not 1 <= concurrency <= 16:
+        raise ValueError("Concurrency must be between 1 and 16")
     if not isinstance(jobs, list):
         raise ValueError("Jobs must be a list")
     names, outputs = set(), set()

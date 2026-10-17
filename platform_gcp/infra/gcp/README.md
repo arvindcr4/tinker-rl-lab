@@ -162,3 +162,21 @@ objects with `id`, `required_sites`, and optional `requires_judge`. Only
 shopping, shopping_admin, gitlab and homepage task dependencies are currently
 supported. Actual task IDs and dependencies must come from the reviewed benchmark
 manifest; no example or automatically inferred subset is authorized here.
+
+### Security admission ceilings (review 48)
+
+The foreground MIG controller rejects more than 10 workers, disks over 1000 GB,
+worker runtimes over 24 hours, and worker machine types other than
+`e2-standard-4`. Its individual cloud commands have 120-second deadlines.
+These resource ceilings are not a monetary budget or an independent reaper:
+controller loss still requires an independently authorized cleanup service. Do
+not leave this deployment unattended until that service and IAM are reviewed.
+
+The builder accepts only `n2-standard-8`, at most 1000 GB disk, and sets a
+provider-side four-hour DELETE deadline. Local cleanup verifies the recorded VM
+identity. Ambiguous creation requires reconciliation; it never authorizes blind
+deletion. The optional archive cache must be a `gs://bucket[/prefix]` URI with
+simple path characters. The Docker installer uses Ubuntu packages rather than
+executing a downloaded shell script. The full Python/OS runtime is still not an
+immutable, hash-locked release; reviewed image/package provenance remains a
+release requirement.

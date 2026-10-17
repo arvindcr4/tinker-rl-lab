@@ -12,7 +12,29 @@ set -euo pipefail
 : "${SERVICE_ACCOUNT:=webarena-runner@${GCP_PROJECT}.iam.gserviceaccount.com}"
 : "${BUILDER_MACHINE_TYPE:=n2-standard-8}"
 : "${WEBARENA_TAR_GCS_BUCKET:=}"
-BUILDER_NAME="webarena-builder-$$"
+# Configuration crosses a generated-shell boundary; accept bucket identifiers only.
+[[ -z "$WEBARENA_TAR_GCS_BUCKET" || "$WEBARENA_TAR_GCS_BUCKET" =~ ^gs://[a-z0-9][a-z0-9._-]{1,220}[a-z0-9](/[A-Za-z0-9._/-]+)?$ ]] || { echo "Invalid GCS bucket" >&2; exit 2; }
+[[ "$BUILDER_DISK_GB" =~ ^[1-9][0-9]{0,3}$ ]] && (( BUILDER_DISK_GB <= 1000 )) || { echo "Builder disk exceeds safety limit" >&2; exit 2; }
+[[ "$BUILDER_MACHINE_TYPE" = "n2-standard-8" ]] || { echo "Unreviewed builder machine type" >&2; exit 2; }
+command -v timeout >/dev/null || { echo "GNU timeout is required" >&2; exit 2; }
+gcloud() { timeout --kill-after=30s 7200s gcloud "$@"; }
+BUILDER_NAME="webarena-builder-$(python3 -c 'import uuid; print(uuid.uuid4().hex[:20])')"
+BUILDER_ID=""
+SETUP_FILE=$(mktemp)
+cleanup() {
+  status=$?
+  trap - EXIT INT TERM HUP
+  rm -f "$SETUP_FILE"
+  if [ -n "$BUILDER_ID" ]; then
+    current=$(gcloud compute instances describe "$BUILDER_NAME" --zone="$GCP_ZONE" --format='value(id)' 2>/dev/null || true)
+    if [ "$current" = "$BUILDER_ID" ]; then
+      gcloud compute instances delete -q "$BUILDER_NAME" --zone="$GCP_ZONE" || status=1
+    fi
+  fi
+  exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 130' INT TERM HUP
 REPO_DIR="$(cd "$(dirname "$0")"/../../.. && pwd)"
 
 echo "==> Project: $GCP_PROJECT  Zone: $GCP_ZONE  Disk: ${BUILDER_DISK_GB}GB"
@@ -39,9 +61,12 @@ gcloud compute instances create "$BUILDER_NAME" \
   --boot-disk-size="${BUILDER_DISK_GB}GB" \
   --boot-disk-type=pd-ssd \
   --service-account="$SERVICE_ACCOUNT" \
-  --scopes=cloud-platform
+  --scopes=cloud-platform \
+  --max-run-duration=4h \
+  --instance-termination-action=DELETE \
+  --no-restart-on-failure
+BUILDER_ID=$(gcloud compute instances describe "$BUILDER_NAME" --zone="$GCP_ZONE" --format='value(id)')
 
-trap 'echo "==> Cleaning builder..."; gcloud compute instances delete -q "$BUILDER_NAME" --zone="$GCP_ZONE" || true' EXIT
 
 echo "==> Waiting for SSH..."
 for i in {1..30}; do
@@ -58,7 +83,7 @@ gcloud compute scp --recurse \
   --zone="$GCP_ZONE"
 
 gcloud compute scp "$WEBARENA_SHA256_MANIFEST" "$BUILDER_NAME:/tmp/webarena-compose/image-sha256.txt" --zone="$GCP_ZONE"
-cat > /tmp/webarena_setup.sh <<SETUP
+cat > "$SETUP_FILE" <<SETUP
 #!/usr/bin/env bash
 set -euo pipefail
 export WEBARENA_TAR_GCS_BUCKET="${WEBARENA_TAR_GCS_BUCKET}"
@@ -68,7 +93,7 @@ sudo apt-get install -y ca-certificates curl gnupg git python3-pip python3-venv 
   libgbm1 libasound2t64 libgtk-3-0
 
 # Docker
-curl -fsSL https://get.docker.com | sudo sh
+sudo apt-get install -y docker.io docker-compose-v2
 sudo usermod -aG docker "\$USER" || true
 
 # Python env
@@ -118,7 +143,7 @@ sudo WEBARENA_TAR_GCS_BUCKET="${WEBARENA_TAR_GCS_BUCKET}" \
 echo "==> setup complete"
 SETUP
 
-gcloud compute scp /tmp/webarena_setup.sh "$BUILDER_NAME:/tmp/webarena_setup.sh" --zone="$GCP_ZONE"
+gcloud compute scp "$SETUP_FILE" "$BUILDER_NAME:/tmp/webarena_setup.sh" --zone="$GCP_ZONE"
 gcloud compute ssh "$BUILDER_NAME" --zone="$GCP_ZONE" -- "bash /tmp/webarena_setup.sh"
 
 echo "==> Stopping builder for image snapshot..."

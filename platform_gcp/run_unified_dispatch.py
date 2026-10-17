@@ -32,6 +32,8 @@ DONE_MARKER = "GCP_UNIFIED_DISPATCH_DONE"
 FAIL_MARKER = "GCP_UNIFIED_DISPATCH_FAIL"
 FORWARDED_ENV = ("HF_TOKEN", "WANDB_API_KEY", "TINKER_API_KEY")
 PROTOCOL = "unified-dispatch-v2"
+GCLOUD_TIMEOUT_S = 120
+MAX_RUNTIME_S = 24 * 3600
 
 
 def build_entry_script(
@@ -88,6 +90,9 @@ sys.exit(proc.returncode)
 def build_startup_script(entry_script: str, *, max_run_duration: str) -> str:
     if not re.fullmatch(r"[1-9][0-9]*[smh]", max_run_duration):
         raise ValueError("max-run-duration must be a positive duration such as 90m")
+    seconds = int(max_run_duration[:-1]) * {"s": 1, "m": 60, "h": 3600}[max_run_duration[-1]]
+    if seconds > MAX_RUNTIME_S:
+        raise ValueError("max-run-duration exceeds the 24-hour safety ceiling")
     encoded = base64.b64encode(entry_script.encode()).decode()
     return f"""#!/bin/bash
 set -euo pipefail
@@ -184,6 +189,7 @@ def _owned(gcloud, instance, project, zone, run_id, instance_id):
         ],
         capture_output=True,
         text=True,
+        timeout=GCLOUD_TIMEOUT_S,
     )
     if proc.returncode:
         return False
@@ -293,6 +299,7 @@ def run_unit(args):
             check=True,
             capture_output=True,
             text=True,
+            timeout=GCLOUD_TIMEOUT_S,
         )
         created = True
         instance_id = json.loads(proc.stdout)[0]["id"]
@@ -326,6 +333,7 @@ def run_unit(args):
                         "--quiet",
                     ],
                     check=True,
+                    timeout=GCLOUD_TIMEOUT_S,
                 )
     return plan
 

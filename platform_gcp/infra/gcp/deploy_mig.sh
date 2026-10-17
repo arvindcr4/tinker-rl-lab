@@ -37,6 +37,14 @@ MAX_RUN_SECONDS=${MAX_RUN_SECONDS:-21600}
 : "${TINKER_REPO_REVISION:?Provide the reviewed commit baked into the worker image}"
 [[ "$TINKER_REPO_REVISION" =~ ^[a-f0-9]{40}$ ]] || exit 2
 [[ "$MAX_RUN_SECONDS" =~ ^[1-9][0-9]*$ && "$NUM_WORKERS" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid worker count/deadline" >&2; exit 2; }
+# These are resource ceilings, not a currency budget or permission to launch.
+[[ "$NUM_WORKERS" =~ ^[1-9][0-9]?$ ]] && (( NUM_WORKERS <= 10 )) || { echo "Worker count exceeds safety ceiling" >&2; exit 2; }
+[[ "$DISK_GB" =~ ^[1-9][0-9]{0,3}$ ]] && (( DISK_GB <= 1000 )) || { echo "Disk exceeds safety ceiling" >&2; exit 2; }
+[[ "$MAX_RUN_SECONDS" =~ ^[1-9][0-9]{0,4}$ ]] && (( MAX_RUN_SECONDS <= 86400 )) || { echo "Runtime exceeds safety ceiling" >&2; exit 2; }
+[[ "$MACHINE_TYPE" = "e2-standard-4" ]] || { echo "Unreviewed worker machine type" >&2; exit 2; }
+command -v timeout >/dev/null || { echo "GNU timeout is required" >&2; exit 2; }
+gcloud() { timeout --kill-after=10s 120s gcloud "$@"; }
+gsutil() { timeout --kill-after=10s 120s gsutil "$@"; }
 RUN_ID="$(date -u +%Y%m%d-%H%M%S)-$(head -c 4 /dev/urandom | od -An -tx1 | tr -d ' \n')"
 MIG_NAME="webarena-mig-$RUN_ID"
 TEMPLATE_NAME="webarena-tpl-$RUN_ID"

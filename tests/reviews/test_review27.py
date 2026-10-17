@@ -6,7 +6,19 @@ from pathlib import Path
 import subprocess
 import sys
 import pytest
-from test_review23 import load, SCRIPTS
+import importlib.util
+from pathlib import Path
+import sys
+
+SCRIPTS = Path(__file__).resolve().parents[2] / "platform_modal/scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+def load(name):
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 from _review27_contracts import exact_iso_g
 
 @pytest.mark.parametrize('p,target',[(.5,.6),(.5,.8),(.1,.95),(.9,.6),(.01,.99)])

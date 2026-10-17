@@ -1,6 +1,19 @@
 import numpy as np
 import pytest
-from test_review23 import load
+import importlib.util
+from pathlib import Path
+import sys
+
+SCRIPTS = Path(__file__).resolve().parents[2] / "platform_modal/scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+def load(name):
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
 from _review24_statistics import conditional_ccf, first_crossing, stable_seed
 
 def test_dry_run_cannot_enter_training(monkeypatch):

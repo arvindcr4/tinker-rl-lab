@@ -1,6 +1,19 @@
 import math
 import pytest
-from test_review23 import load
+import importlib.util
+from pathlib import Path
+import sys
+
+SCRIPTS = Path(__file__).resolve().parents[2] / "platform_modal/scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+def load(name):
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
 
 def test_seed_observations_are_distinct_and_reject_duplicates():
     m=load('length_bias_iter136_fig')

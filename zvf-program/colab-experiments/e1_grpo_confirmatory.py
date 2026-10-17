@@ -1113,6 +1113,8 @@ def main(argv: list[str] | None = None) -> int:
             "trainer_log_history": history,
         }
         run_config = {
+            "arm": args.arm, "seed": args.seed, "task": "GSM8K",
+            "batch_prompts": treatment_runtime["unique_prompts_per_step"],
             "mode": args.mode,
             "model": MODEL_ID,
             "model_revision": MODEL_REVISION,

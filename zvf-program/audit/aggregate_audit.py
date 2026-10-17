@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import argparse
 import functools
-from audit_evidence_contract import record_errors
+from audit_evidence_contract import record_errors, execution_contract
 import json
 import math
 import random
@@ -319,7 +319,8 @@ def validate_records(
                 errors.append(str(exc))
             else:
                 errors.extend(f"{path}: {error}" for error in record_errors(
-                    record, manifest_record, heldout_n=heldout_n))
+                    record, manifest_record, heldout_n=heldout_n,
+                    expected_execution=execution_contract(core), expected_changes=expected_changes))
                 trace = manifest_record.get("heldout_trace")
                 if not isinstance(trace, list) or len(trace) != heldout_n:
                     errors.append(

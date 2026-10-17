@@ -17,6 +17,7 @@ spec.loader.exec_module(CAMPAIGN)
 class E1CampaignTests(unittest.TestCase):
     def setUp(self):
         self.expected = {
+            "execution": CAMPAIGN.load_contract()[1]["execution"],
             "heldout_n": 500,
             "checkpoint_steps": [5, 10, 15, 20, 25, 30],
             "treatment_changes": {"grpo": []},
@@ -41,7 +42,7 @@ class E1CampaignTests(unittest.TestCase):
         }
         self.good_manifest = {
             "evidence_class": "confirmatory", "audit_record": dict(self.good),
-            "run_config": {"unit_fingerprint": self.good["fingerprint"], "stack_fingerprint": self.good["stack_fingerprint"]},
+            "run_config": {**self.expected["execution"], "arm":"grpo", "seed":11, "treatment_changes":[], "unit_fingerprint": self.good["fingerprint"], "stack_fingerprint": self.good["stack_fingerprint"]},
             "heldout_trace": [
                 {
                     "index": index,

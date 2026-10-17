@@ -10,7 +10,20 @@ import re
 METRICS = ("heldout_score", "last10_reward", "mean_zvf", "mean_gu", "wall_clock_seconds")
 
 
-def record_errors(record, manifest, *, heldout_n):
+def execution_contract(core):
+    """Translate registered scientific settings into required manifest fields."""
+    return {
+        "mode": "confirmatory",
+        "model": core["model"],
+        "task": core["task"],
+        "max_steps": core["train_steps"],
+        "heldout_n": core["heldout"]["n"],
+        "max_completion_length": core["max_new_tokens"],
+        "batch_prompts": core["batch_prompts"],
+    }
+
+
+def record_errors(record, manifest, *, heldout_n, expected_execution=None, expected_changes=None):
     errors = []
     if type(heldout_n) is not int or heldout_n <= 0:
         return ["positive heldout_n required"]
@@ -47,6 +60,57 @@ def record_errors(record, manifest, *, heldout_n):
         errors.append("manifest evidence_class mismatch")
     inner = manifest.get("audit_record", {})
     config = manifest.get("run_config", {})
+    if not isinstance(inner, dict) or not isinstance(config, dict):
+        return errors + ["manifest audit_record and run_config must be objects"]
+    required_execution = {
+        "mode",
+        "model",
+        "task",
+        "max_steps",
+        "heldout_n",
+        "max_completion_length",
+        "batch_prompts",
+    }
+    if (
+        not isinstance(expected_execution, dict)
+        or not required_execution.issubset(expected_execution)
+        or expected_execution.get("mode") != "confirmatory"
+        or expected_execution.get("heldout_n") != heldout_n
+    ):
+        errors.append("complete registered execution contract required")
+    else:
+        for field, expected_value in expected_execution.items():
+            if (
+                type(config.get(field)) is not type(expected_value)
+                or config.get(field) != expected_value
+            ):
+                errors.append(
+                    f"manifest run_config {field} differs from registered execution contract"
+                )
+    for field in ("arm", "seed"):
+        if (
+            field not in record
+            or type(config.get(field)) is not type(record[field])
+            or config.get(field) != record[field]
+        ):
+            errors.append(f"manifest run_config {field} mismatch")
+    if not isinstance(expected_changes, list) or not all(
+        isinstance(v, str) for v in expected_changes
+    ):
+        errors.append("registered treatment changes required")
+    else:
+        for location, value in (
+            ("outer record", record),
+            ("manifest audit_record", inner),
+            ("manifest run_config", config),
+        ):
+            changes = value.get("treatment_changes")
+            if (
+                not isinstance(changes, list)
+                or not all(isinstance(v, str) for v in changes)
+                or sorted(changes) != sorted(expected_changes)
+            ):
+                errors.append(f"{location} treatment_changes differ from registered contract")
     for field in (
         "arm",
         "seed",

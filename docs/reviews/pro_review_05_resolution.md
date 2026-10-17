@@ -103,3 +103,32 @@ Edits are scoped to side-program source, its tests, and this resolution. There
 are no changes under `zvf-program/flagship` or `platform_hybrid`. Coordination
 with flagship and hybrid owners found no intended file overlaps. Protocol,
 amendment, results, output CSV/JSON, and slide binary artifacts remain untouched.
+
+## Independent-audit follow-up
+
+The independent check of `1ef56a4e` reproduced three residual admission/control
+bugs. All three are fixed in the follow-up commit:
+
+1. Audit acceptance now requires the preregistration-derived execution contract,
+   not only matching metrics and echoed hashes. Campaign, aggregate and independent
+   verification check mode, model, task, full step horizon, held-out count, batch
+   prompts and completion cap; run-config arm/seed must match the outer identity.
+   Treatment changes must match the registered list independently in the outer
+   record, manifest audit record and manifest run config. Missing execution fields
+   or missing expected contracts fail closed. The producer now records previously
+   omitted arm/seed/task/batch metadata. Historical manifests without sufficient
+   execution metadata are not retroactively filled in or admitted.
+2. Applied preflight updates require `finite_parameters is True`, in addition to
+   active loss tokens, gradient and parameter-change evidence. False, missing,
+   null, numeric/string and container substitutes are rejected by the actual
+   four-cell matrix gate. Valid synthetic fixtures now explicitly attest true.
+3. TRL control effects require raw-reward observations. A summary-only cold-start
+   collapse under `on_collapse="abort"` remains diagnostic/noop and cannot set
+   training stop or fire the abort hook. The next raw-reward collapse still fires
+   the intended abort policy.
+
+Twenty-four added entrypoint regressions exercise actual aggregate/campaign
+admission, matrix evaluation, and TRL `on_log` behavior. The same full command
+above passed: **370 passed, 0 skipped, 3 warnings in 21.19 seconds**.
+Ruff `F,E9` and `git diff --check` also cover the follow-up. All tests remain
+CPU-only, synthetic or mocked; no retained results or protocol hashes were edited.

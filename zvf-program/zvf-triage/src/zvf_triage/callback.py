@@ -280,10 +280,10 @@ def _make_trl_callback(
                 decision = self.inner.on_step(rewards, group_ids, step_id=step_id,
                     prompt_ids=_extract(logs, kwargs, "prompt_ids"))
             self._last_observed_step = step_id
-            if decision.auto_stop or (
+            if decision.observation_kind == "raw_rewards" and (decision.auto_stop or (
                 decision.regime is Regime.COLD_START_COLLAPSE
                 and self.inner.on_collapse == "abort"
-            ):
+            )):
                 control.should_training_stop = True
             return control
 

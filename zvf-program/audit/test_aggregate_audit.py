@@ -166,7 +166,9 @@ class ContractTests(unittest.TestCase):
                       remote_verification={"hf_repo":"owner/repo", "hf_commit":"c"*40, "wandb":{"state":"finished"}})
         data = json.loads(manifest.read_text())
         data.update(evidence_class="confirmatory", audit_record=dict(record),
-                    run_config={"unit_fingerprint": record["fingerprint"],
+                    run_config={**aggregate_audit.execution_contract(self.prereg["core_stratum"]),
+                                "arm":arm, "seed":seed, "treatment_changes":record["treatment_changes"],
+                                "unit_fingerprint": record["fingerprint"],
                                 "stack_fingerprint": record["stack_fingerprint"]})
         manifest.write_text(json.dumps(data))
         return record

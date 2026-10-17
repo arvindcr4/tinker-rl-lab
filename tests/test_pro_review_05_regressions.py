@@ -45,6 +45,17 @@ USE = importlib.import_module("usecases")
 HS = load_module("review05_supervisor", ZVF / "e13_balrog/hosted_supervisor.py")
 
 
+AUDIT_EXECUTION = {
+    "mode": "confirmatory",
+    "model": "Qwen/Qwen3-8B",
+    "task": "GSM8K",
+    "max_steps": 30,
+    "heldout_n": 2,
+    "max_completion_length": 1024,
+    "batch_prompts": 4,
+}
+
+
 def audit_pair():
     record = dict(
         arm="grpo",
@@ -71,7 +82,14 @@ def audit_pair():
     manifest = dict(
         evidence_class="confirmatory",
         audit_record=copy.deepcopy(record),
-        run_config=dict(unit_fingerprint="a" * 64, stack_fingerprint="b" * 64),
+        run_config=dict(
+            **AUDIT_EXECUTION,
+            arm="grpo",
+            seed=11,
+            treatment_changes=[],
+            unit_fingerprint="a" * 64,
+            stack_fingerprint="b" * 64,
+        ),
         heldout_trace=[dict(index=i, correct=i == 0, completion_sha256="c" * 64) for i in range(2)],
     )
     return record, manifest
@@ -83,8 +101,12 @@ def audit_pair():
 def test_audit_missing_required_measurement_is_rejected_everywhere(tmp_path, monkeypatch, field):
     record, manifest = audit_pair()
     record.pop(field)
-    assert CONTRACT.record_errors(record, manifest, heldout_n=2)
-    expected = dict(heldout_n=2, checkpoint_steps=[5], treatment_changes={"grpo": []})
+    assert CONTRACT.record_errors(
+        record, manifest, heldout_n=2, expected_execution=AUDIT_EXECUTION, expected_changes=[]
+    )
+    expected = dict(
+        execution=AUDIT_EXECUTION, heldout_n=2, checkpoint_steps=[5], treatment_changes={"grpo": []}
+    )
     monkeypatch.setattr(CAMPAIGN, "read_json", lambda _: manifest)
     assert (
         CAMPAIGN.validate_result(("grpo", 11), record, expected, stack_fingerprint="b" * 64)[0]
@@ -94,10 +116,26 @@ def test_audit_missing_required_measurement_is_rejected_everywhere(tmp_path, mon
 
 def test_audit_rejects_pilot_and_wrong_identity_even_with_valid_trace():
     record, manifest = audit_pair()
-    assert CONTRACT.record_errors(record, manifest, heldout_n=2) == []
+    assert (
+        CONTRACT.record_errors(
+            record, manifest, heldout_n=2, expected_execution=AUDIT_EXECUTION, expected_changes=[]
+        )
+        == []
+    )
     manifest["evidence_class"] = "pilot"
     manifest["audit_record"]["seed"] = 23
-    assert len(CONTRACT.record_errors(record, manifest, heldout_n=2)) >= 2
+    assert (
+        len(
+            CONTRACT.record_errors(
+                record,
+                manifest,
+                heldout_n=2,
+                expected_execution=AUDIT_EXECUTION,
+                expected_changes=[],
+            )
+        )
+        >= 2
+    )
 
 
 @pytest.mark.parametrize(
@@ -108,7 +146,9 @@ def test_audit_impossible_values_are_not_finite_only_admissible(field, value):
     record, manifest = audit_pair()
     record[field] = value
     manifest["audit_record"][field] = value
-    assert CONTRACT.record_errors(record, manifest, heldout_n=2)
+    assert CONTRACT.record_errors(
+        record, manifest, heldout_n=2, expected_execution=AUDIT_EXECUTION, expected_changes=[]
+    )
 
 
 def test_power_backend_handles_concentrated_chi_density():
@@ -756,3 +796,102 @@ def test_diagnostic_seeds_exclude_locked_confirmatory_and_reserve():
         with pytest.raises(ValueError, match="disjoint"):
             run_preflight.validate_diagnostic_seed(seed, protocol)
     run_preflight.validate_diagnostic_seed(1009, protocol)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("mode", "preflight"),
+        ("model", "unrelated/model"),
+        ("max_steps", 1),
+        ("heldout_n", 8),
+        ("task", "unrelated"),
+        ("batch_prompts", 1),
+        ("max_completion_length", 32),
+        ("arm", "dapo"),
+        ("seed", 999),
+        ("treatment_changes", ["unregistered_change"]),
+        ("max_steps", None),
+        ("batch_prompts", True),
+    ],
+)
+def test_audit_execution_mutations_fail_real_aggregate_and_campaign(tmp_path, field, value):
+    from test_aggregate_audit import ContractTests
+
+    fixture = ContractTests()
+    fixture.setUp()
+    record = fixture.record(tmp_path)
+    record["remote_verification"]["hf_checkpoint_steps"] = [5, 10, 15, 20, 25, 30]
+    path = tmp_path / record["manifest_path"]
+    record["manifest_path"] = str(path)
+    manifest = json.loads(path.read_text())
+    manifest["run_config"][field] = value
+    if value is None:
+        manifest["run_config"].pop(field)
+    path.write_text(json.dumps(manifest))
+    accepted, errors = AUDIT.validate_records(fixture.prereg, [(tmp_path / "record.json", record)])
+    assert not accepted and errors
+    valid, reason = CAMPAIGN.validate_result(
+        ("grpo", 11), record, CAMPAIGN.load_contract()[1], stack_fingerprint="b" * 64
+    )
+    assert valid is False and reason
+
+
+@pytest.mark.parametrize("location", ["audit_record", "run_config", "both"])
+def test_audit_treatment_changes_must_match_in_every_manifest_location(tmp_path, location):
+    from test_aggregate_audit import ContractTests
+
+    fixture = ContractTests()
+    fixture.setUp()
+    record = fixture.record(tmp_path)
+    record["remote_verification"]["hf_checkpoint_steps"] = [5, 10, 15, 20, 25, 30]
+    path = tmp_path / record["manifest_path"]
+    record["manifest_path"] = str(path)
+    manifest = json.loads(path.read_text())
+    for layer in ("audit_record", "run_config") if location == "both" else (location,):
+        manifest[layer]["treatment_changes"] = ["unregistered_change"]
+    path.write_text(json.dumps(manifest))
+    assert not AUDIT.validate_records(fixture.prereg, [(tmp_path / "record.json", record)])[0]
+    assert (
+        CAMPAIGN.validate_result(
+            ("grpo", 11), record, CAMPAIGN.load_contract()[1], stack_fingerprint="b" * 64
+        )[0]
+        is False
+    )
+
+
+@pytest.mark.parametrize("value", [False, None, 0, 1, "true", [], {}, "MISSING"])
+def test_matrix_applied_updates_require_exact_finite_parameter_true(tmp_path, value):
+    from tests.test_next_submission_preflight_gate import synthetic_matrix, GATE
+
+    protocol, paths = synthetic_matrix(tmp_path)
+    for path in paths:
+        receipt = json.loads(path.read_text())
+        for layer in ("payload", "manifest"):
+            observation = receipt[layer]["audit_record"]["update_observations"][0]
+            if value == "MISSING":
+                observation.pop("finite_parameters")
+            else:
+                observation["finite_parameters"] = value
+        path.write_text(json.dumps(receipt))
+    with pytest.raises(GATE.PreflightGateError, match="finite parameters"):
+        GATE.evaluate_matrix(protocol, paths)
+
+
+def test_summary_only_collapse_does_not_apply_abort_but_raw_rewards_do():
+    actions = []
+    cb = ZVFCallback(on_collapse="abort", abort_fn=lambda decision: actions.append(decision.step))
+    adapter = cb.as_trl_callback(num_generations=2)
+    control = SimpleNamespace(should_training_stop=False)
+    adapter.on_log(
+        None,
+        SimpleNamespace(global_step=1),
+        control,
+        logs={"frac_reward_zero_std": 1.0, "reward": 0.0},
+    )
+    assert cb.decisions[-1].observation_kind == "summary_only"
+    assert cb.decisions[-1].signal == "noop"
+    assert control.should_training_stop is False and cb.should_stop is False and actions == []
+    adapter.on_log(None, SimpleNamespace(global_step=2), control, logs={"rewards": [0.0, 0.0]})
+    assert cb.decisions[-1].observation_kind == "raw_rewards"
+    assert control.should_training_stop is True and cb.should_stop is True and actions == [2]

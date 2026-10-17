@@ -104,11 +104,12 @@ def validate_counts(audit, arm, run_config):
                 or type(norm) not in (int, float)
                 or not math.isfinite(norm)
                 or norm <= 0
+                or o.get("finite_parameters") is not True
                 or o.get("parameter_changed") is not True
                 or o.get("optimizer_step_observed") is not True
             ):
                 raise ValueError(
-                    "applied update lacks measured tokens, gradient or parameter change"
+                    "applied update lacks measured tokens, finite parameters, gradient or parameter change"
                 )
             count = o.get("update_eligible_groups")
             if type(count) is not int or count <= 0:

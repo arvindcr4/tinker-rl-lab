@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-from audit_evidence_contract import record_errors
+from audit_evidence_contract import record_errors, execution_contract
 from datetime import datetime, timezone
 import json
 import math
@@ -296,6 +296,7 @@ def load_contract() -> tuple[list[Unit], dict[str, Any]]:
         raise RuntimeError("preregistration has invalid arms or seeds")
     units = [(str(arm), int(seed)) for arm in arms for seed in seeds]
     expected = {
+        "execution": execution_contract(core),
         "heldout_n": int(core["heldout"]["n"]),
         "checkpoint_steps": list(range(5, int(core["train_steps"]) + 1, 5)),
         "treatment_changes": {
@@ -392,7 +393,9 @@ def validate_result(
         checks["hf_repo"] = isinstance(verification.get("hf_repo"), str)
         checks["hf_commit"] = isinstance(verification.get("hf_commit"), str)
     failed = [name for name, passed in checks.items() if not passed]
-    failed.extend(record_errors(record, manifest, heldout_n=heldout_n))
+    failed.extend(record_errors(record, manifest, heldout_n=heldout_n,
+                                expected_execution=expected.get("execution"),
+                                expected_changes=expected["treatment_changes"].get(arm)))
     return (not failed, ", ".join(failed) if failed else None)
 
 

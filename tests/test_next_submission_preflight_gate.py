@@ -30,7 +30,7 @@ def synthetic_matrix(tmp_path):
                      update_eligible_groups=1, updated_groups=1,
                      truncated_generated_rollouts=0, unknown_finish_rollouts=0,
                      update_observations=[{"optimizer_step": 1, "active_loss_tokens": 32,
-                         "finite_gradient_norm": .25, "parameter_changed": True,
+                         "finite_gradient_norm": .25, "parameter_changed": True, "finite_parameters": True,
                          "optimizer_step_observed": True, "update_applied": True,
                          "update_eligible_groups": 1}])
         config = payload["run_config"]

@@ -1,13 +1,20 @@
 from typing import List, Dict, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
+
+class StrictRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
 
 # Request format for /v1/completions endpoint.
-class CompletionRequest(BaseModel):
+class CompletionRequest(StrictRequest):
+    model: str | None = None
     prompt: str | List[str]
     max_tokens: int = 100
     temperature: float = 1.0
-    stop: List[str] | None = None
+    top_p: float = 1.0
+    top_k: int = -1
+    stop: List[str] | List[int] | None = None
     n: int = 1
     seed: int | None = None  # Fix: Allow explicit seed to avoid single-seed extrapolations
     # TODO: Expose parameters for micro-partitioning and reference offloading to address the "Closed-Source Confound"
@@ -28,11 +35,14 @@ class ChatMessage(BaseModel):
 
 
 # Request format for /v1/chat/completions endpoint.
-class ChatCompletionRequest(BaseModel):
+class ChatCompletionRequest(StrictRequest):
+    model: str | None = None
     messages: List[ChatMessage]
     max_tokens: int = 100
     temperature: float = 1.0
-    stop: List[str] | None = None
+    top_p: float = 1.0
+    top_k: int = -1
+    stop: List[str] | List[int] | None = None
     n: int = 1
     seed: int | None = None  # Fix: Allow explicit seed to avoid single-seed extrapolations
     # TODO: Expose parameters for micro-partitioning and reference offloading to address the "Closed-Source Confound"
@@ -48,12 +58,12 @@ class ChatCompletionResponse(BaseModel):
 
 
 # Request format for /generate endpoint (SGLang compatible).
-class GenerateRequest(BaseModel):
+class GenerateRequest(StrictRequest):
     text: str | List[str] | None = None  # Input text or list of texts
     input_ids: List[int] | List[List[int]] | None = None  # Input token IDs (alternative to text)
-    sampling_params: Dict[
-        str, Any
-    ] | None = None  # Sampling parameters: temperature, top_p, max_new_tokens, n, etc.
+    sampling_params: Dict[str, Any] | None = (
+        None  # Sampling parameters: temperature, top_p, max_new_tokens, n, etc.
+    )
     return_logprob: bool = True  # Whether to return log probabilities
     top_logprobs_num: int = 0  # Number of top logprobs to return per token
     return_text_in_logprobs: bool = False  # Whether to return text in logprobs
@@ -75,12 +85,12 @@ class GenerateResponse(BaseModel):
 
 class TokenLogprob(BaseModel):
     token_id: int
-    logprob: float
+    logprob: float | None
     token: str | None = None  # Decoded token text (when return_text=True)
 
 
 # Request format for /logprobs endpoint.
-class LogprobsRequest(BaseModel):
+class LogprobsRequest(StrictRequest):
     input_ids: List[int] | None = None  # Token IDs to compute logprobs for
     text: str | None = None  # Text to tokenize then compute logprobs (alternative to input_ids)
     return_text: bool = False  # Whether to include decoded token strings
@@ -88,5 +98,6 @@ class LogprobsRequest(BaseModel):
 
 # Response format for /logprobs endpoint.
 class LogprobsResponse(BaseModel):
+    policy_version: str | None = None
     logprobs: List[TokenLogprob]  # Per-token logprobs
     num_tokens: int  # Total number of tokens in the input

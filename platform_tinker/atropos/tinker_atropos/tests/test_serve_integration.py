@@ -23,8 +23,8 @@ import pytest
 import requests
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("TINKER_API_KEY"),
-    reason="TINKER_API_KEY not set — skipping tinker integration tests",
+    os.environ.get("RUN_PAID_TINKER_INTEGRATION") != "1" or not os.environ.get("TINKER_API_KEY"),
+    reason="Paid integration requires explicit RUN_PAID_TINKER_INTEGRATION=1 and credentials",
 )
 
 SERVE_PORT = 18199  # unusual port to avoid conflicts

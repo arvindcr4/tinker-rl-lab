@@ -130,7 +130,9 @@ def main(argv: list[str] | None = None) -> int:
         reward = PavlovNonXLAMReward()
         records: list[dict[str, Any]] = []
         for index, example in enumerate(examples):
-            prompt_ids = tokenizer.encode(example.prompt, add_special_tokens=False)[:2048]
+            prompt_ids = tokenizer.encode(example.prompt, add_special_tokens=False)
+            if len(prompt_ids) > 2048:
+                raise ValueError("Prompt exceeds 2048 tokens; refusing task-removing truncation")
             result = sampler.sample(
                 T.ModelInput.from_ints(prompt_ids),
                 num_samples=1,

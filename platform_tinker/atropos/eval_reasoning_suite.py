@@ -31,7 +31,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import os
 import random
 import time
 from dataclasses import dataclass
@@ -48,7 +47,9 @@ from tinker_atropos.config import TinkerAtroposConfig
 
 GSM_QUESTION_SUFFIX = " Provide a numerical answer without units, written inside \\boxed{}."
 MATH_QUESTION_SUFFIX = " Provide your answer inside \\boxed{}."
-TRUTHFULQA_QUESTION_SUFFIX = " Provide your answer by selecting the correct option letter inside \\boxed{}."
+TRUTHFULQA_QUESTION_SUFFIX = (
+    " Provide your answer by selecting the correct option letter inside \\boxed{}."
+)
 
 GSM_PREFIX = [
     {
@@ -121,9 +122,11 @@ def parse_args() -> argparse.Namespace:
             "gsm_symbolic_p2 math olympiadbench truthfulqa all"
         ),
     )
-    parser.add_argument("--base-url", type=str, help="OpenAI-compatible base URL, e.g. http://localhost:8001/v1")
+    parser.add_argument(
+        "--base-url", type=str, help="OpenAI-compatible base URL, e.g. http://localhost:8001/v1"
+    )
     parser.add_argument("--model", type=str, help="Model name passed to the endpoint")
-    parser.add_argument("--api-key", type=str, default="x", help="API key for the endpoint")
+    parser.add_argument("--api-key", type=str, default=None, help="API key for the endpoint")
     parser.add_argument(
         "--max-tokens",
         type=int,
@@ -263,7 +266,9 @@ def _normalize_base_url(base_url: str) -> str:
     return base_url
 
 
-def _sample_examples(examples: List[Example], max_examples: Optional[int], seed: int) -> List[Example]:
+def _sample_examples(
+    examples: List[Example], max_examples: Optional[int], seed: int
+) -> List[Example]:
     if max_examples is None or len(examples) <= max_examples:
         return examples
     rng = random.Random(seed)
@@ -300,7 +305,9 @@ def load_gsm1k_examples(max_examples: Optional[int], seed: int) -> List[Example]
     return _sample_examples(examples, max_examples, seed)
 
 
-def load_gsm_symbolic_examples(variant: str, max_examples: Optional[int], seed: int) -> List[Example]:
+def load_gsm_symbolic_examples(
+    variant: str, max_examples: Optional[int], seed: int
+) -> List[Example]:
     dataset = load_dataset("apple/GSM-Symbolic", variant, split="test")
     examples = [
         Example(
@@ -381,11 +388,11 @@ def load_truthfulqa_examples(max_examples: Optional[int], seed: int) -> List[Exa
         targets = row["mc1_targets"]
         choices = targets["choices"]
         labels = targets["labels"]
-        
+
         rng = random.Random(seed + idx)
         combined = list(zip(choices, labels))
         rng.shuffle(combined)
-        
+
         letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         prompt = row["question"] + "\n"
         gold_answers = []
@@ -394,7 +401,7 @@ def load_truthfulqa_examples(max_examples: Optional[int], seed: int) -> List[Exa
             prompt += f"{letter}. {choice}\n"
             if label == 1:
                 gold_answers.append(letter)
-        
+
         examples.append(
             Example(
                 benchmark="truthfulqa",

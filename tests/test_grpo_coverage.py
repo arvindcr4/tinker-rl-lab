@@ -7,10 +7,9 @@ import json
 import runpy
 import sys
 import types
-from dataclasses import asdict
+from dataclasses import asdict, replace
 
 import torch
-from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -53,6 +52,11 @@ def _receipt(step=1, **overrides):
 
 
 def _write_prior(config, **payload):
+    data = _dataset(_example())
+    manifest = grpo._experiment_manifest(
+        data, ExactMathReward(), list(data.train_examples()), [], _Tokenizer()
+    )
+    config = replace(config, experiment_manifest=manifest)
     stored = json.loads(json.dumps(grpo._config_fingerprint(config, config.seed)))
     body = {"config": stored, "step": 0}
     body.update(payload)
@@ -238,21 +242,11 @@ def test_sample_scored_group_truncates_long_prompts():
         ModelInput=SimpleNamespace(from_ints=lambda values: values),
     )
     config = GRPOConfig(name="trunc", max_prompt_tokens=3, group_size=1, max_response_tokens=4)
-    prompt_ids, resp_ids, rewards, lengths = grpo._sample_scored_group(
-        Tok(),
-        Sampler(),
-        types_mod,
-        config,
-        ExactMathReward(),
-        _example(),
-    )
-
-    assert prompt_ids == [0, 1, 2]
-    assert seen["prompt"] == [0, 1, 2]
-    assert seen["params"].max_tokens == 4
-    assert resp_ids == [[9, 9]]
-    assert rewards == [1.0]
-    assert lengths == [2]
+    with pytest.raises(ValueError, match="Rendered prompt exceeds"):
+        grpo._sample_scored_group(
+            Tok(), Sampler(), types_mod, config, ExactMathReward(), _example()
+        )
+    assert not seen  # reject before sampling, never remove the question
 
 
 def test_wandb_finalizers_fail_closed_on_missing_or_broken_runs():
@@ -515,7 +509,9 @@ def test_completed_receipt_with_checkpoints_returns_without_tinker(tmp_path, mon
     monkeypatch.setattr(grpo, "_start_wandb", lambda *_args, **_kwargs: run)
     monkeypatch.setattr(grpo, "_preflight_hf", lambda _config: "owner")
     with patch.dict(sys.modules, {"tinker": None}):
-        completed = grpo._run_one_seed(config, _dataset(_example()), ExactMathReward(), object())
+        completed = grpo._run_one_seed(
+            config, _dataset(_example()), ExactMathReward(), _Tokenizer()
+        )
 
     assert completed.run_id == "tinker-done"
     assert run.summary["tinker_run_id"] == "tinker-done"
@@ -533,7 +529,7 @@ def test_completed_legacy_urls_are_retained(tmp_path, monkeypatch):
     run = _quiet_run()
     monkeypatch.setattr(grpo, "_start_wandb", lambda *_args, **_kwargs: run)
     monkeypatch.setattr(grpo, "_preflight_hf", lambda _config: "owner")
-    completed = grpo._run_one_seed(config, _dataset(_example()), ExactMathReward(), object())
+    completed = grpo._run_one_seed(config, _dataset(_example()), ExactMathReward(), _Tokenizer())
 
     assert completed.checkpoint_urls == ["https://huggingface.co/legacy/tree/old"]
     assert run.summary["checkpoint_urls"] == ["https://huggingface.co/legacy/tree/old"]
@@ -547,7 +543,7 @@ def test_completed_receipt_without_run_id_fails_closed(tmp_path, monkeypatch):
     monkeypatch.setattr(grpo, "_start_wandb", lambda *_args, **_kwargs: run)
     monkeypatch.setattr(grpo, "_preflight_hf", lambda _config: "owner")
     with pytest.raises(RuntimeError, match="no nonempty Tinker run ID"):
-        grpo._run_one_seed(config, _dataset(_example()), ExactMathReward(), object())
+        grpo._run_one_seed(config, _dataset(_example()), ExactMathReward(), _Tokenizer())
     assert run.summary["status"] == "failed"
 
 
@@ -619,14 +615,14 @@ def test_critic_masks_truncated_responses_out_of_the_fit(tmp_path, monkeypatch):
             config, _dataset(_example()), ExactMathReward(), _Tokenizer(), logger=lambda _m: None
         )
     assert result.reward_trace
-    assert Path(str(tmp_path)).joinpath(f"{config.name}_seed{config.seed}.critic.pt").exists()
+    assert list(tmp_path.glob("*.critic.step*.pt"))
 
 
 def test_fresh_run_pins_revisions_and_scores_heldout(tmp_path, monkeypatch):
     calls = {"heldout": 0}
 
     def sample_fn(prompt, num_samples, sampling_params):
-        assert len(prompt) == 2
+        assert len(prompt) == 5
         if sampling_params.temperature == 0.1:
             calls["heldout"] += 1
             if calls["heldout"] == 1:
@@ -637,7 +633,7 @@ def test_fresh_run_pins_revisions_and_scores_heldout(tmp_path, monkeypatch):
     config = _config(
         tmp_path,
         evaluate_heldout=True,
-        max_prompt_tokens=2,
+        max_prompt_tokens=100,
         model_revision="model-rev",
         dataset_revision="data-rev",
     )
@@ -649,7 +645,7 @@ def test_fresh_run_pins_revisions_and_scores_heldout(tmp_path, monkeypatch):
 
     assert holder["pretrained"] == (
         config.model,
-        {"trust_remote_code": True, "revision": "model-rev"},
+        {"revision": "model-rev"},
     )
     metadata = holder["lora_kwargs"]["user_metadata"]
     assert metadata["model_revision"] == "model-rev"

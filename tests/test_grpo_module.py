@@ -504,6 +504,7 @@ class TestTrackingFailClosed(unittest.TestCase):
 
         class Response:
             tokens = [1, 2]
+            logprobs = [-1.0, -1.0]
 
         class Responses:
             sequences = [Response(), Response()]
@@ -549,6 +550,9 @@ class TestTrackingFailClosed(unittest.TestCase):
                 events.append("service_client")
                 self.training_client = TrainingClient()
                 holder["training_client"] = self.training_client
+
+            def create_training_client_from_state_with_optimizer(self, path):
+                return self.training_client
 
             def create_lora_training_client(self, **_kwargs):
                 events.append("create_training_client")
@@ -960,7 +964,11 @@ class TestTrackingFailClosed(unittest.TestCase):
                     )
 
                     self.assertEqual(result.run_id, "tinker-run-1")
-                    critic_path = Path(checkpoint_dir) / "critic-run_seed42.critic.pt"
+                    critic_path = Path(
+                        json.loads((Path(checkpoint_dir) / "critic-run_seed42.json").read_text())[
+                            "critic_state"
+                        ]["path"]
+                    )
                     self.assertTrue(critic_path.exists())
                     state = torch.load(critic_path, map_location="cpu", weights_only=True)
                     self.assertIn("embedding.weight", state["model"])
@@ -1000,7 +1008,16 @@ class TestTrackingFailClosed(unittest.TestCase):
                     receipt_path = Path(checkpoint_dir) / "critic-resume_seed42.json"
                     payload = json.loads(receipt_path.read_text())
                     payload["status"] = "started"
-                    payload["step"] = 1
+                    payload["step"] = payload["actor_step"] = 1
+                    critic_file = next(Path(checkpoint_dir).glob("*.step1.*.pt"))
+                    import hashlib
+
+                    payload["critic_state"] = {
+                        "path": str(critic_file),
+                        "step": 1,
+                        "sha256": hashlib.sha256(critic_file.read_bytes()).hexdigest(),
+                    }
+                    payload["train_state_path"] = "tinker://run/state/state_seed42_1"
                     receipt_path.write_text(json.dumps(payload))
 
                     result = grpo._run_one_seed(
@@ -1014,7 +1031,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         self.assertEqual(len(result.reward_trace), 2)
         self.assertTrue(any("critic resumed from" in m for m in messages))
 
-    def test_critic_resume_accepts_raw_state_dict(self):
+    def test_critic_resume_rejects_raw_state_dict(self):
         import torch
 
         runtime = self._fake_runtime()
@@ -1038,23 +1055,26 @@ class TestTrackingFailClosed(unittest.TestCase):
                         runtime["tokenizer"],
                         logger=lambda _message: None,
                     )
-                    critic_path = Path(checkpoint_dir) / "critic-raw_seed42.critic.pt"
+                    critic_path = Path(
+                        json.loads((Path(checkpoint_dir) / "critic-raw_seed42.json").read_text())[
+                            "critic_state"
+                        ]["path"]
+                    )
                     payload = torch.load(critic_path, map_location="cpu", weights_only=True)
                     torch.save(payload["model"], critic_path)
                     receipt_path = Path(checkpoint_dir) / "critic-raw_seed42.json"
                     receipt = json.loads(receipt_path.read_text())
                     receipt["status"] = "started"
-                    receipt["step"] = 1
+                    receipt["step"] = receipt["actor_step"] = 2
                     receipt_path.write_text(json.dumps(receipt))
-                    result = grpo._run_one_seed(
-                        config,
-                        self._dataset(),
-                        ExactMathReward(),
-                        runtime["tokenizer"],
-                        logger=messages.append,
-                    )
-        self.assertEqual(len(result.reward_trace), 2)
-        self.assertTrue(any("critic resumed from" in m for m in messages))
+                    with self.assertRaisesRegex(RuntimeError, "hash mismatch"):
+                        grpo._run_one_seed(
+                            config,
+                            self._dataset(),
+                            ExactMathReward(),
+                            runtime["tokenizer"],
+                            logger=messages.append,
+                        )
 
     def test_critic_resume_without_state_fails_closed(self):
         runtime = self._fake_runtime()
@@ -1080,10 +1100,10 @@ class TestTrackingFailClosed(unittest.TestCase):
                     receipt_path = Path(checkpoint_dir) / "critic-missing_seed42.json"
                     payload = json.loads(receipt_path.read_text())
                     payload["status"] = "started"
-                    payload["step"] = 1
+                    payload["step"] = payload["actor_step"] = 2
                     receipt_path.write_text(json.dumps(payload))
-                    (Path(checkpoint_dir) / "critic-missing_seed42.critic.pt").unlink()
-                    with self.assertRaisesRegex(RuntimeError, "no critic state"):
+                    Path(payload["critic_state"]["path"]).unlink()
+                    with self.assertRaisesRegex(RuntimeError, "missing file"):
                         grpo._run_one_seed(
                             config,
                             self._dataset(),
@@ -1124,7 +1144,16 @@ class TestTrackingFailClosed(unittest.TestCase):
                     receipt_path = Path(checkpoint_dir) / "critic-pretrain-resume_seed42.json"
                     payload = json.loads(receipt_path.read_text())
                     payload["status"] = "started"
-                    payload["step"] = 1
+                    payload["step"] = payload["actor_step"] = 1
+                    critic_file = next(Path(checkpoint_dir).glob("*.step1.*.pt"))
+                    import hashlib
+
+                    payload["critic_state"] = {
+                        "path": str(critic_file),
+                        "step": 1,
+                        "sha256": hashlib.sha256(critic_file.read_bytes()).hexdigest(),
+                    }
+                    payload["train_state_path"] = "tinker://run/state/state_seed42_1"
                     receipt_path.write_text(json.dumps(payload))
                     resumed = grpo._run_one_seed(
                         config,
@@ -1143,8 +1172,8 @@ class TestTrackingFailClosed(unittest.TestCase):
             config = GRPOConfig(name="critic-atomic", checkpoint_dir=checkpoint_dir)
             critic = grpo.PromptValueCritic()
             opt = torch.optim.Adam(critic.parameters())
-            grpo._save_critic(config, 42, critic, opt, step=2)
-            critic_path = Path(checkpoint_dir) / "critic-atomic_seed42.critic.pt"
+            receipt = grpo._save_critic(config, 42, critic, opt, step=2)
+            critic_path = Path(receipt["path"])
             payload = torch.load(critic_path, map_location="cpu", weights_only=True)
             self.assertEqual(payload["step"], 2)
             self.assertIn("optimizer", payload)
@@ -1279,7 +1308,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                     receipt_path = Path(checkpoint_dir) / "dynamic-resume_seed42.json"
                     payload = json.loads(receipt_path.read_text())
                     payload["status"] = "started"
-                    payload["step"] = 1
+                    payload["step"] = payload["actor_step"] = 1
                     receipt_path.write_text(json.dumps(payload))
                     with self.assertRaisesRegex(RuntimeError, "dynamic-sampling draws"):
                         grpo._run_one_seed(
@@ -1548,7 +1577,11 @@ class TestTrackingFailClosed(unittest.TestCase):
                         runtime["tokenizer"],
                         logger=lambda _message: None,
                     )
-                    sidecar = Path(checkpoint_dir) / "critic-completed_seed42.critic.pt"
+                    sidecar = Path(
+                        json.loads(
+                            (Path(checkpoint_dir) / "critic-completed_seed42.json").read_text()
+                        )["critic_state"]["path"]
+                    )
                     self.assertTrue(sidecar.exists())
                     sidecar.unlink()
                     second = grpo._run_one_seed(
@@ -1596,19 +1629,14 @@ class TestTrackingFailClosed(unittest.TestCase):
                     payload["result"]["zero_reward_steps"] = 9
                     payload["result"]["zero_loss_steps"] = 5
                     receipt_path.write_text(json.dumps(payload))
-                    resumed = grpo._run_one_seed(
-                        config,
-                        dataset,
-                        ExactMathReward(),
-                        runtime["tokenizer"],
-                        logger=lambda _message: None,
-                    )
-        self.assertEqual(resumed.reward_trace, full.reward_trace)
-        self.assertEqual(
-            resumed.zero_reward_steps,
-            sum(1 for reward in resumed.reward_trace if reward == 0),
-        )
-        self.assertEqual(resumed.zero_loss_steps, 0)
+                    with self.assertRaisesRegex(ValueError, "unsafe rewind"):
+                        grpo._run_one_seed(
+                            config,
+                            dataset,
+                            ExactMathReward(),
+                            runtime["tokenizer"],
+                            logger=lambda _message: None,
+                        )
 
 
 class TestTrainingExample(unittest.TestCase):
@@ -1920,13 +1948,13 @@ class TestToolCallReward(unittest.TestCase):
         r = ToolCallReward()
         resp = '{"tool": "calculator", "arguments": {"wrong": "x"}}'
         score = r.score(resp, self._ex("calculator", {"expression": "1+1"}))
-        self.assertAlmostEqual(score, 0.7)
+        self.assertAlmostEqual(score, 0.5)
 
     def test_valid_json_wrong_tool(self):
         r = ToolCallReward()
         resp = '{"tool": "other_tool", "arguments": {}}'
         score = r.score(resp, self._ex("calculator", {"expression": "1+1"}))
-        self.assertAlmostEqual(score, 0.3)
+        self.assertAlmostEqual(score, 0.1)
 
     def test_no_json(self):
         r = ToolCallReward()
@@ -1936,29 +1964,29 @@ class TestToolCallReward(unittest.TestCase):
         r = ToolCallReward()
         example = self._ex("calculator", {"expression": "1+1"})
         wrapped = 'plan {"tool": "calculator", "arguments": {"expression": "1+1"}} done'
-        self.assertAlmostEqual(r.score(wrapped, example), 1.0)
+        self.assertAlmostEqual(r.score(wrapped, example), 0.0)
         self.assertEqual(StrictToolCallReward().score(wrapped, example), 0.0)
         doubled = (
             '{"tool": "calculator", "arguments": {"expression": "1+1"}} '
             '{"tool": "calculator", "arguments": {"expression": "1+1"}}'
         )
-        self.assertAlmostEqual(r.score(doubled, example), 0.1)
+        self.assertAlmostEqual(r.score(doubled, example), 0.0)
 
-    def test_legacy_credit_is_key_presence_not_exact_values(self):
+    def test_legacy_entry_uses_semantic_values(self):
         r = ToolCallReward()
         example = self._ex("calculator", {"expression": "1+1"})
         wrong_value = '{"tool": "calculator", "arguments": {"expression": "WRONG"}}'
-        self.assertAlmostEqual(r.score(wrong_value, example), 1.0)
+        self.assertAlmostEqual(r.score(wrong_value, example), 0.7)
         self.assertAlmostEqual(StrictToolCallReward().score(wrong_value, example), 0.7)
         alias = '{"name": "calculator", "parameters": {"expression": "1+1"}}'
         self.assertAlmostEqual(r.score(alias, example), 1.0)
         empty = self._ex("calculator", {})
-        self.assertAlmostEqual(r.score('{"tool": "calculator", "arguments": {}}', empty), 0.7)
+        self.assertAlmostEqual(r.score('{"tool": "calculator", "arguments": {}}', empty), 1.0)
         partial = self._ex("calculator", {"expression": "1+1", "mode": "deg"})
         one_key = '{"tool": "calculator", "arguments": {"expression": "1+1"}}'
-        self.assertAlmostEqual(r.score(one_key, partial), 0.85)
+        self.assertAlmostEqual(r.score(one_key, partial), 0.5 + 0.2 * (2 / 3) + 0.15)
         not_a_dict = '{"tool": "calculator", "arguments": "1+1"}'
-        self.assertAlmostEqual(r.score(not_a_dict, example), 0.7)
+        self.assertAlmostEqual(r.score(not_a_dict, example), 0.0)
 
     def test_invalid_json(self):
         r = ToolCallReward()
@@ -1968,7 +1996,7 @@ class TestToolCallReward(unittest.TestCase):
     def test_malformed_json_with_brace(self):
         r = ToolCallReward()
         # "{bad json}" has braces but json.loads fails => 0.1
-        self.assertAlmostEqual(r.score("{bad json}", self._ex("calc", {})), 0.1)
+        self.assertAlmostEqual(r.score("{bad json}", self._ex("calc", {})), 0.0)
 
 
 class TestStrictToolCallReward(unittest.TestCase):
@@ -2181,7 +2209,7 @@ class TestMathReward(unittest.TestCase):
     def test_boxed_grouping_and_tolerance_do_not_fall_through(self):
         r = MathReward()
         self.assertAlmostEqual(r.score("\\boxed{1, 234}", self._ex("1234")), 1.0)
-        self.assertAlmostEqual(r.score("\\boxed{42.005}", self._ex("42")), 1.0)
+        self.assertAlmostEqual(r.score("\\boxed{42.005}", self._ex("42")), 0.3)
         self.assertAlmostEqual(r.score("\\boxed{42.02}", self._ex("42")), 0.3)
         # A boxed answer stops the search. A later correct number does not rescue it.
         self.assertAlmostEqual(r.score("\\boxed{99} and the end is 42", self._ex("42")), 0.3)
@@ -2198,13 +2226,13 @@ class TestExactMathReward(unittest.TestCase):
         self.assertEqual(reward.score("\\boxed{42}", example), 1.0)
         self.assertEqual(reward.score("The answer might be \\boxed{41}", example), 0.0)
         thousands = TrainingExample(prompt="q", target="1234")
-        self.assertEqual(reward.score("total is 1,234", thousands), 1.0)
+        self.assertEqual(reward.score("total is 1,234", thousands), 0.0)
         self.assertEqual(reward.score("1,234 then 5", thousands), 0.0)
-        self.assertEqual(reward.score("\\boxed{99} and the end is 42", example), 1.0)
-        self.assertEqual(reward.score("42.005", example), 1.0)
+        self.assertEqual(reward.score("\\boxed{99} and the end is 42", example), 0.0)
+        self.assertEqual(reward.score("42.005", example), 0.0)
         self.assertEqual(reward.score("42.02", example), 0.0)
         self.assertEqual(
-            reward.score("answer is -42", TrainingExample(prompt="q", target="-42")),
+            reward.score("answer: -42", TrainingExample(prompt="q", target="-42")),
             1.0,
         )
 

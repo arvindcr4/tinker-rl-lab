@@ -8,11 +8,11 @@ import os
 import random
 import sys
 import time
-from typing import Dict, List, Optional, Tuple, TypedDict, Union
+from typing import List, Optional, Tuple, TypedDict, Union
 
 from datasets import load_dataset
 from latex2sympy2_extended import NormalizationConfig
-from math_verify import LatexExtractionConfig, parse, verify
+from math_verify import LatexExtractionConfig, parse
 from tqdm.asyncio import tqdm_asyncio
 
 from atroposlib.envs.base import (
@@ -23,6 +23,7 @@ from atroposlib.envs.base import (
 )
 from atroposlib.type_definitions import Item
 from tinker_atropos.config import TinkerAtroposConfig
+from tinker_atropos.grading import authoritative_math_answer, verify_answer
 
 
 def _get_config_path():
@@ -39,7 +40,8 @@ question_suffix = " Provide your answer inside \\boxed{}."
 convo_prefix = [
     {
         "role": "user",
-        "content": "What is the sum of all positive integers n such that n^2 divides 12!?" + question_suffix,
+        "content": "What is the sum of all positive integers n such that n^2 divides 12!?"
+        + question_suffix,
     },
     {
         "role": "assistant",
@@ -69,7 +71,9 @@ class MATHEnv(BaseEnv):
 
     @classmethod
     def config_init(cls) -> Tuple[BaseEnvConfig, List[APIServerConfig]]:
-        config = TinkerAtroposConfig.from_yaml(CONFIG_PATH) if CONFIG_PATH else TinkerAtroposConfig()
+        config = (
+            TinkerAtroposConfig.from_yaml(CONFIG_PATH) if CONFIG_PATH else TinkerAtroposConfig()
+        )
 
         env_config = BaseEnvConfig(
             tokenizer_name=config.base_model,
@@ -100,7 +104,9 @@ class MATHEnv(BaseEnv):
         if wandb_metrics is None:
             wandb_metrics = {}
         try:
-            wandb_metrics["train/percent_correct"] = sum(self.percent_correct_buffer) / len(self.percent_correct_buffer)
+            wandb_metrics["train/percent_correct"] = sum(self.percent_correct_buffer) / len(
+                self.percent_correct_buffer
+            )
         except ZeroDivisionError:
             pass
         self.percent_correct_buffer = list()
@@ -128,7 +134,16 @@ class MATHEnv(BaseEnv):
 
         # Load MATH dataset (all subjects combined)
         from datasets import concatenate_datasets
-        subjects = ["algebra", "counting_and_probability", "geometry", "intermediate_algebra", "number_theory", "prealgebra", "precalculus"]
+
+        subjects = [
+            "algebra",
+            "counting_and_probability",
+            "geometry",
+            "intermediate_algebra",
+            "number_theory",
+            "prealgebra",
+            "precalculus",
+        ]
         train_splits = []
         test_splits = []
         for subject in subjects:
@@ -175,25 +190,57 @@ class MATHEnv(BaseEnv):
             split="eval",
         )
         response_content = completion.choices[0].message.content
-        gold_parsed = parse("\\boxed{" + gold_answer + "}", extraction_mode="first_match", extraction_config=[LatexExtractionConfig()])
+        gold_parsed = parse(
+            "\\boxed{" + gold_answer + "}",
+            extraction_mode="first_match",
+            extraction_config=[LatexExtractionConfig()],
+        )
         answer_parsed = parse(
-            response_content.split("</think>")[-1],
-            extraction_config=[LatexExtractionConfig(normalization_config=NormalizationConfig(nits=False, malformed_operators=False, basic_latex=True, boxed="all", units=True), boxed_match_priority=0, try_extract_without_anchor=False)],
+            authoritative_math_answer(response_content.split("</think>")[-1]),
+            extraction_config=[
+                LatexExtractionConfig(
+                    normalization_config=NormalizationConfig(
+                        nits=False,
+                        malformed_operators=False,
+                        basic_latex=True,
+                        boxed="all",
+                        units=True,
+                    ),
+                    boxed_match_priority=0,
+                    try_extract_without_anchor=False,
+                )
+            ],
             extraction_mode="first_match",
         )
-        score = 1 if verify(answer_parsed, gold_parsed) else 0
-        return {"score": score, "sample": {"problem": problem, "gold_answer": gold_answer, "score": int(score), "correct": bool(score)}}
+        score = 1 if verify_answer(gold_parsed, answer_parsed) else 0
+        return {
+            "score": score,
+            "sample": {
+                "problem": problem,
+                "gold_answer": gold_answer,
+                "score": int(score),
+                "correct": bool(score),
+            },
+        }
 
     async def evaluate(self, *args, **kwargs):
         start_time = time.time()
-        eval_tasks = [self.rollout_and_score_eval(item["problem"], item["solution"]) for item in self.test]
+        eval_tasks = [
+            self.rollout_and_score_eval(item["problem"], item["solution"]) for item in self.test
+        ]
         results = await tqdm_asyncio.gather(*eval_tasks)
         scores = [r["score"] for r in results]
         samples = [r["sample"] for r in results]
         percent_correct = sum(scores) / len(scores)
         end_time = time.time()
         self.eval_metrics.append(("eval/percent_correct", percent_correct))
-        await self.evaluate_log(metrics={"eval/percent_correct": percent_correct}, samples=samples, start_time=start_time, end_time=end_time, generation_parameters={"temperature": 0.0, "max_tokens": self.config.max_token_length})
+        await self.evaluate_log(
+            metrics={"eval/percent_correct": percent_correct},
+            samples=samples,
+            start_time=start_time,
+            end_time=end_time,
+            generation_parameters={"temperature": 0.0, "max_tokens": self.config.max_token_length},
+        )
 
     async def collect_trajectories(self, item) -> Tuple[ScoredDataGroup, list[Item]]:
         user_message = {"role": "user", "content": item["problem"] + question_suffix}
@@ -201,39 +248,78 @@ class MATHEnv(BaseEnv):
         messages = [*convo_prefix, user_message]
 
         async with self.server.managed_server(tokenizer=self.tokenizer) as managed:
-            chat_completion = await managed.chat_completion(messages=messages, n=self.config.group_size, max_tokens=self.config.max_token_length, temperature=1.0, stop=[self.tokenizer.eos_token_id])
+            chat_completion = await managed.chat_completion(
+                messages=messages,
+                n=self.config.group_size,
+                max_tokens=self.config.max_token_length,
+                temperature=1.0,
+                stop=[self.tokenizer.eos_token_id],
+            )
             state = managed.get_state()
             nodes = state["nodes"]
 
         to_score = list()
         for choice, node in zip(chat_completion.choices, nodes):
-            completion_messages = (*convo_prefix, user_message, {"role": "assistant", "content": choice.message.content})
-            to_score.append({"messages": completion_messages, "gold_answer": gold_answer, "finish_reason": choice.finish_reason, "tokens": node.tokens, "masked_tokens": node.masked_tokens, "logprobs": node.logprobs})
+            completion_messages = (
+                *convo_prefix,
+                user_message,
+                {"role": "assistant", "content": choice.message.content},
+            )
+            to_score.append(
+                {
+                    "messages": completion_messages,
+                    "gold_answer": gold_answer,
+                    "finish_reason": choice.finish_reason,
+                    "tokens": node.tokens,
+                    "masked_tokens": node.masked_tokens,
+                    "logprobs": node.logprobs,
+                }
+            )
         to_postprocess = await self.score(to_score)
         return to_postprocess, []
 
-    async def score(self, rollout_group_data) -> Union[Optional[ScoredDataGroup], List[Optional[ScoredDataGroup]]]:
+    async def score(
+        self, rollout_group_data
+    ) -> Union[Optional[ScoredDataGroup], List[Optional[ScoredDataGroup]]]:
         scores = ScoredDataGroup()
         scores["tokens"] = list()
         scores["masks"] = list()
         scores["scores"] = list()
         scores["inference_logprobs"] = list()
 
-        gold_parsed = parse(rollout_group_data[0]["gold_answer"], extraction_mode="first_match", extraction_config=[LatexExtractionConfig()])
+        gold_parsed = parse(
+            rollout_group_data[0]["gold_answer"],
+            extraction_mode="first_match",
+            extraction_config=[LatexExtractionConfig()],
+        )
 
         if len(gold_parsed) != 0:
             random.shuffle(rollout_group_data)
             for item in rollout_group_data:
                 answer_parsed = parse(
-                    item["messages"][-1]["content"].split("</think>")[-1],
-                    extraction_config=[LatexExtractionConfig(normalization_config=NormalizationConfig(nits=False, malformed_operators=False, basic_latex=True, boxed="all", units=True), boxed_match_priority=0, try_extract_without_anchor=False)],
+                    authoritative_math_answer(
+                        item["messages"][-1]["content"].split("</think>")[-1]
+                    ),
+                    extraction_config=[
+                        LatexExtractionConfig(
+                            normalization_config=NormalizationConfig(
+                                nits=False,
+                                malformed_operators=False,
+                                basic_latex=True,
+                                boxed="all",
+                                units=True,
+                            ),
+                            boxed_match_priority=0,
+                            try_extract_without_anchor=False,
+                        )
+                    ],
                     extraction_mode="first_match",
                 )
-                reward = verify(answer_parsed, gold_parsed)
+                reward = verify_answer(gold_parsed, answer_parsed)
                 tokens = item["tokens"]
                 masked_tokens = item["masked_tokens"]
                 logprobs = item["logprobs"]
-                if len([1 for i in masked_tokens if i != -100]) < 10:
+                if len([1 for i in masked_tokens if i != -100]) < 1:
                     continue
                 scores["tokens"].append(tokens)
                 scores["masks"].append(masked_tokens)

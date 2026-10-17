@@ -12,9 +12,7 @@ import argparse
 import asyncio
 import sys
 
-from tinker_atropos.config import TinkerAtroposConfig
-import tinker_atropos.trainer as trainer_module
-from tinker_atropos.trainer import TinkerAtroposTrainer
+from tinker_atropos.config import TinkerAtroposConfig, apply_overrides
 
 
 def parse_args():
@@ -34,7 +32,9 @@ def parse_args():
     # Allow overriding specific config parameters via CLI
     parser.add_argument("--base-model", type=str, help="Override base model")
     parser.add_argument("--lora-rank", type=int, help="Override LoRA rank")
-    parser.add_argument("--full-finetune", action="store_true", help="Use full fine-tuning instead of LoRA")
+    parser.add_argument(
+        "--full-finetune", action="store_true", help="Use full fine-tuning instead of LoRA"
+    )
     parser.add_argument("--learning-rate", type=float, help="Override learning rate")
     parser.add_argument("--num-steps", type=int, help="Override number of training steps")
     parser.add_argument("--batch-size", type=int, help="Override batch size")
@@ -88,16 +88,7 @@ def load_config(args) -> TinkerAtroposConfig:
     # Create new config with overrides if any were provided
     if overrides:
         print(f"Applying CLI overrides: {overrides}")
-        config_dict = config.to_dict()
-        # Handle nested config fields
-        if "use_wandb" in overrides:
-            config_dict["env"]["use_wandb"] = overrides.pop("use_wandb")
-        if "use_lora" in overrides:
-            config_dict["tinker"]["use_lora"] = overrides.pop("use_lora")
-        if "lora_rank" in overrides:
-            config_dict["tinker"]["lora_rank"] = overrides.pop("lora_rank")
-        config_dict.update(overrides)
-        config = TinkerAtroposConfig(**config_dict)
+        config = apply_overrides(config, overrides)
 
     return config
 
@@ -139,6 +130,9 @@ async def main():
 
     # Initialize trainer
     print("Initializing Tinker-Atropos Trainer...")
+    import tinker_atropos.trainer as trainer_module
+    from tinker_atropos.trainer import TinkerAtroposTrainer
+
     trainer = TinkerAtroposTrainer(config=config)
 
     # Set the global trainer variable so FastAPI endpoints can access it

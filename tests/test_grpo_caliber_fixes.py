@@ -143,7 +143,14 @@ def _runtime(monkeypatch, *, sample_fn=None, seeded=False):
             holder["params"].append(sampling_params)
             if sample_fn is not None:
                 return _Future(sample_fn(prompt, num_samples, sampling_params))
-            return _Future(SimpleNamespace(sequences=[_seq([1, 7]), _seq([2, 7])]))
+            return _Future(
+                SimpleNamespace(
+                    sequences=[
+                        _seq([1, 7], logprobs=[-1.0, -1.0]),
+                        _seq([2, 7], logprobs=[-1.0, -1.0]),
+                    ]
+                )
+            )
 
     class TrainingClient:
         model_id = "tinker-cal"
@@ -260,14 +267,13 @@ def test_gspo_uses_stale_sampler_logprobs_and_clips(tmp_path, monkeypatch):
     assert step_log["train/gspo_sampler_old"] == 1.0
 
 
-def test_gspo_without_sampler_logprobs_falls_back_and_logs(tmp_path, monkeypatch):
-    logs = []
-    with _runtime(monkeypatch) as holder:
-        _run(_config(tmp_path, name="cal", gspo_enabled=True), logs=logs)
-    assert holder["metrics"][0]["gspo_clip_frac"] == 0.0
-    assert any("GSPO falls back" in message for message in logs)
-    step_log = next(item for item in holder["logs"] if "train/gspo_sampler_old" in item)
-    assert step_log["train/gspo_sampler_old"] == 0.0
+def test_gspo_without_sampler_logprobs_fails_closed(tmp_path, monkeypatch):
+    def sample_fn(*args):
+        return SimpleNamespace(sequences=[_seq([1, 7]), _seq([2, 7])])
+
+    with _runtime(monkeypatch, sample_fn=sample_fn):
+        with pytest.raises(ValueError, match="requires complete behavior"):
+            _run(_config(tmp_path, name="cal", gspo_enabled=True))
 
 
 # --------------------------------------------------- (3) held-out failures
@@ -282,7 +288,9 @@ def test_heldout_failures_score_zero_and_are_logged(tmp_path, monkeypatch):
             if calls["heldout"] == 1:
                 raise RuntimeError("sampler blip")
             return SimpleNamespace(sequences=[_seq([1])])
-        return SimpleNamespace(sequences=[_seq([1, 7]), _seq([2, 7])])
+        return SimpleNamespace(
+            sequences=[_seq([1, 7], logprobs=[-1.0, -1.0]), _seq([2, 7], logprobs=[-1.0, -1.0])]
+        )
 
     dataset = InMemoryDataset(train=[_example()], test=[_example(), _example()])
     logs = []
@@ -388,7 +396,9 @@ def test_dynamic_sampling_reward_includes_degenerate_groups(tmp_path, monkeypatc
         calls["n"] += 1
         if calls["n"] == 1:  # degenerate all-correct group, then a mixed one
             return SimpleNamespace(sequences=[_seq([1, 7]), _seq([1, 8])])
-        return SimpleNamespace(sequences=[_seq([1, 7]), _seq([2, 7])])
+        return SimpleNamespace(
+            sequences=[_seq([1, 7], logprobs=[-1.0, -1.0]), _seq([2, 7], logprobs=[-1.0, -1.0])]
+        )
 
     config = _config(tmp_path, name="cal", dynamic_sampling=True, dynamic_sampling_max_resamples=1)
     with _runtime(monkeypatch, sample_fn=sample_fn) as holder:

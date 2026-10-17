@@ -19,6 +19,7 @@ from __future__ import annotations
 import ast
 import difflib
 import hashlib
+import inspect
 import json
 import math
 import os
@@ -341,6 +342,8 @@ class GRPOConfig:
     """All knobs for a GRPO experiment in one value object."""
 
     name: str
+    experiment_manifest: Optional[Dict[str, Any]] = None
+    protocol_version: str = "grpo-on-policy-v2"
     model: str = "Qwen/Qwen3-8B"
     lora_rank: int = 32
     steps: int = 200
@@ -948,7 +951,7 @@ def _sample_scored_group(
     """
     prompt_ids = tok.encode(example.prompt, add_special_tokens=False)
     if len(prompt_ids) > config.max_prompt_tokens:
-        prompt_ids = prompt_ids[: config.max_prompt_tokens]
+        raise ValueError("Rendered prompt exceeds max_prompt_tokens; refusing to remove the task")
 
     sp_kwargs: Dict[str, Any] = {
         "max_tokens": config.max_response_tokens,
@@ -977,7 +980,11 @@ def _sample_scored_group(
         for resp, ids in zip(responses.sequences, resp_ids_list):
             lps = getattr(resp, "logprobs", None)
             sampler_logprobs.append(
-                [float(v) for v in lps] if lps is not None and len(lps) == len(ids) else None
+                [float(v) for v in lps]
+                if lps is not None
+                and len(lps) == len(ids)
+                and all(v is not None and math.isfinite(v) and v <= 0 for v in lps)
+                else None
             )
             stop_reason = getattr(resp, "stop_reason", None)
             stop_reason = getattr(stop_reason, "value", stop_reason)
@@ -985,6 +992,7 @@ def _sample_scored_group(
                 truncated.append(stop_reason == "length")
             else:
                 truncated.append(len(ids) >= config.max_response_tokens)
+        meta["prompt_tokens_sha256"] = hashlib.sha256(json.dumps(prompt_ids).encode()).hexdigest()
         meta["sampler_logprobs"] = sampler_logprobs
         meta["truncated"] = truncated
         meta["identical_group"] = (
@@ -1046,23 +1054,81 @@ def _save_critic(
     optimizer: Optional[torch.optim.Optimizer] = None,
     *,
     step: int,
-) -> None:
-    """Persist critic weights and Adam state next to the JSON receipt.
-
-    The write is atomic (temp file + ``os.replace``, like
-    :func:`_write_checkpoint`) so a kill mid-save cannot corrupt the
-    previous state.  ``step`` stamps the training step the weights came
-    from; resume keeps loading the latest critic file after a receipt
-    rewind (see ``test_critic_state_resumes_mid_run``).
-    """
+) -> Dict[str, Any]:
+    """Write an immutable content-addressed sidecar before committing its receipt."""
     path = _critic_checkpoint_path(config, seed)
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload: Dict[str, Any] = {"model": critic.state_dict(), "step": step}
+    payload: Dict[str, Any] = {
+        "model": critic.state_dict(),
+        "step": step,
+        "torch_rng_state": torch.get_rng_state(),
+    }
     if optimizer is not None:
         payload["optimizer"] = optimizer.state_dict()
     temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
     torch.save(payload, temporary)
-    os.replace(temporary, path)
+    digest = hashlib.sha256(temporary.read_bytes()).hexdigest()
+    immutable = path.with_name(f"{path.stem}.step{step}.{digest}.pt")
+    if immutable.exists():
+        temporary.unlink()
+    else:
+        os.replace(temporary, immutable)
+    return {"path": str(immutable), "sha256": digest, "step": step}
+
+
+def _experiment_manifest(dataset, reward, train, test, tokenizer):
+    """Bind resumes to actual ordered examples, effective prompts and grader code."""
+
+    def digest(value):
+        return hashlib.sha256(
+            json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+        ).hexdigest()
+
+    def examples(rows):
+        return [digest(asdict(example)) for example in rows]
+
+    try:
+        reward_code = inspect.getsource(type(reward))
+    except (OSError, TypeError) as exc:
+        raise ValueError("Reward implementation cannot be fingerprinted") from exc
+
+    def adapter_state(obj, depth=0):
+        if depth > 10:
+            raise ValueError("Adapter state is too deeply nested to fingerprint")
+        if obj is None or isinstance(obj, (str, float, int, bool)):
+            return obj
+        if isinstance(obj, (list, tuple)):
+            return [adapter_state(v, depth + 1) for v in obj]
+        if isinstance(obj, dict):
+            return {str(k): adapter_state(v, depth + 1) for k, v in obj.items()}
+        values = vars(obj) if hasattr(obj, "__dict__") else {}
+        return {
+            "type": f"{type(obj).__module__}.{type(obj).__qualname__}",
+            "fields": adapter_state(values, depth + 1),
+        }
+
+    reward_file = inspect.getsourcefile(type(reward))
+    return {
+        "version": "experiment-inputs-v2",
+        "dataset_type": f"{type(dataset).__module__}.{type(dataset).__qualname__}",
+        "train_examples": examples(train),
+        "test_examples": examples(test),
+        "effective_prompt_hashes": [
+            digest(tokenizer.encode(ex.prompt, add_special_tokens=False)) for ex in [*train, *test]
+        ],
+        "reward_type": f"{type(reward).__module__}.{type(reward).__qualname__}",
+        "reward_source": hashlib.sha256(reward_code.encode()).hexdigest(),
+        "reward_settings": digest(adapter_state(reward)),
+        "reward_module_source": hashlib.sha256(Path(reward_file).read_bytes()).hexdigest()
+        if reward_file
+        else None,
+        "tokenizer_type": f"{type(tokenizer).__module__}.{type(tokenizer).__qualname__}",
+        "tokenizer_name": getattr(tokenizer, "name_or_path", None),
+        "chat_template": digest(getattr(tokenizer, "chat_template", None)),
+        "vocabulary": digest(tokenizer.get_vocab()) if hasattr(tokenizer, "get_vocab") else None,
+        "runner_source": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "backend_revision": "unverified: tokenizer revision does not identify backend weights",
+    }
 
 
 def _config_fingerprint(config: GRPOConfig, seed: int) -> Dict[str, Any]:
@@ -1132,6 +1198,11 @@ def _load_checkpoint(config: GRPOConfig, seed: int) -> Dict[str, Any] | None:
         # receipts resume under the current config instead of failing.
         # Genuine drift (changed values, removed keys) still fails closed.
         if isinstance(stored, dict):
+            if (
+                expected.get("experiment_manifest")
+                and stored.get("experiment_manifest") != expected["experiment_manifest"]
+            ):
+                raise ValueError("Checkpoint experiment inputs are missing or different")
             backfilled = dict(stored)
             for key, value in expected.items():
                 if key not in backfilled:
@@ -1624,53 +1695,9 @@ def _run_one_seed(
     """Execute the GRPO loop for one seed.  Pure enough to unit-test with fakes."""
     seed = config.seed
     config.validate_tracking()
-    rng = random.Random(seed)
-    torch.manual_seed(seed)
-
     train_examples = list(dataset.train_examples())
     if not train_examples:
         raise ValueError(f"[{config.name}] dataset returned 0 training examples")
-
-    checkpoint_path = _checkpoint_path(config, seed)
-    prior = _load_checkpoint(config, seed)
-    resume_step = int((prior or {}).get("step", 0))
-    resume_state_path = (prior or {}).get("train_state_path")
-    # Critic pretrain draws from this RNG before the step loop, and only
-    # on a fresh run.  Replay those draws before the per-step draws so a
-    # resume after pretraining keeps the same example order.
-    if config.critic_enabled and config.critic_pretrain_batches > 0 and resume_step > 0:
-        for _ in range(config.critic_pretrain_batches):
-            rng.sample(train_examples, min(config.batch_size, len(train_examples)))
-    for _ in range(resume_step):
-        rng.sample(train_examples, min(config.batch_size, len(train_examples)))
-
-    critic: Any = None
-    critic_opt: Any = None
-    # A completed receipt already holds the result. Loading the critic
-    # first turns a missing or unreadable sidecar into a failed retry.
-    if config.critic_enabled and not (prior and prior.get("status") == "completed"):
-        critic = PromptValueCritic(
-            hidden_dim=config.critic_hidden_dim,
-            max_prompt_tokens=config.max_prompt_tokens,
-        )
-        critic_opt = torch.optim.Adam(critic.parameters(), lr=config.critic_lr)
-        critic_path = _critic_checkpoint_path(config, seed)
-        if resume_step > 0:
-            if not critic_path.exists():
-                raise RuntimeError(
-                    f"[{config.name}] resume at step {resume_step} has no critic "
-                    f"state at {critic_path}"
-                )
-            payload = torch.load(critic_path, map_location="cpu", weights_only=True)
-            if isinstance(payload, dict) and "model" in payload:
-                critic.load_state_dict(payload["model"])
-                if "optimizer" in payload:
-                    critic_opt.load_state_dict(payload["optimizer"])
-            else:
-                # Files written before the optimizer was stored.
-                critic.load_state_dict(payload)
-            logger(f"[{config.name}] critic resumed from {critic_path}")
-
     wb = _start_wandb(config, seed)
     try:
         # Hub identity is checked while the run is still local.  This is
@@ -1683,6 +1710,91 @@ def _run_one_seed(
         except ValueError as exc:
             raise RuntimeError(f"campaign launch gate failed: {exc}") from exc
         hf_owner = _preflight_hf(config)
+
+        rng = random.Random(seed)
+        torch.manual_seed(seed)
+
+        test_examples_snapshot = list(dataset.test_examples())
+        if tokenizer is None:
+            try:
+                from transformers import AutoTokenizer
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Tokenizer dependency is unavailable: {_redact_error(exc)}"
+                ) from exc
+            kwargs = {"revision": config.model_revision} if config.model_revision else {}
+            tokenizer = AutoTokenizer.from_pretrained(config.model, **kwargs)
+        for example in [*train_examples, *test_examples_snapshot]:
+            if (
+                len(tokenizer.encode(example.prompt, add_special_tokens=False))
+                > config.max_prompt_tokens
+            ):
+                raise ValueError(
+                    "Rendered prompt exceeds max_prompt_tokens; shorten context explicitly"
+                )
+        config = replace(
+            config,
+            experiment_manifest=_experiment_manifest(
+                dataset, reward, train_examples, test_examples_snapshot, tokenizer
+            ),
+        )
+        checkpoint_path = _checkpoint_path(config, seed)
+        prior = _load_checkpoint(config, seed)
+        resume_step = int((prior or {}).get("step", 0))
+        if prior and prior.get("actor_step", resume_step) != resume_step:
+            raise ValueError("Actor checkpoint step does not match receipt; unsafe rewind")
+        resume_state_path = (prior or {}).get("train_state_path")
+        # Critic pretrain draws from this RNG before the step loop, and only
+        # on a fresh run.  Replay those draws before the per-step draws so a
+        # resume after pretraining keeps the same example order.
+        if config.critic_enabled and config.critic_pretrain_batches > 0 and resume_step > 0:
+            for _ in range(config.critic_pretrain_batches):
+                rng.sample(train_examples, min(config.batch_size, len(train_examples)))
+        for _ in range(resume_step):
+            rng.sample(train_examples, min(config.batch_size, len(train_examples)))
+
+        critic: Any = None
+        critic_opt: Any = None
+        # A completed receipt already holds the result. Loading the critic
+        # first turns a missing or unreadable sidecar into a failed retry.
+        if config.critic_enabled and not (prior and prior.get("status") == "completed"):
+            critic = PromptValueCritic(
+                hidden_dim=config.critic_hidden_dim,
+                max_prompt_tokens=config.max_prompt_tokens,
+            )
+            critic_opt = torch.optim.Adam(critic.parameters(), lr=config.critic_lr)
+            critic_state = (prior or {}).get("critic_state")
+            critic_path = (
+                Path(critic_state["path"])
+                if critic_state
+                else _critic_checkpoint_path(config, seed)
+            )
+            if resume_step > 0:
+                if not critic_state or critic_state.get("step") != resume_step:
+                    raise RuntimeError("Actor/critic checkpoint step mismatch or missing manifest")
+                if (
+                    not critic_path.exists()
+                    or hashlib.sha256(critic_path.read_bytes()).hexdigest()
+                    != critic_state["sha256"]
+                ):
+                    raise RuntimeError("Critic checkpoint hash mismatch or missing file")
+                if not critic_path.exists():
+                    raise RuntimeError(
+                        f"[{config.name}] resume at step {resume_step} has no critic "
+                        f"state at {critic_path}"
+                    )
+                payload = torch.load(critic_path, map_location="cpu", weights_only=True)
+                if not isinstance(payload, dict) or payload.get("step") != resume_step:
+                    raise RuntimeError("Critic payload step does not match actor receipt")
+                if isinstance(payload, dict) and "model" in payload:
+                    critic.load_state_dict(payload["model"])
+                    torch.set_rng_state(payload["torch_rng_state"])
+                    if "optimizer" in payload:
+                        critic_opt.load_state_dict(payload["optimizer"])
+                else:
+                    # Files written before the optimizer was stored.
+                    critic.load_state_dict(payload)
+                logger(f"[{config.name}] critic resumed from {critic_path}")
 
         if prior and prior.get("status") == "completed":
             completed = GRPORunResult(**prior["result"])
@@ -1848,6 +1960,11 @@ def _run_one_seed(
                 )
 
         for step in range(resume_step, config.steps):
+            # Freeze a fresh behavior snapshot for this whole batch. Durable
+            # artifact publication is independent of sampling distribution.
+            behavior = tc.save_weights_for_sampler(name=f"behavior_seed{seed}_{step}").result()
+            sc = tc.create_sampling_client(model_path=behavior.path)
+            _wandb_log(wb, {"train/behavior_policy": behavior.path, "train/behavior_step": step})
             batch = rng.sample(train_examples, min(config.batch_size, len(train_examples)))
             all_data: List[Any] = []
             all_advs: List[float] = []
@@ -1856,6 +1973,7 @@ def _run_one_seed(
             all_old: List[Optional[List[float]]] = []
             pending: List[Any] = []
             pending_extra: List[Any] = []
+            batch_trajectory_manifest = []
             batch_rewards: List[float] = []
             sampled_rewards: List[float] = []
             critic_prompts: List[List[int]] = []
@@ -1877,7 +1995,7 @@ def _run_one_seed(
             while pool_idx < len(pool):
                 example = pool[pool_idx]
                 pool_idx += 1
-                group_meta: Dict[str, Any] = {}
+                group_meta: Dict[str, Any] = {"policy_version": behavior.path}
                 prompt_ids, resp_ids_list, rewards, token_lengths = _sample_scored_group(
                     tok,
                     sc,
@@ -1887,6 +2005,15 @@ def _run_one_seed(
                     example,
                     seed=_sampling_seed(seed, step, pool_idx - 1),
                     meta=group_meta,
+                )
+                batch_trajectory_manifest.append(
+                    {
+                        "policy_version": behavior.path,
+                        "prompt_tokens_sha256": group_meta["prompt_tokens_sha256"],
+                        "responses_sha256": hashlib.sha256(
+                            json.dumps(resp_ids_list).encode()
+                        ).hexdigest(),
+                    }
                 )
                 if group_meta["identical_group"] and config.temperature > 0:
                     identical_groups += 1
@@ -2020,7 +2147,7 @@ def _run_one_seed(
             if config.gspo_enabled:
                 # GSPO's ratio is pi_theta / pi_old with pi_old the policy
                 # that generated the rollouts, so the sampler's own response
-                # logprobs are old_logprobs on every epoch.  Fallback when
+                # logprobs are old_logprobs on every epoch.
                 # the sampler returned none: epoch 0 at ratio 1, stash for
                 # later epochs (the pre-2026-10-03 behaviour), logged.
                 gspo_sampler_old = all(lps is not None for lps in all_old)
@@ -2030,23 +2157,16 @@ def _run_one_seed(
                     else None
                 )
                 if not gspo_sampler_old:
-                    logger(
-                        f"[{config.name}] WARNING: sampler returned no logprobs for "
-                        f"{sum(lps is None for lps in all_old)}/{len(all_old)} responses; "
-                        "GSPO falls back to trainer logprobs (ratio 1 on epoch 0)"
+                    raise ValueError(
+                        "GSPO requires complete behavior probabilities for every response"
                     )
-                stashed_old: List[Any] = []
                 for epoch in range(config.gspo_update_epochs):
                     loss_fn = make_gspo_loss_fn(
                         all_advs,
-                        old_logprobs=(
-                            sampler_old
-                            if gspo_sampler_old
-                            else (None if epoch == 0 else stashed_old)
-                        ),
+                        old_logprobs=sampler_old,
                         epsilon_low=config.gspo_epsilon_low,
                         epsilon_high=config.gspo_epsilon_high,
-                        stash=stashed_old if epoch == 0 and not gspo_sampler_old else None,
+                        stash=None,
                         response_lens=all_resp_lens,
                     )
                     train_result = tc.forward_backward_custom(
@@ -2116,7 +2236,7 @@ def _run_one_seed(
             if config.critic_enabled:
                 step_log["train/critic_loss"] = critic_loss
                 step_log["train/critic_ev"] = critic_ev
-            _wandb_log(wb, step_log)
+            _wandb_log(wb, {**step_log, "train/trajectory_manifest": batch_trajectory_manifest})
 
             if (step + 1) % save_every == 0:
                 state = tc.save_state(name=f"state_seed{seed}_{step + 1}", overwrite=True).result()
@@ -2138,11 +2258,19 @@ def _run_one_seed(
                     checkpoint_receipt,
                     step=step + 1,
                 )
-                sc = tc.create_sampling_client(model_path=ckpt.path)
+                critic_state = (
+                    _save_critic(config, seed, critic, critic_opt, step=step + 1)
+                    if config.critic_enabled
+                    else None
+                )
                 _write_checkpoint(
                     checkpoint_path,
                     {
                         "status": "started",
+                        "critic_state": critic_state,
+                        "actor_step": step + 1,
+                        "data_rng_state": rng.getstate(),
+                        "trajectory_manifest": batch_trajectory_manifest,
                         "config": _config_fingerprint(config, seed),
                         "step": step + 1,
                         "train_state_path": state.path,
@@ -2157,11 +2285,9 @@ def _run_one_seed(
                         "campaign_metadata": _campaign_metadata(config),
                     },
                 )
-                if config.critic_enabled:
-                    _save_critic(config, seed, critic, critic_opt, step=step + 1)
                 logger(f"[{config.name}]   -> Checkpoint step_{step + 1}")
 
-        tc.save_state(name=f"seed{seed}_final", overwrite=True).result()
+        final_state = tc.save_state(name=f"seed{seed}_final", overwrite=True).result()
         final = tc.save_weights_for_sampler(name=f"seed{seed}_final").result()
         final_receipt = _publish_checkpoint(
             config,
@@ -2187,14 +2313,14 @@ def _run_one_seed(
         heldout_reward: Optional[float] = None
 
         if config.evaluate_heldout:
-            test_examples = list(dataset.test_examples())
+            test_examples = test_examples_snapshot
             if test_examples:
                 test_rewards: List[float] = []
                 heldout_failed = 0
                 for ex_idx, ex in enumerate(test_examples):
                     pid = tok.encode(ex.prompt, add_special_tokens=False)
                     if len(pid) > config.max_prompt_tokens:
-                        pid = pid[: config.max_prompt_tokens]
+                        raise ValueError("Held-out prompt exceeds max_prompt_tokens")
                     sp_kwargs: Dict[str, Any] = {
                         "max_tokens": config.max_response_tokens,
                         "temperature": 0.1,
@@ -2245,12 +2371,21 @@ def _run_one_seed(
             checkpoint_receipts=checkpoint_receipts,
             campaign_metadata=_campaign_metadata(config),
         )
+        critic_state = (
+            _save_critic(config, seed, critic, critic_opt, step=config.steps)
+            if config.critic_enabled
+            else None
+        )
         # The local completion receipt is written before W&B is marked
         # successful.  Any receipt failure therefore leaves a failed run.
         _write_checkpoint(
             checkpoint_path,
             {
                 "status": "completed",
+                "critic_state": critic_state,
+                "actor_step": config.steps,
+                "data_rng_state": rng.getstate(),
+                "train_state_path": final_state.path,
                 "final_status": "success",
                 "config": _config_fingerprint(config, seed),
                 "step": config.steps,
@@ -2262,8 +2397,6 @@ def _run_one_seed(
                 "result": asdict(result),
             },
         )
-        if config.critic_enabled:
-            _save_critic(config, seed, critic, critic_opt, step=config.steps)
         # The tinker run ID and checkpoint summary keys were already recorded
         # by _log_wandb_checkpoint for the final receipt; no re-write needed.
         _finish_wandb(wb, success=True)
@@ -2511,7 +2644,7 @@ def make_xlam_dataset(seed: int = 42, revision: Optional[str] = None) -> InMemor
                 if isinstance(row.get("answers"), str)
                 else row.get("answers", [])
             )
-            if not isinstance(answers, list) or not answers:
+            if not isinstance(answers, list) or len(answers) != 1:
                 continue
             answer = answers[0]
             tool = answer.get("name", answer.get("tool", ""))
@@ -2522,7 +2655,7 @@ def make_xlam_dataset(seed: int = 42, revision: Optional[str] = None) -> InMemor
                 continue
             prompt = _chat_prompt(
                 system_prompt,
-                f"Available tools:\n{json.dumps(tools[:8])}\n\n"
+                f"Available tools:\n{json.dumps(tools)}\n\n"
                 f"User: {row.get('query', row.get('instruction', ''))}",
             )
             examples.append(
@@ -2565,8 +2698,8 @@ def _api_bank_prompt(raw_prompt: str, tool_name: str) -> str:
     ]
     if len(matching_blocks) != 1:
         raise ValueError(f"API-Bank prompt does not define target tool {tool_name!r} exactly once")
-    tool_contract = "Available tool:\n" + matching_blocks[0][:1800]
-    dialogue = content[content.rfind("[USER]") :].strip()[-3500:]
+    tool_contract = "Available tools:\n" + tools_section.strip()
+    dialogue = content[content.find("[USER]") :].strip()
     system = (
         "You are an enterprise tool-calling assistant. Use the available tool contract and "
         "dialogue history. Return ONLY one strict JSON object with keys 'tool' and "
@@ -2757,25 +2890,10 @@ def make_pavlov_non_xlam_dataset(
 class ToolCallReward:
     """Scores tool-call completions the way the original ``grpo_exp_*.py`` scripts did."""
 
-    def score(self, response: str, example: TrainingExample) -> float:
-        target = example.target or {}
-        tool_name = target.get("tool", target.get("name", ""))
-        arguments = target.get("arguments", target.get("parameters", {}))
+    version = "tool-correctness-v2"
 
-        m = re.search(r"\{.*\}", response.strip(), re.DOTALL)
-        if not m:
-            return 0.0
-        try:
-            parsed = json.loads(m.group())
-        except (json.JSONDecodeError, ValueError):
-            return 0.1
-        score = 0.3
-        if parsed.get("tool") == tool_name or parsed.get("name") == tool_name:
-            score += 0.4
-        pred_args = parsed.get("arguments", parsed.get("parameters", {}))
-        if isinstance(pred_args, dict) and arguments:
-            score += 0.3 * sum(1 for k in arguments if k in pred_args) / len(arguments)
-        return min(score, 1.0)
+    def score(self, response: str, example: TrainingExample) -> float:
+        return StrictToolCallReward().score(response, example)
 
 
 class _DuplicateJSONKey(ValueError):
@@ -2816,7 +2934,7 @@ def _tool_alias_value(payload: Dict[str, Any], primary: str, alias: str) -> Any:
     present = [payload[key] for key in (primary, alias) if key in payload]
     if not present:
         return _MISSING_TOOL_FIELD
-    if len(present) == 2 and present[0] != present[1]:
+    if len(present) == 2 and _canonical_tool_value(present[0]) != _canonical_tool_value(present[1]):
         return _CONFLICTING_TOOL_FIELD
     return present[0]
 
@@ -2827,7 +2945,11 @@ def _canonical_tool_value(value: Any) -> Any:
         return {str(k): _canonical_tool_value(v) for k, v in sorted(value.items())}
     if isinstance(value, list):
         return [_canonical_tool_value(v) for v in value]
-    return value
+    if isinstance(value, bool):
+        return ("bool", value)
+    if isinstance(value, (int, float)):
+        return ("number", value)
+    return (type(value).__name__, value)
 
 
 class StrictToolCallReward:
@@ -2894,11 +3016,16 @@ class StrictToolCallReward:
 
 
 def _boxed_candidates(response: str) -> List[str]:
-    """Return cleaned ``\\boxed{}`` answers from a math response."""
-    return [
-        item.strip().replace(",", "").replace(" ", "")
-        for item in re.findall(r"\\boxed\{([^}]+)\}", response)
-    ]
+    """Read balanced boxes, including nested fraction braces."""
+    boxes = []
+    for match in re.finditer(r"\\boxed\{", response):
+        depth, start = 1, match.end()
+        for index in range(start, len(response)):
+            depth += (response[index] == "{") - (response[index] == "}")
+            if depth == 0:
+                boxes.append(response[start:index].strip().replace(",", "").replace(" ", ""))
+                break
+    return boxes
 
 
 def _numeric_equal(candidate: str, answer: str, *, tolerance: float = 0.01) -> bool:
@@ -2906,7 +3033,11 @@ def _numeric_equal(candidate: str, answer: str, *, tolerance: float = 0.01) -> b
     if candidate == answer:
         return True
     try:
-        return abs(float(candidate) - float(answer)) < tolerance
+        return (
+            math.isfinite(float(candidate))
+            and math.isfinite(float(answer))
+            and abs(float(candidate) - float(answer)) <= tolerance
+        )
     except (ValueError, TypeError):
         return False
 
@@ -2914,14 +3045,20 @@ def _numeric_equal(candidate: str, answer: str, *, tolerance: float = 0.01) -> b
 class MathReward:
     """Scores math completions: boxed answer > last number > partial credit."""
 
+    version = "math-shaped-final-box-v2"
+
+    def __init__(self, numeric_tolerance: float = 0.0):
+        if not math.isfinite(numeric_tolerance) or numeric_tolerance < 0:
+            raise ValueError("numeric_tolerance must be finite and nonnegative")
+        self.numeric_tolerance = numeric_tolerance
+
     def score(self, response: str, example: TrainingExample) -> float:
-        answer = str(example.target or "")
+        answer = "" if example.target is None else str(example.target)
         response = response.strip()
 
         boxed = _boxed_candidates(response)
-        for b_clean in boxed:
-            if _numeric_equal(b_clean, answer):
-                return 1.0
+        if boxed and _numeric_equal(boxed[-1], answer, tolerance=self.numeric_tolerance):
+            return 1.0
         if boxed:
             return 0.3
 
@@ -2933,7 +3070,7 @@ class MathReward:
         if all_nums:
             last = all_nums[-1].replace(",", "")
             try:
-                if abs(float(last) - float(answer)) < 0.01:
+                if abs(float(last) - float(answer)) <= self.numeric_tolerance:
                     return 1.0
             except (ValueError, TypeError):
                 pass
@@ -2946,20 +3083,27 @@ class MathReward:
 class ExactMathReward:
     """Binary boxed-or-final-number reward used by held-out math benchmarks."""
 
+    version = "authoritative-last-box-v2"
+
     def score(self, response: str, example: TrainingExample) -> float:
-        answer = str(example.target or "")
-        candidates = _boxed_candidates(response.strip())
-        all_numbers = re.findall(r"[-+]?\d[\d,]*\.?\d*", response)
-        if all_numbers:
-            candidates.append(all_numbers[-1].replace(",", ""))
-        for candidate in candidates:
-            if _numeric_equal(candidate, answer):
-                return 1.0
-        return 0.0
+        answer = "" if example.target is None else str(example.target)
+        boxes = _boxed_candidates(response.strip())
+        if boxes:
+            return float(_numeric_equal(boxes[-1], answer, tolerance=0.0))
+        # Without a box, only an explicit final-answer line or a bare numeric
+        # response is authoritative; incidental explanatory numbers are not.
+        final = re.search(
+            r"(?:final answer|answer)\s*:\s*([-+]?\d[\d,]*(?:\.\d+)?)\s*[.]?\s*$", response, re.I
+        )
+        candidate = final.group(1).replace(",", "") if final else response.strip().replace(",", "")
+        return float(_numeric_equal(candidate, answer, tolerance=0.0))
 
 
 class PatchReward:
-    """Dense, format-aware reward for a SWE-Gym unified diff candidate."""
+    """Patch-text imitation score; does not demonstrate repository repair."""
+
+    version = "patch-text-similarity-v2"
+    metric_name = "patch_text_similarity"
 
     @staticmethod
     def _normalise(value: str) -> str:

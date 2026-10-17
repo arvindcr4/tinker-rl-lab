@@ -1,15 +1,5 @@
-
-import atexit
-try:
-    from codecarbon import EmissionsTracker
-    _tracker = EmissionsTracker()
-    _tracker.start()
-    atexit.register(_tracker.stop)
-except ImportError:
-    pass
-
 import pytest
-from tinker_atropos.trainer import TinkerAtroposTrainer
+from tinker_atropos.dataset import DatasetPreprocessor
 from tinker_atropos.config import TinkerAtroposConfig
 
 # LIMITATION (review): Address the methodological limitations from the adversarial review.
@@ -24,8 +14,8 @@ from tinker_atropos.config import TinkerAtroposConfig
 
 @pytest.fixture
 def trainer():
-    config = TinkerAtroposConfig(base_model="meta-llama/Llama-3.1-8B-Instruct")
-    trainer = TinkerAtroposTrainer(config=config)
+    config = TinkerAtroposConfig()
+    trainer = DatasetPreprocessor("http://unused.invalid")
     return trainer
 
 
@@ -35,13 +25,13 @@ class TestLogprobAlignment:
             "batch": [
                 {
                     "tokens": [[1, 2, 3, 4, 5, 6, 7, 8]],
-                    "inference_logprobs": [[1.0, 1.0, 1.0, 1.0, 0.8, 0.7, 0.6, 0.5]],
+                    "inference_logprobs": [[1.0, 1.0, 1.0, 1.0, -0.8, -0.7, -0.6, -0.5]],
                     "scores": [2.5],
                 }
             ]
         }
 
-        datums, group_rewards, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, group_rewards, _, _ = trainer.pad_data_to_good_offset(batch_data)
         assert len(datums) == 1
 
         datum = datums[0]
@@ -61,15 +51,15 @@ class TestLogprobAlignment:
                         [1, 2, 3, 7, 8, 9],
                     ],
                     "inference_logprobs": [
-                        [1.0, 1.0, 1.0, 0.9, 0.8, 0.7],  # 3 prompt, 3 generated
-                        [1.0, 1.0, 1.0, 0.85, 0.75, 0.65],
+                        [1.0, 1.0, 1.0, -0.9, -0.8, -0.7],  # 3 prompt, 3 generated
+                        [1.0, 1.0, 1.0, -0.85, -0.75, -0.65],
                     ],
                     "scores": [5.0, 1.0],
                 }
             ]
         }
 
-        datums, _, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, _, _, _ = trainer.pad_data_to_good_offset(batch_data)
         advantages = datums[0].loss_fn_inputs["advantages"].to_torch().tolist()
 
         assert advantages[0] == 0.0
@@ -89,7 +79,7 @@ class TestLogprobAlignment:
             ]
         }
 
-        datums, _, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, _, _, _ = trainer.pad_data_to_good_offset(batch_data)
         advantages = datums[0].loss_fn_inputs["advantages"].to_torch().tolist()
 
         assert all(a == 0.0 for a in advantages)
@@ -104,15 +94,15 @@ class TestLogprobAlignment:
                         [6, 7, 8, 9, 10],
                     ],
                     "inference_logprobs": [
-                        [0.9, 0.8, 0.7, 0.6, 0.5],
-                        [0.85, 0.75, 0.65, 0.55, 0.45],
+                        [-0.9, -0.8, -0.7, -0.6, -0.5],
+                        [-0.85, -0.75, -0.65, -0.55, -0.45],
                     ],
                     "scores": [6.0, 2.0],
                 }
             ]
         }
 
-        datums, _, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, _, _, _ = trainer.pad_data_to_good_offset(batch_data)
         advantages = datums[0].loss_fn_inputs["advantages"].to_torch().tolist()
 
         assert all(a == 2.0 for a in advantages)
@@ -127,34 +117,34 @@ class TestLogprobAlignment:
                         [10, 20, 30, 40, 51],
                     ],
                     "inference_logprobs": [
-                        [1.0, 0.9, 0.8, 0.7, 0.6],
-                        [1.0, 0.85, 0.75, 0.65, 0.55],
+                        [1.0, -0.9, -0.8, -0.7, -0.6],
+                        [1.0, -0.85, -0.75, -0.65, -0.55],
                     ],
                     "scores": [2.0, 1.0],
                 }
             ]
         }
 
-        datums, _, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, _, _, _ = trainer.pad_data_to_good_offset(batch_data)
 
         target_tokens = datums[0].loss_fn_inputs["target_tokens"].to_torch().tolist()
         logprobs = datums[0].loss_fn_inputs["logprobs"].to_torch().tolist()
 
         assert target_tokens == [20, 30, 40, 50]
-        assert logprobs == pytest.approx([0.9, 0.8, 0.7, 0.6], rel=1e-6)
+        assert logprobs == pytest.approx([-0.9, -0.8, -0.7, -0.6], rel=1e-6)
 
     def test_zero_advantage_override(self, trainer):
         batch_data = {
             "batch": [
                 {
                     "tokens": [[1, 2, 3, 4]],
-                    "inference_logprobs": [[1.0, 1.0, 0.8, 0.7]],
+                    "inference_logprobs": [[1.0, 1.0, -0.8, -0.7]],
                     "scores": [0.0],  # Zero advantage
                 }
             ]
         }
 
-        datums, _, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, _, _, _ = trainer.pad_data_to_good_offset(batch_data)
         advantages = datums[0].loss_fn_inputs["advantages"].to_torch().tolist()
 
         assert all(a == 0.0 for a in advantages)
@@ -168,15 +158,15 @@ class TestLogprobAlignment:
                         [1, 2, 3, 4, 6],
                     ],
                     "inference_logprobs": [
-                        [1.0, 1.0, 0.8, 0.7, 0.6],
-                        [1.0, 1.0, 0.85, 0.75, 0.65],
+                        [1.0, 1.0, -0.8, -0.7, -0.6],
+                        [1.0, 1.0, -0.85, -0.75, -0.65],
                     ],
                     "scores": [1.0, 4.0],
                 }
             ]
         }
 
-        datums, _, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, _, _, _ = trainer.pad_data_to_good_offset(batch_data)
         advantages = datums[0].loss_fn_inputs["advantages"].to_torch().tolist()
 
         assert advantages[0] == 0.0
@@ -193,15 +183,15 @@ class TestLogprobAlignment:
                         [1, 2, 3, 5],
                     ],
                     "inference_logprobs": [
-                        [1.0, 1.0, 0.9, 0.8],
-                        [1.0, 1.0, 0.85, 0.75],
+                        [1.0, 1.0, -0.9, -0.8],
+                        [1.0, 1.0, -0.85, -0.75],
                     ],
                     "scores": [5.0, 3.0],
                 }
             ]
         }
 
-        datums, group_rewards, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, group_rewards, _, _ = trainer.pad_data_to_good_offset(batch_data)
 
         assert len(datums) == 2
         assert len(group_rewards) == 1
@@ -226,8 +216,8 @@ class TestLogprobAlignment:
                         [1, 2, 3, 5],
                     ],
                     "inference_logprobs": [
-                        [1.0, 1.0, 0.9, 0.8],
-                        [1.0, 1.0, 0.85, 0.75],
+                        [1.0, 1.0, -0.9, -0.8],
+                        [1.0, 1.0, -0.85, -0.75],
                     ],
                     "scores": [5.0, 3.0],
                     "overrides": [
@@ -238,7 +228,7 @@ class TestLogprobAlignment:
             ]
         }
 
-        datums, _, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, _, _, _ = trainer.pad_data_to_good_offset(batch_data)
 
         advantages1 = datums[0].loss_fn_inputs["advantages"].to_torch().tolist()
         assert advantages1[1] == 1.0
@@ -255,15 +245,15 @@ class TestLogprobAlignment:
                         [1, 2, 4],
                     ],
                     "inference_logprobs": [
-                        [1.0, 0.9, 0.8],
-                        [1.0, 0.85, 0.75],
+                        [1.0, -0.9, -0.8],
+                        [1.0, -0.85, -0.75],
                     ],
                     "scores": [3.0, 3.0],
                 }
             ]
         }
 
-        datums, group_rewards, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, group_rewards, _, _ = trainer.pad_data_to_good_offset(batch_data)
 
         assert len(datums) == 0
         assert len(group_rewards) == 1  # we don't skip this output when all advantages are zero
@@ -275,7 +265,7 @@ class TestLogprobStatistics:
             "batch": [
                 {
                     "tokens": [[1, 2, 3, 4, 5, 6]],
-                    "inference_logprobs": [[1.0, 1.0, 0.9, 0.8, 0.7, 0.6]],
+                    "inference_logprobs": [[1.0, 1.0, -0.9, -0.8, -0.7, -0.6]],
                     "scores": [2.0],
                 }
             ]
@@ -294,7 +284,7 @@ class TestLogprobStatistics:
             "batch": [
                 {
                     "tokens": [[1, 2, 3, 4, 5]],
-                    "inference_logprobs": [[1.0, 1.0, 0.8, 0.7, 0.6]],
+                    "inference_logprobs": [[1.0, 1.0, -0.8, -0.7, -0.6]],
                     "scores": [1.0],
                 }
             ]
@@ -302,8 +292,8 @@ class TestLogprobStatistics:
 
         trainer.pad_data_to_good_offset(batch_data)
 
-        assert trainer.logprob_stats["logprobs/min"] == pytest.approx(0.6)
-        assert 0.65 <= trainer.logprob_stats["logprobs/mean"] <= 0.75
+        assert trainer.logprob_stats["logprobs/min"] == pytest.approx(-0.8)
+        assert -0.75 <= trainer.logprob_stats["logprobs/mean"] <= -0.65
 
     def test_advantage_stats_populated(self, trainer):
         batch_data = {
@@ -315,9 +305,9 @@ class TestLogprobStatistics:
                         [1, 2, 5],
                     ],
                     "inference_logprobs": [
-                        [1.0, 0.9, 0.8],
-                        [1.0, 0.85, 0.75],
-                        [1.0, 0.8, 0.7],
+                        [1.0, -0.9, -0.8],
+                        [1.0, -0.85, -0.75],
+                        [1.0, -0.8, -0.7],
                     ],
                     "scores": [5.0, 3.0, 2.0],
                 }
@@ -342,15 +332,15 @@ class TestEdgeCases:
                         [1, 3],
                     ],
                     "inference_logprobs": [
-                        [1.0, 0.9],
-                        [1.0, 0.8],
+                        [1.0, -0.9],
+                        [1.0, -0.8],
                     ],
                     "scores": [2.0, 1.0],
                 }
             ]
         }
 
-        datums, _, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, _, _, _ = trainer.pad_data_to_good_offset(batch_data)
 
         assert len(datums) == 2
         input_tokens = datums[0].model_input.to_ints()
@@ -365,15 +355,15 @@ class TestEdgeCases:
                         [1, 2, 3, 4, 6],
                     ],
                     "inference_logprobs": [
-                        [1.0, 1.0, 0.99, 0.8, 0.7],
-                        [1.0, 1.0, 0.95, 0.75, 0.65],
+                        [1.0, 1.0, -0.99, -0.8, -0.7],
+                        [1.0, 1.0, -0.95, -0.75, -0.65],
                     ],
                     "scores": [3.0, 1.0],
                 }
             ]
         }
 
-        datums, _, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, _, _, _ = trainer.pad_data_to_good_offset(batch_data)
         advantages = datums[0].loss_fn_inputs["advantages"].to_torch().tolist()
 
         assert advantages[0] == 0.0
@@ -382,7 +372,7 @@ class TestEdgeCases:
     def test_empty_batch(self, trainer):
         batch_data = {"batch": []}
 
-        datums, group_rewards, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, group_rewards, _, _ = trainer.pad_data_to_good_offset(batch_data)
 
         assert len(datums) == 0
         assert len(group_rewards) == 0
@@ -391,8 +381,8 @@ class TestEdgeCases:
         n = 100
         tokens1 = list(range(n))
         tokens2 = list(range(1000, 1000 + n))
-        logprobs1 = [1.0] * 10 + [0.8] * (n - 10)
-        logprobs2 = [1.0] * 10 + [0.7] * (n - 10)
+        logprobs1 = [1.0] * 10 + [-0.8] * (n - 10)
+        logprobs2 = [1.0] * 10 + [-0.7] * (n - 10)
 
         batch_data = {
             "batch": [
@@ -404,7 +394,7 @@ class TestEdgeCases:
             ]
         }
 
-        datums, _, _ = trainer.pad_data_to_good_offset(batch_data)
+        datums, _, _, _ = trainer.pad_data_to_good_offset(batch_data)
 
         assert len(datums) == 2
         advantages = datums[0].loss_fn_inputs["advantages"].to_torch().tolist()

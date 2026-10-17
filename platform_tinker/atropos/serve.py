@@ -12,16 +12,6 @@ LIMITATION: limitations from the adversarial review:
 - The ZVF Metric, Early-Training Snapshots, Failure to Prove Generalization, and Single-Seed Extrapolations limitations apply to training and are not directly applicable to this inference server.
 """
 
-import atexit
-try:
-    from codecarbon import EmissionsTracker
-    _tracker = EmissionsTracker()
-    _tracker.start()
-    atexit.register(_tracker.stop)
-except ImportError:
-    pass
-
-
 import argparse
 import asyncio
 import logging
@@ -29,7 +19,7 @@ import time
 import uuid
 
 import tinker
-from tinker.types import ModelInput, SamplingParams
+from tinker.types import ModelInput
 from fastapi import FastAPI, HTTPException, Request, Depends
 from transformers import AutoTokenizer
 
@@ -43,10 +33,15 @@ from tinker_atropos.types import (
     TokenLogprob,
 )
 
+from tinker_atropos.http_contract import (
+    sampling_params as translate_sampling,
+    finish_reason,
+    probabilities,
+)
+
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("tinker.serve")
 
@@ -71,24 +66,23 @@ async def chat_completions(request: ChatCompletionRequest, state=Depends(get_app
 
     try:
         messages_dict = [{"role": msg.role, "content": msg.content} for msg in request.messages]
-        
+
         prompt_text = await asyncio.to_thread(
             state.tokenizer.apply_chat_template,
             messages_dict,
             tokenize=False,
-            add_generation_prompt=True
+            add_generation_prompt=True,
         )
         prompt_tokens = await asyncio.to_thread(
-            state.tokenizer.encode,
-            prompt_text,
-            add_special_tokens=False
+            state.tokenizer.encode, prompt_text, add_special_tokens=False
         )
         model_input = ModelInput.from_ints(prompt_tokens)
 
-        sampling_params = SamplingParams(
-            max_tokens=request.max_tokens,
-            temperature=request.temperature,
-            stop=request.stop if request.stop else [],
+        sampling_params = translate_sampling(
+            {
+                k: getattr(request, k)
+                for k in ("max_tokens", "temperature", "stop", "seed", "top_p", "top_k")
+            }
         )
 
         result = await state.sampling_client.sample_async(
@@ -100,15 +94,13 @@ async def chat_completions(request: ChatCompletionRequest, state=Depends(get_app
         choices = []
         for i, sequence in enumerate(result.sequences):
             output_text = await asyncio.to_thread(
-                state.tokenizer.decode,
-                sequence.tokens,
-                skip_special_tokens=True
+                state.tokenizer.decode, sequence.tokens, skip_special_tokens=True
             )
             choices.append(
                 {
                     "message": {"role": "assistant", "content": output_text},
                     "index": i,
-                    "finish_reason": "stop",
+                    "finish_reason": finish_reason(sequence),
                 }
             )
 
@@ -118,6 +110,8 @@ async def chat_completions(request: ChatCompletionRequest, state=Depends(get_app
             created=int(time.time()),
             model=state.model_name,
         )
+    except HTTPException:
+        raise
     except ValueError as ve:
         logger.error(f"Value error during chat completion: {ve}")
         raise HTTPException(status_code=400, detail=f"Invalid request: {ve}")
@@ -138,16 +132,15 @@ async def completions(request: CompletionRequest, state=Depends(get_app_state)):
 
         for prompt in prompts:
             prompt_tokens = await asyncio.to_thread(
-                state.tokenizer.encode,
-                prompt,
-                add_special_tokens=False
+                state.tokenizer.encode, prompt, add_special_tokens=False
             )
             model_input = ModelInput.from_ints(prompt_tokens)
 
-            sampling_params = SamplingParams(
-                max_tokens=request.max_tokens,
-                temperature=request.temperature,
-                stop=request.stop if request.stop else [],
+            sampling_params = translate_sampling(
+                {
+                    k: getattr(request, k)
+                    for k in ("max_tokens", "temperature", "stop", "seed", "top_p", "top_k")
+                }
             )
 
             result = await state.sampling_client.sample_async(
@@ -158,15 +151,13 @@ async def completions(request: CompletionRequest, state=Depends(get_app_state)):
 
             for sequence in result.sequences:
                 output_text = await asyncio.to_thread(
-                    state.tokenizer.decode,
-                    sequence.tokens,
-                    skip_special_tokens=True
+                    state.tokenizer.decode, sequence.tokens, skip_special_tokens=True
                 )
                 all_choices.append(
                     {
                         "text": output_text,
                         "index": len(all_choices),
-                        "finish_reason": "stop",
+                        "finish_reason": finish_reason(sequence),
                     }
                 )
 
@@ -176,6 +167,8 @@ async def completions(request: CompletionRequest, state=Depends(get_app_state)):
             created=int(time.time()),
             model=state.model_name,
         )
+    except HTTPException:
+        raise
     except ValueError as ve:
         logger.error(f"Value error during completion: {ve}")
         raise HTTPException(status_code=400, detail=f"Invalid request: {ve}")
@@ -195,9 +188,7 @@ async def logprobs(request: LogprobsRequest, state=Depends(get_app_state)):
             token_ids = request.input_ids
         elif request.text is not None:
             token_ids = await asyncio.to_thread(
-                state.tokenizer.encode,
-                request.text,
-                add_special_tokens=False
+                state.tokenizer.encode, request.text, add_special_tokens=False
             )
         else:
             logger.warning("Logprobs request missing input_ids and text")
@@ -210,9 +201,10 @@ async def logprobs(request: LogprobsRequest, state=Depends(get_app_state)):
         model_input = ModelInput.from_ints(token_ids)
         prompt_lps = await state.sampling_client.compute_logprobs_async(model_input)
 
+        prompt_lps = probabilities(token_ids, prompt_lps, allow_unavailable=True)
         token_logprobs = []
         for i, token_id in enumerate(token_ids):
-            lp = prompt_lps[i] if i < len(prompt_lps) and prompt_lps[i] is not None else 0.0
+            lp = prompt_lps[i]
             if request.return_text:
                 token_text = await asyncio.to_thread(state.tokenizer.decode, [token_id])
             else:
@@ -252,6 +244,15 @@ def main():
         logger.info("Using base model weights")
         app.state.sampling_client = service_client.create_sampling_client(base_model=args.model)
 
+    from tinker_atropos.runtime_identity import verify_tokenizer, runtime_manifest
+
+    backend_model = app.state.sampling_client.get_base_model()
+    if backend_model != args.model:
+        raise ValueError(
+            f"Saved weights use {backend_model!r}, but --model selected {args.model!r}"
+        )
+    verify_tokenizer(app.state.sampling_client.get_tokenizer(), app.state.tokenizer)
+    app.state.runtime_manifest = runtime_manifest(backend_model, app.state.tokenizer)
     logger.info("Sampling client ready")
 
     import uvicorn
@@ -267,4 +268,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -462,7 +462,7 @@ def legacy_main(preset: str, argv: Optional[List[str]] = None) -> int:
         "--batch": "--batch-size",
         "--tag": "--name",
     }
-    forwarded = [translations.get(arg, arg) for arg in (argv or [])]
+    forwarded = [translations.get(arg, arg) for arg in (sys.argv[1:] if argv is None else argv)]
     return main(["--preset", preset, *forwarded])
 
 

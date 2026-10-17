@@ -1,16 +1,16 @@
 import time
-import json
 import numpy as np
 import requests
 import torch
 from tenacity import retry, stop_after_attempt, wait_exponential
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List
 
 import tinker
 
+
 class DatasetPreprocessor:
     """Handles dataset fetching, padding, and distillation processing."""
-    
+
     def __init__(self, atropos_api_url: str):
         self.atropos_api_url = atropos_api_url
         self.logprob_stats = {}
@@ -23,7 +23,11 @@ class DatasetPreprocessor:
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=15))
     def get_batch(self):
         """Fetch a batch of rollouts from Atropos API with retry logic."""
-        data = requests.get(f"{self.atropos_api_url}/batch", timeout=10).json()
+        response = requests.get(f"{self.atropos_api_url}/batch", timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        if not isinstance(data, dict) or "batch" not in data:
+            raise ValueError("Malformed batch response: expected batch or explicit null queue")
         return data
 
     @staticmethod
@@ -72,20 +76,28 @@ class DatasetPreprocessor:
         has_distil_data = False
         skipped_count = 0
         total_trajectories = 0
-        
+
         all_teacher_logprobs = []
         all_student_logprobs_for_distil = []
         all_per_token_advantages = []
 
         for item in batch:
             total_trajectories += len(item["tokens"])
-            scores = np.array(item["scores"])
+            scores = np.array(item["scores"], dtype=float)
+            if len(scores) != len(item["tokens"]) or not np.all(np.isfinite(scores)):
+                raise ValueError("Invalid trajectory scores")
+            item_has_distil = (
+                item.get("distill_token_ids") is not None
+                and item.get("distill_logprobs") is not None
+            )
+            if (item.get("distill_token_ids") is None) != (item.get("distill_logprobs") is None):
+                raise ValueError("Incomplete distillation fields")
             original_mean = np.mean(scores)
             advantages = scores - original_mean
 
             group_mean_rewards.append(original_mean)
 
-            if len(scores) > 1 and np.all(advantages == 0.0):
+            if len(scores) > 1 and np.all(advantages == 0.0) and not item_has_distil:
                 skipped_count += 1
                 continue
 
@@ -104,6 +116,12 @@ class DatasetPreprocessor:
             for i in range(len(item["tokens"])):
                 tokens = item["tokens"][i]
                 trajectory_logprobs = item["inference_logprobs"][i]
+                if len(trajectory_logprobs) != len(tokens) or not np.all(
+                    np.isfinite(trajectory_logprobs)
+                ):
+                    raise ValueError("Incomplete or nonfinite behavior probabilities")
+                if any(lp > 0 and lp != 1.0 for lp in trajectory_logprobs):
+                    raise ValueError("Positive behavior log probability")
                 advantage = advantages[i]
 
                 all_advantages.append(advantage)
@@ -119,7 +137,9 @@ class DatasetPreprocessor:
 
                 assert (
                     len(input_tokens) == seq_len == len(all_logprobs) == len(all_advantages_padded)
-                ), f"Length mismatch: input={len(input_tokens)}, target={seq_len}, logprobs={len(all_logprobs)}, advantages={len(all_advantages_padded)}"
+                ), (
+                    f"Length mismatch: input={len(input_tokens)}, target={seq_len}, logprobs={len(all_logprobs)}, advantages={len(all_advantages_padded)}"
+                )
 
                 if item_has_distil:
                     raw_distil_ids = item["distill_token_ids"][i]
@@ -132,22 +152,46 @@ class DatasetPreprocessor:
                         raw_distil_lps[1:] if len(raw_distil_lps) > seq_len else raw_distil_lps
                     )
 
-                    self._validate_distil_field(raw_distil_ids, "distil_token_ids", seq_len)
+                    distil_ids = self._validate_distil_field(
+                        raw_distil_ids, "distil_token_ids", seq_len
+                    )
+                    if not np.array_equal(distil_ids, target_tokens):
+                        raise ValueError("Teacher token IDs do not match trajectory targets")
                     distil_lps = self._validate_distil_field(
                         raw_distil_lps, "distil_logprobs", seq_len
                     )
 
+                    active = np.asarray([lp != 1.0 for lp in all_logprobs])
+                    if item.get("masks") is not None:
+                        masks = item["masks"][i]
+                        if len(masks) != len(tokens):
+                            raise ValueError("Token mask length mismatch")
+                        active &= np.asarray([m != -100 for m in masks[1:]])
+                    teacher_active = np.asarray(distil_lps[active], dtype=float)
+                    if not np.all(np.isfinite(teacher_active)) or np.any(teacher_active > 0):
+                        raise ValueError("Unavailable or invalid teacher log probabilities")
                     all_advantages_padded = [
-                        0.0 if lp == 1.0 else float(t_lp - lp)
-                        for lp, t_lp in zip(all_logprobs, distil_lps)
+                        float(t_lp - lp) if keep else 0.0
+                        for lp, t_lp, keep in zip(all_logprobs, distil_lps, active)
                     ]
 
+                overrides = item.get("overrides")
+                if overrides and overrides[i].get("set_advantage_to_zero", False):
+                    all_advantages_padded = [0.0] * seq_len
+                if item.get("masks") is not None:
+                    mask = item["masks"][i]
+                    if len(mask) != len(tokens):
+                        raise ValueError("Token mask length mismatch")
+                    # Atropos masked_tokens uses -100 at environment/prompt positions.
+                    all_advantages_padded = [
+                        0.0 if m == -100 else adv for m, adv in zip(mask[1:], all_advantages_padded)
+                    ]
+                if item_has_distil:
                     for lp, t_lp, adv in zip(all_logprobs, distil_lps, all_advantages_padded):
-                        if lp != 1.0:
+                        if adv != 0.0:
                             all_teacher_logprobs.append(float(t_lp))
                             all_student_logprobs_for_distil.append(float(lp))
                             all_per_token_advantages.append(adv)
-
                 datum = tinker.Datum(
                     model_input=tinker.ModelInput.from_ints(tokens=input_tokens),
                     loss_fn_inputs={
@@ -166,7 +210,7 @@ class DatasetPreprocessor:
 
         if all_reference_logprobs:
             logprob_array = np.array(all_reference_logprobs)
-            logprob_array_actual = logprob_array[(logprob_array != 0.0) & (logprob_array != 1.0)]
+            logprob_array_actual = logprob_array[logprob_array != 1.0]
             if len(logprob_array_actual) > 0:
                 self.logprob_stats = {
                     "logprobs/mean": float(np.mean(logprob_array_actual)),
@@ -213,7 +257,16 @@ class DatasetPreprocessor:
 
         if total_trajectories > 0:
             self.erf_stats = {
-                "train/erf": float(len(datums)) / total_trajectories
+                "train/erf": sum(
+                    bool(torch.any(d.loss_fn_inputs["advantages"].to_torch() != 0)) for d in datums
+                )
+                / total_trajectories,
+                "train/received_trajectories": total_trajectories,
+                "train/retained_datums": len(datums),
+                "train/active_tokens": sum(
+                    int(torch.count_nonzero(d.loss_fn_inputs["advantages"].to_torch()))
+                    for d in datums
+                ),
             }
         else:
             self.erf_stats = {}
@@ -221,20 +274,24 @@ class DatasetPreprocessor:
         if skipped_count > 0:
             print(f"Skipped {skipped_count} groups with zero advantages")
 
-        zvf = skipped_count / max(1, len(batch))
+        zvf = sum(len(item["scores"]) > 1 and np.ptp(item["scores"]) == 0 for item in batch) / max(
+            1, len(batch)
+        )
         return datums, group_mean_rewards, has_distil_data, zvf
 
-    def get_data(self) -> tuple[List[tinker.Datum], bool]:
-        while True:
+    def get_data(self, timeout: float = 120, cancelled=None) -> tuple[List[tinker.Datum], bool]:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if cancelled is not None and cancelled.is_set():
+                raise RuntimeError("Batch polling cancelled")
             data = self.get_batch()
 
             if data.get("batch") is not None:
-                with open("temp.json", "w", encoding="utf-8") as f:
-                    json.dump(data, f)
-
                 datums, group_mean_rewards, has_distil, zvf = self.pad_data_to_good_offset(data)
                 self.group_mean_rewards = group_mean_rewards
                 self.zvf = zvf
                 return datums, has_distil
             else:
                 time.sleep(1)
+
+        raise TimeoutError("Timed out waiting for an Atropos batch")

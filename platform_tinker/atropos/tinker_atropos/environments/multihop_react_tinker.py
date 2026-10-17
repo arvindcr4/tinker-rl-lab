@@ -20,14 +20,14 @@ Reward:
     0.15 — wrong but produced at least two valid tool calls (exploration)
     0.0  — wrong with fewer than two valid tool calls
 """
-import json
+
 import os
 import random
 import re
 import string
 import sys
 from collections import Counter
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 from datasets import load_dataset
 
@@ -37,7 +37,6 @@ from atroposlib.envs.base import (
     BaseEnvConfig,
     ScoredDataGroup,
 )
-from atroposlib.type_definitions import Item
 from tinker_atropos.config import TinkerAtroposConfig
 
 
@@ -45,9 +44,7 @@ def _get_config_path():
     for i, arg in enumerate(sys.argv):
         if arg == "--config" and i + 1 < len(sys.argv):
             return sys.argv[i + 1]
-    return os.environ.get(
-        "TINKER_CONFIG_PATH", "configs/multihop_react_qwen_8b.yaml"
-    )
+    return os.environ.get("TINKER_CONFIG_PATH", "configs/multihop_react_qwen_8b.yaml")
 
 
 CONFIG_PATH = _get_config_path()
@@ -78,15 +75,20 @@ Always search before answering. Do NOT guess without searching first."""
 # Lightweight retrieval over HotpotQA context paragraphs
 # ---------------------------------------------------------------------------
 
+
 def _normalize_answer(s: str) -> str:
     """Lower text and remove punctuation, articles and extra whitespace."""
+
     def remove_articles(text):
         return re.sub(r"\b(a|an|the)\b", " ", text)
+
     def white_space_fix(text):
         return " ".join(text.split())
+
     def remove_punc(text):
         exclude = set(string.punctuation)
         return "".join(ch for ch in text if ch not in exclude)
+
     return white_space_fix(remove_articles(remove_punc(s.lower())))
 
 
@@ -106,7 +108,9 @@ def _exact_match(prediction: str, ground_truth: str) -> bool:
     return _normalize_answer(prediction) == _normalize_answer(ground_truth)
 
 
-def _build_kb(context_titles: List[str], context_sentences: List[List[str]]) -> Dict[str, List[str]]:
+def _build_kb(
+    context_titles: List[str], context_sentences: List[List[str]]
+) -> Dict[str, List[str]]:
     """Build a title → [sentences] knowledge base from HotpotQA context."""
     kb: Dict[str, List[str]] = {}
     for title, sents in zip(context_titles, context_sentences):
@@ -136,9 +140,7 @@ def _bm25_search(query: str, kb: Dict[str, List[str]], top_k: int = 3) -> str:
     return "\n".join(results)
 
 
-def _execute_react_trace(
-    text: str, kb: Dict[str, List[str]]
-) -> Tuple[Optional[str], int, int]:
+def _execute_react_trace(text: str, kb: Dict[str, List[str]]) -> Tuple[Optional[str], int, int]:
     """
     Execute a ReAct trace against the knowledge base.
     Returns (submitted_answer, valid_tool_calls, total_actions).
@@ -186,8 +188,7 @@ def _execute_react_trace(
         if finish_match:
             total_actions += 1
             submitted_answer = finish_match.group(1)
-            valid_calls += 1
-            continue
+            break
 
     return submitted_answer, valid_calls, total_actions
 
@@ -218,10 +219,10 @@ def _score_react_trace(
 
     correct = False
     if answer_text and gold_answer:
-        correct = _exact_match(answer_text, gold_answer) or _f1_score(answer_text, gold_answer) >= 0.8
+        correct = _exact_match(answer_text, gold_answer)
 
     # Did model search/lookup before answering?
-    retrieval_calls = valid_calls - (1 if submitted else 0)
+    retrieval_calls = valid_calls
 
     if correct and retrieval_calls > 0:
         reward = 1.0
@@ -236,6 +237,7 @@ def _score_react_trace(
         "submitted_answer": submitted,
         "answer_text": answer_text,
         "correct": correct,
+        "answer_f1": _f1_score(answer_text or "", gold_answer),
         "valid_calls": valid_calls,
         "total_actions": total_actions,
         "retrieval_calls": retrieval_calls,
@@ -243,9 +245,32 @@ def _score_react_trace(
     return reward, meta
 
 
+def _react_observation(trace, text, kb):
+    import ast
+
+    match = re.search(r"^Action:\s*(search|lookup|finish)\((.*)\)\s*$", text, re.M)
+    if not match:
+        return "Error: expected one search, lookup or finish action", False
+    name, raw_args = match.groups()
+    try:
+        args = ast.literal_eval("(" + raw_args + ",)")
+    except (SyntaxError, ValueError):
+        return "Error: malformed tool arguments", False
+    if name == "finish" and len(args) == 1 and isinstance(args[0], str):
+        return "", True
+    if name == "search" and len(args) == 1 and isinstance(args[0], str):
+        return _bm25_search(args[0], kb), False
+    if name == "lookup" and len(args) == 2 and isinstance(args[0], str) and type(args[1]) is int:
+        sentences = kb.get(args[0], [])
+        if 1 <= args[1] <= len(sentences):
+            return sentences[args[1] - 1], False
+    return "Error: invalid tool call", False
+
+
 # ---------------------------------------------------------------------------
 # HotpotQA data loading
 # ---------------------------------------------------------------------------
+
 
 def _load_hotpotqa(split: str = "train", max_examples: int = 5000, seed: int = 42):
     """Load HotpotQA bridge questions with their context paragraphs."""
@@ -264,12 +289,14 @@ def _load_hotpotqa(split: str = "train", max_examples: int = 5000, seed: int = 4
         if not titles or not sentences:
             continue
 
-        examples.append({
-            "question": item["question"],
-            "answer": item["answer"],
-            "context_titles": titles,
-            "context_sentences": sentences,
-        })
+        examples.append(
+            {
+                "question": item["question"],
+                "answer": item["answer"],
+                "context_titles": titles,
+                "context_sentences": sentences,
+            }
+        )
         if len(examples) >= max_examples:
             break
     return examples
@@ -295,9 +322,7 @@ class MultihopReactEnv(BaseEnv):
     @classmethod
     def config_init(cls):
         config = (
-            TinkerAtroposConfig.from_yaml(CONFIG_PATH)
-            if CONFIG_PATH
-            else TinkerAtroposConfig()
+            TinkerAtroposConfig.from_yaml(CONFIG_PATH) if CONFIG_PATH else TinkerAtroposConfig()
         )
         cls._full_config = config
         env_config = BaseEnvConfig(
@@ -357,9 +382,9 @@ class MultihopReactEnv(BaseEnv):
         if wandb_metrics is None:
             wandb_metrics = {}
         if self.percent_correct_buffer:
-            wandb_metrics["train/percent_correct"] = sum(
+            wandb_metrics["train/percent_correct"] = sum(self.percent_correct_buffer) / len(
                 self.percent_correct_buffer
-            ) / len(self.percent_correct_buffer)
+            )
         if self.tool_use_buffer:
             wandb_metrics["train/retrieval_rate"] = sum(self.tool_use_buffer) / len(
                 self.tool_use_buffer
@@ -373,17 +398,19 @@ class MultihopReactEnv(BaseEnv):
 
     async def rollout_and_score_eval(self, example: dict) -> dict:
         kb = _build_kb(example["context_titles"], example["context_sentences"])
-        completion = await self.server.chat_completion(
-            messages=[
+        from tinker_atropos.interaction import interactive_rollout
+
+        response, _ = await interactive_rollout(
+            self.server,
+            self.tokenizer,
+            [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": example["question"]},
             ],
-            n=1,
+            lambda trace, text: _react_observation(trace, text, kb),
             max_tokens=self.config.max_token_length,
             temperature=0.0,
-            split="eval",
         )
-        response = completion.choices[0].message.content
         reward, meta = _score_react_trace(response, example["answer"], kb)
         return {
             "score": reward,
@@ -398,17 +425,13 @@ class MultihopReactEnv(BaseEnv):
         from tqdm.asyncio import tqdm_asyncio
 
         start = time.time()
-        tasks = [
-            self.rollout_and_score_eval(ex) for ex in self.eval_examples[:200]
-        ]
+        tasks = [self.rollout_and_score_eval(ex) for ex in self.eval_examples[:200]]
         results = await tqdm_asyncio.gather(*tasks)
 
         scores = [r["score"] for r in results]
         full_correct = sum(1 for s in scores if s >= 1.0) / len(scores)
         any_correct = sum(1 for s in scores if s >= 0.5) / len(scores)
-        retrieval_rate = sum(
-            1 for r in results if r["retrieval_calls"] > 0
-        ) / len(results)
+        retrieval_rate = sum(1 for r in results if r["retrieval_calls"] > 0) / len(results)
         avg_tool_calls = sum(r["valid_calls"] for r in results) / len(results)
 
         self.eval_metrics.append(("eval/agentic_accuracy", full_correct))
@@ -448,25 +471,20 @@ class MultihopReactEnv(BaseEnv):
             {"role": "user", "content": item["question"]},
         ]
 
-        async with self.server.managed_server(tokenizer=self.tokenizer) as managed:
-            completions = await managed.chat_completion(
-                messages=messages,
-                n=self.config.group_size,
-                max_tokens=self.config.max_token_length,
-                temperature=1.0,
-                stop=[self.tokenizer.eos_token_id],
-            )
-            state = managed.get_state()
-            nodes = state["nodes"]
+        from tinker_atropos.interaction import interactive_rollout
 
         to_score = []
-        for choice, node in zip(completions.choices, nodes):
+        for _ in range(self.config.group_size):
+            response, node = await interactive_rollout(
+                self.server,
+                self.tokenizer,
+                messages,
+                lambda trace, text: _react_observation(trace, text, kb),
+                max_tokens=self.config.max_token_length,
+            )
             to_score.append(
                 {
-                    "messages": (
-                        *messages,
-                        {"role": "assistant", "content": choice.message.content},
-                    ),
+                    "messages": (*messages, {"role": "assistant", "content": response}),
                     "answer": item["answer"],
                     "kb": kb,
                     "tokens": node.tokens,
@@ -489,7 +507,7 @@ class MultihopReactEnv(BaseEnv):
             reward, meta = _score_react_trace(response, item["answer"], item["kb"])
 
             masked_tokens = item["masked_tokens"]
-            if len([t for t in masked_tokens if t != -100]) < 10:
+            if len([t for t in masked_tokens if t != -100]) < 1:
                 continue
 
             scores["tokens"].append(item["tokens"])

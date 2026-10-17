@@ -71,3 +71,6 @@ echo "============================================================"
 echo "  Completed: $RUN_COUNT runs, $FAIL_COUNT failures"
 echo "  Logs: $LOG_DIR/"
 echo "============================================================"
+
+# A partial campaign is a failure, even if its final command succeeded.
+if (( FAIL_COUNT > 0 )); then exit 1; fi

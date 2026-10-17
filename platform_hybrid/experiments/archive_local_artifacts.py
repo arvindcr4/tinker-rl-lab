@@ -18,6 +18,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -111,10 +112,19 @@ def safe_name(value: str, limit: int = 140) -> str:
 
 
 def hardlink_or_copy(src: str, dst: str) -> None:
+    """Compatibility name: archive snapshots always own their inode."""
+    source, target = Path(src), Path(dst)
+    if source.resolve() == target.resolve():
+        raise ValueError("archive source and destination must differ")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(prefix=".archive-", dir=target.parent)
+    os.close(fd)
+    temporary = Path(name)
     try:
-        os.link(src, dst)
-    except OSError:
-        shutil.copy2(src, dst)
+        shutil.copy2(source, temporary)
+        os.replace(temporary, target)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def ignore_sensitive_cache_files(_: str, names: list[str]) -> set[str]:
@@ -131,6 +141,9 @@ def ignore_sensitive_cache_files(_: str, names: list[str]) -> set[str]:
 def copy_tree_hardlinked(src: Path, dst: Path) -> dict[str, Any]:
     if not src.exists():
         return {"copied": False, "reason": "source_missing", "source": str(src)}
+    source, target = src.resolve(), dst.resolve()
+    if source == target or source in target.parents or target in source.parents:
+        raise ValueError("archive source and destination must not overlap")
     dst.parent.mkdir(parents=True, exist_ok=True)
     before_free = disk_free_bytes(dst.parent)
     start = time.time()
@@ -151,7 +164,7 @@ def copy_tree_hardlinked(src: Path, dst: Path) -> dict[str, Any]:
         "free_bytes_before": before_free,
         "free_bytes_after": disk_free_bytes(dst.parent),
         "elapsed_seconds": round(time.time() - start, 3),
-        "mode": "hardlink_or_copy_with_symlinks",
+        "mode": "owned_copy_snapshot_v2_with_symlinks",
     }
 
 
@@ -659,7 +672,18 @@ def redact_secrets(root: Path) -> dict[str, Any]:
         for value in exact_values:
             redacted = redacted.replace(value, b"[REDACTED_SECRET]")
         if redacted != data:
-            path.write_bytes(redacted)
+            # A legacy archive may share an inode with the original evidence.
+            # Replacing the archive entry never mutates that shared inode.
+            fd, name = tempfile.mkstemp(prefix=".redacted-", dir=path.parent)
+            temporary = Path(name)
+            try:
+                with os.fdopen(fd, "wb") as stream:
+                    stream.write(redacted)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                os.replace(temporary, path)
+            finally:
+                temporary.unlink(missing_ok=True)
             changed_files.append(str(path.relative_to(root)))
     return {
         "scanned_files": scanned_files,

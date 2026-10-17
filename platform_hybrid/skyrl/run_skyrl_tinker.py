@@ -11,15 +11,6 @@ Usage:
     python run_skyrl_tinker.py --config configs/tinker_hosted.yaml --env gsm8k
 """
 
-import atexit
-try:
-    from codecarbon import EmissionsTracker
-    _tracker = EmissionsTracker()
-    _tracker.start()
-    atexit.register(_tracker.stop)
-except ImportError:
-    pass
-
 import argparse
 import importlib
 import json
@@ -33,12 +24,19 @@ from pathlib import Path
 
 import yaml
 
+# Direct-script and package invocation resolve the same shared exact grader.
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from platform_hybrid.skyrl.reward_contract import (
+    PROTOCOL_ID, gsm8k_reward, math_reward, tool_reward, refresh_sampler, load_unique_yaml,
+)
+
 warnings.filterwarnings("ignore")
 
 
 def load_config(config_path: str, overrides: dict) -> dict:
     with open(config_path) as f:
-        cfg = yaml.safe_load(f)
+        cfg = load_unique_yaml(f)
     # Apply CLI overrides
     if overrides.get("model"):
         cfg["model"]["name"] = overrides["model"]
@@ -51,6 +49,7 @@ def load_config(config_path: str, overrides: dict) -> dict:
         cfg["tinker"]["lora_rank"] = overrides["lora_rank"]
     if overrides.get("lr"):
         cfg["tinker"]["learning_rate"] = overrides["lr"]
+    cfg["execution_protocol"] = PROTOCOL_ID
     return cfg
 
 
@@ -121,21 +120,7 @@ class GSM8KEnv:
         )
 
     def reward(self, response: str, item: dict) -> float:
-        import re
-        # Extract answer after ####
-        match = re.search(r'####\s*([\d,.\-]+)', response)
-        if not match:
-            # Try last number in response
-            nums = re.findall(r'[\d,]+\.?\d*', response)
-            if not nums:
-                return 0.0
-            pred = nums[-1].replace(",", "")
-        else:
-            pred = match.group(1).replace(",", "")
-        try:
-            return 1.0 if float(pred) == float(item["answer"].replace(",", "")) else 0.1
-        except ValueError:
-            return 0.0
+        return gsm8k_reward(response, item)
 
     def sample_batch(self, n: int) -> list[dict]:
         self.load()
@@ -179,15 +164,7 @@ class MathEnv:
         )
 
     def reward(self, response: str, item: dict) -> float:
-        import re
-        match = re.search(r'\\boxed\{([^}]+)\}', response)
-        if not match:
-            return 0.0
-        pred = match.group(1).strip()
-        gold_match = re.search(r'\\boxed\{([^}]+)\}', item["answer"])
-        if gold_match and pred == gold_match.group(1).strip():
-            return 1.0
-        return 0.1
+        return math_reward(response, item)
 
     def sample_batch(self, n: int) -> list[dict]:
         self.load()
@@ -246,21 +223,7 @@ class ToolUseEnv:
         )
 
     def reward(self, response: str, item: dict) -> float:
-        import re
-        m = re.search(r'\{.*\}', response.strip(), re.DOTALL)
-        if not m:
-            return 0.0
-        try:
-            p = json.loads(m.group())
-        except json.JSONDecodeError:
-            return 0.1
-        score = 0.3
-        if p.get("tool") == item["tool"] or p.get("name") == item["tool"]:
-            score += 0.4
-        pred_args = p.get("arguments", p.get("parameters", {}))
-        if isinstance(pred_args, dict) and item["args"]:
-            score += 0.3 * sum(1 for k in item["args"] if k in pred_args) / len(item["args"])
-        return min(score, 1.0)
+        return tool_reward(response, item)
 
     def sample_batch(self, n: int) -> list[dict]:
         return random.sample(self.prompts, min(n, len(self.prompts)))
@@ -524,6 +487,8 @@ Trained for {total_steps} steps with final average reward of {avg_reward:.3f}.
 # ── Main training loop ────────────────────────────────────────────────────
 
 def train(cfg: dict, env, wandb_run):
+    if cfg.get("execution_protocol") != PROTOCOL_ID:
+        raise ValueError("explicit current execution protocol required")
     import tinker
     import tinker.types as T
     from transformers import AutoTokenizer
@@ -661,6 +626,9 @@ def train(cfg: dict, env, wandb_run):
             eps=opt_cfg.get("eps", 1e-8),
         )).result()
 
+        # Sampler synchronization is independent of durable recovery cadence.
+        sc, sampler_path = refresh_sampler(tc, step + 1)
+
         step_time = time.time() - step_start
         avg_r = sum(batch_rewards) / len(batch_rewards)
         step_rewards.append(avg_r)
@@ -677,17 +645,15 @@ def train(cfg: dict, env, wandb_run):
 
         # Checkpoint
         if (step + 1) % save_every == 0:
-            tc.save_state(name=f"state_{step + 1}")
-            ckpt = tc.save_weights_for_sampler(name=f"step_{step + 1}").result()
-            sc = tc.create_sampling_client(model_path=ckpt.path)
-            log_checkpoint_wandb(wandb_run, step + 1, ckpt.path)
+            tc.save_state(name=f"state_{step + 1}").result()
+            log_checkpoint_wandb(wandb_run, step + 1, sampler_path)
             print(f"  -> Checkpoint saved: step_{step + 1}")
 
     # Final save
     # TODO: Implement a robust held-out evaluation loop on unseen test sets to prove
     # true generalization and calculate statistical significance, avoiding training-set overfitting claims.
     total_time = time.time() - train_start
-    tc.save_state(name="final")
+    tc.save_state(name="final").result()
     final_ckpt = tc.save_weights_for_sampler(name="final").result()
 
     final_avg = sum(step_rewards[-10:]) / max(len(step_rewards[-10:]), 1)
@@ -710,6 +676,9 @@ def train(cfg: dict, env, wandb_run):
 
     # Collect metrics for HF model card
     metrics = {
+        "execution_protocol": PROTOCOL_ID,
+        "reward_measurement": "on_policy_training_last10_not_final_heldout",
+        "objective": "unclipped_group_centered_sequence_sum_no_reference_kl",
         "final_avg_reward": final_avg,
         "overall_avg_reward": overall_avg,
         "total_steps": steps,

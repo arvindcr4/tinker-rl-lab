@@ -1,0 +1,26 @@
+191: 
+192:     # measured held-out eval (greedy on fresh problems)
+193:     model.eval()
+194:     correct, total = 0, 200
+195:     heldout = sample_batch(total)
+196:     for i in range(0, total, 32):
+197:         chunk = heldout[i:i + 32]
+198:         enc = tok([make_prompt(a, b) for (a, b) in chunk], return_tensors="pt", padding=True).to(device)
+199:         with torch.no_grad():
+200:             gen = model.generate(**enc, max_new_tokens=MAX_NEW, do_sample=False,
+201:                                  pad_token_id=tok.pad_token_id)
+202:         for t, (a, b) in zip(tok.batch_decode(gen[:, enc["input_ids"].shape[1]:], skip_special_tokens=True), chunk):
+203:             if parse(t) is not None and parse(t) == a + b:
+204:                 correct += 1
+205:     heldout_acc = correct / total
+206:     last10 = float(np.mean([s["mean_reward"] for s in step_log[-10:]]))
+207:     mean_zvf = float(np.mean([s["zvf"] for s in step_log]))
+208: 
+209:     result = {
+210:         "experiment": "groupsize_zvf_sweep",
+211:         "model": MODEL, "task": "arithmetic_correctness",
+212:         "group_size": group_size, "seed": seed,
+213:         "n_steps": N_STEPS, "n_prompts": N_PROMPTS,
+214:         "heldout_acc": heldout_acc, "last10_avg": last10, "mean_zvf": mean_zvf,
+215:         "elapsed_seconds": time.time() - t0,
+216:         "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu",

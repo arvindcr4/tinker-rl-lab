@@ -38,9 +38,9 @@
     "git_sha": "de9bcba",
     "code_file": "experiments/openings/campaign.py",
     "code_hash": "sha256:338fe245685b9126",
-    "reward_fn_hash": "sha256:338fe245685b9126",
-    "data_hash": "sha256:8c4bcfcab83f9986",
-    "config_hash": "sha256:dc9a4182b7f04a2c"
+    "reward_fn_hash": "sha256:eb1382ebf78a7dc56bf53cf6432056ca5ae5122575a4bfc2e0c185d1413083ae",
+    "config_hash": "sha256:dc9a4182b7f04a2c",
+    "data_ref": "openai/gsm8k:main:train"
   },
   "rigor": {
     "n_seeds": 3,

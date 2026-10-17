@@ -14,6 +14,9 @@ item lists were aligned at eight on 2026-07-11.
 echo of \citet{henderson2018deep}, who showed that deep-RL results depend on
 codebase, hyperparameters, and even the random seeds chosen, to the point
 that the same algorithm from two repositories behaves as two algorithms.
+\citet{engstrom2020implementation} showed that unlabelled ``code-level
+optimizations'' account for much of PPO's reported advantage over TRPO---the
+direct ancestor of our label-versus-stack argument.
 Follow-on work built the statistical repair kit: rigorous comparison
 protocols \citep{colas2019hitchhiker} and small-sample-aware aggregate
 metrics \citep{agarwal2021deep}, and position work has questioned what RL
@@ -31,19 +34,37 @@ that checklists plus process shift community behavior---and also that
 self-attested checklists have limits, which motivates our artifact-computed
 badge (\secref{sec:p5-toolchain}). Statistical treatments of evaluation
 noise \citep{miller2024erroreval, zhang2024benchvariance} quantify the
-uncertainty floor against which our 12-cell within-noise finding
-(\secref{sec:p5-exhibit-h2h}) should be read.
+uncertainty floor against which our 12-cell head-to-head
+(\secref{sec:p5-exhibit-h2h}), which is \emph{not} shown to be within noise,
+should be read.
 
 \paragraph{Evaluation-stack sensitivity.} The lm-evaluation-harness effort
 documented, from years of maintenance experience, that prompt formatting,
 answer extraction, and implementation details shift LLM benchmark scores by
 ranking-relevant margins, and argued for shared, versioned evaluation
 infrastructure \citep{biderman2024lessons}. Independent audits reach the same
-conclusion for reasoning evaluations specifically
-\citep{hochlehnert2025sober}, and contamination studies show the data side of
+conclusion for reasoning evaluations specifically: \citet{hochlehnert2025sober}
+find math-reasoning results sensitive to decoding, seeds, prompt format, and
+hardware/software configuration, and that many reported RL gains shrink under a
+standardized protocol, and contamination studies show the data side of
 the same coin \citep{zhang2024gsm1k, riddell2024contamination}. Our claim is
 that RL \emph{training} inherits all of this---the verifier is an evaluator
 in the loop---plus the V1--V3 vectors unique to on-policy optimization.
+
+\paragraph{Silent framework defects and controlled comparisons.}
+\citet{limozin2026sftrl} trace published gains of mixed-policy methods over
+SFT-then-RL to two silent framework bugs (a DeepSpeed CPU-offload optimizer bug
+affecting TRL, OpenRLHF, and LLaMA-Factory, and an OpenRLHF loss-aggregation
+bug)---a stack-provenance failure no algorithm label would reveal.
+\citet{liu2025tricks} re-run common RL-for-reasoning tricks in one framework
+and find that conflicting published conclusions trace to differing
+settings, data, and initialization. Controlled multi-algorithm studies
+\citep{li2026oxrl} report scale-dependent ranking inversions on identical
+infrastructure, and critic-based methods remain competitive when implemented
+carefully \citep{kazemnejad2025vineppo, liu2025asyppo}, so a ``GRPO vs.\ PPO''
+gap measured on one stack is a property of that stack. MIN-REPORT-RL is a
+reporting-side complement: it does not prevent such defects but records the
+fields needed to localize them.
 
 \paragraph{The GRPO-variant explosion.} The label space we target is growing
 quickly: GRPO \citep{shao2024deepseekmath, guo2025deepseekr1}, DAPO

@@ -370,9 +370,15 @@ benchmark evaluation; KL divergence tracking across GRPO training steps;
 and held-out evaluation for Qwen3-32B and Qwen3.5-27B. Modal H100s
 provide the low-level GPU access required for PPO value-model training.
 
+\ifdefined\ANONYMOUSBUILD
+All experiment logs and model checkpoints will be released on Weights \&
+Biases and the HuggingFace Hub (links withheld for anonymous review; an
+anonymized artifact archive accompanies the submission).
+\else
 All experiment logs are available on Weights \& Biases (project:
 \texttt{tinker-rl-lab-world-class}) and model checkpoints on HuggingFace
 Hub (\url{https://huggingface.co/arvindcr4/tinker-rl-bench-*}).
+\fi
 Per-run compute is logged with the released artifacts. Total project compute:
 $\sim$1,200 A100 GPU-hours across both platforms.
 

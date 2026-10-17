@@ -1,0 +1,13 @@
+{
+  "recorded_at_utc": "2026-10-11T00:55:16.925991+00:00",
+  "git_head": "643f8f0e70b7c5d2c027902cadd21fb7a440f31a",
+  "source_sha256": {
+    "utils/stats.py": "6de7760be43f002b2dd3c496795040757181bc1d4327609b75d6d03e39c4596d",
+    "platform_hybrid/experiments/modal/modal_samestack_gsm8k_cot_v2.py": "7c1f987d4128fb22606e8c629f7653673dd42c1761cade072aea3c4c0b518e64",
+    "tests/test_properties_stats.py": "b7c3998478fb9edb96bb634ecc985b7e72b1cf2be7985a07d087b1f887d3da2d",
+    "tests/test_stats_input_guards.py": "2561d708df9e7064f3e974488214180eedd03cc91d79272a183398476ebaf49c",
+    "tests/test_samestack_statistics.py": "a942bb67770caab7b04572f6fabb5ace8857634b55b9b418ef716489d87640aa",
+    "tools/audit_thesis_numbers.py": "c0529ae9c10c5573795247d748a9224ea17f7ff41284667ea326604b08586a09",
+    "tests/test_audit_thesis_numbers.py": "86c543a32598b18cf1825186c10c3ffd2fc49bdbcefe2443d3922f988238725e"
+  }
+}

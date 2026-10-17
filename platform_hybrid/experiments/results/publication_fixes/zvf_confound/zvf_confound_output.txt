@@ -1,0 +1,120 @@
+runs=350  step rows=2004  runs with step history=352
+
+== 1. Per-model table (summary mean_zvf vs FINAL-step reward; 9 labels) ==
+                                       n    zvf  final_reward  mean_step_reward              G           batch          steps  step_zvf  step_hG  step_excess
+model                                                                                                                                                        
+Llama-3.2-1B                         101  0.973         0.006             0.005      [4, 6, 8]             [8]         [3, 5]     0.973    0.972        0.001
+Llama-3.2-3B                         106  0.945         0.011             0.010  [4, 6, 8, 16]  [6, 8, 16, 32]     [2, 5, 12]     0.944    0.942        0.002
+Qwen3-32B                              6  0.253         0.345             0.357  [4, 6, 8, 16]     [6, 16, 32]        [2, 12]     0.227    0.103        0.124
+Qwen3-8B                               6  0.288         0.502             0.419  [4, 6, 8, 16]     [6, 16, 32]        [2, 12]     0.280    0.093        0.187
+NVIDIA-Nemotron-3-Nano-30B-A3B-BF16    6  0.497         0.766             0.744     [4, 6, 16]     [6, 16, 32]        [2, 12]     0.523    0.322        0.201
+Llama-3.1-8B-Instruct                  6  0.651         0.828             0.873  [4, 6, 8, 16]     [6, 16, 32]        [2, 12]     0.675    0.483        0.192
+Qwen3-4B-Instruct-2507               107  0.868         0.860             0.837  [4, 6, 8, 16]  [6, 8, 16, 32]  [2, 3, 5, 12]     0.871    0.466        0.405
+gpt-oss-20b                            6  0.786         0.903             0.913  [4, 6, 8, 16]         [6, 32]        [2, 12]     0.805    0.486        0.319
+Qwen3-30B-A3B-Instruct-2507            6  0.956         0.945             0.956     [4, 6, 16]     [6, 16, 32]        [2, 12]     0.949    0.643        0.305
+
+== 2. model x (batch, G, steps) cells ==
+                              model  batch  G  steps  n
+              Llama-3.1-8B-Instruct      6  6      2  1
+              Llama-3.1-8B-Instruct     16  4     12  1
+              Llama-3.1-8B-Instruct     16  8     12  1
+              Llama-3.1-8B-Instruct     32  4     12  2
+              Llama-3.1-8B-Instruct     32 16     12  1
+                       Llama-3.2-1B      8  4      5 48
+                       Llama-3.2-1B      8  6      3  1
+                       Llama-3.2-1B      8  8      5 52
+                       Llama-3.2-3B      6  6      2  1
+                       Llama-3.2-3B      8  4      5 50
+                       Llama-3.2-3B      8  8      5 50
+                       Llama-3.2-3B     16  4     12  1
+                       Llama-3.2-3B     16  8     12  2
+                       Llama-3.2-3B     16 16     12  1
+                       Llama-3.2-3B     32 16     12  1
+NVIDIA-Nemotron-3-Nano-30B-A3B-BF16      6  6      2  1
+NVIDIA-Nemotron-3-Nano-30B-A3B-BF16     16  4     12  4
+NVIDIA-Nemotron-3-Nano-30B-A3B-BF16     32 16     12  1
+        Qwen3-30B-A3B-Instruct-2507      6  6      2  1
+        Qwen3-30B-A3B-Instruct-2507     16  4     12  1
+        Qwen3-30B-A3B-Instruct-2507     16 16     12  2
+        Qwen3-30B-A3B-Instruct-2507     32  4     12  1
+        Qwen3-30B-A3B-Instruct-2507     32 16     12  1
+                          Qwen3-32B      6  6      2  1
+                          Qwen3-32B     16  4     12  2
+                          Qwen3-32B     16  8     12  1
+                          Qwen3-32B     16 16     12  1
+                          Qwen3-32B     32  8     12  1
+             Qwen3-4B-Instruct-2507      6  6      2  1
+             Qwen3-4B-Instruct-2507      8  4      5 51
+             Qwen3-4B-Instruct-2507      8  8      3  1
+             Qwen3-4B-Instruct-2507      8  8      5 49
+             Qwen3-4B-Instruct-2507     16  8     12  1
+             Qwen3-4B-Instruct-2507     16 16     12  3
+             Qwen3-4B-Instruct-2507     32  8     12  1
+                           Qwen3-8B      6  6      2  1
+                           Qwen3-8B     16  4     12  2
+                           Qwen3-8B     16 16     12  1
+                           Qwen3-8B     32  8     12  1
+                           Qwen3-8B     32 16     12  1
+                        gpt-oss-20b      6  6      2  1
+                        gpt-oss-20b     32  4     12  2
+                        gpt-oss-20b     32  8     12  1
+                        gpt-oss-20b     32 16     12  2
+Small-model runs with steps=5,batch=8: 300 / 314
+Large-model runs (other 6 labels) with steps=12: 30 / 36
+
+== 3. Run-level OLS (HC3 SE), outcome = run mean ZVF; reward = final-step reward ==
+R0_reward_quadratic              R2=0.421 adjR2=0.418  r=-1.422 (p=3.1e-12)  r^2=+1.435 (p=1.3e-10)
+R1_model_only                    R2=0.873 adjR2=0.870
+R2_config_only                   R2=0.372 adjR2=0.357
+R3_model+config                  R2=0.900 adjR2=0.896
+R4_model+config+reward_quad      R2=0.912 adjR2=0.907  r=-0.585 (p=0.029)  r^2=+0.489 (p=0.003)
+Incremental F (reward, reward^2 | model+config): F=21.64 p=1.46e-09 dR2=0.0115
+Across 9 model means: quad R2=0.958, coef r^2=+3.27 p=2.35e-05 (n=9)
+
+== 4. Step-level OLS (SE clustered by run), outcome = step ZVF ==
+S0_hG_only                         R2=0.492  hG=+0.426[+0.343,+0.510]
+S1_reward_quadratic                R2=0.506  r=-1.917[-2.309,-1.525]  r2=+1.982[+1.553,+2.411]
+S2_model+batch+G                   R2=0.768  
+S3_model+batch+G+reward_quad       R2=0.819  r=-2.123[-2.850,-1.396]  r2=+1.616[+1.205,+2.027]
+S4_model+batch+G+reward_quad+hG    R2=0.822  r=-1.386[-2.102,-0.671]  r2=+0.922[+0.418,+1.426]  hG=+0.165[+0.062,+0.268]
+Identity line ZVF = h_G(p_step) (no fit): R2=-0.951, corr=0.701, mean excess=+0.156
+
+== 5. Excess ZVF over h_G(p_step) (prompt-difficulty dispersion proxy) ==
+E0_model                   R2=0.519
+E1_model+config            R2=0.538
+E2_model+config+reward     R2=0.824
+Per-model mean excess (step level):
+                                      mean  count
+model                                            
+Llama-3.2-1B                         0.001    504
+Llama-3.2-3B                         0.002    563
+Qwen3-32B                            0.124     62
+Qwen3-8B                             0.187     62
+Llama-3.1-8B-Instruct                0.192     62
+NVIDIA-Nemotron-3-Nano-30B-A3B-BF16  0.201     62
+Qwen3-30B-A3B-Instruct-2507          0.305     62
+gpt-oss-20b                          0.319     62
+Qwen3-4B-Instruct-2507               0.405    565
+
+== 6. Within-model step-level association (model-demeaned) ==
+Llama-3.1-8B-Instruct                n=  62 corr(ZVF,reward)=+0.579 corr(ZVF,h_G(p))=+0.889
+Llama-3.2-1B                         n= 504 corr(ZVF,reward)=-0.890 corr(ZVF,h_G(p))=+0.970
+Llama-3.2-3B                         n= 563 corr(ZVF,reward)=-0.879 corr(ZVF,h_G(p))=+0.963
+NVIDIA-Nemotron-3-Nano-30B-A3B-BF16  n=  62 corr(ZVF,reward)=+0.696 corr(ZVF,h_G(p))=+0.812
+Qwen3-30B-A3B-Instruct-2507          n=  62 corr(ZVF,reward)=+0.451 corr(ZVF,h_G(p))=+0.519
+Qwen3-32B                            n=  62 corr(ZVF,reward)=-0.166 corr(ZVF,h_G(p))=+0.764
+Qwen3-4B-Instruct-2507               n= 565 corr(ZVF,reward)=+0.237 corr(ZVF,h_G(p))=+0.345
+Qwen3-8B                             n=  62 corr(ZVF,reward)=+0.238 corr(ZVF,h_G(p))=+0.545
+gpt-oss-20b                          n=  62 corr(ZVF,reward)=+0.331 corr(ZVF,h_G(p))=+0.667
+Pooled within-model corr(ZVF,reward)=+0.182, corr(ZVF,h_G(p))=+0.487
+
+== 7. Qwen3-32B group-size grid: runs per cell ==
+                n    zvf  final_reward
+G  batch steps                        
+4  16    12     2  0.333         0.398
+6  6     2      1  0.417         0.139
+8  16    12     1  0.156         0.203
+   32    12     1  0.198         0.723
+16 16    12     1  0.083         0.207
+
+wrote /Users/arvind/Developer/agentic_repos/tinker-rl-lab/platform_hybrid/experiments/results/publication_fixes/zvf_confound/zvf_confound_results.json

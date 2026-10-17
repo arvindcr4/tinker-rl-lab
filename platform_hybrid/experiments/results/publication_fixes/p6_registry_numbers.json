@@ -1,0 +1,44 @@
+{
+ "n_stack": 28,
+ "n_pairs": 378,
+ "levels": {
+  "R0": 39,
+  "R1": 0,
+  "R2": 1,
+  "R3": 10,
+  "R4": 26,
+  "R5": 302
+ },
+ "underspecified": 342,
+ "backend_pair": {
+  "level": 5,
+  "coverage": 0.5833333333333334
+ },
+ "dapo_pair": {
+  "level": 5,
+  "coverage": 0.8679245283018868
+ },
+ "same_checkpoint": "R0 39, R2 1, R3 10, R4 26, R5 2",
+ "generated": "R3 1, R4 12, R5 53",
+ "n_generated": 12,
+ "r0_classes": [
+  [
+   "tinker_aero_qwen3.5-4b_gsm8k",
+   "tinker_areal_qwen3.5-4b_gsm8k",
+   "tinker_gift_qwen3.5-4b_gsm8k"
+  ],
+  [
+   "zvf130_aero",
+   "zvf130_areal",
+   "zvf130_cppo",
+   "zvf130_es",
+   "zvf130_gift",
+   "zvf130_grpo",
+   "zvf130_mcgrpo",
+   "zvf130_ngrpo",
+   "zvf130_scafgrpo"
+  ]
+ ],
+ "dedup_all": "R2 1, R3 2, R4 18, R5 132",
+ "dedup_same": "R2 1, R3 2, R4 18, R5 2"
+}

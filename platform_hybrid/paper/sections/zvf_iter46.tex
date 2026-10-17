@@ -13,6 +13,19 @@
 
 \subsection{Dynamic Iso-Yield Group Sizing (Iso-G)}
 \label{sec:zvf-isog}
+
+\paragraph{Retraction notice (2026-10-16).} This subsection depends on the
+``anti-herding'' divergence $\delta_{\mathrm{div}}=\mathrm{ZVF}_{\mathrm{iid}}-\mathrm{ZVF}_{\mathrm{obs}}$,
+which is an estimator artefact: with $\mathrm{ZVF}_{\mathrm{iid}}$ evaluated at
+the same group's plug-in $\hat p=k/G$, $\delta_{\mathrm{div}}\ge0$ for every
+group (its expectation is $+0.105$ under exactly i.i.d.\ rollouts at the
+GSM8K $\bar p$); evaluated at a pooled or step-mean $\bar p$, it is $\le0$ in
+expectation by Jensen's inequality. It does not measure rollout herding or
+anti-herding, and every number below that uses it (yield corrections, iso-$G$
+savings, $\delta_{\mathrm{div}}$-based triggers or rankings) is withdrawn. It is
+retained only for the audit trail; see
+Section~\ref{sec:zvf-cross-source-falsification} for the corrected analysis.
+
 \S\ref{sec:zvf-iso-yield} answered the static question: \emph{for a
 fixed $Y_{\mathrm{target}}$, what is the minimum $G$ for each library?}
 Iter~46 closes the loop with the dynamic counterpart

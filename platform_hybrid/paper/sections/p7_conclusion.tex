@@ -8,17 +8,22 @@ $S = p(1-p)(1 - h_G(p))$, predicts the ZVF phenomena Pillar~2 catalogued:
 its exact expected value (T1, matched at the endpoints and interior of the
 binned reward tensors), its monotone decline in group size (T2, confirmed
 on two independent grids), and its coupling to gradient mass through
-$p(1-p)$ (T3, directionally confirmed in an open backward pass at
-$+0.71$). The same model exposes the diagnostic's structural limit---the
-symmetry that aliases mastery with incapacity, visible as a U-shape across
-368 runs---and supplies the repair: the pairwise-contrast density
+$p(1-p)$ (T3, a modelling assumption with only anecdotal toy-scale support).
+Batch ZVF is $\E_i[h_G(p_i)]$---the Advantage Collapse Rate~\citep{he2026advantage}
+under another name---and its excess over $h_G(\bar p)$ measures
+prompt-difficulty dispersion. The same model exposes the diagnostic's
+structural limit---the symmetry that aliases mastery with incapacity; the
+368-run cross-model U-shape is consistent with it but is carried by model
+and configuration, not established as a reward effect---and supplies the
+repair: the pairwise-contrast density
 $\mathrm{PCD} = \frac{G-1}{G}\E[p(1-p)]$, which survives the micro-jitter
 that silently zeroes ZVF in any pipeline with a dense sub-reward.
 
 The implemented callback and four-arm pilot establish feasibility, not
 superiority. Adaptive $G$ reached the same held-out delta as Dr.~GRPO while
-spending more rollouts, and the larger retrospective trace reveals that 92.3\%
-of symmetric escalation fires occur on all-correct groups. Cross-prompt pooling
+spending more rollouts, and a post-hoc count over 2,560 logged group outcomes
+(no controller ran) finds that 92.3\% of degenerate groups are all-correct,
+as a per-prompt binomial model at that reward level predicts (91.5\%). Cross-prompt pooling
 cannot stand in for a larger GRPO group, and a frozen-$p$ simulation cannot stand
 in for closed-loop learning. The durable output is therefore a falsifiable design
 rule---separate failed starvation from solved saturation, price interventions in

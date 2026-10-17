@@ -8,11 +8,14 @@ descriptive — nothing checks that a given run actually satisfies it. P5 makes 
 ## The record (`*.provenance.json`)
 1. `min_report_rl` — the seven reportable items (schema `$defs.min_report`): loss form, reference-KL,
    sampler backend, telemetry, group-size schedule, held-out split, decontamination.
-2. `provenance` — declared anchors: `git_sha`, `code_file` + `code_hash`, `reward_fn_hash`,
-   `data_hash`, `config_hash`. This verifier recomputes only `code_hash`; presence of
-   other anchors does not establish that their underlying artifacts were checked.
-   The generator's `data_hash` hashes the configured dataset descriptor, not the
-   downloaded dataset bytes.
+2. `provenance` — declared anchors: `git_sha`, `code_file` + `code_hash` (sha256 of
+   the file, 16-hex prefix), `reward_fn_hash` (full sha256 of the reward function
+   source), `data_ref` (a dataset label, not a content hash), and `config_hash`.
+   The verifier recomputes `code_hash` and `reward_fn_hash`; presence of other
+   anchors does not establish that their underlying artifacts were checked.
+   Before 2026-10-16, `reward_fn_hash` copied `code_hash` and `data_hash` hashed
+   the dataset label. Both placeholders were removed; the two changed records
+   are no longer covered by their signatures until re-signed.
 3. `rigor` — `n_seeds`, `seeds`, `reports_heldout`, `heldout_disjoint`, `reports_ci`.
 4. `results` — the reported effect(s).
 
@@ -23,7 +26,8 @@ Grades three axes and returns a badge **A–F**:
   and telemetry-list forms are both accepted. This is not full nested-schema or
   result-evidence validation.
 - **Integrity** — provenance hashes present; `code_hash` **recomputed against the live file** (catches
-  code drift since the run).
+  code drift since the run); `reward_fn_hash` **recomputed against the reward function source**,
+  rejecting whole-file-hash placeholders.
 - **Rigor** — integer `n_seeds >= 3` with the same number of distinct integer
   seed identifiers, explicit Boolean assertions for held-out reporting/disjointness
   and decontamination, and uncertainty reporting (WARN if not explicitly asserted).
@@ -36,7 +40,7 @@ an apparently configured record. Frozen records are not automatically migrated.
 Malformed JSON field types produce failed checks instead of comparison/access
 crashes. `--strict` rejects every WARN/FAIL; it does not change the score or grade.
 
-## Current checked-in records (rechecked 2026-10-11)
+## Current checked-in records (rechecked 2026-10-17)
 
 | run | grade | strict status and remaining limitation |
 |---|---|---|
@@ -48,7 +52,7 @@ are not verified by this tool. It must not be promoted to verified uncertainty
 merely because a number is present. The historical 100% description is not the
 current strict outcome. No measured results or signed records were changed to
 produce these scores. The verifier checks declared metadata and the live source
-hash; a grade alone is not a scientific-validity or publishability verdict.
+and reward-function hashes; a grade alone is not a scientific-validity or publishability verdict.
 
 ## Phase-2
 Detached Ed25519 verification and strict MIN-REPORT checks are wired into CI as

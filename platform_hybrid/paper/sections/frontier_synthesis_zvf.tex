@@ -9,7 +9,7 @@
 % REASONING CONTRIBUTIONS -- proposed theorems, replacement diagnostics,
 % and falsifiable claims produced by the frontier models -- NOT
 % experiments this paper ran. Everything is attributed as external
-% synthesis and, where it touches our own rho=0.27 outcome-prediction
+% synthesis and, where it touches our own (now withdrawn) rho=0.27 outcome-prediction
 % and temporal-stickiness results, the connection is stated in prose.
 % Source digest: frontier_calls/digests/frontier_P2.md
 % =====================================================================
@@ -22,23 +22,23 @@ submitted the Pillar~2 construction to an external cross-examination of
 two frontier reasoning systems (ChatGPT Pro Extended and Gemini Deep
 Think). The exchange is a source of \emph{arguments and proposed
 diagnostics}, not additional experiments; we report the sharpest
-contributions and, where they bear on our reported results---the weak
-outcome correlation ($\rho = 0.27$, Section~\ref{sec:zvf-cross-experiment})
+contributions and, where they bear on our reported results---the
+(withdrawn) outcome correlation (Section~\ref{sec:zvf-cross-experiment:corr})
 and the temporal stickiness / upward drift
 (Section~\ref{sec:zvf-dynamics})---we say so explicitly.
 
-\paragraph{Why $\rho = 0.27$ is structural: mastery--incapacity aliasing.}
+\paragraph{Why ZVF cannot be an outcome predictor: mastery--incapacity aliasing.}
 In an external cross-examination, both models argued that ZVF is a weak
 \emph{outcome} predictor by construction because it is an \emph{unsigned}
 saturation statistic. Writing $K_x=\sum_{i=1}^{G} R_i$ for the within-group
 success count, $\mathrm{ZVF}=\Pr(K_x=0)+\Pr(K_x=G)$ assigns the same value
 to an all-wrong group ($K_x=0$, incapacity) and an all-correct group
 ($K_x=G$, mastery)---aliasing the two ends of the difficulty axis that
-have opposite outcome implications. A modest $\rho\approx0.27$ over the
-$23$ pooled (experiment, model, $G$) cells is thus the \emph{expected}
-behavior of a sign-blind scalar, not a
-defect of the underlying quantity (frontier synthesis). This rationalizes
-our own reading: ZVF is a mechanistic \emph{signal-availability}
+have opposite outcome implications, so a weak or unstable ZVF--outcome
+association is the \emph{expected} behavior of a sign-blind scalar (frontier
+synthesis). Our own pooled coefficient is withdrawn as uninformative
+(Section~\ref{sec:zvf-cross-experiment:corr}), so this argument is not
+offered as an explanation of a measured value. It supports the reading that ZVF is a mechanistic \emph{signal-availability}
 diagnostic, not a standalone performance predictor.
 
 \paragraph{A proposed ZVF Inelasticity Theorem (frontier synthesis).}
@@ -118,7 +118,8 @@ $0.845\to0.631$ ZVF drop we observe as $G:2\to16$: the reduction is
 concentrated in the interior-$p_x$ prompts and saturates in the tails.
 
 \paragraph{Two caveats that sharpen our own claims.}
-First, on our anti-herding falsification: the models cautioned that the
+First, on our (now withdrawn; Section~\ref{sec:zvf-cross-source-falsification})
+anti-herding result: the models cautioned that the
 measured residual
 $\Delta_G=\mathrm{ZVF}^{\mathrm{obs}}_G-\mathbb{E}_x[p_x^{\,G}+(1-p_x)^{\,G}]\in[-0.23,-0.13]$
 should be read as \emph{edge-thinning / excess contrastive yield}
@@ -126,7 +127,8 @@ should be read as \emph{edge-thinning / excess contrastive yield}
 i.i.d.\ Bernoulli null), \emph{not} as negative pairwise rollout
 correlation. ZVF is an extreme-event statistic, whereas correlation is a
 second-moment property, and one model produced an explicit counterexample
-($G=4$, $p=\tfrac12$) with $\Delta_G<0$ yet pairwise $\rho>0$. This
+($G=4$, $p=\tfrac12$) with $\Delta_G<0$ yet pairwise $\rho>0$. The residual itself was an estimator artefact (sign-guaranteed under a
+same-group plug-in $\hat p$), so neither reading is supported. This
 reinforces the conservative stance already taken in
 Section~\ref{sec:zvf-dynamics}. Second, and as a genuine \emph{challenge}
 to the ``zero gradient'' framing in Section~the companion paper on ZVF gradients: under

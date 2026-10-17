@@ -1,0 +1,305 @@
+109: def load_tinker_gsm8k() -> List[Dict[str, Any]]:
+110:     """Real Qwen3-8B / GSM8K rollouts, K=8 per problem, 3 seeds."""
+111:     summary_path = RESULTS / "tinker_gsm8k_zvf_summary.json"
+112:     summary = json.loads(summary_path.read_text())
+113:     rows: List[Dict[str, Any]] = []
+114:     for seed, zvf_val, acc in zip(
+115:         summary["seeds"], summary["zvf_per_seed"], summary["sampling_accuracy_per_seed"]
+116:     ):
+117:         per_problem = json.loads(
+118:             (RESULTS / f"tinker_gsm8k_zvf_s{seed}.json").read_text()
+119:         )["per_problem"]
+120:         zvf_per_problem = [p["zvf"] for p in per_problem]
+121:         zvf_mean, zvf_min, zvf_max = _stat(zvf_per_problem)
+122:         rows.append(
+123:             {
+124:                 "experiment": "tinker_gsm8k_zvf",
+125:                 "model": "Qwen/Qwen3-8B",
+126:                 "task": "gsm8k",
+127:                 "group_size": summary["group_size"],
+128:                 "n_seeds": 1,
+129:                 "mean_zvf": zvf_mean,
+130:                 "min_zvf": zvf_min,
+131:                 "max_zvf": zvf_max,
+132:                 "mean_reward": summary.get("sampling_accuracy_mean", acc),
+133:                 "peak": acc,
+134:                 "last10_avg": acc,
+135:                 "n_problems": len(per_problem),
+136:                 "n_steps": len(per_problem),
+137:                 "evidence_path": str(
+138:                     (RESULTS / f"tinker_gsm8k_zvf_s{seed}.json").relative_to(REPO_ROOT)
+139:                 ),
+140:                 "seed": seed,
+141:             }
+142:         )
+143:     # Add an aggregate row.
+144:     rows.append(
+145:         {
+146:             "experiment": "tinker_gsm8k_zvf",
+147:             "model": "Qwen/Qwen3-8B",
+148:             "task": "gsm8k",
+149:             "group_size": summary["group_size"],
+150:             "n_seeds": summary["n_seeds"],
+151:             "mean_zvf": summary["mean_zvf"],
+152:             "min_zvf": min(summary["zvf_per_seed"]),
+153:             "max_zvf": max(summary["zvf_per_seed"]),
+154:             "mean_reward": summary["sampling_accuracy_mean"],
+155:             "peak": max(summary["sampling_accuracy_per_seed"]),
+156:             "last10_avg": summary["sampling_accuracy_mean"],
+157:             "n_problems": summary["n_problems_total"],
+158:             "n_steps": summary["n_problems_total"],
+159:             "evidence_path": "platform_hybrid/experiments/results/tinker_gsm8k_zvf_summary.json",
+160:             "seed": "agg",
+161:         }
+162:     )
+163:     return rows
+164: 
+165: 
+166: def load_groupsize_sweep() -> List[Dict[str, Any]]:
+167:     """Aggregate G-sweep rows (G in {2,4,8,16}, 3 seeds each)."""
+168:     path = RESULTS / "groupsize_zvf_sweep.tsv"
+169:     rows: List[Dict[str, Any]] = []
+170:     with path.open() as fh:
+171:         for line in fh:
+172:             line = line.strip()
+173:             if not line or line.startswith("G\t"):
+174:                 continue
+175:             parts = line.split("\t")
+176:             if len(parts) < 7:
+177:                 continue
+178:             G = int(parts[0])
+179:             n_seeds = int(parts[1])
+180:             heldout_acc_mean = float(parts[2])
+181:             heldout_acc_se = float(parts[3])
+182:             last10_mean = float(parts[4])
+183:             mean_zvf = float(parts[5])
+184:             mean_train = float(parts[6])
+185:             rows.append(
+186:                 {
+187:                     "experiment": "groupsize_zvf_sweep",
+188:                     "model": "Qwen/Qwen2.5-0.5B",
+189:                     "task": "arithmetic_synthetic",
+190:                     "group_size": G,
+191:                     "n_seeds": n_seeds,
+192:                     "mean_zvf": mean_zvf,
+193:                     "min_zvf": mean_zvf - heldout_acc_se,
+194:                     "max_zvf": mean_zvf + heldout_acc_se,
+195:                     "mean_reward": mean_train,
+196:                     "peak": heldout_acc_mean + heldout_acc_se,
+197:                     "last10_avg": last10_mean,
+198:                     "n_problems": 0,
+199:                     "n_steps": 40 * n_seeds,
+200:                     "evidence_path": "platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv",
+201:                     "seed": "agg",
+202:                 }
+203:             )
+204:     return rows
+205: 
+206: 
+207: def load_variance_mitigation() -> List[Dict[str, Any]]:
+208:     """Per-method collapse-labeled trajectories.
+209: 
+210:     The TSV carries per-step zvf and heldout-acc for several methods;
+211:     we aggregate to one row per (method, seed). The "collapse" column
+212:     is preserved verbatim.
+213:     """
+214:     path = RESULTS / "variance_mitigation.tsv"
+215:     rows_by_method: Dict[Tuple[str, int], List[Dict[str, Any]]] = {}
+216:     with path.open() as fh:
+217:         reader = csv.DictReader(fh, delimiter="\t")
+218:         for r in reader:
+219:             key = (r["method"], int(r["seed"]))
+220:             rows_by_method.setdefault(key, []).append(r)
+221:     rows: List[Dict[str, Any]] = []
+222:     for (method, seed), recs in rows_by_method.items():
+223:         zvfs = [float(r["zvf"]) for r in recs]
+224:         rewards = [float(r["reward_mean"]) for r in recs]
+225:         heldout = [float(r["heldout_acc"]) for r in recs]
+226:         collapse = max(int(r["collapse"]) for r in recs)
+227:         rows.append(
+228:             {
+229:                 "experiment": "variance_mitigation",
+230:                 "model": method.upper(),
+231:                 "task": "math_verifiable_rl",
+232:                 "group_size": 8,
+233:                 "n_seeds": 1,
+234:                 "mean_zvf": statistics.fmean(zvfs),
+235:                 "min_zvf": min(zvfs),
+236:                 "max_zvf": max(zvfs),
+237:                 "mean_reward": statistics.fmean(rewards),
+238:                 "peak": max(heldout),
+239:                 "last10_avg": statistics.fmean(heldout[-10:]),
+240:                 "n_problems": 0,
+241:                 "n_steps": len(recs),
+242:                 "evidence_path": "platform_hybrid/experiments/results/variance_mitigation.tsv",
+243:                 "seed": seed,
+244:                 "_collapse_flag": collapse,
+245:             }
+246:         )
+247:     return rows
+248: 
+249: 
+250: def load_tool_use_diagnostics() -> List[Dict[str, Any]]:
+251:     """Cross-tool tool-use runs that fully collapsed (last10 == 0).
+252: 
+253:     Each row has a `zvf` of 1.0 across the entire trajectory and a
+254:     last10_avg of 0.0 -- the strongest ZVF == failure signature in
+255:     our measurement set.
+256:     """
+257:     path = RESULTS / "tool_code_reward_diagnostics.tsv"
+258:     rows: List[Dict[str, Any]] = []
+259:     seen: set = set()
+260:     with path.open() as fh:
+261:         reader = csv.DictReader(fh, delimiter="\t")
+262:         for r in reader:
+263:             key = (r["model"], r["experiment"])
+264:             if key in seen:
+265:                 continue
+266:             seen.add(key)
+267:             rows.append(
+268:                 {
+269:                     "experiment": r["experiment"],
+270:                     "model": r["model"],
+271:                     "task": r["task"],
+272:                     "group_size": 1,
+273:                     "n_seeds": 1,
+274:                     "mean_zvf": float(r["zvf"]),
+275:                     "min_zvf": float(r["zvf"]),
+276:                     "max_zvf": float(r["zvf"]),
+277:                     "mean_reward": float(r["reward_mean"]),
+278:                     "peak": float(r["peak"]),
+279:                     "last10_avg": float(r["last10_avg"]),
+280:                     "n_problems": 0,
+281:                     "n_steps": int(r["n_steps"]),
+282:                     "evidence_path": "platform_hybrid/experiments/results/tool_code_reward_diagnostics.tsv",
+283:                     "seed": 0,
+284:                 }
+285:             )
+286:     return rows
+287: 
+288: 
+289: def load_scaling_law_phases() -> List[Dict[str, Any]]:
+290:     """Three-phase scaling-law table -- one row per model.
+291: 
+292:     The scaling-law TSV does NOT carry explicit per-step ZVF; we keep
+293:     these rows in the summary for the heldout-vs-phase cross-tab but
+294:     leave mean_zvf as NaN so the bootstrap can drop them.
+295:     """
+296:     path = RESULTS / "scaling_law_three_phase.tsv"
+297:     rows: List[Dict[str, Any]] = []
+298:     with path.open() as fh:
+299:         header = fh.readline()
+300:         for line in fh:
+301:             parts = line.rstrip("\n").split("\t")
+302:             if len(parts) < 8:
+303:                 continue
+304:             rows.append(
+305:                 {
+306:                     "experiment": "scaling_law_three_phase",
+307:                     "model": parts[0],
+308:                     "params_B": float(parts[1]),
+309:                     "task": "gsm8k_reasoning",
+310:                     "phase": parts[2],
+311:                     "group_size": 8,
+312:                     "n_seeds": 1,
+313:                     "mean_zvf": float("nan"),
+314:                     "min_zvf": float("nan"),
+315:                     "max_zvf": float("nan"),
+316:                     "mean_reward": float(parts[13]),
+317:                     "peak": float(parts[13]),
+318:                     "last10_avg": float(parts[14]),
+319:                     "n_problems": 0,
+320:                     "n_steps": 30,
+321:                     "evidence_path": "platform_hybrid/experiments/results/scaling_law_three_phase.tsv",
+322:                     "seed": "agg",
+323:                 }
+324:             )
+325:     return rows
+326: 
+327: 
+328: def load_drgrpo_vs_grpo() -> List[Dict[str, Any]]:
+329:     """Per-run mean_zvf from the Qwen2.5-0.5B DRGRPO vs GRPO study."""
+330:     path = RESULTS / "drgrpo_vs_grpo.json"
+331:     data = json.loads(path.read_text())
+332:     rows: List[Dict[str, Any]] = []
+333:     for r in data["runs"]:
+334:         rows.append(
+335:             {
+336:                 "experiment": "drgrpo_vs_grpo",
+337:                 "model": r["model"],
+338:                 "task": "arithmetic",
+339:                 "group_size": 8,
+340:                 "n_seeds": 1,
+341:                 "mean_zvf": r["mean_zvf"],
+342:                 "min_zvf": min(s["zvf"] for s in r["step_log"]),
+343:                 "max_zvf": max(s["zvf"] for s in r["step_log"]),
+344:                 "mean_reward": statistics.fmean(s["mean_reward"] for s in r["step_log"]),
+345:                 "peak": r["heldout_acc"],
+346:                 "last10_avg": r["last10_avg"],
+347:                 "n_problems": 0,
+348:                 "n_steps": len(r["step_log"]),
+349:                 "evidence_path": "platform_hybrid/experiments/results/drgrpo_vs_grpo.json",
+350:                 "seed": r["seed"],
+351:                 "algo": r["algo"],
+352:             }
+353:         )
+354:     return rows
+355: 
+356: 
+357: def load_samestack_ppo_grpo() -> List[Dict[str, Any]]:
+358:     """Per-run metrics from the PPO/GRPO shared-stack diagnostic."""
+359:     path = RESULTS / "samestack_ppo_grpo.json"
+360:     if not path.exists():
+361:         return []
+362:     data = json.loads(path.read_text())
+363:     rows: List[Dict[str, Any]] = []
+364:     runs = data.get("runs", [])
+365:     for r in runs:
+366:         rows.append(
+367:             {
+368:                 "experiment": "samestack_ppo_grpo",
+369:                 "model": r.get("model", "?"),
+370:                 "task": r.get("task", "arithmetic"),
+371:                 "group_size": r.get("group_size", 8),
+372:                 "n_seeds": 1,
+373:                 "mean_zvf": r.get("mean_zvf", float("nan")),
+374:                 "min_zvf": r.get("min_zvf", float("nan")),
+375:                 "max_zvf": r.get("max_zvf", float("nan")),
+376:                 "mean_reward": r.get("mean_reward", float("nan")),
+377:                 "peak": r.get("heldout_acc", float("nan")),
+378:                 "last10_avg": r.get("last10_avg", float("nan")),
+379:                 "n_problems": 0,
+380:                 "n_steps": r.get("n_steps", 0),
+381:                 "evidence_path": "platform_hybrid/experiments/results/samestack_ppo_grpo.json",
+382:                 "seed": r.get("seed", 0),
+383:             }
+384:         )
+385:     return rows
+386: 
+387: 
+388: # ---------------------------------------------------------------------------
+389: # Failure taxonomy
+390: # ---------------------------------------------------------------------------
+391: 
+392: 
+393: def classify(row: Dict[str, Any]) -> str:
+394:     peak = float(row.get("peak", float("nan")))
+395:     last = float(row.get("last10_avg", float("nan")))
+396:     if math.isnan(peak) or math.isnan(last):
+397:         return "unknown"
+398:     if last <= 0.001:
+399:         # True zero-out (tool-use collapse, Nemotron final collapse).
+400:         return "collapse"
+401:     if peak > 0.7 and last < 0.35:
+402:         return "collapse"
+403:     if last < 0.85 * peak:
+404:         return "drift"
+405:     if peak < 0.5:
+406:         return "plateau"
+407:     return "converged"
+408: 
+409: 
+410: # ---------------------------------------------------------------------------
+411: # Correlation + bootstrap
+412: # ---------------------------------------------------------------------------
+413: 

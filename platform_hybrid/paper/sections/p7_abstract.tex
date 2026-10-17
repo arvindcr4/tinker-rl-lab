@@ -7,40 +7,41 @@ This paper is a retrospective controller audit and a prospective intervention
 plan: we ask which ZVF-derived quantities are mechanistically predictable and
 whether they are ready to control rollout allocation. This does not
 overturn Pillar-2's restraint---we \emph{test} ZVF's predictive value through
-falsifiable predictions (T1--T3 below) rather than assume it, and we flag where
-that value rests on the weakest evidence (the causal gradient link is toy-scale
-and directional only). We model the
+falsifiable predictions (T1--T3 below) rather than assume it. We model the
 usable learning signal per prompt as $S = p(1-p)\,(1 - h_G(p))$, where $p$ is
 the latent success probability and $h_G(p) = p^G + (1-p)^G$ is the probability
-a size-$G$ group is degenerate, and derive three testable consequences:
-(T1) the expected ZVF indicator equals $p^G + (1-p)^G$; (T2) larger group
-size $G$ lowers ZVF; (T3) gradient magnitude tracks $p(1-p)$. Each prediction
-is paired with an empirical check: a 368-run Weights~\&~Biases audit across seven
-models (all logged runs---a superset of the benchmark's 70+ core training runs; the
-core set is defined by run \emph{type}, i.e.\ completed GRPO training runs, and is
-\emph{not} filtered on convergence or reward, while the remaining logged runs are
-evaluations, ablation probes, and short/aborted infrastructure runs---so the audit
-is not subject to outcome-based survivorship selection)
-reproduces the predicted U-shape of ZVF in accuracy (ZVF $0.95$--$0.97$ at both
-reward extremes, $0.25$--$0.29$ at mid-range rewards of $0.35$--$0.50$); a
-model~$\times$~$G$ grid confirms the monotone $G$ effect at interior accuracy
-(e.g.\ Qwen3-32B: $0.33 \to 0.18 \to
-0.08$ for $G = 4/8/16$); and a toy-scale open-backward-pass experiment finds
-$\mathrm{corr}(\|\nabla\|, p(1-p)) = +0.71$ (0.5B model, synthetic arithmetic;
-directional only). Because ZVF aliases mastery with incapacity, we promote the
-pairwise-contrast density $\mathrm{PCD} = \frac{G-1}{G}\,\E[p(1-p)]$ as the
-control signal: a micro-jitter falsification collapses batch ZVF from $0.158$
-to $0.000$ while leaving PCD unchanged. We then operationalize the theory as a
-\texttt{zvf-triage} callback and an adaptive-$G$ controller that escalates
-group size on ZVF spikes. In a four-arm open-trainer audit, adaptive-$G$
-matches the best fixed-recipe held-out gain ($+0.575$) at $186$ rollouts,
-while DAPO-style dynamic sampling drives ZVF to $0.00$ at $+45\%$ rollout
-cost---an accuracy-versus-compute trade, not a controller win. In the larger
-2,560-observation controller trace, 1,723 of 1,867 escalation events (92.3\%)
-occur on all-correct groups and only 144 on all-wrong groups. This asymmetry
-shows that a symmetric ZVF trigger mostly spends on solved prompts; deleting
-those fires is only a counterfactual proposal because performance preservation
-has not been measured. No result here establishes prospective superiority over
+a size-$G$ group is degenerate, and derive three consequences:
+(T1) the expected ZVF indicator of a prompt equals $h_G(p)$, so batch ZVF
+equals $\E_i[h_G(p_i)]$ and its excess over $h_G(\bar p)$ measures
+prompt-difficulty dispersion (GSM8K: observed $0.158$, homogeneous $0.054$,
+beta-binomial with intra-prompt correlation $0.16$ predicts $0.170$);
+(T2) larger group size $G$ lowers ZVF; (T3) gradient magnitude tracks $p(1-p)$.
+ZVF is equivalent to the Advantage Collapse Rate~\citep{he2026advantage} and
+the Jensen excess was shown by \citet{nie2026gradstarvation}; our contribution
+is the use of ZVF as a sampler-control input, not the statistic.
+A 368-run Weights~\&~Biases audit across nine model labels shows ZVF near
+$0.95$--$0.97$ at both final-reward extremes and $0.25$--$0.29$ for two models
+at final reward $0.35$--$0.50$, but a confound regression shows that model
+identity and configuration (batch, $G$, step budget differ by model) explain
+$R^2=0.90$ of run-level ZVF and reward terms add only $0.012$, so the
+population ``U-shape'' is not evidence of a reward effect. A model~$\times$~$G$
+grid is consistent with T2 (Qwen3-32B: $0.33 \to 0.18 \to 0.08$ for
+$G = 4/8/16$, from 1--2 runs per cell at mixed batch sizes). Gradient-level
+evidence for T3 is an unreplicated toy anecdote and is not used. Because ZVF
+aliases mastery with incapacity, we promote the pairwise-contrast density
+$\mathrm{PCD} = \frac{G-1}{G}\,\E[p(1-p)]$ as the control signal: a micro-jitter
+falsification collapses batch ZVF from $0.158$ to $0.000$ while leaving PCD
+unchanged. We then operationalize the theory as a \texttt{zvf-triage} callback
+and an adaptive-$G$ controller that escalates group size on ZVF spikes. In a
+four-arm open-trainer audit, adaptive-$G$ matches the best fixed-recipe
+held-out gain ($+0.575$) at $186$ rollouts, while DAPO-style dynamic sampling
+drives ZVF to $0.00$ at $+45\%$ rollout cost---an accuracy-versus-compute
+trade, not a controller win. A post-hoc count over 2,560 logged group outcomes
+(4 methods $\times$ 40 steps $\times$ 16 prompts; no controller ran) finds
+that 1,723 of the 1,867 degenerate groups (92.3\%) are all-correct; a
+per-prompt binomial model at the observed reward level predicts 91.5\%, so the
+asymmetry is a property of the reward level, not of any trigger.
+No result here establishes prospective superiority over
 static $G{=}16$, Dr.~GRPO, or dynamic sampling. All intervention evidence is
 single-task, small-$n$, or retrospective, and the paper ends with the matched-
 budget, multi-seed test required to earn control authority.
@@ -48,7 +49,7 @@ budget, multi-seed test required to earn control authority.
 Adaptive group size is \emph{not} promoted to a recommended policy. The
 submission claim is strictly a \emph{retrospective controller audit} plus a
 \emph{pre-registered prospective test plan}: mechanism-consistent telemetry
-(T1--T3 checks, 92.3\% all-correct escalation asymmetry) and an explicit
+(T1--T2 checks; the all-correct share of degenerate groups) and an explicit
 bakeoff design against static $G{=}16$ and naive boundary heuristics. Closing
 that bakeoff is future work and is not required for the audit/test-plan
 contribution targeted at a workshop-short venue.

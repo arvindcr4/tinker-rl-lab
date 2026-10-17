@@ -27,8 +27,9 @@ expected ZVF indicator equals $p^G + (1-p)^G$ (T1), larger $G$ lowers ZVF
 theorem is paired with an empirical check drawn from a 368-run
 Weights~\&~Biases audit (which counts \emph{all} logged runs---training,
 evaluation, and short accuracy-swept probes---and is thus a superset of the
-benchmark's 70+ core \emph{training} runs), a model~$\times$~group-size grid, and an
-open-backward-pass gradient probe. Second, \emph{intervention}: if the model
+benchmark's 70+ core \emph{training} runs), a confound regression on its
+per-step histories, and a model~$\times$~group-size grid (1--2 runs per cell).
+T3 has only toy-scale anecdotal support. Second, \emph{intervention}: if the model
 is right, then ZVF is not fate but a control target. We build a
 \texttt{zvf-triage} callback that watches per-step ZVF and an adaptive-$G$
 controller that escalates group size when the signal starves, and we audit it
@@ -38,7 +39,9 @@ sampling) in a single open, auditable reimplementation.
 The theory also explains why ZVF alone cannot drive a controller. Because
 $h_G(p)$ is symmetric in $p \leftrightarrow 1-p$, ZVF assigns the same value
 to a mastered prompt ($p \to 1$) and a hopeless one ($p \to 0$); at
-population scale this produces the U-shape we measure across seven models.
+population scale both ends of the reward axis carry high ZVF across the nine
+model labels we audit---though, as Section~\ref{sec:p7-audit} shows, the
+interior of that cross-model curve is confounded with model and configuration.
 Worse, ZVF is an \emph{existence} statistic: adding reward jitter
 of order $10^{-4}$ drives measured ZVF to zero while shifting the measured
 within-group contrast by less than $10^{-6}$. We therefore promote the
@@ -52,8 +55,10 @@ Our contributions are:
 theorems, each paired with an empirical check;
 (ii) the PCD statistic and a micro-jitter falsification separating it from
 ZVF;
-(iii) a toy-scale validation that gradient norms track $p(1-p)$
-($\mathrm{corr} = +0.71$; directional only);
+(iii) a confound analysis showing that batch ZVF is $\E_i[h_G(p_i)]$, that
+its excess over $h_G(\bar p)$ tracks prompt-difficulty dispersion, and that
+the cross-model U-shape is carried by model and configuration rather than by
+reward;
 (iv) an operational \texttt{zvf-triage} callback and adaptive-$G$ controller,
 audited in a four-arm open-trainer comparison against GRPO, Dr.~GRPO, and
 DAPO-style dynamic sampling, with the accuracy-versus-compute trade stated
@@ -67,11 +72,23 @@ $G{=}16$ matched-token bakeoff remains unrun.
 
 \subsection{Related Work}
 \label{sec:p7-related}
+ZVF itself is not new. The Advantage Collapse Rate (ACR) of
+\citet{he2026advantage} measures the same collapse of group-relative advantages
+under homogeneous rewards (and is reported there to predict stagnation and
+final performance); ZVF is equivalent to it up to aggregation granularity, and
+we claim only its use as a sampler-control input. \citet{nie2026gradstarvation}
+prove that the true degeneracy rate exceeds the i.i.d.\ Bernoulli prediction by
+Jensen's inequality---the population form of our T1---and DARA
+\citep{zheng2026dara} uses the complementary ``active-group density''
+($1-$ZVF per reward) to reweight rewards in multi-reward RL.
 The degenerate-group problem is increasingly attacked at the sampler. DAPO
 \citep{yu2025dapo} filters out zero-variance groups by resampling until the
 batch carries signal (dynamic sampling); GRESO \citep{zhang2026greso} makes
 the rollout decision itself selective to avoid paying for uninformative
-prompts; RL-ZVP/AERO \citep{le2025rlzvp} instead extracts signal \emph{from}
+prompts; VCRL \citep{jiang2025vcrl} builds a curriculum from group reward
+variance; and online difficulty filtering \citep{bae2025online} keeps prompts
+of intermediate pass rate, motivated by a policy-improvement bound in the
+variance of task-level success probabilities. RL-ZVP/AERO \citep{le2025rlzvp} instead extracts signal \emph{from}
 zero-variance groups via entropy-guided advantage shaping. Our adaptive-$G$
 controller is a third point in this design space: rather than discarding or
 reshaping degenerate groups, it changes the group size that generates them,

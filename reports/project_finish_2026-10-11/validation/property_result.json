@@ -1,0 +1,20 @@
+{
+  "command": [
+    "uv",
+    "run",
+    "--no-sync",
+    "--with",
+    "hypothesis==6.168.3",
+    "python",
+    "-m",
+    "pytest",
+    "tests/test_properties_advantages.py",
+    "tests/test_properties_stats.py",
+    "-q",
+    "-rs"
+  ],
+  "returncode": 0,
+  "duration_seconds": 5.65,
+  "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/reports/project_finish_2026-10-11/validation/property_tests.log",
+  "started_at": "2026-10-11T00:50:59.410786+00:00"
+}

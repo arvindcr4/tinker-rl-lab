@@ -37,9 +37,14 @@ A valid empirical $G'$ test requires fresh within-prompt rollouts under the same
 policy, with total rollout tokens matched across controller and static arms.
 
 \paragraph{Connection to the boundary audit.}
-The valid 2,560-observation controller trace should guide the next experiment:
-1,723 of 1,867 fires (92.3\%) occur on all-correct groups and 144 on all-wrong
-groups. An all-wrong-only policy would remove 92.3\% of escalations, but whether
-it preserves held-out performance is unknown. The preregistered comparison must
+No controller ran on the N2 tensors; the 2,560 rows are logged group outcomes
+(4 methods $\times$ 40 steps $\times$ 16 prompts, one seed). Counting
+post hoc, 1,723 of the 1,867 degenerate groups (92.3\%) are all-correct and
+144 all-wrong. A per-prompt binomial model using each (method, prompt)
+success rate predicts 1,775 all-correct and 165 all-wrong (91.5\%), so the
+share follows from the reward level ($\bar p=0.83$) and says nothing about a
+trigger. A symmetric ZVF trigger \emph{would} mostly fire on solved prompts
+at this reward level; whether an all-wrong-only policy preserves held-out
+performance is unknown. The preregistered comparison must
 therefore include symmetric escalation, all-wrong-only retry, solved retirement
 or distillation, and static $G=16$ under a common token budget.

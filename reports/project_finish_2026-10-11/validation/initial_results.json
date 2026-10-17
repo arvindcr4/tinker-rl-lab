@@ -1,0 +1,81 @@
+{
+  "started_at": "2026-10-11T00:49:27.506622+00:00",
+  "results": {
+    "lock_check": {
+      "command": [
+        "make",
+        "lock-check"
+      ],
+      "returncode": 0,
+      "duration_seconds": 0.13,
+      "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/reports/project_finish_2026-10-11/validation/lock_check.log"
+    },
+    "submission_check": {
+      "command": [
+        "make",
+        "submission-check"
+      ],
+      "returncode": 0,
+      "duration_seconds": 0.19,
+      "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/reports/project_finish_2026-10-11/validation/submission_check.log"
+    },
+    "lint_format": {
+      "command": [
+        "make",
+        "lint",
+        "format-check"
+      ],
+      "returncode": 0,
+      "duration_seconds": 1.3,
+      "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/reports/project_finish_2026-10-11/validation/lint_format.log"
+    },
+    "audit_suite": {
+      "command": [
+        "uv",
+        "run",
+        "--no-sync",
+        "python",
+        "platform_local/run_all_audits.py"
+      ],
+      "returncode": 0,
+      "duration_seconds": 5.92,
+      "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/reports/project_finish_2026-10-11/validation/audit_suite.log"
+    },
+    "typecheck": {
+      "command": [
+        "make",
+        "typecheck"
+      ],
+      "returncode": 0,
+      "duration_seconds": 11.25,
+      "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/reports/project_finish_2026-10-11/validation/typecheck.log"
+    },
+    "public_check": {
+      "command": [
+        "make",
+        "public-check"
+      ],
+      "returncode": 0,
+      "duration_seconds": 14.16,
+      "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/reports/project_finish_2026-10-11/validation/public_check.log"
+    },
+    "core_coverage": {
+      "command": [
+        "uv",
+        "run",
+        "--no-sync",
+        "pytest",
+        "tests/",
+        "-m",
+        "not latex",
+        "-q",
+        "--cov",
+        "--cov-config=.coveragerc",
+        "--cov-report=term"
+      ],
+      "returncode": 1,
+      "duration_seconds": 83.75,
+      "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/reports/project_finish_2026-10-11/validation/core_coverage.log"
+    }
+  }
+}

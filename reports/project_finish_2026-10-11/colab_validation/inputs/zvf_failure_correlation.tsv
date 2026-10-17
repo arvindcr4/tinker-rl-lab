@@ -1,0 +1,11 @@
+# Pillar 2 ZVF vs training-failure correlation table
+# Rows are per-(experiment, model, group_size) pooled means,
+# not per-step rows; per-step ZVF rows are autocorrelated and
+# would inflate apparent significance. Bootstrap CIs are B=2000
+# percentile resamples over the pooled rows. Source:
+# scripts/zvf_diagnostic.py
+test	n_pooled_rows	rho	ci_lo	ci_hi	method
+mean_zvf vs last10_avg	23	0.2173	-0.2912	0.9362	Pearson + 95% bootstrap CI
+mean_zvf vs last10_avg	23	0.2687	-0.3704	0.8787	Spearman + 95% bootstrap CI
+mean_zvf vs is_collapse	23	0.6150	NA	NA	Pearson point-biserial (CI NaN, deterministic at n=14)
+mean_zvf vs is_collapse	23	0.5594	NA	NA	Spearman point-biserial (CI NaN, deterministic at n=14)

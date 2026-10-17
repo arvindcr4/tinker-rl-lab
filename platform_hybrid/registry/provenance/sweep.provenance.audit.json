@@ -56,7 +56,7 @@
     {
       "level": "PASS",
       "weight": 1,
-      "msg": "provenance hash present: data_hash"
+      "msg": "reward_fn_hash VERIFIED against the reward function source"
     },
     {
       "level": "PASS",

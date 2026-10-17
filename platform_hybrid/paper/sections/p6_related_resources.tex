@@ -53,6 +53,15 @@ training run, narrowed to the seven fields our companion pillar papers found
 to be ranking-relevant, and made machine-readable so that the auditing step
 can be a script rather than a reviewer.
 
+\paragraph{Implementation provenance in RL.} That undisclosed implementation
+details move RL outcomes is well established
+\citep{henderson2018deep, engstrom2020implementation}; for LLM post-training,
+silent framework bugs have produced spurious published gains
+\citep{limozin2026sftrl}, unified re-implementations reconcile conflicting
+conclusions \citep{liu2025tricks}, and evaluation choices alone shift
+reasoning results \citep{hochlehnert2025sober}. The registry does not claim
+this insight; it supplies a machine-readable record and a diff over it.
+
 \paragraph{What no existing resource provides.}
 To our knowledge no existing community resource records (i) the executed loss
 form of an RL fine-tuning run at the granularity where GRPO variants differ,

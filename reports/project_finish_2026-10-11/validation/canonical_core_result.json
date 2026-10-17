@@ -1,0 +1,19 @@
+{
+  "command": [
+    "uv",
+    "run",
+    "--no-sync",
+    "pytest",
+    "tests/",
+    "-m",
+    "not latex",
+    "-q",
+    "--cov",
+    "--cov-config=.coveragerc",
+    "--cov-report=term"
+  ],
+  "returncode": 0,
+  "duration_seconds": 80.61,
+  "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/reports/project_finish_2026-10-11/validation/core_coverage_canonical.log",
+  "started_at": "2026-10-11T00:50:36.111126+00:00"
+}

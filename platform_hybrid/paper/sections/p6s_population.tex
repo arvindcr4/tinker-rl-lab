@@ -1,0 +1,103 @@
+% Paper 6 (GRPO-Registry) population section
+\section{Populating the Registry from Real Artifacts}
+\label{sec:p6-population}
+
+A registry seeded with hypothetical entries would not test the artifact against
+real reporting gaps. All \NSTACK{} seed stack records derive from concrete
+artifacts of this program (Table~\ref{tab:p6-entries-summary}): framework config dumps
+and runs for Qwen3-8B/GSM8K, the open Colab trainer audit, the managed-runtime
+head-to-head, the N2 same-stack four-method run, two W\&B PPO/REINFORCE runs,
+and the zvf-iter130 risk-index batch. Entries marked with a \texttt{run\_config}
+block were regenerated from the run sources with per-field provenance; the
+others remain hand-entered.
+
+\begin{table}[t]
+\centering
+\caption{Seed stack entries by family (full per-entry table with badges and
+spec coverage in Appendix~\ref{app:p6s-entries}). Gen.\ = entries regenerated
+from run sources by \texttt{generate\_entries.py}; the rest are hand-entered.}
+\label{tab:p6-entries-summary}
+\small
+\begin{tabular}{@{}lrlrl@{}}
+\toprule
+Family & $n$ & Labels & Gen. & Badge \\
+\midrule
+A: framework runs (Qwen3-8B, GSM8K) & 4 & grpo & 4 & 58--86 \\
+B: open Colab trainer (E3, toy scale) & 4 & grpo, drgrpo, dapo & 4 & 93 \\
+C: managed-runtime head-to-head (Qwen3.5-4B) & 4 & grpo, dapo, drgrpo, gspo & 4 & 86 \\
+D: N2 same-stack variants (Qwen3.5-4B) & 3 & aero, gift, areal & 0 & 67--68 \\
+W\&B PPO/REINFORCE runs & 2 & ppo-reinforce & 0 & 50 \\
+E: zvf-iter130 risk-index batch & 11 & 9 methods + 2 tool-use & 0 & 43 \\
+\midrule
+Total & \NSTACK{} & & \NGEN{} & 43--93 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Family A: the released config dumps.}
+The four entries \texttt{trl/verl/openrlhf/tinker_grpo_qwen3-8b_gsm8k} are
+mechanical translations of the 44-field per-framework dumps shipped at
+\texttt{experiments/framework_config_dumps/}, since regenerated from the run
+scripts where those exist. The dumps were written post hoc for reviewers and
+do not describe the runs actually executed (e.g.\ placeholder checkpoint
+hashes; TRL LoRA rank and completion length differ from the TRL script), so
+the generated \texttt{run\_config} values take precedence. Translation preserved every honesty marker in the
+dumps: the eleven \texttt{managed_by_tinker} nulls (including \texttt{kl.beta}
+and \texttt{importance_sampling.granularity}), the genuine OpenRLHF deviations
+($\beta{=}0.02$; sequence-level importance granularity), the Base-vs-Instruct
+model confound on the managed runtime, and the fact that the veRL and OpenRLHF
+rows of \texttt{framework_comparison.json} are dry-run placeholders (their
+\texttt{telemetry} item is therefore null and their \texttt{outcomes} empty).
+
+\paragraph{Family B: the open Colab trainer (E3 audit).}
+Four entries record the arms of the E3 open-trainer audit (\ifdefined\ANONYMOUSBUILD
+logged to W\&B; project name withheld for review\else W\&B project
+\texttt{zvf-colab-experiments}\fi): base GRPO, Dr.~GRPO (both deltas
+implemented), DAPO (clip-higher, dynamic sampling, token-level loss, and KL
+removal implemented; overlong shaping recorded as \texttt{absent} because it
+is inapplicable at toy completion lengths), and an adaptive-$G$ arm whose
+\texttt{group_size_schedule} records the live escalation rule ($G$
+$4{\to}6{\to}8$ on ZVF spikes). These runs are toy-scale and their outcome
+fields (held-out delta $+0.50$ to $+0.575$; the DAPO arm's mean ZVF $0.00$ at
+$+45\%$ rollouts) are directional evidence only---but the \emph{records} are
+exact, because the trainer's backward pass is open.
+
+\paragraph{Family C: the managed-runtime head-to-head.}
+Four entries record the 12-cell head-to-head (Qwen3.5-4B, GSM8K, three seeds
+per arm) in which the four variant labels spanned $0.034$ in last-10
+training reward ($0.710$--$0.744$; not shown equivalent, and two seed-paired
+contrasts exclude zero) while their delta status arrays differ
+sharply from Family B's: every claimed delta on the closed stack is
+\texttt{surrogate} or \texttt{unknown}, never fully \texttt{implemented}.
+
+\paragraph{Family D: N2 same-stack isolated variants.}
+Three entries (aero, gift, areal) record the same managed runtime as Family C
+but with a different \emph{label} per cell. The N2 four-method run holds the
+sampler, $G{=}8$, seed 0, prompt pool, and step count fixed---so the per-method
+delta against GRPO is guaranteed to isolate the label, not the stack. Measured
+last-10 reward/ZVF land in the same paired-bootstrap envelope as GRPO
+(Section~\ref{sec:p6-measured}); the entries make this measurable artifact
+machine-queryable for the first time.
+
+\paragraph{Family E: zvf-iter130 risk-index batch.}
+Eleven entries (\texttt{zvf130\_*}: nine GRPO-family methods and two tool-use
+cells) record a different shape of
+evidence: a single-batch harness that ran all nine GRPO-family methods on the
+same prompt pool with five seeds each and produced a per-method risk-index
+mean on \texttt{zvf\_iter130\_method\_risk.tsv}. The corresponding stack entries
+report fewer MIN-REPORT leaves (9/23) because the harness is a snapshot, not a
+full training run---but the entries preserve the per-method seeds, the
+provenance link to the source TSV, and the variant-delta pointers, so a query
+can recover the comparison set without losing the partial-reporting honesty
+marker.
+
+\paragraph{What population taught us about our own reporting.}
+The badge column is itself a finding. Our hand-entered config dumps---built for a
+reviewer-requested fairness audit---scored low: they nail items 2, 3,
+and 5 (KL, backend, group size) but expose item 1 only partially (a launcher
+YAML records \texttt{importance_sampling.granularity}, not clip bounds or
+advantage normalization) and items 6--7 not at all. The open Colab arms score
+highest not because the runs are better but because an open backward pass plus an
+explicit ``no KL, no decontamination'' declaration makes every field
+\emph{reportable}. Reproducibility supplements of the kind commonly shipped
+with RL papers, ours included, do not automatically satisfy MIN-REPORT.

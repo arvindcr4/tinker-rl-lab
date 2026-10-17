@@ -1,0 +1,374 @@
+{
+ "side": "tinker",
+ "seed": 456,
+ "model": "Qwen/Qwen3-8B",
+ "step_log": [
+  {
+   "step": 0,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Jessica is making an apple pie. She knows that each serving ",
+    "A craft store makes a third of its sales in the fabric secti"
+   ]
+  },
+  {
+   "step": 1,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Kiki likes to spend her money on hats and scarves. When she ",
+    "Robin likes to bake cupcakes for friends and to make her pup"
+   ]
+  },
+  {
+   "step": 2,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Company A and Company B merge. Company A receives 60% of the",
+    "Apple sold 100 iPhones at their New York store today for an "
+   ]
+  },
+  {
+   "step": 3,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Kylie makes 10 beaded necklaces on Monday and 2 beaded neckl",
+    "Geli is committed to her 3 times a week workout. On her firs"
+   ]
+  },
+  {
+   "step": 4,
+   "mean_reward": 0.1875,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "You can lower the price by 20% if you buy more than fifteen ",
+    "In Professor Plum's biology class there are 40 students. Of "
+   ]
+  },
+  {
+   "step": 5,
+   "mean_reward": 1.0,
+   "zvf": 1.0,
+   "mean_len": 457.5,
+   "trunc_frac": 0.5,
+   "questions": [
+    "There are 6 girls and 8 boys in the school play. If both par",
+    "Two sisters go to the movies.  Movie tickets are $8 per pers"
+   ]
+  },
+  {
+   "step": 6,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Joseph drives his car at 50 mph for 2.5 hours. Kyle drives h",
+    "Manny has a tree that grows at the rate of fifty centimeters"
+   ]
+  },
+  {
+   "step": 7,
+   "mean_reward": 0.5,
+   "zvf": 0.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Jon decides to take up baseball.  He can throw a fastball at",
+    "Megan has read 32 books this year.  Kelcie has read 1/4 the "
+   ]
+  },
+  {
+   "step": 8,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "A man owned 1/2 of a lot. He sold 1/10 of his share for the ",
+    "A couple agreed to split their expenses equally, including t"
+   ]
+  },
+  {
+   "step": 9,
+   "mean_reward": 0.0625,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "John works at 2 different hospitals.  At the first hospital,",
+    "A pie shop charges $5 for a slice of pie. They cut each whol"
+   ]
+  },
+  {
+   "step": 10,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Johnny makes his signature crab dish 40 times a day.  It use",
+    "Tom plays 9 rounds of golf.  He takes an average of 4 stroke"
+   ]
+  },
+  {
+   "step": 11,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Ibrahim wants to buy an MP3 player for 120 euros and a CD fo",
+    "Last week, Arman worked 35 hours for 5 days at $10 per hour."
+   ]
+  },
+  {
+   "step": 12,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "There are 3414 yellow balloons and there are 1762 more black",
+    "OpenAI runs a robotics competition that limits the weight of"
+   ]
+  },
+  {
+   "step": 13,
+   "mean_reward": 1.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "A park is 1000 feet long and 2000 feet wide. If there is 1 t",
+    "A smartphone seller is offering a discount of 5% off for cus"
+   ]
+  },
+  {
+   "step": 14,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Ariel is collecting fish. She has 45 fish. 2/3 are male. How",
+    "While at Wizards Park, Kate buys 3 magic wands, one for hers"
+   ]
+  },
+  {
+   "step": 15,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Musa is the class teacher of a class of 45 students. He want",
+    "In a yard, the number of tanks is five times the number of t"
+   ]
+  },
+  {
+   "step": 16,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "The maximum safe amount of caffeine you can consume per day ",
+    "Maddie wants to see how much her mom spends on coffee each w"
+   ]
+  },
+  {
+   "step": 17,
+   "mean_reward": 0.125,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Fabian has three times more marbles than Kyle and five times",
+    "Tommy has 3 toy cars. His neighbor, Jessie, has 3 cars too. "
+   ]
+  },
+  {
+   "step": 18,
+   "mean_reward": 1.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "A party venue has 4 tables that seat 6 people each, 16 table",
+    "There are 12 inches to a foot. Blossom measures her room and"
+   ]
+  },
+  {
+   "step": 19,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Ned is an explosives specialist racing to deactivate a time ",
+    "Four cats live in the old grey house at the end of the road."
+   ]
+  },
+  {
+   "step": 20,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Joseph wants to go to Boston for a road trip. If he takes ro",
+    "Tayzia and her two young daughters get haircuts.  Women\u2019s ha"
+   ]
+  },
+  {
+   "step": 21,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Angela has half as many insects as Jacob does, and Jacob has",
+    "Alan counted how many chairs the office canteen has. It has "
+   ]
+  },
+  {
+   "step": 22,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Patricia has 4 barrels of 7 gallons each. All of them are em",
+    "It starts raining at 7:00 and pours heavily until its stops "
+   ]
+  },
+  {
+   "step": 23,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Steve decides to read a new book.  He reads 100 pages Monday",
+    "Jerry takes 2 antacids that weigh 2 grams each and are 5% zi"
+   ]
+  },
+  {
+   "step": 24,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Era had 5 burgers for her and her 4 friends. She sliced each",
+    "James bought a gallon of milk for $3, a bunch of bananas for"
+   ]
+  },
+  {
+   "step": 25,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Jenny decided to get a cat with her girlfriend.  They agreed",
+    "Jacob loves to build things. In Jacob's toy bin there are 18"
+   ]
+  },
+  {
+   "step": 26,
+   "mean_reward": 0.5,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Grace's age is 3/8th the age of her grandmother. Her grandmo",
+    "Ariella has $200 more in her son's saving account than Danie"
+   ]
+  },
+  {
+   "step": 27,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Linda is painting her bedroom. Her bedroom has 4 walls, with",
+    "Karen's students are about to take a standardized test. Kare"
+   ]
+  },
+  {
+   "step": 28,
+   "mean_reward": 0.125,
+   "zvf": 0.5,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "A shop sold 29 bags of potatoes in the morning. In the after",
+    "James has an old printer that crumples every seventh page an"
+   ]
+  },
+  {
+   "step": 29,
+   "mean_reward": 0.0,
+   "zvf": 1.0,
+   "mean_len": 512.0,
+   "trunc_frac": 1.0,
+   "questions": [
+    "Sid takes $48 with him on a shopping trip to the mall.  He s",
+    "John's piggy bank contains quarters, dimes, and nickels.  He"
+   ]
+  }
+ ],
+ "final_sampler_path": "tinker://47b2d7cd-36af-5b20-a719-170ccb8252c6:train:0/sampler_weights/m456_final",
+ "archive_url": "<signed GCS URL redacted; regenerate from final_sampler_path>",
+ "run_id": "47b2d7cd-36af-5b20-a719-170ccb8252c6:train:0",
+ "config": {
+  "steps": 30,
+  "prompts_per_step": 2,
+  "group": 8,
+  "lr": 1e-05,
+  "adam": {
+   "beta1": 0.9,
+   "beta2": 0.95,
+   "eps": 1e-08,
+   "weight_decay": 0.0
+  },
+  "lora": "Tinker rank=32, train_mlp=True, train_attn=True, train_unembed=False (alpha 32, all-linear)",
+  "temp": 0.8,
+  "top_p": 0.95,
+  "max_tokens": 512,
+  "stop": [
+   151645,
+   151643
+  ],
+  "on_policy": "refresh every step",
+  "loss": "-sum_i A_i sum_t logp_t(response) / N; A=(r-mean)/(pop std+1e-8)"
+ },
+ "env": {
+  "backend": "Tinker API",
+  "tinker_sdk": "0.33.1",
+  "python": "3.12.13",
+  "client_host": "Arvinds-MacBook-Pro-342.local",
+  "wallclock_s": 1239.9474527835846,
+  "seeds": {
+   "stream": 456,
+   "lora_init": 456,
+   "sampling": "seed*1000+step*10+j"
+  }
+ }
+}

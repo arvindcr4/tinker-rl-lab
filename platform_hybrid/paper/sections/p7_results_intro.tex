@@ -4,14 +4,15 @@
 The results are organized as a ladder from theory to intervention. We first
 state the signal-starvation model and its three theorems, pairing each with
 the empirical check that could have falsified it
-(Section~\ref{sec:p7-theory}). We then zoom out to population scale, where
-the theory predicts---and a 368-run audit confirms---that ZVF is U-shaped in
-accuracy, which is precisely why ZVF alone cannot steer a controller: it
-aliases mastery with incapacity. Section~\ref{sec:p7-ushape} introduces the
+(Section~\ref{sec:p7-theory}). We then zoom out to population scale: batch
+ZVF is $\E_i[h_G(p_i)]$, high at both ends of the reward axis, which is why ZVF
+alone cannot steer a controller---it aliases mastery with incapacity. A
+368-run audit shows both ends, but a confound regression shows its interior
+is carried by model and configuration, not reward. Section~\ref{sec:p7-ushape} introduces the
 pairwise-contrast density (PCD) as the disambiguating statistic and reports
 the micro-jitter falsification that separates the two. Section~\ref{sec:p7-e1}
-validates the gradient-level assumption (T3) in an open backward pass, at
-honest toy scale. Sections~\ref{sec:p7-controller} and \ref{sec:p7-rules}
+explains why the earlier toy gradient correlation is demoted to an anecdote,
+leaving T3 a modelling assumption. Sections~\ref{sec:p7-controller} and \ref{sec:p7-rules}
 operationalize the theory: a \texttt{zvf-triage} callback, an adaptive-$G$
 controller, a four-arm audit against fixed recipes, and the design rules the
 audit supports.
@@ -21,15 +22,23 @@ paper and the Pillar-5/6 reporting papers) frame everything that follows.
 First, recipe labels
 are unreliable across stacks: in a 12-cell head-to-head on one closed stack
 (Qwen3.5-4B, GSM8K, 3 seeds each), \texttt{dapo}, \texttt{drgrpo},
-\texttt{grpo}, and \texttt{gspo} land within noise on last-10 reward
-($0.744$, $0.742$, $0.723$, $0.710$) while their mean ZVFs ($0.578$, $0.500$,
-$0.567$, $0.511$) stay far from the $0.00$ that true dynamic sampling
-produces in an open trainer---the same ``DAPO'' label yields mean ZVF $0.58$
-on the closed stack and $0.00$ in the open reimplementation. Second, the
-stack itself can dominate the visible label: a nominal backend audit holding
-$G$, learning rate, data, and seed fixed moved final reward from $5.0\%$ to
-$85.6\%$, but also bundled a different base checkpoint. The $17\times$ ratio
-is therefore an under-specification warning, not a backend causal estimate.
+\texttt{grpo}, and \texttt{gspo} span $0.034$ on last-10 reward
+($0.744$, $0.742$, $0.723$, $0.710$; neither shown equivalent nor shown
+different at 3 seeds) while their mean ZVFs ($0.578$, $0.500$, $0.567$,
+$0.511$) stay far from the $0.00$ that true dynamic sampling produces; the
+closed-stack ``dapo'' arm is an advantage-clip variant that never ran dynamic
+sampling. Second, a nominal backend comparison moved final reward from
+$5.0\%$ to $85.6\%$, but $64\%$ of that gap is a base-checkpoint switch and
+the rest is confounded by reward, prompt, decoding, batch, data, and loss
+implementation; it is an under-specification warning, not a backend estimate.
+
+\emph{Retractions.} Every result in this paper that uses the ``anti-herding''
+quantity $\delta_{\mathrm{div}}$ (triggers, rankings, joint controllers) is
+withdrawn: $\delta_{\mathrm{div}}$ is $\ge0$ by construction under a same-group
+plug-in $\hat p$ and $\le0$ in expectation under a pooled $\hat p$ (Jensen), so it
+does not measure rollout correlation. The ``2,560-observation controller
+trace'' was a post-hoc count over logged group outcomes; no controller ran
+on it.
 Both findings dictate our method: all
 interventional comparisons in this paper run inside a \emph{single auditable
 open reimplementation}, so that the controller is compared against what

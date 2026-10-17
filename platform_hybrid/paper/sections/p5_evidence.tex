@@ -10,73 +10,93 @@ Item~8 (\secref{sec:p5-stack}).  Exhibits~18--20 also evaluate a historical
 continuous-telemetry extension.  That experiment is reported as an optional
 extension and must not be read as redefining the current Item~8.
 
-\subsection{Exhibit 1: A 17$\times$ Same-Label Flip from an Under-Specified Stack}
+\subsection{Exhibit 1: A 17$\times$ Same-Label Gap Is Mostly a Checkpoint Switch}
 \label{sec:p5-exhibit-backend}
-In a nominal backend audit (Stratum B), we held group size $G$, learning rate,
-dataset, prompt template, and random seed fixed. Final reward moved from $5.0\%$
-on one stack to $85.6\%$ on the other. Subsequent provenance inspection showed
-that the managed stack had silently pinned a different base checkpoint; managed
-defaults in sampling, precision, masking, and loss implementation could also
-differ. The $17\times$ ratio is therefore \emph{not} a backend-only causal
-estimate. It is the sharper reporting failure: the visible ``same GRPO config''
-did not identify the model or update substrate actually compared. Nothing in the
-algorithm label, surface hyperparameter table, or seed disclosure exposed this
-bundling. For calibration, this same-label stack swing is an order of
-magnitude larger than any label-vs-label gap we measured
-(\secref{sec:p5-exhibit-h2h}), and is consistent with the broader observation
-that evaluation, model-identity, and serving details shift LLM results by
-margins that would be headline findings if attributed to algorithms
-\citep{biderman2024lessons, hochlehnert2025sober}.
+The framework-comparison record (\texttt{experiments/results/framework\_comparison.json};
+Stratum B) labels two runs ``GRPO, Qwen3-8B, GSM8K, $G{=}8$, lr $10^{-5}$,
+30 steps, seed 42''. Final (last-10) training reward is $0.856$ on Tinker and
+$0.050$ on TRL: a $17\times$ ratio. The runs are not a backend comparison:
+\begin{itemize}
+  \item \textbf{Checkpoint.} The Tinker run trained \texttt{Qwen3-8B-Base};
+    the TRL run trained the Instruct \texttt{Qwen3-8B}. A run of Qwen3-8B (Instruct) on the same
+    Tinker harness
+    (\texttt{wave6\_w6\_base\_r32\_t0.8\_b2} in \texttt{master\_results.json})
+    reaches $0.338$. The checkpoint switch alone therefore moves reward by
+    $-0.519$, i.e.\ $64\%$ of the $-0.806$ gap; the residual $-0.288$
+    (Tinker vs.\ TRL, both on Qwen3-8B (Instruct)) is the most that could be
+    attributed to ``backend''.
+  \item \textbf{Everything else that still differs.} Reward function and
+    answer parser; system prompt and chat template; decoding (temperature,
+    maximum completion length); batch shape ($2$ prompts $\times 8$ on Tinker
+    vs.\ $1\times8$ on TRL); training-data subset (TRL used
+    \texttt{train[:500]}); and loss/optimizer implementation (LoRA rank and
+    targets, clipping, normalization). The TRL run logs reward $0.0$ on its
+    first step and on 25 of its 30 steps, consistent with a reward/format
+    mismatch rather than a learning-dynamics difference.
+  \item \textbf{The ``matched'' configuration.} The per-framework
+    ``matched-configuration'' YAML in \texttt{experiments/framework\_config\_dumps/}
+    describes neither run: it was written post hoc for reviewers (with
+    placeholder checkpoint hashes), and, e.g., it lists LoRA rank 16 and 384
+    new tokens for TRL whereas the TRL script used rank 32 and 512.
+\end{itemize}
+An earlier revision stated that every labelled knob except the checkpoint was
+harmonised. That is false and is withdrawn. The exhibit supports one narrow
+point: a label plus a short hyperparameter table did not identify the model or
+the harness actually compared, and the largest single lever was the
+unreported checkpoint. A designed decomposition (same checkpoint, reward,
+prompt, decoding, and batch across both trainers) has not been run.
 
-\subsection{Exhibit 2: The Same Label Denotes Different Experiments}
+\subsection{Exhibit 2: The Same Label on Different Experiments}
 \label{sec:p5-exhibit-label}
 DAPO~\citep{yu2025dapo} is defined by decoupled (asymmetric) clipping
-\emph{plus} dynamic sampling: groups whose completions are all-correct or
-all-incorrect are resampled, which by construction drives the Zero-Variance
-Fraction (the share of groups with identical within-group rewards; see the
-companion Pillar-2 paper of \ours{}) toward zero. In our cross-stack audit
-(Stratum B), ``DAPO'' run on an open Colab trainer with true dynamic sampling
-produced mean ZVF $0.00$, exactly as the algorithm's definition requires. The
-same label run on a closed training stack---where dynamic sampling is not
-expressible and the practitioner substitutes the standard surrogate of GRPO
-with asymmetric clipping---produced mean ZVF $0.58$. Same label, opposite
-telemetry: one run never wastes a group, the other spends more than half its
-groups on updates with a zero centered reward-contrast term under that runner.
-Any downstream comparison citing both runs as
-``DAPO'' is comparing two different objects. This is not an indictment of
-either stack; it is an indictment of the label as an experimental
-specification.
+\emph{plus} dynamic sampling, which resamples all-correct and all-incorrect
+groups and so drives the Zero-Variance Fraction (ZVF) to zero by construction.
+An earlier revision contrasted an open-trainer ``DAPO'' run (mean ZVF $0.00$)
+with a closed-stack ``DAPO'' run (mean ZVF $0.58$) as ``same label, opposite
+telemetry''. That contrast is not interpretable: the two runs differ in
+model, task (synthetic arithmetic vs.\ GSM8K), $G$, number of steps, and
+seeds; the open-trainer $0.00$ holds by construction; and the closed-stack
+``dapo'' arm is an advantage-clipping variant of GRPO with no dynamic
+sampling, i.e.\ not DAPO, and its registry entry should not carry the DAPO
+label. The defensible content is \emph{within-stack}: switching
+GRPO$\to$``DAPO'' moved mean ZVF from $0.25$ to $0.00$ on the open trainer
+and from $0.567$ to $0.578$ on the closed stack. The lesson for reporting is
+that a label must be accompanied by the mechanism actually implemented
+(here: whether dynamic sampling ran).
 
-\subsection{Exhibit 3: Four Labels Within Noise on One Fixed Stack}
+\subsection{Exhibit 3: Four Labels on One Fixed Stack}
 \label{sec:p5-exhibit-h2h}
-Conversely, when the stack \emph{is} held fixed, labels stop separating. In a
-12-cell head-to-head on the Tinker stack (Qwen3.5-4B, GSM8K, three seeds per
-arm; Stratum B), the four labeled arms landed within noise of one another
-(\tableref{tab:p5-h2h}): the full spread in mean last-10 training reward is
-$0.034$ ($0.710$--$0.744$), comparable to seed-level variation under the
-\ours{} seed policy (\secref{sec:setup}). Mean ZVF varies somewhat more
-($0.500$--$0.578$) but with no arm approaching the ZVF~$0.00$ that true dynamic
-sampling produces (Exhibit 2)---consistent with all four arms being, at this
-stack's level of description, minor variations of one group-relative loss. The
-juxtaposition of Exhibits 1--3 is the core of our position: a factor the field
-reports meticulously (the label) moved outcomes by $\leq 0.034$ reward on a
-fixed stack, while a factor the field routinely omits (the backend) moved
-outcomes by $0.794$.
+In a 12-cell head-to-head on the Tinker stack (Qwen3.5-4B, GSM8K, three seeds
+per arm, 15 steps, batch 2, $G{=}8$; Stratum B), mean last-10 training reward
+spans $0.034$ ($0.710$--$0.744$; \tableref{tab:p5-h2h}). An earlier revision
+called this ``within noise''. The data do not show that. Treating arms as
+independent, the pooled within-arm seed SD is $0.105$ and two one-sided
+equivalence tests (TOST, $\alpha=0.05$) fail for every pair at margins
+$\pm0.05$, $\pm0.10$, and $\pm0.15$; equivalence of all six pairs is reached
+only at $\pm0.19$, wider than any effect of interest. Because each seed fixes
+the prompt stream, the appropriate analysis blocks on seed: seed accounts for
+$96\%$ of the sum of squares and arm for $2.5\%$ (arm $F_{3,6}=2.62$,
+$p=0.15$); the residual SD is $0.017$; and two seed-paired contrasts exclude
+zero (dapo$-$gspo $+0.033$, 90\% CI $[+0.006,+0.060]$; drgrpo$-$gspo
+$+0.031$, $[+0.004,+0.058]$). All-pairs equivalence under the block model
+holds only at $\pm0.060$. With 3 seeds and 15 steps, label differences of a
+few points can neither be excluded nor confirmed. Mean ZVF ($0.500$--$0.578$)
+is far from the $0.00$ that true dynamic sampling yields, consistent with
+the ``dapo'' arm not running dynamic sampling (Exhibit~2).
 
 \begin{table}[t]
 \centering
 \caption{12-cell head-to-head on one fixed stack (Tinker; Qwen3.5-4B; GSM8K;
-3 seeds per arm; internal program records, June 2026). Arms are within noise
-of one another on final reward; no arm reaches the ZVF regime that the same
-labels produce on stacks where their defining mechanisms are actually
-expressible.}
+3 seeds per arm; 15 steps; internal program records, June 2026). Differences
+are \emph{not} shown to be within noise: see text for unpaired TOST and
+seed-blocked contrasts.}
 \label{tab:p5-h2h}
 \small
 \begin{tabular}{@{}lcc@{}}
 \toprule
 Arm (label as configured) & Mean last-10 reward & Mean ZVF \\
 \midrule
-dapo (asymmetric-clip surrogate) & 0.744 & 0.578 \\
+dapo (advantage-clip variant; no dynamic sampling) & 0.744 & 0.578 \\
 drgrpo                           & 0.742 & 0.500 \\
 grpo                             & 0.723 & 0.567 \\
 gspo                             & 0.710 & 0.511 \\
@@ -101,8 +121,8 @@ make routine rather than exceptional.
 
 \subsection{Exhibit 5: Quantitative Decomposition---Algorithm vs Stack}
 \label{sec:p5-exhibit-eta2}
-Exhibit 3 shows the qualitative version: four labels within noise on one
-fixed stack. To make the comparison quantitatively testable, we decompose
+Exhibit 3 shows the qualitative version: four labels whose last-10 rewards
+span $0.034$ on one fixed stack (not shown to be equivalent). To make the comparison quantitatively testable, we decompose
 variance into $\eta^{2} = \mathrm{SS}_{\text{between}} / \mathrm{SS}_{\text{total}}$
 across two axes on the live N2 corpus
 (\texttt{experiments/results/n2\_reward\_tensor\_resume/n2\_metrics.tsv} and

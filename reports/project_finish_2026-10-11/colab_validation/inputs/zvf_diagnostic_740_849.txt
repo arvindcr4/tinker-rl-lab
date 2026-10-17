@@ -1,0 +1,110 @@
+740: def write_correlation(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str, Any]:
+741:     """Per-experiment collapse-label correlations.
+742: 
+743:     We collapse the 14 per-experiment rows by averaging across
+744:     seeds within an (experiment, condition) pair, then correlate
+745:     mean_zvf against last10_avg / collapse_binary.
+746:     """
+747:     keys: Dict[Tuple[str, str, int], List[Dict[str, Any]]] = {}
+748:     for r in rows:
+749:         key = (r["experiment"], str(r.get("model", "")), int(r.get("group_size", 0) or 0))
+750:         keys.setdefault(key, []).append(r)
+751:     pooled: List[Dict[str, Any]] = []
+752:     for key, recs in keys.items():
+753:         mz_vals = [r["mean_zvf"] for r in recs if not math.isnan(r["mean_zvf"])]
+754:         la_vals = [r["last10_avg"] for r in recs if not math.isnan(r["last10_avg"])]
+755:         pk_vals = [r["peak"] for r in recs if not math.isnan(r["peak"])]
+756:         # Only keep rows that have at least a non-NaN last10_avg and peak;
+757:         # ZVF is optional for the scaling-law-only rows.
+758:         if not la_vals or not pk_vals:
+759:             continue
+760:         mz = statistics.fmean(mz_vals) if mz_vals else float("nan")
+761:         la = statistics.fmean(la_vals)
+762:         pk = statistics.fmean(pk_vals)
+763:         pooled.append(
+764:             {
+765:                 "experiment": key[0],
+766:                 "model": key[1],
+767:                 "group_size": key[2],
+768:                 "mean_zvf": mz,
+769:                 "last10_avg": la,
+770:                 "peak": pk,
+771:                 "failure": classify(
+772:                     {"peak": pk, "last10_avg": la}
+773:                 ),
+774:             }
+775:         )
+776: 
+777:     zvfs = [p["mean_zvf"] for p in pooled if not math.isnan(p["mean_zvf"])]
+778:     paired_lasts = [p["last10_avg"] for p in pooled if not math.isnan(p["mean_zvf"])]
+779:     paired_zvfs = zvfs
+780:     paired_collapse = [
+781:         (1.0 if p["failure"] == "collapse" else 0.0)
+782:         for p in pooled
+783:         if not math.isnan(p["mean_zvf"])
+784:     ]
+785: 
+786:     pear_r, pear_lo_hi = bootstrap_ci(paired_zvfs, paired_lasts, _pearson, B=2000, seed=11)
+787:     spear_r, spear_lo_hi = bootstrap_ci(paired_zvfs, paired_lasts, _spearman, B=2000, seed=22)
+788:     pear_collapse, _ = bootstrap_ci(paired_zvfs, paired_collapse, _pearson, B=2000, seed=33)
+789:     spear_collapse, _ = bootstrap_ci(paired_zvfs, paired_collapse, _spearman, B=2000, seed=44)
+790: 
+791:     out_path.parent.mkdir(parents=True, exist_ok=True)
+792:     with out_path.open("w") as fh:
+793:         fh.write("# Pillar 2 ZVF vs training-failure correlation table\n")
+794:         fh.write(
+795:             "# Rows are per-(experiment, model, group_size) pooled means,\n"
+796:             "# not per-step rows; per-step ZVF rows are autocorrelated and\n"
+797:             "# would inflate apparent significance. Bootstrap CIs are B=2000\n"
+798:             "# percentile resamples over the pooled rows. Source:\n"
+799:             "# platform_modal/scripts/zvf_diagnostic.py\n"
+800:         )
+801:         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
+802:         writer.writerow(
+803:             (
+804:                 "test",
+805:                 "n_pooled_rows",
+806:                 "rho",
+807:                 "ci_lo",
+808:                 "ci_hi",
+809:                 "method",
+810:             )
+811:         )
+812:         writer.writerow(
+813:             (
+814:                 "mean_zvf vs last10_avg",
+815:                 len(pooled),
+816:                 _fmt(pear_r),
+817:                 _fmt(pear_lo_hi[0]),
+818:                 _fmt(pear_lo_hi[1]),
+819:                 "Pearson + 95% bootstrap CI",
+820:             )
+821:         )
+822:         writer.writerow(
+823:             (
+824:                 "mean_zvf vs last10_avg",
+825:                 len(pooled),
+826:                 _fmt(spear_r),
+827:                 _fmt(spear_lo_hi[0]),
+828:                 _fmt(spear_lo_hi[1]),
+829:                 "Spearman + 95% bootstrap CI",
+830:             )
+831:         )
+832:         writer.writerow(
+833:             (
+834:                 "mean_zvf vs is_collapse",
+835:                 len(pooled),
+836:                 _fmt(pear_collapse),
+837:                 "NA",
+838:                 "NA",
+839:                 "Pearson point-biserial (CI NaN, deterministic at n=14)",
+840:             )
+841:         )
+842:         writer.writerow(
+843:             (
+844:                 "mean_zvf vs is_collapse",
+845:                 len(pooled),
+846:                 _fmt(spear_collapse),
+847:                 "NA",
+848:                 "NA",
+849:                 "Spearman point-biserial (CI NaN, deterministic at n=14)",

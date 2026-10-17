@@ -94,7 +94,14 @@ field is not.
 
 \subsection{The Stackdiff Verdict}
 \label{app:p5-verdict}
-Running the differ on the two manifests:
+Running the differ on the two (illustrative, hand-written) manifests below.
+The real pair also differs in model (Qwen2.5-0.5B vs.\ Qwen3.5-4B), task
+(synthetic arithmetic vs.\ GSM8K), reward parser, prompt template,
+evaluation protocol, steps, and seeds, and the closed-stack arm is a
+REINFORCE-style loss with an advantage clip rather than DAPO; the registry's
+\texttt{stackdiff} on the generated entries reports all of these at R5/R4
+(companion Pillar-6 paper). The ZVF contrast ($0.58$ vs.\ $0.00$) is
+therefore not like-for-like:
 \begin{lstlisting}[basicstyle=\ttfamily\footnotesize, frame=single,
                    breaklines=true, columns=fullflexible]
 $ grpo-stackdiff manifest_a.json manifest_b.json

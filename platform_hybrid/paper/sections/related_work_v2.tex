@@ -27,7 +27,12 @@ contribution against more than fifty recent works; entries marked with
 
 Proximal Policy Optimization (PPO)~\cite{schulman2017proximal} is the workhorse
 algorithm behind InstructGPT-style RLHF~\cite{ouyang2022training, christiano2017deeprlhf, stiennon2020summarize, bai2022hhrlhf, bai2022claudecai}
-and has dominated production deployments for five years. Direct Preference
+and has dominated production deployments for five years. Whether
+group-relative methods beat it is stack-dependent: careful critic-based
+variants remain competitive~\cite{kazemnejad2025vineppo, liu2025asyppo}, and
+controlled multi-algorithm studies on shared infrastructure find
+scale-dependent ranking inversions~\cite{li2026oxrl}; we therefore treat any
+single-stack GRPO-vs-PPO gap as a replication-level observation. Direct Preference
 Optimization~\cite{rafailov2024direct} reframed preference learning as
 contrastive classification and spawned a large family of RL-free alternatives,
 including IPO~\cite{azar2024ipo}, KTO~\cite{ethayarajh2024kto},
@@ -53,9 +58,16 @@ multimodal settings. Wu et al.~\cite{wu2025grpodpo} prove that GRPO is
 objective --- and show that 2-GRPO retains $98.1\%$ of the performance of
 16-GRPO at $12.5\%$ of the rollout budget.
 
-Recent 2026 work further raises the bar for this diagnostic. Advantage
-Collapse/AVSPO studies diagnosis and mitigation of homogeneous-group
-updates~\cite{he2026advantage}; query recycling treats zero-variance queries
+Recent 2026 work pre-empts this diagnostic. The Advantage Collapse Rate
+(ACR) of AVSPO~\cite{he2026advantage} measures the same homogeneous-group
+advantage collapse that we call ZVF (the two are equivalent up to
+aggregation granularity) and reports that it predicts stagnation and final
+performance; Gradient Starvation~\cite{nie2026gradstarvation} proves that the true
+degeneracy rate exceeds the i.i.d.\ Bernoulli prediction by Jensen's
+inequality; DARA~\cite{zheng2026dara} reweights rewards by their active-group
+density in multi-reward RL; VCRL~\cite{jiang2025vcrl} and online difficulty
+filtering~\cite{bae2025online} select prompts by group reward variance or
+intermediate pass rate; query recycling treats zero-variance queries
 as candidates for later resampling~\cite{coelho2026recycling}; and ConSPO
 analyzes a clipped, contrastive GRPO objective and proposes a distinct
 sequence-level alternative~\cite{zhang2026conspo}. Goldilocks RL instead
@@ -120,9 +132,10 @@ self-consistency~\cite{wang2023selfconsistency}, tree-of-thought
 search~\cite{yao2024tot}, and critic-style post-hoc
 verifiers~\cite{mcaleese2024criticgpt} all benefit from or substitute for
 process reward supervision. VerifyBench~\cite{zhang2025verifybench} and
-A~Sober Look~\cite{hochlehnert2025sober} warn, however, that reward hacking
-and evaluation artefacts can inflate perceived gains, motivating our
-insistence on binary verifiable rewards for mathematical reasoning.
+A~Sober Look~\cite{hochlehnert2025sober} warn, respectively, that verifier
+errors and evaluation artefacts (decoding, seeds, prompt format, hardware and
+software configuration) can inflate perceived reasoning gains, motivating our
+insistence on binary verifiable rewards and reported evaluation stacks.
 
 Reasoning-specific algorithmic contributions also continue to accumulate.
 ReFT~\cite{luong2024reft} studies supervised fine-tuning versus RL for

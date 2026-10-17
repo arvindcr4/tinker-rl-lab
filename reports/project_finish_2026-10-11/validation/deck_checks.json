@@ -1,0 +1,15 @@
+{
+  "schema": "pes-review-deck-check-v1",
+  "deck": "TinkerRL_PES_Defense_2026-10-11.pptx",
+  "sha256": "bd0aefbc8fffac98551177b65a5c94710771fae46835b7b1e53002282a8be402",
+  "bytes": 59154,
+  "slides": 12,
+  "visual_review": "PASS",
+  "visual_review_scope": "16 October 2026: slides 4, 5, 6, 10 and 12 text and slide 4, 5, 6, 10, 12 notes edited with python-pptx; all twelve slides re-rendered with the same artifact-tool importer (validation/deck_work/rev16_render.mjs, images in validation/deck_work/rev16/) and the edited slides inspected at full size. Native PowerPoint not tested.",
+  "structural_findings": 0,
+  "layout_findings": 0,
+  "first_party_import_passed": true,
+  "source_derived_font_policy_passed": true,
+  "scope": "Structure, layout, imported rendering and scoped scientific claim review. No independent experiment rerun.",
+  "finalization_receipt": "deck_work/rev16_render.mjs"
+}

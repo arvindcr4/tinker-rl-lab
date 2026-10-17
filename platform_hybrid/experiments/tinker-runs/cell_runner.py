@@ -380,6 +380,9 @@ def main(argv=None) -> int:
         example_limit=args.example_limit,
         save_every=args.save_every,
         tag=args.tag,
+        # run() re-derives the advantage-normalisation flag from `loss`; omitting
+        # it silently reverted the drgrpo arm to grpo.
+        loss=args.loss,
     )
 
     print(

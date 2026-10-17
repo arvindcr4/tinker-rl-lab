@@ -99,9 +99,10 @@ def test_generator_does_not_invent_disjointness_or_decontamination(tmp_path):
 
 def test_live_source_outside_repository_has_a_valid_display_label(declared_record, tmp_path):
     source = tmp_path / "synthetic_source.py"
-    source.write_text("# synthetic fixture\n")
+    source.write_text("def reward(answer):\n    return float(answer == 'correct')\n")
     declared_record["provenance"]["code_file"] = str(source)
     declared_record["provenance"]["code_hash"] = minreport.sha256_file(source)
+    declared_record["provenance"]["reward_fn_hash"] = minreport.reward_fn_sha256(source)
     assert failures(declared_record) == []
 
 
@@ -149,3 +150,28 @@ def test_registry_schema_objects_and_legacy_compact_forms_are_supported(declared
         "source": "synthetic-fixture.jsonl",
     }
     assert failures(declared_record) == []
+
+
+@pytest.mark.parametrize("field", ["git_sha", "code_hash", "reward_fn_hash"])
+@pytest.mark.parametrize("value", [None, [], {}, True, 1, "", "   "])
+def test_hash_presence_rejects_malformed_values(declared_record, field, value):
+    declared_record["provenance"][field] = value
+    assert any(
+        item["level"] == "FAIL" and item["msg"] == f"missing or malformed provenance: {field}"
+        for item in failures(declared_record)
+    )
+
+
+def test_reward_hash_must_match_function_and_cannot_copy_file_hash(declared_record):
+    assert "data_ref" in declared_record["provenance"]
+    assert "data_hash" not in declared_record["provenance"]
+    assert failures(declared_record) == []
+    declared_record["provenance"]["reward_fn_hash"] = declared_record["provenance"]["code_hash"]
+    assert any(
+        item["level"] == "FAIL" and "placeholder" in item["msg"]
+        for item in failures(declared_record)
+    )
+    declared_record["provenance"]["reward_fn_hash"] = "sha256:" + "0" * 64
+    assert any(
+        "does not match live reward function" in item["msg"] for item in failures(declared_record)
+    )

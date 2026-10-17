@@ -1,0 +1,11 @@
+GSM8K: n=600 groups, ZVF_obs=0.1583, pbar=0.6942
+(1) plug-in delta: mean=+0.1224  min=0.0000  frac>0=0.842  frac<0=0.000
+    E[plug-in delta] under exact iid Bernoulli(pbar): +0.1046
+    E[plug-in delta] under iid Bernoulli(p_i), p_i ~ Beta(3.61,1.62): +0.1075
+(3) ZVF_obs=0.1583  homogeneous h_8(pbar)=0.0540 (ratio 2.93)  beta-binomial (ICC=0.160) predicts 0.1704
+    k-histogram obs=[19, 13, 16, 33, 66, 91, 141, 145, 76]; chi2 vs Binomial(8,pbar)=8119 (df=7)
+(2) arithmetic per-step delta (h_G(pbar_step) - ZVF_step): n=480 mean=-0.0668 95%CI [-0.0786,-0.0555]
+    G= 2: n=120 obs mean delta=-0.0097; iid-Bernoulli expected delta for a +/-0.3 difficulty spread at pbar=0.84: -0.0206
+    G= 4: n=120 obs mean delta=-0.0549; iid-Bernoulli expected delta for a +/-0.3 difficulty spread at pbar=0.86: -0.0146
+    G= 8: n=120 obs mean delta=-0.0937; iid-Bernoulli expected delta for a +/-0.3 difficulty spread at pbar=0.87: -0.1797
+    G=16: n=120 obs mean delta=-0.1089; iid-Bernoulli expected delta for a +/-0.3 difficulty spread at pbar=0.87: -0.3861

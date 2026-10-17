@@ -5,7 +5,7 @@
   "label_claimed": "dapo",
   "framework": {
     "name": "tinker",
-    "version": "0.2.x",
+    "version": null,
     "openness": "managed"
   },
   "model": "Qwen/Qwen3.5-4B",
@@ -17,83 +17,89 @@
   ],
   "provenance": {
     "source_artifacts": [
-      "12-cell Tinker head-to-head (internal program records, 2026-06-21)"
+      "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb sha256:77ccbf3720b9bc8a279a47928366b34ed195b1dc945685d5165784505469cf9f",
+      "experiments/tinker-runs/cell_runner.py@b0ac85bfb sha256:9c8498de559587732454e773eaa2e010e3c6acde077f0d8bf5cb37db5c61aa71",
+      "platform_hybrid/experiments/tinker-runs/results/week_h2h/SUMMARY.json sha256:2c0636831e416b9d8529a934e456c52ccec67bfafcba22e3609ebea57f11a52d",
+      "platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_Qwen3.5-4B_s42_G8_Dmedium_R16_S15.json sha256:ab69616441bc40fd864151890eff27d7e5e1500490c8c28d63305a659ba96b43",
+      "platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_Qwen3.5-4B_s123_G8_Dmedium_R16_S15.json sha256:02721255fc7c067414c7a69f9f4e2b78e2073320131709fa628d17c3df17983d",
+      "platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_Qwen3.5-4B_s456_G8_Dmedium_R16_S15.json sha256:482e8f15beaa43d02aaceb08f137c1ce059493e47d0e4f6f5fd2cbed2521501e"
     ],
     "wandb": "arvindcr4-pes-university/zvf-audit",
-    "date_recorded": "2026-06-21"
+    "date_recorded": "2026-06-21",
+    "generated_by": "platform_hybrid/registry/generate_entries.py"
   },
   "variant_deltas_applied": [
     {
       "delta_id": "delta_dapo",
       "component": "clip_higher",
-      "status": "surrogate",
-      "note": "asymmetric clip set through the user-facing config; underlying managed loss form unverifiable"
+      "status": "absent",
+      "note": "advantage clip [-2,3] (experiments/tinker-runs/cell_runner.py@b0ac85bfb:L181); no ratio exists to clip"
     },
     {
       "delta_id": "delta_dapo",
       "component": "dynamic_sampling",
       "status": "absent",
-      "note": "closed sampler exposes no group filter-and-resample hook"
+      "note": "no zero-variance filter/resample in the loop"
     },
     {
       "delta_id": "delta_dapo",
       "component": "token_level_loss",
-      "status": "unknown",
-      "note": "managed_by_tinker"
+      "status": "absent",
+      "note": "sequence-sum loss (experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L78)"
     },
     {
       "delta_id": "delta_dapo",
       "component": "overlong_reward_shaping",
       "status": "absent",
-      "note": null
+      "note": "binary reward (experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L56)"
     },
     {
       "delta_id": "delta_dapo",
       "component": "kl_removed",
-      "status": "unknown",
-      "note": "kl.beta is managed_by_tinker"
+      "status": "implemented",
+      "note": "custom loss has no KL term (experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L78)"
     }
   ],
   "min_report": {
     "loss_form": {
-      "importance_ratio_level": null,
-      "clip_eps_low": 0.2,
-      "clip_eps_high": 0.28,
-      "length_normalization": null,
-      "advantage_normalization": null,
-      "token_mask": null,
-      "token_aggregation": "token",
-      "reward_shaping_type": "overlong_penalty",
-      "sampling_dynamic_filter": true
+      "importance_ratio_level": "none",
+      "clip_eps_low": null,
+      "clip_eps_high": null,
+      "length_normalization": false,
+      "advantage_normalization": "std",
+      "token_mask": "none (prompt+completion targets; spurious token-0 final target)",
+      "token_aggregation": "sequence-sum",
+      "reward_shaping_type": "none",
+      "sampling_dynamic_filter": false
     },
     "reference_kl": {
-      "reference_policy": true,
-      "kl_beta": null,
-      "kl_estimator": null
+      "reference_policy": false,
+      "kl_beta": 0.0,
+      "kl_estimator": "none"
     },
     "sampler_backend": {
       "backend": "tinker-managed sampler",
-      "precision": "bf16",
-      "temperature": 0.7,
+      "precision": null,
+      "temperature": 0.8,
       "top_p": 0.95
     },
     "telemetry": {
       "per_step_zvf": true,
       "per_step_gu": true,
-      "source": "benchmark harness on per-group rewards"
+      "source": "step_log zvf/gu per step (platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_Qwen3.5-4B_s42_G8_Dmedium_R16_S15.json#step_log)"
     },
     "group_size_schedule": {
-      "initial_g": null,
+      "initial_g": 8,
       "schedule": "fixed",
       "adaptation_rule": "none"
     },
     "heldout_split": {
-      "disjoint_from_reward_env": true,
-      "description": "GSM8K test split (benchmark protocol)"
+      "disjoint_from_reward_env": null,
+      "description": "no held-out evaluation in the run script"
     },
     "decontamination": {
-      "performed": null,
-      "parser_robustness_probe": null
+      "performed": false,
+      "parser_robustness_probe": false
     }
   },
   "outcomes": {
@@ -109,13 +115,272 @@
       "source": "scripts/p5p8/registry_validate.py::bootstrap_paired_diff (percentile 2.5/97.5 over aligned per-step N2 tensors)"
     },
     "coverage": {
-      "min_report_coverage": 0.8571,
+      "min_report_coverage": 1.0,
       "declared_deltas_coverage": 0.2,
       "measured_coverage": 0.6,
       "ci_method_present": true,
-      "audit_source": "scripts/p5p8/p6_outcomes_coverage_block.py",
+      "audit_source": "platform_hybrid/registry/generate_entries.py",
       "audit_date": "2026-07-05"
     }
   },
-  "notes": "The label-flip exhibit: same 'dapo' label as colab-open_dapo_e3 but only an asymmetric-clip surrogate is actually in force; mean ZVF 0.578 vs 0.00 on the open stack."
+  "notes": "12-cell Tinker head-to-head, 'dapo' arm (3 seeds). cell_runner surrogate on the in-repo REINFORCE loop: no ratio, no KL, sequence-sum log-probs over prompt+completion. 'dapo' = advantage clip [-2,3] only; none of DAPO's four components. Generated by generate_entries.py; do not hand-edit.",
+  "run_config": {
+    "execution.mode": {
+      "value": "real",
+      "status": "logged",
+      "source": "platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_Qwen3.5-4B_s42_G8_Dmedium_R16_S15.json#status",
+      "note": "status=completed in all 3 seeds"
+    },
+    "checkpoint.id": {
+      "value": "Qwen/Qwen3.5-4B",
+      "status": "logged",
+      "source": "platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_Qwen3.5-4B_s42_G8_Dmedium_R16_S15.json#model"
+    },
+    "checkpoint.variant": {
+      "value": "instruct",
+      "status": "inferred",
+      "source": "checkpoint name 'Qwen/Qwen3.5-4B' has no -Base suffix (post-trained release)"
+    },
+    "checkpoint.revision": {
+      "value": null,
+      "status": "unknown",
+      "source": "unpinned: create_lora_training_client(base_model=...) (experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L148)"
+    },
+    "reward.id": {
+      "value": "boxed-any|last-number-fallback|abs-tol-0.01",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L56"
+    },
+    "prompt.template_sha256": {
+      "value": "eef537d66c25b088babf9c9b619e8ea60a39b2e02def9f67703d85ebb1df9afb",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L26",
+      "note": "sha256(SYSTEM_PROMPT \\x1f QUESTION_SUFFIX)"
+    },
+    "prompt.chat_template": {
+      "value": "manual-chatml",
+      "status": "code",
+      "source": "experiments/tinker-runs/cell_runner.py@b0ac85bfb:L147"
+    },
+    "data.dataset": {
+      "value": "openai/gsm8k:main",
+      "status": "code",
+      "source": "experiments/tinker-runs/cell_runner.py@b0ac85bfb:L121"
+    },
+    "eval.metric": {
+      "value": "mean sampled train reward over last 10 steps",
+      "status": "logged",
+      "source": "platform_hybrid/experiments/tinker-runs/results/week_h2h/SUMMARY.json#by_arm.dapo.mean_last10_reward"
+    },
+    "eval.heldout": {
+      "value": "none",
+      "status": "inferred",
+      "source": "no evaluation loop in experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb"
+    },
+    "loss.objective": {
+      "value": "reinforce: -A_i * sum_t logp, mean over sequences",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L78"
+    },
+    "loss.importance_ratio": {
+      "value": "none",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L78",
+      "note": "custom loss uses raw log-probs; no ratio"
+    },
+    "loss.clip": {
+      "value": "advantage[-2,3]",
+      "status": "code",
+      "source": "experiments/tinker-runs/cell_runner.py@b0ac85bfb:L181",
+      "note": "clamps the standardized advantage, not the importance ratio"
+    },
+    "loss.aggregation": {
+      "value": "sequence-sum",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L78"
+    },
+    "loss.advantage_norm": {
+      "value": "std",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L212"
+    },
+    "loss.token_mask": {
+      "value": "none (prompt+completion targets; spurious token-0 final target)",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L197"
+    },
+    "loss.length_normalization": {
+      "value": false,
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L78"
+    },
+    "loss.dynamic_sampling": {
+      "value": false,
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L162"
+    },
+    "loss.reward_shaping": {
+      "value": "none",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L56"
+    },
+    "loss.inner_epochs": {
+      "value": 1,
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L217"
+    },
+    "kl.reference_policy": {
+      "value": false,
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L78",
+      "note": "custom loss has no KL term"
+    },
+    "kl.beta": {
+      "value": 0.0,
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L78"
+    },
+    "kl.estimator": {
+      "value": "none",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L78"
+    },
+    "decoding.temperature": {
+      "value": 0.8,
+      "status": "logged",
+      "source": "platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_Qwen3.5-4B_s42_G8_Dmedium_R16_S15.json#temperature"
+    },
+    "decoding.top_p": {
+      "value": 0.95,
+      "status": "default",
+      "source": "experiments/tinker-runs/cell_runner.py@b0ac85bfb:L318",
+      "note": "cell_runner argparse default; the sweep launcher command is not in the repo"
+    },
+    "decoding.max_tokens": {
+      "value": 512,
+      "status": "default",
+      "source": "experiments/tinker-runs/cell_runner.py@b0ac85bfb:L319",
+      "note": "cell_runner argparse default; the sweep launcher command is not in the repo"
+    },
+    "batch.prompts_per_step": {
+      "value": 2,
+      "status": "logged",
+      "source": "platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_Qwen3.5-4B_s42_G8_Dmedium_R16_S15.json#batch"
+    },
+    "batch.samples_per_prompt": {
+      "value": 8,
+      "status": "logged",
+      "source": "platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_Qwen3.5-4B_s42_G8_Dmedium_R16_S15.json#group_size"
+    },
+    "batch.group_schedule": {
+      "value": "fixed",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L179"
+    },
+    "train.steps": {
+      "value": 15,
+      "status": "logged",
+      "source": "platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_Qwen3.5-4B_s42_G8_Dmedium_R16_S15.json#steps"
+    },
+    "train.sampler_refresh": {
+      "value": "every 5 steps, no importance correction",
+      "status": "default",
+      "source": "experiments/tinker-runs/cell_runner.py@b0ac85bfb:L322",
+      "note": "cell_runner argparse default; the sweep launcher command is not in the repo"
+    },
+    "data.subset": {
+      "value": "train, 'medium' reasoning-step tercile, first 256 after seeded shuffle",
+      "status": "logged",
+      "source": "platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_Qwen3.5-4B_s42_G8_Dmedium_R16_S15.json#difficulty",
+      "note": "example_limit 256 is the cell_runner argparse default; the sweep launcher command is not in the repo (experiments/tinker-runs/cell_runner.py@b0ac85bfb:L321)"
+    },
+    "data.selection": {
+      "value": "seeded rng.sample per step",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L162"
+    },
+    "optimizer.name": {
+      "value": "adam (tinker AdamParams)",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L219"
+    },
+    "optimizer.lr": {
+      "value": 1e-05,
+      "status": "logged",
+      "source": "platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_Qwen3.5-4B_s42_G8_Dmedium_R16_S15.json#lr"
+    },
+    "optimizer.betas": {
+      "value": [
+        0.9,
+        0.95
+      ],
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L222"
+    },
+    "optimizer.eps": {
+      "value": 1e-08,
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L223"
+    },
+    "optimizer.weight_decay": {
+      "value": null,
+      "status": "unknown",
+      "source": "not set; AdamParams default unresolved"
+    },
+    "lora.rank": {
+      "value": 16,
+      "status": "logged",
+      "source": "platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_Qwen3.5-4B_s42_G8_Dmedium_R16_S15.json#rank"
+    },
+    "lora.alpha": {
+      "value": null,
+      "status": "unknown",
+      "source": "managed by Tinker; not set or logged"
+    },
+    "lora.dropout": {
+      "value": null,
+      "status": "unknown",
+      "source": "managed by Tinker; not set or logged"
+    },
+    "lora.targets": {
+      "value": null,
+      "status": "unknown",
+      "source": "managed by Tinker; not set or logged"
+    },
+    "trainer.name": {
+      "value": "tinker",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L148"
+    },
+    "runtime.backend": {
+      "value": "tinker-managed sampler",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L154"
+    },
+    "runtime.precision": {
+      "value": null,
+      "status": "unknown",
+      "source": "managed by Tinker; not exposed or logged"
+    },
+    "reward.fn_sha256": {
+      "value": "87dba71ceab0b6566f10de47826417c94f33f92029a6cbcbecf16d4f5fe797c0",
+      "status": "code",
+      "source": "experiments/tinker-runs/live_zvf_probe.py@b0ac85bfb:L56",
+      "note": "sha256 of the reward_fn source segment"
+    },
+    "trainer.version": {
+      "value": null,
+      "status": "unknown",
+      "source": "tinker SDK version not logged"
+    },
+    "seeds": {
+      "value": [
+        42,
+        123,
+        456
+      ],
+      "status": "logged",
+      "source": "platform_hybrid/experiments/tinker-runs/results/week_h2h/h2h2_dapo_*.json#seed"
+    }
+  }
 }

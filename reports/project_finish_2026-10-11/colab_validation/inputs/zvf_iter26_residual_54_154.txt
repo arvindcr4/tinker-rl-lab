@@ -1,0 +1,101 @@
+54:         return (float("nan"), (float("nan"), float("nan")))
+55:     samples.sort()
+56:     return (
+57:         metric(xs, ys),
+58:         (samples[int(0.025 * len(samples))], samples[int(0.975 * len(samples)) - 1]),
+59:     )
+60: 
+61: 
+62: def load_summary(path: Path):
+63:     rows = []
+64:     header = None
+65:     with path.open() as fh:
+66:         for line in fh:
+67:             if line.startswith("#"):
+68:                 continue
+69:             parts = line.rstrip("\n").split("\t")
+70:             if header is None:
+71:                 header = parts
+72:                 continue
+73:             if len(parts) < len(header):
+74:                 continue
+75:             r = dict(zip(header, parts))
+76:             # Parse numerics; skip NA
+77:             try:
+78:                 r["mean_zvf"] = float(r["mean_zvf"])
+79:                 r["last10_avg"] = float(r["last10_avg"])
+80:                 r["mean_reward"] = float(r["mean_reward"])
+81:             except (ValueError, KeyError):
+82:                 continue
+83:             if any(math.isnan(v) for v in (r["mean_zvf"], r["last10_avg"], r["mean_reward"])):
+84:                 continue
+85:             rows.append(r)
+86:     return rows
+87: 
+88: 
+89: def pool_per_experiment_model(rows):
+90:     pools = defaultdict(list)
+91:     for r in rows:
+92:         key = (r["experiment"], r["model"], r["group_size"])
+93:         pools[key].append(r)
+94:     pooled = []
+95:     for key, recs in pools.items():
+96:         pooled.append(
+97:             {
+98:                 "experiment": key[0],
+99:                 "model": key[1],
+100:                 "group_size": key[2],
+101:                 "mean_zvf": statistics.fmean(r["mean_zvf"] for r in recs),
+102:                 "last10": statistics.fmean(r["last10_avg"] for r in recs),
+103:                 "mean_reward": statistics.fmean(r["mean_reward"] for r in recs),
+104:             }
+105:         )
+106:     return pooled
+107: 
+108: 
+109: def analyse_slice(slice_rows, label, B=2000, seed=0):
+110:     """Run naive + residual + reward correlations on one slice."""
+111:     n = len(slice_rows)
+112:     out = {"label": label, "n_pooled": n}
+113:     if n < 5:
+114:         out.update({"naive_r": "NA", "reward_r": "NA", "residual_r": "NA",
+115:                     "naive_lo": "NA", "naive_hi": "NA",
+116:                     "residual_lo": "NA", "residual_hi": "NA"})
+117:         return out
+118:     zvfs = [r["mean_zvf"] for r in slice_rows]
+119:     lasts = [r["last10"] for r in slice_rows]
+120:     rewards = [r["mean_reward"] for r in slice_rows]
+121: 
+122:     naive = _bootstrap(zvfs, lasts, _pearson, B=B, seed=seed)
+123:     reward = _bootstrap(rewards, lasts, _pearson, B=B, seed=seed + 1)
+124:     # Residual last10 ~ reward
+125:     mx = statistics.fmean(rewards)
+126:     my = statistics.fmean(lasts)
+127:     num = sum((x - mx) * (y - my) for x, y in zip(rewards, lasts))
+128:     den = sum((x - mx) ** 2 for x in rewards)
+129:     b1 = num / den if den != 0 else 0.0
+130:     b0 = my - b1 * mx
+131:     resid = [y - (b0 + b1 * x) for x, y in zip(rewards, lasts)]
+132:     residual = _bootstrap(zvfs, resid, _pearson, B=B, seed=seed + 2)
+133: 
+134:     out.update(
+135:         {
+136:             "naive_r": f"{naive[0]:+.3f}",
+137:             "naive_lo": f"{naive[1][0]:+.3f}",
+138:             "naive_hi": f"{naive[1][1]:+.3f}",
+139:             "reward_r": f"{reward[0]:+.3f}",
+140:             "residual_r": f"{residual[0]:+.3f}",
+141:             "residual_lo": f"{residual[1][0]:+.3f}",
+142:             "residual_hi": f"{residual[1][1]:+.3f}",
+143:         }
+144:     )
+145:     return out
+146: 
+147: 
+148: def _library_level_pool(rows):
+149:     """Per-step rows in zvf_summary.tsv are autocorrelated; we instead
+150:     pool at the (experiment, model, group_size) level for variance_mitigation
+151:     and report one row per (method) with method-level means across all of
+152:     its per-step rows. This keeps the matched-stack cross-library signal
+153:     honest (each method has 500-1500 rollout steps)."""
+154:     # Read the underlying variance_mitigation.tsv directly.

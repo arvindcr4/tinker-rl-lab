@@ -14,19 +14,59 @@ Usage:
 """
 import argparse
 import json
+import re
 import pathlib
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
 ITEMS = ["loss_form", "reference_kl", "sampler_backend", "telemetry",
          "group_size_schedule", "heldout_split", "decontamination"]
-# stackdiff flip-risk ladder (R0 lowest, R5 highest)
-RISK = {0: "R0 identical manifests",
-        1: "R1 nuisance-only differences (metadata, logging)",
-        2: "R2 runtime differences (backend, precision, placement)",
-        3: "R3 loss-form or KL-handling differences",
-        4: "R4 variant-delta set differs (a claimed technique is absent or surrogate on one side)",
-        5: "R5 unauditable: a differing item is unreported (null) on at least one side"}
+# stackdiff severity ladder.  A level is assigned ONLY from fields that are
+# known on both sides and differ; fields unknown on either side never raise
+# the level -- they lower `coverage` and are reported as `underspecified`.
+RISK = {0: "R0 no known differences",
+        1: "R1 nuisance-only differences (seeds, trainer version, reporting)",
+        2: "R2 runtime differences (trainer, sampler backend, precision, implementation hash)",
+        3: "R3 hyperparameter / budget differences (decoding, batch shape, steps, optimizer, LoRA, data subset)",
+        4: "R4 algorithm differences (loss form, advantage, clipping, KL, variant-delta set)",
+        5: "R5 outcome-critical differences (checkpoint, reward, prompt/chat template, dataset, eval protocol, execution mode)"}
+# Canonical comparison catalogue: field -> severity.  Values come from the
+# entry's `run_config` block when present (generated from run sources with
+# per-field provenance), otherwise from the hand-entered top-level fields and
+# `min_report` (see legacy_view).  Order here is the print order.
+FIELDS = {
+    # R5 outcome-critical
+    "execution.mode": 5, "checkpoint.id": 5, "checkpoint.variant": 5,
+    "checkpoint.revision": 5, "reward.id": 5, "prompt.template_sha256": 5,
+    "prompt.chat_template": 5, "data.dataset": 5, "eval.metric": 5,
+    "eval.heldout": 5,
+    # R4 algorithm
+    "loss.objective": 4, "loss.importance_ratio": 4, "loss.clip": 4,
+    "loss.aggregation": 4, "loss.advantage_norm": 4, "loss.token_mask": 4,
+    "loss.length_normalization": 4, "loss.dynamic_sampling": 4,
+    "loss.reward_shaping": 4, "loss.inner_epochs": 4,
+    "kl.reference_policy": 4, "kl.beta": 4, "kl.estimator": 4,
+    # R3 hyperparameters / budget
+    "decoding.temperature": 3, "decoding.top_p": 3, "decoding.max_tokens": 3,
+    "batch.prompts_per_step": 3, "batch.samples_per_prompt": 3,
+    "batch.group_schedule": 3, "train.steps": 3, "train.sampler_refresh": 3,
+    "data.subset": 3, "data.selection": 3,
+    "optimizer.name": 3, "optimizer.lr": 3, "optimizer.betas": 3,
+    "optimizer.eps": 3, "optimizer.weight_decay": 3,
+    "lora.rank": 3, "lora.alpha": 3, "lora.dropout": 3, "lora.targets": 3,
+    # R2 runtime
+    "trainer.name": 2, "runtime.backend": 2, "runtime.precision": 2,
+    "reward.fn_sha256": 2,
+    # R1 nuisance
+    "trainer.version": 1, "seeds": 1,
+}
+# Underspecified flag: coverage below this, or any R5 field unknown, except
+# fields in FLAG_EXEMPT (checkpoint.revision is unpinned in every run script in
+# this repo; it is still listed among the unknowns but cannot trigger the flag).
+COVERAGE_FLOOR = 0.8
+FLAG_EXEMPT = {"checkpoint.revision"}
+# run_config status vocabulary; only "unknown" counts as not known.
+KNOWN_STATUSES = ("logged", "code", "default", "inferred")
 
 
 def load(kind=None):
@@ -49,9 +89,180 @@ def item_score(d):
     return sum(v is not None for v in leaves) / len(leaves) if leaves else 0.0
 
 
+
+
 def badge(rec):
     scores = {it: item_score(rec["min_report"][it]) for it in ITEMS}
     return round(100 * sum(scores.values()) / len(ITEMS)), scores
+
+
+def _variant(model):
+    """Base/instruct from the checkpoint name; None when the name is silent."""
+    if not model:
+        return None
+    name = model.lower().split("/")[-1]
+    if "base" in name:
+        return "base"
+    if "instruct" in name or name.endswith("-inst") or name.endswith("-it"):
+        return "instruct"
+    return None
+
+
+def legacy_view(rec):
+    """Map hand-entered top-level + min_report fields onto FIELDS names.
+
+    Every value is tagged status="registry" (hand-entered, no per-field
+    provenance).  JSON null -> unknown, per the registry convention."""
+    mr = rec.get("min_report", {})
+    lf, kl = mr.get("loss_form", {}), mr.get("reference_kl", {})
+    sb, gs = mr.get("sampler_backend", {}), mr.get("group_size_schedule", {})
+    clip = None
+    if lf.get("clip_eps_low") is not None and lf.get("clip_eps_high") is not None:
+        clip = f"ratio[{1 - lf['clip_eps_low']:g},{1 + lf['clip_eps_high']:g}]"
+    seeds = rec.get("seeds")
+    raw = {
+        "checkpoint.id": rec.get("model"),
+        "checkpoint.variant": _variant(rec.get("model")),
+        "data.dataset": rec.get("task"),
+        "trainer.name": rec.get("framework", {}).get("name"),
+        "trainer.version": rec.get("framework", {}).get("version"),
+        "seeds": sorted(seeds) if seeds else None,
+        "loss.importance_ratio": lf.get("importance_ratio_level"),
+        "loss.clip": clip,
+        "loss.aggregation": lf.get("token_aggregation"),
+        "loss.advantage_norm": lf.get("advantage_normalization"),
+        "loss.token_mask": lf.get("token_mask"),
+        "loss.length_normalization": lf.get("length_normalization"),
+        "loss.dynamic_sampling": lf.get("sampling_dynamic_filter"),
+        "loss.reward_shaping": lf.get("reward_shaping_type"),
+        "kl.reference_policy": kl.get("reference_policy"),
+        "kl.beta": kl.get("kl_beta"),
+        "kl.estimator": kl.get("kl_estimator"),
+        "decoding.temperature": sb.get("temperature"),
+        "decoding.top_p": sb.get("top_p"),
+        "runtime.backend": sb.get("backend"),
+        "runtime.precision": sb.get("precision"),
+        "batch.samples_per_prompt": gs.get("initial_g"),
+        "batch.group_schedule": gs.get("schedule"),
+    }
+    return {k: {"value": v, "status": "registry" if v is not None else "unknown",
+                "source": "registry entry (hand-entered)"} for k, v in raw.items()}
+
+
+def field_view(rec):
+    """Canonical {field: {value, status, source}} over every FIELDS name.
+
+    run_config (generated, with provenance) overrides the legacy view."""
+    view = legacy_view(rec)
+    view.update(rec.get("run_config") or {})
+    unknown = {"value": None, "status": "unknown", "source": "not recorded"}
+    return {f: view.get(f, unknown) for f in FIELDS}
+
+
+def is_known(cell):
+    return cell.get("status") != "unknown" and cell.get("value") is not None
+
+
+def spec_coverage(rec):
+    """Fraction of FIELDS known for one entry (what stackdiff can compare)."""
+    return sum(is_known(c) for c in field_view(rec).values()) / len(FIELDS)
+
+
+# Comparison keys for identifier fields whose hand-entered values carry
+# free-text annotations ("Qwen/Qwen3-8B-base (shared ... harness)") or
+# aliases ("gsm8k" vs "openai/gsm8k:main").  Displayed values are unchanged.
+DATASET_ALIASES = {"gsm8k": "openai/gsm8k:main"}
+
+
+def _strip_note(v):
+    return re.sub(r"\s*\(.*\)\s*$", "", v).strip().lower()
+
+
+CANON = {
+    "checkpoint.id": _strip_note,
+    "data.dataset": lambda v: DATASET_ALIASES.get(_strip_note(v), _strip_note(v)),
+}
+
+
+def _key(field, value):
+    f = CANON.get(field)
+    return _norm(f(value) if f and isinstance(value, str) else value)
+
+
+def _norm(x):
+    if isinstance(x, bool):
+        return ("bool", x)  # keep False distinct from 0.0
+    if isinstance(x, (int, float)):
+        return round(float(x), 12)
+    if isinstance(x, list):
+        return [_norm(i) for i in x]
+    return x
+
+
+def stackdiff(a, b):
+    """Pure comparison of two stack records.
+
+    Returns a dict with:
+      level           0..5: max severity over fields KNOWN on both sides that differ
+      differs         [(field, severity, value_a, value_b)]
+      unknown         [(field, severity, side)], side in {"a", "b", "both"}
+      undeclared      [(delta row, side missing it)]
+      coverage        fraction of compared fields known on both sides
+      hidden_max      max severity among unknown fields (what could still differ)
+      underspecified  coverage < COVERAGE_FLOOR or any R5 field unknown
+    Variant-delta rows are compared too: differing known statuses are R4;
+    "unknown" on either side is reported as unknown; a row declared on one
+    side only is listed in `undeclared` (never a difference, not in coverage).
+    """
+    va, vb = field_view(a), field_view(b)
+    differs, unknown, known_both = [], [], 0
+    for f, sev in FIELDS.items():
+        ka, kb = is_known(va[f]), is_known(vb[f])
+        if ka and kb:
+            known_both += 1
+            if _key(f, va[f]["value"]) != _key(f, vb[f]["value"]):
+                differs.append((f, sev, va[f]["value"], vb[f]["value"]))
+        else:
+            side = "both" if not (ka or kb) else ("a" if not ka else "b")
+            unknown.append((f, sev, side))
+    da = {(d["delta_id"], d["component"]): d["status"]
+          for d in a.get("variant_deltas_applied", [])}
+    db = {(d["delta_id"], d["component"]): d["status"]
+          for d in b.get("variant_deltas_applied", [])}
+    undeclared, n_rows = [], 0
+    for key in sorted(set(da) | set(db)):
+        name = f"delta.{key[0]}:{key[1]}"
+        if key not in da or key not in db:
+            # Declared on one side only: not evidence of absence (a baseline
+            # lists no deltas even when, e.g., its loss also has no KL term).
+            # Reported, but neither a difference nor counted in coverage.
+            undeclared.append((name, "a" if key not in da else "b"))
+            continue
+        n_rows += 1
+        sa, sb = da[key], db[key]
+        if "unknown" in (sa, sb):
+            side = "both" if sa == sb else ("a" if sa == "unknown" else "b")
+            unknown.append((name, 4, side))
+        else:
+            known_both += 1
+            if sa != sb:
+                differs.append((name, 4, sa, sb))
+    coverage = known_both / (len(FIELDS) + n_rows)
+    return {"level": max((d[1] for d in differs), default=0),
+            "differs": differs, "unknown": unknown, "undeclared": undeclared,
+            "coverage": coverage,
+            "hidden_max": max((u[1] for u in unknown), default=0),
+            "underspecified": coverage < COVERAGE_FLOOR or any(
+                u[1] == 5 and u[0] not in FLAG_EXEMPT for u in unknown),
+            "same_label": a["label_claimed"] == b["label_claimed"]}
+
+
+def all_pairs(recs=None):
+    """stackdiff over every unordered pair of stack records."""
+    import itertools
+    recs = recs if recs is not None else load("stack")
+    return {(x, y): stackdiff(recs[x], recs[y])
+            for x, y in itertools.combinations(sorted(recs), 2)}
 
 
 def cmd_list(_):
@@ -67,7 +278,9 @@ def cmd_badge(args):
     for rid, r in recs.items():
         total, scores = badge(r)
         detail = " ".join(f"{k}={v:.2f}" for k, v in scores.items())
-        print(f"{rid:40s} badge={total:3d}  {detail}")
+        src = "run_config" if r.get("run_config") else "hand-entered"
+        print(f"{rid:40s} badge={total:3d}  spec_coverage={spec_coverage(r):.2f} "
+              f"({src})  {detail}")
 
 
 def cmd_query(args):
@@ -81,51 +294,59 @@ def cmd_query(args):
         print(line)
 
 
-def diff_leaves(a, b, prefix=""):
-    out = []
-    for k in sorted(set(a) | set(b)):
-        va, vb = a.get(k), b.get(k)
-        if isinstance(va, dict) and isinstance(vb, dict):
-            out += diff_leaves(va, vb, prefix + k + ".")
-        elif va != vb:
-            out.append((prefix + k, va, vb))
-    return out
-
-
 def cmd_stackdiff(args):
+    from collections import Counter
     recs = load("stack")
+    if getattr(args, "all", False):
+        if getattr(args, "generated", False):
+            recs = {k: v for k, v in recs.items() if v.get("run_config")}
+        res = all_pairs(recs)
+        print(f"stackdiff --all: {len(recs)} stacks, {len(res)} pairs")
+        groups = [("all pairs", res),
+                  ("same claimed label", {k: v for k, v in res.items() if v["same_label"]})]
+        for title, sub in groups:
+            n = len(sub)
+            if not n:
+                continue
+            lv = Counter(r["level"] for r in sub.values())
+            und = sum(r["underspecified"] for r in sub.values())
+            covs = sorted(r["coverage"] for r in sub.values())
+            print(f"{title} (n={n}):")
+            for k in range(6):
+                print(f"  R{k}: {lv[k]:4d}   {RISK[k]}")
+            print(f"  underspecified: {und}/{n}   coverage median={covs[n // 2]:.2f} "
+                  f"min={covs[0]:.2f} max={covs[-1]:.2f}")
+        return 0
+    if not (args.a and args.b):
+        sys.exit("stackdiff needs two entry ids (or --all)")
     a, b = recs[args.a], recs[args.b]
-    level = 0
+    r = stackdiff(a, b)
+    va, vb = field_view(a), field_view(b)
     print(f"stackdiff {a['id']} vs {b['id']}")
-    if a["label_claimed"] == b["label_claimed"]:
+    if r["same_label"]:
         print(f"  shared claimed label: '{a['label_claimed']}'")
-    # runtime / backend
-    for f, va, vb in diff_leaves(a["min_report"]["sampler_backend"],
-                                 b["min_report"]["sampler_backend"]):
-        level = max(level, 2)
-        print(f"  [R2] sampler_backend.{f}: {va!r} -> {vb!r}")
-    # loss form + KL
-    for it in ("loss_form", "reference_kl"):
-        for f, va, vb in diff_leaves(a["min_report"][it], b["min_report"][it]):
-            lv = 5 if (va is None or vb is None) else 3
-            level = max(level, lv)
-            print(f"  [R{lv}] {it}.{f}: {va!r} -> {vb!r}")
-    # variant-delta sets
-    da = {(d["delta_id"], d["component"]): d["status"]
-          for d in a.get("variant_deltas_applied", [])}
-    db = {(d["delta_id"], d["component"]): d["status"]
-          for d in b.get("variant_deltas_applied", [])}
-    for key in sorted(set(da) | set(db)):
-        sa, sb = da.get(key, "absent"), db.get(key, "absent")
-        if sa != sb:
-            lv = 5 if "unknown" in (sa, sb) else 4
-            level = max(level, lv)
-            print(f"  [R{lv}] delta {key[0]}:{key[1]}: {sa} -> {sb}")
-    print(f"verdict: {RISK[level]}")
-    if level >= 4:
-        print("verdict: comparisons across this pair are at risk of a LABEL FLIP;"
-              "\n         do not attribute outcome differences to the shared label.")
-    return level
+    for f, sev, x, y in sorted(r["differs"], key=lambda d: -d[1]):
+        src = ""
+        if getattr(args, "sources", False) and f in va:
+            src = f"\n        a: {va[f]['source']}\n        b: {vb[f]['source']}"
+        print(f"  [R{sev}] {f}: {x!r} -> {y!r}{src}")
+    print(f"verdict: {RISK[r['level']]}")
+    print(f"coverage: {r['coverage']:.2f} of compared fields known on both sides; "
+          f"{len(r['unknown'])} unknown (max hidden severity R{r['hidden_max']})")
+    if r["underspecified"]:
+        crit = [u[0] for u in r["unknown"] if u[1] == 5 and u[0] not in FLAG_EXEMPT]
+        print("UNDERSPECIFIED: " + (f"outcome-critical fields unknown: {', '.join(crit)}"
+                                     if crit else f"coverage < {COVERAGE_FLOOR}"))
+    if r["undeclared"]:
+        print(f"undeclared delta rows (one side only, not compared): "
+              + ", ".join(f"{n} [missing on {s}]" for n, s in r["undeclared"]))
+    if getattr(args, "verbose", False):
+        for f, sev, side in sorted(r["unknown"], key=lambda u: -u[1]):
+            print(f"  [unknown R{sev}] {f} (missing on {side})")
+    if r["same_label"] and r["level"] >= 4:
+        print("label-flip risk: the shared label does not pin the stack;"
+              "\n  do not attribute outcome differences to the label.")
+    return r["level"]
 
 
 def cmd_implementations(args):
@@ -569,8 +790,18 @@ def main():
     pq.add_argument("--item", choices=ITEMS, required=True)
     pq.add_argument("--full", action="store_true")
     pd = sub.add_parser("stackdiff")
-    pd.add_argument("a")
-    pd.add_argument("b")
+    pd.add_argument("a", nargs="?")
+    pd.add_argument("b", nargs="?")
+    pd.add_argument("--all", action="store_true",
+                    help="R-level distribution over all stack pairs")
+    pd.add_argument("--exit-level", action="store_true",
+                    help="exit with the R-level (0..5) instead of 0, for scripted gating")
+    pd.add_argument("--generated", action="store_true",
+                    help="with --all: only entries that carry a generated run_config")
+    pd.add_argument("--sources", action="store_true",
+                    help="print per-field provenance next to each difference")
+    pd.add_argument("-v", "--verbose", action="store_true",
+                    help="also list every unknown field")
     pi = sub.add_parser("implementations")
     pi.add_argument("--delta", default=None,
                     help="Show stacks claiming this delta_id (e.g. delta_dapo).")
@@ -604,6 +835,11 @@ def main():
     pah.add_argument("--method", default=None,
                      help="Filter to one method (grpo, aero, areal, gift).")
     args = ap.parse_args()
+    if args.cmd == "stackdiff":
+        level = cmd_stackdiff(args)
+        # Default exit 0: a difference is a finding, not a tool failure.
+        # --exit-level restores the pre-2026-10-16 behaviour (exit code = R-level).
+        return level if args.exit_level and not args.all else 0
     rc = {"list": cmd_list, "badge": cmd_badge,
           "query": cmd_query, "stackdiff": cmd_stackdiff,
           "implementations": cmd_implementations, "drift": cmd_drift,

@@ -1,0 +1,49 @@
+{
+  "started_at": "2026-10-11T00:53:26.612424+00:00",
+  "results": {
+    "final_static_gates": {
+      "command": [
+        "make",
+        "lint",
+        "format-check",
+        "typecheck",
+        "lock-check",
+        "docs-check",
+        "secrets"
+      ],
+      "returncode": 0,
+      "duration_seconds": 12.65,
+      "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/reports/project_finish_2026-10-11/validation/final_static_gates.log"
+    },
+    "final_public_check": {
+      "command": [
+        "make",
+        "public-check"
+      ],
+      "returncode": 0,
+      "duration_seconds": 13.18,
+      "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/reports/project_finish_2026-10-11/validation/final_public_check.log"
+    },
+    "final_full_coverage": {
+      "command": [
+        "uv",
+        "run",
+        "--no-sync",
+        "--with",
+        "hypothesis==6.168.3",
+        "python",
+        "-m",
+        "pytest",
+        "tests/",
+        "-q",
+        "-rsx",
+        "--cov",
+        "--cov-config=.coveragerc",
+        "--cov-report=term"
+      ],
+      "returncode": 0,
+      "duration_seconds": 89.73,
+      "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/reports/project_finish_2026-10-11/validation/final_full_coverage.log"
+    }
+  }
+}

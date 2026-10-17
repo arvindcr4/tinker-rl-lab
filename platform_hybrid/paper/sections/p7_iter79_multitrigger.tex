@@ -14,6 +14,19 @@
               Headline Metrics Carry 95\% Bootstrap CIs of Width $\leq$10\%}
 \label{sec:p7-iter79-multitrigger}
 
+\paragraph{Retraction notice (2026-10-16).} The ``anti-herding'' quantity
+$\delta_{\mathrm{div}}=\mathrm{ZVF}_{\mathrm{iid}}-\mathrm{ZVF}_{\mathrm{obs}}$
+used here is an estimator artefact. With $\mathrm{ZVF}_{\mathrm{iid}}$
+evaluated at a group's own plug-in $\hat p=k/G$, $\delta_{\mathrm{div}}\ge0$
+for every group by construction; evaluated at a pooled or step-mean $\bar p$,
+$\delta_{\mathrm{div}}\le0$ in expectation by Jensen's inequality ($h_G(p)=p^G+(1-p)^G$
+is convex). It does not measure rollout (anti-)herding. Results in this
+subsection that rank, trigger, or size $G$ on $\delta_{\mathrm{div}}$ are
+withdrawn and kept only as an audit trail. Batch ZVF is $\E_i[h_G(p_i)]$; its
+excess over $h_G(\bar p)$ reflects prompt-difficulty dispersion (see the P2
+correction note).
+
+
 \paragraph{Question.}
 Iter 55 (P7 row 74) established that the ZVF-triage trigger is
 moderately seed-robust on the N10 five-seed panel (CV across seeds of

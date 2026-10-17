@@ -13,6 +13,7 @@ Usage:
 """
 
 import argparse
+import ast
 import hashlib
 import json
 import os
@@ -53,6 +54,25 @@ def sha256_file(path):
     if resolved is None:
         return None
     return "sha256:" + hashlib.sha256(resolved.read_bytes()).hexdigest()[:16]
+
+
+REWARD_FN_NAMES = ("reward", "reward_fn", "reward_function")
+
+
+def reward_fn_sha256(path):
+    """Full sha256 of the reward function's source segment in `path`.
+
+    Returns None if the file or a function named in REWARD_FN_NAMES is absent;
+    never falls back to the whole-file hash (that was a placeholder)."""
+    resolved = resolve_source_path(path)
+    if resolved is None:
+        return None
+    text = resolved.read_text()
+    for node in ast.walk(ast.parse(text)):
+        if isinstance(node, ast.FunctionDef) and node.name in REWARD_FN_NAMES:
+            seg = ast.get_source_segment(text, node)
+            return "sha256:" + hashlib.sha256(seg.encode()).hexdigest()
+    return None
 
 
 def git_sha():
@@ -107,11 +127,9 @@ def generate(run, config_path, out):
             "git_sha": git_sha(),
             "code_file": code,
             "code_hash": sha256_file(code),
-            "reward_fn_hash": sha256_file(code),  # reward fn lives in the run file
-            "data_hash": "sha256:"
-            + hashlib.sha256(
-                json.dumps(cfg.get("data", "openai/gsm8k:main:train")).encode()
-            ).hexdigest()[:16],
+            "reward_fn_hash": reward_fn_sha256(code),
+            # A label, not a content hash: the dataset is fetched at run time.
+            "data_ref": cfg.get("data", "openai/gsm8k:main:train"),
             "config_hash": "sha256:"
             + hashlib.sha256(json.dumps(cfg, sort_keys=True).encode()).hexdigest()[:16],
         },
@@ -169,13 +187,28 @@ def verify(record, strict=False):
         )
     # 2) integrity: provenance hashes present & code hash recomputes
     pv = section("provenance")
-    for h in ["git_sha", "code_hash", "reward_fn_hash", "data_hash"]:
+    for h in ["git_sha", "code_hash", "reward_fn_hash"]:
         value = pv.get(h)
         add(
             isinstance(value, str) and bool(value.strip()),
             1,
             f"provenance hash present: {h}",
             f"missing or malformed provenance: {h}",
+        )
+    if isinstance(pv.get("reward_fn_hash"), str) and pv["reward_fn_hash"].strip():
+        live_rf = reward_fn_sha256(pv.get("code_file"))
+        add(
+            pv["reward_fn_hash"] != pv.get("code_hash")
+            and live_rf is not None
+            and pv["reward_fn_hash"] == live_rf,
+            1,
+            "reward_fn_hash VERIFIED against the reward function source",
+            (
+                "reward_fn_hash is a placeholder (copy of code_hash)"
+                if pv["reward_fn_hash"] == pv.get("code_hash")
+                else f"reward_fn_hash does not match live reward function ({live_rf})"
+            ),
+            warn=pv["reward_fn_hash"] != pv.get("code_hash"),
         )
     # recompute code hash against the file named in the record's provenance
     code_file = pv.get("code_file")

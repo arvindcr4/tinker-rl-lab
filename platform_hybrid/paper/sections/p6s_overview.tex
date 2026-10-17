@@ -1,0 +1,13 @@
+% P6 submission build: resource overview folded into the introduction (cut-list b)
+\paragraph{The artifact.} The deliverable ships under \texttt{registry/}:
+\texttt{schema.json} (JSON Schema, draft 2020-12; record types \texttt{stack}
+and \texttt{variant\_delta}); \texttt{entries/*.json} (\NSTACK{} stack records
+and 20 variant-delta records, each derived from a run of our own research
+program or a source paper we checked); \texttt{generate\_entries.py}, which
+regenerates stack records from run sources with per-field provenance; and
+\texttt{query.py}, a dependency-free CLI implementing \texttt{list},
+\texttt{query}, \texttt{badge}, and \texttt{stackdiff}. Every registry number in
+this paper is CLI output on the shipped entries. The runs behind the seed
+entries come from a multi-library GRPO benchmark described in companion work;
+this paper makes no new training claims, and toy-scale Colab results are
+marked as directional.

@@ -244,7 +244,6 @@ def mann_whitney_u(scores_a: np.ndarray, scores_b: np.ndarray) -> dict:
     scores_b = np.asarray(scores_b, dtype=float).ravel()
     if scores_a.size == 0 or scores_b.size == 0:
         raise ValueError("mann_whitney_u requires at least one score per group")
-
     if not np.all(np.isfinite(scores_a)) or not np.all(np.isfinite(scores_b)):
         raise ValueError("mann_whitney_u requires finite scores")
     if np.all(scores_a == scores_a[0]) and np.all(scores_b == scores_a[0]):

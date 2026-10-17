@@ -35,7 +35,7 @@ echo "============================================"
 # 1. Create clean copy (no .git)
 echo "[1/6] Creating clean copy..."
 
-rsync -av --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' \
+rsync -av --exclude='platform_modal/scripts/anonymize.sh' --exclude='platform_modal/scripts/_anonymization_validate.py' --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' \
     --exclude='.env' --exclude='wandb/' --exclude='results/*.jsonl' \
     "${SOURCE_DIR}/" "${STAGING_DIR}/"
 
@@ -104,6 +104,8 @@ rm -f .gitconfig 2>/dev/null || true
 
 echo ""
 echo "============================================"
+# Validate all remaining names and file bytes before publishing the staged copy.
+python3 "$SOURCE_DIR/platform_modal/scripts/_anonymization_validate.py" "$STAGING_DIR"
 # Refuse a concurrently created destination rather than nesting the staging copy.
 if [[ -e "$OUTPUT_DIR" || -L "$OUTPUT_DIR" ]]; then exit 2; fi
 mv -T -n -- "$STAGING_DIR" "$OUTPUT_DIR"

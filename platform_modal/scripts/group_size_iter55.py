@@ -23,12 +23,12 @@ Inputs (read-only):
   platform_hybrid/experiments/results/group_size_iter43_summary.tsv     (Wu retention at 4 budgets)
 
 Outputs (TSVs):
-  group_size_iter55_d_eff.tsv            d_eff(G) and contrast yield
-  group_size_iter55_antiherd.tsv         delta_div(G) and G-invariance test
-  group_size_iter55_isoyield_pred.tsv    predicted argmax G per budget
-  group_size_iter55_coupling.tsv         empirical - predicted residual
-  group_size_iter55_wu_model.tsv         Wu retention model fits/predictions
-  group_size_iter55_summary.tsv          headline rollup
+  group_size_iter55_d_eff_v2.tsv            d_eff(G) and contrast yield
+  group_size_iter55_antiherd_v2.tsv         delta_div(G) and G-invariance test
+  group_size_iter55_isoyield_pred_v2.tsv    predicted argmax G per budget
+  group_size_iter55_coupling_v2.tsv         empirical - predicted residual
+  group_size_iter55_wu_model_v2.tsv         Wu retention model fits/predictions
+  group_size_iter55_summary_v2.tsv          headline rollup
 """
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ np.random.seed(SEED)
 
 
 def effective_size(zvf):
-    """Compute d_eff and Contrastive Yield per G from the zvf sweep."""
+    """Compute heuristic G*(1-ZVF) score, not a variance-derived effective sample size."""
     out = []
     for r in zvf:
         G = r["G"]
@@ -74,6 +74,7 @@ def effective_size(zvf):
                 "Y_obs": Y_obs,
                 "Y_iid": Y_th,
                 "d_eff_obs": d_eff_obs,
+                "estimand_kind": "heuristic_G_times_nonzero_group_fraction",
                 "d_eff_iid": d_eff_th,
                 "ratio_d_eff_Yratio": Y_obs / Y_th if Y_th > 0 else float("nan"),
             }
@@ -513,43 +514,43 @@ def main():
     # A
     eff = effective_size(zvf)
     write_tsv(
-        RES / "group_size_iter55_d_eff.tsv",
-        ["G", "n_seeds", "zvf_obs", "zvf_iid", "Y_obs", "Y_iid", "d_eff_obs", "d_eff_iid", "ratio_d_eff_Yratio"],
+        RES / "group_size_iter55_d_eff_v2.tsv",
+        ["G", "n_seeds", "estimand_kind", "zvf_obs", "zvf_iid", "Y_obs", "Y_iid", "d_eff_obs", "d_eff_iid", "ratio_d_eff_Yratio"],
         eff,
     )
-    print(f"Wrote group_size_iter55_d_eff.tsv ({len(eff)} rows)")
+    print(f"Wrote group_size_iter55_d_eff_v2.tsv ({len(eff)} rows)")
 
     # B
     anti = antiherding_test(eff)
     write_tsv(
-        RES / "group_size_iter55_antiherd.tsv",
+        RES / "group_size_iter55_antiherd_v2.tsv",
         ["G", "zvf_obs", "zvf_iid", "delta_div", "delta_div_rel", "in_frontier_range"],
         anti,
     )
-    print(f"Wrote group_size_iter55_antiherd.tsv ({len(anti)} rows)")
+    print(f"Wrote group_size_iter55_antiherd_v2.tsv ({len(anti)} rows)")
 
     # C
     pred = isoyield_pred(rows, eff, zvf)
     write_tsv(
-        RES / "group_size_iter55_isoyield_pred.tsv",
+        RES / "group_size_iter55_isoyield_pred_v2.tsv",
         ["T_tokens", "G", "d_eff", "steps_per_prompt", "score", "is_predicted_peak", "predicted_argmax_G"],
         pred,
     )
-    print(f"Wrote group_size_iter55_isoyield_pred.tsv ({len(pred)} rows)")
+    print(f"Wrote group_size_iter55_isoyield_pred_v2.tsv ({len(pred)} rows)")
 
     # D
     coup = coupling(rows, pred)
     write_tsv(
-        RES / "group_size_iter55_coupling.tsv",
+        RES / "group_size_iter55_coupling_v2.tsv",
         ["T_tokens", "empirical_argmax_G", "predicted_argmax_G", "ratio_emp_over_pred", "residual_log10", "within_factor_2"],
         coup,
     )
-    print(f"Wrote group_size_iter55_coupling.tsv ({len(coup)} rows)")
+    print(f"Wrote group_size_iter55_coupling_v2.tsv ({len(coup)} rows)")
 
     # E
     wu, alpha, de_ratio = wu_retention_model(rows, zvf, eff)
     write_tsv(
-        RES / "group_size_iter55_wu_model.tsv",
+        RES / "group_size_iter55_wu_model_v2.tsv",
         [
             "T_tokens",
             "G4_acc",
@@ -563,12 +564,12 @@ def main():
         ],
         wu,
     )
-    print(f"Wrote group_size_iter55_wu_model.tsv ({len(wu)} rows)")
+    print(f"Wrote group_size_iter55_wu_model_v2.tsv ({len(wu)} rows)")
 
     # E2: budget-aware retention model
     step, alpha_cal, alpha_all, gamma_cal, gamma_all, r2_all = wu_retention_stepaware(rows, zvf, eff)
     write_tsv(
-        RES / "group_size_iter55_stepaware.tsv",
+        RES / "group_size_iter55_stepaware_v2.tsv",
         [
             "T_tokens",
             "G4_acc",
@@ -583,12 +584,12 @@ def main():
         ],
         step,
     )
-    print(f"Wrote group_size_iter55_stepaware.tsv ({len(step)} rows)")
+    print(f"Wrote group_size_iter55_stepaware_v2.tsv ({len(step)} rows)")
 
     # F
     summ = summarize(eff, anti, coup, wu, step, alpha, alpha_all, gamma_all, de_ratio)
-    write_tsv(RES / "group_size_iter55_summary.tsv", ["metric", "value"], summ)
-    print(f"Wrote group_size_iter55_summary.tsv ({len(summ)} rows)")
+    write_tsv(RES / "group_size_iter55_summary_v2.tsv", ["metric", "value"], summ)
+    print(f"Wrote group_size_iter55_summary_v2.tsv ({len(summ)} rows)")
 
     # Headline
     print("\n=== Iter 55 Headline ===")

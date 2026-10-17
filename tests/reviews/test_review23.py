@@ -133,3 +133,41 @@ def test_ratio_above_one_not_clipped(tmp_path):
     m=load('group_size_iter63');m.EFFECT_TSV=tmp_path/'historical.tsv'
     m.append_to_effect_tsv([(1e6,1.2,1.1,1.3)], [0], (1.2,0,1,(0,0,0)), (1.2,0,1,(0,0,0)), (1.2,1.2,1e6,1,(0,0,0),(0,0,0)),False,False)
     assert '1.2' in (tmp_path/'group_size_iter63_retention_fits_v2.tsv').read_text().splitlines()[1]
+
+def test_anonymization_scans_binary_names_and_symlinks(tmp_path):
+    m=load('_anonymization_validate')
+    (tmp_path/'innocent.bin').write_bytes(b'\x00ArvindCR\x00')
+    (tmp_path/'arvindcr4.txt').write_text('ordinary')
+    (tmp_path/'link').symlink_to(tmp_path/'innocent.bin')
+    errors=m.validate(tmp_path)
+    assert len(errors)==3
+    assert any('content' in e for e in errors)
+    assert any('filename' in e for e in errors)
+    assert any('symlink' in e for e in errors)
+
+def test_threshold_refits_loaded_evidence():
+    m=load('group_size_iter135')
+    rows=[{'T':10**t,'G':g,'acc':(.9-.1*t if g==4 else 1)} for t in [1,2,3] for g in [4,32]]
+    out=m.threshold_tstar(rows)
+    assert 'T=10000' in out[0]['headline']
+    assert 'input_sha256=' in out[0]['headline']
+    changed=[dict(row,acc=row['acc']-.1) if row['G']==4 else row for row in rows]
+    assert m.threshold_tstar(changed)[0]['headline'] != out[0]['headline']
+    with pytest.raises(ValueError): m.threshold_tstar(rows+rows)
+
+def test_compute_cost_scenario_and_gu_association():
+    m=load('group_size_iter115')
+    rows=[{'budget_tokens':t,'G':g,'heldout_acc_mean':.1*(i+1)*(1 if g==4 else 2), 'gu_estimate': (i+1 if g==4 else 1)} for i,t in enumerate([100,1000,10000]) for g in [4,32]]
+    cost=m.compute_cost(rows,tokens_per_gpu_hour=100,usd_per_million_tokens=3)
+    assert all(r['usd_per_million_tokens']==3 and r['cost_kind']=='unvalidated_scenario' for r in cost)
+    assert all('extrapolated_G4' in r for r in cost)
+    assert m.zvf_linkage(rows)[-1]['budget_tokens']=='SPEARMAN_GU_RATIO'
+    with pytest.raises(ValueError): m.compute_cost(rows,tokens_per_gpu_hour=0)
+
+def test_isog_separates_observed_and_projected(tmp_path):
+    import csv
+    m=load('group_size_elevated'); m.RESULTS=tmp_path
+    path=m.write_isog_sizing_tsv({'runs':[{'group_size':g,'step_log':[{'mean_reward':.5,'zvf':.8}]} for g in [2,4]]})
+    with path.open() as f: rows=list(csv.DictReader(f,delimiter='\t'))
+    assert rows and all(r['G_min_observed']=='unavailable' for r in rows)
+    assert all('G_min_projected' in r for r in rows)

@@ -18,10 +18,10 @@ budget T*.  Iter 47 builds on that with three fresh analyses that target
       Wu retention decrease monotonically with T?  Bootstrap CI on tau.
 
   (3) Per-difficulty crossover T*(p): bin the cell accuracies into 3
-      difficulty buckets (low/mid/high), compute per-bin retention as a
+      cell accuracy buckets (low/mid/high), compute per-bin retention as a
       function of T, and find T* per bin.  Where does Wu's claim hold
       longest (easiest prompt classes or hardest)?  This sharpens iter 43's
-      difficulty-stratification finding with a *budget axis* attached.
+      cell-accuracy-stratification description with a *budget axis* attached.
 
 Deliverables (4 TSV + 1 paper section + 1 figure):
 
@@ -32,7 +32,7 @@ Deliverables (4 TSV + 1 paper section + 1 figure):
         5 rows: per-G_a Kendall's tau with bootstrap CI on iso-token
         retention vs budget.
     platform_hybrid/experiments/results/group_size_iter47_diff_Tstar_v2.tsv
-        9 rows: 3 difficulty bins x 3 retention targets.  Per-bin T*.
+        9 rows: 3 cell accuracy bins x 3 retention targets.  Per-bin T*.
     platform_hybrid/experiments/results/group_size_iter47_summary_v2.tsv
         Single rollup with 11 headline numbers.
     paper/sections/group_size_iter47_v2.tex + figures/group_size_iter47_v2.pdf.
@@ -299,13 +299,13 @@ def main_monotonicity(cells: list[dict]) -> list[dict]:
 
 def main_diff_Tstar(cells: list[dict]) -> list[dict]:
     """Bin cells by acc(low/mid/high), compute R(Ga, T) per bin, solve T*."""
-    # We need per-cell acc as the difficulty proxy.  For each (T, bin), take
+    # We need per-cell acc as the cell accuracy stratum (treatment-dependent; not prompt difficulty).  For each (T, bin), take
     # mean retention across Ga in that bin.
     Ts = sorted({c["T"] for c in cells})
     Gas = sorted({c["G"] for c in cells if c["G"] != 64})
     targets = [0.976, 0.90, 0.80]
 
-    # Bin every (T, Ga) into low/mid/high by its acc (difficulty proxy).
+    # Bin every (T, Ga) into low/mid/high by its acc (cell accuracy stratum (treatment-dependent; not prompt difficulty)).
     bins_at_gt = {}
     for c in cells:
         if c["G"] == 64:

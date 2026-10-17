@@ -33,7 +33,7 @@ Deliverables (each computed from existing TSVs -- no fabrication):
         ZVF-driven component of any retention gap.
 
     platform_hybrid/experiments/results/group_size_iter43_difficulty_v2.tsv
-        15 rows: 5 G values x 3 difficulty bins (low/mid/high).
+        15 rows: 5 G values x 3 cell accuracy bins (low/mid/high).
         Per-bin effective-equivalence score.
 
     platform_hybrid/experiments/results/group_size_iter43_flop_tost_v2.tsv
@@ -147,7 +147,7 @@ def main_eff_zvf(token_norm: list[dict]) -> None:
 # (2) Difficulty-adjusted retention
 # ---------------------------------------------------------------------------
 def main_difficulty(token_norm: list[dict]) -> None:
-    """Stratify per-G accuracy into 3 difficulty bins using per-cell p proxy.
+    """Stratify per-G accuracy into 3 cell accuracy bins using per-cell p proxy.
 
     Without per-prompt trace data, we use the inter-cell acc distribution
     at the same T as a proxy for difficulty. The intuition: at T=64M,

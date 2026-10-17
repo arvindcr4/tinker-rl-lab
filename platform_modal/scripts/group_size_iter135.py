@@ -1,50 +1,10 @@
 #!/usr/bin/env python3
-"""Iter 135 -- Pillar 3: Sharp threshold extrapolation + native-Wu-claim test.
+"""Exploratory native-pair retention and functional-form sensitivity.
 
-Angle (frontier synthesis + iters 127/131 follow-on):
-
-  Iter 127 (joint acc(G,T) surface): R^2=0.796, b/c=0.48 (compute
-  dominates G by 2x/decade), G*=32 pegs at T>=1.6e7.
-  Iter 131 (Wu-claim budget-conditional): G=4 retention of G=32 on
-  Qwen2.5-0.5B/arithmetic drops monotonically with log10(T),
-  retention ~ 1.776 - 0.138 * log10(T), R=-0.952, p=0.048, with
-  values T=1M:0.976, T=4M:0.834, T=16M:0.751, T=64M:0.727.
-
-Iter 135 sharpens this into a DECISIVE, EXTRAPOLATED PREDICTION by
-combining three concrete tests:
-
-  (A) Native-Wu-claim test (G=2 vs G=16): the original Wu et al.
-      2025 paper tests G=2 vs G=16 -- but our groupsize_zvf_sweep
-      gives a direct, within-the-same-run test of THIS pairing on
-      Qwen2.5-0.5B / arithmetic. If G=2 holds >= 97.6% of G=16,
-      the Wu claim holds natively; if not, our extrapolation
-      generalises to the smaller pairing too.
-
-  (B) Threshold budget T* for retention < 50%: extrapolate the
-      iter131 retention-vs-logT linear model to find the smallest
-      budget where G=4 retention of G=32 collapses below 50%
-      (i.e. G=4 actively loses to G=32 by a factor of 2).
-
-  (C) Cross-link to ZVF mechanism: compare the iter131 retention
-      drop (0.249 over T=1M->64M) to the iter131 ZVF drop (0.207
-      over G=2->16). This is the Pillar 2 <-> Pillar 3
-      mechanistic cross-link: as G grows, ZVF drops 0.207 (24.7%);
-      as T grows at fixed G=4, retention of G=32 drops 0.249;
-      the predicted ZVF-increase needed at T=64M to recover G=32
-      accuracy under G=4 is delta_ZVF = 0.207 * (0.249/0.207)
-      effectively zero, because retention is a one-shot outcome
-      on the convergence plateau.
-
-Outputs (5 TSVs + 1 figure, all derived from existing measured
-data -- no fabrication):
-
-  platform_hybrid/experiments/results/group_size_iter135_native_wu_v2.tsv
-  platform_hybrid/experiments/results/group_size_iter135_threshold_tstar_v2.tsv
-  platform_hybrid/experiments/results/group_size_iter135_zvf_mech_link_v2.tsv
-  platform_hybrid/experiments/results/group_size_iter135_reward_quad_v2.tsv
-  platform_hybrid/experiments/results/group_size_iter135_summary_v2.tsv
-  figures/group_size_iter135_v2.pdf
-"""
+Review23-v2: thresholds are fitted to the supplied matched budget cells and
+carry input hashes and validity ranges. Native G2/G16 observations evaluate
+this local protocol, not a universal literature claim. ZVF mechanism links
+remain descriptive/model-based and do not establish causal attribution."""
 from __future__ import annotations
 
 import csv
@@ -185,76 +145,30 @@ def native_wu_claim(sweep: dict) -> list[dict]:
 # (B) Threshold budget T* for retention < 50%, extrapolated from
 #     iter131's retention ~ 1.776 - 0.138 * log10(T).
 # --------------------------------------------------------------------------
-def threshold_tstar() -> list[dict]:
-    """iter131 OLS retention(T) = 1.776 - 0.138 * log10(T) (R=-0.952,
-    p=0.048, n=4). Find the smallest T such that retention < 0.50.
-    Also compute the budget at which retention < 0.976 (the Wu
-    bound, which iter131 already established is T<=1M)."""
-    slope = -0.138
-    intercept = 1.776
-    # 0.50 = 1.776 - 0.138 * log10(T*)  =>  log10(T*) = (1.776-0.50)/0.138
-    logT_50 = (intercept - 0.50) / (-slope)
-    T_50 = 10 ** logT_50
-
-    # Retention < 0.976: log10(T*) = (1.776-0.976)/0.138
-    logT_976 = (intercept - 0.976) / (-slope)
-    T_976 = 10 ** logT_976
-
-    # And the other Wu bound: < 0.95
-    logT_95 = (intercept - 0.95) / (-slope)
-    T_95 = 10 ** logT_95
-
-    # And < 0.90
-    logT_90 = (intercept - 0.90) / (-slope)
-    T_90 = 10 ** logT_90
-
-    # And < 0.10 (severe)
-    logT_10 = (intercept - 0.10) / (-slope)
-    T_10 = 10 ** logT_10
-
-    return [
-        {
-            "metric_kind": "threshold_extrap",
-            "metric_key": "T50",
-            "headline": (
-                f"Extrapolated T* for G=4 retention of G=32 < 0.50: "
-                f"log10(T*)={logT_50:.3f}, T*={T_50:.3e} tokens "
-                f"(OLS retention ~ 1.776 - 0.138 log10(T) on iter131 n=4)"
-            ),
-        },
-        {
-            "metric_kind": "threshold_extrap",
-            "metric_key": "T90",
-            "headline": (
-                f"Extrapolated T* for G=4 retention of G=32 < 0.90: "
-                f"T*={T_90:.3e} tokens"
-            ),
-        },
-        {
-            "metric_kind": "threshold_extrap",
-            "metric_key": "T95",
-            "headline": (
-                f"Extrapolated T* for G=4 retention of G=32 < 0.95 "
-                f"(Wu-strict bound): T*={T_95:.3e} tokens"
-            ),
-        },
-        {
-            "metric_kind": "threshold_extrap",
-            "metric_key": "T976",
-            "headline": (
-                f"Extrapolated T* for G=4 retention of G=32 < 0.976 "
-                f"(Wu-native bound): T*={T_976:.3e} tokens"
-            ),
-        },
-        {
-            "metric_kind": "threshold_extrap",
-            "metric_key": "T10",
-            "headline": (
-                f"Extrapolated T* for G=4 retention of G=32 < 0.10: "
-                f"T*={T_10:.3e} tokens (beyond any realistic budget)"
-            ),
-        },
-    ]
+def threshold_tstar(rows: list[dict]) -> list[dict]:
+    """Exploratory log-linear thresholds fitted to supplied matched budget cells."""
+    import hashlib
+    indexed = {}
+    for row in rows:
+        key = (float(row["T"]), int(row["G"]))
+        if key in indexed:
+            raise ValueError("duplicate budget/group")
+        indexed[key] = float(row["acc"])
+    budgets = sorted(t for t, g in indexed if g == 4 and (t, 32) in indexed)
+    if len(budgets) < 2 or any(t <= 0 or indexed[(t,32)] <= 0 for t in budgets):
+        raise ValueError("positive matched budget/denominator evidence required")
+    ratios = [indexed[(t,4)] / indexed[(t,32)] for t in budgets]
+    if not all(math.isfinite(x) for x in ratios):
+        raise ValueError("finite retention required")
+    slope, intercept = np.polyfit(np.log10(budgets), ratios, 1)
+    digest = hashlib.sha256(json.dumps(list(zip(budgets, ratios))).encode()).hexdigest()
+    out = []
+    for target in [.5,.9,.95,.976,.1]:
+        log_t = (target-intercept)/slope if slope < 0 else float("inf")
+        crossing = 10.**log_t if log_t < 308 else float("inf")
+        out.append({"metric_kind":"model_sensitivity_threshold", "metric_key":f"T{target*100:g}",
+                    "headline":f"Exploratory log-linear retention threshold {target}: T={crossing:g}; slope={slope:.12g}; intercept={intercept:.12g}; observed_range=[{min(budgets):g},{max(budgets):g}]; extrapolated={not min(budgets)<=crossing<=max(budgets)}; input_sha256={digest}; no universal scaling claim"})
+    return out
 
 
 # --------------------------------------------------------------------------
@@ -475,7 +389,7 @@ def main() -> None:
     rows = load_token_normalized()
 
     native = native_wu_claim(sweep)
-    tstar = threshold_tstar()
+    tstar = threshold_tstar(rows)
     zlink = zvf_mech_link(rows, sweep)
     rquad = reward_quadratic(sweep)
 

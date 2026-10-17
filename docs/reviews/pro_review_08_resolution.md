@@ -71,3 +71,6 @@ MIN-REPORT block against the shared schema and compares canonical bytes, prevent
 Python's `True == 1.0` equality from accepting a changed sampler configuration.
 The strict gate pins producer bytes before launch and requires both the receipt
 and post-run file to match, rejecting a producer replaced during execution.
+Reporting caches now reject absolute external or parent-traversal artifact sources,
+and bind the copied query/strict-JSON runtime dependencies. Removing an external
+source can no longer leave its cached report marked verified.

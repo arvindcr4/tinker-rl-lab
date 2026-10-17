@@ -823,11 +823,16 @@ def audit_input_manifest(target):
     manifest = {f"registry/{k}": v for k, v in registry_input_manifest(HERE).items()}
     manifest["producer"] = hashlib.sha256(target.read_bytes()).hexdigest()
     paths = set((root / "platform_hybrid/experiments/results/n2_reward_tensor_resume").glob("*_tensors.jsonl"))
+    paths.update(path for path in (HERE / "query.py", HERE / "json_protocol.py") if path.is_file())
     def collect(value):
         if isinstance(value, dict):
             for key, child in value.items():
                 if key in {"source", "audit_source"} and isinstance(child, str):
                     raw = child.split("#", 1)[0].split(" sha256:", 1)[0]
+                    if pathlib.Path(raw).is_absolute() and not pathlib.Path(raw).resolve().is_relative_to(root):
+                        raise ValueError("external reporting source is outside the bound repository")
+                    if ".." in pathlib.Path(raw).parts:
+                        raise ValueError("parent traversal is not a bound reporting source")
                     for base in (root, root / "platform_hybrid"):
                         path = (base / raw).resolve()
                         if path.is_relative_to(root) and path.is_file():

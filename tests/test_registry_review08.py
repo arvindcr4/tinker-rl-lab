@@ -373,3 +373,22 @@ def test_producer_replacement_during_run_cannot_pass(registry,monkeypatch):
         return audit_runner(registry)(argv,**kwargs)
     monkeypatch.setattr(subprocess,'run',changed)
     assert q.cmd_validate_strict(SimpleNamespace(include_warn=False))==1
+
+
+
+def test_reporting_manifest_rejects_external_source_even_when_missing(registry,monkeypatch,tmp_path):
+    external=tmp_path/'external.tsv';external.write_text('synthetic')
+    monkeypatch.setattr(q,'load',lambda:{'r':{'measured':{'source':str(external)}}})
+    target=registry.parents[1]/'platform_modal/scripts/p5p8/p6_iter118_strict_validator.py'
+    with pytest.raises(ValueError,match='external reporting source'):q.audit_input_manifest(target)
+    external.unlink()
+    with pytest.raises(ValueError,match='external reporting source'):q.audit_input_manifest(target)
+
+
+def test_reporting_manifest_binds_copied_runtime_dependencies(registry,monkeypatch):
+    monkeypatch.setattr(q,'load',lambda:{})
+    for filename in ['query.py','json_protocol.py']:(registry/filename).write_text('before')
+    target=registry.parents[1]/'platform_modal/scripts/p5p8/p6_iter118_strict_validator.py'
+    before=q.audit_input_manifest(target)
+    (registry/'json_protocol.py').write_text('after')
+    assert q.audit_input_manifest(target)!=before

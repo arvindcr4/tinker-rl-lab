@@ -14,7 +14,8 @@ HERE = pathlib.Path(__file__).resolve().parent.parent
 ROOT = HERE.parents[2]
 PAGE = "file://" + str(HERE / "tinkerrl_demo.html")
 V2 = json.loads((ROOT / "reports/project_finish_2026-10-11/validation/samestack_v2/v2_analysis.json").read_text())
-VIEWS = ["overview", "advantage", "zvf", "samestack", "answers", "stackdiff", "audit", "viva"]
+PLATFORM = ROOT / "reports/project_finish_2026-10-11/validation/samestack_v2/platform_calibration.json"
+VIEWS = ["overview", "advantage", "zvf", "samestack", "platform", "answers", "stackdiff", "audit", "viva"]
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 
@@ -57,6 +58,15 @@ def main():
         results.append(check("G8−PPO TOST p matches v2_analysis.json", abs(num(stats["TOST p, margin ±0.02"]) - V2["power"]["g8-ppo"]["tost_0.02_p"]) < 5e-4))
         results.append(check("G8−PPO sign-flip p matches v2_analysis.json", abs(num(stats["Exact sign-flip p"]) - ref["p_signflip"]) < 5e-4))
 
+        # Platform view: every stored base accuracy (per platform and Modal state) is shown.
+        if PLATFORM.exists():
+            plat = json.loads(PLATFORM.read_text())
+            want = {f"{s['acc']:.4f}" for p in plat["platforms"] for s in plat["base"][p].values()}
+            page.goto(f"{PAGE}#platform")
+            text = page.locator("main section.view").inner_text()
+            results.append(check("platform view shows every base accuracy from platform_calibration.json",
+                                 len(want) > 1 and all(w in text for w in want), f"want {sorted(want)}"))
+
         # Re-grading in the page agrees with stored scores.
         page.goto(f"{PAGE}#answers")
         pill = page.locator(".pill", has_text="re-graded").inner_text()
@@ -75,7 +85,7 @@ def main():
         page.goto(f"{PAGE}#overview")
         page.keyboard.press("ArrowRight")
         results.append(check("→ moves to the next view", page.evaluate("location.hash") == "#advantage"))
-        page.keyboard.press("8")
+        page.keyboard.press("9")
         results.append(check("number key jumps to a view", page.evaluate("location.hash") == "#viva"))
         page.keyboard.press("p")
         results.append(check("P toggles presenter mode", "present" in page.evaluate("document.documentElement.className")))

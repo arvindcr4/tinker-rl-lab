@@ -460,5 +460,10 @@
    "p_diff_ge_0.05": 2.343554327241022e-08
   }
  },
- "disagreement_examples": []
+ "disagreement_examples": [],
+ "holm_family": [
+  "g8-ppo",
+  "g8-g2",
+  "g2-ppo"
+ ]
 }

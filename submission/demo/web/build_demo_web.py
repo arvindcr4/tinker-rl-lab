@@ -17,6 +17,7 @@ V2 = ROOT / "platform_hybrid/experiments/results/samestack_gsm8k_v2s"
 V1 = ROOT / "reports/project_finish_2026-10-11/validation/samestack_v2/v1_recompute.json"
 GOLD = ROOT / "reports/project_finish_2026-10-11/validation/samestack_v2/gsm8k_test_gold.json"
 AUDIT = ROOT / "reports/public_revision_2026-10-11/PUBLIC_CHECKOUT_NUMBER_AUDIT.json"
+PLATFORM = ROOT / "reports/project_finish_2026-10-11/validation/samestack_v2/platform_calibration.json"
 ARMS = ["grpo_g8", "grpo_g2", "ppo", "ppo_8x8"]
 
 sys.path.insert(0, str(ROOT / "platform_hybrid/registry"))
@@ -120,8 +121,16 @@ def audit():
             "path": str(AUDIT.relative_to(ROOT)), "sha256": sha(AUDIT)}
 
 
+def platform():
+    """Cross-platform calibration (Modal A10G vs Colab A100), if platform_calibration.py has been run."""
+    if not PLATFORM.exists():
+        return None
+    d = json.loads(PLATFORM.read_text(), parse_constant=lambda _: None)
+    return {**d, "path": str(PLATFORM.relative_to(ROOT)), "sha256": sha(PLATFORM)}
+
+
 def main():
-    data = {"samestack": samestack(), "samestack_v1": samestack_v1(), "examples": examples(), "grader_check": grader_check(), "stackdiff": stackdiff(), "audit": audit()}
+    data = {"samestack": samestack(), "samestack_v1": samestack_v1(), "examples": examples(), "grader_check": grader_check(), "stackdiff": stackdiff(), "audit": audit(), "platform": platform()}
     out = HERE / "src/data.json"
     out.write_text(json.dumps(data, separators=(",", ":"), default=str) + "\n")
     print(f"wrote {out.relative_to(ROOT)} ({out.stat().st_size // 1024} KB)")

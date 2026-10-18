@@ -1,1 +1,18 @@
 location	claim_text	value	source_artifact	generator_script	status
+Abstract/Sec6.1	505 prompt-seed tasks	505	platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Sec6	2,525 rows; 5 rows per key = Y_target levels	2525; 5	platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Sec6	cohort k_x in 1..7 of one G=8 group; 505 of 600 groups	k=1..7	platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv; tinker_gsm8k_zvf_s{42,123,456}.json via zvf_contrastive_yield.tsv	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Sec6.1	identity max discrepancy 1.11e-16	removed (reframed as algebraic check)	platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv	analysis/breakthroughs_2026-07-13/analyze_breakthroughs.py	removed
+Sec6.1	U(2),U(3),U(4),U(5) plug-in	0.2584,0.3165,0.3291,0.3274	platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Sec6.1	U(4)-U(5)	0.00177	platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Sec6.1	key bootstrap 95% CI	[0.00082,0.00272]	platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Sec6.1	problem-clustered bootstrap 95% CI (199 problems)	[0.00083,0.00272]	platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Sec6.1	linear-cost argmax	G=2 (tie G=3; 0.18274)	platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Sec6.1	unbiased hypergeometric U(4),U(5)	0.37784,0.37789	platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Tab3	observed mean p, Var, ZVF5, 1-ZVF	0.6743,0.0369,0.2680,0.7320	platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Tab3	polarized mean, Var, ZVF5 (518@1.0, 482@0.3243)	0.6743,0.1140,0.5876	platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Sec6.2/Tab4	observations 4x40x16	2560	platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Abstract/Tab4	fires; all-correct; all-wrong; share	1867;1723;144;92.3%	platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Tab4 caption	per-method all-correct/all-wrong	GRPO 427/34, AERO 427/34, GIFT 455/38, AReaL 414/38	platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
+Tab4 (old)	mean recovered contrast all-correct/all-wrong	0.513/0.634	platform_hybrid/experiments/results/p5p8/p7_iter203_emp_per_obs.tsv	platform_modal/scripts/p5p8/p7_iter203_empirical_gprime.py (older cross-prompt-merge version; not reproducible)	removed
+AppC	passk_reliability_curve.tsv agreement	4.4e-6	platform_hybrid/experiments/results/berkeley/passk_reliability_curve.tsv	analysis/breakthroughs_2026-07-13/analyze_breakthroughs.py (crosscheck_existing_curve)	verified

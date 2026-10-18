@@ -5,7 +5,6 @@
 \ifdefined\pdftrailerid\pdftrailerid{}\fi
 
 \documentclass{article}
-
 % Reuse the repository's NeurIPS 2026 style without adding the parent paper
 % directory to LaTeX's global input path (which can select the umbrella
 % paper's main.bbl instead of this paper's bibliography).
@@ -27,14 +26,12 @@
 \usetikzlibrary{shapes,arrows.meta,positioning,calc}
 \usepackage{hyperref}
 \usepackage{url}
-
 \hypersetup{
   colorlinks=true,
   linkcolor=blue!55!black,
   citecolor=blue!55!black,
   urlcolor=blue!55!black
 }
-
 \newtheorem{proposition}{Proposition}
 \newtheorem{corollary}{Corollary}
 \newcommand{\grpo}{\textsc{GRPO}\xspace}
@@ -48,18 +45,14 @@
 \newcommand{\ind}{\mathbf{1}}
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\R}{\mathbb{R}}
-
 \title{When Does an RL Update Teach?\\
 A Diagnostic and Controller Proposal Across GRPO, PPO, and\\
 Single-Rollout Asynchronous Optimization}
-
 \author{Arvind C R\\
 PES University\\
 \texttt{arvindcr4@gmail.com}}
-
 \begin{document}
 \maketitle
-
 \begin{abstract}
 Reinforcement-learning post-training is usually budgeted in rollouts, tokens,
 or wall-clock time, even though some collected trajectories induce no policy
@@ -79,7 +72,6 @@ retires or distills solved-saturated examples, trains the critic when credit is
 unreliable, and refreshes stale rollouts when clipping destroys useful signal.
 The controller preserves asynchronous single-rollout execution and logs
 sampling propensities to expose curriculum bias.
-
 We ground the proposal in an audited GRPO artifact.  Across 505 unique
 prompt-seed keys, the arithmetic identity between contrastive group yield and the gap
 between pass@G and unanimous success holds to $1.11\times10^{-16}$.  In a
@@ -107,7 +99,6 @@ workshop-short venue.
 \paragraph{Evidence boundary.} The all-correct groups below provide observed
 high-reward flat-group examples, not mastery on unseen tasks. The routing
 policy is prospective, not a demonstrated deployment benefit.
-
 \begin{figure}[htbp]
 \centering
 \resizebox{\linewidth}{!}{
@@ -126,19 +117,15 @@ policy is prospective, not a demonstrated deployment benefit.
         Retire (Solved) $\big|$ Retry (Failed) $\big|$ Critic-Only Repair\\
         Refresh Stale Rollouts $\big|$ Standard Policy Update
     };
-
     \draw [arrow] (input) -- (metrics);
     \draw [arrow] (metrics) -- (triage);
     \draw [arrow] (triage) |- (router);
     \draw [arrow] (metrics) |- (router);
 \end{tikzpicture}
-}
 \caption{\textbf{Signal Starvation Diagnostic and TRIAGE-RL Action Router Pipeline (N01).} Decomposing credit into Potential Advantage Mass ($\text{PAM}$) and Gradient Survival Ratio ($\text{GSR}$), certifying Effective Gradient Mass ($\text{EGM}$), and routing distinct failure causes.}
 \label{fig:triage_rl_pipeline}
 \end{figure}
-
 \section{Introduction}
-
 Long-horizon language-model reinforcement learning (RL) spends most of its
 budget before the optimizer runs: agents interact with tools, environments
 return sparse outcomes, and trajectories may contain hundreds of thousands of
@@ -146,7 +133,6 @@ tokens.  Yet a completed rollout is not necessarily an effective update.  A
 policy-gradient coefficient can vanish because no contrast exists, because a
 critic predicts the observed outcome, or because an off-policy trust-region
 rule masks the token.  Throughput metrics do not distinguish these causes.
-
 The distinction matters as systems move from synchronous group-relative
 optimization toward critic-based single-rollout training.  GRPO estimates a
 baseline from several responses to the same prompt \citep{shao2024deepseekmath};
@@ -160,14 +146,12 @@ variable numbers of trainable sub-traces, so training moved from group-wise
 optimization to critic-based PPO over individual rollouts
 \citep{glm2026glm52}.  The algorithms differ, but the operational question is
 the same: \emph{how much generated learning signal reaches the actor?}
-
 We answer by factorizing the score-function coefficient into a generated
 signal and a survival gate.  This yields two cheap statistics that can be
 logged without an additional backward pass: potential advantage mass (PAM)
 and gradient survival ratio (GSR).  Their product is effective gradient mass
 (EGM).  A sampled gradient-norm audit guards against the known weakness of
 coefficient-only proxies: nonzero weighted score vectors can cancel.
-
 This framing changes the controller design.  ``Low signal'' is not one state.
 All-correct GRPO groups and all-wrong groups both have zero advantage, but the
 former are candidates for retirement or distillation and the latter for
@@ -177,7 +161,6 @@ destroyed by clipping, for which a fresh rollout is preferable to widening the
 trust region.  A bad critic calls for critic-only updates, not repeated actor
 epochs.  Invalid or hacked trajectories belong in a quarantine path rather
 than the hard-example queue.
-
 Our contributions are:
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
   \item a unified, implementation-level decomposition of score-function
@@ -191,16 +174,13 @@ Our contributions are:
   \item a preregistered evaluation contract that separates already observed
   GRPO facts from untested PPO/SAO hypotheses.
 \end{enumerate}
-
 \paragraph{Claim status.}
 The identities are algebraic checks and the GRPO counts are descriptive.
 The unified controller is a method proposal. Its PPO and SAO benefits are
 falsifiable hypotheses, not current empirical claims. Reused GRPO artifacts
 are not independent replication evidence.
-
 \section{Background and the Three Starvation Mechanisms}
 \label{sec:background}
-
 Let a behavior policy $\mu$ generate action token $a_t$ in state $s_t$, and
 let $\pi_\theta$ be the actor being optimized.  Define the token ratio
 \begin{equation}
@@ -212,16 +192,12 @@ let $\pi_\theta$ be the actor being optimized.  Define the token ratio
 \end{equation}
 The policy surrogate objective uses a detached advantage estimate $A_t$ and,
 depending on the algorithm, a detached token gate $m_t\in\{0,1\}$.
-
 \subsection{GRPO: signal is never generated for flat groups}
-
 For prompt $x$, GRPO samples $G$ responses with rewards $R_1,\ldots,R_G$ and
 forms a group-relative advantage such as
-\begin{equation}
   A_i^{\mathrm{grp}}=
   \frac{R_i-\bar R_x}{s_x+\varepsilon}.
   \label{eq:grpo-adv}
-\end{equation}
 Here $\bar R_x$ and $s_x\geq0$ are the within-group reward mean and standard
 deviation, and $\varepsilon>0$ is a numerical stabilizer. Every action token
 $t$ in response $i$ receives $A_t=A_i^{\mathrm{grp}}$.
@@ -230,19 +206,14 @@ token.  A later PPO-style clip may also suppress signal, but the defining
 GRPO starvation event occurs before clipping: no within-prompt contrast was
 generated.  The zero-variance fraction (ZVF) is the fraction of sampled prompt
 groups with this property.
-
 \subsection{PPO: credit can be absent or clipped away}
-
 PPO estimates $A_t$ with a critic, commonly using generalized advantage
 estimation (GAE) \citep{schulman2016gae}, and maximizes
-\begin{equation}
   \ell_t^{\mathrm{PPO}}(\theta)=
   \min\!\left(\rho_t A_t,
     \operatorname{clip}(\rho_t,1-\epsilon,1+\epsilon)A_t\right).
   \label{eq:ppo}
-\end{equation}
 Away from the clip boundary, its score-function term is weighted by
-\begin{equation}
   c_t^{\mathrm{PPO}}=m_t^{\mathrm{PPO}}\rho_t A_t,
   \qquad
   m_t^{\mathrm{PPO}}=
@@ -252,54 +223,39 @@ Away from the clip boundary, its score-function term is weighted by
     1, & \text{otherwise.}
   \end{cases}
   \label{eq:ppo-gate}
-\end{equation}
 PPO can therefore starve because $A_t\approx0$ (credit starvation) or because
 the sign-dependent clipping gate is zero (transport starvation).  The common
 aggregate \emph{clip fraction} merges these with healthy tokens and does not
 say whether the clipped tokens carried substantial advantage.
-
 \subsection{SAO: strict survival under asynchronous policy lag}
-
 SAO is designed for asynchronous, single-rollout agentic RL.  It uses a
 critic, updates that critic more frequently than the actor, freezes attention
 parameters during value-model training, and skips environment-observation
 tokens when constructing token-level GAE \citep{hou2026sao}.  To stabilize
 off-policy updates, direct double-sided importance sampling (DIS) retains only
 tokens inside an asymmetric interval:
-\begin{equation}
   m_t^{\mathrm{SAO}}=\ind\!\left[1-\epsilon_l < \rho_t < 1+\epsilon_h\right],
-  \qquad
   c_t^{\mathrm{SAO}}=m_t^{\mathrm{SAO}}\rho_t A_t.
   \label{eq:sao-gate}
-\end{equation}
 Unlike PPO's sign-dependent gate, DIS masks either sign outside the interval.
 This is a stability mechanism, not a flaw.  But when policy lag makes most
 high-advantage tokens fail the gate, a throughput-efficient learner can still
 be update-inefficient.  The right response is usually to reduce lag or refresh
 the rollout, not to weaken the safety boundary.
-
 \section{A Unified Signal-Survival Formalism}
 \label{sec:formalism}
-
 For any actor token, let
-\begin{equation}
   c_t=m_t\rho_t A_t,
-  \qquad
   z_t=\nabla_\theta\log\pi_\theta(a_t\mid s_t).
   \label{eq:coefficient}
-\end{equation}
 For a token batch $\mathcal{B}$, the score-function component of the surrogate
 gradient is
-\begin{equation}
   g_{\mathcal{B}}=\frac{1}{|\mathcal{B}|}
   \sum_{t\in\mathcal{B}}c_t z_t.
   \label{eq:gradient}
-\end{equation}
 Entropy, KL, and value-loss gradients are deliberately excluded: the question
 is whether the sampled reward signal teaches the actor.
-
 \subsection{Potential, survival, and effective mass}
-
 We define
 \begin{align}
   \pam(\mathcal{B})
@@ -319,22 +275,15 @@ We define
 \end{align}
 The factorization uses the binary gate's idempotence, $m_t^2=m_t$:
 $c_t^2=m_t(\rho_t A_t)^2$. Continuous weights are not part of this gate.
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
     node distance=1.4cm and 1.8cm,
     card/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
     mult/.style={circle, draw=orange!80!black, fill=orange!10, thick, font=\small},
     outcard/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
     arrow/.style={-{Stealth[scale=1.2]}, thick, draw=purple!60!black}
-]
     \node [card] (pam) {\textbf{Potential Advantage Mass}\\[2pt]$\text{PAM}(\mathcal{B}) = \frac{1}{|\mathcal{B}|}\sum (\rho_t A_t)^2$};
     \node [card, right=of pam] (gsr) {\textbf{Gradient Survival Ratio}\\[2pt]$\text{GSR}(\mathcal{B}) = \frac{\sum m_t(\rho_t A_t)^2}{\sum (\rho_t A_t)^2}$};
     \node [mult, right=of gsr] (times) {$\times$};
     \node [outcard, right=of times] (egm) {\textbf{Effective Gradient Mass}\\[2pt]$\text{EGM}(\mathcal{B}) = \text{PAM} \cdot \text{GSR}$};
-
     \draw [arrow] (pam) -- (gsr);
     \draw [arrow] (gsr) -- (times);
     \draw [arrow] (times) -- (egm);
@@ -342,30 +291,22 @@ $c_t^2=m_t(\rho_t A_t)^2$. Continuous weights are not part of this gate.
     \node [outcard, below=1.0cm of gsr, fill=red!5, draw=red!70!black, minimum width=8.5cm] (cert) {
         \textbf{Zero-Update Certificate Protocol}\\[2pt]
         $\text{EGM}(\mathcal{B}) = 0 \implies g_{\mathcal{B}} = \mathbf{0} \quad (\text{Exact Zero-Update Certificate})$
-    };
     \draw [arrow, dashed] (egm) |- (cert);
-\end{tikzpicture}
-}
 \caption{\textbf{Token-Level Credit Factorization and Zero-Update Certificate (N01).} Illustrating the product decomposition $\text{EGM} = \text{PAM} \times \text{GSR}$ and the exact score-function zero-update certificate.}
 \label{fig:egm_credit_factorization}
-\end{figure}
 PAM measures generated credit before the gate (Figure~\ref{fig:egm_credit_factorization}).  GSR measures how much squared
 credit survives it.  EGM is the surviving coefficient mass.  Squaring makes
 positive and negative advantages comparable and prevents cancellation from
 being hidden at this diagnostic stage.
-
 For a set of root trajectories $\mathcal{R}$, define the near-zero update rate
-\begin{equation}
   \zuf_{\delta}(\mathcal{R})=
   \frac{1}{|\mathcal{R}|}\sum_{\tau\in\mathcal{R}}
   \ind\!\left[\egm(\tau)\leq\delta\right].
   \label{eq:zuf}
-\end{equation}
 At $\delta=0$, ZUF is an exact coefficient-level zero-update fraction.  A
 positive $\delta$, fixed from warm-up data, measures practical near-starvation.
 This root-level ZUF is distinct from GRPO's zero-\emph{variance} fraction
 (ZVF), though a flat GRPO group normally belongs to both sets.
-
 \begin{proposition}[Exact zero-update certificate]
 If $\egm(\mathcal{B})=0$, then the reward-conditioned score-function gradient
 $g_{\mathcal{B}}$ in Eq.~\eqref{eq:gradient} is exactly zero.
@@ -377,23 +318,17 @@ summand in Eq.~\eqref{eq:gradient} is zero.  Conversely, nonzero vectors
 $c_tz_t$ can cancel, or score vectors can be degenerate, while EGM remains
 positive.
 \end{proof}
-
 This non-converse is important.  EGM is an inexpensive routing statistic, not
 a theorem that an update will improve reward.  We therefore pair it with a
 periodic geometry-aware audit,
-\begin{equation}
   \mathrm{GUN}(\mathcal{B})=\left\|
   \frac{1}{|\mathcal{B}|}\sum_{t\in\mathcal{B}} c_tz_t\right\|_2^2,
   \label{eq:gun}
-\end{equation}
 measured on sampled microbatches before optimizer preconditioning.  EGM must
 predict this squared gradient-update norm and, separately, marginal learning
 progress to earn operational trust.
-
 \subsection{One table, three algorithms}
-
 \begin{table}[t]
-\centering
 \caption{The same coefficient decomposition exposes different starvation
 causes.  ``Generated'' refers to PAM; ``survives'' refers to GSR.}
 \label{tab:unification}
@@ -409,16 +344,13 @@ SAO & Critic plus skip-observation GAE & Strict two-sided DIS mask & $A=0$ or ev
 \bottomrule
 \end{tabularx}
 \end{table}
-
 As summarized in Table~\ref{tab:unification}, at initialization of a GRPO actor epoch, $\rho\approx1$ and the clip gate
 usually survives, so ZVF is the dominant certificate.  Later GRPO epochs can
 also suffer transport starvation and should log both quantities.  In PPO and
 SAO, the critic replaces the group baseline, but it does not eliminate zero
 updates; it relocates them from group variance to credit and trust-region
 mechanisms.
-
 \subsection{Root trajectories, not compacted chunks}
-
 Long-horizon systems may compact one environment episode into chunks
 $\tau_1,\ldots,\tau_J$.  Routing each chunk independently overweights episodes
 that happen to compact more often.  We retain a \texttt{root\_trajectory\_id}
@@ -427,53 +359,37 @@ root-macro ZUF (each episode counts once) and token-micro EGM (each trainable
 token counts once).  A retry, retirement, or quarantine decision is made once
 per root; loss normalization can remain token-level, as in the GLM-5.2
 description \citep{glm2026glm52}.
-
 \section{Boundary Semantics: Zero Is Not One State}
 \label{sec:semantics}
-
 Let $R(\tau)$ be a root outcome, $\hat V(\tau)$ the critic's pre-outcome value,
 $e_V$ a held-out value error or calibration statistic, and $h(\tau)$ an
 invalid/hack flag.  Table~\ref{tab:states} maps observable states to distinct
 causes.  Thresholds are calibrated on a warm-up split and frozen before the
 comparison arms run.
-
-\begin{table}[t]
-\centering
 \caption{Cause-aware routing.  Low/high are relative to preregistered
 warm-up thresholds, not values tuned on final outcomes.
 $\hat V$ is the critic's pre-outcome value; $e_V$ is a held-out value error
 or calibration statistic.}
 \label{tab:states}
-\scriptsize
-\setlength{\tabcolsep}{2pt}
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.15\linewidth}XXXX@{}}
-\toprule
 State & Evidence & Interpretation & Actor action & Data action \\
-\midrule
 Solved saturation & high $R$, high $\hat V$, low PAM & expected success & none/minimal & retire or distill \\
 Failed starvation & low $R$, low $\hat V$, low PAM & expected failure & none/minimal & bounded retry \\
 Critic lag & high $e_V$ or uncertainty & unreliable credit & defer & critic-only updates \\
 Transport starvation & high PAM, low GSR & useful credit was gated & stop epochs & refresh from latest policy \\
 Healthy & nontrivial EGM, acceptable $e_V$ & update can teach & actor-critic & base stream \\
 Invalid/hacked & $h(\tau)=1$ & corrupted reward & no reward update & quarantine \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
 The invalid path is essential for coding agents.  The GLM-5.2 report describes
 online anti-hack filtering because pass/fail rewards can be inflated by reading
 protected artifacts or fetching target code \citep{glm2026glm52}.  Treating
 those trajectories as hard negatives would train on a contaminated target.
-
 \section{TriageRL: A Cause-Aware Controller}
 \label{sec:controller}
-
 As diagrammed in Figure~\ref{fig:triage_rl_pipeline} and formalized in
 Algorithm~\ref{alg:triage}, \method operates beside, rather than inside, the base
 optimizer.  It does not turn SAO into grouped sampling: every completed root is
 handled immediately, and retries enter a nonblocking priority queue as
 independent future rollouts.
-
 \begin{algorithm}[t]
 \caption{Root-trajectory signal triage}
 \label{alg:triage}
@@ -498,57 +414,45 @@ critic diagnostics $e_V,u_V$, outcome $R$, invalid flag $h$
 \STATE Global dispatcher invariant: preserve at least $q_{\min}$ probability for the base data stream
 \end{algorithmic}
 \end{algorithm}
-
 The underlying signal flows and controller decision mechanics are visualized
 in Figures~\ref{fig:n01_pam_distribution}--\ref{fig:n01_multiarm_exploration},
 covering PAM distributions, GSR vanishing, EGM state transitions, 5-way cause
 classification, diagnostic seams, rollout refresh, ZVF pipelines, and
 multi-arm exploration.
-
 \subsection{Retry only where another rollout has value}
-
 Failure-only does not mean ``sample the hardest prompt forever.''  Maintain a
 Beta posterior $p_x\sim\operatorname{Beta}(\alpha_x,\beta_x)$ for binary
 success and prioritize
-\begin{equation}
   U_x=\frac{
     \E[p_x(1-p_x)]+\beta\sqrt{\operatorname{Var}[p_x(1-p_x)]}}
     {\widehat{\operatorname{cost}}(x)}
   \ind[\text{failed starvation}],
   \label{eq:retry-utility}
-\end{equation}
 subject to a per-root retry cap.  The posterior variance term explores
 uncertain prompts; $p(1-p)$ de-prioritizes both hopeless and already solved
 items.  This connects the controller to adaptive rollout allocation methods
 such as CERO \citep{zong2026cero}, but the semantic gate prevents symmetric
 escalation of all-correct and all-wrong observations.
-
 \subsection{Adapt actor and critic work for different reasons}
-
 For PPO, recompute GSR after each actor epoch and stop when either target KL is
 exceeded or marginal surviving mass drops below the frozen threshold.  High
 PAM plus low GSR means the current gradient masks substantial coefficient
 mass, not that later epochs cannot change ratios and unmask tokens.
 For SAO, the analogous action is to reduce queue lag or refresh a trajectory;
 widening DIS would trade the observed inefficiency for off-policy instability.
-
 Critic work is controlled separately.  Let $K_V$ be critic steps per actor
 step.  Increase $K_V$ only when held-out explained variance, calibration, or
 ensemble disagreement indicates critic lag, up to a fixed $K_{\max}$.  SAO's
 reported choice of two critic updates per actor update is a strong default
 \citep{hou2026sao}; \method makes the ratio conditional rather than universal.
-
 \subsection{Outcome-conditioned sampling changes the objective}
-
 A failure-only queue is a curriculum and can bias the training distribution.
 We mix it with the base sampler so every base stratum has probability at least
 $q_{\min}$.  Each root logs its selection probability $q(x)$ and reference
 probability $p_0(x)$.  When the target is the base distribution, the actor loss
 uses a clipped propensity weight
-\begin{equation}
   w(x)=\min\!\left(w_{\max},\frac{p_0(x)}{q(x)}\right).
   \label{eq:propensity}
-\end{equation}
 Clipping these weights introduces bias even for pre-rollout selection.
 Prompt-only weights do not correct outcome-dependent filtering of the current
 root. A base-distribution estimator would require selection before observing
@@ -559,10 +463,8 @@ $q(x)\ge q_{\min}p_0(x)$, not an absolute per-prompt probability floor.
 If $q(x)$ is not identifiable (for example, an open-ended environment creates
 new tasks), the run is labeled curriculum optimization rather than presented
 as an unbiased estimator.  Untouched held-out evaluation remains mandatory.
-
 \section{Existing GRPO Evidence}
 \label{sec:evidence}
-
 This section reports a deterministic re-analysis of checked-in experiment
 artifacts; it contains no PPO or SAO run.  The source contains 2,525 rows but
 505 unique $(\text{seed},\text{problem})$ keys because probabilities repeat
@@ -570,22 +472,16 @@ across group settings.  No key has conflicting success probabilities.
 The TSV labels these as \texttt{tinker\_gsm8k}; its model and generation
 protocol are not established by these columns alone. Keys are not necessarily
 distinct prompts independent across seeds.
-
 \subsection{Pass@G and contrastive yield are the same event accounting}
-
 Let each prompt have single-sample success probability $p_x$.  For binary
 rewards and $G$ conditionally independent samples,
-\begin{equation}
   \mathrm{ZVF}_G=\E_x[p_x^G+(1-p_x)^G].
   \label{eq:zvf}
-\end{equation}
 Define pass@$G=1-\E_x[(1-p_x)^G]$ and define
 $\mathrm{pass}^{G}=\E_x[p_x^G]$ as the probability that all $G$ samples pass.
 Then
-\begin{equation}
   \mathrm{pass@}G-\mathrm{pass}^{G}=1-\mathrm{ZVF}_G.
   \label{eq:duality}
-\end{equation}
 The left side is exactly the probability mass of groups containing both a
 success and a failure, which is precisely the group-relative contrast GRPO
 can use. Across $G=2,\ldots,16$ and 505 unique prompt-seed keys, the maximum
@@ -594,34 +490,24 @@ plug-in probabilities: this is an arithmetic sanity check, not independent
 empirical verification of independence or latent success rates. Convexity
 biases $f_G(\hat p)$ upward in expectation relative to $f_G(p)$; deduplication
 does not remove probability-estimation noise.
-
 \begin{proposition}[Polarization increases flat groups]
 For $G\geq2$, $f_G(p)=p^G+(1-p)^G$ is convex on $[0,1]$.  Therefore, among
 prompt-probability distributions with equal mean, a mean-preserving spread
 cannot decrease expected ZVF.
-\end{proposition}
 The proof is in Appendix~\ref{app:proofs}.  As reported in
 Table~\ref{tab:polarization}, this bounds a fixed-mean comparison only.
 Increasing-mean training trajectories are not mean-preserving spreads and
 require a separate analysis.
-
-\begin{table}[t]
-\centering
 \caption{Equal-mean polarization audit at $G=5$.  The second cohort is a
 constructed equal-mean, higher-variance comparison, not a training run or
 an empirical proof of convex order.}
 \label{tab:polarization}
 \small
 \begin{tabular}{@{}lrrrr@{}}
-\toprule
 Cohort & mean $p$ & $\operatorname{Var}(p)$ & ZVF & $1-$ZVF \\
-\midrule
 Observed middle ($n=505$) & 0.6743 & 0.0369 & 0.2680 & 0.7320 \\
 Equal-mean polarized ($n=1000$) & 0.6743 & 0.1140 & 0.5876 & 0.4124 \\
-\bottomrule
 \end{tabular}
-\end{table}
-
 On this finite plug-in cohort, the arbitrary proxy
 $(1-\mathrm{ZVF})/\sqrt{G}$ is largest at $G=4$ on the evaluated integer
 grid. The square-root penalty is not a measured token, FLOP or wall-clock
@@ -630,41 +516,26 @@ interval $[0.00082,0.00270]$ and bootstrap win frequency are withdrawn as
 inferential evidence: independent resampling of prompt-seed keys does not
 preserve shared-prompt and shared-seed dependence. No clustered replacement
 interval or held-out allocation test is available.
-
 \subsection{The current escalation rule mostly spends on solved groups}
-
 The offline rule trace contains four methods, 40 steps, and 16 prompts per step
 ($4\times40\times16=2{,}560$ observations).  It fired 1,867 times.  Table
 \ref{tab:controller-audit} shows the boundary split.
-
-\begin{table}[t]
-\centering
 \caption{Offline escalation-rule audit, not a deployed controller.
 Counts are descriptive, not independent experimental replicates.}
 \label{tab:controller-audit}
-\small
 \begin{tabular}{@{}lrrr@{}}
-\toprule
 Boundary & Rule fires & Share of fires & Recovery estimate \\
-\midrule
 All correct & 1,723 & 92.3\% & not established \\
 All wrong & 144 & 7.7\% & not established \\
-\midrule
 Total & 1,867 & 100\% & -- \\
-\bottomrule
-\end{tabular}
-\end{table}
-
 An all-wrong-only counterfactual would remove 92.3\% of these escalation
 events.  The audit does \emph{not} establish that accuracy would be preserved:
 all-correct samples may still regularize the policy or protect against
 forgetting.  This uncertainty motivates a causal matched-budget comparison of
 symmetric escalation, failure-only retry, and failure-only retry plus solved
 retirement/distillation.
-
 \section{Preregistered Evaluation Contract for PPO and SAO}
 \label{sec:prereg}
-
 \paragraph{Protocol completeness gate.}
 This is a prospective design, not a registered or executed confirmatory
 study. Before any such run, archive a dated manifest of numeric thresholds,
@@ -679,7 +550,6 @@ first priority, then critic repair, transport refresh, low-PAM outcome routes,
 and ordinary update. Low-PAM intermediate-outcome roots fall through to the
 ordinary update but are logged as unclassified, not healthy. Solved/failed
 labels are outcome labels, not calibrated mastery estimates.
-
 All generated tokens, including retries, refreshes and discarded roots, count
 toward the rollout budget. Critic-only and distillation FLOPs and wall time
 must also be charged; token-matched comparisons alone do not establish compute
@@ -688,42 +558,33 @@ component: H3 requires refresh versus widening with all other routes fixed;
 H4 requires root versus chunk routing with the same optimizer and budgets.
 The H3 composite, H4 association measure, H1 regression/baselines and saturation
 screen must be specified before outcomes, not selected after observing them.
-
 The following tests are specified before collecting controller outcomes.
 Pilot data may set thresholds and estimate variance, but it is excluded from
 the confirmatory comparison and thresholds are frozen afterward.
-
 \subsection{Hypotheses and falsification criteria}
-
 \paragraph{H1: diagnostic validity.}
 Within algorithm and training phase, root EGM should predict the sampled
 geometry-aware norm in Eq.~\eqref{eq:gun} better than reward alone, raw
 advantage variance alone, or clip fraction alone.  H1 fails if paired
 out-of-sample $R^2$ does not improve over the best baseline or if EGM bins are
 not monotone in the probability of a nonzero gradient norm.
-
 \paragraph{H2: cause-aware allocation.}
 At matched rollout tokens and environment calls, failure-only retry plus
 solved retirement/distillation should improve held-out success per million
 rollout tokens over symmetric low-signal resampling.  H2 fails if the paired
 95\% confidence interval includes zero on the preregistered primary metric.
-
 \paragraph{H3: refresh beats trust-region widening.}
 For high-PAM/low-GSR roots, fresh-policy recollection should outperform wider
 PPO/DIS clipping at matched generated tokens, measured by stability-adjusted
 held-out success.  H3 fails if refresh does not improve success or if it
 increases collapse/hack rate enough to lose the composite endpoint.
-
 \paragraph{H4: root routing avoids compaction bias.}
 On compacted agent traces, root-level routing should reduce the association
 between number of chunks and selection probability while preserving or
 improving held-out reward.  H4 fails if chunk-level routing performs at least
 as well without measurable compaction bias.
-
 \subsection{Arms, controls, and budgets}
-
 For each algorithm-task cell, compare:
-\begin{enumerate}[leftmargin=*,itemsep=2pt]
   \item \textbf{Base}: the published or repository baseline;
   \item \textbf{Symmetric}: retry any low-EGM root, matching the original GRPO
   escalation semantics;
@@ -732,23 +593,19 @@ For each algorithm-task cell, compare:
   distillation; and
   \item \textbf{Full triage}: boundary-aware routing plus critic-only and
   fresh-policy transport-starvation actions.
-\end{enumerate}
 The GRPO/PPO isolation cell uses the same Qwen3-8B initialization, GSM8K split,
 LoRA rank 4, tokenizer, reward, maximum length, and five seeds.  The agentic
 cell uses an open Qwen3-30B-A3B checkpoint with a fixed scaffold and a public
 SWE-Bench Verified split, matching SAO's published scale where feasible
 \citep{hou2026sao}.  If resource constraints require a smaller model, that
 change is made for all arms and recorded before confirmatory runs.
-
 Primary budgets are generated action tokens and environment calls.  Actor
 forward/backward FLOPs and wall-clock time are secondary budget views.  Each
 arm receives identical maximums and an identical base-stream floor.  Every
 root logs model version, lag, behavior log-probability, token ratio, advantage,
 gate, reward, value prediction, chunk count, selection propensity, invalid
 flag, and route.
-
 \subsection{Endpoints and analysis}
-
 The primary endpoint is held-out success per million generated action tokens.
 Secondary endpoints are held-out pass@1 and pass@k, root-macro ZUF, token-micro
 PAM/GSR/EGM, sampled GUN, critic explained variance and calibration error,
@@ -757,9 +614,7 @@ hack rate, and collapse incidence.  Results use seed-paired differences,
 prompt-clustered bootstrap intervals, and both intention-to-route and
 as-routed analyses.  Hyperparameters and exclusion rules are frozen in a
 machine-readable manifest before the confirmatory run.
-
 \section{Related Work}
-
 PPO introduced the clipped policy surrogate used widely in RLHF
 \citep{schulman2017ppo,ouyang2022training}; GAE provides its standard
 bias-variance tradeoff for critic advantages \citep{schulman2016gae}.
@@ -767,7 +622,6 @@ GRPO removes the learned critic by normalizing rewards within prompt groups
 \citep{shao2024deepseekmath}, a design later popularized in reasoning systems
 \citep{deepseekai2025r1}.  REINFORCE-style baselines such as RLOO offer another
 critic-free route \citep{ahmadian2024back}.
-
 Recent work attacks rollout cost from complementary directions.  CERO treats
 cross-epoch rollout allocation as an online resource-allocation problem
 \citep{zong2026cero}.  BASIS shares information across a batch while using one
@@ -777,7 +631,6 @@ improve the source or allocation of advantage information.  Our focus is the
 downstream accounting question: after baseline estimation and trust-region
 gating, which root trajectories still reach the actor, and what should the
 system do with each failure cause?
-
 SAO directly targets single-rollout asynchronous agentic RL and introduces
 strict double-sided masking, faster critic updates, frozen-attention critic
 training, and skip-observation GAE \citep{hou2026sao}.  Asynchronous
@@ -787,16 +640,13 @@ the interaction between staleness and learning rate in asynchronous RLHF
 \citep{song2026staleness}.  \method is complementary: it treats staleness as
 one observable cause of signal non-survival and routes it without relaxing the
 base optimizer's stability rule.
-
 \section{Limitations and Broader Impact}
-
 \paragraph{Submission non-claims.}
 This workshop-short manuscript does not report PPO or SAO training results.
 Instrumentation and preregistration under
 \path{platform_hybrid/experiments/signal_starvation/} are shipped so those
 runs can be executed later; their absence does not weaken the GRPO-grounded
 diagnostic or the evaluation contract stated above.
-
 First, EGM is not an improvement guarantee.  It ignores score-vector geometry,
 optimizer preconditioning, gradient interference across roots, and the
 possibility that a large gradient is harmful.  Periodic GUN measurement and
@@ -804,7 +654,6 @@ held-out reward are therefore necessary.  Second, critic errors can make the
 semantic split wrong: a low advantage may reflect miscalibration rather than
 true saturation.  The critic-lag route and calibration diagnostics reduce but
 do not eliminate this risk.
-
 Third, the binary solved/failed framing is cleanest for verifiable rewards.
 Dense or multi-objective environments require vector-valued boundary rules and
 careful reward-scale normalization.  Fourth, retry curricula change data
@@ -815,9 +664,7 @@ PPO/SAO generalization remains unverified until the evaluation contract is
 executed.  Finally, adaptive hard-example sampling can amplify unsafe or
 adversarial behaviors.  Invalid/hack quarantine, a base-stream floor, capped
 retries, and fixed held-out safety evaluation are required guardrails.
-
 \section{Conclusion}
-
 GRPO flat groups, PPO clipping, and SAO double-sided masking look like separate
 pathologies because they occur at different stages.  At the actor interface,
 they share a simple structure: an advantage must be generated and then survive
@@ -829,202 +676,66 @@ corrupted rewards.  Existing GRPO artifacts establish the accounting identity
 and motivate the asymmetry; matched-budget PPO and SAO experiments must decide
 whether it improves learning.  That separation between verified evidence and
 testable proposal is the central methodological commitment of this work.
-
 % --- appendix figures (moved before bibliography for denser last page) ---
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
     node distance=0.9cm and 1.0cm,
     box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
     box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
     box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
     \node [box1] (n1) {Trajectory Batch};
     \node [box2, right=of n1] (n2) {\textbf{Potential Advantage Mass (PAM) Distribution}\\PAM Calculator};
     \node [box3, right=of n2] (n3) {Advantage Distribution};
-
     \draw [arrow] (n1) -- (n2);
     \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
 \caption{\textbf{Potential Advantage Mass (PAM) Distribution}. Distribution of advantage magnitudes across training trajectories.}
 \label{fig:n01_pam_distribution}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
     \node [box1] (n1) {Gradient Tokens};
     \node [box2, right=of n1] (n2) {\textbf{Gradient Survival Ratio (GSR) Vanishing Flow}\\GSR Decay Engine};
     \node [box3, right=of n2] (n3) {Surviving Gradient Mass};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
 \caption{\textbf{Gradient Survival Ratio (GSR) Vanishing Flow}. Mechanism of gradient signal decay under token clipping.}
 \label{fig:n01_gsr_vanishing}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
     \node [box1] (n1) {Rollout Batch};
     \node [box2, right=of n1] (n2) {\textbf{Effective Gradient Mass (EGM) State Transition}\\EGM State Evaluator};
     \node [box3, right=of n2] (n3) {State Transition Matrix};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
 \caption{\textbf{Effective Gradient Mass (EGM) State Transition}. Transition matrix between zero and non-zero EGM states.}
 \label{fig:n01_egm_transition}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
     \node [box1] (n1) {Failed Trajectory};
     \node [box2, right=of n1] (n2) {\textbf{TRIAGE-RL Action Router 5-Way Classification}\\5-Way Cause Classifier};
     \node [box3, right=of n2] (n3) {Assigned Action Route};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
 \caption{\textbf{TRIAGE-RL Action Router 5-Way Classification}. Classifying rollout failures into five distinct causal categories.}
 \label{fig:n01_triage_classification}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
     \node [box1] (n1) {Diagnostic Telemetry};
     \node [box2, right=of n1] (n2) {\textbf{Critic Lag vs Transport Error Diagnostic Seams}\\Seam Diagnostic Module};
     \node [box3, right=of n2] (n3) {Pinpointed Error Cause};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
 \caption{\textbf{Critic Lag vs Transport Error Diagnostic Seams}. Distinguishing critic estimation lag from data transport bottlenecks.}
 \label{fig:n01_critic_transport}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
     \node [box1] (n1) {Trajectory Buffer};
     \node [box2, right=of n1] (n2) {\textbf{Stale Rollout Refresh vs Standard Policy Update}\\Staleness Checker};
     \node [box3, right=of n2] (n3) {Refresh vs Update Action};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
 \caption{\textbf{Stale Rollout Refresh vs Standard Policy Update}. Branching logic for refreshing stale trajectory buffers.}
 \label{fig:n01_stale_refresh}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
     \node [box1] (n1) {Rollout Rewards};
     \node [box2, right=of n1] (n2) {\textbf{Zero-Variance Fraction (ZVF) Diagnostic Pipeline}\\ZVF Metric Calculator};
     \node [box3, right=of n2] (n3) {Zero-Variance Ratio};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
 \caption{\textbf{Zero-Variance Fraction (ZVF) Diagnostic Pipeline}. Real-time calculation of zero-variance rollout fraction.}
 \label{fig:n01_zvf_pipeline}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
     \node [box1] (n1) {Training Arms Grid};
     \node [box2, right=of n1] (n2) {\textbf{Multi-Arm Controlled Exploration Protocol}\\Exploration Scheduler};
     \node [box3, right=of n2] (n3) {Optimized Training Policy};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
 \caption{\textbf{Multi-Arm Controlled Exploration Protocol}. Controlled exploration protocol across multiple training arms.}
 \label{fig:n01_multiarm_exploration}
-\end{figure}
-
 \bibliographystyle{plainnat}
 \bibliography{references}
 \appendix
-
 \section{Proofs and Derivations}
 \label{app:proofs}
-
 \subsection{PPO's sign-dependent gate}
-
 For $A_t>0$, Eq.~\eqref{eq:ppo} equals the constant
 $(1+\epsilon)A_t$ whenever $\rho_t>1+\epsilon$, so its policy gradient is zero.
 Below that boundary it equals $\rho_tA_t$.  For $A_t<0$, the minimum reverses
 which branch is active: the surrogate objective is constant below $1-\epsilon$ and remains
 $\rho_tA_t$ otherwise.  This yields Eq.~\eqref{eq:ppo-gate}, ignoring the
 measure-zero nondifferentiable boundary.
-
 \subsection{Pass@G/ZVF identity}
-
 Conditioned on $p_x$, an all-success group occurs with probability $p_x^G$,
 an all-failure group with probability $(1-p_x)^G$, and a contrastive group
 with the remaining probability.  Averaging over prompts gives
@@ -1034,9 +745,7 @@ with the remaining probability.  Averaging over prompts gives
   &=1-\E_x[p_x^G+(1-p_x)^G]\\
   &=1-\mathrm{ZVF}_G.
 \end{align*}
-
 \subsection{Polarization proposition}
-
 For $G\geq2$,
 \begin{equation*}
   f_G''(p)=G(G-1)\left(p^{G-2}+(1-p)^{G-2}\right)\geq0.
@@ -1044,12 +753,9 @@ For $G\geq2$,
 Thus $f_G$ is convex.  If $P'$ is a mean-preserving spread of $P$, then $P'$ 
 dominates $P$ in convex order, so $\E[f_G(P')]\geq\E[f_G(P)]$.  By
 Eq.~\eqref{eq:zvf}, expected ZVF cannot decrease.
-
 \section{Implementation Contract}
 \label{app:implementation}
-
 \subsection{Minimum log schema}
-
 \begin{sloppypar}
 Each action token should record
 \path{root_trajectory_id}, \path{chunk_id}, \path{token_index},
@@ -1061,9 +767,7 @@ sampling propensity, route, retry count, generated tokens, environment calls,
 and wall-clock latency.  Observations are excluded from actor EGM in
 skip-observation agentic training.
 \end{sloppypar}
-
 \subsection{Numerical checks}
-
 The implementation should assert:
 \begin{enumerate}[leftmargin=*]
   \item $0\leq\gsr\leq1$ and $\egm=\pam\cdot\gsr$ to numerical tolerance;
@@ -1075,10 +779,7 @@ The implementation should assert:
   \item actor epochs stop on the same batch when GSR falls below threshold;
   \item base-stream probability never falls below $q_{\min}$; and
   \item invalid roots never enter retry or actor-update queues.
-\end{enumerate}
-
 \subsection{Reference integration points}
-
 The repository's compact PPO implementation computes ratios, clipped surrogate
 losses, approximate KL, clip fractions, and the new detached PAM/GSR/EGM
 diagnostics in
@@ -1089,10 +790,8 @@ machine-readable contract live in
 instrumentation on a small arithmetic PPO implementation, not evidence for
 language-model PPO, SAO, or GLM-5.2. Production conclusions require the
 matched-budget experiments in Section~\ref{sec:prereg}.
-
 \section{Reproducibility and Evidence Ledger}
 \label{app:ledger}
-
 The deterministic audit is reproduced from the repository root with:
 \begin{verbatim}
 python3 analysis/breakthroughs_2026-07-13/analyze_breakthroughs.py
@@ -1107,12 +806,9 @@ The generated summary is
 \path{analysis/breakthroughs_2026-07-13/summary.json}.  The audit explicitly
 marks causal held-out improvement, global $G=4$ optimality, and performance
 preservation under all-wrong-only routing as not established.
-
 \section{Decision Rules for Negative Results}
-
 The proposed controller should be rejected or revised under any of the
 following outcomes:
-\begin{itemize}[leftmargin=*]
   \item EGM fails to predict sampled gradient norm beyond clip fraction and
   advantage variance;
   \item failure-only routing improves training reward but reduces untouched
@@ -1124,9 +820,307 @@ following outcomes:
   \item refresh loses held-out success at matched total generated-token and
   compute budgets (tokens and coefficient mass are not comparable units); or
   \item root-level routing does not reduce chunk-count selection bias.
-\end{itemize}
 Publishing these failures would still test the paper's central premise: a
 diagnostic should earn control authority through prospective evidence rather
 than through an appealing retrospective decomposition.
-
 \end{document}
+a zero reward-conditioned score-function gradient (not of a zero total
+actor update when KL or entropy terms are active); positive EGM is deliberately treated as
+We ground the proposal in two checked-in group-sampling artifacts.  For 505
+prompt-seed tasks (Qwen3-8B on GSM8K), contrastive group yield equals the gap
+between pass@G and unanimous success by an exact algebraic identity.  In a
+2,560-observation boundary-escalation trace (Qwen3.5-4B, four group-based
+methods), 1,723 of 1,867 escalation events (92.3\%) occurred on all-correct
+groups, whereas only 144 occurred on all-wrong groups.
+Verified here: the identity between pass@G and the GRPO Zero-Variance
+Fraction (ZVF; the pre-gate, group-reward specialization of starvation,
+distinct from the root-level ZUF), a plug-in conditional group-size calculation
+(shown not to be robust to estimator choice), and all-correct/all-wrong
+escalation counts recomputed from raw reward tensors.
+evaluation contract.  \emph{Not claimed}: any PPO or SAO training outcome (including
+GLM-5.2-style pipelines); causal held-out improvement from TriageRL; or global optimality of a
+\paragraph{Evidence boundary.} In the audited binary-reward GRPO trace,
+92.3\% of flat-group escalation events fell on all-correct groups; that
+prevalence is measured (Section~\ref{sec:evidence}).  Whether retiring or
+distilling such solved groups improves held-out accuracy in GRPO, PPO, or SAO,
+and whether the solved-saturation regime carries over to dense or non-binary
+rewards, is prospective and untested.
+    \node [diagbox, right=of metrics] (triage) {\textbf{Cause Classifier}\\Solved / Failed / Critic Lag /\\Transport / Invalid / Healthy};
+    \node [routerbox, below=1.6cm of metrics, xshift=1.2cm] (router) {
+        \textbf{TriageRL Action Router}\\
+        Refresh Stale Rollouts $\big|$ Quarantine (Invalid) $\big|$ Standard Update
+    \draw [arrow] (triage.south) -- (triage.south |- router.north);
+    \draw [arrow] (metrics.south) -- (metrics.south |- router.north);
+\caption{\textbf{Signal starvation diagnostic and TriageRL action router.} Decomposing credit into Potential Advantage Mass ($\text{PAM}$) and Gradient Survival Ratio ($\text{GSR}$), certifying Effective Gradient Mass ($\text{EGM}$), and routing distinct failure causes.}
+production agentic pipeline closely aligned with single-rollout critic-based
+optimization: compacted long trajectories yield variable numbers of trainable
+sub-traces, so training moved from group-wise optimization to critic-based PPO
+over individual rollouts, combined with trajectory compaction and online
+anti-hack filtering \citep{glm2026glm52}.  We therefore treat GLM-5.2 as a
+systems instance of the PPO/SAO setting, not as a fourth surrogate loss.
+Across GRPO, PPO, and SAO the algorithms differ, but the operational question is
+  signal in GRPO, PPO, and SAO, together with an exact score-function zero-gradient
+  certificate and an explicit non-converse;
+  \item two results reproduced from checked-in group-sampling artifacts: an
+  exact pass@G/ZVF accounting identity and a strong asymmetry between
+  all-correct and all-wrong escalation fires; and
+The mathematical identities and reported GRPO counts are verified.  The
+unified controller is a method proposal.  Its PPO and SAO benefits are
+falsifiable hypotheses, not current empirical claims.  The GRPO numbers are
+re-analyses of artifacts shared with companion GRPO studies by the same author
+(Section~\ref{sec:evidence}, Appendix~\ref{app:ledger}); they are not an
+independent replication of those studies.
+The policy surrogate objective (maximized; its negative is the loss) uses a
+detached advantage estimate $A_t$ and, depending on the algorithm, a detached
+binary token gate $m_t\in\{0,1\}$.
+Here $\bar R_x$ and $s_x\ge0$ are the group mean and standard deviation of
+$R_1,\ldots,R_G$, $\varepsilon>0$ is a stabilizer that avoids $0/0$, and every
+action token $t$ of response $i$ receives $A_t=A_i^{\mathrm{grp}}$.  In GRPO we
+take a root $\tau$ to be one response.  If all rewards are equal,
+$A_i^{\mathrm{grp}}=0$ for every response and every token.  A later PPO-style clip may also suppress signal, but the defining
+    0, & A_t>0\ \text{and}\ \rho_t\geq1+\epsilon,\\
+    0, & A_t<0\ \text{and}\ \rho_t\leq1-\epsilon,\\
+    \node [card] (pam) {\textbf{Potential Advantage Mass}\\[2pt]$\text{PAM}(\mathcal{B}) = \frac{1}{|\mathcal{B}|}\sum_{t\in\mathcal{B}} (\rho_t A_t)^2$};
+    \node [card, right=of pam] (gsr) {\textbf{Gradient Survival Ratio}\\[2pt]$\text{GSR}(\mathcal{B}) = \frac{\sum_{t\in\mathcal{B}} m_t(\rho_t A_t)^2}{\sum_{t\in\mathcal{B}} (\rho_t A_t)^2}$};
+        $\text{EGM}(\mathcal{B}) = 0 \implies g_{\mathcal{B}} = \mathbf{0} \quad (\text{score-function gradient only})$
+\caption{\textbf{Token-level credit factorization and zero-update certificate.} Illustrating the product decomposition $\text{EGM} = \text{PAM} \times \text{GSR}$ and the exact score-function zero-update certificate.}
+The factorization in Eq.~\eqref{eq:egm} uses $m_t^2=m_t$, which holds because
+the gate is binary; a continuous gate would require $m_t^2$ in the numerator of
+Eq.~\eqref{eq:gsr}.  If $|\mathcal{B}|=0$ (a root with no trainable action
+token), we set $\pam=\gsr=\egm=0$.
+For a root trajectory $\tau$ compacted into chunks $\tau_1,\ldots,\tau_J$, let
+$\mathcal{B}(\tau)=\bigcup_{j=1}^{J}\mathcal{B}(\tau_j)$ be its trainable action
+tokens and write $\egm(\tau)=\egm(\mathcal{B}(\tau))$.  For a set of root
+trajectories $\mathcal{R}$, define the near-zero update rate
+(ZVF): every response of a flat GRPO group has $\egm=0$, but a response
+in a non-flat group can also have $\egm=0$ when $R_i=\bar R_x$ (e.g., with
+non-binary rewards), so $\zuf_0\ge$ the response-weighted ZVF.
+\begin{proposition}[Exact score-function zero-gradient certificate]
+$g_{\mathcal{B}}$ in Eq.~\eqref{eq:gradient} is exactly zero.  The total actor
+update may remain nonzero when KL or entropy regularizers are active.
+predict this squared gradient-update norm and, separately, marginal learning progress
+to earn operational trust.
+and pool all action tokens of the root, $\egm_{\rm root}(\tau)=
+\sum_{j}\sum_{t\in\mathcal{B}(\tau_j)}c_t^2/\sum_j|\mathcal{B}(\tau_j)|$, which
+is invariant to lossless re-chunking.  For reporting over a set $\mathcal{R}$ we
+give both root-macro ZUF (each episode counts once) and dataset-level
+token-micro $\egm_{\rm micro}(\mathcal{R})=\sum_{\tau}\sum_{t\in\mathcal{B}(\tau)}
+c_t^2/\sum_{\tau}|\mathcal{B}(\tau)|$ (each trainable token counts once).
+Because $\egm(\tau)$ is a per-token mean, a long root whose surviving mass is
+concentrated on a few pivotal tokens is diluted by $1/|\mathcal{B}(\tau)|$ and
+crosses a fixed $\delta>0$ more easily than a short root with the same total
+mass; thresholds are therefore calibrated within length strata, and the summed
+mass $|\mathcal{B}(\tau)|\,\egm(\tau)$ is logged alongside.  A retry, retirement, or quarantine decision is made once
+$e_V(\tau)=|R(\tau)-\hat V(\tau)|$ the per-root value residual,
+$u_V(\tau)$ a per-root critic-uncertainty estimate (ensemble disagreement when
+an ensemble exists; otherwise the warm-up residual quantile of the prompt's
+stratum, so single-critic PPO/SAO is covered), and $h(\tau)$ an invalid/hack
+flag.  These per-root quantities route individual roots; the periodic
+held-out calibration statistics of Section~\ref{sec:controller} only set the
+global critic step ratio $K_V$.  For critic-free GRPO, $\hat V$ is replaced by
+the prompt's running success estimate and the critic-lag branch is disabled.  Table~\ref{tab:states} maps observable states to distinct
+causes.  Thresholds $(\tau_V,\tau_U,\tau_A,\tau_S,\tau_R^{\rm fail},\tau_R^{\rm solve},\delta)$
+are set to preregistered quantiles of their warm-up distributions (per
+algorithm, task, and length stratum) and frozen before the comparison arms run.
+\caption{Cause-aware routing: five non-healthy causes plus the healthy
+state, six routes in all.  $\hat V$ is the critic's pre-outcome value, $e_V(\tau)$
+the per-root value residual, $u_V(\tau)$ critic uncertainty (defined in
+Section~\ref{sec:semantics}).  Low/high are relative to preregistered
+warm-up thresholds, not values tuned on final outcomes.}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.15\linewidth}>{\raggedright\arraybackslash}p{0.2\linewidth}XXX@{}}
+Critic lag & high $e_V(\tau)$ or $u_V(\tau)$ & unreliable credit & defer & critic-only updates \\
+Healthy & $\egm>\delta$, acceptable $e_V(\tau)$ & update can teach & actor-critic & base stream \\
+value $\hat V(\tau)$, per-root diagnostics $e_V(\tau),u_V(\tau)$, outcome $R$,
+invalid flag $h$, frozen thresholds
+$\tau_V,\tau_U,\tau_A,\tau_S,\tau_R^{\rm fail},\tau_R^{\rm solve},\delta$
+\STATE \textit{Global dispatcher invariant (not a per-root step): the base data
+stream keeps mixture weight at least $q_{\min}$.}
+\ELSIF{critic present and ($e_V(\tau)>\tau_V$ or $u_V(\tau)>\tau_U$)}
+  \STATE use $\tau$ for critic-only updates; drop it from the actor (no re-triage)
+\ELSIF{$\pam\leq\tau_A$ and $R\leq\tau_R^{\rm fail}$ and $\hat V\leq\tau_R^{\rm fail}$}
+\ELSIF{$\pam\leq\tau_A$ and $R\geq\tau_R^{\rm solve}$ and $\hat V\geq\tau_R^{\rm solve}$}
+\ELSIF{$\egm(\tau)>\delta$}
+  \STATE log as unresolved low-signal (intermediate $R$, or $R$/$\hat V$
+  disagreement); no retry, no retirement; apply the ordinary update with its
+  (near-zero) coefficients
+success, starting from a preregistered prior $(\alpha_0,\beta_0)$ and updated
+with observed successes and failures, and score
+    \E[p_x(1-p_x)]+\kappa_{\rm UCB}\sqrt{\operatorname{Var}[p_x(1-p_x)]}}
+    {\widehat{\mathrm{cost}}(x)}
+  \,\ind[x\ \text{has an unretired failed-starved root}],
+subject to a per-root retry cap.  Both moments follow in closed form from the
+first four Beta moments with $S_x=\alpha_x+\beta_x$; $\widehat{\mathrm{cost}}(x)$
+is the running mean of generated action tokens plus environment calls per
+rollout of $x$.  The queue samples stochastically,
+$q_{\rm retry}(x)\propto\exp(U_x/T_q)$ with a preregistered temperature $T_q$,
+so that every queued prompt has a positive, logged propensity.  The posterior variance term explores
+For PPO, recompute PAM, GSR, and EGM on the current ratios $\rho_t(\theta)$
+after each actor epoch and stop when either target KL is exceeded or
+$\gsr<\tau_S$ (the same predicate as Algorithm~\ref{alg:triage}); EGM is logged
+but is not a separate stopping rule.  High
+PAM plus low GSR means additional epochs cannot recover the masked evidence.
+step.  Increase $K_V$ by one (up to a fixed $K_{\max}$) at each evaluation interval in
+which held-out explained variance, calibration, or ensemble disagreement crosses
+its frozen warm-up threshold, and decrease it by one (down to $1$) when all
+three are within threshold.  SAO's
+We mix it with the base sampler,
+$q(x)=\lambda p_0(x)+(1-\lambda)q_{\rm retry}(x)$ with $\lambda\ge q_{\min}$, so
+every prompt keeps probability at least $q_{\min}p_0(x)$.  Each root logs its
+selection probability $q(x)$ and reference probability $p_0(x)$.  When the
+target is the base distribution, the actor loss is multiplied, after PAM and
+EGM are computed, by a clipped prompt-propensity weight
+This only partially corrects pre-rollout prompt selection: truncation at
+$w_{\max}$ and the outcome-conditioned routing of Algorithm~\ref{alg:triage}
+(which changes $\Pr(\tau\ \text{updates the actor}\mid x)$) leave the update
+biased, so every such run is labeled curriculum optimization rather than an
+unbiased estimator of the base objective.  Untouched held-out evaluation remains mandatory.
+artifacts (Appendix~\ref{app:ledger}); it contains no PPO or SAO run.  The
+group-size cohort comes from Qwen3-8B GRPO on GSM8K run through the Tinker API
+(three seeds, 200 problems, one $G{=}8$ group per seed and problem at
+temperature 1.0).  Each $p_x=k_x/8$ is the empirical success rate of that
+group, and the cohort keeps only the uncertain middle $1\le k_x\le7$
+(505 of 600 groups).  The source table has 2,525 rows because each of the 505
+$(\text{seed},\text{problem})$ keys is listed once per target-yield level
+(five levels) with the same $p_x$; no key has conflicting values.
+can use.  The identity is algebraic: evaluating both sides on the stored
+$p_x$ for $G=2,\ldots,16$ agrees to floating-point precision, which checks the
+implementation, not an empirical prediction.  All $G$-dependent quantities
+below are analytic plug-in evaluations of Eq.~\eqref{eq:zvf} at the stored
+$p_x$, not sampled groups of size $G$.  The identity and the convexity in
+Proposition~\ref{prop:polar} are known for binary-reward GRPO
+\citep{nie2026gradstarvation}; we use them as an accounting baseline rather
+than as new results.
+\label{prop:polar}
+The proof is in Appendix~\ref{app:proofs}.  The proposition covers only
+mean-preserving spreads.  A shift that also raises average reward combines a
+spread with an upward move of easy prompts; because $f_G'(p)>0$ for $p>1/2$,
+that upward move raises ZVF further, so improving easy prompts while making
+hard prompts harder can raise average reward and still reduce contrastive
+yield.  Table~\ref{tab:polarization} illustrates the equal-mean case with a
+constructed two-point cohort ($518$ prompts at $p{=}1$ and $482$ at
+$p{=}\mu-0.35{=}0.3243$, matching the observed mean).  The observed cohort has
+mass below $0.3243$, so this comparison is not a formal mean-preserving spread
+and does not rely on Proposition~\ref{prop:polar}; both ZVF values are computed
+directly from Eq.~\eqref{eq:zvf}.
+\caption{Equal-mean polarization comparison at $G=5$ (plug-in).  The second
+cohort is a constructed equal-mean two-point comparison, not a training run.}
+Equal-mean polarized ($n=1{,}000$) & 0.6743 & 0.1140 & 0.5876 & 0.4124 \\
+For allocation we use the declared utility $U(G)=(1-\mathrm{ZVF}_G)/\sqrt{G}$,
+a contrastive yield per $\sqrt{G}$ cost unit chosen to reflect sublinear batched
+generation cost; it is a modeling choice.  Under the plug-in estimate on the
+uncertain-middle cohort, $U(2),U(3),U(4),U(5)=0.2584,0.3165,0.3291,0.3274$, so
+$G=4$ is the argmax over $G=2,\ldots,16$.  The $G=4$ minus $G=5$ difference is
+0.00177, with 95\% bootstrap intervals $[0.00082,0.00272]$ resampling keys and
+$[0.00083,0.00272]$ resampling the 199 problems as clusters.  Two caveats
+change the reading.  Under linear rollout cost, $(1-\mathrm{ZVF}_G)/G$ is
+maximized at $G=2$ (tied with $G=3$) and decreases thereafter.  And because
+$f_G$ is convex, plugging in $\hat p_x=k_x/8$ overstates $\mathrm{ZVF}_G$; the
+unbiased estimator $[\binom{k_x}{G}+\binom{8-k_x}{G}]/\binom{8}{G}$ (valid for
+$G\le8$) gives $U(4)=0.37784$ and $U(5)=0.37789$, a tie.  The $G=4$ selection is
+therefore an artifact of the plug-in estimator for this cohort and utility, not
+a robust or global optimum.
+The escalation trace replays a boundary rule on raw binary reward tensors from
+Qwen3.5-4B trained through the Tinker API with four group-based methods (GRPO,
+AERO, GIFT, AReaL), seed 0, 40 steps, 16 prompts per step, $G=8$ rollouts per
+prompt ($4\times40\times16=2{,}560$ observations).  The rule starts at $G=8$
+and fires exactly when a group is flat ($k\in\{0,8\}$), requesting a larger
+group.  It fired 1,867 times.  Table~\ref{tab:controller-audit} shows the
+boundary split, recomputed directly from the tensors; the all-correct share is
+91.6--92.6\% within each method.
+\caption{Audited escalation events (flat $G{=}8$ groups), pooled over the four
+methods.  Per method (all-correct/all-wrong): GRPO 427/34, AERO 427/34,
+GIFT 455/38, AReaL 414/38.}
+\begin{tabular}{@{}lrr@{}}
+Boundary & Fires & Share of fires \\
+All correct & 1,723 & 92.3\% \\
+All wrong & 144 & 7.7\% \\
+Total & 1,867 & 100\% \\
+Within algorithm and training phase, root $\log\egm$ should predict the
+sampled root-level $\log\mathrm{GUN}$ (Eq.~\eqref{eq:gun}) in an OLS fit better
+than reward alone, raw advantage variance alone, clip fraction alone, or a joint
+clip-fraction-plus-advantage-variance baseline.  H1 fails if paired
+out-of-sample $R^2$ does not improve over the best baseline or if the conditional
+mean of GUN is not monotone across EGM deciles.
+At matched generated action tokens and environment calls, failure-only retry
+plus solved retirement/distillation should improve held-out success per million
+generated action tokens over symmetric low-signal resampling.  H2 fails if the paired
+For high-PAM/low-GSR roots, fresh-policy recollection (Arm 5b) should
+outperform wider PPO/DIS clipping (Arm 7) at matched generated action tokens,
+measured by held-out success per million generated action tokens, subject to
+non-inferior collapse and reward-hack rates at a preregistered margin.  H3 fails
+if refresh does not improve held-out success or if either rate exceeds that
+margin.
+On compacted agent traces, root-level routing (Arm 6) should reduce the
+partial Spearman correlation between chunk count $J$ and selection probability
+$q(\tau)$, conditioned on prompt and outcome, relative to chunk-level routing
+(Arm 8), while preserving or improving held-out reward.  H4 fails if chunk-level
+routing performs at least as well without a significantly positive correlation.
+  distillation;
+  \item[5a.] \textbf{Critic-repair triage}: boundary-aware routing plus
+  critic-only repair;
+  \item[5b.] \textbf{Refresh triage}: boundary-aware routing plus fresh-policy
+  recollection for transport starvation;
+  \item[6.] \textbf{Full triage}: boundary-aware routing plus both actions;
+  \item[7.] \textbf{Wider-clip control} (for H3): boundary-aware routing with
+  widened PPO $\epsilon$ or DIS $(\epsilon_l,\epsilon_h)$; and
+  \item[8.] \textbf{Chunk-routed control} (for H4): full triage applied to
+  compacted chunks instead of roots.
+The GRPO/PPO isolation cell uses the same Qwen3-8B initialization, GSM8K and
+MATH-500 splits, LoRA rank 4, tokenizer, reward, maximum length, and five seeds.
+GSM8K alone is expected to be dominated by solved saturation for this model, so
+the harder split is included to give failed starvation enough support; the
+warm-up must show a preregistered minimum count of failed-starved roots per arm
+before confirmatory runs start.  The agentic
+Primary budgets are total generated action tokens and environment calls,
+counting irreversibly every token and call spent on quarantined, critic-deferred,
+and pre-refresh trajectories.  Total learner (actor, critic, and distillation)
+forward/backward FLOPs and wall-clock time are secondary budget views, with an
+iso-FLOP parity check reported beside the primary token-budget endpoint.  Each
+token-level credit for single-rollout PPO \citep{che2026single}.  DAPO filters flat (all-correct and all-wrong)
+groups symmetrically by dynamic sampling and decouples the upper clip bound
+(Clip-Higher) \citep{yu2025dapo}; GRESO predicts and skips zero-variance prompts
+before rollout from their reward history \citep{zheng2025greso}; Dr.~GRPO removes
+the group standard-deviation and length normalizations \citep{liu2025drgrpo}.
+\method differs from DAPO and GRESO in being asymmetric: all-correct groups are
+retired or distilled rather than resampled, only failed-starved roots are
+retried, and clipped high-advantage roots are refreshed rather than handled by a
+wider upper clip.  On the critic side, VAPO \citep{yue2025vapo} and VinePPO
+\citep{kazemnejad2025vineppo} improve value estimation and credit assignment for
+long-horizon reasoning PPO; \method's critic-lag route only detects and defers
+miscalibrated credit and could use either estimator.  These methods
+which branch is active: the surrogate is constant below $1-\epsilon$ and remains
+$\rho_tA_t$ otherwise.  This yields Eq.~\eqref{eq:ppo-gate}; we assign the measure-zero
+nondifferentiable boundary to the gated side, matching the strict interior
+convention of Eq.~\eqref{eq:sao-gate}.
+reward components, value prediction, per-root value residual $e_V(\tau)$,
+critic uncertainty, invalid/hack reason,
+  \item flat GRPO groups have PAM and EGM equal to zero (to numerical tolerance);
+  \item the diagnostic reducer is invariant to a lossless repartition of fixed
+  token tuples $(\rho_t,A_t,m_t)$ into chunks (re-chunking during generation
+  changes the tuples themselves and is not covered);
+  \item actor epochs stop on the same batch when GSR falls below $\tau_S$;
+  \item the base-stream mixture weight never falls below $q_{\min}$; and
+The numbers in Section~\ref{sec:evidence} are reproduced from the repository
+root with:
+python3 tools/review_ledger/P12_signal_starvation_recompute.py
+It reads
+\path{platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv}
+(the 505-task cohort) and the raw reward tensors
+\path{platform_hybrid/experiments/results/n2_reward_tensor_resume/*_s0_tensors.jsonl}
+(the escalation counts), and writes
+\path{platform_hybrid/experiments/results/review_2026-10-18/P12_signal_starvation/recompute.json}.
+The earlier audit script
+\path{analysis/breakthroughs_2026-07-13/analyze_breakthroughs.py} gives the
+same cohort numbers; it also reads
+\path{platform_hybrid/experiments/results/berkeley/passk_reliability_curve.tsv}
+only as a cross-check that the pass@$k$/pass$^k$ curve comes from the same
+cohort (agreement within $4.4\times10^{-6}$), and no reported number depends on
+it.  A per-escalation ``recovered contrast'' column previously reported in
+Table~\ref{tab:controller-audit} was dropped: it came from an earlier version
+of the escalation script that formed larger groups by merging rollouts of
+different prompts, which are not valid GRPO groups.  The audit explicitly
+  \item EGM fails to predict sampled root-level log-GUN beyond the best of the
+  single baselines and the joint clip-fraction-plus-advantage-variance baseline;
+  \item fresh-policy recollection yields lower cumulative surviving gradient
+  mass per generated action token, or lower held-out success per million
+  generated action tokens, than continuing epochs or widening the trust region; or

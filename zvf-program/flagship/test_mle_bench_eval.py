@@ -280,14 +280,15 @@ class FailClosedReceiptTests(unittest.TestCase):
             checkout = _fake_checkout(Path(tmp) / "checkout")
             data_dir = Path(tmp) / "data"
             data_dir.mkdir()
-            return runner.build_receipt(
-                checkout=checkout,
-                competition_id=kwargs.pop("competition_id", None),
-                data_dir=kwargs.pop("data_dir", data_dir),
-                observed_at="2026-08-09",
-                inspect_docker=False,
-                **kwargs,
-            )
+            with patch.object(runner, "verify_source_checkout", return_value={"verified": True, "test_only": True}):
+                return runner.build_receipt(
+                    checkout=checkout,
+                    competition_id=kwargs.pop("competition_id", None),
+                    data_dir=kwargs.pop("data_dir", data_dir),
+                    observed_at="2026-08-09",
+                    inspect_docker=False,
+                    **kwargs,
+                )
 
     def test_receipt_defaults_to_the_smallest_competition(self) -> None:
         receipt = self._receipt()
@@ -481,11 +482,11 @@ class InvalidControlTests(unittest.TestCase):
             prepared.mkdir(parents=True)
             source = prepared / "sample_submission.csv"
             source.write_text("id,a,b\nid1,0.5,0.5\n", encoding="utf-8")
-            before = source.read_text(encoding="utf-8")
+            before = source.read_bytes()
             control = runner.build_invalid_control(source, Path(tmp) / "controls")
 
-        self.assertNotIn(str(prepared), str(control))
-        self.assertEqual(before, "id,a,b\nid1,0.5,0.5\n")
+            self.assertEqual(source.read_bytes(), before)
+            self.assertFalse(control.resolve().is_relative_to(prepared.resolve()))
 
     def test_control_preserves_non_numeric_id_column(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -369,13 +369,13 @@ class LifeSciBenchEvalAdapterTests(unittest.TestCase):
             ),
         )
 
-    def test_no_live_runtime_or_network_imports(self) -> None:
+    def test_import_architecture_excludes_network_clients(self) -> None:
         import ast
         from pathlib import Path
 
         path = Path(e8.__file__)
         tree = ast.parse(path.read_text(), filename=str(path))
-        forbidden = {"requests", "httpx", "browsergym", "playwright", "wandb", "tinker", "os", "subprocess"}
+        forbidden = {"socket", "urllib", "http", "ftplib", "requests", "httpx", "browsergym", "playwright", "wandb", "tinker", "os", "subprocess"}
         imported = set()
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):

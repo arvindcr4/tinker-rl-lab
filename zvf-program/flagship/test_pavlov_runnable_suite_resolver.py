@@ -130,9 +130,6 @@ def runtime_bundle(registry: dict[str, object]) -> dict[str, object]:
         "status": "READY",
         "revision": "f" * 40,
         "receipt_refs": {
-            key: f"receipt://xlam/{key}" for key in RECEIPT_KEYS
-        },
-        "receipt_refs": {
             **{key: f"receipt://xlam/{key}" for key in RECEIPT_KEYS},
             "runtime": "receipt://xlam/runtime",
         },

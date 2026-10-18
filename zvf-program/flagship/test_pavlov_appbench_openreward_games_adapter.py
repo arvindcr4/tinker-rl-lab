@@ -588,7 +588,8 @@ class AppBenchGrantTests(unittest.TestCase):
             ]
         )
         grant["graders"]["count"] = 1
-        with self.assertRaises(adapter.PavlovAppbenchOpenrewardGamesAdapterError):
+        grant = self._sign(grant)
+        with self.assertRaisesRegex(adapter.PavlovAppbenchOpenrewardGamesAdapterError, "two-grader"):
             adapter.validate_appbench_provider_grant(grant, trust_root=self.TEST_ROOT)
 
     def test_only_exact_provider_signed_result_can_complete(self):

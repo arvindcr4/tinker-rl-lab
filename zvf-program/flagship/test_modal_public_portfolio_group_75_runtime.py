@@ -63,7 +63,11 @@ class Launcher75Tests(unittest.TestCase):
         ns=helpers();raw,selection,funds,prior=fixture(ns)
         for key,value in [('source_sha256',{}),('full_expected_total',4427),('continuation_count',2),('automatic_resampling_allowed',True),
                           ('byte_identical_original_rows',False),('provider_observed_at','2020-01-01T00:00:00+00:00'),('native_ingestion_performed',True)]:
-            with self.subTest(key=key),self.assertRaises(ValueError):ns['validate_inputs'](raw,funds,prior,False,{**selection,key:value})
+            changed = {**selection, key: value}
+            rebound = {**funds, 'resume_receipt_sha256': hashlib.sha256((json.dumps(changed, sort_keys=True, separators=(',', ':'), ensure_ascii=False, allow_nan=False)+'\n').encode()).hexdigest()}
+            with self.subTest(key=key), self.assertRaises(ValueError) as error:
+                ns['validate_inputs'](raw,rebound,prior,False,changed)
+            self.assertNotIn('resume receipt digest', str(error.exception).lower())
         with self.assertRaises(ValueError):ns['validate_inputs'](raw,funds,prior,True,selection)
         with self.assertRaises(ValueError):ns['validate_inputs'](raw,funds,prior,False,None)
     def test_hard_resource_single_use_and_same_actor_command(self):

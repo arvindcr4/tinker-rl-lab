@@ -42,7 +42,7 @@ import sys
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
-SCHEMA_VERSION = "e9-mle-bench-eval-receipt-v2"
+SCHEMA_VERSION = "e9-mle-bench-eval-receipt-v3"
 UPSTREAM_URL = "https://github.com/openai/mle-bench"
 UPSTREAM_COMMIT = "507f92e1138bb6e40dac5c6ee7a6758e6424bf97"
 
@@ -756,6 +756,16 @@ REQUIRED_GATES = (
 )
 
 
+def verify_source_checkout(checkout: Path) -> dict[str, Any]:
+    """Require the actual pinned Git tree and clean working tree, offline."""
+    try:
+        revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=checkout, check=True, capture_output=True, text=True).stdout.strip()
+        status = subprocess.run(["git", "status", "--porcelain", "--untracked-files=all"], cwd=checkout, check=True, capture_output=True, text=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return {"verified": False, "reason": "missing_git_source_evidence"}
+    return {"verified": revision == UPSTREAM_COMMIT and not status, "observed_revision": revision, "clean": not bool(status)}
+
+
 def evaluate_gates(receipt: dict[str, Any]) -> dict[str, bool]:
     """Compute each contract gate from the assembled receipt body."""
 
@@ -768,7 +778,7 @@ def evaluate_gates(receipt: dict[str, Any]) -> dict[str, bool]:
     contamination = receipt.get("contamination_policy", {})
 
     return {
-        "upstream_revision_pinned": bool(source.get("revision")) and bool(source.get("checkout_present")),
+        "upstream_revision_pinned": source.get("source_verification", {}).get("verified") is True and source.get("revision") == UPSTREAM_COMMIT,
         "split_manifest_resolved": bool(manifest.get("eval_split", {}).get("task_ids_sha256")),
         "verifier_identity_resolved": bool(verifier.get("resolved")),
         "dataset_license_accepted": binding.get("kaggle_rules", {}).get("accepted") is True,
@@ -909,6 +919,7 @@ def build_receipt(
             "revision_url": f"{UPSTREAM_URL}/commit/{UPSTREAM_COMMIT}",
             "checkout_path": str(checkout),
             "checkout_present": (checkout / "mlebench/registry.py").is_file(),
+            "source_verification": verify_source_checkout(checkout),
             "license_sha256": sha256_file(checkout / "LICENSE"),
             "license_position": LICENSE_POSITION,
         },

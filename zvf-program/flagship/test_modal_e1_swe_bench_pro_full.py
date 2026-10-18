@@ -43,28 +43,24 @@ index 7898192..6178079 100644
 """
 
 
+EXPECTED_PUBLIC_FIELDS = ("instance_id", "repo", "base_commit", "problem_statement", "requirements", "interface", "repo_language", "dockerhub_tag")
+FORBIDDEN_FIELDS = {key: "SENSITIVE_" + key for key in ("patch", "test_patch", "fail_to_pass", "pass_to_pass", "selected_test_files_to_run", "before_repo_set_cmd")}
+
+
 def _row() -> dict[str, object]:
-    row: dict[str, object] = {key: f"value-{key}" for key in GENERATION_FIELDS}
-    row.update(
-        {
-            "patch": "gold",
-            "test_patch": "hidden tests",
-            "fail_to_pass": "['secret']",
-            "pass_to_pass": "['secret']",
-            "selected_test_files_to_run": "['secret.py']",
-            "before_repo_set_cmd": "secret command",
-        }
-    )
+    row: dict[str, object] = {key: f"value-{key}" for key in EXPECTED_PUBLIC_FIELDS}
+    row.update(FORBIDDEN_FIELDS)
     return row
 
 
 class E1FullRunnerTests(unittest.TestCase):
     def test_model_boundary_contains_only_allowlisted_fields(self) -> None:
         task = _sanitize_task(_row())
-        self.assertEqual(set(task), set(GENERATION_FIELDS))
+        self.assertEqual(set(task), set(EXPECTED_PUBLIC_FIELDS))
         prompt = _build_prompt(task, {"src/a.py": "old = True\n"})
-        self.assertNotIn("hidden tests", prompt)
-        self.assertNotIn("secret command", prompt)
+        for field, sentinel in FORBIDDEN_FIELDS.items():
+            self.assertNotIn(field, task)
+            self.assertNotIn(sentinel, prompt)
 
     def test_extracts_valid_diff_before_trailing_prose(self) -> None:
         patch, reason = _extract_diff(VALID_PATCH + "I will explain the patch now.\n")
@@ -87,8 +83,8 @@ class E1FullRunnerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "images.json"
             path.write_text(
-                '{"images":[{"instance_id":"i","digest":"sha256:abc",'
-                '"immutable_uri":"repo@sha256:def"}]}',
+                json.dumps({"images": [{"instance_id": "i", "digest": "sha256:" + "a" * 64,
+                    "immutable_uri": "repo@sha256:" + "b" * 64}]}),
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(RuntimeError, "URI/digest mismatch"):

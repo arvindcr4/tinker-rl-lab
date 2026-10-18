@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import tempfile
 import unittest
 from importlib import import_module
 from pathlib import Path
@@ -199,8 +200,8 @@ class BFCLSplitManifestBoundaryTests(unittest.TestCase):
         )
 
     def test_main_reports_status_exit_code(self) -> None:
-        temporary = Path(__file__).resolve().parent / "_tmp_bfcl_split_manifest.json"
-        try:
+        with tempfile.TemporaryDirectory() as directory:
+            temporary = Path(directory) / "manifest.json"
             manifest = _valid_manifest()
             temporary.write_text(json.dumps(manifest), encoding="utf-8")
             self.assertEqual(split_validator.main(["--manifest", str(temporary)]), 0)
@@ -208,9 +209,7 @@ class BFCLSplitManifestBoundaryTests(unittest.TestCase):
             manifest["suite_id"] = "wrong_suite"
             temporary.write_text(json.dumps(manifest), encoding="utf-8")
             self.assertEqual(split_validator.main(["--manifest", str(temporary)]), 1)
-        finally:
-            if temporary.exists():
-                temporary.unlink()
+
 
 
 if __name__ == "__main__":

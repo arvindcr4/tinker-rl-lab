@@ -15,12 +15,13 @@ model $R(t) = R_{\max}(1 - e^{-\lambda t})$ per trace and audit its
 identifiability, finding that four of the five frontier traces have $\lambda$
 pinned at the upper bound and none is identifiable (Nemotron-120B is the exception,
 with $\lambda\!\approx\!0.99$ but likewise non-identifiable), so per-trace saturation
-rates cannot be trusted. We then run an internally recorded model-selection comparison over the
-12-anchor pool that geometrically falsifies a clean three-phase hypothesis (only
-$2/12$ anchors match all criteria), and a compute-adjusted re-analysis that asks
-whether a contrastive-yield axis, rather than raw parameter count, is the correct
-abscissa. Finally, the Nemotron-120B LatentMoE trace is examined as a distinct collapse
+rates cannot be trusted. We then compare functional forms, recompute the
+12-anchor pool directly from the per-step logs (\secref{sec:p1-rawtrace}: no
+cross-scale slope is detectable on total, active, or compute-proxy axes, and no
+full trace follows the three-phase template), and relate the
+saturation-fit degeneracy to the step-level zero-variance fraction. Finally, the Nemotron-120B LatentMoE trace is examined as a distinct collapse
 phase---peak per-step training reward $0.875$ at step~3 drifting to a late-window mean of $0.208$ (last 5 steps; BIC post-peak segment mean $0.154$), with a
 zero-reward step fraction of $0.55$ against $\le 0.067$ on the other four core anchors---rather than as a
-smooth continuation of the trend. The final subsection adds an external
-frontier-model cross-examination of these claims.
+smooth continuation of the trend. Conjectures from an external
+frontier-model cross-examination are collected in
+Appendix~\ref{sec:frontier-scaling}.

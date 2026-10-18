@@ -1,0 +1,4 @@
+pool	n	n_R1_high	high	AICc_intercept	AICc_log10N	AICc_R1ind	AICc_log10N_plus_R1ind	R2_log10N	R2_R1ind
+core5	5	3	Qwen3.5-4B;Llama-3.1-8B-Instruct;DeepSeek-V3.1	-8.6816	-2.0364	-23.0752	-3.6526	0.0043	0.9852
+long7	7	5	Qwen3.5-4B;Llama-3.1-8B-Instruct;gpt-oss-20B;DeepSeek-V3.1;Kimi-K2-Thinking	-15.1183	-10.9780	-41.6148	-34.9915	0.0085	0.9875
+all12	12	8	Qwen3.5-4B;Llama-3.1-8B-Instruct;Qwen3.5-27B;gpt-oss-20B;Qwen3-30B-MoE-Inst;DeepSeek-V3.1;Qwen3-235B-MoE;Kimi-K2-Thinking	-26.2805	-23.8126	-42.3544	-38.8492	0.0380	0.7948

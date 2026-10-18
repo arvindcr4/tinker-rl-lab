@@ -327,7 +327,7 @@ PUBLIC FILE PREVIEW
 def _grade(
     data_dir: Path, competition_id: str, submission: Path, output_path: Path
 ) -> dict[str, Any]:
-    submission_before = submission.read_bytes()
+    submission_before = submission.read_bytes() if submission.is_file() else None
     script = (
         "import json,sys; from pathlib import Path; "
         "from mlebench.registry import registry; from mlebench.grade import grade_csv; "
@@ -351,10 +351,11 @@ def _grade(
         ],
         timeout=600,
     )
-    if submission.read_bytes() != submission_before:
+    submission_after = submission.read_bytes() if submission.is_file() else None
+    if submission_after != submission_before:
         raise RuntimeError("native grader submission bytes changed during grading")
     input_binding = {"competition_id": competition_id,
-                     "submission_sha256": hashlib.sha256(submission_before).hexdigest(),
+                     "submission_sha256": hashlib.sha256(submission_before).hexdigest() if submission_before is not None else None,
                      "grader_revision": MLE_BENCH_COMMIT,
                      "grader_script_sha256": hashlib.sha256(script.encode()).hexdigest()}
     output_path.with_suffix(".input.json").write_text(json.dumps(input_binding, sort_keys=True))
@@ -1346,7 +1347,8 @@ def run_one(
         if agent_failure is None:
             bind_effective_execution(
                 competition_id=competition_id, original=original_solution_path.read_bytes(),
-                effective=solution_path.read_bytes(), submission=submission.read_bytes(),
+                effective=solution_path.read_bytes(),
+                submission=submission.read_bytes() if submission.is_file() else None,
                 native_grade=b'{"score": null, "valid_submission": false}',
                 grader_input=None, repairs=repair_records)
             native_grade = _grade(
@@ -1984,7 +1986,7 @@ def collect_replay(
         raise ValueError("spawn receipt function_call_id is invalid")
     if launch_receipt.get("status") == "REMOTE_RESULT_MATERIALIZED":
         destination = Path(str(launch_receipt["materialized_output_dir"]))
-        solution_code = (destination / "solution.py").read_text(encoding="utf-8")
+        solution_code = (destination / "solution.py").read_bytes().decode("utf-8")
         if solution_code.endswith("\n"):
             solution_code = solution_code[:-1]
         result = {

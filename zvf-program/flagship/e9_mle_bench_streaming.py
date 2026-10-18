@@ -1437,7 +1437,7 @@ def bind_effective_execution(*, competition_id: str, original: bytes, effective:
         raise LaunchGateError("native score must be finite numeric or null")
     submission_hash = _artifact_hash(submission) if submission is not None else None
     if grader_input is not None:
-        if (submission is None or grader_input.get("submission_sha256") != submission_hash
+        if (grader_input.get("submission_sha256") != submission_hash
                 or grader_input.get("competition_id") != competition_id
                 or not grader_input.get("grader_revision")):
             raise LaunchGateError("native grader input does not bind exact submission bytes")

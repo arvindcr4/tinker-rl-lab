@@ -110,3 +110,40 @@ def test_unchanged_failed_program_is_bound_without_fake_grade():
         grader_input=None, repairs=[])
     assert result["submission_sha256"] is None
     assert result["repairs"] == []
+
+
+def test_missing_submission_can_retain_invalid_native_grade():
+    grade = b'{"score": null, "valid_submission": false, "submission_exists": false}'
+    result = core.bind_effective_execution(competition_id="synthetic", original=ORIGINAL,
+        effective=ORIGINAL, submission=None, native_grade=grade, repairs=[],
+        grader_input={"competition_id": "synthetic", "submission_sha256": None,
+                      "grader_revision": "synthetic-fixture"})
+    assert result["submission_sha256"] is None
+    assert result["native_grade_sha256"] == digest(grade)
+
+
+@pytest.mark.parametrize("mutate", [False, True])
+def test_production_native_grade_boundary_records_exact_input_and_rejects_mutation(tmp_path, monkeypatch, mutate):
+    pytest.importorskip("modal")
+    import modal_e9_mle_bench_streaming as runner
+    submission = tmp_path / "submission.csv"
+    submission.write_bytes(SUBMISSION)
+    grade_path = tmp_path / "native_grade.json"
+    def local_grader(command, **kwargs):
+        assert command[-2] == str(submission)
+        assert submission.read_bytes() == SUBMISSION
+        grade_path.write_bytes(GRADE)
+        if mutate:
+            submission.write_bytes(SUBMISSION.replace(b"0.1", b"0.2"))
+    monkeypatch.setattr(runner, "_run", local_grader)
+    if mutate:
+        with pytest.raises(RuntimeError, match="changed during grading"):
+            runner._grade(tmp_path, "synthetic", submission, grade_path)
+        assert not grade_path.with_suffix(".input.json").exists()
+    else:
+        assert runner._grade(tmp_path, "synthetic", submission, grade_path) == json.loads(GRADE)
+        inputs = json.loads(grade_path.with_suffix(".input.json").read_text())
+        assert inputs["submission_sha256"] == digest(SUBMISSION)
+        assert inputs["competition_id"] == "synthetic"
+        assert inputs["grader_revision"] == runner.MLE_BENCH_COMMIT
+        assert len(inputs["grader_script_sha256"]) == 64

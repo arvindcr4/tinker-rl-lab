@@ -44,3 +44,9 @@ row count/order/IDs/nonfinite predictions, newline-only native-input substitutio
 and missing/invalid native grades. Local hashes do not authenticate official
 policy, datasets, grader installation, or generated-code isolation. No paid path
 was enabled, and official native scoring conformance remains unestablished.
+
+The exact-input gate also preserves native invalid/missing-submission outcomes
+with a null input hash; it never invents a CSV for a failed task. Production
+`_grade` boundary fixtures assert the actual input-path/hash record and reject
+submission mutation during grading. A declared revision/script hash is not
+independent proof of the installed native grader or reference-data contents.

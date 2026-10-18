@@ -21,13 +21,12 @@ existing data:
       and asks: is R>=0.976 achieved at ANY target reward? It is not:
       R is *itself* a function of the target reward and decays.
 
-  (B) **Noise-floor mechanism test (sigma^2/G × iter99 SNR).** The
-      per-step baseline variance sigma^2/G is the mechanism behind
-      iter 119 (D). iter 99 produced an SNR-at-G table from the
-      Qwen2.5-0.5B reward-channel. iter 123 joins the two: SNR(G)
-      should scale as sqrt(G) by theory (sigma/sqrt(G) baseline
-      estimate precision); the empirical SNR-vs-G slope is regressed
-      and tested against the theoretical +0.5/decade line.
+  (B) **Model-derived SNR scaling projection (sigma^2/G × iter99).**
+      The input column snr_pred_implicit_dpo contains projected SNR values.
+      Regress their log-log scaling and compare it with a G^0.5 reference.
+      This is a model-internal comparison, not measured SNR or validation
+      of a causal noise/drift mechanism. Fit intervals describe these
+      projected points, not independent experimental uncertainty.
 
   (C) **Broader G-pair sweep -- Wu at G=4~=G=32, G=8~=G=32, G=16~=G=32.**
       The Wu et al.\ headline is G=2/G=16 (rollouts-frac=0.125). At
@@ -161,19 +160,21 @@ def iso_reward_retention(iso: pd.DataFrame) -> list[dict]:
 
 
 # =============================================================================
-# (B) Noise-floor mechanism: SNR(G) vs theoretical +0.5/decade
+# (B) Model-derived SNR projection vs G^0.5 reference
 # =============================================================================
 def noise_mechanism(snr: pd.DataFrame) -> list[dict]:
-    """Join iter 99 SNR-at-G with iter 119 D (sigma^2/G).
-    Test the predicted scaling: snr(G) ~ G^0.5.
+    """Describe model-derived snr_pred_implicit_dpo scaling against G^0.5.
+
+    Regression diagnostics concern projected points, not observed SNR or
+    independent experimental uncertainty; they do not validate a mechanism.
     """
     out = []
     if snr.empty:
         return [{"metric_kind": "error", "metric_key": "no_snr_data",
-                 "headline": "No iter99 SNR-at-G data"}]
+                 "headline": "No iter99 model-derived SNR projection data"}]
     out.append({
         "metric_kind": "snr_pool_size", "metric_key": "n_G",
-        "headline": f"SNR-at-G pool: n={len(snr)} G-values: {sorted(snr['G'].astype(int).tolist())}",
+        "headline": f"Model-derived SNR-at-G projection pool: n={len(snr)} G-values: {sorted(snr['G'].astype(int).tolist())}",
     })
     # OLS on log10(SNR) ~ log10(G) with theoretical slope +0.5 prediction
     g = snr["G"].astype(float).values
@@ -186,17 +187,17 @@ def noise_mechanism(snr: pd.DataFrame) -> list[dict]:
     slope, intercept, r, p, se = stats.linregress(logG, logS)
     out.append({
         "metric_kind": "snr_scaling", "metric_key": "ols_log10_snr_vs_log10_G",
-        "headline": f"OLS log10(SNR) ~ log10(G): slope={slope:+.3f}/decade  95%CI [{slope-1.96*se:+.3f},{slope+1.96*se:+.3f}]  R^2={r**2:.3f}  p={p:.2e}",
+        "headline": f"OLS on model-derived projection log10(SNR) ~ log10(G): slope={slope:+.3f}/decade  projection-fit 95%CI [{slope-1.96*se:+.3f},{slope+1.96*se:+.3f}]  R^2={r**2:.3f}  p={p:.2e}",
     })
     out.append({
         "metric_kind": "snr_scaling", "metric_key": "theoretical_pred_+0.5",
-        "headline": f"Theoretical SNR~G^0.5 predicts slope=+0.500/decade; empirical={slope:+.3f}/decade -- slope is {'CONSISTENT' if abs(slope-0.5)<0.30 else 'INCONSISTENT'} with theory at 0.30 tolerance",
+        "headline": f"Theoretical SNR~G^0.5 predicts slope=+0.500/decade; model-derived projection={slope:+.3f}/decade -- slope is {'CONSISTENT' if abs(slope-0.5)<0.30 else 'INCONSISTENT'} with the reference at 0.30 tolerance (model-internal comparison only)",
     })
     # Per-G predictions and residuals
     pred = 10 ** (intercept + 0.5 * logG)
     out.append({
         "metric_kind": "snr_scaling", "metric_key": "pred_at_G",
-        "headline": "Predicted vs empirical SNR at G: " +
+        "headline": "Model-derived SNR / G^0.5 reference at G: " +
                      ", ".join(f"G={int(gi)}={snr_pred[i]:.3f}/{pred[i]:.3f}"
                                for i, gi in enumerate(g)),
     })
@@ -405,8 +406,8 @@ def make_figure(iso_reward, noise, wu, es, cross, out_pdf: Path) -> None:
 
     # (B) SNR scaling
     ax =axes[0, 1]
-    ax.set_title("(B) SNR vs G: predicted slope +0.5/decade (sqrt(G))")
-    # We don't have the raw df here; show predicted curve and overlay empirical SNR if available
+    ax.set_title("(B) Model-derived SNR projection vs sqrt(G) reference")
+    # Display model-derived input projections and an anchored reference curve
     # (noise extras would have records; we don't have that here so just show the headline prediction)
     slope_row = next((r for r in noise if r["metric_key"] == "ols_log10_snr_vs_log10_G"), None)
     pred_row = next((r for r in noise if r["metric_key"] == "pred_at_G"), None)
@@ -421,24 +422,24 @@ def make_figure(iso_reward, noise, wu, es, cross, out_pdf: Path) -> None:
         if pred_row:
             # parse "G=2=x.x/G=4=y.y..."
             parts = pred_row["headline"].split(",")
-            Gs_emp = []
-            snr_emp = []
+            Gs_projected = []
+            snr_projected = []
             for p in parts:
-                # Pattern: "G=<gi>=<snr_emp>/<snr_pred>"
+                # Pattern: "G=<gi>=<snr_projected>/<snr_pred>"
                 # Use a regex-style parse
                 import re
                 m = re.match(r"\s*G=(\d+)=([\d.]+)/", p)
                 if m:
-                    Gs_emp.append(int(m.group(1)))
-                    snr_emp.append(float(m.group(2)))
-            if Gs_emp:
-                ax.scatter(Gs_emp, snr_emp, color="#d62728", s=80, zorder=3, label="empirical SNR")
+                    Gs_projected.append(int(m.group(1)))
+                    snr_projected.append(float(m.group(2)))
+            if Gs_projected:
+                ax.scatter(Gs_projected, snr_projected, color="#d62728", s=80, zorder=3, label="model-derived SNR projection")
                 # Theory: snr ~ G^0.5; pick a single anchor to align
-                s_theory = snr_emp[len(snr_emp)//2] / (Gs_emp[len(Gs_emp)//2] ** 0.5)
-                ax.plot(Gs_th, s_theory * Gs_th ** 0.5, color="#1f77b4", lw=2, label="theory: snr ~ G^0.5")
+                s_theory = snr_projected[len(snr_projected)//2] / (Gs_projected[len(Gs_projected)//2] ** 0.5)
+                ax.plot(Gs_th, s_theory * Gs_th ** 0.5, color="#1f77b4", lw=2, label="anchored G^0.5 reference")
         ax.set_xscale("log"); ax.set_yscale("log")
         ax.set_xlabel("Group size G")
-        ax.set_ylabel("Predicted SNR")
+        ax.set_ylabel("Model-derived SNR projection")
         ax.legend(fontsize=8)
         ax.grid(True, alpha=0.3)
 
@@ -477,7 +478,7 @@ def make_figure(iso_reward, noise, wu, es, cross, out_pdf: Path) -> None:
             ax.text(bar.get_x() + bar.get_width() / 2, difference, f"{difference:+.3f}",
                     ha="center", va="bottom", fontsize=9)
 
-    fig.suptitle("Pillar 3 / Iter 123 -- Wu et al. (2025) G=2~=G=16 at broader scale:\niso-reward, noise-mechanism, broader G-pair sweep, effect-size magnitude",
+    fig.suptitle("Pillar 3 / Iter 123 -- Wu et al. (2025) G=2~=G=16 at broader scale:\niso-reward, model-derived SNR projection, broader G-pair sweep, effect-size magnitude",
                  fontsize=11, fontweight="bold")
     fig.tight_layout()
     fig.savefig(out_pdf, bbox_inches="tight")
@@ -536,7 +537,7 @@ def main() -> None:
     for r in iso_r:
         if r["metric_kind"] in ("iso_reward_setup", "iso_reward_pairs", "iso_reward_best"):
             print(f"  {r['metric_key']!s:>40}  ::  {r['headline']}")
-    print("\n=== Iter 123 (B) Noise mechanism SNR~G^0.5 ===")
+    print("\n=== Iter 123 (B) Model-derived SNR projection vs G^0.5 ===")
     for r in noise:
         if r["metric_kind"] in ("snr_scaling", "snr_pool_size"):
             print(f"  {r['metric_key']!s:>40}  ::  {r['headline']}")

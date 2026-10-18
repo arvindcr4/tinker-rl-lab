@@ -134,3 +134,35 @@ def test_iter119_boundary_numeric_serialization_and_plot(tmp_path, monkeypatch):
 )
 def test_correlation_sign_and_no_causal_claim(rho, expected):
     assert expected in load(119).zvf_association_label(rho)
+
+
+def test_iter123_snr_projection_labels_preserve_derived_values(tmp_path, monkeypatch):
+    import inspect
+    import numpy as np
+    m = load(123)
+    g = [2, 4, 8, 16]
+    snr = pd.DataFrame({'G': g, 'snr_pred_implicit_dpo': np.sqrt(g)})
+    rows = m.noise_mechanism(snr)
+    prose = ' '.join(r['headline'] for r in rows)
+    assert 'empirical' not in prose
+    assert 'model-derived projection=+0.500/decade' in prose
+    assert 'projection-fit 95%CI [+0.500,+0.500]' in prose
+    assert 'model-internal comparison only' in prose
+    values = next(r['headline'] for r in rows if r['metric_key'] == 'pred_at_G')
+    for n in g:
+        assert f'G={n}={n**.5:.3f}/{n**.5:.3f}' in values
+    assert 'not observed SNR' in m.noise_mechanism.__doc__
+    assert 'mechanism behind' not in m.__doc__
+    assert 'empirical SNR' not in inspect.getsource(m.make_figure)
+    original_close = m.plt.close
+    monkeypatch.setattr(m.plt, 'close', lambda *_: None)
+    m.make_figure([], rows, [], [], [], tmp_path / 'projection.pdf')
+    fig = m.plt.gcf()
+    ax = fig.axes[1]
+    assert ax.collections[0].get_label() == 'model-derived SNR projection'
+    assert ax.lines[0].get_label() == 'anchored G^0.5 reference'
+    assert ax.get_ylabel() == 'Model-derived SNR projection'
+    # Existing figure consumer rounds projections to three decimal places.
+    points = ax.collections[0].get_offsets()
+    assert np.allclose(points[:, 1], [round(float(x)**.5, 3) for x in points[:, 0]])
+    original_close(fig)

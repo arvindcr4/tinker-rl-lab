@@ -13,8 +13,9 @@ the latent success probability and $h_G(p) = p^G + (1-p)^G$ is the probability
 a size-$G$ group is degenerate, and derive three consequences:
 (T1) the expected ZVF indicator of a prompt equals $h_G(p)$, so batch ZVF
 equals $\E_i[h_G(p_i)]$ and its excess over $h_G(\bar p)$ measures
-prompt-difficulty dispersion (GSM8K: observed $0.158$, homogeneous $0.054$,
-beta-binomial with intra-prompt correlation $0.16$ predicts $0.170$);
+prompt-difficulty dispersion (Qwen3-8B on GSM8K, 600 groups at $G{=}8$: observed
+$0.158$, homogeneous $0.054$, fitted beta-binomial with intra-prompt correlation
+$0.16$ predicts $0.170$);
 (T2) larger group size $G$ lowers ZVF; (T3) gradient magnitude tracks $p(1-p)$.
 ZVF is equivalent to the Advantage Collapse Rate~\citep{he2026advantage} and
 the Jensen excess was shown by \citet{nie2026gradstarvation}; our contribution
@@ -32,19 +33,23 @@ aliases mastery with incapacity, we promote the pairwise-contrast density
 $\mathrm{PCD} = \frac{G-1}{G}\,\E[p(1-p)]$ as the control signal: a micro-jitter
 falsification collapses batch ZVF from $0.158$ to $0.000$ while leaving PCD
 unchanged. We then operationalize the theory as a \texttt{zvf-triage} callback
-and an adaptive-$G$ controller that escalates group size on ZVF spikes. In a
-four-arm open-trainer audit, adaptive-$G$ matches the best fixed-recipe
-held-out gain ($+0.575$) at $186$ rollouts, while DAPO-style dynamic sampling
-drives ZVF to $0.00$ at $+45\%$ rollout cost---an accuracy-versus-compute
-trade, not a controller win. A post-hoc count over 2,560 logged group outcomes
+and an adaptive-$G$ controller that escalates group size when recent ZVF is
+high. In a four-arm open-trainer pilot (Qwen2.5-0.5B-Instruct, synthetic
+addition, two seeds, 20 held-out problems), adaptive-$G$ ties the best
+fixed-recipe mean held-out gain ($+0.575$) at $186$ rollouts per seed versus
+$120$, while DAPO-style dynamic sampling drives ZVF to $0.00$ at $+45\%$
+rollout cost (a later single-seed rerun with the same hyperparameters gave
+$+0.50$ for GRPO, Dr.~GRPO and adaptive-$G$). This is an accuracy-versus-compute
+observation, not a controller win. A post-hoc count over 2,560 logged group outcomes
 (4 methods $\times$ 40 steps $\times$ 16 prompts; no controller ran) finds
-that 1,723 of the 1,867 degenerate groups (92.3\%) are all-correct; a
-per-prompt binomial model at the observed reward level predicts 91.5\%, so the
-asymmetry is a property of the reward level, not of any trigger.
+that 1,723 of the 1,867 degenerate groups (92.3\%) are all-correct; a binomial
+model with each prompt's success rate estimated from the other three methods'
+rollouts predicts 91.9\%, so the asymmetry is a property of the reward level,
+not of any trigger.
 No result here establishes prospective superiority over
 static $G{=}16$, Dr.~GRPO, or dynamic sampling. All intervention evidence is
-single-task, small-$n$, or retrospective, and the paper ends with the matched-
-budget, multi-seed test required to earn control authority.
+single-task, small-$n$, or retrospective, and the paper ends with the
+matched-budget, multi-seed test required to earn control authority.
 \paragraph{Venue claim boundary (workshop-short; controller \emph{not} promoted).}
 Adaptive group size is \emph{not} promoted to a recommended policy. The
 submission claim is strictly a \emph{retrospective controller audit} plus a
@@ -54,6 +59,6 @@ bakeoff design against static $G{=}16$ and naive boundary heuristics. Closing
 that bakeoff is future work and is not required for the audit/test-plan
 contribution targeted at a workshop-short venue.
 \end{abstract}
-\paragraph{August 2026 evidence boundary.} Unsigned ZVF alone cannot select
+\paragraph{Evidence boundary.} Unsigned ZVF alone cannot select
 retire/distill versus retry/resample/warm-start. Any operator policy remains a
 prospective, matched-budget evaluation contract rather than a demonstrated benefit.

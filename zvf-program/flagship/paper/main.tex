@@ -68,7 +68,8 @@ Second, we give cost-accounting corollaries of the known binary-starvation
 model. Increasing group size across fixed-size designs reduces the expected number of
 groups needed to see a contrast; for every $G$, complete-group sampling costs
 at least $1/\epsilon$ expected rollouts at success probability $\epsilon$.  We
-also give a restricted two-state witness: when $\Delta>0$, the two actions
+also give a restricted two-state witness: when the incremental retry utility
+$\Delta$ is positive, the two actions
 \{stop, commit to $m$ batch rollouts\} reverse rank across compatible latent
 states and incur positive two-point minimax regret.
 
@@ -428,8 +429,8 @@ only for fixed $G$.
 \end{proposition}
 
 \begin{proof}
-Use $(1-\epsilon)^G=1-G\epsilon+\binom{G}{2}\epsilon^2+O(\epsilon^3)$ and
-$\epsilon^G=O(\epsilon^2)$ for fixed $G\geq2$, then invert the resulting
+Use $(1-\epsilon)^G=1-G\epsilon+\binom{G}{2}\epsilon^2+O_G(\epsilon^3)$ and
+$\epsilon^G=O_G(\epsilon^2)$ for fixed $G\geq2$, then invert the resulting
 series.  Multiplication by $G$ yields Eq.~\eqref{eq:boundary-cost}.  For
 Eq.~\eqref{eq:all-g-cost}, a mixed group is a subset of the event ``at least one
 success,'' and the union bound gives the second inequality.
@@ -835,16 +836,19 @@ reported decomposition.
     filtered corpus, seeds 23/37 & 2 & contract-infeasible \\
     filtered scientific, three seeds, four conditions & 12 & contract-infeasible \\
     \midrule
-    Total & 31 & 10/14/2/1/4 state counts \\
+    Total & 31 & State counts as labeled in Table~\ref{tab:state} \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
 \section{Evidence Status Matrix}
 
+Table~\ref{tab:evidence-status} separates current evidence from future work.
+
 \begin{table}[h]
   \centering
   \caption{Boundary between current evidence and future work.}
+  \label{tab:evidence-status}
   \begin{tabularx}{\linewidth}{lXl}
     \toprule
     Item & Evidence & Status \\

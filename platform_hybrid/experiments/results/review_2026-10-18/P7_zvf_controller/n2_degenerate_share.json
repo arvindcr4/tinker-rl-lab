@@ -1,0 +1,45 @@
+{
+ "per_method": {
+  "grpo": {
+   "steps": 40,
+   "groups": 640,
+   "degenerate": 461,
+   "all_correct": 427,
+   "mean_reward": 0.8342
+  },
+  "aero": {
+   "steps": 40,
+   "groups": 640,
+   "degenerate": 461,
+   "all_correct": 427,
+   "mean_reward": 0.8275
+  },
+  "areal": {
+   "steps": 40,
+   "groups": 640,
+   "degenerate": 452,
+   "all_correct": 414,
+   "mean_reward": 0.8287
+  },
+  "gift": {
+   "steps": 40,
+   "groups": 640,
+   "degenerate": 493,
+   "all_correct": 455,
+   "mean_reward": 0.8447
+  }
+ },
+ "groups": 2560,
+ "degenerate": 1867,
+ "all_correct": 1723,
+ "all_wrong": 144,
+ "binom_pred_leave_one_method_out": {
+  "expected_all_correct": 1747.1,
+  "expected_all_wrong": 153.1,
+  "share": 0.9194
+ },
+ "note_91_5pct": "the earlier 91.5% (1,775/165) prediction could not be reproduced by any definition tried (step-mean p: 99.99%; method-mean p: 100%; 4-method pooled p: 92.1%; LOMO p: 91.9%)",
+ "all_correct_share": 0.9229,
+ "binom_pred_share_stepmean_p": 0.9999,
+ "binom_pred_share_methodmean_p": 1.0
+}

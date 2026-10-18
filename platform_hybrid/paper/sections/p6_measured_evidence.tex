@@ -11,14 +11,13 @@ $16$ prompts per step---logging the full per-prompt reward tensor at every
 step (\texttt{experiments/results/n2\_reward\_tensor\_resume/}).
 
 \subsection{Schema validation}
-Every shipped record parses against the registry schema. The CI-style
-auditor (\texttt{scripts/p5p8/registry\_validate.py},
-\texttt{experiments/results/p5p8/registry\_schema\_check.tsv}) reports
-\textbf{31/31 entries passed} at the time of that audit: 20 \texttt{stack}
-records and 11 \texttt{variant\_delta} records. The registry has since grown
-to 28 stack and 18 variant-delta records, with two amendment sidecars
-(Table~\ref{tab:p6-entries}). The historical 31-record check does not
-validate this expanded population.
+At registry commit \texttt{ca5b792}, all 46 shipped records (28 \texttt{stack},
+18 \texttt{variant\_delta}) validate against \texttt{schema.json}; the two
+amendment sidecars do not, because they carry no \texttt{record\_type} or
+\texttt{schema\_version} (Appendix~\ref{sec:p6-appendix-layout}). An earlier
+run of the CI-style auditor (\texttt{scripts/p5p8/registry\_validate.py},
+\texttt{experiments/results/p5p8/registry\_schema\_check.tsv}) passed
+31/31 records (20 stack, 11 variant-delta) on a smaller snapshot.
 
 \subsection{Measured deltas on the same stack}
 Table~\ref{tab:p6-measured-deltas} reports paired bootstrap means and
@@ -32,8 +31,10 @@ counterfactual or a causal algorithm effect.
 \caption{Same-stack variant deltas ($\Delta = \text{variant} - \texttt{grpo}$)
 from the N2 four-method run (seed $0$, $G{=}8$, last-10 steps; paired
 bootstrap CI on per-step scalar, then per-prompt pooled). The reward
-deltas are all $\leq 2$pp in magnitude; AERO and AREAL show small but
-statistically significant reward \emph{decreases}. The largest effects
+deltas are all $\leq 2$pp in magnitude; for the AERO and AREAL reward
+\emph{decreases} the step-bootstrap CI excludes $0$, but that interval
+resamples 10 autocorrelated steps of one seed and is not a seed-level
+significance test. The largest effects
 are on the length distribution: AERO and AREAL \emph{lengthen}
 completions by $\sim$31 tokens and reduce length-CV. GIFT raises ZVF
 ($+0.125$) and shifts the loss by its gamma-style additive baseline
@@ -61,8 +62,8 @@ reward\_mean (per-prompt, $n{=}16$) & areal & --- & --- & $-0.006$ & $[-0.044,\,
 \bottomrule
 \end{tabular}%
 }\\
-\footnotesize{$^{\dagger}$ CI excludes $0$; per-prompt means omitted
-(trivial). Source: \texttt{experiments/results/n2\_reward\_tensor\_resume/}.
+\footnotesize{$^{\dagger}$ Step-bootstrap CI excludes $0$ (single seed);
+per-prompt rows report only the pooled contrast over $n{=}16$ prompts. Source: \texttt{experiments/results/n2\_reward\_tensor\_resume/}.
 }
 \end{table}
 
@@ -71,7 +72,11 @@ These intervals summarize one logged trajectory per method. Adjacent steps
 are not independent training replicates; significance of a step bootstrap
 does not establish a reproducible method effect. No cross-seed reward
 ranking or mechanistic interpretation follows. The last-10 window is part
-of the estimand, not a full-trajectory result.
+of the estimand, not a full-trajectory result. The run is also near
+ceiling: over the last 10 steps, $72.5\%$ of GRPO's groups are all-correct
+(\texttt{frac\_all\_one}; $82.5\%$ for GIFT), so most of the measured ZVF
+reflects mastered prompts, and the run cannot by itself support a claim that
+the variant label does not move outcomes once the stack is fixed.
 \endinput % Historical stronger interpretation preserved below.
 The measured reward deltas are all $\leq 2$pp in magnitude at the same
 stack---direct quantitative corroboration of the Pillar-1 ``algorithm

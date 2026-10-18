@@ -1,0 +1,131 @@
+--- a/outputs/PES_Conference_Submissions_2026-09-25/ACL_ARR_Oct2026/body.tex
++++ b/outputs/PES_Conference_Submissions_2026-09-25/ACL_ARR_Oct2026/body.tex
+@@ -53,8 +53,13 @@
+ single inferential protocol or infer missing intervals from rounded statistics. An inconclusive test
+ is reported as inconclusive; it is not read as equivalence. Where we use the
+ zero-variance fraction (ZVF), it is the share of a batch's prompt groups in
+-which every completion received the same reward, so the group-relative
+-advantage is identically zero.
++which every completion received the same binary verifiable outcome reward.
++For these rewards this is exactly the fraction of all-correct or all-wrong
++groups. Under mean-centred or $\varepsilon$-stabilised group normalisation
++with $\varepsilon>0$, and without per-token reward penalties, their
++reward-relative advantages are identically zero. This definition concerns
++the batch at the point of measurement; filtering out uniform groups before
++logging can therefore change the reported fraction.
+
+ \section{Exhibits}
+
+@@ -71,7 +76,7 @@
+ E-2 Same-stack PPO vs.\ GRPO (Qwen2.5-0.5B, 5 paired seeds) &
+ Paired held-out $\Delta=-0.002$, $p=0.374$ &
+ Failure to detect, not equivalence \\
+-E-3 Cross-back-end PPO vs.\ GRPO (Qwen3-8B; Llama-3.1-8B-Instruct) &
++E-3 Cross-backend PPO vs.\ GRPO (Qwen3-8B; Llama-3.1-8B-Instruct) &
+ Qwen3-8B Welch $p=0.7605$ (provenance conflict); Llama $d=12.75$, 95\% CI $[8.49, 17.00]$ &
+ Arms on different backends; historical step summaries, no directional inference \\
+ E-4 Same-stack variant audit (8 paired seeds) &
+@@ -100,7 +105,7 @@
+ $\eta^2=0.546$ for library or framework, $0.558$ for training algorithm,
+ $0.471$ for model family and $0.322$ for model scale. These sum to 1.897, so
+ they are not a partition of variance: the factors are collinear with one
+-another and with back-end, reward implementation, hardware and task, and each
++another and with backend, reward implementation, hardware and task, and each
+ marginal $\eta^2$ absorbs its correlates. They estimate no factor's
+ independent contribution, but they show that the framework is not a nuisance
+ term that can be ignored.
+@@ -110,10 +115,10 @@
+ PPO and GRPO differ by $-0.002$ on held-out accuracy ($p=0.374$): a failure
+ to detect a difference, not equivalence. An earlier Qwen3-8B comparison gives
+ Welch $p=0.7605$, but it is a provenance conflict rather than a matched
+-result: its arms ran on different back-ends (managed service vs.\ an H100
++result: its arms ran on different backends (managed service vs.\ an H100
+ cluster), and its $n=10$ is the last ten autocorrelated steps of one run per
+-arm. On Llama-3.1-8B-Instruct the cross-back-end contrast gives $d=12.75$
+-($[8.49, 17.00]$, $p<0.001$). We treat both cross-back-end rows as
++arm. On Llama-3.1-8B-Instruct the cross-backend contrast gives $d=12.75$
++($[8.49, 17.00]$, $p<0.001$). We treat both cross-backend rows as
+ stack-conditioned evidence and withhold a directional algorithm claim.
+
+ \paragraph{Same-stack variants do not separate (E-4).}
+--- a/outputs/PES_Conference_Submissions_2026-09-25/RAIT2027/body.tex
++++ b/outputs/PES_Conference_Submissions_2026-09-25/RAIT2027/body.tex
+@@ -28,11 +28,16 @@
+ PPO~\cite{schulman2017proximal}. It samples $G$ completions per prompt and
+ standardises their rewards within the group:
+ \begin{equation}
+-A_i = \frac{r_i - \mu_g}{\sigma_g + \varepsilon}, \quad
+-\mu_g = \tfrac{1}{G}\textstyle\sum_j r_j, \quad
+-\sigma_g^2 = \tfrac{1}{G}\textstyle\sum_j (r_j-\mu_g)^2 .
++\begin{aligned}
++A_i &= \frac{r_i - \mu_g}{\sigma_g + \varepsilon}, \quad
++\mu_g = \tfrac{1}{G}\textstyle\sum_{j=1}^G r_j, \\
++\sigma_g^2 &= \tfrac{1}{G}\textstyle\sum_{j=1}^G (r_j-\mu_g)^2 .
++\end{aligned}
+ \label{eq:adv}
+ \end{equation}
++Here $i\in\{1,\ldots,G\}$ indexes completions in a single group $g$;
++the group subscript on $r_i$ is suppressed and $\varepsilon>0$ is a
++numerical stabiliser, distinct from the variance threshold $\epsilon$ below.
+ If every completion in the group receives the same reward, $\sigma_g = 0$ and
+ every $A_i$ is zero. Any KL term still acts, but the group-relative part of
+ the update, which is the only part driven by the task, vanishes. Standard
+@@ -72,11 +77,11 @@
+ \section{Method}
+
+ \subsection{Zero-Variance Fraction}
+-For a batch $\mathcal{B}_t$ of prompt groups at step $t$, each with $K$
++For a batch $\mathcal{B}_t$ of prompt groups at step $t$, each with $G$
+ sampled completions and rewards normalised to $[0,1]$,
+ \begin{equation}
+ \mathrm{ZVF}_t = \frac{1}{|\mathcal{B}_t|}\sum_{g\in\mathcal{B}_t}
+-\mathbb{1}\!\left[\widehat{\mathrm{Var}}(r_{g,1},\dots,r_{g,K}) \le \epsilon\right],
++\mathbb{1}\!\left[\widehat{\mathrm{Var}}(r_{g,1},\dots,r_{g,G}) \le \epsilon\right],
+ \end{equation}
+ with $\widehat{\mathrm{Var}}$ the unbiased sample variance and
+ $\epsilon = 10^{-6}$. Gradient utilisation is its complement,
+@@ -86,7 +91,7 @@
+ $\mathrm{ZVF}_t = 1$ guarantees a zero policy-term gradient only when groups
+ are exactly uniform; a positive variance threshold also counts near-uniform groups.
+ Sensitivity to $\epsilon$ is at most 0.4\%. The definition does not apply to
+-dense rewards, $K = 1$, or non-outcome rewards.
++dense rewards, $G = 1$, or non-outcome rewards.
+
+ \subsection{Pairwise contrast density}
+ For rewards $r_1,\ldots,r_G$ in $[0,1]$ and $G\ge2$, define
+--- a/outputs/PES_Conference_Paper_2026-09-25/paper.tex
++++ b/outputs/PES_Conference_Paper_2026-09-25/paper.tex
+@@ -61,11 +61,16 @@
+ it samples a group of $G$ completions per prompt and standardises each reward
+ against the group's own statistics,
+ \begin{equation}
+-A_i = \frac{r_i - \mu_g}{\sigma_g + \varepsilon}, \quad
+-\mu_g = \tfrac{1}{G}\textstyle\sum_j r_j, \quad
+-\sigma_g^2 = \tfrac{1}{G}\textstyle\sum_j (r_j-\mu_g)^2 .
++\begin{aligned}
++A_i &= \frac{r_i - \mu_g}{\sigma_g + \varepsilon}, \quad
++\mu_g = \tfrac{1}{G}\textstyle\sum_{j=1}^G r_j, \\
++\sigma_g^2 &= \tfrac{1}{G}\textstyle\sum_{j=1}^G (r_j-\mu_g)^2 .
++\end{aligned}
+ \label{eq:adv}
+ \end{equation}
++Here $i\in\{1,\ldots,G\}$ indexes completions within a single prompt group
++$g$; the group subscript on $r_i$ is suppressed and $\varepsilon>0$ is a
++numerical stabiliser.
+
+ This simplification has two consequences that standard training logs do not
+ reveal. The first concerns \emph{mechanism}. When every completion in a group
+@@ -127,10 +132,11 @@
+ \subsection{Telemetry and the Zero-Variance Fraction}
+ The training loop emits per-step ZVF, gradient utilisation, policy entropy,
+ completion length and KL divergence, and persists the raw per-group reward
+-tensors. For a batch of groups $\mathcal{B}$,
++tensors. For a batch of groups $\mathcal{B}$, with $|\mathcal{B}|$ the
++number of prompt groups,
+ \begin{equation}
+ \mathrm{ZVF} = \frac{1}{|\mathcal{B}|}\sum_{g\in\mathcal{B}}
+-\mathbb{1}\left[\sigma_g = 0\right].
++\mathbf{1}\left[\sigma_g = 0\right].
+ \end{equation}
+ Because it is computed from stored tensors, ZVF can be reproduced exactly.
+ We also track variance-scale pairwise contrast density,

@@ -3,7 +3,7 @@
 \label{sec:p5-limitations}
 Position papers owe their readers an honest account of the evidence's edges;
 five limitations are load-bearing here. First, the headline exhibits
-(the $17\times$ under-specified same-label comparison, the cross-stack DAPO telemetry flip, the
+(the $17\times$ under-specified same-label comparison, the DAPO-label exhibit, the
 12-cell head-to-head, and the 368-run audit) are internal program records:
 they were run under a declared protocol and are summarized faithfully, but
 they have not undergone the full artifact-release pipeline of the \ours{}
@@ -17,13 +17,12 @@ verifiable-reward tasks and the GRPO family; the eight-item standard (seven
 run-manifest fields plus pass@$k$ reporting) was chosen for that regime, and
 reward-model-based RLHF stacks may need additional items
 (reward-model version and training data at minimum). Fourth, the flip-risk
-grades encode a conservative ordering (label collision graded above generic
-stack divergence) that we have validated on our own audits but not against a
-broad external corpus; the grade boundaries, especially R2 vs.\ R3, will need
+grades encode an ordering (outcome-critical fields such as the base
+checkpoint above algorithm fields, above hyperparameters and runtime) that is
+motivated by our own exhibits but not validated against a broad external
+corpus; the field-to-grade assignments, especially R2 vs.\ R3, will need
 community calibration. Fifth, the toolchain of \secref{sec:p5-toolchain} is a
-specification with feasibility evidence, not a released product suite; the
-live adaptive-$G$ result shows the telemetry is cheap, but manifest adapters
-for every framework in \tableref{tab:implementations} remain to be built.
-None of these limitations weakens the central asymmetry the paper rests on:
-every documented lever we cite moved results by more than the label
-differences the field currently headlines.
+specification, not a released product suite; compliance overhead has not
+been measured and manifest adapters remain to be built. The retained
+exhibits motivate disclosure, not a universal ranking of stack effects
+above algorithm effects.

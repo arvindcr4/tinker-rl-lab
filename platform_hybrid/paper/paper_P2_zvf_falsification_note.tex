@@ -19,7 +19,7 @@
 \large A Correction Note on a Retracted ``Sign-Wrong Bernoulli'' Result}
 \author{Arvind C R\\
 PES University\\\texttt{arvindcr4@gmail.com}}
-\date{\today}
+\date{18 October 2026}
 
 \begin{document}
 \maketitle
@@ -38,18 +38,24 @@ For the step-level estimator, the nonpositive population Jensen gap competes
 with positive finite-sample plug-in bias; its sign is not guaranteed.
 Under conditionally independent rollouts,
 $\mathbb{E}[\mathrm{ZVF}]=\mathbb{E}_i[h_G(p_i)]$ and the excess over
-$h_G(\bar p)$ reflects prompt-difficulty dispersion. The present observations
-cannot distinguish that mechanism from conditional rollout dependence.
+$h_G(\bar p)$ would reflect prompt-difficulty dispersion; we use the excess only
+as an overdispersion summary, because the present observations cannot apportion
+it between that mechanism and conditional rollout dependence.
 On the 600 GSM8K groups, observed ZVF is $0.158$, the homogeneous-binomial
 value is $0.054$, and a two-parameter beta-binomial fitted to these same groups
-has expected ZVF $0.170$ (marginal intra-class correlation $0.160$). This
-is the same object as the Advantage Collapse Rate of \citet{he2026advantage},
+has expected ZVF $0.170$ (marginal intra-class correlation $0.160$). That
+total-only agreement hides cell-level misfit: the fit implies $4.2$ all-fail and
+$98.1$ all-success groups against $19$ and $76$ observed, and it is rejected
+(Pearson $\chi^2=82.2$, df $6$). ZVF is the same object, up to aggregation
+level, as the Advantage Collapse Rate of \citet{he2026advantage},
 and the Jensen excess was proved by \citet{nie2026gradstarvation}; we claim no
 new diagnostic or theorem.
 \end{abstract}
 
 \section{Setup}
 
+GRPO \citep{shao2024deepseekmath} centres each reward on its group mean, so a
+group with constant rewards contributes no gradient.
 For a group of $G\ge2$ binary rewards with $k$ successes write
 $\mathrm{ZVF}_{\mathrm{obs}}=\mathbf{1}\{k\in\{0,G\}\}$ and
 $h_G(p)=p^G+(1-p)^G$. If prompt $i$ has latent success probability $p_i$ and
@@ -58,7 +64,7 @@ $\mathbb{E}[\mathrm{ZVF}_{\mathrm{obs}}\mid p_i]=h_G(p_i)$ and, over a prompt
 population with $\bar p:=\mathbb E_i[p_i]$,
 $\mathbb{E}[\mathrm{ZVF}]=\mathbb{E}_i[h_G(p_i)]\ge h_G(\bar p)$,
 with equality only when all prompts share one $p$ ($h_G$ is strictly convex
-for $G\ge2$). Define $\mathrm{pass@}G(p):=1-(1-p)^G$.
+for $G\ge2$). Define $\mathrm{pass@}G(p):=1-(1-p)^G$ \citep{chen2021codex}.
 Then $\mathrm{pass@}G(p)-p^G=1-h_G(p)$ is an algebraic identity, not an
 empirical finding. Its sample counterpart is
 $\mathbf1\{k\ge1\}-\mathbf1\{k=G\}=1-\mathrm{ZVF}_{\mathrm{obs}}$.
@@ -74,9 +80,18 @@ every group, and a positive mean is guaranteed whenever any group is mixed
 (84.2\% are; Table~\ref{tab:main}). Under the exact i.i.d.\ Bernoulli null
 with $G=8$ the expected value is
 $\sum_{k=0}^G \binom{G}{k}\bar p^k(1-\bar p)^{G-k}\,[h_G(k/G)-\mathbf{1}\{k\in\{0,G\}\}]
-\simeq+0.105$ at $\bar p=0.694$ ($+0.108$ under the fitted beta-binomial).
+\simeq+0.105$ at $\bar p=0.694$ ($+0.107$ under the fitted beta-binomial).
 The empirical plug-in mean is $0.2807$, minus observed ZVF $0.1583$, giving
-$+0.1224$. The number therefore cannot evidence ``anti-herding''.
+$+0.1224$. Simulating 600 independent groups gives 95\% sampling bands for the
+mean of $[0.095,0.114]$ under the homogeneous binomial and $[0.097,0.118]$
+under the fitted beta-binomial; $+0.1224$ lies above both, so the observed
+$k$-histogram is not reproduced by either null, but a positive value is still
+guaranteed by construction and carries no sign information. The bands treat
+groups as independent, which the 103 repeated-problem pairs
+(\S\ref{sec:gsm8k}) violate. On the same groups the pooled plug-in residual
+$h_8(\bar p)-\mathrm{ZVF}_{\mathrm{obs}}=-0.104$ has the opposite sign: the sign
+is set by the choice of estimator. The number therefore cannot evidence
+``anti-herding''.
 
 \paragraph{The step-level estimator has competing biases.}
 The synthetic-arithmetic statistic used an estimated step-mean success rate:
@@ -90,18 +105,29 @@ $\mathbb E[h_G(\hat{\bar p}_t)]-h_G(\bar p_t)$, so a negative sign is not
 implied by the population inequality alone. Recomputing the 480 aggregate rows
 with source \texttt{groupsize\_zvf\_sweep} in
 \nolinkurl{experiments/results/zvf_contrastive_yield.tsv} gives $-0.0668$
-($-0.067$ rounded), across $G\in\{2,4,8,16\}$ with 120 rows per $G$.
-The earlier $-0.0703$ is withdrawn: its subset/weighting provenance is not
-reconciled. Raw within-step group structure and $B_t$ are not established by
-these aggregate inputs; neither a finite-sample null nor a causal dependence
-mechanism is identified. The historical step-iid interval is withheld.
+($-0.067$ rounded), across $G\in\{2,4,8,16\}$ with 120 rows per $G$
+(per-$G$ means $-0.010$, $-0.055$, $-0.094$, $-0.109$). The rows are the step
+logs of 12 GRPO runs (Qwen2.5-0.5B \citep{qwen2024qwen25}, synthetic arithmetic,
+40 steps, 3 seeds per $G$); the same value is recovered from the per-run
+JSON step logs under
+\nolinkurl{experiments/results/modal_registry/modal_artifacts/tinkerrl-results/groupsize_zvf/}.
+The earlier $-0.0703$ is withdrawn: its subset/weighting provenance
+is not reconciled. Run metadata record $B_t=16$ prompts per step, but the logs
+store only the step-mean reward and step ZVF, not per-group success counts, so
+neither a finite-sample null nor a causal dependence mechanism is identified.
+With only three seed clusters per $G$ no reliable interval is available, and the
+historical step-iid interval is withheld.
 
 \section{What the GSM8K groups actually show}
+\label{sec:gsm8k}
 
 \begin{table}[t]
 \centering
-\caption{GSM8K group statistics (Qwen3-8B, $G{=}8$, 3 seeds $\times$ 200
-problems; recomputed from \texttt{tinker\_gsm8k\_zvf\_s\{42,123,456\}.json}).}
+\caption{GSM8K \citep{cobbe2021gsm8k} group statistics (base Qwen3-8B
+\citep{yang2025qwen3}, no training, $G{=}8$, temperature 1.0, 3 seeds $\times$
+200 problems; recomputed from
+\texttt{tinker\_gsm8k\_zvf\_s\{42,123,456\}.json}). ICC: marginal intra-class
+correlation $1/(a+b+1)$.}
 \label{tab:main}
 \small
 \begin{tabular}{@{}lr@{}}
@@ -114,7 +140,10 @@ Mean success rate $\bar p$ & 0.694 \\
 Homogeneous binomial $h_8(\bar p)$ & 0.054 \\
 Beta-binomial fit ($a{=}3.61$, $b{=}1.62$; ICC $0.160$) & 0.170 \\
 Observed counts for $k=0,\ldots,8$ & 19,13,16,33,66,91,141,145,76 \\
-$\chi^2$ of $k$-histogram vs.\ Binomial$(8,\bar p)$ & 8119 (df $=7$) \\
+All-fail / all-success groups: observed & 19 / 76 \\
+\quad expected under fitted beta-binomial & 4.2 / 98.1 \\
+LR deviance $D$ of $k$-histogram vs.\ Binomial$(8,\bar p)$ & 341.3 (df $=7$) \\
+Pearson $\chi^2$ vs.\ fitted beta-binomial & 82.2 (df $=6$) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -123,14 +152,34 @@ Observed ZVF is $2.9\times$ the homogeneous-binomial value.
 The beta-binomial is an unconstrained two-parameter maximum-likelihood fit
 (Nelder--Mead on log parameters); its implied mean $a/(a+b)=0.690$ is not
 fixed at the empirical $0.694$. Its ZVF agreement within $0.012$ is an
-in-sample descriptive fit, not held-out prediction or mechanism identification.
-ICC denotes marginal intra-class correlation $1/(a+b+1)$ under that model.
-The unpooled Pearson discrepancy is approximately 8119, but its sparse
-expected tail counts (about $0.046$ and $0.83$ at $k=0,1$) invalidate an
-asymptotic chi-square test; no corresponding significance claim is retained.
-Different seed problem sets do not identify conditional dependence separately
-from latent prompt heterogeneity. Exact unique problem overlap, split and
-decoding provenance must be audited before stronger generalization claims.
+in-sample total-only match produced by offsetting errors: the fit
+under-predicts all-fail groups ($4.2$ vs.\ $19$) and over-predicts all-success
+groups ($98.1$ vs.\ $76$), and the $k=0$ cell alone contributes $53.0$ of the
+Pearson $\chi^2=82.2$ (df $6$, $p\approx10^{-15}$; likelihood-ratio
+deviance $D=59.0$, $p\approx10^{-10}$). The fitted beta-binomial is therefore rejected;
+it is a descriptive overdispersion summary, not held-out prediction or mechanism
+identification. Overdispersion relative to a single binomial is not in doubt:
+the variance of $k$ is $2.2\times$ the binomial value. The unpooled Pearson
+statistic against Binomial$(8,\bar p)$ is not used because two expected cells
+are below 1 ($0.046$ and $0.83$ at $k=0,1$); the likelihood-ratio deviance $D=341.3$
+exceeds every value in $20{,}000$ parametric-bootstrap replicates
+($p<10^{-4}$), and pooling $k\le2$ (expected $7.5$) gives Pearson
+$\chi^2=323.8$ (df $5$).
+
+The 600 groups contain 503 distinct problems by question text: 85 appear in
+two seeds and 6 in all three, giving 103 repeated-problem pairs, consistent
+with independent seed-shuffles of the 1{,}319-problem test split. Success
+counts of repeated problems correlate across independent runs (Pearson
+$r=0.65$), which persistent prompt-level difficulty predicts and within-group
+rollout dependence alone does not. This is a post-hoc check; it does not bound
+any additional within-group dependence, so the decomposition of the excess ZVF
+remains unidentified. The excess of all-fail groups may also partly reflect
+answer truncation: the JSON schema matches
+\nolinkurl{platform_hybrid/experiments/tinker_direct_eval.py} (raw prompt with a
+\verb|\boxed{}| answer suffix, boxed-or-last-integer parser, default
+\texttt{max\_tokens}${}=512$), but the token limit is not recorded in the result
+files and only 200-character completion prefixes are stored, so truncation
+cannot be audited from these artefacts.
 
 \paragraph{Prospective test (not executed).}
 With $M\ge G$ independent calibration rollouts and $m_i$ successes for prompt
@@ -138,12 +187,16 @@ $i$, predict held-out ZVF using
 $\widehat h_i=[\binom{m_i}{G}+\binom{M-m_i}{G}]/\binom{M}{G}$
 (with binomial coefficients zero when the upper argument is below $G$).
 This is unbiased for $h_G(p_i)$ under conditional i.i.d.\ sampling, unlike
-$h_G(m_i/M)$. Average over prompts and assess held-out error with
+$h_G(m_i/M)$; it is the same hypergeometric construction as the unbiased
+pass@$k$ estimator of \citet{chen2021codex}. Average over prompts and assess held-out error with
 prompt-clustered uncertainty. No results of this prospective protocol are claimed.
 
 \section{Relation to prior work}
 Nothing here is new. ZVF is equivalent, up to aggregation granularity, to the
-Advantage Collapse Rate \citep{he2026advantage}. \citet{nie2026gradstarvation}
+Advantage Collapse Rate \citep{he2026advantage}, which is defined as the
+proportion of training batches with ineffective gradients rather than of
+groups. Beta-binomial modelling of per-prompt success probabilities is already
+used to predict pass@$k$ scaling \citep{kazdan2025passk}. \citet{nie2026gradstarvation}
 prove that the true degeneracy rate exceeds the i.i.d.\ Bernoulli prediction
 by Jensen's inequality, which is the corrected reading above; DARA
 \citep{zheng2026dara} uses the complementary active-group density in
@@ -158,7 +211,8 @@ contribution of this note is the retraction and the GSM8K numbers.
   \item No claim that ZVF predicts held-out collapse or ranks trainers; the
     earlier pooled Spearman $\rho=0.27$ is withdrawn (17 finite cells, 9 of
     them simulated, mixed outcome definitions).
-  \item No use of \texttt{variance\_mitigation.tsv} or any simulated panel.
+  \item No use of \texttt{variance\_mitigation.tsv} (the earlier draft's
+    comparison table behind that $\rho$) or any simulated panel.
 \end{itemize}
 
 \section{Reproducibility}
@@ -168,6 +222,14 @@ arithmetic mean from the named checked-in files, not every historical number
 quoted for retraction. Repository: \url{https://github.com/arvindcr4/tinker-rl-lab}.
 The GSM8K inputs live in \nolinkurl{platform_hybrid/experiments/results/};
 outputs are written to a caller-selected new JSON file via \texttt{--output}.
+That output includes the beta-binomial expected counts and the Pearson
+statistic against the fitted beta-binomial. The likelihood-ratio statistics,
+pooled test, parametric bootstrap, simulated null bands and repeated-problem
+statistics are computed from the same three JSON files, and the arithmetic
+cross-check from the per-run step logs, by
+\nolinkurl{tools/review_ledger/P2_zvf_falsification_note_audit.py} (fixed
+bootstrap seed), which writes
+\nolinkurl{platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json}.
 No held-out prediction experiment or immutable archive is supplied here.
 
 \bibliographystyle{plainnat}
@@ -178,7 +240,7 @@ X.~He, Q.~Sun, A.~Cheng, X.~Li, X.~Ji, H.~Lu, R.~Huang, and Q.~Hu.
 \newblock Advantage collapse in group relative policy optimization: Diagnosis and mitigation.
 \newblock arXiv:2605.21125, 2026.
 \bibitem[Nie et~al.(2026)]{nie2026gradstarvation}
-W.-H.~Nie et~al.
+W.~Nie et~al.
 \newblock Gradient starvation in binary-reward {GRPO}: Why group-mean centering fails and why the simplest fix works.
 \newblock arXiv:2605.07689, 2026.
 \bibitem[Zheng et~al.(2026)]{zheng2026dara}
@@ -194,13 +256,37 @@ H.~Zheng, Y.~Zhou, B.~R.~Bartoldson, B.~Kailkhura, F.~Lai, J.~Zhao, and B.~Chen.
 \newblock Act only when it pays: Efficient reinforcement learning for {LLM} reasoning via selective rollouts.
 \newblock arXiv:2506.02177, 2025.
 \bibitem[Jiang et~al.(2025)]{jiang2025vcrl}
-G.~Jiang et~al.
+G.~Jiang, W.~Feng, G.~Quan, C.~Hao, Y.~Zhang, G.~Liu, and H.~Wang.
 \newblock {VCRL}: Variance-based curriculum reinforcement learning for large language models.
 \newblock arXiv:2509.19803, 2025.
 \bibitem[Bae et~al.(2025)]{bae2025online}
 S.~Bae, J.~Hong, M.~Y.~Lee, H.~Kim, J.~Nam, and D.~Kwak.
 \newblock Online difficulty filtering for reasoning oriented reinforcement learning.
 \newblock arXiv:2504.03380, 2025.
+\bibitem[Shao et~al.(2024)]{shao2024deepseekmath}
+Z.~Shao et~al.
+\newblock {DeepSeekMath}: Pushing the limits of mathematical reasoning in open language models.
+\newblock arXiv:2402.03300, 2024.
+\bibitem[Cobbe et~al.(2021)]{cobbe2021gsm8k}
+K.~Cobbe et~al.
+\newblock Training verifiers to solve math word problems.
+\newblock arXiv:2110.14168, 2021.
+\bibitem[Yang et~al.(2025)]{yang2025qwen3}
+A.~Yang et~al. (Qwen Team).
+\newblock {Qwen3} technical report.
+\newblock arXiv:2505.09388, 2025.
+\bibitem[Qwen Team(2024)]{qwen2024qwen25}
+Qwen Team (A.~Yang et~al.).
+\newblock {Qwen2.5} technical report.
+\newblock arXiv:2412.15115, 2024.
+\bibitem[Chen et~al.(2021)]{chen2021codex}
+M.~Chen et~al.
+\newblock Evaluating large language models trained on code.
+\newblock arXiv:2107.03374, 2021.
+\bibitem[Kazdan et~al.(2025)]{kazdan2025passk}
+J.~Kazdan, R.~Schaeffer, Y.~Allouah, C.~Sullivan, K.~Yu, N.~Levi, and S.~Koyejo.
+\newblock Efficient prediction of pass@k scaling in large language models.
+\newblock arXiv:2510.05197, 2025.
 \end{thebibliography}
 
 \end{document}

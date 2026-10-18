@@ -9,6 +9,7 @@
 \textbf{A}: completed multi-seed cells (inferential eligibility separately required). Tier \textbf{B}:
 single-seed completed case-study runs, descriptive only. Tier \textbf{C}:
 failed or partial cells listed for honesty (Appendix~\ref{sec:run-manifest}).
+\emph{floor}: non-LM PPO sanity floor, outside the LM tiers.
 ``Repro.'' = reproducibility status: \emph{open} (re-runnable end-to-end via
 released code on commodity GPUs), \emph{closed-backend} (depends on the
 proprietary Tinker API), or \emph{listed} (no claim, only enumerated).}
@@ -26,9 +27,11 @@ Later, separate 5-seed Qwen3-8B GSM8K comparison
  ($83.3\%$ vs.\ fixed-base $82.0\%$, $\Delta{=}{+}1.3$pp, $p{=}0.26$)
  & future & One-sample seed-level test against a fixed baseline; not paired-seed
  & --- & not reviewed \\
-Completed multi-seed Modal cells (CleanRL, SB3, Tianshou;
-Qwen2.5-0.5B task identity unresolved)
+TRL Qwen2.5-0.5B, 5 seeds (logged task: synthetic math; script not pinned)
  & A & Seed summaries; inference requires eligible comparisons
+ & \checkmark & open \\
+CleanRL/SB3/Tianshou PPO, non-LLM policy network, 5 seeds each
+ & floor & Non-LM sanity floor (accuracy ${\approx}0.01$); not LM evidence
  & \checkmark & open \\
 Tinker Llama-3.3-70B (4 reported seeds)
  & A & Replication metadata; eligibility unresolved
@@ -43,12 +46,12 @@ Single-seed case-study runs across model scale on Tinker
 Single-seed Tinker group-size sweep
  ($G\!\in\!\{2,4,8,16,32\}$, Qwen3-8B, GSM8K) and tool-use case studies
  (Llama-3.1-8B-Inst, Qwen3-32B; reward $0$ at 30 steps)
- & B & Single-seed traces; consistent with mechanical identity
+ & B & Single-seed traces; descriptive only
  & \checkmark & closed-backend \\
 Stratified ZVF-vs-performance analysis
  (within-task Pearson $r{=}{+}0.40$, $N{=}19$;
  model-varying $r{=}{+}0.13$, $N{=}7$;
- see \texttt{stratified\_diagnostics} when present)
+ Appendix~\ref{sec:stratified-diagnostics})
  & B & Descriptive instrumentation, task-confounded
  & \checkmark & closed-backend \\
 Failed/partial cells

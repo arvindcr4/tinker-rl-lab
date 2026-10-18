@@ -5,14 +5,14 @@
 \label{sec:conclusion}
 
 \ours{} is a shared empirical substrate for RL post-training across libraries,
-algorithms, and model families. The current release supports three
+algorithms, and model families. The current release supports two
 conservative claims: (i) ZVF/GU are useful \emph{descriptive} diagnostics of
 when binary-reward GRPO stops producing within-group signal, but should not be
-read as causal predictors independent of reward mean and group size; (ii)
+read as causal predictors independent of reward mean and group size; and (ii)
 initialization and rollout regime are plausible stack-level moderators in the
-released case studies, not isolated causal effects; and (iii) cross-stack
-PPO/GRPO rankings are descriptive because policy architecture and task encoding
-are not fully matched. Later, separate Qwen3-8B GSM8K evidence is inconclusive:
+released case studies, not isolated causal effects. The paper makes no
+PPO-versus-GRPO ranking claim. Later, separate Qwen3-8B GSM8K evidence is inconclusive:
 $p{=}0.26$ is a one-sample seed-level test against a fixed base, not a paired
-or reviewed-record test. The released traces and
-checkpoints are intended to make stricter follow-up easy.
+or reviewed-record test. File-level trace and checkpoint availability and
+cohort inclusion IDs must be established before this collection can support
+a complete reproduction or coverage claim.

@@ -24,85 +24,170 @@ PES University\\\texttt{arvindcr4@gmail.com}}
 \maketitle
 
 \begin{abstract}
-We audit whether the available group-relative policy optimization (GRPO)
-post-training traces support a size-scaling law. They do not currently support
-one: short, heterogeneous horizons, ceiling effects, and weakly identified
-curve fits prevent a positive scaling interpretation. This is an evidence
-limitation, not a statistical demonstration of zero slope or a universal
-failure of scaling. Earlier permutation, model-selection, architecture-gap,
-and leave-one-anchor claims are not retained as inferential conclusions.
-A Nemotron-3-Super-120B-A12B trace contains 11 zero-reward steps out of 20;
-this is a descriptive run observation, not a model-family comparison.
+We audit whether twelve single-seed group-relative policy optimization
+(GRPO)~\cite{shao2024deepseekmath} post-training traces on GSM8K~\cite{cobbe2021gsm8k},
+spanning 4B to 1T nominal total parameters, support a model-size scaling law.
+They do not. Horizons are 3--30 logged steps, 5 of 12 anchors start at reward
+$1.0$, and model size is perfectly aliased with the training recipe: every
+anchor of at least 120B parameters uses a different learning rate, group size,
+LoRA rank and horizon from every anchor of at most 32B. Saturation-curve fits are
+weakly identified: with the asymptote $R_\infty$ restricted to the reward range
+$[0,1]$, 8 of 12 fitted asymptotes lie on a bound. The fitted slope of $R_\infty$
+per decade of $N$ has a 95\% interval of $[-0.50,+0.27]$, so the panel cannot
+exclude a change of about $+0.65$ in asymptotic reward across its 2.4 decades.
+This is an evidence limitation of this panel, not a demonstration of zero slope.
+On a separate 40-step, five-seed GRPO audit of one small model, the same
+saturation fit was identifiable on 5 of 5 traces, so horizon and ceiling, not
+GRPO as such, plausibly drive the failure. Earlier permutation,
+model-selection, architecture-gap and leave-one-anchor claims are not retained
+as inferential conclusions; their recomputed values are reported for
+traceability only.
 \end{abstract}
 
 \section{What is (and is not) claimed}
 
-\paragraph{Claim.} The currently documented anchors are insufficient to
-identify a positive GRPO size trend or a universal saturation exponent.
+\paragraph{Claim.} The twelve documented short-horizon GSM8K anchors are
+insufficient to identify a positive GRPO size trend or a universal saturation
+rate. Because size and recipe are aliased (Table~\ref{tab:panel}), no
+difference between the $\le$32B and $\ge$120B groups can be assigned to size.
 
 \paragraph{Non-claims.} No multi-seed powered cross-scale significance test; no
 causal architecture ranking; no claim that larger models cannot improve under
-other stacks, horizons, or tasks. Frontier anchors are single-seed and
+other stacks, horizons, or tasks. All anchors are single-seed (seed 42) and
 descriptive by design. Predictions recorded in an internal iteration ledger are
 \emph{not} an immutable external preregistration.
+
+\paragraph{Positioning.} Pre-training scaling laws fit loss as a function of
+parameters and data~\cite{kaplan2020scaling,hoffmann2022chinchilla}. Recent RL
+post-training work fits saturating curves of reward against compute or training
+steps and reports predictable trajectories for stable
+recipes~\cite{khatri2025artscaling,nimmaturi2025predictive}; large-scale RL with
+verifiable rewards is also reported to improve reasoning~\cite{deepseek2025r1}.
+This note tests a narrower question: can a saturation fit of the form used in
+that line of work, applied to these short traces, identify a trend in
+\emph{model size} $N$? It cannot, and this note does not contest the cited
+compute- or step-axis results.
 
 \section{Panel and provenance limits}
 
 The historical 12-row fit panel is explicitly enumerated in
-\nolinkurl{platform_hybrid/experiments/results/scaling_law_iter109_saturation.tsv}:
-Qwen3.5-4B (30 steps), Qwen3-8B (30), Llama-3.1-8B-Instruct (30),
-Qwen3-32B (3), Qwen3.5-27B (3), gpt-oss-20B (30), Qwen3-30B-MoE (5),
-Qwen3-30B-MoE-Inst (3), DeepSeek-V3.1 (20),
-Nemotron-3-Super-120B-A12B (20; historically labelled Nemotron-120B),
-Qwen3-235B-MoE (4), and Kimi-K2-Thinking (20).
-Its \texttt{trace\_file} column identifies the input filename for each row.
-The table's \texttt{params\_B} is nominal total parameter count, not active
-parameters or per-token compute; its Nemotron \texttt{dense} classification
-is wrong (LatentMoE, 120B total / 12B active).
-
-These rows do not constitute a controlled 0.6B--1T experiment. A complete
-row-level mapping of checkpoint revisions, prompt IDs/splits, seeds,
-backend versions, decoding, and stopping rules is not supplied by that fit
-TSV. In particular, ceiling-saturated instruct models and short probes cannot
-be treated as comparable completed optimization trajectories. We therefore
-withdraw panel-wide inferential conclusions pending that provenance audit.
-The source repository is \url{https://github.com/arvindcr4/tinker-rl-lab};
-this note does not provide a frozen archival release.
-
-\section{Descriptive findings and withdrawn analyses}
+\nolinkurl{platform_hybrid/experiments/results/scaling_law_iter109_saturation.tsv};
+Table~\ref{tab:panel} lists each anchor's recipe, read from the per-run JSON
+files under \nolinkurl{platform_hybrid/experiments/tinker-runs/results/}.
+$N$ is nominal total parameter count, not active parameters or per-token
+compute. The fit TSV's Nemotron \texttt{dense} classification is wrong
+(LatentMoE, 120B total / 12B active). Each training step samples 2 prompts, so a
+step's reward is the mean of 16 binary rollouts ($G{=}8$) or 8 rollouts
+($G{=}4$).
 
 \begin{table}[ht]
 \centering
-\caption{Audit status. Historical analyses are identified, not endorsed as tests.}
+\caption{Per-anchor recipe and ceiling. All runs: GSM8K, LoRA, seed 42.
+$T$ = logged steps used in the fit; $\dagger$ = partial run transcribed from
+console logs. $r_1$ = first-step reward; $\bar r$ = mean reward over $T$;
+$\hat R_\infty$ from the refit with $R_0,R_\infty\in[0,1]$, $^{*}$ = on a bound.}
+\label{tab:panel}
+\small
+\begin{tabular}{@{}lrlrcccrrr@{}}
+\toprule
+Anchor & $N$ (B) & Arch. & $T$ & lr & $G$ & rank & $r_1$ & $\bar r$ & $\hat R_\infty$ \\
+\midrule
+Qwen3.5-4B & 4 & dense & 30 & $3{\times}10^{-5}$ & 8 & 32 & 1.000 & 0.817 & 0.80 \\
+Qwen3-8B & 8 & dense & 30 & $3{\times}10^{-5}$ & 8 & 32 & 0.375 & 0.285 & 1.00$^{*}$ \\
+Llama-3.1-8B-Instruct & 8 & dense & 30 & $3{\times}10^{-5}$ & 8 & 32 & 1.000 & 0.869 & 0.83 \\
+gpt-oss-20B & 20 & MoE & 30 & $3{\times}10^{-5}$ & 8 & 32 & 0.625 & 0.840 & 0.85 \\
+Qwen3.5-27B & 27 & dense & 3$^\dagger$ & $3{\times}10^{-5}$ & 8 & 32 & 0.562 & 0.437 & 0.00$^{*}$ \\
+Qwen3-30B-A3B & 30 & MoE & 5$^\dagger$ & $3{\times}10^{-5}$ & 8 & 32 & 0.188 & 0.325 & 1.00$^{*}$ \\
+Qwen3-30B-A3B-Inst.-2507 & 30 & MoE & 3$^\dagger$ & $3{\times}10^{-5}$ & 8 & 32 & 1.000 & 1.000 & 1.00$^{*}$ \\
+Qwen3-32B & 32 & dense & 3$^\dagger$ & $3{\times}10^{-5}$ & 8 & 32 & 0.312 & 0.250 & 0.00$^{*}$ \\
+Nemotron-3-Super-120B-A12B & 120 & LatentMoE & 20 & $1{\times}10^{-5}$ & 4 & 16 & 0.000 & 0.175 & 1.00$^{*}$ \\
+Qwen3-235B-A22B-Inst.-2507 & 235 & MoE & 4$^\dagger$ & $1{\times}10^{-5}$ & 4 & 16 & 1.000 & 1.000 & 1.00$^{*}$ \\
+DeepSeek-V3.1 & 685 & MoE & 20 & $1{\times}10^{-5}$ & 4 & 16 & 0.875 & 0.844 & 0.84 \\
+Kimi-K2-Thinking & 1000 & MoE & 20 & $1{\times}10^{-5}$ & 4 & 16 & 1.000 & 0.850 & 0.00$^{*}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These rows do not constitute a controlled 4B--1T experiment. Remote logs confirm
+only part of the panel. Weights \& Biases histories reproduce the fitted traces
+exactly for Llama-3.1-8B-Instruct, gpt-oss-20B and Kimi-K2-Thinking. For
+Qwen3-235B and Qwen3-30B-Instruct, the fitted traces are the first 4 and 3 steps
+of runs that logged 15 and 13 steps. No logged history reproduces the
+transcribed Qwen3-32B, Qwen3.5-27B or Qwen3-30B-A3B traces. Tinker training-run
+records with matching base model and LoRA rank exist for the seven non-partial
+anchors. A row-level mapping of checkpoint revisions, prompt IDs, backend
+versions, decoding and stopping rules is not available. Ceiling-saturated
+instruct models and 3--5-step probes are not comparable completed optimization
+trajectories, so panel-wide inferential conclusions are withdrawn. The source
+repository is \url{https://github.com/arvindcr4/tinker-rl-lab}; this note does
+not provide a frozen archival release.
+
+\section{Recomputed checks and withdrawn analyses}
+
+The saturation model is $R(t)=R_0+(R_\infty-R_0)(1-e^{-\lambda t})$, fitted by
+bounded least squares per trace. The historical fit
+(\nolinkurl{platform_modal/scripts/scaling_law_iter109.py}) used
+$R_0\in[-1.5,1.5]$, $R_\infty\in[0,1.5]$, $\lambda\in[10^{-4},50]$. Those bounds
+admit asymptotes above the reward cap of 1, and three fits (Qwen3-8B,
+Qwen3-30B-A3B, Nemotron) returned $\hat R_\infty=1.5$. We refit with
+$R_0,R_\infty\in[0,1]$. Slopes are ordinary least squares on $\log_{10}N$.
+Two-sided permutation $p$-values use $10^4$ permutations. The minimum detectable
+slope (MDS) is the slope detectable with 80\% power at $\alpha=0.05$,
+$(t_{0.975}+t_{0.80})\,\mathrm{SE}$. Table~\ref{tab:neg} reports the results.
+
+\begin{table}[ht]
+\centering
+\caption{Audit status. Recomputed values are reported for traceability, not
+endorsed as tests of a size effect (size is aliased with recipe).}
 \label{tab:neg}
 \small
-\begin{tabular}{@{}p{0.42\linewidth}>{\raggedright\arraybackslash}p{0.54\linewidth}@{}}
+\begin{tabular}{@{}p{0.30\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}@{}}
 \toprule
 Check & Status \\
 \midrule
-Size regressions on fitted rates and asymptotes &
-Historical $p=0.7382$ and $0.5061$ in
-\nolinkurl{scaling_law_iter109b_permtest.tsv}; not retained as evidence of
-flatness because fitted boundary values and heterogeneous traces are not
-exchangeable scientific replicates. \\
-Saturation-rate fits &
-Historical form $R(t)=R_\infty+(R_0-R_\infty)e^{-\lambda t}$ in
-\nolinkurl{platform_modal/scripts/scaling_law_iter109.py}, with bounds
-$R_0\in[-1.5,1.5]$, $R_\infty\in[0,1.5]$, $\lambda\in[10^{-4},50]$.
-These bounds permit nonphysical reward asymptotes. No universal exponent is inferred. \\
-Corrected Akaike information criterion (AICc) comparisons &
-Withdrawn as headline evidence; short per-family panels and uncertain fitted
-estimands do not support the former blanket constant-model preference. \\
+Fit degeneracy &
+Historical bounds: $\hat R_\infty$ on a bound for 6/12 anchors (three at
+$1.5>1$, three at $0$). Refit with $R_\infty\le 1$: 8/12 on a bound (four at
+$1$, four at $0$). Only four anchors have $T\ge 20$ and an interior refit
+(Qwen3.5-4B, Llama-3.1-8B-Instruct, gpt-oss-20B, DeepSeek-V3.1). \\
+$R_\infty$ and $\log_{10}\lambda$ vs.\ $\log_{10}N$ (all 12) &
+Historical: $p=0.738$ and $0.506$
+(\nolinkurl{scaling_law_iter109b_permtest.tsv}); historical bootstrap 95\%
+interval for the $R_\infty$ slope $[-0.49,+0.28]$ per decade. Refit: $R_\infty$
+slope $-0.12$ per decade, 95\% CI $[-0.50,+0.27]$, $p=0.50$, MDS $0.54$;
+$\log_{10}\lambda$ slope $-0.12$, CI $[-0.92,+0.69]$, $p=0.74$. These inputs
+are mostly boundary values, so the tests are uninformative, not evidence of
+flatness. \\
+Restricted and model-free trends &
+$R_\infty$ on the four interior $T\ge 20$ anchors: slope $+0.01$, CI
+$[-0.04,+0.07]$, $p=0.42$ ($n=4$; only 24 permutations). Mean reward
+$\bar r$ (no fit), all 12: slope $+0.08$ per decade, CI $[-0.21,+0.37]$,
+$p=0.53$, MDS $0.40$; $T\ge 20$ only ($n=7$): $+0.03$, CI $[-0.32,+0.38]$,
+$p=0.84$. \\
+Ceiling &
+5/12 anchors have $r_1=1.0$, and their first-five-step mean is at least $0.92$;
+these anchors have little or no headroom on the training reward. \\
+Corrected Akaike information criterion (AICc)~\cite{hurvich1989aicc} &
+The historical constant-model preference holds on five 20--30-step traces
+(\nolinkurl{scaling_law_iter25_modelsel.tsv}). It does not hold in general: on
+a 40-step, five-seed same-stack GRPO audit (Qwen2.5-0.5B, GSM8K, 128 rollouts
+per step; \nolinkurl{scaling_law_iter29_summary.tsv}), $\lambda$ was interior
+and saturation was AICc-best on 5/5 traces. That audit is not a cross-scale
+anchor; it bounds where this note's failure applies. \\
 Nemotron-3-Super-120B-A12B &
-Descriptive trace: peak reward $0.875$ at step 3; last-10 $0.1625$;
-zero-reward steps $11/20$; $5/20$ steps above $0.25$.
-Input: \nolinkurl{frontier_gsm8k_nemotron-120b.json}. \\
-MoE--dense comparison &
-Withdrawn: historical split misclassified Nemotron. Neither the original
-nor the corrected small-panel $p$-value identifies an architecture effect. \\
+Descriptive trace: peak $0.875$ at step 3; first-five mean $0.175$ vs.\
+last-ten mean $0.1625$, so no sustained learned state precedes the low tail;
+zero-reward steps $11/20$; overall $28/160$ correct rollouts ($0.175$, Wilson
+95\% CI $[0.12,0.24]$). A parser or format failure is not ruled out, because
+completions were not retained. Input:
+\nolinkurl{frontier_gsm8k_nemotron-120b.json}. \\
+MoE--dense comparison (mean reward) &
+Withdrawn: the historical 6-vs-6 split ($+0.338$, exact one-sided $p=0.024$)
+misclassified Nemotron. Corrected 7-vs-5: $+0.188$, $p=0.178$. \\
 Leave-Nemotron analysis &
-Withdrawn: no trusted sensitivity receipt is established here; earlier
-claims of robustness or reversal are not retained. \\
+Recomputed 6 MoE vs.\ 5 dense: $+0.278$, exact one-sided $p=0.048$ (462
+splits). Not a claim: it is one of several post-hoc splits, uncorrected for
+multiplicity, and architecture is confounded with recipe and ceiling. \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -112,13 +197,64 @@ claims of robustness or reversal are not retained. \\
 Plateau, drift, and collapse are descriptive trajectory labels, not an
 established stack-conditioned taxonomy. Recipe, horizon, prompt difficulty,
 checkpoint capability and size co-vary. This audit therefore supports neither
-a universal positive scaling law nor its universal negation. Repeated-seed,
-matched-budget experiments with documented checkpoints and held-out prompts
-are required before comparing architecture or scaling slopes. No standalone
-scientific novelty for these generic identifiability limitations is claimed.
+a universal positive scaling law nor its universal negation. Here
+\emph{identifiability} means that the per-trace parameters $(R_\infty,\lambda)$
+cannot be estimated away from their bounds from the available data. For
+practitioners, a size-trend claim needs, at minimum, a shared recipe across
+sizes, horizons long enough for interior fits (40 steps sufficed in the
+small-model audit above), anchors with headroom below the reward ceiling, and
+repeated seeds. No standalone scientific novelty for these generic
+identifiability limitations is claimed.
 
 \section{Document scope}
 This correction note withdraws overstatements in the historical scaling audit.
 It does not certify the longer draft or replace missing panel provenance.
+
+\begin{thebibliography}{9}
+\small
+\bibitem{cobbe2021gsm8k}
+K.~Cobbe, V.~Kosaraju, M.~Bavarian, M.~Chen, H.~Jun, L.~Kaiser, M.~Plappert,
+J.~Tworek, J.~Hilton, R.~Nakano, C.~Hesse, and J.~Schulman.
+\newblock Training verifiers to solve math word problems.
+\newblock arXiv:2110.14168, 2021.
+
+\bibitem{deepseek2025r1}
+DeepSeek-AI.
+\newblock {DeepSeek-R1}: Incentivizing reasoning capability in {LLMs} via
+reinforcement learning.
+\newblock arXiv:2501.12948, 2025.
+
+\bibitem{hoffmann2022chinchilla}
+J.~Hoffmann et~al.
+\newblock Training compute-optimal large language models.
+\newblock arXiv:2203.15556, 2022.
+
+\bibitem{hurvich1989aicc}
+C.~M. Hurvich and C.-L. Tsai.
+\newblock Regression and time series model selection in small samples.
+\newblock \emph{Biometrika}, 76(2):297--307, 1989.
+
+\bibitem{kaplan2020scaling}
+J.~Kaplan et~al.
+\newblock Scaling laws for neural language models.
+\newblock arXiv:2001.08361, 2020.
+
+\bibitem{khatri2025artscaling}
+D.~Khatri et~al.
+\newblock The art of scaling reinforcement learning compute for {LLMs}.
+\newblock arXiv:2510.13786, 2025.
+
+\bibitem{nimmaturi2025predictive}
+D.~Nimmaturi, V.~Bhargava, R.~Ghosh, J.~George, and D.~Dutta.
+\newblock Predictive scaling laws for efficient {GRPO} training of large
+reasoning models.
+\newblock arXiv:2507.18014, 2025.
+
+\bibitem{shao2024deepseekmath}
+Z.~Shao et~al.
+\newblock {DeepSeekMath}: Pushing the limits of mathematical reasoning in open
+language models.
+\newblock arXiv:2402.03300, 2024.
+\end{thebibliography}
 
 \end{document}

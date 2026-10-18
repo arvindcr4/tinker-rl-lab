@@ -22,7 +22,7 @@ def zvf(rewards_2d: np.ndarray, eps: float = 1e-6) -> float:
 \subsection{Per-Framework Reward-Field Locations}
 
 Each framework emits rollouts in a different layout. We consolidate them
-via \texttt{scripts/zvf\_compute\_cross\_framework.py} which normalizes
+via \texttt{platform\_modal/scripts/zvf\_compute\_cross\_framework.py} which normalizes
 every source into a $[|B_t|, K]$ reward matrix. Field mappings are in
 Table~\ref{tab:zvf-parser-fields}.
 
@@ -54,7 +54,8 @@ tolerates fp32 round-off while treating any distinguishable reward
 difference as ``nonzero variance''. A sensitivity sweep over
 $\varepsilon \in \{10^{-8}, 10^{-6}, 10^{-4}, 10^{-2}\}$ shifts
 cross-framework ZVF estimates by at most $0.4\%$ absolute on our logs,
-well below between-run variability. The reference implementation thresholds
+well below between-run variability; the raw logs behind this sweep are not
+bundled, so it cannot be re-run from the released files. The reference implementation thresholds
 the rewards as given and performs no rescaling; every task in this paper already
 emits rewards in $[0,1]$. Rewards on another scale must be mapped to $[0,1]$ with
 the task's fixed bounds $(r-R_{\min})/(R_{\max}-R_{\min})$ before calling
@@ -84,26 +85,26 @@ To recompute ZVF from raw logs end-to-end:
 # raw logs remain in the experiment workspace used to generate them.
 
 # TRL
-python3 scripts/zvf_compute_cross_framework.py \
+python3 platform_modal/scripts/zvf_compute_cross_framework.py \
     --framework trl --log-path <raw-log> \
     --out experiments/results/zvf_trl_qwen3_8b.jsonl
 
 # TINKER
-python3 scripts/zvf_compute_cross_framework.py \
+python3 platform_modal/scripts/zvf_compute_cross_framework.py \
     --framework tinker --log-path <raw-log> \
     --out experiments/results/zvf_tinker_qwen3_8b.jsonl
 
 # OpenRLHF
-python3 scripts/zvf_compute_cross_framework.py \
+python3 platform_modal/scripts/zvf_compute_cross_framework.py \
     --framework openrlhf --log-path <raw-log> \
     --out experiments/results/zvf_openrlhf_qwen3_8b.jsonl
 
 # veRL
-python3 scripts/zvf_compute_cross_framework.py \
+python3 platform_modal/scripts/zvf_compute_cross_framework.py \
     --framework verl --log-path <raw-log> \
     --out experiments/results/zvf_verl_qwen3_8b.jsonl
 \end{verbatim}
 Each invocation emits a time-series JSONL of
 \texttt{\{step, zvf, batch\_reward\_mean, n\_groups, K\}} using the
-canonical pseudocode above. This unifies the diagnostic across every
-framework once the raw rollout trace is available.
+canonical pseudocode above. The OpenRLHF and veRL commands are schema
+templates unless the paper reports runs from those stacks.

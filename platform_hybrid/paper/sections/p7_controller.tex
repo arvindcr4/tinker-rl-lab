@@ -9,20 +9,23 @@ Adaptive-\texorpdfstring{$G$}{G} Controller}
 The theory suggests a minimal intervention. T2 says growing $G$ kills
 degenerate groups exponentially fast at interior $p$; T1 says it cannot help
 at the boundaries; T3 says the payoff of a rescued group scales with
-$p(1-p)$. The \texttt{zvf-triage} callback therefore watches the per-step
-ZVF trajectory (with PCD as the aliasing guard of
-Section~\ref{sec:p7-pcd}) and, when ZVF spikes above a threshold while PCD
-indicates the run is still in the interior regime, escalates the group size
-for subsequent steps. In the audited runs the schedule was $G: 4 \to 6 \to
-8$, each escalation triggered live by a ZVF spike. The controller changes
+$p(1-p)$. The intended \texttt{zvf-triage} callback watches the per-step
+ZVF trajectory, uses PCD as the aliasing guard of Section~\ref{sec:p7-pcd},
+and escalates the group size for subsequent steps when ZVF is high while PCD
+indicates the interior regime. The E3 pilot implements a simpler rule with
+\emph{no} PCD gate: before each step, if the mean ZVF of the previous two
+steps exceeds $0.4$, $G$ grows by 2 (from $G_0{=}4$, capped at 10). Per-step
+$G$ schedules were not retained; the mean of 186 rollouts per seed implies
+escalation to at least $G{=}8$ in at least one of the two seeds. The controller changes
 \emph{only} the sampler budget; loss form, learning rate, data, and seeds
 are untouched, so it composes with any GRPO-family objective.
 
 The natural comparison is DAPO-style dynamic sampling \citep{yu2025dapo},
 which attacks the same degeneracy by \emph{resampling}: it discards
-zero-variance groups and draws new prompts until the batch is fully
-non-degenerate. Dynamic sampling is guaranteed to reach ZVF $= 0$; the
-question is at what rollout cost, and whether the outcome justifies it.
+zero-variance groups and draws again until the batch carries signal. With an
+unbounded budget it reaches ZVF $= 0$ among accepted groups; the E3 arm
+redraws a dead group for the \emph{same} prompt at most twice. The question
+is at what rollout cost, and whether the outcome justifies it.
 A caution from the cross-stack audit applies before any such comparison:
 the recipe \emph{label} ``DAPO'' does not pin down the mechanism. On the
 closed stack, the available ``DAPO'' arm is GRPO with an asymmetric-clip
@@ -32,22 +35,30 @@ $0.00$. All four arms below therefore run in one open, auditable
 reimplementation where each mechanism is verified from the code, not the
 name.
 
-\subsection{The E3 four-arm audit}
+\subsection{The E3 four-arm pilot}
 \label{sec:p7-e3}
 Experiment E3 (W\&B project \texttt{zvf-colab-experiments}, run family
-\texttt{E3\_open\_audit}) compares four arms in the single open trainer:
+\mbox{\texttt{E3\_open\_audit}}; script
+\texttt{zvf-program/colab-experiments/e3\_open\_audit.py}, result record
+\texttt{results/e3\_open\_audit.json}) compares four arms in one open
+trainer: Qwen2.5-0.5B-Instruct, full-parameter AdamW (learning rate
+$2\times10^{-6}$, two inner epochs with clipped sequence-level ratios), seeds
+$\{0,1\}$ shared across arms, 10 steps of 3 synthetic addition prompts
+(operands $11$--$60$, at most 40 new tokens, temperature 1.0, top-$p$ 0.95),
+and a held-out set of 20 problems per seed scored greedily before and after
+training. The arms are
 plain GRPO \citep{shao2024deepseekmath}, Dr.~GRPO \citep{tong2025drgrpo},
 DAPO-style dynamic sampling \citep{yu2025dapo}, and GRPO with the
 adaptive-$G$ controller. Table~\ref{tab:p7-e3} reports the held-out
-improvement, mean ZVF, and total rollouts consumed.
+improvement, mean ZVF, and rollouts consumed per seed.
 
 \begin{table}[t]
 \centering
-\caption{E3 four-arm open-trainer audit (single auditable reimplementation;
-same data, budget baseline of 120 rollouts, seeds shared across arms).
-Adaptive-$G$ matches the best held-out gain; dynamic sampling zeroes ZVF at
-$+45\%$ rollouts without a held-out advantage. Small-$n$, single-task ---
-see scope note.}
+\caption{E3 four-arm open-trainer pilot: means over two seeds of the held-out
+accuracy change (20 problems per seed, so one problem is $0.05$), mean step
+ZVF, and rollouts per seed (fixed arms: $3\times4\times10=120$). Source:
+\texttt{zvf-program/colab-experiments/results/e3\_open\_audit.json}. Two
+seeds, one task, no interval; differences of $0.075$ are 1.5 problems.}
 \label{tab:p7-e3}
 \begin{tabular}{lccc}
 \toprule
@@ -62,21 +73,21 @@ Arm & Held-out $\Delta$ & Mean ZVF & Rollouts \\
 \end{table}
 
 Three readings, in decreasing order of confidence. \emph{First}, the
-telemetry behaves exactly as each mechanism dictates: dynamic sampling
-reaches ZVF $= 0.00$ by construction, and the adaptive-$G$ arm lowers ZVF
-($0.25 \to 0.23$) only modestly because escalation fires late, on spikes,
-rather than continuously. \emph{Second}, the accuracy-versus-compute trade
-is explicit: DAPO buys its perfect telemetry with $174$ rollouts against the
+telemetry is consistent with each mechanism: dynamic sampling reaches
+ZVF $= 0.00$ among accepted groups (no group stayed dead after two redraws),
+and the adaptive-$G$ arm's mean ZVF ($0.23$ vs $0.25$ for GRPO, a gap below the
+$1/3$ resolution of a three-group step) barely moves, because escalation
+can fire only after two high-ZVF steps. \emph{Second}, the accuracy-versus-compute trade
+is explicit in this pilot: DAPO buys its perfect telemetry with $174$ rollouts against the
 $120$ of the fixed arms ($+45\%$), and its held-out gain ($+0.550$) does not
 exceed the cheaper Dr.~GRPO ($+0.575$ at $120$). Zeroing ZVF is not free
-and, on this task, not necessary. The adaptive-$G$ arm spends a comparable
-overhead ($186$ rollouts, $+55\%$) but ties the best held-out result; its
-spend concentrates on the steps the triage flagged, rather than being paid
-on every batch. \emph{Third}---and most weakly---adaptive-$G$'s tie with
-Dr.~GRPO at the top is a small-$n$, single-task result; we claim only that
-the controller is \emph{competitive with, not superior to}, the best fixed
-recipe, while providing the live starvation telemetry the fixed recipes
-lack.
+and, in this pilot, did not raise the held-out gain. The adaptive-$G$ arm spends a comparable
+overhead ($186$ rollouts, $+55\%$) and ties the best mean held-out result;
+its extra spend falls on the steps after the trigger fired rather than on
+every batch. \emph{Third}---and most weakly---adaptive-$G$'s tie with
+Dr.~GRPO at the top is a two-seed, 20-problem, single-task result; we claim
+no ranking among the arms, only that the controller ran end to end and
+emits the live starvation telemetry the fixed recipes lack.
 
 \paragraph{What the controller is for.} The honest summary of
 Table~\ref{tab:p7-e3} is that on a task this well-conditioned, several roads
@@ -91,6 +102,20 @@ starvation regime, which the seven-field run-manifest portion of the
 eight-item minimum reporting stack in the
 companion papers can carry across stacks.
 
+\paragraph{E3 provenance limit.}
+The result record stores only per-arm means; per-seed values and per-step
+$G$ and ZVF trajectories were printed but not retained, and the W\&B run
+summary is empty. A later single-seed rerun with the same hyperparameters
+(seed 11; \texttt{zvf-program/audit/results/colab-e1-pilot/results/}) gave
+held-out changes of $+0.50$ (GRPO), $+0.50$ (Dr.~GRPO), $+0.45$ (dynamic
+sampling) and $+0.50$ (adaptive-$G$, 168 rollouts, final $G{=}6$), with mean
+ZVF $0.23$, $0.13$, $0.00$, $0.23$. The numerical tie therefore does not
+establish competitiveness or equivalence. Dynamic sampling yields zero ZVF
+only among accepted groups; with a cap of two redraws a dead group can
+survive, and the reported $0.00$ means none did in these runs.
+
+% Exclude historical replay narrative, including withdrawn delta_div claims.
+\iffalse
 \subsection{Counterfactual evaluation on the N2 four-method reward tensors}
 \label{sec:p7-controller-cf}
 \paragraph{Setup.}
@@ -1168,12 +1193,12 @@ on the N10 panel}
 
 The previous subsection fixed the controller's evidence base on the N2
 four-method tensor. The Berkeley row-01 Dualformer-Auto analysis
-\citep{su2024dualformer} established a complementary cheap-direction rule:
-on the iter127 $n{=}20$ cell sweep, Dualformer-Auto (threshold-gated
-$G$) achieves $56.2\%$ savings vs always-$G{=}16$, vs the
-zvf-triage rule which (as shown above on N2) spends more compute on
-the saturated regime. The two rules have **opposite signs** on the
-escalation direction:
+\citep{su2024dualformer} was previously reported here as establishing a
+complementary cheap-direction rule with a $56.2\%$ saving on the iter127
+cell sweep. That attribution and saving figure are withdrawn (see
+the replay audit boundary in the introduction); only the rule's
+direction is retained as a historical description. The two rules have
+\textbf{opposite signs} on the escalation direction:
 \begin{itemize}
 \item \emph{zvf-triage}: $G_t = G_{\mathrm{esc}} (=16)$ when $z_t \geq \tau$, else $G_{\mathrm{base}} (=8)$ --- escalate on intermediate zvf, base otherwise.
 \item \emph{Dualformer-Auto} ($G$-de-escalating): $G_t = G_{\mathrm{des}} (=4)$ when $z_t \geq \tau$, else $G_{\mathrm{base}} (=8)$ --- de-escalate on intermediate zvf, base otherwise.
@@ -2149,7 +2174,11 @@ method & saving (pt) & 95\% CI (per-step) & Berkeley claim \\
 \end{tabular}
 \end{center}
 Every CI excludes $0.562$ (max upper CI = $0.375$ on grpo/aero/areal).
-\textbf{The Berkeley 56.2\% saving is not reproducible on the N2 corpus}.
+\textbf{The Berkeley 56.2\% saving is not reproduced on the N2 corpus.}
+This replay compares two estimators on unclustered per-prompt
+observations whose steps are not independent; it does not validate the
+rule or establish the corpus-mix explanation, which remains a
+hypothesis.
 The structural reason is the prompt mix: on N2, 461/640$\approx$72\%
 of prompts are boundary ($k{=}0$ or $k{=}8$), so Dualformer's
 $G'{=}2$ de-escalation cannot help them and the maximum achievable
@@ -2247,8 +2276,9 @@ $\approx 1.18$). It is an observed operating point, not a deployment designation
 
 \paragraph{Why this matters.}
 \begin{itemize}
-    \item \textbf{Refutes Berkeley row 01 on N2}: the 56.2\% saving
-        claim is corpus-mix-dependent; the falsifiable sub-claim is
+    \item \textbf{Does not reproduce Berkeley row 01 on N2}: the 56.2\%
+        saving is not recovered by this replay; the corpus-mix reading is
+        a hypothesis, and the falsifiable sub-claim is
         ``on a contrast-rich corpus ($\geq 50\%$ contrast prompts),
         Dualformer-Auto recovers the 56.2\% saving headline''.
     \item \textbf{Closes the loop from iter-66 row 77
@@ -2397,3 +2427,4 @@ dualformer-only contrast-only candidate ($0.79$--$0.83$).
 ($\leq 290$ LoC, stdlib only); outputs in
 \texttt{experiments/results/p5p8/p7\_joint\_controller.\{tsv,json\}},
 \texttt{p7\_joint\_controller\_boot.tsv}.
+\fi

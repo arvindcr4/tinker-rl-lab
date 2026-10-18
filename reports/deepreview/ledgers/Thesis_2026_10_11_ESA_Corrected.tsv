@@ -1,0 +1,3 @@
+location	claim_text	value	source_artifact	generator_script	status
+Table 1.1 / finding 974	Historical association labelled Spearman; existing estimate/CI unchanged and interpretation withdrawn	0.27; [-0.37,0.88]	platform_hybrid/experiments/results/claim_to_run/claim_to_run_table.tsv P2-C2	No recomputation; historical source transcription only	verified
+Figure 4.5 caption / finding 989	Curve is GU complement of existing rounded ZVF fit, not ZVF itself	ZVF=0.922 G^-0.137; GU=1-ZVF	reports/public_revision_2026-10-11/thesis/figures/fig_gradient_utilisation.tex lines 16-17,104,107	Existing figure rounds 0.9217 and -0.1371; no refitting	verified

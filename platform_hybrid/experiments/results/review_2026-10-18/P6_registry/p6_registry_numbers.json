@@ -1,0 +1,198 @@
+{
+ "macros": {
+  "STACKDIFFNPAIRS": 136,
+  "STACKDIFFDIST": "R0: 6, R1: 0, R2: 1, R3: 1, R4: 23, R5: 105",
+  "STACKDIFFUNDER": "136/136",
+  "STACKDIFFCOVA": "0.48",
+  "STACKDIFFCOVB": "0.73",
+  "NSTACK": 17,
+  "NSTACKALL": 28,
+  "NFIXTURE": 11,
+  "NFIELDS": 58,
+  "NGEN": 12,
+  "NHAND": 5,
+  "COVMED": "0.20",
+  "GENPAIRS": "66 pairs: R0 1, R3 1, R4 11, R5 53",
+  "SAMECKPT": "33 pairs: R0 6, R2 1, R3 1, R4 23, R5 2",
+  "NRZERO": 6,
+  "DEDUPN": 16,
+  "DEDUPALL": "120 pairs: R0 4, R2 1, R3 1, R4 23, R5 91",
+  "DEDUPSAME": "30 pairs: R0 4, R2 1, R3 1, R4 23, R5 1",
+  "NCKPT": 5,
+  "KLFULL": 11,
+  "KLPARTIAL": 5,
+  "KLUNREP": 1,
+  "NCIMETHOD": 7,
+  "LEAFCOUNTS": "10, 3, 4, 2, 3, 2, 2",
+  "NLEAVES": 26,
+  "BADGEA": "51--78",
+  "BADGEB": "84",
+  "BADGEC": "78",
+  "BADGED": "58--59",
+  "BADGEW": "40",
+  "BADGEALL": "40--84"
+ },
+ "excluded": [
+  "zvf130_aero",
+  "zvf130_areal",
+  "zvf130_cppo",
+  "zvf130_es",
+  "zvf130_gift",
+  "zvf130_grpo",
+  "zvf130_mcgrpo",
+  "zvf130_ngrpo",
+  "zvf130_scafgrpo",
+  "zvf130_tool_use_llama-8b-inst",
+  "zvf130_tool_use_qwen3-32b"
+ ],
+ "checkpoints": [
+  "meta-llama/llama-3.1-8b-instruct",
+  "qwen/qwen2.5-0.5b-instruct",
+  "qwen/qwen3-8b",
+  "qwen/qwen3-8b-base",
+  "qwen/qwen3.5-4b"
+ ],
+ "n_unknown_checkpoint": 0,
+ "leaves": {
+  "loss_form": [
+   "advantage_normalization",
+   "clip_eps_high",
+   "clip_eps_low",
+   "clipping_applied",
+   "importance_ratio_level",
+   "length_normalization",
+   "reward_shaping_type",
+   "sampling_dynamic_filter",
+   "token_aggregation",
+   "token_mask"
+  ],
+  "reference_kl": [
+   "kl_beta",
+   "kl_estimator",
+   "reference_policy"
+  ],
+  "sampler_backend": [
+   "backend",
+   "precision",
+   "temperature",
+   "top_p"
+  ],
+  "telemetry": [
+   "per_step_gu",
+   "per_step_zvf"
+  ],
+  "group_size_schedule": [
+   "adaptation_rule",
+   "initial_g",
+   "schedule"
+  ],
+  "heldout_split": [
+   "disjoint_from_reward_env",
+   "n"
+  ],
+  "decontamination": [
+   "parser_robustness_probe",
+   "performed"
+  ]
+ },
+ "ci_method_ids": [
+  "tinker_aero_qwen3.5-4b_gsm8k",
+  "tinker_areal_qwen3.5-4b_gsm8k",
+  "tinker_dapo_qwen3.5-4b_gsm8k",
+  "tinker_drgrpo_qwen3.5-4b_gsm8k",
+  "tinker_gift_qwen3.5-4b_gsm8k",
+  "tinker_grpo_qwen3.5-4b_gsm8k",
+  "tinker_gspo_qwen3.5-4b_gsm8k"
+ ],
+ "kl_census": {
+  "FULL": 11,
+  "PARTIAL": 5,
+  "UNREPORTED": 1
+ },
+ "families": {
+  "B": [
+   "colab-open_dapo_e3",
+   "colab-open_drgrpo_e3",
+   "colab-open_grpo-adaptiveg_e3",
+   "colab-open_grpo_e3"
+  ],
+  "A": [
+   "openrlhf_grpo_qwen3-8b_gsm8k",
+   "tinker_grpo_qwen3-8b_gsm8k",
+   "trl_grpo_qwen3-8b_gsm8k",
+   "verl_grpo_qwen3-8b_gsm8k"
+  ],
+  "D": [
+   "tinker_aero_qwen3.5-4b_gsm8k",
+   "tinker_areal_qwen3.5-4b_gsm8k",
+   "tinker_gift_qwen3.5-4b_gsm8k"
+  ],
+  "C": [
+   "tinker_dapo_qwen3.5-4b_gsm8k",
+   "tinker_drgrpo_qwen3.5-4b_gsm8k",
+   "tinker_grpo_qwen3.5-4b_gsm8k",
+   "tinker_gspo_qwen3.5-4b_gsm8k"
+  ],
+  "W": [
+   "wandb_ppo_reinforce_llama318b-inst_gsm8k",
+   "wandb_ppo_reinforce_qwen38b_gsm8k"
+  ]
+ },
+ "r0_classes": [
+  [
+   "openrlhf_grpo_qwen3-8b_gsm8k",
+   "verl_grpo_qwen3-8b_gsm8k"
+  ]
+ ],
+ "input_sha256": {
+  "colab-open_dapo_e3.json": "7f32e97e7c7c00dce5c14592ca572d920172c0fbf243faed03ebc7e9a631885e",
+  "colab-open_drgrpo_e3.json": "259919882204fbcb1b5e8f5a5b3810e38cbce7abb7a99c7f97c525f83a973710",
+  "colab-open_grpo-adaptiveg_e3.json": "dc3b2eeefb4ca8b2ef421935a67f2bace1f1aedec6b0d756002fa8a692e8b24b",
+  "colab-open_grpo_e3.json": "76f429ce8546e3606f08884f9c1ca86bc5a97a70177a45df23579634ae543169",
+  "delta_adaptiveg.json": "5f9ee9d1a720426d52912bf55eed0cab8e9c02db4dbbcdeca74b23ccb03a3167",
+  "delta_aero.amendment.json": "6b8b7595c7a6419dee3790e9e9c2470860e9e08b0356a10b05b1f161418479ac",
+  "delta_aero.json": "f96c6b567ba23206765f355a079283eed4898f2c82ffe3b1b99860af9d6df966",
+  "delta_areal.amendment.json": "68233a689f80b37d1253531d599a72df6f56b91093f5196a471fae8bad23e7ed",
+  "delta_areal.json": "12273bc4abe8435c9d4bfff7314273010c6612cf75409ef8641115345c4d4610",
+  "delta_cppo.json": "04c75fc1a83c9dc91297a48a1256fd0ff7c1352db4219851593a5f87486006bb",
+  "delta_dapo.json": "86268bcd72b625dd90265b2494de25eadda37f5710b199bf27779b508434cf5f",
+  "delta_drgrpo.json": "137ad9776c5b7e4af58258e3c494d694553cc2a9d49d7a4bab10bb1f4c17a918",
+  "delta_es.json": "c10c86453ed81b9912c5ca0613b6e22ca48e2af41cbe9d0b7620d53542cf3f98",
+  "delta_gift.json": "20d7a7eecc388e60fd7d29ac33b07cc63eae3fe2d392d5997fd3af26110000bf",
+  "delta_gspo.json": "d77c06afa8968ac661f5c7636b24520e52c81ce6740589ae01816ddc0e064b40",
+  "delta_liteppo.json": "dc91730458b25804c0e96f0ec1b9ee19a9987d25059fb10bba4d32fcf2bf3e72",
+  "delta_mcgrpo.json": "6361cef6e361f245e9e2f465190e1a0e65b267e8b3a9535c88141aaadc3d9d27",
+  "delta_ngrpo.json": "6406498b4d5ce681c6bdc5e26267d66d8835c643cc6206ebffd4b18510e3b231",
+  "delta_ppo.json": "9d060e455cf409e410a6d7bbaf500318208d65aa57519025b078f45b830efe9d",
+  "delta_ppo_reinforce.json": "74a10de29c52f0dd2fcad56415e52a102e24dd074b024a5fc5920d1333880b82",
+  "delta_reinforce.json": "6ad151de791e1920fe518c8fe4aeda68c4059130b96e7f3f1f646128c66e159a",
+  "delta_scafgrpo.json": "b72ab6012284fbdcba26950ad446922a9f28013fd3a5049ced8b494f2a9d96b8",
+  "delta_tool_use_llama-8b-inst.json": "7e90ca05cc2c6d63f90c40aa9fe2bc5cc756fa5ef464ed1e55d4d8fce1e6814c",
+  "delta_tool_use_qwen3-32b.json": "23d9c520ec92070ba61246b23969a27ca88e49f5eb899f11e7917449f4a079f8",
+  "openrlhf_grpo_qwen3-8b_gsm8k.json": "fe678327e148397c8493cd6255a0d978d4497c6c5fa94278ff0f51fff23210f0",
+  "tinker_aero_qwen3.5-4b_gsm8k.json": "27eea5f3c3b08389021f6c963fcbee90c36db03e87a90a37ae134aecd6c6a269",
+  "tinker_areal_qwen3.5-4b_gsm8k.json": "0520e65236c7cadab64108ae82572ce83aad77d023af41e0a0357aa41b71400f",
+  "tinker_dapo_qwen3.5-4b_gsm8k.json": "8cd5ebfb8692a81ad359bf88ccfca1cfc8f25b357cfbc51d7105f326641b38d2",
+  "tinker_drgrpo_qwen3.5-4b_gsm8k.json": "317f1b40d3cbcb9fbe37fc3e6bf454695c56552a8d3d530657de55a969d47ab5",
+  "tinker_gift_qwen3.5-4b_gsm8k.json": "36d0c8b2c3a6762dfec90aff3a326626d5b1cafd99ac40d768e5d5bbdc48ed15",
+  "tinker_grpo_qwen3-8b_gsm8k.json": "365eb44b9596284fa767132e8ee27955385a8e4f4606d34d330091f6269b729e",
+  "tinker_grpo_qwen3.5-4b_gsm8k.json": "ead413f1269a5a6b28b72b9c5a820e1456800788f663111444f0cd219fe538e3",
+  "tinker_gspo_qwen3.5-4b_gsm8k.json": "b2acf6661ee05ce7786d2feb47c834f466e7393a48a9fb34dc10860301b06150",
+  "trl_grpo_qwen3-8b_gsm8k.json": "b591be7f8f7c249de22f07c75fba9f61340261d7836ac83063585ae5eeb9f2b4",
+  "verl_grpo_qwen3-8b_gsm8k.json": "a36d4d8bac19b72ade111aad0b9cd340beda479e57290d621281462e4905487a",
+  "wandb_ppo_reinforce_llama318b-inst_gsm8k.json": "83b182d6c4d37f72e5b27577d5e7bcf5f1d2d7a7d5a8ec9c63a1ed820e975508",
+  "wandb_ppo_reinforce_qwen38b_gsm8k.json": "0a6abf165f24c5d2747dd467bd7df45dd1263ed5c789dff8412903e094ee0a67",
+  "zvf130_aero.json": "d5e53846afd4f4eb8e31e2a5ebb475783d736961e4cdbaddee1d80fd7e3417b9",
+  "zvf130_areal.json": "03fd7c2d1654254c4b0ccb264bc858139b6af90a338dbe6660d8f20adb8f9783",
+  "zvf130_cppo.json": "0fdc75ba78ef5f31fecbccf6e98ec1e60e7079f9d6457b60e077effe2a58fb66",
+  "zvf130_es.json": "46a1dd1db200b3af80d79b2d3063b4d5d9f8d77683a8cc2ffcd4aec7da5203b2",
+  "zvf130_gift.json": "707e69a5ccf45968749b3416deebdb8e79a4e4ae86600501b7199e7e610cd1b5",
+  "zvf130_grpo.json": "50acfb8099b39b0ae38f25258710ca6f7e97d5f552bc810f580fd867928795e4",
+  "zvf130_mcgrpo.json": "9b3d9a0c122733a6a79588121e6d57b03a8c92dc6a61b77e20677ae219132162",
+  "zvf130_ngrpo.json": "8d5d8a7ed2c9c74edcf3400c10737fab7d8f20e00366066cd1e780baab912750",
+  "zvf130_scafgrpo.json": "f98afeccf7d576c8a732f8b40e22f0a34c4483832e9697e19596aaf173ecca57",
+  "zvf130_tool_use_llama-8b-inst.json": "936e9bc8de6f081c8472a11d900fc8740f54dbb1852ea23b39fe386d20907a50",
+  "zvf130_tool_use_qwen3-32b.json": "0c036f9b698c901cab63c79a419a40c46a156c98484d500dbac6e0d3d1962037"
+ },
+ "query_sha256": "9760b8a5cb26c07845410f2c1e470f78f775cab3a1cb7a1694d596381c757a5e"
+}

@@ -8,12 +8,15 @@
 
 \paragraph{Task suite and hyperparameter mappings (moved from main body).}
 The task suite (Table~\ref{tab:tasks}) and the cross-stack hyperparameter
-mapping (Table~\ref{tab:hyperparams}) were placed in the main body in
-earlier drafts; per the NeurIPS 2026 9-page hard cap we list them here.
+mapping (Table~\ref{tab:hyperparams}) are listed here.
 
 \begin{table}[ht]
 \centering
-\caption{Benchmark task suite with standardized reward functions.}
+\caption{Benchmark task suite with standardized reward functions. Only the
+two Math RL tasks (and the two-cell tool-use case study in
+Table~\ref{tab:main_results}) have completed manifest cells; Chat SFT,
+Preference, and both Distillation tasks are harness specifications without
+completed runs in this release.}
 \label{tab:tasks}
 \begin{tabular}{llll}
 \toprule
@@ -31,7 +34,9 @@ Distillation (On-Policy) & IS Loss & $\log p_t - \log p_s$ & Online \\
 
 \begin{table}[ht]
 \centering
-\caption{Hyperparameter mapping across libraries (PPO defaults).}
+\caption{Hyperparameter mapping across libraries (PPO defaults). PufferLib
+and \texttt{rl\_games} columns are default mappings only; the manifest has no
+runs for them. SB3, CleanRL and Tianshou runs are non-LM PPO sanity floors.}
 \label{tab:hyperparams}
 \small
 \setlength{\tabcolsep}{4pt}
@@ -55,45 +60,60 @@ This appendix contains the full per-row training-reward table that earlier
 drafts placed in the main body. We retain it here in full because reviewers
 may want to inspect the per-row peak / last-10 numbers behind the artifact
 card (Table~\ref{tab:artifact-card}) and the claims hierarchy
-(Table~\ref{tab:claims-tier}). \emph{All rows below the multi-seed Tier-A
-header are single-seed and reported descriptively.}
+(Table~\ref{tab:claims-tier}). \emph{All rows below the multi-seed block
+are single-seed and reported descriptively.}
 
 Two row-blocks deserve explicit naming. The block labelled
 \textit{single-seed frontier-model case study} (formerly the ``Bitter
 Lesson Campaign'' in earlier drafts) is a set of single-seed Tinker GRPO
-runs spanning Qwen3-8B-Base through 671B-class MoE checkpoints; we now
+runs spanning Qwen3-8B-Base through ${\approx}$1T-parameter MoE checkpoints; we now
 describe it as a case-study row-block rather than a campaign because all
 runs are 1 seed at 30 steps and inferential statistics are not claimed.
 The block labelled \textit{group-size ablation (single-seed per cell)}
 sweeps $G \in \{2,4,8,16,32\}$ on Qwen3-8B at GSM8K, again at 1 seed per
-cell; the token-budget-normalised reanalysis lives in
+cell; the token-budget-normalised reconstruction lives in
 Appendix~\ref{sec:appendix:group-size-reconcile}.
 
-Peak reward and last-10-step mean reward are reported. Multi-seed Tier-A
-rows (Tinker Llama-3.3-70B-Inst at 4 seeds; the Tinker Qwen3-8B Wave-6
-ablation at 1 seed per cell across 12 cells, treated as a Tier-A
-hyperparameter sweep per Appendix~\ref{sec:run-manifest}) report cell-mean
-training reward; all other Tinker rows and the Modal H100 PPO rows are
-single-seed training rewards. Partial experiments (fewer steps than
-planned) are marked $\dagger$.
+Peak reward and last-10-step mean reward are reported. Values are recomputed
+from the \texttt{reward\_trace} arrays of the per-run JSON files
+(\texttt{experiments/tinker-runs/results/}; the frontier and group-size
+blocks come from \texttt{campaign\_v2\_20260419\_111623.json}), not from the
+\texttt{campaign\_v2} rows of \texttt{master\_results.csv}, which are
+26-step snapshots of other run attempts. Every W\&B history logged for these
+runs (truncated for most of them) agrees step-for-step with the JSON trace
+prefix. The multi-seed block reports the seed mean $\pm$ SE of last-10
+training reward; the Qwen3-8B Wave-6 ablation (12 configurations $\times$ 1
+seed, Tier B) is listed in the manifest only. All other Tinker rows and the
+Modal H100 PPO rows are single-seed training rewards. Partial experiments
+(fewer steps than planned) are marked $\dagger$.
 
 \begin{table*}[htbp]
 \centering
 \caption{\textbf{Full per-row training reward on GSM8K and tool-use} (formerly
-the main-body Table~4). Tinker Qwen3-8B Wave-6 group-size ablation rows are
-1 seed per cell across 12 cells (30 steps max); the Tinker Llama-3.3-70B-Inst
-arm has 4 seeds; all other Tinker rows
-(single-seed frontier-model case studies, group-size ablation, tool-use)
-are single-seed and reported descriptively. Modal H100 PPO rows are
-single-seed; the Modal classic-RL Tier-A arms (not displayed here; see
-Appendix~\ref{sec:run-manifest}) use 5 seeds.
-$\dagger$~Training interrupted; reported metrics are from available steps.}
+the main-body Table~4), recomputed from the per-run JSON reward traces.
+Multi-seed rows give the mean $\pm$ SE over seeds of last-10 reward (G${=}8$,
+lr${=}10^{-5}$, 30 steps); the three DeepSeek-V3.1 wave-3 seeds (123, 456,
+789) are in the campaign JSON but are not separate manifest rows. All other
+Tinker rows (single-seed frontier-model case studies, group-size ablation,
+tool-use) are single-seed and descriptive. The two Qwen3-8B-Base rows are
+separate executions of the same seed-42 configuration on the same day
+(different Tinker run IDs). Modal H100 PPO rows are single-seed; the Modal
+classic-RL arms are non-LM sanity floors (Appendix~\ref{sec:run-manifest}).
+$\dagger$~Training interrupted; reported metrics are from available steps.
+$\ddagger$~No $G{=}8$ run exists in the campaign; this cell is the Wave-6
+baseline run, which uses the campaign's configuration (LoRA rank 32,
+$T{=}0.8$, 2 prompts/step, lr $10^{-5}$, seed 42, 512-token completions).}
 \label{tab:main_results}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{@{}l l l l r c c@{}}
 \toprule
 \textbf{Algo} & \textbf{Plat.} & \textbf{Model} & \textbf{Size} & \textbf{Steps} & \textbf{Peak} & \textbf{Last-10} \\
+\midrule
+\multicolumn{7}{l}{\textit{Multi-seed GRPO on Tinker API (GSM8K)}} \\
+\midrule
+GRPO & Tinker & Llama-3.3-70B-Inst ($n{=}4$) & 70B & 30 & 100\% & $96.4 \pm 0.7$\% \\
+GRPO & Tinker & DeepSeek-V3.1 ($n{=}3$, wave-3) & 671B (37B) & 30 & 100\% & $86.7 \pm 4.0$\% \\
 \midrule
 \multicolumn{7}{l}{\textit{GRPO on Tinker API (GSM8K) --- single-seed case studies}} \\
 \midrule
@@ -102,31 +122,32 @@ GRPO & Tinker & Qwen3.5-4B & 4B & 30 & 100\% & 85.0\% \\
 GRPO & Tinker & Qwen3.5-27B$^\dagger$ & 27B & 10 & 75.0\% & 43.7\% \\
 GRPO & Tinker & Qwen3-32B$^\dagger$ & 32B & 10 & 31.2\% & 25.0\% \\
 GRPO & Tinker & Llama-3.1-8B-Inst & 8B & 30 & 100\% & 84.4\% \\
-GRPO & Tinker & DeepSeek-V3.1 & 671B (37B) & 20 & 100\% & 85.0\% \\
-GRPO & Tinker & Nemotron-120B$^\dagger$ & 120B & 20 & 87.5\% & 16.2\% \\
+GRPO & Tinker & DeepSeek-V3.1 (seed 42) & 671B (37B) & 20 & 100\% & 85.0\% \\
+GRPO & Tinker & Nemotron-120B$^\dagger$ & 120B (12B) & 20 & 87.5\% & 16.2\% \\
 GRPO & Tinker & Qwen3-235B-A22B$^\dagger$ & 235B (22B) & 15 & 100\% & 100\% \\
-GRPO & Tinker & Q3-30B-A3B$^\dagger$ & 30B (3B) & partial & 50.0\% & 32.5\% \\
-GRPO & Tinker & Q3-30B-Inst$^\dagger$ & 30B (3B) & partial & 100\% & 100\% \\
-GRPO & Tinker & Kimi-K2 & MoE & 20 & 100\% & 80.0\% \\
+GRPO & Tinker & Q3-30B-A3B$^\dagger$ & 30B (3B) & 20 & 50.0\% & 32.5\% \\
+GRPO & Tinker & Q3-30B-Inst$^\dagger$ & 30B (3B) & 10 & 100\% & 100\% \\
+GRPO & Tinker & Kimi-K2-Thinking (arch run) & ${\approx}$1T (32B) & 20 & 100\% & 80.0\% \\
+GRPO & Tinker & GPT-OSS-20B & 21B (3.6B) & 30 & 100\% & 87.5\% \\
 \midrule
 \multicolumn{7}{l}{\textit{Single-seed frontier-model case studies (GRPO, Tinker)}} \\
 \midrule
-GRPO & Tinker & Qwen3-8B-Base & 8B & 30 & 100\% & 84.4\% \\
-GRPO & Tinker & Kimi-K2-Thinking & MoE & 30 & 100\% & 95.8\% \\
-GRPO & Tinker & Kimi-K2.5 & MoE & 30 & 100\% & 62.5\% \\
-GRPO & Tinker & GPT-OSS-120B & 120B & 30 & 100\% & 87.5\% \\
-GRPO & Tinker & Qwen3.5-397B & 397B (17B) & 30 & 100\% & 97.9\% \\
-GRPO & Tinker & Llama-3.1-70B & 70B & 30 & 56.2\% & 36.4\% \\
-GRPO & Tinker & DS-V3.1-Base & 671B (37B) & 30 & 81.2\% & 57.3\% \\
-GRPO & Tinker & Llama-3.1-8B & 8B & 30 & 18.8\% & 11.5\% \\
+GRPO & Tinker & Qwen3-8B-Base & 8B & 30 & 100\% & 98.8\% \\
+GRPO & Tinker & Kimi-K2-Thinking & ${\approx}$1T (32B) & 30 & 100\% & 83.1\% \\
+GRPO & Tinker & Kimi-K2.5 & ${\approx}$1T (32B) & 30 & 100\% & 76.3\% \\
+GRPO & Tinker & GPT-OSS-120B & 117B (5.1B) & 30 & 100\% & 91.9\% \\
+GRPO & Tinker & Qwen3.5-397B & 397B (17B) & 30 & 100\% & 91.9\% \\
+GRPO & Tinker & Llama-3.1-70B & 70B & 30 & 75.0\% & 45.0\% \\
+GRPO & Tinker & DS-V3.1-Base & 671B (37B) & 30 & 93.8\% & 65.6\% \\
+GRPO & Tinker & Llama-3.1-8B & 8B & 30 & 31.3\% & 8.8\% \\
 \midrule
 \multicolumn{7}{l}{\textit{Group-size ablation (Qwen3-8B, GRPO, Tinker; single-seed per cell)}} \\
 \midrule
-GRPO & Tinker & Qwen3-8B (G=2) & 8B & 30 & 50.0\% & 37.5\% \\
-GRPO & Tinker & Qwen3-8B (G=4) & 8B & 30 & 75.0\% & 52.1\% \\
-GRPO & Tinker & Qwen3-8B (G=8) & 8B & 30 & 81.2\% & 34.4\% \\
-GRPO & Tinker & Qwen3-8B (G=16) & 8B & 30 & 71.9\% & 38.0\% \\
-GRPO & Tinker & Qwen3-8B (G=32)$^\dagger$ & 8B & 30 & 67.2\% & 38.8\% \\
+GRPO & Tinker & Qwen3-8B (G=2) & 8B & 30 & 75.0\% & 35.0\% \\
+GRPO & Tinker & Qwen3-8B (G=4) & 8B & 30 & 87.5\% & 28.8\% \\
+GRPO & Tinker & Qwen3-8B (G=8)$^\ddagger$ & 8B & 30 & 68.8\% & 33.8\% \\
+GRPO & Tinker & Qwen3-8B (G=16) & 8B & 30 & 62.5\% & 32.5\% \\
+GRPO & Tinker & Qwen3-8B (G=32) & 8B & 30 & 67.2\% & 38.8\% \\
 \midrule
 \multicolumn{7}{l}{\textit{TRL-GRPO on Modal H100 (single-launcher reference run)}} \\
 \midrule
@@ -134,7 +155,7 @@ TRL-GRPO & Modal & Qwen3-8B & 8B & 30 & 37.5\% & 5.0\% \\
 TRL-GRPO & Modal & Llama-3.2-3B-Inst & 3B & 30 & 100\% & 71.3\% \\
 TRL-GRPO & Modal & Llama-3.2-1B-Inst & 1B & 30 & 87.5\% & 36.2\% \\
 \midrule
-\multicolumn{7}{@{}p{\linewidth}@{}}{\textit{Task~4: matched launcher comparison. Mixed-checkpoint Qwen3-8B-family GRPO setup: seed${=}42$, $G{=}8$, lr${=}10^{-5}$, GSM8K-500, 30~steps; Tinker uses Qwen3-8B-Base, TRL/verl/OpenRLHF use Qwen3-8B.}} \\
+\multicolumn{7}{@{}p{\linewidth}@{}}{\textit{Task~4: matched launcher comparison. Mixed-checkpoint Qwen3-8B-family GRPO setup: seed${=}42$, $G{=}8$, lr${=}10^{-5}$, GSM8K-500, 30~steps; Tinker uses Qwen3-8B-Base, TRL uses Qwen3-8B (no veRL or OpenRLHF cell was completed). The TRL row repeats the reference run above.}} \\
 \midrule
 GRPO & Tinker-Managed & Qwen3-8B-Base & 8B & 30 & 100\% & 85.6\% \\
 GRPO & TRL (Modal-H100) & Qwen3-8B & 8B & 30 & 37.5\% & 5.0\% \\
@@ -151,6 +172,3 @@ GRPO & Tinker & Llama-3.1-8B-Inst & 8B & 30 & 0\% & 0\% \\
 \bottomrule
 \end{tabular}
 \end{table*}
-
-\noindent\textit{$^\dagger$ Training interrupted; reported metrics are
-from available steps.}

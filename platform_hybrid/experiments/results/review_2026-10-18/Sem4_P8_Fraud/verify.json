@@ -1,0 +1,26 @@
+{
+  "sha256": {
+    "fraud_data.csv": "df828df36d8ad268d0ead3ea074d6e72784acae99a3803e157b2d3751b0d66bf",
+    "train_data.csv": "6dfa30aeea95a5fba06463441cfb4bad9863a8d28fcc74f7c239f7804a6ae728",
+    "test_data.csv": "52bc2b722e93b9d0ead8c8903b108395dc20eb6c2aaa5d970acd0805a4bcf064"
+  },
+  "n_full": 50000,
+  "pos_full": 719,
+  "n_train": 40000,
+  "pos_train": 575,
+  "n_test": 10000,
+  "pos_test": 144,
+  "test_rows_in_full": 10000,
+  "train_rows_in_full": 40000,
+  "train_test_overlap": 0,
+  "aggregates_deterministic_of_V1_V20": true,
+  "constant_negative_accuracy_test": 0.9856,
+  "refit_disjoint": {
+    "xgboost_version": "3.3.0",
+    "auc": 0.801879706664863,
+    "precision": 0.7441860465116279,
+    "recall": 0.2222222222222222,
+    "f1": 0.3422459893048128,
+    "alerts_at_0.5": 43
+  }
+}

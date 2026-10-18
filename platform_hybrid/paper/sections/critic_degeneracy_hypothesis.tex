@@ -113,11 +113,11 @@ prompts $\times\,1$:
   that model's GSM8K training-reward trace (reward variance, fraction of
   steps with reward above $0.5$, peak-to-trough range, and one minus twice
   the zero-reward fraction); it is not a per-prompt difficulty estimate. If CDH holds, an OLS regression
-  of the \emph{empirical prompt-mean reward} $r_\text{mean}$---the
-  Monte-Carlo mean reward per anchor prompt, \emph{not} measured
+  of the \emph{empirical mean training reward} $r_\text{mean}$---the
+  mean of each anchor model's GSM8K training-reward trace, \emph{not} measured
   token-level critic predictions $V_\phi(x_{1:t})$, which this test
   does not observe---on RQS should explain substantial variance.
-  Across the 7 prompt anchors in the released TSV with
+  Across the 7 model anchors in the released TSV with
   $0 < \mathrm{RQS} < 1$:
   \begin{equation*}
     \hat r_\text{mean} = -0.082 + 1.282 \cdot \mathrm{RQS},\quad
@@ -141,8 +141,8 @@ under-powered at $n{=}5$. Taken together, the results are
 \emph{consistent with} the Critic-Degeneracy Hypothesis in this
 small cold-start setup: the critic behaves like a noisy
 re-parameterisation of the prompt mean that GRPO computes
-statelessly, and which RQS approximates one-dimensionally with
-$R^2{=}0.49$. They do not establish CDH as a general property of
+statelessly. (The RQS fit, $R^2{=}0.49$ across models, is partly circular and
+says nothing about the critic.) They do not establish CDH as a general property of
 outcome-reward RL.
 
 \paragraph{Implications for Pillar~1 and Pillar~3.}
@@ -155,7 +155,7 @@ Pillar~3's G-sweep result (G${=}2$ retention of G${=}16$ is
 $100.3\%$ on near-ceiling arithmetic) admits the same reading:
 in this saturated regime the prompt mean is the dominant signal
 axis, so rollouts beyond what already pins it contribute little.
-The static RQS regressor (H5) is a one-dimensional summary of
-that axis; whether the PPO critic and the GRPO group mean remain
+H5 does not measure that axis: RQS is a per-model reward-trace
+composite. Whether the PPO critic and the GRPO group mean remain
 interchangeable outside this small cold-start setup is exactly
 what CDH, as scoped here, does not decide.

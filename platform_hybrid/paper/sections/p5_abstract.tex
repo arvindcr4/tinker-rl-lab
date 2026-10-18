@@ -20,11 +20,11 @@ closed-stack ``dapo'' arm is an advantage-clip variant, not DAPO; within each
 stack, switching GRPO$\to$``DAPO'' moved mean Zero-Variance Fraction (ZVF) from
 $0.25$ to $0.00$ on the open trainer (by construction of dynamic sampling) and
 from $0.567$ to $0.578$ on the closed one. Third, in a 12-cell head-to-head of
-four labels on one fixed stack (3 seeds each), mean last-10 reward spans
-$0.034$ ($0.710$--$0.744$); this is \emph{not} shown to be within noise:
-unpaired equivalence tests fail at any margin below $\pm0.19$, seed explains
-$96\%$ of the variance, and in a seed-paired analysis two contrasts
-(dapo$-$gspo, drgrpo$-$gspo) exclude zero. We therefore
+four labels (surrogate implementations) on one fixed stack (3 seeds each), mean last-10 reward spans
+$0.033$ ($0.710$--$0.744$); this is neither shown to be within noise nor shown
+to be a difference: unpaired equivalence tests need margins of about $\pm0.19$, and in a
+seed-paired analysis two contrasts (dapo$-$gspo, drgrpo$-$gspo) exclude zero at
+90\% but not at 95\% confidence. We therefore
 propose an eight-item \emph{minimum reportable
 stack}---loss form, reference-policy/KL handling, sampler/backend/precision
 \textbf{(including base-checkpoint identity: revision/hash)}, per-step ZVF/GU
@@ -38,11 +38,4 @@ checkpoint is pinned and reported alongside the framework. We formalize an RL-re
 model with flip-risk grades R0--R5, specify a toolchain (manifest emitter, stack
 diff with CI verdicts, registry, auditor badge, and citation-lever tracer) that
 makes the standard enforceable, and close with a call to action for venues.
-\paragraph{Absorbed satellite (retired).}
-The former condensed community position (roster R06) is retired from the live
-tree to \texttt{archive/absorbed/R06\_min\_report/}. Do not count R06 as a
-separate venue paper.
 \end{abstract}
-\paragraph{August 2026 evidence boundary.} The standard requires provenance,
-estimands, and missing-cell reporting; labels and selected checkpoints are not
-substitutes for controlled comparative evidence.

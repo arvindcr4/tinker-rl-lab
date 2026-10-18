@@ -38,11 +38,11 @@
     across model scale, the single-seed group-size sweep, and the
     tool-use case studies. \textbf{(C-grade, listed for honesty)}: the
     failed/partial cells enumerated in Appendix~\ref{sec:run-manifest}.
-    The scope is explicitly restricted to LoRA fine-tuning on three task
-    families (math, code, tool-use) at scales of 0.6B--671B total
-    parameters (0.6B--37B active for the largest MoE checkpoints)
-    (Section~\ref{sec:benchmark}). Section~\ref{sec:limitations}
-    discloses partial-run accounting; partial runs are marked $\dagger$
+    The scope is explicitly restricted to LoRA fine-tuning on GSM8K,
+    synthetic arithmetic and two tool-use cells (HumanEval only as a failed
+    cell) at 0.5B to ${\approx}$1T total parameters (3B--37B active for the
+    MoE checkpoints) (Section~\ref{sec:benchmark}).
+    Appendix~\ref{sec:compute_accounting} discloses partial-run accounting; partial runs are marked $\dagger$
     in Appendix~\ref{sec:appendix:full-results}.}
     \end{enumerate}
 
@@ -76,10 +76,6 @@
             training rewards, not held-out accuracy.  The later Qwen3-8B GSM8K comparison is separate future-paper
             evidence, not a reviewed-record held-out control
             (Section~\ref{sec:limitations}); held-out evaluation remains incomplete.
-      \item \textbf{Proxy metrics in place of direct KL.}
-            the proxy-metrics discussion in the appendix discusses the limits of
-            trajectory-based stability indices as substitutes for direct
-            KL divergence.
     \end{itemize}}
     \end{enumerate}
 
@@ -104,7 +100,7 @@
     \answerPartial{Reproducibility is \emph{partial by design} due to
     platform heterogeneity.
     \begin{itemize}
-      \item \textbf{Modal experiments (fully reproducible).} Complete
+      \item \textbf{Modal experiments (open stack).} Complete
             source code, a pinned \texttt{Dockerfile}, centralised seed
             management (\texttt{utils/seed.py}), and step-by-step
             commands are documented in \texttt{REPRODUCE.md} at
@@ -112,13 +108,13 @@
             jobs run on explicitly provisioned NVIDIA H100~SXM5 (80\,GB)
             workers; TRL baselines run on NVIDIA L4 (24\,GB).  Seeding is
             the manifest's responsibility (Appendix~\ref{sec:run-manifest},
-            source of truth): Tier-A open-stack rows
-            (CleanRL/SB3/Tianshou/Qwen2.5-0.5B classic-RL arms +
-            12~Tinker Wave-6 Qwen3-8B group-size cells (1 seed/cell,
-            30 steps max) + 4~Llama-3.3-70B-Inst rows) report
-            mean $\pm$ SE with 95\,\% bootstrap CIs via
-            \texttt{rliable}; Tier-B rows are single-seed and reported
-            descriptively; Tier-C rows are excluded from headline
+            source of truth): the Tier-A cells (5-seed TRL Qwen2.5-0.5B
+            on Modal L4; 4-seed Tinker Llama-3.3-70B-Inst) are reported as
+            seed summaries (Table~\ref{tab:main_results} gives mean
+            $\pm$ SE for the multi-seed Tinker rows; no \texttt{rliable}
+            intervals are reported); the CleanRL/SB3/Tianshou PPO runs are
+            non-LM sanity floors; the 12 Wave-6 cells and all other
+            single-seed rows are Tier B and reported descriptively; Tier-C rows are excluded from headline
             claims. The single-seed Modal H100 Llama-3.2-{1,3}b GSM8K
             and Qwen3-8B-family rows in Table~\ref{tab:main_results} are
             therefore Tier-B by manifest classification.
@@ -169,11 +165,13 @@
     configuration (rank~32), optimiser (Adam, $\beta_1{=}0.9$,
     $\beta_2{=}0.95$, $\epsilon{=}10^{-8}$, learning rate $10^{-4}$),
     and the 5-seed Modal protocol.  Table~\ref{tab:hyperparams} maps
-    these hyperparameters across all 7~libraries.
+    default hyperparameters across six libraries, four of which have
+    runs (TRL; SB3, CleanRL and Tianshou as non-LM floors).
     Appendix~\ref{sec:appendix:full-results} reports sweep ranges.  Per-task
     YAML configurations are version-controlled under
-    \texttt{atropos/configs/}.  GSM8K uses the standard
-    train/test partitions; HumanEval uses the full pass@1 suite.
+    \texttt{platform\_tinker/atropos/configs/}.  GSM8K uses the standard
+    train/test partitions; held-out evaluations use 200- or 500-problem
+    subsets of the test split, as stated per row.
     Tinker API call scripts describe requested settings, but do not establish
     executed-source identity, backend loss semantics, or hardware. The reviewed
     cohort census and some task/source bindings remain unresolved; missing
@@ -207,9 +205,8 @@
           experiments?
     \answerPartial{Section~\ref{sec:benchmark} and
     Appendix~\ref{sec:run-manifest} list GPU
-    types and estimated GPU-hours for each experiment group; the
-    complete per-experiment breakdown with wall-clock time and
-    estimated cost is in \texttt{COMPUTE.md}.
+    types; estimated GPU-hours and cost per platform are in
+    Appendix~\ref{sec:compute_accounting} and Table~\ref{tab:carbon2}.
     \begin{itemize}
       \item \textbf{Modal experiments.} Fully specified:
             H100~SXM5 (80\,GB) for recent runs and L4 (24\,GB) for the
@@ -219,8 +216,8 @@
             the exact GPU type; GPU-hour figures are inferred from
             billing records and are flagged as approximate.
     \end{itemize}
-    Total project cost is approximately 1{,}200 A100-equivalent GPU-hours
-    across both platforms.  \emph{Partial} reflects the Tinker-side
+    Total project use is approximately 1{,}078 GPU-hours
+    (Table~\ref{tab:carbon2}), mostly assumed-H100 Tinker time.  \emph{Partial} reflects the Tinker-side
     hardware opacity, which is a platform property we cannot resolve.}
     \end{enumerate}
 
@@ -233,10 +230,12 @@
     confirm compliance.  This work involves no human subjects, no
     private or sensitive data, and no models trained on proprietary
     corpora.  All training datasets are public research datasets
-    (GSM8K, HumanEval, NoRobots, synthetic tool-use).  Broader societal
+    (GSM8K, HumanEval, xLAM-Function-Calling-60k, NuminaMath,
+    Open-Platypus, synthetic tool-use; NoRobots is listed for the chat-SFT
+    harness task, which has no completed run).  Broader societal
     impacts---including reward hacking, alignment failure modes of
     RLHF, and equity of compute access---are discussed in
-    Section~\ref{sec:limitations} and in \texttt{ethics\_statement.tex}.}
+    Section~\ref{sec:limitations} and Appendix~\ref{sec:impact_standalone}.}
     \end{enumerate}
 
 % -- 10. Broader Impacts -------------------------------------------------------
@@ -245,7 +244,7 @@
     \item Does the paper discuss both potential positive societal
           impacts and negative societal impacts of the work performed?
     \answerYes{Section~\ref{sec:limitations} (plus
-    \texttt{ethics\_statement.tex} and \texttt{LIMITATIONS\_AND\_IMPACT.md})
+    Appendix~\ref{sec:impact_standalone} and \texttt{LIMITATIONS\_AND\_IMPACT.md})
     discusses:
     \begin{itemize}
       \item \textbf{Positive.} Lowering the barrier to RL post-training
@@ -272,10 +271,9 @@
     \item Does the paper describe safeguards that have been put in place
           for responsible release of data or models that have been
           identified as requiring safeguards?
-    \answerNA{The released artefacts are LoRA adapters fine-tuned from
-    already-public base models (Qwen, Llama, Nemotron, GPT-OSS,
-    Kimi-K2) on standard research datasets (GSM8K, HumanEval, synthetic
-    tool-use).  No new high-risk capabilities are introduced relative to
+    \answerNA{The released artefacts include LoRA adapters for a subset of
+    cells, fine-tuned from already-public base models on GSM8K and
+    synthetic tool-use prompts.  No new high-risk capabilities are introduced relative to
     the base models; released checkpoints inherit the base models'
     licence terms and include standard usage disclaimers in the
     HuggingFace model cards
@@ -293,15 +291,18 @@
     \begin{itemize}
       \item \textbf{GSM8K}~\cite{cobbe2021training}: MIT licence.
       \item \textbf{HumanEval} (OpenAI): MIT licence.
-      \item \textbf{NoRobots} (HuggingFaceH4): CC-BY-NC-4.0 (used for
-            the chat-SFT task only).
+      \item \textbf{NoRobots} (HuggingFaceH4): CC-BY-NC-4.0 (listed for
+            the chat-SFT harness task; no completed run).
+      \item \textbf{xLAM-Function-Calling-60k} (Salesforce): CC BY 4.0.
+      \item \textbf{NuminaMath}: Apache-2.0 (collaborator pipeline).
+      \item \textbf{Open-Platypus}: CC BY-NC 4.0 (collaborator warm-up;
+            non-commercial restriction applies to derived files).
       \item \textbf{Synthetic tool-use data}: self-generated from public
             API documentation; no upstream licence restrictions.
       \item \textbf{Qwen model family}: Apache-2.0.
       \item \textbf{Llama model family}: Meta Llama Community Licence.
-      \item \textbf{Nemotron, GPT-OSS, Kimi-K2}: used under their
-            respective published licences; credits in
-            Section~\ref{sec:benchmark}.
+      \item \textbf{DeepSeek-V3.1, Nemotron, GPT-OSS, Kimi-K2}: used under
+            their respective published licences via the Tinker API.
       \item \textbf{TRL, PEFT, Transformers}: Apache-2.0 (HuggingFace).
       \item \textbf{Modal}: commercial platform; terms of service
             respected.
@@ -324,11 +325,11 @@
             \url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B}, released
             under Apache-2.0 and documented by \texttt{README.md},
             \texttt{REPRODUCE.md}, \texttt{ARTIFACT.md},
-            \texttt{COMPUTE.md}, \texttt{BASELINES.md},
-            \texttt{BENCHMARKS\_COMPARISON.md}, and
+            \texttt{BASELINES.md}, and
             \texttt{LIMITATIONS\_AND\_IMPACT.md}.
-      \item LoRA adapter checkpoints from the successful Modal
-            experiments released alongside the anonymous repository at
+      \item LoRA adapter checkpoints for a subset of cells (per-cell
+            availability not yet inventoried) referenced from the anonymous
+            repository at
             \url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B},
             each accompanied by a HuggingFace model card generated from
             \texttt{huggingface/MODEL\_CARD\_TEMPLATE.md}

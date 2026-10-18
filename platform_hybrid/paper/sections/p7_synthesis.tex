@@ -8,22 +8,24 @@ several falsifiable predictions about ZVF. This paper is, in part, the
 empirical answer to that cross-examination, and it is worth scoring the
 predictions explicitly.
 
-\paragraph{Predicted and confirmed.} (1) \emph{The binomial form.} The
+\paragraph{Algebraic and descriptive checks.} (1) \emph{The binomial form.} The
 cross-examination proposed $\mathrm{ZVF}(p, G) = p^G + (1-p)^G$ as an
-inelasticity result; our T1 adopts it, and the endpoint/interior profile of
-the binned reward tensors plus the $h_G(\bar p)$ column of
-Table~\ref{tab:p7-gsweep} bear it out. (2) \emph{Mastery--incapacity
+inelasticity result; our T1 adopts it. The same-group endpoint/interior
+profile is deterministic, not an empirical validation of the binomial model.
+The $h_G(\bar p)$ column of Table~\ref{tab:p7-gsweep} is a homogeneous
+reference, not the population prediction. (2) \emph{Mastery--incapacity
 aliasing as the structural defect.} Predicted from the symmetry
 $h_G(p) = h_G(1-p)$; illustrated (not confirmed) by the 368-run cross-model
 rows (Table~\ref{tab:p7-ushape}), whose interior is confounded with model and
 configuration (Section~\ref{sec:p7-audit}).
 (3) \emph{The jitter fragility.} The cross-examination's sharpest sub-test
 was that sub-reward jitter would zero ZVF without changing learning; the
-$0.158 \to 0.000$ collapse with PCD invariant
-(Section~\ref{sec:p7-jitter}) confirms it exactly. (4) \emph{Magnitude-aware
+$0.158 \to 0.000$ collapse with PCD unchanged
+(Section~\ref{sec:p7-jitter}) confirms the estimator half; whether learning
+is unchanged under jitter was not tested. (4) \emph{Magnitude-aware
 replacement.} The proposed pairwise-contrast density is implemented here as
-PCD, with its expectation $\frac{G-1}{G}\E[p(1-p)]$ derived and its parabola
-measured.
+PCD, with its expectation $\frac{G-1}{G}\E[p(1-p)]$ derived; its same-group
+parabola is an identity, not a measurement.
 
 \paragraph{Predicted and still open.} The cross-examination set a bar of
 $\rho \geq 0.45$ for any replacement diagnostic as an \emph{early-window
@@ -37,12 +39,12 @@ with the cross-examination's diagnosis that the missing ingredient is sign,
 not more of the same telemetry.
 
 \paragraph{Beyond the predictions.} Two results here were not anticipated
-by the cross-examination. First, the interventional turn: T2 is not only an
-explanation but a control law, and E3 shows a live controller acting on it
-matches the best fixed recipe on held-out gain. Second, the
+by the cross-examination. First, the interventional turn: T2 suggests a control law, and E3 shows a
+live controller acting on it can run end to end (its two-seed tie with the
+best fixed recipe is not evidence of parity). Second, the
 accuracy-versus-compute framing of dynamic sampling: the cross-examination
-treated ZVF $= 0$ as a target, whereas the E3 audit prices it ($+45\%$
-rollouts) and finds the purchase optional on a well-conditioned task. The
+treated ZVF $= 0$ as a target, whereas the E3 pilot prices it ($+45\%$
+rollouts) and, on a well-conditioned task, saw no held-out gain from it. The
 program-level lesson for the pillar family is the same one Papers~1--4
 reached from four different directions: telemetry must be
 magnitude-aware, stack-attributed, and priced---or it will be gamed by the

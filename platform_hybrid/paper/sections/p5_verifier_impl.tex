@@ -4,52 +4,60 @@
 The toolchain of \secref{sec:p5-toolchain} is a specification; a standard is
 only enforceable once a machine can reject a non-compliant run without a human
 in the loop. We therefore implement a reference verifier
-(\texttt{registry/provenance/minreport.py}, stdlib-only) that turns the
+(\texttt{registry/provenance/minreport.py}; signature checks use the
+\texttt{cryptography} package) that turns the
 seven-field run-manifest block from a descriptive checklist into an automated gate. This is
-the load-bearing distinction from the GRPO-Registry of \tableref{tab:implementations}
-and the P6 catalog: a registry \emph{catalogs} what a run declares; the verifier
+the distinction from the P6 catalog: a registry \emph{catalogs} what a run declares; the verifier
 \emph{recomputes} and \emph{rejects}.
 
 \paragraph{The record.} A run emits a provenance record
-(\texttt{*.provenance.json}) with four blocks: \texttt{min\_report\_rl} (the
-seven reportable items---loss form, reference-KL, sampler backend, telemetry,
-group-size schedule, held-out split, decontamination); \texttt{provenance}
-(cryptographic anchors: \texttt{git\_sha}, \texttt{code\_file} with its
-\texttt{code\_hash}, \texttt{reward\_fn\_hash}, \texttt{data\_hash},
-\texttt{config\_hash}); \texttt{rigor} (\texttt{n\_seeds}, the seed list,
-\texttt{reports\_heldout}, \texttt{heldout\_disjoint}, \texttt{reports\_ci});
-and \texttt{results}. The emitter generates the record from the same config the
-trainer executes, so the manifest is a build artifact rather than a writing
-task.
+(\texttt{*.provenance.json}, schema \texttt{MIN-REPORT-RL/2.0}) whose blocks
+include \texttt{min\_report\_rl} (the seven run-manifest items---loss form,
+reference-KL, sampler backend, telemetry, group-size schedule, held-out split,
+decontamination); \texttt{provenance} (anchors: \texttt{git\_sha},
+\texttt{code\_file} with its \texttt{code\_hash}, \texttt{reward\_fn\_hash},
+\texttt{config\_hash}); \texttt{rigor} (\texttt{n\_seeds} and the seed list);
+\texttt{evidence} (repository-local, SHA-256-pinned run, split,
+decontamination, and analysis artifacts); and \texttt{results}. A
+\texttt{generate} command drafts the record from the run's configuration; the
+draft is unsigned until it passes the checks below.
 
-\paragraph{Three grading axes.} \texttt{minreport.py verify} scores a run on a
-weighted rubric and returns a reproducibility badge \textbf{A--F}.
-\emph{Completeness}: all seven MIN-REPORT run-manifest fields are present and non-null.
-\emph{Integrity}: the provenance hashes exist and, crucially, the recorded
-\texttt{code\_hash} is \emph{recomputed against the live source file}, catching
-code drift between the run and the claim. \emph{Rigor}: the check hard-\textsc{fails}
-when \texttt{n\_seeds}${}<3$ (the single-seed trap), and further requires a
-disjoint held-out split with uncertainty reported. Weights concentrate on the
-axes that ordinary checklists never test---the seed-power gate carries the
-heaviest weight, and \texttt{verify --strict} exits non-zero below grade~B so a
-continuous-integration job can block a merge.
+\paragraph{What the verifier checks.} \texttt{minreport.py verify} runs a
+fixed list of checks and reports a reporting-completeness percentage
+separately from acceptance. \emph{Schema and completeness}: the record
+validates against the versioned schema and all seven run-manifest items are
+present. \emph{Integrity}: the recorded \texttt{code\_hash},
+\texttt{reward\_fn\_hash}, and \texttt{config\_hash} are \emph{recomputed}
+against the live repository, and \texttt{git\_sha} must be the full commit
+of the checked-out tree, catching drift between the run and the claim.
+\emph{Rigor}: at least three distinct integer seeds, one completed run
+artifact per seed, a saved held-out split with its count, and saved analysis
+inputs with uncertainty. A record is \textsc{accepted} (grade A) only if every
+check passes \emph{and} it carries an Ed25519 signature under a key the caller
+supplies; otherwise it is \textsc{rejected}, and the command exits non-zero so
+a continuous-integration job can block a merge. Three seeds are a replication
+rule, not a power claim, and a signature establishes approval by a key, not
+that execution occurred.
 
-\paragraph{The A-vs-FAIL demonstration, on this repo's own runs.} Run against
-our multi-seed campaign (three seeds, disjoint held-out, \texttt{code\_hash}
-verified against live source), the verifier awards \textbf{A (100\%)}. Run
-against the original single-seed sweep that produced the same headline numbers,
-it \textbf{FAILS the rigor axis}: \texttt{n\_seeds}${}=1$ trips the underpowered
-gate automatically. The verifier flags, in one command, exactly the weakness a
-careful manual reviewer would catch by hand---which is the point of making the
-standard executable rather than aspirational.
+\paragraph{Applied to this repository's own records.} We re-ran the current
+verifier in diagnostic mode on the two provenance records in the repository
+(\texttt{registry/provenance/\{campaign,sweep\}.provenance.json};
+\texttt{tools/review\_ledger/P5\_minreport\_verifier\_demo.py}). Both are
+\textsc{rejected} at $16\%$ reporting completeness: they predate the 2.0
+schema, carry an abbreviated \texttt{git\_sha}, and pin no evidence
+artifacts. The seed rule separates them as intended---the multi-seed campaign
+passes the three-seed check and the single-seed sweep fails it---but neither
+record is publication-ready. An earlier revision reported grade~A for the
+campaign record under a previous verifier; that result does not reproduce and
+is withdrawn.
 
 \paragraph{Tamper-evidence.} A companion signer
-(\texttt{registry/provenance/sign.py}) produces a detached ed25519 signature
-over the canonicalized record (keys ordered, whitespace normalized, every value
-significant). Its self-test signs a record, verifies the pristine copy
-(\textsc{pass}), mutates one field---a forged \texttt{git\_sha}---and re-verifies
-against the same signature (\textsc{fail}), so any post-hoc edit to a published
-provenance record is detectable; where the \texttt{cryptography} library is
-absent it degrades to an HMAC-SHA256 MAC and records that the fallback gives
-tamper-evidence but not non-repudiation. Together the verifier and signer move
-MIN-REPORT-RL from a norm authors may follow to a gate a repository can enforce.
+(\texttt{registry/provenance/sign.py}) produces a detached Ed25519 signature
+over the canonicalized record (sorted keys, ASCII JSON) with no algorithm
+fallback; its CLI refuses to sign a record that fails the evidence checks. In
+our re-run, a signature made over the campaign record verifies against the
+pristine copy and fails after a single field (\texttt{git\_sha}) is altered.
+This is the same detached-attestation idea that software supply-chain
+frameworks such as in-toto (Torres-Arias et al., USENIX Security 2019) apply to
+build steps; here it covers the run record only, not the execution that
+produced it.

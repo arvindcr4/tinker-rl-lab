@@ -7,30 +7,26 @@
 % =============================================================================
 \begin{abstract}
 This is an \textbf{exploratory workshop artifact note}, not a benchmark paper.
-We release step-level group reward traces, Zero-Variance Fraction (ZVF)
-traces, a parser-script bundle, a per-run manifest, and a structured evidence
-grade table for a historical GRPO-style run collection (census unresolved) across 7 RL libraries (TRL, Stable
-Baselines3, CleanRL, Tianshou, PufferLib, rl\_games, d3rlpy), the closed
-\tinker{} API, and 5 model families (total parameters 0.6B--671B; active
-0.6B--37B for the largest mixture-of-experts checkpoints). The release lives
-at an anonymous repository documented in
-Section~\ref{sec:limitations}.
+We release per-run JSON records with per-step reward and Zero-Variance
+Fraction (ZVF) traces, driver scripts, and a run manifest. The manifest lists
+75 runs: 46 completed GRPO-style LLM runs on two stacks (TRL and the closed
+Tinker API), 16 PPO reference runs, and 13 failed, partial or unstarted
+cells. The release contains no per-group reward arrays and no Tinker model weights
+(Section~\ref{sec:limitations}).
 
 \textbf{Claim hierarchy (descending strength).}
 \textit{(i)} ZVF~$=1\Rightarrow$~zero centered reward contrast is mechanical
-(Appendix~\ref{sec:appendix:zvf-formalization}).
-\textit{(ii)} Later, separate five-seed Qwen3-8B GSM8K evidence reports
-$83.3\%$ vs.\ fixed-baseline $82.0\%$ as a one-sample seed-level
-$p{=}0.26$ test, not paired-seed or reviewed-record evidence.
+(Appendix~\ref{sec:appendix:zvf-formalization}); for binary rewards ZVF is the
+fraction of groups that DAPO's dynamic sampling would discard.
+\textit{(ii)} Held-out null: five Qwen3-8B GRPO seeds on Tinker score
+$83.3\%$ vs.\ $82.0\%$ for the base model on 200 GSM8K test problems
+($+1.3$\,pp, 95\% CI $[-1.4,+4.0]$, $p{=}0.26$; paired McNemar n.s.\ per seed).
 \textit{(iii)} The pooled ZVF--last-10 correlation
 ($r{=}{-}0.769$, $N{=}15$, $p{=}0.0008$) is task-confounded; within
 GSM8K only ($N{=}19$), $r{=}{+}0.40$ ($p{=}0.09$).
 We report ZVF as a cheap descriptive logging quantity, not as a
 predictive failure detector. Frontier-scale and tool-use rows are
-single-seed case studies, released for honesty and not as benchmark numbers.
-The rest of this artifact note is a candid evidence-grade table and three
-discussion prompts for the workshop.
+single-seed case studies, not benchmark numbers; Qwen3-8B training reward
+is depressed by a 512-token generation cap.
+The note closes with an evidence-grade table and five discussion prompts.
 \end{abstract}
-\paragraph{August 2026 evidence boundary.} This workshop artifact preserves
-case-specific rows and does not pool them as an algorithm ranking or a validated
-operator policy.

@@ -1,0 +1,55 @@
+{
+  "campaign": {
+    "exit": 0,
+    "accepted": false,
+    "grade": "REJECTED",
+    "score_pct": 16.0,
+    "seed_check": [
+      {
+        "level": "PASS",
+        "weight": 3,
+        "msg": "minimum distinct-seed requirement met (at least 3)"
+      },
+      {
+        "level": "FAIL",
+        "weight": 3,
+        "msg": "completed run artifacts and held-out metrics verified: one completed run artifact is required per distinct seed"
+      },
+      {
+        "level": "FAIL",
+        "weight": 2,
+        "msg": "saved analysis inputs, results and uncertainty verified: one completed run artifact is required per distinct seed"
+      }
+    ],
+    "n_pass": 2,
+    "n_checks": 23
+  },
+  "sweep": {
+    "exit": 0,
+    "accepted": false,
+    "grade": "REJECTED",
+    "score_pct": 16.0,
+    "seed_check": [
+      {
+        "level": "FAIL",
+        "weight": 3,
+        "msg": "minimum distinct-seed requirement not met (distinct integer seeds, exact count, at least 3)"
+      },
+      {
+        "level": "FAIL",
+        "weight": 3,
+        "msg": "completed run artifacts and held-out metrics verified: one completed run artifact is required per distinct seed"
+      },
+      {
+        "level": "FAIL",
+        "weight": 2,
+        "msg": "saved analysis inputs, results and uncertainty verified: one completed run artifact is required per distinct seed"
+      }
+    ],
+    "n_pass": 1,
+    "n_checks": 23
+  },
+  "sign_cli_refuses_unready_record": true,
+  "verify_pristine": true,
+  "verify_forged_git_sha": false
+}

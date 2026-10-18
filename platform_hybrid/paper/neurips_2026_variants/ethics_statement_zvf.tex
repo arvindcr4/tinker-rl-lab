@@ -46,7 +46,7 @@ five-seed Qwen3-8B GSM8K comparison reports $83.3\%$ versus a fixed-base
 $82.0\%$; its $p{=}0.26$ is a one-sample seed-level test against that fixed
 baseline, not a paired-seed test and not reviewed-record evidence of capability
 improvement. It therefore does not establish an uplift. Second, the public literature already contains GRPO implementations
-\cite{shao2024deepseekmath, openrlhf2024, verl2024, trl2020} that are at
+\cite{shao2024deepseekmath, openrlhf2024, verl2024, vonwerra2022trl} that are at
 least as capable. Third, any reasoning uplift is bounded by the rewarder:
 GSM8K rewards use exact-match against a human-written gold answer, which
 does not generalise to the domains listed above without a new reward
@@ -81,13 +81,12 @@ calling; and (c) not releasing any function-calling harness that would
 actually execute emitted calls.
 
 \paragraph{M4. Compute-efficiency externalities.}
-Our work argues that critic-free RL with budget-dependent group-size
-selection (the optimal $G$ depends on total token budget; see
-Appendix~\ref{sec:appendix:group-size-reconcile}) can be run on modest
-budgets. Improved training efficiency is
+Our work discusses critic-free RL on modest budgets, including a
+hypothesised budget-dependent group-size choice that rests on reconstructed,
+not measured, cells (Appendix~\ref{sec:appendix:group-size-reconcile}). Improved training efficiency is
 itself dual-use: it lowers the cost of running adversarial fine-tuning at
 scale. We judge this externality to be modest relative to the already-low
-cost of fine-tuning a 0.6B--8B model with commodity LoRA recipes
+cost of fine-tuning a 0.5B--8B model with commodity LoRA recipes
 \cite{hu2022lora}, but we flag it explicitly.
 
 \paragraph{Residual risk.}
@@ -124,7 +123,7 @@ Tinker SDK v0.16.1 & Frontier Suite (frontier/MoE)      & 13 & \$25--30 \\
 Modal H100         & PPO baselines (Qwen3-8B, Llama-3.1-8B)& 2  & \$12--18 \\
 Modal H100         & KL-tracking run (failed)              & 1  & \$2--4   \\
 Google Colab Pro (T4) & 0.5B--3B QLoRA SFT+GRPO            & --- & \$10/person \\
-NVIDIA L4 (TRL baseline)& Qwen2.5-0.5B GSM8K, 5 seeds      & 5  & \$3--5   \\
+NVIDIA L4 (TRL baseline)& Qwen2.5-0.5B, 5 seeds (logged task: synthetic math) & 5  & \$3--5   \\
 HuggingFace Hub    & Model + adapter hosting               & --- & \$0 \\
 Weights \& Biases  & Experiment tracking (academic tier)   & --- & \$0 \\
 \midrule
@@ -137,7 +136,7 @@ Weights \& Biases  & Experiment tracking (academic tier)   & --- & \$0 \\
 consumed human labour (approximately six student-FTE-months, unpaid) and
 infrastructure generously subsidised by an academic research group with
 shared access to one A100 node used for TRL baselines and
-pre-submission sanity checks). No author received commercial compensation
+pre-submission sanity checks. No author received commercial compensation
 from Thinking Machines, Modal, or any other vendor mentioned.
 
 \paragraph{Failed-run accounting.} Of the Tinker spend, we estimate
@@ -234,9 +233,9 @@ hardware assumptions; subsequent users can additionally skip the failed
 runs and the ablation sweeps to lower the cost of reproducing our work.
 
 \paragraph{Offset and mitigation.}
-We did not purchase carbon offsets. Instead, we have (a) released all
-trained checkpoints on HuggingFace Hub so that downstream users do not
-need to re-run our experiments; (b) released step-level CSV logs so that
+We did not purchase carbon offsets. Instead, we have (a) released LoRA
+adapters for a subset of cells on the HuggingFace Hub (per-cell availability
+is not yet inventoried); (b) released step-level CSV logs so that
 learning curves can be inspected without re-training; and (c) documented
 in Section~\ref{sec:compute_accounting} which runs were wasteful, so that
 replicators can skip them. We regard reproducibility-by-artefact as a
@@ -253,7 +252,7 @@ used. No human annotators were employed during this work. We document
 each dataset below.
 
 \paragraph{GSM8K \cite{cobbe2021training}.}
-8{,}500 grade-school math word problems (7{,}473 train / 1{,}319 test)
+8{,}792 grade-school math word problems (7{,}473 train / 1{,}319 test)
 authored by human writers contracted by OpenAI. Released under the
 \textbf{MIT License} via \url{https://github.com/openai/grade-school-math}.
 We use the standard train/test splits without modification. The canonical
@@ -268,8 +267,8 @@ respects the test/train split.
 training data for the xLAM agentic model family. Released under the
 \textbf{CC BY 4.0} license via \url{https://huggingface.co/datasets/Salesforce/xlam-function-calling-60k}.
 We use the public release as-is; specifically, we use the first 35 prompts
-$\times$ 10 rollouts in the 10x Structural Ceiling tool-use track and the
-full 60k split for the xlam-60k real-data run in Section~\ref{sec:results}.
+$\times$ 10 rollouts in the 10x Structural Ceiling tool-use track. No
+xLAM-60k training cell is reported in the run manifest.
 Known limitations: xLAM schemas are synthetic and skew toward cleanly-typed
 arguments; the dataset under-represents ambiguous, error-handling, and
 multi-turn tool-calling. Attribution to Salesforce is required by the
@@ -343,8 +342,8 @@ gaps between Tinker GRPO and an open-source GRPO implementation cannot be
 fully attributed from our data: we are able to rule out a handful of
 candidate explanations (seed variance, model-size confound) but not the
 implementation itself. We therefore draw \emph{quantitative} conclusions only
-from the open-source side (TRL, veRL on Modal H100, OpenRLHF) where every
-hyperparameter is auditable, and use Tinker results primarily as
+from the open-source side (TRL on Modal) where every
+hyperparameter is auditable; no veRL or OpenRLHF cell was completed, and use Tinker results primarily as
 \emph{descriptive case studies} of what a carefully engineered production
 stack can achieve for critic-free RL at our scales.
 
@@ -354,9 +353,9 @@ stack can achieve for critic-free RL at our scales.
         logs, and per-run W\&B projects are archived in the repository.
         Researchers with Tinker access can attempt replication with our
         exact configurations.
-  \item Every figure and every summary statistic derived solely from
-        Tinker data is marked with ``\dag'' and a footnote stating that
-        independent replication requires Tinker API access.
+  \item Tinker-derived rows are identified by their backend label in the
+        run manifest and in table section headers; independent replication
+        of those rows requires Tinker API access.
   \item The only reviewed-record inferential claim is the mechanical centered
         reward-contrast identity under the stated runner assumptions
         (Appendix~\ref{sec:appendix:zvf-formalization}). The later held-out
@@ -404,8 +403,8 @@ support an extrapolation about longer training.
 Each Tinker configuration was run once, not 3--5 times as best practice
 prescribes \cite{henderson2018deep}. Tinker results therefore lack
 variance estimates and do not support significance testing; we report
-them descriptively. Only the 5-seed TRL baseline and the 5-seed held-out
-GSM8K evaluation carry proper confidence intervals.
+them descriptively. Only the multi-seed cells in the run manifest admit
+seed-level uncertainty estimates.
 
 \paragraph{Train-set reward as primary Tinker metric.}
 Tinker runs primarily report reward on training prompts. Only the GSM8K
@@ -422,8 +421,9 @@ it means our claims about PPO vs.\ GRPO and TRL vs.\ Tinker are
 LoRA-conditional.
 
 \paragraph{Benchmark coverage is narrow.}
-We evaluate four domains: GSM8K, MATH-500 (exploratory), HumanEval
-(subset), and synthetic/xLAM tool-use. We do not evaluate on MT-Bench,
+Completed training cells cover GSM8K, synthetic arithmetic, and a
+five-tool synthetic tool-use task; HumanEval appears only as a failed or
+partial cell, and the run manifest has no MATH-500 training cell. We do not evaluate on MT-Bench,
 ArenaHard, safety benchmarks (HarmBench, ToxicChat), or truthfulness
 benchmarks (TruthfulQA). Any claim about ``reasoning'' in the paper is
 strictly a claim about the covered benchmarks.
@@ -455,9 +455,8 @@ order-of-magnitude.
 This is an exploratory case study, not a pre-registered confirmatory
 experiment. We did not pre-register primary hypotheses. All $p$-values are
 un-corrected for the number of comparisons actually made across the
-paper; the Bonferroni-surviving comparisons in
-Section~\ref{sec:results} are so flagged, but most of our secondary
-analyses are descriptive.
+paper; no multiplicity correction is applied, and the analyses are
+descriptive.
 
 \paragraph{Geographic and demographic limits.}
 The specific city and country of the authors' institution are withheld

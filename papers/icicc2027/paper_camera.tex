@@ -51,7 +51,8 @@ using a heterogeneous fourteen-lane campaign with incomplete provenance.
 The actor has reported group-relative policy-gradient training lineage.
 GRPO uses rewards relative to sampled groups~\cite{shao2024deepseekmath}, but
 this campaign neither verifies the exact historical objective nor identifies
-its causal effect. We therefore frame the study around evaluation governance.
+its causal effect. We therefore frame the study around evaluation governance;
+this framing was adopted after the results were known, so its lessons are post hoc.
 Training-suite separation is not proven item-level decontamination, and no
 blanket held-out claim is made.
 
@@ -74,7 +75,10 @@ Reinforcement-learning reproducibility studies~\cite{henderson2018deep} and the
 NeurIPS reproducibility program~\cite{pineau2020improving} motivate explicit
 execution records. Model cards~\cite{mitchell2019modelcards} and
 datasheets~\cite{gebru2021datasheets} organize disclosures at model and dataset
-level; our unit is a run within a named benchmark scope. Hash equality proves
+level; our unit is a run within a named benchmark scope. The LM Evaluation
+Harness~\cite{biderman2024lessons} standardizes reproducible evaluation and the
+Agentic Benchmark Checklist~\cite{zhu2025abc} audits task and outcome validity. We add per-run receipts that keep prepared, attempted and
+graded counts, replacement identity and blocked states visible. Hash equality proves
 byte identity, not grader correctness or the truth of a receipt.
 
 Selection was purposive: software, tools, web tasks, biology, ML engineering,
@@ -103,7 +107,8 @@ contrast (Sect.~\ref{sec:paired}).
 The official base identifier is \texttt{Qwen/Qwen3.6-35B-A3B}~\cite{qwen2026model}, a sparse
 mixture-of-experts model, recorded revision \texttt{995ad96e}. One LoRA
 adapter~\cite{hu2022lora}, recorded revision \texttt{64444133}, was served in
-bfloat16 through Tinker~\cite{thinkingmachines2025tinker} or vLLM. The adapter mirror is linked at its recorded revision.\footnote{\url{https://huggingface.co/arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6/tree/64444133c55d88c3f1bf0df8a2f5d7ac646125c8}}
+bfloat16 through Tinker~\cite{thinkingmachines2025tinker} or vLLM; vLLM served a
+recorded bf16 pre-merge of this adapter (862/862 tensors). The adapter mirror is linked at its recorded revision.\footnote{\url{https://huggingface.co/arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6/tree/64444133c55d88c3f1bf0df8a2f5d7ac646125c8}}
 Public metadata confirms availability, not tensor equivalence or sampler replay. No per-lane checkpoint selection is reported. This controls one
 variable; it does not equalize inference or estimate training-seed variance.
 
@@ -158,7 +163,8 @@ bounds, counts and artifact hashes. Deterministic checks reconcile reported
 values with retained receipts. Fail-closed gating is the intended design, not
 proof that every historical launch obeyed it: missing sources and later
 lead-issued overrides are explicit limitations. A receipt cannot authenticate
-itself. Reopening requires the original payload, a validated grader, a
+itself: receipts are unsigned operator-written JSON without external
+timestamping, and no formal receipt schema is defined. Reopening requires the original payload, a validated grader, a
 revision-bound manifest, reconciled prior items and approved resources; a
 changed scaffold or population is a new scope or declared deviation.
 
@@ -236,8 +242,7 @@ strictly complete replacements; E11-O is a strictly complete original.
 E14-R is terminal-complete with native exclusions. E1-O has a full-denominator
 outcome, including non-native failures. The stored check
 \emph{strict-completed-suites = E8, E10, E11} asserts scope completion,
-not that all three are replacements. Its 11 PASS results are preserved unchanged;
-the manuscript's original/replacement interpretation is corrected.
+not that all three are replacements.
 
 \textbf{LAB-Bench (E8-R).} Stored outcomes give 450 correct of 1,967 across
 eight categories. Diagnostic aggregates report 1,259 unparsed responses
@@ -268,9 +273,9 @@ episodes, 88 utility passes and no pinned upstream commit in its recovered
 receipt. It measures neither attack resistance nor AgentHarm. Omni-MATH has
 4,428 dispositions, 4,426 native accepted rows and 2,271 correct; two judge
 outputs stopped before an equivalence verdict. The accepted-set 51.31\% differs
-from all-disposition 51.29\%. The historical denominator error is disclosed,
-not repaired in stored results. Reported cap-hit accuracy is 1,029/2,982
-(34.5\%), versus 1,242/1,446 (85.9\%) uncapped. Difficulty confounds this split.
+from all-disposition 51.29\%. Over all 4,428 dispositions (the two
+judge-incomplete rows count as not correct), reported cap-hit accuracy is
+1,029/2,982 (34.5\%), versus 1,242/1,446 (85.9\%) uncapped. Difficulty confounds this split.
 
 \textbf{SWE-bench Pro (E1-O).} The 731-task \emph{public split} retains 14
 generation failures and four lost artifacts alongside 713 native evaluations.
@@ -283,12 +288,11 @@ The full run used unmodified official scripts on native \texttt{linux/amd64}
 Modal workers (harness \texttt{ca10a60a}). The 1,200-versus-120-second timeout
 concern applies only to an earlier one-task gold-patch check under arm64 QEMU,
 explicitly not a model score. Exact container-runtime version and the 713-run
-timeout/assertion-failure breakdown are unavailable in the retained evidence;
-they must not be invented or inferred from patch-parse counts.
+timeout/assertion-failure breakdown are unavailable in the retained evidence.
 
 \textbf{Incomplete originals.} FrontierSWE and BankerToolBench numbers describe
 one task each; the latter is fractional recovery reward. APEX's seven graded
-tasks average 0.079365; its 0.050505 attempted-prefix mean uses a different
+tasks average 0.079365; its 0.050505 mean over 11 attempted tasks uses a different
 denominator. MLE-bench's 40/75 coverage is 53.33\%, with suite score null and a
 separate merged-vLLM arm. BinaryAudit's agent error is not a native grade; the campaign's 46-item
 denominator is not reconciled to the current project's 33 tasks. ML-Dev-Bench's
@@ -314,7 +318,7 @@ not imply full native grading.}
 Scope & Benchmark & Items & Grades & Result \\\midrule
 E1-R & SWE-bench Multilingual~\cite{khandpurswemultilingual}, later wave & 190 & 57 & 1/190 = 0.0053 \\
 E2-R & CORE-Bench hard & 45 & 45 & 27/45 = 0.600 \\
-E5-R & $\tau^3$-Banking & 97 & 72 & 8/97 = 0.0825 \\
+E5-R & $\tau^3$ banking (tau2-bench \texttt{a2c0247}) & 97 & 72 & 8/97 = 0.0825 \\
 E6-R & WebArena & 812 & 704 & 90/812 = 0.1108 \\
 E9-R & ML-Dev-Bench~\cite{padigela2025mldevbench}, configs & 34 & 34 & 10/34 = 0.2941 \\
 E13-R & BALROG, six environments & 255 & 255 & 26.1\% progression \\\bottomrule
@@ -368,25 +372,30 @@ confounded diagnostic, not a controlled explanation of the full-run zero.
 The separate 26 September pilot uses selection seed 20260926, temperature 0,
 non-thinking prompts and identical items for trained and base weights on the
 same vLLM engine. Table~\ref{tab:paired} lists every lane; exact fractions,
-metrics and retained tests are in the source package. None of its seventeen
+metrics and retained tests are in the evidence package (Data
+availability). None of its seventeen
 primary outcome contrasts establishes a difference; E2's separate exploratory
 conditional runtime contrast is not included in that statement. This is inconclusive,
-not equivalence. Small/public/substitute populations are not full baselines.
+not equivalence. Zero loss on 35/40 training steps (Table~\ref{tab:training})
+suggests few effective updates, which would also predict small differences. Small/public/substitute populations are not full baselines.
 E4 has one nonzero pair; E12 has six app clusters scored by the base model;
 E13 has five environments, unlike the later six-environment run.
 
 \begin{table}[t]
 \caption{All same-engine pilot lanes: trained/base outcomes. Scope names identify
 public subsets or substitutes, not completed original contracts. $p$ denotes
-two-sided exact McNemar except E12's equal-app pass-rate sign-flip test. Intervals are retained paired
-difference intervals, not equivalence bounds.}
+two-sided exact McNemar except E12's equal-app pass-rate sign-flip test (raw-count
+variant $p=.50$; unclustered item McNemar $p=.30$). With $k$
+discordant pairs exact McNemar $p\geq 2^{1-k}$, so E1, E7 and E9 ($k\leq1$) are
+uninformative. Intervals are retained paired bootstrap
+intervals, not equivalence bounds; E4's has one nonzero pair.}
 \label{tab:paired}\centering\small\setlength{\tabcolsep}{3pt}
 \begin{tabularx}{\textwidth}{@{}l Y r l l@{}}\toprule
 Lane & Actual pilot scope / metric & $n$ & Trained / base & Test \\\midrule
 E1 & SWE-bench Pro subset & 10 & 0/10; 0/10 & $p=1$ \\
 E2 & EffiBench~\cite{huang2024effibench} & 30 & 21/30; 24/30 & $p=.25$ \\
 E3 & Terminal-Bench v2~\cite{merrill2026terminalbench} & 8 & 5/8; 3/8 & $p=.5$ \\
-E4 & BankerToolBench reward & 6 & .0662 / .0928 & no interval \\
+E4 & BankerToolBench reward & 6 & .0662 / .0928 & $[-.080,0]$ \\
 E5 & tau2-bench~\cite{barres2025tau2} & 10 & 5/10; 2/10 & $p=.375$ \\
 E6 & MiniWoB++~\cite{liu2018miniwob} & 36 & 16/36; 17/36 & $p=1$ \\
 E7 & BinaryAudit subset & 6 & 1/6; 0/6 & $p=1$ \\
@@ -440,9 +449,20 @@ The case study contributes disciplined reporting, not demonstrated GRPO gains
 or universal reproducibility. Full matched baselines, item-level overlap
 checks, parser/finish-reason instrumentation, controlled sampler comparisons
 and independent evaluation of governance effectiveness remain future research
-requirements. No new experiment is represented as completed by this revision.
+requirements.
 
-\clearpage
+\begin{credits}
+\subsubsection{Data availability.} Receipts, paired outcomes, inventories, the
+check record and source map:
+\url{https://github.com/arvindcr4/tinker-rl-lab/tree/c354f899580f247a255f5c55b8a88152cea0f753}
+(\texttt{papers/icicc2027}, \texttt{outputs/}); items marked unavailable
+are absent.
+% DRAFT from PROVENANCE.md: AI-assistance statement requires author approval and
+% organizer confirmation before release.
+\subsubsection{AI assistance.} Large-language-model assistants helped revise
+the text, recheck arithmetic and verify references; the authors take full
+responsibility for the content.
+\end{credits}
 \bibliographystyle{splncs04}
 \bibliography{refs}
 \end{document}

@@ -13,7 +13,7 @@ measured compliance overhead.
 
 \paragraph{\texttt{trl-min-report-rl} (manifest emitter).} A trainer plugin
 (reference target: a TRL~\citep{vonwerra2022trl} callback, with adapters for
-other frameworks in \tableref{tab:implementations}) that auto-emits the
+other frameworks) that would auto-emit the
 seven-field run manifest as JSON at run start and appends the per-step ZVF/GU
 trajectory (item 4) during training. The author never writes the manifest by
 hand; it is generated from the same objects the trainer actually executes,
@@ -21,21 +21,17 @@ closing the gap between what a paper says and what the code did. Appendix
 \ref{app:p5-worked} shows two complete manifests.
 
 \paragraph{\texttt{grpo-stackdiff} (comparability verdicts in CI).} A CLI
-that takes two manifests and returns (i) an item-by-item diff, (ii) the
-flip-risk grade R0--R5 of \secref{sec:p5-grades}, and (iii) a CI verdict:
-\textsc{comparable} (R0--R2), \textsc{not-comparable} (R3--R4), or
-\textsc{unverifiable} (R5). The intended integration point is a repository or
-leaderboard CI job: a pull request adding ``method A beats method B'' must
-attach two manifests whose stackdiff verdict is \textsc{comparable}, or the
-claim is rewritten as stack-conditioned. Appendix~\ref{app:p5-worked} walks
-one diff to its \textsc{not-comparable} verdict. This grading is a
-specification. The shipped implementation (\texttt{registry/query.py
-stackdiff}, companion Pillar-6 paper) uses a different, field-level mapping:
-R5 outcome-critical (checkpoint, reward, prompt/chat template, dataset,
-evaluation), R4 algorithm, R3 hyperparameters/budget, R2 runtime, R1
-nuisance; the level is computed only from fields known on both sides, and
-unknown fields are reported separately as a coverage score and an
-underspecified flag rather than as R5.
+that takes two manifests and returns (i) a field-by-field diff, (ii) the
+flip-risk grade R0--R5 of \secref{sec:p5-grades}, computed only from fields
+known on both sides, and (iii) a coverage score with an underspecified flag
+for fields unknown on either side. The reference implementation
+(\texttt{registry/query.py stackdiff}, companion Pillar-6 paper) computes
+exactly this rubric and can exit with the grade as its status code. The
+intended integration point is a repository or leaderboard CI job: a pull
+request adding ``method A beats method B'' must attach two manifests that
+satisfy the admissibility reading of \secref{sec:p5-grades}, or the claim is
+rewritten as stack-conditioned. Appendix~\ref{app:p5-worked} walks one diff
+to its \textsc{not-comparable} verdict.
 
 \paragraph{GRPO-Registry (machine-readable stack catalog).} A registry
 mapping algorithm labels to the set of loss-form tuples published under that

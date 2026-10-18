@@ -1,0 +1,22 @@
+location	claim_text	value	source_artifact	generator_script	status
+base_final Ch5 tab:measured_runs	Qwen3-8B seed042/137/256/512/999 peak, last-10 training reward	0.625/0.625/0.625/0.875/0.875; 0.275/0.275/0.325/0.300/0.350	W&B export wandb_runs.json (tinker-rl-scaling, pulled 2026-10-18); platform_hybrid/experiments/results/review_2026-10-18/Sem3_Group6_Original_Report/measured_runs.json	tools/review_ledger/Sem3_Group6_Original_Report_measured_runs.py	verified
+base_final Ch5 tab:measured_runs	rank8/rank16/rank64/100-step/4B runs	peak 0.625/0.750/0.875/0.750/1.000; last-10 0.2125/0.1875/0.250/0.275/0.825	W&B export wandb_runs.json (tinker-rl-scaling, pulled 2026-10-18); platform_hybrid/experiments/results/review_2026-10-18/Sem3_Group6_Original_Report/measured_runs.json	tools/review_ledger/Sem3_Group6_Original_Report_measured_runs.py	verified
+base_final Ch5 seed-level summary	last-10 training reward across 5 seeds	mean 0.305, SD 0.033, n=5	platform_hybrid/experiments/results/review_2026-10-18/Sem3_Group6_Original_Report/measured_runs.json	tools/review_ledger/Sem3_Group6_Original_Report_measured_runs.py	recomputed
+base_final Ch5 held-out; abstract	held-out GSM8K base vs five GRPO seeds	82.0% (164/200); 83.0/82.5/80.5/84.0/86.5%, mean 83.3%, SD 2.2pp, t(4)=1.32, p=0.256	platform_tinker/reports/final/gsm8k_heldout_seed{042,137,256,512,999}.json; gsm8k_base_control_200.json	tools/review_ledger/Sem3_Group6_Original_Report_measured_runs.py	recomputed
+base_final Infrastructure	W&B config lr/rank/steps	lr 3e-5 (5e-6 100-step), rank 32 (8/16/64), 50 steps (100)	W&B export wandb_runs.json (tinker-rl-scaling, pulled 2026-10-18)	tools/review_ledger/Sem3_Group6_Original_Report_measured_runs.py	verified
+base_final Block C	config rank/lr by size	0.6B r16 lr6e-5; 1.7B r16 lr5e-5; 8B r32 lr4e-5	platform_tinker/atropos/configs/gsm8k_qwen_{0_6b,1_7b,8b}.yaml	-	verified
+base_final Table E.2	papers per cluster	8/0/10/31/10; total 59	base_final.tex Appendix E mapping table	tools/review_ledger/Sem3_Group6_Original_Report_taxonomy_counts.py	recomputed
+base_final Table 5.2 / Fig 5.2 (old)	Qwen3-8B 7%->100%, 30B MoE 99.2%, Llama 79%->100%, 3B 2%	various	none (hand-entered pgfplots coordinates)	-	removed
+base_final Fig 5.3 (old)	MATH curves Qwen3-8B ~14%, Llama 50-87%	various	none	-	removed
+base_final Tables 5.3-5.7 (old)	bootstrap CIs, z=14.91/32.93, Spearman, Chow F=32.35, d=5.65, U tests	various	none (reconstructed binary obs; stats_utils.py absent)	-	removed
+base_final HumanEval (old)	Qwen3-3.8B pass@1 32%->40%	32/40	none	-	removed
+base_final Fig 5.1 (old)	illustrative PPO/DPO/GRPO curves	synthetic	none (comment: 'Illustrative data')	-	removed
+base_final Sec 2.6.2/Table 2.1/Fig 2.9 (old)	80 variants: 31/18/8/23 (39/22/10/29%), kappa 0.85; architectures 52/28/20%	various	none (no catalog retained)	-	removed
+base_final Fig 3.4/3.5 (old)	SFT bars 30.2/19.4/32.5; trajectory points 12, 15, 34.2, 44	various	none	-	removed
+base_final Table 3.1	WebArena-Lite WebAgent-R1	Llama-3.1-8B 8.5->44.8; Qwen2.5-3B 6.1->33.9	arXiv:2505.16421 abstract	-	verified
+base_final Table 3.1; Fig 3.3	OSWorld best model / human	12.2% / 72.4%	arXiv:2404.07972 abstract (12.24/72.36)	-	verified
+base_final Table 3.1	Mobile-Agent-v3 OSWorld	37.7 (73.3 is AndroidWorld)	arXiv:2508.15144 abstract	-	verified
+base_final Table 3.1	DeepAgent-32B GAIA	53.3	arXiv:2510.21618 (html results)	-	verified
+base_final Sec 3.3	OS-Harm task count	150	arXiv:2506.14866 abstract	-	verified
+base_final Table 3.1 notes	95% half-widths	+-4.4 (n=500,p=.49); +-14 (n=30,p=.80)	binomial 1.96*sqrt(p(1-p)/n)	-	recomputed
+base_final Table 3.1 (old rows)	Early RL agents 20.0; SFT-only 34.2; Agent-FLAN 32.1/45.1; GPT-4V 18.4; o1-preview 74.4; GAIA GPT-4 30.2	various	none attributable	-	removed

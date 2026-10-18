@@ -85,3 +85,26 @@ def test_seed_runner_no_eval_and_failed_exit(tmp_path):
     assert result.returncode == 1 and not marker.exists()
     assert 'exit_status=1' in result.stdout
     assert subprocess.run(['bash',str(runner),'--seed','oops','--','true'],capture_output=True).returncode==2
+
+
+@pytest.mark.parametrize('case', ['empty', 'all_invalid', 'two_eligible', 'constant_size'])
+def test_permutation_main_undefined_is_not_significant(tmp_path, monkeypatch, case):
+    m = importlib.import_module('scaling_law_iter109b')
+    monkeypatch.setattr(m, 'RES', tmp_path)
+    monkeypatch.setattr(m, 'N_PERM', 99)
+    monkeypatch.setattr(m, 'N_BOOT', 19)
+    anchors = [dict(name=name, lambda_3p=.1+i*.1, R_inf=.4+i*.02,
+                    rmse=.01, valid=case != 'all_invalid', lambda_lo=.01, lambda_hi=1.)
+               for i, name in enumerate(list(m.MODELS_PARAMS_B)[:3])]
+    if case == 'empty': anchors = []
+    if case == 'two_eligible': anchors = anchors[:2]
+    if case == 'constant_size':
+        monkeypatch.setattr(m, 'MODELS_PARAMS_B', {a['name']: 8. for a in anchors})
+    (tmp_path/'scaling_law_iter109_meta.json').write_text(json.dumps({'anchors': anchors}))
+    m.main()
+    result = json.loads((tmp_path/'scaling_law_iter109b_meta.json').read_text())
+    for name in ('lambda_vs_N', 'R_inf_vs_N'):
+        test = result['E_permutation_test'][name]
+        assert test['status'] == 'not_evaluable'
+        assert np.isnan(test['p_two_sided'])
+        assert test['rejects_H0_at_0.05'] is False

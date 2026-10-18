@@ -248,3 +248,25 @@ def test_reported_stable_seed():
 def test_tex_escaping():
     from zvf_gradient_coupling import tex_escape
     assert tex_escape('a_b%')==r'a\_b\%'
+
+
+def test_iter50_producer_renderer_chain(tmp_path, monkeypatch):
+    import zvf_iter50 as producer
+    import zvf_iter50_fig as renderer
+    root = SCRIPTS.parents[1]
+    assert Path(producer.INPUT) == root/'platform_hybrid/experiments/results/variance_mitigation.tsv'
+    assert Path(producer.OUT_LAGGED).parent == renderer.RESULTS
+    assert renderer.analysis is producer
+    source = tmp_path/'input.tsv'
+    source.write_text('method\tseed\tstep\tzvf\treward_mean\theldout_acc\tcollapse\n' +
+                     '\n'.join(f'grpo\t1\t{i}\t{.9-i*.01}\t{.1+i*.01}\t{.8-i*.001}\t0' for i in range(80)))
+    monkeypatch.setattr(producer, 'INPUT', str(source))
+    out = tmp_path/'results'
+    monkeypatch.setattr(producer, 'OUT_DIR', str(out))
+    for key in ('OUT_LAGGED', 'OUT_INTEGRALS', 'OUT_SUMMARY', 'OUT_PREDICTIONS'):
+        monkeypatch.setattr(producer, key, str(out/Path(getattr(producer, key)).name))
+    monkeypatch.setattr(renderer, 'FIG_DIR', tmp_path/'figures')
+    producer.main()
+    renderer.main()
+    assert (tmp_path/'figures/zvf_iter50.png').is_file()
+    assert float(renderer.read_rows(producer.OUT_LAGGED)[0]['r']) < 0

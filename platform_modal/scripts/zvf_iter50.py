@@ -62,7 +62,7 @@ from collections import defaultdict
 # Constants
 # ---------------------------------------------------------------------------
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.abspath(os.path.join(HERE, ".."))
+ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 INPUT = os.path.join(ROOT, "platform_hybrid/experiments/results/variance_mitigation.tsv")
 
 OUT_DIR = os.path.join(ROOT, "platform_hybrid/experiments/results")
@@ -387,6 +387,7 @@ def write_predictions(out_path, lagged_agg, integ_agg, last10_map, by_ms, integ_
 # ---------------------------------------------------------------------------
 def main():
     by_ms = load_variance_mitigation(INPUT)
+    os.makedirs(OUT_DIR, exist_ok=True)
     print(f"[iter50] loaded {sum(len(v) for v in by_ms.values())} per-step rows "
           f"across {len(by_ms)} (method, seed) pairs")
 

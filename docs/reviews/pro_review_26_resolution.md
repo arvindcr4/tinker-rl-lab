@@ -25,3 +25,11 @@ The source ends at “Fix: Use” in the permutation/bootstrap calibration discu
 9 CPU-only tests passed: full mocked-input iter109b metadata/TSV agreement and nonzero Monte Carlo p-values; AIC-column fixture; unavailable fake-dip inference in both modules; Ward-label permutation and largest-gap boundary; optimizer failure/empty bootstrap; constant-trace identifiability; canonical entrypoint isolation; failed-seed status and shell-metacharacter literal handling.
 
 No training, provider jobs, historical data modification, or stored-result/figure regeneration was performed. Future valid unimodality inference, profile intervals, and an end-to-end synthetic recovery study require separately specified research protocols; current outputs do not claim those procedures were run.
+
+## Independent audit: unavailable permutation fits
+
+Empty, all-excluded, fewer-than-three, and constant-size cohorts now produce
+unavailable p-values and non-rejection, with explicit metadata status. NaN
+comparisons can no longer generate a spurious minimum Monte Carlo p-value.
+The generic fixed conclusion was replaced by an interpretation tied to the
+per-regression results. Four temporary-input main tests cover these cases.

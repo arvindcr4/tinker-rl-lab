@@ -45,3 +45,11 @@ No historical result tables, stored experiment JSON, paper figures, or generated
 Figure tests decode real PNG rasters with Pillow and check plausible dimensions; PDFs are emitted by Matplotlib and validated with pdfinfo when installed (not the retired handwritten writer). Iter66 main is exercised entirely on mocked observations in a temporary directory. No canonical output is regenerated.
 
 Additional compatibility run: review26 (9), review28 (23), review29 (25), review29 mains (7), for 64 tests total. All 64 passed in the final combined run.
+
+## Independent audit: iter50 producer/renderer contract
+
+Iter50 now resolves its raw input and versioned tables under the authoritative
+repository-level `platform_hybrid/experiments/results` directory. The renderer
+uses the producer's actual output path constants. A synthetic main-to-main test
+writes only temporary data and verifies a real figure from the generated table;
+it also asserts the default root contract. No historical artifacts were run.

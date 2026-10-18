@@ -7,8 +7,9 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-ROOT=Path(__file__).resolve().parents[1]
-RESULTS=ROOT/'experiments'/'results'
+import zvf_iter50 as analysis
+ROOT=Path(__file__).resolve().parents[2]
+RESULTS=ROOT/'platform_hybrid'/'experiments'/'results'
 FIG_DIR=ROOT/'figures'/'review28_v2'
 
 
@@ -41,8 +42,8 @@ def render(lag_rows, prediction_rows, output_dir):
 
 
 def main():
-    render(read_rows(RESULTS/'zvf_iter50_lagged_corr_review28_v2.tsv'),
-           read_rows(RESULTS/'zvf_iter50_predictions_review28_v2.tsv'),FIG_DIR)
+    render(read_rows(analysis.OUT_LAGGED),
+           read_rows(analysis.OUT_PREDICTIONS),FIG_DIR)
 
 
 if __name__=='__main__':main()

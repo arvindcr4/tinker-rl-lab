@@ -122,3 +122,18 @@ def test_offset_comparison_optimizer_failure_is_unavailable(monkeypatch):
     assert m.comparison_winner({'aicc': 1.}, result) == 'not_evaluable'
     assert m.comparison_winner(result, result) == 'not_evaluable'
     assert m.comparison_winner({'aicc': 2.}, {'aicc': 1.}) == '3p'
+
+
+def test_versioned_scaling_roots_bind_hybrid_sources():
+    root = SCRIPTS.parents[1]/'platform_hybrid'
+    for n in ('109', '109b', '121', '125', '129', '133', '137'):
+        m = importlib.import_module('scaling_law_iter'+n)
+        output = getattr(m, 'RES', getattr(m, 'RESULTS_DIR', None))
+        assert output == root/'experiments/results/review26_v2'
+        if n != '109b':
+            traces = getattr(m, 'TR', getattr(m, 'TRACE_DIR', None))
+            assert traces == root/'experiments/tinker-runs/results'
+        tree = ast.parse((SCRIPTS/f'scaling_law_iter{n}.py').read_text())
+        assert not any(isinstance(node, ast.Expr) and isinstance(node.value, ast.Call)
+                       and isinstance(node.value.func, ast.Attribute) and node.value.func.attr == 'mkdir'
+                       for node in tree.body)

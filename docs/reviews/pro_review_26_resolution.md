@@ -37,3 +37,9 @@ per-regression results. Four temporary-input main tests cover these cases.
 A follow-up failure-injection test covers the iter137 two-parameter comparator:
 optimizer failure returns a fixed unavailable schema, and either unavailable
 AICc makes the comparison not evaluable rather than awarding the failed 2p fit.
+
+Versioned iter109/109b/121/125/129/133/137 now use the repository's authoritative
+`platform_hybrid` trace/result roots, preserving the `review26_v2` output isolation.
+The former `platform_modal/experiments/tinker-runs/results` default does not exist.
+Import-time directory creation was moved into main, and a regression checks all
+seven path contracts without reading any stored trace or executing analysis.

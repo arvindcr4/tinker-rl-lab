@@ -72,13 +72,11 @@ import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
 from _analysis_common import write_rows_tsv as _write_tsv, ols
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TR = ROOT / "experiments" / "tinker-runs" / "results"
 RES = ROOT / "experiments" / "results" / "review26_v2"
 FIG = ROOT / "figures" / "review26_v2"
 PAPER_FIG = ROOT / "paper" / "figures" / "review26_v2"
-FIG.mkdir(parents=True, exist_ok=True)
-PAPER_FIG.mkdir(parents=True, exist_ok=True)
 
 # 12-anchor pool (matches iter101 / iter105)
 MODELS: dict[str, tuple[float, str, str]] = {
@@ -226,6 +224,9 @@ def bootstrap_slope(x, y, n_boot=N_BOOT):
 
 
 def main() -> None:
+    FIG.mkdir(parents=True, exist_ok=True)
+    PAPER_FIG.mkdir(parents=True, exist_ok=True)
+    RES.mkdir(parents=True, exist_ok=True)
     raw = load_traces()
     fits = {name: fit_sat_3p(t, y) for name, (t, y) in raw.items()}
 

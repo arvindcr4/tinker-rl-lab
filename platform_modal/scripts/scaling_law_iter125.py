@@ -80,11 +80,10 @@ import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
 from _analysis_common import saturation, write_rows_tsv as _write_tsv
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
 RESULTS_DIR = REPO / "experiments" / "results" / "review26_v2"
 FIG_DIR = REPO / "figures" / "review26_v2"
-FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 MODELS: dict[str, tuple[str, float, str]] = {
     "Qwen3.5-4B":            ("scale_gsm8k_qwen3.5-4b.json",      4.0,   "dense-instruct"),
@@ -245,6 +244,7 @@ def uniform_cdf_deviation(values, rng=None, n_boot=0, n_grid=256):
 # ---------- main ----------
 
 def main() -> None:
+    FIG_DIR.mkdir(parents=True, exist_ok=True)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(SEED)
 

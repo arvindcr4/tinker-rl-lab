@@ -44,7 +44,7 @@ from pathlib import Path
 import numpy as np
 from _analysis_common import write_rows_tsv as _write_tsv, ols as _ols
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2] / "platform_hybrid"
 RES = ROOT / "experiments" / "results" / "review26_v2"
 
 SEED = 1092026

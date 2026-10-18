@@ -78,11 +78,10 @@ from scipy.optimize import curve_fit  # noqa: E402
 from scipy.stats import mannwhitneyu, spearmanr  # noqa: E402
 from _analysis_common import ols
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
 RESULTS_DIR = REPO / "experiments" / "results" / "review26_v2"
 FIG_DIR = REPO / "figures" / "review26_v2"
-FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 MODELS: dict[str, tuple[str, float, str, str]] = {
     # name               : (trace_file,                       params_B, family, capability)
@@ -222,6 +221,7 @@ def comparison_winner(fit_2p, fit_3p):
 
 
 def main() -> None:
+    FIG_DIR.mkdir(parents=True, exist_ok=True)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     # ------------------------------------------------------------------
     # Load per-step reward traces (same source as iter117).

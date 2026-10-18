@@ -28,14 +28,36 @@ reward saturates above $0.98$; and
 \emph{(ii)} Qwen2.5-1.5B-Instruct on GSM8K-CoT, $30$ steps, $n{=}3$
 seeds per algorithm -- a harder reasoning task where mean reward
 is held near $0.25$ throughout training. The GSM8K-CoT sampler uses
-\texttt{MAX\_NEW=200}; step-0 completions are already close to that cap, so
+\texttt{MAX\_NEW=200}; step-0 mean completions are already $194$ tokens
+(mean over the six runs) and the largest per-step mean in every run is
+$196$--$199$ tokens ($98.2\%$--$99.5\%$ of the cap), so
 all no-inflation claims below are cap-bounded rather than evidence about an
-uncensored long-form regime.
+uncensored long-form regime. The arithmetic sampler uses \texttt{MAX\_NEW=10};
+per-step means there never exceed $8$ tokens ($7.95$ at most).
+
+\paragraph{Estimators as implemented.}
+Both arms share the model, LoRA adapter ($r{=}16$ on $q,v$), group size
+$G{=}8$, a token-level PPO clipped surrogate $\ell_{i,t}$ (clip $0.2$,
+two inner epochs) and the evaluation, and differ only in the two
+Dr.~GRPO changes~\cite{tong2025drgrpo}. For a batch of $B$ completions
+$o_i$ with binary reward $r_i$ and group mean and standard deviation
+$\mu_g,\sigma_g$:
+\begin{align*}
+\text{GRPO:}\quad & \hat A_i = \frac{r_i-\mu_g}{\sigma_g+\epsilon}, &
+\mathcal L &= \frac{1}{B}\sum_i \frac{1}{|o_i|}\sum_{t\le |o_i|}\ell_{i,t},\\
+\text{Dr.~GRPO:}\quad & \hat A_i = r_i-\mu_g, &
+\mathcal L &= \frac{1}{B\,T_{\max}}\sum_i \sum_{t\le |o_i|}\ell_{i,t},
+\end{align*}
+with $\epsilon=10^{-6}$ and $T_{\max}=\texttt{MAX\_NEW}$. No advantage
+clipping is applied in either arm. Drivers:
+\texttt{experiments/modal/modal\_drgrpo\_vs\_grpo.py} and
+\texttt{experiments/modal/modal\_drgrpo\_gsm8k\_cot.py}.
+
 For each run we compute three Spearman correlations:
 $\rho(\texttt{step}, \texttt{len})$ (length trend across training),
 $\rho(\texttt{step}, \texttt{reward})$ (reward trend across
-training), and $\rho(\texttt{len}, \texttt{reward})$ evaluated
-\emph{within} the run (per-step coupling); we also report the
+training), and $\rho(\texttt{len}, \texttt{reward})$ computed across
+the step means of a single run; we also report the
 first-half / second-half mean difference for both length and
 reward, and a binary \emph{length-bias flag} that fires when
 length grows (slope $>0$ or $\rho>0$) \emph{and} reward stays flat
@@ -51,13 +73,32 @@ $\rho(\texttt{step}, \texttt{len})$ is consistently \emph{negative}
 on both tasks (Table~\ref{tab:length-bias-summary}): $-0.405$ (sd
 $0.176$) for GRPO on arithmetic and $-0.622$ (sd $0.301$) for GRPO
 on GSM8K-CoT -- the model becomes \emph{shorter} as training
-proceeds, not longer. The Dr.~GRPO correction attenuates this
-negative length trend on the hard task ($-0.355$ vs $-0.622$ for
-GRPO), but does \emph{not} reverse its sign. The within-run
+proceeds, not longer; all 16 runs have a negative trend. On the hard
+task the Dr.~GRPO mean trend is less negative ($-0.355$ vs $-0.622$),
+but this difference is not resolved at three seeds per arm (difference
+$+0.27$, Welch $t=1.17$, df $=3.9$, $p=0.31$; exact label-permutation
+$p=0.30$ over all $20$ relabelings, whose smallest attainable two-sided
+value is $0.10$). With $n_1{=}n_2{=}3$ a two-sample $t$ test has $80\%$
+power only for $|d|\ge 3.07$ ($|d|\ge 2.02$ at $n_1{=}n_2{=}5$), so
+non-significance here is not evidence of equivalence. The within-run
 coupling $\rho(\texttt{len}, \texttt{reward})$ is also negative on
 all four (algo, task) cells ($-0.293$ to $-0.618$). This is an
 association across step means, not across completions within a step;
 shared training trends can generate it without a causal length effect.
+
+\paragraph{Held-out accuracy (seed-level).}
+On GSM8K-CoT each run greedily scores the same fixed $200$-item test slice
+before and after training. The per-seed gain (post $-$ pre) is
+$+6.2$ points for GRPO (SE $0.44$, $95\%$ CI $[+4.3, +8.1]$, df $=2$)
+and $+5.0$ points for Dr.~GRPO (SE $0.50$, CI $[+2.8, +7.2]$, df $=2$).
+The between-arm difference ($-1.2$ points, Welch $t=-1.75$, df $=3.9$,
+$p=0.16$; exact permutation $p=0.30$) is not resolved, and with three
+seeds per arm this is not evidence that the arms are equivalent. These
+intervals reflect training-seed variation only, on one fixed item slice.
+On arithmetic (post-training only; the driver has no pre-RL evaluation)
+held-out accuracy is $0.987$ (SE $0.003$) for GRPO and $0.992$
+(SE $0.003$) for Dr.~GRPO over five seeds (Welch $p=0.27$), at ceiling.
+Values: \texttt{experiments/results/review\_2026-10-18/P4\_length\_bias/heldout\_seed\_level.tsv}.
 
 \begin{table}[htbp]
 \centering
@@ -81,8 +122,9 @@ length trend (negative = compression); $\rho(\text{step},\text{reward})$ is the 
 $\rho(\text{len},\text{reward})$ is the within-run coupling evaluated across steps. All four
 algo/task cells have \emph{negative} length trends -- the model becomes more concise as training
 proceeds -- and none of the cells crosses the Dr.~GRPO signature threshold (positive length trend
-plus flat-or-down reward trend). The within-run coupling is also negative throughout, so longer
-completions are associated with \emph{lower} per-step reward in our data, not higher.}
+plus flat-or-down reward trend). The within-run coupling is also negative throughout: steps with
+longer \emph{mean} completions have \emph{lower} mean reward. This is an across-step association,
+not a completion-level one. Entries are mean $\pm$ sd over seeds.}
 \label{tab:length-bias-summary}
 \end{table}
 

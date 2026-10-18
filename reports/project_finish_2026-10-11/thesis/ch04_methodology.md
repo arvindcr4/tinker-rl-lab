@@ -57,7 +57,11 @@ with $\tau=10^{-6}$ in squared reward units when rewards are normalised to $[0,1
 
 The following reference is a source-only specification for new reporting. Historical scores and code paths have not been rewritten to match it.
 
+\Needspace{18\baselineskip}
+
 ```
+import numpy as np
+
 def zvf(rewards, tau=1e-6):
     r = np.asarray(rewards, dtype=np.float64)
     if r.ndim != 2 or r.shape[0] == 0 or r.shape[1] < 2:

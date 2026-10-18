@@ -15,7 +15,15 @@
 \usepackage{amsmath,amssymb}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\IfFileExists{newtxtext.sty}{\usepackage{newtxtext,newtxmath}}{\usepackage{mathptmx}} % Times-compatible portable fallback
+% Emergency map profile contains mathptmx/Latin Modern, not newtx mappings.
+\newcommand{\ThesisFallbackFonts}{\IfFileExists{mathptmx.sty}{\usepackage{mathptmx}}{}}
+\ifdefined\ThesisPortableFonts
+  \ThesisFallbackFonts
+\else
+  \IfFileExists{newtxtext.sty}{%
+    \IfFileExists{newtxmath.sty}{\usepackage{newtxtext,newtxmath}}{\ThesisFallbackFonts}%
+  }{\ThesisFallbackFonts}
+\fi
 \usepackage{graphicx}
 \usepackage{array}
 \usepackage{booktabs}

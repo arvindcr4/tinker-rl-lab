@@ -7,7 +7,9 @@ Prepared 11 October 2026 for Arvind C R's M.Tech Project Phase 2 evaluation; cor
 > **Provisional numbers.** The v2 same-stack GRPO-vs-PPO figures (thesis Table 6.2) use 7 of 10 PPO seeds; the exposure-matched PPO arm is pending. See `validation/samestack_v2/README.md` for the update path.
 
 
-Start with the [corrected thesis](thesis/Thesis_Report_ArvindCR_2026-10-11_REVIEW.pdf),
+The current full-thesis revision is [18 October](thesis/Thesis_Report_ArvindCR_2026-10-18_REVISED_REVIEW.pdf); see its [source/build instructions](thesis/README.md). The dated sections, deck and review-pack receipts below describe the earlier October package, not a refreshed audit of the current thesis.
+
+For that historical package, the supporting documents are
 the [12-slide defense](defense/TinkerRL_PES_Defense_2026-10-11.pptx), and the
 [reviewer guide](REVIEWER_GUIDE.md). Rehearse with [defense preparation](DEFENSE_PREP.md)
 and the [full speaking brief](defense/DEFENSE_BRIEF.md).
@@ -81,18 +83,23 @@ The [validation summary](validation/SUMMARY.md) records the software checks.
 [Acceptance review](ACCEPTANCE.md) records the final review scope and remaining limits.
 [WORKFLOW.md](WORKFLOW.md) and [decisions.tsv](decisions.tsv) record the pstack workflow.
 
-## Rebuild the current documents
-
-From the full repository checkout with its locked development environment:
+## Build and check the current thesis
 
 ```sh
-uv run --no-sync python tools/audit_thesis_numbers.py --check \
-  --thesis-dir reports/project_finish_2026-10-11/thesis
-python3 reports/project_finish_2026-10-11/thesis/build_thesis.py
-python3 tools/build_pes_review_pack.py
+bash reports/project_finish_2026-10-11/thesis/build_portable.sh
+python3 reports/project_finish_2026-10-11/check_pdf.py
 ```
 
-The thesis build uses Pandoc and Tectonic with cached resources and untrusted mode.
-It needs an existing compatible TeX cache. Rebuilding changes PDF hashes, so inspect
-the new PDF and refresh its quality receipt before assembling a new review archive.
-The included deck is editable. The historical deck and its source builder remain separate.
+The shared `thesis/current_artifact.json` points both commands and the package
+consumer at the same dated PDF and separate current layout-check receipt.
+A recheck resets visual review to pending; rendered inspection is a separate step.
+
+The broader October PES review archive is historical. Its old numeric audit,
+deck receipt and manifest have not been reissued for this source revision. The
+packager fails closed until a current claim registry and its evidence bindings
+pass; renaming an old PASS would be invalid. A diagnostic replay against revised
+sources found legacy unbound/withdrawn claim spans and unavailable primary
+artifacts, so no new broad-pack certificate is issued. New diagnostics must use
+explicit separate `--json` and `--appendix` output paths, because the audit tool
+writes both outputs even with `--check`. The standalone source ZIP delivered with
+the revised thesis remains rebuildable without those unavailable historical data.

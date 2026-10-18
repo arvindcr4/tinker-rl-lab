@@ -314,7 +314,7 @@ scores are from `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md`, except the six row
 | E12 AppBench | — | as above | AppBench deployment | `CLOSED_EXTERNAL` |
 | E13 BALROG (finish 2026-09-27) | native BALROG evaluator, local | as above | BALROG | 255/255 episodes; 26.1% progression — exploratory override; scope attempted |
 | E13 OpenReward (original) | — | as above | OpenReward held-out games | externally blocked, no closure record |
-| E14 Omni-MATH | native scorer | as above | Omni-MATH | canonical accuracy 2,271/4,428 (51.29%); denominator erratum in §8.2 — `COMPLETE_TERMINAL_NOTE` |
+| E14 Omni-MATH | native scorer | as above | Omni-MATH | native judged-row accuracy 2,271/4,426 (51.31%); conservative all-disposition diagnostic 2,271/4,428 (51.29%); denominator erratum in §8.2 — `COMPLETE_TERMINAL_NOTE` |
 | E14 FrontierMath (original) | — | as above | FrontierMath hosted | `CLOSED_EXTERNAL` |
 
 : E1–E14 historical campaign inventory. The 27 September rows are exploratory protocol-override results outside the original prospective acceptance gates; the E4 full-rerun account is excluded as unverified. Receipt references do not guarantee payload availability in this package.

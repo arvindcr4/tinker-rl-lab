@@ -13,6 +13,7 @@ Run: ./build_portable.sh (recommended), or python3 build_thesis.py
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
@@ -24,7 +25,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FIGDIR = os.path.join(HERE, "figures")
 MASTER = os.path.join(HERE, "thesis_master.tex")
 BUILD = os.path.join(HERE, "build")
-PDF = os.path.join(HERE, "Thesis_Report_ArvindCR_2026-10-18_REVISED_REVIEW.pdf")
+with open(os.path.join(HERE, "current_artifact.json"), encoding="utf-8") as stream:
+    CURRENT_ARTIFACT = json.load(stream)
+PDF = os.path.join(HERE, CURRENT_ARTIFACT["pdf"])
 
 CHAPTERS = [
     ("ch01_introduction.md", "Foundations"),
@@ -709,14 +712,40 @@ def break_bare_identifiers(master: str) -> tuple[str, int]:
     return ident.sub(rep, master), counter
 
 
+def bibliography_style(engine: str) -> str:
+    """Resolve a usable local style without querying Tectonic's private bundle."""
+    explicit = os.environ.get("THESIS_BIB_STYLE")
+    choices = [explicit] if explicit else ["IEEEtran", "ieeetr"]
+    if any(not re.fullmatch(r"[A-Za-z0-9_-]+", style) for style in choices):
+        raise ValueError("THESIS_BIB_STYLE must be a simple bibliography style name")
+    if engine == "tectonic":
+        return choices[0]
+    for style in choices:
+        found = subprocess.run(
+            ["kpsewhich", style + ".bst"], capture_output=True, text=True, check=False
+        )
+        if found.returncode == 0 and found.stdout.strip():
+            return style
+    raise ValueError("missing bibliography style: " + " or ".join(choices))
+
+
 def main() -> int:
     EVIDENCE.clear()
     engine = os.environ.get("THESIS_TEX_ENGINE") or ("tectonic" if shutil.which("tectonic") else "latexmk")
     if engine not in {"tectonic", "latexmk"}:
         raise ValueError("THESIS_TEX_ENGINE must be tectonic or latexmk")
-    missing_tools = [name for name in ("pandoc", engine) if not shutil.which(name)]
+    required_tools = ["pandoc", engine]
+    if engine == "latexmk":
+        required_tools += ["pdflatex", "bibtex", "kpsewhich"]
+    missing_tools = [name for name in required_tools if not shutil.which(name)]
     if missing_tools:
         print("missing required tools: " + ", ".join(missing_tools), file=sys.stderr)
+        return 1
+
+    try:
+        bib_style = bibliography_style(engine)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
         return 1
 
     have = available_figures()
@@ -745,6 +774,8 @@ def main() -> int:
     print(f"figures available: {len(have)}")
 
     preamble = open(os.path.join(HERE, "preamble.tex"), encoding="utf-8").read()
+    if os.environ.get("THESIS_PORTABLE_FONTS") == "1":
+        preamble = "\\def\\ThesisPortableFonts{}\n" + preamble
     # numeric, sorted citations for the IEEE reference list; natbib must load
     # before hyperref
     preamble = preamble.replace(
@@ -791,7 +822,7 @@ def main() -> int:
     # IEEE-style numbered reference list, before the appendices (PES template)
     pieces.append("\n\\cleardoublepage\n\\phantomsection\n"
                   "\\addcontentsline{toc}{chapter}{References}\n"
-                  f"\\bibliographystyle{{{os.environ.get('THESIS_BIB_STYLE', 'IEEEtran')}}}\n\\bibliography{{references}}\n")
+                  f"\\bibliographystyle{{{bib_style}}}\n\\bibliography{{references}}\n")
     pieces.append("\n\\appendix\n")
     for md_name, part in APPENDICES:
         emit(md_name, part)

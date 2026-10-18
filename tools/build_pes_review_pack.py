@@ -90,12 +90,22 @@ def publish_archive(target, snapshot, modes=None):
         Path(temporary).unlink(missing_ok=True)
 
 
+def current_thesis_paths(pack: Path) -> tuple[Path, Path]:
+    """Resolve the current PDF and its separate review receipt from one contract."""
+    config = json.loads((pack / "thesis/current_artifact.json").read_text())
+    return pack / "thesis" / config["pdf"], pack / config["pdf_check_receipt"]
+
+
 def main() -> int:
     audit = json.loads((PACK / "thesis/provenance_audit.json").read_text())
-    if audit["status"] != "PASS":
-        raise ValueError("The current thesis number audit must pass before packaging")
-    pdf = PACK / "thesis/Thesis_Report_ArvindCR_2026-10-11_REVIEW.pdf"
-    quality = json.loads((PACK / "validation/pdf_checks.json").read_text())
+    if audit.get("schema_version") != "thesis-number-provenance-v2" or audit["status"] != "PASS":
+        raise ValueError(
+            "The legacy PES pack requires a current, structurally bound v2 number audit; "
+            "the preserved historical PASS does not authorize packaging this revision. "
+            "See thesis/README.md for the current standalone build."
+        )
+    pdf, pdf_review = current_thesis_paths(PACK)
+    quality = json.loads(pdf_review.read_text())
     if record(pdf)["sha256"] != quality["sha256"] or quality["visual_review"] != "PASS":
         raise ValueError("The PDF must match its completed scoped visual review")
     deck = PACK / "defense/TinkerRL_PES_Defense_2026-10-11.pptx"
@@ -121,7 +131,8 @@ def main() -> int:
             and path.name != "thesis_master.tex"
         ):
             selected.add(path)
-    for name in ("SUMMARY.md", "pdf_checks.json", "deck_checks.json", "delivery_checks.json"):
+    selected.add(pdf_review)
+    for name in ("SUMMARY.md", "deck_checks.json", "delivery_checks.json"):
         selected.add(PACK / "validation" / name)
     # same-stack v2 analysis (thesis §6.5.5, Table 6.2) and the per-run records it reads
     selected.update(path for path in (PACK / "validation/samestack_v2").iterdir() if path.is_file())
@@ -184,8 +195,8 @@ def main() -> int:
     audit_name = (PACK / "thesis/provenance_audit.json").relative_to(ROOT).as_posix()
     validate_audit(json.loads(snapshot[audit_name]), snapshot)
     # Visual reviews are checked again against the bytes actually selected.
-    for document, review in ((pdf, "pdf_checks.json"), (deck, "deck_checks.json")):
-        quality = json.loads(snapshot[(PACK / "validation" / review).relative_to(ROOT).as_posix()])
+    for document, review in ((pdf, pdf_review), (deck, PACK / "validation/deck_checks.json")):
+        quality = json.loads(snapshot[review.relative_to(ROOT).as_posix()])
         if (
             hashlib.sha256(snapshot[document.relative_to(ROOT).as_posix()]).hexdigest()
             != quality["sha256"]

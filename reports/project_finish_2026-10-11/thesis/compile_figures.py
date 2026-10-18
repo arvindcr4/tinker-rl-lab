@@ -22,7 +22,21 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FIGDIR = os.path.join(HERE, "figures")
 
 
-def compile_one(name: str, force: bool = False) -> tuple[str, bool, str]:
+def select_engine() -> str:
+    engine = os.environ.get("THESIS_TEX_ENGINE") or (
+        "tectonic" if shutil.which("tectonic") else "latexmk"
+    )
+    if engine not in {"tectonic", "latexmk"}:
+        raise ValueError("THESIS_TEX_ENGINE must be tectonic or latexmk")
+    required = [engine] + (["pdflatex"] if engine == "latexmk" else [])
+    missing = [name for name in required if not shutil.which(name)]
+    if missing:
+        raise ValueError("missing required tools: " + ", ".join(missing))
+    return engine
+
+
+def compile_one(name: str, force: bool = False, engine: str | None = None) -> tuple[str, bool, str]:
+    engine = engine or select_engine()
     tex = os.path.join(FIGDIR, name + ".tex")
     pdf = os.path.join(FIGDIR, name + ".pdf")
     if not os.path.isfile(tex):
@@ -32,7 +46,6 @@ def compile_one(name: str, force: bool = False) -> tuple[str, bool, str]:
         return name, True, "cached"
     try:
         with tempfile.TemporaryDirectory(prefix=f".{name}-", dir=FIGDIR) as outdir:
-            engine = os.environ.get("THESIS_TEX_ENGINE") or ("tectonic" if shutil.which("tectonic") else "latexmk")
             command = (["tectonic", "-X", "compile", tex, "--outdir", outdir, "--only-cached", "--untrusted"] if engine == "tectonic" else
                        ["latexmk", "-pdf", "-interaction=nonstopmode", "-halt-on-error", "-no-shell-escape", f"-outdir={outdir}", tex])
             r = subprocess.run(
@@ -66,8 +79,10 @@ def main() -> int:
     args = ap.parse_args()
     if args.j < 1:
         ap.error("-j must be at least 1")
-    if not (shutil.which("tectonic") or shutil.which("latexmk")):
-        print("missing required tool: tectonic or latexmk", file=sys.stderr)
+    try:
+        engine = select_engine()
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
         return 1
 
     if not os.path.isdir(FIGDIR):
@@ -88,7 +103,7 @@ def main() -> int:
     print(f"compiling {len(names)} figures with {args.j} workers ...")
     ok, bad = [], []
     with cf.ThreadPoolExecutor(max_workers=args.j) as ex:
-        for name, good, msg in ex.map(partial(compile_one, force=args.force), names):
+        for name, good, msg in ex.map(partial(compile_one, force=args.force, engine=engine), names):
             (ok if good else bad).append((name, msg))
             print(f"  {'OK  ' if good else 'FAIL'} {name:32s} {msg}")
 

@@ -75,7 +75,7 @@ Six unchanged original files resolved five named author-side recovery gaps; thei
 
 Bounded stored-payload checks cover 29 explicit file-reference records across 27 targets, 1,979 E8 archive/local bindings and 525 E10 archive-member bindings. The selected 1,967 E8 grades and 97 E10 traces reproduce the stored success counts of 450 and 88. E8's 1,259 unparsed-answer total remains diagnostic-supported rather than independently recalculated from the reduced grade rows. These are structural, hash and tally checks, not model execution, scorer reruns or independent semantic grading.
 
-For E14, the canonical all-disposition result is 2,271/4,428 (51.29%). Section 8.2 explains the denominator-label erratum; no source bytes or judgments are changed. The omitted full payload still prevents a fresh public-package recount or independent semantic grading.
+For E14, the native judged-row accuracy is 2,271/4,426 (51.31%); counting the two unjudged rows as failures gives the conservative all-disposition diagnostic 2,271/4,428 (51.29%). Section 8.2 explains the denominator-label erratum; no source bytes or judgments are changed. The omitted full payload still prevents a fresh public-package recount or independent semantic grading.
 
 The recovered finish-era chronology says the E4 full rerun had not launched at its September 21 snapshot, while the later secondary summary dates the claimed execution to that day. Their ordering is not established. With no primary job receipt or exact launch timestamp, the full-rerun outcome and trajectory counts are excluded as empirical evidence. Original training-log payloads, the dirty source diff and content-level decontamination also remain unresolved.
 

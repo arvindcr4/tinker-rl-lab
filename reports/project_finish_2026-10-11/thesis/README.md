@@ -23,7 +23,7 @@ Run `./build_portable.sh` here. It requires Python 3.11+, Pandoc and either Tect
 with its populated cache or latexmk/pdfLaTeX/BibTeX with the relevant TeX packages.
 The fallback supports the selected Linux image's installed TeX files using a local
 `build/texmf` format/font cache; it does not install software or run network jobs.
-It uses Times-compatible fonts and `ieeetr` when newtx/IEEEtran are unavailable.
+It preserves a usable system font map when present. Emergency synthesized maps select the known-mapped mathptmx/Latin Modern profile rather than newtx. Outside that profile both newtx text/math packages must exist, otherwise mathptmx is checked and Latin Modern retained as the final fallback. The builder detects `IEEEtran` or `ieeetr` for latexmk, and rejects an explicitly requested missing style.
 All figures are compiled from their `.tex` sources; the obsolete E4 histogram is
 not injected. The output is
 `Thesis_Report_ArvindCR_2026-10-18_REVISED_REVIEW.pdf`.
@@ -42,3 +42,18 @@ archive, credentials or provider exports. Existing public author details are
 preserved. The Library delivery has a separate source-package integrity manifest,
 full PDF, chapter excerpts and point-by-point review response. File hashes establish
 file identity, not historical execution authenticity or scientific validity.
+
+## Current PDF consumers and historical review-pack boundary
+
+`current_artifact.json` is the shared output/receipt contract for the thesis build,
+`../check_pdf.py` and `tools/build_pes_review_pack.py`. From the repository root,
+`python3 reports/project_finish_2026-10-11/check_pdf.py` checks the newly built PDF
+and writes `validation/thesis_2026-10-18/pdf_checks.json`; `--pdf` and `--receipt`
+allow explicit alternatives. An automatic rerun resets visual review to pending.
+The historical `validation/pdf_checks.json` is preserved, not relabelled.
+
+The broad October PES pack also requires its separate number-audit and deck
+bindings. Those historical receipts have not been regenerated for this revision;
+the pack must fail closed on stale bindings. The delivered standalone thesis
+source ZIP is the current rebuildable source package, not a refreshed broad PES
+review archive or a new numerical-audit PASS.

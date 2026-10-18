@@ -1,4 +1,5 @@
 """Aggregate-budget regressions: temporary files and disabled provider fakes only."""
+
 import json
 import sys
 from types import SimpleNamespace
@@ -96,7 +97,12 @@ def test_remote_calls_fail_closed_even_with_credentials_and_small_estimates(tmp_
     tinker = archive.archive_tinker(tmp_path, tmp_path, 100, 0, 0, budget)
     hf = archive.archive_hf(tmp_path, 200, budget)
     assert wandb["skipped"] == ["metadata", "history", "files"]
-    assert wandb["reason"] == tinker["reason"] == hf["remote_metadata_note"] == "unsupported_bounded_remote_transfer"
+    assert (
+        wandb["reason"]
+        == tinker["reason"]
+        == hf["remote_metadata_note"]
+        == "unsupported_bounded_remote_transfer"
+    )
     assert tinker["downloaded_count"] == 0
     assert budget.written_bytes == 0
     assert not list(tmp_path.iterdir())
@@ -121,7 +127,20 @@ def test_main_exhaustion_persists_counted_versioned_receipt(tmp_path, monkeypatc
     root = tmp_path / "out"
     monkeypatch.setattr(archive, "REPO_ROOT", tmp_path / "repo")
     cap = archive.CONTROL_RESERVE_BYTES + 10
-    monkeypatch.setattr(sys, "argv", ["archive", "--output-root", str(root), "--archive-budget-gb", str(cap / 1024**3), "--reserve-free-gb", "0", "--skip-hf"])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "archive",
+            "--output-root",
+            str(root),
+            "--archive-budget-gb",
+            str(cap / 1024**3),
+            "--reserve-free-gb",
+            "0",
+            "--skip-hf",
+        ],
+    )
     assert archive.main() == 2
     receipt = json.loads((root / "MANIFEST.json").read_text())
     assert receipt["protocol"] == archive.ARCHIVE_PROTOCOL
@@ -132,7 +151,7 @@ def test_main_exhaustion_persists_counted_versioned_receipt(tmp_path, monkeypatc
 
 @pytest.mark.parametrize("seconds", [0, -1, float("inf"), float("nan")])
 def test_invalid_deadlines_fail_before_writes(seconds):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="invalid archive budget"):
         archive.ArchiveBudget(100, seconds)
 
 
@@ -180,7 +199,7 @@ def test_redaction_replacement_obeys_same_budget(tmp_path, monkeypatch):
     root.mkdir()
     budget = archive.ArchiveBudget(20)
     archive.hardlink_or_copy(str(source), str(root / "file.json"), budget)
-    with pytest.raises(archive.BudgetExceeded):
+    with pytest.raises(archive.BudgetExceeded, match="byte_budget"):
         archive.redact_secrets(root, budget)
     assert not list(root.glob(".redacted-*"))
     assert source.read_text() == "synthetic-fixture"
@@ -190,7 +209,20 @@ def test_redaction_replacement_obeys_same_budget(tmp_path, monkeypatch):
 def test_main_success_counts_receipt_itself_and_refuses_reuse(tmp_path, monkeypatch):
     monkeypatch.setattr(archive, "REPO_ROOT", tmp_path / "missing-repo")
     root = tmp_path / "out"
-    monkeypatch.setattr(sys, "argv", ["archive", "--output-root", str(root), "--archive-budget-gb", "0.001", "--reserve-free-gb", "0", "--skip-hf"])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "archive",
+            "--output-root",
+            str(root),
+            "--archive-budget-gb",
+            "0.001",
+            "--reserve-free-gb",
+            "0",
+            "--skip-hf",
+        ],
+    )
     assert archive.main() == 0
     receipt = json.loads((root / "MANIFEST.json").read_text())
     assert receipt["status"] == "local_complete_remote_skipped"

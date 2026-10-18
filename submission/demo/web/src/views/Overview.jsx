@@ -11,7 +11,7 @@ export default function Overview() {
     {
       k: "GRPO vs PPO-style, same stack", big: s ? sgn(s.md, 3) : "Pending", go: "samestack",
       pill: [c?.equivalent ? "good" : "warn", c?.equivalent ? "Adjusted equivalence established" : "No confirmatory verdict"],
-      text: s ? `${s.n} validated paired seeds; mean difference ${sgn(s.md, 3)}, 95% difference CI [${sgn(s.lo, 3)}, ${sgn(s.hi, 3)}], 90% equivalence CI [${sgn(s.eqLo, 3)}, ${sgn(s.eqHi, 3)}]. Adjusted combined TOST p = ${pfmt(s.holmTost)}. ${c.decision}.` :
+      text: s ? `${s.n} validated paired seeds; ${MODEL.completion.selected}/${MODEL.completion.planned ?? "unknown"} planned runs selected, ${MODEL.completion.missing ?? "unknown"} missing; mean difference ${sgn(s.md, 3)}, 95% difference CI [${sgn(s.lo, 3)}, ${sgn(s.hi, 3)}], 90% equivalence CI [${sgn(s.eqLo, 3)}, ${sgn(s.eqHi, 3)}]. Adjusted combined TOST p = ${pfmt(s.holmTost)}. ${c.decision}.` :
         `Canonical analysis ${MODEL.analysis?.status || "unavailable"}. Historical means are descriptive; missing run identity, protocol or ordered-item hashes cannot be repaired by matching seed numbers.`,
     },
     {

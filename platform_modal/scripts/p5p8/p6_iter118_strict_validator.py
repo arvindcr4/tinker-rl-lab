@@ -59,12 +59,15 @@ def main(argv=None):
     global REGISTRY
     ap = __import__("argparse").ArgumentParser(description=__doc__)
     ap.add_argument("--strict", action="store_true", default=True)
-    ap.add_argument("--registry", type=pathlib.Path, default=REGISTRY)
-    ap.add_argument("--output", type=pathlib.Path,
-                    default=RESULTS / "p6_iter118_strict_audit.json")
+    ap.add_argument("--registry", type=pathlib.Path, default=PROJECT_ROOT / "registry")
+    ap.add_argument("--output", type=pathlib.Path)
     ap.add_argument("--input-sha256", help="expected content hash of registry inputs")
     args = ap.parse_args(argv)
     REGISTRY = args.registry.resolve()
+    if args.output is None:
+        if REGISTRY != (PROJECT_ROOT / "registry").resolve():
+            ap.error("--output is required for a non-default --registry")
+        args.output = RESULTS / "p6_iter118_strict_audit.json"
     sys.path.insert(0, str(WORKTREE / "platform_hybrid" / "registry"))
     from query import registry_input_manifest, registry_manifest_sha256, VALIDATOR_VERSION, load
     try:
@@ -74,7 +77,7 @@ def main(argv=None):
         return 1
     manifest = registry_input_manifest(REGISTRY)
     digest = registry_manifest_sha256(manifest)
-    if args.input_sha256 and args.input_sha256 != digest:
+    if args.input_sha256 is not None and args.input_sha256 != digest:
         print("registry input manifest mismatch", file=sys.stderr)
         return 1
     deltas = {record_id for record_id, rec in validated_records.items()

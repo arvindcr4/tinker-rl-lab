@@ -92,6 +92,9 @@ def drive_session(session, runs, *, stage=STAGE, command=colab, source=None, par
     # Session creation is explicit to the CLI; this helper never guesses by a
     # substring match against another session's name.
     source = source or capture_source()
+    if source.get("status") != "observed" or not source.get("commit") or not source.get("dirty_hash"):
+        raise ValueError("observed source provenance is required before upload")
+    execution_failures, preservation_failures = [], []
     expected = {"environment": "colab", "protocol_id": PROTOCOL_ID, "protocol_hash": PROTOCOL_HASH,
                 "source_commit": source["commit"], "source_dirty_hash": source["dirty_hash"]}
     with tempfile.TemporaryDirectory(prefix="samestack-upload-") as directory:
@@ -111,19 +114,36 @@ def drive_session(session, runs, *, stage=STAGE, command=colab, source=None, par
             command("upload", "-s", session, str(local), remote)
         for offset in range(0, len(parsed), batch):
             group = parsed[offset:offset + batch]
-            waves = -(-len(group) // parallel)
+            waves = len(group)  # GPU admission may serialize the entire batch.
             # Remote core validates every requested identity; staging never skips runs.
-            command("exec", "-s", session, "-f", str(RUNNER), "--timeout", str(14400 * waves),
-                    "--env", "RUNS=" + ",".join(f"{arm}:{seed}" for arm, seed in group),
-                    "--env", "SMOKE=0", "--env", f"PARALLEL={parallel}")
+            try:
+                result = command("exec", "-s", session, "-f", str(RUNNER), "--timeout", str(14400 * waves),
+                                 "--env", "RUNS=" + ",".join(f"{arm}:{seed}" for arm, seed in group),
+                                 "--env", "SMOKE=0", "--env", f"PARALLEL={parallel}", check=False)
+                if getattr(result, "returncode", 0):
+                    execution_failures.append(RuntimeError(f"remote batch failed: {group}"))
+            except (OSError, subprocess.SubprocessError) as exc:
+                execution_failures.append(exc)
             for arm, seed in group:
                 name = f"{arm}_s{seed}"
-                preserve_run(session, name, stage, expected=expected, command=command)
-                print(f"PRESERVED {name}", flush=True)
+                try:
+                    preserve_run(session, name, stage, expected=expected, command=command)
+                    print(f"PRESERVED {name}", flush=True)
+                except (OSError, ValueError, subprocess.SubprocessError) as exc:
+                    preservation_failures.append(exc)
+    if preservation_failures:
+        # Preserve successful siblings but retain remote evidence for retries.
+        # Do not automatically retry paid execution or assume a provider TTL.
+        print(f"Session {session} was not stopped: {len(preservation_failures)} bundle(s) "
+              "could not be preserved. Retry artifact downloads or explicitly stop the "
+              "session after reviewing evidence loss; provider charges may continue.", file=sys.stderr)
+        raise preservation_failures[0]
     for arm, seed in parsed:
         validate_completion(Path(stage) / f"{arm}_s{seed}" / f"{arm}_s{seed}.json", expected=expected)
     if stop_session:
         command("stop", "-s", session)
+    if execution_failures:
+        raise execution_failures[0]
 
 
 def capture_source():

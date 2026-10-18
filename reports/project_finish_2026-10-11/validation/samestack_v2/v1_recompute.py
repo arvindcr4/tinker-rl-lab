@@ -10,8 +10,11 @@ from pathlib import Path
 
 
 def load_runs(directory):
-    from platform_hybrid.experiments.samestack_contract import strict_json_load
-    return strict_json_load(Path(directory) / "samestack_gsm8k_cot_full.json")["runs"]
+    from platform_hybrid.experiments.samestack_contract import _unique_object
+    # Historical logs contain bare NaN in unused ZVF diagnostics. Consumed
+    # score fields remain strictly checked by validate_runs.
+    return json.loads((Path(directory) / "samestack_gsm8k_cot_full.json").read_text(),
+                      parse_constant=lambda value: None, object_pairs_hook=_unique_object)["runs"]
 
 
 def validate_runs(records):

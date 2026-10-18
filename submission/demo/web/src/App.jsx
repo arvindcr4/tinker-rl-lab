@@ -86,7 +86,7 @@ export default function App() {
           <summary>Provenance ({sources.length} source files, SHA-256)</summary>
           <div className="table-box"><table><tbody>
             {sources.map((s) => (
-              <tr key={s.path}><td className="mono">{s.path}</td><td>{s.role || "source"}</td><td className="mono">{s.sha256 || "missing"}</td></tr>
+              <tr key={s.path}><td className="mono">{s.path}</td><td>{s.roles?.length ? s.roles.join("; ") : (s.role || "source")}</td><td className="mono">{s.sha256 || "missing"}</td></tr>
             ))}
           </tbody></table></div>
           <p className="small">Missing or unverified coverage: {missing.length ? missing.join("; ") : "none reported"}</p>

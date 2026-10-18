@@ -14,11 +14,11 @@ def completion_log_probs(model, full, attention, prompt_length, want_features=Fa
     output = model(input_ids=full, attention_mask=attention,
                    position_ids=position_ids_from_attention(attention),
                    output_hidden_states=want_features, use_cache=False)
-    logits = output.logits[:, :-1, :].float()
-    targets = full[:, 1:]
+    logits = output.logits[:, prompt_length - 1:-1, :].float()
+    targets = full[:, prompt_length:]
     log_probs = F.log_softmax(logits, dim=-1).gather(-1, targets.unsqueeze(-1)).squeeze(-1)
     features = output.hidden_states[-1][:, prompt_length - 1, :].detach().float() if want_features else None
-    return log_probs[:, prompt_length - 1:], features
+    return log_probs, features
 
 
 def clipped_response_loss(log_probs, old_log_probs, advantages, mask, clip, batch_size):

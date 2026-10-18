@@ -162,9 +162,9 @@ def _variant(model):
     if not model:
         return None
     name = model.lower().split("/")[-1]
-    if re.search(r"(?:^|[-_.])base(?:$|[-_.])", name):
+    if re.search(r"(?:^|[-_.])base(?:$|[-_.\s(])", name):
         return "base"
-    if re.search(r"(?:^|[-_.])instruct(?:$|[-_.])", name) or name.endswith(("-inst", "-it")):
+    if re.search(r"(?:^|[-_.])instruct(?:$|[-_.\s(])", name) or name.endswith(("-inst", "-it")):
         return "instruct"
     return None
 

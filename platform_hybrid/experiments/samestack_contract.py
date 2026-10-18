@@ -139,7 +139,7 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
     logs = record.get("step_log")
     if not isinstance(logs, list) or len(logs) != recipe["n_steps"]:
         errors.append("step_log length must match n_steps")
-    elif any(not isinstance(row, dict) or row.get("step") != i for i, row in enumerate(logs)):
+    elif any(not isinstance(row, dict) or (type(row.get("step")) is not int or row["step"] != i) for i, row in enumerate(logs)):
         errors.append("step_log must have ordered consecutive step IDs")
     if isinstance(logs, list) and any(not isinstance(row, dict) or not _number(row.get("mean_reward"))
                                      or not 0 <= row["mean_reward"] <= 1 for row in logs):
@@ -148,7 +148,7 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
     warm_count = (1 if smoke else 4) if isinstance(arm, str) and arm.startswith("ppo") else 0
     if not isinstance(warm, list) or len(warm) != warm_count:
         errors.append("warm_log length does not match arm critic warm-up")
-    elif any(not isinstance(row, dict) or row.get("warm_step") != i for i, row in enumerate(warm)):
+    elif any(not isinstance(row, dict) or (type(row.get("warm_step")) is not int or row["warm_step"] != i) for i, row in enumerate(warm)):
         errors.append("warm_log must have ordered consecutive warm_step IDs")
     critic = record.get("critic")
     if arm in ("ppo", "ppo_8x8"):
@@ -222,7 +222,9 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
             elif manifest["config_hash"] != canonical_hash(config):
                 errors.append("config_hash mismatch")
             for key in set(ROOT_CONFIG) | set(config):
-                if key not in config or config[key] != record.get(key):
+                if key not in config:
+                    unknown.append(f"effective_config.{key} unavailable")
+                elif config[key] != record.get(key):
                     errors.append(f"manifest effective_config contradicts root {key}")
             for key in ("model_revision", "tokenizer_revision", "dataset_revision"):
                 if not isinstance(config.get(key), str) or not REVISION.fullmatch(config[key]):
@@ -262,7 +264,8 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
                                            "repetition_penalty": 1.0, "num_beams": 1,
                                            "do_sample": mode == "train", "max_new_tokens": recipe["max_new"]}
                     for key, required in required_generation.items():
-                        if generation.get(key) != required:
+                        if (generation.get(key) != required
+                                or isinstance(generation.get(key), bool) != isinstance(required, bool)):
                             errors.append(f"generation.{mode}.{key} contradicts policy")
                     eos = generation.get("eos_token_id")
                     if (not isinstance(eos, list) or not eos
@@ -287,8 +290,11 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
             unknown.append("ordered test item hash unavailable")
         elif manifest["ordered_test_item_hash"] != canonical_hash(ids):
             errors.append("ordered test item identity/hash mismatch")
-        if ids is not None and isinstance(texts, dict) and "test_item_ids" in texts and texts["test_item_ids"] != ids:
-            errors.append("text item order contradicts manifest")
+        if ids is not None and isinstance(texts, dict):
+            if "test_item_ids" not in texts:
+                unknown.append("text test_item_ids unavailable")
+            elif texts["test_item_ids"] != ids:
+                errors.append("text item order contradicts manifest")
         train_ids = manifest.get("train_item_ids")
         if not isinstance(train_ids, list) or not train_ids or not all(isinstance(v, str) and v for v in train_ids):
             unknown.append("ordered train item IDs unavailable")

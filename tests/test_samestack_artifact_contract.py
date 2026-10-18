@@ -195,6 +195,7 @@ def test_download_failure_after_json_retries_and_preserves_bundle(tmp_path):
 
 def test_session_does_not_stop_when_artifact_preservation_fails(tmp_path, monkeypatch):
     source = {
+        "status": "observed",
         "commit": "a" * 40,
         "dirty_hash": "b" * 64,
         "source_files": {
@@ -280,6 +281,7 @@ def test_existing_json_never_skips_colab_execution(tmp_path, monkeypatch):
     existing = tmp_path / "ppo_s42.json"
     existing.write_text('{"incomplete": true}')
     source = {
+        "status": "observed",
         "commit": "a" * 40,
         "dirty_hash": "b" * 64,
         "source_files": {
@@ -361,6 +363,7 @@ def test_mean_reward_cannot_silently_bypass_summary_recomputation():
 
 def test_batched_colab_preserves_each_bundle_before_stop(tmp_path, monkeypatch):
     source = {
+        "status": "observed",
         "commit": "a" * 40,
         "dirty_hash": "b" * 64,
         "source_files": {
@@ -395,6 +398,7 @@ def test_batched_colab_preserves_each_bundle_before_stop(tmp_path, monkeypatch):
 
 def test_batched_colab_transfer_failure_never_stops_session(tmp_path, monkeypatch):
     source = {
+        "status": "observed",
         "commit": "a" * 40,
         "dirty_hash": "b" * 64,
         "source_files": {

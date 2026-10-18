@@ -274,6 +274,6 @@ def analyze_runs(records, plan=None, *, completion_validated_run_ids=(), input_a
                           "five_pair_minimum_two_sided_signflip_p": .0625,
                           "item_only": "Conditional on observed training seeds; not training-run uncertainty",
                           "pooled_mcnemar": "Nonprimary descriptive diagnostic; repeated seed-item observations are not independent",
-                          "equivalence": "90% TOST CI and combined max(one-sided p) Holm-adjusted across the fixed family; +/-2pp margin has no supplied scientific justification",
+                          "equivalence": f"90% TOST CI and combined max(one-sided p) Holm-adjusted across the fixed family; +/-{plan['equivalence_margin'] * 100:g}pp margin; " + (f"justification: {plan['margin_justification']}" if plan.get("margin_justification") else "no supplied scientific justification"),
                           "prespecification": "Retrospective repair; no prospective registration claim",
                           "power": "Pilot unadjusted paired-t sensitivity only; actual-design joint seed/item, family and TOST simulation remains unmet without justified variance/correlation assumptions"}}

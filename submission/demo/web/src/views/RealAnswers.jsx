@@ -49,8 +49,8 @@ export default function RealAnswers() {
         <h2>Read the actual answers</h2>
         <p className="small">Stored greedy answers from seed {EX.seed} on the GSM8K test split: the base model, then after GRPO and the PPO-style variant. Historical examples are aligned by stored index; absent protocol/item hashes remain unverified and these examples do not establish a paired inferential cohort. Each answer is re-graded here, in your browser, by a port of the analysis grader. Pick an outcome pattern; the page shows the first {EX.per_pattern} test items of that pattern, so the examples are fixed by rule rather than chosen by hand.</p>
         <div className="row" style={{ marginTop: 10 }}>
-          <span className={`pill wrap ${regraded.every(Boolean) ? "good" : "bad"}`}>{regraded.filter(Boolean).length}/{regraded.length} shown answers re-graded to their stored score</span>
-          {CURRENT_CHECK ? <span className={`pill wrap ${CURRENT_CHECK.coverage_complete && CURRENT_CHECK.disagreements === 0 ? "good" : "warn"}`}>{CURRENT_CHECK.completions.toLocaleString("en")} stored answers from {CURRENT_CHECK.runs_checked ?? CURRENT_CHECK.runs} runs: {CURRENT_CHECK.disagreements ?? "unknown"} disagreements; coverage {CURRENT_CHECK.coverage_complete ? "complete" : "incomplete"}</span>
+          <span className={`pill wrap ${regraded.length === 0 ? "warn" : regraded.every(Boolean) ? "good" : "bad"}`}>{regraded.filter(Boolean).length}/{regraded.length} shown answers re-graded to their stored score</span>
+          {CURRENT_CHECK ? <span className={`pill wrap ${CURRENT_CHECK.disagreements > 0 ? "bad" : CURRENT_CHECK.coverage_complete && CURRENT_CHECK.disagreements === 0 ? "good" : "warn"}`}>{CURRENT_CHECK.completions.toLocaleString("en")} stored answers from {CURRENT_CHECK.runs_checked ?? CURRENT_CHECK.runs} runs: {CURRENT_CHECK.disagreements ?? "unknown"} disagreements; coverage {CURRENT_CHECK.coverage_complete ? "complete" : "incomplete"}</span>
             : <span className="pill wrap warn">Full audit for the current grading specification unavailable; rebuild the export</span>}
         </div>
       </div>

@@ -32,7 +32,7 @@ def canonical_hash(value):
 
 
 PROTOCOL_HASH = canonical_hash(PROTOCOL_SPEC)
-_NUMBER = re.compile(r"[+-]?(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?\Z")
+_NUMBER = re.compile(r"[+-]?(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?\Z", re.ASCII)
 _BOX = re.compile(r"\\boxed\s*\{")
 _LATEX_FRACTION = re.compile(r"([+-]?)\\(?:dfrac|tfrac|frac)\s*\{([^{}]+)\}\s*\{([^{}]+)\}\Z")
 

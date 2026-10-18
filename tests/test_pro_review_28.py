@@ -272,10 +272,11 @@ def test_iter50_producer_renderer_chain(tmp_path, monkeypatch):
     assert float(renderer.read_rows(producer.OUT_LAGGED)[0]['r']) < 0
 
 
-def test_average_precision_nonfinite_scores_do_not_hang():
-    from _review28_statistics import average_precision
-    assert average_precision([.5, np.nan], [1, 0]) == 1.
-    assert average_precision([np.nan, .5], [0, 1]) == 1.
-    assert np.isnan(average_precision([np.nan], [1]))
-    assert average_precision([.5, np.inf, .1], [1, 1, 2]) == 1.
-    with pytest.raises(ValueError): average_precision([.5], [1, 0])
+@pytest.mark.parametrize("name", ["average_precision", "auc"])
+def test_precision_nonfinite_scores_fail_explicitly(name):
+    import _review28_statistics as stats
+    metric = getattr(stats, name)
+    for scores, labels in [([.5, np.nan], [1, 0]), ([np.nan, .5], [0, 1]),
+                           ([np.nan], [1]), ([.5, np.inf, .1], [1, 1, 2]),
+                           ([.5], [1, 0]), ([.5], [2])]:
+        with pytest.raises(ValueError): metric(scores, labels)

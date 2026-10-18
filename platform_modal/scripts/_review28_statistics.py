@@ -17,8 +17,10 @@ def spearman(x, y):
 
 def auc(scores, labels):
     scores, labels = np.asarray(scores, float), np.asarray(labels, float)
-    mask = np.isfinite(scores) & np.isin(labels, [0, 1])
-    scores, labels = scores[mask], labels[mask]
+    if scores.ndim != 1 or labels.shape != scores.shape:
+        raise ValueError("scores and labels must be equally sized one-dimensional arrays")
+    if not np.isfinite(scores).all() or not np.isin(labels, [0, 1]).all():
+        raise ValueError("scores must be finite and labels must be binary")
     n1, n0 = sum(labels == 1), sum(labels == 0)
     if not n1 or not n0:
         return float('nan')
@@ -29,8 +31,9 @@ def average_precision(scores, labels):
     scores, labels = np.asarray(scores, float), np.asarray(labels, float)
     if scores.ndim != 1 or labels.shape != scores.shape:
         raise ValueError("scores and labels must be equally sized one-dimensional arrays")
-    mask = np.isfinite(scores) & np.isin(labels, [0, 1])
-    pairs = sorted(zip(scores[mask], labels[mask]), reverse=True)
+    if not np.isfinite(scores).all() or not np.isin(labels, [0, 1]).all():
+        raise ValueError("scores must be finite and labels must be binary")
+    pairs = sorted(zip(scores, labels), reverse=True)
     positive = sum(label == 1 for _, label in pairs)
     if not positive:
         return float('nan')

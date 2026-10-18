@@ -184,7 +184,7 @@ All fourteen lanes now appear in Table 5 with actual benchmark names and sevente
 - E9 MLE-bench lite: medals 0/5 versus 0/5; above-median 0/5 versus 1/5; both p = 1
 - E10 AgentHarm public: refusal 21/30 versus 20/30; harm score .2467 versus .2362; benign score .7799 versus .7944 on a separate 30 benign tasks. The two paired difference intervals include zero
 - E11 VerilogEval: 33/50 versus 33/50; p = 1
-- E12 App-Bench: 113/151 versus 118/151 rubric passes, six applications; app-level sign-flip p = .25
+- E12 App-Bench: 113/151 versus 118/151 rubric passes, six applications; two-sided equal-app pass-rate sign-flip p = .25
 - E13 BALROG: 25.5062388592% versus 23.6310160428%, 26 episodes/five environments; difference 1.8752228164 pp, retained 95% interval [−2.727, 7.091]
 - E14 Omni-MATH: 43/100 versus 44/100; p = 1
 
@@ -214,7 +214,7 @@ Verified: Xiang Deng is first author of arXiv 2509.16941. Current v2 section 3.3
 
 ### C4. Tinker reference and archive
 
-Verified current announcement: Thinking Machines Lab, “Announcing Tinker,”1 October 2025, https://thinkingmachines.ai/news/announcing-tinker/. The landing page https://thinkingmachines.ai/tinker/ is live. A read-back verified archive snapshot is https://web.archive.org/web/20261007202106/https://thinkingmachines.ai/news/announcing-tinker/ . This is a platform announcement, not a scholarly article; availability is checked at audit time, not guaranteed forever. Verification receipt is included.
+Verified current announcement: Thinking Machines Lab, “Announcing Tinker,”1 October 2025, https://thinkingmachines.ai/news/announcing-tinker/. The landing page https://thinkingmachines.ai/tinker/ is live. The retained audit reports a successful read-back of archive snapshot https://web.archive.org/web/20261007202106/https://thinkingmachines.ai/news/announcing-tinker/ . This is a platform announcement, not a scholarly article; the original audit date is retained, but its exact check time was not captured and the current web-reader recheck was unsuccessful. The verification receipt distinguishes reported historical availability from fresh confirmation; continued availability is not guaranteed.
 
 ## Prior ICICC reviewer requirements retained
 
@@ -243,3 +243,7 @@ Verified current announcement: Thinking Machines Lab, “Announcing Tinker,”1 
 8. Registration/payment/final submission by the authorized person, after privately verifying the paper-specific dates and final preparation instructions. No payment, registration, submission or signature is represented as completed
 
 Official public guidance: https://www.icicc-conf.com/downloads and https://www.icicc-conf.com/registrations. These links do not establish completion of this paper’s requirements.
+
+## Publication-review clarification
+
+The E12 p-value is explicitly a two-sided test of equal-app pass-rate differences: 16/64 exact sign assignments, p = .25. A test of raw passed-rubric count differences instead gives .50 and is a different statistic. No historical result was changed. E1-R now explicitly identifies the 133 ungraded items counted as failures under its retained operational metric and distinguishes the conditional 1/57 score. All 21 publication-review dispositions and reproducible arithmetic are in verification/pr25-review-resolutions.md and verification/e12-signflip-arithmetic.json.

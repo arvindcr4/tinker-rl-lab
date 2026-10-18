@@ -1,8 +1,11 @@
 {
+  "checked_at": "2026-10-18T12:26:05.337546+00:00",
   "checked_date": "2026-10-18",
-  "scope": "Editorial/build checks, existing-count arithmetic and unchanged historical receipt hash; not new benchmark verification or venue-policy certification",
+  "scope": "Editorial/build checks, source-parsed arithmetic, exact recount of retained app summaries and optional historical receipt hash; not new benchmark execution or venue-policy certification",
   "pages_including_references": 12,
   "paper_size": "A4",
+  "extractable_text_characters": 35398,
+  "rendered_title_verified": true,
   "cited_references": 37,
   "references_dated_2024_or_2025": 18,
   "references_dated_2026": 9,
@@ -18,13 +21,16 @@
   "original_contract_rows": 14,
   "reported_replacement_identities": 9,
   "primary_paired_outcome_contrasts": 17,
+  "source_parsed_arithmetic_checks": 14,
+  "e12_equal_app_pass_rate_two_sided_p": 0.25,
+  "e12_counts_checked_against_original_receipt": true,
   "historical_ledger_check_status": "checked existing repository record",
   "historical_ledger_sha256_unchanged": true,
   "known_nonfatal_diagnostics": [
     "LLNCS/amsmath: Unable to redefine math accent vec",
-    "Underfull bibliography lines; render inspected"
+    "Underfull bibliography lines; inspect render separately"
   ],
-  "pdf_sha256": "5c6ceae1c937417d4f5799bd3e1cd916cbb481c09a37da975544b1a33fffb188",
-  "source_sha256": "e16a70de3acd7e18ca8cb0dac75ecdce2dbe82c35d9ed06b7267a92055bb9a6f",
-  "bibliography_sha256": "d2b072eb58950e30b680159b1eb8293d4ddef74dc22cca704c80a9881717bf3c"
+  "pdf_sha256": "3ee033cb5b2800dd557d5484026ef608e6067358208e063acdee500f0d7ac41c",
+  "source_sha256": "48a6e3322146abb4428c94630cc6fb99ef189633ded1ee90cf08621702918adb",
+  "bibliography_sha256": "05dfb8a5032cf012bb1a3088f525013e12fa4bfe3d5c1b8a366e96edb8762ca5"
 }

@@ -27,8 +27,12 @@ if ! kpsewhich article.cls >/dev/null || ! kpsewhich lmodern.sty >/dev/null || !
       "$dist/fonts/map/dvips/amsfonts/symbols.map" \
       "$extra/fonts/map/dvips/lm/lm.map" > "$cache/maps/pdftex.map"
   if [[ ! -s "$cache/formats/pdflatex.fmt" ]]; then
-    ( cd "$cache/formats"; pdftex -ini -etex -jobname=pdflatex -progname=pdflatex \
-        -interaction=nonstopmode -halt-on-error pdflatex.ini > format-build.log )
+    if ! ( cd "$cache/formats"; pdftex -ini -etex -jobname=pdflatex -progname=pdflatex \
+        -interaction=nonstopmode -halt-on-error pdflatex.ini > format-build.log 2>&1 ); then
+      echo "pdfLaTeX format build failed; see $cache/formats/format-build.log" >&2
+      tail -n 40 "$cache/formats/format-build.log" >&2
+      exit 1
+    fi
   fi
 fi
 latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=build paper_camera.tex

@@ -326,7 +326,9 @@ include new infrastructure/thinner scaffolds (E1/E2/E5/E6), context/tool-text
 changes (E1/E9), and thinking mode, architecture and retry-seed changes (E13).
 Infrastructure-aborted attempts were rerun in E2/E9; E13 restarted killed or
 hung episodes with new seeds. The denominators count final task/episode
-outcomes, not every execution attempt. WebArena has 108 ungraded judge-dependent tasks: 90/812 is a lower bound,
+outcomes, not every execution attempt. E1-R counts 120 patch/evaluation errors
+and 13 empty patches as failures: 1/190 is operational resolved/attempted,
+versus conditional 1/57 graded (0.0175). WebArena has 108 ungraded tasks: 90/812 is a lower bound,
 with a logical upper bound 198/812 = 0.244, not imputed successes. Tau3's
 8/72 = 0.111 excludes infrastructure errors and is only sensitivity.
 Earlier multilingual waves cover the other 110 tasks at 4/110 with different
@@ -375,7 +377,7 @@ E13 has five environments, unlike the later six-environment run.
 \begin{table}[t]
 \caption{All same-engine pilot lanes: trained/base outcomes. Scope names identify
 public subsets or substitutes, not completed original contracts. $p$ denotes
-exact McNemar except E12's six-app sign-flip test. Intervals are retained paired
+two-sided exact McNemar except E12's equal-app pass-rate sign-flip test. Intervals are retained paired
 difference intervals, not equivalence bounds.}
 \label{tab:paired}\centering\small\setlength{\tabcolsep}{3pt}
 \begin{tabularx}{\textwidth}{@{}l Y r l l@{}}\toprule

@@ -1,10 +1,8 @@
 # Bibliography verification and citation plan
 
-Historical preparation note: its reference counts describe an earlier draft. The final revised manuscript has 37 cited entries; see citation-review-2026-10-18.md and quality-report.json.
+Historical preparation note, reviewed 18 October 2026. The recommendations below describe an earlier 20-entry working plan, including 19 scholarly references and one platform announcement; they are not the current bibliography or a separate delivered file. The retained bibliography is `../refs.bib`, with expanded author metadata in `full-reference-metadata.bib`. The current manuscript cites all 37 entries: 28 `article`, `inproceedings`, or `techreport` records and nine `misc` records. See `citation-review-2026-10-18.md` and `reference-addendum.md` for the current state.
 
-Verified 18 October 2026. Deliverable: `verified-refs.bib` contains 19 scholarly references and one clearly labelled platform announcement. It preserves all 13 keys actually cited by the historical manuscript. Seven new, directly relevant citations bring the total to 20 entries (19 scholarly). No repository file was modified.
-
-## Recommended citation placements
+## Historical recommended citation placements
 
 1. Introduction, after reproducibility/disclosure literature: add `\cite{kapoor2024agentsmatter}` to a sentence such as: “Recent work on agent evaluation also identifies inadequate holdout sets, cost-blind comparisons and a lack of standardized evaluation practices.” Replace the unsupported novelty/generalization “The evaluation layer ... has not yet been held to the same standard” with a narrower claim that this campaign operationalizes these concerns through receipts, explicit coverage and fail-closed scope boundaries.
 2. Table 1, CORE-Bench row: `CORE-Bench~\cite{siegel2024corebench}`
@@ -14,7 +12,7 @@ Verified 18 October 2026. Deliverable: `verified-refs.bib` contains 19 scholarly
 6. E11 complete-scope paragraph, first mention: `VerilogEval~\cite{liu2023verilogeval,pinckney2025revisiting}`. Call the denominator “312 task instances across two 156-problem framings”; it is not 312 distinct underlying hardware problems. The official harness says the problems are identical and only task format changes.
 7. Externally blocked lanes paragraph, AgentHarm first mention: `AgentHarm~\cite{andriushchenko2025agentharm}`. Alternatively cite it in the discussion distinguishing harmful-task completion from AgentDojo benign utility. Do not imply AgentHarm is wholly private: this campaign's original private-task contract was blocked, while the benchmark also has a public release.
 
-Retain the existing 13 historical citation placements. With these seven placements, all 20 entries are actually cited. Do not use `\nocite{*}` to satisfy the minimum. If paper length is tight, the redundant DeepSeek-R1 citation can be removed while retaining DeepSeekMath as the GRPO source; 18 scholarly sources would remain. Its complete Nature author list contains 194 names and some BibTeX styles may print all of them.
+The initial plan retained 13 historical citation placements and proposed seven more. This was a placement recommendation, not evidence that a separate 20-entry bibliography was delivered or validated. The current manuscript has since changed: it cites all 37 keys in `../refs.bib`, does not use `\nocite{*}`, and does not include DeepSeek-R1. The source-specific notes below retain the historical review context; they do not imply that every reviewed source appears in the current manuscript.
 
 ## Main corrections
 
@@ -56,12 +54,12 @@ Retain the existing 13 historical citation placements. With these seven placemen
 
 No publisher DOI was shown for the ICLR records used. Their verified proceedings URLs are supplied instead; do not attach an arXiv DOI to a conference entry as though it identified the proceedings edition. arXiv-only entries use their actual DataCite-issued arXiv DOIs.
 
-## Checks
+## Current artifact checks
 
-- All 20 entries parse successfully with BibTeX 0.99d and a minimal validation style; author fields also pass `num.names$` parsing
-- Braces balanced; keys unique; no raw non-ASCII characters remain
-- All 13 historical manuscript citation keys resolve
-- Seven new keys need the placements above; after that there are 19 actually cited scholarly references
-- Eleven uncited historical entries were omitted, chiefly training/optimizer/framework references that did not support this evaluation paper's claims
-- The system's standard `plain.bst` was absent, so typography was not tested locally; the parent paper build must check `splncs04` rendering and length
-- Direct IEEE and OpenReview page fetches were intermittently blocked. Verification used public publisher proceedings pages, publisher-registered Crossref metadata and primary arXiv/paper pages, without solving a challenge or changing accounts
+Checked against the retained files on 18 October 2026:
+
+- `../refs.bib` and `full-reference-metadata.bib` each contain the same 37 unique keys; all 37 resolve to citations in `../paper_camera.tex`
+- `refs-review-additions.bib` contains verification copies of 15 keys already present in `../refs.bib`; it must not be appended to that file
+- Of the 28 `article`, `inproceedings`, or `techreport` records, 16 are dated 2024 or 2025; across all 37 records, 18 are dated 2024 or 2025
+- No validation claim is made for an unretained working bibliography. The final package build and `../verify_manuscript.py` provide the rendered-manuscript checks
+- Direct IEEE and OpenReview page fetches were intermittently blocked during the initial review. That review used public publisher proceedings pages, publisher-registered Crossref metadata and primary arXiv/paper pages

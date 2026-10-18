@@ -22,21 +22,21 @@ Author and venue approval of the change remain required. It has not been changed
 
 - Official base: `Qwen/Qwen3.6-35B-A3B`, immutable revision `995ad96eacd98c81ed38be0c5b274b04031597b0`
 - Exact adapter repository: `arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6`, revision `64444133c55d88c3f1bf0df8a2f5d7ac646125c8`
-- The shorter adapter name in the critique is incomplete. The pinned public API identifies both SHAs; model metadata and adapter config corroborate base name, LoRA rank/alpha32/32 and all-linear targets. No tensors were downloaded; reported LFS hash is server metadata. Adapter config's `revision=null` does not independently bind base SHA
+- The shorter adapter name in the critique is incomplete. The pinned public API identifies both SHAs; model metadata and adapter config corroborate base name, LoRA rank/alpha 32/32 and all-linear targets. No tensors were downloaded; reported LFS hash is server metadata. Adapter config's `revision=null` does not independently bind base SHA
 - Sources: `zvf-program/flagship/pavlovs_domain_contract.json`; `zvf-program/e5_successor27/resource_request_2026-09-19.json` immutable_identity; `verification/huggingface-public-metadata-2026-10-18.json`; full public URLs in `verification/citation-review-2026-10-18.md`
 - Training table source: `reports/public_revision_2026-10-11/thesis/ch09_results_campaign.md` section 8.1.1; provenance qualifications in `ch_back_campaign_detail.md` D.2 and `ch_back_reproducibility.md` B.11
-- Reported API-Bank-RLVR/SWE-Gym512-row pool, group 4, prompts/step 2, 40 steps yields80 draws/320 completions; LR 1e-5, Adam(.9,.95, 1e-8), prompt/output1536/384,T.7,top-p.95, seed 809
+- Reported API-Bank-RLVR and SWE-Gym; 512-row pool; 4 completions per group, 2 prompts per step and 40 steps yield 80 prompt draws/320 completions; learning rate 1e-5; Adam betas (.9, .95), epsilon 1e-8; prompt/output caps 1,536/384 tokens; temperature .7; top-p .95; seed 809
 - Original training identity receipt/logs are described as recovered/hash-matched in the retained report, but missing dirty source and exact consumed-row inventory remain unresolved. The declared source-list is not a complete consumed corpus or content-level E1–E14 overlap audit
 - No causal GRPO benefit, canonical-objective reconstruction, training-seed variance estimate or blanket held-out claim follows
 
 ## Original/replacement identity and dated states
 
 - Original registry: `zvf-program/flagship/pavlovs_domain_contract.json`; replacement definitions: `pavlovs_open_portfolio_overrides.json`; exact benchmark public sources: `verification/citation-review-2026-10-18.md`
-- Original E1–E14: SWE-bench Pro, FrontierSWEv1, SDAB, BankerToolBench, APEX-Agents, WebBench, BinaryAudit, LifeSciBench, MLE-bench, AgentHarm, VerilogEval, App-Bench, OpenReward games, FrontierMath
+- Original E1–E14: SWE-bench Pro, FrontierSWE v1, SDAB, BankerToolBench, APEX-Agents, WebBench, BinaryAudit, LifeSciBench, MLE-bench, AgentHarm, VerilogEval, App-Bench, OpenReward games, FrontierMath
 - Reported replacements: E1 SWE-bench Multilingual; E2 CORE-Bench; E5 tau3 banking_knowledge; E6 WebArena; E8 LAB-Bench; E9 ML-Dev-Bench; E10 AgentDojo benign; E13 BALROG; E14 Omni-MATH
 - E3/E7/E12 have proposed-only overlay replacements; these are not fabricated completed scopes in the figure
 - E6 original missing runtime/verifier prerequisites and E13 missing held-out game-family/seed/verifier contract are detailed in `verification/empirical-review-findings.md`. Public project existence does not close those historical contracts
-- Table 3 has all 14 original rows plus the 3 scored primary replacement rows. Table 4 has6 later replacements, with separately dated states. Figure 1 represents all 23 reported O/R scope identities and never substitutes R state for O state
+- Table 3 has all 14 original rows plus the 3 scored primary replacement rows. Table 4 has 6 later replacements, with separately dated states. Figure 1 represents all 23 reported O/R scope identities and never substitutes R state for O state
 - Historical six launch/quota blocks were followed by retained 27 September execution records. They are not presented as current quota blockers or publishable model findings
 
 ## Historical scores, diagnostics and corrections
@@ -89,3 +89,7 @@ The reported E11 original-protocol versus later-trained-vLLM comparison23/50→3
 `verification/citation-review-2026-10-18.md` verifies all original/replacement/pilot identities, exact model naming, official count/version caveats and Tinker live/archive URLs. `refs.bib` uses consistent first3+et-al display for lists longer than6; `verification/full-reference-metadata.bib` retains complete available verified metadata. All references in main bibliography are cited; publisher/arXiv/project entries are distinguished. Human reference review remains required by venue policy.
 
 `verify_manuscript.py` checks actual compiled pages, citations, fonts, tables, scopes, arithmetic and unchanged historical ledger hash. Its quality report does not certify scientific truth, similarity or publication-policy compliance. All pages must also be visually inspected after the final build.
+
+## Publication-review statistical clarification
+
+E12’s exact two-sided test uses equal-app pass-rate differences, with 16/64 equally likely sign assignments at least as extreme (p = .25). A raw-pass-count test instead gives .50; it is a different statistic, not a two-sided correction to the rate test. Per-app counts, denominators, source paths and both exact calculations are retained in verification/e12-signflip-arithmetic.json; verify_manuscript.py recomputes the rate test using rational arithmetic. No original result receipt was edited.

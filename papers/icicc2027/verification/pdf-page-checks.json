@@ -1,5 +1,5 @@
 {
-  "pdf_sha256": "5c6ceae1c937417d4f5799bd3e1cd916cbb481c09a37da975544b1a33fffb188",
+  "pdf_sha256": "3ee033cb5b2800dd557d5484026ef608e6067358208e063acdee500f0d7ac41c",
   "pages": [
     {
       "page": 1,
@@ -39,19 +39,19 @@
     },
     {
       "page": 7,
-      "text_characters": 2621,
+      "text_characters": 2615,
       "page_bounds_violations": [],
       "final_render_visually_inspected": true
     },
     {
       "page": 8,
-      "text_characters": 2623,
+      "text_characters": 2700,
       "page_bounds_violations": [],
       "final_render_visually_inspected": true
     },
     {
       "page": 9,
-      "text_characters": 2254,
+      "text_characters": 2349,
       "page_bounds_violations": [],
       "final_render_visually_inspected": true
     },
@@ -74,5 +74,5 @@
       "final_render_visually_inspected": true
     }
   ],
-  "visual_review": "All final page PNGs inspected; no clipping, overlap, missing glyphs or unreadable tables. Standard Springer line-breaking retained; bibliography begins on page10."
+  "visual_review": "All 12 final review-build PNGs inspected; no clipping, overlap, missing glyphs or unreadable tables. Affected manuscript pages 7 and 9 checked explicitly. Standard Springer layout retained; references begin on page 10."
 }

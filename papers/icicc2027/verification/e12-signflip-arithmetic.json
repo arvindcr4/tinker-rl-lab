@@ -1,0 +1,63 @@
+{
+  "scope": "Editorial exact arithmetic on retained app summaries; no model or grader execution and no stored-result modification",
+  "source": "outputs/e1_e14_small_scale_2026-09-26/E12/paired.json",
+  "source_fields": "per_task_passed; per_item rubric counts",
+  "historical_implementation": "tools/audit_thesis_numbers.py:176-186,450-456",
+  "apps": [
+    {
+      "app": "t1",
+      "trained_passed": 13,
+      "base_passed": 14,
+      "rubrics": 24
+    },
+    {
+      "app": "t2",
+      "trained_passed": 31,
+      "base_passed": 30,
+      "rubrics": 33
+    },
+    {
+      "app": "t3",
+      "trained_passed": 19,
+      "base_passed": 19,
+      "rubrics": 22
+    },
+    {
+      "app": "t4",
+      "trained_passed": 21,
+      "base_passed": 25,
+      "rubrics": 25
+    },
+    {
+      "app": "t5",
+      "trained_passed": 11,
+      "base_passed": 11,
+      "rubrics": 23
+    },
+    {
+      "app": "t6",
+      "trained_passed": 18,
+      "base_passed": 19,
+      "rubrics": 24
+    }
+  ],
+  "equal_app_pass_rate": {
+    "statistic": "absolute equal-app mean of trained-minus-base pass-rate differences; inclusive two-sided tail",
+    "observed_mean_fraction": "-703/19800",
+    "sign_assignments": 64,
+    "lower_tail_extreme": 8,
+    "two_sided_extreme": 16,
+    "one_sided_lower_p": 0.125,
+    "two_sided_p": 0.25
+  },
+  "raw_pass_count_sensitivity": {
+    "statistic": "absolute sum of per-app trained-minus-base passed-rubric counts; differs from equal-app pass-rate statistic",
+    "observed_sum": -5,
+    "sign_assignments": 64,
+    "lower_tail_extreme": 16,
+    "two_sided_extreme": 32,
+    "one_sided_lower_p": 0.25,
+    "two_sided_p": 0.5
+  },
+  "interpretation": "Neither statistic establishes a trained/base difference. Equal-app rate analysis is the reported primary cluster sensitivity; pooled rubric rates113/151 vs118/151 are descriptive and not its test statistic."
+}

@@ -1,0 +1,149 @@
+[
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUxl",
+    "comment_id": 4306977242,
+    "path": "papers/icicc2027/verification/bibliography-initial-verification.md",
+    "status": "fixed",
+    "response": "Removed the missing working-bibliography deliverable and unsupported validation claims. The historical note now identifies retained refs.bib and its current checks."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUxn",
+    "comment_id": 4306977244,
+    "path": "papers/icicc2027/verification/reference-addendum.md",
+    "status": "fixed",
+    "response": "Removed the nonexistent AgentBench, AgentBoard and original tau-bench additions. The addendum now matches the current 37 cited entries and defines its scholarly-type counts."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUxq",
+    "comment_id": 4306977248,
+    "path": "papers/icicc2027/README.md",
+    "status": "fixed",
+    "response": "README now distinguishes source checkout contents from generated build/paper_camera.pdf and build/paper_camera.bbl; separate delivery archives may contain copies."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUxw",
+    "comment_id": 4306977256,
+    "path": "papers/icicc2027/verification/revision-consistency-review.md",
+    "status": "clarified; proposed numeric correction not applicable",
+    "response": "The implemented statistic is the equal-app mean pass-rate difference, not raw passed-rubric counts. Differences (-1/24,+1/33,0,-4/25,0,-1/24) give exact two-sided p=16/64=.25, lower-tail p=8/64=.125. Raw count differences instead give two-sided .50. The caption and companions explicitly identify the rate statistic; e12-signflip-arithmetic.json and verify_manuscript.py reproduce both distinctions without changing stored results."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUx0",
+    "comment_id": 4306977259,
+    "path": "papers/icicc2027/verify_manuscript.py",
+    "status": "fixed",
+    "response": "Replacement identities are computed from manuscript table rows and cross-checked against the figure. Primary contrasts are counted from the paired inventory and checked against all 17 table rows. Timestamp and report counts are runtime-derived."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUx2",
+    "comment_id": 4306977263,
+    "path": "papers/icicc2027/verify_manuscript.py",
+    "status": "fixed",
+    "response": "The verifier parses printed fractions, rounded values and the conditional denominator directly from paper_camera.tex. Mutation tests demonstrate rejection of changed percentages and denominators."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUx6",
+    "comment_id": 4306977268,
+    "path": "papers/icicc2027/verify_manuscript.py",
+    "status": "fixed",
+    "response": "Rendered text must contain the source title, expected section headings and a substantive text body. Regression tests reject empty text, wrong titles and missing sections."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUx8",
+    "comment_id": 4306977270,
+    "path": "papers/icicc2027/verification/empirical-review-findings.md",
+    "status": "fixed",
+    "response": "Restored missing spaces throughout the empirical audit and made both BALROG means explicit percentages. Clarified units and arithmetic labels."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUx_",
+    "comment_id": 4306977274,
+    "path": "papers/icicc2027/verification/refs-review-additions.bib",
+    "status": "fixed",
+    "response": "Marked the 15-entry bibliography as an overlapping verification copy that must not be appended to or loaded with refs.bib."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUyD",
+    "comment_id": 4306977281,
+    "path": "papers/icicc2027/verification/citation-review-2026-10-18.md",
+    "status": "fixed",
+    "response": "Explicitly stated that paired-pilot lane labels are a separate namespace and do not identify original/replacement benchmark contracts."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUyF",
+    "comment_id": 4306977283,
+    "path": "papers/icicc2027/paper_camera.tex",
+    "status": "fixed",
+    "response": "Retained the receipt-defined operational 1/190 score and explicitly identified its 133 ungraded failures: 120 patch/evaluation errors and 13 empty patches. Added conditional 1/57=.0175; source is outputs/finish_pending_2026-09-27/E1/result.json."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUyJ",
+    "comment_id": 4306977287,
+    "path": "papers/icicc2027/refs.bib",
+    "status": "fixed",
+    "response": "Replaced stale proposal comments with a statement that the entries are already cited in the manuscript; rendered reference records were unchanged."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUyL",
+    "comment_id": 4306977290,
+    "path": "papers/icicc2027/README.md",
+    "status": "fixed",
+    "response": "Added verify_manuscript.py to Contents and documented its dependency on build outputs, Python/Poppler and optional standard-library regression tests."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUyM",
+    "comment_id": 4306977291,
+    "path": "papers/icicc2027/build.sh",
+    "status": "fixed",
+    "response": "Format-build failure now prints the log path and the last 40 log lines before exiting. A simulated pdftex failure verified nonzero exit and visible diagnostics."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUyO",
+    "comment_id": 4306977294,
+    "path": "papers/icicc2027/SOURCE_MAP.md",
+    "status": "fixed",
+    "response": "Separated SWE-Gym from its 512-row pool size and labeled prompt draws, completion count, optimizer values, token caps, temperature and top-p."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUyP",
+    "comment_id": 4306977296,
+    "path": "papers/icicc2027/README.md",
+    "status": "fixed",
+    "response": "README now starts with ./build.sh and the exact generated PDF path rather than implying a PDF is present in the source checkout."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUyQ",
+    "comment_id": 4306977299,
+    "path": "papers/icicc2027/verification/full-reference-metadata.bib",
+    "status": "fixed",
+    "response": "Expanded the metadata companion to the complete verified 85-author Terminal-Bench byline, checked against official arXiv metadata/BibTeX. The rendered reference remains consistently abbreviated for page length."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUyS",
+    "comment_id": 4306977303,
+    "path": "papers/icicc2027/verification/tinker-wayback-availability.json",
+    "status": "qualified; exact historical timestamp unavailable",
+    "response": "Added checked_at=null with an explanation, known audit date, method and retained reported read-back results. The snapshot timestamp is explicitly not the check time. A new web-reader recheck failed, so the receipt and response do not fabricate a timestamp or claim fresh availability."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUyT",
+    "comment_id": 4306977305,
+    "path": "papers/icicc2027/verification/full-reference-metadata.bib",
+    "status": "fixed",
+    "response": "Removed the copied proposed-addition/no-new-keys claim and described the entries as already present in refs.bib."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUyU",
+    "comment_id": 4306977308,
+    "path": "papers/icicc2027/verification/full-reference-metadata.bib",
+    "status": "fixed",
+    "response": "Corrected the metadata header: 37 cited entries, 28 article/inproceedings/techreport entries, 16 of those dated 2024\u20132025; 18 dated 2024\u20132025 across all types."
+  },
+  {
+    "thread_id": "PRRT_kwDORm7TnM6tqUyX",
+    "comment_id": 4306977311,
+    "path": "papers/icicc2027/llncs.cls",
+    "status": "not changed; vendored and unused",
+    "response": "Preserved the unmodified Springer LLNCS v2.26 class. This manuscript uses a one-column document and invokes neither listoffigures nor listoftables; the reported twocolumn list behavior is not exercised. Altering vendor code is outside this bounded manuscript fix. Class/style hashes remain those recorded in PROVENANCE.md."
+  }
+]

@@ -341,15 +341,16 @@ assumptions only if at least one group in the batch is
 \emph{informative}, i.e.\ has $Z_g=0$ (non-uniform outcomes). Define the
 per-prompt informativeness probability $q_g \coloneqq 1-h_K(p_g) =
 1-p_g^K-(1-p_g)^K$, the population fraction of informative groups
-$\bar q \coloneqq 1-\theta_K = \E_\phi[q_g]$, and note $\bar q = 1 - \ZVF$ in
-expectation.
+$\bar q \coloneqq 1-\theta_K = \E_\phi[q_g] = 1-\E[\ZVF_t]$.
+The population parameter $\theta_K$ is distinct from its random batch estimate
+$\ZVF_t$; substituting the latter does not preserve the guarantees below.
 
 \begin{lemma}[Rollouts per informative group]\label{lem:rollouts-per-group}
-Under Assumptions~\ref{ass:binary}--\ref{ass:across-iid}, drawing groups of
-size $K$ until the first informative group ($Z_g=0$) requires, in expectation,
-$1/\bar q$ groups, i.e.\ $K/\bar q$ rollouts. With $\bar q = 1-\ZVF$ this is
+Under Assumptions~\ref{ass:binary}--\ref{ass:nondegen}, drawing groups of
+size $K\ge2$ until the first informative group ($Z_g=0$) requires, in
+expectation, $1/\bar q$ groups, i.e.\ $K/\bar q$ rollouts:
 \begin{equation}\label{eq:exp-rollouts}
-\E[\text{rollouts to first informative group}] \;=\; \frac{K}{1-\ZVF}.
+\E[\text{rollouts to first informative group}] \;=\; \frac{K}{1-\theta_K}.
 \end{equation}
 \end{lemma}
 \begin{proof}
@@ -365,48 +366,46 @@ assumption fails and this equality is not claimed.
 \end{proof}
 
 \begin{theorem}[Wasted-compute reliability bound]\label{thm:T2}
-Fix group size $K$ and a target: obtain at least one informative group with
-probability at least $1-\delta$. Under
-Assumptions~\ref{ass:binary}--\ref{ass:across-iid}, if the population
-zero-variance rate is $\theta_K=\ZVF$, then the number of \emph{independent
-groups} $n_g$ that must be drawn satisfies
+Fix group size $K\ge2$ and $\delta\in(0,1)$. Under
+Assumptions~\ref{ass:binary}--\ref{ass:nondegen}, let $\theta_K\in(0,1)$
+be the population zero-variance probability. Obtaining at least one
+informative group with probability at least $1-\delta$ requires and is
+ensured by an integer number of independent groups satisfying
 \begin{equation}\label{eq:T2-groups}
-n_g \;\ge\; \frac{\ln(1/\delta)}{-\ln \ZVF}
-\qquad\Longleftrightarrow\qquad
-N \;\coloneqq\; K\,n_g \;\ge\;
-\underbrace{K\,\frac{\ln(1/\delta)}{-\ln \ZVF}}_{\displaystyle N(\ZVF)}\!,
+n_g\ge\left\lceil\frac{\ln(1/\delta)}{-\ln\theta_K}\right\rceil,
+\qquad
+N_{\mathrm{disc}}(\theta_K)\coloneqq
+K\left\lceil\frac{\ln(1/\delta)}{-\ln\theta_K}\right\rceil.
 \end{equation}
-and $N(\ZVF)\to\infty$ as $\ZVF\to1^-$. This is a continuous lower
-bound, not the discrete quantile itself. The exact rollout quantile is
-$K\lceil\ln(1/\delta)/(-\ln\theta_K)\rceil$: a budget below the
-continuous bound leaves probability $>\delta$ that all groups are
-uninformative. This is not a bound on policy improvement or total gradients.
+Here $N_{\mathrm{disc}}$ is the exact rollout quantile. Its continuous lower
+bound is
+\[
+N_{\mathrm{cont}}(\theta_K)\coloneqq
+K\frac{\ln(1/\delta)}{-\ln\theta_K}\le N_{\mathrm{disc}}(\theta_K).
+\]
+A rollout allocation $B$ permits $\lfloor B/K\rfloor$ complete groups and
+meets the target iff $B\ge N_{\mathrm{disc}}(\theta_K)$; exceeding only
+$N_{\mathrm{cont}}$ is insufficient. Both quantities diverge as
+$\theta_K\to1^-$. This is not a bound on policy improvement or total gradients.
 \end{theorem}
 \begin{proof}
-With i.i.d.\ groups, each is uninformative with probability $\ZVF$, so all
-$n_g$ drawn groups are uninformative with probability $\ZVF^{\,n_g}$. Requiring
-this probability to be at most $\delta$ gives
-\[
-  n_g \ge \frac{\ln(1/\delta)}{-\ln \ZVF}.
-\]
-Multiplying by $K$ rollouts per group gives \eqref{eq:T2-groups}; the smallest
-integer group budget is
-\[
-  \left\lceil \frac{\ln(1/\delta)}{-\ln \ZVF} \right\rceil.
-\]
-The divergence as
-$\ZVF\to1$ follows since $-\ln \ZVF\to0^+$. The result is explicitly about an
-informative group that can supply a potentially nonzero centered
-reward-contrast contribution under the stated assumptions; no total-update or
-policy-improvement claim is used in the proof. Corollary~\ref{cor:T2-traj} handles estimation of the
-population rate. Under correlated groups the product probability
-$\ZVF^{n_g}$ need not hold, so the theorem's i.i.d.\ condition is essential.
+With i.i.d.\ groups, all $n_g$ groups are uninformative with probability
+$\theta_K^{n_g}$. Requiring this probability to be at most $\delta$ gives
+$n_g\ge\ln(1/\delta)/(-\ln\theta_K)$. Rounding up to a whole group and
+multiplying by $K$ proves \eqref{eq:T2-groups}. The divergence follows from
+$-\ln\theta_K\to0^+$; more precisely,
+$N_{\mathrm{cont}}(\theta_K)\sim K\ln(1/\delta)/(1-\theta_K)$.
+An informative group can supply a potentially nonzero centered reward-contrast
+contribution, but the proof uses no total-update or policy-improvement claim.
+Under correlated groups the product probability $\theta_K^{n_g}$ need not
+hold. Corollary~\ref{cor:T2-traj} handles estimation of the population rate.
 \end{proof}
 
 \begin{corollary}[Certified compute floor from an observed trajectory]
 \label{cor:T2-traj}
-Let $X=m\ZVF_t$ and let $L_\alpha(X;m)$ be the one-sided
-Clopper--Pearson lower confidence bound for the binomial proportion,
+Under the assumptions of T2, let $X=m\ZVF_t$ from a diagnostic batch of
+$m\ge1$ groups, and fix $\alpha\in(0,1)$. The one-sided
+Clopper--Pearson lower confidence bound is
 \[
 L_\alpha(X;m)=
 \begin{cases}
@@ -414,23 +413,35 @@ L_\alpha(X;m)=
 I^{-1}_{\alpha}(X,m-X+1), & X>0,
 \end{cases}
 \]
-where $I^{-1}$ is the inverse regularized incomplete Beta function. Under the
-assumptions of T1,
-$\Prob_{\theta_K}\{\theta_K\ge L_\alpha(X;m)\}\ge1-\alpha$. Since
-$N(Z)=K\ln(1/\delta)/(-\ln Z)$ is increasing on $(0,1)$,
+where $I^{-1}$ is the inverse regularized incomplete Beta function. Then
+$\Prob_{\theta_K}\{\theta_K\ge L_\alpha(X;m)\}\ge1-\alpha$.
+Extend $N_{\mathrm{cont}}(0)=0$ by continuity and
+$N_{\mathrm{disc}}(0)=K$ (one group suffices at zero population failure
+probability). Both functions are nondecreasing, so for
+$j\in\{\mathrm{cont},\mathrm{disc}\}$,
 \[
-\Prob_{\theta_K}\!\left\{N(\theta_K)\ge
-N\big(L_\alpha(X;m)\big)\right\}\ge1-\alpha.
+\Prob_{\theta_K}\!\left\{N_j(\theta_K)\ge
+N_j\big(L_\alpha(X;m)\big)\right\}\ge1-\alpha.
 \]
-Thus $N(L_{0.05})$ is an exact-coverage, conservative 95\% certified compute
-floor, conditional on the i.i.d.\ group model. Wilson bounds remain a convenient
-operational approximation, but the theorem does not depend on their asymptotic
-coverage.
-At $X=0$, define $N(0)=0$ by continuity; this lower certificate is vacuous,
-not an upper budget guaranteeing success. Throughout T2 and its expectation
-lemma, $\ZVF$ without a time subscript means the population parameter
-$\theta_K\in(0,1)$, not its noisy batch estimate. This uses the nondegeneracy
-assumption in addition to the sampling assumptions.
+Thus $N_{\mathrm{disc}}(L_{0.05}(X;m))$ is a conservative 95\% lower
+confidence bound on the required rollout budget, not a sufficient allocation.
+At $X=0$ it certifies only the trivial one-group minimum; at $X=m$,
+$L_\alpha(m;m)=\alpha^{1/m}<1$, so this lower budget bound stays finite.
+Wilson bounds remain an operational approximation, not the basis of this
+finite-sample certificate.
+
+Conversely, a sufficient budget certificate uses an \emph{upper} bound
+$U_\alpha(X;m)=I^{-1}_{1-\alpha}(X+1,m-X)$ for $X<m$, and
+$U_\alpha(m;m)=1$. With $N_{\mathrm{disc}}(1)=+\infty$,
+\[
+\Prob_{\theta_K}\!\left\{N_{\mathrm{disc}}(\theta_K)\le
+N_{\mathrm{disc}}\big(U_\alpha(X;m)\big)\right\}\ge1-\alpha.
+\]
+This is a confidence statement over diagnostic samples about a fresh batch's
+$1-\delta$ reliability target, not a claim that confidence $1-\alpha$ and
+future-batch success probability $1-\delta$ are the same quantity. These
+are pointwise guarantees for a fixed diagnostic sample size; repeated online
+checks require separate sequential or multiplicity control.
 \end{corollary}
 
 %==============================================================================
@@ -443,12 +454,19 @@ adaptive controller set-point.
 
 \paragraph{Learning signal per group.} For binary rewards at group size $G$,
 we declare a diagnostic proxy: weight the mixed-group probability by the
-population Bernoulli variance $p(1-p)$. This is not the expectation of the
-sample variance (which already incorporates homogeneous outcomes), nor a
-conditional variance identity. It intentionally weights informativeness twice
-near the boundaries; its optimality is only relative to this declared choice.
+external prompt-difficulty weight $p(1-p)$. To distinguish this choice from
+realized sample variance, let $C\sim\mathrm{Binomial}(G,p)$ and
+$V=C(G-C)/(G(G-1))$. Homogeneous groups already have $V=0$, hence
+\[
+\E[V\1\{Z_g=0\}\mid p]=\E[V\mid p]=p(1-p).
+\]
+The exact expected sample variance per rollout, averaged over $\phi$, is
+$\E_\phi[p(1-p)]/G$ and has the unique integer optimum $G=2$ under
+Assumption~\ref{ass:nondegen}. The extra mixed-group factor below instead
+creates a composite heuristic; its $\{2,3\}$ tie is not a sample-variance
+identity or a policy-gradient optimum:
 \begin{equation}\label{eq:signal-per-group}
-S(p,G)\propto (1-h_G(p))p(1-p),\qquad h_G(p)=p^G+(1-p)^G.
+S(p,G)\coloneqq (1-h_G(p))p(1-p),\qquad h_G(p)=p^G+(1-p)^G.
 \end{equation}
 
 \paragraph{Signal per rollout.} Each group of size $G$ costs $G$ rollouts, so
@@ -459,48 +477,18 @@ J(G) \;\coloneqq\; \frac{1}{G}\,
 \E_{p\sim\phi}\!\big[\,(1-h_G(p))\,p(1-p)\,\big].
 \end{equation}
 
-\begin{theorem}[Optimum of the declared proxy objective]\label{thm:T3}
-Under Assumptions~\ref{ass:binary},~\ref{ass:within-iid},~\ref{ass:nondegen}
-and a reward-density prior $\phi$ with positive mass on $(0,1)$, the
-population proxy has the exact integer maximizer set $\{2,3\}$, independent
-of $\phi$. Define its optimal group size by
-\begin{equation}\label{eq:Gstar}
-G^\star \;\in\; \argmax_{G\in\{2,3,\dots\}} \; J(G),
-\end{equation}
-and, treating $G$ as continuous, any interior \emph{critical point} satisfies
-the first-order stationarity condition $\partial J/\partial G = 0$, i.e.
-\begin{equation}\label{eq:foc}
-\E_{p\sim\phi}\!\Big[(1-h_G(p))\,p(1-p)\Big]
-\;=\;
--\,G\,\E_{p\sim\phi}\!\Big[\tfrac{\partial}{\partial G}h_G(p)\,p(1-p)\Big],
-\quad
-\tfrac{\partial}{\partial G}h_G(p)=p^G\ln p+(1-p)^G\ln(1-p).
-\end{equation}
-For a point-mass prior $\phi=\delta_{p_0}$ the objective becomes
-\begin{equation}\label{eq:J-pointmass}
-J(G)=\frac{1-p_0^G-(1-p_0)^G}{G}\,p_0(1-p_0),
-\end{equation}
-so the maximizing $G$ depends only on the
-informativeness-per-rollout term
-$(1-p_0^G-(1-p_0)^G)/G$.
-\textbf{Resolution (2026-07-11): under this objective the maximizer is
-universal, and the theorem is weaker than previously stated.} The
-algebraic identities $1-p^2-(1-p)^2 = 2p(1-p)$ and
-$1-p^3-(1-p)^3 = 3p(1-p)$ hold for all $p$, so
-$(1-h_2(p))/2 = (1-h_3(p))/3 = p(1-p)$ pointwise, and therefore
+\begin{theorem}[Universal discrete optimum of the declared proxy]\label{thm:T3}
+Under Assumptions~\ref{ass:binary},~\ref{ass:within-iid},~\ref{ass:nondegen},
+the population objective in \eqref{eq:efficiency} satisfies
 \begin{equation}\label{eq:J23}
-J(2) \;=\; J(3) \;=\; \E_{p\sim\phi}\big[(p(1-p))^2\big]
-\qquad\text{for \emph{every} prior }\phi,
+J(2)=J(3)=\E_{p\sim\phi}\big[(p(1-p))^2\big]>J(G)
+\quad\text{for every integer }G\ge4.
 \end{equation}
-while $(1-h_G(p))/G < p(1-p)$ on $(0,1)$ for $G\ge4$. Hence
-$G^\star\in\{2,3\}$ \emph{independently of $\phi$}: the argmax of
-\eqref{eq:efficiency} carries no information about the reward-density
-prior, the FOC \eqref{eq:foc} is vacuous for the discrete problem, and
-any \emph{data-dependent} optimal-$G$ claim must come from a richer
-objective (variance-, Fisher-information-, or wall-clock-aware), which
-this paper does not supply. We retain \eqref{eq:efficiency} as the
-simplest signal-per-rollout accounting, with its optimum stated
-honestly as the universal $\{2,3\}$.
+Consequently,
+\begin{equation}\label{eq:Gstar}
+\argmax_{G\in\{2,3,\dots\}} J(G)=\{2,3\},
+\end{equation}
+independently of $\phi$. This proxy supplies no data-adaptive integer set-point.
 \end{theorem}
 \begin{proof}
 Let $C\sim\mathrm{Binomial}(G,p)$ count successes in a group. The mixed-group
@@ -521,14 +509,22 @@ strictly exceed the lower bound $G-1$, so the inequality is strict. Multiplying
 by $p(1-p)/G$ and integrating over $\phi$ proves
 $J(2)=J(3)>J(G)$ for every integer $G\ge4$ under
 Assumption~\ref{ass:nondegen}.
-
-For completeness, the continuous relaxation is differentiable for $G>0$.
-The terms $p^G|\ln p|$ and $(1-p)^G|\ln(1-p)|$ are uniformly bounded by
-$1/(eG)$, so differentiation under any probability measure $\phi$ is justified
-by domination locally in $G$. The quotient rule then gives \eqref{eq:foc} for
-any interior critical point. No uniqueness or discrete-rounding claim is needed:
-the binomial argument above proves the discrete optimum directly.
 \end{proof}
+
+\begin{remark}[Continuous relaxation is not an integer control rule]
+For real $G>0$, $J$ is differentiable: the terms $p^G|\ln p|$ and
+$(1-p)^G|\ln(1-p)|$ are uniformly bounded by $1/(eG)$, justifying
+differentiation under $\phi$ locally in $G$. An interior stationary point
+therefore satisfies
+\begin{equation}\label{eq:foc}
+\E_\phi[(1-h_G(p))p(1-p)]
+=-G\E_\phi[(\partial_G h_G(p))p(1-p)],
+\end{equation}
+where $\partial_G h_G(p)=p^G\ln p+(1-p)^G\ln(1-p)$, with endpoint
+terms defined by continuity. Since $J(2)=J(3)$, Rolle's theorem ensures
+at least one stationary point between them. This does not change the exact
+integer maximizer set proved above, even for a point-mass prior.
+\end{remark}
 
 \begin{corollary}[Beta-prior closed form]\label{cor:beta}
 If $\phi=\mathrm{Beta}(\alpha,\beta)$, then
@@ -561,21 +557,33 @@ control law. Its sampling assumptions must hold for the next batch:
         compute $\ZVF_t$ and the one-sided Clopper--Pearson lower bound in
         Corollary~\ref{cor:T2-traj}. Wilson is an operational approximation;
         the displayed two-sided Wald interval is not this exact certificate.
-  \item \textbf{Decide (T2).} If the reliability budget
-        $N(\underline{\ZVF}_t)$ from Corollary~\ref{cor:T2-traj} exceeds the
-        next-batch rollout budget, that fresh batch cannot meet the stated
-        reliability target, with the certificate's confidence, under an
-        unchanged population and fixed $K$. This does not make a retrospective
-        probability claim about the already observed diagnostic batch.
+  \item \textbf{Decide (T2).} Write $L=L_\alpha(m\ZVF_t;m)$. If
+        $N_{\mathrm{disc}}(L)>B$ for the next-batch rollout allocation $B$,
+        that fresh batch cannot meet the stated reliability target, with the
+        certificate's confidence, under an unchanged population and fixed $K$.
+        This certifies \emph{insufficient budget}, not a realized batch failure.
+        The converse $N_{\mathrm{disc}}(L)\le B$ certifies no sufficiency;
+        that requires the upper-bound construction in
+        Corollary~\ref{cor:T2-traj}. No retrospective probability claim is
+        made about the already observed diagnostic batch.
   \item \textbf{Act (T3, revised).} Under objective \eqref{eq:efficiency}
         the per-rollout optimum is the universal $G^\star\in\{2,3\}$
         (eq.~\ref{eq:J23}), so the controller cannot derive a
         \emph{data-dependent} group size from T3 as stated; re-estimating
         $\widehat\phi_t$ adds nothing. The escalation policy must instead
-        be separately justified: a rate measured at one $K$ does not identify
-        $\theta_{K'}$ at another size. T2 alone cannot license escalation
-        without a cross-size model or new measurements.
+        be separately justified: a rate measured at one $K$ does not generally
+        identify $\theta_{K'}$ at another size. T2 alone cannot license
+        escalation without a cross-size model or new measurements.
 \end{enumerate}
+At a fixed number of fresh groups $m$, raising $K$ reduces
+$\theta_K^m$ but spends more rollouts. At a fixed rollout allocation $B$,
+the failure probability is instead $\theta_K^{\lfloor B/K\rfloor}$ and
+can increase. For an analytic counterexample (not measured training data),
+let half the prompts have $p=0$ and half $p=1/2$. At $B=8$, four groups of
+size 2 fail with probability $(3/4)^4=81/256$, whereas one group of size 8
+fails with probability $129/256$. Group-size escalation therefore needs an
+explicit cost convention and cannot be justified from decreasing $\theta_K$
+alone.
 This is the formal interface between Pillar~2 (theory) and Pillar~1 (the
 mechanistic controller): T1 supplies \emph{sensor calibration}, T2 supplies a
 \emph{reliability trigger}, and T3 rules out the proposed proxy as a
@@ -630,7 +638,8 @@ an invalidation.
 \paragraph{E-T2: the waiting-time quantile.} With $G{=}8$ and
 $\delta{=}0.1$, the geometric $(1{-}\delta)$-quantile
 \[
-G\left\lceil\frac{\ln\delta}{\ln\mathrm{ZVF}}\right\rceil
+N_{\mathrm{disc}}(\theta_G)
+=G\left\lceil\frac{\ln(1/\delta)}{-\ln\theta_G}\right\rceil
 \]
 matched the observed
 $(1{-}\delta)$-quantile of rollouts-to-first-informative-group within
@@ -724,8 +733,9 @@ reward types.
 \paragraph{What is conditionally established.} Under i.i.d.\ groups and binary
 verifiable rewards: (T1) $\ZVF_t$ is an unbiased, asymptotically normal
 estimator of a well-defined population quantity with a closed-form CI; (T2)
-high \ZVF{} implies a logarithmically diverging \emph{reliability budget} ---
-the $(1{-}\delta)$-quantile of rollouts to a potentially nonzero centered
+high population \ZVF{} implies a diverging \emph{reliability budget},
+with $N_{\mathrm{disc}}(\theta_K)\sim K\ln(1/\delta)/(1-\theta_K)$ as
+$\theta_K\to1^-$ --- the $(1{-}\delta)$-quantile of rollouts to a potentially nonzero centered
 reward-contrast contribution under the stated assumptions; (T3) the
 signal-per-rollout objective has a well-defined optimum, which is the
 \emph{universal} $G^\star\in\{2,3\}$ (eq.~\ref{eq:J23}), prior-independent.

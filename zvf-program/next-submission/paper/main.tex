@@ -118,7 +118,7 @@ Both arms train Qwen3-8B \citep{qwen3report2025} with a pinned open canonical GR
   \item If the two verifier rewards \emph{agree}, the sampler stops sampling that prompt and records a homogeneous group (all-wrong or all-correct). The group receives no gradient update and no replacement prompt. No auxiliary gradient, curriculum substitution, or hidden resampling is introduced.
 \end{enumerate}
 
-The intervention changes the sampling policy and nothing else: the model, prompt schedule, optimizer, reward parser, update count, checkpoint rule, evaluation harness, and the canonical GRPO objective applied to expanded groups are identical across arms.
+The intervention changes the sampling policy and nothing else: the model, prompt schedule, optimizer, reward parser, update count, checkpoint rule, evaluation harness, and the canonical GRPO objective applied to expanded groups are all identical across arms.
 
 \subsection{Canonical objective}
 
@@ -205,7 +205,8 @@ inversion rule; deterministic streams alone do not specify an interval.
 \subsection{Power derivation and blinded variance reassessment}
 
 The capability planning standard deviation is $0.0128285396$, a historical
-paired held-out standard deviation from the companion E1 single-stack audit.
+paired held-out standard deviation from the companion single-stack audit
+(experiment identifier E1).
 It is a planning prior only, not a certified effect or proof that its variance
 transfers here. The frozen plan records 19 paired seeds from a one-sided
 noncentral paired-$t$ calculation at the worst-case Holm level $0.0125$,
@@ -338,7 +339,7 @@ Full 64-hex digests for these artifacts, and for every provider launcher (Colab,
 
 \subsection{Dataset pins}
 
-Frozen dataset revisions:
+Frozen Hugging Face Git commit dataset revisions:
 \begin{itemize}
   \item GSM8K training: \path{openai/gsm8k}, revision \texttt{740312ad\ldots}
   \item MATH training: \path{DigitalLearningGmbH/MATH-lighteval}, revision \texttt{0530c786\ldots}

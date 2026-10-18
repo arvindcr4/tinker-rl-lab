@@ -26,7 +26,7 @@
 \usetikzlibrary{shapes,arrows.meta,positioning,calc}
 \usepackage[numbers,sort&compress]{natbib}
 
-\newcommand{\zvf}{\textsc{Zvf}}
+\newcommand{\zvf}{\textsc{ZVF}}
 \newcommand{\gu}{\textsc{Gu}}
 \newcommand{\minreport}{\textsc{Min-Report-RL}}
 \newcommand{\grpo}{\textsc{GRPO}}
@@ -296,14 +296,14 @@ The audit verdict is then:
 \toprule
 \textbf{Verdict} & \textbf{Rule}\\
 \midrule
-Retains & Controlled CI excludes zero and its lower bound is at least $50\%$
+\texttt{RETAINS} & Controlled CI excludes zero and its lower bound is at least $50\%$
   of a metric-compatible published $\Delta$.\\
-Survives & Controlled CI excludes zero, but the published effect is not
+\texttt{SURVIVES} & Controlled CI excludes zero, but the published effect is not
   metric-compatible or the half-gain rule fails.\\
-Disappears & The 90\% CI lies inside a preregistered equivalence margin and the
+\texttt{DISAPPEARS} & The 90\% CI lies inside a preregistered equivalence margin and the
   exact 80\%-power MDE does not exceed that margin.\\
-Reverses & Controlled 95\% CI is entirely negative.\\
-Inconclusive & Every other outcome, including inadequate power.\\
+\texttt{REVERSES} & Controlled 95\% CI is entirely negative.\\
+\texttt{INCONCLUSIVE} & Every other outcome, including inadequate power.\\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -314,11 +314,11 @@ absolute held-out success. Sensitivity analyses at 0.005 and 0.02 are secondary.
 \begin{sloppypar}
 \paragraph{Executable estimand in this case study.} The frozen
 preregistration stores \texttt{published\_delta=null} for every arm. Therefore
-the \textsc{retains} rule and any fraction-of-published-gain (``survival'')
-estimand are not evaluated here and \textsc{retains} is structurally
+the \texttt{RETAINS} rule and any fraction-of-published-gain (``survival'')
+estimand are not evaluated here and \texttt{RETAINS} is structurally
 unreachable. The executable outputs are the controlled arm--GRPO deltas and
-the \textsc{survives}, \textsc{disappears}, \textsc{reverses}, or
-\textsc{inconclusive} rules defined above. Historical notes that quote DAPO as
+the \texttt{SURVIVES}, \texttt{DISAPPEARS}, \texttt{REVERSES}, or
+\texttt{INCONCLUSIVE} rules defined above. Historical notes that quote DAPO as
 \texttt{DISAPPEARS} are superseded by the exact-power correction
 (\S\ref{sec:stats}); that label does not appear as a result in this manuscript.
 \end{sloppypar}
@@ -331,8 +331,8 @@ the \textsc{survives}, \textsc{disappears}, \textsc{reverses}, or
 The independent unit is a seed, not a training step. Training rewards are
 autocorrelated within a trace, so inferential claims are made only across the
 seed sweep. Primary deltas use paired percentile-bootstrap 90\% and 95\%
-confidence intervals over seeds. Sign-based \textsc{survives}, \textsc{retains},
-and \textsc{reverses} decisions additionally require rejection by a two-sided
+confidence intervals over seeds. Sign-based \texttt{SURVIVES}, \texttt{RETAINS},
+and \texttt{REVERSES} decisions additionally require rejection by a two-sided
 paired-$t$ test after Benjamini--Hochberg correction across the four arm--GRPO
 comparisons at FDR 0.05. Single-seed arms are descriptive only.
 
@@ -436,7 +436,7 @@ does not establish a held-out gain (CI upper bound $+0.00675$).
 variant ``survives'' or ``retains'' a published gain---no metric-compatible
 \texttt{published\_delta} was registered; (ii)~that any arm is equivalent to
 GRPO---the smallest achievable MDE$_{80}$ is $\AuditDAPOMDE$ against a $0.01$
-margin, so \textsc{disappears} was unreachable a priori at $n{=}8$;
+margin, so \texttt{DISAPPEARS} was unreachable a priori at $n{=}8$;
 (iii)~that DAPO improves held-out accuracy---its point difference ($0.001$) is
 smaller than the $0.004$ evaluator-replay shift observed on GRPO seed~11;
 (iv)~that stack lock equalizes sample budget---DAPO consumed $3.61\times$ the

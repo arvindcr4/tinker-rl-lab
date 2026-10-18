@@ -503,20 +503,20 @@ simplest signal-per-rollout accounting, with its optimum stated
 honestly as the universal $\{2,3\}$.
 \end{theorem}
 \begin{proof}
-Let $S\sim\mathrm{Binomial}(G,p)$ count successes in a group. The mixed-group
-event is $M=\{1\le S\le G-1\}$ and
+Let $C\sim\mathrm{Binomial}(G,p)$ count successes in a group. The mixed-group
+event is $M=\{1\le C\le G-1\}$ and
 $\Prob(M)=1-p^G-(1-p)^G$. On $M$,
-$S(G-S)\ge G-1$, with equality for every mixed outcome when $G\in\{2,3\}$.
+$C(G-C)\ge G-1$, with equality for every mixed outcome when $G\in\{2,3\}$.
 Moreover,
 \[
-\E[S(G-S)]=G(G-1)p(1-p).
+\E[C(G-C)]=G(G-1)p(1-p).
 \]
 Therefore
 \[
-\Prob(M)\le\frac{\E[S(G-S)]}{G-1}=G p(1-p).
+\Prob(M)\le\frac{\E[C(G-C)]}{G-1}=G p(1-p).
 \]
 For $G=2$ and $G=3$ equality holds pointwise. For $G\ge4$ and
-$p\in(0,1)$, outcomes with $2\le S\le G-2$ have positive probability and
+$p\in(0,1)$, outcomes with $2\le C\le G-2$ have positive probability and
 strictly exceed the lower bound $G-1$, so the inequality is strict. Multiplying
 by $p(1-p)/G$ and integrating over $\phi$ proves
 $J(2)=J(3)>J(G)$ for every integer $G\ge4$ under
@@ -673,7 +673,7 @@ LoRA (rank~4) training runs on Qwen3-8B/GSM8K at a matched budget of
 2{,}560 rollouts per arm --- $G{=}2\times160$ steps vs.\ $G{=}16\times20$
 steps, batch 8, 512-token completions, seeds $\{123,456\}$ --- extend the
 single-seed corroboration above. The $G{=}2$ arms convert the budget into
-$8\times$ more optimiser steps and drive train reward to
+$8\times$ more optimizer steps and drive train reward to
 $\approx0.9$--$1.0$ on the sampled pool --- small-$G$ per-rollout
 efficiency in action --- before finishing in sustained
 $\ZVF\approx0.75$--$1.0$: the all-\emph{correct} zero-variance wall, the
@@ -737,9 +737,9 @@ signal-per-rollout objective has a well-defined optimum, which is the
         degeneracy analysis; no such claim is made here.
   \item \textbf{T2 bounds rollouts to a potentially nonzero centered
         reward-contrast contribution under the stated assumptions, not
-        rollouts to improvement or a total gradient.} Corollary~\ref{cor:T2-traj} supplies an exact-
-        coverage lower bound when the population $\ZVF$ is estimated.
-  \item \textbf{T3's objective $S(p,G)$ is a modelling choice,} and under it
+        rollouts to improvement or a total gradient.} Corollary~\ref{cor:T2-traj} supplies an
+        exact-coverage lower bound when the population $\ZVF$ is estimated.
+  \item \textbf{T3's objective $S(p,G)$ is a modeling choice,} and under it
         the optimum is the universal, prior-independent $\{2,3\}$
         (eq.~\ref{eq:J23}) --- so T3 as stated supports no data-adaptive
         group-size policy; a richer objective and prospective experiment are

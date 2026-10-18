@@ -93,8 +93,10 @@ falsifiable routing policy, and reproducible bridge from an established GRPO
 failure mode to critic-based PPO and asynchronous SAO. It reuses companion GRPO
 artifacts and must not be counted as an independent replication of those results.
 \textbf{Venue claim boundary (workshop-short methods / proposal).}
-Checked here: GRPO pass@G/ZVF arithmetic identity, conditional proxy calculation,
+Checked here: the GRPO pass@G/Zero-Variance Fraction (ZVF) arithmetic identity,
+conditional proxy calculation,
 and all-correct/all-wrong controller counts from checked-in artifacts.
+ZVF measures pre-gate group-reward starvation, distinct from root-trajectory ZUF.
 Proposed here: Effective Gradient Mass, TriageRL routing, and the PPO/SAO
 evaluation contract.  \emph{Not claimed}: any PPO, SAO, or GLM-style training
 outcome; causal held-out improvement from TriageRL; or global optimality of a
@@ -208,8 +210,8 @@ let $\pi_\theta$ be the actor being optimized.  Define the token ratio
         -\log\mu(a_t\mid s_t)\right).
   \label{eq:ratio}
 \end{equation}
-The policy loss uses a detached advantage estimate $A_t$ and, depending on
-the algorithm, a detached token gate $m_t\in\{0,1\}$.
+The policy surrogate objective uses a detached advantage estimate $A_t$ and,
+depending on the algorithm, a detached token gate $m_t\in\{0,1\}$.
 
 \subsection{GRPO: signal is never generated for flat groups}
 
@@ -220,6 +222,9 @@ forms a group-relative advantage such as
   \frac{R_i-\bar R_x}{s_x+\varepsilon}.
   \label{eq:grpo-adv}
 \end{equation}
+Here $\bar R_x$ and $s_x\geq0$ are the within-group reward mean and standard
+deviation, and $\varepsilon>0$ is a numerical stabilizer. Every action token
+$t$ in response $i$ receives $A_t=A_i^{\mathrm{grp}}$.
 If all rewards are equal, $A_i^{\mathrm{grp}}=0$ for every response and every
 token.  A later PPO-style clip may also suppress signal, but the defining
 GRPO starvation event occurs before clipping: no within-prompt contrast was
@@ -302,8 +307,8 @@ We define
     \label{eq:pam}\\
   \gsr(\mathcal{B})
     &=\begin{cases}
-       \dfrac{\sum_t m_t(\rho_t A_t)^2}
-             {\sum_t(\rho_t A_t)^2}, & \sum_t(\rho_t A_t)^2>0,\\[7pt]
+       \dfrac{\sum_{t\in\mathcal{B}} m_t(\rho_t A_t)^2}
+             {\sum_{t\in\mathcal{B}}(\rho_t A_t)^2}, & \sum_{t\in\mathcal{B}}(\rho_t A_t)^2>0,\\[7pt]
        0, & \text{otherwise,}
       \end{cases}
     \label{eq:gsr}\\
@@ -312,6 +317,8 @@ We define
       =\pam(\mathcal{B})\gsr(\mathcal{B}).
     \label{eq:egm}
 \end{align}
+The factorization uses the binary gate's idempotence, $m_t^2=m_t$:
+$c_t^2=m_t(\rho_t A_t)^2$. Continuous weights are not part of this gate.
 
 \begin{figure}[htbp]
 \centering
@@ -376,12 +383,12 @@ a theorem that an update will improve reward.  We therefore pair it with a
 periodic geometry-aware audit,
 \begin{equation}
   \mathrm{GUN}(\mathcal{B})=\left\|
-  \frac{1}{|\mathcal{B}|}\sum_t c_tz_t\right\|_2^2,
+  \frac{1}{|\mathcal{B}|}\sum_{t\in\mathcal{B}} c_tz_t\right\|_2^2,
   \label{eq:gun}
 \end{equation}
 measured on sampled microbatches before optimizer preconditioning.  EGM must
-predict this gradient-update norm and, separately, marginal learning progress
-to earn operational trust.
+predict this squared gradient-update norm and, separately, marginal learning
+progress to earn operational trust.
 
 \subsection{One table, three algorithms}
 
@@ -433,7 +440,9 @@ comparison arms run.
 \begin{table}[t]
 \centering
 \caption{Cause-aware routing.  Low/high are relative to preregistered
-warm-up thresholds, not values tuned on final outcomes.}
+warm-up thresholds, not values tuned on final outcomes.
+$\hat V$ is the critic's pre-outcome value; $e_V$ is a held-out value error
+or calibration statistic.}
 \label{tab:states}
 \scriptsize
 \setlength{\tabcolsep}{2pt}
@@ -486,7 +495,7 @@ critic diagnostics $e_V,u_V$, outcome $R$, invalid flag $h$
 \ELSE
   \STATE apply the ordinary actor-critic update
 \ENDIF
-\STATE Preserve at least $q_{\min}$ probability for the base data stream
+\STATE Global dispatcher invariant: preserve at least $q_{\min}$ probability for the base data stream
 \end{algorithmic}
 \end{algorithm}
 
@@ -771,8 +780,8 @@ system do with each failure cause?
 
 SAO directly targets single-rollout asynchronous agentic RL and introduces
 strict double-sided masking, faster critic updates, frozen-attention critic
-training, and skip-observation GAE \citep{hou2026sao}.  Asynchronous actor-
-learner systems have long required off-policy correction
+training, and skip-observation GAE \citep{hou2026sao}.  Asynchronous
+actor-learner systems have long required off-policy correction
 \citep{mnih2016asynchronous,espeholt2018impala}; recent scaling-law work studies
 the interaction between staleness and learning rate in asynchronous RLHF
 \citep{song2026staleness}.  \method is complementary: it treats staleness as
@@ -1010,7 +1019,7 @@ testable proposal is the central methodological commitment of this work.
 For $A_t>0$, Eq.~\eqref{eq:ppo} equals the constant
 $(1+\epsilon)A_t$ whenever $\rho_t>1+\epsilon$, so its policy gradient is zero.
 Below that boundary it equals $\rho_tA_t$.  For $A_t<0$, the minimum reverses
-which branch is active: the loss is constant below $1-\epsilon$ and remains
+which branch is active: the surrogate objective is constant below $1-\epsilon$ and remains
 $\rho_tA_t$ otherwise.  This yields Eq.~\eqref{eq:ppo-gate}, ignoring the
 measure-zero nondifferentiable boundary.
 
@@ -1057,11 +1066,11 @@ skip-observation agentic training.
 
 The implementation should assert:
 \begin{enumerate}[leftmargin=*]
-  \item $0\leq\gsr\leq1$ and $\egm=\pam\,\gsr$ to numerical tolerance;
+  \item $0\leq\gsr\leq1$ and $\egm=\pam\cdot\gsr$ to numerical tolerance;
   \item PPO gates match Eq.~\eqref{eq:ppo-gate} for all four sign/boundary
   combinations;
   \item SAO gates are zero on both sides of the DIS interval;
-  \item flat GRPO groups have PAM and EGM equal to zero;
+  \item flat GRPO groups have PAM and EGM equal to zero to numerical tolerance;
   \item root aggregation is invariant to a lossless repartition into chunks;
   \item actor epochs stop on the same batch when GSR falls below threshold;
   \item base-stream probability never falls below $q_{\min}$; and

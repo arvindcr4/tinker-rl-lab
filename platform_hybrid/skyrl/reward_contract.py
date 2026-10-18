@@ -59,7 +59,8 @@ def tool_reward(response, item):
         if (
             "arguments" in parsed
             and "parameters" in parsed
-            and parsed["arguments"] != parsed["parameters"]
+            and json.dumps(parsed["arguments"], sort_keys=True, allow_nan=False)
+            != json.dumps(parsed["parameters"], sort_keys=True, allow_nan=False)
         ):
             return 0.0
         arguments = parsed.get("arguments", parsed.get("parameters"))

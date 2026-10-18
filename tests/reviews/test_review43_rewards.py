@@ -85,3 +85,23 @@ def test_released_skyrl_config_retains_model_optimizer_and_logging(name):
     assert config["trainer"]["policy"]["optimizer_config"]["lr"]
     assert config["trainer"]["algorithm"]["advantage_estimator"] == "grpo"
     assert config["trainer"]["logger"] == "wandb"
+
+
+@pytest.mark.parametrize(("arguments", "parameters"), [
+    ({"x": 1}, {"x": True}),
+    ({"x": True}, {"x": 1}),
+    ({"x": 1}, {"x": "1"}),
+    ({"x": 1}, {"x": 2}),
+    ({"x": 1}, {"x": float("nan")}),
+    ({"x": float("nan")}, {"x": float("nan")}),
+    ({"x": [1]}, {"x": [True]}),
+])
+def test_tool_aliases_must_agree_under_exact_json_types(arguments, parameters):
+    response = json.dumps(dict(tool="calc", arguments=arguments, parameters=parameters))
+    assert tool_reward(response, {"tool": "calc", "args": arguments}) == 0
+
+
+def test_identical_tool_aliases_remain_valid():
+    args = {"x": [1, True, "1"], "y": {"a": 2}}
+    response = json.dumps(dict(tool="calc", name="calc", arguments=args, parameters=args))
+    assert tool_reward(response, {"tool": "calc", "args": args}) == 1

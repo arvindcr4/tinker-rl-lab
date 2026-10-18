@@ -204,3 +204,18 @@ a conservative deduplication key, independent of source file and traversal path.
 Explicit seed/config/attempt differences remain distinct. Identical unidentified
 independent runs cannot be certified as separate observations; durable run IDs
 are required for empirical inference, whose legacy entrypoint remains disabled.
+
+
+## Bounded student-trajectory distillation follow-up (C18)
+
+The separate `student-trajectory-kl-v1` contract is documented in
+[`STUDENT_DISTILLATION_V1.md`](../../platform_hybrid/experiments/implementations/STUDENT_DISTILLATION_V1.md).
+It generates fresh local student continuations and scores token-mean forward
+KL(teacher || student) on their valid response positions, with detached teacher
+scores and stop-gradient sampling. This is a semi-gradient objective, not a
+policy-gradient estimator of expected trajectory KL. It neither relabels the
+fixed-history objective nor changes historical results. Synthetic CPU and tiny
+random-model generation/backward checks use no optimizer steps; full Trainer
+initialization remains skipped here because `accelerate>=1.1.0` is absent.
+GPU execution, real-checkpoint compatibility and empirical training/performance
+remain unverified; the contract is restricted to local single-device execution.

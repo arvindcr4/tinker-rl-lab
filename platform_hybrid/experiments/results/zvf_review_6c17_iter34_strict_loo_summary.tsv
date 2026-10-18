@@ -1,0 +1,2 @@
+n	strict_loo_accuracy	majority_baseline	label_permutation_p	recall_collapse	recall_drift	recall_plateau	recall_saturation
+12	0.5833	0.4167	0.0715	0.0	0.6667	0.0	1.0

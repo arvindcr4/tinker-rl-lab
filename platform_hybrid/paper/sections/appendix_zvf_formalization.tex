@@ -6,7 +6,7 @@
 \subsection{Formal Definition}
 
 Let a GRPO batch $B_t$ at optimizer step $t$ consist of $|B_t|$ prompt-groups,
-each group $g$ containing $K$ rollouts with scalar outcome rewards
+each group $g$ containing $K$ rollouts (in this appendix $K\equiv G$, the group size used in the main text) with scalar outcome rewards
 $r_{g,1}, \ldots, r_{g,K} \in \mathbb{R}$. We define the \emph{Zero-Variance
 Fraction} (ZVF) as
 \begin{equation}
@@ -110,9 +110,15 @@ per-problem observed ZVF is just the binary all-agree indicator
 $\mathbf{1}[p \in \{0,1\}]$ and the closed form is a deterministic function of
 the same $p$, so the large $r \approx 0.93$ chiefly reflects their shared
 dependence on $p$'s extremity (the rank correlation is weaker,
-$\rho \approx 0.65$). The i.i.d.-Bernoulli null is moreover only a coarse level
-estimate---here it \emph{over}-predicts mean ZVF ($\approx 0.28$ vs.\ observed
-$0.16$), the opposite-sign residual to the low-temperature $0.5$B probe. We thus
+$\rho \approx 0.65$). As a level estimate, the homogeneous i.i.d.\ null
+evaluated at the pooled mean reward ($\bar p=0.694$) gives $h_8(\bar p)=0.054$,
+which \emph{under}-predicts the observed $0.158$ by $2.9\times$, as Jensen's
+inequality requires under heterogeneous prompt difficulty; a beta-binomial fit
+(intra-prompt correlation $0.160$) predicts $0.170$
+(Section~\ref{sec:zvf-cross-source-falsification}). An earlier figure of
+$\approx 0.28$ averaged $h_8$ at each group's own plug-in $k/G$, which is biased
+upward by construction and is withdrawn. The residual therefore has the same
+(positive) sign as on the $0.5$B probe. We thus
 read this as a consistency check on the \emph{shape} of the diagnostic across
 scales, not a precise quantitative fit.
 

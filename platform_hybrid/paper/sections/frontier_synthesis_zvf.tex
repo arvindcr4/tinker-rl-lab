@@ -75,11 +75,15 @@ within-group reward variance, equivalently the mean squared pairwise
 contrast that GRPO's baseline projection actually consumes:
 \begin{equation}
   \mathrm{PCD}
-  \;=\; \mathbb{E}_{x}\!\big[\mathrm{Var}(r\mid x)\big]
+  \;=\; \mathbb{E}_{x}\!\big[\widehat{\mathrm{Var}}_G(\mathbf r\mid x)\big]
   \;=\; \mathbb{E}_{x}\!\Big[\tfrac{1}{G^2}\!\sum_{i<j}(r_i-r_j)^2\Big]
   \;=\; \tfrac{G-1}{G}\,\mathbb{E}_{x}\!\big[p_x(1-p_x)\big],
   \label{eq:pcd}
 \end{equation}
+where $\widehat{\mathrm{Var}}_G(\mathbf r\mid x)=\tfrac1G\sum_{i=1}^G(r_i-\bar r)^2$ is
+the biased (population) variance of the group's $G$ rewards, whose expectation
+carries the factor $\tfrac{G-1}{G}$; it differs from the Bernoulli variance
+$p_x(1-p_x)$ and from the unbiased estimator of Eq.~\eqref{eq:zvf},
 a sharp parabola peaking at $p_x=\tfrac12$ rather than the flat plateau
 that $1-\mathrm{ZVF}$ forms over intermediate $p_x$. The models offered a
 concrete \emph{micro-jitter falsification}: injecting noise
@@ -114,25 +118,30 @@ spend the freed budget on stubborn tails---and a matching
 $C_{\mathrm{eff}} = T\cdot G\cdot \mathbb{E}_x[\,1-p_x^{\,G}-(1-p_x)^{\,G}\,]\cdot\lVert\Delta\theta\rVert_{\mathrm{KL}}$,
 in which extra samples count only insofar as they create mixed-reward
 groups. Equation~\eqref{eq:gu-marginal} is consistent with the
-$0.845\to0.631$ ZVF drop we observe as $G:2\to16$: the reduction is
+$0.838\to0.631$ ZVF drop we observe as $G:2\to16$: the reduction is
 concentrated in the interior-$p_x$ prompts and saturates in the tails.
 
 \paragraph{Two caveats that sharpen our own claims.}
 First, on our (now withdrawn; Section~\ref{sec:zvf-cross-source-falsification})
 anti-herding result: the models cautioned that the
-measured residual
-$\Delta_G=\mathrm{ZVF}^{\mathrm{obs}}_G-\mathbb{E}_x[p_x^{\,G}+(1-p_x)^{\,G}]\in[-0.23,-0.13]$
-should be read as \emph{edge-thinning / excess contrastive yield}
-($13$--$23$ percentage points fewer zero-advantage groups than the
-i.i.d.\ Bernoulli null), \emph{not} as negative pairwise rollout
-correlation. ZVF is an extreme-event statistic, whereas correlation is a
+then-reported residual
+$\Delta_G=\mathrm{ZVF}^{\mathrm{obs}}_G-[\bar p^{\,G}+(1-\bar p)^{\,G}]\in[-0.23,-0.13]$
+on the arithmetic group-size sweep should be read as \emph{edge-thinning}, \emph{not}
+as negative pairwise rollout correlation. (That residual evaluated the closed form
+at the terminal held-out accuracy rather than on the training rollouts; on the same
+rollouts it is $+0.01$ to $+0.11$, the positive Jensen excess expected from
+prompt heterogeneity; \texttt{experiments/results/group\_size\_review\_1ed8\_zvf\_theory.tsv}.) ZVF is an extreme-event statistic, whereas correlation is a
 second-moment property, and one model produced an explicit counterexample
 ($G=4$, $p=\tfrac12$) with $\Delta_G<0$ yet pairwise $\rho>0$. The residual itself was an estimator artefact (sign-guaranteed under a
 same-group plug-in $\hat p$), so neither reading is supported. This
 reinforces the conservative stance already taken in
 Section~\ref{sec:zvf-dynamics}. Second, and as a genuine \emph{challenge}
-to the ``zero gradient'' framing in Section~the companion paper on ZVF gradients: under
-a KL-penalized reward $r_i=r^{\mathrm{task}}_i-\beta\,\mathrm{KL}_i$, when
+to the ``zero gradient'' framing in the companion paper on ZVF gradients: in
+implementations that fold $\beta>0$ into the scalar reward before
+group standardization while ZVF is logged on the task reward alone (it does
+not apply to loss-level KL, to $\beta=0$ as in our runs, or to ZVF logged on the
+total reward, whose variance $\beta^2\widehat{\mathrm{Var}}(\mathrm{KL})$ is then
+non-zero), under a KL-penalized reward $r_i=r^{\mathrm{task}}_i-\beta\,\mathrm{KL}_i$, when
 $\mathrm{Var}(r^{\mathrm{task}})=0$ the advantage normalization cancels
 $\beta$ and yields
 $A_i=-(\mathrm{KL}_i-\overline{\mathrm{KL}})/\sigma_{\mathrm{KL}}$, so a

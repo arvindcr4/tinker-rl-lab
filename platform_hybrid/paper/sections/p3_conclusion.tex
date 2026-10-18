@@ -25,9 +25,9 @@ provenance: the $G{=}4/G{=}32$
 $\widehat{\mathrm{GE}}_{\mathrm{tok}}$-ratio (audit H1, bootstrap CI
 $[4.16, 4.82]$) and the negative retention-vs-$T$ slope (H2, CI
 $[-0.237, -0.038]$) are precise \emph{within the reconstructed grid},
-whereas the SNR-slope-vs-theory comparison (H3, a log--log SNR-vs-$G$ slope
-in decade/decade where $\sqrt{G}$ predicts $+0.500$; the point slope from the
-per-$G$ SNRs is $+0.183$/decade) and the native-Wu $G{=}2 \approx G{=}16$
+whereas the SNR-slope-vs-theory comparison (H3) is not interpretable, because
+the logged ``SNR'' is a transform of the non-degenerate-step fraction rather than
+a gradient SNR (Section~\ref{sec:group-size-iter27}), and the native-Wu $G{=}2 \approx G{=}16$
 equivalence claim (H4; $n{=}3$ paired seeds, equivalence region straddled)
 are NULL, and the corrected TOST agrees with the H4 NULL verdict
 ($G{=}16$ $p{=}0.056$, held-out $p{=}0.100$)
@@ -47,8 +47,7 @@ winning trajectories; in the spreadsheet construction on the reconstructed
 grid, the cell-wise argmax coincides ($G^\ast = 8, 16, 32, 32$ at
 $T \in \{1, 4, 16, 64\}\mathrm{M}$, where the $G{=}32$ optima at high $T$
 are joint-fit extrapolations); no Iterative-RPO run was trained and no
-invariance theorem is claimed. The log--log SNR slope in $G$ is
-$+0.183$/decade, below the $\sqrt{G}$-theory value of $+0.500$/decade
+invariance theorem is claimed
 (\texttt{experiments/results/berkeley/dpo\_iterative\_rpo\_summary.json}).
 Second, a Dualformer-style fast/slow/auto reading of
 $G$~\citep{su2024dualformer} suggests the non-monotone landscape is

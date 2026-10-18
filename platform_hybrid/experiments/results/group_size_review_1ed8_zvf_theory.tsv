@@ -1,0 +1,5 @@
+G	mean_train_reward	zvf_empirical	zvf_theory_per_step_train_p	residual_per_step	zvf_theory_terminal_heldout_p_legacy	residual_legacy
+2	0.8398	0.838	0.8283	0.0097	0.9641	-0.1261
+4	0.8625	0.7635	0.7087	0.0548	0.9542	-0.1906
+8	0.8694	0.6906	0.5969	0.0937	0.9232	-0.2326
+16	0.8731	0.6312	0.5223	0.1089	0.7109	-0.0796

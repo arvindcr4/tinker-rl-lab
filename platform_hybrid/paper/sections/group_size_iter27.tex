@@ -41,7 +41,7 @@ bars and per-point retention annotated. The retention-vs-$G{=}2$ values
 are $\{99.4\%, 99.6\%, 100.7\%\}$ for $G\in\{4,8,16\}$; \emph{all three
 G values meet or exceed the Wu~2025 97.6\% threshold on this easy
 near-ceiling task}. Table~\ref{tab:groupsize-iter27-synthesis}
-gives the full per-$G$ row including SNR and TOST verdict.
+gives the full per-$G$ row including the non-degenerate-step fraction $f$ and the TOST verdict.
 
 \begin{table}[htbp]
 \centering
@@ -49,12 +49,12 @@ gives the full per-$G$ row including SNR and TOST verdict.
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{rcccccccc}
 \hline
-$G$ & $n$ & last10 reward & ret.\ vs $G{=}2$ & 95\% CI & SNR(adv) & SNR 95\% CI & TOST vs $G{=}2$ ($\epsilon{=}0.02$) & above Wu? \\
+$G$ & $n$ & last10 reward & ret.\ vs $G{=}2$ & 95\% CI & $f$ & logged ``SNR'' $=\sqrt{f/(1{-}f)}$ & TOST vs $G{=}2$ ($\epsilon{=}0.02$) & above Wu? \\
 \hline
-2  & 3 & 0.9771 & 1.0000 & [1.000,\,1.000] & 1.46 & [1.22,\,1.81] & --- & yes \\
-4  & 3 & 0.9714 & 0.9941 & [0.990,\,0.998] & 1.76 & [1.46,\,2.23] & yes ($p{=}0.012$)  & yes \\
-8  & 3 & 0.9732 & 0.9960 & [0.988,\,1.006] & 1.94 & [1.58,\,2.54] & yes ($p{=}0.043$)  & yes \\
-16 & 3 & 0.9837 & 1.0068 & [0.997,\,1.012] & 2.16 & [1.72,\,2.86] & no ($p{=}0.056$)  & yes \\
+2  & 3 & 0.9771 & 1.0000 & [1.000,\,1.000] & 0.683 & 1.46 & --- & yes \\
+4  & 3 & 0.9714 & 0.9941 & [0.990,\,0.998] & 0.758 & 1.76 & yes ($p{=}0.012$)  & yes \\
+8  & 3 & 0.9732 & 0.9960 & [0.988,\,1.006] & 0.792 & 1.94 & yes ($p{=}0.043$)  & yes \\
+16 & 3 & 0.9837 & 1.0068 & [0.997,\,1.012] & 0.825 & 2.16 & no ($p{=}0.056$)  & yes \\
 \hline
 \end{tabular}%
 }
@@ -62,8 +62,7 @@ $G$ & $n$ & last10 reward & ret.\ vs $G{=}2$ & 95\% CI & SNR(adv) & SNR 95\% CI 
 canonical measurements on the Qwen2.5-0.5B / arithmetic sweep: 3 seeds,
 40 steps. Retention is the paired last-10 reward ratio
 $\text{reward}_G/\text{reward}_{G{=}2}$ (the $G{=}2$ row is identically
-$1.0000$, CI $[1,1]$). SNR is on the per-step advantage-variance
-trajectory (see text). TOST at $\epsilon{=}0.02$ is the paired test on
+$1.0000$, CI $[1,1]$). $f$ is the fraction of training steps whose batch contains a non-degenerate group; the logged ``SNR'' is a transform of $f$, not a gradient SNR (see text). TOST at $\epsilon{=}0.02$ is the paired test on
 per-seed last-10 training reward ($n{=}3$, $\nu{=}2$) versus $G{=}2$:
 $G{=}4$ $p{=}0.012$, $G{=}8$ $p{=}0.043$, $G{=}16$ $p{=}0.056$ (not
 equivalent at $\alpha{=}0.05$); 90\% CIs for the mean difference
@@ -78,24 +77,20 @@ compares retention against the Wu~2025 $97.6\%$ headline. Sources:
 \label{tab:groupsize-iter27-synthesis}
 \end{table}
 
-\paragraph{SNR scaling (DPO vs MC variance).}
-SNR is defined as the pooled per-step \texttt{advantage\_variance}
-$|\text{mean}|/\text{std}$, using $120$ step-values per $G$ (3 seeds
-$\times$ 40 steps). Figure~\ref{fig:group-size-iter27}B plots the per-$G$
-SNR from iter~15 with two reference laws anchored at $G{=}2$: the flat
-DPO-equivalence reference ($\text{SNR}(G) = \text{SNR}(G{=}2)$) and the
-$\sqrt{G}$ MC-variance reference ($\text{SNR}(G) = \text{SNR}(G{=}2)
-\sqrt{G/2}$). The measured SNR is $\{1.46,\,1.76,\,1.94,\,2.16\}$
-for $G\in\{2,4,8,16\}$---monotonically increasing but \emph{sub}-$\sqrt{G}$:
-at $G{=}16$ the measured value is $52\%$ of the anchored $\sqrt{G}$
-prediction $1.46\sqrt{8}{=}4.14$, and $48\%$ above the flat baseline.
-The log-log slope is $0.183$ per decade, versus $0.500$ for $\sqrt{G}$.
-The signal is \emph{not} purely DPO (which would predict a flat SNR);
-it is also \emph{not} pure MC variance reduction (which would predict
-SNR $\propto \sqrt{G}$). The data sit between the two reference laws,
-suggesting that within-group contrast quality improves with $G$ but is
-bounded by the iter-11 entropy-collapse floor. This is descriptive only:
-steps are autocorrelated and $n{=}3$ seeds.
+\paragraph{What the logged ``SNR'' measures.}
+The statistic is the mean over steps divided by the
+standard deviation over steps of the logged per-step \texttt{advantage\_variance}
+($120$ step-values per $G$). Because advantages are whitened within each group and
+the logged value is the variance of the non-zero advantages, that per-step value is
+$1$ whenever the batch contains any non-degenerate group and $0$ otherwise, so the
+statistic equals $\sqrt{f/(1-f)}$, where $f$ is the fraction of steps with at least
+one non-degenerate group ($f{=}0.683, 0.758, 0.792, 0.825$ for $G{=}2,4,8,16$;
+$\sqrt{0.683/0.317}{=}1.47$). It is a monotone transform of a batch-level
+zero-variance rate, not a gradient signal-to-noise ratio, so its comparison with
+the flat and $\sqrt{G}$ reference laws in Figure~\ref{fig:group-size-iter27}B is not
+meaningful. We draw no conclusion about $\sqrt{G}$ variance scaling from this sweep;
+measuring a gradient SNR would require per-step gradient-vector logs, which these
+runs did not keep (\texttt{platform\_modal/scripts/group\_size\_review\_1ed8\_audit.py}).
 
 \paragraph{Retention-vs-budget: three DPO bands.}
 Figure~\ref{fig:group-size-iter27}C plots retention $R(T) =
@@ -190,11 +185,11 @@ have retention $\{99.4\%,99.6\%,100.7\%\}$ versus $G{=}2$ and meet the
 Wu~2025 97.6\% threshold; the $G{=}4$ retention CI excludes $1.0$ while
 the $G{=}8$ and $G{=}16$ CIs include it. The dashed gray line is the Wu
 band at 97.6\% of the $G{=}2$ baseline.
-\emph{(B)} Per-$G$ SNR (pooled per-step \texttt{advantage\_variance}
-$|\text{mean}|/\text{std}$, 120 step-values per $G$; green), with the
-flat DPO-equivalence reference (purple) and the $\sqrt{G}$
-MC-variance reference (red). Measured SNR is sub-$\sqrt{G}$ but above
-flat (descriptive only; steps autocorrelated, $n{=}3$ seeds).
+\emph{(B)} Logged ``SNR'' (pooled per-step \texttt{advantage\_variance}
+$|\text{mean}|/\text{std}$; green), which equals $\sqrt{f/(1-f)}$ for the fraction $f$
+of steps containing a non-degenerate group; the flat (purple) and $\sqrt{G}$ (red)
+reference curves are retained from the original figure but the comparison is not
+meaningful (see text).
 \emph{(C)} Illustrative retention vs token budget for Qwen3-8B/GSM8K. The Wu
 reference line (gray, R$=0.976$) and the reconstructed G=4 vs G=32 curve
 (blue) cross at $T{=}1\,$M and diverge by $25$\,pp at $T{=}64\,$M.

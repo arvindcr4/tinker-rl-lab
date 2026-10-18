@@ -42,41 +42,17 @@ same canonical script used elsewhere in this paper
 
 \subsection{Pre-registered design (not yet run)}
 This is a \emph{pre-registered protocol}, not a results table: at submission time
-no cell has been populated. Table~\ref{tab:zvf-counterfactual} fixes the design
-(models, reward versions, seeds, steps, and the planned statistic); the sweep
-state is tracked at \texttt{experiments/tool\_use\_zvf\_sweep/manifest.tsv}.
-
-\begin{table}[h]
-\centering
-\small
-\begin{tabular}{llrrrr}
-\toprule
-Model & Reward & Seed & Steps & ZVF (mean last 10 steps) & Pass\@1 \\
-\midrule
-Qwen3-4B & v1 & 42 & 50 & --- & --- \\
-Qwen3-4B & v1 & 43 & 50 & --- & --- \\
-Qwen3-4B & v1 & 44 & 50 & --- & --- \\
-Qwen3-4B & v2 & 42 & 50 & --- & --- \\
-Qwen3-4B & v2 & 43 & 50 & --- & --- \\
-Qwen3-4B & v2 & 44 & 50 & --- & --- \\
-\midrule
-Qwen3-8B & v1 & 42 & 50 & --- & --- \\
-Qwen3-8B & v1 & 43 & 50 & --- & --- \\
-Qwen3-8B & v1 & 44 & 50 & --- & --- \\
-Qwen3-8B & v2 & 42 & 50 & --- & --- \\
-Qwen3-8B & v2 & 43 & 50 & --- & --- \\
-Qwen3-8B & v2 & 44 & 50 & --- & --- \\
-\bottomrule
-\end{tabular}
-\caption{Reward-shape counterfactual. ZVF is the fraction of GRPO groups
-with within-group score variance below \(10^{-4}\), averaged over the final
-ten training steps. \(3\) seeds per cell; the planned summary statistic is
-paired-\(t\) on per-seed ZVF between v1 and v2 within each model. Em-dash
-cells are unrun (no results exist yet); on completion the per-seed values will be
-emitted by \texttt{experiments/tool\_use\_zvf\_sweep/run\_sweep.py} and spliced
-in.}
+no run has been executed and no result is reported. The design is
+$2$ models (Qwen3-4B, Qwen3-8B) $\times$ $2$ reward versions (v1, v2) $\times$ $3$
+seeds ($42$, $43$, $44$), $50$ training steps each. The outcome is ZVF---the
+fraction of GRPO groups with within-group sample variance at most
+$\varepsilon=10^{-6}$, the default of the canonical script---averaged over the
+final ten steps, together with pass@1; the planned test is a paired $t$ on
+per-seed ZVF between v1 and v2 within each model. On the six-level shaped reward
+the smallest non-zero group variance is $2.5\times10^{-3}$, so any
+$\varepsilon\le10^{-4}$ tests exact reward homogeneity. Sweep state is tracked at
+\texttt{experiments/tool\_use\_zvf\_sweep/manifest.tsv}.
 \label{tab:zvf-counterfactual}
-\end{table}
 
 \subsection{Pre-committed interpretation}
 We pre-commit to the following reading of the results to avoid post-hoc

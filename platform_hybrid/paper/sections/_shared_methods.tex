@@ -25,7 +25,7 @@ Reward is verifiable and binary: the last integer matching the regular expressio
 Held-out evaluation uses $200$ fresh problems drawn from the same distribution with greedy decoding (and the same $10$-token cap and parsing rule).
 
 \paragraph{Distinct 199-action classic-RL environment.}
-Separately, the $199$-action arithmetic environment with discrete actions $[-99,+99]$ is a contextual-bandit-style interface for classic RL libraries: the agent selects an integer action rather than generating text.
+Separately, the $199$-action arithmetic environment with discrete actions $\{0,\dots,198\}$ (all possible sums) is a contextual-bandit-style interface for classic RL libraries: the agent selects an integer action rather than generating text.
 It is used only for the cross-library $F_3$ comparison --- $F_3$ denotes the cross-library heterogeneity claim, i.e.\ that outcomes vary across RL libraries/stacks when the task and algorithm family are held as fixed as the libraries allow (formalised in the Multiple-Comparison Correction paragraph below) --- and is not an LLM generation task, so its accuracies are never pooled with the LLM arithmetic sweep above.
 
 % Table of tasks
@@ -49,7 +49,7 @@ Distillation (On-Policy) & IS Loss & $\log p_t - \log p_s$ & Online \\
 
 \subsection{Cross-Library Implementation}
 
-\paragraph{Two seven-library rosters --- read carefully.}
+\paragraph{Two seven-library rosters.}
 This paper uses \emph{two} different seven-library rosters that
 should not be conflated. The cross-RL-library benchmark below
 (Table~\ref{tab:implementations}) covers TRL, SB3, CleanRL, Tianshou,
@@ -76,13 +76,13 @@ cross-RL-library evidence in $F_3$ uses the first.
 \toprule
 \textbf{Library} & \textbf{Implementation} & \textbf{Category} \\
 \midrule
-TRL (HuggingFace) & GRPOTrainer, DPOTrainer, SFTTrainer & LLM-native \\
-Stable Baselines3 & PPO & Classic RL \\
-CleanRL & PPO (single-file) & Research RL \\
-Tianshou & PPO & Modular RL \\
-PufferLib & PPO (high-throughput) & High-perf RL \\
+TRL (HuggingFace)~\citep{vonwerra2022trl} & GRPOTrainer, DPOTrainer, SFTTrainer & LLM-native \\
+Stable Baselines3~\citep{raffin2021sb3} & PPO & Classic RL \\
+CleanRL~\citep{huang2022cleanrl} & PPO (single-file) & Research RL \\
+Tianshou~\citep{weng2022tianshou} & PPO & Modular RL \\
+PufferLib~\citep{suarez2024pufferlib} & PPO (high-throughput) & High-perf RL \\
 rl\_games (NVIDIA) & PPO (GPU-optimized) & High-perf RL \\
-d3rlpy & CQL (offline) & Offline RL \\
+d3rlpy~\citep{seno2022d3rlpy} & CQL (offline) & Offline RL \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -95,7 +95,7 @@ The GAE $\lambda$ and discount $\gamma$ rows of Table~\ref{tab:hyperparams} are 
 
 \begin{table}[htbp]
 \centering
-\caption{Hyperparameter mapping across libraries (PPO defaults).}
+\caption{Hyperparameter mapping across libraries (PPO defaults). d3rlpy is omitted because its offline CQL learner has no PPO clip, GAE or entropy parameters.}
 \label{tab:hyperparams}
 \begin{tabular}{lcccccc}
 \toprule
@@ -117,7 +117,7 @@ Target KL & 0.01 & 0.01 & 0.01 & N/A & N/A & N/A \\
 All RL tasks in this study use deterministic, rule-based outcome verifiers returning binary rewards $R \in \{0, 1\}$ (Figure~\ref{fig:reward-flow}).
 On \textbf{GSM8K}~\citep{cobbe2021training}, the verifier extracts the final numerical answer after the canonical \texttt{\#\#\#\# <number>} delimiter (falling back to the last \texttt{\textbackslash boxed\{...\}} or trailing numeric token when the delimiter is absent), strips commas, currency symbols, and whitespace, and returns $R = 1$ if the parsed value matches the ground-truth answer within $10^{-6}$ and $R = 0$ otherwise. Completions without a parseable numeric answer receive $R = 0$ and are logged separately as format-extraction failures (capturing the $55\%$ zero-reward step rate on Nemotron-120B).
 On the \textbf{measured LLM arithmetic task} (Task Suite above), the verifier extracts the last integer matching the regular expression \texttt{-?\textbackslash d+} in the completion and returns $R = 1$ iff that integer equals $a+b$ exactly, and $R = 0$ otherwise (including when no integer is present).
-On the \textbf{199-action modular-arithmetic environment} used for the classic-RL library benchmark ($F_3$), actions correspond to integers in $[-99, +99]$ and $R = 1$ is awarded for exact integer equality with the target expression.
+On the \textbf{199-action modular-arithmetic environment} used for the classic-RL library benchmark ($F_3$), actions correspond to integers in $\{0, \dots, 198\}$ and $R = 1$ is awarded for exact equality with $a+b$.
 
 % Figure 3: Verifiable Reward Flow
 \begin{figure}[t]
@@ -135,7 +135,7 @@ Following best practices for benchmark design~\cite{agarwal2021deep}, we establi
 clear performance bounds across both the synthetic arithmetic and GSM8K tasks:
 
 \begin{itemize}
-    \item \textbf{Floor (random / zero-reward baseline)}: On the 199-choice modular-arithmetic task, uniform random action selection yields $\frac{1}{199} \approx 0.50\%$ accuracy ($20.0\%$ on the 5-choice L1 variant). On free-form GSM8K generation, unparseable or random output yields a $0.0\%$ floor, while pre-RL step-1 baseline accuracy $R(1)$ spans $0.000$ (Nemotron-120B format mismatch) and $0.250$ (\texttt{Qwen3-8B} base) up to $0.812$--$1.000$ on instruction-tuned checkpoints.
+    \item \textbf{Floor (random / zero-reward baseline)}: On the 199-action classic-RL arithmetic bandit, uniform random action selection yields $\frac{1}{199} \approx 0.50\%$ accuracy ($20.0\%$ on the 5-choice L1 variant). On free-form GSM8K generation, unparseable or random output yields a $0.0\%$ floor, while pre-RL step-1 baseline accuracy $R(1)$ spans $0.000$ (Nemotron-120B format mismatch) and $0.250$ (\texttt{Qwen3-8B} base) up to $0.812$--$1.000$ on instruction-tuned checkpoints.
     \item \textbf{Ceiling (oracle)}: Symbolic evaluation achieves $100\%$ accuracy on both arithmetic and GSM8K.
     \item \textbf{Human baseline}: College-level adults achieve $\sim$99.5\% on
     two-digit addition under timed conditions and $\sim$85--95\% on untimed grade-school word problems.
@@ -320,7 +320,7 @@ Cohen's $d$ & Conventional size & Power ($n{=}5$ vs $n{=}5$) & Power ($n{=}5$ vs
 hypothesis tests reported in the paper with Benjamini--Hochberg (BH)
 adjusted $p$-values at FDR $= 0.05$.  Tests are ranked by raw
 $p$-value (ascending). $\checkmark$ = significant after BH correction
-on the historical $20$-test family; $\times$ = not significant; $^{\ddag}$ = legacy test computed across per-step training rewards within single-seed traces (pseudo-replicated step observations rather than independent seed runs), which is invalid for cross-seed inference and excluded under our Tier-A/B protocol. Total
+on the historical $20$-test family; $\times$ = not significant; ``Last-10'' is the mean over the final 10 logged steps of a run; $^{\ddag}$ = legacy test computed across per-step training rewards within single-seed traces (pseudo-replicated step observations rather than independent seed runs), which is invalid for cross-seed inference and excluded under our Tier-A/B protocol. Total
 tests: $20$; survive on the historical family: $19$. \emph{This
 table is not the paper's headline statistical result.} Under the restricted Tier-A/B family released with the artifacts,
 only $F_3$ (library heterogeneity across the 5 classic-RL implementations on

@@ -21,7 +21,7 @@ group size, and accuracy. This paper therefore treats ZVF conservatively---as a
 descriptive instrument whose reach we bound rather than a causal predictor.
 
 We study ZVF as one pillar of \ours{}, a controlled benchmark of 70+ runs across
-seven RL libraries and five model families ($0.6$B--$\sim$671B) on GSM8K
+seven RL libraries and seven model families ($0.5$B--$1$T) on GSM8K
 \citep{cobbe2021training}, HumanEval~\citep{chen2021codex}, and tool-use tasks.
 Our contributions are: (i) a cross-library, cross-scale measurement of ZVF and its
 relationship to training failure, showing strong association with catastrophic
@@ -46,9 +46,22 @@ held-out improvement, gradient direction, or causal value of an intervention.
 \label{sec:p2-related}
 Reward sparsity and vanishing advantages are recurring obstacles in RL from
 verifiable or human feedback~\citep{christiano2017deeprlhf, ouyang2022training, ahmadian2024backtobasics}. Variants of GRPO adjust the group baseline or advantage
-normalization to preserve signal~\citep{lin2025cppo, gift2025, liu2025rlsubnetworks};
-our aim is orthogonal---not to propose a new estimator but to test how well a
-simple degeneracy statistic predicts outcomes. In relating group reward variance
+normalization to preserve signal~\citep{lin2025cppo, gift2025, tong2025drgrpo}.
+The diagnostic itself is not new: \citet{he2026advantage} define the Advantage
+Collapse Rate (ACR)---the share of groups whose reward standard deviation falls
+below a small threshold, i.e.\ ZVF---show that early ACR predicts final accuracy,
+and use real-time ACR monitoring to drive AVSPO, which injects virtual reward
+samples into homogeneous groups. \citet{nie2026gradstarvation} prove that the
+degeneracy rate exceeds the i.i.d.\ Bernoulli prediction by Jensen's inequality.
+Other methods act on zero-variance groups directly: by over-sampling and
+filtering them (DAPO's dynamic sampling,~\citealp{yu2025dapo}; online difficulty
+filtering,~\citealp{bae2025online}), by skipping prompts predicted to be
+zero-variance (GRESO,~\citealp{zhang2026greso}), by adapting rollout allocation
+(AERO,~\citealp{zhang2026aero}), by a variance-based curriculum
+(VCRL,~\citealp{jiang2025vcrl}), or by extracting signal from them
+(RL-ZVP,~\citealp{le2025rlzvp}).
+Our aim is orthogonal---not to propose a new estimator but to bound what this
+simple degeneracy statistic can and cannot tell a practitioner. In relating group reward variance
 to the update, we connect to analyses that recast group-relative RL as an implicit
 contrast or preference objective~\citep{wu2025grpodpo}, a link we make
 explicit when discussing gradient utilization.

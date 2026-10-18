@@ -27,8 +27,7 @@ falsifiable tests}, not additional experiments; we report the sharpest
 contributions and, where they bear on our evidence---the measured
 $100.3\%$ retention of $G{=}2$ vs $G{=}16$ on the near-ceiling
 arithmetic task, the reconstructed $0.24$ absolute $G{=}4\!\to\!G{=}32$ swing at
-canonical scale, and the sub-$\sqrt{G}$ SNR
-(Table~\ref{tab:groupsize-iter27-synthesis})---we say so explicitly.
+canonical scale---we say so explicitly.
 
 \paragraph{A proposed contrast-projection theorem: GRPO as an endogenous all-pairs DPO (frontier synthesis).}
 Writing $s_i = \nabla_\theta \log \pi_\theta(y_i \mid x)$ for the
@@ -97,12 +96,11 @@ margin
 The frontier reading is that GRPO is a self-scheduling curriculum:
 balanced groups ($K{=}G/2 \Rightarrow \Delta{=}2$) are gently throttled
 while rare breakthroughs ($K{=}1 \Rightarrow \Delta \approx \sqrt{G}$)
-receive amplified gradient. This rationalizes our measured
-sub-$\sqrt{G}$ SNR ($1.46 \to 2.16$ from $G{=}2$ to $G{=}16$, only
-$52\%$ of the $\sqrt{G}$ law, Table~\ref{tab:groupsize-iter27-synthesis}): the
-$O(1/G)$ LOO penalty and the whitening non-linearity together cap
-variance reduction well below the i.i.d.\ $\sqrt{G}$ ideal (frontier
-synthesis).
+receive amplified gradient. Whether the $O(1/G)$ LOO penalty and the whitening
+non-linearity cap gradient-variance reduction below the i.i.d.\ $\sqrt{G}$ rate
+cannot be checked on our sweep, which did not log gradient vectors (the logged
+``SNR'' is a transform of the non-degenerate-step fraction;
+Section~\ref{sec:group-size-iter27}).
 
 \paragraph{Signal yield $Y_G(p)$ and why ``bigger $G$'' is not monotone.}
 The frontier models formalize the useful-signal rate
@@ -204,11 +202,7 @@ alone would miss. The proposed boundary is exchangeable above
 $\approx 0.95$, distinct estimators below $\approx 0.8$ or on a
 projection sign flip; equivalently, the group mean overtakes a trained
 critic once its $O(1/G)$ Monte-Carlo variance drops below the critic's
-mean-squared error. Because our measured SNR rises only sublinearly
-($52\%$ of $\sqrt{G}$), the frontier prediction is that BEI should climb
-sublinearly and \emph{saturate before} critic-free GRPO becomes fully
-value-head-equivalent at the group sizes we test---i.e.\ $G{=}16$ is not
-yet in the PPO-equivalent regime. At the opposite end the same account
+mean-squared error. We have not measured BEI. At the opposite end the same account
 recovers the GRPO$\leftrightarrow$DPO bridge up to a stated scalar:
 at $G{=}2$ a mixed group is a single win--loss pair, on which the
 \emph{unwhitened} centred update assigns $\pm\tfrac12$,
@@ -223,7 +217,7 @@ prompt contributes (Eq.~\ref{eq:fs-contrast}), the whitened margin turns
 that count into an auto-curriculum (Eq.~\ref{eq:fs-margin}), and the
 useful fraction $Y_G(p)=\mathrm{GU}(p,G)$ (Eq.~\ref{eq:fs-yield})
 shows per-rollout yield alone favours minimal $G$, so any interior
-compute optimum must come from trading per-step SNR against step
+compute optimum must come from trading per-step gradient signal against step
 count at a fixed token budget. This is consistent
 with our measured near-ceiling equivalence at small $G$ and with the
 failure of that equivalence at canonical scale, while sharpening the one

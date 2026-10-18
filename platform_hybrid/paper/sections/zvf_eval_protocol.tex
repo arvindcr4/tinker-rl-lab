@@ -10,24 +10,17 @@
 \subsection{How Many Seeds Does the Headline Need? Eval-Protocol Hardening}
 \label{sec:zvf-eval-protocol}
 
-Applying the cost-efficiency lens of \citet{yehudai2025survey} and the
-fine-grained-ablation discipline of $\tau^2$-Bench~\citep{barres2025tau2}
-to the iter130 per-seed risk data (9 variance-mitigation methods
-$\times$ 5 seeds), we ask how much of the evaluation budget the headline
-claims actually require. The top-1 headline (``which method minimises
-risk'') is fully seed-robust: the top-1 match rate is $1.00$ across all
-$\binom{5}{k}$ seed subsets for every $k$, so the minimum viable seed
-panel at the 95\% stability level is $k{=}1$ --- a five-fold evaluation
-saving for that specific claim. Finer-grained claims are more expensive:
-the top-3 \emph{set} reaches 80\% stability only at $k{=}4$ (top-3 match
-rate $0.4$ at $k{=}1$ rising to $0.8$ at $k{=}4$), and the sign of each
-method's $z$-score against \texttt{grpo} is leave-one-seed-out stable
-for 8/8 non-baseline methods. Decomposing the risk index by channel,
-8/9 methods are magnitude-dominant while \texttt{grpo} itself is
-drift-dominant --- variance mitigation acts chiefly by suppressing the
-magnitude channel --- and the best-3/mid-3/worst-3 partition is
-$1.0$-stable under leave-one-seed-out re-ranking
-(\texttt{experiments/results/berkeley/eval\_protocol\_summary.json}).
+An earlier revision applied the cost-efficiency lens of
+\citet{yehudai2025survey} and the ablation discipline of
+$\tau^2$-Bench~\citep{barres2025tau2} to the per-seed scores of the iter130 risk
+index (9 variance-mitigation methods $\times$ 5 seeds) and concluded that one
+seed suffices for the top-1 method claim. Those seeds are draws from the
+simulated variance-mitigation projection, whose per-method trajectories differ
+across seeds only by injected noise, and the risk index itself is withdrawn
+(Section~\ref{sec:zvf-risk-index}); seed stability on them says nothing about
+how many training seeds a real comparison needs, so that conclusion is withdrawn
+(\texttt{experiments/results/berkeley/eval\_protocol\_summary.json} is retained
+for the audit trail).
 
 The earlier fused-risk AUROC and threshold analysis is withdrawn. It used
 synthetic/imputed anchors and cannot validate calibrated monitoring, a safe

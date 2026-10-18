@@ -19,10 +19,9 @@
 \section{ZVF as a Cross-Library Failure Diagnostic}
 \label{sec:zvf-cross-experiment}
 
-The previous two appendices formalized ZVF
-(Section~\ref{sec:appendix:zvf-formalization}) and specified the
-per-framework reward-field mapping
-(Section~\ref{sec:appendix:zvf-pipeline}). This section closes the
+Appendix~\ref{sec:appendix:zvf-formalization} formalizes ZVF and
+Appendix~\ref{sec:appendix:zvf-pipeline} specifies the per-framework
+reward-field mapping. This section closes the
 diagnostic loop by aggregating every ZVF stream in our measurement
 matrix into a single per-experiment summary, attaching a deterministic
 failure taxonomy, and reporting the correlation between mean-ZVF and
@@ -33,19 +32,21 @@ the heldout-accuracy outcome. The artifact is
 \subsection{Failure Taxonomy}
 
 We classify every experiment cell into one of four mutually exclusive
-buckets using only two public thresholds on the heldout-accuracy
-trajectory:
+buckets with an ordered rule cascade on the heldout-accuracy trajectory
+(\texttt{classify} in \texttt{platform\_modal/scripts/zvf\_diagnostic.py});
+the first rule that fires assigns the label:
 \begin{align}
-\mathrm{collapse} &\;\equiv\; p > 0.7 \,\wedge\, \ell < 0.35 \label{eq:collapse}\\
-\mathrm{drift} &\;\equiv\; \ell < 0.85\,p \,\wedge\, \neg\mathrm{collapse} \label{eq:drift}\\
-\mathrm{plateau} &\;\equiv\; p < 0.5 \label{eq:plateau}\\
-\mathrm{converged} &\;\equiv\; \ell \geq 0.85\,p \label{eq:converged}
+\mathrm{collapse} &\;\Leftarrow\; \ell \le 0.001 \;\vee\; (p > 0.7 \,\wedge\, \ell < 0.35) \label{eq:collapse}\\
+\text{else}\quad\mathrm{drift} &\;\Leftarrow\; \ell < 0.85\,p \label{eq:drift}\\
+\text{else}\quad\mathrm{plateau} &\;\Leftarrow\; p < 0.5 \label{eq:plateau}\\
+\text{else}\quad\mathrm{converged} & \label{eq:converged}
 \end{align}
 where $p$ is the peak heldout accuracy observed in the run and
 $\ell$ is the average over the last $10$ optimizer steps. The
-thresholds are not tuned to our data: $p > 0.7$ requires that the run
-\emph{reached} a useful operating point at some point, $\ell < 0.35$
-requires that the run \emph{lost} it by the end. The
+thresholds are not tuned to our data: $\ell \le 0.001$ catches runs that end
+with no correct answers at all (including runs that never had any),
+$p > 0.7$ requires that the run \emph{reached} a useful operating point,
+and $\ell < 0.35$ requires that the run \emph{lost} it by the end. The
 \texttt{collapse} bucket is the answer to the
 \textsc{collapse-or-recovery} question posed by reviewer~W3.
 
@@ -106,8 +107,9 @@ The two cross-tool trajectories (\texttt{cross\_tool\_qwen3-32b},
 \texttt{experiments/results/tool\_code\_reward\_diagnostics.tsv})
 emit reward $= 0.0$ on every rollout of every step: $\mathrm{ZVF}_t
 = 1.0$ for all $t$ and heldout $= 0.0$ for the entire
-30-step window. Under the taxonomy they fall in
-\texttt{collapse} (peak $= 0$, last10 $= 0$).
+30-step window. They fall in \texttt{collapse} through the first clause
+of Eq.~\ref{eq:collapse} ($\ell = 0$); they never reached an operating point,
+so ``collapse'' here means zero signal throughout rather than a lost peak.
 
 \paragraph{Nemotron-120B collapse (peak $0.875 \to$ late $0.154$).}
 The five-model three-phase scaling-law table
@@ -197,8 +199,7 @@ by \texttt{scripts/zvf\_diagnostic.py}. Source TSV:
 \end{table}
 
 \paragraph{Reviewed-record correction.} Any cross-library AERO/GRPO comparison
-below is later or heterogeneous evidence, not reviewed \#36320 evidence and
-not an algorithm ranking. In particular, do not use aggregate GU fields from
+below is later or heterogeneous evidence and not an algorithm ranking. In particular, do not use aggregate GU fields from
 \texttt{zvf\_audit\_summary.json}: submitted GU means $1-\mathrm{ZVF}$.
 The headline read of Table~\ref{tab:zvf-by-library} is the
 contrast between AERO and the GRPO baseline:
@@ -242,8 +243,6 @@ by \texttt{scripts/zvf\_diagnostic.py}; source:
 \label{fig:zvf-by-library}
 \end{figure}
 
-\subsection{Practical Diagnostic Recipe}
-
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.66\linewidth]{figures/zvf_vs_failure.png}
@@ -286,10 +285,10 @@ at ceiling accuracy.
 \paragraph{Why this is evidence and not a circular claim.}
 The collapse label is computed only from peak vs.\ last-10, never
 from ZVF. The correlation between ZVF and the collapse label is
-therefore a prediction, not a fit. The 95\% bootstrap CI is wide
-because $n=23$ cells; the diagnostic value of ZVF in our matrix is
-the \emph{separation} (collapse rows ZVF $\approx 1$, plateau rows
-ZVF $\approx 0.5$), not the point estimate of a single correlation.
+therefore not a fit. With so few collapse cells (two of them $G{=}1$
+tool-use cells whose ZVF is $1$ by construction), what the table shows is a
+\emph{separation} (collapse rows ZVF $=1$, plateau rows median ZVF $0.22$),
+not an estimated association.
 
 \paragraph{Limitations.}
 We deliberately do \emph{not} report partial correlations
@@ -344,13 +343,10 @@ artefacts. Recomputation:
 same quantity as the Advantage Collapse Rate~\cite{he2026advantage}; see
 Section~\ref{sec:zvf-cross-experiment:related}.
 
-\paragraph{Prospective prediction test (placeholder).}
-% PLACEHOLDER -- ZVF PREDICTION EXPERIMENT (Colab, in progress). Results will
-% land in platform_hybrid/experiments/results/publication_fixes/. Fill with:
-% per-prompt p_i from an independent sample, predicted mean_i h_G(p_i) at
-% several G, observed ZVF, prediction error with CI.
-\textbf{[Placeholder: held-out ZVF prediction experiment, results pending in
-\texttt{experiments/results/publication\_fixes/}.]}
+\paragraph{Prospective prediction test (not run).} The convex-functional
+reading makes a testable prediction: estimating each prompt's $p_i$ from an
+independent sample should predict a fresh batch's ZVF as $\E_i[h_G(p_i)]$ at any
+$G$. We have not run this test.
 
 \subsection{Relation to Advantage-Collapse and Difficulty-Filtering Work}
 \label{sec:zvf-cross-experiment:related}

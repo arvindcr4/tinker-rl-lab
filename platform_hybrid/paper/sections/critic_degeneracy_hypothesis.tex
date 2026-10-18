@@ -82,10 +82,12 @@ prompts $\times\,1$:
 \item \textbf{H3 -- paired last10\_avg (5 seeds, matched-stack).}
   CDH predicts near-equivalence (critic $\approx$ group mean), but
   this test cannot certify it. The paired differences give mean
-  $\Delta_{\text{GRPO-PPO}}=0.0608$, $sd{=}0.0958$, $n{=}5$, hence
-  $\mathrm{SE}=0.0958/\sqrt{5}=0.0428$ and a $95\%$ confidence
-  interval of approximately $[-0.058,\,0.180]$ (paired $t$,
-  $\nu{=}4$; two-sided $p{=}0.156$). The result is inconclusive:
+  $\Delta_{\text{GRPO-PPO}}=0.0608$ over $n{=}5$ seeds; recomputed from the raw
+  per-seed runs (\texttt{samestack\_ppo\_grpo.json}) the paired $t$ is $1.27$
+  ($\nu{=}4$, two-sided $p{=}0.27$) with $95\%$ CI $[-0.072,\,0.194]$; most of
+  the gap is one PPO seed at $0.72$. (The earlier $p{=}0.156$ was a normal
+  approximation computed from a summary standard deviation that does not
+  match the raw runs.) The result is inconclusive:
   the interval contains both $0$ and effects beyond $\pm0.1$, and
   the $6$-point point estimate itself exceeds an
   $\epsilon{=}0.02$ TOST equivalence margin, so no equivalence
@@ -104,11 +106,13 @@ prompts $\times\,1$:
   negative $\|g\|$--$R$ coupling for GRPO by construction.
 \item \textbf{H5 -- regressor-collapse fingerprint.} Under CDH the
   PPO critic is trying to learn $E[R \mid x_\text{prompt}]$, which
-  RQS (Reward-Design Quality Score: a one-dimensional,
-  non-parametric per-prompt difficulty score in $[0,1]$, released
-  per prompt anchor in
-  \texttt{experiments/results/berkeley/eureka\_rqs\_per\_anchor.tsv})
-  approximates without parameters. If CDH holds, an OLS regression
+  RQS is meant to proxy. RQS (Reward-Design Quality Score;
+  \texttt{platform\_modal/scripts/berkeley/eureka\_reward\_design\_quality.py},
+  released in \texttt{experiments/results/berkeley/eureka\_rqs\_per\_anchor.tsv})
+  is a per-\emph{model} score, the geometric mean of four statistics of
+  that model's GSM8K training-reward trace (reward variance, fraction of
+  steps with reward above $0.5$, peak-to-trough range, and one minus twice
+  the zero-reward fraction); it is not a per-prompt difficulty estimate. If CDH holds, an OLS regression
   of the \emph{empirical prompt-mean reward} $r_\text{mean}$---the
   Monte-Carlo mean reward per anchor prompt, \emph{not} measured
   token-level critic predictions $V_\phi(x_{1:t})$, which this test
@@ -119,20 +123,18 @@ prompts $\times\,1$:
     \hat r_\text{mean} = -0.082 + 1.282 \cdot \mathrm{RQS},\quad
     R^2 = 0.490,\quad n = 7.
   \end{equation*}
-  A 1-dimensional static regressor explains \emph{half} of
-  $r_\text{mean}$ variance. A PPO value head (typically
-  $L \cdot d_h^2$ parameters) would be fitting residual variation
-  on top of this 1-parameter axis.
+  Because RQS is computed from the same reward trace as $r_\text{mean}$
+  (its second component is mechanically related to the mean) and the
+  anchors are different models from the same-stack runs, this fit is
+  partly circular and does not test what any value head predicts.
 \end{enumerate}
 
 \paragraph{Verdict.}
 H1, H2, and H4 point against the variance-reduction reading of
 PPO's critic in this setup (descriptively, at $n{=}5$, and with
-the confounds noted under H1 and H4), and H5 shows a
-one-dimensional static regressor captures half the prompt-mean
-reward variance. H3 is inconclusive, and it must not be conflated
+the confounds noted under H1 and H4); H5 does not bear on the critic. H3 is inconclusive, and it must not be conflated
 with the held-out comparison: the last-10-step paired difference
-($\Delta{=}0.0608$, $p{=}0.156$) and the held-out paired
+($\Delta{=}0.0608$, $p{=}0.27$) and the held-out paired
 difference ($\Delta{=}{-}0.002$, $p{=}0.62$) are different
 quantities, and \emph{neither} certifies equivalence---both are
 under-powered at $n{=}5$. Taken together, the results are

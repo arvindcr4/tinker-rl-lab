@@ -44,10 +44,13 @@ i.i.d.\ odds-split model $\Pr(K{=}0\mid K{\in}\{0,G\})=(1{-}p)^G/[(1{-}p)^G{+}p^
 evaluated at the aggregate accuracy $p$ predicts ZVF$^-{\approx}0.0003$:
 it \emph{under}-predicts the exact ZVF$^-$ by two orders of magnitude,
 because difficulty heterogeneity concentrates the all-wrong mass on a
-minority of hard prompts that the aggregate $p$ washes out. We therefore
-treat the odds-split as a \emph{conservative lower bound} on ZVF$^-$ when
-only $(\mathrm{ZVF},\bar r,G)$ are logged, and report exact values wherever
-per-group traces exist.
+minority of hard prompts that the aggregate $p$ washes out. The odds-split is
+\emph{not} a bound in general: it under-predicts ZVF$^-$ when $p>0.5$ (as here),
+but when $p<0.5$ it assigns $90$--$100\%$ of the zero-variance mass to
+ZVF$^-$ and over-predicts it whenever some prompts are already mastered. Where
+only $(\mathrm{ZVF},\bar r,G)$ are logged we apply it per step at the step's
+mean reward and average over steps; these values are model-based imputations,
+and we report exact values only where per-group traces exist.
 
 \paragraph{Signed ZVF restores the health ordering that raw ZVF inverts.}
 Table~\ref{tab:zvf-signed} decomposes 20 runs spanning five data sources
@@ -84,8 +87,9 @@ Converged runs concentrate their zero-variance mass in the benign
 ZVF$^+$ (saturation) channel; plateaued, drifting, and collapsed runs
 concentrate it in the pathological ZVF$^-$ (starvation) channel. Raw ZVF
 conflates the two and is non-monotone with outcome. GSM8K rows are exact
-per-group; the rest use the conservative odds-split lower bound on
-ZVF$^-$. Source:
+per-group; all other rows apply the i.i.d.\ odds-split per step at the step's
+mean reward (then average), which is an imputation, not a bound. ``var-mit''
+rows come from the simulated variance-mitigation projection. Source:
 \texttt{experiments/results/zvf\_signed\_summary.tsv}.}
 \label{tab:zvf-signed}
 \end{table}
@@ -120,14 +124,23 @@ that raw ZVF cannot make and that matters when ranking mitigations.
 \paragraph{Honest scope.}
 The perfect AUC is over $n{=}20$ aggregate runs, not a per-step claim; the
 outcome labels are the deterministic \texttt{classify()} rule (peak vs
-last-10 accuracy) used throughout Pillar~2. ZVF$^-$ for the 15 non-GSM8K
-runs is the odds-split lower bound, so the true ZVF$^-$ separation is at
-least as clean as reported. The two collapse points (tool-use, $\bar
+last-10 accuracy) used throughout Pillar~2. ZVF$^-$ for the 17 non-GSM8K
+runs is an odds-split imputation rather than a measurement or a bound (see
+the confound paragraph below). The two collapse points (tool-use, $\bar
 r{=}0$) are the unambiguous $\mathrm{ZVF}^-{=}1$ limit; the separation
 does not rest on them alone -- the plateau/drift band ($0.10$--$0.47$)
 already clears the healthy band ($\le 0.072$). We do not claim ZVF$^-$
 distinguishes plateau from collapse (both are starved); we claim it
 distinguishes starved from healthy, which raw ZVF cannot.
+
+\paragraph{Confound with mean reward.} On these 20 runs every healthy run has
+$\bar r>0.5$ and every unhealthy run has $\bar r<0.5$, and the odds-split factor
+$(1-p)^G/[(1-p)^G+p^G]$ is close to a step function at $p=0.5$. Mean reward
+alone therefore separates the two groups perfectly, so the imputed ZVF$^-$
+adds no separating information beyond $\bar r$; nine of the 13 unhealthy runs are
+simulated variance-mitigation rows. The separation result should be read as a
+property of this imputation, and a test of ZVF$^-$ as a separator needs runs with
+logged per-group rewards on both sides of $\bar r=0.5$.
 
 \paragraph{Reproduction.}
 \texttt{scripts/zvf\_signed\_decomposition.py} (stdlib only; reads the five

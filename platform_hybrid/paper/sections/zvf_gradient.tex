@@ -4,6 +4,17 @@
 % coupling on the G-sweep (Qwen2.5-0.5B / synthetic arithmetic).
 % Source: scripts/zvf_gradient_coupling.py
 
+\paragraph{ZVF and gradient-flow proxies on the measured group-size sweep.}
+Table~\ref{tab:zvf-gradient-coupling} correlates per-step ZVF with logged
+gradient-flow proxies on the measured Qwen2.5-0.5B arithmetic sweep
+($G\in\{2,4,8,16\}$, 3 seeds, 40 steps). Higher ZVF goes with smaller gradient
+norm and lower entropy at every $G$, and with higher mean reward (the sweep is
+near ceiling, so most zero-variance groups are all-correct). The
+\texttt{advantage\_variance} proxy is not independent of ZVF: that runner logs the
+variance of the non-zero whitened advantages, which is $1$ whenever any group in
+the batch is non-degenerate and $0$ otherwise, so its correlation with ZVF is
+largely mechanical.
+
 
 \begin{table}[htbp]
 \centering

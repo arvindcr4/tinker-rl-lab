@@ -14,7 +14,7 @@ $r_{g,k} \in \mathbb{R}$ for $g=1,\ldots,|B_t|$ and $k=1,\ldots,K$, ZVF
 is computed as in Eq.~(\ref{eq:zvf}). The reference implementation is:
 \begin{verbatim}
 def zvf(rewards_2d: np.ndarray, eps: float = 1e-6) -> float:
-    # rewards_2d shape: [num_groups, K]
+    # rewards_2d shape: [num_groups, G], already in [0, 1]
     var_per_group = rewards_2d.var(axis=-1, ddof=1)
     return float((var_per_group <= eps).mean())
 \end{verbatim}
@@ -54,8 +54,11 @@ tolerates fp32 round-off while treating any distinguishable reward
 difference as ``nonzero variance''. A sensitivity sweep over
 $\varepsilon \in \{10^{-8}, 10^{-6}, 10^{-4}, 10^{-2}\}$ shifts
 cross-framework ZVF estimates by at most $0.4\%$ absolute on our logs,
-well below between-run variability. Rewards not in $[0,1]$ are scaled to
-that range before thresholding.
+well below between-run variability. The reference implementation thresholds
+the rewards as given and performs no rescaling; every task in this paper already
+emits rewards in $[0,1]$. Rewards on another scale must be mapped to $[0,1]$ with
+the task's fixed bounds $(r-R_{\min})/(R_{\max}-R_{\min})$ before calling
+\texttt{zvf()}; batch min--max scaling is undefined on a constant batch.
 
 \subsection{Cross-Framework Consistency Check}
 

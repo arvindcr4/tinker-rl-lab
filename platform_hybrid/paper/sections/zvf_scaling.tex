@@ -56,10 +56,10 @@ T5 & Spearman(frac_below_0p1, late_minus_peak) & rho$ = -0.894$ \\
 \end{table}
 
 \paragraph{Reading the table.}
-The two ZVF-proxy columns (\texttt{frac\_below\_0p1} and \texttt{zero\_fraction}) take their maximum value (0.55) on the Nemotron-120B row and are 0 (or 0.07) on every non-collapse row. $\rho_{\mathrm{Spearman}}(\text{frac\_below\_0p1}, \text{is\_collapse}) = +1.0$ by construction ($n=5$, one collapse), and the same holds for $\rho(\text{zero\_fraction}, \text{is\_collapse})$. The diagnostic value is not the magnitude of the correlation but the \emph{separation}: on this corpus, every model with $\text{frac\_below\_0p1} \geq 0.1$ is a collapse, and every model with $\text{frac\_below\_0p1} < 0.1$ is not.
+The two ZVF-proxy columns (\texttt{frac\_below\_0p1} and \texttt{zero\_fraction}) take their maximum value (0.55) on the Nemotron-120B row; among the non-collapse rows they are $0$ except Qwen3-8B ($0.133$ and $0.067$). $\rho_{\mathrm{Spearman}}(\text{frac\_below\_0p1}, \text{is\_collapse}) = +0.791$ (Table~\ref{tab:zvf-scaling-tests}), not $+1$: three non-collapse rows tie at $0$ while Qwen3-8B is strictly positive, and the same holds for \texttt{zero\_fraction}. What the table shows is a \emph{separation} on five rows: any threshold on $\text{frac\_below\_0p1}$ in $(0.133, 0.55]$ isolates the collapse row, whereas the round threshold $0.1$ would also flag Qwen3-8B. The threshold is chosen after seeing the data and has no out-of-sample support.
 
 \paragraph{What this is evidence for.}
-The collapse rule used in \texttt{scaling\_law\_three\_phase.tsv} is $p > 0.7 \wedge \ell < 0.35$, a peak-vs-last10 rule. The ZVF-proxy rule $\text{frac\_below\_0p1} \geq 0.1$ picks the same row. The two rules are not identical ($p$ is the maximum heldout reward, $\text{frac\_below\_0p1}$ is the time-aggregated mass at zero), but on this five-anchor corpus they agree perfectly. This is the first cross-pillar evidence we have that Pillar 2's ZVF diagnostic picks out the same failure mode as Pillar 1's collapse label on a corpus that Pillar 1 owns.
+The collapse rule used in \texttt{scaling\_law\_three\_phase.tsv} is $p > 0.7 \wedge \ell < 0.35$, a peak-vs-last10 rule. A ZVF-proxy rule with a threshold between $0.133$ and $0.55$ picks the same row. The two rules are not identical ($p$ is the maximum heldout reward, $\text{frac\_below\_0p1}$ is the time-aggregated mass at zero), and their agreement on one collapse among five anchors is a consistency check, not evidence that the proxy generalizes.
 
 \begin{figure}[htbp]
 \centering

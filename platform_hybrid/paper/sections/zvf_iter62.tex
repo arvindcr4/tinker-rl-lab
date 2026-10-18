@@ -83,7 +83,7 @@ reading -- that AERO attacks the starvation channel -- is therefore
 \emph{not} falsified by stratification (the hard-end ZVF is indeed
 slightly lower under AERO), but it \emph{is} revealed to be a
 misleading framing: a $-0.006$ ZVF change at the hard end is dwarfed
-by $-0.48$ to $-0.48$ reductions in the middle quintiles (q2 and
+by $-0.480$ and $-0.476$ reductions in the middle quintiles (q2 and
 q3), where vanilla GRPO has heavy starvation-and-saturation turnover
 as the policy gradually masters a stratum of prompts.
 
@@ -133,7 +133,7 @@ one-number summary of each library's ZVF stratification shape. We
 identify three clusters: (i) \emph{saturators} with $\Delta_{4-0}
 \in [0.5, 0.9]$ -- GRPO, CPPO, NGRPO, AERO, MCGRPO, GIFT, AREAL --
 whose ZVF is dominated by easy-prompt saturation at the end of
-training; (ii) \emph{flattener} SCAFGRPO with $\Delta_{4-0}{=}0.16$,
+training; (ii)~\emph{flattener} SCAFGRPO with $\Delta_{4-0}{=}0.16$,
 whose ZVF is roughly equal across difficulty; (iii) \emph{aggressive
 mitigator} ES with $\Delta_{4-0}{=}0.23$, whose ZVF is everywhere
 near zero. SCAFGRPO's flattening is the only method that maintains

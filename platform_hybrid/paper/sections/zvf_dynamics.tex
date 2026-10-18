@@ -25,7 +25,7 @@
 \section{ZVF as a Training-Time Trajectory: Sticky Drift and Short Lead}
 \label{sec:zvf-dynamics}
 
-The previous appendix aggregates ZVF as a pooled per-run mean and
+Section~\ref{sec:zvf-cross-experiment} aggregates ZVF as a pooled per-run mean and
 correlates it against the heldout-accuracy outcome. Pooling throws
 away the time axis. The iter14 contribution is the temporal layer:
 per-step ZVF trajectories are reduced to four
@@ -65,8 +65,7 @@ next-worst method (CPPO, $0.065$) and over 6$\times$ the GIFT/ES/AReaL
 upper tail ($0.001$ to $0.026$). This is the dynamics-level evidence
 that the ZVF pooled mean was always going to look elevated on GRPO: it
 is not that GRPO is born saturated, it is that GRPO saturates over
-training. (frontier synthesis: matches Gemini Deep Think's
-``structural signal bottleneck'' framing.)
+training.
 
 \paragraph{(ii) Lag-1 autocorrelation is high, signal stickiness is universal.}
 Across all 9 variance-mitigation methods and all 4 G-sweep cells the

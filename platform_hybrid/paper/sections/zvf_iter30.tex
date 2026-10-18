@@ -120,7 +120,7 @@ Source: \texttt{experiments/results/zvf\_iter30\_leadindic.tsv}.}
 \begin{enumerate}
 \item \textbf{ZVF-level features are a strong leading indicator at every horizon.}
 \texttt{trailing\_mean\_25} and \texttt{trailing\_auc\_25} ROC-AUC lie in
-$[0.93, 0.93]$ for $K \in \{5, 10, 25\}$ --- substantially above the diagonal
+$[0.928, 0.932]$ for $K \in \{5, 10, 25\}$ --- substantially above the diagonal
 and above the 0.62 point-biserial correlation reported in the iter22
 correlation table, because the iter22 column conflates trajectory-level mean
 ZVF with the binary \emph{within-trajectory} early-warning problem.
@@ -156,7 +156,7 @@ calibration-aware thresholds to be useful.
 
 iter22's lead-time analysis showed that \emph{on GRPO trajectories
 that collapse}, the ZVF trajectory consistently \emph{passes} the
-threshold \texttt{theta = 0.8--0.9} within 1--3 steps of collapse
+threshold $\theta = 0.8$--$0.9$ within 1--3 steps of collapse
 --- a per-trajectory reading. iter26 showed that even after
 regressing out mean reward, the residualised ZVF carries positive
 correlation with last-10 accuracy within the variance-mitigation

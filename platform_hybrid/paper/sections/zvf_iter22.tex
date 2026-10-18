@@ -99,8 +99,8 @@ distinction: across libraries, the mean ZVF CI tracks the
 task difficulty (which is fixed at \texttt{math\_verifiable\_rl} for
 all 9 libraries). When two libraries share the same task and have
 disjoint ZVF CIs, the difference is necessarily a property of the
-policy-update operator -- consistent with the (frontier synthesis)
-claim that ZVF is contrastive yield, not difficulty.
+policy-update operator -- consistent with the external frontier-model
+claim (Section~\ref{sec:frontier-zvf}) that ZVF is contrastive yield, not difficulty.
 
 \begin{figure}[htbp]
 \centering
@@ -154,7 +154,7 @@ areal      & 5 & 0 & 0.00 & ---  & 0.538 & 0.530 & 0.431 \\
 es         & 5 & 0 & 0.00 & ---  & 0.256 & 0.251 & 0.220 \\
 \bottomrule
 \end{tabular}
-\caption{ZVF lead-time summary by library. GRPO is the only library
+\caption{Peak-to-collapse lag summary by library (\texttt{lead\_steps} is the lag from peak held-out accuracy to the first collapse flag; it does not use ZVF). GRPO is the only library
 that triggered any collapse event. mean lead is the lag (in steps)
 between the heldout-accuracy peak and the first collapse flag.
 ``pre-5'' and ``post-5'' are 5-step ZVF averages AFTER the peak and
@@ -187,8 +187,8 @@ story for GRPO: the post-peak ZVF is statistically indistinguishable
 from the pre-peak ZVF (p=0.893). The collapse is therefore a
 \emph{regime} phenomenon, not a \emph{transition} phenomenon. GRPO
 runs at ZVF $\approx 0.88$ throughout the post-peak window and
-collapses anyway. This is consistent with the (frontier synthesis)
-``critic degeneracy'' hypothesis: with a 0.88 ZVF, the within-group
+collapses anyway. This is consistent with the
+``critic degeneracy'' hypothesis from the external frontier-model cross-examination: with a 0.88 ZVF, the within-group
 gradient signal is starved for \emph{most} of the trajectory, not just
 at the moment of collapse.
 
@@ -208,7 +208,7 @@ can verify the per-library directionality directly.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{zvf_leadtime.pdf}
-\caption{ZVF lead-time figure. Left: mean lead-steps per library
+\caption{Peak-to-collapse lag figure. Left: mean lead-steps per library
 (empty bars where no run collapsed). Right: pre-5 vs post-terminal
 5-step ZVF per library. AREAL (rightmost pair, $p=0.043$) shows a
 significant terminal ZVF decrease; GRPO (leftmost pair, $p=0.893$)

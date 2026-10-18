@@ -28,7 +28,7 @@ trajectory in \texttt{experiments/results/variance_mitigation.tsv}. A
 peak of the lag profile at a \emph{positive} $L$ is the canonical
 signature of reward leading ZVF (reward at $t$ is a stronger linear
 predictor of ZVF at $t+L$ than of ZVF at $t$ itself).
-\item \textbf{(B) phase-2 $(ZVF{-}0.5)^+$ integral.} On the same
+\item \textbf{(B) phase-2 $(\mathrm{ZVF}{-}0.5)^+$ integral.} On the same
 trajectories, we compute
 $\overline{\max(0,\mathrm{ZVF}{-}0.5)}$ over the $[0,\text{peak}]$,
 $[\text{peak},\text{peak}{+}50]$, and $[\text{peak}{+}50,\text{end}]$
@@ -125,8 +125,7 @@ bootstrap 95\% CI is in
 The phase-decomposition integral and the lag profile both operate on
 the same 5,541 per-step rows of
 \texttt{variance_mitigation.tsv} and share its
-$n{=}5$-per-method seed sample. Pre-registered predictions
-$4$ are reported in
+$n{=}5$-per-method seed sample. Four pre-registered predictions are reported in
 \texttt{experiments/results/zvf_iter50_predictions.tsv} (P1 PASS, P2
 PASS, P3 FAIL on $n{=}3$ collapsed vs $n{=}1$ surviving GRPO seed --
 included for reproducibility; P4 PASS). The P3 failure is a sample-size

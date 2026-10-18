@@ -62,11 +62,12 @@ adaptive decision, and training record.  A frozen CPU differential contains 14
 intended cases for each of TRL and verl and a shared 36-case controller matrix,
 while retaining native differences rather than relabeling them as conformance.
 Second, we give cost-accounting corollaries of the known binary-starvation
-model. Increasing group size across fixed-size designs reduces the expected number of
-groups needed to see a contrast; for every $G$, complete-group sampling costs
-at least $1/\epsilon$ expected rollouts at success probability $\epsilon$.  We
-also give a restricted two-state witness: when the incremental retry utility
-$\Delta$ is positive, the two actions
+model.  Near a binary reward boundary, a larger fixed group size reduces the
+expected number of groups needed to see a contrast; for every $G$,
+complete-group sampling costs at least $1/\epsilon$ expected rollouts at
+success probability $\epsilon$.  We also give a restricted two-state witness:
+when a prepaid batch has positive net expected value $\Delta$ under the
+solvable state, the two actions
 \{stop, commit to $m$ batch rollouts\} reverse rank across compatible latent
 states and incur positive two-point minimax regret.
 
@@ -115,7 +116,11 @@ active tokens, and how importance ratios are clipped.  DAPO, for example,
 combines dynamic sampling with a particular token-level loss design
 \citep{yu2025dapo}; verl is built on the HybridFlow execution framework
 \citep{sheng2024hybridflow}.  A run that terminates successfully need not
-implement the intervention that its label suggests.
+implement the intervention that its label suggests.  Code-level choices of this
+kind were already shown to drive outcomes in deep policy-gradient methods
+\citep{engstrom2020implementation}, and selective-rollout methods for LLM RL
+deliberately skip prompts predicted to yield uninformative groups
+\citep{zheng2025greso}.
 
 This paper asks one central question:
 
@@ -144,9 +149,12 @@ We make four contributions.
 
 \paragraph{Claim discipline.}
 Every substantive statement is classified as proved,
-artifact-verified, externally sourced, or proposed; negative evidence statuses
+artifact-verified, externally sourced, or proposed. Negative evidence labels
 (infeasible, not established, and not run) additionally describe availability,
-not separate positive claim types.  The portable companion
+not positive claim types.  Table~\ref{tab:status} uses the abbreviations
+Proved, Verified (artifact-verified), and Sourced (externally sourced) together
+with the three negative labels; the only proposed item is the prospective
+controller comparison in the Discussion. The portable companion
 \path{verify_anonymous_claims.py} runs executable mathematical sanity checks and verifies
 receipt hashes and internal invariants; it does not replace the analytic proofs
 or recompute gradients from checkpoints.  The separate \path{ANONYMOUS_CLAIM_LEDGER.md}
@@ -160,15 +168,18 @@ maps claims to exact evidence in an anonymous review supplement.
 For prompt $x$, let $G\geq2$ responses receive rewards
 $R_1,\ldots,R_G$.  A representative group-relative advantage is
 \begin{equation}
-  A_i = \frac{R_i-\bar R}{s_R+\varepsilon},
+  A_i = \frac{R_i-\bar R}{s_R+\varepsilon_{\rm std}},
   \qquad
   \bar R=\frac{1}{G}\sum_{j=1}^{G}R_j .
   \label{eq:group-advantage}
 \end{equation}
-Here $s_R$ is the within-group sample standard deviation
-$\sqrt{\sum_j(R_j-\bar R)^2/(G-1)}$ and $\varepsilon>0$ is a
-representative stabilizer, not a universal implementation constant; the exact
-S1 and campaign branches are specified separately below.
+Here $s_R=\sqrt{\sum_j(R_j-\bar R)^2/(G-1)}$ is sample standard
+deviation and $\varepsilon_{\rm std}>0$ is a representative stabilizer, not a
+universal implementation constant (it is unrelated to the success probability
+$\epsilon$ of Section~\ref{sec:theory}).  Implementations differ in whether the
+stabilizer is added unconditionally, as in Eq.~\eqref{eq:group-advantage}, or
+replaced by an explicit zero-standard-deviation branch; the exact S1 and
+campaign branches are specified below.
 If all rewards are equal, every numerator is zero.  We use \emph{zero-variance
 fraction} (ZVF) only as a descriptive name for the observed fraction of such
 groups.  It is not an estimate of a prompt's latent success probability.
@@ -223,16 +234,30 @@ matches a declared equation.
 The repository's S1 harness evaluates frozen reward and mask fixtures without
 loading a model or running an optimizer.  A framework-neutral reference emits
 advantages, selected rows, losses, and decision outputs.  Separate adapters
-evaluate pinned TRL and verl distributions and record package versions, source
+evaluate pinned TRL \citep{vonwerra2020trl} and verl
+\citep{sheng2024hybridflow} distributions and record package versions, source
 paths, and hashes.  The combined receipt has SHA-256 fixture digest
 \texttt{c35916cf...af8ae9b}; it contains 14 intended cases per stack and 36
 controller cases with no recorded errors.
 
-Here is the complete scalar objective checked by S1.  Let $\mathcal S$ be the
-selected completion rows and $M_{it}\in\{0,1\}$ the completion mask.  Within
-each reward group, GRPO, DAPO, and GSPO use sample standard deviation
-(Bessel correction); if it is at most $10^{-8}$, $A_i=0$.  DrGRPO uses only the
-centered reward.  AERO replaces the zero-variance branch with its frozen
+Here is the complete scalar objective checked by S1.  The five arms are named
+after GRPO \citep{shao2024deepseekmath}, DAPO \citep{yu2025dapo}, Group Sequence
+Policy Optimization (GSPO) \citep{zheng2025gspo}, Dr.~GRPO (DrGRPO)
+\citep{liu2025drgrpo}, and Adaptive Efficient Rollout Optimization (AERO)
+\citep{zhang2026aero}, but each arm is a frozen fixture-level encoding of one
+targeted semantic, not a reimplementation of the cited algorithm: DAPO differs
+from GRPO only in its upper clip bound (no dynamic sampling or token-level
+reduction), DrGRPO removes standard-deviation scaling but keeps the
+per-completion reduction of Eq.~\eqref{eq:s1-objective}, and AERO encodes only
+a posterior-scaled zero-variance branch with frozen counts.  Let $M_{it}\in\{0,1\}$
+be the completion mask after row selection and
+$\mathcal S=\{i:\sum_tM_{it}>0\}$ the active rows; unselected and zero-mask rows
+are excluded from $\mathcal S$ and from all group statistics, and a fixture
+with $\mathcal S=\emptyset$ is rejected as invalid.  Within each reward group,
+GRPO, DAPO, and GSPO use sample standard deviation (Bessel correction) over the
+active rows, with $s_g:=0$ when a group has one active row; if $s_g$ is at most
+$10^{-8}$, $A_i=0$.  Groups with no active row contribute nothing.  DrGRPO uses
+only the centered reward.  AERO replaces the zero-variance branch with a frozen
 Beta-smoothed posterior scale.  For token log probabilities $\ell_{it}$ and
 old log probabilities $\ell^{\rm old}_{it}$, the exact advantage rule is
 \begin{equation}
@@ -256,23 +281,36 @@ are the frozen AERO success/observation counts.  The loss is
    \frac{\sum_t M_{it}h_{it}}{\sum_t M_{it}},
  \label{eq:s1-objective}
 \end{align}
-where $u=0.28$ for DAPO and $0.20$ otherwise.  GSPO replaces the token
+where $u=0.28$ for DAPO and $0.20$ otherwise; every arm, including DAPO and
+DrGRPO, uses this per-completion reduction.  Because only rows in $\mathcal S$
+enter, every denominator $\sum_tM_{it}$ is positive.  GSPO replaces the token
 ratio by the sequence ratio
-$\exp(\sum_tM_{it}(\ell_{it}-\ell^{\rm old}_{it})/\sum_tM_{it})$.
-There is no KL or other auxiliary term in this CPU differential.
+$\exp(\sum_tM_{it}(\ell_{it}-\ell^{\rm old}_{it})/\max\{1,\sum_tM_{it}\})$.
+There is no KL or other auxiliary term in this CPU differential.  S1 gradients
+are taken with respect to the fixture log probabilities $\ell_{it}$.
 
-The four campaign conditions use the DAPO loss structure in
-Eq.~\eqref{eq:s1-objective}, but their training implementation has a separate
-$10^{-12}$ zero-standard-deviation floor (S1 uses $10^{-8}$ for its float64
-conformance comparisons).  \texttt{intended\_full} standardizes selected
-rewards without an additive epsilon, emits zero advantages at that campaign
-floor, and averages completion means.  \texttt{epsilon\_only} instead adds
-$10^{-4}$ to a nonzero selected standard deviation.
+The four campaign conditions use the DAPO clip structure of
+Eq.~\eqref{eq:s1-objective} ($u=0.28$) for every condition, but their training
+implementation has a separate $10^{-12}$ zero-standard-deviation floor (S1 uses
+its float64 comparison tolerance $10^{-8}$ as its zero threshold).  For the
+campaign's binary rewards with $G=8$, any nonzero sample standard deviation is
+at least $\sqrt{7/56}\approx0.354$, so the two thresholds select the same branch.
+\texttt{intended\_full} standardizes selected rewards without an additive
+epsilon, emits zero advantages when $s_g\leq10^{-12}$, and averages completion
+means as in Eq.~\eqref{eq:s1-objective}.  \texttt{epsilon\_only} keeps that
+floor branch and reduction but divides by $s_g+10^{-4}$ when $s_g>10^{-12}$.
 \texttt{reduction\_only} keeps the intended advantages but uses one global
-masked-token mean.  \texttt{native\_trl} standardizes all eight reward rows
-with $s+10^{-4}$ before selection and uses the global masked-token mean; it does
-not use the campaign's explicit floor branch.  Inactive rows have all-zero
-masks.  The verifier reads and asserts both source constants.
+masked-token mean,
+\begin{equation}
+ L_{\rm global}=\frac{\sum_{i}\sum_t M_{it}h_{it}}{\sum_{i}\sum_t M_{it}}.
+ \label{eq:global-reduction}
+\end{equation}
+\texttt{native\_trl} standardizes all eight reward rows with
+$s^{\rm all}_g+10^{-4}$ before selection, where $s^{\rm all}_g$ is the
+eight-row sample standard deviation, and uses
+Eq.~\eqref{eq:global-reduction}; it does not use the campaign's explicit floor
+branch.  Inactive rows have all-zero masks.  The verifier reads and asserts
+both source constants.
 
 The harness intentionally separates two questions:
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
@@ -286,13 +324,13 @@ mean ``different from this reference,'' not ``framework bug.''
 
 \begin{table}[t]
   \centering
-  \caption{Frozen S1 conformance receipt. Intended counts are fixture cases;
-  native material and not-tested counts are objective arms, not fixture cases.
-  Intended integrations pass separately.}
+  \caption{Frozen S1 conformance receipt. Intended counts are fixture cases
+  (of 14); native material and not-tested counts are objective arms (of 5),
+  each compared on one fixture.  Intended integrations pass separately.}
   \label{tab:s1}
   \begin{tabular}{lrrr}
     \toprule
-    Stack & Intended cases & Native material & Native not tested \\
+    Stack & Intended fixture cases & Native material arms & Native not-tested arms \\
     \midrule
     TRL 1.2.0 & 14 & 4 & 1 \\
     verl 0.3.0.post1 & 14 & 1 & 4 \\
@@ -303,23 +341,35 @@ mean ``different from this reference,'' not ``framework bug.''
 The controller matrix is shared across stacks: six policies crossed with six
 observations.  The policies are fixed $G\in\{8,16\}$, symmetric-ZVF,
 failure-only, boundary-aware, and full-triage; the observations are all-wrong,
-all-correct, mixed, noisy, missing, and delayed.  Every policy returns
-\texttt{recheck} for an unresolved reward.  Otherwise, static policies keep
-their named size; symmetric-ZVF escalates any zero-variance group to 16;
-failure-only escalates all-wrong groups; boundary-aware escalates all-wrong and
-drops all-correct groups; and full-triage escalates all-wrong when the Wilson
+all-correct, mixed, noisy, missing, and delayed.  The noisy, missing, and
+delayed observations are the unresolved rewards: every policy returns
+\texttt{recheck} for them and charges no rollouts.  The three resolved
+observations are two-reward groups $(0,0)$, $(1,1)$, and $(0,1)$ with no prior
+history.  Otherwise, static policies keep their named size; symmetric-ZVF
+escalates any zero-variance group to 16; failure-only escalates all-wrong
+groups to 16; boundary-aware escalates all-wrong groups to 16 and drops
+all-correct groups; and full-triage escalates all-wrong to 16 when the Wilson
 upper bound is at least $0.05$ (dropping it otherwise), drops all-correct when
-the Wilson lower bound is at least $0.95$, and keeps $G=8$ otherwise.
+the Wilson lower bound is at least $0.95$, and keeps $G=8$ otherwise.  Every
+non-escalated, non-dropped resolved case keeps $G=8$.  The Wilson interval uses
+$z=1.959964$ (95\%) on the pooled history-plus-group counts, here $(k,n)$ with
+$n=2$.  For $(0,2)$ the upper bound is $0.658$ and for $(2,2)$ the lower bound
+is $0.342$, so the two full-triage drop branches are not exercised by the 36
+frozen cases.
 Appendix~\ref{app:cases} lists every objective case and native verdict; the
 anonymous supplement contains exact inputs and outputs.
 
 \subsection{Zero gradients are relations, not angles}
 
 Let $g_a$ and $g_b$ be gradients under two semantics.  A cosine is meaningful
-only when both norms are positive.  Here each gradient is the float64 CPU
+only when both norms are positive.  In S1 each gradient is the float64 CPU
 gradient of the complete selected policy objective in
-Eq.~\eqref{eq:s1-objective}; ``zero'' means a bit-exact stored norm of zero,
-not a tunable threshold.  Receipts retain both norms and use four logical cases:
+Eq.~\eqref{eq:s1-objective} with respect to $\ell_{it}$; in the campaign it is
+the gradient with respect to the trainable adapter parameters, cast to float64
+for the diagnostic.  ``Zero'' means a bit-exact stored norm of zero, not a
+tunable threshold, and the campaign's relative distance is
+$\lVert g_a-g_b\rVert_2/\lVert g_a\rVert_2$ with $g_a$ the intended gradient.
+Receipts retain both norms and use four logical cases:
 \begin{equation}
 \operatorname{rel}(g_a,g_b)=
 \begin{cases}
@@ -335,11 +385,15 @@ Joint zero counts as equivalence; a one-sided zero is a categorical material
 divergence.  This classification alone makes no general claim about parameter
 updates under momentum, weight decay, auxiliary losses, or accumulation.  In
 the frozen campaign specifically, the reference-KL coefficient $\beta=0$
-(not AdamW momentum), weight decay is zero, gradient
+(not AdamW momentum; fused AdamW keeps PyTorch's default
+$(\beta_1,\beta_2)=(0.9,0.999)$), weight decay is zero, gradient
 accumulation is one, and a selected zero gradient explicitly skips
 \texttt{optimizer.step}; parameters and AdamW state are unchanged while the
-linear scheduler advances.  This avoids both a division-by-zero artifact and
-selective deletion of hard replay groups.
+linear scheduler advances, so neither the moment buffers nor the AdamW step
+counter change on such a step.  An AdamW step on a zero gradient would still
+move parameters through a nonzero first-moment buffer and decay both buffers;
+skipping it avoids that no-signal update without selectively deleting hard
+replay groups.
 
 \subsection{Failure boundaries and immutable evidence}
 
@@ -514,7 +568,13 @@ change normalized gradient direction and 100-step learning under matched
 generated-token and FLOP budgets.  It pinned TRL 1.2.0, Transformers 5.5.4,
 Qwen3-1.7B at a specific revision, A100 execution, group size eight, and four
 conditions: \texttt{intended\_full}, \texttt{native\_trl},
-\texttt{epsilon\_only}, and \texttt{reduction\_only}.  Three screening seeds
+\texttt{epsilon\_only}, and \texttt{reduction\_only}.  The frozen execution
+contract fixes Qwen3-1.7B revision \texttt{70d244cc}, a LoRA adapter (rank 16,
+$\alpha=32$, dropout 0, all linear modules), fused AdamW with learning rate
+$10^{-6}$, linear schedule without warmup, weight decay 0, gradient-norm clip
+1.0, and reference-KL coefficient 0.  Replay corpora are sampled with
+temperature 1.0, top-$p$ 1.0, top-$k$ disabled, the model's thinking-mode chat
+template enabled, and at most 512 new tokens.  Three screening seeds
 were planned in two regimes:
 
 \begin{itemize}[leftmargin=*,itemsep=2pt]
@@ -558,9 +618,18 @@ claim that the scientific gate passed.
 
 The filtered seed-11 generator failed the frozen contract with observed
 completion-length CV $0$, below the required $0.35$, under the 512-token cap.
-The intended positive-control variation therefore could not be constructed
-without changing the registered treatment.  We descoped that branch rather
-than weakening the gate.  The four balanced seed-37 scientific units remain
+Completion length varies only when the model emits an end-of-sequence token
+before the cap; a read-only root-cause analysis recorded in the campaign
+execution notes found that, with thinking mode and sampled decoding, completions
+essentially always fill the 512-token cap (groups 0 and 50 of the accepted
+balanced seed-23 corpus, for example, have raw lengths $512\times8$), and the
+generator's error reports a maximum selected-row CV of exactly zero over the
+filtered pool.  The intended positive-control variation
+therefore could not be constructed without changing the registered treatment.
+We descoped that branch rather than weakening the gate: only the seed-11
+filtered corpus job executed (failed validation); the seed-23 and seed-37
+filtered corpora and all 12 filtered scientific units were marked
+contract-infeasible without execution.  The four balanced seed-37 scientific units remain
 pending because a fresh A100 allocation probe was rejected for
 quota/entitlement.  Neither partial progress nor pending work is counted as a
 scientific outcome.
@@ -608,10 +677,44 @@ for seed 23; every such receipt stores both norms as exact zero and leaves
 cosine and relative $\ell_2$ null.  The verifier checks those stored invariants
 but does not regenerate gradients from private model checkpoints.
 
+Every row of Table~\ref{tab:runs}, whatever its training condition, stores the
+same counterfactual pair $(g_{\rm intended\_full}(\theta_t),
+g_{\rm native\_trl}(\theta_t))$ at that unit's own current parameters
+$\theta_t$; the native-TRL row is therefore not a self-comparison.  Each step
+replays one group of eight rows, and the balanced regime retains all rows and
+charges right-padding as active tokens, so all rows of a group have the same
+active length (4096 active tokens, i.e.\ $8\times512$, in 98 of 100 steps of
+every unit).  Per-completion and global token means then coincide, which makes
+\texttt{intended\_full} and \texttt{reduction\_only}, and likewise
+\texttt{epsilon\_only} and \texttt{native\_trl}, the same objective on this
+corpus; their identical seed-23 records are consistent with that.  For the
+same reason the intended and native objectives differ analytically only by the
+per-group factor $s_g/(s_g+10^{-4})$, which predicts cosine 1 and relative
+$\ell_2$ at most $10^{-4}/(\sqrt{7/56}+10^{-4})\approx2.8\times10^{-4}$.  The
+stored relative $\ell_2$ values of up to $0.0177$ are therefore not explained by
+the objective definitions.  We did not isolate their source; the policy is
+loaded in bfloat16, the two gradients come from separate backward passes, and
+they are cast to float64 only for the diagnostic.  We report them as stored and do not interpret them as a
+semantic effect.
+
 For the sole completed intended-full balanced cell (seed 23), 69/100 receipts
 satisfy the frozen joint criterion, below the preregistered 95/100 requirement.
 Sixty-five are joint-zero; only four of the 35 nonzero receipts satisfy both
-cosine $\geq 0.999$ and relative $\ell_2\leq 0.01$.  The very high cosine
+cosine $\geq 0.999$ and relative $\ell_2\leq 0.01$.  All 31 failing nonzero
+receipts fail only the relative-$\ell_2$ bound; none fails the cosine bound.
+Because $\lVert g_a-g_b\rVert/\lVert g_a\rVert\geq\sin\angle(g_a,g_b)$, the
+relative-$\ell_2$ bound alone implies cosine at least
+$\sqrt{1-10^{-4}}\approx0.99995$, so the cosine bound is never binding.
+Descriptively, the same intended-versus-native criterion holds on 69, 69, 70,
+69, 70, and 69 receipts in the six rows of Table~\ref{tab:runs} (in table
+order), with every nonzero failure again due to relative $\ell_2$.  The
+registered \texttt{epsilon\_only} negative-control gate instead compares each
+step's selected gradient with $g_{\rm intended}$; it holds on 69/100 (seed 11)
+and 70/100 (seed 23) receipts, also below 95/100, with maximum relative
+$\ell_2$ 0.0168.  This pair differs analytically only by the scalar factor
+above, whereas \texttt{reduction\_only} selected gradients are bit-identical to
+$g_{\rm intended}$ on all 200 of its receipts.  The registered
+\texttt{reduction\_only} ratio gate is not evaluated here.  The very high cosine
 extrema are therefore descriptive near-collinearity, not registered
 equivalence.  The incomplete screening matrix prevents a full campaign
 verdict, but no missing cell can reverse this accepted cell's failure.  The
@@ -619,12 +722,6 @@ central causal hypothesis also required the missing filtered positive control
 and direction-consistent effects across all three seeds.  Differences in the
 six final accuracies are neither causal effects nor evidence of superiority.
 No confirmatory seeds ran.
-
-In Table~\ref{tab:runs}, each gradient pair compares intended and native
-semantics at that unit's own current parameters, not gradients between two
-trained conditions. With equal active lengths, the two reduction rules
-coincide; equal seed-23 trajectories within condition pairs are therefore not
-in tension with a nonzero intended/native discrepancy driven by scaling.
 
 \subsection{What the feasibility outcome establishes}
 
@@ -644,6 +741,31 @@ reference, a harmful training effect from native semantics, or an advantage from
 a controller.
 
 \section{Discussion}
+
+\paragraph{Contribution and verification boundary.}
+The proposed contribution is the versioned, fail-closed conformance contract
+linking a declared objective, gradient diagnostics, decisions, and immutable
+receipts, together with a restricted decision-theoretic witness. Neither the
+binary-group identity nor the observation that homogeneous rewards are
+ambiguous is claimed as new. Receipt integrity and stored-diagnostic agreement
+are distinct from source recomputation, gradient recomputation, and training
+reproduction; the latter three are not performed by the receipt verifier.
+Objects whose bytes are not shipped with the verification archive (in every
+case private checkpoints, raw corpora, and per-example predictions) are checked
+only for hash format, which does not authenticate them; the Reproducibility
+Statement lists exactly which source objects the archive contains and
+re-hashes.
+
+\paragraph{Prospective controller comparison (not executed here).}
+A controller claim requires a separately preregistered, matched-budget study:
+fixed $G=8$ and $G=16$, a symmetric ZVF-only policy, faithful published adaptive
+sampling/advantage-collapse baselines, and a posterior or budget-aware
+allocation rule. Any implementation deviations must be recorded before scoring.
+Report held-out quality and uncertainty over independent training seeds,
+charged rollouts (including rejected samples), generated tokens, FLOPs, and
+wall time. The accepted campaign and its failed gate are not results of this
+future comparison. The stop-versus-prepaid-batch witness establishes neither
+sufficiency of an additional statistic nor utility of an implemented controller.
 
 \paragraph{Optimizer efficiency is not sample efficiency.}
 For fixed $G$, Eq.~\eqref{eq:boundary-cost} separates group count from rollout
@@ -775,7 +897,7 @@ are in the anonymous supplement.
     GSPO & base, zero-mask & sequence ratio and masking \\
     DrGRPO & base, translated & unscaled centered reward and reduction \\
     AERO & posterior & posterior advantage on homogeneous rewards \\
-    GRPO selected & base; rows 0,1,3 & active-row selection \\
+    GRPO selected & base (rows 0,1,3) & active-row selection \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -785,6 +907,10 @@ and DrGRPO and does not expose the tested AERO objective.  Native verl is
 materially different on GRPO; DAPO, GSPO, DrGRPO, and AERO are not exposed by
 the pinned kernel.  ``Material'' means the stored native trace differs from
 this reference under the frozen tolerances, not that the framework is defective.
+Each native verdict is computed on one fixture per arm (GRPO base, DAPO
+DAPO-clip, GSPO base, DrGRPO base, AERO posterior), which is why
+Table~\ref{tab:s1} counts five native arms rather than 14 cases; the
+GRPO-selected fixture has no separate native verdict.
 The shared controller cases are the Cartesian product
 \{static-8, static-16, symmetric-ZVF, failure-only, boundary-aware,
 full-triage\} $\times$ \{all-wrong, all-correct, mixed, noisy, missing,
@@ -815,19 +941,23 @@ reported decomposition.
     filtered corpus, seeds 23/37 & 2 & contract-infeasible \\
     filtered scientific, three seeds, four conditions & 12 & contract-infeasible \\
     \midrule
-    Total & 31 & State counts as labeled in Table~\ref{tab:state} \\
+    Total & 31 & 10/14/1/2/4 (Table~\ref{tab:state} order) \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
 \section{Evidence Status Matrix}
 
-Table~\ref{tab:evidence-status} separates current evidence from future work.
+Table~\ref{tab:status} assigns each mathematical, conformance, and empirical
+component one status.  Sourced, Proved, and Verified are the externally
+sourced, proved, and artifact-verified claim types of the claim discipline;
+Infeasible, Not established, and Not run are negative availability labels, not
+positive claims.
 
 \begin{table}[h]
   \centering
   \caption{Boundary between current evidence and future work.}
-  \label{tab:evidence-status}
+  \label{tab:status}
   \begin{tabularx}{\linewidth}{lXl}
     \toprule
     Item & Evidence & Status \\

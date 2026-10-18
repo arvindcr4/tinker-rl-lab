@@ -53,6 +53,7 @@ export function Papers() {
         <p>Corrected export from <time dateTime="2026-10-11">11 Oct 2026</time>, with editable sources and documented evidence gaps.</p>
         <DocumentLink document={DOCUMENTS.thesis} primary />
         <DocumentLink document={DOCUMENTS.thesisSources} />
+        <DocumentLink document={DOCUMENTS.thesisReview} />
         <p className="small">Independent final-thesis review and institutional approval are still pending. This is not a verified copy of the accepted ICICC paper.</p>
       </aside>
     </div>
@@ -90,7 +91,7 @@ export function PreviousSemester() {
       <dl className="stat"><dt>Original report date</dt><dd><time dateTime="2026-04-04">4 Apr 2026</time></dd><dt>Frozen boundary</dt><dd><span className="mono">{SEMESTER_BOUNDARY.tag}</span> · <span className="mono">{SEMESTER_BOUNDARY.commit.slice(0, 8)}</span></dd><dt>Project guides</dt><dd>{GROUP_GUIDES.join(" and ")}</dd></dl>
       <div className="document-actions"><DocumentLink document={DOCUMENTS.capstone} primary /><DocumentLink document={DOCUMENTS.groupProvenance} /></div>
     </article>
-    <div className="callout document-caveat"><strong>Preserved history, with an erratum.</strong> The frozen report contains unresolved baseline-ranking, evaluation-unit, statistical-test and DPO-outcome contradictions. Its historical numbers are not promoted as current verified findings. <a href={DOCUMENTS.groupErratum.href} target="_blank" rel="noopener noreferrer">Read the frozen-report erratum<span className="sr-only"> (opens on GitHub in a new tab)</span> ↗</a></div>
+    <div className="callout document-caveat"><strong>Preserved history, with an erratum.</strong> The frozen report contains unresolved baseline-ranking, evaluation-unit, statistical-test and DPO-outcome contradictions. Its historical numbers are not promoted as current verified findings. <a href={DOCUMENTS.groupErratum.href} target="_blank" rel="noopener noreferrer">Read the frozen-report erratum<span className="sr-only"> (opens on GitHub in a new tab)</span> <span aria-hidden="true">↗</span></a></div>
     <section className="document-section" aria-labelledby="archive-heading">
       <div><h3 id="archive-heading">Explore the earlier deliverables</h3><p className="small">Each link targets a file present in the public repository snapshot.</p></div>
       <div className="grid2">

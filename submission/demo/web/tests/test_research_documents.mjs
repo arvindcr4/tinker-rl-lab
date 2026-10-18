@@ -14,6 +14,39 @@ const root = resolve(here, '../../..');
 const documents = [...Object.values(DOCUMENTS), ...CONTINUATION_PAPERS.map(p => p.source)];
 const publicObjects = JSON.parse(readFileSync(join(here, 'tests/fixtures/public_document_objects.json'), 'utf8'));
 const gitBlobId = (bytes) => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+const thesisActions = [DOCUMENTS.thesis, DOCUMENTS.thesisSources, DOCUMENTS.thesisReview];
+const expectedActions = {
+  papers: [
+    { label: 'Read the decision & reviewer feedback', href: '#submissions' },
+    ...thesisActions, DOCUMENTS.completion, DOCUMENTS.errata, DOCUMENTS.currentStatus,
+    ...CONTINUATION_PAPERS.map(p => p.source), DOCUMENTS.continuationMap, DOCUMENTS.roster, DOCUMENTS.fraudArchive,
+  ],
+  previous: [
+    DOCUMENTS.capstone, DOCUMENTS.groupProvenance, DOCUMENTS.capstone, DOCUMENTS.capstoneSource,
+    DOCUMENTS.preparedPackage, DOCUMENTS.groupCitation, DOCUMENTS.groupContributions,
+    { label: 'Continue to papers & thesis', href: '#papers' },
+    DOCUMENTS.history, DOCUMENTS.continuationProvenance,
+  ],
+};
+const escapeHtml = value => value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;' })[character]);
+function links(html) {
+  return [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].map(([markup, attributes, content]) => ({
+    markup, content,
+    href: attributes.match(/\shref="([^"]*)"/)?.[1],
+    classes: (attributes.match(/\sclass="([^"]*)"/)?.[1] || '').split(/\s+/),
+  }));
+}
+function assertDocumentActions(html, expected) {
+  const actions = links(html).filter(link => link.classes.includes('document-link'));
+  assert.ok(expected.length > 0, 'Expected document actions must not be empty');
+  assert.equal(actions.length, expected.length, 'Every expected document action must be rendered');
+  actions.forEach((link, index) => {
+    const document = expected[index];
+    assert.ok(link.content.startsWith(`<span>${escapeHtml(document.label)}<`), `Visible label for ${document.label}`);
+    assert.equal(link.href, document.href, `Destination for ${document.label}`);
+  });
+  return actions;
+}
 let rendered;
 async function markup() {
   if (rendered) return rendered;
@@ -85,6 +118,38 @@ test('paper view features the actual title and discloses manuscript, review and 
   assert.match(overview, /href="#previous-semester"/);
 });
 
+test('thesis card exposes the indexed export and review status alongside the thesis and sources', async () => {
+  const { papers } = await markup();
+  const thesis = papers.match(/<aside class="panel thesis-feature"[^>]*>[\s\S]*?<\/aside>/)?.[0];
+  assert.ok(thesis, 'The thesis card must be rendered');
+  assertDocumentActions(thesis, thesisActions);
+});
+
+test('every rendered document action uses its corresponding indexed destination', async () => {
+  const pages = await markup();
+  for (const [page, expected] of Object.entries(expectedActions)) assertDocumentActions(pages[page], expected);
+});
+
+test('document action assertions reject placeholders, swapped indexed URLs and missing actions', async () => {
+  const pages = await markup();
+  for (const [page, expected] of Object.entries(expectedActions)) {
+    const html = pages[page];
+    const actions = assertDocumentActions(html, expected);
+    const external = actions.filter(link => !link.href.startsWith('#'));
+    assert.ok(external.length > 0, `${page} must exercise indexed document actions`);
+    for (const link of external) {
+      const wrongDocument = link.href === DOCUMENTS.thesis.href ? DOCUMENTS.capstone : DOCUMENTS.thesis;
+      for (const href of ['#', wrongDocument.href]) {
+        const broken = html.replace(link.markup, link.markup.replace(/\shref="[^"]*"/, ` href="${href}"`));
+        assert.notEqual(broken, html, 'The regression fixture must change a rendered destination');
+        assert.throws(() => assertDocumentActions(broken, expected), /Destination for/);
+      }
+      assert.throws(() => assertDocumentActions(html.replace(link.markup, ''), expected), /Every expected document action/);
+    }
+    assert.throws(() => assertDocumentActions('', expected), /Every expected document action/);
+  }
+});
+
 test('previous-semester view keeps archive limits beside deliverables and credits every group member', async () => {
   const { previous } = await markup();
   assert.match(previous, /aria-labelledby="previous-semester-heading"/);
@@ -98,6 +163,16 @@ test('previous-semester view keeps archive limits beside deliverables and credit
   assert.match(previous, /do not establish claim-level ownership/);
   assert.match(previous, /<ol class="research-progression">/);
   assert.match(previous, /href="#papers"/);
+});
+
+test('frozen-report erratum keeps its new-tab announcement and hides the decorative arrow', async () => {
+  const { previous } = await markup();
+  const errata = links(previous).filter(link => link.href === DOCUMENTS.groupErratum.href);
+  assert.equal(errata.length, 1, 'The frozen-report erratum must remain visible beside the archive caveat');
+  assert.ok(errata[0].content.startsWith(DOCUMENTS.groupErratum.label));
+  assert.match(errata[0].content, /<span class="sr-only"> \(opens on GitHub in a new tab\)<\/span>/);
+  assert.match(errata[0].content, /<span aria-hidden="true">↗<\/span>/);
+  assert.equal((errata[0].content.match(/↗/g) || []).length, 1, 'No unhidden duplicate arrow');
 });
 
 test('document routes keep unique headings, explicit external behavior and no undisclosed destinations', async () => {

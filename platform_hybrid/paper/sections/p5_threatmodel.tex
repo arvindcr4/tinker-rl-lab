@@ -48,38 +48,46 @@ hochlehnert2025sober, zhang2024benchvariance}.
 \subsection{Flip-Risk Grades R0--R5}
 \label{sec:p5-grades}
 Given two runs' manifests (\secref{sec:p5-toolchain}), we grade the risk that
-a comparison between them is confounded. The grade is determined by the most
-severe difference found across the seven run-manifest fields of
-\tableref{tab:p5-minreport}.
+a comparison between them is confounded. The grade is the most severe class
+among fields that are \emph{known on both sides and differ}; the scale below is
+the one the reference \texttt{stackdiff} implementation computes
+(\texttt{registry/query.py}, companion Pillar-6 paper), so the specification
+and the tool use a single rubric.
 \begin{description}[leftmargin=1.5em, itemsep=2pt, topsep=2pt]
-\item[R0 --- Replicate.] All seven manifest fields identical; runs differ at most in
-hardware instance. Comparison measures noise floor.
-\item[R1 --- Seed-only.] Items identical; seeds differ under a declared seed
-policy. Comparison is the intended unit of statistical analysis
-\citep{colas2019hitchhiker, agarwal2021deep}; report dispersion, not a single
-delta.
-\item[R2 --- Declared-knob.] Items differ only in declared, quantitatively
-reported knobs (learning rate, steps, $G$ with fixed schedule form).
-Comparable, with the knob difference stated as a caveat or bridged by a
-matched run.
-\item[R3 --- Stack-vector.] At least one V1/V3/V4/V5 vector differs
-(backend, precision, parser, split, schedule form). Same-label stack swings in
-our corpus reach $17\times$, but the largest exhibit is multi-confound
-($64\%$ of it is a checkpoint switch);
-algorithmic conclusions require a bridging run
-on a common stack before they are admissible.
-\item[R4 --- Label collision.] The same algorithm label with different
-objective semantics (V2): the comparison is between stacks wearing one name.
-Verdict: \textsc{not-comparable}; the label must be split (e.g.,
-``DAPO(dynamic-sampling)'' vs.\ ``DAPO(clip-surrogate)'').
-\item[R5 --- Undeclared.] One or more of the seven manifest fields is missing from
-either manifest. Verdict: \textsc{unverifiable}; no grade can be assigned,
-which is itself the finding.
+\item[R0 --- No known difference.] Every compared field known on both sides
+is identical. This is not by itself evidence of a matched stack: it is
+evidence only to the extent that coverage (below) is complete.
+\item[R1 --- Nuisance.] Seeds, trainer version, or reporting differ. Seeds
+are the intended unit of statistical analysis \citep{colas2019hitchhiker,
+agarwal2021deep}: report dispersion, not a single delta. Version differences
+may need semantic review.
+\item[R2 --- Runtime (V1).] Trainer, sampling backend, precision,
+reward-function hash, or implementation identity differ.
+\item[R3 --- Hyperparameter / budget (V3).] Decoding parameters, batch shape
+or group-size schedule, steps, optimizer, LoRA configuration, or training-data
+subset differ.
+\item[R4 --- Algorithm (V2).] Loss objective, importance-ratio level,
+clipping, aggregation, advantage normalization, token mask, dynamic sampling,
+or KL reference/coefficient/estimator differ. An algorithm comparison is
+\emph{meant} to differ here; the threat is a \emph{label collision}, the same
+label with differing R4 fields, which must be resolved by splitting the label
+(e.g., ``DAPO(dynamic-sampling)'' vs.\ ``DAPO(clip-surrogate)'').
+\item[R5 --- Outcome-critical (V4/V5).] Base checkpoint identity or revision,
+tokenizer, reward definition, prompt or chat template, dataset or its
+revision, or evaluation protocol differ. Exhibit~1's checkpoint switch is R5.
 \end{description}
+Fields unknown on either side never raise the grade; they lower a separate
+\emph{coverage} score and set an \emph{underspecified} flag (coverage below
+$0.8$, or any unknown R5 field). The intended reading for an algorithmic claim
+``A beats B'' is: admissible only if the differing fields are the R4 fields
+that define A versus B plus R1 nuisance, coverage is complete, and seed
+dispersion is reported; any additional R2, R3, or R5 difference makes the
+claim stack-conditioned until a bridging run on a common stack removes it; an
+underspecified pair supports no grade, which is itself the finding.
 Two consequences follow. First, most cross-paper comparisons in today's
-RL-for-LLM literature are R3--R5 by construction, because items 3, 4, and 7
-are almost never reported; the literature's aggregate ranking of GRPO-family
-algorithms is therefore an average over unmodeled stacks. Second, the grading
-is mechanical---it requires no judgment call beyond the manifest contents---
-which is what makes it suitable for continuous integration
+RL-for-LLM literature are underspecified by construction, because items 3, 4,
+and 7 are almost never reported; the literature's aggregate ranking of
+GRPO-family algorithms is therefore an average over unmodeled stacks. Second,
+the grading is mechanical---it requires no judgment call beyond the manifest
+contents---which is what makes it suitable for continuous integration
 (\secref{sec:p5-toolchain}) rather than for post-hoc reviewer heroics.

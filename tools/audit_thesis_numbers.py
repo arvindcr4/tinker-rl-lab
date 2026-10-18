@@ -114,7 +114,16 @@ def strict_json_loads(source, relative=""):
                 and result["runs"][path[1]].get(field) == "ppo"
                 and math.isnan(value)
             )
-            if not allowed:
+            # Mantel placebo items with <= 1 unique value have no defined p-value.
+            placebo = (
+                relative == f"{STATS}/m18_mantel_summary.json"
+                and len(path) == 4
+                and path[1] == "per_item_outcome_perm"
+                and str(path[3]).startswith("p_value_")
+                and result[path[0]][path[1]][path[2]].get("n_unique", 2) <= 1
+                and math.isnan(value)
+            )
+            if not (allowed or placebo):
                 raise ValueError(f"non-finite value at {path}")
         elif isinstance(value, dict):
             for key, item in value.items():
@@ -275,9 +284,13 @@ def c1_ledger():
 def e14():
     rows = jsonl(E14_DISP)
     for row in rows:
-        for field in ("correct", "native_accepted"):
-            if type(row.get(field)) is not bool:
-                raise ValueError(f"E14 {field} must be boolean")
+        if type(row.get("native_accepted")) is not bool:
+            raise ValueError("E14 native_accepted must be boolean")
+        # Skipped (not accepted) rows carry correct=None; accepted rows must be judged.
+        if type(row.get("correct")) is not bool and not (
+            row["native_accepted"] is False and row.get("correct") is None
+        ):
+            raise ValueError("E14 correct must be boolean")
         tokens = row["actor_usage"]["completion_tokens"]
         if type(tokens) is not int or tokens < 0:
             raise ValueError("E14 completion_tokens must be a nonnegative integer")

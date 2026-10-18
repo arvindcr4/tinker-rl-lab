@@ -100,6 +100,8 @@ dev = [
     "seaborn>=0.13.0,<0.14.0",
     "scikit-learn>=1.7,<2",  # reviewed analysis regressions import sklearn
     "tenacity>=9,<10",  # offline provider-adapter imports during collection
+    "fastapi>=0.142.0,<0.143.0",  # offline Atropos and actor HTTP contract tests
+    "httpx>=0.28.1,<0.29.0",  # FastAPI/Starlette TestClient transport
 ]
 
 [project.urls]

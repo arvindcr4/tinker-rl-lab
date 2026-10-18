@@ -20,7 +20,7 @@ def test_ci_dev_extra_contains_collection_dependencies_in_lock():
     lock = tomllib.loads((ROOT / "uv.lock").read_text())
     package = next(p for p in lock["package"] if p["name"] == project["project"]["name"])
     locked_dev = {p["name"] for p in package["optional-dependencies"]["dev"]}
-    for name in ("tenacity", "scikit-learn", "jsonschema"):
+    for name in ("tenacity", "scikit-learn", "jsonschema", "fastapi", "httpx"):
         assert any(item.startswith(name + ">=") for item in dev)
         assert name in locked_dev
 

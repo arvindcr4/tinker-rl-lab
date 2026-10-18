@@ -5036,6 +5036,8 @@ d3rlpy = [
 ]
 dev = [
     { name = "build" },
+    { name = "fastapi" },
+    { name = "httpx" },
     { name = "hypothesis" },
     { name = "jsonschema" },
     { name = "matplotlib" },
@@ -5080,9 +5082,11 @@ requires-dist = [
     { name = "d3rlpy", marker = "extra == 'd3rlpy'", specifier = ">=2.8.0,<2.9.0" },
     { name = "datasets", specifier = "==4.8.4" },
     { name = "datasets", marker = "extra == 'trl'", specifier = "==4.8.4" },
+    { name = "fastapi", marker = "extra == 'dev'", specifier = ">=0.142.0,<0.143.0" },
     { name = "fschat", marker = "extra == 'all'", specifier = "==0.2.36" },
     { name = "fschat", marker = "extra == 'eval'", specifier = "==0.2.36" },
     { name = "gymnasium", specifier = "==1.2.3" },
+    { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28.1,<0.29.0" },
     { name = "huggingface-hub", specifier = "==1.11.0" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.100" },
     { name = "jsonschema", marker = "extra == 'dev'", specifier = ">=4.23,<5" },

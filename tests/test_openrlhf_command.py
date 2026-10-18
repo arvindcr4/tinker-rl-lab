@@ -452,9 +452,16 @@ def test_v084_uses_pretrain_for_both_actor_and_reference():
     assert command[command.index("--pretrain") + 1] == config().model_name
 
 
-@pytest.mark.parametrize(("field", "value"), [
-    ("gamma", -0.1), ("gamma", 1.1), ("lam", -0.1), ("lam", 1.1), ("kl_coef", -0.1),
-])
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("gamma", -0.1),
+        ("gamma", 1.1),
+        ("lam", -0.1),
+        ("lam", 1.1),
+        ("kl_coef", -0.1),
+    ],
+)
 def test_native_algorithm_ranges_fail_before_launch(field, value):
     cfg = config()
     setattr(cfg.algorithm, field, value)

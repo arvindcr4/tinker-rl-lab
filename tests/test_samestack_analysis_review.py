@@ -624,6 +624,7 @@ def test_file_loader_records_validated_bundle_and_rejects_corruption(audit, tmp_
 
 def test_loader_discovers_nested_promoted_runs_and_ignores_receipts(audit, tmp_path):
     import gzip
+
     leaf = tmp_path / "grpo_g8_s42"
     leaf.mkdir()
     (leaf / "grpo_g8_s42.json").write_text(json.dumps({"arm": "grpo_g8", "seed": 42}))

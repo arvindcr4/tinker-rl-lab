@@ -127,8 +127,24 @@ def validate_arithmetic(receipt: dict[str, Any], role: str) -> list[dict[str, An
         raise ValueError(f"{role}: records must be a nonempty list of objects")
     scores = []
     grouped: dict[str, list[float]] = {}
+    identities = set()
+    prompts = set()
     for index, row in enumerate(rows):
+        for key in ROW_FIELDS:
+            _validate_recorded_value(row.get(key), f"{role}.records[{index}].{key}")
+        identity = (row.get("suite_id"), row.get("source_id"))
+        prompt = row.get("prompt_sha256")
+        if None not in identity:
+            if identity in identities:
+                raise ValueError(f"{role}: duplicate source identity")
+            identities.add(identity)
+        if prompt is not None:
+            if prompt in prompts:
+                raise ValueError(f"{role}: duplicate prompt fingerprint")
+            prompts.add(prompt)
         score = _number(row.get("score"), f"{role}.records[{index}].score")
+        if not 0 <= score <= 1:
+            raise ValueError(f"{role}.records[{index}].score must be in [0, 1]")
         if type(row.get("exact")) is not bool or row["exact"] != (score == 1.0):
             raise ValueError(f"{role}.records[{index}].exact disagrees with its score")
         suite = row.get("suite_id")

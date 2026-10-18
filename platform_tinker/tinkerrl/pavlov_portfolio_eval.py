@@ -33,6 +33,9 @@ from .grpo import (
 
 MODEL_ID = "Qwen/Qwen3.6-35B-A3B"
 MODEL_REVISION = "995ad96eacd98c81ed38be0c5b274b04031597b0"
+TOP_P = 0.95
+MAX_PROMPT_TOKENS = 2048
+PROMPT_TRUNCATION = "reject_over_budget"
 WANDB_ENTITY = "arvindcr4-pes-university"
 WANDB_PROJECT = "tinker-rl-lab-pavlov"
 WANDB_GROUP = "pavlov-portfolio-eval-20260809"
@@ -109,9 +112,9 @@ def _configuration_check(args: argparse.Namespace) -> dict[str, Any]:
         tokenizer_revision=MODEL_REVISION,
         dataset_revision=PAVLOV_NON_XLAM_DATASET_REVISION,
         source_revisions=PAVLOV_NON_XLAM_SOURCE_REVISIONS,
-        top_p=0.95,
-        max_prompt_tokens=2048,
-        prompt_truncation="prefix",
+        top_p=TOP_P,
+        max_prompt_tokens=MAX_PROMPT_TOKENS,
+        prompt_truncation=PROMPT_TRUNCATION,
     )
     return {
         "schema_version": 1,
@@ -123,9 +126,10 @@ def _configuration_check(args: argparse.Namespace) -> dict[str, Any]:
             "planned_examples": 2 * args.per_suite,
             "samples_per_problem": 1,
             "max_tokens": args.max_tokens,
-            "max_prompt_tokens": 2048,
+            "max_prompt_tokens": MAX_PROMPT_TOKENS,
+            "prompt_truncation": PROMPT_TRUNCATION,
             "temperature": args.temperature,
-            "top_p": 0.95,
+            "top_p": TOP_P,
             "seed": args.seed,
         },
         "scope": "Local argument and fresh-path inspection only; no execution or scientific verification.",
@@ -207,9 +211,9 @@ def main(argv: list[str] | None = None) -> int:
             "per_suite": args.per_suite,
             "max_tokens": args.max_tokens,
             "temperature": args.temperature,
-            "top_p": 0.95,
-            "max_prompt_tokens": 2048,
-            "prompt_truncation": "reject_over_budget",
+            "top_p": TOP_P,
+            "max_prompt_tokens": MAX_PROMPT_TOKENS,
+            "prompt_truncation": PROMPT_TRUNCATION,
             "seed": args.seed,
         },
     )
@@ -232,8 +236,10 @@ def main(argv: list[str] | None = None) -> int:
         for index, example in enumerate(examples):
             full_prompt_ids = tokenizer.encode(example.prompt, add_special_tokens=False)
             prompt_ids = list(full_prompt_ids)
-            if len(prompt_ids) > 2048:
-                raise ValueError("Prompt exceeds 2048 tokens; refusing task-removing truncation")
+            if len(prompt_ids) > MAX_PROMPT_TOKENS:
+                raise ValueError(
+                    f"Prompt exceeds {MAX_PROMPT_TOKENS} tokens; refusing task-removing truncation"
+                )
             prompt_token_hash = _sha256_text(json.dumps(prompt_ids, separators=(",", ":")))
             result = sampler.sample(
                 T.ModelInput.from_ints(prompt_ids),
@@ -241,7 +247,7 @@ def main(argv: list[str] | None = None) -> int:
                 sampling_params=T.SamplingParams(
                     max_tokens=args.max_tokens,
                     temperature=args.temperature,
-                    top_p=0.95,
+                    top_p=TOP_P,
                     seed=args.seed + index,
                 ),
             ).result()
@@ -315,9 +321,9 @@ def main(argv: list[str] | None = None) -> int:
                 "retries": 0,
                 "temperature": args.temperature,
                 "max_tokens": args.max_tokens,
-                "top_p": 0.95,
-                "max_prompt_tokens": 2048,
-                "prompt_truncation": "reject_over_budget",
+                "top_p": TOP_P,
+                "max_prompt_tokens": MAX_PROMPT_TOKENS,
+                "prompt_truncation": PROMPT_TRUNCATION,
                 "seed": args.seed,
             },
             "count": len(records),
@@ -354,9 +360,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             run.finish(exit_code=1)
         except Exception as finish_exc:
-            if isinstance(exc, KeyboardInterrupt):
-                raise exc from finish_exc
-            raise
+            raise exc from finish_exc
         raise
 
 

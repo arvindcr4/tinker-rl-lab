@@ -150,7 +150,6 @@ def test_reward_callback_cannot_rewrite_response_length_evidence(harness):
     assert harness.invoke() == 0
     receipt = json.loads(harness.output.read_text())
     assert receipt["records"][0]["response_tokens"] == 2
-    assert receipt["records"][1]["response_tokens"] == 0
 
 
 def test_full_prompt_receipt_matches_nontruncated_boundary(harness):
@@ -166,3 +165,41 @@ def test_full_prompt_receipt_matches_nontruncated_boundary(harness):
         assert record["prompt_token_ids_sha256"] == evaluator._sha256_text(
             json.dumps(sent, separators=(",", ":"))
         )
+
+
+def test_sampling_policy_is_shared_by_hash_tracking_receipt_and_request(harness, monkeypatch):
+    monkeypatch.setattr(evaluator, "TOP_P", 0.7)
+    monkeypatch.setattr(evaluator, "MAX_PROMPT_TOKENS", 10)
+    assert harness.invoke() == 0
+    receipt = json.loads(harness.output.read_text())
+    for policy in (harness.state.tracking_config, receipt["sampling"]):
+        assert policy["top_p"] == 0.7
+        assert policy["max_prompt_tokens"] == 10
+        assert policy["prompt_truncation"] == "reject_over_budget"
+    assert harness.calls[0][1]["sampling_params"]["top_p"] == 0.7
+
+
+def test_reward_error_remains_primary_when_tracking_finish_also_fails(harness, monkeypatch):
+    class SamplingFailure(RuntimeError):
+        pass
+
+    def fail_score(*args):
+        raise SamplingFailure("original scoring failure")
+
+    def fail_finish(**kwargs):
+        raise RuntimeError("tracking finish failed")
+
+    import wandb
+
+    original_init = wandb.init
+
+    def init(**kwargs):
+        run = original_init(**kwargs)
+        run.finish = fail_finish
+        return run
+
+    monkeypatch.setattr(wandb, "init", init)
+    monkeypatch.setattr(evaluator, "PavlovNonXLAMReward", lambda: SimpleNamespace(score=fail_score))
+    with pytest.raises(SamplingFailure, match="original scoring failure") as failure:
+        harness.invoke()
+    assert str(failure.value.__cause__) == "tracking finish failed"

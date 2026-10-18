@@ -119,3 +119,17 @@ def test_inspection_fingerprint_binds_the_executed_request_and_receipt(
     )
     monkeypatch.setattr(evaluator, "MODEL_REVISION", "b" * 40)
     assert evaluator._configuration_check(args)["config_sha256"] != receipt["request_sha256"]
+
+
+def test_configuration_hash_binds_shared_sampling_policy(tmp_path, monkeypatch, capsys):
+    args = ["--check-config", "--base-model", "--out", str(tmp_path / "receipt.json")]
+    assert evaluator.main(args) == 0
+    original = json.loads(capsys.readouterr().out)
+    monkeypatch.setattr(evaluator, "TOP_P", 0.7)
+    monkeypatch.setattr(evaluator, "MAX_PROMPT_TOKENS", 10)
+    assert evaluator.main(args) == 0
+    changed = json.loads(capsys.readouterr().out)
+    assert changed["config_sha256"] != original["config_sha256"]
+    assert changed["sampling_request"]["top_p"] == 0.7
+    assert changed["sampling_request"]["max_prompt_tokens"] == 10
+    assert changed["sampling_request"]["prompt_truncation"] == "reject_over_budget"

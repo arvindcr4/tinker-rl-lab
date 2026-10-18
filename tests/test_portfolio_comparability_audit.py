@@ -270,3 +270,28 @@ def test_reject_over_budget_policy_cannot_claim_a_truncated_record():
         record["prompt_truncated"] = True
     with pytest.raises(ValueError, match="contradictory"):
         audit_tool.audit(base, trained)
+
+
+@pytest.mark.parametrize("score", [-0.01, 1.01])
+def test_consistently_aggregated_out_of_range_scores_are_invalid(score):
+    with pytest.raises(ValueError, match=r"score must be in \[0, 1\]"):
+        audit_tool.audit(_receipt("base", (score, 0.0)), _receipt("trained"))
+
+
+@pytest.mark.parametrize("field", ["original_prompt_tokens", "prompt_tokens"])
+def test_unpaired_trailing_row_metadata_is_validated(field):
+    receipt = _receipt("base")
+    receipt["records"][-1][field] = "invalid"
+    with pytest.raises(ValueError, match="invalid recorded metadata"):
+        audit_tool.validate_arithmetic(receipt, "base")
+
+
+@pytest.mark.parametrize("kind", ["source", "prompt"])
+def test_duplicate_cohort_identity_is_invalid(kind):
+    receipt = _receipt("base")
+    duplicate = deepcopy(receipt["records"][0])
+    if kind == "prompt":
+        duplicate["source_id"] = "distinct"
+    receipt["records"].append(duplicate)
+    with pytest.raises(ValueError, match="duplicate"):
+        audit_tool.validate_arithmetic(receipt, "base")

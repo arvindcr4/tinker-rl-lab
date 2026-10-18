@@ -215,7 +215,7 @@ def bootstrap_ci(values: list[float], n_boot: int = 2000, seed: int = 0):
 
 
 def write_outputs(scored):
-    
+
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     tsv = OUT_DIR / "claim_alignment.tsv"
     with tsv.open("w", newline="") as f:

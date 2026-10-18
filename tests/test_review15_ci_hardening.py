@@ -155,12 +155,30 @@ def test_three_paper_compilation_is_owned_only_by_docs_build():
     ):
         assert step["run"].count(paper) == 1
     assert "--outdir" in step["run"]
-    quality = jobs["quality"]["steps"]
-    assert any(step.get("name") == "Coverage gate" for step in quality)
-    assert any(step.get("name") == "Install checksum-pinned Tectonic" for step in quality)
+    # Coverage cannot become green if the excluded native integration gate fails.
+    assert jobs["quality"]["needs"] == "docs-build"
+    assert not jobs["docs-build"].get("continue-on-error", False)
+    assert "if" not in jobs["docs-build"]
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text())
     assert any(
-        "pytest tests/ -m latex" in step.get("run", "") for step in jobs["docs-build"]["steps"]
+        marker.startswith("latex:")
+        for marker in project["tool"]["pytest"]["ini_options"]["markers"]
     )
+    quality = jobs["quality"]["steps"]
+    coverage = next(step for step in quality if step.get("name") == "Coverage gate")
+    assert coverage["run"] == "timeout 20m make coverage"
+    assert coverage["env"]["PYTEST_ADDOPTS"] == '-m "not latex"'
+    assert not any(step.get("name") == "Install checksum-pinned Tectonic" for step in quality)
+    docs_steps = jobs["docs-build"]["steps"]
+    native_index = next(
+        i for i, step in enumerate(docs_steps) if "pytest tests/ -m latex" in step.get("run", "")
+    )
+    assert docs_steps[native_index]["run"] == "timeout 10m uv run --no-sync pytest tests/ -m latex"
+    assert "if" not in docs_steps[native_index]
+    assert "if" not in step
+    assert docs_steps.index(step) < native_index
+    assert not step.get("continue-on-error", False)
+    assert not docs_steps[native_index].get("continue-on-error", False)
 
 
 def test_minreport_audit_installs_schema_and_signature_dependencies():

@@ -51,7 +51,9 @@ jobs:
 
   quality:
     # Type check, coverage gate (fail_under in .coveragerc) and lock freshness.
-    # Separate from test-core because coverage must see the whole suite, not a shard.
+    # Separate from test-core because coverage must see every Python test, not a shard.
+    # Native LaTeX integration runs in docs-build after its bundle is hydrated.
+    needs: docs-build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -74,16 +76,6 @@ jobs:
         run: timeout 5m make typecheck
       - name: uv.lock and requirements-lock.txt are fresh
         run: timeout 5m make lock-check
-      - name: Install checksum-pinned Tectonic
-        env:
-          TECTONIC_URL: https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-x86_64-unknown-linux-musl.tar.gz
-          TECTONIC_SHA256: 8533d07f9ccbd7a65824b9e0459041bca34af1eb33daba48f59215593753a3b7
-        run: |
-          curl --fail --location --retry 3 "$TECTONIC_URL" -o "$RUNNER_TEMP/tectonic.tar.gz"
-          echo "$TECTONIC_SHA256  $RUNNER_TEMP/tectonic.tar.gz" | sha256sum -c -
-          mkdir -p "$RUNNER_TEMP/tex-bin"
-          tar -xzf "$RUNNER_TEMP/tectonic.tar.gz" -C "$RUNNER_TEMP/tex-bin" tectonic
-          echo "$RUNNER_TEMP/tex-bin" >> "$GITHUB_PATH"
       - name: Install local secret gate scanner
         env:
           GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
@@ -95,6 +87,8 @@ jobs:
           tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
           sudo install -m 755 "$RUNNER_TEMP/gitleaks-bin/gitleaks" /usr/local/bin/gitleaks
       - name: Coverage gate
+        env:
+          PYTEST_ADDOPTS: '-m "not latex"'
         run: timeout 20m make coverage
 
   secret-scan:

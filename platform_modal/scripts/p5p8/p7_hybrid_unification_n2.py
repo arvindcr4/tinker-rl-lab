@@ -27,7 +27,7 @@ Per-method metrics (n=4 methods × 40 steps = 160 step-units):
   savings_vs_C0   (total_G_C0 - total_G_Ci) / total_G_C0
   n_fire          number of steps with G_t != 8
   select_rate     n_fire / 40
-  headroom_bad    steps fired on zvf >= 0.99 (saturated, no escalation value)
+  headroom_bad    steps escalated above baseline on zvf >= 0.99 (saturated, no escalation value)
 
 Statistical rigor:
   - Per-method total_G (point estimate; n=40 steps too few to bootstrap).
@@ -63,7 +63,7 @@ from _p5p7_common import c3_hybrid
 # ----------------------------------------------------------------------------
 ROOT = Path(__file__).resolve().parents[3]
 N2_DIR = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
-OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v4"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v5"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 TAU = 0.7           # primary zvf-triage threshold
@@ -126,7 +126,7 @@ def metrics(G_t: list[int], z: list[float]) -> dict:
     total = sum(G_t)
     n_fire = sum(1 for g in G_t if g != G_BASE)
     sel = n_fire / n
-    headroom_bad = sum(1 for g, zt in zip(G_t, z) if g != G_BASE and zt >= 0.99)
+    headroom_bad = sum(1 for g, zt in zip(G_t, z) if g > G_BASE and zt >= 0.99)
     sat_band_fired = sum(1 for g, zt in zip(G_t, z) if g != G_BASE and zt >= SATURATION_THRESHOLD)
     return {
         "total_G": total,

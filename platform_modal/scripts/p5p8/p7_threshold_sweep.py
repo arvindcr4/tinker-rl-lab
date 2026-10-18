@@ -15,7 +15,7 @@ For each controller in {zvf_triage, dualformer_auto, hybrid} and each τ ∈
   * total_G           — sum of G_t over 15 steps (compute proxy)
   * savings           — (120 − total_G) / 120  (vs always-G=8)
   * fire_rate         — fraction of steps where G_t ≠ 8
-  * headroom_bad      — fires on z_t ≥ 0.99 (should be 0 for well-calibrated)
+  * headroom_bad      — escalations above baseline on z_t ≥ 0.99 (should be 0 for well-calibrated)
   * mean_zvf_at_fire  — average z_t over the firing steps
 
 Then computes per (controller, τ):
@@ -49,7 +49,7 @@ from _p5p7_common import c3_hybrid as controller_hybrid
 
 ROOT = Path(__file__).resolve().parents[2]
 N10_DIR = ROOT / "platform_hybrid/experiments/results/n10_seed_expansion"
-OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v5"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 G_BASE = 8
@@ -98,7 +98,7 @@ def per_seed_metrics(G_t: list[int], z: list[float]) -> dict:
     total = sum(G_t)
     fires = [g for g, zt in zip(G_t, z) if g != G_BASE]
     n_fire = len(fires)
-    headroom_bad = sum(1 for g, zt in zip(G_t, z) if g != G_BASE and zt >= 0.99)
+    headroom_bad = sum(1 for g, zt in zip(G_t, z) if g > G_BASE and zt >= 0.99)
     zvf_at_fire = [zt for g, zt in zip(G_t, z) if g != G_BASE]
     return {
         "total_G": total,

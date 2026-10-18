@@ -19,3 +19,4 @@ Ethics Tab compute	itemised spend and runs	$40-55/$65/$25-30/...; 25/32/13	none	
 Ethics Tab carbon	GPU-h / kWh / CO2	~950 Tinker GPU-h etc.	none (L4 contradicted by modal_results_all.json elapsed 136-184 s/seed)	none	unsourced
 Ethics limits	held-out split	first 200 GSM8K test items	platform_tinker/reports/final/evaluate_gsm8k_test.py	same	verified
 Sec0 gap	Qwen3-8B 512-cap truncation rate; truncated vs untruncated reward	99.0% of 5184; 0.287 vs 1.0 (n=51)	zvf-program/experiments-next/results/pool_qwen3-8b_train_n512_r32_s42.json	zvf-program/experiments-next common.py	verified
+Tab headline percentage display	TRL five-seed accuracy range/mean/SD, unit conversion only	62--81%; 73.4%; 7.0 percentage points (sample SD 7.0303 pp)	platform_hybrid/experiments/results/modal_results_all.json trl_grpo_math[].final_accuracy	python3 statistics.mean/stdev and min/max over seeds 42,123,456,789,1024; multiply by 100	recomputed

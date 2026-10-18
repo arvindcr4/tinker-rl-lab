@@ -208,7 +208,7 @@ TRL arm has 5 seeds; the Tinker case studies are single-seed
 (cost-constrained, closed backend). For Tinker rows, summaries 1/2 are online
 peak/last-10 training reward on the sampled training prompts, under the
 512-token generation cap of Table~\ref{tab:configs}. The TRL row reports the
-final accuracy per seed (mean 0.734, SD 0.070 over seeds
+final accuracy per seed (mean $73.4\%$, SD 7.0 percentage points over seeds
 $\{42,123,456,789,1024\}$; task \texttt{math} on the synthetic \texttt{gen}
 split per the run records), not a peak or last-10 value. The Qwen3-235B run is
 partial (15 of 20 steps; only 4 step rewards were logged) and is listed
@@ -220,7 +220,7 @@ separately.}
 \midrule
 \multicolumn{6}{l}{\textit{Multi-seed open-stack}} \\
 \midrule
-TRL-GRPO (Modal L4) & Qwen2.5-0.5B & math (gen) & 5 & range 0.62--0.81 & mean 0.734 \\
+TRL-GRPO (Modal L4) & Qwen2.5-0.5B & math (gen) & 5 & range 62--81\% & mean 73.4\% \\
 \midrule
 \multicolumn{6}{l}{\textit{Single-seed Tinker case studies (\dag closed backend)}} \\
 \midrule

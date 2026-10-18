@@ -6,22 +6,22 @@
 \subsection{Formal Definition}
 
 Let a GRPO batch $B_t$ at optimizer step $t$ consist of $|B_t|$ prompt-groups,
-each group $g$ containing $K$ rollouts with scalar outcome rewards
-$r_{g,1}, \ldots, r_{g,K} \in \mathbb{R}$. We define the \emph{Zero-Variance
+each group $g$ containing $G$ rollouts with scalar outcome rewards
+$r_{g,1}, \ldots, r_{g,G} \in \mathbb{R}$. We define the \emph{Zero-Variance
 Fraction} (ZVF) as
 \begin{equation}
 \label{eq:zvf}
 \mathrm{ZVF}_t \;=\; \frac{1}{|B_t|} \sum_{g \in B_t}
-  \mathbb{1}\!\left[\;\widehat{\mathrm{Var}}(r_{g,1}, \ldots, r_{g,K}) = 0\;\right],
+  \mathbb{1}\!\left[\;\widehat{\mathrm{Var}}(r_{g,1}, \ldots, r_{g,G}) = 0\;\right],
 \end{equation}
-where $\widehat{\mathrm{Var}}$ is the unbiased sample variance and $K\ge2$.
+where $\widehat{\mathrm{Var}}$ is the unbiased sample variance and $G\ge2$.
 This exact statistic counts identical rewards and implies zero centered
 reward coefficients, not necessarily zero total-objective gradients.
 A separate near-constant telemetry statistic uses variance $\le10^{-6}$;
 for real rewards that threshold does not imply zero coefficients. For example,
 $(0,0,0,10^{-4})$ has sample variance $2.5\times10^{-9}$ but nonzero centered
 rewards. For binary rewards the smallest mixed-group sample variance is
-$1/K$; hence the tolerance agrees with exact collapse only when $1/K>10^{-6}$,
+$1/G$; hence the tolerance agrees with exact collapse only when $1/G>10^{-6}$,
 as for the reported group sizes. The expectation below concerns exact collapse.
 
 \subsection{Why ZVF Is Not a Tautological Re-expression of Mean Reward}
@@ -31,16 +31,16 @@ $r \in \{0,1\}$ and group-relative advantages, $\mathrm{ZVF}_t$ is a direct
 function of the batch mean reward $\bar{r}_t$: if every group succeeds
 (or fails) uniformly, $\mathrm{ZVF}_t = 1$. This is true at the extremes
 $\bar{r}_t \in \{0,1\}$ but does \emph{not} hold at intermediate values.
-For $K$ i.i.d.~Bernoulli rollouts with prompt-specific success probability
-$p_g$, the expected ZVF under a null independence model is
+For $G$ i.i.d.~Bernoulli rollouts with prompt-specific success probability
+$p_g$ and prompts $g \sim \mathcal{D}$, the expected ZVF under a null independence model is
 \begin{equation}
-\mathbb{E}[\mathrm{ZVF}_t] \;=\; \mathbb{E}_{p_g}\!\left[\,p_g^{K} + (1-p_g)^{K}\,\right].
+\mathbb{E}[\mathrm{ZVF}_t] \;=\; \mathbb{E}_{g \sim \mathcal{D}}\!\left[\,p_g^{G} + (1-p_g)^{G}\,\right].
 \end{equation}
 The right-hand side depends on the full prompt-difficulty distribution
 $\{p_g\}$, not only on its first moment. Two populations can therefore
 share the same mean reward $\bar r = 0.5$ yet have very different ZVF:
 a bimodal population with $p_g \in \{0,1\}$ yields $\mathrm{ZVF}=1$,
-while a uniform-hard population with all $p_g = 0.5$ and $K=8$ yields
+while a uniform-hard population with all $p_g = 0.5$ and $G=8$ yields
 $\mathrm{ZVF} \approx 2 \cdot (0.5)^8 \approx 0.008$. The substantive
 claim is thus not ``high mean reward implies high ZVF,'' but rather that
 ZVF is sensitive to \emph{how} success mass is distributed across prompts.
@@ -79,7 +79,7 @@ to the tautology concern:
         $\widehat{\mathrm{Var}}$ is almost surely nonzero and
         $\mathrm{ZVF} \to 0$. ZVF degenerates and must be replaced by a
         per-step-reward-variance diagnostic or alternative diagnostic surrogates.
-  \item \textbf{$K=1$.} The unbiased sample variance and this statistic are undefined; exclude such groups.
+  \item \textbf{$G=1$.} The unbiased sample variance and this statistic are undefined; exclude such groups.
   \item \textbf{SFT-saturated baselines.} When the policy already solves
         the task ($\bar p_g \to 1$ for essentially every prompt),
         $\mathrm{ZVF} \to 1$ and the diagnostic loses discriminative power;
@@ -88,5 +88,5 @@ to the tautology concern:
         training there are no rollout groups and ZVF is ill-defined.
 \end{itemize}
 Within its intended scope -- outcome-reward GRPO on verifiable tasks with
-$K \ge 4$ and non-saturated reward support -- ZVF is a cheap descriptive statistic; its early-warning utility is unvalidated. Outside that scope, the paper now recommends
+$G \ge 4$ and non-saturated reward support -- ZVF is a cheap descriptive statistic; its early-warning utility is unvalidated. Outside that scope, the paper now recommends
 explicit surrogates instead of over-claiming portability.

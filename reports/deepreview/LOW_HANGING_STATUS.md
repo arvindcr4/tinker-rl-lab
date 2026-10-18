@@ -4,6 +4,42 @@ Editorial branch: `review-low-hanging-2026-10-18`. This report records the
 editorial pass; the subsequent main integration was authorized by the user.
 No additional DeepReview API calls were made.
 
+## Minor-finding follow-up
+
+Branch `review-minor-followup-2026-10-18` corrects two remaining P8
+presentation findings: **690** now displays the TRL row and caption in
+percentages, and **694** uses group size G consistently and defines the
+expectation over prompts drawn from the difficulty distribution. The five
+released TRL seed accuracies independently reproduce the displayed range
+62--81%, mean 73.4%, and sample SD 7.0 percentage points. This is a unit
+conversion, not new experimental evidence.
+
+Seventeen stale open dispositions are verified as **already-fixed** in the
+current active sources and rebuilt PDFs: P8 **691, 692, 693, 698--702, 704**;
+P6 submission **780--784, 787, 788, 791**. In particular P8 now includes its
+workshop-specific ethics statement, not the older shared statement. The
+removed failed-spend/carbon claims are not replaced with guessed values.
+The mixed-case model identifiers in P6 remain literal registry strings, and
+its longer anonymous registry twin still has a stale prose CLI flag; neither
+is silently normalized or claimed corrected here. Unverified statistical
+tables and cost totals remain open.
+
+P8 and all four P6 roots (submission, submission_anon, registry,
+registry_anon) build using cached Tectonic resources, with no undefined
+references or citations. P8 remains 13 pages; P6 submission and its anonymous
+twin remain 16 pages with References starting on page 10 (body stays within
+9 pages). Registry and registry_anon remain 16 and 65 pages respectively.
+The rendered P8 headline table and appendix equations were inspected for
+clipping, percentages, group-size notation, brackets and thresholds. P6
+compiled text verifies the CLI hyphens, bibliography spelling/capitalization,
+and appendix heading plus introductory sentence before its table.
+
+All 1,204 finding IDs remain covered exactly once. Non-target disposition
+records are unchanged. The peer's truncation re-evaluation text and all
+empirical results are preserved. Logs, disposable PDFs and inspected captures
+are under `.amp/in/artifacts/minor-followup/` in the isolated
+editorial-minor worktree. No new DeepReview calls were made.
+
 ## Bibliography follow-up
 
 Branch `review-bibliography-followup-2026-10-18` applies the remaining verified

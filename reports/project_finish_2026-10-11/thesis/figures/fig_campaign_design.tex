@@ -48,7 +48,7 @@
 % 1. FROZEN ACTOR --------------------------------------------------------
 \node[rectangle, rounded corners=2pt, draw=black!70, thick, fill=blue!6,
       text width=14.6cm, inner sep=4pt, font=\scriptsize, align=center] (actor) at (7.55,0)
-  {{\footnotesize\bfseries\color{pesblue}FROZEN ACTOR --- one policy, shared by all fourteen lanes}\\[2pt]
+  {{\footnotesize\bfseries\color{pesblue}HISTORICAL SCOPE MAP --- one reported actor, incomplete execution provenance}\\[2pt]
    \texttt{Qwen/Qwen3.6-35B-A3B} @ \texttt{995ad96e} \ $+$ \ LoRA
    \texttt{campaign adapter} @ \texttt{withheld revision}\\[1pt]
    \textit{served in bfloat16 as} \texttt{campaign-actor-bf16}};
@@ -61,17 +61,17 @@
 \draw[black!40, thick, rounded corners=3pt] (0.0,-1.55) rectangle (15.1,-8.87);
 \node[hdr] at (0.12,-1.86) {Lane};
 \node[hdr] at (0.85,-1.86) {Original contract ({\color{pesblue}orig})};
-\node[hdr] at (6.65,-1.86) {Replacement scope ({\color{good!70!black}repl})};
+\node[hdr] at (6.65,-1.86) {Exploratory replacement scope};
 \node[hdr] at (12.3,-1.86) {Terminal state};
 \draw[black!50] (0.08,-2.13) -- (15.02,-2.13);
 \node[cell, font=\scriptsize\bfseries] at (0.12,-2.445) {E1};
 \node[cell] at (0.85,-2.445) {\emph{SWE-bench Pro}: \textbf{2/731 = 0.27\%}};
-\node[cell] at (6.65,-2.445) {\emph{SWE-bench Multilingual}: 1/190 = 0.53\%$^{\ddagger}$};
+\node[cell] at (6.65,-2.445) {\emph{SWE-bench Multilingual}: 1/190 = 0.5\%$^{\ddagger}$};
 \node[cell] at (12.3,-2.445) {\textcolor{complete!80!black}{$\star$\ SCORED 09-27}};
 \fill[black!6] (0.08,-2.680) rectangle (15.02,-3.150);
 \node[cell, font=\scriptsize\bfseries] at (0.12,-2.915) {E2};
 \node[cell] at (0.85,-2.915) {\emph{FrontierSWE}: \textbf{1/17; replay 0.8628}};
-\node[cell] at (6.65,-2.915) {\emph{CORE-Bench} (hard): 27/45 = 0.600};
+\node[cell] at (6.65,-2.915) {\emph{CORE-Bench} (hard): 27/45 = 60.0\%};
 \node[cell] at (12.3,-2.915) {\textcolor{complete!80!black}{$\star$\ SCORED 09-27}};
 \node[cell, font=\scriptsize\bfseries] at (0.12,-3.385) {E3};
 \node[cell] at (0.85,-3.385) {\emph{SDAB}: {\color{black!55}closed external}, no figure};
@@ -84,12 +84,12 @@
 \node[cell] at (12.3,-3.855) {\textcolor{partial!85!black}{$\circ$\ PARTIAL}};
 \node[cell, font=\scriptsize\bfseries] at (0.12,-4.325) {E5};
 \node[cell] at (0.85,-4.325) {\emph{APEX-Agents}: \textbf{7/480; mean 0.0505}};
-\node[cell] at (6.65,-4.325) {\emph{Tau3}: 8/97 = 0.0825 pass\^{}1};
+\node[cell] at (6.65,-4.325) {\emph{Tau3}: 8/97 = 8.2\% pass\^{}1};
 \node[cell] at (12.3,-4.325) {\textcolor{complete!80!black}{$\star$\ SCORED 09-27}};
 \fill[black!6] (0.08,-4.560) rectangle (15.02,-5.030);
 \node[cell, font=\scriptsize\bfseries] at (0.12,-4.795) {E6};
 \node[cell] at (0.85,-4.795) {\emph{WebBench}: no figure};
-\node[cell] at (6.65,-4.795) {\emph{WebArena}: 90/812 = 0.111 (lower bd.)};
+\node[cell] at (6.65,-4.795) {\emph{WebArena}: 90/812 = 11.1\% (lower bd.)};
 \node[cell] at (12.3,-4.795) {\textcolor{complete!80!black}{$\star$\ SCORED 09-27}};
 \node[cell, font=\scriptsize\bfseries] at (0.12,-5.265) {E7};
 \node[cell] at (0.85,-5.265) {\emph{BinaryAudit}: 1/46 attempted; no grade};
@@ -102,7 +102,7 @@
 \node[cell] at (12.3,-5.735) {\textcolor{complete!80!black}{$\bullet$\ COMPLETE}};
 \node[cell, font=\scriptsize\bfseries] at (0.12,-6.205) {E9};
 \node[cell] at (0.85,-6.205) {\emph{MLE-bench}: 40/75 graded; score null};
-\node[cell] at (6.65,-6.205) {\emph{MLDevBench}: 10/34 = 0.294};
+\node[cell] at (6.65,-6.205) {\emph{MLDevBench}: 10/34 = 29.4\%};
 \node[cell] at (12.3,-6.205) {\textcolor{complete!80!black}{$\star$\ SCORED 09-27}};
 \fill[black!6] (0.08,-6.440) rectangle (15.02,-6.910);
 \node[cell, font=\scriptsize\bfseries] at (0.12,-6.675) {E10};
@@ -125,24 +125,21 @@
 \fill[black!6] (0.08,-8.320) rectangle (15.02,-8.790);
 \node[cell, font=\scriptsize\bfseries] at (0.12,-8.555) {E14};
 \node[cell] at (0.85,-8.555) {\emph{FrontierMath}: {\color{black!55}closed external}};
-\node[cell] at (6.65,-8.555) {\emph{Omni-MATH}: \textbf{2271/4428 = 51.29\%}$^{\dagger}$};
+\node[cell] at (6.65,-8.555) {\emph{Omni-MATH}: \textbf{51.29\% diagnostic}$^{\dagger}$};
 \node[cell] at (12.3,-8.555) {\textcolor{complete!80!black}{$\bullet$\ COMPLETE$^{\dagger}$}};
 \node[cell, anchor=north west, text width=14.9cm, text=black!75] (note) at (0.1,-8.990)
   {\textbf{Bold} $=$ the lane's figure from the original campaign ledger (at most one per lane, tagged with its scope).
    Pass@1 for E1 and E11; E8 is the LAB-Bench public split, E10 AgentDojo benign utility.
-   $^{\dagger}$E14 closes COMPLETE with a terminal note: its 2 unjudged rows (truncated judge output)
-   count as failures here; the official scorer reports $51.31\%$ on the 4426 judged rows.
-   $\bullet$~complete \ $\star$~replacement scope scored on 2026-09-27 (plain figure: its own receipt, never pooled with the orig figure)
+   $^{\dagger}$E14 is terminal-complete: the displayed all-disposition diagnostic is $2271/4428=51.29\%$ (two unjudged rows counted as failures); the native judged-row score is $2271/4426=51.31\%$.
+   $\bullet$~complete \ $\star$~exploratory protocol-override run scored on 2026-09-27, outside the original prospective gates (not pooled with orig)
    \ $\circ$~partial \ $\times$~blocked (closed external).
    $^{\ddagger}$This run's 190 tasks; the earlier 110 (4 resolved) are a separate contract, not pooled. WebArena: 108 unjudged tasks count as failures.};
 
 % 3. GOVERNANCE RAILS ------------------------------------------------------
 \node[rail] (R1) at ([yshift=-4mm]note.south -| 2.45,0)
-  {{\bfseries\color{pesblue}NATIVE EVALUATOR}\\ per lane: the suite's own grader at a
-   revision pinned in the lane's receipt; no shared grader, no cross-lane normalisation};
+  {{\bfseries\color{pesblue}NAMED GRADING PATH}\\ per lane: scope-specific grader; replacement runners and ungraded items require explicit qualification. No cross-lane normalisation};
 \node[rail] (R2) at ([yshift=-4mm]note.south -| 7.55,0)
-  {{\bfseries\color{pesblue}RECEIPT}\\ one immutable, hash-pinned record per lane:
-   coverage, terminal state, claim boundary, run-manifest hash; it may close with no figure};
+  {{\bfseries\color{pesblue}RECEIPT}\\ retained records where available: coverage, terminal state and source boundary. Private or missing payloads are not made reproducible by a hash};
 \node[rail] (R3) at ([yshift=-4mm]note.south -| 12.65,0)
   {{\bfseries\color{pesblue}REPORTED FIGURE}\\ at most one per receipt, tagged with its
    scope; a lane without a grade reports none rather than an adjacent suite's number};
@@ -157,10 +154,8 @@
 
 % 4. THE TWO GOVERNING RULES ----------------------------------------------
 \node[rulebox, text width=7.05cm] (rule1) at ([yshift=-3mm,xshift=-3.78cm]tally.south)
-  {{\bfseries\color{pesblue}RULE 1 --- one actor, no per-lane tuning}\\[1.5pt]
-   One frozen checkpoint serves all fourteen lanes: no lane-specific fine-tune, no
-   prompting beyond the suite's own harness, no tuning on a lane's evaluation set.
-   Suite differences reflect one fixed policy meeting fourteen interfaces.};
+  {{\bfseries\color{pesblue}RULE 1 --- intended actor identity, bounded execution evidence}\\[1.5pt]
+   One reported checkpoint meets fourteen interfaces. Historical training source and consumed rows are incomplete; replacement scaffolds differ. This is a harness audit, not verified held-out training efficacy.};
 \node[rulebox, text width=7.05cm] (rule2) at ([yshift=-3mm,xshift=3.78cm]tally.south)
   {{\bfseries\color{pesblue}RULE 2 --- orig and repl figures are never pooled}\\[1.5pt]
    A replacement scope is a different suite, interface and often grader. Its figure

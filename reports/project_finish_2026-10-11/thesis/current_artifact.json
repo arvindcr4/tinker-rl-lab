@@ -1,0 +1,12 @@
+{
+  "schema": "thesis-current-artifact-v1",
+  "revision_date": "2026-10-18",
+  "pdf": "Thesis_Report_ArvindCR_2026-10-18_REVISED_REVIEW.pdf",
+  "pdf_check_receipt": "validation/thesis_2026-10-18/pdf_checks.json",
+  "required_text": [
+    "18 October 2026",
+    "Historical Number-Audit Snapshot",
+    "provisional"
+  ],
+  "scope": "Current document identity and layout only. Historical number audits and deck receipts do not certify this revision."
+}

@@ -37,9 +37,9 @@
 \nextgroupplot[
   height=6.2cm, ymin=0.4, ymax=5.6,
   ytick={5,4,3,2,1},
-  yticklabels={{E1 SWE-bench Multilingual\\[-1pt]{\color{black!60}\scriptsize resolved, $n=190$}},{E2 CORE-Bench (hard)\\[-1pt]{\color{black!60}\scriptsize task accuracy, $n=45$}},{E5 Tau3 (banking)\\[-1pt]{\color{black!60}\scriptsize pass\textasciicircum 1, $n=97$}},{E6 WebArena\\[-1pt]{\color{black!60}\scriptsize task success, $n=812$}},{E9 MLDevBench\\[-1pt]{\color{black!60}\scriptsize task success, $n=34$}}},
+  yticklabels={{E1 SWE-bench Multilingual\\[-1pt]{\color{black!60}\scriptsize resolved, $n=190$}},{E2 CORE-Bench (hard)\\[-1pt]{\color{black!60}\scriptsize task accuracy, $n=45$}},{E5 Tau3 (banking)\\[-1pt]{\color{black!60}\scriptsize pass\textasciicircum 1, $n=97$}},{E6 WebArena\\[-1pt]{\color{black!60}\scriptsize task success, $n=812$}},{E9 ML-Dev-Bench\\[-1pt]{\color{black!60}\scriptsize task success, $n=34$}}},
   xlabel={\scriptsize rate over all attempted items (\%), Wilson 95\% CI},
-  title={\footnotesize\bfseries (a) Rates, each on its own suite's denominator},
+  title={\footnotesize\bfseries (a) Exploratory protocol-override replacements},
   title style={at={(0,1)}, anchor=south west, xshift=-38mm},
 ]
 \addplot[only marks, mark=*, mark size=2.4pt, color=pesblue,
@@ -60,11 +60,11 @@
 \draw[partial, densely dotted, line width=0.7pt] (axis cs:11.08,2.33) -- (axis cs:24.38,2.33);
 \node[font=\scriptsize, color=partial!85!black, anchor=west] at (axis cs:25.6,2.36)
   {$\square$ graded only 90/704 $\cdot$ $\triangle$ if all 108 unjudged passed};
-\node[val] at (axis cs:101,5) {$1/190$ $=$ 0.53\% [0.1, 2.9]};
-\node[val] at (axis cs:101,4) {$27/45$ $=$ 60.00\% [45.5, 73.0]};
-\node[val] at (axis cs:101,3) {$8/97$ $=$ 8.25\% [4.2, 15.4]};
-\node[val] at (axis cs:101,2) {$90/812$ $=$ 11.08\% (lower bound) [9.1, 13.4]};
-\node[val] at (axis cs:101,1) {$10/34$ $=$ 29.41\% [16.8, 46.2]};
+\node[val] at (axis cs:101,5) {$1/190$ $=$ 0.5\% [0.1, 2.9]};
+\node[val] at (axis cs:101,4) {$27/45$ $=$ 60.0\% [45.5, 73.0]};
+\node[val] at (axis cs:101,3) {$8/97$ $=$ 8.2\% [4.2, 15.4]};
+\node[val] at (axis cs:101,2) {$90/812$ $=$ 11.1\% (lower bound) [9.1, 13.4]};
+\node[val] at (axis cs:101,1) {$10/34$ $=$ 29.4\% [16.8, 46.2]};
 \nextgroupplot[
   height=6.8cm, ymin=0.4, ymax=7.9,
   ytick={6,5,4,3,2,1,7.3},

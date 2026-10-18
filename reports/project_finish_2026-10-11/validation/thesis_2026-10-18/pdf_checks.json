@@ -1,0 +1,16 @@
+{
+  "schema": "pes-review-pdf-check-v2",
+  "pdf": "Thesis_Report_ArvindCR_2026-10-18_REVISED_REVIEW.pdf",
+  "sha256": "259b89de1438a4b6b711fa5554bb5045394ec2d387ba80feb816cc10091d6113",
+  "bytes": 1520066,
+  "pages": 307,
+  "outside_page_bounds": [],
+  "replacement_character_pages": [],
+  "missing_required_text": [],
+  "bbox_control_characters_removed_for_xml_parse": 2,
+  "visual_review": "PASS",
+  "scope": "Current PDF text and physical-page bounds only. Not a refreshed number audit, scientific authentication, accessibility certification or visual inspection.",
+  "visual_review_scope": "18 October 2026: assistant inspected rendered changed text/table/figure pages and document/bibliography ending, including physical pages 1, 2, 7, 28, 70, 83, 85, 86, 88, 94, 117, 121, 126, 128, 147, 150, 152, 155, 164, 175, 176, 193, 204, 245, 305 and 307. Other pages have automated text/bounds checks only; not a full-page human read, author approval or scientific certification.",
+  "regression_tests": "138 passed: current-artifact tests, thesis-build tests and review09 safe-tool tests",
+  "historical_receipts": "The old validation/pdf_checks.json, REVIEW_MANIFEST.json and thesis/provenance_audit.json remain unchanged and do not certify this revision."
+}

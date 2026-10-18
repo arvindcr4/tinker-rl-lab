@@ -128,14 +128,14 @@ provenance-conflicted.
 | P5-C3 | 1 — [identifier withheld] | Managed summary | Qwen/Qwen3.5-4B | Four algorithm labels | — | — | 3 per arm (42, 123, 456) / 15 | Last-10 reward band 0.710–0.744 (width 0.034); no held-out metric; not an equivalence result (TOST fails; §7.1) | C |
 | P6-C1 | 48 registry entries | Registry (schema validation) | N/A | N/A | N/A | N/A | N/A | 44/48 entries pass schema validation in the later claim-to-run snapshot (`claim_to_run_table.tsv`, which adds amendment entries); the 31/31 of §7.2 is the 31 records shipped with P6 | R |
 | P6-C2 (source-identity audit) | Private source reconciliation omitted | Cross-source metadata | N/A | N/A | N/A | N/A | Not a training or evaluation study | Unresolved attribution limits retained; no public inventory claim | R |
-| P7-C1 | 368 — [operational identifier withheld] | W&B only (0 exact Tinker IDs) | Qwen3-4B-Instruct-2507 (113), Llama-3.2-3B (112), Llama-3.2-1B (107), 3 further models (36) | — | 4, 8, 16 (also 6) | — (prompt and tokenizer families `llama3`, `qwen3_instruct` recorded, not datasets) | 10 logged labels (0–9) / 2–12 | ZVF U-shape observed (nine model labels; largely the binomial identity plus difficulty heterogeneity, §6.3.3); no held-out metric in the W&B summaries | C |
+| P7-C1 | 368 — [operational identifier withheld] | W&B only (0 exact Tinker IDs) | Nine logged model labels; historical roster descriptions are not a verified common-protocol cohort | — | 4, 8, 16 (also 6) | — (prompt and tokenizer families `llama3`, `qwen3_instruct` recorded, not datasets) | 10 logged labels (0–9) / 2–12 | Heterogeneous logged summary: 350 finished, 12 failed, 6 crashed; execution provenance not fully classified; no independent validation of the Bernoulli relation or held-out prediction | C |
 | P7-C2 | 1 — [identifier withheld] | W&B (Colab) | Qwen/Qwen2.5-0.5B-Instruct | — | — | — | 3 (0, 1, 2) in one aggregate / 30 | Gradient magnitude versus p(1−p): Pearson r = +0.71 (scalar only; not recomputable) | C |
 | P7-C3 | 1 — [identifier withheld] | W&B (Colab) | Qwen/Qwen2.5-0.5B-Instruct | Adaptive-G versus fixed recipes | — | — | 1 per arm / not logged | Adaptive-G held-out Δ +0.575; mean ZVF 0.23; 186 rollouts | C |
 | P8-C1 | 1 — `local:qp8_fraud:xgboost:seed42` | Local (XGBoost) | Gradient-boosted trees (200 estimators, depth 6) | — | N/A | Synthetic card-fraud: 50,000 rows; 10,000-row held-out split | random_state 42 / 200 estimators | AUC 0.7955 on the 10,000-row held-out split | C |
 | P8-C2 | 1 — [operational identifier withheld] | Tinker (managed SFT) | Qwen/Qwen3.5-4B | SFT row serialisation (no KL, no reference policy) | N/A | Row-to-text serialisations; 500-row positive-enriched held-out subset | 1 (seed 0) / 63 minibatches | AUC 0.482675, accuracy 0.792 (n = 500) — near chance | C |
 | P8-C3 | 0 — UNLINKED | — | Proposed sensor / scribe / triage architecture | — | — | — | 0 / 0 | No execution; operational benefit over XGBoost alone not measured | X |
 
-: Semester-4 P1-P8 study runs: each claim mapped to its linked runs, stack, model and algorithm.
+: Historical P1–P8 claim-to-record mapping. Tiers are retained source classifications, not present certification of scientific validity: the current exclusions in Chapters 6–7 override any older Tier C label for synthetic, confounded or unverified claims. Linked-record counts do not establish independent completed training runs.
 
 Three facts here are load-bearing. First, **no empirical headline row in the
 P1–P8 ledger reaches Tier A or B** under the statistical-rigor thresholds; the
@@ -173,7 +173,7 @@ held-out n = 500). Its headline contrast, DAPO versus GRPO, is Δ = +0.001,
 percentile-bootstrap CI [−0.0045, +0.00675] (paired-t 95% CI [−0.0063, +0.0083], n = 8 seeds; the bootstrap undercovers at this n), MDE₈₀ = 0.01012, all raw p > 0.21, with
 Benjamini–Hochberg rejecting nothing. The mechanism is visible in the
 diagnostic: DAPO's mean ZVF is 0.000 against GRPO's 0.693, bought with 3.61×
-the rollouts (1,734 versus 480) and 1.44× the wall clock. This eight-paired-seed contrast supports a null. Every retained P11 final manifest specifies
+the rollouts (1,734 versus 480) and 1.44× the wall clock. This eight-paired-seed contrast has no multiplicity-adjusted rejection and does not establish equivalence. Every retained P11 final manifest specifies
 `max_steps=30`; the 40 units are 30-step runs. Accordingly this block does
 **not** satisfy the stated Tier A requirement of at least 100 steps per run
 and remains Tier C under the vocabulary above. Pooling steps across arms or
@@ -294,30 +294,30 @@ scores are from `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md`, except the six row
 | Lane / run identifier | Stack / platform | Model / actor | Dataset / suite | Outcome / terminal state |
 |---|---|---|---|---|
 | E1 SWE-bench Pro | native harness, Tinker actor | Qwen3.6-35B-A3B + adapter | SWE-bench Pro | 2/731 = 0.274% pass@1 (97.54% coverage, 713/731 native evals); originals retained |
-| E1 replacement (finish 2026-09-27) | native swebench 5.0.2, Modal sandboxes | as above | SWE-bench Multilingual | 1/190 resolved (57 graded); earlier waves 4/110 kept separate — `COMPLETE` |
+| E1 replacement (finish 2026-09-27) | native swebench 5.0.2, Modal sandboxes | as above | SWE-bench Multilingual | 1/190 resolved (57 graded); earlier waves 4/110 kept separate — exploratory override; scope attempted |
 | E2 FrontierSWE | native harness | as above | FrontierSWE | 1/17 tasks; replay normalized 0.8628 |
-| E2 replacement (finish 2026-09-27) | native grader, GCP VM per capsule | as above | CORE-Bench hard | 27/45 = 0.600 task accuracy — `COMPLETE` |
+| E2 replacement (finish 2026-09-27) | native grader, GCP VM per capsule | as above | CORE-Bench hard | 27/45 = 0.600 task accuracy — exploratory override; scope attempted |
 | E3 SDAB | — | as above | SDAB (private bundle) | no local or paid path — `CLOSED_EXTERNAL` |
 | E4 BankerToolBench | Tinker→Modal bridge | as above | BankerToolBench | 1/100 tasks, recovery 0.3115 — `CLOSED_PARTIAL` |
-| E4 base-model rerun | Modal `/v1/responses` | base model, zero-init LoRA (0 training steps) | BankerToolBench | 100/100 trials, mean reward 0.0; bridge stop-sequence defect is a plausible mechanism, with unresolved causal contribution (§8.5) |
+| E4 reported base-model rerun | historical bridge claim; deployment unverified | reported base model | BankerToolBench | Unverified secondary account; conflicting same-date ledger, no primary receipt; excluded from empirical results (§8.5) |
 | E5 APEX-Agents | native harness | as above | APEX-Agents | 7/480 native-scored; prefix mean 0.050505 |
-| E5 replacement (finish 2026-09-27) | native tau2, Modal 65k actor | as above | Tau3 banking_knowledge | 8/97 = 0.082 pass^1 (25 infra errors counted as failures) — `COMPLETE` |
-| E6 WebArena (finish 2026-09-27) | native evaluator, GCP VM | as above | WebArena | 90/812 = 0.111, lower bound; 108 ungraded (judge unavailable) — `COMPLETE` |
+| E5 replacement (finish 2026-09-27) | native tau2, Modal 65k actor | as above | Tau3 banking_knowledge | 8/97 = 0.082 pass^1 (25 infra errors counted as failures) — exploratory override; scope attempted |
+| E6 WebArena (finish 2026-09-27) | native evaluator, GCP VM | as above | WebArena | 90/812 = 0.111, lower bound; 108 ungraded (judge unavailable) — exploratory override; scope attempted |
 | E7 BinaryAudit | native harness | as above | BinaryAudit (private payload) | 1/46 attempted, verifier reward 0.0, no grade — `CLOSED_EXTERNAL` |
 | E8 LAB-Bench (public) | native harness | as above | LAB-Bench public, 8 categories | **1967/1967 COMPLETE** |
 | E8 LifeSciBench (original) | — | as above | LifeSciBench private | `CLOSED_EXTERNAL` |
 | E9 MLE-bench | Modal streaming arm | as above | MLE-bench | 40/75 natively graded (53.33%); suite score null |
-| E9 replacement (finish 2026-09-27) | OpenHands CodeActAgent, GCP VM | as above | ML-Dev-Bench | 10/34 = 0.294 task success — `COMPLETE` |
+| E9 replacement (finish 2026-09-27) | OpenHands CodeActAgent, GCP VM | as above | ML-Dev-Bench | 10/34 = 0.294 task success — exploratory override; scope attempted |
 | E10 AgentDojo (benign) | native harness | as above | AgentDojo benign utility | 97/97 tasks completed, utility 88/97 = 0.907 — `COMPLETE` |
 | E10 AgentHarm (original) | — | as above | AgentHarm private | `CLOSED_EXTERNAL` |
 | E11 VerilogEval | native harness | as above | VerilogEval (both framings) | **312/312 = 129/312 pass@1 (41.35%)**; 67/156 completion + 62/156 spec-to-RTL |
 | E12 AppBench | — | as above | AppBench deployment | `CLOSED_EXTERNAL` |
-| E13 BALROG (finish 2026-09-27) | native BALROG evaluator, local | as above | BALROG | 255/255 episodes; 26.1% progression — `COMPLETE` |
+| E13 BALROG (finish 2026-09-27) | native BALROG evaluator, local | as above | BALROG | 255/255 episodes; 26.1% progression — exploratory override; scope attempted |
 | E13 OpenReward (original) | — | as above | OpenReward held-out games | externally blocked, no closure record |
-| E14 Omni-MATH | native scorer | as above | Omni-MATH | 4426/4428 accepted (99.95%); accuracy 2271/4428 = 51.29% (official scorer 51.31% on 4426 judged rows) — `COMPLETE_TERMINAL_NOTE` |
+| E14 Omni-MATH | native scorer | as above | Omni-MATH | native judged-row accuracy 2,271/4,426 (51.31%); conservative all-disposition diagnostic 2,271/4,428 (51.29%); denominator erratum in §8.2 — `COMPLETE_TERMINAL_NOTE` |
 | E14 FrontierMath (original) | — | as above | FrontierMath hosted | `CLOSED_EXTERNAL` |
 
-: E1-E14 evaluation campaign lanes with their run identifiers, stacks and platforms, models, suites and outcomes.
+: E1–E14 historical campaign inventory. The 27 September rows are exploratory protocol-override results outside the original prospective acceptance gates; the E4 full-rerun account is excluded as unverified. Receipt references do not guarantee payload availability in this package.
 
 Two source documents disagree on two lanes, and both observations are retained
 rather than resolved into one, because the disagreement is itself evidence: the
@@ -353,10 +353,10 @@ Four further limits apply.
 
 2. **Non-runs inside the count.** Three entries are not training results:
    `verl-dryrun` and `openrlhf-dryrun` are seeded deterministic fallbacks, and
-   the E4 base-model rerun performs zero training steps; to these add
+   the E4 reported base-model rerun is an unverified secondary account; to these add
    §A.3.1's P1 gradient probe, which takes no optimizer steps at all. They are
-   counted because they are runs in the registry's sense, and flagged so no
-   reader treats them as measurements.
+   included as historical record rows, not as evidence of completed training
+   or of the excluded E4 execution.
 
 3. **Identity conflicts.** Historical source-identity disagreements remain a limitation; private provider reconciliation and its counts are withheld.
 
@@ -376,9 +376,9 @@ different corpus, not a different count of the same one.
 
 | Corpus | Count | What it is | Used in |
 |---|---|---|---|
-| P1 cross-scale roster | 70+ | Runs across seven RL libraries and five model families; 12 of them are the fitted anchors | Chapter 6 §6.2 |
+| P1 cross-scale roster | 70+ | Historical heterogeneous trace roster; 12 fitted anchors include interrupted traces; scaling fits excluded | Chapter 6 §6.2 |
 | Instrumented roster (P8 workshop source) | 79 | The instrumented roster of `paper_P8_workshop.tex`, 0.6B to ~671B | Chapter 4 §4.1 |
-| P5 audit corpus | 790 | The corpus from which the 368-run audit is drawn (`p7_appendix_derivations.tex`, §Provenance of the empirical tables); its relation to the ledger is not recorded | Chapter 7 §7.1 |
+| P5 audit corpus | 790 | Source-reported aggregate; exact 790-ID membership and real/synthetic/dry-run classification unavailable; not a replication denominator | Chapter 7 §7.1 |
 | Mega-campaign cells | 98 | Sampling-only cells of `mega_20260704` | Chapter 7 §7.1 |
 | E1–E14 actor training | 1 | The 40-step `pavlov_portfolio` run of August 2026, after the ledger cut-off | Chapter 8 §8.1.1 |
 | Unsaturated same-stack rerun | 15 | v1: three arms × five seeds on Modal, 2 October 2026 (§A.3.2); superseded | Chapter 6 §6.5.5 |

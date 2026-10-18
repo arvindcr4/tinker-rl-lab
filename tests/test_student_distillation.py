@@ -279,3 +279,36 @@ def test_real_trainer_initialization_and_loss_without_training(tmp_path):
     assert student.config.distillation_protocol == PROTOCOL_VERSION
     assert all(not p.requires_grad for p in teacher.parameters())
     assert trainer.optimizer is None
+
+
+@pytest.mark.parametrize("stage", ["student_eval", "teacher_eval", "generate", "score", "success"])
+@pytest.mark.parametrize("has_config", [False, True])
+def test_generation_config_and_modes_restored_on_all_exit_paths(monkeypatch, stage, has_config):
+    student, teacher = ToyModel(), ToyModel()
+    teacher.eval()
+    original = SimpleNamespace(top_k=99)
+    if has_config:
+        student.generation_config = original
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("injected failure")
+
+    if stage == "student_eval":
+        monkeypatch.setattr(student, "eval", fail)
+    elif stage == "teacher_eval":
+        monkeypatch.setattr(teacher, "eval", fail)
+    elif stage == "generate":
+        monkeypatch.setattr(student, "generate", fail)
+    elif stage == "score":
+        monkeypatch.setattr(teacher, "forward", fail)
+    if stage == "success":
+        run(student, teacher)
+    else:
+        with pytest.raises(RuntimeError, match="injected failure"):
+            run(student, teacher)
+    assert student.training
+    assert not teacher.training
+    assert hasattr(student, "generation_config") is has_config
+    if has_config:
+        assert student.generation_config is original
+        assert original.top_k == 99

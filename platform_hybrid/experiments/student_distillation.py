@@ -79,13 +79,14 @@ def student_trajectory_loss(
     defaults = getattr(generation_config, "_get_default_generation_params", None)
     if defaults is not None:
         generation_config.update(**defaults(), defaults_only=True)
-    previous_generation_config = getattr(student, "generation_config", None)
-    student.generation_config = generation_config
+    missing = object()
+    previous_generation_config = getattr(student, "generation_config", missing)
     rows, records, masks = [], [], []
     student_training, teacher_training = student.training, teacher.training
-    student.eval()
-    teacher.eval()
     try:
+        student.generation_config = generation_config
+        student.eval()
+        teacher.eval()
         for ids, attention in zip(input_ids, attention_mask, strict=True):
             active = torch.where(attention.bool())[0]
             if active.numel() == 0 or active[-1] - active[0] + 1 != active.numel():
@@ -137,6 +138,10 @@ def student_trajectory_loss(
         )
         return loss, outputs, tuple(records)
     finally:
-        student.generation_config = previous_generation_config
+        if previous_generation_config is missing:
+            if hasattr(student, "generation_config"):
+                del student.generation_config
+        else:
+            student.generation_config = previous_generation_config
         student.train(student_training)
         teacher.train(teacher_training)

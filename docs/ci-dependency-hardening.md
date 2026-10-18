@@ -65,3 +65,7 @@ in the curated `RUFF_PATHS` style scope (Ruff 0.17.1). Line numbers may drift:
 - `tools/check_public_results.py`: 3 calls, lines 381, 394, 409
 - `tools/check_thesis_evidence.py`: 9 calls, lines 110, 111, 121, 156, 211, 459, 465, 481, 490
 - `utils/stats.py`: 2 calls, lines 317, 528
+
+## Duplicate paper compilation removed
+
+The identical three-paper scratch compilation now runs only in `docs-build`. The `quality` job retains coverage, type checking, lock freshness and its pinned TeX installation for any native LaTeX coverage tests. The dedicated native LaTeX test step and all job identities remain unchanged. `test_three_paper_compilation_is_owned_only_by_docs_build` checks ownership and the three source documents offline; no live CI execution is implied.

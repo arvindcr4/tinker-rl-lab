@@ -134,3 +134,30 @@ def test_all_ci_scanner_installations_verify_before_execution():
         assert script.startswith("set -euo pipefail\n")
         assert script.index("sha256sum -c -") < script.index("tar -xzf")
         assert "| tar" not in script
+
+
+def test_three_paper_compilation_is_owned_only_by_docs_build():
+    jobs = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())["jobs"]
+    compiles = [
+        (job, step)
+        for job, body in jobs.items()
+        for step in body["steps"]
+        if "tectonic -X compile" in step.get("run", "")
+    ]
+    assert len(compiles) == 1
+    owner, step = compiles[0]
+    assert owner == "docs-build"
+    assert step["working-directory"] == "platform_tinker/reports/final"
+    for paper in (
+        "grpo_agentic_llm_paper.tex",
+        "grpo_agentic_llm_paper_anonymous.tex",
+        "supplementary_appendix.tex",
+    ):
+        assert step["run"].count(paper) == 1
+    assert "--outdir" in step["run"]
+    quality = jobs["quality"]["steps"]
+    assert any(step.get("name") == "Coverage gate" for step in quality)
+    assert any(step.get("name") == "Install checksum-pinned Tectonic" for step in quality)
+    assert any(
+        "pytest tests/ -m latex" in step.get("run", "") for step in jobs["docs-build"]["steps"]
+    )

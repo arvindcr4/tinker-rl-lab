@@ -1,4 +1,5 @@
 """Offline regressions for Review20 R16/R17/R18/R19 statistical consumers."""
+
 import csv
 import importlib
 import json
@@ -23,7 +24,9 @@ def test_eta_squared_uses_between_and_total_row_residual_variance():
     assert cohort.calibration_gap_eta_squared([0.1, 0.3, 0.1, 0.3], [0] * 4, groups) == 0
     # Opposite cohort gaps with no within-cohort variance explain all variance.
     assert cohort.calibration_gap_eta_squared([0.2, 0.2, 0.8, 0.8], [0, 0, 1, 1], groups) == 1
-    assert cohort.calibration_gap_eta_squared([0, 0.2, 0.4, 0.6], [0] * 4, groups) == pytest.approx(0.8)
+    assert cohort.calibration_gap_eta_squared([0, 0.2, 0.4, 0.6], [0] * 4, groups) == pytest.approx(
+        0.8
+    )
     assert cohort.calibration_gap_eta_squared([0.2] * 4, [0] * 4, groups) is None
     assert cohort.calibration_gap_eta_squared([], [], []) is None
     with pytest.raises(ValueError, match="align"):
@@ -36,12 +39,22 @@ def test_eta_squared_is_invariant_to_row_and_group_labels():
     groups = np.array([0, 0, 1, 1, 1])
     reference = cohort.calibration_gap_eta_squared(scores, labels, groups)
     order = [4, 0, 3, 1, 2]
-    assert cohort.calibration_gap_eta_squared(scores[order], labels[order], 9 - groups[order]) == pytest.approx(reference)
+    assert cohort.calibration_gap_eta_squared(
+        scores[order], labels[order], 9 - groups[order]
+    ) == pytest.approx(reference)
 
 
 def test_all_negative_cohorts_survive_point_and_bootstrap_outputs(tmp_path, monkeypatch):
     data = tmp_path / "test.csv"
-    headers = [f"V{i}" for i in range(1, 21)] + ["V_mean", "V_std", "V_max", "V_min", "Amount", "Time", "Class"]
+    headers = [f"V{i}" for i in range(1, 21)] + [
+        "V_mean",
+        "V_std",
+        "V_max",
+        "V_min",
+        "Amount",
+        "Time",
+        "Class",
+    ]
     with data.open("w") as handle:
         writer = csv.writer(handle)
         writer.writerow(headers)
@@ -52,7 +65,9 @@ def test_all_negative_cohorts_survive_point_and_bootstrap_outputs(tmp_path, monk
     monkeypatch.setattr(cohort, "OUT_DIR", str(tmp_path))
     monkeypatch.setattr(cohort, "B", 8)
     monkeypatch.setattr(cohort, "fit_gbt", lambda X, y, **kwargs: len(X[0]))
-    monkeypatch.setattr(cohort, "predict_proba", lambda width, X: np.full(len(X), 0.2 if width == 20 else 0.3))
+    monkeypatch.setattr(
+        cohort, "predict_proba", lambda width, X: np.full(len(X), 0.2 if width == 20 else 0.3)
+    )
     cohort.main()
     summary = json.loads((tmp_path / "p8_cohort_calibration_summary.json").read_text())
     assert len(summary["cells"]) == 26
@@ -70,12 +85,15 @@ def test_all_negative_cohorts_survive_point_and_bootstrap_outputs(tmp_path, monk
     assert cohort.recall_at_k_pct([0.1, 0.2], [0, 0], 2) == (None, 1)
 
 
-@pytest.mark.parametrize(("a", "b"), [
-    ([0, 0, 1], [0, 0, 1]),
-    ([0, 0, 1], [1, 1, 0]),
-    ([0, 0, 1, 2], [0, 1, 1, 2]),
-    ([0, 1, 2, 3], [2, 0, 3, 1]),
-])
+@pytest.mark.parametrize(
+    ("a", "b"),
+    [
+        ([0, 0, 1], [0, 0, 1]),
+        ([0, 0, 1], [1, 1, 0]),
+        ([0, 0, 1, 2], [0, 1, 1, 2]),
+        ([0, 1, 2, 3], [2, 0, 3, 1]),
+    ],
+)
 def test_kendall_tau_b_matches_independent_tie_aware_reference(a, b):
     assert tau.kendall_tau(a, b) == pytest.approx(kendalltau(a, b, variant="b").statistic)
 
@@ -89,7 +107,9 @@ def test_kendall_constant_or_tiny_input_is_explicitly_undefined():
         tau.kendall_tau([1], [1, 2])
 
 
-@pytest.mark.parametrize(("choices", "expected"), [([8, 8], 0), ([16, 16], -100), ([4, 4], 50), ([4, 16], -25)])
+@pytest.mark.parametrize(
+    ("choices", "expected"), [([8, 8], 0), ([16, 16], -100), ([4, 4], 50), ([4, 16], -25)]
+)
 def test_savings_are_baseline_minus_actual(choices, expected):
     result = tau.rollout_accounting(choices)
     assert result["baseline_rollouts"] == 16
@@ -101,12 +121,21 @@ def test_savings_are_baseline_minus_actual(choices, expected):
 def test_tau_main_uses_real_actions_savings_and_narrative(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(tau, "SEEDS", [1, 2])
     monkeypatch.setattr(tau, "OUT", tmp_path)
-    monkeypatch.setattr(tau, "load_seed", lambda seed: {
-        "seed": seed, "zvf": [0.1, 0.7, 0.9, 1.0], "heldout_acc": 0.5,
-        "mean_zvf": 0.675, "last10_zvf": 0.675,
-    })
+    monkeypatch.setattr(
+        tau,
+        "load_seed",
+        lambda seed: {
+            "seed": seed,
+            "zvf": [0.1, 0.7, 0.9, 1.0],
+            "heldout_acc": 0.5,
+            "mean_zvf": 0.675,
+            "last10_zvf": 0.675,
+        },
+    )
     original_bootstrap = tau.bootstrap_ci
-    monkeypatch.setattr(tau, "bootstrap_ci", lambda values, **kwargs: original_bootstrap(values, B=8))
+    monkeypatch.setattr(
+        tau, "bootstrap_ci", lambda values, **kwargs: original_bootstrap(values, B=8)
+    )
     tau.main()
     summary = json.loads((tmp_path / "p7_tau_seed_stability_summary.json").read_text())
     assert summary["cross_seed_kendall_tau_zvf_trajectory"]["mean"] == 1
@@ -114,7 +143,9 @@ def test_tau_main_uses_real_actions_savings_and_narrative(tmp_path, monkeypatch,
     for row in summary["two_threshold_grid"]:
         assert row["de_esc_active"] is (row["de_esc_fires_total"] > 0)
         assert row["net_savings_pct"] == row["savings_pct_mean"]
-        assert row["net_savings_pct"] == pytest.approx(100 * (row["baseline_rollouts"] - row["actual_rollouts"]) / row["baseline_rollouts"])
+        assert row["net_savings_pct"] == pytest.approx(
+            100 * (row["baseline_rollouts"] - row["actual_rollouts"]) / row["baseline_rollouts"]
+        )
     output = capsys.readouterr().out
     assert "agreement is Jaccard=1.000, full step agreement=1.000" in output
     assert "COMPLETELY DIFFERENT" not in output
@@ -138,9 +169,12 @@ def test_regret_plot_payloads_have_actual_models_and_distinct_units(monkeypatch)
 def test_regret_plot_draws_the_validated_payloads(tmp_path, monkeypatch):
     monkeypatch.setattr(regret, "C_INV_GRID", [0.5])
     monkeypatch.setattr(regret, "L_GRID", [100])
-    rows = [{"C_inv": 0.5, "L": 100, "model": name, "regret_per_dec": r}
-            for name, r in [("XGB-20raw", 2), ("XGB-24full", 0.5)]]
+    rows = [
+        {"C_inv": 0.5, "L": 100, "model": name, "regret_per_dec": r}
+        for name, r in [("XGB-20raw", 2), ("XGB-24full", 0.5)]
+    ]
     from matplotlib.axes import Axes
+
     original = Axes.imshow
     seen = []
 

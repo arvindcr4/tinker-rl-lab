@@ -33,9 +33,13 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scri
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
 CELLS = ROOT / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
-OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
-OUT.mkdir(parents=True, exist_ok=True)
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
 
+
+
+from p5_review17_stats import additive_r2, ratio_interval
+
+from p5_review17_stats import json_safe
 
 def read_cells() -> list[dict]:
     """Return list of dicts for every cell with key stack axes + outcome."""
@@ -110,6 +114,8 @@ def bootstrap_ci(
 
 
 def main() -> None:
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    OUT.mkdir(parents=True, exist_ok=True)
     cells = read_cells()
     if not cells:
         print(f"FATAL: no cells read from {CELLS}", file=sys.stderr)
@@ -171,21 +177,13 @@ def main() -> None:
     axis_pass("mean_reward", values)
     axis_pass("zvf", zvf_values)
 
-    # Falsifiable headline: sum of stack-eta^2 (with each clamped at >=0)
+    # Descriptive joint categorical OLS fit
     # must exceed 0.50 for "stack dominates" to hold at the 98-cell scale.
-    stack_sum_mean = sum(
-        max(0.0, r["eta_sq"])
-        for r in rows
-        if r["outcome"] == "mean_reward"
-    )
-    stack_sum_zvf = sum(
-        max(0.0, r["eta_sq"])
-        for r in rows
-        if r["outcome"] == "zvf"
-    )
+    stack_sum_mean = additive_r2(cells, values, list(axes))
+    stack_sum_zvf = additive_r2(cells, zvf_values, list(axes))
     print("\n=== falsifiable headline ===")
-    print(f"  sum(eta^2 stack axes) on mean_reward = {stack_sum_mean:.4f}")
-    print(f"  sum(eta^2 stack axes) on zvf         = {stack_sum_zvf:.4f}")
+    print(f"  joint categorical OLS R2 on mean_reward = {stack_sum_mean:.4f}")
+    print(f"  joint categorical OLS R2 on zvf         = {stack_sum_zvf:.4f}")
     print(f"  threshold (P5 thesis)                = 0.5000")
     print(
         f"  verdict: mean_reward {'PASS' if stack_sum_mean > 0.5 else 'FAIL'}, "
@@ -236,6 +234,8 @@ def main() -> None:
             w.writerow(r)
 
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "n_cells": len(cells),
         "axes": sorted(axes.keys()),
         "outcomes": ["mean_reward", "zvf"],
@@ -252,19 +252,19 @@ def main() -> None:
             )
             for r in rows
         ],
-        "sum_stack_eta_sq": {
+        "joint_categorical_ols_r2": {
             "mean_reward": round(stack_sum_mean, 6),
             "zvf": round(stack_sum_zvf, 6),
         },
         "headline": {
             "falsifiable_claim": (
                 "P5 thesis operationalised at 98-cell mega scale: "
-                "sum(eta^2 stack axes) on mean_reward > 0.50 "
-                "(when only the stack varies, the stack explains > 50% "
+                "joint categorical OLS R2 on mean_reward > 0.50 "
+                "(in-sample descriptive association, accounting for > 50% "
                 "of outcome variance)."
             ),
-            "mean_reward_sum_eta_sq": round(stack_sum_mean, 6),
-            "zvf_sum_eta_sq": round(stack_sum_zvf, 6),
+            "mean_reward_joint_r2": round(stack_sum_mean, 6),
+            "zvf_joint_r2": round(stack_sum_zvf, 6),
             "threshold": 0.5000,
             "verdict_mean_reward": "PASS" if stack_sum_mean > 0.5 else "FAIL",
             "verdict_zvf": "PASS" if stack_sum_zvf > 0.5 else "FAIL",
@@ -274,7 +274,7 @@ def main() -> None:
     }
     out_summary = OUT / "p5_stack_conditioning_mega_summary.json"
     with out_summary.open("w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(json_safe(summary), f, indent=2)
 
     print(f"\nWrote {out_main}")
     print(f"Wrote {out_boot}")

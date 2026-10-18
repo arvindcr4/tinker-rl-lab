@@ -62,11 +62,11 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/review17_v2"
 MEGA = ROOT / "platform_hybrid/experiments" / "results" / "mega_20260704"
 N10 = ROOT / "platform_hybrid/experiments" / "results" / "n10_seed_expansion"
 N2 = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
-RES.mkdir(parents=True, exist_ok=True)
+
 
 # v2.5 spec from iter-181
 V25_NEW_FIELDS = {
@@ -86,6 +86,8 @@ V25_NEW_FIELDS = {
 }
 FAMILIES = ("identity", "rollout_outcomes", "operational")
 
+
+from p5_review17_stats import json_safe
 
 def wilson(k, n, z=1.959963984540054):
     if n == 0:
@@ -165,7 +167,7 @@ def load_n10_v25_manifests():
         if "last10_avg_reward" in d:
             mean_r = float(d["last10_avg_reward"])
         elif steps:
-            mean_r = float(statistics.mean(s.get("reward", 0.0) for s in steps))
+            mean_r = float(statistics.mean(s["reward"] for s in steps[-10:]))
         else:
             mean_r = None
         zvf = d.get("mean_zvf")
@@ -178,16 +180,16 @@ def load_n10_v25_manifests():
         else:
             mean_len = None
         m = {
-            "model": d.get("model", "Qwen/Qwen3.5-4B"),
-            "task_slice": "gsm8k_train",
-            "G": d.get("group", 8),
-            "temperature": 1.0,
+            "model": d.get("model"),
+            "task_slice": d.get("task_slice"),
+            "G": d.get("group"),
+            "temperature": None,
             "seed": int(seed) if seed is not None else None,
             "mean_reward": mean_r,
             "zvf": zvf,
             "pcd": None,  # N10 doesn't store pcd
             "n_groups": None,  # N10 doesn't storen_groups distinct from G
-            "sample_errors": 0,
+            "sample_errors": None,
             "mean_completion_len": mean_len,
             "std_completion_len": None,
             "sampled_tokens": None,
@@ -229,33 +231,56 @@ def load_n2_v25_manifests():
         zvf = float(statistics.mean(s["zvf"] for s in steps))
         pcd = float(statistics.mean(s["pcd"] for s in steps))
         mean_len = float(statistics.mean(s["mean_len"] for s in steps))
-        # cv_len is the std-of-lengths / mean-of-lengths per step; aggregate by mean
-        cv_lens = [s.get("cv_len", 0.0) for s in steps if "cv_len" in s]
-        cv_len_mean = float(statistics.mean(cv_lens)) if cv_lens else 0.0
-        # approximate std_completion_len = cv_len * mean_len per step
-        std_len = float(cv_len_mean * mean_len)
-        # n_groups: average distinct prompt_indices per step (use len of unique)
-        ng = int(statistics.mean(len(set(s.get("prompt_indices", []))) for s in steps))
-        sampled_tokens = int(mean_len * ng * len(steps))
+        # Counts cover all observed groups and completions. Without raw lengths
+        # the pooled SD and token total are unknown, rather than fabricated.
+        ng = sum(len(s.get("rewards", s.get("prompt_indices", []))) for s in steps)
+        lengths = [v for step in steps for group in step.get("completion_lengths", [])
+                   for v in (group if isinstance(group, list) else [group])]
+        std_len = statistics.pstdev(lengths) if lengths else None
+        sampled_tokens = sum(lengths) if lengths else None
+        if lengths:
+            mean_len = statistics.mean(lengths)
         m = {
-            "model": "Qwen/Qwen3.5-4B",
-            "task_slice": "gsm8k_hard",
-            "G": int(steps[0].get("group_size", 8)),
-            "temperature": 1.0,
+            "model": steps[0].get("model"),
+            "task_slice": steps[0].get("task_slice"),
+            "G": steps[0].get("group_size"),
+            "temperature": None,
             "seed": 0,
             "mean_reward": mean_r,
             "zvf": zvf,
             "pcd": pcd,
             "n_groups": ng,
-            "sample_errors": 0,
+            "sample_errors": None,
             "mean_completion_len": mean_len,
             "std_completion_len": std_len,
             "sampled_tokens": sampled_tokens,
         }
+        m = {k: v for k, v in m.items() if v is not None}
+        m["_aggregation_scope"] = "all observed steps; raw completion lengths only"
         m["_corpus"] = "n2_reward_tensor_resume"
         m["_cell_id"] = f"N2_{method}_s0"
         out.append(m)
     return out
+
+
+def valid_field(manifest, field):
+    value = manifest.get(field)
+    spec = V25_NEW_FIELDS[field]
+    if value is None or isinstance(value, bool):
+        return False
+    if spec["type"] is str:
+        return bool(str(value).strip())
+    try:
+        numeric = float(value)
+    except (ValueError, TypeError):
+        return False
+    if not math.isfinite(numeric):
+        return False
+    if spec["type"] is int and (numeric != int(numeric) or numeric < 0):
+        return False
+    if "range" in spec and not spec["range"][0] <= numeric <= spec["range"][1]:
+        return False
+    return True
 
 
 def audit_fill(manifests):
@@ -263,7 +288,7 @@ def audit_fill(manifests):
     n = len(manifests)
     out = {}
     for fld in V25_NEW_FIELDS:
-        k = sum(1 for m in manifests if fld in m)
+        k = sum(1 for m in manifests if valid_field(m, fld))
         lo, p, hi = wilson(k, n)
         out[fld] = (k, n, lo, p, hi)
     return out
@@ -276,7 +301,7 @@ def audit_discriminative_entropy(manifests):
         vals = []
         for m in manifests:
             v = m.get(fld)
-            if v is None:
+            if not valid_field(m, fld):
                 continue
             # bin floats to avoid floating-point uniqueness
             spec = V25_NEW_FIELDS[fld]
@@ -300,62 +325,54 @@ def recompute_zvf_from_reward_vectors(rv):
 
 
 def audit_value_correctness_mega():
-    """For mega cells, re-derive zvf + mean_reward + n_groups from
-    per-cell reward_vectors JSON, compare to declared value in cells.tsv.
+    """Enumerate each expected cell/field, preserving unverifiable evidence.
 
-    Returns list of (field, cell_id, declared, recomputed, abs_residual, pass01).
+    NaN in TSV denotes UNVERIFIABLE and never passes; JSON maps it to null.
+    PCD requires an explicit definition and is deliberately unverifiable here.
     """
-    out = []
+    fields = ("zvf", "mean_reward", "n_groups", "pcd", "mean_completion_len")
     manifests = {}
-    for f in sorted((MEGA / "manifests").glob("*.json")):
+    for path in sorted((MEGA / "manifests").glob("*.json")):
         try:
-            d = json.loads(f.read_text())
-        except Exception:
+            doc = json.loads(path.read_text())
+            manifests[doc["cell_id"]] = doc
+        except (ValueError, KeyError, TypeError):
             continue
-        if "cell_id" in d:
-            manifests[d["cell_id"]] = d
-    cells = {}
-    with open(MEGA / "cells.tsv") as fp:
-        for row in csv.DictReader(fp, delimiter="\t"):
-            cid = row.get("cell_id", "")
-            if cid:
-                cells[cid] = row
-    for cid, m in manifests.items():
-        if cid not in cells:
-            continue
-        row = cells[cid]
-        zvf_path_rel = m.get("per_step_zvf_path", "")
-        zvf_path = Path(zvf_path_rel)
-        if not zvf_path.is_absolute():
-            zvf_path = ROOT / zvf_path_rel.lstrip("/")
-        if not zvf_path.exists():
-            continue
+    with (MEGA / "cells.tsv").open() as handle:
+        cells = list(csv.DictReader(handle, delimiter="\t"))
+    if not cells:
+        raise ValueError("Empty expected mega corpus")
+    out = []
+    for row in cells:
+        cid = row["cell_id"]
+        recomputed = {}
         try:
-            doc = json.loads(zvf_path.read_text())
-        except Exception:
-            continue
-        rv = doc.get("reward_vectors")
-        if not rv:
-            continue
-        # zvf
-        rec_zvf = recompute_zvf_from_reward_vectors(rv)
-        if rec_zvf is None:
-            continue
-        declared_zvf = float(row.get("zvf", 0.0))
-        resid_zvf = abs(declared_zvf - rec_zvf)
-        out.append(("zvf", cid, declared_zvf, rec_zvf, resid_zvf, resid_zvf <= 0.05))
-        # mean_reward = mean across all individual rollouts
-        flat = [r for grp in rv for r in grp]
-        rec_mr = sum(flat) / len(flat) if flat else None
-        if rec_mr is not None:
-            declared_mr = float(row.get("mean_reward", 0.0))
-            resid_mr = abs(declared_mr - rec_mr)
-            out.append(("mean_reward", cid, declared_mr, rec_mr, resid_mr, resid_mr <= 0.05))
-        # n_groups = number of groups
-        rec_ng = len(rv)
-        declared_ng = int(float(row.get("n_groups", 0)))
-        resid_ng = abs(declared_ng - rec_ng)
-        out.append(("n_groups", cid, declared_ng, rec_ng, resid_ng, resid_ng <= 0))
+            path = Path(manifests[cid]["per_step_zvf_path"])
+            if not path.is_absolute():
+                path = ROOT / path
+            doc = json.loads(path.read_text())
+            rv = doc["reward_vectors"]
+            if not rv or any(not group or any(v not in (0, 1) for v in group) for group in rv):
+                raise ValueError("Binary reward groups required")
+            flat = [value for group in rv for value in group]
+            recomputed.update(zvf=recompute_zvf_from_reward_vectors(rv),
+                              mean_reward=statistics.mean(flat), n_groups=len(rv))
+            lengths = [v for group in doc.get("completion_lengths", [])
+                       for v in (group if isinstance(group, list) else [group])]
+            if lengths and len(lengths) == len(flat):
+                recomputed["mean_completion_len"] = statistics.mean(lengths)
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+        for field in fields:
+            try:
+                declared, actual = float(row[field]), float(recomputed[field])
+                if not math.isfinite(declared) or not math.isfinite(actual):
+                    raise ValueError("Nonfinite evidence")
+                residual = abs(declared-actual)
+                tolerance = .05 if field in ("zvf", "mean_reward") else 0
+                out.append((field, cid, declared, actual, residual, residual <= tolerance))
+            except (ValueError, KeyError, TypeError):
+                out.append((field, cid, float("nan"), float("nan"), float("nan"), False))
     return out
 
 
@@ -366,10 +383,10 @@ def audit_cross_corpus_matrix(corpus_data):
         row = {"field": fld, "family": V25_NEW_FIELDS[fld]["family"]}
         for corpus_name, manifests in corpus_data.items():
             n = len(manifests)
-            k = sum(1 for m in manifests if fld in m)
+            k = sum(1 for m in manifests if valid_field(m, fld))
             fill = k / n if n else 0.0
             # entropy on this corpus
-            vals = [m.get(fld) for m in manifests if fld in m]
+            vals = [m.get(fld) for m in manifests if valid_field(m, fld)]
             spec = V25_NEW_FIELDS[fld]
             if spec["type"] is float:
                 vals = [round(float(v), 4) for v in vals]
@@ -384,6 +401,8 @@ def audit_cross_corpus_matrix(corpus_data):
 
 
 def main():
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    RES.mkdir(parents=True, exist_ok=True)
     print("[iter185] loading 3 corpora...")
     manifests_mega = load_mega_v25_manifests()
     manifests_n10 = load_n10_v25_manifests()
@@ -426,11 +445,12 @@ def main():
     vc_out_path = RES / "p5_iter185_v25_value_correctness.tsv"
     with open(vc_out_path, "w") as fp:
         w = csv.writer(fp, delimiter="\t")
-        w.writerow(["field", "cell_id", "declared", "recomputed", "abs_residual", "pass01"])
+        w.writerow(["field", "cell_id", "declared", "recomputed", "abs_residual", "pass01", "status"])
         for field, cid, dec, rec, resid, ok in vc_rows:
-            w.writerow([field, cid, f"{dec:.6f}", f"{rec:.6f}", f"{resid:.6f}", int(ok)])
-    n_total = len(vc_rows)
-    n_pass = sum(1 for r in vc_rows if r[5])
+            w.writerow([field, cid, f"{dec:.6f}", f"{rec:.6f}", f"{resid:.6f}", int(ok), "UNVERIFIABLE" if not math.isfinite(rec) else ("PASS" if ok else "FAIL")])
+    zvf_rows = [r for r in vc_rows if r[0] == "zvf"]
+    n_total = len(zvf_rows)
+    n_pass = sum(1 for r in zvf_rows if r[5])
     pass_rate = n_pass / n_total if n_total else 0.0
     print(f"[iter185] value-correctness: {n_pass}/{n_total} ({pass_rate:.4f}) cells pass |residual|<=0.05 on zvf")
 
@@ -478,7 +498,7 @@ def main():
     print(f"[iter185] H3: monotone mega>=n10>=n2 -> {h3_verdict}")
 
     # H4: every corpus has at least 1 STRONG field
-    h4_per_corpus = {}
+    h4_per_corpus = {name: [] for name in corpus_data}
     with open(entropy_out_path) as fp:
         for row in csv.DictReader(fp, delimiter="\t"):
             if row["verdict"] == "STRONG":
@@ -498,16 +518,19 @@ def main():
         # use SD-based CI (small-sample)
         sd_r = statistics.stdev(seeds_rewards) if len(seeds_rewards) > 1 else 0.0
         # Wilson-style: use half-width = 1.96 * sd/sqrt(n)
-        hw = 1.96 * sd_r / math.sqrt(len(seeds_rewards))
+        from scipy.stats import t
+        hw = float(t.ppf(.975, len(seeds_rewards)-1)) * sd_r / math.sqrt(len(seeds_rewards))
     else:
         mean_r = seeds_rewards[0] if seeds_rewards else 0.0
-        hw = 0.0
+        hw = float("nan")
     h5_pass = hw < 0.10
-    h5_verdict = "PASS" if h5_pass else "FAIL"
+    h5_verdict = "INSUFFICIENT_DATA" if len(seeds_rewards) < 2 else ("PASS" if h5_pass else "FAIL")
     print(f"[iter185] H5: n10 mean_reward mean={mean_r:.4f} CI half-width={hw:.4f} -> {h5_verdict}")
 
     # ---- Summary JSON ----
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "iter": 185,
         "pillar": "P5",
         "vein": "brief vein (a) at cross-corpus portability layer",
@@ -528,19 +551,22 @@ def main():
         },
         "h2_value_correctness_zvf_residual_le_0_05": {
             "verdict": h2_verdict,
+            "all_fields_evidence_coverage": sum(math.isfinite(r[3]) for r in vc_rows) / len(vc_rows) if vc_rows else 0,
+            "full_original_hypothesis_status": "UNVERIFIABLE_PCD_DEFINITION_REQUIRED",
+            "executed_scope": "ZVF only; PCD and length are explicitly UNVERIFIABLE without their raw measurements",
             "n_total": n_total,
             "n_pass": n_pass,
             "pass_rate": pass_rate,
         },
         "h3_entropy_monotone_mega_ge_n10_ge_n2": {
             "verdict": h3_verdict,
-            "total_entropy_bits": total_ent_per_corpus,
+            "sum_marginal_entropy_not_joint_information": total_ent_per_corpus,
         },
         "h4_every_corpus_has_at_least_1_strong_field": {
             "verdict": h4_verdict,
             "strong_fields_per_corpus": h4_per_corpus,
         },
-        "h5_n10_mean_reward_bootstrap_ci_half_width_lt_0_10": {
+        "h5_n10_mean_reward_student_t_ci_half_width_lt_0_10": {
             "verdict": h5_verdict,
             "n_seeds": len(seeds_rewards),
             "mean": mean_r,
@@ -559,7 +585,7 @@ def main():
         },
     }
     summary_path = RES / "p5_iter185_summary.json"
-    summary_path.write_text(json.dumps(summary, indent=2))
+    summary_path.write_text(json.dumps(json_safe(summary), indent=2))
     print(f"[iter185] wrote {summary_path}")
     print(f"[iter185] headline: {summary['headline']}")
 

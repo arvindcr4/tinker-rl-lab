@@ -24,7 +24,7 @@ Hypotheses on the N2 four-method panel (40 steps × 4 methods × 1 seed = 160 ro
       GIFT (vs the other three) which is the only one that actively injects
       group-diversity bonus. Confirms the P6 iter-66 row 77 / iter-74 row 87
       "anti-herding residual" GIFT signal.
-  H4 (H3 Ivison-equivalence test on N2): |reward_mean_grpo - reward_mean_aero|
+  H4 (H3 Ivison-descriptive mean-gap comparison on N2): |reward_mean_grpo - reward_mean_aero|
       + |reward_mean_grpo - reward_mean_areal| + |reward_mean_grpo - reward_mean_gift|
       pooled over the last 10 steps is <= 0.05 on every algorithm-pair. A
       weak (>= 0.05) result rejects H4.
@@ -44,16 +44,18 @@ from _p5p7_common import load_rows
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
 from _stats import cohens_d_pstdev_pooled as cohens_d  # noqa: E402
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-RES  = os.path.join(ROOT, "experiments", "results")
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+RES  = os.path.join(ROOT, "platform_hybrid", "experiments", "results")
 N2   = os.path.join(RES, "n2_reward_tensor_resume", "n2_metrics.tsv")
-OUT  = os.path.join(RES, "p5p8")
-os.makedirs(OUT, exist_ok=True)
+OUT  = os.path.join(RES, "p5p8/review17_v2")
+
 
 METRICS = ["zvf", "pcd", "larq", "reward_mean", "mean_len", "cv_len", "loss"]
 METHODS = ["grpo", "aero", "areal", "gift"]
 
 # ----------------------- helpers -----------------------
+
+from p5_review17_stats import json_safe
 
 def axis_variance_fraction(rows, axis_key, value_key, filter_fn=None):
     """Reuse the Berkeley unpacking machinery. SS_axis / SS_total."""
@@ -76,7 +78,11 @@ def axis_variance_fraction(rows, axis_key, value_key, filter_fn=None):
     if ss_total <= 1e-12:
         return None
     eta2 = ss_axis / ss_total
-    omega2 = (ss_axis - (len(by_axis) - 1) * (ss_total / max(len(grand) - 1, 1))) / (ss_total + 1e-12)
+    df_within = len(grand) - len(by_axis)
+    if df_within <= 0:
+        return None
+    mse = ss_within / df_within
+    omega2 = (ss_axis - (len(by_axis) - 1) * mse) / (ss_total + mse)
     return {
         "eta2": eta2,
         "omega2": max(omega2, 0.0),
@@ -90,6 +96,8 @@ def axis_variance_fraction(rows, axis_key, value_key, filter_fn=None):
 
 
 def main():
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    os.makedirs(OUT, exist_ok=True)
     rows = load_rows(N2, METRICS)
     assert len(rows) == 160, f"expected 160 (4 methods x 40 steps), got {len(rows)}"
 
@@ -156,7 +164,7 @@ def main():
             "n_rest": len(rest),
         })
 
-    # ------------------- H4: H3-style equivalence test (Ivison's |delta| <= 0.005) -------------------
+    # ------------------- H4: H3-style descriptive mean-gap comparison (Ivison's |delta| <= 0.005) -------------------
     last10_grpo = [r for r in last10 if r["method"] == "grpo"]
     h4 = []
     for other in ("aero", "areal", "gift"):
@@ -171,25 +179,27 @@ def main():
                 "grpo_last10_mean": round(fmean(gr), 5),
                 f"{other}_last10_mean": round(fmean(ot), 5),
                 "abs_diff": round(abs(diff), 5),
-                "ivison_equivalence_le_0p005": abs(diff) <= 0.005,
-                "ivison_equivalence_le_0p05": abs(diff) <= 0.05,
+                "descriptive_mean_gap_le_0p005": abs(diff) <= 0.005,
+                "descriptive_mean_gap_le_0p05": abs(diff) <= 0.05,
                 "n_each": min(len(gr), len(ot)),
             })
 
     # ------------------- summary -------------------
-    h1_decisive_all = all(p["h1_decisive_le_0p10"] for p in pooled)
-    h4_strict_pass = all(h["ivison_equivalence_le_0p005"] for h in h4 if h["metric"] == "reward_mean")
-    h4_loose_pass  = all(h["ivison_equivalence_le_0p05"]    for h in h4 if h["metric"] == "reward_mean")
+    h1_decisive_all = bool(pooled) and all(p["h1_decisive_le_0p05"] for p in pooled)
+    h4_strict_pass = all(h["descriptive_mean_gap_le_0p005"] for h in h4 if h["metric"] == "reward_mean")
+    h4_loose_pass  = all(h["descriptive_mean_gap_le_0p05"]    for h in h4 if h["metric"] == "reward_mean")
 
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "iter": 85,
         "vein": "(b) Ivison 2024 unpacking_dpo_ppo factorization on N2 four-method same-stack tensors",
         "data": {"path": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
                  "n_rows": len(rows), "n_methods": 4, "n_steps": 40, "n_seeds": 1,
                  "methods": METHODS},
         "h1_pooled_algo_axis_eta2_le_0p05_all_metrics": h1_decisive_all,
-        "h4_ivison_equivalence_strict_all_reward_pairs": h4_strict_pass,
-        "h4_ivison_equivalence_loose_all_reward_pairs": h4_loose_pass,
+        "h4_descriptive_mean_gap_strict_all_reward_pairs": h4_strict_pass,
+        "h4_descriptive_mean_gap_loose_all_reward_pairs": h4_loose_pass,
         "pooled_per_metric": pooled,
         "h3_gift_dominance": h3,
         "h4_ivison_pairs": h4,
@@ -210,7 +220,7 @@ def main():
             f.write(f"{p['step']}\t{p['metric']}\t{p['n_rows']}\t{p['eta2']}\t{p['omega2']}\t{p['ss_total']}\n")
 
     with open(os.path.join(OUT, "p5_n2_unpacking_summary.json"), "w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(json_safe(summary), f, indent=2)
 
     # ----------------------- console headline -----------------------
     print("== Iter 85 P5 N2 unpacking ==")
@@ -222,9 +232,9 @@ def main():
     print(f"H3 GIFT dominance vs other 3 (last-10 step, Cohen's d):")
     for h in h3:
         print(f"  {h['metric']:11s}  d={h['cohens_d']:+.3f}  Δ={h['diff_gift_minus_rest']:+.4f}")
-    print(f"H4 Ivison equivalence on reward_mean:")
+    print(f"H4 descriptive mean gap on reward_mean:")
     for h in [h for h in h4 if h["metric"] == "reward_mean"]:
-        tag = "✓ ≤0.005" if h["ivison_equivalence_le_0p005"] else ("· ≤0.05" if h["ivison_equivalence_le_0p05"] else "✗ >0.05")
+        tag = "✓ ≤0.005" if h["descriptive_mean_gap_le_0p005"] else ("· ≤0.05" if h["descriptive_mean_gap_le_0p05"] else "✗ >0.05")
         print(f"  {h['pair']:18s}  |Δ|={h['abs_diff']:.4f}  {tag}")
     print(f"H4 strict (≤0.005 on every reward pair): {h4_strict_pass}")
     print(f"H4 loose  (≤0.05  on every reward pair): {h4_loose_pass}")

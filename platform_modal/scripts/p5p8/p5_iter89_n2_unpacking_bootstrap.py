@@ -50,11 +50,11 @@ from _p5p7_common import load_rows
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
 from _stats import paired_step_bootstrap  # noqa: E402
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-RES  = os.path.join(ROOT, "experiments", "results")
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+RES  = os.path.join(ROOT, "platform_hybrid", "experiments", "results")
 N2   = os.path.join(RES, "n2_reward_tensor_resume", "n2_metrics.tsv")
-OUT  = os.path.join(RES, "p5p8")
-os.makedirs(OUT, exist_ok=True)
+OUT  = os.path.join(RES, "p5p8/review17_v2")
+
 
 METRICS = ["zvf", "pcd", "larq", "reward_mean", "mean_len", "cv_len", "loss"]
 METHODS = ["grpo", "aero", "areal", "gift"]
@@ -64,6 +64,8 @@ ALPHA = 0.05
 
 
 # ----------------------- helpers -----------------------
+
+from p5_review17_stats import json_safe
 
 def axis_eta2(rows, axis_key, value_key):
     """Reuse the Berkeley unpacking machinery. Returns SS_axis/SS_total."""
@@ -88,10 +90,11 @@ def cohens_d(a, b):
     if len(a) < 2 or len(b) < 2:
         return float("nan")
     ma, mb = fmean(a), fmean(b)
-    va, vb = pstdev(a), pstdev(b)
+    from statistics import stdev
+    va, vb = stdev(a), stdev(b)
     pooled = math.sqrt(((len(a) - 1) * va * va + (len(b) - 1) * vb * vb) / (len(a) + len(b) - 2))
     if pooled <= 1e-12:
-        return 0.0
+        return float("nan")
     return (ma - mb) / pooled
 
 
@@ -118,6 +121,8 @@ def reject_in_null(ci_lo, ci_hi, null_value, direction="two-sided"):
 # ----------------------- main -----------------------
 
 def main():
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    os.makedirs(OUT, exist_ok=True)
     rows = load_rows(N2, METRICS)
     print(f"== Iter 89 P5 N2 unpacking bootstrap (B={B}, seed={SEED}) ==")
     print(f"loaded {len(rows)} rows ({len(METHODS)} methods x {len({r['step'] for r in rows})} steps x 1 seed)")
@@ -251,6 +256,8 @@ def main():
 
     # ------------------- summary -------------------
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "iter": 89,
         "vein": "(b)+(c) Bootstrap CIs + leave-one-method-out stability on the N2 four-method same-stack panel",
         "data": {"path": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
@@ -288,7 +295,7 @@ def main():
                     f"{h['eta2_zvf_boot_lo']}\t{h['eta2_zvf_boot_hi']}\t{int(h['in_band_0p025_0p075'])}\n")
     # 4) summary json
     with open(os.path.join(OUT, "p5_n2_unpacking_boot_summary.json"), "w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(json_safe(summary), f, indent=2)
 
     print("\nwrote:")
     print(f"  {os.path.join(OUT, 'p5_n2_unpacking_boot.tsv')}")
@@ -296,7 +303,7 @@ def main():
     print(f"  {os.path.join(OUT, 'p5_n2_unpacking_lomo.tsv')}")
     print(f"  {os.path.join(OUT, 'p5_n2_unpacking_boot_summary.json')}")
     print()
-    print(f"H1 verdict: bootstrap UB <= 0.05 on zvf/pcd/larq/reward_mean/cv_len (strict channels) = {all(h['H1_ub_le_0p05_pass'] for h in h1_table)}")
+    print(f"H1 verdict: bootstrap UB <= 0.05 on zvf/pcd/larq/reward_mean/cv_len (strict channels) = {all(h['H1_ub_le_0p05_pass'] for h in h1_table if h['metric'] in ('zvf', 'pcd', 'larq', 'reward_mean', 'cv_len'))}")
     print(f"H2 verdict: pair-wise UB <= 0.04 on every strict channel = {h2_pass_all}")
     print(f"H3 verdict: LOMO all in [0.025, 0.075] = {h3_pass}")
     print(f"H4 verdict: zvf CI lower bound >= 1.0 = {h4_zvf_pass}")

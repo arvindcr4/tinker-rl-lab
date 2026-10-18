@@ -82,7 +82,7 @@ from _stats import wilson  # noqa: E402
 WORKTREE = REPO_ROOT
 MANIFEST_DIR = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/manifests"
 CELLS_TSV = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
-OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8/review17_v2"
 
 MANIFEST_FIELDS = [
     "loss_form", "ref_policy_kl", "sampler_backend_precision",
@@ -92,6 +92,8 @@ CELLS_FIELDS = ["model", "task_slice", "G", "temperature", "seed"]
 TELEMETRY = ["zvf", "mean_reward", "pcd", "mean_completion_len"]
 
 # ---------- helpers ----------
+from p5_review17_stats import json_safe
+
 def wilson_ci(k: int, n: int, z: float = 1.96):
     if n == 0:
         return (0.0, 0.0, 0.0)
@@ -218,6 +220,7 @@ def bootstrap_paired_diff(a_vals, b_vals, n_boot=2000, seed=20260706):
 
 # ---------- main analysis ----------
 def main():
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     manifests = load_manifests()
     cells = load_cells()
@@ -470,14 +473,16 @@ def main():
 
     # 5. JSON summary
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "iter": 189,
         "pillar": "P5",
         "n_cells": n_cells,
         "n_manifests": n_manifests,
+        "prediction_status": "NOT_EVALUATED: unique signatures saturate in-sample eta2 by construction",
         "manifest_field_cardinality": {
-            "loss_form": 1, "ref_policy_kl": 1, "sampler_backend_precision": 1,
-            "group_size_schedule": 5, "heldout_split": 3, "decontamination_notes": 2,
-            "per_step_zvf_path": 98, "cell_id": 98,
+            field: len({str(m.get(field, "MISSING")) for m in manifests.values()})
+            for field in candidate_sets["manifest_all_8"]
         },
         "uniq_stats": uniq_stats,
         "greedy_min_k": h3_min_k,
@@ -495,7 +500,7 @@ def main():
                    "lift_pp": h5_lift, "verdict": "PASS" if h5_pass else "FAIL"},
         },
         "headline_findings": [
-            f"F1: 3 manifest fields are CONSTANT (loss_form=n/a-sampling, ref_policy_kl=n/a, sampler_backend_precision=tinker-closed), so manifest alone only discriminates on 3 fields (G, task_slice, decontamination)",
+            "F1: Within-corpus constant fields can still be necessary for replication; cardinality is not evidence quality.",
             f"F2: manifest_discriminating_3 produces {uniq_stats['manifest_discriminating_3']['n_classes']} equivalence classes (max size {uniq_stats['manifest_discriminating_3']['max_class_size']}); only {h1_unique}/98 cells uniquely identifiable from manifest alone",
             f"F3: minimal-fields-to-identify-all-98 = k={h3_min_k} (the standard {len(['model', 'task_slice', 'G', 'temperature', 'seed'])}-tuple)",
             f"F4: MANIFEST-FIELDS η² on telemetry — zvf={eta2_zvf:.3f}, pcd={eta2_pcd:.3f}, mean_reward={next(r['eta_sq'] for r in eta2_rows if r['field_group']=='manifest_discriminating_3' and r['channel']=='mean_reward'):.3f}, mean_completion_len={next(r['eta_sq'] for r in eta2_rows if r['field_group']=='manifest_discriminating_3' and r['channel']=='mean_completion_len'):.3f}",
@@ -503,7 +508,7 @@ def main():
         ],
     }
     with open(OUT_DIR / "p5_iter189_summary.json", "w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(json_safe(summary), f, indent=2)
 
     print(f"\nOutputs written to {OUT_DIR}/p5_iter189_*")
     print(f"Total hypotheses: {sum(1 for h in summary['hypotheses'].values() if h['verdict']=='PASS')}/5 PASS")

@@ -37,7 +37,7 @@ Method (mirrors platform_modal/scripts/berkeley/unpacking_dpo_ppo_factorization.
      synthesis): per (method, step), compute the observed ZVF and
      compare to the iid prediction ZVF^iid = p^G + (1-p)^G where
      p = per-step reward-mean. The gap delta = ZVF_obs - ZVF^iid is the
-     "anti-herding diversity bonus" -- the same delta the frontier
+     "same-sample plug-in diagnostic (biased under iid) diversity bonus" -- the same delta the frontier
      synthesis flags at |delta| in [0.13, 0.23] for the panel-mean.
 
 Headline falsifiable claim (P5):
@@ -68,10 +68,10 @@ from pathlib import Path
 # ----------------------------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 N2_DIR = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
-OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
+
 
 N_METHODS = 4
 N_STEPS = 40
@@ -84,6 +84,8 @@ ETA2_ALGO_THRESHOLD = 0.10  # P5 falsifiable: eta^2(method) <= 0.10
 # ----------------------------------------------------------------------------
 # Loaders
 # ----------------------------------------------------------------------------
+from p5_review17_stats import json_safe
+
 def load_n2_long() -> list[dict]:
     """Return one row per (method, step, prompt, group_position)."""
     out = []
@@ -196,12 +198,6 @@ def boot_eta2(cell_rows: list[dict], axis_key: str, n_boot: int = N_BOOT,
     etas = []
     for _ in range(n_boot):
         sample = [flat[rng.randrange(n)] for _ in range(n)]
-        rows_b = [{"method": m, axis_key: getattr(_row, axis_key, None) or _row[1] if False else None} for m, s, p, v in sample]
-        # rebuild rows for eta2_one_way
-        rows_b = [{"method": m if axis_key != "method" else m,
-                   "step": s if axis_key == "step" else None,
-                   "prompt": p if axis_key == "prompt" else None,
-                   axis_key: v} for m, s, p, v in sample]
         # Map axis values correctly
         if axis_key == "method":
             rows_b = [{"method": m, "v": v} for m, s, p, v in sample]
@@ -220,10 +216,11 @@ def boot_eta2(cell_rows: list[dict], axis_key: str, n_boot: int = N_BOOT,
     etas.sort()
     return {
         "mean": statistics.fmean(etas),
-        "lo": etas[int(0.025 * n_boot)],
-        "hi": etas[int(0.975 * n_boot)],
+        "lo": etas[int(0.025 * len(etas))] if len(etas) >= .95 * n_boot else float("nan"),
+        "hi": etas[min(len(etas)-1, int(0.975 * len(etas)))] if len(etas) >= .95 * n_boot else float("nan"),
         "sd": statistics.pstdev(etas) if len(etas) > 1 else 0.0,
-        "n_boot": len(etas),
+        "n_boot": len(etas), "n_invalid": n_boot - len(etas),
+        "status": "VALID" if len(etas) >= .95*n_boot else "DEGENERATE",
     }
 
 
@@ -235,6 +232,8 @@ import math  # noqa: E402
 # Main
 # ----------------------------------------------------------------------------
 def main():
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     findings = []
 
     # Load
@@ -292,7 +291,7 @@ def main():
 
     # Falsifiable verdict
     h_decisive = (method_levels["eta2"] <= ETA2_ALGO_THRESHOLD and
-                  boot_method["hi"] <= ETA2_ALGO_THRESHOLD + 0.05)
+                  boot_method["hi"] <= ETA2_ALGO_THRESHOLD)
     h_verdict = "DECISIVE" if h_decisive else "SUGGESTIVE" if method_levels["eta2"] <= 0.15 else "NULL"
     print(f"\n--- HEADLINE (falsifiable) ---")
     print(f"  P5 claim: eta^2(method) <= {ETA2_ALGO_THRESHOLD} on per-cell-mean reward")
@@ -391,12 +390,13 @@ def main():
     print(f"  panel-mean delta range: "
           f"[{min(panel_mean_deltas):+.4f}, {max(panel_mean_deltas):+.4f}]")
     # frontier synthesis stated |delta| in [0.13, 0.23] for the panel-mean
-    in_synthesis_band = all(0.10 <= abs(d) <= 0.25 for d in panel_mean_deltas)
+    in_synthesis_band = bool(panel_mean_deltas) and all(0.13 <= abs(d) <= 0.23 for d in panel_mean_deltas)
     print(f"  synthesised frontier band (|panel_delta| in [0.13, 0.23]): "
           f"{'CONFIRMED' if in_synthesis_band else 'PARTIAL' if any(0.05 <= abs(d) <= 0.30 for d in panel_mean_deltas) else 'NOT MET'}")
 
     findings.append({
-        "hypothesis": "IID-baseline ZVF decomposition (frontier synthesis Gemini R2)",
+        "hypothesis": "Descriptive same-sample plug-in ZVF residual",
+        "dependence_inference": "NOT_IDENTIFIED: same-sample plug-in residual is negative even under iid",
         "G_group": G_GROUP,
         "per_method_delta_mean": {m: round(statistics.fmean(d), 4) for m, d in delta_panels.items()},
         "per_method_delta_sd":   {m: round(statistics.pstdev(d), 4) for m, d in delta_panels.items()},
@@ -440,6 +440,8 @@ def main():
     print(f"[OK] wrote {zvf_path}")
 
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "iter": 45,
         "pillar": "P5",
         "vein": "(b) — stack-conditioning quantification on N2 four-method tensors",
@@ -455,9 +457,9 @@ def main():
             "step":   round(raw_step["eta2"],   4),
             "prompt": round(raw_prompt["eta2"], 4),
         },
-        "boot_ci_method":  {k: round(v, 4) for k, v in boot_method.items() if isinstance(v, float)},
-        "boot_ci_step":    {k: round(v, 4) for k, v in boot_step.items()   if isinstance(v, float)},
-        "boot_ci_prompt":  {k: round(v, 4) for k, v in boot_prompt.items() if isinstance(v, float)},
+        "boot_ci_method":  boot_method,
+        "boot_ci_step":    boot_step,
+        "boot_ci_prompt":  boot_prompt,
         "per_method_means": {m: round(v, 4) for m, v in method_means.items()},
         "per_method_delta_vs_grpo": {m: round(v - grpo_mean, 4) for m, v in method_means.items()},
         "panel_zvf_delta_range": [round(min(panel_mean_deltas), 4), round(max(panel_mean_deltas), 4)],
@@ -467,7 +469,7 @@ def main():
     }
     summary_path = OUT_DIR / "p5_stack_conditioning_summary.json"
     with summary_path.open("w") as fh:
-        json.dump(summary, fh, indent=2, default=str)
+        json.dump(json_safe(summary), fh, indent=2, default=str)
     print(f"[OK] wrote {summary_path}")
     print(f"\nDONE — P5 stack-conditioning quantification complete.")
 

@@ -47,11 +47,13 @@ from _paths import REPO_ROOT  # noqa: E402
 ROOT = str(REPO_ROOT)
 MAN_DIR = f"{ROOT}/platform_hybrid/experiments/results/mega_20260704/manifests"
 CELLS = f"{ROOT}/platform_hybrid/experiments/results/mega_20260704/cells.tsv"
-OUT = f"{ROOT}/platform_hybrid/experiments/results/p5p8"
+OUT = f"{ROOT}/platform_hybrid/experiments/results/p5p8/review17_v2"
 SCHEMA = f"{ROOT}/platform_hybrid/registry/schema.json"
 
 random.seed(20260705)
 
+
+from p5_review17_stats import json_safe
 
 def shannon(counter):
     n = sum(counter.values())
@@ -66,6 +68,8 @@ def shannon(counter):
 
 
 def main():
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    os.makedirs(OUT, exist_ok=True)
     # ---- Load manifest schema (from disk, not registry) ----
     sample_manifest = json.load(open(f"{MAN_DIR}/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59.json"))
     manifest_keys = sorted(sample_manifest.keys())
@@ -227,7 +231,7 @@ def main():
             return mm.group(1) if mm else "?"
         def recover_task(cid):
             # task is between model_family and _G
-            mm = re.search(r"_(gsm8k_\w+|humaneval_subset)_", cid)
+            mm = re.search(r"_(gsm8k_(?:easy|hard)|humaneval_subset)_G\d+(?:_|$)", cid)
             return mm.group(1) if mm else "?"
         def recover_model_family(cid):
             # model_family is the leading prefix before the task
@@ -248,7 +252,7 @@ def main():
         # is this axis in the manifest schema at all?
         in_manifest = (manifest_equiv.get(axis) is not None)
         # is it recoverable from cell_id?
-        recoverable = True  # cell_id encodes (model_family, task_slice, G, temp, seed)
+        recoverable = axis in {"model_family", "task_slice", "G", "temperature", "seed"}  # telemetry cannot be parsed from identity
         missing_rows.append({
             "field": axis,
             "field_class": "stack_axis" if axis in cell_axis_cols else "telemetry",
@@ -347,6 +351,8 @@ def main():
             w.writerow(r)
 
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "n_manifests": len(manifests),
         "n_cells_tsv_rows": len(rows),
         "schema_mismatch_table": boot_rows,
@@ -369,7 +375,7 @@ def main():
     }
     summary_path = f"{OUT}/p5_iter97_schema_mismatch_summary.json"
     with open(summary_path, "w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(json_safe(summary), f, indent=2)
     print(f"wrote: {schema_path}")
     print(f"wrote: {missing_path}")
     print(f"wrote: {ambiguous_path}")

@@ -39,10 +39,10 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-MANIFEST_DIR = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
-CELLS_TSV = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+ROOT = Path(__file__).resolve().parents[3]
+MANIFEST_DIR = ROOT / "platform_hybrid" / "experiments" / "results" / "mega_20260704" / "manifests"
+CELLS_TSV = ROOT / "platform_hybrid" / "experiments" / "results" / "mega_20260704" / "cells.tsv"
+OUT_DIR = ROOT / "platform_hybrid" / "experiments" / "results" / "p5p8/review17_v2"
 
 RNG = random.Random(20260705)
 N_BOOT = 5000
@@ -69,6 +69,8 @@ ITEM_WEIGHTS = {
     "decontamination_notes": 20,
 }
 
+
+from p5_review17_stats import json_safe
 
 def load_cells() -> list[dict]:
     rows = []
@@ -116,25 +118,10 @@ def shannon_entropy_bits(values: list[str]) -> float:
 
 
 def badge_for(manifest: dict) -> tuple[float, dict[str, float]]:
-    """Mirror the auditor's per-item base*0.5*(1+sub_cov) score."""
-    if manifest is None:
-        return 0.0, {}
-    per_item = {}
-    for k, w in ITEM_WEIGHTS.items():
-        v = manifest.get(k)
-        if v is None or str(v).strip() == "":
-            base = 0.0
-        elif str(v).startswith("n/a"):
-            base = 0.5
-        elif k == "per_step_zvf_path":
-            base = 1.0  # a path is always concrete when present
-        else:
-            base = 1.0
-        per_item[k] = w * base * (0.5 + 0.5 * 0.5)  # sub_cov~0.5 default
-    # Special: per_step_zvf_path baseline — full weight when path present
-    if manifest.get("per_step_zvf_path"):
-        per_item["per_step_zvf_path"] = ITEM_WEIGHTS["per_step_zvf_path"]
-    return sum(per_item.values()), per_item
+    """Canonical v2 completeness score, independent of outcome significance."""
+    from p5_mve_empirical import score_one
+    result = score_one(manifest or {}, {}, include_mve=False)
+    return result["total"], {item["name"]: item["score"] for item in result["items"]}
 
 
 def fingerprint(manifest: dict) -> tuple:
@@ -197,22 +184,16 @@ def bootstrap_ci(values: list[float], stat_fn, n_boot: int = N_BOOT) -> tuple[fl
 
 def permutation_p(diff_obs: float, group_a: list[float], group_b: list[float],
                    n_perm: int = 5000) -> float:
-    """Two-sided permutation p-value for the difference in means."""
-    combined = group_a + group_b
-    n_a = len(group_a)
-    n = len(combined)
-    abs_diffs = []
-    for _ in range(n_perm):
-        RNG.shuffle(combined)
-        ma = statistics.mean(combined[:n_a])
-        mb = statistics.mean(combined[n_a:])
-        abs_diffs.append(abs(ma - mb))
-    abs_diffs.sort()
-    rank = sum(1 for x in abs_diffs if x >= abs(diff_obs))
-    return (rank + 1) / (n_perm + 1)
+    """Unavailable: flattened pairs are dependent and lack cell identities.
+
+    Keep descriptive differences, but never return an invalid pair-level p-value.
+    A run/cell-level randomization protocol is required before inference.
+    """
+    return float("nan")
 
 
 def main() -> int:
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     cells = load_cells()
     manifests = load_manifests()
@@ -283,19 +264,9 @@ def main() -> int:
         bs = [x[0] for x in h1_pair_diffs]
         ds = [x[1] for x in h1_pair_diffs]
         rho = spearman(bs, ds)
-        # bootstrap CI on rho
-        rho_boots = []
-        n = len(bs)
-        for _ in range(N_BOOT):
-            idx = [RNG.randrange(n) for _ in range(n)]
-            xs = [bs[i] for i in idx]
-            ys = [ds[i] for i in idx]
-            r = spearman(xs, ys)
-            if not math.isnan(r):
-                rho_boots.append(r)
-        rho_boots.sort()
-        rho_lo = rho_boots[int(0.025 * len(rho_boots))]
-        rho_hi = rho_boots[int(0.975 * len(rho_boots)) - 1]
+        # Pairs share cells. No valid CI is identified from flattened pairs.
+        rho_lo, rho_hi = float("nan"), float("nan")
+
     else:
         rho, rho_lo, rho_hi = float("nan"), float("nan"), float("nan")
 
@@ -450,6 +421,8 @@ def main() -> int:
 
     # p5_manifest_outcome_coupling_summary.json
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "n_cells": len(enriched),
         "n_cell_groups_with_seeds": len(cell_groups),
         "n_pairwise_seed_comparisons": len(h1_pair_diffs),
@@ -486,7 +459,7 @@ def main() -> int:
         },
     }
     with (OUT_DIR / "p5_manifest_outcome_coupling_summary.json").open("w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(json_safe(summary), f, indent=2)
 
     # ----- Console digest
     print(f"[p5_manifest_outcome_coupling] cells={len(enriched)} "

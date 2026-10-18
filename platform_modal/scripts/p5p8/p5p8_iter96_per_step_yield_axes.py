@@ -42,41 +42,51 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/review17_v2"
 TENSORS_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor"
 TENSORS_DIR_RESUME = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
-RES.mkdir(parents=True, exist_ok=True)
+
 
 SEED = 20260705
 G = 8  # observed group size on N2
 
 
+from p5_review17_stats import json_safe
+
 def load_step_records() -> list[dict]:
     """Load all (method, step, rewards[16][8]) from the N2 four-method panels."""
-    out = []
+    out = {}
     for d in (TENSORS_DIR, TENSORS_DIR_RESUME):
         for f in sorted(d.glob("*_s0_tensors.jsonl")):
             if f.name.startswith("smoke_"):
                 continue
-            for line in f.open():
+            for line in f.read_text().splitlines():
                 r = json.loads(line)
-                if "rewards" in r:
-                    rewards = r["rewards"]
-                    k_per_prompt = [sum(int(x) for x in rollout) for rollout in rewards]
-                    out.append(dict(
-                        method=r.get("method", f.stem.split("_s")[0]),
-                        seed=int(r.get("seed", 0)),
-                        step=int(r["step"]),
-                        k_per_prompt=k_per_prompt,
-                        zvf_obs=float(r.get("zvf", -1.0)),
-                    ))
-    return out
+                rewards = r.get("rewards")
+                if not rewards or any(len(group) != G for group in rewards):
+                    raise ValueError(f"Unsupported reward group shape: {f}")
+                if any(value not in (0, 1) for group in rewards for value in group):
+                    raise ValueError(f"Binary rewards required: {f}")
+                k = [sum(group) for group in rewards]
+                record = dict(method=r.get("method", f.stem.split("_s")[0]),
+                              seed=int(r.get("seed", 0)), step=int(r["step"]),
+                              k_per_prompt=k,
+                              zvf_obs=sum(value in (0, G) for value in k)/len(k))
+                key = (r.get("run_id", "N2"), record["method"], record["seed"], record["step"])
+                if key in out and out[key] != record:
+                    raise ValueError(f"Conflicting resumed observation {key}")
+                out[key] = record
+    if not out:
+        raise ValueError("No N2 observations")
+    return [out[key] for key in sorted(out)]
 
 
 def compute_per_step_items(record: dict) -> dict:
     """Compute Item 14-step, 15-step, 16-step, 17-step for one record."""
     k = record["k_per_prompt"]
     n = len(k)
+    if n < 2 or any(not isinstance(v, (int, float)) or v != int(v) or not 0 <= v <= G for v in k):
+        raise ValueError("At least two binary-reward groups are required")
     p_hat = sum(k) / (n * G)
     # Item 13-step : zvf_yield_residual analog = zvf_obs - binom(zvf)
     import math
@@ -149,18 +159,18 @@ def _rank(xs: list[float]) -> list[float]:
     return ranks
 
 
-def binomial_null_test(item_13_orig: list[float], item_X_orig: list[float],
-                       items_per_step: list[dict], n_sim: int = 500) -> dict:
-    """Shuffle k_per_prompt within each step to break per-step Item axes but
-    preserve (p_hat, n_prompts, n_steps). Compute the per-step Items on the
-    shuffled data and report the empirical H_bits uplift mean & CI for item_X."""
-    rng = random.Random(SEED)
-    items_X_shuffled = []
-    for r in records:
-        pass  # need records; we'll recompute
+def simulate_step(record, rng):
+    """Evaluate the identical plug-in statistic on an iid null record."""
+    p_hat = sum(record["k_per_prompt"]) / (len(record["k_per_prompt"]) * G)
+    k = [sum(rng.random() < p_hat for _ in range(G))
+         for _ in record["k_per_prompt"]]
+    return compute_per_step_items({"k_per_prompt": k,
+        "zvf_obs": sum(value in (0, G) for value in k) / len(k)})
 
 
 def main() -> None:
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    RES.mkdir(parents=True, exist_ok=True)
     print("[iter96-SYNTH] loading N2 four-method tensors ...")
     records = load_step_records()
     print(f"  n_records = {len(records)}; unique methods = {set(r['method'] for r in records)}")
@@ -225,26 +235,16 @@ def main() -> None:
     rng = random.Random(SEED)
     null_results = {m: {c: [] for c in ["item_14_step", "item_15_step", "item_16_step", "item_17_step"]}
                     for m in methods + ["POOLED"]}
-    for r in enriched:
-        p_hat = r["p_hat"]
-        n = len(r["k_per_prompt"])
-        if n < 2:
-            continue
-        for _ in range(500):
-            k_sim = [sum(rng.random() < p_hat for _ in range(G)) for _ in range(n)]
-            mean_k = sum(k_sim) / n
-            var_k = sum((x - mean_k) ** 2 for x in k_sim) / max(n - 1, 1)
-            var_iid = G * p_hat * (1 - p_hat)
-            item_14_sim = (var_k - var_iid) / max(var_iid, 1e-12)
-            uniq = len(set(k_sim))
-            from collections import Counter
-            cnt = Counter(k_sim)
-            item_16_sim = max(cnt.values()) / n
-            mean_p = sum(x / G for x in k_sim) / n
-            item_17_sim = sum(((x / G) - mean_p) ** 2 for x in k_sim) / max(n - 1, 1)
-            for c, v in zip(["item_14_step", "item_15_step", "item_16_step", "item_17_step"],
-                             [item_14_sim, uniq, item_16_sim, item_17_sim]):
-                null_results[r["method"]][c].append(v)
+    # Each draw is one complete replicate, including all pooled observations.
+    for _ in range(500):
+        replicate = {m: [] for m in methods + ["POOLED"]}
+        for r in enriched:
+            simulated = simulate_step(r, rng)
+            replicate[r["method"]].append(simulated)
+            replicate["POOLED"].append(simulated)
+        for m, simulated_rows in replicate.items():
+            for c in null_results[m]:
+                null_results[m][c].append(sum(row[c] for row in simulated_rows)/len(simulated_rows))
 
     # Empirical vs null: difference of means
     excess = {m: {} for m in methods + ["POOLED"]}
@@ -269,6 +269,8 @@ def main() -> None:
                                 diff=emp_mean - null_mean, z=excess_z)
 
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "n_records": len(records),
         "methods": methods,
         "rho_per_method_per_item": rho_rows,
@@ -278,8 +280,8 @@ def main() -> None:
             for m in methods + ["POOLED"] if m in excess and excess[m]
         },
     }
-    (RES / "p5p8_iter96_per_step_summary.json").write_text(json.dumps(summary, indent=2, default=str))
-    print(json.dumps(summary, indent=2, default=str))
+    (RES / "p5p8_iter96_per_step_summary.json").write_text(json.dumps(json_safe(summary), indent=2, default=str))
+    print(json.dumps(json_safe(summary), indent=2, default=str))
 
 
 if __name__ == "__main__":

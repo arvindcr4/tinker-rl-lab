@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import hashlib
 import logging
 import math
 import statistics
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Sequence, Set
+from typing import Any, Dict, List, Sequence
 
 logger = logging.getLogger(__name__)
 
@@ -140,6 +141,35 @@ def aggregate_results(results: List[EpisodeResult], success_threshold: float = 1
     return out
 
 
+def validate_complete_evaluation(final: Dict[str, Any]) -> None:
+    """Publication must verify the planned denominator, not a status string alone."""
+    if final.get("completion_status") != "complete":
+        raise ValueError("publication requires complete validated coverage without episode errors")
+    receipt = final.get("evaluation_receipt", {})
+    config = receipt.get("effective_config", {})
+    eid = hashlib.sha256(json.dumps(config, sort_keys=True, allow_nan=False).encode()).hexdigest()
+    tasks = config.get("tasks")
+    if (receipt.get("evaluation_id") != eid or not isinstance(tasks, list) or not tasks or
+        any(not isinstance(task, str) or not task for task in tasks) or
+        len(set(tasks)) != len(tasks) or type(config.get("seed")) is not int):
+        raise ValueError("publication receipt configuration is invalid")
+    expected = {(eid, task, int.from_bytes(hashlib.sha256(
+        f"{config['seed']}:{task}".encode()).digest()[:4], "big")) for task in tasks}
+    rows = receipt.get("coverage", [])
+    actual = []
+    for row in rows:
+        if (not isinstance(row, dict) or set(row) != {"evaluation_id", "env_id", "seed"}
+            or type(row["seed"]) is not int or not isinstance(row["env_id"], str)
+            or not isinstance(row["evaluation_id"], str)):
+            raise ValueError("publication receipt coverage is invalid")
+        actual.append((row["evaluation_id"], row["env_id"], row["seed"]))
+    overall = final.get("overall", {})
+    if (len(actual) != len(set(actual)) or set(actual) != expected or
+        type(overall.get("n")) is not int or overall["n"] != len(expected) or
+        type(overall.get("episodes_with_error")) is not int or overall["episodes_with_error"] != 0):
+        raise ValueError("publication receipt coverage is incomplete or inconsistent")
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--inputs", nargs="+", required=True,
@@ -171,17 +201,51 @@ def main() -> int:
     if args.receipts:
         receipts = [json.loads(Path(path).read_text()) for path in args.receipts]
         identities = {r.evaluation_id for r in results}
-        if {r["evaluation_id"] for r in receipts} != identities or len(identities) != 1:
-            raise ValueError("receipt identity mismatch")
-        if any(r["effective_config"] != receipts[0]["effective_config"] for r in receipts):
+        config = receipts[0]["effective_config"]
+        evaluation_id = hashlib.sha256(json.dumps(config, sort_keys=True, allow_nan=False).encode()).hexdigest()
+        if identities != {evaluation_id} or any(r.get("evaluation_id") != evaluation_id for r in receipts):
+            raise ValueError("receipt configuration hash/identity mismatch")
+        if any(r["effective_config"] != config for r in receipts):
             raise ValueError("receipt configuration mismatch")
-        out["evaluation_receipt"] = receipts[0]
-    if args.manifest:
-        expected = {(r["evaluation_id"], r["env_id"], r["seed"]) for r in json.loads(Path(args.manifest).read_text())}
+        tasks = config.get("tasks")
+        if (not isinstance(tasks, list) or not tasks or
+            any(not isinstance(task, str) or not task for task in tasks) or
+            len(set(tasks)) != len(tasks) or type(config.get("seed")) is not int):
+            raise ValueError("invalid planned task/seed configuration")
+        planned = {(evaluation_id, task, int.from_bytes(hashlib.sha256(
+            f"{config['seed']}:{task}".encode()).digest()[:4], "big")) for task in tasks}
+
+        def coverage_keys(rows):
+            keys = []
+            for row in rows:
+                if (not isinstance(row, dict) or set(row) != {"evaluation_id", "env_id", "seed"}
+                    or type(row["seed"]) is not int or not isinstance(row["env_id"], str)
+                    or not isinstance(row["evaluation_id"], str)):
+                    raise ValueError("invalid episode coverage identity")
+                keys.append((row["evaluation_id"], row["env_id"], row["seed"]))
+            if len(set(keys)) != len(keys):
+                raise ValueError("duplicate episode coverage identity")
+            return set(keys)
+
+        coverage_rows = [row for receipt in receipts for row in receipt["coverage"]]
+        covered = coverage_keys(coverage_rows)
         observed = {(r.evaluation_id, r.env_id, r.seed) for r in results}
-        if expected != observed:
+        if not covered <= planned or not observed <= covered:
+            raise ValueError("episode coverage is outside the planned receipt")
+        if args.manifest and coverage_keys(json.loads(Path(args.manifest).read_text())) != covered:
+            raise ValueError("manifest coverage does not match receipt coverage")
+        out["evaluation_receipt"] = {**receipts[0], "coverage": coverage_rows}
+        if observed == covered == planned:
+            out["completion_status"] = "complete_with_errors" if any(r.error for r in results) else "complete"
+        else:
+            out["completion_status"] = "coverage_incomplete"
+    elif args.manifest:
+        # A free-standing manifest cannot authenticate its own denominator/config.
+        expected_rows = json.loads(Path(args.manifest).read_text())
+        expected = {(r["evaluation_id"], r["env_id"], r["seed"]) for r in expected_rows}
+        observed = {(r.evaluation_id, r.env_id, r.seed) for r in results}
+        if len(expected) != len(expected_rows) or expected != observed:
             raise ValueError("episode coverage does not match expected manifest")
-        out["completion_status"] = "complete_with_errors" if any(r.error for r in results) else "complete"
     Path(args.out).write_text(json.dumps(out, indent=2))
     logger.info("Aggregated %d results into %s", len(results), args.out)
     logger.info("Result:\n%s", json.dumps(out, indent=2))

@@ -36,6 +36,11 @@ from textwrap import dedent
 def _render_model_card(
     *, base_model: str, benchmark: str, final: dict, dataset_repo: str, run_id: str,
 ) -> str:
+    try:
+        from .aggregate import validate_complete_evaluation
+    except ImportError:  # Direct script execution
+        from aggregate import validate_complete_evaluation
+    validate_complete_evaluation(final)
     receipt = final.get("evaluation_receipt", {})
     config = receipt.get("effective_config", {})
     if final.get("completion_status") != "complete":

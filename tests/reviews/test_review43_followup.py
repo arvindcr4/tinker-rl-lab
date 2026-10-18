@@ -150,6 +150,13 @@ def test_card_requires_receipt_and_no_errors():
     kwargs=dict(base_model='model',benchmark='webarena',dataset_repo='data',run_id='run')
     with pytest.raises(ValueError):_render_model_card(final={},**kwargs)
     final={'completion_status':'complete','evaluation_receipt':{'evaluation_id':'v2','effective_config':{'model':'model','benchmark':'webarena','temperature':.7,'action_tokens':99},'actual_concurrency':1}}
+    import hashlib
+    config = final['evaluation_receipt']['effective_config']
+    config.update(tasks=['task'], seed=42)
+    eid = hashlib.sha256(json.dumps(config, sort_keys=True).encode()).hexdigest()
+    final['evaluation_receipt'].update(evaluation_id=eid, coverage=[dict(evaluation_id=eid,
+        env_id='task', seed=int.from_bytes(hashlib.sha256(b'42:task').digest()[:4], 'big'))])
+    final['overall'] = dict(n=1, episodes_with_error=0)
     card=_render_model_card(final=final,**kwargs)
     assert 'temperature 0.7' in card and 'budget 99' in card
     assert '50-way' not in card and 'sample_async' not in card

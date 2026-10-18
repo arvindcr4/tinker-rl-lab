@@ -2891,19 +2891,24 @@ or untrained G ≥ 32 projections. Pillar 4 separates length censoring,
 held-out numerical accuracy and semantic reasoning quality. A result is
 admitted only for the estimand its design actually supports.
 
-The headline configuration of the internal report sources is LoRA rank
-32, Adam with β₁ = 0.9 and β₂ = 0.95, learning rate 1 × 10⁻⁴, and the
-seed set \{42, 123, 456, 789, 1024\}. It is not held fixed across the
-programme. The canonical dispatch matrix uses rank 16 and learning rate
-1 × 10⁻⁶, the stack probe uses 1 × 10⁻⁵, the P4 scale extension uses
-rank 4, and the Tinker runners default to 3 × 10⁻⁵; Table 4.2
-distinguishes reported settings, inspected candidate implementations and
-unresolved historical execution bindings. The instrumented 79-run roster
-described in that source spans the Qwen3, Qwen3.5, Llama-3.x,
-DeepSeek-V3.1 and Nemotron-120B families, from 0.6B to approximately
-671B total parameters, including mixture-of-experts anchors at the
-frontier end of that range; the wider P1 cross-scale roster adds a 1T
-anchor (Kimi-K2) and so spans 0.6B to 1T (Chapter 6 §6.1; source:
+The internal report sources have no single headline configuration: in
+the P8 workshop manifest every Tinker run uses LoRA with Adam (β₁ = 0.9,
+β₂ = 0.95), the Tinker case studies use rank 32 and learning rate 3 ×
+10⁻⁵ at seed 42, the frontier case studies use rank 16 and 1 × 10⁻⁵, and
+only the TRL reference (\{42, 123, 456, 789, 1024\}) and the held-out
+control (\{42, 137, 256, 512, 999\}) are multi-seed. Configuration is
+not held fixed across the programme. The canonical dispatch matrix uses
+rank 16 and learning rate 1 × 10⁻⁶, the stack probe uses 1 × 10⁻⁵, the
+P4 scale extension uses rank 4, and the Tinker runners default to 3 ×
+10⁻⁵; Table 4.2 distinguishes reported settings, inspected candidate
+implementations and unresolved historical execution bindings. The run
+manifest of that source lists 75 runs in 44 cells --- 46 completed
+GRPO-style LLM runs on TRL and Tinker, one LLM PPO run, 15 classic-RL
+PPO reference runs and 13 failed, partial or never-started cells --- and
+its completed GRPO cells cover eight model families (Qwen2.5, Qwen3,
+Qwen3.5, Llama-3.x, DeepSeek-V3.1, Nemotron, gpt-oss, Kimi-K2) from 0.5B
+to approximately 1T total parameters, at most 37B active; the P1
+cross-scale roster spans 0.6B to 1T (Chapter 6 §6.1; source:
 platform\_hybrid/paper/sections/p1\_abstract.tex). The statistical
 apparatus is declared in the shared methods source but was not
 pre-registered (Chapter 9 §9.2; the analysis log records 206
@@ -9486,9 +9491,9 @@ Used in
 P1 cross-scale roster & 70+ & Historical heterogeneous trace roster; 12
 fitted anchors include interrupted traces; scaling fits excluded &
 Chapter 6 §6.2 \\
-Instrumented roster (P8 workshop source) & 79 & The instrumented roster
-of \longtok{paper\_\allowbreak{}P8\_\allowbreak{}workshop.tex}, 0.6B to \textasciitilde671B &
-Chapter 4 §4.1 \\
+P8 run manifest & 75 & The run manifest of
+\longtok{paper\_\allowbreak{}P8\_\allowbreak{}workshop.tex} (44 cells, 0.5B to \textasciitilde1T
+total parameters) & Chapter 4 §4.1 \\
 P5 audit corpus & 790 & Source-reported aggregate; exact 790-ID
 membership and real/synthetic/dry-run classification unavailable; not a
 replication denominator & Chapter 7 §7.1 \\
@@ -12759,6 +12764,9 @@ Methodology}\label{chapter-4-proposed-methodology}
   \texttt{platform\_hybrid/sem} 4
   \longtok{work/submissions/mtech-final-review/build\_\allowbreak{}review\_\allowbreak{}pptx.py},
   slide 7
+\item
+  \longtok{platform\_hybrid/paper/neurips\_\allowbreak{}2026\_\allowbreak{}variants/paper\_\allowbreak{}P8\_\allowbreak{}workshop.tex},
+  Table \texttt{tab:configs}
 \item
   \longtok{platform\_hybrid/paper/neurips\_\allowbreak{}2026\_\allowbreak{}variants/paper\_\allowbreak{}P8\_\allowbreak{}workshop.tex}
 \item

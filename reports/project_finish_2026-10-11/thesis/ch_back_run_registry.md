@@ -384,7 +384,7 @@ different corpus, not a different count of the same one.
 | Corpus | Count | What it is | Used in |
 |---|---|---|---|
 | P1 cross-scale roster | 70+ | Historical heterogeneous trace roster; 12 fitted anchors include interrupted traces; scaling fits excluded | Chapter 6 §6.2 |
-| Instrumented roster (P8 workshop source) | 79 | The instrumented roster of `paper_P8_workshop.tex`, 0.6B to ~671B | Chapter 4 §4.1 |
+| P8 run manifest | 75 | The run manifest of `paper_P8_workshop.tex` (44 cells, 0.5B to ~1T total parameters) | Chapter 4 §4.1 |
 | P5 audit corpus | 790 | Source-reported aggregate; exact 790-ID membership and real/synthetic/dry-run classification unavailable; not a replication denominator | Chapter 7 §7.1 |
 | Mega-campaign cells | 98 | Sampling-only cells of `mega_20260704` | Chapter 7 §7.1 |
 | E1–E14 actor training | 1 | The 40-step `pavlov_portfolio` run of August 2026, after the ledger cut-off | Chapter 8 §8.1.1 |

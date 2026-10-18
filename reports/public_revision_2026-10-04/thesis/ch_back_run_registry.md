@@ -368,8 +368,8 @@ different corpus, not a different count of the same one.
 | Corpus | Count | What it is | Used in |
 |---|---|---|---|
 | P1 cross-scale roster | 70+ | Runs across seven RL libraries and five model families; 12 of them are the fitted anchors | Chapter 6 §6.2 |
-| Instrumented roster (P8 workshop source) | 79 | The instrumented roster of `paper_P8_workshop.tex`, 0.6B to ~671B | Chapter 4 §4.1 |
-| P5 audit corpus | 790 | The corpus from which the 368-run audit is drawn (`p5_stack.tex`); its relation to the ledger is not recorded | Chapter 7 §7.1 |
+| P8 run manifest | 75 | The run manifest of `paper_P8_workshop.tex` (44 cells, 0.5B to ~1T total parameters) | Chapter 4 §4.1 |
+| P5 ZVF audit | 368 | The Stratum-B audit of `p5_stack.tex`, W&B project `zvf-audit` (350 runs with logged final metrics) | Chapter 7 §7.1 |
 | Mega-campaign cells | 98 | Sampling-only cells of `mega_20260704` | Chapter 7 §7.1 |
 | E1–E14 actor training | 1 | The 40-step `pavlov_portfolio` run of August 2026, after the ledger cut-off | Chapter 8 §8.1.1 |
 | Unsaturated same-stack rerun | 15 | Three arms × five seeds on Modal, 2 October 2026 (§A.3.2) | Chapter 6 §6.5.5 |

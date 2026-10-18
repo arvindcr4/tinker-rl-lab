@@ -310,6 +310,8 @@ def main():
         "n_test": int(n_test),
         "base_rate": float(yte.mean()),
         "variants": list(VARIANTS.keys()),
+        "second_stage": "full-feature XGB surrogate; not measured LLM outcomes",
+        "cost_model": "assumed $0.0001 screening per row plus $0.001 per invoked surrogate",
         "flip_count": len(flip_rows),
         "flip_mean_rate_at_K2": float(np.mean([r["flip_rate"] for r in flip_rows if r["K_pct"] == 2.0])),
         "feat_count": len(feat_rows),

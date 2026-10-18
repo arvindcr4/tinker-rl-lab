@@ -241,6 +241,9 @@ def main():
         "verdict": ("HISTORICAL COUNT BOUNDS PASSED FOR TWO SEEDS" if headline_pass
                     else "HISTORICAL COUNT BOUNDS FAILED"),
         "second_stage": "fixed XGB-24full surrogate at original seed; not measured LLM",
+        "cost_model": {"status": "assumed per-stage prices, not measured billing",
+                       "screening_usd_per_row": COST_XGB,
+                       "second_stage_usd_per_invocation": COST_LLM},
         "uncertainty_scope": "paired held-out row bootstrap conditional on two fitted seeds",
         "key_finding": (
             f"Gradient-band XGB-20raw: seed {SEED_ORIG} caught "

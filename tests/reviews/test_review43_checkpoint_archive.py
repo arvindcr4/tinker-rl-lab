@@ -62,7 +62,7 @@ def test_full_upload_validates_before_publication_and_cleans_owned_staging(tmp_p
         staging.append(Path(dest).parent)
         assert Path(dest).parent.stat().st_mode & 0o777 == 0o700
         shutil.copyfile(source, dest)
-    monkeypatch.setattr('urllib.request.urlretrieve', download)
+    monkeypatch.setattr(trainer, 'download_checkpoint_archive', download)
     svc = NS(create_rest_client=lambda: NS(get_checkpoint_archive_url_from_tinker_path=lambda _: NS(
         result=lambda: NS(url='https://fixture.invalid/archive'))))
     cfg = dict(huggingface=dict(push_to_hub=True, model_card=False, hub_org='fixture'), model=dict(name='mock'))

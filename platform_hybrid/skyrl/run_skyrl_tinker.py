@@ -349,6 +349,67 @@ MAX_CHECKPOINT_MEMBERS = 10000
 MAX_CHECKPOINT_BYTES = 8 * 1024**3
 
 
+MAX_CHECKPOINT_DOWNLOAD_BYTES = 8 * 1024**3
+MAX_CHECKPOINT_DOWNLOAD_SECONDS = 300
+CHECKPOINT_READ_TIMEOUT_SECONDS = 10
+CHECKPOINT_DOWNLOAD_CHUNK_BYTES = 1024**2
+
+
+def download_checkpoint_archive(url: str, destination: Path) -> None:
+    """Download only provider GCS HTTPS data, with bounded I/O and no URL logging.
+
+    Five-minute wall-clock deadline plus at most one ten-second blocking read.
+    Redirects are rejected rather than forwarding a signed URL to another host.
+    """
+    import urllib.request
+    from urllib.parse import urlsplit
+
+    try:
+        parsed = urlsplit(url)
+        host = parsed.hostname or ""
+        valid = (parsed.scheme == "https" and
+                 (host == "storage.googleapis.com" or host.endswith(".storage.googleapis.com")) and
+                 not parsed.username and not parsed.password and not parsed.fragment and
+                 parsed.port in (None, 443))
+    except (TypeError, ValueError):
+        valid = False
+    if not valid:
+        raise ValueError("checkpoint archive URL is not an approved HTTPS storage target")
+
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            raise ValueError("checkpoint archive redirects are forbidden")
+
+    deadline = time.monotonic() + MAX_CHECKPOINT_DOWNLOAD_SECONDS
+    try:
+        opener = urllib.request.build_opener(NoRedirect())
+        with opener.open(url, timeout=CHECKPOINT_READ_TIMEOUT_SECONDS) as response:
+            length = response.headers.get("Content-Length")
+            if length is not None and (not str(length).isdigit() or int(length) > MAX_CHECKPOINT_DOWNLOAD_BYTES):
+                raise ValueError("checkpoint archive compressed byte limit exceeded")
+            total = 0
+            with destination.open("xb") as stream:
+                while True:
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError("checkpoint archive download deadline exceeded")
+                    # read1 performs a single buffered/raw read, so a trickling
+                    # sender cannot indefinitely extend a full-chunk read.
+                    chunk = response.read1(CHECKPOINT_DOWNLOAD_CHUNK_BYTES)
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError("checkpoint archive download deadline exceeded")
+                    if not chunk:
+                        break
+                    total += len(chunk)
+                    if total > MAX_CHECKPOINT_DOWNLOAD_BYTES:
+                        raise ValueError("checkpoint archive compressed byte limit exceeded")
+                    stream.write(chunk)
+            if length is not None and total != int(length):
+                raise ValueError("checkpoint archive download is truncated")
+    except Exception:
+        # Library HTTP/URL exceptions may contain the complete signed query.
+        raise ValueError("checkpoint archive download failed validation or exceeded its byte/time limit") from None
+
+
 def extract_checkpoint_archive(archive_path: Path, destination: Path) -> None:
     """Validate the complete bounded inventory before extracting only regular data."""
     import tarfile
@@ -397,7 +458,6 @@ def upload_to_hub(
         return None
 
     import tempfile
-    import urllib.request
 
     from huggingface_hub import HfApi
 
@@ -424,7 +484,7 @@ def upload_to_hub(
 
         # Download and extract
         archive_path = Path(staging) / "checkpoint.tar.gz"
-        urllib.request.urlretrieve(archive_url, str(archive_path))
+        download_checkpoint_archive(archive_url, archive_path)
         print(f"  Downloaded archive: {archive_path.stat().st_size / 1024 / 1024:.1f} MB")
 
         extract_checkpoint_archive(archive_path, local_dir)

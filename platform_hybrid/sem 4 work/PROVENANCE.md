@@ -1,3 +1,7 @@
+[Review 43 claim-level unresolved inventory](claim_lineage_review43.json) records missing source/owner evidence without inferring ownership from dates.
+
+> CLAIM LINEAGE (review 43): Semester boundaries alone do not establish claim ownership. For each claim record implementation, experiment execution, analysis, writing and supervision separately, plus source run IDs, data/metric hashes, semester phases and reuse kind. Unknown owners and receipts remain unresolved. A prepared submission package is not evidence of submission: require exact venue/track, artifact SHA-256, submission ID and receipt.
+
 # Semester 4 Provenance
 
 ## Historical boundary

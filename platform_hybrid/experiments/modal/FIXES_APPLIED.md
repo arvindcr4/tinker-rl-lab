@@ -16,40 +16,21 @@
 element 0 of tensors does not require grad and does not have a grad_fn
 ```
 
-**Root cause:**  
-The KL and entropy computations were performed on tensors that came from a `torch.no_grad()` block (and thus had no grad_fn), but those raw tensor operations were still evaluated outside the block. When PyTorch tried to track autograd state through those tensors, it encountered a mismatch — the ref model is frozen (`requires_grad=False`) and its output tensors cannot participate in the gradient graph. Any arithmetic mixing frozen ref outputs with live policy outputs caused the error.
+**Correction (review 43):** Frozen reference outputs may participate in arithmetic
+with live policy outputs. That alone is not an autograd error. The historical
+prescription reversed KL direction and changed normalization; do not apply it.
+For policy-to-reference KL averaged over response tokens:
 
-**Fix applied (both `modal_parallel_runner.py` and `relaunch_kl.py`):**
+```python
+reference_logp = reference_logp.detach()
+token_kl = (policy_logp.exp() * (policy_logp - reference_logp)).sum(-1)
+kl = (token_kl * response_mask).sum() / response_mask.sum().clamp_min(1)
+monitoring_kl = kl.detach()
+```
 
-1. Explicitly freeze the reference model's parameters:
-   ```python
-   ref_model.eval()
-   for p in ref_model.parameters():
-       p.requires_grad = False
-   ```
-
-2. Move the **entire** KL/entropy computation inside a `with torch.no_grad():` block and call `.detach()` on both logit tensors. KL divergence is a monitoring metric — it must never be part of the backward graph:
-   ```python
-   with torch.no_grad():
-       pol_out = policy_model(**inputs)
-       ref_out = ref_model(**inputs)
-       policy_logits = pol_out.logits.detach()
-       ref_logits = ref_out.logits.detach()
-
-       kl = F.kl_div(
-           F.log_softmax(policy_logits, dim=-1),
-           F.softmax(ref_logits, dim=-1),
-           reduction='batchmean',
-       ).item()
-
-       pol_lp = F.log_softmax(policy_logits, dim=-1)
-       pol_p = torch.exp(pol_lp)
-       entropy = -(pol_p * pol_lp).sum(dim=-1).mean().item()
-   ```
-
-3. Replaced the manual KL formula `(pol_p * (pol_lp - ref_lp)).sum(-1).mean()` with `F.kl_div(log_softmax(policy), softmax(ref), reduction='batchmean')` — this is numerically more stable and matches the PyTorch convention for KL(P || Q) where P is the "target" distribution.
-
-4. The dummy gradient step (`train_out = policy_model(**inputs); loss.backward()`) remains **outside** the `no_grad` block so that LoRA adapter weights are correctly updated. This forward pass is a separate call from the one used for KL monitoring.
+Retain policy gradients when KL regularizes the objective; detach monitoring
+metrics only. The reference remains frozen. This documents the intended formula,
+not proof that a historical runner executed it.
 
 Also added `import torch.nn.functional as F` to the import line in both files.
 

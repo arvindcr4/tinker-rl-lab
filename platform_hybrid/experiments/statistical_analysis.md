@@ -1,3 +1,5 @@
+> EVIDENCE QUARANTINE (review 43): Tables 2–3 use reconstructed, variance-matched values, not observed independent seeds. Their empirical bootstrap and paired-inference claims are unsupported. Table 4 uses dependent trace steps, not independent training replications. Stored tables are preserved unchanged for audit only; do not cite their uncertainty as empirical. Status: summary_statistics_only. Reanalysis requires raw run/item identities and an appropriate independent, paired, clustered or time-series unit.
+
 # Statistical Rigor Pass — Tinker RL Lab (NeurIPS 2026)
 
 > **Master seed:** `20260506` · **Bootstrap:** B = 10,000 (percentile) · **CI:** 95 % · **α:** 0.05

@@ -36,6 +36,12 @@ from textwrap import dedent
 def _render_model_card(
     *, base_model: str, benchmark: str, final: dict, dataset_repo: str, run_id: str,
 ) -> str:
+    receipt = final.get("evaluation_receipt", {})
+    config = receipt.get("effective_config", {})
+    if final.get("completion_status") != "complete":
+        raise ValueError("publication requires complete validated coverage without episode errors")
+    if config.get("model") != base_model or config.get("benchmark") != benchmark:
+        raise ValueError("publication model/benchmark must match the effective receipt")
     overall = final.get("overall", {})
     by_bench = final.get("by_benchmark", {})
     today = datetime.utcnow().strftime("%Y-%m-%d")
@@ -108,14 +114,12 @@ def _render_model_card(
           Each step: feed `axtree_txt` + last-action error back to the model; sample one
           action with `Thought:`/`Action:` format; execute with `env.step`; repeat until
           terminated/truncated or `max_steps` reached.
-        - **Observation.** AXTree, capped at 24k chars (head-and-tail truncation beyond).
-        - **Sampling.** Tinker `SamplingClient` (`sample_async`), T=0 greedy, 256-token
-          action budget.
-        - **Reward.** Task-terminal reward from BrowserGym's `_task_validate`, taken as
-          `max(total_reward_over_episode, max_reward_over_episode)` clipped to `[0,1]`.
-        - **Parallelism.** 10-worker Managed Instance Group on GCP, each worker runs an
-          isolated WebArena docker stack with 5 concurrent Chromiums (50-way).
-        - **No cross-task interference.** One WebArena stack per VM.
+        - **Effective receipt:** {receipt.get("evaluation_id")}
+        - **Sampling:** {receipt.get("sampling_mode", "unknown")}; temperature {config.get("temperature", "unknown")}; action token budget {config.get("action_tokens", "unknown")}
+        - **Concurrency per worker:** {receipt.get("actual_concurrency", "unknown")}; deployment-wide concurrency unknown
+        - **Observation cap:** {config.get("max_axtree_chars", "unknown")}; episode step limit {config.get("max_steps", "unknown")}
+        - **Reward protocol:** {config.get("protocol", "unknown")}; maximum task reward, never summed partial rewards
+        - **Package/model revisions:** unknown unless separately captured; this receipt is not an exact reproducibility pin
 
         ## Reproduction
 
@@ -180,6 +184,7 @@ def main() -> int:
     api = HfApi()
 
     final = json.loads(Path(args.final).read_text())
+    _render_model_card(base_model=args.base_model, benchmark=args.benchmark, final=final, dataset_repo=args.dataset_repo, run_id=args.run_id)
 
     # -------------------------------------------------------------------------
     # 1) Dataset repo: raw JSONL shards + aggregated final.json

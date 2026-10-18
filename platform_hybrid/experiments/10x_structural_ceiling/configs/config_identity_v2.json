@@ -1,0 +1,1369 @@
+[
+  {
+    "config": "block_a_gsm8k_qwen8b_seed4.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-qwen3-8b-seed4-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25,
+        "seed": 42004
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_qwen8b_seed4/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-a-multiseed",
+        "wandb_run_name": "gsm8k-qwen3-8b-seed4"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_a_gsm8k_qwen8b_seed5.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-qwen3-8b-seed5-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25,
+        "seed": 42005
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_qwen8b_seed5/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-a-multiseed",
+        "wandb_run_name": "gsm8k-qwen3-8b-seed5"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_b_gsm8k_gemma2_9b.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "NousResearch/Meta-Llama-3.1-8B-Instruct",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8010",
+        "wandb_name": "gsm8k-llama3.1-8b-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "NousResearch/Meta-Llama-3.1-8B-Instruct",
+          "base_url": "http://localhost:8011/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_llama_8b/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-b-family-isolation",
+        "wandb_run_name": "gsm8k-llama3.1-8b",
+        "tinker_model_name": "meta-llama/Llama-3.1-8B-Instruct"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_b_gsm8k_mistral_7b.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "meta-llama/Llama-3.1-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8030",
+        "wandb_name": "gsm8k-llama3.1-8b-base-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "meta-llama/Llama-3.1-8B",
+          "base_url": "http://localhost:8031/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_llama_8b_base/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-b-family-isolation",
+        "wandb_run_name": "gsm8k-llama3.1-8b-base",
+        "tinker_model_name": "meta-llama/Llama-3.1-8B"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_b_gsm8k_phi3_medium.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "unsloth/Llama-3.2-3B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8020",
+        "wandb_name": "gsm8k-llama3.2-3b-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "unsloth/Llama-3.2-3B",
+          "base_url": "http://localhost:8021/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_llama_3b/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-b-family-isolation",
+        "wandb_run_name": "gsm8k-llama3.2-3b",
+        "tinker_model_name": "meta-llama/Llama-3.2-3B"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_c_gsm8k_qwen_0_6b.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "meta-llama/Llama-3.2-1B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-llama3.2-1b-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "meta-llama/Llama-3.2-1B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 16,
+        "learning_rate": 5e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_llama_1b/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-c-size-ladder",
+        "wandb_run_name": "gsm8k-llama3.2-1b",
+        "tinker_model_name": "meta-llama/Llama-3.2-1B"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_c_gsm8k_qwen_14b.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "NousResearch/Meta-Llama-3.1-8B-Instruct",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-llama3.1-8b-instruct-ladder-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "NousResearch/Meta-Llama-3.1-8B-Instruct",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_llama_8b_instruct_ladder/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-c-size-ladder",
+        "wandb_run_name": "gsm8k-llama3.1-8b-instruct-ladder",
+        "tinker_model_name": "meta-llama/Llama-3.1-8B-Instruct"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_c_gsm8k_qwen_1_7b.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "unsloth/Llama-3.2-3B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-llama3.2-3b-ladder-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "unsloth/Llama-3.2-3B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_llama_3b_ladder/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-c-size-ladder",
+        "wandb_run_name": "gsm8k-llama3.2-3b-ladder",
+        "tinker_model_name": "meta-llama/Llama-3.2-3B"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_c_gsm8k_qwen_4b.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "meta-llama/Llama-3.1-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-llama3.1-8b-ladder-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "meta-llama/Llama-3.1-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_llama_8b_ladder/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-c-size-ladder",
+        "wandb_run_name": "gsm8k-llama3.1-8b-ladder",
+        "tinker_model_name": "meta-llama/Llama-3.1-8B"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_d_gsm8k_qwen8b_ppo.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 1,
+        "batch_size": 128,
+        "max_batches_offpolicy": 1,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-qwen3-8b-ppo-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25,
+        "algorithm": "ppo",
+        "ppo_epochs": 4,
+        "ppo_clip_range": 0.2,
+        "kl_coeff": 0.05
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 2e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_qwen8b_ppo/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-d-algorithm-isolation",
+        "wandb_run_name": "gsm8k-qwen3-8b-ppo"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_e_gsm8k_qwen8b_dpo.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-qwen3-8b-dpo-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25,
+        "algorithm": "dpo",
+        "dpo_beta": 0.1
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 2e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_qwen8b_dpo/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-e-algorithm-isolation",
+        "wandb_run_name": "gsm8k-qwen3-8b-dpo"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_f_tooluse_constrained.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "tool-use-qwen3-8b-constrained-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 10,
+        "constrained_decoding": true,
+        "json_schema_enforce": true
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 200
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 1024,
+        "checkpoint_dir": "./checkpoints/10x/tool_use_constrained/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-f-constrained-decoding",
+        "wandb_run_name": "tool-use-qwen3-8b-constrained"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_f_tooluse_unconstrained.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "tool-use-qwen3-8b-unconstrained-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 10,
+        "constrained_decoding": false,
+        "json_schema_enforce": false
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 200
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 1024,
+        "checkpoint_dir": "./checkpoints/10x/tool_use_unconstrained/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-f-constrained-decoding",
+        "wandb_run_name": "tool-use-qwen3-8b-unconstrained"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_g_gsm8k_group32.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 32,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-qwen3-8b-g32-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_qwen8b_g32/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-g-group-saturation",
+        "wandb_run_name": "gsm8k-qwen3-8b-g32"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_g_gsm8k_group4.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 4,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-qwen3-8b-g4-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_qwen8b_g4/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-g-group-saturation",
+        "wandb_run_name": "gsm8k-qwen3-8b-g4"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_g_gsm8k_group64.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 64,
+        "batch_size": 64,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-qwen3-8b-g64-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_qwen8b_g64/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-g-group-saturation",
+        "wandb_run_name": "gsm8k-qwen3-8b-g64"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_h_humaneval_qwen8b.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 64,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8050",
+        "wandb_name": "humaneval-qwen3-8b-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 1024,
+        "max_num_workers": 16,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8051/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 164
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/humaneval_qwen8b/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-h-benchmark-transfer",
+        "wandb_run_name": "humaneval-qwen3-8b"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_h_math_qwen8b.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8040",
+        "wandb_name": "math-qwen3-8b-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 1024,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8041/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/math_qwen8b/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-h-benchmark-transfer",
+        "wandb_run_name": "math-qwen3-8b"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_i_gsm8k_lr_1e4.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-qwen3-8b-lr1e4-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 0.0001,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_qwen8b_lr1e4/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-i-lr-sweep",
+        "wandb_run_name": "gsm8k-qwen3-8b-lr1e-4"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_i_gsm8k_lr_1e5.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-qwen3-8b-lr1e5-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 1e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_qwen8b_lr1e5/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-i-lr-sweep",
+        "wandb_run_name": "gsm8k-qwen3-8b-lr1e-5"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_i_gsm8k_lr_3e4.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-qwen3-8b-lr3e4-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 0.0003,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_qwen8b_lr3e4/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-i-lr-sweep",
+        "wandb_run_name": "gsm8k-qwen3-8b-lr3e-4"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_j_tooluse_gemma2_9b.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "NousResearch/Meta-Llama-3.1-8B-Instruct",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8010",
+        "wandb_name": "tool-use-llama3.1-8b-instruct-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 10
+      },
+      "openai": [
+        {
+          "model_name": "NousResearch/Meta-Llama-3.1-8B-Instruct",
+          "base_url": "http://localhost:8011/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 200
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 1024,
+        "checkpoint_dir": "./checkpoints/10x/tool_use_llama8b_instruct/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-j-tool-cross-family",
+        "wandb_run_name": "tool-use-llama3.1-8b-instruct",
+        "tinker_model_name": "meta-llama/Llama-3.1-8B-Instruct"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "block_j_tooluse_llama8b.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "NousResearch/Meta-Llama-3.1-8B-Instruct",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8030",
+        "wandb_name": "tool-use-llama3.1-8b-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 10
+      },
+      "openai": [
+        {
+          "model_name": "NousResearch/Meta-Llama-3.1-8B-Instruct",
+          "base_url": "http://localhost:8031/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 200
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 1024,
+        "checkpoint_dir": "./checkpoints/10x/tool_use_llama8b/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "block-j-tool-cross-family",
+        "wandb_run_name": "tool-use-llama3.1-8b",
+        "tinker_model_name": "meta-llama/Llama-3.1-8B-Instruct"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "round2_continuation_humaneval_200.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 64,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8050",
+        "wandb_name": "humaneval-qwen3-8b-200step-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 1024,
+        "max_num_workers": 16,
+        "total_steps": 200,
+        "steps_per_eval": 50,
+        "seed": 42
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8051/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 164
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/humaneval_qwen8b/",
+        "save_checkpoint_interval": 25,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "round2-continuation",
+        "wandb_run_name": "humaneval-qwen3-8b-200step"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "round2_continuation_lr1e5_300.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-qwen3-8b-lr1e5-300step-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 300,
+        "steps_per_eval": 50,
+        "seed": 42
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 1e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/gsm8k_qwen8b_lr1e5/",
+        "save_checkpoint_interval": 25,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "round2-continuation",
+        "wandb_run_name": "gsm8k-qwen3-8b-lr1e-5-300step"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "round2_continuation_math500_300.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "math500-qwen3-8b-300step-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 1024,
+        "max_num_workers": 24,
+        "total_steps": 300,
+        "steps_per_eval": 50,
+        "seed": 42
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/10x/math_qwen8b/",
+        "save_checkpoint_interval": 25,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "round2-continuation",
+        "wandb_run_name": "math500-qwen3-8b-300step"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "round2_dense_code.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 64,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8050",
+        "wandb_name": "humaneval-dense-reward-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 1024,
+        "max_num_workers": 16,
+        "total_steps": 100,
+        "steps_per_eval": 25,
+        "seed": 42,
+        "reward_mode": "dense"
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8051/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 164
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/round2/humaneval_dense/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "round2-dense-code",
+        "wandb_run_name": "humaneval-dense-reward"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "round2_phase_easy.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-phase-easy-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 100,
+        "steps_per_eval": 25,
+        "seed": 42,
+        "difficulty_bin": "easy"
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/round2/phase_easy/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "round2-phase-diagram",
+        "wandb_run_name": "gsm8k-phase-easy"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "round2_phase_hard.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-phase-hard-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 100,
+        "steps_per_eval": 25,
+        "seed": 42,
+        "difficulty_bin": "hard"
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/round2/phase_hard/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "round2-phase-diagram",
+        "wandb_run_name": "gsm8k-phase-hard"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "round2_phase_mid.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-phase-mid-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 100,
+        "steps_per_eval": 25,
+        "seed": 42,
+        "difficulty_bin": "mid"
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/round2/phase_mid/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "round2-phase-diagram",
+        "wandb_run_name": "gsm8k-phase-mid"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  },
+  {
+    "config": "round2_reinforce_gsm8k.yaml",
+    "effective_template": {
+      "env": {
+        "group_size": 16,
+        "batch_size": 128,
+        "max_batches_offpolicy": 3,
+        "tokenizer_name": "Qwen/Qwen3-8B",
+        "use_wandb": true,
+        "rollout_server_url": "http://localhost:8000",
+        "wandb_name": "gsm8k-qwen3-8b-reinforce-env",
+        "ensure_scores_are_not_same": false,
+        "max_token_length": 512,
+        "max_num_workers": 24,
+        "total_steps": 50,
+        "steps_per_eval": 25,
+        "seed": 42,
+        "algorithm": "reinforce"
+      },
+      "openai": [
+        {
+          "model_name": "Qwen/Qwen3-8B",
+          "base_url": "http://localhost:8001/v1",
+          "api_key": "x",
+          "weight": 1.0,
+          "num_requests_for_eval": 256
+        }
+      ],
+      "tinker": {
+        "lora_rank": 32,
+        "learning_rate": 4e-05,
+        "max_token_trainer_length": 2048,
+        "checkpoint_dir": "./checkpoints/round2/reinforce_gsm8k/",
+        "save_checkpoint_interval": 10,
+        "wandb_project": "tinker-structural-ceiling",
+        "wandb_group": "round2-reinforce",
+        "wandb_run_name": "gsm8k-qwen3-8b-reinforce"
+      },
+      "slurm": false,
+      "testing": false
+    },
+    "historical_run_id": null,
+    "model_revision": null,
+    "status": "template_not_run_receipt"
+  }
+]

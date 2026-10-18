@@ -1,3 +1,5 @@
+> See [review 43 erratum](REVIEW43_ERRATUM.md) for unresolved frozen-report contradictions.
+
 # Semester 3 Contribution Record
 
 This summary is derived from the original Group 6 report's “Updated Team Contributions” and CRediT statement. It records the submitted division of work; it does not attribute later Semester 4 work to the group.

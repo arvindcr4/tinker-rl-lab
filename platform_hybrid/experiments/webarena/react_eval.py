@@ -26,6 +26,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import logging
 import os
@@ -87,6 +88,7 @@ class EpisodeResult:
     steps: List[StepRecord]
     wall_time_sec: float
     error: Optional[str] = None
+    evaluation_id: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -97,12 +99,10 @@ def _import_benchmark(benchmark: str) -> None:
     """Lazy-register the gym environment ids for a benchmark."""
     if benchmark == "miniwob":
         import browsergym.miniwob  # noqa: F401
-    elif benchmark in ("webarena", "webarena_verified"):
-        import browsergym.webarena  # noqa: F401
-        try:
-            import browsergym.webarena_verified  # noqa: F401
-        except ImportError:
-            pass
+    elif benchmark == "webarena":
+        import browsergym.webarena
+    elif benchmark == "webarena_verified":
+        import browsergym.webarena_verified
     elif benchmark == "workarena":
         import browsergym.workarena  # noqa: F401
     elif benchmark == "visualwebarena":
@@ -207,7 +207,7 @@ class TinkerChatSampler:
         future = self.sc.sample(
             prompt=model_input, num_samples=1, sampling_params=params,
         )
-        result = future.result()
+        result = future.result(timeout=120)
         completion_ids = result.sequences[0].tokens
         return self.tokenizer.decode(completion_ids, skip_special_tokens=True)
 
@@ -224,7 +224,6 @@ def run_episode(
     max_axtree_chars: int,
     benchmark: str,
 ) -> EpisodeResult:
-    _import_benchmark(benchmark)
     t0 = time.time()
     # Playwright sync API is incompatible with running from an asyncio executor
     # worker thread: it either errors with "cannot switch to a different thread"
@@ -234,7 +233,7 @@ def run_episode(
     # this coroutine. They block the event loop briefly, but no other episode is
     # running concurrently in this process, so that is acceptable. The only awaits
     # needed are around sampler.sample() (LLM HTTP) which stays truly async.
-    env = _make_env(env_id)
+    env = None
     steps: List[StepRecord] = []
     total_reward = 0.0
     max_reward = 0.0
@@ -243,6 +242,8 @@ def run_episode(
     valid_action_count = 0
     last_error: Optional[str] = None
     try:
+        _import_benchmark(benchmark)
+        env = _make_env(env_id)
         obs, info = env.reset(seed=seed)
         goal = _goal_to_str(obs)
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -266,7 +267,9 @@ def run_episode(
             try:
                 obs, reward, terminated, truncated, info = env.step(action)
                 reward_f = float(reward or 0.0)
-                valid_action_count += 1
+                step_error = obs.get("last_action_error") or info.get("action_exec_error")
+                if not step_error:
+                    valid_action_count += 1
                 total_reward += reward_f
                 max_reward = max(max_reward, reward_f)
                 last_error = obs.get("last_action_error") or info.get("action_exec_error")
@@ -299,13 +302,16 @@ def run_episode(
             env.close()
         except Exception as e:
             logger.warning("Failed to close env env_id=%s: %s", env_id, e)
-    score = max(max_reward, total_reward)
+    if not terminated and not truncated:
+        truncated = True
+    # Versioned maximum task-reward contract; never sum partial rewards into success.
+    score = max_reward
     score = max(0.0, min(1.0, float(score)))
     return EpisodeResult(
         env_id=env_id, seed=seed, score=score, total_reward=total_reward,
         terminated=terminated, truncated=truncated, num_steps=len(steps),
         valid_action_count=valid_action_count, steps=steps,
-        wall_time_sec=time.time() - t0,
+        wall_time_sec=time.time() - t0, error=last_error,
     )
 
 
@@ -343,6 +349,14 @@ def _shard(tasks: List[str], shard_spec: str) -> List[str]:
 def _main_sync(args: argparse.Namespace) -> int:
     _import_benchmark(args.benchmark)
     tasks = _parse_tasks(args.tasks, args.benchmark)
+    if args.concurrency != 1:
+        raise ValueError("Only sequential execution (--concurrency 1) is supported")
+    if args.max_steps <= 0:
+        raise ValueError("max_steps must be positive")
+    config = {k: getattr(args, k) for k in ("benchmark", "model", "seed", "max_steps", "max_axtree_chars", "action_tokens", "temperature")}
+    config.update(protocol="browsergym-max-task-reward-v2", tasks=tasks)
+    evaluation_id = hashlib.sha256(json.dumps(config, sort_keys=True).encode()).hexdigest()
+    seeds = {task: int.from_bytes(hashlib.sha256(f"{args.seed}:{task}".encode()).digest()[:4], "big") for task in tasks}
     tasks = _shard(tasks, args.shard)
     if args.limit:
         tasks = tasks[: args.limit]
@@ -373,9 +387,6 @@ def _main_sync(args: argparse.Namespace) -> int:
             logger.warning("wandb init failed (%r); continuing without wandb", exc)
             wandb_run = None
 
-    sampler = TinkerChatSampler(
-        model=args.model, temperature=args.temperature, max_tokens=args.action_tokens,
-    )
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -388,6 +399,7 @@ def _main_sync(args: argparse.Namespace) -> int:
                 max_axtree_chars=args.max_axtree_chars,
                 benchmark=args.benchmark,
             )
+            res.evaluation_id = evaluation_id
             with out_path.open("a") as f:
                 f.write(json.dumps(asdict(res), default=str) + "\n")
             completed["n"] += 1
@@ -419,22 +431,35 @@ def _main_sync(args: argparse.Namespace) -> int:
                     logger.warning("wandb.log failed: %r", exc)
 
     if out_path.exists() and not args.resume:
-        out_path.unlink()
+        raise ValueError("output already exists; choose a new versioned path or --resume")
     done_ids: set = set()
     if args.resume and out_path.exists():
         for line in out_path.read_text().splitlines():
             if not line.strip():
                 continue
-            try:
-                done_ids.add(json.loads(line)["env_id"])
-            except Exception as e:
-                logger.warning("Failed to parse line for done_ids: %s", e)
+            row = json.loads(line)
+            if row.get("evaluation_id") != evaluation_id or row.get("seed") != seeds.get(row["env_id"]) or row["env_id"] not in tasks:
+                raise ValueError("resume configuration mismatch; use a new output path")
+            if row["env_id"] in done_ids:
+                raise ValueError("duplicate resume episode")
+            # Explicit policy: retain all recorded attempts, including errors.
+            done_ids.add(row["env_id"])
+            completed["n"] += 1
+            completed["sum_score"] += row["score"]
+            completed["sum_steps"] += row["num_steps"]
         logger.info("resuming: %d already done", len(done_ids))
+
+    receipt_path = out_path.with_suffix(out_path.suffix + ".receipt.json")
+    receipt_path.write_text(json.dumps({"evaluation_id": evaluation_id, "effective_config": config, "actual_concurrency": 1, "sampling_mode": "synchronous", "sampling_timeout_seconds": 120, "coverage": [{"evaluation_id": evaluation_id, "env_id": task, "seed": seeds[task]} for task in tasks]}, indent=2))
+
+    sampler = TinkerChatSampler(
+        model=args.model, temperature=args.temperature, max_tokens=args.action_tokens,
+    )
 
     for i, env_id in enumerate(tasks):
         if env_id in done_ids:
             continue
-        one(env_id, seed=args.seed + i, idx=i)
+        one(env_id, seed=seeds[env_id], idx=i)
 
     # --- Optional: HuggingFace Hub upload ---
     if args.hf_repo:
@@ -494,7 +519,7 @@ def main() -> int:
     p.add_argument("--max-axtree-chars", type=int, default=24000)
     p.add_argument("--action-tokens", type=int, default=256)
     p.add_argument("--temperature", type=float, default=0.0)
-    p.add_argument("--concurrency", type=int, default=5,
+    p.add_argument("--concurrency", type=int, default=1,
                    help="Max concurrent browsergym envs / Chromiums")
     p.add_argument("--resume", action="store_true",
                    help="Skip env_ids already present in --out")

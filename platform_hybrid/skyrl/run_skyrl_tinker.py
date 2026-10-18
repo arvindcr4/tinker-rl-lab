@@ -233,6 +233,8 @@ class ToolUseEnv:
 
 def init_wandb(cfg: dict, env_name: str) -> "wandb.sdk.wandb_run.Run | None":
     """Initialize W&B run from config."""
+    if cfg.get("logging", {}).get("backend") != "wandb":
+        return None
     import wandb
     try:
         import torch, wandb
@@ -409,10 +411,10 @@ def upload_to_hub(
     with open(local_dir / "training_metrics.json", "w") as f:
         json.dump(metrics, f, indent=2)
 
-    # Generate model card
+    # Shared upload metadata is required even without a model card.
+    avg_reward = metrics.get("final_avg_reward", 0)
+    total_steps = metrics.get("total_steps", 0)
     if hf_cfg.get("model_card", True):
-        avg_reward = metrics.get("final_avg_reward", 0)
-        total_steps = metrics.get("total_steps", 0)
         card_content = f"""---
 library_name: peft
 base_model: {model_name}
@@ -465,7 +467,9 @@ Trained for {total_steps} steps with final average reward of {avg_reward:.3f}.
 
 ## Framework
 
-- **RL Framework**: SkyRL
+- **Trainer implementation**: custom run_skyrl_tinker.py (not the SkyRL trainer)
+- **Training service**: Tinker
+- **Objective protocol**: skyrl-tinker-exact-onpolicy-v2
 - **Training Backend**: Tinker (hosted)
 - **Algorithm**: GRPO
 """
@@ -545,6 +549,7 @@ def train(cfg: dict, env, wandb_run):
         batch = env.sample_batch(prompts_per_step)
         all_data = []
         all_advs = []
+        completion_starts = []
         batch_rewards = []
         step_samples = []
 
@@ -597,6 +602,7 @@ def train(cfg: dict, env, wandb_run):
                 )
                 all_data.append(datum)
                 all_advs.append(adv)
+                completion_starts.append(max(0, len(prompt_ids) - 1))
 
         if not all_data:
             continue
@@ -610,7 +616,7 @@ def train(cfg: dict, env, wandb_run):
             losses = []
             for i, logprobs in enumerate(logprobs_list):
                 adv = _step_advs[i]
-                losses.append(-adv * logprobs.sum())
+                losses.append(-adv * logprobs[completion_starts[i]:].sum())
             loss = torch.stack(losses).mean()
             return loss, {"grpo_loss": loss.item()}
 
@@ -678,7 +684,7 @@ def train(cfg: dict, env, wandb_run):
     metrics = {
         "execution_protocol": PROTOCOL_ID,
         "reward_measurement": "on_policy_training_last10_not_final_heldout",
-        "objective": "unclipped_group_centered_sequence_sum_no_reference_kl",
+        "objective": "unclipped_group_centered_completion_sequence_sum_no_reference_kl",
         "final_avg_reward": final_avg,
         "overall_avg_reward": overall_avg,
         "total_steps": steps,

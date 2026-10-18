@@ -1,3 +1,5 @@
+> VALIDITY BOUNDARY (review 43): First-five predictors and last-ten outcomes require at least 15 observations and disjoint windows; shorter runs are ineligible. Two collapse cases and reward-only equal AUC do not establish incremental predictive validity. Recover task labels, use independent held-out runs, nonlinear reward/task controls and report incremental performance over reward-only baselines. Existing exploratory tables are not a validated predictive model.
+
 # ZVF Predictive Validation
 
 This is a pseudo-prospective validation over existing completed logs. The predictor only uses the first five logged optimization steps; outcomes are computed from the last ten logged steps.

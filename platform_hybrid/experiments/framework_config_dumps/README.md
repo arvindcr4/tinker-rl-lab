@@ -1,3 +1,5 @@
+> REPRODUCIBILITY STATUS (review 43): These are comparison templates, not captured effective configurations. Version families and placeholder hashes are not exact pins. Before allocation capture model/data revisions, source commit, algorithm, reward version, constraint mode, resolved batch/accumulation and runtime dispatch; provider-managed unknown fields remain unknown.
+
 # Per-Framework Config Dumps (Qwen3-8B / GSM8K)
 
 This directory is the reproducibility supplement for

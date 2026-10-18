@@ -1,3 +1,5 @@
+> BATCHING STATUS (review 43): Matched batch size across GRPO and SFT is unverified. Validate effective prompt batch, rollout group size, devices and gradient accumulation against a pinned runtime before any matched-comparison claim.
+
 # Axolotl Experiment Configs
 
 Matched baselines for the GRPO scaling study, runnable on HuggingFace Spaces,

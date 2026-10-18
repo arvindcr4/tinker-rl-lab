@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import math
 import statistics
 from collections import defaultdict
 from dataclasses import dataclass
@@ -21,6 +22,8 @@ class EpisodeResult:
     valid_action_count: int
     wall_time_sec: float
     error: str | None = None
+    seed: int | None = None
+    evaluation_id: str | None = None
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> EpisodeResult:
@@ -31,6 +34,8 @@ class EpisodeResult:
             valid_action_count=data["valid_action_count"],
             wall_time_sec=data.get("wall_time_sec", 0.0),
             error=data.get("error"),
+            seed=data["seed"],
+            evaluation_id=data["evaluation_id"],
         )
 
 
@@ -59,22 +64,30 @@ class AggregationResult:
 
 
 def parse_results(paths: Sequence[Path]) -> List[EpisodeResult]:
-    """Parse episode results from JSONL files, deduping by env_id."""
-    results: List[EpisodeResult] = []
-    seen_ids: Set[str] = set()
-    for p_in in paths:
-        try:
-            for line in p_in.read_text().splitlines():
-                if not line.strip():
-                    continue
+    """Fail closed on corrupt, unversioned, or conflicting episode records."""
+    records = {}
+    for path in paths:
+        for lineno, line in enumerate(path.read_text().splitlines(), 1):
+            if not line.strip():
+                continue
+            try:
                 data = json.loads(line)
-                if data["env_id"] in seen_ids:
-                    continue  # first-writer-wins on dedup
-                seen_ids.add(data["env_id"])
-                results.append(EpisodeResult.from_dict(data))
-        except Exception as e:
-            logger.error("Failed to parse %s: %s", p_in, e)
-    return results
+                item = EpisodeResult.from_dict(data)
+                if not item.evaluation_id or type(item.seed) is not int:
+                    raise ValueError("missing episode identity")
+                if not math.isfinite(item.score) or not 0 <= item.score <= 1:
+                    raise ValueError("invalid score")
+                if item.num_steps < 0 or not 0 <= item.valid_action_count <= item.num_steps:
+                    raise ValueError("invalid action counts")
+                key = (item.evaluation_id, item.env_id, item.seed)
+                if key in records and records[key] != item:
+                    raise ValueError("conflicting duplicate episode")
+                records[key] = item
+            except Exception as exc:
+                raise ValueError(f"{path}:{lineno}: {exc}") from exc
+    if len({r.evaluation_id for r in records.values()}) > 1:
+        raise ValueError("cannot pool different evaluation configurations")
+    return list(records.values())
 
 
 def summarize(items: List[EpisodeResult], success_threshold: float = 1.0) -> AggregationResult:
@@ -115,6 +128,7 @@ def aggregate_results(results: List[EpisodeResult], success_threshold: float = 1
         by_prefix[prefix].append(r)
 
     out = {
+        "completion_status": "coverage_unverified",
         "overall": summarize(results, success_threshold).to_dict(),
         "by_benchmark": {k: summarize(v, success_threshold).to_dict() for k, v in by_prefix.items()},
         "num_shards": num_shards,
@@ -126,6 +140,8 @@ def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--inputs", nargs="+", required=True,
                    help="JSONL files or glob (e.g. results_shard_*.jsonl)")
+    p.add_argument("--receipts", nargs="+", help="Matching per-shard evaluation receipt JSON files")
+    p.add_argument("--manifest", help="JSON list of expected env_id/seed/evaluation_id records")
     p.add_argument("--out", required=True, help="Where to write aggregated JSON")
     p.add_argument("--success-threshold", type=float, default=1.0,
                    help="Score >= this counts as success (WebArena uses 1.0)")
@@ -148,6 +164,20 @@ def main() -> int:
     results = parse_results(paths)
     out = aggregate_results(results, args.success_threshold, len(paths))
     
+    if args.receipts:
+        receipts = [json.loads(Path(path).read_text()) for path in args.receipts]
+        identities = {r.evaluation_id for r in results}
+        if {r["evaluation_id"] for r in receipts} != identities or len(identities) != 1:
+            raise ValueError("receipt identity mismatch")
+        if any(r["effective_config"] != receipts[0]["effective_config"] for r in receipts):
+            raise ValueError("receipt configuration mismatch")
+        out["evaluation_receipt"] = receipts[0]
+    if args.manifest:
+        expected = {(r["evaluation_id"], r["env_id"], r["seed"]) for r in json.loads(Path(args.manifest).read_text())}
+        observed = {(r.evaluation_id, r.env_id, r.seed) for r in results}
+        if expected != observed:
+            raise ValueError("episode coverage does not match expected manifest")
+        out["completion_status"] = "complete_with_errors" if any(r.error for r in results) else "complete"
     Path(args.out).write_text(json.dumps(out, indent=2))
     logger.info("Aggregated %d results into %s", len(results), args.out)
     logger.info("Result:\n%s", json.dumps(out, indent=2))

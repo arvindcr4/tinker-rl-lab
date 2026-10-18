@@ -23,7 +23,7 @@ Inherited from Semester 3:
 
 Added in Semester 4:
 
-- The eight standalone P1–P8 research papers and their current authorship.
+- The P1–P7 paper records and their current authorship; P8 is absorbed/archived, not a standalone paper.
 - Post-capstone experiment, audit, synthesis, and paper iterations.
 - Expanded scaling, ZVF, group-size, length-bias, reporting, registry, controller, and fraud analyses.
 - Berkeley-course-derived research audits and prototypes.

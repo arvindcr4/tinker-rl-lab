@@ -11,6 +11,7 @@ cd "$(dirname "$0")"
 LOG_DIR="./logs"
 mkdir -p "$LOG_DIR"
 
+RUN_DIR=$(mktemp -d "./checkpoints-dpo-v2.XXXXXXXX")
 LOGFILE="$LOG_DIR/block_e_dpo_$(date +%Y%m%d_%H%M%S).log"
 
 echo "============================================================"
@@ -20,7 +21,7 @@ echo "  Log: $LOGFILE"
 echo "============================================================"
 
 PYTHONUNBUFFERED=1 python -u -m tinker_cookbook.recipes.preference.dpo.train \
-    log_path="./checkpoints/10x/gsm8k_qwen8b_dpo/" \
+    log_path="$RUN_DIR/train" \
     model_name="Qwen/Qwen3-8B" \
     dataset=gsm8k \
     renderer_name=qwen \
@@ -29,7 +30,7 @@ PYTHONUNBUFFERED=1 python -u -m tinker_cookbook.recipes.preference.dpo.train \
     max_steps=50 \
     wandb_project=tinker-structural-ceiling \
     wandb_name="block_e_dpo_qwen8b_gsm8k" \
-    behavior_if_log_dir_exists=delete \
+    behavior_if_log_dir_exists=error \
     2>&1 | tee "$LOGFILE"
 
 echo ""

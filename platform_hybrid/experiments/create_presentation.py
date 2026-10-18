@@ -461,7 +461,7 @@ def add_lora_diagram(prs):
     p.alignment = PP_ALIGN.CENTER
 
     p = tf.add_paragraph()
-    p.text = "Example: d=4096, r=32 → 99.2% fewer trainable parameters"
+    p.text = f"Per matrix: d=4096, r=32 → {100*(1-2*32/4096):.4f}% fewer parameters"
     p.font.size = Pt(12)
     p.font.color.rgb = GRAY
     p.alignment = PP_ALIGN.CENTER
@@ -529,7 +529,8 @@ def add_results_chart(prs):
     p.font.color.rgb = DARK_BLUE
 
     # Data points
-    points = [(1.7, 4.0, "0.67"), (2.8, 2.6, "0.85"), (3.9, 1.9, "0.95"), (5.0, 1.55, "0.99"), (6.1, 1.35, "1.00")]
+    points = [(1.5 + step * 0.22, 5.55 - reward * 4.25, f"{reward:.2f}") for step, reward in [(0, .67), (5, .85), (10, .95), (15, .99), (20, 1.0)]]
+    add_label(slide, 1.5, 6.3, "Illustrative values; no run ID or seed. Not empirical evidence.")
 
     for x, y, val in points:
         pt = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(x - 0.1), Inches(y - 0.1), Inches(0.2), Inches(0.2))
@@ -561,7 +562,7 @@ def add_results_chart(prs):
     p.font.bold = True
     p.font.color.rgb = DARK_BLUE
 
-    results = ["• 69.5% → 100%", "• Converged in 20 steps", "• ~2 min training", "• Perfect accuracy"]
+    results = ["• Illustrative training snapshot", "• Single seed, short horizon", "• Convergence not established", "• Held-out accuracy unmeasured"]
     # TODO: As per adversarial review, these are early-training snapshots (20 steps) and single-seed runs, which are insufficient to prove asymptotic RL convergence or generalization.
     for r in results:
         p = tf.add_paragraph()
@@ -626,6 +627,11 @@ def add_code_slide(prs, title, code):
     return slide
 
 def main():
+    import argparse
+    from pathlib import Path
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", default="artifacts/illustrative_tinker_demo_v2.pptx")
+    args = parser.parse_args()
     prs = Presentation()
     prs.slide_width = Inches(10)
     prs.slide_height = Inches(7.5)
@@ -735,7 +741,8 @@ python -m tinker_cookbook.recipes.math_rl.train \\
     # 15. Thank You
     add_title_slide(prs, "Thank You!", "Questions?\n\npes-llm-research/tinker-experiments")
 
-    output_path = '/home/ubuntu/pes-llm-research/tinker-experiments/Tinker_RL_Demo.pptx'
+    output_path = str(Path(args.output).resolve())
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     prs.save(output_path)
     print(f"Presentation saved to {output_path}")
     print(f"Total slides: {len(prs.slides)}")

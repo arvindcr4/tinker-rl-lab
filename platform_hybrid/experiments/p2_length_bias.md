@@ -1,3 +1,5 @@
+> INTERPRETATION CORRECTION (review 43): Length/reward association does not identify parser bias. Failures at the 512-token cap may reflect truncation. Report truncation, parser failures and completed-but-incorrect responses separately before making mechanism claims.
+
 # P2: Length-bias diagnostic (post-hoc from held-out GSM8K)
 
 Source: `experiments/results/heldout_gsm8k.json` — 10 Qwen3-8B checkpoints evaluated on

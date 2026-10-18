@@ -1,3 +1,5 @@
+> PROTOCOL CORRECTION (review 43): This is a prompt-pool intervention. Pool assignment changes content, difficulty, headroom and length as well as ZVF; it does not isolate a causal ZVF mechanism. The v3 launcher uses fresh directories and never reuses legacy caches. Model revisions remain unresolved unless captured by the service receipt.
+
 # Causal ZVF Experiment
 
 ## Overview

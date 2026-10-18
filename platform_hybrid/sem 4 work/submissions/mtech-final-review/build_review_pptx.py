@@ -630,8 +630,8 @@ def slide_11_length_heldout(prs, n):
          "(diff −0.0028, 95% CI [−0.0045, −0.0014]).", 0, False),
         ("Held-out GSM8K (Qwen3-8B, 5 seeds × 200 test items, greedy):", 0, True),
         ("GRPO 83.3% (SD 2.2%) vs base 82.0% — only +1.3 pp", 1, False),
-        ("t = 1.32, p = 0.26 → not significant; capability is pre-existing", 1, False),
-        ("Honest negative: GRPO surfaces capability more than it creates it.", 0, True),
+        ("t = 1.32, p = 0.26: improvement not established; mechanism unresolved", 1, False),
+        ("The available held-out test does not establish the mechanism.", 0, True),
     ]
     add_bullets(slide, MARGIN, Inches(1.7), Inches(6.5), Inches(5.0), items, size=15.5)
     add_image_fitted(slide, fig("paper", "figures", "length_vs_reward.png"),
@@ -781,7 +781,7 @@ def slide_16_publications(prs, n):
 def slide_17_demo(prs, n):
     slide = new_slide(prs, "Demo Pointer", page_no=n)
     items = [
-        ("Executed demo notebook: demo_recording/thesis_demo.ipynb — 11 cells, "
+        ("Unverified archival demo pointer: demo_recording/thesis_demo.ipynb — "
          "all real outputs (results tables, ZVF, group-size, P8 metrics); "
          "HTML export + recorded walkthrough thesis_demo.mp4.", 0, True),
         ("Live HuggingFace Space (pre-computed, CPU-only): "
@@ -861,11 +861,11 @@ def slide_20_conclusions(prs, n):
         ("A multi-framework GRPO benchmark (6 backends, 44+ curated runs, 70+ across "
          "the roster) that runs identical workloads and reports the stack.", 0, True),
         ("Four de-confound pillars show “GRPO” gains are stack- and "
-         "model-conditioned: same-stack PPO≡GRPO (p=0.76).", 0, True),
+         "model-conditioned: no detected same-stack difference (p=0.76); equivalence not assessed.", 0, True),
         ("ZVF (and gradient utilization = 1−ZVF) is a portable diagnostic for "
          "signal starvation; group size is a preference-density dial.", 0, True),
         ("Honest held-out negative: GRPO adds only +1.3 pts on GSM8K (p=0.26) — "
-         "it surfaces capability more than it creates it.", 0, True),
+         "the test did not establish improvement or mechanism.", 0, True),
         ("Reproducibility-first: 13-audit suite, Docker, REPRODUCE.md, and eight "
          "papers P1–P8 + a NeurIPS workshop artifact.", 0, True),
     ]
@@ -921,7 +921,12 @@ def build() -> Presentation:
 
 
 def main():
+    if "--archival-build" not in sys.argv:
+        raise SystemExit("Superseded source: pass --archival-build only for historical inspection")
     prs = build()
+    for slide in prs.slides:
+        box = slide.shapes.add_textbox(Inches(0.2), Inches(0.05), Inches(12), Inches(0.35))
+        box.text_frame.text = "SUPERSEDED ARCHIVE — NOT FOR PRESENTATION; demo execution unverified"
     prs.save(OUT_PATH)
     print(f"Wrote {OUT_PATH}")
     print(f"Slides: {len(prs.slides._sldIdLst)}")

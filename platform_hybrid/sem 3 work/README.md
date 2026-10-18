@@ -1,3 +1,5 @@
+> See [review 43 erratum](REVIEW43_ERRATUM.md) for unresolved frozen-report contradictions.
+
 # Semester 3 Work — Group 6
 
 This folder is the frozen professor-facing record of the Semester 3 group project. It represents the work completed by a six-student team before Arvind C R continued the research individually in Semester 4.

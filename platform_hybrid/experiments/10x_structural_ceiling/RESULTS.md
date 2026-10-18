@@ -1,3 +1,5 @@
+> EVIDENCE QUARANTINE (review 43): Filename model labels disagree with effective Block B/C YAML models. Historical model identities remain unresolved until provider receipts and revisions are recovered. These summaries do not establish a cross-family size threshold or architecture-wide inability to learn. The all-50-step, highest-GU-54.5%, and every-last10->0.94 prose conflicts with 39/26/47 steps, 57.0%, and 0.925 rows. Preserve stored observations; do not use contradictory summaries as validated findings.
+
 # 10x Structural Ceiling — Experimental Results
 
 **Date:** 2026-04-05 (updated with full 50-step reruns)

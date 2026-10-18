@@ -29,6 +29,7 @@ from transformers import (
     AutoTokenizer,
     Trainer,
     TrainingArguments,
+    set_seed,
 )
 
 # Add project root to path for utils
@@ -37,13 +38,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 @dataclass
 class DistillationConfig:
-    """Configuration for knowledge distillation."""
+    """Distillation settings; seed configures the legacy model-loading entry points.
+
+    Student-trajectory v1 instead uses the caller's TrainingArguments.seed/data_seed.
+    """
 
     teacher_model_name: str = "meta-llama/Llama-3.2-3B-Instruct"
     student_model_name: str = "meta-llama/Llama-3.2-1B"
     temperature: float = 2.0
     alpha: float = 0.5
     max_length: int = 512
+    seed: int = 42
 
 
 def generate_teacher_dataset(
@@ -89,6 +94,8 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
     import wandb
     from trl import SFTTrainer, SFTConfig
 
+    # Seed before model construction and stochastic teacher-data generation.
+    set_seed(config.seed)
     print("Loading teacher model...")
     teacher = AutoModelForCausalLM.from_pretrained(
         config.teacher_model_name,
@@ -112,6 +119,8 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
     )
 
     sft_config = SFTConfig(
+        seed=config.seed,
+        data_seed=config.seed,
         output_dir=os.environ.get("RESULTS_DIR", "./distillation_off_policy"),
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
@@ -176,6 +185,7 @@ def train_fixed_history_distillation(config: DistillationConfig, train_dataset: 
     """Fixed-history distillation with explicit causal task targets."""
     import wandb
 
+    set_seed(config.seed)
     print("Loading teacher model...")
     teacher = AutoModelForCausalLM.from_pretrained(
         config.teacher_model_name,
@@ -194,6 +204,8 @@ def train_fixed_history_distillation(config: DistillationConfig, train_dataset: 
     tokenizer.pad_token = tokenizer.eos_token
 
     training_args = TrainingArguments(
+        seed=config.seed,
+        data_seed=config.seed,
         output_dir=os.environ.get("RESULTS_DIR", "./distillation_fixed_history"),
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
@@ -339,6 +351,10 @@ def train_on_policy_distillation(
 
     No model loading or publication is implicit. This changed protocol must use a
     new output directory; it does not establish results for historical runs.
+    The caller's TrainingArguments is passed unchanged: Trainer owns seed and
+    data_seed, while trajectory sampling advances the current torch RNG without
+    per-call reseeding. DistillationConfig.seed only applies to the legacy entry
+    points; callers must seed before constructing the already-supplied models.
     """
     if config.alpha != 0.0:
         raise ValueError("On-policy v1 is pure KL: explicitly set config.alpha=0")

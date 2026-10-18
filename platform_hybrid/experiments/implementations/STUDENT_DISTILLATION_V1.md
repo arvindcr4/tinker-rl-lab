@@ -42,8 +42,11 @@ seed; reproducible restart/RNG checkpoint validation is outside this local v1.
 fast tokenizers, tokenized prompt dataset, and `TrainingArguments`. Set
 `DistillationConfig(alpha=0.0)` explicitly: sampled student tokens are not genuine
 supervised task targets. Set `remove_unused_columns=False`, `push_to_hub=False`,
-and `report_to=[]`; choose a new empty output directory. The API does not load
-models or publish artifacts. Invoking it runs training and therefore requires
+and `report_to=[]`; choose a new empty output directory. The caller's
+`TrainingArguments.seed` and `data_seed` remain authoritative and are passed
+unchanged. `DistillationConfig.seed` controls only the legacy off-policy and
+fixed-history model-loading entry points; seed before constructing models supplied
+to this API. The API does not load models or publish artifacts. Invoking it runs training and therefore requires
 separate authorization/resources; the regression suite does not invoke it.
 
 Teacher and student must have identical token-to-ID maps, fast-tokenizer

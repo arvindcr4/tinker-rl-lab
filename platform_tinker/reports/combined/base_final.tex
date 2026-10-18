@@ -1047,7 +1047,7 @@ Complex systems have hidden failure modes. Red teaming applies adversarial optim
 Progress demands measurement. Without agreed-upon yardsticks, we cannot distinguish genuine advances from cherry-picked results. Good benchmarks act as the community's shared exam---forcing models to prove their worth on problems they have not memorized.
 
 \section{Policy Gradient Methods: PPO and TRPO}
-Policy optimization has a cliff-edge problem: a single bad update can destroy the policy, and because the data distribution depends on the policy, it can never recover. PPO solves this by enforcing a "trust region"—a mathematical guardrail ensuring we never step too far into the unknown. Trust-region methods prevent catastrophic performance degradation by limiting policy updates. PPO \cite{schulman2017proximal} makes this practical with a clipping mechanism:
+Policy optimization has a cliff-edge problem: a single bad update can destroy the policy, and because the data distribution depends on the policy, it can never recover. PPO solves this by enforcing a "trust region"—a mathematical guardrail ensuring we never step too far into the unknown. Trust-region methods prevent catastrophic performance degradation by limiting policy updates. PPO \cite{schulman2017ppo} makes this practical with a clipping mechanism:
 \begin{equation}
 L^{CLIP}(\theta) = \mathbb{E}_t \left[ \min(r_t(\theta) \hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t) \right]
 \end{equation}
@@ -1367,7 +1367,7 @@ TRPO \cite{schulman2015trust} optimizes a surrogate objective under an explicit 
 \begin{equation}
 \max_\theta \mathbb{E}_t\left[\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)} \hat{A}_t\right] \quad \text{s.t.} \quad \text{KL}[\pi_{\theta_{\text{old}}} \| \pi_\theta] \leq \delta
 \end{equation}
-Under bounded-advantage assumptions, TRPO is accompanied by a conservative improvement guarantee. PPO \cite{schulman2017proximal} replaces the hard KL constraint with a clipped surrogate objective:
+Under bounded-advantage assumptions, TRPO is accompanied by a conservative improvement guarantee. PPO \cite{schulman2017ppo} replaces the hard KL constraint with a clipped surrogate objective:
 \begin{equation}
 L^{\text{CLIP}}(\theta) = \mathbb{E}_t\left[\min\left(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t\right)\right]
 \end{equation}
@@ -3508,7 +3508,7 @@ This appendix provides a comprehensive mapping of all surveyed papers to our 19-
 % === CORE ALGORITHMS: Policy-Based (Cat 1) ===
 \multicolumn{4}{|c|}{\cellcolor{blue!15}\textbf{Core Algorithms: Policy-Based (Category 1)}} \\
 \hline
-schulman2017proximal & Proximal Policy Optimization Algorithms & 1 & Policy-Based \\
+schulman2017ppo & Proximal Policy Optimization Algorithms & 1 & Policy-Based \\
 \hline
 schulman2015trust & Trust Region Policy Optimization & 1 & Policy-Based \\
 \hline

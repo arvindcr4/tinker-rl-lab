@@ -161,6 +161,58 @@ td.mark.yes { color: var(--good) } td.mark.no { color: var(--bad) }
 .feedback-scores dd { margin: 0 }
 .receipt-only { border-left-style: dashed }
 :root.present .feedback-points, :root.present .feedback-scores { font-size: 17px }
+/* Document library: paper record first, source and ownership boundaries alongside it. */
+.research-overview, .document-section { display: grid; gap: 16px; min-width: 0 }
+.research-overview h3, .research-documents h3 { margin: 0 }
+.research-entry, .publication-feature, .thesis-feature, .semester-feature, .archive-card, .manuscript-card, .contribution-card { display: grid; gap: 14px; align-content: start }
+.research-entry { border-left: 3px solid var(--grpo) }
+.research-entry h4, .research-documents h4 { margin: 0; font-size: 17px; line-height: 1.35 }
+.research-entry h4 { font: 600 23px/1.25 var(--display) }
+.document-heading { display: grid; gap: 8px }
+.publication-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px }
+.publication-feature { border-top: 4px solid var(--grpo); padding: 26px }
+.publication-feature h3 { font: 600 clamp(23px, 3vw, 31px)/1.25 var(--display); text-wrap: balance }
+.thesis-feature { background: var(--bg); border-color: var(--control) }
+.thesis-feature h3, .semester-feature h3 { font: 600 24px/1.25 var(--display) }
+.contribution-card .card-link { display: inline-flex; align-items: center; min-height: 44px }
+.document-section > div > h3, .document-section > .row > div > h3 { font: 600 21px/1.3 var(--display); margin-bottom: 6px }
+.document-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch }
+.document-link { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; min-height: 44px; border: 1px solid var(--control); border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; overflow-wrap: anywhere }
+.document-link:hover { background: var(--bg); border-color: var(--grpo) }
+.document-link.primary { border-color: var(--grpo); background: var(--grpo); color: var(--panel) }
+.document-link.primary:hover { text-decoration: underline; text-underline-offset: 3px }
+.document-format { font: 500 12px/1.4 var(--mono); flex-shrink: 0 }
+.document-link > span:first-child { min-width: 0 }
+.document-caveat { line-height: 1.6 }
+.document-source-note { border-top: 1px solid var(--line); padding-top: 16px; max-width: none }
+.manuscript-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px }
+.manuscript-card { gap: 12px; grid-template-rows: auto auto 1fr auto }
+.manuscript-card p, .archive-card p, .contribution-card p { font-size: 15px }
+.manuscript-card p.small { font-size: 14px }
+.manuscript-card > .row { flex-wrap: nowrap; align-items: flex-start }
+.paper-number { display: inline-grid; place-items: center; min-width: 38px; min-height: 32px; border: 1px solid var(--grpo); border-radius: 6px; color: var(--grpo); font: 600 13px/1.3 var(--mono); flex-shrink: 0 }
+.document-disclosure-body { display: grid; gap: 14px; padding-top: 8px }
+.document-disclosure-body .document-link { justify-self: start }
+.semester-feature .stat { margin-top: 4px }
+.semester-feature .stat dd { font-family: var(--body) }
+.team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: 0 24px; list-style: none; margin: 0; padding: 0 }
+.team-grid li { padding: 16px 0; border-top: 1px solid var(--line); min-width: 0; overflow-wrap: anywhere }
+.team-grid h4 { margin-bottom: 6px }
+.research-progression { display: grid; gap: 20px; list-style: none; padding: 0; margin: 0 }
+.research-progression li { display: flex; gap: 16px; align-items: flex-start; min-width: 0 }
+.research-progression li > div { min-width: 0 }
+.research-progression h4 { margin-bottom: 6px }
+:root.present .manuscript-card p, :root.present .archive-card p, :root.present .contribution-card p, :root.present .document-link { font-size: 17px }
+@media (max-width: 760px) {
+  .publication-grid { grid-template-columns: 1fr }
+  .publication-feature { padding: 20px }
+}
+@media (max-width: 520px) {
+  .document-actions { display: grid }
+  .document-link { flex-wrap: wrap; gap: 6px 12px }
+  .document-format { flex-shrink: 1 }
+  .research-progression li { gap: 10px }
+}
 @media (max-width: 760px) {
   nav.tabs .section-links { display: none }
   nav.tabs .section-picker { display: flex; align-items: center; gap: 12px; padding-block: 10px }

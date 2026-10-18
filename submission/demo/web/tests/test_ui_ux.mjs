@@ -13,7 +13,7 @@ async function markup() {
   const result = await build({
     stdin: { contents: `import React from 'react'; import {renderToStaticMarkup} from 'react-dom/server';
       import App from './src/App.jsx';
-      export const pages = Object.fromEntries(['overview', 'advantage', 'zvf', 'samestack', 'platform', 'answers', 'stackdiff', 'audit', 'viva', 'submissions'].map(id => {
+      export const pages = Object.fromEntries(['overview', 'advantage', 'zvf', 'samestack', 'platform', 'answers', 'stackdiff', 'audit', 'viva', 'submissions', 'papers', 'previous-semester'].map(id => {
         globalThis.location = {hash: '#' + id};
         return [id, renderToStaticMarkup(React.createElement(App))];
       }));`, resolveDir: here, sourcefile: 'ui-fixture.jsx', loader: 'jsx' },
@@ -30,7 +30,7 @@ async function markup() {
 
 test('every route keeps a named main landmark, one h1 and a skip destination', async () => {
   const pages = await markup();
-  assert.equal(Object.keys(pages).length, 10);
+  assert.equal(Object.keys(pages).length, 12);
   for (const [id, html] of Object.entries(pages)) {
     assert.equal((html.match(/<h1(?:\s|>)/g) || []).length, 1, id);
     assert.match(html, /class="skip-link" href="#main-content"/);
@@ -40,12 +40,12 @@ test('every route keeps a named main landmark, one h1 and a skip destination', a
   }
 });
 
-test('mobile and desktop section navigation retain all ten deep links and the active state', async () => {
+test('mobile and desktop section navigation retain all twelve deep links and the active state', async () => {
   const pages = await markup();
   for (const [id, html] of Object.entries(pages)) {
     const sections = html.match(/<select id="section-select"[^>]*>([\s\S]*?)<\/select>/)?.[1];
     assert.ok(sections, id);
-    assert.equal((sections.match(/<option /g) || []).length, 10);
+    assert.equal((sections.match(/<option /g) || []).length, 12);
     assert.match(html, new RegExp(`<option value="${id}" selected=""`));
     assert.match(html, new RegExp(`href="#${id}" aria-current="page"`));
   }
@@ -54,7 +54,12 @@ test('mobile and desktop section navigation retain all ten deep links and the ac
   assert.ok(pages.viva.includes('Previous: Evidence audit'));
   assert.ok(pages.viva.includes('Next: Submissions'));
   assert.ok(pages.submissions.includes('Previous: Hard questions'));
-  assert.ok(!pages.submissions.includes('Next:'));
+  assert.ok(pages.submissions.includes('Next: Papers &amp; thesis'));
+  assert.ok(pages.papers.includes('Previous: Submissions'));
+  assert.ok(pages.papers.includes('Next: Previous semester'));
+  assert.ok(pages['previous-semester'].includes('Previous: Papers &amp; thesis'));
+  assert.ok(!pages['previous-semester'].includes('Next:'));
+  assert.equal((pages.papers.match(/class="key"/g) || []).length, 10, 'New routes never advertise duplicate number shortcuts');
 });
 
 test('answer pattern selection and reward controls use named native controls', async () => {

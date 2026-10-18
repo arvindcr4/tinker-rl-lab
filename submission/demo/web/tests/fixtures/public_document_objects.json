@@ -1,0 +1,30 @@
+{
+  "commit": "eb9eb4927ddf1c5b24017f1fd913c96744bb6dd4",
+  "blobs": {
+    "PROJECT_HISTORY.md": "0f77021c6ca21d61c65ded81832385522ca577da",
+    "CURRENT_PROJECT_STATUS.md": "a4ee5396b9408c48038bdebd14931ff55c9469d1",
+    "reports/public_revision_2026-10-11/thesis/Thesis_Report_ArvindCR_2026-10-11_ESA_CORRECTED_REVIEW.pdf": "7fac4a3fc49121f8c8e7d3805db3e2a4d8d6cf9d",
+    "reports/public_revision_2026-10-11/thesis/README.md": "efc5b05afde1096cae9f14a5492a094c29294edb",
+    "reports/public_revision_2026-10-11/README.md": "d98064ebb47ef6110ff21ea3d0911dda076f5547",
+    "reports/public_revision_2026-10-11/COMPLETION_ASSESSMENT.md": "7231256787693d2d4bde463fa6c1c76b986da6f6",
+    "reports/runtime_followup_2026-10-11/MANUSCRIPT_ERRATA.md": "e0c0c71eec7b4a82322ecdf361af279cad241923",
+    "platform_hybrid/sem 3 work/deliverables/capstone-final-report.docx": "31d1e80794393e910f941f7c00beb8369bd8ef5f",
+    "platform_hybrid/sem 3 work/source/capstone_final_report.tex": "465d560e4a73b4850225e8455ef90edb566c75b5",
+    "platform_hybrid/sem 3 work/CITATION.cff": "d06ab62643357c249d2e804f1106f17e23d5af49",
+    "platform_hybrid/sem 3 work/CONTRIBUTIONS.md": "23c0783f5f1e7f57e7d0cf1012a79a168d60efb3",
+    "platform_hybrid/sem 3 work/PROVENANCE.md": "697c2cbf9e9d42eb8003e8145371798080dff66a",
+    "platform_hybrid/sem 3 work/REVIEW43_ERRATUM.md": "f71d50d32a5432e0b7ffa2b056d884795c104d21",
+    "platform_hybrid/sem 3 work/submissions/neurips-main-track/SUBMISSION_MANIFEST.md": "3203a5b9e01e434f3de394e853b58d7696e19d7a",
+    "platform_hybrid/sem 4 work/EXPERIMENTS.md": "79bc829c5659bd839f2230d3eefd3e3448c68820",
+    "platform_hybrid/sem 4 work/PROVENANCE.md": "20dff52446b548f3f48e68ab6d3a73bbd66998ed",
+    "platform_hybrid/paper/PAPERS_README.md": "fed1fde1fcc2c7f39f78e24e36d5f5a29906ef59",
+    "platform_hybrid/paper/archive/absorbed/P08_fraud/paper_P8_fraud.tex": "ec0483882dc2dfd983c60ad23843b118b552ad17",
+    "platform_hybrid/paper/paper_P1_scaling.tex": "7f29352559658fa413f888e66a72e6fd77c80a7c",
+    "platform_hybrid/paper/paper_P2_zvf.tex": "2729255f46c952c8d2b13e8e029a55a44c7c8c1c",
+    "platform_hybrid/paper/paper_P3_group_size.tex": "182aaa5b727224a6313ca47e8c34cf8daddf5e50",
+    "platform_hybrid/paper/paper_P4_length_bias.tex": "00ea9cdb9eba2110147b6d5891f6b557a8b24fd0",
+    "platform_hybrid/paper/paper_P5_minreport.tex": "378f8be42100c9484f7d251aae08f2a5f10880e1",
+    "platform_hybrid/paper/paper_P6_registry.tex": "fe2cc4a278f20c1513ba02088b523f4d75b5a5fe",
+    "platform_hybrid/paper/paper_P7_zvf_controller.tex": "ccb7086607092ab5f06ac525afbef652d7335e28"
+  }
+}

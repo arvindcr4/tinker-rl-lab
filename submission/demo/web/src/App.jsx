@@ -10,6 +10,7 @@ import Audit from "./views/Audit.jsx";
 import RealAnswers from "./views/RealAnswers.jsx";
 import Viva from "./views/Viva.jsx";
 import Submissions from "./views/Submissions.jsx";
+import { Papers, PreviousSemester } from "./views/ResearchDocuments.jsx";
 
 // Order is the defense demo route.
 const VIEWS = [
@@ -23,6 +24,8 @@ const VIEWS = [
   ["audit", "Evidence audit", Audit],
   ["viva", "Hard questions", Viva],
   ["submissions", "Submissions", Submissions],
+  ["papers", "Papers & thesis", Papers],
+  ["previous-semester", "Previous semester", PreviousSemester],
 ];
 
 const current = () => {
@@ -121,12 +124,12 @@ export default function App() {
         </div>
         <div className="wrap section-links" ref={navRef}>
           {VIEWS.map(([id, label], i) => (
-            <a key={id} href={`#${id}`} aria-current={id === view ? "page" : undefined}><span className="key" aria-hidden="true">{(i + 1) % 10}</span>{label}</a>
+            <a key={id} href={`#${id}`} aria-current={id === view ? "page" : undefined}>{i < 10 && <span className="key" aria-hidden="true">{(i + 1) % 10}</span>}{label}</a>
           ))}
         </div>
       </nav>
       <main className="wrap" id="main-content" ref={mainRef} tabIndex={-1} aria-label={VIEWS[idx][1]}>
-        <div className="section-context"><span>Section <span className="mono">{idx + 1} / {VIEWS.length}</span></span><span>{view === "submissions" ? "Submission history · Offline snapshot" : "Stored results · Offline demo"}</span></div>
+        <div className="section-context"><span>Section <span className="mono">{idx + 1} / {VIEWS.length}</span></span><span>{view === "submissions" ? "Submission history · Offline snapshot" : ["papers", "previous-semester"].includes(view) ? "Public documents · Curated index" : "Stored results · Offline demo"}</span></div>
         <View />
         <nav className="next-row" aria-label="Previous and next sections">
           {previous ? <a className="next previous" href={`#${previous[0]}`}>← Previous: {previous[1]}</a> : <span className="small">Choose any section to explore</span>}
@@ -145,7 +148,7 @@ export default function App() {
           <p className="small">Missing or unverified coverage: {missing.length ? missing.join("; ") : "none reported"}</p>
           <p className="small">Hashes identify the files read by this export. They do not retrospectively prove an unrecorded training environment or protocol.</p>
         </details>
-        <p style={{ marginTop: 10 }}>Experimental data exported offline from stored results by <span className="mono">submission/demo/web/build_demo_web.py</span>. Submission metadata is curated separately. No model runs in this page, and nothing here is a new measurement. Registry: {SD.entries.length} stacks.</p>
+        <p style={{ marginTop: 10 }}>Experimental data exported offline from stored results by <span className="mono">submission/demo/web/build_demo_web.py</span>. Submission metadata and the public-document index are curated separately. No model runs in this page, and nothing here is a new measurement. Registry: {SD.entries.length} stacks.</p>
       </div></footer>
     </>
   );

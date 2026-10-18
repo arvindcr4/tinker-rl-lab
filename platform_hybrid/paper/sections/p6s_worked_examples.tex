@@ -1,10 +1,22 @@
 % Paper 6 (GRPO-Registry) worked examples
 \section{Worked Examples}
 \label{sec:p6-worked}
-Both examples below are verbatim CLI runs on the shipped entries.
+The examples are interpretations of current registry metadata, not
+controlled experimental validation. Exact output depends on the snapshot.
 
 \subsection{Example 1: \texttt{stackdiff} on the ``DAPO'' Pair}
 \label{sec:p6-worked-dapo}
+The open Colab and managed-runtime ``dapo'' records differ in known
+outcome-critical and algorithm fields. The current query gives R5 at
+coverage 0.73; this is not a like-for-like telemetry comparison.
+The managed arm is advantage clipping rather than full DAPO.
+\subsection{KL reporting}
+\label{sec:p6-worked-kl}
+Run \texttt{python3 registry/query.py query --item reference\_kl} for
+the current per-record census. Explicit absence is reportable; unknown
+provider-internal values remain unknown. No historical twelve-stack
+denominator or matched-backend equivalence result is retained.
+\endinput % Stale CLI excerpts and unsupported matched experiment preserved below.
 The registry contains two stacks claiming the label \texttt{dapo}: the open
 Colab trainer arm and the managed-runtime arm. Diffing them:
 

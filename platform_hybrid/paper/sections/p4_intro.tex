@@ -1,6 +1,17 @@
 % Pillar-4 (length bias) standalone introduction + related work
 \section{Introduction}
 \label{sec:p4-intro}
+We audit logged mean completion length and reward in 16 short-horizon runs:
+five seeds per algorithm on arithmetic and three on capped GSM8K-CoT.
+The question is descriptive: do mean lengths rise over these trajectories?
+Step means cannot identify correctness-conditioned length bias, within-step
+dispersion, causal mediation, or held-out generalization. The 200-token
+GSM8K-CoT cap limits the observable regime. Declining mean lengths under
+that cap neither establish equivalence nor refute the normalization
+motivation of Dr.\,GRPO~\citep{tong2025drgrpo}.
+No comparison to an external paper's optimization-step horizon is made:
+step counts without matched batch and token budgets are not comparable.
+\endinput % Historical broader introduction preserved below, not compiled.
 GRPO~\citep{shao2024deepseekmath, guo2025deepseekr1} normalizes the group-relative
 advantage by response length. This introduces a potential length bias: when reward
 is sparse and binary, longer completions have more chances to stumble into a

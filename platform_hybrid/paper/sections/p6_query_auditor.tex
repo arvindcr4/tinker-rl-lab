@@ -93,12 +93,12 @@ records (\STACKDIFFNPAIRS{} pairs) reports \STACKDIFFDIST{};
 dominates because the entries span eight base models: checkpoint identity is
 the differing R5 field in nearly every R5 pair. Holding the checkpoint fixed
 shows that the ladder discriminates: the checkpoint-sharing pairs give \SAMECKPT{}. The R0 count needs
-a caveat. All \NRZERO{} R0 pairs fall inside two groups of hand-entered
-entries (sizes \RZEROCLASSES{}: the three N2 Tinker entries and nine
-\texttt{zvf130\_*} entries) whose known fields are identical and whose
-algorithm fields are unknown, at coverage $0.19$--$0.29$; R0 there means
-``no \emph{known} difference'', not ``same stack'', and every such pair is
-flagged underspecified. Collapsing each group to one entry leaves \DEDUPN{}
+a caveat. R0 means no known difference, not verified equivalence, and all
+\NRZERO{} R0 pairs are underspecified. Identical normalized signatures,
+including their unknown states, form only one non-singleton class:
+the OpenRLHF and veRL config records. R0 is not itself a transitive
+equivalence relation when different pairs expose different known fields.
+Collapsing that identical-signature class leaves \DEDUPN{}
 entries and \DEDUPALL{}; among checkpoint-sharing pairs, \DEDUPSAME{}. The two
 same-checkpoint R5 pairs are real runs versus dry runs (execution mode).
 Restricted to the \NGEN{} generated entries, \GENPAIRS{}.
@@ -120,7 +120,6 @@ warning that outcome differences must not be attributed to the shared label;
 \NSTACK{} stack entries are still hand-entered (no run script was available to
 regenerate them), so most of their fields are unknown; this is why median pair
 coverage is \COVMED{} and why \STACKDIFFUNDER{} pairs are underspecified. The \NGEN{}
-generated entries reach a median pair coverage of $0.85$ among themselves
-(range $0.19$--$0.98$). Only
+generated entries still require pair-specific coverage checks. Only
 \texttt{stackdiff} and the badge are implemented; the manifest-emitting trainer
 plugin and LeverTrace check remain specifications.

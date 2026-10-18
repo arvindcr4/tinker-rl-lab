@@ -6,9 +6,10 @@ non-compliance. The NeurIPS reproducibility program showed that a checklist
 plus process measurably improves reporting \citep{pineau2020improving}; our
 aim is to push the marginal cost of compliance to near zero by making the
 manifest a build artifact rather than a writing task. We specify five
-components. All five are specifications with reference behavior defined by
-the audits in this paper; we are explicit below about which behaviors have
-already been exercised and which are design targets.
+components. The emitter and LeverTrace are design targets, not exercised
+trainer integrations. Registry queries, stackdiff and a coverage badge have
+reference implementations; none establishes causal comparability or
+measured compliance overhead.
 
 \paragraph{\texttt{trl-min-report-rl} (manifest emitter).} A trainer plugin
 (reference target: a TRL~\citep{vonwerra2022trl} callback, with adapters for
@@ -57,6 +58,7 @@ to support L? LeverTrace walks a citation graph and flags credited-but-
 unreported levers, targeting the accretion process by which a label acquires
 empirical reputation that no single stack ever demonstrated.
 
+\endinput % Unverified overhead/control feasibility claims preserved historically.
 \subsection{Feasibility Evidence: The Telemetry Is Already Actionable}
 \label{sec:p5-feasibility}
 The manifest's most novel items (4 and 5) are not merely reportable---they

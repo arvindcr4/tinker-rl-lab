@@ -18,13 +18,14 @@ non-disclosure:
 an RL-for-LLM comparison should attach the seven-field run manifest and the
 eighth evaluation report (pass@$k$; \tableref{tab:p5-minreport}) per compared
 run as supplementary JSON.
-Auto-emission (\secref{sec:p5-toolchain}) makes this a one-line cost for
-open trainers; for closed stacks, ``provider-internal, version-dated'' is an
+Auto-emission (\secref{sec:p5-toolchain}) is a proposed integration, not a
+demonstrated one-line cost. For closed stacks, ``provider-internal, version-dated'' is an
 acceptable and informative value---the point is that conditioning be
 declared, not that all stacks be open.
 \item \textbf{Grade the comparisons.} Reviewers should see the
 \texttt{grpo-stackdiff} grade for every headline comparison. R0--R2
-comparisons support algorithmic claims; R3--R4 comparisons should be
+comparisons identify fewer known confounds but do not alone support algorithmic claims;
+coverage and experimental design must also be checked. R3--R4 comparisons should be
 rewritten as stack-conditioned observations; R5 should be treated as a
 missing-experiment flag, exactly as a missing baseline is today.
 \item \textbf{Split colliding labels.} Where the registry shows one label

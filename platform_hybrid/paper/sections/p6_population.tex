@@ -76,17 +76,13 @@ last-10 reward/ZVF land in the same paired-bootstrap envelope as GRPO
 (Section~\ref{sec:p6-measured}); the entries make this measurable artifact
 machine-queryable for the first time.
 
-\paragraph{Family E: zvf-iter130 risk-index batch.}
+\paragraph{Family E: historical synthetic risk-index fixture.}
 Eleven entries (\texttt{zvf130\_*}: nine GRPO-family methods and two tool-use
-cells) record a different shape of
-evidence: a single-batch harness that ran all nine GRPO-family methods on the
-same prompt pool with five seeds each and produced a per-method risk-index
-mean on \texttt{zvf\_iter130\_method\_risk.tsv}. The corresponding stack entries
-report fewer MIN-REPORT leaves (9/23) because the harness is a snapshot, not a
-full training run---but the entries preserve the per-method seeds, the
-provenance link to the source TSV, and the variant-delta pointers, so a query
-can recover the comparison set without losing the partial-reporting honesty
-marker.
+cells) retain metadata from a synthetic risk-index fixture, not measured
+training outcomes. Their presence tests catalog handling of partial records;
+it does not establish that those algorithms trained or improved ZVF.
+The current corpus has 28 stack records, 18 variant-delta records and two
+amendment sidecars; sidecars are not additional variant-delta records.
 
 \paragraph{What population taught us about our own reporting.}
 The badge column is itself a finding. Our hand-entered config dumps---built for a

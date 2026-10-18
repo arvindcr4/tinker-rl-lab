@@ -16,14 +16,16 @@ auditor (\texttt{scripts/p5p8/registry\_validate.py},
 \texttt{experiments/results/p5p8/registry\_schema\_check.tsv}) reports
 \textbf{31/31 entries passed} at the time of that audit: 20 \texttt{stack}
 records and 11 \texttt{variant\_delta} records. The registry has since grown
-to 28 stack and 20 variant-delta records (Table~\ref{tab:p6-entries}).
+to 28 stack and 18 variant-delta records, with two amendment sidecars
+(Table~\ref{tab:p6-entries}). The historical 31-record check does not
+validate this expanded population.
 
 \subsection{Measured deltas on the same stack}
 Table~\ref{tab:p6-measured-deltas} reports paired bootstrap means and
 $95\%$ CIs on the last-$10$ steps (deterministic LCG, $n_{\text{boot}}=2000$).
 The per-prompt pooled view pools each prompt's mean reward over the steps
-it sees and is the cleanest counterfactual because it eliminates
-prompt-set drift.
+it sees. It describes prompt variation within one seed, not a seed-level
+counterfactual or a causal algorithm effect.
 
 \begin{table}[t]
 \centering
@@ -65,6 +67,12 @@ reward\_mean (per-prompt, $n{=}16$) & areal & --- & --- & $-0.006$ & $[-0.044,\,
 \end{table}
 
 \subsection{What this rules in and out}
+These intervals summarize one logged trajectory per method. Adjacent steps
+are not independent training replicates; significance of a step bootstrap
+does not establish a reproducible method effect. No cross-seed reward
+ranking or mechanistic interpretation follows. The last-10 window is part
+of the estimand, not a full-trajectory result.
+\endinput % Historical stronger interpretation preserved below.
 The measured reward deltas are all $\leq 2$pp in magnitude at the same
 stack---direct quantitative corroboration of the Pillar-1 ``algorithm
 barely moves outcome once stack is fixed'' reading. Two of the three

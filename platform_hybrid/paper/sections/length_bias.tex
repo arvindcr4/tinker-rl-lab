@@ -13,15 +13,8 @@
 \label{sec:length-bias-pillar}
 
 \paragraph{Headline question.}
-The Dr.~GRPO thesis~\cite{tong2025drgrpo} and the broader
-length-bias / reward-hacking literature~\cite{ouyang2022training, christiano2017deeprlhf}
-predict that GRPO
-\emph{systematically} inflates response length during training:
-longer outputs mechanically accumulate more gradient signal
-regardless of correctness, the model first learns to associate length
-with reward, then collapses when the reward model saturates. The
-Dr.~GRPO correction (per-question rather than per-completion
-normalisation) is offered as a remedy. We have
+We examine a bounded descriptive signature, not a test of the full
+Dr.~GRPO mechanism~\cite{tong2025drgrpo}. We have
 \emph{per-step traces} of $(\texttt{mean\_reward},
 \texttt{mean\_comp\_len})$ for eight GRPO runs and eight Dr.~GRPO runs
 across two tasks, and we ask: does the length-vs-reward trajectory
@@ -52,8 +45,8 @@ summary is in
 \texttt{experiments/results/length\_bias\_summary.tsv}.
 
 \paragraph{Headline finding.}
-\textbf{At 30--40-step horizons neither GRPO nor Dr.~GRPO exhibits
-the verbosity-trap signature on either task.} The per-run
+\textbf{Mean completion lengths decline over these 30--40-step traces.}
+This does not rule out correctness-conditioned length bias. The per-run
 $\rho(\texttt{step}, \texttt{len})$ is consistently \emph{negative}
 on both tasks (Table~\ref{tab:length-bias-summary}): $-0.405$ (sd
 $0.176$) for GRPO on arithmetic and $-0.622$ (sd $0.301$) for GRPO
@@ -62,12 +55,9 @@ proceeds, not longer. The Dr.~GRPO correction attenuates this
 negative length trend on the hard task ($-0.355$ vs $-0.622$ for
 GRPO), but does \emph{not} reverse its sign. The within-run
 coupling $\rho(\texttt{len}, \texttt{reward})$ is also negative on
-all four (algo, task) cells ($-0.293$ to $-0.618$), meaning that
-\emph{at any single step}, longer completions are associated with
-\emph{lower} mean reward -- consistent with the model's
-increasingly long but still-incorrect early-stage completions
-contributing to lower step means. The picture is one of
-\emph{compression under reinforcement}, not verbosity inflation.
+all four (algo, task) cells ($-0.293$ to $-0.618$). This is an
+association across step means, not across completions within a step;
+shared training trends can generate it without a causal length effect.
 
 \begin{table}[htbp]
 \centering
@@ -95,6 +85,8 @@ plus flat-or-down reward trend). The within-run coupling is also negative throug
 completions are associated with \emph{lower} per-step reward in our data, not higher.}
 \label{tab:length-bias-summary}
 \end{table}
+
+\endinput % Later horizon, mechanism, drift and forecast analyses are historical only.
 
 \paragraph{Why this is consistent with, not against, the Dr.~GRPO thesis.}
 Dr.~GRPO is a claim about \emph{horizon}: the verbosity-trap emerges

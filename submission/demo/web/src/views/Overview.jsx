@@ -31,13 +31,18 @@ export default function Overview() {
   const st = SS.setup;
   return (
     <section className="view">
-      <div className="grid3">
+      <div>
+        <h2>Explore the evidence</h2>
+        <p className="small">Start with a finding, then inspect the analysis and its limits.</p>
+      </div>
+      <div className="overview-grid">
         {cards.map((c) => (
           <a key={c.k} className="panel finding" href={`#${c.go}`}>
-            <div className="eyebrow">{c.k}</div>
+            <h3 className="eyebrow">{c.k}</h3>
             <div className="big">{c.big}</div>
             <div><span className={`pill ${c.pill[0]}`}>{c.pill[1]}</span></div>
             <p className="small">{c.text}</p>
+            <span className="card-link">Explore this finding <span aria-hidden="true">→</span></span>
           </a>
         ))}
       </div>

@@ -55,11 +55,11 @@ export default function AdvantageLab() {
         <div className="panel">
           <div className="row between" style={{ marginBottom: 10 }}>
             <h3 style={{ margin: 0 }}>One prompt, a group of {G} sampled answers</h3>
-            <div className="seg" aria-label="Group size">
+            <div className="seg" role="group" aria-label="Group size">
               {SIZES.map((n) => <button key={n} type="button" aria-pressed={n === G} onClick={() => resize(n)}>G = {n}</button>)}
             </div>
           </div>
-          <div className="coins" style={{ gridTemplateColumns: `repeat(${Math.min(G, 8)}, minmax(0, 64px))` }}>
+          <div className="coins" role="group" aria-label="Answer rewards" style={{ "--group-size": Math.min(G, 8) }}>
             {rewards.map((r, i) => (
               <button key={i} type="button" className={`coin ${r ? "on" : ""}`} aria-pressed={!!r}
                 aria-label={`Answer ${i + 1}: ${r ? "correct" : "wrong"}`} onClick={() => flip(i)}>{r}</button>

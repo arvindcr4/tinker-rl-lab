@@ -57,15 +57,16 @@ export default function RealAnswers() {
       <div className="panel">
         <p className="small">Current grading specification: {GRADING_SPEC_ID}. Historical stored scores remain unchanged.</p>
         <h3>All {EX.n.toLocaleString("en")} test items by outcome (base · GRPO · PPO)</h3>
-        <div className="table-box"><table>
+        <p className="small" id="pattern-help">Select a pattern to read its stored examples. A check means correct; a cross means wrong.</p>
+        <div className="table-box"><table aria-describedby="pattern-help">
           <thead><tr><th>Base</th><th>GRPO</th><th>PPO</th><th className="num">Items</th><th>Reading</th></tr></thead>
           <tbody>
             {patterns.map(([k, n]) => (
-              <tr key={k} className={`pick ${k === pattern ? "on" : ""}`} onClick={() => { setPattern(k); setPick(0); }}
-                tabIndex={0} onKeyDown={(e) => e.key === "Enter" && (setPattern(k), setPick(0))} aria-selected={k === pattern}>
-                {[...k].map((c, j) => <td key={j} className={`mark ${c === "1" ? "yes" : "no"}`}>{mark(c)}</td>)}
+              <tr key={k} className={`pick ${k === pattern ? "on" : ""}`} onClick={() => { setPattern(k); setPick(0); }}>
+                {[...k].map((c, j) => <td key={j} className={`mark ${c === "1" ? "yes" : "no"}`}><span aria-hidden="true">{mark(c)}</span><span className="sr-only">{c === "1" ? "Correct" : "Wrong"}</span></td>)}
                 <td className="num">{n}</td>
-                <td className="small">{READING[k]}</td>
+                <td><button type="button" className="pattern-choice" aria-pressed={k === pattern}
+                  onClick={() => { setPattern(k); setPick(0); }}>{READING[k]}</button></td>
               </tr>
             ))}
           </tbody>
@@ -74,7 +75,7 @@ export default function RealAnswers() {
       {item ? <div className="panel">
         <div className="row between">
           <h3 style={{ margin: 0 }}>Test item #{item.i} · gold answer <span className="mono">{item.gold}</span></h3>
-          <div className="seg">{items.map((it, j) => <button key={it.i} type="button" aria-pressed={it === item} onClick={() => setPick(j)}>#{it.i}</button>)}</div>
+          <div className="seg" role="group" aria-label="Stored test items">{items.map((it, j) => <button key={it.i} type="button" aria-pressed={it === item} onClick={() => setPick(j)}>#{it.i}</button>)}</div>
         </div>
         <p style={{ margin: "10px 0 14px" }}>{item.question}</p>
         <div className="grid3">

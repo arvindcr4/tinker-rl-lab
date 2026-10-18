@@ -14,7 +14,16 @@ DEMO_DATA=/tmp/samestack-demo.json npm run build
 
 The build writes `dist/index.html` and `tinkerrl_demo.html`. Both are self-contained and open from disk. `npm run data` explicitly replaces `src/data.json` with a new export; it never edits underlying experimental results. Use `--plan /path/to/plan.json` only with a declared versioned analysis plan. Missing historical identity is never inferred from filenames or seed numbers. New runs can be selected with `--results-dir /path/to/environment/protocol` pointing to the leaf directory containing the arm/seed records; completion markers and aggregates are not treated as runs.
 
-Presenter controls: ← / → or 1–9 change views; P toggles larger text. A short route is Advantage lab → GRPO vs PPO-style → Real answers → Stack diff.
+Presenter controls: ← / → or 1–9 change views; P toggles larger text. The header's Shortcuts toggle turns single-key navigation off. Inputs and the mobile section selector keep their native keyboard behavior. A short route is Advantage lab → GRPO vs PPO-style → Real answers → Stack diff.
+
+## Presentation and access
+
+- On narrow screens, a labeled section selector exposes all nine views. Desktop section links keep the current view in sight; Previous and Next links and browser Back/Forward remain available
+- A skip link bypasses the header. Route changes focus the named content region, except when selecting a section, where focus stays in the selector for repeated arrow-key use
+- Outcome-pattern selection uses native buttons with pressed states. Reward controls retain generous touch targets, and status labels and long identifiers can reflow
+- The page uses locally available fonts without external font requests. Reduced-motion preferences disable decorative control transitions
+
+The source-only UI pass applies accessibility, navigation and resilient-text principles from [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill). It adds no dependency on that project's tooling and does not change the scientific analysis or historical artifacts.
 
 The ninth view retains the historical cross-platform calibration from `platform_calibration.json`, including its input hash in the provenance manifest. Its legacy inference and available-only multiplicity adjustment have not been repaired by the same-stack changes; do not treat its equivalence wording as a validated canonical same-stack conclusion.
 
@@ -41,7 +50,8 @@ node tests/grade_all.mjs
 
 - Shared fixtures check exact boxed/rational grading and Python/JavaScript statistics, including invalid, zero-variance and TOST-boundary cases; exact sign-flip enumeration is capped at 20 pairs
 - Analysis/view fixtures cover absent arms, zero contrasts, one pair, disjoint/invalid provenance, duplicate seeds, interim completion, missing margins and adjustment gating
-- Export tests verify the normative analysis path and immutable inputs; browser checks cover all views, small/large layouts, canonical pending/available states, grader probes and navigation
+- UI structure tests cover named landmarks, navigation states, native selection controls, offline dependencies and theme text contrast
+- Export tests verify the normative analysis path and immutable inputs; browser checks cover all views at 320/375/768/1024/1440px, canonical pending/available states, grader probes, keyboard focus/history, touch targets, reduced motion and text-spacing reflow
 - `grade_all.mjs` is an audit against immutable historical scores. A nonzero exit can indicate genuine disagreement with the repaired grader, not a software regression. `--json --report-only` emits the discrepancies and coverage without failing the export. Never change the grader to force old scores to agree
 
 `npm test` runs unit/contract/export/browser checks before the strict historical score audit. Python browser checks use `DEMO_PAGE`/`DEMO_DATA` when supplied and can select an installed browser with `CHROME_PATH`.

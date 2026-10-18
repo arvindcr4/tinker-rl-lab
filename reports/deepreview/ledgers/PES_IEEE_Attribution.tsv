@@ -1,0 +1,33 @@
+location	claim_text	value	source_artifact	generator_script	status
+Abstract; IV-D (old)	marginal one-way eta^2 over 42 experiments (framework/algorithm/family/scale)	0.546/0.558/0.471/0.322	none: 42-row subset membership unrecoverable (thesis ch06 l.11; no artifact found by git grep)	none	removed
+IV-A (old)	ZVF-outcome correlation	rho~0.27	historical pool of 17 finite cells, 9 synthetic (thesis Table A.5 P2-C2)	none	removed
+IV-B (old)	505-task conditional utility audit G=4 over G=5	0.00177 [0.00082,0.00270]	none found in repo artifacts (git grep)	none	removed
+IV-C (old)	four-arm open-trainer adaptive-G held-out gain; rollouts; DAPO cost	+0.575 @186 rollouts; +45%	W&B zvf-colab-experiments/E3_open_audit has empty summary; no per-arm records	none	removed
+IV-D (old)	Llama-3.1-8B-Instruct cross-back-end effect size	d=12.75	unresolved sampling provenance (paper's own caveat); not in thesis registry	none	removed
+IV-A (old)	re-baselining estimator and curriculum panel results	qualitative	no specified artifact	none	removed
+IV-A	Phase-1 mean step ZVF range over 4 methods	0.706-0.770	platform_hybrid/experiments/results/n2_reward_tensor_resume/*_s0_tensors.jsonl	tools/review_ledger/PES_IEEE_Attribution_recompute.py	recomputed
+IV-A	all-correct fraction of groups	0.647-0.711	same	same	recomputed
+IV-A (old)	stored Qwen3-8B GSM8K tensors ZVF	0.130/0.190/0.155 pooled 0.158	P2 tensors not in checkout; tinker_direct_eval*.json give 0.30 (10 problems) and 0.15 (20 problems), not these values	none	removed
+IV-B; Fig.1	group-size sweep ZVF G=2..16	0.838/0.7635/0.6906/0.6312	platform_hybrid/experiments/results/groupsize_zvf_sweep.json	tools/review_ledger/PES_IEEE_Attribution_recompute.py	recomputed
+Fig.1	GU seed SD per G	0.0126/0.0157/0.0118/0.0083	same	same	recomputed
+IV-B	held-out accuracy per seed range	0.97-0.995	same	same	recomputed
+IV-B	zvf-audit runs: count, labels, G, steps, finished	368; 9; {4,6,8,16}; 2-12; 350	W&B export wandb_runs.json project zvf-audit	tools/review_ledger/PES_IEEE_Attribution_zvf_audit.py	recomputed
+IV-B	mean run ZVF by final reward bin	0.959 (n=207, reward 0); 0.881 (n=52, >=0.9); 0.12-0.38 (n=10, 0.1-0.6)	same	same	recomputed
+IV-B	Qwen3-32B mean ZVF G=4/8/16 (runs)	0.333 (2)/0.177 (2)/0.083 (1)	same	same	recomputed
+IV-B	Qwen3-4B-Instruct mean ZVF G=4/8/16	0.889/0.843/0.915	same	same	recomputed
+IV-B	gradient-norm vs p(1-p) Pearson r	+0.71	W&B zvf-colab-experiments/E1_grad_signal summary pearson_gradnorm_vs_p1mp	none (logged scalar)	verified
+IV-C	offline trigger fires; all-correct; all-incorrect	1867; 1723 (92.3%); 144	n2_reward_tensor_resume/*_s0_tensors.jsonl	tools/review_ledger/PES_IEEE_Attribution_recompute.py	recomputed
+IV-D; Abstract	same-stack GRPO-PPO held-out paired diff (5 seeds)	-0.002, 95% CI [-0.008,+0.004], t4=-1.0, p=0.374	platform_hybrid/experiments/results/modal_registry/modal_artifacts/tinkerrl-results/samestack/{grpo,ppo}_s*.json	tools/review_ledger/PES_IEEE_Attribution_recompute.py	recomputed
+IV-D	8-seed arm means GRPO/DAPO/GSPO/DrGRPO/AERO	0.633/0.634/0.638/0.631/0.632	W&B tinker-rl-lab e1-confirmatory-* heldout_score (heldout_n=500)	tools/review_ledger/PES_IEEE_Attribution_p11_recompute.py	recomputed
+IV-D	paired diffs vs GRPO; min raw p; min BH p; MDE80	+0.001/+0.005/-0.002/-0.001; 0.21; 0.84; 0.010-0.015	same	same	recomputed
+IV-D	DAPO label pair mean ZVF	0.00 vs 0.58	open side: W&B e1 dapo runs mean_zvf=0; managed side copied from thesis Table A.5 P5-C2 (records withheld)	none	verified
+IV-D	Tinker vs TRL Qwen3-8B last-10 training reward	0.856 vs 0.050	thesis Table A.5 P5-C1 (Tier X: checkpoint confound, stated in text)	none	verified
+IV-D	managed four-label last-10 band	0.710-0.744	W&B zvf-colab-experiments/tinker-h2h-qwen3.5-4b summary (0.744/0.742/0.723/0.71)	none	verified
+IV-E	held-out pre->post GRPO; Dr GRPO (3 seeds, n=200)	0.202->0.263; 0.205->0.255	platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json	inline recompute (seed-level t)	recomputed
+IV-E	seed-level difference in gains	+0.012, t2=1.61, p=0.25	same	inline scipy ttest_1samp on per-seed delta differences	recomputed
+IV-E	completion length first5->last5 per arm	GRPO 195.0->180.3; DrGRPO 193.9->186.8 (pooled 194.4->183.5)	same	same	recomputed
+III-E	actor training record	40 steps, G=4, 2 prompts/step, rank 32, lr 1e-5, temp 0.7, seed 809, zero reward 22/40	thesis ch09 Table (config.yaml; run receipt; output.log)	none	verified
+IV-F; Table I	campaign scores	450/1967; 88/97; 129/312; 2271/4426; 2271/4428; 2/731	thesis Table C.3 (ch_back_notation.md C.5) receipts	none	verified
+Table II	lane original/replacement/state	14 rows	thesis Table C.3	none	verified
+V	small paired rerun items per lane; smallest McNemar p	5-151; 0.25	thesis Table 8.6 (outputs/e1_e14_small_scale_2026-09-26)	none	verified
+V	VerilogEval extraction failures	150/312	thesis ch_back_campaign_detail.md E11 failure attribution	none	verified

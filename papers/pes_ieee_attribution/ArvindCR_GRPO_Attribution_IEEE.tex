@@ -1,1 +1,419 @@
-/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/PES_Conference_Paper_2026-09-25/paper.tex
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{\sc e}\kern-.125em X}}
+
+\begin{document}
+
+\title{Stack-Conditioned Measurement of GRPO Post-Training:\\
+Signal Diagnostics and a Fourteen-Lane Evaluation Ledger}
+
+\author{\IEEEauthorblockN{Arvind C R}
+\IEEEauthorblockA{\textit{Dept.\ of Computer Science and Engineering} \\
+\textit{PES University}\\
+Bengaluru, India \\
+arvindcr4@gmail.com}
+\and
+\IEEEauthorblockN{Ramesh Prakash Guledgudd}
+\IEEEauthorblockA{\textit{Dept.\ of Computer Science and Engineering} \\
+\textit{PES University}\\
+Bengaluru, India}
+}
+
+\maketitle
+
+\begin{abstract}
+We report short-horizon GRPO-family telemetry and an audit of a
+heterogeneous fourteen-lane evaluation campaign. Uniform rewards remove the
+centred reward-driven advantage; the Zero-Variance Fraction (ZVF) counts such
+groups and is a measurement proxy, not a gradient or capability score. Stored
+tensors and logged runs come from different populations and are reported
+separately. Same-stack algorithm contrasts are inconclusive: PPO versus GRPO
+over five paired seeds gives $\Delta=-0.002$ (paired $t_4=-1.0$,
+$p$-value $=0.374$), and four GRPO variants over eight paired seeds give no
+contrast detectable at their minimum detectable effects. The campaign records
+129/312 (41.35\%) on VerilogEval and 2,271/4,426 (51.31\%) among accepted
+Omni-MATH rows, but only five lane scopes produced complete graded results,
+no full-suite base-model comparator was run, and a small paired rerun found
+no trained-versus-base difference. No training benefit, cross-suite
+aggregate, algorithm equivalence or independent stack attribution is
+established.
+\end{abstract}
+
+\begin{IEEEkeywords}
+reinforcement learning, GRPO, large language models, verifiable rewards,
+reproducibility, benchmark evaluation
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+Reinforcement learning with verifiable rewards (RLVR) replaces the learned
+reward model of RLHF~\cite{ouyang2022training} with a programmatic checker,
+such as exact match for mathematics or unit tests for code. The workhorse
+optimiser was long PPO~\cite{schulman2017proximal}, which needs a value
+network. GRPO~\cite{shao2024deepseekmath,guo2025deepseekr1} removes the critic:
+it samples a group of $G$ completions per prompt and standardises each reward
+against the group's own statistics. For one group $g$ with rewards
+$r_1,\dots,r_G$ and a small stability constant $\varepsilon>0$,
+\begin{equation}
+A_i = \frac{r_i - \mu_g}{\sigma_g + \varepsilon}, \;
+\mu_g = \tfrac{1}{G}\textstyle\sum_{j=1}^{G} r_j, \;
+\sigma_g^2 = \tfrac{1}{G}\textstyle\sum_{j=1}^{G} (r_j-\mu_g)^2 ,
+\label{eq:adv}
+\end{equation}
+for $i\in\{1,\dots,G\}$. Implementations differ in this normalisation
+($1/G$ versus $1/(G-1)$, group versus batch standard deviation, or none).
+
+This simplification has two consequences that standard training logs do not
+reveal. The first concerns \emph{mechanism}. When every completion in a group
+receives the same reward, the numerator $r_i-\mu_g$ is zero for every $i$
+(while $\varepsilon$ keeps the denominator positive), so every $A_i$ in
+(\ref{eq:adv}) is exactly zero; the same holds without $\sigma_g$ scaling.
+The group has been sampled and scored at full cost, but it
+contributes no reward-driven gradient. The second concerns
+\emph{attribution}. ``GRPO'' is implemented in Tinker~\cite{thinkingmachines2024tinker},
+TRL~\cite{vonwerra2022trl}, veRL~\cite{sheng2024verl},
+OpenRLHF~\cite{hu2024openrlhf} and many forks, each with its own answer
+parser, temperature, KL coefficient, clip range, LoRA targets~\cite{hu2022lora}
+and evaluator. Two runs labelled GRPO can differ in many ways that plausibly
+change the outcome.
+
+This paper reports an individual M.Tech project that treats both issues as
+measurement problems. Our contributions are:
+\begin{itemize}
+\item a harness that dispatches one task specification to several back-ends;
+completed runs in this release come only from Tinker and TRL (veRL and
+OpenRLHF entries are unexecuted launch plans), and raw per-group reward
+tensors are persisted only by the tensor-instrumented runners;
+\item the ZVF diagnostic, a falsifiable signal model for group size, and an
+offline audit of an adaptive group-size trigger;
+\item same-stack contrasts and label-collision exhibits showing why a method
+label needs its stack, and an eight-item minimum reportable stack;
+\item an audit of a fourteen-lane held-out campaign for one trained actor,
+with each lane reported at its terminal state.
+\end{itemize}
+
+\section{Related Work}
+
+GRPO was introduced with DeepSeekMath~\cite{shao2024deepseekmath} and
+popularised by DeepSeek-R1~\cite{guo2025deepseekr1}. Variants modify the
+estimator: DAPO~\cite{yu2025dapo} adds decoupled clipping and dynamic sampling
+that discards zero-variance groups, GSPO~\cite{qwen2025gspo} moves the ratio to
+the sequence level, and Dr.\ GRPO~\cite{liu2025understanding} removes the
+length and standard-deviation normalisations it identifies as biased.
+RLOO~\cite{ahmadian2024backtobasics} uses a leave-one-out baseline, which for
+binary groups is proportional to the centred advantage and vanishes on the
+same uniform groups. Zero-variance groups are already targeted by prior work:
+GRESO~\cite{zheng2025greso} predicts and skips them before rollout,
+AERO~\cite{zhang2026aero} adapts rollout allocation in group-based RL, and
+RL-ZVP~\cite{le2025rlzvp} extracts signal from zero-variance prompts by
+entropy-guided advantage shaping. The tie probability
+$p^G+(1-p)^G$ for i.i.d.\ binary rewards is elementary; we use it as a
+measurement baseline, not as a new result. Preference-based alternatives such
+as DPO~\cite{rafailov2024direct} and open recipes such as
+T\"ULU~3~\cite{lambert2024tulu3} complete the landscape. On methodology,
+Henderson et al.~\cite{henderson2018deep} and Engstrom et
+al.~\cite{engstrom2020implementation} showed that deep RL results are
+sensitive to seeds and code-level details; reproducibility
+checklists~\cite{pineau2020improving}, model cards~\cite{mitchell2019modelcards},
+datasheets~\cite{gebru2021datasheets} and evaluation
+frameworks~\cite{liang2022helm,biderman2024lmeval} set reporting norms. We do
+not propose a new estimator; the uncrossed corpus cannot allocate effects to
+stack versus algorithm.
+
+\section{Methodology}
+
+\subsection{Attribution-first design}
+Matched comparisons aim to hold model, prompts, verifier, decoding configuration,
+step budget and evaluation fixed while changing one factor; the historical
+cross-backend summaries below do not meet that design. A shared task,
+reward and decoding specification is dispatched through thin adapters to each
+back-end, so the same experiment runs without re-implementing the grader.
+Being able to run the same experiment on every back-end does not mean every
+back-end completed it. In this release only Tinker and TRL produced completed
+runs; veRL and OpenRLHF entries are dry-run launch plans and are never pooled
+with real results.
+
+\subsection{Telemetry and the Zero-Variance Fraction}
+The training loop emits per-step ZVF, gradient utilisation $\mathrm{GU}=1-\mathrm{ZVF}$,
+policy entropy, completion length and KL divergence; the tensor-instrumented
+runners also persist the raw per-group reward tensors. For a batch
+$\mathcal{B}$ of $|\mathcal{B}|$ prompt groups,
+\begin{equation}
+\mathrm{ZVF} = \frac{1}{|\mathcal{B}|}\sum_{g\in\mathcal{B}}
+\mathbf{1}\left[\sigma_g = 0\right].
+\label{eq:zvf}
+\end{equation}
+Where tensors are stored, ZVF is recomputed exactly from them. We also track
+a variance-scale contrast density,
+$\widehat{\mathrm{PCD}}=G^{-1}\sum_{i=1}^G(r_i-\bar r)^2$ per group, averaged
+over $\mathcal{B}$. Under i.i.d.\ Bernoulli rewards its expectation is
+$(G-1)p(1-p)/G$; the distinct-pair disagreement fraction instead has
+expectation $2p(1-p)$. For binary rewards both vanish exactly on the groups
+counted by (\ref{eq:zvf}); with continuous rewards a tolerance is required.
+Both are unsigned and require mean reward for interpretation.
+
+\subsection{A signal model for group size}
+Assume a prompt with success probability $p$ yields $G$ conditionally i.i.d.\
+binary rewards $r_j\sim\mathrm{Bernoulli}(p)$. Then the expected ZVF of its
+group is the tie probability $h_G(p) = p^G + (1-p)^G$, which alone implies
+(i) a U-shape of ZVF in $p$, with minimum $2^{1-G}$ at $p=0.5$, and (ii) a
+strict decrease in ZVF with $G$ for $p\in(0,1)$. Mixtures of prompt
+difficulties within a batch raise batch ZVF above $h_G(\bar p)$. As a heuristic
+for usable signal per prompt we use
+\begin{equation}
+S(p, G) = p(1-p)\,\bigl(1 - h_G(p)\bigr),
+\label{eq:signal}
+\end{equation}
+an inverted-U in $p$. The $p(1-p)$ factor is the variance of an
+\emph{unnormalised} centred advantage; under the $\sigma_g$ scaling of
+(\ref{eq:adv}) the mean squared advantage of a non-uniform group is
+approximately one, so (\ref{eq:signal}) is not an expected normalised-gradient
+identity. Its additional prediction (iii) is a positive association between
+gradient norm and $p(1-p)$. The adaptive trigger audited in Section~IV-C
+raises $G$ for a prompt when its observed group is uniform.
+
+\subsection{Statistical protocol}
+The seed is the unit of replication. Matched contrasts use two-sided paired
+$t$-tests on per-seed differences at $\alpha=0.05$, with degrees of freedom
+reported; minimum detectable effects (MDE) are for 80\% power from the
+noncentral $t$; the four variant-versus-GRPO contrasts of Section~IV-D form
+one Benjamini--Hochberg family. Consecutive training steps are not independent
+observations. Single-seed panels, logged run summaries and offline trace audits
+are reported descriptively without inferential claims. Inconclusive tests do
+not establish equivalence.
+
+\subsection{Held-out evaluation campaign (E1--E14)}
+The campaign evaluates one actor, Qwen3.6-35B-A3B with a Tinker-trained LoRA
+adapter (rank 32, all linear layers) in bfloat16. Its recovered training
+record reports 40 steps at $G=4$ with 2 prompts per step (80 prompt draws)
+from a 512-row API-Bank/SWE-Gym tool-use pool, learning rate $10^{-5}$,
+temperature 0.7 and seed 809; reward was zero on 22 of 40 steps. The exact
+executed training code, the 80 drawn prompts and the consumed-row inventory
+are not recovered, so item-level training separation is not established and
+this is not a verified training-effect experiment. Each lane names one
+original benchmark contract; several also have a declared replacement scope
+(Table~\ref{tab:lanes}). Original and replacement scopes are never pooled.
+
+\section{Results}
+
+\subsection{Signal starvation in the Phase-1 configuration}
+The Phase-1 configuration is Qwen3.5-4B on GSM8K~\cite{cobbe2021training} on
+Tinker, $G=8$, 16 prompts per step, 40 steps, one seed, four method labels
+(GRPO, AERO, GIFT, AReaL) in a mean-centred runner without $\sigma_g$
+division. Recomputed from the stored tensors (640 groups per method), mean
+step ZVF is 0.706--0.770 and all-correct groups are 0.647--0.711 of all
+groups, so most uniform groups are prompts already solved in the observed
+group; this does not establish true $p=1$. The regime is configuration-specific:
+other cohorts with more interior accuracy show much lower ZVF and are not
+pooled with this panel.
+
+\subsection{Group size: a mechanism, not a universal optimum}
+In a 12-run sweep (Qwen2.5-0.5B, synthetic arithmetic task, $G\in\{2,4,8,16\}$,
+three seeds, 40 steps) mean ZVF falls from 0.838 at $G=2$ to 0.631 at $G=16$
+(Fig.~\ref{fig:gu}). Held-out accuracy is at ceiling (0.97--0.995 per seed),
+so the sweep establishes no accuracy optimum, and larger $G$ costs
+proportionally more rollouts. The logged \texttt{zvf-audit} project (368 W\&B
+runs; nine model labels; $G\in\{4,6,8,16\}$; 2--12 steps; 350 finished)
+is a heterogeneous offline summary, not a common-protocol cohort. Binned by
+final reward, mean run ZVF is 0.959 for the 207 zero-reward runs, 0.881 for the
+52 runs at reward $\ge0.9$, and 0.12--0.38 for the 10 runs between 0.1 and 0.6,
+consistent with prediction (i). Prediction (ii) appears in some model rows
+(Qwen3-32B: 0.33, 0.18, 0.08 at $G=4/8/16$ from 2, 2 and 1 runs) but not in
+others (Qwen3-4B-Instruct: 0.89, 0.84, 0.92). Prediction (iii) rests on a single
+logged scalar, Pearson $r=+0.71$ between gradient norm and $p(1-p)$ for a
+Qwen2.5-0.5B run aggregate (three seeds, 30 steps; the number of observations
+is not logged), and is directional only.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.95\columnwidth,height=4.6cm,xmode=log,log basis x=2,
+ xtick={2,4,8,16},xticklabels={2,4,8,16},xmin=1.7,xmax=19,ymin=0,ymax=0.45,
+ xlabel={Group size $G$},ylabel={$\mathrm{GU}=1-\mathrm{ZVF}$},
+ ymajorgrids,grid style={gray!25},tick label style={font=\footnotesize},
+ label style={font=\footnotesize}]
+\addplot[only marks,mark=square*,mark size=2pt,black,
+ error bars/.cd,y dir=both,y explicit]
+ coordinates {(2,0.1620) +- (0,0.0126) (4,0.2365) +- (0,0.0157)
+              (8,0.3094) +- (0,0.0118) (16,0.3688) +- (0,0.0083)};
+\end{axis}
+\end{tikzpicture}
+\caption{Gradient utilisation versus group size (Qwen2.5-0.5B arithmetic,
+three seeds, 40 steps). Points are seed means; bars are $\pm1$ seed SD.
+No fitted law or extrapolation is shown, and different $G$ consume different
+rollout budgets. Source: \texttt{groupsize\_zvf\_sweep.json}.}
+\label{fig:gu}
+\end{figure}
+
+\subsection{An offline audit of the adaptive trigger}
+An earlier four-arm open-trainer comparison of fixed and adaptive group size
+has no retained per-arm records and is not reported. We report instead an
+offline replay over the stored Phase-1 tensors (4 methods $\times$ 640
+prompt-steps $=2{,}560$ observations). A symmetric trigger that escalates on
+any uniform group fires on 1,867 of them; 1,723 (92.3\%) are all-correct
+groups and 144 all-incorrect. The share largely follows from the reward
+level. No controller executed in this replay and no fresh rollouts were drawn,
+so it cannot show whether larger $G$ would restore contrast or what the live
+cost would be; plugging an observed $\hat p\in\{0,1\}$ into $h_G$ forces zero
+predicted rescue by construction. We therefore do not recommend the trigger
+as a default; an asymmetric, cost-aware trigger is the next design target.
+
+\subsection{The stack is part of the result}
+Historical marginal one-way ANOVAs over a 42-experiment subset are not
+reported: the row-level membership of that subset is not recoverable, so its
+effect sizes cannot be recomputed or adjusted for confounding. Stack
+sensitivity is shown here only through matched contrasts and exhibits.
+\emph{PPO versus GRPO.} On one TRL-style stack (Qwen2.5-0.5B, synthetic
+arithmetic, 40 steps, five seeds) the per-seed held-out difference GRPO$-$PPO
+is $-0.002$ (95\% CI $[-0.008, +0.004]$, $t_4=-1.0$, $p=0.374$), at a
+0.98--1.00 ceiling: a failure to detect a difference, not evidence of
+equivalence. An earlier Qwen3-8B PPO/GRPO comparison is a provenance conflict
+(different back-ends; its $n=10$ were autocorrelated steps of one run per arm)
+and is not used.
+\emph{Four variants versus GRPO.} On one TRL stack (Qwen3-8B, GSM8K, $G=4$,
+30 steps, eight paired seeds, 500 held-out items each) the held-out means are
+0.633 (GRPO), 0.634 (DAPO), 0.638 (GSPO), 0.631 (Dr.\ GRPO) and 0.632 (AERO).
+The paired differences from GRPO are $+0.001$, $+0.005$, $-0.002$ and $-0.001$
+(df $=7$; all raw $p\ge0.21$; BH-adjusted $p\ge0.84$), with MDEs of 0.010--0.015,
+at or above the 0.010 design margin. All four contrasts are inconclusive.
+\emph{Label collisions.} Two runs labelled ``DAPO'' on different stacks showed
+mean ZVF of 0.00 and 0.58; the managed run's closed internals prevent
+verifying the mechanism. Nominally matched Tinker and TRL GRPO runs on
+Qwen3-8B GSM8K reached last-10 training rewards of 0.856 and 0.050, but the
+base checkpoint also changed (Qwen3-8B-Base versus Qwen3-8B), so this is an
+under-specification exhibit, not a back-end effect. On one managed platform
+four labels landed within a 0.034 training-reward band (0.710--0.744, three
+seeds, 15 steps, no held-out metric); this is not evidence of equivalence.
+These exhibits motivate an eight-item minimum reportable stack: (1) loss form,
+(2) reference policy and KL handling, (3) sampler and back-end, (4) telemetry,
+(5) group-size schedule, (6) held-out split, (7) decontamination, and (8)
+held-out pass@$k$ under a stated evaluator. A machine-readable registry diff
+flags the ``DAPO'' pair from manifests alone.
+
+\subsection{Length bias}
+Length bias is not established. A post-hoc heuristic flag in our experiment
+roster (reward peaking before 65\% of training, then ending below 90\% of
+peak) marks four of eleven GRPO runs, but its thresholds are post hoc, it
+tests reward rather than length, and it fires on most runs in the wider trace
+pool. In a controlled comparison (Qwen2.5-1.5B-Instruct, GSM8K chain of
+thought, three seeds, 30 steps, 200 held-out items per seed), held-out
+accuracy rose from 0.202 to 0.263 for GRPO and from 0.205 to 0.255 for Dr.\
+GRPO; the seed-level difference in gains is $+0.012$ ($t_2=1.61$, $p=0.25$),
+inconclusive. Mean completion length (first five to last five steps) fell
+from 195.0 to 180.3 tokens for GRPO and from 193.9 to 186.8 for Dr.\ GRPO.
+Generation was capped at 200 tokens with starting lengths near the cap, so
+upward drift is right-censored and this configuration cannot test
+unconstrained length inflation.
+
+\subsection{Fourteen-lane evaluation ledger}
+Table~\ref{tab:lanes} gives each lane's original contract, replacement
+scope and terminal state. In the 19 September ledger, three scopes are
+strictly complete: LAB-Bench public split~\cite{laurent2024labbench} (E8
+replacement), AgentDojo benign utility~\cite{debenedetti2024agentdojo} (E10
+replacement) and VerilogEval~\cite{liu2023verilogeval} (E11 original). The
+Omni-MATH~\cite{gao2024omnimath} replacement for E14 is terminal-complete with
+two judge-excluded rows. SWE-bench Pro~\cite{deng2025swebenchpro} (E1
+original) has a full-suite result whose 731-task denominator includes 18
+tasks without a native evaluation. Six later replacement executions (27
+September) used a protocol override and do not close their original
+contracts; seven original contracts remain externally closed or blocked.
+The campaign therefore supplies neither fourteen complete native suites nor
+a common held-out estimand.
+
+\begin{table}[t]
+\caption{Graded results for the trained actor. Each row uses its suite's
+native evaluator, metric and denominator (acc.\ = accuracy; ``all rows''
+counts the two judge-excluded rows as incorrect); rows are not comparable
+and are never aggregated.}
+\label{tab:campaign}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Lane, suite (scope) & Metric & Passed/total & Score \\
+\midrule
+E8 LAB-Bench (repl.) & accuracy & 450/1,967 & 0.2288 \\
+E10 AgentDojo (repl.) & benign utility & 88/97 & 0.9072 \\
+E11 VerilogEval (orig.) & pass@1 & 129/312 & 0.4135 \\
+E14 Omni-MATH (repl.) & acc., judged rows & 2,271/4,426 & 0.5131 \\
+E14 Omni-MATH (repl.) & acc., all rows & 2,271/4,428 & 0.5129 \\
+E1 SWE-bench Pro (orig.) & pass@1 & 2/731 & 0.0027 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table*}[t]
+\caption{E1--E14 lanes: original contract, declared replacement scope, and
+terminal state of each scope (19 September ledger; 27 September replacement
+executions marked ``exploratory''). Complete = full scope-specific
+dispositions. Closed ext.\ = external access closed with a written record.}
+\label{tab:lanes}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Lane & Original contract & State (original) & Replacement scope & State (replacement) \\
+\midrule
+E1 & SWE-bench Pro~\cite{deng2025swebenchpro} & complete (2/731) & SWE-bench Multilingual~\cite{khandpurswemultilingual} & exploratory \\
+E2 & FrontierSWE~\cite{proximal2026frontierswe} & partial (1/17 tasks) & CORE-Bench~\cite{siegel2024corebench} & exploratory \\
+E3 & SDAB~\cite{emulated2026sdab} & closed ext. & --- & --- \\
+E4 & BankerToolBench~\cite{lau2026bankertoolbench} & closed, partial (1/100 tasks) & --- & --- \\
+E5 & APEX-Agents~\cite{vidgen2026apexagents} & partial (7/480 scored) & Tau3 & exploratory \\
+E6 & WebBench~\cite{halluminatewebbench} & no result & WebArena~\cite{zhou2024webarena} & exploratory (108 ungraded) \\
+E7 & BinaryAudit~\cite{quesma2026binaryaudit} & closed ext. & --- & --- \\
+E8 & LifeSciBench~\cite{liu2026lifescibench} & closed ext. & LAB-Bench public~\cite{laurent2024labbench} & complete \\
+E9 & MLE-bench~\cite{chan2025mlebench} & partial (40/75 graded) & ML-Dev-Bench~\cite{padigela2025mldevbench} & exploratory \\
+E10 & AgentHarm~\cite{andriushchenko2025agentharm} & closed ext. & AgentDojo benign~\cite{debenedetti2024agentdojo} & complete \\
+E11 & VerilogEval~\cite{liu2023verilogeval} & complete & --- & --- \\
+E12 & AppBench~\cite{afterquery2025appbench} & closed ext. & --- & --- \\
+E13 & OpenReward games~\cite{openrewardplatform} & blocked, no record & BALROG~\cite{paglieri2025balrog} & exploratory \\
+E14 & FrontierMath~\cite{glazer2024frontiermath} & closed ext. & Omni-MATH~\cite{gao2024omnimath} & complete, terminal note \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\section{Discussion and Threats to Validity}
+
+The campaign results describe one actor at one revision; no full-suite
+base-model comparator exists, so they are not evidence of what the GRPO step
+contributed. A separate small paired rerun (26 September) scored the trained
+actor and the base model on identical items under one vLLM configuration,
+5--151 items per lane; for externally blocked lanes it used public subsets
+or declared public substitutes, so it is not a rerun of the original
+contracts. No lane showed a trained-versus-base difference (smallest
+McNemar $p=0.25$). The training run itself was 40 steps with reward zero on
+22 of them. Tinker results measure the platform's GRPO implementation,
+whose internals are closed. Several scores carry harness limitations (e.g.,
+150 of 312 VerilogEval responses failed answer extraction in a run with a
+1,024-token cap and thinking enabled; per-sample causes were not recorded),
+and the VerilogEval managed sampler path no longer exists,
+so a re-run would change the sampler as well as the run. The ledger therefore
+supports scope accounting and failure-mode auditing, not reproduction of
+every score. These limits are stated with the numbers because hiding them
+would overstate the evidence.
+
+\section{Conclusion}
+The results motivate source-bound telemetry and explicit scope accounting,
+not independent stack attribution or algorithm equivalence. Matched
+same-stack contrasts were inconclusive at their detectable effect sizes, and
+label-collision exhibits show that a method name without its stack is not a
+reproducible specification. Short-horizon panels, missing execution records
+and incomplete training-overlap evidence limit the claims. No controller
+benefit or post-training capability gain is established.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

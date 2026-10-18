@@ -351,28 +351,32 @@ def test_exit_code_is_zero_by_default_and_level_with_flag():
 # Exact frozen historical bytes, not a broad version/status exemption. Any new
 # generated record or modified historical entry must match the current generator.
 LEGACY_GENERATED_SHA256 = {
-  "tinker_grpo_qwen3-8b_gsm8k": "365eb44b9596284fa767132e8ee27955385a8e4f4606d34d330091f6269b729e",
-  "trl_grpo_qwen3-8b_gsm8k": "b591be7f8f7c249de22f07c75fba9f61340261d7836ac83063585ae5eeb9f2b4",
-  "verl_grpo_qwen3-8b_gsm8k": "a36d4d8bac19b72ade111aad0b9cd340beda479e57290d621281462e4905487a",
-  "openrlhf_grpo_qwen3-8b_gsm8k": "fe678327e148397c8493cd6255a0d978d4497c6c5fa94278ff0f51fff23210f0",
-  "tinker_grpo_qwen3.5-4b_gsm8k": "ead413f1269a5a6b28b72b9c5a820e1456800788f663111444f0cd219fe538e3",
-  "tinker_drgrpo_qwen3.5-4b_gsm8k": "317f1b40d3cbcb9fbe37fc3e6bf454695c56552a8d3d530657de55a969d47ab5",
-  "tinker_dapo_qwen3.5-4b_gsm8k": "8cd5ebfb8692a81ad359bf88ccfca1cfc8f25b357cfbc51d7105f326641b38d2",
-  "tinker_gspo_qwen3.5-4b_gsm8k": "b2acf6661ee05ce7786d2feb47c834f466e7393a48a9fb34dc10860301b06150",
-  "colab-open_grpo_e3": "76f429ce8546e3606f08884f9c1ca86bc5a97a70177a45df23579634ae543169",
-  "colab-open_drgrpo_e3": "259919882204fbcb1b5e8f5a5b3810e38cbce7abb7a99c7f97c525f83a973710",
-  "colab-open_dapo_e3": "7f32e97e7c7c00dce5c14592ca572d920172c0fbf243faed03ebc7e9a631885e",
-  "colab-open_grpo-adaptiveg_e3": "dc3b2eeefb4ca8b2ef421935a67f2bace1f1aedec6b0d756002fa8a692e8b24b"
+    "tinker_grpo_qwen3-8b_gsm8k": "365eb44b9596284fa767132e8ee27955385a8e4f4606d34d330091f6269b729e",
+    "trl_grpo_qwen3-8b_gsm8k": "b591be7f8f7c249de22f07c75fba9f61340261d7836ac83063585ae5eeb9f2b4",
+    "verl_grpo_qwen3-8b_gsm8k": "a36d4d8bac19b72ade111aad0b9cd340beda479e57290d621281462e4905487a",
+    "openrlhf_grpo_qwen3-8b_gsm8k": "fe678327e148397c8493cd6255a0d978d4497c6c5fa94278ff0f51fff23210f0",
+    "tinker_grpo_qwen3.5-4b_gsm8k": "ead413f1269a5a6b28b72b9c5a820e1456800788f663111444f0cd219fe538e3",
+    "tinker_drgrpo_qwen3.5-4b_gsm8k": "317f1b40d3cbcb9fbe37fc3e6bf454695c56552a8d3d530657de55a969d47ab5",
+    "tinker_dapo_qwen3.5-4b_gsm8k": "8cd5ebfb8692a81ad359bf88ccfca1cfc8f25b357cfbc51d7105f326641b38d2",
+    "tinker_gspo_qwen3.5-4b_gsm8k": "b2acf6661ee05ce7786d2feb47c834f466e7393a48a9fb34dc10860301b06150",
+    "colab-open_grpo_e3": "76f429ce8546e3606f08884f9c1ca86bc5a97a70177a45df23579634ae543169",
+    "colab-open_drgrpo_e3": "259919882204fbcb1b5e8f5a5b3810e38cbce7abb7a99c7f97c525f83a973710",
+    "colab-open_dapo_e3": "7f32e97e7c7c00dce5c14592ca572d920172c0fbf243faed03ebc7e9a631885e",
+    "colab-open_grpo-adaptiveg_e3": "dc3b2eeefb4ca8b2ef421935a67f2bace1f1aedec6b0d756002fa8a692e8b24b",
 }
 
 
 def test_real_generated_registry_freshness_has_exact_legacy_exceptions():
     import hashlib
+
     sys.path.insert(0, str(REG))
     import generate_entries as generator
+
     specs = {**generator.fc_family(), **generator.h2h_family(), **generator.e3_family()}
     for eid, spec in specs.items():
         path = REG / "entries" / f"{eid}.json"
         old = json.loads(path.read_text())
         if generator.build(eid, spec, old) != old:
-            assert hashlib.sha256(path.read_bytes()).hexdigest() == LEGACY_GENERATED_SHA256.get(eid), eid
+            assert hashlib.sha256(path.read_bytes()).hexdigest() == LEGACY_GENERATED_SHA256.get(
+                eid
+            ), eid

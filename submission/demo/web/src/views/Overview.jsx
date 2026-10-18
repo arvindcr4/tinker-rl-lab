@@ -1,6 +1,7 @@
 import React from "react";
 import { ARM_NAME, CONTRASTS, DATA, MODEL, SD, SS, nSeeds, zvfStats } from "../data.js";
 import { pct, pfmt, sgn } from "../stats.js";
+import { SubmissionOverview } from "./Submissions.jsx";
 
 export default function Overview() {
   const c = CONTRASTS.find((c) => c.id === "g8-ppo"), s = c?.stats;
@@ -46,6 +47,7 @@ export default function Overview() {
           </a>
         ))}
       </div>
+      <SubmissionOverview />
       <div className="panel">
         <h3>What this project built</h3>
         <p>A measurement system for RL post-training of language models: a same-stack GRPO-versus-PPO-style harness on GSM8K, zero-variance-fraction (ZVF) telemetry for group-relative advantages, a stack-provenance registry with a <span className="mono">stackdiff</span> tool, and a number audit that reports which registered thesis values are bound to a recomputation or source artifact, and which remain missing or unbound.</p>

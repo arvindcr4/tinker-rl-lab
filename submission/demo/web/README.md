@@ -14,18 +14,36 @@ DEMO_DATA=/tmp/samestack-demo.json npm run build
 
 The build writes `dist/index.html` and `tinkerrl_demo.html`. Both are self-contained and open from disk. `npm run data` explicitly replaces `src/data.json` with a new export; it never edits underlying experimental results. Use `--plan /path/to/plan.json` only with a declared versioned analysis plan. Missing historical identity is never inferred from filenames or seed numbers. New runs can be selected with `--results-dir /path/to/environment/protocol` pointing to the leaf directory containing the arm/seed records; completion markers and aggregates are not treated as runs.
 
-Presenter controls: ← / → or 1–9 change views; P toggles larger text. The header's Shortcuts toggle turns single-key navigation off. Inputs and the mobile section selector keep their native keyboard behavior. A short route is Advantage lab → GRPO vs PPO-style → Real answers → Stack diff.
+Presenter controls: ← / → or 1–9 change views; 0 opens Submissions; P toggles larger text. The header's Shortcuts toggle turns single-key navigation off. Inputs and the mobile section selector keep their native keyboard behavior. A short route is Advantage lab → GRPO vs PPO-style → Real answers → Stack diff.
 
 ## Presentation and access
 
-- On narrow screens, a labeled section selector exposes all nine views. Desktop section links keep the current view in sight; Previous and Next links and browser Back/Forward remain available
+- On narrow screens, a labeled section selector exposes all ten views. Desktop section links keep the current view in sight; Previous and Next links and browser Back/Forward remain available
 - A skip link bypasses the header. Route changes focus the named content region, except when selecting a section, where focus stays in the selector for repeated arrow-key use
 - Outcome-pattern selection uses native buttons with pressed states. Reward controls retain generous touch targets, and status labels and long identifiers can reflow
 - The page uses locally available fonts without external font requests. Reduced-motion preferences disable decorative control transitions
 
 The source-only UI pass applies accessibility, navigation and resilient-text principles from [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill). It adds no dependency on that project's tooling and does not change the scientific analysis or historical artifacts.
 
-The ninth view retains the historical cross-platform calibration from `platform_calibration.json`, including its input hash in the provenance manifest. Its legacy inference and available-only multiplicity adjustment have not been repaired by the same-stack changes; do not treat its equivalence wording as a validated canonical same-stack conclusion.
+The Platform calibration view retains the historical cross-platform calibration from `platform_calibration.json`, including its input hash in the provenance manifest. Its legacy inference and available-only multiplicity adjustment have not been repaired by the same-stack changes; do not treat its equivalence wording as a validated canonical same-stack conclusion.
+
+## Conference submission history
+
+The Overview links to `#submissions`, a separate administrative snapshot verified on 2026-10-18. `src/submissions.js` contains curated bibliographic and status metadata from organizer email notifications, independently of experimental `src/data.json` and the analysis pipeline:
+
+- ICICC 2027 paper 243: accepted by organizer notification; camera-ready, registration and final publication remain unverified. The organizer-stated registration deadline is a date only because its timezone was not specified
+- NeurIPS 2026 main-track paper 36320: rejected. A public-release form receipt does not establish the selected option or public availability
+- Expandable history separates 31 workshop-paper submissions of 11 distinct titles across six workshops from one workshop-organization proposal. Counts derive from the records; rejection and desk-rejection remain distinct. AI4MetaScience paper 6 has a decision-availability notice, but its outcome remains unverified
+
+`src/submissionFeedback.js` adds sanitized, attributed paraphrases to all 34 records. Search covers titles, venues, decisions and feedback; coverage filters distinguish retrieved reviews, committee/decision context, author responses and missing review text. Each submission has a native feedback disclosure with separate coverage notices:
+
+- ICICC: two anonymous reviewer reports and final-paper requirements, dated to the acceptance email; no numerical review scores or posted author response were found
+- NeurIPS main track: three original anonymous reviews and the initial area-chair assessment from the July 24 archive, two later reviewer comments, three posted author comments, and posting receipts whose response text is unavailable. Original posting dates are unknown; archive dates and explicit rating scales remain visible. The final paper-specific rejection rationale and latest portal state remain unverified
+- Workshop submissions and proposal: general organizer context where available, with explicit missing-material notices. General selection criteria are not presented as paper-specific decision reasons
+
+The author-response warning preserves chronology: the saved July 28 provenance audit predates the August 2 author claims about the 92.6%/92.1% control. The five-seed transfer claim is unsupported by that audit; withdrawal appears in an unposted revised-response draft. The UI does not treat historical author statements as current verified results or completed revisions, or drafts as posted responses.
+
+Titles remain verbatim historical titles, not current scientific conclusions. Dates are displayed in UTC without local timezone shifts; submission dates use notification dates except the ICICC creation record. Source correspondence, addresses, email IDs, reviewer identities, verbatim review text and private portal links are excluded. Explicit review scores are attributed to their dated source and documented scale. No public paper availability or proceedings indexing claim is made, and the page performs no inbox or portal requests. Updating these facts requires verifying new evidence and reviewing the sanitized source diff; it does not regenerate stored experiment results or the historical HTML artifact.
 
 ## Scientific contract
 

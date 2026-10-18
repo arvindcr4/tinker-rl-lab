@@ -15,7 +15,7 @@ HERE = pathlib.Path(__file__).resolve().parent.parent
 ROOT = HERE.parents[2]
 PAGE = "file://" + str(pathlib.Path(os.environ.get("DEMO_PAGE", str(HERE / "tinkerrl_demo.html"))).resolve())
 DATA = json.loads(pathlib.Path(os.environ.get("DEMO_DATA", str(HERE / "src/data.json"))).read_text())
-VIEWS = ["overview", "advantage", "zvf", "samestack", "platform", "answers", "stackdiff", "audit", "viva"]
+VIEWS = ["overview", "advantage", "zvf", "samestack", "platform", "answers", "stackdiff", "audit", "viva", "submissions"]
 CHROME = os.environ.get("CHROME_PATH") or shutil.which("chromium") or shutil.which("google-chrome")
 if not CHROME:
     candidate = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
@@ -69,6 +69,16 @@ def main():
                 results.append(check(f"{v} renders at {width}px {scheme}, no page overflow",
                                      overflow <= 0 and page.locator("main section.view").count() == 1,
                                      f"overflow={overflow}"))
+                if v == "submissions":
+                    page.locator(".submission-history > summary").click()
+                    for summary in page.locator(".workshop-group > summary").all():
+                        summary.click()
+                    for summary in page.locator(".submission-feedback > summary").all():
+                        summary.click()
+                    results.append(check(f"expanded submission history reflows at {width}px",
+                                         page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+                                         and page.locator(".submission-list > li:visible").count() == 31
+                                         and page.locator(".submission-feedback[open]").count() == 34))
             results.append(check(f"no console or page errors at {width}px", not errors, "; ".join(errors[:3])))
             page.close()
 
@@ -135,6 +145,10 @@ def main():
         results.append(check("→ moves to the next view", page.evaluate("location.hash") == "#advantage"))
         page.keyboard.press("9")
         results.append(check("number key jumps to a view", page.evaluate("location.hash") == "#viva"))
+        page.keyboard.press("0")
+        results.append(check("zero key opens submission history", page.evaluate("location.hash") == "#submissions"))
+        page.keyboard.press("ArrowLeft")
+        results.append(check("previous key preserves the original nine-view order", page.evaluate("location.hash") == "#viva"))
         page.keyboard.press("p")
         results.append(check("P toggles presenter mode", "present" in page.evaluate("document.documentElement.className")))
 
@@ -150,6 +164,7 @@ def main():
         page.get_by_role("button", name="Shortcuts", exact=True).click()
         page.locator("main").focus()
         page.keyboard.press("9")
+        page.keyboard.press("0")
         page.keyboard.press("p")
         results.append(check("disabled shortcuts leave the view and presentation unchanged",
                              page.evaluate("location.hash === '#overview' && !document.documentElement.classList.contains('present')")))
@@ -169,6 +184,75 @@ def main():
         page.go_forward()
         page.wait_for_function("location.hash === '#viva'")
         results.append(check("Back and Forward restore section selection", page.locator("main").get_attribute("aria-label") == "Hard questions"))
+
+        # Conference decisions are a separate, dated administrative snapshot.
+        page.locator('.next-row a[href="#submissions"]').click()
+        page.wait_for_function("location.hash === '#submissions'")
+        submission_text = page.locator("main").inner_text()
+        results.append(check("primary decisions and publication limits are explicit",
+                             page.locator(".submission-primary > article > .row > .pill").all_inner_texts() == ["Accepted", "Rejected"]
+                             and "18 Oct 2026" in submission_text
+                             and "Camera-ready submission, registration and final publication are unverified" in submission_text
+                             and "public-release option are unverified" in submission_text))
+        results.append(check("collapsed history does not miscount repeat submissions as unique papers",
+                             "31 workshop submissions + 1 workshop proposal" in submission_text
+                             and not page.locator(".submission-history").evaluate("el => el.open")))
+        history = page.locator(".submission-history > summary")
+        history.focus()
+        page.keyboard.press("Enter")
+        group = page.locator(".workshop-group > summary").first
+        group.focus()
+        page.keyboard.press("Space")
+        results.append(check("keyboard disclosure exposes workshop decisions and original titles",
+                             page.locator(".workshop-group[open]").count() == 1
+                             and page.locator(".submission-list > li:visible").count() == 11
+                             and "11 distinct titles across 6 workshops" in page.locator("main").inner_text()
+                             and "not endorsed findings" in page.locator("main").inner_text()))
+        page.keyboard.press("Space")
+        page.keyboard.press("Enter")
+        history.click()
+        history.click()
+        results.append(check("repeated disclosure changes preserve the section and selected group",
+                             page.evaluate("location.hash === '#submissions'")
+                             and page.locator(".workshop-group[open]").count() == 1))
+        page.go_back()
+        page.wait_for_function("location.hash === '#viva'")
+        page.go_forward()
+        page.wait_for_function("location.hash === '#submissions'")
+        results.append(check("submission history supports Back and Forward without stale disclosure state",
+                             page.locator("main").get_attribute("aria-label") == "Submissions"
+                             and not page.locator(".submission-history").evaluate("el => el.open")))
+
+        # Search/filter changes expose genuine retrieved content and retain missing-material caveats.
+        search = page.locator("#submission-search")
+        search.fill("backfilled upstream-run")
+        results.append(check("feedback search finds the provenance caveat without triggering shortcuts",
+                             page.evaluate("location.hash === '#submissions'")
+                             and "Showing 1 of 34 submissions" in page.locator("[role=status]").inner_text()))
+        feedback = page.locator('[data-feedback-for="neurips-2026-main-36320"]')
+        feedback.locator(":scope > summary").focus()
+        page.keyboard.press("Enter")
+        warning = feedback.locator(".feedback-warning").inner_text()
+        results.append(check("author response warning preserves audit chronology and unposted withdrawal",
+                             "28 Jul 2026" in warning
+                             and "posting of that revision is not verified" in warning
+                             and "August 2 comments" in warning))
+        page.keyboard.press("Enter")
+        results.append(check("repeated keyboard disclosure closes feedback", not feedback.evaluate("el => el.open")))
+        search.fill("AI4MetaScience")
+        page.locator("#feedback-filter").select_option("with_responses")
+        results.append(check("combined filters do not count missing responses as retrieved",
+                             "No matching submissions" in page.locator("main").inner_text()))
+        page.locator("#feedback-filter").select_option("all")
+        results.append(check("workshop search opens matching history and preserves unknown outcome",
+                             page.locator(".submission-list > li:visible").count() == 1
+                             and "Decision available; outcome unverified" in page.locator("main").inner_text()))
+        page.get_by_role("button", name="Clear filters", exact=True).click()
+        results.append(check("clear filters restores all submissions and resets controls",
+                             "Showing 34 of 34 submissions" in page.locator("[role=status]").inner_text()
+                             and search.input_value() == ""
+                             and page.locator("#feedback-filter").input_value() == "all"
+                             and page.get_by_role("button", name="Clear filters", exact=True).is_disabled()))
 
         page.set_viewport_size({"width": 375, "height": 900})
         page.set_viewport_size({"width": 1024, "height": 900})
@@ -198,6 +282,7 @@ def main():
                 results.append(check(f"outcome pattern supports {key} with a selected state", button.get_attribute("aria-pressed") == "true"))
         page.locator("#probe-text").focus()
         page.keyboard.press("9")
+        page.keyboard.press("0")
         page.keyboard.press("p")
         page.keyboard.press("ArrowLeft")
         results.append(check("typing in grader controls does not invoke shortcuts", page.evaluate("location.hash") == "#answers"))
@@ -225,6 +310,13 @@ def main():
         page.add_style_tag(content="* { line-height: 1.5 !important; letter-spacing: .12em !important; word-spacing: .16em !important; } p { margin-bottom: 2em !important; }")
         results.append(check("presenter mode and text-spacing overrides reflow on mobile", page.evaluate("document.documentElement.scrollWidth <= innerWidth")))
         results.append(check("status badges retain their full content", page.locator(".pill").evaluate_all("els => els.every(el => el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1)")))
+        page.locator("#section-select").select_option("submissions")
+        page.locator(".submission-history > summary").click()
+        for summary in page.locator(".workshop-group > summary").all():
+            summary.click()
+        results.append(check("expanded submissions reflow with presenter mode and text spacing",
+                             page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+                             and page.locator(".submission-list > li:visible").count() == 31))
         page.close()
         page = browser.new_page(viewport={"width": 1280, "height": 900})
 

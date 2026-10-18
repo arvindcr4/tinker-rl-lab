@@ -151,10 +151,11 @@ Table~\ref{tab:claims-tier} maps every claim in the paper to its evidence
 tier and to the artifact files that support it; a per-stack auditability
 matrix is in Table~\ref{tab:artifact-card} (both tables appear immediately
 after the abstract so cross-references resolve in the introduction).
-Inferential conclusions (A-grade) are limited to the mechanical
-$\mathrm{ZVF}$ identity (Section~\ref{sec:zvf-analysis}) and the held-out
-5-seed Qwen3-8B GSM8K control. All other rows are B-grade single-seed case
-studies or C-grade listings; the full per-row training-reward table that
+The mechanical $\mathrm{ZVF}$ identity (Section~\ref{sec:zvf-analysis})
+is a theoretical result, not empirical inference. The separate held-out
+5-seed Qwen3-8B GSM8K control is future-paper evidence and is not admitted
+as inferential evidence in this release. Historical empirical rows remain
+descriptive with unresolved inferential eligibility; the full per-row training-reward table that
 earlier drafts placed in main is now Appendix~\ref{sec:appendix:full-results}.
 
 \subsection{Zero-Variance Fraction: cross-stack diagnostic}
@@ -257,7 +258,7 @@ compute accounting, carbon estimate, data provenance, closed-backend
 acknowledgement, and known methodological limits) is in
 Appendix~\ref{sec:impact_standalone}. In summary: (i) all B-grade rows are
 single-seed and depend on a closed-source Tinker backend; we report them
-descriptively. (ii) Most A-grade evidence is concentrated on
+descriptively. (ii) Most historical empirical evidence is concentrated on
 short-horizon GSM8K with binary verifiable rewards; tool-use,
 code-generation, and non-math coverage are sparser. (iii) Inferential
 eligibility is unresolved for the historical cohort. The theoretical

@@ -1,4 +1,4 @@
-\subsection{Scaling Laws and Empirical Observations}
+\section{Scaling Laws and Empirical Observations}
 \label{sec:scaling-laws}
 
 A defining feature of modern deep learning---and large language models in
@@ -9,7 +9,7 @@ computation, and discusses their implications for the GRPO scaling study
 undertaken in this capstone.
 
 %% ---------- Classical Scaling Laws ----------
-\subsubsection{Classical Scaling Laws for Pretraining}
+\subsection{Classical Scaling Laws for Pretraining}
 
 Kaplan et al.\ introduced the first comprehensive empirical characterisation of
 how language model cross-entropy loss depends on three scale
@@ -41,7 +41,7 @@ strategy and fundamentally shaped how the field reasons about resource
 allocation in large-scale pretraining.
 
 %% ---------- Chinchilla Scaling ----------
-\subsubsection{Compute-Optimal Training: Chinchilla Scaling}
+\subsection{Compute-Optimal Training: Chinchilla Scaling}
 
 Hoffmann et al.\ revisited the question of optimal resource allocation by
 training over 400 language models ranging from 70 million to 16 billion
@@ -79,7 +79,7 @@ regimes, ensuring that the starting checkpoints represent efficient use of their
 respective pretraining budgets.
 
 %% ---------- Scaling Laws for RL Fine-Tuning ----------
-\subsubsection{Scaling Laws for Reinforcement Learning Fine-Tuning}
+\subsection{Scaling Laws for Reinforcement Learning Fine-Tuning}
 
 While pretraining scaling laws are well established, the scaling behaviour of
 \emph{post-training} via reinforcement learning has only recently begun to
@@ -147,7 +147,7 @@ minimum model capacity below which direct RL training yields suboptimal
 returns compared to distillation-based approaches.
 
 %% ---------- Test-Time Compute Scaling ----------
-\subsubsection{Test-Time Compute Scaling}
+\subsection{Test-Time Compute Scaling}
 
 A complementary scaling dimension operates not during training but at inference
 time.  Snell et al.\ investigated how allocating additional compute at test time
@@ -185,7 +185,7 @@ tokens, and the quality of this learned compute allocation improves with both
 model scale and RL training investment.
 
 %% ---------- Reward Hacking and Overoptimisation ----------
-\subsubsection{Reward Hacking and Overoptimisation}
+\subsection{Reward Hacking and Overoptimisation}
 
 Scaling RL training is not without risks.  Gao et al.\ provided the first
 systematic characterisation of \emph{reward model overoptimisation}, the
@@ -222,7 +222,7 @@ degradation, and its coefficient $\beta$ must be tuned with awareness of the
 overoptimisation dynamics characterised by Gao et al.
 
 %% ---------- Implications for This Study ----------
-\subsubsection{Implications for the Present Study}
+\subsection{Implications for the Present Study}
 
 The scaling laws surveyed above delineate several orthogonal dimensions along
 which performance can be improved: pretraining model size, pretraining data

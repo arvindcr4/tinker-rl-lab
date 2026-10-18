@@ -3,9 +3,8 @@
 # Per-Framework Config Dumps (Qwen3-8B / GSM8K)
 
 This directory is the reproducibility supplement for
-`paper/sections/framework_configs_appendix.tex`. It ships one exact
-hyperparameter dump per framework for the canonical
-Qwen3-8B + GSM8K matched-configuration run.
+`paper/sections/framework_configs_appendix.tex`. It ships proposed configuration templates for a
+Qwen3-8B + GSM8K comparison, not exact effective dumps from a canonical matched run.
 
 ## Contents
 
@@ -17,7 +16,7 @@ Qwen3-8B + GSM8K matched-configuration run.
 | `verl_qwen3_8b_gsm8k.yaml`     | Bytedance veRL (Ray + vLLM)      | sharded Ray reference placement |
 
 Together these four YAMLs enumerate the 44 hyperparameter fields the
-appendix reports. Readers verify fairness by diffing them pairwise.
+appendix reports. Pairwise diffs describe template differences; they cannot verify runtime fairness.
 
 ## The field partition (recomputable from the four YAMLs)
 
@@ -84,11 +83,11 @@ derived directly from the four released YAMLs (44 tracked leaf fields total):
 * `runtime.num_minibatches: 1` is veRL-specific (minibatched PPO
   workflow; unused in GRPO mode but surfaced by the config schema).
 
-## Reproducing the Dumps from Live Configs
+## Exporting configuration defaults (not runtime receipts)
 
 Each framework's live Pydantic config module exposes a `to_yaml()`
 helper (see `trl_integrations/config.py`, `openrlhf/config.py`,
-`verl/config.py`). To regenerate a dump after a live run:
+`verl/config.py`). The following examples instantiate defaults only; they do not capture a live run. Save exports separately and bind actual resolved settings to run receipts before admission:
 
 ```bash
 # TRL

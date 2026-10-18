@@ -5,9 +5,11 @@
 **Date:** 2026-04-05 (updated with full 50-step reruns)
 **Platform:** Tinker Cloud (~$65 total spend across two billing cycles)
 **W&B Project:** [tinker-structural-ceiling](https://wandb.ai/arvindcr4-pes-university/tinker-structural-ceiling)
-**Total runs:** 32 with data — all 50 steps complete (11 rerun to completion after credit recharge)
+**Historical run count:** 32 with data; the table includes incomplete runs (39/26/47 steps). Completion and model identity require source receipts.
 
-## Finding 1: Structural Ceiling Confirmed Across Benchmarks
+## Quarantined observation 1: Benchmark outcomes (no structural ceiling established)
+
+> QUARANTINED: Historical observations and interpretations below are retained for audit only. Model identity, causal mechanisms, architecture/size generalizations and recommendations are not validated.
 
 | Benchmark | Model | Steps | Final Reward | Avg Last-10 | Verdict |
 |-----------|-------|-------|-------------|-------------|---------|
@@ -22,9 +24,11 @@
 
 GRPO learns structural/format tasks perfectly but fails on semantic tasks. The ceiling is where the task transitions from pattern-matching to genuine reasoning. MATH-500 at 0.720 final reward (0.574 avg) shows partial learning — it can extract boxed format but not consistently solve competition math. HumanEval is a total null at 50 steps, confirmed with zvf=1.00 at convergence.
 
-## Finding 2: Cross-Family Architecture Dependence
+## Quarantined observation 2: Cross-Family Architecture Dependence
 
-### GSM8K Results by Model
+> QUARANTINED: Historical observations and interpretations below are retained for audit only. Model identity, causal mechanisms, architecture/size generalizations and recommendations are not validated.
+
+### GSM8K Results by unresolved historical model label
 | Model | Size | Type | Steps | Final Reward | ZVF |
 |-------|------|------|-------|-------------|-----|
 | Qwen3-8B | 8B | Instruct | 50 | **1.000** | 1.00 |
@@ -33,7 +37,7 @@ GRPO learns structural/format tasks perfectly but fails on semantic tasks. The c
 | Llama-3.2-3B | 3B | Base | 47 | 0.016 | 1.00 |
 | Llama-3.2-1B | 1B | Base | 50 | **0.000** | 1.00 |
 
-### Tool-Use Results by Model
+### Tool-Use Results by unresolved historical model label
 | Model | Size | Type | Steps | Final Reward | ZVF |
 |-------|------|------|-------|-------------|-----|
 | Qwen3-8B | 8B | Instruct | 50 | **1.000** | 1.00 |
@@ -42,7 +46,9 @@ GRPO learns structural/format tasks perfectly but fails on semantic tasks. The c
 
 **Key insight:** The 0%→92% JSON validity finding is **Qwen-specific**. Llama-3.1-8B-Instruct achieves only 10.3% on the same task. This means GRPO's tool-use success depends on the base model's pre-existing JSON generation capability, not on RL learning the format.
 
-## Finding 3: Instruction Tuning is the Prerequisite, Not RL
+## Quarantined observation 3: Instruction Tuning is the Prerequisite, Not RL
+
+> QUARANTINED: Historical observations and interpretations below are retained for audit only. Model identity, causal mechanisms, architecture/size generalizations and recommendations are not validated.
 
 | Comparison | Reward | Delta |
 |-----------|--------|-------|
@@ -53,7 +59,9 @@ GRPO learns structural/format tasks perfectly but fails on semantic tasks. The c
 
 RL amplifies what SFT already encoded. It cannot bootstrap reasoning from a base model. The 20x improvement from instruction tuning dwarfs any RL contribution.
 
-## Finding 4: Model Size Ladder (NEW — full 50 steps)
+## Quarantined observation 4: Model Size Ladder (NEW — full 50 steps)
+
+> QUARANTINED: Historical observations and interpretations below are retained for audit only. Model identity, causal mechanisms, architecture/size generalizations and recommendations are not validated.
 
 | Model | Size | Steps | Final Reward | Avg Last-10 | Mean ZVF | Onset |
 |-------|------|-------|-------------|-------------|----------|-------|
@@ -65,7 +73,9 @@ RL amplifies what SFT already encoded. It cannot bootstrap reasoning from a base
 
 **Key insight:** Below 8B-instruct, GRPO on GSM8K is a total null across both Qwen and Llama families. Both 0.6B and 1.7B Qwen models show immediate saturation (onset=step 0, ZVF>88%) — the model never generates within-group reward variance, so gradients never form. This extends the capacity threshold finding beyond Llama to Qwen, confirming it's not architecture-specific.
 
-## Finding 5: Group Saturation Diagnostic (Novel — full 50 steps)
+## Quarantined observation 5: Group Saturation Diagnostic (Novel — full 50 steps)
+
+> QUARANTINED: Historical observations and interpretations below are retained for audit only. Model identity, causal mechanisms, architecture/size generalizations and recommendations are not validated.
 
 | Group Size (G) | Final Reward | Avg Last-10 | Mean ZVF | Mean GU | Saturation Onset | Steps |
 |---------------|-------------|-------------|---------|---------|-----------------|-------|
@@ -84,7 +94,9 @@ All group sizes converge to ~1.0 reward at 50 steps. The key differences:
 
 Practical recommendation: **G=32 is the sweet spot** — highest mean gradient utilization (54.5%) with latest saturation onset (step 29). G=64 provides diminishing returns with 2x the compute cost.
 
-## Finding 6: Learning Rate Speed-Saturation Tradeoff (full 50 steps)
+## Quarantined observation 6: Learning Rate Speed-Saturation Tradeoff (full 50 steps)
+
+> QUARANTINED: Historical observations and interpretations below are retained for audit only. Model identity, causal mechanisms, architecture/size generalizations and recommendations are not validated.
 
 | LR | Steps | Final Reward | Avg Last-10 | Mean ZVF | Mean GU | Saturation Onset |
 |----|-------|-------------|-------------|---------|---------|-----------------|
@@ -100,7 +112,9 @@ Key updates with full 50-step data:
 - **LR=4e-5** remains the best balanced choice: converges to >0.92 with moderate saturation.
 - **LR=1e-4** converges fastest but wastes ~76% of training budget on saturated steps.
 
-## Finding 7: Constrained Decoding Ablation
+## Quarantined observation 7: Constrained Decoding Ablation
+
+> QUARANTINED: Historical observations and interpretations below are retained for audit only. Model identity, causal mechanisms, architecture/size generalizations and recommendations are not validated.
 
 | Variant | Final Reward | Mean ZVF | GU | Saturation Onset |
 |---------|-------------|---------|-----|-----------------|
@@ -109,7 +123,9 @@ Key updates with full 50-step data:
 
 **Difference is negligible.** Both converge to ~1.0 with similar saturation profiles. This refutes the "decoder confound" criticism — GRPO genuinely learns format, it's not just overlapping with grammar enforcement.
 
-## Finding 8: Reward Hacking and Catastrophic Collapse
+## Quarantined observation 8: Reward Hacking and Catastrophic Collapse
+
+> QUARANTINED: Historical observations and interpretations below are retained for audit only. Model identity, causal mechanisms, architecture/size generalizations and recommendations are not validated.
 
 Llama-3.1-8B base on tool-use showed a dramatic trajectory:
 1. **Steps 1-20:** Stuck at reward 0.10-0.18, 75-100% ZVF (saturated at bottom)
@@ -119,7 +135,9 @@ Llama-3.1-8B base on tool-use showed a dramatic trajectory:
 
 Loss magnitudes during breakout reached -238, indicating extreme policy divergence. This is a textbook reward hacking -> collapse pattern.
 
-## Summary Table for Paper
+## Quarantined historical summary (not for paper claims)
+
+> QUARANTINED: Historical observations and interpretations below are retained for audit only. Model identity, causal mechanisms, architecture/size generalizations and recommendations are not validated.
 
 | Dimension | Varied | Fixed | Key Finding (50-step) |
 |-----------|--------|-------|-------------|
@@ -135,9 +153,11 @@ Loss magnitudes during breakout reached -238, indicating extreme policy divergen
 - **Round 1:** 21 runs, ~$42 (billing limit hit, 15 partial)
 - **Round 2:** 11 reruns to full 50 steps, ~$23 (all parallel, ~40 min wall time)
 - **Total:** 32 runs with data, **~$65 total**
-- All experiments now have full 50-step data with proper state checkpoints
+- Historical completion claim withdrawn: some table rows have fewer than 50 steps; checkpoints require verification.
 
-## Key Corrections from Full Data
+## Quarantined historical interpretations
+
+> QUARANTINED: Historical observations and interpretations below are retained for audit only. Model identity, causal mechanisms, architecture/size generalizations and recommendations are not validated.
 1. **LR=3e-4 is not unstable** — partial data at step 37 showed reward=0.219 (apparent divergence), but full 50-step run shows recovery to 0.984. The dip was transient.
 2. **MATH-500 ceiling is higher than initially observed** — 0.720 final (was 0.536 at step 37). Partial convergence continues improving slowly.
 3. **Group sizes all converge** — at 50 steps, every G achieves >0.94 avg last-10. The differences are in gradient efficiency (when/how much compute is wasted), not final performance.

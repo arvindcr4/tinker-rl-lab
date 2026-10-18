@@ -50,9 +50,9 @@ prompt: |
   QUERY FILE: research/query-<vault_tag>.md
 
   PIPELINE POSITION: You are step 15 (polish auditor) of the
-  hyperresearch V8 pipeline — the final step. Step 14 (patcher) applied
+  hyperresearch V8 pipeline — the pre-readability polish step. Step 14 (patcher) applied
   critic findings as Edit hunks. After you return, the orchestrator
-  runs the final integrity gate and ships. You are TOOL-LOCKED to
+  runs the integrity check, then step 16 readability and final-byte review. You are TOOL-LOCKED to
   [Read, Edit].
 
   YOUR INPUTS:
@@ -73,7 +73,7 @@ The polish auditor strips:
 
 The polish auditor ESCALATES structural mismatches (wrong format for the prompt, missing required sections, etc.) rather than fabricating content to fix them. Read the escalations in the polish log.
 
-If the escalation names a structural issue (e.g., "user asked for a ranked list; draft is unranked prose"), you have one shot to fix it — craft the restructure yourself with hand-written Edits, then ship.
+If the escalation names a structural issue (e.g., "user asked for a ranked list; draft is unranked prose"), you have one shot to fix it — craft the restructure yourself with hand-written Edits, then continue to step 16.
 
 **Sanity-check net length.** Polish should have NEGATIVE net char delta. If the polish log shows positive net chars added, something went wrong — polish is for cutting, not expanding.
 
@@ -83,23 +83,43 @@ If the escalation names a structural issue (e.g., "user asked for a ranked list;
 
 ## Step 15.4 — Final integrity gate
 
-Before declaring the run complete, verify every expected pipeline artifact exists. **The required set depends on the tier:**
-
-- **light tier:** only `research/polish-log.json` is required (steps 12–14 are skipped, so no critic findings or patch log).
-- **full tier:** require all four critic findings + patch-log + polish-log:
+This is a pre-readability integrity check, not publication clearance. Resolve all artifact paths under `research/runs/<run_id>/`. Check JSON contents, not just existence. Light tier requires a populated polish log; full tier also requires a patch log and all four completed critic envelopes.
 
 ```bash
-for f in research/critic-findings-dialectic.json \
-         research/critic-findings-depth.json \
-         research/critic-findings-width.json \
-         research/critic-findings-instruction.json \
-         research/patch-log.json \
-         research/polish-log.json; do
-  test -f "$f" || echo "MISSING: $f"
-done
+python - "$RUN_ID" "$PIPELINE_TIER" <<'PY_CHECK'
+import json
+import sys
+from pathlib import Path
+run_id, tier = sys.argv[1:]
+if tier not in {"light", "full"} or not run_id or Path(run_id).name != run_id:
+    raise SystemExit("Invalid run ID or tier")
+root = Path("research/runs") / run_id
+errors = []
+for name in (["polish-log"] if tier == "light" else ["polish-log", "patch-log"]):
+    try:
+        record = json.loads((root / f"{name}.json").read_text())
+        if not isinstance(record, dict) or not record or record.get("run_id") != run_id:
+            raise ValueError("missing populated run-scoped log")
+    except (OSError, ValueError) as exc:
+        errors.append(f"{name}: {exc}")
+if tier == "full":
+    for critic in ("dialectic", "depth", "width", "instruction"):
+        try:
+            record = json.loads((root / f"critic-findings-{critic}.json").read_text())
+            if (not isinstance(record, dict) or record.get("status") != "completed"
+                    or not isinstance(record.get("findings"), list)
+                    or record.get("run_id") != run_id or record.get("critic") != critic
+                    or any(not record.get(k) for k in ("query_sha256", "corpus_sha256", "draft_sha256"))):
+                raise ValueError("required completed v2 critic envelope unavailable")
+        except (OSError, ValueError) as exc:
+            errors.append(f"{critic}: {exc}")
+if errors:
+    raise SystemExit("review_status: incomplete\n" + "\n".join(errors))
+print("Pre-readability integrity passed; step 16 final-byte review still required")
+PY_CHECK
 ```
 
-If any artifact is missing, the responsible step failed silently. Re-spawn the responsible agent ONCE with the missing output path as its explicit required output. If it fails a second time, record status: failed, findings: null and the error. Set review_status: incomplete. Never substitute an empty success record; only deliver an explicitly incomplete draft.
+If an artifact is missing, malformed, or a required review is failed, re-spawn the responsible agent ONCE with the run-scoped output path. If it fails again, preserve `status: failed`, `findings: null`, and the error, and set `review_status: incomplete`. Never substitute an empty success record. Continue only as an explicitly incomplete draft until all required reviews complete; step 16 must still re-review the delivered bytes.
 
 ---
 
@@ -134,7 +154,7 @@ If any artifact is missing, the responsible step failed silently. Re-spawn the r
 
 ---
 
-## Step 15.6 — Ship
+## Step 15.6 — Prepare for readability review
 
 The final report lives at `research/notes/final_report_<vault_tag>.md`. The wrapper's required save path (if any) is a separate copy — handle per the wrapper contract.
 
@@ -143,9 +163,9 @@ The final report lives at `research/notes/final_report_<vault_tag>.md`. The wrap
 ## Exit criterion
 
 - `research/polish-log.json` populated
-- Final integrity gate passed; failed/missing reviews remain incomplete
+- Run-scoped integrity check passed; every required critic has `status: completed` with a findings array and provenance; failed/missing reviews remain incomplete
 - Lint gate passed
-- `research/notes/final_report_<vault_tag>.md` is the final, shippable artifact
+- `research/runs/<run_id>/notes/final_report_<vault_tag>.md` is ready for step 16; it is not shippable until the final-byte gate passes
 
 ---
 

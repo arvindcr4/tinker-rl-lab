@@ -50,5 +50,9 @@ The demo tree is byte-identical to tested PR20 `b8ca50d7`; its 25 JS tests,
 build and strict audit of 71,226 stored completions therefore remain applicable.
 No browser QA is claimed: Chromium startup was unavailable in that environment.
 Historical results, registry entries, generated thesis artifacts, excluded
-`Platform.jsx` and `platform_calibration.py` match main byte-for-byte.
+`Platform.jsx` match main `72812969` byte-for-byte.
+`platform_calibration.py` differs from that reference: it rejects an empty
+platform set, reports unavailable inference for fewer than two pairs, retains
+empty contrasts, and reserves unavailable tests in the Holm family without
+presenting their placeholders as test results.
 No training, provider jobs, or historical result migration is part of this work.

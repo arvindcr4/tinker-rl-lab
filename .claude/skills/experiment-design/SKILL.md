@@ -89,3 +89,22 @@ Generates baselines, ablation matrix, hyperparameter grid, metric selection. Std
 ## Research integrity contract v2 (mandatory)
 
 Select candidates on development/validation outcomes only. Confirmatory test outcomes must remain unavailable to adaptive selection. Freeze method, configuration, split, seed set, endpoint, and analysis before confirmation. Previously inspected test sets are development evidence and must be recorded as such. Completion means all planned valid runs and analyses are finished, including negative and inconclusive outcomes. Mean and standard deviation are descriptive; inference requires a prespecified effect, interval/test, experimental unit, and multiplicity correction. Seed counts follow power or precision targets.
+
+### Generator seed and analysis inputs
+
+The generator defaults to descriptive reporting (`statistical_test: none`), regardless of seed count. Without a `seed_plan`, it emits `num_seeds: null`, no run-count estimate, and `planning_status: incomplete_seed_plan`; this draft must not authorize allocation. Supply a prespecified power/precision calculation in the plan JSON, for example:
+
+```json
+{
+  "seed_plan": {
+    "type": "precision",
+    "target": "95% normal-approximation mean interval half-width <= 0.1; pilot SD 0.2",
+    "required_num_seeds": 16,
+    "calculation": "ceil((1.96 * 0.2 / 0.1)^2) = 16; normal approximation assumed",
+    "experimental_unit": "independent training seed"
+  },
+  "num_seeds": 16
+}
+```
+
+`type` must be `power` or `precision`; target, calculation (including assumptions), experimental unit, and a positive integer required seed count are mandatory. The generator adopts that calculated minimum if `num_seeds` is omitted and rejects smaller or unplanned counts. It validates the supplied calculation's count, not its statistical assumptions; review the calculation before allocation. JSON and Markdown preserve the seed plan. Inferential analysis remains a separate prespecification requirement, never inferred from seed count.

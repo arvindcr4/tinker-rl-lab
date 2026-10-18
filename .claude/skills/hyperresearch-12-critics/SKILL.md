@@ -64,7 +64,8 @@ Read these inputs:
 ## Exit criterion
 
 - All 4 critic findings JSONs exist (`research/critic-findings-<name>.json`)
-- Each is valid JSON with a `findings` array
+- Each is a valid v2 JSON envelope: `status: completed` requires a `findings` array; `status: failed` requires `findings: null` and a nonempty `error`
+- Failed envelopes satisfy artifact collection only: mark `review_status: incomplete`; they never satisfy completed review or the final gate
 
 ---
 

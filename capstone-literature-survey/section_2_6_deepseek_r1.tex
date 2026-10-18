@@ -1,4 +1,4 @@
-\subsection{DeepSeek-R1 and Emergent Reasoning}
+\section{DeepSeek-R1 and Emergent Reasoning}
 \label{sec:deepseek-r1}
 
 A central question in the study of large language model (LLM) reasoning is whether
@@ -10,7 +10,7 @@ DeepSeek-R1---that together demonstrate the power of Group Relative Policy
 Optimization (GRPO) \cite{shao2024deepseekmath} to elicit emergent chain-of-thought
 reasoning, self-reflection, and verification behaviors in large-scale language models.
 
-\subsubsection{DeepSeek-R1-Zero: Pure RL without Supervised Fine-Tuning}
+\subsection{DeepSeek-R1-Zero: Pure RL without Supervised Fine-Tuning}
 
 DeepSeek-R1-Zero is trained by applying GRPO directly to the DeepSeek-V3-Base
 model \cite{deepseek2024v3}, a 671-billion-parameter Mixture-of-Experts architecture,
@@ -48,7 +48,7 @@ sampled outputs per question ($G=16$), 32 questions per step (512 outputs per up
 10^{-6}$, and a KL coefficient of 0.001, over approximately 10{,}400 policy update
 steps.
 
-\subsubsection{Emergent Behaviors}
+\subsection{Emergent Behaviors}
 
 Perhaps the most remarkable aspect of DeepSeek-R1-Zero is the spontaneous emergence
 of sophisticated reasoning behaviors that were never explicitly taught. Three
@@ -83,7 +83,7 @@ incentive structures can give rise to complex cognitive strategies without expli
 supervision, providing evidence that reasoning capabilities can be ``incentivized''
 rather than ``taught.''
 
-\subsubsection{Limitations of R1-Zero}
+\subsection{Limitations of R1-Zero}
 
 Despite its impressive reasoning capabilities, DeepSeek-R1-Zero exhibits several
 practical shortcomings. First, its outputs suffer from \textbf{poor readability}: the
@@ -96,7 +96,7 @@ rule-based rewards, DeepSeek-R1-Zero has \textbf{limited generalization} to broa
 capabilities such as creative writing, open-domain question answering, and
 instruction following.
 
-\subsubsection{The DeepSeek-R1 Multi-Stage Pipeline}
+\subsection{The DeepSeek-R1 Multi-Stage Pipeline}
 
 To address the limitations of R1-Zero while preserving its reasoning strengths,
 DeepSeek-R1 is trained through a carefully designed four-stage pipeline:
@@ -139,7 +139,7 @@ STEM, logic, and general instruction-following, producing the final DeepSeek-R1 
 The integration of multiple reward signals enables the model to maintain strong
 reasoning while aligning with human preferences for helpfulness and harmlessness.
 
-\subsubsection{Benchmark Results}
+\subsection{Benchmark Results}
 
 Table~\ref{tab:deepseek-r1-results} presents a comparison of DeepSeek-R1-Zero,
 DeepSeek-R1, and OpenAI o1-1217 on key reasoning benchmarks. DeepSeek-R1 achieves
@@ -172,7 +172,7 @@ LiveCodeBench (pass@1)   & 50.0  & 65.9  & 63.4 \\
 \end{tabular}
 \end{table}
 
-\subsubsection{Distillation to Smaller Models}
+\subsection{Distillation to Smaller Models}
 
 A key practical contribution of DeepSeek-R1 is the demonstration that its reasoning
 capabilities can be effectively transferred to substantially smaller models through
@@ -201,7 +201,7 @@ discover those patterns through RL from scratch. However, the authors note that
 advancing beyond the frontiers of existing reasoning capability ultimately requires
 large-scale RL on sufficiently powerful base models.
 
-\subsubsection{Significance for GRPO Scaling}
+\subsection{Significance for GRPO Scaling}
 
 DeepSeek-R1 represents the most prominent demonstration to date of GRPO operating at
 the scale of hundreds of billions of parameters. Several aspects are directly relevant

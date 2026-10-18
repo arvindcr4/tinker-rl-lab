@@ -1,4 +1,4 @@
-\subsection{Group Relative Policy Optimization}
+\section{Group Relative Policy Optimization}
 \label{sec:grpo}
 
 The preceding sections traced a clear trajectory: PPO
@@ -88,7 +88,6 @@ function:
 \begin{equation}
 \label{eq:grpo-advantage}
 % Stabilization is explicit; this background equation does not certify historical execution.
-
 \boxed{
 \hat{A}_{i,t} = \tilde{r}_i
   = \frac{r_i - \operatorname{mean}(\mathbf{r})}

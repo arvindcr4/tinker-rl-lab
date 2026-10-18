@@ -38,8 +38,8 @@ condition-matched comparison. Rows with $n_{\text{seeds}}<5$ are descriptive onl
 \centering
 \caption{\textbf{Base-vs.-instruct audit under condition-matched reporting.}
 Pre-RL and post-RL columns are taken directly from the released paired-audit
-artifact. Held-out evaluation identity remains unresolved; these values do not certify a common slice. ``d.o.'' = descriptive only (insufficient seeds for
-inference).}
+artifact. Held-out evaluation identity remains unresolved; these values do not certify a common slice. ``d.o.'' = descriptive only (insufficient seeds or unresolved
+evaluation/test identity; seed count alone does not establish eligibility).}
 \label{tab:paired-bi}
 \small
 \begin{tabular}{@{}l l l c c c c c c@{}}
@@ -50,7 +50,7 @@ inference).}
 \textbf{$\Delta_{\mathrm{heldout}}$} & \textbf{$n_{\text{seeds}}$} \\
 \midrule
 Qwen3-8B     & Base & \texttt{Qwen/Qwen3-8B-Base}      & 0.8250 & 0.8562 & 0.8200 & 0.9090 & +0.0890 & 1 (d.o.) \\
-Qwen3-8B     & Inst & \texttt{Qwen/Qwen3-8B}           & 0.2925 & 0.3105 & 0.8200 & 0.8330 & +0.0130 & 5 \\
+Qwen3-8B     & Inst & \texttt{Qwen/Qwen3-8B}           & 0.2925 & 0.3105 & 0.8200 & 0.8330 & +0.0130 & 5 (d.o.) \\
 Llama-3.1-8B & Base & \texttt{meta-llama/Llama-3.1-8B} & 0.1252 & 0.1147 & ---    & ---    & ---     & 1 (d.o.) \\
 Llama-3.1-8B & Inst & \texttt{meta-llama/Llama-3.1-8B-Instruct} & 0.9500 & 0.9625 & --- & --- & --- & 1 (d.o.) \\
 \bottomrule

@@ -1,9 +1,9 @@
-\subsection{Proximal Policy Optimization for Language Models}
+\section{Proximal Policy Optimization for Language Models}
 \label{sec:ppo}
 
 Proximal Policy Optimization (PPO), introduced by \cite{schulman2017ppo}, has become the dominant reinforcement learning algorithm for aligning large language models with human preferences. PPO belongs to the family of policy gradient methods and was originally designed for continuous control and game-playing tasks. Its adoption as the RL backbone of RLHF---most notably in InstructGPT \cite{ouyang2022instructgpt}---established the standard pipeline for post-training alignment of LLMs. This section presents the PPO algorithm in its general form, describes its adaptation to the language modeling setting, and discusses the practical challenges that motivate the search for simpler alternatives.
 
-\subsubsection{The PPO Algorithm}
+\subsection{The PPO Algorithm}
 
 Policy gradient methods optimize a parameterized policy $\pi_\theta$ by ascending the gradient of an expected return objective. The vanilla policy gradient estimator takes the form
 \begin{equation}
@@ -30,7 +30,7 @@ PPO employs an \textbf{actor-critic architecture} in which the policy (actor) an
 \end{equation}
 where $L_t^{\text{VF}}(\theta) = \big(V_\theta(s_t) - \hat{R}_t\big)^2$ is the squared-error value function loss, $S[\pi_\theta](s_t)$ is the entropy of the policy at state $s_t$, and $c_1$, $c_2$ are balancing coefficients.
 
-\subsubsection{Generalized Advantage Estimation}
+\subsection{Generalized Advantage Estimation}
 
 Accurate advantage estimation is critical to the stability and sample efficiency of PPO. \emph{Generalized Advantage Estimation} (GAE) provides a principled mechanism for interpolating between high-bias, low-variance estimates (temporal-difference residuals) and low-bias, high-variance estimates (Monte Carlo returns). Define the TD residual as
 \begin{equation}
@@ -43,7 +43,7 @@ where $\gamma \in [0,1]$ is the discount factor. The GAE advantage estimator is 
 \end{equation}
 where $\lambda \in [0,1]$ controls the bias-variance trade-off. Setting $\lambda = 0$ recovers the one-step TD residual $\hat{A}_t = \delta_t$, while $\lambda = 1$ yields the full Monte Carlo return minus the baseline. In practice, $\lambda = 0.95$ and $\gamma = 0.99$ are common defaults \cite{schulman2017ppo}.
 
-\subsubsection{Recasting PPO for Language Generation}
+\subsection{Recasting PPO for Language Generation}
 
 Applying PPO to language model alignment requires a reinterpretation of the RL formalism in terms of text generation. The correspondence is as follows:
 \begin{itemize}
@@ -60,7 +60,7 @@ Following the formulation of \cite{ouyang2022instructgpt}, the per-token reward 
 \end{equation}
 where $\eta$ is a coefficient controlling the strength of the KL constraint. This penalty serves a dual purpose: it prevents \emph{reward hacking}---where the policy exploits weaknesses in the reward model to achieve high scores without genuinely improving response quality---and it preserves the language modeling capabilities acquired during pretraining. \cite{zheng2023secrets} find that this token-level KL penalty is in fact critical to the stability of PPO training, allowing the optimization to scale to longer training horizons without policy collapse.
 
-\subsubsection{The Four-Model Architecture}
+\subsection{The Four-Model Architecture}
 
 A distinctive characteristic of PPO-based RLHF is its requirement for \textbf{four separate neural network models} to be active during training \cite{ouyang2022instructgpt, zheng2023secrets}:
 \begin{enumerate}
@@ -75,7 +75,7 @@ All four models may be of comparable size to the base LLM (e.g., 7B--70B paramet
 \end{equation}
 where $\lambda_{\text{ptx}}$ controls the weight of the pretraining language modeling loss.
 
-\subsubsection{Challenges of PPO for Large Language Models}
+\subsection{Challenges of PPO for Large Language Models}
 
 Despite its effectiveness, PPO presents several practical challenges when applied to LLMs that have motivated research into simpler alternatives:
 

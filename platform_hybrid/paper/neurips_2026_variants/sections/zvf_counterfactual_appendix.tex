@@ -35,13 +35,13 @@ for a total of twelve GRPO runs
 \(64\) / \(128\) for 4B / 8B, \(50\) training steps).
 The reward-version switch is gated by a single environment variable
 (\texttt{TOOL\_USE\_REWARD\_VERSION}) so that the training harness, dataset,
-and sampler are byte-identical between v1 and v2. ZVF is computed with the
-same canonical script used elsewhere in this paper
+and sampler are byte-identical between v1 and v2. Exact ZVF must be reported separately from the positive-threshold telemetry
+in the table below, using the canonical script elsewhere in this paper
 (\texttt{scripts/zvf\_compute\_cross\_framework.py}); configs live under
 \texttt{experiments/tool\_use\_zvf\_sweep/}.
 
 \subsection{Results}
-Table~\ref{tab:zvf_counterfactual} summarises per-run ZVF and pass rate.
+Table~\ref{tab:zvf_counterfactual} reserves per-run near-constant telemetry and pass rate.
 Rows with em-dashes indicate planned cells with no admitted completed result; the sweep state is tracked at
 \texttt{experiments/tool\_use\_zvf\_sweep/manifest.tsv}.
 
@@ -50,7 +50,7 @@ Rows with em-dashes indicate planned cells with no admitted completed result; th
 \small
 \begin{tabular}{llrrrr}
 \toprule
-Model & Reward & Seed & Planned steps & ZVF (mean last 10 steps) & Pass\@1 \\
+Model & Reward & Seed & Planned steps & Near-constant fraction (last 10) & Pass\@1 \\
 \midrule
 Qwen3-4B & v1 & 42 & 50 & --- & --- \\
 Qwen3-4B & v1 & 43 & 50 & --- & --- \\
@@ -67,10 +67,10 @@ Qwen3-8B & v2 & 43 & 50 & --- & --- \\
 Qwen3-8B & v2 & 44 & 50 & --- & --- \\
 \bottomrule
 \end{tabular}
-\caption{Reward-shape counterfactual. ZVF is the fraction of GRPO groups
+\caption{Reward-shape counterfactual. Near-constant fraction is the fraction of GRPO groups
 with within-group score variance below \(10^{-4}\), averaged over the final
-ten training steps. \(3\) seeds per cell; the planned summary statistic is
-paired-\(t\) on per-seed ZVF between v1 and v2 within each model. Em-dash
+ten training steps. This is not exact ZVF and does not establish zero centered reward coefficients. Exact-ZVF interpretation below requires a separate exact statistic before admission. \(3\) seeds per cell; the planned summary statistic is
+paired-\(t\) on per-seed near-constant fraction between v1 and v2 within each model. Em-dash
 rows indicate unavailable results, not verified running jobs; any future values require validation against
 \texttt{experiments/tool\_use\_zvf\_sweep/results.csv} on the next build.}
 \label{tab:zvf_counterfactual}

@@ -17,15 +17,8 @@ slice used for the original held-out-accuracy claim).
 
 ## Reading
 
-The reward parser *favours shorter completions* -- rewarded responses are
-170.8 tokens shorter on average (CI [-183.7, -157.5]).
+Rewarded responses are 170.8 tokens shorter on average in this historical summary (reported CI [-183.7, -157.5]). This is a length/reward association; the parser mechanism remains unresolved.
 
-Panel A of the figure shows the bimodal pattern: failed completions often
-run long (the model writes reasoning that never boxes an answer), while
-rewarded completions have a narrower length distribution. Panel B confirms
-the median difference. Panel C plots P(reward=1) against length bin: the
-curve rises then falls, consistent with a verbosity tax above some
-length at which the model stops producing valid boxed answers. Panel D
-shows the effect persists across all 10 checkpoints.
+The failed-response median at the 512-token cap is compatible with truncation as well as parsing or completion errors. Panels A and B describe length distributions, Panel C describes reward rate by length bin, and Panel D stratifies by checkpoint. None identifies a verbosity penalty. Separate truncation, parser failure, and completed-but-incorrect measurements are required before assigning a mechanism.
 
 Figure: `paper/figures/v2/p2_length_bias.png`.

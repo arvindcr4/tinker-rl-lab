@@ -73,13 +73,17 @@ Read these inputs:
            "evidence": "strongest evidence with source note ids",
            "proponents": ["source-note-id-3"]
          },
-         "resolution": "one-paragraph committed reading with load-bearing reason",
+         "resolution_status": "resolved|unresolved",
+         "resolution": "supported reading with load-bearing reason, or why evidence cannot decide",
+         "evidence_needed": ["For unresolved: specific missing evidence and how it could distinguish the sides"],
          "origin": "comparisons|contradiction-graph|orphan-scan",
          "decision_relevance": "high|medium"
        }
      ]
    }
    ```
+
+For unresolved tensions, `evidence_needed` must be nonempty and specific; do not force a committed reading. For resolved tensions, cite the resolving evidence in `resolution` and use an empty `evidence_needed` array.
 
 This artifact feeds directly into step 10's conditional Source Tensions section. Every tension named here becomes a subsection in the final report.
 

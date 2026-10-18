@@ -2,9 +2,7 @@
 
 # Axolotl Experiment Configs
 
-Matched baselines for the GRPO scaling study, runnable on HuggingFace Spaces,
-RunPod, or any GPU server. These address reviewer criticism #8 ("no matched
-baseline showing GRPO is the reason") and #15 ("GRPO is obsolete").
+Proposed baseline configurations for the GRPO scaling study. Runtime compatibility and effective batching must be captured before claiming matched comparisons or attributing differences to GRPO.
 
 ## Configs
 
@@ -64,13 +62,13 @@ CUDA_VISIBLE_DEVICES=0 axolotl train experiments/axolotl/grpo_gsm8k_qwen8b_dr_gr
 
 ## Comparison Matrix
 
-All experiments use identical hyperparameters for fair comparison:
+The table records intended settings, not verified runtime equivalence:
 
 | Param | Value | Notes |
 |-------|-------|-------|
 | Model | Qwen3-8B base | Same across all methods |
 | LoRA rank | 32 | Same capacity budget |
 | LR | 4e-5 | Same optimization |
-| Effective batch | 128 | Same gradient signal |
+| Effective batch | 128 (proposed) | Unverified; capture prompt batch, group size, devices and accumulation |
 | Data | GSM8K train | Same distribution |
 | Eval | GSM8K test (1319) | Greedy decoding, \\boxed{} extraction |

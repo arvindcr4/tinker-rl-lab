@@ -344,7 +344,30 @@ class LocalDatasetGateTests(unittest.TestCase):
                 (cache / f"{name}.metadata").write_text(
                     f"{commit}\netag\n123.0\n", encoding="utf-8"
                 )
+        # This expected manifest is fixed before any adversarial mutation and
+        # represents an independent trust source only within this fixture.
+        self.enterContext(mock.patch.object(runner, "TRUSTED_LOCAL_DATASET_SHA256", {
+            name: runner.sha256_bytes(body.encode()) for name, body in payloads.items()}))
         return root
+
+    def test_changed_bytes_do_not_inherit_cache_revision_trust(self):
+        with TemporaryDirectory() as tmp:
+            root = self._materialize(Path(tmp) / "ds", commit=runner.DATASET_REVISION)
+            original_metadata = (root / ".cache/huggingface/download/tasks_and_rubrics.json.metadata").read_bytes()
+            (root / "tasks_and_rubrics.json").write_text(json.dumps([synthetic_task("b")]))
+            gate, resolved = runner._dataset_access_gate(token=None, cache_dir=Path(tmp) / "cache", dataset_dir=root)
+            self.assertEqual((root / ".cache/huggingface/download/tasks_and_rubrics.json.metadata").read_bytes(), original_metadata)
+            self.assertEqual(gate.status, "BLOCKED")
+            self.assertIsNone(resolved)
+            self.assertFalse(gate.details["content_verified"])
+
+    def test_missing_independent_expected_manifest_is_blocked(self):
+        with TemporaryDirectory() as tmp:
+            root = self._materialize(Path(tmp) / "ds", commit=runner.DATASET_REVISION)
+            with mock.patch.object(runner, "TRUSTED_LOCAL_DATASET_SHA256", {}):
+                gate, resolved = runner._dataset_access_gate(token=None, cache_dir=Path(tmp) / "cache", dataset_dir=root)
+            self.assertEqual(gate.status, "BLOCKED")
+            self.assertIsNone(resolved)
 
     def test_pinned_revision_passes_and_records_digests(self):
         with TemporaryDirectory() as tmp:

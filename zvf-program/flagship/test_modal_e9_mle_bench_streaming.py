@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import sys
@@ -548,7 +549,14 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             preflight_completed_at="2026-08-30T04:00:01+00:00",
         )
         reservation = merged_arm.reserve_pilot_budget(gpu_usd=1.0, cpu_usd=0.25)
-        raw_run_one = runner.run_one.get_raw_f()
+        # Execute the production function body with only its Modal decorator
+        # removed, avoiding SDK-version-specific private unwrapping methods.
+        node = next(node for node in ast.parse(Path(runner.__file__).read_text()).body
+                    if isinstance(node, ast.FunctionDef) and node.name == "run_one")
+        node.decorator_list = []
+        namespace = dict(vars(runner))
+        exec(compile(ast.Module(body=[node], type_ignores=[]), runner.__file__, "exec"), namespace)
+        raw_run_one = namespace["run_one"]
         outcomes = {
             "prepare timeout": TimeoutError("prepare timed out"),
             "missing prepared directories": mock.DEFAULT,
@@ -575,6 +583,8 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                         side_effect=AssertionError("prompt was built after prepare failed"),
                     ) as prompt,
                 ):
+                    namespace.update(vars(runner))
+                    namespace["_require_enforced_budget"] = lambda: None  # local fake execution only
                     result = raw_run_one(
                         competition_id="alaska2-image-steganalysis",
                         generation_backend="merged_vllm",
@@ -611,6 +621,8 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                 side_effect=AssertionError("GPU generator was constructed while frozen"),
             ) as generator,
         ):
+            namespace.update(vars(runner))
+            namespace["_require_enforced_budget"] = lambda: None
             with self.assertRaisesRegex(core.LaunchGateError, "remote boundary"):
                 raw_run_one(
                     competition_id="alaska2-image-steganalysis",

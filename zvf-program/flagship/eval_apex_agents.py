@@ -389,13 +389,16 @@ DATASET_ACCESS_FILES = {
 }
 
 
-def _local_dataset_gate(dataset_dir: Path) -> tuple[Gate, dict[str, Path] | None]:
-    """Accept an already-downloaded copy, but only on proof of the revision.
+# Expected bytes must come from an independently reviewed manifest, never the
+# local cache being checked. No authoritative content manifest was supplied.
+TRUSTED_LOCAL_DATASET_SHA256: dict[str, str] = {}
 
-    ``hf download`` writes ``.cache/huggingface/download/<file>.metadata`` whose
-    first line is the resolved commit hash.  Requiring it means a hand-assembled
-    directory, or a copy pulled from ``main``, cannot masquerade as the pinned
-    revision.
+
+def _local_dataset_gate(dataset_dir: Path) -> tuple[Gate, dict[str, Path] | None]:
+    """Require pinned cache metadata plus independently trusted content hashes.
+
+    Cache metadata alone is only an assertion: copying it must not authenticate
+    altered bytes. The expected manifest is not derived from this directory.
     """
     missing: list[str] = []
     wrong_revision: list[dict[str, Any]] = []
@@ -450,6 +453,17 @@ def _local_dataset_gate(dataset_dir: Path) -> tuple[Gate, dict[str, Path] | None
                 ],
             },
         ), None
+    expected = TRUSTED_LOCAL_DATASET_SHA256
+    if set(expected) != set(DATASET_ACCESS_FILES.values()) or any(
+        not re.fullmatch(r"[0-9a-f]{64}", str(expected.get(name, "")))
+        or receipts[name]["sha256"] != expected[name] for name in receipts
+    ):
+        return Gate("benchmark_access", "BLOCKED", {
+            "dataset_id": DATASET_ID, "dataset_revision": DATASET_REVISION,
+            "source": "local_dataset_dir", "files": receipts,
+            "message": "independently trusted expected-content manifest missing or bytes mismatch",
+            "content_verified": False,
+        }), None
     return Gate(
         "benchmark_access",
         "PASS",
@@ -458,7 +472,8 @@ def _local_dataset_gate(dataset_dir: Path) -> tuple[Gate, dict[str, Path] | None
             "dataset_revision": DATASET_REVISION,
             "source": "local_dataset_dir",
             "dataset_dir": str(dataset_dir),
-            "revision_proof": "hf cache metadata commit hash matches the pin",
+            "revision_proof": "pinned metadata plus independently configured expected-content hashes",
+            "content_verified": True,
             "files": receipts,
         },
     ), resolved

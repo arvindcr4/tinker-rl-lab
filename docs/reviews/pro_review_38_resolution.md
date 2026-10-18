@@ -25,3 +25,30 @@ Offline code and synthetic tests only. No paid dispatch, real benchmark run, gen
 |19 integrations|20 small regressions exercise real acceptance rules for request overrides, strict SWE results, changed-patch identity, durable timeout state, evaluator dirty state, Omni manifest drift, and CORE cache/raw binding. Broader xLAM/APEX/SDAB/MLE live-runner integration fixtures named in the review remain follow-up coverage obligations, not claimed completed.|
 
 Validation: 83 passing offline tests (new regressions, completion-gate, FrontierMath and Harbor), 15 historical/artifact-dependent skips; six targeted repair/validity tests pass. The full e9 suite additionally requires excluded Freesound/Smartphone historical source artifacts; CORE/Omni/portfolio existing native suites require excluded prepared benchmark output trees. These were not downloaded, synthesized as official data, or executed. New tests use only tiny synthetic files and fake subprocess results. `compileall` and `git diff --check` pass.
+
+### R38.19 follow-up: executed offline grader and lifecycle regressions
+
+- xLAM now runs the real production custom StrictToolCallReward through the
+  evaluation loop on distinct correct/wrong-tool/wrong-argument/malformed/extra-
+  call outputs, asserting 1/5 perfect calls and 1.8/5 mean partial-credit reward.
+  This tests the actual custom component semantics, not official xLAM parity.
+- SDAB fixtures derive accepted scores from the supplied sampler's answer and
+  separately reject a correct answer when the synthetic native verifier refuses
+  it. The provider's actual proprietary grader remains unavailable.
+- APEX local datasets require independently configured expected-content hashes;
+  cache revision metadata alone cannot approve altered bytes. Synthetic expected
+  hashes are fixed before tampering in tests. No authoritative production content
+  manifest was supplied, so the production local-copy gate remains blocked.
+- A stateful E9 job times out twice, retaining the exact reservation and ledger,
+  then completes under the same call ID and settles once; repeated collection
+  does not refetch, respawn or double-settle. Existing spawn persistence/recovery
+  tests exercise the separate reservation-to-call-ID transition.
+- Executed CPU-preflight failure records events and asserts no GPU runner lookup
+  or allocation. CPU dataset preparation failure executes the production function
+  body under mocks (without SDK-version-specific unwrapping), checking no GPU
+  constructor or prompt call. Paid gates are bypassed only inside these all-local
+  fixture namespaces; production freezes remain unchanged.
+
+These are bounded local regressions. They do not establish upstream/native
+benchmark conformance, real provider settlement, live SDK behavior, or an
+independent provider-side cleanup service.

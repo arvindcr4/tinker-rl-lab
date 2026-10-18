@@ -174,6 +174,8 @@ def main():
             b_diff = b_new - b_orig
             boot_data[(backbone, rule)] = {
                 "b_orig": b_orig, "b_new": b_new, "b_diff": b_diff,
+                "recall_orig": pr_K(comp_orig, yte, K_PCT)[1],
+                "recall_new": pr_K(comp_new, yte, K_PCT)[1],
                 "n_llm_orig": n_llm_orig, "n_llm_new": n_llm_new,
             }
 
@@ -201,13 +203,13 @@ def main():
     for (backbone, rule), d in boot_data.items():
         boot_rows.append({
             "backbone": backbone, "rule": rule,
-            "recall_orig": float(d["b_orig"].mean()),
+            "recall_orig": d["recall_orig"],
             "recall_orig_ci_lo": float(np.percentile(d["b_orig"], 2.5)),
             "recall_orig_ci_hi": float(np.percentile(d["b_orig"], 97.5)),
-            "recall_new": float(d["b_new"].mean()),
+            "recall_new": d["recall_new"],
             "recall_new_ci_lo": float(np.percentile(d["b_new"], 2.5)),
             "recall_new_ci_hi": float(np.percentile(d["b_new"], 97.5)),
-            "delta_recall": float(d["b_diff"].mean()),
+            "delta_recall": d["recall_new"] - d["recall_orig"],
             "delta_recall_ci_lo": float(np.percentile(d["b_diff"], 2.5)),
             "delta_recall_ci_hi": float(np.percentile(d["b_diff"], 97.5)),
             "n_llm_orig": d["n_llm_orig"], "n_llm_new": d["n_llm_new"],

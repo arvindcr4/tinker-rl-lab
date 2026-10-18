@@ -46,7 +46,7 @@ for d in sys.argv[2:]:
             sys.exit(f"duplicate run {key}: {runs[key]['_file']} and {f}")
         runs[key] = r
 plats = sorted({p for p, _, _ in runs}, key=lambda p: p != REF)  # reference platform first
-if len(plats) > 2 or plats[0] != REF:
+if not plats or len(plats) > 2 or plats[0] != REF:
     sys.exit(f"expected Modal {REF} plus one Colab platform, got {plats}")
 OTHER = plats[1] if len(plats) == 2 else None
 
@@ -68,7 +68,19 @@ def tost(c):
 
 
 def one_sample(d):
-    """paired() on a precomputed difference dict."""
+    """Report insufficient pairs without relaxing paired()'s validation."""
+    if len(d) < 2:
+        seeds = sorted(d)
+        values = [d[s] for s in seeds]
+        if not np.isfinite(values).all():
+            raise ValueError("finite paired differences are required")
+        return {"status": "unavailable", "reason": "insufficient_pairs",
+                "n": len(d), "seeds": seeds, "diffs": values,
+                "mean": float(np.mean(values)) if values else None,
+                "sd": None, "p_t": None, "p_signflip": None, "tost_p": None,
+                "t_ci": None, "tost_ci90": None, "boot_ci": None,
+                "difference_ci_95": None, "equivalence_ci_90": None,
+                "within_margin_unadjusted": None}
     c = paired(d, {k: 0.0 for k in d})
     c["tost_p"] = tost(c)
     return c
@@ -102,8 +114,6 @@ for metric, f in (("post", post), ("gain", gain)):
                 if pp == p and a == x and ry is not None and s not in d:
                     d[s], plat_of[s] = f(rx) - f(ry), p
                     state_ok[s] = rx["_base_state"] == ry["_base_state"]
-        if not d:
-            continue
         c = one_sample(d)
         c["platform_of_seed"] = {str(s): plat_of[s] for s in sorted(d)}
         c["strata"] = {}
@@ -118,9 +128,11 @@ for metric, f in (("post", post), ("gain", gain)):
         c["modal_state_matched"] = {"n": len(ok), **({"mean": float(np.mean(list(ok.values())))} if ok else {})}
         C[name] = c
     for stat in ("p_t", "p_signflip", "tost_p"):
-        ps = {k: c[stat] for k, c in C.items() if c[stat] is not None}
+        # Reserve the entire pre-specified family, including unavailable tests.
+        # A placeholder p=1 protects the family size, but is not a test result.
+        ps = {k: c[stat] if c[stat] is not None else 1.0 for k, c in C.items()}
         for k, v in holm(ps).items():
-            C[k][f"holm_{stat}"] = v
+            C[k][f"holm_{stat}"] = v if C[k][stat] is not None else None
     R[f"contrasts_{metric}"] = C
 R["primary"] = "contrasts_post: mean, paired t with holm_p_t; holm_p_signflip and holm_tost_p alongside"
 

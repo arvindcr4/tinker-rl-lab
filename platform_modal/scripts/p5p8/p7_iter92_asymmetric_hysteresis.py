@@ -27,16 +27,15 @@ Outputs:
 import json
 import random
 from collections import defaultdict
-from math import lgamma, log, exp
+from math import isfinite
 from pathlib import Path
 
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
 WORK = REPO_ROOT
 N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
-OUT = WORK / "platform_hybrid/experiments/results/p5p8"
-OUT.mkdir(parents=True, exist_ok=True)
+OUT = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
 METHODS = ["grpo", "aero", "gift", "areal"]
 G_BASE = 8
 G_ESC = 16
@@ -124,7 +123,55 @@ def contrast_yield(applied, ks_per_step):
     return total_base, total_ctrl, total_ctrl - total_base
 
 
+def bootstrap_retention_from_yields(base, raw, controlled, B=4000, seed=20260705):
+    """Paired step bootstrap conditional on the recorded action trajectories.
+
+    The same sampled step indices apply to baseline, raw and controlled yields.
+    Undefined/nonpositive raw gains are counted, never mapped to retention=1.
+    The gain-difference interval is defined even when the ratio is not.
+    """
+    n = len(base)
+    if not n or len(raw) != n or len(controlled) != n or B < 1:
+        raise ValueError("aligned nonempty yields and positive B required")
+    if not all(isfinite(x) for seq in (base, raw, controlled) for x in seq):
+        raise ValueError("yield values must be finite")
+    raw_gain = [r - b for r, b in zip(raw, base)]
+    ctrl_gain = [c - b for c, b in zip(controlled, base)]
+    point_raw, point_ctrl = sum(raw_gain), sum(ctrl_gain)
+    rng = random.Random(seed)
+    ratios, differences = [], []
+    for _ in range(B):
+        indices = [rng.randrange(n) for _ in range(n)]
+        sampled_raw = sum(raw_gain[i] for i in indices)
+        sampled_ctrl = sum(ctrl_gain[i] for i in indices)
+        differences.append(sampled_ctrl - sampled_raw)
+        if sampled_raw > 0:
+            ratios.append(sampled_ctrl / sampled_raw)
+
+    def interval(values):
+        if not values:
+            return None, None, None
+        values = sorted(values)
+        return (values[len(values)//2], values[int(.025*len(values))],
+                values[min(len(values)-1, int(.975*len(values)))])
+
+    median, lo, hi = interval(ratios)
+    _, diff_lo, diff_hi = interval(differences)
+    return {
+        "yield_retention_point": point_ctrl / point_raw if point_raw > 0 else None,
+        "yield_retention_median": median, "ci_lo": lo, "ci_hi": hi,
+        "ci_excludes_1.0": lo > 1 or hi < 1 if lo is not None else None,
+        "n_valid_ratio_boot": len(ratios), "n_undefined_ratio_boot": B-len(ratios),
+        "ratio_status": ("unavailable_nonpositive_raw_gain" if point_raw <= 0 else
+                         "conditional_on_positive_raw_gain" if len(ratios) < B else "defined"),
+        "gain_difference": point_ctrl - point_raw,
+        "gain_difference_ci_lo": diff_lo, "gain_difference_ci_hi": diff_hi,
+        "bootstrap_unit": "paired_step_conditional_on_recorded_actions",
+    }
+
+
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
     zvf_by = load_step_zvf()
     ks_by = load_step_ks()
     print(f"[load] {len(METHODS)} methods x {N_STEPS} steps")
@@ -226,13 +273,12 @@ def main():
                 continue
             r = next(x for x in per_method_rows
                      if x["method"] == m and x["config"] == cfg_name)
-            ret = r["delta_yield"] / raw["delta_yield"] if raw["delta_yield"] else 0
-            print(f"{m:<8}{cfg_name:<22}{ret:>12.3f}")
+            ret = r["delta_yield"] / raw["delta_yield"] if raw["delta_yield"] > 0 else None
+            print(f"{m:<8}{cfg_name:<22}{str(ret):>12}")
 
     # ===== Paired-step bootstrap CI on yield-retention =====
     print()
     print("[boot] Paired-step bootstrap CI on yield-retention (B=4000)")
-    random.seed(20260705)
     B = 4000
     boot_rows = []
     for cfg_name, tau, k_up, k_dn in CONFIGS:
@@ -243,41 +289,25 @@ def main():
             ks_seq = [ks_by[(m, s)] for s in range(N_STEPS)]
             raw_applied, _, _, _ = hysteresis_filter(zvf_seq, 0.70, 1, 1)
             ctrl_applied, _, _, _ = hysteresis_filter(zvf_seq, tau, k_up, k_dn)
-            y_base = sum(yield_iid(k / G_BASE, G_BASE) for ks in ks_seq for k in ks)
-            diffs = []
-            for _ in range(B):
-                steps = [random.randrange(N_STEPS) for _ in range(N_STEPS)]
-                # Paired by step
-                y_raw = sum(
-                    yield_iid(ks_seq[s][p] / G_BASE, raw_applied[s])
-                    for s in steps
-                    for p in range(N_PROMPTS)
-                )
-                y_ctrl = sum(
-                    yield_iid(ks_seq[s][p] / G_BASE, ctrl_applied[s])
-                    for s in steps
-                    for p in range(N_PROMPTS)
-                )
-                diffs.append((y_ctrl - y_base) / (y_raw - y_base) if (y_raw - y_base) > 0 else 1.0)
-            diffs.sort()
-            med = diffs[B // 2]
-            lo = diffs[int(B * 0.025)]
-            hi = diffs[int(B * 0.975)]
+            base = [sum(yield_iid(k / G_BASE, G_BASE) for k in ks) for ks in ks_seq]
+            raw = [sum(yield_iid(k / G_BASE, g) for k in ks)
+                   for ks, g in zip(ks_seq, raw_applied)]
+            controlled = [sum(yield_iid(k / G_BASE, g) for k in ks)
+                          for ks, g in zip(ks_seq, ctrl_applied)]
+            result = bootstrap_retention_from_yields(base, raw, controlled, B=B)
             boot_rows.append({
                 "method": m, "config": cfg_name, "tau": tau,
-                "k_up": k_up, "k_dn": k_dn,
-                "yield_retention_median": round(med, 3),
-                "ci_lo": round(lo, 3),
-                "ci_hi": round(hi, 3),
-                "ci_excludes_1.0": lo > 1.0 or hi < 1.0,
+                "k_up": k_up, "k_dn": k_dn, **result,
             })
-            print(f"  {m:<8} {cfg_name:<22} retention={med:.3f} CI=[{lo:.3f},{hi:.3f}]")
+            print(f"  {m:<8} {cfg_name:<22} retention={result['yield_retention_point']} "
+                  f"CI=[{result['ci_lo']},{result['ci_hi']}] "
+                  f"status={result['ratio_status']}")
 
     cols_b = list(boot_rows[0].keys())
     with open(OUT / "p7_iter92_asymm_boot.tsv", "w") as f:
         f.write("\t".join(cols_b) + "\n")
         for r in boot_rows:
-            f.write("\t".join(str(r[c]) for c in cols_b) + "\n")
+            f.write("\t".join(str(r[c]) if r[c] is not None else "" for c in cols_b) + "\n")
 
     summary = {
         "iter": 92,

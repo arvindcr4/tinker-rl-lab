@@ -7,18 +7,14 @@ Vein (c)+(d) of the brief:
   (d) bootstrap CIs on every P7 headline
 
 Methodology:
-  - Controller family: Adaptive-G with a SINGLE τ threshold (Dualformer-Auto
-    simplification — a clean de-escalation rule from G_base=8 to G_des=4 when
-    z_t >= τ, mirroring Berkeley row 01's auto-G rule which yielded 56.2% savings).
-  - Per-step replay on N2 four-method reward tensors: for each step in each
-    method, compute per-prompt binary zvf, then apply the controller to each
-    prompt's zvf and count escalations/de-escalations, total_G used, and
-    contrast_intent (would-have-been-non-zero-advantage if G had been used).
-  - Per-seed replay on N10 5-seed panel: replay each τ on each seed's 15-step
-    zvf trajectory, compute savings vs G_base=8, then bootstrap-CI on savings
-    across the 5 seeds (B=2000 percentile).
-  - Combined seed-CV across the N10 panel + cross-method CV on N2.
-  - Headroom-bad: # fires on z_t >= 0.99 (sanity: must remain 0).
+  - A versioned step-level rule allocates G=4 when tau <= observed step ZVF
+    < 0.99, and G=8 otherwise, on both N2 and N10.
+  - N2 expected contrast uses within-prompt sampling without replacement.
+    Boundary groups have zero restoration, and contrast losses are retained.
+  - Budgets are retrospective allocations excluding the already observed
+    pilot; they are not claims of executable online savings.
+  - N10 seed bootstrap intervals describe savings across the observed seeds.
+    Infeasible threshold selection is explicitly unavailable.
 
 Outputs:
   platform_hybrid/experiments/results/p5p8/p7_iter99_seed_threshold_robustness_per_step_n2.tsv
@@ -30,7 +26,6 @@ Outputs:
 Stdlib only. ≤300 LoC.
 """
 import json
-import os
 import csv
 import math
 import random
@@ -39,12 +34,11 @@ from statistics import mean, stdev
 
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
 WORK = REPO_ROOT
 N2_DIR = WORK / 'platform_hybrid/experiments/results/n2_reward_tensor_resume'
 N10_DIR = WORK / 'platform_hybrid/experiments/results/n10_seed_expansion'
-OUT_DIR = WORK / 'platform_hybrid/experiments/results/p5p8'
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+OUT_DIR = WORK / 'platform_hybrid/experiments/results/p5p8/corrected-review20-v2'
 
 G_BASE = 8
 G_DES = 4  # Dualformer-Auto simplification (de-escalation only)
@@ -57,43 +51,64 @@ SEEDS = [42, 179, 316, 453, 590]
 METHODS = ['grpo', 'aero', 'gift', 'areal']
 
 
+THRESHOLD_RULE_ID = "step_zvf_deescalation_headroom_v2"
+
+
 def per_prompt_zvf(reward_tensor):
-    """reward_tensor[prompt_idx] = list of G rewards. Return per-prompt binary zvf."""
-    out = []
-    for pr in reward_tensor:
-        s = sum(pr)
-        n = len(pr)
-        out.append(1.0 if (s == 0 or s == n) else 0.0)
-    return out
+    """Observed all-equal indicator, used only to compute a step fraction."""
+    if not reward_tensor or any(len(group) != G_BASE or any(v not in (0, 1) for v in group)
+                                for group in reward_tensor):
+        raise ValueError("expected nonempty binary G=8 prompt groups")
+    return [float(sum(group) in (0, len(group))) for group in reward_tensor]
+
+
+def deescalates(step_zvf, tau):
+    """A fraction-valued step trigger with the declared saturation guard."""
+    if not 0 <= step_zvf <= 1 or not 0 <= tau <= 1:
+        raise ValueError("ZVF and threshold must be probabilities")
+    return tau <= step_zvf < HEADROOM
+
+
+def subsample_contrast_probability(rewards, size):
+    """Without-replacement chance of a mixed subset from one recorded group."""
+    n, k = len(rewards), sum(rewards)
+    if not n or any(v not in (0, 1) for v in rewards) or not 1 <= size <= n:
+        raise ValueError("valid binary group and subset size required")
+    k = int(k)
+    return 1.0 - (math.comb(k, size) + math.comb(n-k, size)) / math.comb(n, size)
 
 
 def replay_n2(tau, method_tensors):
-    """Replay single-τ controller on N2 four-method tensors at per-prompt resolution.
-    Returns dict with per-step aggregates."""
+    """Use the same step-fraction trigger as N10; preserve actual prompt counts.
+
+    Recorded groups support retrospective subsampling only. Expected contrast
+    counts may decrease; de-escalation never restores an all-equal group.
+    """
     rows = []
     for step_idx, step in enumerate(method_tensors):
-        ppz = per_prompt_zvf(step['rewards'])
-        fires_des = sum(1 for z in ppz if z >= tau)
-        # total_G used = sum over prompts of (G_DES if z >= τ else G_BASE)
-        total_G = sum(G_DES if z >= tau else G_BASE for z in ppz)
-        # contrast_intent = # prompts where original was zvf=0 (all 0 or all 1) and new G gives nonzero advantage prob.
-        # In a binary reward setup, contrast_intent ≈ # prompts where 0 < K < G.
-        # Here contrast_intent_if_saved = # prompts at boundary zvf (already boundary=1) that we'd downsample to get nonzero advantage.
-        # Simplification: contrast_intent = # boundary prompts that get de-escalated (boundary savings come from larger fraction of nonzero advantage at smaller G).
-        contrast_intent = fires_des  # boundary prompts that we down-sample to G_DES
-        baseline_G = G_BASE * N_PROMPTS
-        savings = (baseline_G - total_G) / baseline_G if baseline_G > 0 else 0.0
+        groups = step['rewards']
+        ppz = per_prompt_zvf(groups)
+        step_zvf = mean(ppz)
+        fire = deescalates(step_zvf, tau)
+        group_size = G_DES if fire else G_BASE
+        total_G = group_size * len(groups)
+        baseline_G = G_BASE * len(groups)
+        contrast_expected = sum(subsample_contrast_probability(group, group_size) for group in groups)
+        baseline_contrast = sum(1-z for z in ppz)
         rows.append({
-            'method': step['method'],
-            'step': step_idx,
-            'tau': tau,
-            'zvf': step['zvf'],
-            'total_G_prompts': total_G,
-            'baseline_G_prompts': baseline_G,
-            'savings': savings,
-            'contrast_intent': contrast_intent,
-            'fires_des': fires_des,
-            'headroom_bad': sum(1 for z in ppz if z >= HEADROOM and z >= tau),
+            'rule_id': THRESHOLD_RULE_ID,
+            'method': step['method'], 'step': step.get('step', step_idx), 'tau': tau,
+            'zvf': step_zvf,
+            'total_G_prompts': total_G, 'baseline_G_prompts': baseline_G,
+            'savings': (baseline_G-total_G) / baseline_G,
+            'expected_contrast_prompts': contrast_expected,
+            'baseline_contrast_prompts': baseline_contrast,
+            'delta_expected_contrast_prompts': contrast_expected-baseline_contrast,
+            'fires_des': len(groups) if fire else 0,
+            'fired_step': int(fire),
+            'headroom_bad': int(fire and step_zvf >= HEADROOM),
+            'outcome_status': 'recorded_group_subsampling_expectation',
+            'budget_status': 'retrospective_allocation_excludes_pilot_cost',
         })
     return rows
 
@@ -108,7 +123,7 @@ def replay_n10(tau, seed_data):
     for step in sl:
         z = step['zvf']
         zvs.append(z)
-        if z >= tau:
+        if deescalates(z, tau):
             total_G += G_DES
             fires_des += 1
             if z >= HEADROOM:
@@ -118,6 +133,7 @@ def replay_n10(tau, seed_data):
     baseline_G = G_BASE * len(sl)
     savings = (baseline_G - total_G) / baseline_G if baseline_G > 0 else 0.0
     return {
+        'rule_id': THRESHOLD_RULE_ID,
         'tau': tau,
         'seed': seed_data['seed'],
         'total_G': total_G,
@@ -127,7 +143,7 @@ def replay_n10(tau, seed_data):
         'escalations': 0,
         'deescalations': fires_des,
         'headroom_bad': headroom_bad,
-        'mean_zvf': mean(zvs),
+        'mean_zvf': mean(zvs) if zvs else None,
         'heldout_acc': seed_data.get('heldout_acc', float('nan')),
     }
 
@@ -158,6 +174,7 @@ def cv(xs):
 
 
 def main():
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     # Load N2 four-method tensors
     n2_data = {}
     for m in METHODS:
@@ -207,7 +224,7 @@ def main():
         # N2 aggregates (across methods × steps)
         n2_for_tau = [r for r in n2_per_step if r['tau'] == tau]
         n2_savings = [r['savings'] for r in n2_for_tau]
-        n2_contrast = [r['contrast_intent'] for r in n2_for_tau]
+        n2_contrast = [r['expected_contrast_prompts'] for r in n2_for_tau]
         n2_per_method_mean = {}
         for m in METHODS:
             ms = [r['savings'] for r in n2_for_tau if r['method'] == m]
@@ -229,7 +246,7 @@ def main():
             'n2_mean_savings': n2_mean_sav,
             'n2_cv_savings': n2_cv_sav,
             'n2_method_cv': n2_method_cv,
-            'n2_mean_contrast_intent': n2_mean_contrast,
+            'n2_mean_expected_contrast_prompts': n2_mean_contrast,
             'n2_grpo_savings': n2_per_method_mean['grpo'],
             'n2_aero_savings': n2_per_method_mean['aero'],
             'n2_gift_savings': n2_per_method_mean['gift'],
@@ -251,17 +268,16 @@ def main():
 
     # 4) Calibrated τ: among τ with n10_excludes_zero=True and headroom_bad=0, pick lowest CV(savings)
     valid = [r for r in ci_rows if r['n10_excludes_zero'] and
+             math.isfinite(r['n10_cv_savings']) and math.isfinite(r['n2_method_cv']) and
              next(s['n10_headroom_bad'] for s in summary if s['tau'] == r['tau']) == 0]
     if valid:
         calibrated = min(valid, key=lambda r: (r['n10_cv_savings'], r['n2_method_cv']))
         calibrated_tau = calibrated['tau']
     else:
-        calibrated = ci_rows[0]
-        calibrated_tau = calibrated['tau']
-    print(f'[OK] Calibrated τ = {calibrated_tau} '
-          f'(N10 mean savings={calibrated["n10_mean_savings"]:.4f}, '
-          f'CV(savings)={calibrated["n10_cv_savings"]:.3f}, '
-          f'CV(method)={calibrated["n2_method_cv"]:.3f})')
+        calibrated = None
+        calibrated_tau = None
+    print(f'[OK] Calibrated τ = {calibrated_tau}; status='
+          f'{"selected" if calibrated is not None else "no_feasible_threshold"}')
 
     # 5) Write outputs
     with open(OUT_DIR / 'p7_iter99_seed_threshold_robustness_per_step_n2.tsv', 'w', newline='') as f:
@@ -299,6 +315,9 @@ def main():
             'per_seed_n10': len(n10_per_seed),
             'summary': len(summary),
         },
+        'rule_id': THRESHOLD_RULE_ID,
+        'calibration_status': 'selected' if calibrated is not None else 'no_feasible_threshold',
+        'budget_status': 'retrospective_allocation_excludes_pilot_cost',
         'calibrated_tau': calibrated_tau,
         'calibrated_point': calibrated,
         'headroom_threshold': HEADROOM,
@@ -318,13 +337,14 @@ def main():
 
     # 7) Print headline
     print('\n=== HEADLINE (calibrated point) ===')
-    print(f'  τ       = {calibrated_tau}')
-    print(f'  N10 mean savings = {calibrated["n10_mean_savings"]:.4f}')
-    print(f'  N10 95% CI       = [{calibrated["n10_ci_lo"]:.4f}, {calibrated["n10_ci_hi"]:.4f}]')
-    print(f'  N10 CV(savings)  = {calibrated["n10_cv_savings"]:.4f}')
-    print(f'  N2 method CV     = {calibrated["n2_method_cv"]:.4f}')
-    print(f'  N2 mean savings  = {next(s["n2_mean_savings"] for s in summary if s["tau"] == calibrated_tau):.4f}')
-    print(f'  Headroom-bad     = {next(s["n10_headroom_bad"] for s in summary if s["tau"] == calibrated_tau)}')
+    if calibrated is not None:
+        print(f'  τ       = {calibrated_tau}')
+        print(f'  N10 mean savings = {calibrated["n10_mean_savings"]:.4f}')
+        print(f'  N10 95% CI       = [{calibrated["n10_ci_lo"]:.4f}, {calibrated["n10_ci_hi"]:.4f}]')
+        print(f'  N10 CV(savings)  = {calibrated["n10_cv_savings"]:.4f}')
+        print(f'  N2 method CV     = {calibrated["n2_method_cv"]:.4f}')
+        print(f'  N2 mean savings  = {next(s["n2_mean_savings"] for s in summary if s["tau"] == calibrated_tau):.4f}')
+        print(f'  Headroom-bad     = {next(s["n10_headroom_bad"] for s in summary if s["tau"] == calibrated_tau)}')
 
     # Print headline table
     print('\n=== Full τ sweep (N10 + N2 four-method) ===')

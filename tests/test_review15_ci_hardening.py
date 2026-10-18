@@ -161,3 +161,14 @@ def test_three_paper_compilation_is_owned_only_by_docs_build():
     assert any(
         "pytest tests/ -m latex" in step.get("run", "") for step in jobs["docs-build"]["steps"]
     )
+
+
+def test_minreport_audit_installs_schema_and_signature_dependencies():
+    jobs = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())["jobs"]
+    steps = jobs["minreport-audit"]["steps"]
+    install = next(i for i, step in enumerate(steps) if "pip install" in step.get("run", ""))
+    command = steps[install]["run"]
+    assert "cryptography==49.0.0" in command
+    assert "jsonschema==4.26.0" in command
+    verify = next(i for i, step in enumerate(steps) if "verify_inventory.py" in step.get("run", ""))
+    assert install < verify

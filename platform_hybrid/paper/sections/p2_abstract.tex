@@ -16,9 +16,12 @@ An earlier pooled ZVF--outcome correlation ($\rho\approx0.27$) is withdrawn: onl
 and the outcome column mixed held-out accuracy with training reward. The same ZVF can
 describe mastery or incapacity. Under conditionally i.i.d.\ rollouts, batch ZVF
 equals $\mathbb{E}_i[h_G(p_i)]$ with $h_G(p)=p^G+(1-p)^G$, so its excess over
-$h_G(\bar p)$ measures prompt-difficulty dispersion: on GSM8K the observed $0.158$
-is $2.9\times$ the homogeneous value $0.054$ and a beta-binomial fit (intra-prompt
-correlation $0.16$) predicts $0.170$. ZVF is equivalent to the Advantage Collapse
+$h_G(\bar p)$ reflects prompt-difficulty dispersion; without repeated sampling it
+cannot be separated from within-prompt rollout dependence, so we read it only as
+overdispersion. On GSM8K the observed $0.158$ is $2.9\times$ the homogeneous value
+$0.054$; a beta-binomial fitted to the same groups (marginal intra-class correlation
+$0.16$) gives $0.170$ in-sample but misfits the all-fail cell and is rejected by a
+goodness-of-fit test. ZVF is equivalent to the Advantage Collapse
 Rate~\cite{he2026advantage}, and the Jensen excess was shown
 in~\cite{nie2026gradstarvation}; we claim no new diagnostic. In a matched 8-seed comparison on Qwen3-8B/GSM8K
 (30 steps, 500 held-out problems), four GRPO variants---AERO, DAPO, Dr.~GRPO and

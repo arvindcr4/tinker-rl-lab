@@ -1,0 +1,24 @@
+location	claim_text	value	source_artifact	generator_script	status
+abstract;sec2	per-group plug-in delta mean	+0.1224	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+abstract;sec2	E[plug-in delta] homogeneous binomial	+0.105 (0.1046)	platform_hybrid/experiments/results/publication_fixes/zvf_confound/p2_delta_artifact.json	platform_hybrid/analysis_publication_fixes/p2_delta_artifact.py	verified
+sec2	E[plug-in delta] fitted beta-binomial (was +0.108)	+0.107 (0.10749)	platform_hybrid/experiments/results/publication_fixes/zvf_confound/p2_delta_artifact.json	platform_hybrid/analysis_publication_fixes/p2_delta_artifact.py	recomputed
+sec2	95% band of mean plug-in delta, 600 iid groups, binomial / beta-binomial	[0.095,0.114] / [0.097,0.118]	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+sec2	pooled residual h8(pbar)-ZVF_obs	-0.104	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+sec2	480-row step residual mean (TSV and raw JSON logs)	-0.0668	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+sec2	per-G step residual means G=2,4,8,16	-0.010,-0.055,-0.094,-0.109	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+sec2	prompts per step B_t	16	platform_hybrid/experiments/results/modal_registry/modal_artifacts/tinkerrl-results/groupsize_zvf/G8_s42.json		verified
+sec2	earlier step residual with '(459 steps)'	removed: 459 has no source			removed
+tab:main	observed ZVF per seed / pooled	0.130/0.190/0.155; 0.158	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+tab:main	pbar; h8(pbar); ratio	0.694; 0.054; 2.9x	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+tab:main	beta-binomial a,b, ICC, ZVF	3.61, 1.62, 0.160, 0.170	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+tab:main	k histogram	19,13,16,33,66,91,141,145,76	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+tab:main;abstract	BB expected all-fail / all-success	4.2 / 98.1	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+tab:main;sec3	LR deviance vs Binomial(8,pbar), df	341.3, 7	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+tab:main;abstract;sec3	Pearson chi2 vs fitted BB, df, p	82.2, 6, 1.3e-15	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+sec3	k=0 contribution to chi2	53.0	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+sec3	LR deviance vs BB, p	59.0, 7.3e-11	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+sec3	var(k)/binomial var	2.2x	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+sec3	parametric bootstrap exceedances	0/20000	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+sec3	pooled k<=2 expected; Pearson; df	7.5; 323.8; 5	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+sec3	distinct problems; in 2 seeds; in 3; pairs; r	503; 85; 6; 103; 0.65	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+sec3	tinker_direct_eval.py defaults: boxed suffix, boxed-or-last-int parser, max_tokens 512, 200-char prefixes	as stated	platform_hybrid/experiments/tinker_direct_eval.py		verified

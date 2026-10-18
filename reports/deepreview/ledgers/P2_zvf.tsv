@@ -1,0 +1,16 @@
+location	claim_text	value	source_artifact	generator_script	status
+p2_abstract	observed ZVF; h8(pbar); ratio	0.158; 0.054; 2.9x	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+p2_abstract;appendix A.4	beta-binomial ICC; ZVF (in-sample, rejected)	0.16; 0.170	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+zvf_cross_experiment_diagnostic:falsification	LR deviance vs binomial (replaces invalid chi2_7=8119)	341.3, 7 df, 0/20000	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+zvf_cross_experiment_diagnostic:falsification	BB expected all-fail/all-success vs observed; Pearson	4.2/98.1 vs 19/76; 82.2, 6 df	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+zvf_cross_experiment_diagnostic:falsification	distinct problems; repeated pairs; r	503; 103; 0.65	platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json	tools/review_ledger/P2_zvf_falsification_note_audit.py	recomputed
+zvf_cross_experiment_diagnostic:falsification	chi2_7=8119 (unpooled Pearson, expected cells <1)	removed			removed
+zvf_cross_experiment_diagnostic:arith	prompts per step in arithmetic logs	16	platform_hybrid/experiments/results/modal_registry/modal_artifacts/tinkerrl-results/groupsize_zvf/G8_s42.json		verified
+tab:zvf-by-library	e1 held-out, deltas, paired p, TOST p, mean ZVF, tokens	0.633 ... (5 arms)	platform_hybrid/experiments/results/e1_variance_mitigation_summary.tsv	platform_modal/scripts/e1_variance_mitigation_analysis.py	verified
+sec:zvf-cross-library	variance_mitigation.tsv / zvf_by_library.tsv synthetic corpus	removed (dry-run generator)		experiments/variance_mitigation_integration.py --dry-run	removed
+sec:zvf-iter34	strict LOO accuracy; majority; perm p	0.583; 0.417; 0.07	platform_hybrid/experiments/results/zvf_review_6c17_iter34_strict_loo_summary.tsv	platform_modal/scripts/zvf_review_6c17_audit.py	verified
+tab:zvf-scaling-tests	Spearman frac_below_0p1 / zero_fraction vs is_collapse	+0.791	platform_hybrid/experiments/results/zvf_review_6c17_scaling_spearman.tsv	platform_modal/scripts/zvf_review_6c17_audit.py	verified
+fig:zvf-scaling-cross-pillar	five-anchor proxy figure (re-plotted, minus signs)	figure	platform_hybrid/experiments/results/zvf_scaling_cross_pillar.tsv	tools/review_ledger/P2_zvf_scaling_figure.py	verified
+tab:zvf-signed	signed ZVF rows (GSM8K exact, sweep, dr-grpo)	0.025..0.766	platform_hybrid/experiments/results/zvf_signed_summary.tsv	platform_modal/scripts/zvf_signed_decomposition.py	verified
+tab:zvf-signed	AERO/GRPO odds-split rows from variance_mitigation	removed			removed
+_shared_methods (request)	Bonferroni MDE alpha=0.01, n=5/5	2.744		statsmodels TTestIndPower.solve_power	recomputed

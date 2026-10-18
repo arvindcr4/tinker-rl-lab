@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import types
 from pathlib import Path
+from tests._shared_fakes import temporary_modules
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -138,7 +139,7 @@ class TestHeldoutRewardSummary(unittest.TestCase):
         self.assertEqual(heldout_reward_summary([]), {})
 
     def test_stats_import_failure_degrades_to_mean_only(self):
-        with patch.dict(sys.modules, {"utils.stats": None}):
+        with temporary_modules({"utils.stats": None}):
             summary = heldout_reward_summary([0.0, 1.0, 1.0, 0.0])
         self.assertEqual(summary["test/reward"], 0.5)
         self.assertEqual(summary["test/reward_n"], 4.0)
@@ -492,6 +493,13 @@ class TestGRPOConfig(unittest.TestCase):
 
 
 class TestTrackingFailClosed(unittest.TestCase):
+    def setUp(self):
+        # These tests mock the online providers. A developer's offline logging
+        # preference must not prevent the intended downstream guard from running.
+        environment = patch.dict("os.environ", {"WANDB_MODE": "online"})
+        environment.start()
+        self.addCleanup(environment.stop)
+
     def _dataset(self):
         return InMemoryDataset(train=[TrainingExample(prompt="q", target="1")])
 
@@ -504,6 +512,7 @@ class TestTrackingFailClosed(unittest.TestCase):
 
         class Response:
             tokens = [1, 2]
+            logprobs = [-1.0, -1.0]
 
         class Responses:
             sequences = [Response(), Response()]
@@ -552,6 +561,10 @@ class TestTrackingFailClosed(unittest.TestCase):
 
             def create_lora_training_client(self, **_kwargs):
                 events.append("create_training_client")
+                return self.training_client
+
+            def create_training_client_from_state_with_optimizer(self, path):
+                events.append(("resume_training_client", path))
                 return self.training_client
 
         class HfApi:
@@ -623,7 +636,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         tinker = types.ModuleType("tinker")
         tinker.ServiceClient = service_client
 
-        with patch.dict(sys.modules, {"wandb": wandb, "tinker": tinker}, clear=False):
+        with temporary_modules({"wandb": wandb, "tinker": tinker}):
             with self.assertRaisesRegex(RuntimeError, "W&B online initialization failed"):
                 grpo._run_one_seed(
                     self._config(), self._dataset(), ExactMathReward(), tokenizer=None
@@ -645,7 +658,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         tinker = types.ModuleType("tinker")
         tinker.ServiceClient = service_client
 
-        with patch.dict(sys.modules, {"wandb": wandb, "tinker": tinker}, clear=False):
+        with temporary_modules({"wandb": wandb, "tinker": tinker}):
             with self.assertRaisesRegex(RuntimeError, "no live run ID"):
                 grpo._run_one_seed(
                     self._config(), self._dataset(), ExactMathReward(), tokenizer=None
@@ -754,7 +767,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         hf.HfApi = lambda **_kwargs: api
         completed = SimpleNamespace(returncode=0)
 
-        with patch.dict(sys.modules, {"huggingface_hub": hf}, clear=False):
+        with temporary_modules({"huggingface_hub": hf}):
             with patch.object(grpo, "_preflight_hf", return_value="owner"):
                 with patch.object(grpo.subprocess, "run", return_value=completed) as run:
                     receipt = grpo._publish_checkpoint(
@@ -806,7 +819,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         api.model_info.side_effect = RuntimeError("revision not found")
         hf = types.ModuleType("huggingface_hub")
         hf.HfApi = lambda **_kwargs: api
-        with patch.dict(sys.modules, {"huggingface_hub": hf}, clear=False):
+        with temporary_modules({"huggingface_hub": hf}):
             with patch.object(grpo, "_preflight_hf", return_value="owner"):
                 with patch.object(grpo.subprocess, "run", return_value=SimpleNamespace()):
                     with self.assertRaisesRegex(RuntimeError, "checkpoint verification failed"):
@@ -933,6 +946,38 @@ class TestTrackingFailClosed(unittest.TestCase):
             "source_path": str(folder_path),
         }
 
+    def _committed_critic_path(self, config):
+        receipt = json.loads(grpo._checkpoint_path(config, config.seed).read_text())
+        return grpo._critic_checkpoint_path(config, config.seed, receipt.get("critic_state_sha256"))
+
+    def _run_and_restore_first_critic_checkpoint(self, config, dataset, runtime):
+        """Restore the first receipt; its immutable sidecar must remain intact."""
+        real_write = grpo._write_checkpoint
+        saved = {}
+        receipt_path = grpo._checkpoint_path(config, config.seed)
+
+        def capture(path, payload):
+            real_write(path, payload)
+            if payload["step"] == 1 and payload["status"] == "started":
+                for saved_path in (receipt_path, self._committed_critic_path(config)):
+                    saved[saved_path] = saved_path.read_bytes()
+
+        with patch.object(grpo, "_write_checkpoint", capture):
+            result = grpo._run_one_seed(
+                config,
+                dataset,
+                ExactMathReward(),
+                runtime["tokenizer"],
+                logger=lambda _message: None,
+            )
+        self.assertEqual(len(saved), 2)
+        for path, contents in saved.items():
+            if path == receipt_path:
+                path.write_bytes(contents)
+            else:
+                self.assertEqual(path.read_bytes(), contents)
+        return result
+
     def test_critic_run_writes_state_and_logs(self):
         import torch
 
@@ -960,7 +1005,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                     )
 
                     self.assertEqual(result.run_id, "tinker-run-1")
-                    critic_path = Path(checkpoint_dir) / "critic-run_seed42.critic.pt"
+                    critic_path = self._committed_critic_path(config)
                     self.assertTrue(critic_path.exists())
                     state = torch.load(critic_path, map_location="cpu", weights_only=True)
                     self.assertIn("embedding.weight", state["model"])
@@ -973,7 +1018,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         samples = [e for e in runtime["events"] if e == "sample"]
         self.assertEqual(len(samples), 3)  # 1 pretrain batch + 2 steps
 
-    def test_critic_state_resumes_mid_run(self):
+    def test_critic_legacy_receipt_resume_control_flow(self):
         runtime = self._fake_runtime()
         messages: list[str] = []
         with _temporary_modules(self._fake_modules(runtime)):
@@ -988,20 +1033,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                         checkpoint_dir=checkpoint_dir,
                         critic_enabled=True,
                     )
-                    grpo._run_one_seed(
-                        config,
-                        self._dataset(),
-                        ExactMathReward(),
-                        runtime["tokenizer"],
-                        logger=lambda _message: None,
-                    )
-                    # Rewind the completed receipt to a mid-run state.  The
-                    # config is unchanged, so the fingerprint still matches.
-                    receipt_path = Path(checkpoint_dir) / "critic-resume_seed42.json"
-                    payload = json.loads(receipt_path.read_text())
-                    payload["status"] = "started"
-                    payload["step"] = 1
-                    receipt_path.write_text(json.dumps(payload))
+                    self._run_and_restore_first_critic_checkpoint(config, self._dataset(), runtime)
 
                     result = grpo._run_one_seed(
                         config,
@@ -1013,8 +1045,12 @@ class TestTrackingFailClosed(unittest.TestCase):
 
         self.assertEqual(len(result.reward_trace), 2)
         self.assertTrue(any("critic resumed from" in m for m in messages))
+        self.assertIn(
+            ("resume_training_client", "tinker://run/state/state_seed42_1"), runtime["events"]
+        )
+        self.assertEqual(runtime["holder"]["training_client"].optim_count, 1)
 
-    def test_critic_resume_accepts_raw_state_dict(self):
+    def test_critic_resume_rejects_unversioned_raw_state_dict(self):
         import torch
 
         runtime = self._fake_runtime()
@@ -1038,23 +1074,168 @@ class TestTrackingFailClosed(unittest.TestCase):
                         runtime["tokenizer"],
                         logger=lambda _message: None,
                     )
-                    critic_path = Path(checkpoint_dir) / "critic-raw_seed42.critic.pt"
+                    critic_path = self._committed_critic_path(config)
                     payload = torch.load(critic_path, map_location="cpu", weights_only=True)
-                    torch.save(payload["model"], critic_path)
+                    torch.save(payload["model"], grpo._critic_checkpoint_path(config, config.seed))
                     receipt_path = Path(checkpoint_dir) / "critic-raw_seed42.json"
                     receipt = json.loads(receipt_path.read_text())
+                    receipt.pop("critic_state_sha256")
+                    receipt.pop("critic_state", None)
                     receipt["status"] = "started"
-                    receipt["step"] = 1
+                    receipt["step"] = receipt["actor_step"] = 1
+                    receipt["train_state_path"] = "tinker://run/state/state_seed42_1"
                     receipt_path.write_text(json.dumps(receipt))
-                    result = grpo._run_one_seed(
-                        config,
-                        self._dataset(),
-                        ExactMathReward(),
-                        runtime["tokenizer"],
-                        logger=messages.append,
+                    with (
+                        patch.object(grpo, "_start_wandb") as tracking,
+                        self.assertRaisesRegex(RuntimeError, "actor checkpoint step"),
+                    ):
+                        grpo._run_one_seed(
+                            config,
+                            self._dataset(),
+                            ExactMathReward(),
+                            runtime["tokenizer"],
+                            logger=messages.append,
+                        )
+                    tracking.assert_not_called()
+
+    def test_legacy_critic_resume_rejects_mismatched_or_incomplete_state(self):
+        import torch
+
+        runtime = self._fake_runtime()
+        with (
+            _temporary_modules(self._fake_modules(runtime)),
+            patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt),
+            tempfile.TemporaryDirectory() as checkpoint_dir,
+        ):
+            config = GRPOConfig(
+                name="critic-pair",
+                steps=2,
+                save_every=1,
+                group_size=2,
+                batch_size=1,
+                checkpoint_dir=checkpoint_dir,
+                critic_enabled=True,
+            )
+            self._run_and_restore_first_critic_checkpoint(config, self._dataset(), runtime)
+            original = torch.load(
+                self._committed_critic_path(config), map_location="cpu", weights_only=True
+            )
+            path = grpo._critic_checkpoint_path(config, config.seed)
+            receipt_path = grpo._checkpoint_path(config, config.seed)
+            receipt = json.loads(receipt_path.read_text())
+            receipt.pop("critic_state_sha256")
+            receipt_path.write_text(json.dumps(receipt))
+            for changes in (
+                {"step": 0},
+                {"step": 2},
+                {"step": True},
+                {"step": "1"},
+                {"step": None},
+                {"optimizer": None},
+            ):
+                with self.subTest(changes=changes):
+                    payload = dict(original)
+                    payload.update(changes)
+                    if changes.get("optimizer", "present") is None:
+                        del payload["optimizer"]
+                    torch.save(payload, path)
+                    with (
+                        patch.object(grpo, "_start_wandb") as tracking,
+                        self.assertRaisesRegex(RuntimeError, "actor checkpoint step 1"),
+                    ):
+                        grpo._run_one_seed(
+                            config, self._dataset(), ExactMathReward(), runtime["tokenizer"]
+                        )
+                    tracking.assert_not_called()
+
+    def test_interrupted_critic_or_receipt_write_preserves_last_committed_pair(self):
+        for phase in ("critic", "receipt"):
+            with self.subTest(phase=phase):
+                runtime = self._fake_runtime()
+                with (
+                    _temporary_modules(self._fake_modules(runtime)),
+                    patch.object(
+                        grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt
+                    ),
+                    tempfile.TemporaryDirectory() as checkpoint_dir,
+                ):
+                    config = GRPOConfig(
+                        name="critic-torn",
+                        steps=2,
+                        save_every=1,
+                        group_size=2,
+                        batch_size=1,
+                        checkpoint_dir=checkpoint_dir,
+                        critic_enabled=True,
                     )
-        self.assertEqual(len(result.reward_trace), 2)
-        self.assertTrue(any("critic resumed from" in m for m in messages))
+                    real_save, real_write = grpo._save_critic, grpo._write_checkpoint
+
+                    def interrupted_save(*args, **kwargs):
+                        if phase == "critic" and kwargs["step"] == 2:
+                            raise OSError("simulated interrupted commit")
+                        return real_save(*args, **kwargs)
+
+                    def interrupted_write(path, payload):
+                        if phase == "receipt" and payload["step"] == 2:
+                            raise OSError("simulated interrupted commit")
+                        return real_write(path, payload)
+
+                    with (
+                        patch.object(grpo, "_save_critic", interrupted_save),
+                        patch.object(grpo, "_write_checkpoint", interrupted_write),
+                        self.assertRaisesRegex(OSError, "interrupted commit"),
+                    ):
+                        grpo._run_one_seed(
+                            config, self._dataset(), ExactMathReward(), runtime["tokenizer"]
+                        )
+                    receipt = json.loads(grpo._checkpoint_path(config, config.seed).read_text())
+                    self.assertEqual(receipt["step"], 1)
+                    self.assertTrue(self._committed_critic_path(config).exists())
+                    if phase == "receipt":
+                        self.assertGreaterEqual(
+                            len(list(Path(checkpoint_dir).glob("critic-*.pt"))), 2
+                        )
+                    result = grpo._run_one_seed(
+                        config, self._dataset(), ExactMathReward(), runtime["tokenizer"]
+                    )
+                    self.assertEqual(result.resumed_from_step, 1)
+                    self.assertEqual(runtime["holder"]["training_client"].optim_count, 1)
+                    self.assertEqual(len(result.reward_trace), 2)
+
+    def test_final_critic_failure_cannot_leave_completed_receipt(self):
+        runtime = self._fake_runtime()
+        with (
+            _temporary_modules(self._fake_modules(runtime)),
+            patch.object(grpo, "_publish_checkpoint", side_effect=self._fake_success_receipt),
+            tempfile.TemporaryDirectory() as checkpoint_dir,
+        ):
+            config = GRPOConfig(
+                name="critic-final-failure",
+                steps=1,
+                save_every=1,
+                group_size=2,
+                batch_size=1,
+                checkpoint_dir=checkpoint_dir,
+                critic_enabled=True,
+            )
+            real_save = grpo._save_critic
+            calls = 0
+
+            def fail_final(*args, **kwargs):
+                nonlocal calls
+                calls += 1
+                if calls == 2:
+                    raise OSError("simulated final critic failure")
+                return real_save(*args, **kwargs)
+
+            with patch.object(grpo, "_save_critic", fail_final):
+                with self.assertRaisesRegex(OSError, "final critic"):
+                    grpo._run_one_seed(
+                        config, self._dataset(), ExactMathReward(), runtime["tokenizer"]
+                    )
+            receipt = json.loads(grpo._checkpoint_path(config, config.seed).read_text())
+            self.assertEqual(receipt["status"], "started")
+            self.assertNotIn("result", receipt)
 
     def test_critic_resume_without_state_fails_closed(self):
         runtime = self._fake_runtime()
@@ -1080,9 +1261,10 @@ class TestTrackingFailClosed(unittest.TestCase):
                     receipt_path = Path(checkpoint_dir) / "critic-missing_seed42.json"
                     payload = json.loads(receipt_path.read_text())
                     payload["status"] = "started"
-                    payload["step"] = 1
+                    payload["step"] = payload["actor_step"] = 2
+                    payload["train_state_path"] = "tinker://run/state/state_seed42_1"
                     receipt_path.write_text(json.dumps(payload))
-                    (Path(checkpoint_dir) / "critic-missing_seed42.critic.pt").unlink()
+                    self._committed_critic_path(config).unlink()
                     with self.assertRaisesRegex(RuntimeError, "no critic state"):
                         grpo._run_one_seed(
                             config,
@@ -1092,7 +1274,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                             logger=lambda _message: None,
                         )
 
-    def test_critic_pretrain_resume_keeps_example_order(self):
+    def test_critic_pretrain_receipt_resume_keeps_example_order(self):
         dataset = InMemoryDataset(
             train=[
                 TrainingExample(prompt="easy", target="1"),
@@ -1114,18 +1296,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                         critic_pretrain_batches=1,
                         seed=42,
                     )
-                    full = grpo._run_one_seed(
-                        config,
-                        dataset,
-                        ExactMathReward(),
-                        runtime["tokenizer"],
-                        logger=lambda _message: None,
-                    )
-                    receipt_path = Path(checkpoint_dir) / "critic-pretrain-resume_seed42.json"
-                    payload = json.loads(receipt_path.read_text())
-                    payload["status"] = "started"
-                    payload["step"] = 1
-                    receipt_path.write_text(json.dumps(payload))
+                    full = self._run_and_restore_first_critic_checkpoint(config, dataset, runtime)
                     resumed = grpo._run_one_seed(
                         config,
                         dataset,
@@ -1143,17 +1314,31 @@ class TestTrackingFailClosed(unittest.TestCase):
             config = GRPOConfig(name="critic-atomic", checkpoint_dir=checkpoint_dir)
             critic = grpo.PromptValueCritic()
             opt = torch.optim.Adam(critic.parameters())
-            grpo._save_critic(config, 42, critic, opt, step=2)
-            critic_path = Path(checkpoint_dir) / "critic-atomic_seed42.critic.pt"
+            digest = grpo._save_critic(config, 42, critic, opt, step=2)
+            critic_path = grpo._critic_checkpoint_path(config, 42, digest)
             payload = torch.load(critic_path, map_location="cpu", weights_only=True)
             self.assertEqual(payload["step"], 2)
             self.assertIn("optimizer", payload)
             # A kill mid-save must leave the previous state intact: the
             # write goes to a temp file first, so a failed save cannot
             # truncate the committed one.
-            with patch.object(torch, "save", side_effect=RuntimeError("boom")):
-                with self.assertRaises(RuntimeError):
+            before = critic_path.read_bytes()
+
+            def fail_after_partial_write(payload, destination, **kwargs):
+                if hasattr(destination, "write"):
+                    destination.write(b"partial checkpoint")
+                else:
+                    Path(destination).write_bytes(b"partial checkpoint")
+                raise OSError("injected partial write")
+
+            with patch.object(torch, "save", side_effect=fail_after_partial_write):
+                with self.assertRaises(OSError):
                     grpo._save_critic(config, 42, critic, opt, step=3)
+            self.assertEqual(critic_path.read_bytes(), before)
+            with patch.object(grpo.os, "link", side_effect=OSError("injected publish failure")):
+                with self.assertRaises(OSError):
+                    grpo._save_critic(config, 42, critic, opt, step=3)
+            self.assertEqual(critic_path.read_bytes(), before)
             payload = torch.load(critic_path, map_location="cpu", weights_only=True)
             self.assertEqual(payload["step"], 2)
 
@@ -1279,7 +1464,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                     receipt_path = Path(checkpoint_dir) / "dynamic-resume_seed42.json"
                     payload = json.loads(receipt_path.read_text())
                     payload["status"] = "started"
-                    payload["step"] = 1
+                    payload["step"] = payload["actor_step"] = 1
                     receipt_path.write_text(json.dumps(payload))
                     with self.assertRaisesRegex(RuntimeError, "dynamic-sampling draws"):
                         grpo._run_one_seed(
@@ -1548,7 +1733,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                         runtime["tokenizer"],
                         logger=lambda _message: None,
                     )
-                    sidecar = Path(checkpoint_dir) / "critic-completed_seed42.critic.pt"
+                    sidecar = self._committed_critic_path(config)
                     self.assertTrue(sidecar.exists())
                     sidecar.unlink()
                     second = grpo._run_one_seed(
@@ -1562,7 +1747,7 @@ class TestTrackingFailClosed(unittest.TestCase):
         self.assertEqual(second.run_id, first.run_id)
         self.assertEqual(second.sampler_path, first.sampler_path)
 
-    def test_rewound_final_does_not_restore_discarded_counters(self):
+    def test_rewound_final_without_actor_state_cannot_resume(self):
         dataset = InMemoryDataset(
             train=[
                 TrainingExample(prompt="easy", target="1"),
@@ -1582,7 +1767,7 @@ class TestTrackingFailClosed(unittest.TestCase):
                         checkpoint_dir=checkpoint_dir,
                         seed=42,
                     )
-                    full = grpo._run_one_seed(
+                    grpo._run_one_seed(
                         config,
                         dataset,
                         ExactMathReward(),
@@ -1596,19 +1781,18 @@ class TestTrackingFailClosed(unittest.TestCase):
                     payload["result"]["zero_reward_steps"] = 9
                     payload["result"]["zero_loss_steps"] = 5
                     receipt_path.write_text(json.dumps(payload))
-                    resumed = grpo._run_one_seed(
-                        config,
-                        dataset,
-                        ExactMathReward(),
-                        runtime["tokenizer"],
-                        logger=lambda _message: None,
-                    )
-        self.assertEqual(resumed.reward_trace, full.reward_trace)
-        self.assertEqual(
-            resumed.zero_reward_steps,
-            sum(1 for reward in resumed.reward_trace if reward == 0),
-        )
-        self.assertEqual(resumed.zero_loss_steps, 0)
+                    with (
+                        patch.object(grpo, "_start_wandb") as tracking,
+                        self.assertRaisesRegex(ValueError, "unsafe rewind"),
+                    ):
+                        grpo._run_one_seed(
+                            config,
+                            dataset,
+                            ExactMathReward(),
+                            runtime["tokenizer"],
+                            logger=lambda _message: None,
+                        )
+                    tracking.assert_not_called()
 
 
 class TestTrainingExample(unittest.TestCase):
@@ -1671,7 +1855,7 @@ class TestXLAMDataset(unittest.TestCase):
 
         datasets.load_dataset = fake_load_dataset
         revision = "26d14ebfe18b1f7b524bd39b404b50af5dc97866"
-        with patch.dict(sys.modules, {"datasets": datasets}, clear=False):
+        with temporary_modules({"datasets": datasets}):
             dataset = make_xlam_dataset(seed=809, revision=revision)
 
         self.assertEqual(
@@ -1694,7 +1878,7 @@ class TestXLAMDataset(unittest.TestCase):
             return []
 
         datasets.load_dataset = fake_load_dataset
-        with patch.dict(sys.modules, {"datasets": datasets}, clear=False):
+        with temporary_modules({"datasets": datasets}):
             make_xlam_dataset()
 
         self.assertEqual(calls, [("Salesforce/xlam-function-calling-60k", {"split": "train"})])
@@ -1772,7 +1956,7 @@ class TestPavlovPortfolioDataset(unittest.TestCase):
             e4 = root / "outputs/e4_banker_toolbench/official_repo_ff6db552/native-data"
             e4.mkdir(parents=True)
             (e4 / "tasks.jsonl").write_text('{"task_id":"eval-e4"}\n')
-            with patch.dict(sys.modules, {"datasets": datasets}, clear=False):
+            with temporary_modules({"datasets": datasets}):
                 dataset = make_pavlov_non_xlam_dataset(seed=809, repo_root=root)
 
         self.assertEqual(len(dataset.train_examples()), 512)
@@ -1814,11 +1998,13 @@ class TestPavlovPortfolioReward(unittest.TestCase):
         self.assertGreater(partial, 0.2)
         self.assertLess(partial, 1.0)
 
-    def test_whitespace_equivalent_diff_is_exact_and_a_missing_header_is_zero(self):
+    def test_line_ending_equivalent_diff_is_exact_and_a_missing_header_is_zero(self):
         expected = "diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-x\n+y"
         example = TrainingExample(prompt="q", target=expected)
         reward = PatchReward()
-        padded = "\n" + expected.replace("\n", "  \n") + "\n\n"
+        # Only line endings and boundary blank newlines are equivalent;
+        # whitespace inside a diff line is source content or hunk structure.
+        padded = "\r\n" + expected.replace("\n", "\r\n") + "\r\n\r\n"
         self.assertEqual(reward.score(padded, example), 1.0)
         body = "--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-x\n+y"
         self.assertEqual(reward.score(body, example), 0.0)
@@ -1920,13 +2106,13 @@ class TestToolCallReward(unittest.TestCase):
         r = ToolCallReward()
         resp = '{"tool": "calculator", "arguments": {"wrong": "x"}}'
         score = r.score(resp, self._ex("calculator", {"expression": "1+1"}))
-        self.assertAlmostEqual(score, 0.7)
+        self.assertAlmostEqual(score, 0.5)
 
     def test_valid_json_wrong_tool(self):
         r = ToolCallReward()
         resp = '{"tool": "other_tool", "arguments": {}}'
         score = r.score(resp, self._ex("calculator", {"expression": "1+1"}))
-        self.assertAlmostEqual(score, 0.3)
+        self.assertAlmostEqual(score, 0.1)
 
     def test_no_json(self):
         r = ToolCallReward()
@@ -1936,29 +2122,29 @@ class TestToolCallReward(unittest.TestCase):
         r = ToolCallReward()
         example = self._ex("calculator", {"expression": "1+1"})
         wrapped = 'plan {"tool": "calculator", "arguments": {"expression": "1+1"}} done'
-        self.assertAlmostEqual(r.score(wrapped, example), 1.0)
+        self.assertAlmostEqual(r.score(wrapped, example), 0.0)
         self.assertEqual(StrictToolCallReward().score(wrapped, example), 0.0)
         doubled = (
             '{"tool": "calculator", "arguments": {"expression": "1+1"}} '
             '{"tool": "calculator", "arguments": {"expression": "1+1"}}'
         )
-        self.assertAlmostEqual(r.score(doubled, example), 0.1)
+        self.assertAlmostEqual(r.score(doubled, example), 0.0)
 
-    def test_legacy_credit_is_key_presence_not_exact_values(self):
+    def test_legacy_entry_uses_semantic_values(self):
         r = ToolCallReward()
         example = self._ex("calculator", {"expression": "1+1"})
         wrong_value = '{"tool": "calculator", "arguments": {"expression": "WRONG"}}'
-        self.assertAlmostEqual(r.score(wrong_value, example), 1.0)
+        self.assertAlmostEqual(r.score(wrong_value, example), 0.7)
         self.assertAlmostEqual(StrictToolCallReward().score(wrong_value, example), 0.7)
         alias = '{"name": "calculator", "parameters": {"expression": "1+1"}}'
         self.assertAlmostEqual(r.score(alias, example), 1.0)
         empty = self._ex("calculator", {})
-        self.assertAlmostEqual(r.score('{"tool": "calculator", "arguments": {}}', empty), 0.7)
+        self.assertAlmostEqual(r.score('{"tool": "calculator", "arguments": {}}', empty), 1.0)
         partial = self._ex("calculator", {"expression": "1+1", "mode": "deg"})
         one_key = '{"tool": "calculator", "arguments": {"expression": "1+1"}}'
-        self.assertAlmostEqual(r.score(one_key, partial), 0.85)
+        self.assertAlmostEqual(r.score(one_key, partial), 0.5 + 0.2 * (2 / 3) + 0.15)
         not_a_dict = '{"tool": "calculator", "arguments": "1+1"}'
-        self.assertAlmostEqual(r.score(not_a_dict, example), 0.7)
+        self.assertAlmostEqual(r.score(not_a_dict, example), 0.0)
 
     def test_invalid_json(self):
         r = ToolCallReward()
@@ -1968,7 +2154,7 @@ class TestToolCallReward(unittest.TestCase):
     def test_malformed_json_with_brace(self):
         r = ToolCallReward()
         # "{bad json}" has braces but json.loads fails => 0.1
-        self.assertAlmostEqual(r.score("{bad json}", self._ex("calc", {})), 0.1)
+        self.assertAlmostEqual(r.score("{bad json}", self._ex("calc", {})), 0.0)
 
 
 class TestStrictToolCallReward(unittest.TestCase):
@@ -2181,7 +2367,7 @@ class TestMathReward(unittest.TestCase):
     def test_boxed_grouping_and_tolerance_do_not_fall_through(self):
         r = MathReward()
         self.assertAlmostEqual(r.score("\\boxed{1, 234}", self._ex("1234")), 1.0)
-        self.assertAlmostEqual(r.score("\\boxed{42.005}", self._ex("42")), 1.0)
+        self.assertAlmostEqual(r.score("\\boxed{42.005}", self._ex("42")), 0.3)
         self.assertAlmostEqual(r.score("\\boxed{42.02}", self._ex("42")), 0.3)
         # A boxed answer stops the search. A later correct number does not rescue it.
         self.assertAlmostEqual(r.score("\\boxed{99} and the end is 42", self._ex("42")), 0.3)
@@ -2198,13 +2384,13 @@ class TestExactMathReward(unittest.TestCase):
         self.assertEqual(reward.score("\\boxed{42}", example), 1.0)
         self.assertEqual(reward.score("The answer might be \\boxed{41}", example), 0.0)
         thousands = TrainingExample(prompt="q", target="1234")
-        self.assertEqual(reward.score("total is 1,234", thousands), 1.0)
+        self.assertEqual(reward.score("total is 1,234", thousands), 0.0)
         self.assertEqual(reward.score("1,234 then 5", thousands), 0.0)
-        self.assertEqual(reward.score("\\boxed{99} and the end is 42", example), 1.0)
-        self.assertEqual(reward.score("42.005", example), 1.0)
+        self.assertEqual(reward.score("\\boxed{99} and the end is 42", example), 0.0)
+        self.assertEqual(reward.score("42.005", example), 0.0)
         self.assertEqual(reward.score("42.02", example), 0.0)
         self.assertEqual(
-            reward.score("answer is -42", TrainingExample(prompt="q", target="-42")),
+            reward.score("answer: -42", TrainingExample(prompt="q", target="-42")),
             1.0,
         )
 

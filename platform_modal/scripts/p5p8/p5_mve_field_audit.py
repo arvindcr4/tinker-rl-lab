@@ -51,11 +51,11 @@ from collections import defaultdict
 from statistics import mean, median, stdev
 
 # --- I/O paths ---
-WORKTREE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+WORKTREE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 CELLS_TSV = os.path.join(WORKTREE, "platform_hybrid/experiments/results/mega_20260704/cells.tsv")
-OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8/review17_v2")
 FIG_DIR = os.path.join(OUT_DIR, "figures")
-os.makedirs(FIG_DIR, exist_ok=True)
+
 
 # --- audit constants ---
 MVE_FIELDS = ["mean_reward", "zvf", "pcd", "mean_completion_len", "std_completion_len"]
@@ -65,9 +65,14 @@ BOOT_B = 2000
 SEED = 20260704
 
 # --- helpers ---
+from p5_review17_stats import additive_r2, ratio_interval
+
+from p5_review17_stats import json_safe
+
 def safe_float(x):
     try:
-        return float(x)
+        value = float(x)
+        return value if math.isfinite(value) else None
     except (ValueError, TypeError):
         return None
 
@@ -137,6 +142,8 @@ def pearson(xs, ys):
     return sxy / math.sqrt(sxx * syy)
 
 def main():
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    os.makedirs(FIG_DIR, exist_ok=True)
     # 1) Load cells.tsv
     with open(CELLS_TSV) as f:
         reader = csv.DictReader(f, delimiter="\t")
@@ -210,10 +217,11 @@ def main():
             })
         # cross-axis sum
         axis_etas = [r["eta2"] for r in eta2_rows if r["field"] == f and r["eta2"] is not None]
-        cross_sum = sum(axis_etas)
+        valid_rows = [r for r in rows if safe_float(r.get(f, "")) is not None]
+        cross_sum = additive_r2(valid_rows, [safe_float(r[f]) for r in valid_rows], STACK_AXES)
         eta2_rows.append({
             "field": f,
-            "axis": "CROSS_SUM",
+            "axis": "JOINT_CATEGORICAL_OLS_R2",
             "n_groups": None,
             "eta2": round(cross_sum, 4),
             "ci_lo": None,
@@ -314,6 +322,8 @@ def main():
 
     # --- save summary JSON ---
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "n_cells": n_cells,
         "mve_fields": MVE_FIELDS,
         "stack_axes": STACK_AXES,
@@ -339,7 +349,7 @@ def main():
         "seed": SEED,
     }
     with open(os.path.join(OUT_DIR, "p5_mve_field_summary.json"), "w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(json_safe(summary), f, indent=2)
 
     # --- figure: 5-panel per-field distribution ---
     try:

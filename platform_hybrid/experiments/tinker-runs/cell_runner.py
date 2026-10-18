@@ -41,7 +41,7 @@ MAPPING ASSUMPTIONS (please confirm — see README at bottom of run_sweep docstr
                   prompts the existing runner trains on; it changes no training
                   logic.
   --loss       -> the existing runner uses one GRPO surrogate (REINFORCE with a
-                  per-group standardized advantage == the canonical
+                  per-group standardized advantage; a custom
                   "importance_sampling" GRPO surrogate already in the repo).
                   We record the requested arm faithfully and apply the
                   arm-specific advantage post-processing the loop supports:
@@ -56,6 +56,13 @@ MAPPING ASSUMPTIONS (please confirm — see README at bottom of run_sweep docstr
                   audit can stratify by it.
 """
 from __future__ import annotations
+
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 3:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
+from platform_hybrid.experiments.framework_contracts import objective_identity, response_logprobs
+
 
 import argparse
 import csv
@@ -163,12 +170,12 @@ def install_loss_arm(probe_module, loss: str) -> None:
     """Adjust the existing runner's loss surrogate for the requested arm.
 
     The in-repo loop computes a per-group standardized advantage and a
-    REINFORCE-style loss `-(adv * sum(logprob))`. That is the canonical GRPO /
-    importance_sampling surrogate already used across the repo. For dapo / gspo
+    REINFORCE-style loss `-(adv * sum(logprob))`. This is a group-standardized policy-gradient surrogate, without an importance ratio. For dapo / gspo
     we wrap probe_module.loss_fn with the arm-specific post-processing the loop
     supports. We do NOT fabricate metrics; we only change how the (real) loss is
     formed from the (real) advantages and (real) log-probs.
     """
+    probe_module.OBJECTIVE_IDENTITY = objective_identity(loss)
     if loss in ("importance_sampling", "grpo"):
         return  # baseline surrogate == what the runner already does
 
@@ -177,24 +184,24 @@ def install_loss_arm(probe_module, loss: str) -> None:
     advs = probe_module._ADVS  # the live advantage buffer the runner fills
 
     if loss == "dapo":
-        # DAPO: asymmetric (clip-higher) advantage clipping, length-unbiased.
+        # DAPO-labelled surrogate: asymmetric advantage clipping, not ratio clipping.
         clip_lo, clip_hi = -2.0, 3.0
 
         def loss_fn(_data, logprobs_list):
             losses = []
             for i in range(len(logprobs_list)):
                 a = max(clip_lo, min(clip_hi, advs[i]))
-                losses.append(-a * logprobs_list[i].sum())
+                losses.append(-a * response_logprobs(_data[i], logprobs_list[i]).sum())
             loss_t = losses[0] if len(losses) == 1 else torch.stack(losses).mean()
             return loss_t, {"loss": loss_t.item()}
 
     elif loss == "gspo":
-        # GSPO: sequence-level objective -> aggregate log-probs by MEAN per
+        # GSPO-labelled surrogate: aggregate response log-probs by MEAN per
         # sequence (length-normalized) instead of SUM.
         def loss_fn(_data, logprobs_list):
             losses = []
             for i in range(len(logprobs_list)):
-                lp = logprobs_list[i]
+                lp = response_logprobs(_data[i], logprobs_list[i])
                 seq = lp.mean() if lp.numel() > 0 else lp.sum()
                 losses.append(-advs[i] * seq)
             loss_t = losses[0] if len(losses) == 1 else torch.stack(losses).mean()
@@ -202,8 +209,8 @@ def install_loss_arm(probe_module, loss: str) -> None:
     elif loss == "drgrpo":
         # Dr.GRPO: remove the /std normalization of the per-group advantage.
         # The runner computes A = (r - mean) / std by default. Dr.GRPO uses
-        # A = (r - mean) (no /std), which removes the bias toward shorter
-        # responses. We achieve this by toggling the module-level flag
+        # A = (r - mean) (no /std). This surrogate does not implement the
+        # canonical fixed-token denominator. We toggle the module-level flag
         # _ADV_NORMALIZE_STD in live_zvf_probe BEFORE the runner's next
         # optimizer step. We do NOT modify the loss_fn (the standard
         # REINFORCE/GRPO loss form is unchanged); we only change the
@@ -216,7 +223,7 @@ def install_loss_arm(probe_module, loss: str) -> None:
             # matching the in-repo loop's loss kernel.
             losses = []
             for i in range(len(logprobs_list)):
-                losses.append(-advs[i] * logprobs_list[i].sum())
+                losses.append(-advs[i] * response_logprobs(_data[i], logprobs_list[i]).sum())
             loss_t = losses[0] if len(losses) == 1 else torch.stack(losses).mean()
             return loss_t, {"loss": loss_t.item()}
     else:  # pragma: no cover - guarded earlier
@@ -241,8 +248,7 @@ def upsert_master_row(result: dict, cell: dict) -> None:
         "model": result.get("model", cell["model"]),
         "model_short": result.get("model_short", cell["model"].split("/")[-1].lower()),
         # method records the loss arm so the audit can stratify by it.
-        "method": "GRPO" if cell["loss"] in ("grpo", "importance_sampling")
-                  else cell["loss"].upper(),
+        "method": objective_identity(cell["loss"])["objective_id"],
         "task": result.get("task", cell["task"]),
         "platform": "tinker",
         "seed": result.get("seed", cell["seed"]),
@@ -338,6 +344,8 @@ def main(argv=None) -> int:
 
     out_path = Path(args.out).expanduser().resolve()
     out_path.parent.mkdir(parents=True, exist_ok=True)
+    if out_path.exists():
+        raise FileExistsError("Refusing to overwrite a prior cell attempt; select a new output/tag")
 
     cell = {
         "tag": args.tag, "model": args.model, "task": args.task,
@@ -367,6 +375,7 @@ def main(argv=None) -> int:
     # exactly these attributes.
     run_args = argparse.Namespace(
         model=args.model,
+        difficulty=args.difficulty,
         seed=args.seed,
         rank=args.rank,
         steps=args.steps,

@@ -10,6 +10,12 @@ Pulls W&B data from tinker-structural-ceiling project and generates:
 """
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import require_empirical, EvidenceUnavailable
+
+
 import json
 from pathlib import Path
 
@@ -59,6 +65,10 @@ def load_wandb_runs(project: str = "tinker-structural-ceiling") -> pd.DataFrame:
                 **{f"summary_{k}": v for k, v in run.summary.items()
                    if not k.startswith("_")},
             }
+            # Promote only measured summary endpoints; never accept config declarations
+            # as a substitute for observed endpoint/provenance fields.
+            for field in ("heldout_before", "heldout_after", "evaluation_ids_hash"):
+                record[field] = record.get(f"summary_{field}")
             # LIMITATION: "Early-Training Snapshot Problem" - flag or filter runs with very few
             # gradient steps (e.g., 30-50 steps) to avoid extrapolating from incomplete training dynamics.
             records.append(record)
@@ -69,31 +79,19 @@ def load_wandb_runs(project: str = "tinker-structural-ceiling") -> pd.DataFrame:
 
 
 def scaling_curve(df: pd.DataFrame) -> None:
-    """Plot model size vs. GSM8K accuracy improvement."""
-    try:
-        import matplotlib.pyplot as plt
-
-        size_runs = df[df["group"].str.contains("size-ladder", na=False)].copy()
-        if size_runs.empty:
-            print("No size-ladder data yet.")
-            return
-
-        # LIMITATION: "Failure to Prove Generalization" - Compute statistical significance (e.g., p-values)
-        # for the accuracy delta on held-out test sets to prove gains are not just training set memorization noise.
-        # LIMITATION: "Single-Seed Extrapolations" - Aggregate across multiple random seeds and plot
-        # confidence intervals or error bars instead of relying on highly variant N=1 runs.
-
-        fig, ax = plt.subplots(figsize=(8, 5))
-        ax.set_xlabel("Model Size (B params)")
-        ax.set_ylabel("GSM8K Accuracy Delta (post-RL - base)")
-        ax.set_title("Structural Ceiling: Size Scaling Curve")
-        ax.axhline(y=0, color="red", linestyle="--", alpha=0.5, label="No improvement")
-        ax.set_xscale("log")
-        ax.legend()
-        fig.savefig("scaling_curve.png", dpi=150, bbox_inches="tight")
-        print("Saved: scaling_curve.png")
-    except ImportError:
-        print("matplotlib not available — skipping plot")
+    import matplotlib.pyplot as plt
+    records = df.to_dict("records")
+    if not records:
+        raise EvidenceUnavailable("No measured scaling points")
+    for r in records:
+        require_empirical(r)
+        if any(r.get(k) is None for k in ("model_size_b", "heldout_before", "heldout_after", "evaluation_ids_hash")):
+            raise EvidenceUnavailable("Scaling points require held-out endpoints and evaluation IDs")
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.scatter([r["model_size_b"] for r in records], [r["heldout_after"]-r["heldout_before"] for r in records])
+    ax.set(xlabel="Model size (B parameters)", ylabel="Held-out accuracy change", title="Observed change within tested budget")
+    fig.savefig("scaling_curve.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
 
 
 def saturation_phase_diagram(df: pd.DataFrame) -> None:
@@ -125,29 +123,19 @@ def saturation_phase_diagram(df: pd.DataFrame) -> None:
 
 
 def generate_latex_table(df: pd.DataFrame) -> str:
-    """Generate LaTeX table for paper."""
-    header = (
-        "\\begin{table}[htbp]\n"
-        "\\centering\n"
-        "\\caption{10x Structural Ceiling: Experimental Matrix Results}\n"
-        "\\label{tab:10x-results}\n"
-        "\\small\n"
-        "\\begin{tabular}{@{}llcccc@{}}\n"
-        "\\toprule\n"
-        "\\textbf{Block} & \\textbf{Model} & \\textbf{Benchmark} & "
-        "\\textbf{Base Acc} & \\textbf{Post-RL Acc} & \\textbf{$\\Delta$} \\\\\n"
-        "\\midrule\n"
-    )
-    # LIMITATION: "The Closed-Source Confound" - The table should clearly separate closed-source
-    # frameworks (like Tinker) from open-source baselines (like TRL) to isolate algorithmic gains
-    # from undisclosed managed infrastructure advantages.
-    rows = ""
-    footer = (
-        "\\bottomrule\n"
-        "\\end{tabular}\n"
-        "\\end{table}\n"
-    )
-    return header + rows + footer
+    records = df.to_dict("records")
+    if not records:
+        raise EvidenceUnavailable("No measured table rows")
+    lines = [r"\begin{tabular}{lrrr}", r"Model & Before & After & Difference \\"]
+    for r in records:
+        require_empirical(r)
+        if any(r.get(k) is None for k in ("model", "heldout_before", "heldout_after", "evaluation_ids_hash")):
+            raise EvidenceUnavailable("Missing held-out table endpoint/provenance")
+        label = str(r["model"]).replace("_", r"\_").replace("%", r"\%")
+        before, after = r["heldout_before"], r["heldout_after"]
+        lines.append(f"{label} & {before:.3f} & {after:.3f} & {after-before:+.3f} " + r"\\")
+    lines.append(r"\end{tabular}")
+    return "\n".join(lines)
 
 
 if __name__ == "__main__":

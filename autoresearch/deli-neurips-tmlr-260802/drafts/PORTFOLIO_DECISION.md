@@ -148,7 +148,7 @@ Remaining work (~1 working day):
    class `C3_single_seed`), or cut Table 2 entirely. **Blocking.**
 4. Fix Table 2's "Held-out Δ" header — the GRPO baseline row is 0.500, so it is a within-arm
    pre/post change, not a delta versus GRPO.
-5. Add an explicit non-claims paragraph: no published delta was registered; DISAPPEARS was
+5. Add an explicit non-claims paragraph: no published delta was registered; the former DISAPPEARS classification was
    unreachable a priori at n=8 (smallest achievable MDE80 across arms is 0.0101 against a 0.01
    margin); replay perturbs a held-out score by up to 0.004, which exceeds the 0.001 DAPO point
    difference; DAPO consumed 3.61× the rollouts, so the stack lock controls implementation but
@@ -348,7 +348,7 @@ Colab allocation variance: **3–6 weeks, not 15 days.**
 
 At the observed DAPO paired sd of 0.00875, **n=9 yields MDE80 = 0.00934 ≤ the 0.01 margin**. That
 is **2 additional A100 runs** (one GRPO seed + one DAPO seed, ~7.6 A100-hours, roughly $10) to
-convert DAPO from INCONCLUSIVE to a genuine preregistered DISAPPEARS. Because the sd is estimated
+make the former DISAPPEARS classification assessable under the power criterion, not guarantee it. Any verdict remains contingent on the new paired observations and every preregistered decision rule. Because the sd is estimated
 on 7 df, a safe design targets n=12 for DAPO: ~10 extra runs, **~38 A100-hours, roughly $45**.
 Full four-arm coverage needs n = 9/11/13/15 (DAPO/GSPO/AERO/Dr.GRPO) plus matched GRPO seeds —
 about 23 extra runs, ~104 A100-hours, roughly $125.
@@ -416,7 +416,7 @@ The narrower paper that **does** survive, per the stop condition's own instructi
 > DAPO eliminates zero-variance groups entirely (ZVF 0.693 → 0.000) at 3.61× the rollouts
 > and 1.44× wall clock, with its held-out gain bounded above by +0.0068 at 95%. Its
 > non-claims are stated at the same prominence: no published delta was registered, so
-> survival fractions were never computed; DISAPPEARS was unreachable a priori at n=8; and
+> survival fractions were never computed; the former DISAPPEARS classification was unreachable a priori at n=8; and
 > replay perturbs a held-out score by up to 0.004, which exceeds the DAPO point difference.
 
 The second, independent negative-results paper is §3.2 (the ZVF sampling-model falsification

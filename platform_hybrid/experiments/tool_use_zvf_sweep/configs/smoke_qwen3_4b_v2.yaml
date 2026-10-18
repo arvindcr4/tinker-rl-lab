@@ -1,3 +1,4 @@
+reward_version: "v2"
 # smoke test: Qwen3.5-4B, v2 (6-level shaped) reward, 2 steps, tiny batch
 # v2 reward is designed to break ZVF saturation (within-group score variance)
 # validates 3-process stack + Tinker round-trip + a non-empty gradient step

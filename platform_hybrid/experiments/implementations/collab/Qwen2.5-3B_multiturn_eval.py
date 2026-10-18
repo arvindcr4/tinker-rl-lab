@@ -1,3 +1,9 @@
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import json_object, tool_score, execute_fixture_tool, EvidenceUnavailable
+
 # ============================================================
 #  ADVANCED EXPERIMENT — STEP 3: Multi-Turn Evaluation
 #  Compares SFT vs GRPO on multi-turn tool call chains
@@ -18,7 +24,8 @@
 # !pip install -q transformers peft accelerate bitsandbytes
 
 from huggingface_hub import login
-login(token="hf_YOUR_TOKEN_HERE")
+if __name__ == "__main__":
+    raise EvidenceUnavailable("Legacy notebook scenarios lack frozen semantic fixtures; use the versioned offline evaluator contract")
 
 import json, os, re, torch
 import wandb
@@ -156,121 +163,46 @@ def get_args(text):
     return obj.get("arguments", {}) if valid else {}
 
 # ── SCORING ──────────────────────────────────────────────────
-def score_chain(responses):
-    scores = {
-        "chain_started":    False,
-        "valid_json_calls": 0,
-        "args_populated":   0,
-        "clean_outputs":    0,
-        "repeated_calls":   0,
-        "chain_length":     len(responses),
-        "reached_answer":   False,
-        "tool_names":       [],
-        "tool_args":        [],
-    }
-
-    seen_sigs = []
-
-    for i, resp in enumerate(responses):
-        if is_valid_tool_call(resp):
-            scores["valid_json_calls"] += 1
-            if i == 0:
-                scores["chain_started"] = True
-            if is_clean_output(resp):
-                scores["clean_outputs"] += 1
-
-            name = get_tool_name(resp)
-            args = get_args(resp)
-            scores["tool_names"].append(name)
-            scores["tool_args"].append(args)
-
-            if args and len(args) > 0:
-                scores["args_populated"] += 1
-
-            sig = (name, frozenset(str(v) for v in args.values()))
-            if sig in seen_sigs:
-                scores["repeated_calls"] += 1
-            seen_sigs.append(sig)
-        else:
-            if len(resp) > 20:
-                scores["reached_answer"] = True
-
-    n = len(responses)
-    if n == 0:
-        scores["quality"] = 0.0
-    else:
-        q = 0.0
-        if scores["chain_started"]:   q += 0.25
-        if scores["reached_answer"]:  q += 0.30
-        if scores["valid_json_calls"] > 0:
-            q += 0.15 * (scores["valid_json_calls"] / max(1, n - 1))
-            q += 0.15 * (scores["args_populated"] / scores["valid_json_calls"])
-        if scores["clean_outputs"] > 0:
-            q += 0.10 * (scores["clean_outputs"] / max(1, n))
-        q -= 0.15 * scores["repeated_calls"]
-        scores["quality"] = round(max(0.0, min(1.0, q)), 2)
-
-    return scores
+def score_chain(responses, scenario=None):
+    if scenario is not None and (not scenario.get("tool_calls") or not scenario.get("accepted_answers")):
+        raise EvidenceUnavailable("Scenario lacks a frozen semantic endpoint")
+    calls = [json_object(r) for r in responses]
+    valid = [c for c in calls if c and isinstance(c.get("name"), str) and isinstance(c.get("arguments"), dict)]
+    fixtures = scenario.get("tool_calls", []) if scenario else []
+    chain_ok = bool(fixtures) and len(responses) == len(fixtures) + 1 and all(tool_score(responses[i], f["name"], f["arguments"]) for i, f in enumerate(fixtures))
+    final = responses[-1].strip().lower() if responses else ""
+    # Exact normalized allowed answers are deliberately conservative.
+    grounded = bool(scenario and final in [a.strip().lower() for a in scenario.get("accepted_answers", [])])
+    success = bool(chain_ok and grounded)
+    return {"quality": float(success), "task_success": success, "chain_started": bool(valid),
+            "reached_answer": grounded, "valid_json_calls": len(valid),
+            "args_populated": sum(bool(c["arguments"]) for c in valid),
+            "repeated_calls": len(valid)-len({json.dumps(c, sort_keys=True) for c in valid}),
+            "tool_names": [c["name"] for c in valid], "tool_args": [c["arguments"] for c in valid],
+            "chain_length": len(responses), "clean_outputs": len(valid)}
 
 
 # ── RUN SCENARIO ─────────────────────────────────────────────
 def run_scenario(model, scenario, max_turns=6):
-    """
-    Run a full multi-turn scenario.
-
-    FIX 1: wrap-up message injected immediately when tool_responses
-           are exhausted (tool_idx >= len), before the next generation.
-
-    FIX 2: if model repeats the same tool call, inject wrap-up
-           immediately to cut the loop short.
-    """
-    history  = [{"role": "system", "content": SYSTEM_PROMPT}]
-    history.append({"role": "user", "content": scenario["user"]})
-    responses       = []
-    tool_idx        = 0
-    last_sig        = None
-    wrapup_injected = False
-
-    for turn_idx in range(max_turns):
-
-        # FIX 1: all tool responses consumed — nudge NOW, before generating
-        if (not wrapup_injected
-                and tool_idx >= len(scenario["tool_responses"])
-                and responses):
-            history.append({"role": "user", "content": WRAPUP_MSG})
-            wrapup_injected = True
-
+    if not scenario.get("tool_calls") or not scenario.get("accepted_answers"):
+        raise EvidenceUnavailable("Freeze exact call fixtures and semantic answers before evaluating this scenario")
+    history = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": scenario["user"]}]
+    responses, tool_idx = [], 0
+    fixtures = scenario.get("tool_calls", [])
+    for _ in range(max_turns):
         response = infer(model, history)
         responses.append(response)
         history.append({"role": "assistant", "content": response})
-
-        if is_valid_tool_call(response):
-            name = get_tool_name(response)
-            args = get_args(response)
-            sig  = (name, frozenset(str(v) for v in args.values()))
-
-            # FIX 2: repeated call → inject wrap-up and stop adding tool results
-            if sig == last_sig and not wrapup_injected:
-                history.append({"role": "user", "content": WRAPUP_MSG})
-                wrapup_injected = True
-                # don't inject another tool result; let model answer next turn
-                last_sig = sig
-                continue
-
-            last_sig = sig
-
-            if tool_idx < len(scenario["tool_responses"]):
-                history.append({"role": "tool",
-                                "content": scenario["tool_responses"][tool_idx]})
-                tool_idx += 1
-            else:
-                # no more scripted responses; still stop generating tool calls
-                if not wrapup_injected:
-                    history.append({"role": "user", "content": WRAPUP_MSG})
-                    wrapup_injected = True
+        obj = json_object(response)
+        if obj is None:
+            break
+        fixture = fixtures[tool_idx] if tool_idx < len(fixtures) else None
+        if fixture and tool_score(response, fixture["name"], fixture["arguments"]):
+            observation = scenario["tool_responses"][tool_idx]
+            tool_idx += 1
         else:
-            break  # final answer reached
-
+            observation = json.dumps({"error": "Invalid tool name or arguments"})
+        history.append({"role": "tool", "content": observation})
     return responses, history
 
 
@@ -290,8 +222,8 @@ for sc in SCENARIOS:
     sft_responses,  _ = run_scenario(sft_model,  sc)
     grpo_responses, _ = run_scenario(grpo_model, sc)
 
-    sft_scores  = score_chain(sft_responses)
-    grpo_scores = score_chain(grpo_responses)
+    sft_scores  = score_chain(sft_responses, sc)
+    grpo_scores = score_chain(grpo_responses, sc)
 
     all_sft_scores.append(sft_scores["quality"])
     all_grpo_scores.append(grpo_scores["quality"])

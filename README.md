@@ -152,19 +152,21 @@ Features:
 ### Prerequisites
 
 ```bash
-# Create virtual environment
-python3 -m venv tinker-env
-source tinker-env/bin/activate
-
-# Install dependencies
-pip install tinker tinker-cookbook atropos
-# Full dependency set (all integrations, audits, and analysis scripts):
-pip install -r requirements.txt
+# Install uv from its official distribution first, then use the canonical lock:
+uv sync --locked --extra dev
+uv run --no-sync python -c "import tinker"
+source .venv/bin/activate  # repeat in each terminal using the examples below
+# Optional integrations need separate validation. Atropos is atroposlib, not atropos.
 ```
 
 ### Running Tinker Experiments
 
+These optional recipes are outside the canonical lock. Install the cookbook
+into the activated environment before running them; record its resolved version
+for reproducible runs. A later `uv sync` can remove optional packages.
+
 ```bash
+uv pip install --python .venv/bin/python tinker-cookbook
 export TINKER_API_KEY="your-key-here"
 
 # Math RL
@@ -179,7 +181,13 @@ python -m tinker_cookbook.recipes.chat_sl.train \
 
 ### Running Atropos + Tinker
 
+Install the local integration and its `atroposlib` dependency separately. This
+optional stack is outside the canonical lock and needs its own runtime validation.
+Activate the repository `.venv` in each terminal.
+
 ```bash
+uv pip install --python .venv/bin/python -e ./platform_tinker/atropos
+
 # Terminal 1: Start Atropos API
 run-api
 

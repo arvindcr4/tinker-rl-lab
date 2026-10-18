@@ -137,7 +137,7 @@ class PavlovsCampaignManifestTests(unittest.TestCase):
             expected,
         )
 
-    def test_complete_receipts_are_the_only_way_to_clear_arm_gate(self) -> None:
+    def test_unsigned_legacy_receipts_do_not_clear_arm_gate(self) -> None:
         candidate = copy.deepcopy(self.contract)
         for model in candidate["model_candidates"]:
             model["revision"] = "a" * 40
@@ -199,10 +199,10 @@ class PavlovsCampaignManifestTests(unittest.TestCase):
         }
         candidate["receipts"]["suite_receipts"] = per_suite
         manifest = build_manifest(candidate)
-        self.assertEqual(manifest["status"], "READY")
-        self.assertTrue(manifest["launchable"])
-        self.assertTrue(all(arm["launchable"] for arm in manifest["arms"]))
-        self.assertEqual(manifest["missing_receipts"], [])
+        self.assertEqual(manifest["status"], "BLOCKED")
+        self.assertFalse(manifest["launchable"])
+        self.assertFalse(any(arm["launchable"] for arm in manifest["arms"]))
+        self.assertIn("budget", manifest["missing_receipts"])
 
     def test_status_only_wandb_and_hf_values_do_not_authorize(self) -> None:
         candidate = copy.deepcopy(self.contract)
@@ -243,17 +243,17 @@ class PavlovsCampaignManifestTests(unittest.TestCase):
         self.assertEqual(halving["method"], "successive_halving")
         self.assertEqual(len(halving["screening_arm_ids"]), 3)
         self.assertEqual(
-            halving["tie_breakers"], ["strict mean reward", "lower estimated cost"]
+            halving["tie_breakers"], ["strict mean reward", "lower estimated cost", "lower learning rate", "lexical arm ID"]
         )
         separation = halving["held_out_separation"]
         self.assertTrue(separation["must_be_disjoint"])
         self.assertTrue(separation["selection_split"]["consulted_during_selection"])
         self.assertFalse(separation["final_eval_split"]["consulted_during_selection"])
-        self.assertIn("extend only the winning arm", halving["winner_extension"])
+        self.assertIn("two survivors to 100; one winner to 200", halving["winner_extension"])
 
     def test_xlam_only_scope_cannot_launch_or_claim_company_usefulness(self) -> None:
         candidate = copy.deepcopy(self.contract)
-        candidate["xlam_only"] = True
+        candidate["execution_scope"] = "xlam_component"
         manifest = build_manifest(candidate)
         self.assertFalse(manifest["claim_policy"]["xlam_only_launch_allowed"])
         self.assertFalse(manifest["claim_policy"]["xlam_only_claim_allowed"])

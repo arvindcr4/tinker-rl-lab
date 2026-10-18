@@ -136,3 +136,11 @@ def reward_function(completion, expected_answer):
 - [PufferLib](https://github.com/PufferAI/PufferLib)
 - [rl_games](https://github.com/Denys88/rl_games)
 - [d3rlpy](https://d3rlpy.readthedocs.io/)
+
+### Distillation protocol status
+
+The explicit local student-trajectory implementation is versioned separately as
+[`student-trajectory-kl-v1`](STUDENT_DISTILLATION_V1.md). It samples fresh student
+continuations and uses a response-token forward-KL semi-gradient. Fixed-history
+teacher matching has a separate API; historical results are not upgraded by this
+code change. See the protocol note for opt-in requirements and validation limits.

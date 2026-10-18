@@ -234,7 +234,8 @@ class SourceDefinitionTests(unittest.TestCase):
 
 class PublishedReleaseTests(unittest.TestCase):
     def test_actual_frozen_publication(self):
-        result = release.check_public_release(ROOT)
+        with release.archived_snapshot(ROOT) as snapshot:
+            result = release.check_public_release(snapshot)
         self.assertEqual(result["status"], "PASS")
         self.assertEqual(result["files_verified"], 108)
         self.assertEqual(result["copied_definitions_verified"], 58)
@@ -243,7 +244,7 @@ class PublishedReleaseTests(unittest.TestCase):
     def test_cli_from_unrelated_working_directory(self):
         with tempfile.TemporaryDirectory() as directory:
             result = subprocess.run(
-                [sys.executable, "-B", str(ROOT / "tools/check_public_release.py")],
+                [sys.executable, "-B", str(ROOT / "tools/check_public_release.py"), "--archived"],
                 cwd=directory,
                 capture_output=True,
                 text=True,
@@ -251,6 +252,42 @@ class PublishedReleaseTests(unittest.TestCase):
             )
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
         self.assertEqual(json.loads(result.stdout)["status"], "PASS")
+
+    def test_archived_check_labels_current_source_scope(self):
+        result = release.check_archived_release(ROOT)
+        self.assertEqual(result["archived_commit"], release.ARCHIVED_COMMIT)
+        self.assertEqual(result["archived_publication"]["files_verified"], 108)
+        self.assertEqual(result["current_source_checks"]["copied_definitions_verified"], 58)
+        self.assertFalse(result["working_tree_release_certified"])
+
+    def test_current_tree_is_not_frozen_publication(self):
+        with self.assertRaisesRegex(ValueError, "publication (byte count|SHA-256) mismatch"):
+            release.check_public_release(ROOT)
+
+    def test_archived_snapshot_tampering_fails(self):
+        with release.archived_snapshot(ROOT) as snapshot:
+            (snapshot / "README.md").write_text("tampered")
+            with self.assertRaisesRegex(ValueError, "publication byte count mismatch"):
+                release.check_public_release(snapshot)
+
+    def test_missing_archived_commit_fails_closed(self):
+        with self.assertRaisesRegex(ValueError, "Git object unavailable"):
+            with release.archived_snapshot(ROOT, "0" * 40):
+                self.fail("missing commit must not yield a snapshot")
+
+    def test_changed_manifest_is_not_blessed(self):
+        original = release.safe_file
+        with tempfile.TemporaryDirectory() as directory:
+            changed = Path(directory) / "manifest.json"
+            changed.write_text("{}")
+
+            def selected(root, name):
+                return changed if name == release.MANIFEST else original(root, name)
+
+            with patch.object(release, "safe_file", side_effect=selected):
+                with self.assertRaisesRegex(ValueError, "immutable archived manifest"):
+                    with release.archived_snapshot(ROOT):
+                        self.fail("changed manifest must not yield a snapshot")
 
     def test_cli_invalid_root_has_structured_failure_and_nonzero_exit(self):
         with tempfile.TemporaryDirectory() as directory:

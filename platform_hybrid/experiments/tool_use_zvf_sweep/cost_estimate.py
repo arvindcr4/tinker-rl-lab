@@ -25,6 +25,7 @@ Env knobs (set conservative upper-bound rates):
 """
 from __future__ import annotations
 import json
+import math
 import os
 import sys
 from pathlib import Path
@@ -41,7 +42,10 @@ def _rate(name: str) -> float:
             f"  export TINKER_RATE_TRAIN_PER_M=1.0    # USD / 1M trained tokens"
         )
     try:
-        return float(v)
+        value = float(v)
+        if not math.isfinite(value) or value < 0:
+            raise ValueError("finite nonnegative rate required")
+        return value
     except ValueError:
         raise SystemExit(f"ERROR: {name}={v!r} is not a number")
 
@@ -51,11 +55,17 @@ def estimate(path: Path) -> dict:
     env = cfg["env"]
     tinker = cfg["tinker"]
 
+    for section, key, default in [(env,"total_steps",None),(env,"batch_size",None),(env,"group_size",None), (env,"max_token_length",512),(tinker,"max_token_trainer_length",1024)]:
+        value = section.get(key, default)
+        if type(value) is not int or value <= 0:
+            raise ValueError(f"{key} must be a positive integer")
     total_steps = int(env["total_steps"])
     batch_size = int(env["batch_size"])
     group_size = int(env["group_size"])
     max_env_tok = int(env.get("max_token_length", 512))
     max_train_tok = int(tinker.get("max_token_trainer_length", 1024))
+    if min(total_steps, batch_size, group_size, max_env_tok, max_train_tok) <= 0:
+        raise ValueError("Counts and token limits must be positive")
     tokenizer = env.get("tokenizer_name", "?")
 
     # Upper bounds: assume every sampled response is full length, every trained
@@ -64,6 +74,8 @@ def estimate(path: Path) -> dict:
     eval_sets = max(1, total_steps // max(1, steps_per_eval))
     num_eval_reqs = int(cfg.get("openai", [{}])[0].get("num_requests_for_eval", 0))
 
+    if steps_per_eval <= 0 or num_eval_reqs < 0:
+        raise ValueError("Invalid evaluation counts")
     sample_tokens_train = total_steps * batch_size * group_size * max_env_tok
     sample_tokens_eval = eval_sets * num_eval_reqs * max_env_tok
     sample_tokens = sample_tokens_train + sample_tokens_eval
@@ -77,6 +89,8 @@ def estimate(path: Path) -> dict:
     mult_env = f"TINKER_MODEL_MULT_{model_key}"
     mult = float(os.environ.get(mult_env, "1.0"))
 
+    if not math.isfinite(mult) or mult <= 0:
+        raise ValueError("Finite positive multiplier required")
     sample_usd = (sample_tokens / 1_000_000) * sample_rate * mult
     train_usd = (train_tokens / 1_000_000) * train_rate * mult
     total_usd = sample_usd + train_usd
@@ -92,7 +106,8 @@ def estimate(path: Path) -> dict:
         "sample_usd_upper": round(sample_usd, 2),
         "train_usd_upper": round(train_usd, 2),
         "model_mult": mult,
-        "usd_upper": round(total_usd, 2),
+        "usd_upper": math.ceil(total_usd * 100) / 100,
+        "cost_kind": "preflight_estimate_not_live_billing_cap",
     }
 
 

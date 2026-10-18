@@ -3,18 +3,18 @@
 
 Builds three additions on top of platform_modal/scripts/zvf_diagnostic.py:
 
-1. zvf_iter118_auroc.tsv
+1. zvf_iter118_auroc_review28_v2.tsv
    AUROC (with 95% bootstrap CI, B=2000) of mean_zvf vs terminal
    failure binary, computed on the pooled (experiment, model,
    group_size) cells.  Two targets: (a) is_collapse (cleanest),
    (b) is_collapse_or_drift (matches platform_modal/scripts/zvf_diagnostic).
 
-2. zvf_iter118_aero_grpo_gap.tsv
+2. zvf_iter118_aero_grpo_gap_review28_v2.tsv
    Effect-size gap (AERO - GRPO) on mean_zvf and on
    collapse-rate, with bootstrap CIs over the per-seed cells of
    variance_mitigation (real measurement, n=5 seeds each).
 
-3. zvf_iter118_calibration.tsv
+3. zvf_iter118_calibration_review28_v2.tsv
    Predictive calibration: bin pooled rows by their mean_zvf
    decile, then report the empirical fraction of "failure" rows in
    each bin plus Wilson 95% CIs.  This is the "first-class
@@ -22,11 +22,11 @@ Builds three additions on top of platform_modal/scripts/zvf_diagnostic.py:
 
 Output artefacts:
 
-    platform_hybrid/experiments/results/zvf_iter118_auroc.tsv
-    platform_hybrid/experiments/results/zvf_iter118_aero_grpo_gap.tsv
-    platform_hybrid/experiments/results/zvf_iter118_calibration.tsv
-    platform_hybrid/experiments/results/zvf_iter118_narrative.json
-    figures/zvf_iter118_calibration.pdf
+    platform_hybrid/experiments/results/zvf_iter118_auroc_review28_v2.tsv
+    platform_hybrid/experiments/results/zvf_iter118_aero_grpo_gap_review28_v2.tsv
+    platform_hybrid/experiments/results/zvf_iter118_calibration_review28_v2.tsv
+    platform_hybrid/experiments/results/zvf_iter118_narrative_review28_v2.json
+    figures/zvf_iter118_calibration_review28_v2.pdf
 
 All inputs are existing per-experiment measurement files; no new
 tinker runs are launched.
@@ -165,6 +165,9 @@ def write_auroc(pooled: List[Dict[str, Any]], out_path: Path) -> Dict[str, Any]:
       (a) is_collapse            positive = collapse
       (b) is_collapse_or_drift   positive = collapse or drift
     """
+    pooled = [r for r in pooled if math.isfinite(r["mean_zvf"]) and
+              r.get("failure") in ("collapse", "drift", "plateau", "converged")]
+
     by_kind: Dict[str, List[Dict[str, Any]]] = {}
     for r in pooled:
         kind = r["experiment"]
@@ -283,9 +286,23 @@ def write_aero_grpo_gap(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str,
 
     aero = [r for r in rows if r["experiment"] == "variance_mitigation" and str(r["model"]).upper() == "AERO"]
     grpo = [r for r in rows if r["experiment"] == "variance_mitigation" and str(r["model"]).upper() == "GRPO"]
+    def keyed(group):
+        result = {}
+        for row in group:
+            key = (row.get("experiment"), str(row.get("seed")))
+            if row.get("seed") is None or key in result:
+                raise ValueError("Missing or duplicate paired run identity")
+            result[key] = row
+        return result
+    amap, gmap = keyed(aero), keyed(grpo)
+    matched = sorted(amap.keys() & gmap.keys())
+    unmatched_aero = len(amap.keys() - gmap.keys())
+    unmatched_grpo = len(gmap.keys() - amap.keys())
+    aero, grpo = [amap[k] for k in matched], [gmap[k] for k in matched]
     if not aero or not grpo:
         return {"gap_zvf": float("nan"), "gap_failure": float("nan")}
 
+    # Both point estimates and intervals use the same complete seed pairs.
     aero_zvfs = [r["mean_zvf"] for r in aero]
     grpo_zvfs = [r["mean_zvf"] for r in grpo]
     aero_fail = [1.0 if r["failure"] in ("collapse", "drift") else 0.0 for r in aero]
@@ -390,6 +407,7 @@ def write_aero_grpo_gap(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str,
             )
 
     return {
+        "unmatched_aero": unmatched_aero, "unmatched_grpo": unmatched_grpo,
         "gap_zvf": gap_zvf,
         "gap_failure": gap_fail,
         "gap_last10": gap_last,
@@ -419,13 +437,8 @@ def write_calibration(pooled: List[Dict[str, Any]], out_path: Path) -> Dict[str,
     valid.sort(key=lambda r: r["mean_zvf"])
     n = len(valid)
     n_bins = min(8, max(4, n // 3))
-    bin_size = max(1, n // n_bins)
-    bins: List[List[Dict[str, Any]]] = []
-    for i in range(0, n, bin_size):
-        bins.append(valid[i : i + bin_size])
-    while len(bins) > n_bins:
-        bins[n_bins - 2].extend(bins[-1])
-        bins = bins[:-1]
+    from _review28_statistics import quantile_partitions
+    bins = quantile_partitions(valid, "mean_zvf", n_bins)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w") as fh:
@@ -501,13 +514,8 @@ def write_calibration_figure(
     valid.sort(key=lambda r: r["mean_zvf"])
     n = len(valid)
     n_bins = min(8, max(4, n // 3))
-    bin_size = max(1, n // n_bins)
-    bins = []
-    for i in range(0, n, bin_size):
-        bins.append(valid[i : i + bin_size])
-    while len(bins) > n_bins:
-        bins[n_bins - 2].extend(bins[-1])
-        bins = bins[:-1]
+    from _review28_statistics import quantile_partitions
+    bins = quantile_partitions(valid, "mean_zvf", n_bins)
     zvf_means = [statistics.fmean([r["mean_zvf"] for r in b]) for b in bins]
     fail_rates = [
         sum(1 for r in b if r["failure"] in ("collapse", "drift")) / len(b) for b in bins
@@ -643,11 +651,11 @@ def main() -> int:
     pooled = _pool_by_cell(rows)
     print(f"[zvf-iter118] pooled {len(pooled)} (experiment, model, G) cells")
 
-    out_auroc = RESULTS / "zvf_iter118_auroc.tsv"
-    out_gap = RESULTS / "zvf_iter118_aero_grpo_gap.tsv"
-    out_calib = RESULTS / "zvf_iter118_calibration.tsv"
-    out_fig = FIGURES / "zvf_iter118_calibration.pdf"
-    out_narr = RESULTS / "zvf_iter118_narrative.json"
+    out_auroc = RESULTS / "zvf_iter118_auroc_review28_v2.tsv"
+    out_gap = RESULTS / "zvf_iter118_aero_grpo_gap_review28_v2.tsv"
+    out_calib = RESULTS / "zvf_iter118_calibration_review28_v2.tsv"
+    out_fig = FIGURES / "zvf_iter118_calibration_review28_v2.pdf"
+    out_narr = RESULTS / "zvf_iter118_narrative_review28_v2.json"
 
     auroc = write_auroc(pooled, out_auroc)
     gap = write_aero_grpo_gap(rows, out_gap)

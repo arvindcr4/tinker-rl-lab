@@ -1,65 +1,9 @@
 #!/usr/bin/env python3
-"""Pillar 3 -- Iter 115: TOST equivalence + cross-pillar ZVF linkage +
-compute-cost projection.
+"""Exploratory retention equivalence, descriptive GU association, and explicit cost scenarios.
 
-Iter 107 falsified Wu et al. (2025) "It Takes Two" via bootstrap,
-iso-accuracy, and returns-to-compute.
-Iter 111 added log-G linear fit + best-G scalability.
-
-Iter 115 sharpens with THREE new analyses that the prior record did
-not measure:
-
-  (A) Two One-Sided Tests (TOST) equivalence procedure.
-      Wu et al's claim is an EQUIVALENCE claim ("G=2 ~= G=16 within
-      2.4 percentage points"), so the proper statistical test is
-      TOST, not a one-sided bootstrap. Iter 107's p(Delta<=0)<0.001
-      only shows the difference is positive; TOST shows whether
-      the data is CONSISTENT with equivalence, or whether it
-      definitively FAILS equivalence. We use three bounds:
-        - delta_eq = 0.024 (97.6% retention, Wu's headline)
-        - delta_eq = 0.050 (5 pp equivalence, common in ML)
-        - delta_eq = 0.010 (1 pp, strict operational equivalence)
-
-  (B) Cross-pillar ZVF -> G=4 retention linkage.
-      Iter 114 measured ZVF anti-herding bonus delta_d =
-      ZVF_emp - (p^G + (1-p)^G) across 14 libraries. Iter 31, 43,
-      and 95 already showed that GU (1-ZVF) drives returns-to-compute
-      per G. Here we test whether the GU ratio GU(G=4)/GU(G=32)
-      tracks the retention collapse across the four budget levels:
-      Spearman rho(retention, GU_ratio) on n=4 budget rows plus
-      permutation p-value.
-
-  (C) Compute-equivalent wall-clock projection.
-      Convert the 18x token-budget penalty at T=64M into estimated
-      wall-clock hours and dollar cost, using a Llama-3.2-3B / Qwen3
-      size proxy (16 tokens/s/G on H100, $2/Gtok list price).
-      Goal: give reviewers a concrete operational number for the
-      G=4/G=32 delta.
-
-Inputs:
-    platform_hybrid/experiments/results/group_size_token_normalized.tsv
-    platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv
-    platform_hybrid/experiments/results/zvf_iter114_delta_d.tsv
-
-Outputs:
-    platform_hybrid/experiments/results/group_size_iter115_tost.tsv
-    platform_hybrid/experiments/results/group_size_iter115_zvf_linkage.tsv
-    platform_hybrid/experiments/results/group_size_iter115_compute_cost.tsv
-    platform_hybrid/experiments/results/group_size_iter115_summary.tsv
-    figures/group_size_iter115.pdf
-
-Sharpest claims:
-    (1) TOST at delta_eq=0.024 (Wu's bound) demonstrates equivalence
-        ONLY at T=1M (p_TOST=0.26, CI inside); at T>=4M, Delta
-        exceeds the Wu bound by 5-10x and p_TOST=1.0 (cannot even
-        pretend the data supports equivalence).
-    (2) Across budgets, retention tracks GU ratio monotonically;
-        Spearman rho=+1.000 on 4 budgets. The Pillar 2 mechanism
-        (ZVF contrast starvation) is the Pillar 3 driver.
-    (3) At acc=0.70, G=4 needs 1367 GPU-hr ($157) vs G=32's
-        174 GPU-hr ($20) -- a 7.9x compute penalty that Wu's
-        equivalence claim would have hidden.
-"""
+Review23-v2: summary-normal approximate uncertainty is not a matched-run mechanism
+test. Cost projections are unvalidated point-fit scenarios with explicit units
+and extrapolation flags, not measured runtimes or calibrated cost intervals."""
 
 from __future__ import annotations
 
@@ -151,25 +95,30 @@ def tost_equivalence(iso: list[dict], delta_eq: float) -> list[dict]:
         s32 = (float(row32["heldout_acc_ci_high"]) - float(row32["heldout_acc_ci_low"])) / (2 * 1.96)
         a4_draws = rng.normal(a4, s4, N_BOOT)
         a32_draws = rng.normal(a32, s32, N_BOOT)
-        delta_draws = a32_draws - a4_draws
+        if np.any(a32_draws <= 0):
+            raise ValueError("relative retention sensitivity requires positive denominators")
+        delta_draws = 1.0 - a4_draws / a32_draws
         mean_d = float(delta_draws.mean())
         se_d = float(delta_draws.std())
         p_lower = float((delta_draws <= -delta_eq).mean())
         p_upper = float((delta_draws >= +delta_eq).mean())
         p_tost = max(p_lower, p_upper)
-        ci_lo, ci_hi = np.percentile(delta_draws, [2.5, 97.5])
+        ci_lo, ci_hi = np.percentile(delta_draws, [5, 95])
         demonstrates_equiv = p_tost < 0.05
         if demonstrates_equiv:
             verdict = "EQUIVALENCE demonstrated (|Delta|<=bound consistent with data)"
-        elif mean_d > delta_eq:
+        elif ci_lo > delta_eq:
             verdict = f"FAILS equivalence (Delta=+{mean_d:.3f} > +{delta_eq})"
-        elif mean_d < -delta_eq:
+        elif ci_hi < -delta_eq:
             verdict = f"FAILS equivalence (Delta={mean_d:.3f} < -{delta_eq})"
         else:
             verdict = "INCONCLUSIVE (CI spans bound)"
         out.append({
             "budget_tokens": T,
             "delta_eq_bound": delta_eq,
+            "estimand": "one_minus_small_over_large_accuracy_ratio",
+            "interval_level": 0.90,
+            "method": "independent_normal_summary_sensitivity",
             "delta_mean": round(mean_d, 4),
             "delta_se": round(se_d, 4),
             "delta_ci_lo": round(float(ci_lo), 4),
@@ -186,7 +135,7 @@ def tost_equivalence(iso: list[dict], delta_eq: float) -> list[dict]:
 
 # (B) Cross-pillar ZVF -> retention linkage --------------------------------
 
-def zvf_linkage(iso: list[dict], zvfsweep: list[dict]) -> list[dict]:
+def zvf_linkage(iso: list[dict]) -> list[dict]:
     """Per-budget retention vs GU ratio + Spearman correlation."""
     budgets = sorted({int(r["budget_tokens"]) for r in iso})
     out = []
@@ -218,57 +167,28 @@ def zvf_linkage(iso: list[dict], zvfsweep: list[dict]) -> list[dict]:
                 f"T={T//1_000_000}M: retention={retention:.3f}, "
                 f"GU_ratio={gu_ratio:.2f}: G=4 carries {gu_ratio:.1f}x more "
                 f"contrast yield per group but {retention*100:.1f}% of G=32 accuracy; "
-                f"ZVF is NOT the binding constraint -- gradient noise is."
+                f"Descriptive association only; neither constraint nor mechanism is identified."
             ),
         })
-    # Spearman across budgets: retention vs log(T)
+    # Same-cell association is descriptive: budgets share fitted/aggregate evidence.
     if len(out) >= 3:
-        ret = np.array([r["retention_G4_over_G32"] for r in out])
-        logT = np.array([math.log10(r["budget_tokens"]) for r in out])
-        n = len(ret)
-        def rankify(x):
-            idx = np.argsort(x)
-            ranks = np.empty_like(x, dtype=float)
-            ranks[idx] = np.arange(1, n + 1)
-            return ranks
-        rr = rankify(ret)
-        rl = rankify(logT)
-        d = rr - rl
-        spearman = 1 - 6 * np.sum(d ** 2) / (n * (n ** 2 - 1))
-        # permutation p-value (n=4 -> 24 perms exact)
-        rng = np.random.default_rng(RNG_SEED)
-        count = 0
-        for _ in range(10000):
-            perm = rng.permutation(logT)
-            idx = np.argsort(perm)
-            rperm = np.empty_like(perm)
-            rperm[idx] = np.arange(1, n + 1)
-            d2 = rr - rperm
-            rho2 = 1 - 6 * np.sum(d2 ** 2) / (n * (n ** 2 - 1))
-            if abs(rho2) >= abs(spearman):
-                count += 1
-        p_perm = count / 10000
-        out.append({
-            "budget_tokens": "SPEARMAN_LOG_T",
-            "acc_G4": "",
-            "acc_G32": "",
-            "retention_G4_over_G32": round(float(spearman), 4),
-            "GU_G4": "",
-            "GU_G32": "",
-            "GU_ratio_G4_over_G32": round(float(p_perm), 4),
-            "interpretation": (
-                f"Spearman rho(retention, log10 T)={spearman:+.4f}, "
-                f"permutation p={p_perm:.4f} -- retention monotonically "
-                f"collapses as budget grows"
-            ),
-        })
+        from scipy.stats import spearmanr
+        ret = [r["retention_G4_over_G32"] for r in out]
+        gu = [r["GU_ratio_G4_over_G32"] for r in out]
+        rho = float(spearmanr(ret, gu).statistic) if len(set(gu)) > 1 and len(set(ret)) > 1 else float("nan")
+        out.append({"budget_tokens":"SPEARMAN_GU_RATIO", "acc_G4":"", "acc_G32":"",
+                    "retention_G4_over_G32":rho, "GU_G4":"", "GU_G32":"",
+                    "GU_ratio_G4_over_G32":float("nan"),
+                    "interpretation":f"Descriptive Spearman rho(retention, GU ratio)={rho:g}; no causal mechanism test"})
     return out
 
 
 # (C) Compute-equivalent cost projection -----------------------------------
 
-def compute_cost(iso: list[dict]) -> list[dict]:
+def compute_cost(iso: list[dict], *, tokens_per_gpu_hour=57600.0, usd_per_million_tokens=2.0, hardware="H100 assumption", precision="fp16 assumption", batch_size=1, price_date="unspecified", throughput_source="unvalidated scenario", included_stages="rollout throughput; token-price scenario") -> list[dict]:
     """Wall-clock + USD projection for iso-accuracy targets."""
+    if tokens_per_gpu_hour <= 0 or usd_per_million_tokens < 0:
+        raise ValueError("invalid cost scenario")
     by_g: dict[int, list[tuple[float, float]]] = {}
     for r in iso:
         G = int(r["G"])
@@ -287,19 +207,23 @@ def compute_cost(iso: list[dict]) -> list[dict]:
     # 16 tok/s/GPU is conservative for batch=1 fp16; 3B model fits
     # comfortably on one H100. Training is much more expensive but
     # rollout dominates the token budget.
-    TOK_PER_GPU_HR = 16 * 3600  # 57,600 tok/GPU-hr
-    PRICE_PER_MTOK = 2.0  # USD per million tokens, training+rollout
+    TOK_PER_GPU_HR = tokens_per_gpu_hour  # 57,600 tok/GPU-hr
+    PRICE_PER_MTOK = usd_per_million_tokens  # USD per million tokens, training+rollout
 
     acc_targets = [0.50, 0.60, 0.70, 0.80, 0.85]
     out = []
     for acc in acc_targets:
-        row = {"target_acc": acc}
+        row = {"target_acc": acc, "cost_kind":"unvalidated_scenario", "tokens_per_gpu_hour":tokens_per_gpu_hour,
+               "usd_per_million_tokens":usd_per_million_tokens, "hardware":hardware, "precision":precision,
+               "batch_size":batch_size, "price_date":price_date, "throughput_source":throughput_source,
+               "included_stages":included_stages, "budget_uncertainty":"unavailable: point-fit sensitivity only"}
         budgets = {}
         for G, (slope, intercept) in sorted(fits.items()):
             log_target = math.log10(max(acc, 1e-3))
-            log_t_star = (log_target - intercept) / slope if abs(slope) > 1e-9 else float("nan")
-            t_star = 10 ** log_t_star
+            log_t_star = (log_target - intercept) / slope if slope > 1e-9 else float("nan")
+            t_star = 10 ** log_t_star if log_t_star < 308 else float("nan")
             budgets[G] = t_star
+            row[f"extrapolated_G{G}"] = not min(t for t,_ in by_g[G]) <= t_star <= max(t for t,_ in by_g[G])
             row[f"T_star_G{G}_tokens"] = round(t_star, 0)
         t4 = budgets.get(4, float("nan"))
         t32 = budgets.get(32, float("nan"))
@@ -347,11 +271,11 @@ def make_summary(tost: list[dict], linkage: list[dict], cost: list[dict]) -> lis
                     f"p_TOST={strict_row['p_tost']:.4f} -> {strict_row['verdict']}"
                 ),
             })
-    spear = next((r for r in linkage if r["budget_tokens"] == "SPEARMAN_LOG_T"), None)
+    spear = next((r for r in linkage if r["budget_tokens"] == "SPEARMAN_GU_RATIO"), None)
     if spear:
         out.append({
             "metric_kind": "cross_pillar_linkage",
-            "metric_key": "spearman_logT",
+            "metric_key": "spearman_gu_ratio",
             "headline": spear["interpretation"],
         })
     if cost:
@@ -415,7 +339,7 @@ def make_figure(tost: list[dict], linkage: list[dict], cost: list[dict],
     axes[0].grid(True, alpha=0.3)
 
     # (Mid) Retention vs log(T) with GU annotations
-    pts = [r for r in linkage if r["budget_tokens"] != "SPEARMAN_LOG_T"]
+    pts = [r for r in linkage if r["budget_tokens"] != "SPEARMAN_GU_RATIO"]
     if pts:
         Ts = [r["budget_tokens"] / 1e6 for r in pts]
         ret = [r["retention_G4_over_G32"] for r in pts]
@@ -434,7 +358,7 @@ def make_figure(tost: list[dict], linkage: list[dict], cost: list[dict],
         ax2b.set_ylabel("GU ratio G=4/G=32", color="#1f77b4")
         ax2b.tick_params(axis="y", labelcolor="#1f77b4")
         ax2b.axhline(1.0, color="#1f77b4", ls=":", lw=0.8)
-        ax2.set_title("(Mid) Retention collapses; GU ratio stays >1")
+        ax2.set_title("(Mid) Retention and heuristic GU ratio")
         ax2.grid(True, alpha=0.3)
         for T, x, y in zip(Ts, Ts, ret):
             ax2.annotate(f"T={T:.0f}M", (T, y), fontsize=7,
@@ -442,11 +366,10 @@ def make_figure(tost: list[dict], linkage: list[dict], cost: list[dict],
                          color="#d62728")
         ax2.legend(loc="lower left", fontsize=7.5)
         ax2b.legend(loc="upper right", fontsize=7.5)
-        spear = next((r for r in linkage if r["budget_tokens"] == "SPEARMAN_LOG_T"), None)
+        spear = next((r for r in linkage if r["budget_tokens"] == "SPEARMAN_GU_RATIO"), None)
         if spear:
             ax2.set_title(
-                f"(Mid) Retention collapses vs T (rho={spear['retention_G4_over_G32']:+.3f}, "
-                f"p={spear['GU_ratio_G4_over_G32']:.4f})"
+                f"(Mid) Descriptive retention/GU association: rho={spear['retention_G4_over_G32']:+.3f}"
             )
 
     # (R) Wall-clock + USD projection
@@ -490,36 +413,30 @@ def make_figure(tost: list[dict], linkage: list[dict], cost: list[dict],
 
 def main() -> None:
     iso = load_iso()
-    zvfsweep = load_zvf_sweep()
-    deltad = load_delta_d()
 
     tost_all = []
     for delta_eq in EQUIV_BOUNDS:
         tost_all.extend(tost_equivalence(iso, delta_eq))
 
-    linkage = zvf_linkage(iso, zvfsweep)
+    linkage = zvf_linkage(iso)
     cost = compute_cost(iso)
     summary = make_summary(tost_all, linkage, cost)
 
-    write_tsv(RES / "group_size_iter115_tost.tsv", tost_all,
-              ["budget_tokens", "delta_eq_bound", "delta_mean", "delta_se",
+    write_tsv(RES / "group_size_iter115_tost_v2.tsv", tost_all,
+              ["budget_tokens", "estimand", "interval_level", "method", "delta_eq_bound", "delta_mean", "delta_se",
                "delta_ci_lo", "delta_ci_hi", "p_lower_one_sided",
                "p_upper_one_sided", "p_tost", "demonstrates_equivalence",
                "ci_inside_equiv_bound", "verdict"])
-    write_tsv(RES / "group_size_iter115_zvf_linkage.tsv", linkage,
+    write_tsv(RES / "group_size_iter115_zvf_linkage_v2.tsv", linkage,
               ["budget_tokens", "acc_G4", "acc_G32",
                "retention_G4_over_G32", "GU_G4", "GU_G32",
                "GU_ratio_G4_over_G32", "interpretation"])
-    write_tsv(RES / "group_size_iter115_compute_cost.tsv", cost,
-              ["target_acc", "T_star_G4_tokens", "T_star_G8_tokens",
-               "T_star_G16_tokens", "T_star_G32_tokens",
-               "T_star_G64_tokens", "gpu_hr_G4", "gpu_hr_G32",
-               "usd_G4", "usd_G32", "ratio_G4_over_G32_tokens",
-               "extra_gpu_hr_G4_vs_G32", "extra_usd_G4_vs_G32"])
-    write_tsv(RES / "group_size_iter115_summary.tsv", summary,
+    write_tsv(RES / "group_size_iter115_compute_cost_v2.tsv", cost,
+              sorted({key for row in cost for key in row}))
+    write_tsv(RES / "group_size_iter115_summary_v2.tsv", summary,
               ["metric_kind", "metric_key", "headline"])
 
-    make_figure(tost_all, linkage, cost, FIG / "group_size_iter115.pdf")
+    make_figure(tost_all, linkage, cost, FIG / "group_size_iter115_v2.pdf")
 
     print("=== Iter 115 TOST (delta_eq=0.024 = Wu bound) ===")
     for r in tost_all:

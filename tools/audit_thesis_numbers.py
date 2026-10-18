@@ -68,22 +68,73 @@ CHAPTERS = {
     "ch08": "ch08_results_fraud.md",
 }
 Z95 = 1.959963984540054
+_AUDIT_SNAPSHOT: dict[str, bytes] | None = None
+_LAST_AUDIT_SNAPSHOT: dict[str, bytes] = {}
+
+
+def _source_bytes(rel):
+    if _AUDIT_SNAPSHOT is None:
+        return (ROOT / rel).read_bytes()
+    if rel not in _AUDIT_SNAPSHOT:
+        _AUDIT_SNAPSHOT[rel] = (ROOT / rel).read_bytes()
+    return _AUDIT_SNAPSHOT[rel]
 
 
 # ---------------------------------------------------------------- helpers
 @cache
 def text(rel: str) -> str:
-    return (ROOT / rel).read_text(encoding="utf-8")
+    return _source_bytes(rel).decode("utf-8")
+
+
+def reject_duplicate_keys(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def strict_json_loads(source, relative=""):
+    result = json.loads(source, object_pairs_hook=reject_duplicate_keys)
+
+    def finite(value, path=()):
+        if isinstance(value, float) and not math.isfinite(value):
+            historical = {
+                f"{RES}/samestack_gsm8k_cot_full.json": "arm",
+                f"{RES}/samestack_ppo_grpo.json": "algo",
+            }
+            field = historical.get(relative)
+            allowed = (
+                field is not None
+                and len(path) == 5
+                and path[0] == "runs"
+                and path[2] == "step_log"
+                and path[4] == "zvf"
+                and result["runs"][path[1]].get(field) == "ppo"
+                and math.isnan(value)
+            )
+            if not allowed:
+                raise ValueError(f"non-finite value at {path}")
+        elif isinstance(value, dict):
+            for key, item in value.items():
+                finite(item, (*path, key))
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                finite(item, (*path, index))
+
+    finite(result)
+    return result
 
 
 @cache
 def J(rel: str) -> Any:
-    return json.loads(text(rel))
+    return strict_json_loads(text(rel), rel)
 
 
 @cache
 def jsonl(rel: str):
-    return [json.loads(line) for line in text(rel).splitlines() if line.strip()]
+    return [strict_json_loads(line, rel) for line in text(rel).splitlines() if line.strip()]
 
 
 def tsv(rel: str):
@@ -102,7 +153,7 @@ def sha256(rel: str) -> str:
     if any(c in rel for c in "*?["):
         lines = "".join(f"{sha256(p)}  {p}\n" for p in expand(rel))
         return hashlib.sha256(lines.encode()).hexdigest()
-    return hashlib.sha256((ROOT / rel).read_bytes()).hexdigest()
+    return hashlib.sha256(_source_bytes(rel)).hexdigest()
 
 
 def wilson(k, n, pct=False):
@@ -129,7 +180,7 @@ def signflip_p(diffs):
         raise ValueError("sign-flip requires nonempty finite differences")
     obs = abs(math.fsum(diffs))
     totals = (
-        abs(math.fsum(s * d for s, d in zip(signs, diffs)))
+        abs(math.fsum(s * d for s, d in zip(signs, diffs, strict=True)))
         for signs in itertools.product((1, -1), repeat=len(diffs))
     )
     hits = sum(total >= obs or math.isclose(total, obs, rel_tol=1e-12) for total in totals)
@@ -185,7 +236,7 @@ def m16():
     step = d["primary_step_unit_last10"]
     arms = ("aero", "areal", "gift")
     ps = [signflip_p(step[a]["step_deltas"]) for a in arms]
-    adj = dict(zip(arms, holm(ps)))
+    adj = dict(zip(arms, holm(ps), strict=True))
     means = {a: statistics.mean(step[a]["step_deltas"]) for a in arms}
     ci = {a: step[a]["ci95_orig_seed20260704"] for a in arms}
     return [
@@ -223,6 +274,13 @@ def c1_ledger():
 @cache
 def e14():
     rows = jsonl(E14_DISP)
+    for row in rows:
+        for field in ("correct", "native_accepted"):
+            if type(row.get(field)) is not bool:
+                raise ValueError(f"E14 {field} must be boolean")
+        tokens = row["actor_usage"]["completion_tokens"]
+        if type(tokens) is not int or tokens < 0:
+            raise ValueError("E14 completion_tokens must be a nonnegative integer")
     accepted = [r for r in rows if r.get("native_accepted")]
     correct = sum(bool(r.get("correct")) and r.get("native_accepted") for r in rows)
     capped = [r for r in rows if r["actor_usage"]["completion_tokens"] >= 2048]
@@ -331,9 +389,9 @@ def finish_reasons(rel):
     for line in text(rel).splitlines():
         if not line.strip():
             continue
-        rec = json.loads(line)
+        rec = strict_json_loads(line, rel)
         body = (
-            json.loads(base64.b64decode(rec["raw_body_base64"]))
+            strict_json_loads(base64.b64decode(rec["raw_body_base64"], validate=True), rel)
             if rec.get("raw_body_base64")
             else rec["response"]
         )
@@ -342,7 +400,7 @@ def finish_reasons(rel):
 
 
 def serving_rows():
-    gens = [json.loads((ROOT / p).read_text()) for p in expand(f"{E1_DIR}/tasks/*/generation.json")]
+    gens = [J(p) for p in expand(f"{E1_DIR}/tasks/*/generation.json")]
     tinker = [g for g in gens if g.get("generation_backend") is None]
     vllm = [g for g in gens if g.get("generation_backend") == "modal_gpu_vllm_merged_peft"]
 
@@ -385,7 +443,7 @@ def table_8b(lane):
     mt, mb = statistics.mean(t), statistics.mean(b)
     out: list[float | str] = [len(rows), mt, mb, round(round(mt, 4) - round(mb, 4), 4)]
     if lane != "E4":
-        bb, cc, p = mcnemar(list(zip(t, b)))
+        bb, cc, p = mcnemar(list(zip(t, b, strict=True)))
         out += [p, f"{bb}/{cc}"]
     return out
 
@@ -2507,13 +2565,17 @@ def ch06_rows():
     def seed_mcnemar(algo):
         return ", ".join(
             "{:.6f}".format(
-                mcnemar(list(zip(run[algo, s]["post_correct"], run[algo, s]["pre_correct"])))[2]
+                mcnemar(
+                    list(
+                        zip(run[algo, s]["post_correct"], run[algo, s]["pre_correct"], strict=True)
+                    )
+                )[2]
             )
             for s in (42, 123, 456)
         )
 
     forms = sorted({tuple(int(x) for x in r["pre_correct"]) for r in full}, key=sum)
-    differ = sum(len(set(col)) > 1 for col in zip(*forms))
+    differ = sum(len(set(col)) > 1 for col in zip(*forms, strict=True))
     sd = {g: statistics.stdev(v) for g, v in acc.items()}
     se = {g: sd[g] / math.sqrt(3) for g in acc}
     return [
@@ -2736,7 +2798,7 @@ def numbers_agree(token, computed):
     want, got = NUM.findall(token), NUM.findall(computed)
     if len(want) != len(got) or not want:
         return False
-    for w, g in zip(want, got):
+    for w, g in zip(want, got, strict=True):
         wv = Decimal(w.replace("−", "-").replace(",", ""))
         gv = Decimal(g.replace("−", "-").replace(",", ""))
         exponent = wv.as_tuple().exponent
@@ -2756,8 +2818,21 @@ def in_source(token, source):
     wanted = NUM.findall(token)
     if not wanted:
         return token in flat
-    values = {Decimal(n.replace(",", "")) for n in NUM.findall(flat)}
-    return all(Decimal(n.replace("−", "-").replace(",", "")) in values for n in wanted)
+    if len(wanted) == 1 and not NUM.sub("", token).strip():
+        values = {Decimal(n.replace(",", "")) for n in NUM.findall(flat)}
+        return Decimal(wanted[0].replace("−", "-").replace(",", "")) in values
+
+    # Composite assertions retain labels, units, punctuation and numeric order.
+    def canonical(value):
+        value = re.sub(r"\\[,;: ]", " ", value)
+        value = re.sub(r"[\\$~{}]", "", value).replace("−", "-")
+        value = NUM.sub(lambda m: str(Decimal(m[0].replace(",", "")).normalize()), value)
+        return re.sub(r"\s+", " ", value).strip()
+
+    # A composite value must not match a suffix of a different number or
+    # label (for example 0.9% inside 10.9%, or 1 ms inside 11 ms).
+    pattern = r"(?<![\w./^*+-])" + re.escape(canonical(token)) + r"(?![\w./^*+-]|\s*[/^*])"
+    return re.search(pattern, canonical(flat)) is not None
 
 
 # Only these exact section/token pairs may inherit a named explicit claim.
@@ -2788,11 +2863,68 @@ def bound_prose_evidence(group, token, chapter, groups):
     )
 
 
+def manuscript_binding(chapter, group, index, token, bindings):
+    """Extract a unique explicitly labeled span; never search a chapter for a value.
+
+    claim_bindings.json v2 maps a claim group to an ordered list of {span,label}.
+    Source syntax: <!-- claim: span-id -->LABEL: VALUE<!-- /claim: span-id -->.
+    Existing unmarked manuscripts are inventories only until deliberately bound.
+    """
+    specs = bindings.get(group, [])
+    if index >= len(specs):
+        return None
+    spec = specs[index]
+    span, label = spec.get("span"), spec.get("label")
+    if (
+        not isinstance(span, str)
+        or not re.fullmatch(r"[A-Za-z0-9_.-]+", span)
+        or not isinstance(label, str)
+        or not label
+    ):
+        raise ValueError("invalid manuscript claim binding")
+    opening, closing = f"<!-- claim: {span} -->", f"<!-- /claim: {span} -->"
+    if chapter.count(opening) != 1 or chapter.count(closing) != 1:
+        return False
+    start = chapter.index(opening) + len(opening)
+    end = chapter.index(closing)
+    value = chapter[start:end].strip()
+    prefix = label + ":"
+    if end < start or not value.startswith(prefix):
+        return False
+    value = value[len(prefix) :].strip()
+    # A span is one claim value, with neither extra correct tokens nor altered
+    # ordering hidden beside the asserted value.
+    if NUM.findall(value) and len(NUM.findall(value)) != len(NUM.findall(token)):
+        return False
+    return in_source(token, value) and in_source(value, token)
+
+
+def read_claim_bindings():
+    path = ROOT / THESIS / "claim_bindings.json"
+    if not path.exists():
+        return {}
+    data = strict_json_loads(text(f"{THESIS}/claim_bindings.json"))
+    if data.get("schema") != "thesis-claim-bindings-v2" or not isinstance(data.get("claims"), dict):
+        raise ValueError("unsupported manuscript claim binding schema")
+    return data["claims"]
+
+
 def evaluate():
+    global _AUDIT_SNAPSHOT, _LAST_AUDIT_SNAPSHOT
+    _AUDIT_SNAPSHOT = {}
+    try:
+        return _evaluate_snapshot()
+    finally:
+        _LAST_AUDIT_SNAPSHOT = _AUDIT_SNAPSHOT
+        _AUDIT_SNAPSHOT = None
+
+
+def _evaluate_snapshot():
     # A second audit in this process must observe edited files and new evidence.
     for reader in (text, J, jsonl, expand, sha256, e14, e11_boot):
         reader.cache_clear()
     chapters = {k: text(f"{THESIS}/{v}") for k, v in CHAPTERS.items()}
+    bindings = read_claim_bindings()
     groups: list[dict[str, Any]] = []
     verified: dict[str, list[str]] = {}
     for group, ch, tokens, method, artifacts, compute in itertools.chain(
@@ -2832,7 +2964,16 @@ def evaluate():
                 row["result"] = "ARTIFACT_MISSING"
             elif method in ("T", "P"):
                 row["result"] = (
-                    "PASS" if any(in_source(tok, text(a)) for a in artifacts) else "FAIL"
+                    "PASS"
+                    if any(in_source(tok, text(a)) for a in artifacts)
+                    else (
+                        "UNBOUND"
+                        if method == "T"
+                        and len(NUM.findall(tok)) > 1
+                        or method == "T"
+                        and NUM.sub("", tok).strip()
+                        else "FAIL"
+                    )
                 )
                 if method == "P" and row["result"] == "FAIL":
                     binding = bound_prose_evidence(group, tok, CHAPTERS[ch], groups)
@@ -2870,6 +3011,19 @@ def evaluate():
             if not row["in_chapter"]:
                 row["result"] = "FAIL"
                 row["note"] = "token not found verbatim in chapter"
+            row["evidence_result"] = row["result"]
+            if row["result"] == "PASS" and method in ("R", "S", "T", "A", "C", "P"):
+                bound = manuscript_binding(chapters[ch], group, i, tok, bindings)
+                row["manuscript_binding"] = (
+                    "missing" if bound is None else "matched" if bound else "mismatch"
+                )
+                if bound is not True:
+                    row["result"] = "UNBOUND" if bound is None else "FAIL"
+                    row["note"] = (
+                        "requires a unique labeled manuscript claim span"
+                        if bound is None
+                        else "value or label differs at the bound manuscript span"
+                    )
             record["tokens"].append(row)
             if row["result"] == "PASS" and method == "R":
                 verified.setdefault(ch, []).append(tok)
@@ -3028,7 +3182,7 @@ def overall_status(groups):
 
 
 def main(argv=None):
-    global THESIS
+    global THESIS, _LAST_AUDIT_SNAPSHOT
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -3056,6 +3210,7 @@ def main(argv=None):
     try:
         for reader in (text, J, jsonl, expand, sha256, e14, e11_boot):
             reader.cache_clear()
+        _LAST_AUDIT_SNAPSHOT = {}
         groups = evaluate()
         appendix_text = appendix(groups, args.json.name)
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
@@ -3065,7 +3220,7 @@ def main(argv=None):
         THESIS = original_thesis
     summary = audit_summary(groups)
     report = {
-        "schema_version": "thesis-number-provenance-v1",
+        "schema_version": "thesis-number-provenance-v2",
         "status": overall_status(groups),
         "token_counts": dict(Counter(r["result"] for g in groups for r in g["tokens"])),
         "scope": (
@@ -3077,6 +3232,40 @@ def main(argv=None):
         "summary": summary,
         "thesis_directory": thesis_dir.relative_to(ROOT.resolve()).as_posix(),
         "groups": groups,
+        "source_bindings": [
+            {
+                "path": path,
+                "sha256": hashlib.sha256(_LAST_AUDIT_SNAPSHOT[path]).hexdigest()
+                if path in _LAST_AUDIT_SNAPSHOT
+                else sha256(path),
+            }
+            for path in sorted(
+                {
+                    *_LAST_AUDIT_SNAPSHOT,
+                    *(
+                        f"{thesis_dir.relative_to(ROOT.resolve()).as_posix()}/{name}"
+                        for name in CHAPTERS.values()
+                        if (thesis_dir / name).is_file()
+                    ),
+                    *(
+                        [f"{thesis_dir.relative_to(ROOT.resolve()).as_posix()}/claim_bindings.json"]
+                        if (thesis_dir / "claim_bindings.json").is_file()
+                        else []
+                    ),
+                    *(
+                        p
+                        for group in groups
+                        for artifact in group["artifacts"]
+                        if artifact["sha256"]
+                        for p in (
+                            expand(artifact["path"])
+                            if any(c in artifact["path"] for c in "*?[")
+                            else [artifact["path"]]
+                        )
+                    ),
+                }
+            )
+        ],
     }
     rendered = json.dumps(report, indent=2, ensure_ascii=False) + "\n"
     for pattern, replacement in REDACT.items():

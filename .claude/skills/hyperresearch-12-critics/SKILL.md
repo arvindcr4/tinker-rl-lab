@@ -55,7 +55,7 @@ Read these inputs:
      - decomposition_path: research/prompt-decomposition.json   (instruction-critic only)
    ```
 
-3. **Wait for all critics.** If one fails, you can proceed with the partial set, but log the absence to the run log — the patch pass is less robust with missing critic coverage. **Do NOT skip the instruction-critic specifically** — it's the only critic measuring prompt adherence, which is the dimension with the widest variance.
+3. **Wait for all critics.** If one fails, preserve its failed envelope and mark review_status: incomplete. Partial analysis may continue but cannot pass the final review gate. **Do NOT skip the instruction-critic specifically** — it's the only critic measuring prompt adherence, which is the dimension with the widest variance.
 
 4. **Do not read the findings yourself and apply them.** The patcher (step 14) reads the findings. Your job is to hand them to the patcher — AFTER step 13 (gap-fetch) runs.
 
@@ -64,7 +64,8 @@ Read these inputs:
 ## Exit criterion
 
 - All 4 critic findings JSONs exist (`research/critic-findings-<name>.json`)
-- Each is valid JSON with a `findings` array
+- Each is a valid v2 JSON envelope: `status: completed` requires a `findings` array; `status: failed` requires `findings: null` and a nonempty `error`
+- Failed envelopes satisfy artifact collection only: mark `review_status: incomplete`; they never satisfy completed review or the final gate
 
 ---
 
@@ -75,3 +76,9 @@ Return to the entry skill (`hyperresearch`). Invoke step 13:
 ```
 Skill(skill: "hyperresearch-13-gap-fetch")
 ```
+
+## Final review contract v2
+
+All artifacts belong under research/runs/<run_id>/; legacy paths above are logical names relative to that run. Carry run_id, query_sha256 and corpus_sha256 in each artifact. Critic envelopes also carry critic, status (completed/failed), draft_sha256, findings (array only for completed), and error for failures. Never accept legacy bare findings as completed review.
+
+After ALL readability edits in step 16, rerun the integrity and lint checks and required critics against the delivered bytes. Write a schema_version: 2 manifest with tier, run_id, query_sha256, corpus_sha256, final_sha256 and lint_status: passed. Run `python tools/research_review_gate.py --report <final-report> --manifest <run-manifest> --reviews <required-critic-files>` and preserve its receipt. Any failure means review_status: incomplete and prevents a shippable designation. Light tier requires the final hash/lint manifest but no critics. No edit may follow a successful receipt without invalidating it.

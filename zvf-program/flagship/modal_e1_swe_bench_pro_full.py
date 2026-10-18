@@ -225,6 +225,19 @@ SOURCE_EXTENSIONS = {
 }
 
 
+PAID_EXECUTION_POLICY = "blocked-until-enforced-reservation-settlement-v2"
+
+
+def _require_enforced_budget() -> None:
+    """No launch until a provider-bound reservation/settlement contract exists.
+
+    Advisory projections and caller-declared authorization are not spending
+    enforcement. This is intentionally not configurable through a bypass flag.
+    Offline receipt construction and historical inspection remain available.
+    """
+    raise RuntimeError("paid execution blocked: enforced reservation/settlement budget contract unavailable")
+
+
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
@@ -309,7 +322,10 @@ def _hunk_body_counts(lines: list[str], start: int) -> tuple[int, int, int]:
 def _recount_hunks(patch: str) -> tuple[str, int]:
     """Rewrite every @@ header with the counts its body actually has.
 
-    Equivalent of ``git apply --recount``. The model never sees line numbers,
+    Count-only repair follows ``git apply --recount`` for valid changed hunks.
+    Unlike git --recount, this adapter drops context-only hunks; malformed
+    bodies still require _validate_unified_diff before submission.
+    The model never sees line numbers,
     so its header counts are guesses; the 2026-08-16 seed1818 run (2/731) was
     evaluated on unrepaired patches, of which 593/713 failed ``git apply`` as
     corrupt. Context-only hunks (no +/- lines) are no-ops that plain
@@ -719,6 +735,36 @@ def _resolve_image_digest(tag: str, token: str) -> str:
     return digest
 
 
+def _validate_image_manifest(manifest: dict[str, Any], tasks: list[dict[str, Any]]) -> None:
+    """Validate saved image bindings before reuse (local integrity, not registry trust)."""
+    if manifest.get("schema_version") != "pavlov-e1-image-manifest-v1":
+        raise RuntimeError("unsupported image manifest schema")
+    images = manifest.get("images")
+    if not isinstance(images, list) or len(images) != len(tasks) or manifest.get("count") != len(tasks):
+        raise RuntimeError("saved image manifest is incomplete")
+    if manifest.get("manifest_sha256") != _sha256_text(_stable_json(images)):
+        raise RuntimeError("image manifest hash mismatch")
+    expected = {str(task["instance_id"]): task for task in tasks}
+    seen = set()
+    for image in images:
+        if not isinstance(image, dict):
+            raise RuntimeError("image record must be an object")
+        task_id = image.get("instance_id")
+        if task_id not in expected or task_id in seen:
+            raise RuntimeError("image task coverage mismatch")
+        seen.add(task_id)
+        digest = image.get("digest", "")
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+            raise RuntimeError("image digest is not immutable")
+        task = expected[task_id]
+        if (image.get("tag") != task["dockerhub_tag"] or
+            image.get("tag_uri") != f"{DOCKER_REPOSITORY}:{task['dockerhub_tag']}" or
+            image.get("immutable_uri") != f"{DOCKER_REPOSITORY}@{digest}"):
+            raise RuntimeError("image binding mismatch")
+        if task.get("docker_image") is not None and task["docker_image"] != image["immutable_uri"]:
+            raise RuntimeError("saved task image binding mismatch")
+
+
 def _resolve_image_manifest(
     tasks: list[dict[str, Any]], *, workers: int
 ) -> dict[str, Any]:
@@ -819,6 +865,7 @@ def _shared_tinker_sampler(tinker_module: Any, wandb_run_id: str) -> Any:
 def generate_candidate(payload: dict[str, Any]) -> dict[str, Any]:
     """Generate one pass@1 candidate with W&B online before the Tinker call."""
 
+    _require_enforced_budget()
     task = dict(payload["task"])
     sources = dict(payload["sources"])
     seed = int(payload["seed"])
@@ -1408,6 +1455,8 @@ def _aggregate_receipt(
         if candidates
         else {}
     )
+    if not isinstance(eval_results, dict) or any(type(value) is not bool for value in eval_results.values()):
+        raise RuntimeError("evaluator results must be an object of boolean outcomes")
     candidate_ids = {str(item["instance_id"]) for item in candidates}
     if set(eval_results) != candidate_ids:
         missing = sorted(candidate_ids - set(eval_results))
@@ -1421,7 +1470,7 @@ def _aggregate_receipt(
         instance_id = str(task["instance_id"])
         generation = generation_by_id[instance_id]
         full_results[instance_id] = (
-            bool(eval_results[instance_id])
+            eval_results[instance_id]
             if generation["status"] == "GENERATED"
             else False
         )
@@ -1584,6 +1633,7 @@ def main(
     evaluator_workers: int = 20,
     resume: bool = False,
 ) -> None:
+    _require_enforced_budget()
     root = _repo_root()
     run_dir = root / f"outputs/modal_e1_e14/{RUN_DATE}/e1_swe_bench_pro_full/seed{seed}"
     if run_dir.exists() and not resume:
@@ -1651,8 +1701,7 @@ def main(
     image_manifest_path = run_dir / "image_manifest.json"
     if image_manifest_path.is_file():
         image_manifest = json.loads(image_manifest_path.read_text(encoding="utf-8"))
-        if image_manifest.get("count") != EXPECTED_TASK_COUNT:
-            raise RuntimeError("saved image manifest is incomplete")
+        _validate_image_manifest(image_manifest, tasks)
     else:
         image_manifest = _resolve_image_manifest(tasks, workers=digest_workers)
         _write_json(image_manifest_path, image_manifest)

@@ -41,9 +41,6 @@ import json
 from pathlib import Path
 
 import numpy as np
-import xgboost as xgb
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
 
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
@@ -74,6 +71,7 @@ TAUS_JOINT = [0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90]
 
 
 def fit_xgb(Xtr, ytr, Xte, feats, seed):
+    import xgboost as xgb
     cols = [ALL24.index(c) for c in feats]
     n_pos = max(1, int(ytr.sum()))
     n_neg = max(1, len(ytr) - n_pos)
@@ -90,6 +88,8 @@ def fit_xgb(Xtr, ytr, Xte, feats, seed):
 
 
 def fit_joint_vstat_lr(Xtr, ytr):
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.preprocessing import StandardScaler
     """Logistic regression on (V_mean, V_std, V_max, V_min) -> is_fraud."""
     cols = [ALL24.index(c) for c in AGG4]
     Xtr_v = Xtr[:, cols]
@@ -113,6 +113,8 @@ def predict_joint(clf, sc, Xte):
 
 
 def fit_vmean_lr(Xtr, ytr):
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.preprocessing import StandardScaler
     """Single-feature logistic regression on V_mean only -> is_fraud."""
     cols = [ALL24.index("V_mean")]
     Xtr_v = Xtr[:, cols]
@@ -133,6 +135,20 @@ def fit_vmean_lr(Xtr, ytr):
 def predict_vmean(clf, sc, Xte):
     cols = [ALL24.index("V_mean")]
     return clf.predict_proba(sc.transform(Xte[:, cols]))[:, 1]
+
+
+def precision_target_rate(rows, precision_target=.05, value_target=.30):
+    keys = {(r['seed'], r['rate_pct'], r['fset']) for r in rows}
+    successful = reached = 0
+    for key in keys:
+        eligible = sorted((r for r in rows if (r['seed'], r['rate_pct'], r['fset']) == key), key=lambda r: r['tau'])
+        first = next((r for r in eligible if r['esc_prec'] >= precision_target), None)
+        reached += first is not None
+        successful += first is not None and first['value_rate'] >= value_target
+    return dict(successful=successful, eligible=len(keys), reached_target=reached,
+                rate=successful/len(keys) if keys else None,
+                conditional_rate=successful/reached if reached else None,
+                status='descriptive_test_oracle' if keys else 'insufficient_data')
 
 
 def main():
@@ -305,21 +321,10 @@ def main():
               f" beating vmean on precision; PASS={h3_pass}")
 
     # H4: at the joint-tau where esc_prec first crosses 5%, value_rate remains >= 0.30 on >= 25%
-    h4_pass_cells = 0
-    h4_total_cells = 0
-    for cell_key in {(r["seed"], r["rate_pct"], r["fset"]) for r in joint_cells}:
-        cell_rows = sorted(
-            [r for r in joint_cells
-             if (r["seed"], r["rate_pct"], r["fset"]) == cell_key],
-            key=lambda r: r["tau"])
-        # First tau at which esc_prec >= 0.05
-        first_5pct = next((r for r in cell_rows if r["esc_prec"] >= 0.05), None)
-        if first_5pct is not None:
-            h4_total_cells += 1
-            if first_5pct["value_rate"] >= 0.30:
-                h4_pass_cells += 1
-    h4_pass_rate = h4_pass_cells / max(1, h4_total_cells)
-    h4_pass = h4_pass_rate >= 0.25
+    h4_result = precision_target_rate(joint_cells)
+    h4_pass_cells, h4_total_cells = h4_result['successful'], h4_result['eligible']
+    h4_pass_rate = h4_result['rate']
+    h4_pass = h4_pass_rate is not None and h4_pass_rate >= .25
     print(f"[iter172] H4: {h4_pass_cells}/{h4_total_cells} = {h4_pass_rate:.3f} "
           f"cells with value_rate>=0.30 at first-5%-tau; PASS={h4_pass}")
 
@@ -349,6 +354,9 @@ def main():
     print(f"[iter172] wrote {out_h3} ({len(h3_rows)} rows)")
 
     summary = {
+        "precision_target_result": h4_result,
+        "analysis_protocol": "pro-review-02-v2-exploratory-test-oracle",
+        "selection_warning": "Thresholds selected on reused evaluation labels; prospective performance requires frozen validation-selected choices and independent evaluation",
         "iter": 172,
         "job": "P8 V-stat ensemble precision-restoration ablation",
         "n_seeds": len(SEEDS),

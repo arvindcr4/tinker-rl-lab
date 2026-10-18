@@ -123,7 +123,7 @@ provenance-conflicted.
 | P3-C1 | 12 — [operational identifier withheld] | W&B-managed open trainer; no Tinker identity | Qwen/Qwen3.5-4B | — | 2, 4, 8, 16 | — (saturated arithmetic regime; dataset not recorded) | 3 per G (seeds 0, 1, 2) / 8 | Mean held-out Δ: G=2 +0.0000, G=4 +0.0000, G=8 −0.0625, G=16 +0.0000; evaluation size not logged | C |
 | P3-C2 | 5 — [operational identifier withheld] | W&B, sampling only | — (G = 32 cells) | — | 32 | — | 5 cells / 0 optimizer steps | No matched G = 4/G = 32 training replication; the comparison cannot be executed | X |
 | P4-C1 | 6 — `local:drgrpo_gsm8k_cot:grpo:seed42` | Local | Qwen/Qwen2.5-1.5B-Instruct as mapped (abstract says Qwen3-8B) — conflict | GRPO / Dr.GRPO | — | GSM8K CoT | 3 per arm (42, 123, 456) / 30 | GRPO 0.2017→0.2633 (Δ +0.0617); Dr.GRPO 0.2050→0.2550 (Δ +0.0500); n = 200/seed | X |
-| P5-C1 | 2 — [operational identifier withheld], [identifier withheld] | Tinker-managed versus TRL backend | Qwen/Qwen3-8B-Base versus Qwen/Qwen3-8B — confounded | GRPO / TRL-GRPO | 8 | GSM8K | 1 per backend (seed 42) / 30 | Final/last-10 training reward 0.050→0.856; no held-out metric | X |
+| P5-C1 | 2 — [operational identifier withheld], [identifier withheld] | Tinker-managed versus TRL backend | Qwen/Qwen3-8B-Base versus Qwen/Qwen3-8B — confounded | GRPO / TRL-GRPO | 8 | GSM8K | 1 per backend (seed 42) / 30 | Last-10 mean training reward 0.050→0.856; no held-out metric | X |
 | P5-C2 | 2 — [identifier withheld], [identifier withheld] | Open trainer versus managed stack | Qwen2.5-0.5B-Instruct versus Qwen3.5-4B (declared non-consistent exhibit) | DAPO label versus asymmetric-clip surrogate | — | — | 2 open versus 3 managed / not logged (open), 15 (managed) | Mean ZVF 0.00 versus 0.58; no comparable held-out metric | C |
 | P5-C3 | 1 — [identifier withheld] | Managed summary | Qwen/Qwen3.5-4B | Four algorithm labels | — | — | 3 per arm (42, 123, 456) / 15 | Last-10 reward band 0.710–0.744 (width 0.034); no held-out metric; not an equivalence result (TOST fails; §7.1) | C |
 | P6-C1 | 48 registry entries | Registry (schema validation) | N/A | N/A | N/A | N/A | N/A | 44/48 entries pass schema validation in the later claim-to-run snapshot (`claim_to_run_table.tsv`, which adds amendment entries); the 31/31 of §7.2 is the 31 records shipped with P6 | R |
@@ -219,7 +219,7 @@ artefact records a group size per run. Δ is the change in held-out accuracy.
 | `hard_curriculum/curriculum-hard-s0…s2` | Tinker → W&B `study logging group` (`hard-curriculum`) | Qwen/Qwen3.5-4B | GRPO + curriculum filter | 6 *default* | GSM8K hard-learnable pool (40 of 300 probed) | 0–2 | 10 | 3 runs; mean Δ 0.0000; zero-loss fraction 0.0 |
 | `p4_surprise/{sum,mean,surprise}-s0…s1` | Tinker → W&B `study logging group` (`p4-surprise`) | Qwen/Qwen3.5-4B | GRPO, loss variant | 4 *default* | GSM8K | 0–1 | 8 | 6 runs; mean Δ +0.1250 (sum) / 0.0000 (mean) / +0.0417 (surprise) |
 | `p1_layerfreeze/result.json` | Colab L4 | Qwen/Qwen2.5-1.5B-Instruct | — (gradient probe, no optimizer steps) | — | — | — | 5 | 1 run; step-1 predicts final top-layer set at overlap 1.0; top-25% concentration 0.476 |
-| `p1_layerfreeze/scaled_4seed_result.json` | Colab L4 | Qwen/Qwen2.5-3B-Instruct | GRPO | 4 | GSM8K (24 problems) | 0–3 | 10 | 4 runs; overlap 0.0833 ± 0.0481 — approximately chance; concentration 0.3908 |
+| `p1_layerfreeze/scaled_4seed_result.json` | Colab L4 | Qwen/Qwen2.5-3B-Instruct | GRPO | 4 | GSM8K (24 problems) | 0–3 | 10 | 4 runs; overlap 0.0833 ± 0.0481 — below the simple 0.25 reference, not evidence of general anticorrelation; concentration 0.3908 |
 | `p1_layerfreeze/freeze_flop_result.json` | Colab L4 | Qwen/Qwen2.5-1.5B-Instruct | GRPO (step-1-frozen arm) | — | — | 0–1 | — | 4 runs, full and frozen arms; frozen arm gains 0.0000 against 0.0625 at 60.7% of the parameter count |
 | `p1_layerfreeze/emergence_result.json` | Colab L4 | Qwen/Qwen2.5-1.5B-Instruct | GRPO (step-1 layer selection) | — | — | 0–1 | — | 2 runs; mean step-1 overlap 0.643 |
 
@@ -235,7 +235,7 @@ FINDINGS warning that `zero_loss_frac` was invalid (an empty-metrics-dict bug,
 "since fixed") belongs to the nine-run batch, not to that file. Second, the P1
 layer-freeze block has the same shape: the two-seed 3B pass (overlap
 0.1111 ± 0.0000) is superseded by the four-seed pass (0.0833 ± 0.0481), and
-both sit near chance, so the toy-scale overlap of 1.0 must not be read as a
+the larger-model overlap is below the simple independent 0.25 reference, so the toy-scale overlap of 1.0 must not be read as a
 transferable layer-selection signal. Third, the two single-seed training
 blocks flagged SUSPECT by independent verification (kimi, 2026-07-06) are
 superseded by the multi-seed blocks above: the curriculum opening's +0.05
@@ -362,9 +362,7 @@ Four further limits apply.
 
 4. **Snapshot scope.** Historical source inventories differ in scope. They are neither current live accounts nor counts of independent experiments, and this public package does not provide a complete inventory replay.
 
-None of this changes a reported result, because every result in Chapters 6–8
-is bound to named artefacts rather than to the registry as a whole. It does
-bound what the registry can be used for: it establishes provenance and
+Named artifacts may preserve an arithmetic result while missing source identity limits attribution to an algorithm or checkpoint. Chapters 6–8 state each claim's verification level; selected audits are not universal verification. The registry records reported provenance and
 identity, shows that the run population is far larger than the reported
 claims, and shows that those claims rest on a small, explicitly tiered subset
 with the P1–P8 empirical rows at Tier C or X and P11 at Tier C under the

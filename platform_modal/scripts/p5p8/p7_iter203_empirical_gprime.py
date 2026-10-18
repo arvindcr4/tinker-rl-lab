@@ -60,7 +60,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_mo
 from _paths import REPO_ROOT  # noqa: E402
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
-OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
+OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review20-v2"
 METHODS = ("grpo", "aero", "gift", "areal")
 G_BASE = 8
 N_PROMPTS = 16
@@ -91,54 +91,13 @@ def load_pool():
 
 
 def emp_gu_at_gpr(step_rewards, g_prime):
-    """Empirical GU at group size g_prime, computed by partitioning the
-    16 prompts × 8 rollouts pool into groups of size g_prime.  Each
-    group contributes k = sum of binary rewards; GU = 1 iff
-    0 < k < g_prime.
+    """Within-prompt ordered subsample only; never concatenate prompts."""
+    if not step_rewards or g_prime < 1:
+        raise ValueError("nonempty prompts and positive group size required")
+    if any(len(prompt) < g_prime for prompt in step_rewards):
+        raise ValueError("UNAVAILABLE: insufficient same-prompt completions for requested G")
+    return sum(0 < sum(prompt[:g_prime]) < g_prime for prompt in step_rewards) / len(step_rewards)
 
-    G_prime must divide 16 * 8 = 128.  Returns float in [0, 1].
-    """
-    if g_prime == 8:
-        # factual: each prompt is one G=8 group
-        n_groups = 0
-        n_useful = 0
-        for prompt in step_rewards[:N_PROMPTS]:
-            k = sum(int(round(x)) for x in prompt[:G_BASE])
-            n_groups += 1
-            n_useful += int(0 < k < G_BASE)
-        return n_useful / n_groups
-    elif g_prime == 16:
-        n_groups = 0
-        n_useful = 0
-        for i in range(0, N_PROMPTS, 2):
-            combined = list(step_rewards[i]) + list(step_rewards[i + 1])
-            k = sum(int(round(x)) for x in combined[:g_prime])
-            n_groups += 1
-            n_useful += int(0 < k < g_prime)
-        return n_useful / n_groups
-    elif g_prime == 32:
-        n_groups = 0
-        n_useful = 0
-        for i in range(0, N_PROMPTS, 4):
-            combined = []
-            for j in range(4):
-                combined.extend(step_rewards[i + j])
-            k = sum(int(round(x)) for x in combined[:g_prime])
-            n_groups += 1
-            n_useful += int(0 < k < g_prime)
-        return n_useful / n_groups
-    elif g_prime == 64:
-        n_groups = 0
-        n_useful = 0
-        for i in range(0, N_PROMPTS, 8):
-            combined = []
-            for j in range(8):
-                combined.extend(step_rewards[i + j])
-            k = sum(int(round(x)) for x in combined[:g_prime])
-            n_groups += 1
-            n_useful += int(0 < k < g_prime)
-        return n_useful / n_groups
-    return 0.0
 
 
 def per_prompt_k(step_rewards, prompt_index):

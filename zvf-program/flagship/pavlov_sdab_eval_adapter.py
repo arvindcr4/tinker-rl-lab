@@ -869,8 +869,12 @@ def build_result_receipt(
     """Validate one W&B, Tinker, or HF receipt against the SDAB boundary."""
 
     canonical_boundary = build_sdab_boundary(boundary)
+    if not canonical_boundary["task_count"]:
+        raise SdabBoundaryError("result boundary must contain evaluation tasks")
     if not isinstance(result, Mapping):
         raise SdabBoundaryError("SDAB result receipt must be an object")
+    if result.get("boundary_sha256") != sha256_digest(canonical_boundary):
+        raise SdabBoundaryError("result boundary binding missing or mismatched")
     if backend is None:
         backend = result.get("backend")
     backend_name = _backend_name(backend)
@@ -961,6 +965,27 @@ def build_result_receipt(
         raise SdabBoundaryError("result.metrics must be an object")
     if status == "completed" and not metrics:
         raise SdabBoundaryError("completed SDAB results must include metrics; no result may be fabricated")
+    if status == "completed":
+        grades = result.get("task_grades")
+        if not isinstance(grades, list) or len(grades) != canonical_boundary["task_count"]:
+            raise SdabBoundaryError("completed results require one native task grade per task")
+        if {g.get("task_id") for g in grades if isinstance(g, Mapping)} != set(canonical_boundary["task_ids"]):
+            raise SdabBoundaryError("native task grade coverage mismatch")
+        composites = []
+        perfect = []
+        for grade in grades:
+            values = [grade.get(key) for key in ("feature_correctness", "operational_correctness", "engineering_correctness")]
+            if any(type(v) not in (int, float) or not 0 <= v <= 1 for v in values):
+                raise SdabBoundaryError("native score components must be finite in [0,1]")
+            if grade.get("attempt") != 1 or type(grade.get("attempt")) is not int:
+                raise SdabBoundaryError("Pass@1 requires first-attempt grades")
+            composites.append(sum(w*v for w,v in zip((.6,.3,.1), values)))
+            perfect.append(all(v == 1 for v in values))
+        expected = {"composite_score": 100*sum(composites)/len(grades), "pass_at_1": sum(perfect)/len(grades)}
+        for key, value in expected.items():
+            supplied = metrics.get(key)
+            if type(supplied) not in (int, float) or abs(supplied-value) > 1e-9 or supplied != supplied:
+                raise SdabBoundaryError(f"metrics.{key} disagrees with native task grades")
     metrics_digest = _required_digest_alias(result, ("metrics_digest",), "result.metrics_digest")
     expected_metrics_digest = sha256_digest(metrics)
     if metrics_digest != expected_metrics_digest:
@@ -986,9 +1011,12 @@ def build_result_receipt(
             "held-out claim requires immutable split/license/task/container/decontamination "
             "receipts and a completed result; missing=" + ",".join(missing)
         )
-    heldout_proven = not missing
+    # Checksums and caller assertions are not an authenticated result attestation.
+    if claim_requested:
+        raise SdabBoundaryError("authenticated result attestation verification is unavailable")
+    heldout_proven = False
     receipt = {
-        "schema_version": "pavlov-sdab-eval-result-receipt-v1",
+        "schema_version": "pavlov-sdab-eval-result-receipt-v2",
         "receipt_id": receipt_id,
         "backend": backend_name,
         "backend_fields": backend_fields,
@@ -1132,8 +1160,9 @@ def _bundle_synthetic_flag(bundle: Mapping[str, Any]) -> bool:
 
 
 def _strip_raw_content(record: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
-    stripped = sorted(key for key in record if key.casefold() in RAW_CONTENT_KEYS)
-    metadata = {key: record[key] for key in record if key.casefold() not in RAW_CONTENT_KEYS}
+    allowed = {"task_id", "category", "task_hash", "content_sha256", "revision", "source_revision", "license", "receipt_id"}
+    stripped = sorted(key for key in record if key not in allowed)
+    metadata = {key: value for key, value in record.items() if key in allowed and isinstance(value, (str, int, float, bool, type(None)))}
     return metadata, stripped
 
 
@@ -1256,6 +1285,7 @@ def validate_task_bundle(
     sorted_ids = sorted(ordered_ids)
     report = {
         "schema_version": BUNDLE_SCHEMA_VERSION,
+        "provider_payload_sha256": sha256_digest(bundle),
         "synthetic": synthetic,
         "authoritative": not synthetic,
         "benchmark_id": BENCHMARK_ID,

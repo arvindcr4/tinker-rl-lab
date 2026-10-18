@@ -1,0 +1,12 @@
+{
+  "status": "incomplete_evidence_inventory_not_authorship_adjudication",
+  "required_roles": ["implementation", "experiment_execution", "analysis", "writing", "supervision"],
+  "claims": [
+    {"claim_id": "tool_schema_improvement", "source_run_ids": [], "experiment_phase": "unresolved", "analysis_phase": "semester_4", "owners_by_role": {}, "reuse_kind": "unresolved", "status": "needs_exact_run_and_contribution_records"},
+    {"claim_id": "qwen_ppo_grpo_ranking", "source_run_ids": [], "experiment_phase": "semester_3", "analysis_phase": "semester_4", "owners_by_role": {}, "reuse_kind": "reanalysis_of_inherited_summary", "status": "conflicting_archived_summaries"},
+    {"claim_id": "cross_family_structural_ceiling", "source_run_ids": [], "experiment_phase": "unresolved", "analysis_phase": "semester_4", "owners_by_role": {}, "reuse_kind": "unresolved", "status": "model_identity_unresolved"},
+    {"claim_id": "zvf_incremental_predictive_value", "source_run_ids": [], "experiment_phase": "unresolved", "analysis_phase": "semester_4", "owners_by_role": {}, "reuse_kind": "unresolved", "status": "independent_validation_required"}
+  ],
+  "submission_status": "no_submission_receipt_in_this_inventory",
+  "submission_required_fields": ["venue", "track", "artifact_sha256", "submission_id", "receipt"]
+}

@@ -3,7 +3,7 @@
 
 Three additions on top of iter 118's diagnostic:
 
-1. ``zvf_iter122_iso_yield.tsv``
+1. ``zvf_iter122_iso_yield_review28_v2.tsv``
    Per-task iso-yield curve: given the groupsize_zvf_sweep measurements
    (G in {2, 4, 8, 16}), report the minimum G required to push ZVF
    under each target tau in {0.20, 0.25, 0.30, 0.40, 0.50, 0.60}.
@@ -11,13 +11,13 @@ Three additions on top of iter 118's diagnostic:
    operational form of "Iso-Yield Dynamic Grouping" (Gemini
    Deep Think frontier synthesis).
 
-2. ``zvf_iter122_aero_quantile.tsv``
+2. ``zvf_iter122_aero_quantile_review28_v2.tsv``
    AERO-vs-GRPO paired gap STRATIFIED into low/mid/high ZVF quantile
    bins of the variance_mitigation suite. Restricts the iter 118
    headline (-0.260 absolute) by asking: where does AERO actually
    win -- in the easy ZVF band, the hard ZVF band, or both?
 
-3. ``zvf_iter122_op_sweep.tsv``
+3. ``zvf_iter122_op_sweep_review28_v2.tsv``
    Precision/recall operating-point sweep on the 23 pooled cells for
    "high-ZVF-cell" discrimination (mean_zvf > tau) against the binary
    target is_collapse. Sweeps tau in {0.30, 0.40, 0.50, 0.60, 0.70,
@@ -26,10 +26,10 @@ Three additions on top of iter 118's diagnostic:
 
 Output artefacts:
 
-    platform_hybrid/experiments/results/zvf_iter122_iso_yield.tsv
-    platform_hybrid/experiments/results/zvf_iter122_aero_quantile.tsv
-    platform_hybrid/experiments/results/zvf_iter122_op_sweep.tsv
-    platform_hybrid/experiments/results/zvf_iter122_meta.json
+    platform_hybrid/experiments/results/zvf_iter122_iso_yield_review28_v2.tsv
+    platform_hybrid/experiments/results/zvf_iter122_aero_quantile_review28_v2.tsv
+    platform_hybrid/experiments/results/zvf_iter122_op_sweep_review28_v2.tsv
+    platform_hybrid/experiments/results/zvf_iter122_meta_review28_v2.json
     figures/zvf_iter122_iso_yield.{pdf,png}
 
 All inputs are existing per-experiment measurement files; no new
@@ -61,106 +61,19 @@ import zvf_iter118_diagnostic as z118  # type: ignore  # noqa: E402
 # ---------------------------------------------------------------------------
 
 
-def _iso_yield_curve(
-    gs: Sequence[int], zvfs: Sequence[float], taus: Sequence[float]
-) -> List[Dict[str, Any]]:
-    """For each tau, find the minimum G such that ZVF(G) <= tau.
-
-    Linearly interpolates in log2(G) between measurement points; if
-    no G in the measured range satisfies the target, returns the
-    floor (G=2 if all measurements exceed tau) or extrapolates using
-    the last slope.
-    """
-    if not gs:
-        return []
-    g_log = [math.log2(g) for g in gs]
-    zvfs_sorted = sorted(zip(g_log, zvfs))
-
-    out: List[Dict[str, Any]] = []
+def _iso_yield_curve(gs, zvfs, taus):
+    """Observed-grid target attainment; no unvalidated monotonic extrapolation."""
+    if len(gs) != len(zvfs) or len(set(gs)) != len(gs): raise ValueError("unaligned/duplicate group sizes")
+    points=sorted(zip(gs,zvfs))
+    if any(g < 1 or int(g)!=g or not math.isfinite(z) or not 0<=z<=1 for g,z in points):
+        raise ValueError("invalid measured group size or ZVF")
+    out=[]
     for tau in taus:
-        # If even the smallest measured G has ZVF <= tau, declare floor.
-        if zvfs_sorted[0][1] <= tau:
-            g_min = 2 ** zvfs_sorted[0][0]
-            achieved = zvfs_sorted[0][1]
-            out.append(
-                {
-                    "tau": tau,
-                    "g_min": g_min,
-                    "achieved_zvf": achieved,
-                    "interpolated": False,
-                    "extrapolated": False,
-                }
-            )
-            continue
-        # If even the largest measured G has ZVF > tau and the curve
-        # is asymptoting (slope approaches zero), mark the target
-        # UNREACHABLE on the empirical G-range. This is the iso-yield
-        # analogue of an unbounded loss surface: pushing G further
-        # helps less than the linear extrapolation suggests.
-        if zvfs_sorted[-1][1] > tau:
-            if len(zvfs_sorted) >= 2:
-                x0, y0 = zvfs_sorted[-2]
-                x1, y1 = zvfs_sorted[-1]
-                slope = (y1 - y0) / (x1 - x0) if x1 != x0 else 0.0
-                # If the slope is shallow enough that the linear
-                # extrapolation blows past G=128 (a "physically
-                # plausible" cap), declare the tau UNREACHABLE -- the
-                # curve has effectively asymptotic'd at the empirical
-                # floor y1.
-                if slope >= -0.05:
-                    g_min = float("inf")
-                    interp = False
-                    extrap = False
-                else:
-                    x_star = x1 + (tau - y1) / slope
-                    x_star = max(x_star, x1)  # never below last point
-                    if x_star > math.log2(128):  # cap at G=128
-                        g_min = float("inf")
-                        interp = False
-                        extrap = False
-                    else:
-                        g_min = 2 ** x_star
-                        interp = False
-                        extrap = True
-            else:
-                g_min = float("inf")
-                interp = False
-                extrap = False
-            out.append(
-                {
-                    "tau": tau,
-                    "g_min": g_min,
-                    "achieved_zvf": zvfs_sorted[-1][1],
-                    "interpolated": interp,
-                    "extrapolated": extrap,
-                }
-            )
-            continue
-        # Otherwise interpolate between bracketing points.
-        bracket = None
-        for i in range(len(zvfs_sorted) - 1):
-            x_lo, y_lo = zvfs_sorted[i]
-            x_hi, y_hi = zvfs_sorted[i + 1]
-            if y_lo > tau >= y_hi:
-                # linear interpolation.
-                if y_lo == y_hi:
-                    x_star = (x_lo + x_hi) / 2
-                else:
-                    x_star = x_lo + (tau - y_lo) * (x_hi - x_lo) / (y_hi - y_lo)
-                bracket = (x_star, y_hi)
-                break
-        if bracket is None:
-            # Fallback (should not happen).
-            bracket = (zvfs_sorted[-1][0], zvfs_sorted[-1][1])
-        out.append(
-            {
-                "tau": tau,
-                "g_min": 2 ** bracket[0],
-                "achieved_zvf": bracket[1],
-                "interpolated": True,
-                "extrapolated": False,
-            }
-        )
+        if not 0<=tau<=1: raise ValueError("target outside [0,1]")
+        successes=[(g,z) for g,z in points if z<=tau]
+        g,z=successes[0] if successes else (float("inf"),float("nan"))
+        out.append(dict(tau=tau,g_min=g,achieved_zvf=z,interpolated=False,extrapolated=False,
+                        status="observed" if successes else "not_reached_in_measured_range"))
     return out
 
 
@@ -308,6 +221,9 @@ def write_aero_quantile(out_path: Path) -> Dict[str, Any]:
     aero = [r for r in rows if r.get("model") == "AERO"]
     grpo = [r for r in rows if r.get("model") == "GRPO"]
     if not aero or not grpo:
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        from _review28_io import write_table
+        write_table(out_path, [], fields=["seed", "aero_zvf", "grpo_zvf", "gap_zvf"])
         return {"n_pairs": 0, "n_bins": 0}
     by_seed_aero = {r["seed"]: r for r in aero}
     by_seed_grpo = {r["seed"]: r for r in grpo}
@@ -316,6 +232,9 @@ def write_aero_quantile(out_path: Path) -> Dict[str, Any]:
         pairs.append((by_seed_aero[s], by_seed_grpo[s]))
 
     if not pairs:
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        from _review28_io import write_table
+        write_table(out_path, [], fields=["seed", "aero_zvf", "grpo_zvf", "gap_zvf"])
         return {"n_pairs": 0}
 
     rng = random.Random(122022)
@@ -326,8 +245,8 @@ def write_aero_quantile(out_path: Path) -> Dict[str, Any]:
     gaps_zvf: List[float] = []
     gaps_last: List[float] = []
     for a, g in pairs:
-        gap_zvf = g["mean_zvf"] - a["mean_zvf"]
-        gap_last = g["last10_avg"] - a["last10_avg"]
+        gap_zvf = a["mean_zvf"] - g["mean_zvf"]
+        gap_last = a["last10_avg"] - g["last10_avg"]
         gaps_zvf.append(gap_zvf)
         gaps_last.append(gap_last)
         per_seed.append(
@@ -677,11 +596,11 @@ def write_iso_yield_curve_plot(
 
 
 def main() -> int:
-    out_iso = RESULTS / "zvf_iter122_iso_yield.tsv"
-    out_aero = RESULTS / "zvf_iter122_aero_quantile.tsv"
-    out_op = RESULTS / "zvf_iter122_op_sweep.tsv"
-    out_meta = RESULTS / "zvf_iter122_meta.json"
-    out_fig = FIGURES / "zvf_iter122_iso_yield.png"
+    out_iso = RESULTS / "zvf_iter122_iso_yield_review28_v2.tsv"
+    out_aero = RESULTS / "zvf_iter122_aero_quantile_review28_v2.tsv"
+    out_op = RESULTS / "zvf_iter122_op_sweep_review28_v2.tsv"
+    out_meta = RESULTS / "zvf_iter122_meta_review28_v2.json"
+    out_fig = FIGURES / "zvf_iter122_iso_yield_review28_v2.png"
 
     # 1. Iso-yield curve from groupsize_zvf_sweep.
     iso_summary = write_iso_yield(out_iso)
@@ -714,10 +633,10 @@ def main() -> int:
         # Mirror to paper/figures/ if present.
         try:
             (PAPER_FIGS).mkdir(parents=True, exist_ok=True)
-            (PAPER_FIGS / "zvf_iter122_iso_yield.png").write_bytes(
+            (PAPER_FIGS / "zvf_iter122_iso_yield_review28_v2.png").write_bytes(
                 out_fig.read_bytes()
             )
-            (PAPER_FIGS / "zvf_iter122_iso_yield.pdf").write_bytes(
+            (PAPER_FIGS / "zvf_iter122_iso_yield_review28_v2.pdf").write_bytes(
                 out_fig.with_suffix(".pdf").read_bytes()
             )
         except Exception:  # noqa: BLE001

@@ -209,21 +209,29 @@ class PavlovProtocolValidatorTests(unittest.TestCase):
         protocol, contract, budget = self._authorized_bundle()
         record = contract["suite_registry"]["swe_bench_pro_eval"]["immutable_receipts"]["revision"]
         record["payload"]["status"] = "verified"
+        record["digest"] = compute_receipt_digest("swe_bench_pro_eval", "revision", record["payload"])
 
         report = validate_bundle(protocol, contract, budget)
 
         self.assertIn("primary_suite_receipts_incomplete", report["blocker_codes"])
         self.assertFalse(report["paid_launch_allowed"])
+
+        missing = next(item for item in report["checks"]["primary_receipts"]["missing"] if item["suite_id"] == "swe_bench_pro_eval")
+        self.assertIn("payload_status_not_evidence", str(missing))
 
     def test_malformed_receipt_url_is_a_blocker_not_a_validator_crash(self) -> None:
         protocol, contract, budget = self._authorized_bundle()
         record = contract["suite_registry"]["swe_bench_pro_eval"]["immutable_receipts"]["revision"]
         record["payload"]["source_url"] = "https://[malformed"
+        record["digest"] = compute_receipt_digest("swe_bench_pro_eval", "revision", record["payload"])
 
         report = validate_bundle(protocol, contract, budget)
 
         self.assertIn("primary_suite_receipts_incomplete", report["blocker_codes"])
         self.assertFalse(report["paid_launch_allowed"])
+
+        missing = next(item for item in report["checks"]["primary_receipts"]["missing"] if item["suite_id"] == "swe_bench_pro_eval")
+        self.assertIn("url_parse_error", str(missing))
 
     def test_budget_and_gate_types_are_exact(self) -> None:
         protocol, contract, budget = self._authorized_bundle()

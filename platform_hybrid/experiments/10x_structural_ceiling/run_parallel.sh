@@ -66,3 +66,6 @@ echo ""
 echo "============================================================"
 echo "  All done. Failures: $FAIL_COUNT / ${#CONFIGS[@]}"
 echo "============================================================"
+
+# A partial campaign is a failure, even if its final command succeeded.
+if (( FAIL_COUNT > 0 )); then exit 1; fi

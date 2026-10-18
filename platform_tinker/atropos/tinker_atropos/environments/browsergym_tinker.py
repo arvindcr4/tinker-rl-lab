@@ -13,7 +13,6 @@ WebArena once the WebArena sites are running and configured.
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import os
 import random
@@ -36,9 +35,7 @@ def _get_config_path():
     for i, arg in enumerate(sys.argv):
         if arg == "--config" and i + 1 < len(sys.argv):
             return sys.argv[i + 1]
-    return os.environ.get(
-        "TINKER_CONFIG_PATH", "configs/browsergym_miniwob_qwen_8b_smoke.yaml"
-    )
+    return os.environ.get("TINKER_CONFIG_PATH", "configs/browsergym_miniwob_qwen_8b_smoke.yaml")
 
 
 CONFIG_PATH = _get_config_path()
@@ -90,9 +87,7 @@ ALLOWED_ACTIONS = {
     "noop",
 }
 
-ACTION_RE = re.compile(
-    r"^(?P<name>[a-zA-Z_][a-zA-Z0-9_]*)\s*\((?P<args>.*)\)\s*$"
-)
+ACTION_RE = re.compile(r"^(?P<name>[a-zA-Z_][a-zA-Z0-9_]*)\s*\((?P<args>.*)\)\s*$")
 
 
 def _import_browsergym(benchmark: str) -> None:
@@ -156,6 +151,16 @@ def _stringify_observation(obs: Any, max_chars: int) -> Tuple[str, str]:
             goal_parts.append(f"{key}: {obs[key]}")
 
     observation_parts: List[str] = []
+    # BrowserGym emits raw trees; flatten those before URL/screenshot metadata.
+    if obs.get("axtree_object") is not None or obs.get("dom_object") is not None:
+        try:
+            from browsergym.utils.obs import flatten_axtree_to_str, flatten_dom_to_str
+        except ImportError as exc:
+            raise RuntimeError("BrowserGym observation flattening utilities are required") from exc
+        if obs.get("axtree_object") is not None:
+            observation_parts.append(flatten_axtree_to_str(obs["axtree_object"]))
+        if obs.get("dom_object") is not None:
+            observation_parts.append(flatten_dom_to_str(obs["dom_object"]))
     priority_keys = [
         "url",
         "open_pages_urls",
@@ -237,7 +242,9 @@ def _run_browsergym_episode(
     except Exception as exc:
         logger.exception(
             "BrowserGym episode failed (env_id=%s, seed=%s): %r",
-            env_id, seed, exc,
+            env_id,
+            seed,
+            exc,
         )
         return {
             "score": 0.0,
@@ -274,9 +281,7 @@ def _build_initial_item(env_id: str, cfg: TinkerAtroposConfig, seed: int) -> Dic
     env = _make_browsergym_env(env_id, cfg)
     try:
         obs, info = env.reset(seed=seed)
-        goal, observation = _stringify_observation(
-            obs, cfg.browsergym_observation_max_chars
-        )
+        goal, observation = _stringify_observation(obs, cfg.browsergym_observation_max_chars)
         return {
             "env_id": env_id,
             "seed": seed,
@@ -304,9 +309,7 @@ class BrowserGymEnv(BaseEnv):
     @classmethod
     def config_init(cls):
         config = (
-            TinkerAtroposConfig.from_yaml(CONFIG_PATH)
-            if CONFIG_PATH
-            else TinkerAtroposConfig()
+            TinkerAtroposConfig.from_yaml(CONFIG_PATH) if CONFIG_PATH else TinkerAtroposConfig()
         )
         cls._full_config = config
         env_config = BaseEnvConfig(
@@ -333,6 +336,11 @@ class BrowserGymEnv(BaseEnv):
             )
         ]
         return env_config, server_configs
+
+    def save_checkpoint(self, step, data=None):
+        data = dict(data or {})
+        data["split_manifest"] = self.split_manifest
+        return super().save_checkpoint(step, data)
 
     async def setup(self):
         full_cfg = getattr(self.__class__, "_full_config", None)
@@ -364,16 +372,28 @@ class BrowserGymEnv(BaseEnv):
             else:
                 raise ValueError("browsergym_env_ids must be set for this benchmark")
 
-        print(
-            f"Preparing BrowserGym benchmark={full_cfg.browsergym_benchmark} "
-            f"env_ids={env_ids}"
-        )
+        print(f"Preparing BrowserGym benchmark={full_cfg.browsergym_benchmark} env_ids={env_ids}")
         self.items = []
         for offset, env_id in enumerate(env_ids):
             item = await asyncio.to_thread(
                 _build_initial_item, env_id, full_cfg, full_cfg.data_seed + offset
             )
             self.items.append(item)
+        self.eval_items = []
+        for offset, env_id in enumerate(env_ids):
+            self.eval_items.append(
+                await asyncio.to_thread(
+                    _build_initial_item, env_id, full_cfg, full_cfg.data_seed + 1_000_000 + offset
+                )
+            )
+        from tinker_atropos.data_identity import split_manifest
+
+        self.split_manifest = split_manifest(
+            self.items,
+            self.eval_items,
+            data_seed=full_cfg.data_seed,
+            label="same_tasks_heldout_reset_seeds",
+        )
         random.Random(full_cfg.data_seed).shuffle(self.items)
         self.iter = 0
 
@@ -381,17 +401,17 @@ class BrowserGymEnv(BaseEnv):
         if wandb_metrics is None:
             wandb_metrics = {}
         if self.percent_success_buffer:
-            wandb_metrics["train/browser_success_rate"] = sum(
+            wandb_metrics["train/browser_success_rate"] = sum(self.percent_success_buffer) / len(
                 self.percent_success_buffer
-            ) / len(self.percent_success_buffer)
+            )
         if self.reward_buffer:
-            wandb_metrics["train/browser_reward_mean"] = sum(
+            wandb_metrics["train/browser_reward_mean"] = sum(self.reward_buffer) / len(
                 self.reward_buffer
-            ) / len(self.reward_buffer)
+            )
         if self.action_count_buffer:
-            wandb_metrics["train/browser_action_count_mean"] = sum(
+            wandb_metrics["train/browser_action_count_mean"] = sum(self.action_count_buffer) / len(
                 self.action_count_buffer
-            ) / len(self.action_count_buffer)
+            )
 
         self.percent_success_buffer = []
         self.reward_buffer = []
@@ -407,9 +427,7 @@ class BrowserGymEnv(BaseEnv):
             {"role": "system", "content": SYSTEM_PROMPT},
             {
                 "role": "user",
-                "content": USER_TEMPLATE.format(
-                    goal=item["goal"], observation=item["observation"]
-                ),
+                "content": USER_TEMPLATE.format(goal=item["goal"], observation=item["observation"]),
             },
         ]
         completion = await self.server.chat_completion(
@@ -435,8 +453,8 @@ class BrowserGymEnv(BaseEnv):
 
         full_cfg = getattr(self.__class__, "_full_config", None)
         start = time.time()
-        eval_count = max(1, min(len(self.items), full_cfg.browsergym_eval_episodes))
-        eval_items = self.items[:eval_count]
+        eval_count = max(1, min(len(self.eval_items), full_cfg.browsergym_eval_episodes))
+        eval_items = self.eval_items[:eval_count]
         results = []
         for item in tqdm_asyncio(eval_items):
             results.append(await self.rollout_and_score_eval(item))
@@ -445,14 +463,18 @@ class BrowserGymEnv(BaseEnv):
         reward_mean = sum(scores) / len(scores)
         action_count = sum(r["valid_action_count"] for r in results) / len(results)
 
-        self.eval_metrics.append(("eval/browser_success_rate", success_rate))
-        self.eval_metrics.append(("eval/browser_reward_mean", reward_mean))
-        self.eval_metrics.append(("eval/browser_action_count_mean", action_count))
+        self.eval_metrics.append(
+            ("eval/same_tasks_heldout_seeds_browser_success_rate", success_rate)
+        )
+        self.eval_metrics.append(("eval/same_tasks_heldout_seeds_browser_reward_mean", reward_mean))
+        self.eval_metrics.append(
+            ("eval/same_tasks_heldout_seeds_browser_action_count_mean", action_count)
+        )
         await self.evaluate_log(
             metrics={
-                "eval/browser_success_rate": success_rate,
-                "eval/browser_reward_mean": reward_mean,
-                "eval/browser_action_count_mean": action_count,
+                "eval/same_tasks_heldout_seeds_browser_success_rate": success_rate,
+                "eval/same_tasks_heldout_seeds_browser_reward_mean": reward_mean,
+                "eval/same_tasks_heldout_seeds_browser_action_count_mean": action_count,
             },
             samples=[
                 {
@@ -477,9 +499,7 @@ class BrowserGymEnv(BaseEnv):
             {"role": "system", "content": SYSTEM_PROMPT},
             {
                 "role": "user",
-                "content": USER_TEMPLATE.format(
-                    goal=item["goal"], observation=item["observation"]
-                ),
+                "content": USER_TEMPLATE.format(goal=item["goal"], observation=item["observation"]),
             },
         ]
         async with self.server.managed_server(tokenizer=self.tokenizer) as managed:
@@ -531,7 +551,7 @@ class BrowserGymEnv(BaseEnv):
             reward = float(result["score"])
 
             masked_tokens = item["masked_tokens"]
-            if len([t for t in masked_tokens if t != -100]) < 3:
+            if len([t for t in masked_tokens if t != -100]) < 1:
                 continue
 
             scores["tokens"].append(item["tokens"])

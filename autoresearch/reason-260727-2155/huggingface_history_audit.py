@@ -58,6 +58,30 @@ def compact_model(model: Any) -> dict[str, Any]:
     }
 
 
+def integrity_verdict(units, checked, errors):
+    if errors or len(checked) != len(units):
+        return "INCOMPLETE"
+    valid = all(
+        row["expected_commit"] == row["resolved_commit"]
+        and row["checkpoint_steps"] == EXPECTED_STEPS
+        and all(row["required_files"].values())
+        and all(row["manifest_checks"].values())
+        and bool(row["expected_manifest_sha256"])
+        and row["manifest_sha256"] == row["expected_manifest_sha256"]
+        for row in checked
+    )
+    return "PASS" if units and valid else "FAIL"
+
+
+def validate_roster(units):
+    if not units or len({u["unit"] for u in units}) != len(units):
+        raise ValueError("empty or duplicate unit identities")
+    if len({u["hf_repo"] for u in units}) != len(units):
+        raise ValueError("multiple units map to one repository")
+    if any(not u.get("hf_commit") for u in units):
+        raise ValueError("missing pinned revision")
+
+
 def main() -> int:
     token = sys.stdin.readline().strip()
     if not token:
@@ -87,6 +111,7 @@ def main() -> int:
 
         campaign = json.loads(CAMPAIGN.read_text(encoding="utf-8"))
         units = campaign["units"]
+        validate_roster(units)
         expected_repos = {str(unit["hf_repo"]) for unit in units}
         expected_by_repo = {str(unit["hf_repo"]): unit for unit in units}
 
@@ -151,8 +176,7 @@ def main() -> int:
                     manifest_checks = {
                         "schema_confirmatory": manifest.get("schema_version")
                         == "e1-colab-confirmatory-run-v1",
-                        "evidence_confirmatory": manifest.get("evidence_class")
-                        == "confirmatory",
+                        "evidence_confirmatory": manifest.get("evidence_class") == "confirmatory",
                         "arm_matches": audit_record.get("arm")
                         == str(unit["unit"]).split("/", 1)[0],
                         "seed_matches": audit_record.get("seed")
@@ -166,14 +190,12 @@ def main() -> int:
                         == unit.get("stack_fingerprint"),
                         "remote_steps_match": manifest.get("remote_checkpoint_steps")
                         == EXPECTED_STEPS,
-                        "trace_has_500_rows": len(manifest.get("heldout_trace", []))
-                        == 500,
+                        "trace_has_500_rows": len(manifest.get("heldout_trace", [])) == 500,
                         "local_manifest_sha_matches": local_sha == remote_sha,
                     }
                     required_files = {
                         "run_manifest.json": "run_manifest.json" in files,
                         "final_adapter": "final/adapter_model.safetensors" in files,
-                        "evaluation_progress": "evaluation/progress.json" in files,
                     }
                     checked.append(
                         {
@@ -185,6 +207,9 @@ def main() -> int:
                             "file_count": len(files),
                             "checkpoint_steps": steps,
                             "required_files": required_files,
+                            "optional_files": {
+                                "evaluation_progress": "evaluation/progress.json" in files
+                            },
                             "manifest_sha256": remote_sha,
                             "expected_manifest_sha256": unit.get("manifest_sha256"),
                             "manifest_checks": manifest_checks,
@@ -228,21 +253,19 @@ def main() -> int:
             "all_six_checkpoints": sum(
                 row["checkpoint_steps"] == EXPECTED_STEPS for row in checked
             ),
-            "all_required_files": sum(
-                all(row["required_files"].values()) for row in checked
-            ),
-            "all_manifest_checks": sum(
-                all(row["manifest_checks"].values()) for row in checked
-            ),
+            "all_required_files": sum(all(row["required_files"].values()) for row in checked),
+            "all_manifest_checks": sum(all(row["manifest_checks"].values()) for row in checked),
             "local_manifest_sha_matches": sum(
                 row["manifest_checks"]["local_manifest_sha_matches"] for row in checked
             ),
             "campaign_manifest_sha_matches": sum(
-                row["manifest_sha256"] == row["expected_manifest_sha256"]
-                for row in checked
+                row["manifest_sha256"] == row["expected_manifest_sha256"] for row in checked
             ),
         }
+        verdict = integrity_verdict(units, checked, errors)
         result = {
+            "schema_version": 2,
+            "verdict": verdict,
             "sdk_version": getattr(huggingface_hub, "__version__", None),
             "identity": {
                 "name": username,
@@ -252,9 +275,7 @@ def main() -> int:
                 else None,
             },
             "author_model_count": len(models),
-            "author_private_model_count": sum(
-                row.get("private") is True for row in compact_models
-            ),
+            "author_private_model_count": sum(row.get("private") is True for row in compact_models),
             "e1_model_count": len(e1_models),
             "e1_models": e1_models,
             "matched_candidate_count": len(matched_candidates),
@@ -267,7 +288,7 @@ def main() -> int:
             ),
         }
         print(json.dumps(result, sort_keys=True, default=jsonable))
-        return 0 if not errors else 1
+        return 0 if verdict == "PASS" else 1
     except Exception as exc:
         message = str(exc).replace(token, "<redacted>")
         print(json.dumps({"error": type(exc).__name__, "message": message}))

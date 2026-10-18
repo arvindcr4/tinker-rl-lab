@@ -225,3 +225,13 @@ with the intended extraction documented) for **verl**, **OpenRLHF**, and
 Apache-2.0 — see [`LICENSE`](LICENSE). Chosen to match the Apache-2.0 licensing of
 TRL / verl, which the deck targets for upstreaming. See also
 [`CHANGELOG.md`](CHANGELOG.md).
+
+## Cross-program metric compatibility
+
+The prospective experiments-next pool pipeline uses `binary-exact-v1`:
+population variance, epsilon zero, binary finite rewards and K >= 2. This
+package's configurable continuous-reward epsilon convention is a different
+contract. Compare only after checking the reward domain, variance convention,
+epsilon and singleton policy. GU = 1 - ZVF measures non-degenerate reward-group
+fraction; it does not establish a nonzero optimizer gradient after masking,
+normalization or numerical operations.

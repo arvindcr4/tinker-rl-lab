@@ -9,7 +9,7 @@ Tinker adapters store the unembedding LoRA as `model.unembed_tokens`; it is rena
 import json, os, platform, subprocess, sys, time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from matched_common import *  # noqa
+from matched_common import LORA, MODEL, N_EVAL, MAX_TOK, gsm8k, build_prompt, reward_fn, boxed_only_reward
 
 EOS = [151645, 151643]
 
@@ -42,7 +42,8 @@ def main(out, specs):
     prompts = [build_prompt(q) for q, _ in test]
     base = AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.bfloat16).to("cuda").eval()
     res = {}
-    for spec in specs:
+    os.makedirs(out, exist_ok=True)
+    for index, spec in enumerate(specs):
         name, ad = spec.split("=", 1)
         if ad == "base":
             model = base
@@ -66,9 +67,18 @@ def main(out, specs):
                      "trunc_frac": sum(n >= MAX_TOK for n in ntok) / len(ntok), "texts": texts,
                      "zero_lora_B_tensors": (len(missing) if ad != "base" else None)}
         print(name, res[name]["acc_campaign_reward"], res[name]["acc_boxed_only"], res[name]["trunc_frac"], flush=True)
+        with open(f"{out}/eval_heldout.json.tmp", "w") as handle:
+            json.dump(res, handle)
+        os.replace(f"{out}/eval_heldout.json.tmp", f"{out}/eval_heldout.json")
         if ad != "base":
-            model.unload() if hasattr(model, "unload") else None
-            base = AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.bfloat16).to("cuda").eval()
+            del model, base
+            if "g" in locals():
+                del g, c, enc
+            import gc
+            gc.collect()
+            torch.cuda.empty_cache()
+            if index + 1 < len(specs):
+                base = AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.bfloat16).to("cuda").eval()
     smi = subprocess.run(["nvidia-smi", "--query-gpu=name,memory.total,driver_version", "--format=csv,noheader"],
                          capture_output=True, text=True).stdout.strip()
     res["_env"] = {"platform": "google_colab", "gpu": smi, "torch": torch.__version__, "transformers": transformers.__version__,

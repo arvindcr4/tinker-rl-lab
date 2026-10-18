@@ -62,3 +62,8 @@ records `S1_PASS`, source hashes, 14 intended cases per stack, 36 controller
 cases, and the preserved native verdict vectors. This closes S1 only; it does
 not authorize GPU screening. See `S1_AMENDMENT.md` and the active execution
 notes for the next gate.
+
+
+## Receipt boundary v2
+
+Successful local receipts establish `KERNEL_FIXTURES_PASS` only. They do not establish `TRAINING_INTEGRATION_PASS` or scientific eligibility. The intended verl trace injects canonical advantages and reconstructs an objective; the TRL shell injects log-probabilities/advantages with zero KL. The controller fixtures test the reference controller, not a production runner. Production hooks, actual sampling-call counts, effective settings, selected IDs and accumulated gradients still need a separately bounded integration fixture before production conformance can be claimed. Controlled DAPO/DrGRPO definitions remain component variants.

@@ -82,6 +82,8 @@ all = [
     "trl==1.2.0",
 ]
 dev = [
+    "types-jsonschema>=4.23,<5",
+    "jsonschema>=4.23,<5",  # publication registry validation regressions
     "build>=1.2",
     "pytest>=9.1.0,<10.0.0",
     "pytest-cov>=4.0",
@@ -96,6 +98,10 @@ dev = [
     "matplotlib>=3.11.0,<4.0.0",
     "scipy>=1.17.0,<2.0.0",
     "seaborn>=0.13.0,<0.14.0",
+    "scikit-learn>=1.7,<2",  # reviewed analysis regressions import sklearn
+    "tenacity>=9,<10",  # offline provider-adapter imports during collection
+    "fastapi>=0.142.0,<0.143.0",  # offline Atropos and actor HTTP contract tests
+    "httpx>=0.28.1,<0.29.0",  # FastAPI/Starlette TestClient transport
 ]
 
 [project.urls]
@@ -125,7 +131,7 @@ exclude = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py311"
 extend-exclude = [
     # Vendored / upstream integrations — not authored by this project.
     "atropos",
@@ -154,15 +160,14 @@ extend-exclude = [
 # F821 undefined name) enabled globally so they continue to flag real
 # issues in first-party code (``utils/``, ``tests/``, top-level modules).
 # Noisy exploratory-code paths (``scripts/**``, ``experiments/**``) scope
-# those same rules via ``per-file-ignores`` below; vendored trees are
+# only unused imports via ``per-file-ignores`` below; vendored trees are
 # excluded entirely via ``extend-exclude`` above.
 # Bug-finding + security on top of the original F/W/I/UP031 gate:
 #   B = flake8-bugbear, S = flake8-bandit, PIE = misc anti-patterns,
 #   PT = pytest style (only fires on tests), RUF100 = stale ``# noqa``,
 #   RET505 = superfluous else-after-return.
 # Broader UP (UP006/UP045, PEP 585/604 annotations) is deliberately NOT enabled:
-# on py39 it needs ``from __future__ import annotations``, which changes how
-# pydantic models resolve annotations at runtime.
+# annotation modernization is a separate migration from bug-finding checks.
 select = ["F", "W", "I", "UP031", "B", "S", "PIE", "PT", "RUF100", "RET505"]
 ignore = [
     "E501",   # line length — handled by formatter if at all
@@ -177,16 +182,14 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Scope the noisy notebook/script-style false positives to exploratory code
-# paths instead of disabling bug-finding checks for the whole repository.
-# First-party code (``utils/``, ``tests/``, library modules) still gets
-# F401 / F811 / F821 enforcement.
-"scripts/**/*.py"      = ["F401", "F811", "F821"]
-"experiments/**/*.py"  = ["F401", "F811", "F821"]
-"paper/figures/**/*.py" = ["F401", "F811", "F821"]
+# Exploratory scripts may retain unused imports, but undefined names and
+# redefinitions are checked in executable first-party research code too.
+"scripts/**/*.py"      = ["F401"]
+"experiments/**/*.py"  = ["F401"]
+"paper/figures/**/*.py" = ["F401"]
 # Top-level GRPO research drivers (one-shot scripts, not reusable library
 # code; they keep exploratory imports deliberately).
-"grpo_*.py"            = ["F401", "F811", "F821"]
+"grpo_*.py"            = ["F401"]
 # Tests: bare ``assert`` is how pytest works; unittest.TestCase assert* methods
 # are a legitimate style in this suite; fake tokens/secrets are fixtures.
 "tests/**/*.py" = ["S101", "PT009", "PT027", "S105", "S106"]

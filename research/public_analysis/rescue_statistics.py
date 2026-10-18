@@ -1,41 +1,32 @@
-"""Public derivative: extracted scientific functions; operational code removed.
-
-Selected definitions are unchanged from the retained source identified in
-PROVENANCE.json. This module alone cannot authenticate empirical evidence.
-"""
+"""Candidate rescue statistics v2; historical definitions remain hash-preserved."""
 from __future__ import annotations
-
 import math
+from . import rescue_statistics_historical_v1 as historical
 
-def wilson(k: int, n: int, z: float = 1.959963984540054) -> list[float] | None:
-    if n == 0:
-        return None
-    if not 0 <= k <= n:
-        raise ValueError("Invalid binomial counts")
-    p = k / n
-    d = 1 + z * z / n
-    center = (p + z * z / (2 * n)) / d
-    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
-    return [max(0.0, center - half), min(1.0, center + half)]
+PROTOCOL_VERSION = "rescue-statistics-v2-candidate"
 
+def binomial_counts(k, n):
+    if type(k) is not int or type(n) is not int or not 0 <= k <= n:
+        raise ValueError("Invalid integer binomial counts")
 
-def binomial_summary(k: int, n: int) -> dict:
-    return {
-        "rescued": k, "initially_homogeneous": n,
-        "fraction": k / n if n else None,
-        "wilson_95": wilson(k, n),
-        "zero_events_exact_upper_one_sided_95": 1 - 0.05 ** (1 / n) if n and k == 0 else None,
-    }
+def wilson(k: int, n: int, z: float = 1.959963984540054):
+    binomial_counts(k, n)
+    if type(z) not in (int, float) or not math.isfinite(z) or z <= 0:
+        raise ValueError("z must be finite and positive")
+    return historical.wilson(k, n, z)
 
+def binomial_summary(k: int, n: int):
+    binomial_counts(k, n)
+    return {"rescued": k, "initially_homogeneous": n,
+            "fraction": k / n if n else None, "wilson_95": wilson(k, n),
+            "zero_events_exact_upper_one_sided_95": 1 - .05 ** (1 / n) if n and k == 0 else None}
 
-def logbeta(a: float, b: float) -> float:
-    return math.lgamma(a) + math.lgamma(b) - math.lgamma(a + b)
+logbeta = historical.logbeta
 
-
-def rescue_prediction(k: int, n: int, m: int, prior: float) -> float:
-    """Mixedness of combined original+fresh draws, given homogeneous original."""
-    if k not in (0, n):
-        raise ValueError("Prediction conditions on a homogeneous initial group")
-    a, b = k + prior, n - k + prior
-    unchanged = math.exp(logbeta(a, b + m) - logbeta(a, b)) if k == 0 else math.exp(logbeta(a + m, b) - logbeta(a, b))
-    return 1 - unchanged
+def rescue_prediction(k: int, n: int, m: int, prior: float):
+    binomial_counts(k, n)
+    if n <= 0 or type(m) is not int or m < 0:
+        raise ValueError("positive initial size and nonnegative integer fresh draws required")
+    if type(prior) not in (float, int) or not math.isfinite(prior) or prior <= 0:
+        raise ValueError("finite positive prior required")
+    return historical.rescue_prediction(k, n, m, prior)

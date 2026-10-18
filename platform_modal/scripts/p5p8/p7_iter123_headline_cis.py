@@ -43,14 +43,15 @@ import json
 import math
 import os
 import pathlib
+from _review_replay import stable_seed
 import random
 import statistics
 from typing import Any, Callable
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
+ROOT = pathlib.Path(__file__).resolve().parents[3]
 N10_DIR = ROOT / "experiments" / "results" / "n10_seed_expansion"
 N2_TSV = ROOT / "experiments" / "results" / "n2_reward_tensor_resume" / "n2_metrics.tsv"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8/corrected-review19-v3"
 OUT_TSV = OUT_DIR / "p7_iter123_headline_cis.tsv"
 OUT_JSON = OUT_DIR / "p7_iter123_headline_cis.json"
 
@@ -68,13 +69,15 @@ def z_bernoulli(p: float, g: int) -> float:
 
 def invert_p(z_obs: float, g_obs: int = G_OBS, iters: int = 80) -> float:
     """Recover p0 in [0, 0.5] s.t. z(p0, g_obs) ~= z_obs (symmetric root)."""
+    if not 2.0 ** (1-g_obs) <= z_obs <= 1.0:
+        raise ValueError("ZVF outside homogeneous Bernoulli model range")
     lo, hi = 0.0, 0.5
     for _ in range(iters):
         mid = 0.5 * (lo + hi)
         if z_bernoulli(mid, g_obs) > z_obs:
-            hi = mid
-        else:
             lo = mid
+        else:
+            hi = mid
     return 0.5 * (lo + hi)
 
 
@@ -257,7 +260,7 @@ def audit_n2_four_method() -> list[dict]:
     # H1: each method has 40 steps; method-level mean ZVF and its CI under step bootstrap
     for m in methods:
         zvf = by_method[m]
-        rng = random.Random(SEED + hash(m) % 10000)
+        rng = random.Random(SEED + stable_seed(m) % 10000)
         n = len(zvf)
         boots = []
         for _ in range(B):
@@ -366,7 +369,7 @@ def audit_single_seed_or_rule() -> list[dict]:
         "metric": "dualformer_auto_saving",
         "n_boot_units": 20,
         "published_point": 0.562,
-        "recomputed_point": 0.562,
+        "recomputed_point": None, "source_status": "UNVERIFIED_SOURCE",
         "ci_lo": float("nan"),
         "ci_hi": float("nan"),
         "sd_across_seeds": float("nan"),
@@ -382,7 +385,7 @@ def audit_single_seed_or_rule() -> list[dict]:
         "metric": "alphaproof_gamma0_decisive",
         "n_boot_units": 12,
         "published_point": 1.000,
-        "recomputed_point": 1.000,
+        "recomputed_point": None, "source_status": "UNVERIFIED_SOURCE",
         "ci_lo": float("nan"),
         "ci_hi": float("nan"),
         "sd_across_seeds": float("nan"),
@@ -398,7 +401,7 @@ def audit_single_seed_or_rule() -> list[dict]:
         "metric": "ccc_pareto_front",
         "n_boot_units": 160,
         "published_point": 1.000,
-        "recomputed_point": 1.000,
+        "recomputed_point": None, "source_status": "UNVERIFIED_SOURCE",
         "ci_lo": float("nan"),
         "ci_hi": float("nan"),
         "sd_across_seeds": float("nan"),
@@ -414,7 +417,7 @@ def audit_single_seed_or_rule() -> list[dict]:
         "metric": "ccc_preservation",
         "n_boot_units": 160,
         "published_point": 0.9969,
-        "recomputed_point": 0.9969,
+        "recomputed_point": None, "source_status": "UNVERIFIED_SOURCE",
         "ci_lo": float("nan"),
         "ci_hi": float("nan"),
         "sd_across_seeds": float("nan"),
@@ -430,7 +433,7 @@ def audit_single_seed_or_rule() -> list[dict]:
         "metric": "kappa_range",
         "n_boot_units": 3,
         "published_point": 0.370,  # midpoint of 0.19--0.55
-        "recomputed_point": 0.370,
+        "recomputed_point": None, "source_status": "UNVERIFIED_SOURCE",
         "ci_lo": float("nan"),
         "ci_hi": float("nan"),
         "sd_across_seeds": float("nan"),

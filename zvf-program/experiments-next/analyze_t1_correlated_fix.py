@@ -1,28 +1,12 @@
 #!/usr/bin/env python3
-"""analyze_t1_correlated_fix.py — diagnose and fix the correlated-batch
-coverage collapse found by analyze_t1_ci.py.
+"""Exploratory finite-pool coverage under ordered and stratified sampling.
 
-The E-T1 result: under difficulty-sorted (curriculum-style) batching, the
-binomial CI's coverage of the GLOBAL population ZVF collapses to 0.08-0.40
-with *narrower* intervals. Two candidate explanations with different fixes:
-
-  (H-bias)  The batch ZVF is a nearly-unbiased, well-calibrated estimate of
-            the LOCAL (window) ZVF, which simply differs from the global
-            one. Fix = redefine the estimand: under curriculum ordering the
-            CI is valid for the curriculum-stage ZVF (which is what a
-            stage-local controller acts on anyway); global inference needs
-            stratified batches.
-  (H-var)   Within-window correlation inflates variance beyond binomial.
-            Fix = clustered/robust variance.
-
-This script adjudicates by measuring, on a real pool:
-  1. correlated batches vs LOCAL truth  -> if coverage ~0.95, H-bias wins
-  2. correlated batches vs GLOBAL truth -> the known failure (reproduced)
-  3. STRATIFIED batches (one prompt per difficulty stratum slot) vs GLOBAL
-     truth -> tests the proposed design fix for global inference
-
-Pure offline analysis of a build_pool.py pool. Output feeds the T1 section
-rewrite in theory/zvf_theory.tex.
+Local-window and global prompt-population estimands are distinct. Binary
+finite-pool probabilities use exact hypergeometric terms. One independent draw
+per stratum uses population weights and a conservative weighted Hoeffding
+interval, not an ordinary Wilson interval or an unidentified sample variance.
+Monte Carlo coverage uncertainty is reported separately. This simulation does
+not validate general curriculum inference or establish controller readiness.
 """
 
 from __future__ import annotations
@@ -33,6 +17,9 @@ import random
 from pathlib import Path
 
 from common import RESULTS_DIR, load_pool, utc_now, write_result
+
+from analyze_t1_ci import population_zvf
+from analysis_contract import validate_design, strata_all, stratified_interval, T1_DECISION
 
 Z95 = 1.959963984540054
 
@@ -51,7 +38,7 @@ def wilson_ci(zvf: float, m: int) -> tuple[float, float]:
 
 def prompt_zv_prob(rng: random.Random, rewards: list[float], G: int,
                    draws: int = 48) -> float:
-    return sum(zv_indicator(rng, rewards, G) for _ in range(draws)) / draws
+    return population_zvf([{"rewards": rewards}], G, rng)
 
 
 def main() -> None:
@@ -66,6 +53,9 @@ def main() -> None:
     pool = load_pool(args.pool)
     prompts = pool["prompts"]
     G, M, B = args.group_size, args.batch_size, args.batches
+    validate_design(groups=[G], counts=[M,B], available=pool["rollouts_per_prompt"], n_prompts=len(prompts))
+    if M > len(prompts):
+        raise ValueError("batch size exceeds prompt population")
     rng = random.Random(args.seed)
 
     # per-prompt zero-variance probability at G (smooth local truth)
@@ -86,15 +76,13 @@ def main() -> None:
         cov_global += int(lo <= global_truth <= hi)
 
     # --- 3: stratified batches (one draw per difficulty slot) ---
-    k = max(1, len(order) // M)
-    strata = [order[i * k:(i + 1) * k] for i in range(M)]
-    strata = [s for s in strata if s]
+    strata = strata_all(order, M)
+    weights = [len(st)/len(order) for st in strata]
     cov_strat = 0
     for _ in range(B):
         idx = [rng.choice(s) for s in strata]
-        zvf = sum(zv_indicator(rng, prompts[i]["rewards"], G)
-                  for i in idx) / len(idx)
-        lo, hi = wilson_ci(zvf, len(idx))
+        values = [zv_indicator(rng, prompts[i]["rewards"], G) for i in idx]
+        lo, hi = stratified_interval(values, weights)
         cov_strat += int(lo <= global_truth <= hi)
 
     result = {
@@ -108,10 +96,13 @@ def main() -> None:
         "coverage_correlated_vs_local_truth": round(cov_local / B, 4),
         "coverage_correlated_vs_global_truth": round(cov_global / B, 4),
         "coverage_stratified_vs_global_truth": round(cov_strat / B, 4),
-        "interpretation": (
-            "H-bias confirmed if local~0.95 while global collapses; "
-            "stratified~0.95 validates the design fix for global inference"
-        ),
+        "decision_contract": T1_DECISION,
+        "truth_estimator": "exact hypergeometric conditional on finite binary pool",
+        "stratified_interval": "weighted Hoeffding bound; independent one-draw strata",
+        "coverage_mc_ci95": {"local": wilson_ci(cov_local/B,B),
+                             "global": wilson_ci(cov_global/B,B),
+                             "stratified": wilson_ci(cov_strat/B,B)},
+        "interpretation": "Exploratory finite-pool coverage; no general controller validation",
         "generated_at": utc_now(),
     }
     out = RESULTS_DIR / f"t1_correlated_fix_{pool['tag']}_G{G}_M{M}.json"

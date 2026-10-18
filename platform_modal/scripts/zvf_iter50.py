@@ -31,18 +31,18 @@ Inputs:
         iter38 zvf_iter38_classifier; treated as ground truth here.
 
 Outputs:
-    platform_hybrid/experiments/results/zvf_iter50_lagged_corr.tsv
+    platform_hybrid/experiments/results/zvf_iter50_lagged_corr_review28_v2.tsv
         Long-form table; columns = (method, seed, lag, r). 9*5*7 = 315
         rows.
-    platform_hybrid/experiments/results/zvf_iter50_phase_integrals.tsv
+    platform_hybrid/experiments/results/zvf_iter50_phase_integrals_review28_v2.tsv
         Per-(method, seed) per-phase integral of (ZVF - 0.5)⁺
         normalised. 9*5 = 45 rows × {int_phase1, int_phase2,
         int_phase3, n_steps_phase1, peak_step}.
-    platform_hybrid/experiments/results/zvf_iter50_summary.tsv
+    platform_hybrid/experiments/results/zvf_iter50_summary_review28_v2.tsv
         Per-library (method) rollup: mean peak-L r at the
         reward-leads-ZVF lag, mean phase-2 integral, mean last10_avg.
         9 rows.
-    platform_hybrid/experiments/results/zvf_iter50_predictions.tsv
+    platform_hybrid/experiments/results/zvf_iter50_predictions_review28_v2.tsv
         4 pre-registered predictions for this iter.
 
 This script does NOT touch the existing zvf_diagnostic.py outputs;
@@ -62,14 +62,14 @@ from collections import defaultdict
 # Constants
 # ---------------------------------------------------------------------------
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.abspath(os.path.join(HERE, ".."))
+ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 INPUT = os.path.join(ROOT, "platform_hybrid/experiments/results/variance_mitigation.tsv")
 
 OUT_DIR = os.path.join(ROOT, "platform_hybrid/experiments/results")
-OUT_LAGGED = os.path.join(OUT_DIR, "zvf_iter50_lagged_corr.tsv")
-OUT_INTEGRALS = os.path.join(OUT_DIR, "zvf_iter50_phase_integrals.tsv")
-OUT_SUMMARY = os.path.join(OUT_DIR, "zvf_iter50_summary.tsv")
-OUT_PREDICTIONS = os.path.join(OUT_DIR, "zvf_iter50_predictions.tsv")
+OUT_LAGGED = os.path.join(OUT_DIR, "zvf_iter50_lagged_corr_review28_v2.tsv")
+OUT_INTEGRALS = os.path.join(OUT_DIR, "zvf_iter50_phase_integrals_review28_v2.tsv")
+OUT_SUMMARY = os.path.join(OUT_DIR, "zvf_iter50_summary_review28_v2.tsv")
+OUT_PREDICTIONS = os.path.join(OUT_DIR, "zvf_iter50_predictions_review28_v2.tsv")
 
 LAGS = [-10, -5, -1, 0, 1, 5, 10]
 THRESHOLD = 0.5  # ZVF-above-threshold integration target
@@ -293,7 +293,7 @@ def write_predictions(out_path, lagged_agg, integ_agg, last10_map, by_ms, integ_
 
     # P1: the cross-correlation r(reward_t, ZVF_t+1) - "reward leads ZVF by 1 step"
     # is STRICTLY POSITIVE for vanilla GRPO (peak > 0).
-    grpo_at_p1 = lagged_agg.get(("grpo", 1), {}).get("mean", 0.0)
+    grpo_at_p1 = lagged_agg.get(("grpo", 1), {}).get("mean", float("nan"))
     preds.append({
         "id": "P1_reward_leads_zvf_lag1_grpo",
         "claim": (
@@ -308,7 +308,7 @@ def write_predictions(out_path, lagged_agg, integ_agg, last10_map, by_ms, integ_
     # P2: AERO exhibits STRICTLY LOWER r than vanilla GRPO at lag +1
     # (the variance-mitigation mechanism DELAYS ZVF rise relative to reward
     # decline by intervening in the gradient update).
-    aero_at_p1 = lagged_agg.get(("aero", 1), {}).get("mean", 0.0)
+    aero_at_p1 = lagged_agg.get(("aero", 1), {}).get("mean", float("nan"))
     diff_p2 = grpo_at_p1 - aero_at_p1
     preds.append({
         "id": "P2_aero_lower_lag1_corr_than_grpo",
@@ -335,8 +335,8 @@ def write_predictions(out_path, lagged_agg, integ_agg, last10_map, by_ms, integ_
     grpo_non = [v for c, v in grpo_p2 if not c and not (
         isinstance(v, float) and math.isnan(v)
     )]
-    p3_diff = (safe_mean(grpo_coll) if grpo_coll else 0.0) - (
-        safe_mean(grpo_non) if grpo_non else 0.0
+    p3_diff = (safe_mean(grpo_coll) if grpo_coll else float("nan")) - (
+        safe_mean(grpo_non) if grpo_non else float("nan")
     )
     preds.append({
         "id": "P3_grpo_p2_int_coll_minus_noncoll",
@@ -345,15 +345,16 @@ def write_predictions(out_path, lagged_agg, integ_agg, last10_map, by_ms, integ_
             "collapsing seeds than on non-collapsing seeds"
         ),
         "value": p3_diff,
-        "pass": p3_diff > 0.0,
+        "pass": p3_diff > 0.0 if math.isfinite(p3_diff) else "NOT_EVALUABLE",
         "n_collapsed": len(grpo_coll),
         "n_noncoll": len(grpo_non),
     })
 
     # P4: the cross-correlation peak lag is POSITIVE in vanilla GRPO
     # (the peak lag is the argmax of |r| over LAGS).
-    grpo_curve = [lagged_agg.get(("grpo", L), {}).get("mean", 0.0) for L in LAGS]
-    peak_lag = LAGS[grpo_curve.index(max(grpo_curve))] if grpo_curve else 0
+    grpo_curve = [lagged_agg.get(("grpo", L), {}).get("mean", float("nan")) for L in LAGS]
+    available = [(L,r) for L,r in zip(LAGS,grpo_curve) if math.isfinite(r)]
+    peak_lag = max(available,key=lambda item:(abs(item[1]),-item[0]))[0] if available else float("nan")
     preds.append({
         "id": "P4_grpo_peak_lag_positive",
         "claim": (
@@ -361,7 +362,7 @@ def write_predictions(out_path, lagged_agg, integ_agg, last10_map, by_ms, integ_
             "is POSITIVE (reward leads ZVF)"
         ),
         "value": peak_lag,
-        "pass": peak_lag > 0,
+        "pass": peak_lag > 0 if math.isfinite(peak_lag) else "NOT_EVALUABLE",
         "all_lags_signed": dict(zip(LAGS, [round(r, 4) for r in grpo_curve])),
     })
 
@@ -371,11 +372,12 @@ def write_predictions(out_path, lagged_agg, integ_agg, last10_map, by_ms, integ_
         for p in preds:
             extras = {k: v for k, v in p.items()
                       if k not in ("id", "claim", "value", "pass")}
-            extras_json = repr(extras) if extras else ""
+            extras_json = __import__("json").dumps(extras)
             w.writerow([
                 p["id"], p["claim"],
                 f"{p['value']:.6f}" if isinstance(p["value"], float) else str(p["value"]),
-                "PASS" if p["pass"] else "FAIL",
+                ("NOT_EVALUABLE" if p["pass"] == "NOT_EVALUABLE" or (isinstance(p["value"], float) and not math.isfinite(p["value"]))
+                 else "PASS" if p["pass"] else "FAIL"),
                 extras_json,
             ])
 
@@ -385,6 +387,7 @@ def write_predictions(out_path, lagged_agg, integ_agg, last10_map, by_ms, integ_
 # ---------------------------------------------------------------------------
 def main():
     by_ms = load_variance_mitigation(INPUT)
+    os.makedirs(OUT_DIR, exist_ok=True)
     print(f"[iter50] loaded {sum(len(v) for v in by_ms.values())} per-step rows "
           f"across {len(by_ms)} (method, seed) pairs")
 

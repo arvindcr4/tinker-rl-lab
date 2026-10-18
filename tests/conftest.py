@@ -1,15 +1,5 @@
-"""PyTest configuration and global fixtures.
+"""Root test configuration is standard-library-only.
 
-Pre-import torch dynamo and inductor test operators.
-This prevents unittest.mock.patch.dict(sys.modules, ...) in test suites
-from removing dynamically loaded C++ operator libraries on unpatch.
+ML tests own their imports and must restore only explicitly faked module keys.
+Lightweight checkers can be collected without torch or compiler internals.
 """
-
-import contextlib
-
-import torch
-import torch._dynamo
-
-# Optional: absent or failing to load on some torch builds; best-effort pre-import only.
-with contextlib.suppress(Exception):
-    import torch._inductor.test_operators  # noqa: F401  (side-effect import)

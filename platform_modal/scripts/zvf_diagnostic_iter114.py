@@ -10,10 +10,10 @@ just a binary alarm?**
 This script computes three follow-on artefacts from the same
 cross-library aggregator used by platform_modal/scripts/zvf_diagnostic.py:
 
-  platform_hybrid/experiments/results/zvf_iter114_dose_response.tsv
+  platform_hybrid/experiments/results/zvf_iter114_dose_response_review28_v2.tsv
       5 ZVF quantile bins x (n_rows, mean_last10, frac_collapse,
       frac_converged, severity_drop) -- the dose-response curve.
-  platform_hybrid/experiments/results/zvf_iter114_delta_d.tsv
+  platform_hybrid/experiments/results/zvf_iter114_delta_d_review28_v2.tsv
       Per-library delta_d = mean_zvf_emp - mean_zvf_iid(p_emp, G_emp).
       Positive delta_d -> anti-herding; negative -> herding/collapse.
   figures/zvf_iter114_dose_response.{pdf,png}
@@ -23,7 +23,7 @@ Inputs (all real measurements from prior iterations):
 
   platform_hybrid/experiments/results/zvf_summary.tsv (already produced by zvf_diagnostic.py)
   platform_hybrid/experiments/results/zvf_by_library.tsv
-  platform_hybrid/experiments/results/zvf_dynamics_phase.tsv  (per-source p_obs proxy)
+  platform_hybrid/experiments/results/zvf_dynamics_phase_review28_v2.tsv  (per-source p_obs proxy)
   platform_hybrid/experiments/results/variance_mitigation.tsv  (per-step for delta_d)
 
 Honest statistics note
@@ -240,15 +240,8 @@ def dose_response(rows: List[Dict[str, Any]], n_bins: int = 5) -> List[Dict[str,
     usable = [r for r in rows if not math.isnan(r["mean_zvf"]) and not math.isnan(r["last10_avg"]) and not math.isnan(r["peak"])]
     if not usable:
         return []
-    zvfs = sorted(r["mean_zvf"] for r in usable)
-    # Equal-count quantile bins.
-    n = len(usable)
-    bin_size = max(1, n // n_bins)
-    bins: List[List[Dict[str, Any]]] = []
-    for i in range(n_bins):
-        start = i * bin_size
-        end = (i + 1) * bin_size if i < n_bins - 1 else n
-        bins.append(usable[start:end])
+    from _review28_statistics import quantile_partitions
+    bins = quantile_partitions(usable, "mean_zvf", n_bins)
     out: List[Dict[str, Any]] = []
     for i, bin_rows in enumerate(bins):
         mz_lo = min(r["mean_zvf"] for r in bin_rows)
@@ -315,23 +308,18 @@ def delta_d_per_library(by_lib_rows: List[Dict[str, Any]], p_proxy: Dict[Tuple[s
         if math.isnan(mz):
             continue
         # G_proxy
-        g = 8
+        g = None
         p = float("nan")
-        if lib in p_proxy:
+        if (lib, "agg") in p_proxy:
             p, g = p_proxy[(lib, "agg")]
         else:
             # Non-mitigation libraries: estimate p from last10_avg.
             p = r["mean_last10"] if not math.isnan(r["mean_last10"]) else float("nan")
-            if lib == "tool_use":
-                g = 1
-            elif lib == "gsm8k_real":
-                g = 8
-            elif lib == "arithmetic_groupsize":
-                g = 8
-            elif lib == "scaling_law":
-                g = 8
-            elif lib in ("drgrpo_vs_grpo", "samestack_ppo_grpo"):
-                g = 8
+            try:
+                g = int(r["group_size"])
+            except (KeyError, TypeError, ValueError):
+                continue
+
         if math.isnan(p):
             zvf_iid = float("nan")
             delta_d = float("nan")
@@ -351,8 +339,7 @@ def delta_d_per_library(by_lib_rows: List[Dict[str, Any]], p_proxy: Dict[Tuple[s
                 "n_collapse": r["n_collapse"],
                 "collapse_rate": r["collapse_rate"],
                 "interpretation": (
-                    "anti-herd" if (not math.isnan(delta_d) and delta_d < 0)
-                    else "herd"
+                    "homogeneous_plugin_diagnostic_not_identified_dependence"
                 ),
             }
         )
@@ -508,10 +495,10 @@ def write_meta(meta: Dict[str, Any], out_path: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--out-dose", type=Path, default=RESULTS / "zvf_iter114_dose_response.tsv")
-    parser.add_argument("--out-delta-d", type=Path, default=RESULTS / "zvf_iter114_delta_d.tsv")
-    parser.add_argument("--out-figure", type=Path, default=FIGURES / "zvf_iter114_dose_response.pdf")
-    parser.add_argument("--out-meta", type=Path, default=RESULTS / "zvf_iter114_meta.json")
+    parser.add_argument("--out-dose", type=Path, default=RESULTS / "zvf_iter114_dose_response_review28_v2.tsv")
+    parser.add_argument("--out-delta-d", type=Path, default=RESULTS / "zvf_iter114_delta_d_review28_v2.tsv")
+    parser.add_argument("--out-figure", type=Path, default=FIGURES / "zvf_iter114_dose_response_review28_v2.pdf")
+    parser.add_argument("--out-meta", type=Path, default=RESULTS / "zvf_iter114_meta_review28_v2.json")
     parser.add_argument("--n-bins", type=int, default=5)
     args = parser.parse_args()
 

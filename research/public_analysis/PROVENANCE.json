@@ -2,7 +2,7 @@
   "definition_digest_encoding": "SHA-256 of UTF-8 exact ast.get_source_segment(source, node). No AST-dump serialization or whitespace normalization; the AST only locates the original source span. This is independent of empty version-only AST fields.",
   "derivative_notice": "Function-only public derivative. This is not an original frozen source file or a raw-data evidence release.",
   "modules": {
-    "parser_review.py": {
+    "parser_review_historical_v1.py": {
       "selected_definition_source_sha256": {
         "canonical_value": "b10e56fe10aaafd0c479c93bb2928ca42fafd730dbbc706c4d5f5f3ddd125abc",
         "decide": "7eb2c499380f13ce6df0e08eb484949db2eabe3dcb79791ba4a28ce9bfc392cf",
@@ -72,7 +72,7 @@
       "source": "original_reference_comparator",
       "transformation": "Selected complete AST nodes copied verbatim; imports, module header and public-only constants supplied separately; no original whole-file identity claimed."
     },
-    "rescue_statistics.py": {
+    "rescue_statistics_historical_v1.py": {
       "selected_definition_source_sha256": {
         "binomial_summary": "3e3bce4f1a307062827f3806692ba4d7e5aaccda3cdf5166652184fd5c912b05",
         "logbeta": "37c9a4c6cebe1315a40a989a37967e6fad00674525703dc9dec1de7f1bfe7b98",

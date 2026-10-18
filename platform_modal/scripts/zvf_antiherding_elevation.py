@@ -1,39 +1,10 @@
 #!/usr/bin/env python3
-"""Pillar 2 elevation: cross-source anti-herding falsification + empirical Iso-G.
+"""Descriptive plug-in residuals and observed group-size yield (review27-v3).
 
-Frontier synthesis (Gemini Deep Think, round 2) claimed delta_div is uniformly
-in [0.13, 0.23]: "high-temperature autoregressive sampling inherently anti-herds
-(rho < 0), generating spontaneous contrast... delta_div in [0.13, 0.23] is your
-measured structural diversity bonus."
-
-Direct measurement on the same data sources the spec calls out
-(zvf_contrastive_yield.tsv) shows this is FALSE in a regime-dependent way:
-
-  - tinker_gsm8k (Qwen3-8B / GSM8K, real reasoning):   mean_delta_div = +0.1224
-                                                       (anti-herding, 84% positive)
-  - groupsize_zvf_sweep (Qwen2.5-0.5B / arithmetic):   mean_delta_div = -0.0668
-                                                       (HERDING, 30% positive)
-  - groupsize_zvf_sweep_agg (per-step aggregate):      mean_delta_div = -0.2994
-                                                       (strong herding, 0% positive)
-
-The sign of delta_div is regime-dependent: a real reasoning model with
-diverse rollouts anti-herds, but a small/overfit synthetic model HARDS --
-sampling produces more correlated outcomes than independent Bernoulli draws.
-This is consistent with mode collapse in a near-deterministic regime.
-
-This script (1) pools delta_div across the two sources with bootstrap CIs,
-(2) computes an empirical Iso-G sizing curve that uses the measured delta_div
-instead of the iid-only theoretical curve, and (3) cross-validates the
-predictions against the observed yield on the held-out Qwen3-8B/GSM8K slice.
-
-Outputs:
-    platform_hybrid/experiments/results/zvf_antiherding_falsification.tsv
-        Per-source and pooled delta_div stats with 2000-resample CIs.
-    platform_hybrid/experiments/results/zvf_empirical_isog.tsv
-        Corrected Iso-G sizing using empirical delta_div bin-by-bin.
-    figures/zvf_antiherding_falsification.pdf
-        Three-panel: delta_div distribution by source, sign test,
-        empirical-vs-iid iso-G sizing overlay.
+These residuals use same-sample probabilities or aggregate batch means, so
+neither their sign nor an interval identifies sampler dependence. No calibrated
+independent prompt probabilities or held-out dependence experiment is available.
+Observed-grid sizing is exploratory, not cross-validated compute savings.
 """
 from __future__ import annotations
 
@@ -46,8 +17,8 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-RESULTS = REPO_ROOT / "experiments" / "results"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+RESULTS = REPO_ROOT / "platform_hybrid" / "experiments" / "results"
 FIG_DIR = REPO_ROOT / "figures"
 
 
@@ -57,7 +28,7 @@ FIG_DIR = REPO_ROOT / "figures"
 
 
 def load_decomposition(path: Path) -> List[Dict[str, Any]]:
-    """Load the long-form zvf_contrastive_yield.tsv rows.
+    """Load the long-form zvf_contrastive_yield_v2.tsv rows.
 
     Skip the 4 header lines; columns are tab-separated.
     """
@@ -67,8 +38,10 @@ def load_decomposition(path: Path) -> List[Dict[str, Any]]:
             if not line.strip() or line.startswith("#"):
                 continue
             parts = line.rstrip("\n").split("\t")
-            if len(parts) < 9 or parts[0] == "source":
+            if parts[0] == "source":
                 continue
+            if len(parts) < 9:
+                raise ValueError("incomplete decomposition row")
             try:
                 rows.append(
                     {
@@ -83,8 +56,20 @@ def load_decomposition(path: Path) -> List[Dict[str, Any]]:
                         "Y_obs": float(parts[8]),
                     }
                 )
-            except (ValueError, IndexError):
-                continue
+            except (ValueError, IndexError) as exc:
+                raise ValueError("malformed decomposition row") from exc
+    identities = set()
+    for row in rows:
+        key = (row["source"], row["seed"], row["id"], row["G"])
+        if key in identities:
+            raise ValueError("duplicate decomposition identity")
+        identities.add(key)
+        if row["G"] < 2 or any(not math.isfinite(row[k]) for k in ("p_x", "zvf_obs", "zvf_iid", "delta_div", "Y_obs")):
+            raise ValueError("invalid or nonfinite decomposition measurement")
+        if any(not 0 <= row[k] <= 1 for k in ("p_x", "zvf_obs", "zvf_iid", "Y_obs")):
+            raise ValueError("decomposition probability out of range")
+        if not math.isclose(row["Y_obs"], 1-row["zvf_obs"], abs_tol=1e-4) or not math.isclose(row["delta_div"], row["zvf_iid"]-row["zvf_obs"], abs_tol=1e-4):
+            raise ValueError("inconsistent decomposition metrics")
     return rows
 
 
@@ -109,16 +94,12 @@ def bootstrap_mean(
     return (point, (lo, hi))
 
 
+from _review27_contracts import stable_seed
+
 def write_falsification_tsv(
     rows: List[Dict[str, Any]], out_path: Path
 ) -> Dict[str, Any]:
-    """Write the per-source delta_div stats with bootstrap CIs.
-
-    Sources are pooled at the per-problem level (one row per
-    (source, seed, problem_id)), so each observation is one
-    (problem, group) draw -- not autocorrelated because it is
-    by-problem.
-    """
+    """Descriptive source summaries; no unsupported row-independence assumption."""
     by_source: Dict[str, List[Dict[str, Any]]] = {}
     for r in rows:
         by_source.setdefault(r["source"], []).append(r)
@@ -126,17 +107,8 @@ def write_falsification_tsv(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     summary: Dict[str, Any] = {}
     with out_path.open("w") as fh:
-        fh.write("# Pillar 2 cross-source anti-herding falsification\n")
-        fh.write(
-            "# delta_div = zvf_iid(p, G) - zvf_obs; POSITIVE means anti-herding\n"
-            "# (sampler produces more contrast than independent draws),\n"
-            "# NEGATIVE means herding (mode collapse / correlated rollouts).\n"
-            "# Bootstrap CIs: B=2000 percentile resamples over per-problem\n"
-            "# rows (one row per (source, seed, problem_id)). CIs whose sign\n"
-            "# disagrees with the point estimate are decisive evidence of a\n"
-            "# cross-source sign reversal in delta_div.\n"
-            "# Source: platform_modal/scripts/zvf_antiherding_elevation.py\n"
-        )
+        fh.write("# review27-v3: descriptive plug-in residual; dependence unidentified.\n")
+        fh.write("# CI unavailable: independent sampling clusters not established.\n")
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
             (
@@ -154,11 +126,12 @@ def write_falsification_tsv(
         )
         for src, src_rows in sorted(by_source.items()):
             dvals = [r["delta_div"] for r in src_rows]
-            mean_d, (lo, hi) = bootstrap_mean(dvals, B=2000, seed=hash(src) & 0xFFFF)
+            mean_d = statistics.fmean(dvals)
+            lo = hi = float("nan")
             n = len(dvals)
             frac_pos = sum(1 for v in dvals if v > 0) / n if n else float("nan")
             med = statistics.median(dvals) if n else float("nan")
-            verdict = "anti-herd" if lo > 0 else ("herd" if hi < 0 else "AMBIGUOUS")
+            verdict = "UNIDENTIFIED: same-sample or aggregate plug-in residual"
             writer.writerow(
                 (
                     src,
@@ -193,14 +166,10 @@ def write_falsification_tsv(
 def empirical_isog_curve(
     rows: List[Dict[str, Any]], source: str, Y_targets: Sequence[float] = (0.6, 0.8, 0.95)
 ) -> List[Dict[str, Any]]:
-    """For each p-quintile, compute the *empirical* ZVF(p, G) = empirical
-    delta_div stats per bin, and the iso-G sizing needed to hit each Y_target.
+    """Smallest observed G meeting a descriptive bin-average yield target.
 
-    We measure delta_div at the empirical G from each row and project it
-    to all G in {2, 4, 8, 16} via the empirical scaling relation --
-    specifically: at G+1, the iid baseline drops by a factor of max(p,1-p)
-    and the empirical ZVF uses the empirical delta_div from the source's
-    most similar G.
+    Probability bins themselves are estimated from the same groups; no
+    extrapolation, dependence identification, or held-out validation is claimed.
     """
     src_rows = [r for r in rows if r["source"] == source]
     if not src_rows:
@@ -209,49 +178,33 @@ def empirical_isog_curve(
     bins = [(i / 10.0, (i + 1) / 10.0) for i in range(10)]
     rows_binned: List[Dict[str, Any]] = []
     for lo, hi in bins:
-        cell = [r for r in src_rows if lo <= r["p_x"] < hi]
+        cell = [r for r in src_rows if lo <= r["p_x"] < hi or (hi == 1.0 and r["p_x"] == 1.0)]
         if not cell:
             continue
         mean_d = statistics.fmean(r["delta_div"] for r in cell)
         mean_p = statistics.fmean(r["p_x"] for r in cell)
         n = len(cell)
         for Yt in Y_targets:
-            # Empirical ZVF(p, G) ~ iid(p, G) - mean_delta_div, clamped to
-            # [0, 1]. Find smallest G such that 1 - empirical_ZVF >= Yt.
-            for G_test in range(1, 65):
-                pG = mean_p ** G_test + (1 - mean_p) ** G_test
-                emp_zvf = max(0.0, min(1.0, pG - mean_d))
-                if 1 - emp_zvf >= Yt:
-                    rows_binned.append(
-                        {
-                            "source": source,
-                            "p_lo": lo,
-                            "p_hi": hi,
-                            "p_mean": mean_p,
-                            "mean_delta_div": mean_d,
-                            "n": n,
-                            "Y_target": Yt,
-                            "G_iid": _iso_g_iid(mean_p, Yt),
-                            "G_empirical": G_test,
-                            "delta_G": G_test - _iso_g_iid(mean_p, Yt),
-                        }
-                    )
-                    break
+            observed_by_g = {}
+            for row in cell:
+                observed_by_g.setdefault(row["G"], []).append(row["Y_obs"] if "Y_obs" in row else 1-row["zvf_obs"])
+            candidates=[g for g,ys in observed_by_g.items() if statistics.fmean(ys)>=Yt]
+            selected=min(candidates) if candidates else float("inf")
+            iid=_iso_g_iid(mean_p,Yt)
+            rows_binned.append({
+                "source":source,"p_lo":lo,"p_hi":hi,"p_mean":mean_p,
+                "mean_delta_div":mean_d,"n":n,"Y_target":Yt,
+                "G_iid":iid,"G_empirical":selected,
+                "delta_G": selected-iid if math.isfinite(selected) and math.isfinite(iid) else float("nan"),
+                "status":"observed_grid_descriptive" if candidates else "not_observed_feasible",
+            })
     return rows_binned
 
 
-def _iso_g_iid(p: float, Y_target: float) -> int:
-    """Same as zvf_contrastive_yield.iso_g; duplicated here to keep the
-    artifact script self-contained.
-    """
-    if p <= 0.0 or p >= 1.0:
-        return 1
-    y_target = max(min(Y_target, 1.0 - 1e-9), 1e-9)
-    log_inv = math.log(1.0 - y_target)
-    denom = math.log(max(p, 1.0 - p))
-    if denom == 0:
-        return 1
-    return max(1, math.ceil(log_inv / denom))
+def _iso_g_iid(p: float, Y_target: float):
+    """Exact IID contrast-yield solver (review27-v2); inf means infeasible."""
+    from _review27_contracts import exact_iso_g
+    return exact_iso_g(p, Y_target)
 
 
 def write_empirical_isog_tsv(
@@ -262,17 +215,8 @@ def write_empirical_isog_tsv(
     out: List[Dict[str, Any]] = []
     srcs = sorted({r["source"] for r in rows})
     with out_path.open("w") as fh:
-        fh.write("# Pillar 2 empirical Iso-G sizing (vs theoretical iid iso-G).\n")
-        fh.write(
-            "# Bins: 10 even-width bins over p in [0, 1]. mean_delta_div from\n"
-            "# zvf_contrastive_yield.tsv for that bin. G_empirical = smallest G\n"
-            "# such that 1 - (iid(p, G) - mean_delta_div)_clipped >= Y_target.\n"
-            "# delta_G > 0 means the empirical sampler NEEDS MORE rollouts than\n"
-            "# the iid theory assumes (herding regime); delta_G < 0 means\n"
-            "# FEWER (anti-herding regime). This is the directly testable\n"
-            "# prediction the Contrastive Yield framing licenses.\n"
-            "# Source: platform_modal/scripts/zvf_antiherding_elevation.py\n"
-        )
+        fh.write("# review27-v3: observed group-size grid only; infeasible/unsupported is inf.\n")
+        fh.write("# IID is a model prediction at bin mean p; delta_G is descriptive, not savings.\n")
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
             (
@@ -286,6 +230,7 @@ def write_empirical_isog_tsv(
                 "G_iid",
                 "G_empirical",
                 "delta_G",
+                "status",
             )
         )
         for src in srcs:
@@ -302,6 +247,7 @@ def write_empirical_isog_tsv(
                         r["G_iid"],
                         r["G_empirical"],
                         r["delta_G"],
+                        r["status"],
                     )
                 )
                 out.append(r)
@@ -354,18 +300,14 @@ def write_figure(
         )
     ax.axvline(0, color="black", linestyle=":", linewidth=0.8)
     ax.set_xlabel("delta_div = ZVF_iid - ZVF_obs")
-    ax.set_ylabel("n problems")
-    ax.set_title("(A) Per-source delta_div: sign reversal across regimes")
+    ax.set_ylabel("n source rows")
+    ax.set_title("(A) Descriptive residual distribution by source")
     ax.legend(loc="upper left", fontsize=8, frameon=False)
 
     # Panel B: per-source mean-delta_div with bootstrap CI.
     ax = axes[1]
     srcs_sorted = sorted(fals_summary.keys(), key=lambda s: fals_summary[s]["mean"])
     means = [fals_summary[s]["mean"] for s in srcs_sorted]
-    los = [fals_summary[s]["ci_lo"] for s in srcs_sorted]
-    his = [fals_summary[s]["ci_hi"] for s in srcs_sorted]
-    yerr_lo = [m - l for m, l in zip(means, los)]
-    yerr_hi = [h - m for m, h in zip(means, his)]
     colors = [palette.get(s, "#34495e") for s in srcs_sorted]
     ax.barh(
         srcs_sorted,
@@ -373,12 +315,10 @@ def write_figure(
         color=colors,
         edgecolor="white",
         linewidth=0.6,
-        xerr=[yerr_lo, yerr_hi],
-        error_kw={"elinewidth": 1.4, "capsize": 3},
     )
     ax.axvline(0, color="black", linestyle=":", linewidth=0.8)
-    ax.set_xlabel("mean delta_div (95% bootstrap CI)")
-    ax.set_title("(B) Cross-source sign test: real model anti-herds, synthetic herds")
+    ax.set_xlabel("mean plug-in residual (no inferential interval)")
+    ax.set_title("(B) Descriptive plug-in residual by source")
 
     # Panel C: empirical-vs-iid iso-G sizing on tinker_gsm8k (Y_target=0.8).
     ax = axes[2]
@@ -405,19 +345,19 @@ def write_figure(
             g_emp,
             marker="s",
             color="#27ae60",
-            label="empirical iso-G (real delta_div)",
+            label="minimum observed G meeting target",
             linewidth=1.4,
             markersize=5,
         )
         ax.set_xlabel("p (bin mean)")
         ax.set_ylabel("G required for Y >= 0.8")
-        ax.set_title("(C) Empirical iso-G on Qwen3-8B/GSM8K\n(anti-herding gives G=2 free at p~0.5)")
+        ax.set_title("(C) Observed-grid yield sizing (exploratory)")
         ax.set_yscale("log")
         ax.legend(loc="upper left", fontsize=8, frameon=False)
         ax.grid(True, axis="y", linestyle=":", alpha=0.4)
 
     fig.suptitle(
-        "Cross-source anti-herding falsification of frontier claim delta_div in [0.13, 0.23]",
+        "Plug-in residuals do not identify sampler dependence",
         y=1.02,
         fontsize=10,
     )
@@ -425,7 +365,7 @@ def write_figure(
     fig.savefig(out_path, format="pdf")
     fig.savefig(out_path.with_suffix(".png"), format="png", dpi=140)
     plt.close(fig)
-    return str(out_path.relative_to(REPO_ROOT))
+    return str(out_path.resolve())
 
 
 # ---------------------------------------------------------------------------
@@ -438,22 +378,22 @@ def main() -> int:
     parser.add_argument(
         "--in-decomposition",
         type=Path,
-        default=RESULTS / "zvf_contrastive_yield.tsv",
+        default=RESULTS / "zvf_contrastive_yield_v2.tsv",
     )
     parser.add_argument(
         "--out-falsification",
         type=Path,
-        default=RESULTS / "zvf_antiherding_falsification.tsv",
+        default=RESULTS / "zvf_antiherding_falsification_v3.tsv",
     )
     parser.add_argument(
         "--out-empirical-isog",
         type=Path,
-        default=RESULTS / "zvf_empirical_isog.tsv",
+        default=RESULTS / "zvf_empirical_isog_v3.tsv",
     )
     parser.add_argument(
         "--out-figure",
         type=Path,
-        default=FIG_DIR / "zvf_antiherding_falsification.pdf",
+        default=FIG_DIR / "zvf_antiherding_falsification_v3.pdf",
     )
     args = parser.parse_args()
 
@@ -471,17 +411,7 @@ def main() -> int:
             f"CI=[{s['ci_lo']:+.4f}, {s['ci_hi']:+.4f}] "
             f"frac_positive={s['frac_positive']:.3f}  -> {s['verdict']}"
         )
-    # Frontier synthesis claim: delta_div in [0.13, 0.23] uniformly.
-    # Empirical verdict: falsified by groupsize_zvf_sweep (negative CI).
-    print(
-        "[zvf-elevation] frontier claim delta_div in [0.13, 0.23]: "
-        + (
-            "SUPPORTED on tinker_gsm8k (real reasoning model), "
-            if 0.13 <= fals_summary.get("tinker_gsm8k", {}).get("mean", 0) <= 0.23
-            else "FALSIFIED on tinker_gsm8k (outside band), "
-        )
-        + "FALSIFIED on groupsize_zvf_sweep (negative CI)."
-    )
+    print("[zvf-elevation] Dependence UNIDENTIFIED: independent calibration and evaluation required.")
     if fig_path:
         print(f"[zvf-elevation] wrote figure {fig_path}")
     return 0

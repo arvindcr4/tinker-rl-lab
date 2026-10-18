@@ -109,8 +109,8 @@ class StatisticsTests(unittest.TestCase):
                 arm: {
                     "controlled_delta": 0.001,
                     "ci95": [-0.0045, 0.00675],
-                    "achieved_mde_80": 0.008667,
-                    "verdict": "DISAPPEARS" if arm == "dapo" else "INCONCLUSIVE",
+                    "achieved_mde_80": 0.0101158932289,
+                    "verdict": "INCONCLUSIVE",
                 }
                 for arm in aggregate_audit.LATEX_ARM_NAMES
             },
@@ -118,8 +118,13 @@ class StatisticsTests(unittest.TestCase):
         rendered = aggregate_audit.render_latex_results(report)
         self.assertIn(r"\newcommand{\AuditDAPODelta}{+0.00100}", rendered)
         self.assertIn(r"\newcommand{\AuditDAPOCILow}{-0.00450}", rendered)
-        self.assertIn(r"\newcommand{\AuditDAPOMDE}{0.00867}", rendered)
-        self.assertIn(r"\newcommand{\AuditDAPOVerdict}{DISAPPEARS}", rendered)
+        self.assertIn(r"\newcommand{\AuditDAPOMDE}{0.01012}", rendered)
+        self.assertIn(r"\newcommand{\AuditDAPOVerdict}{INCONCLUSIVE}", rendered)
+
+    def test_exact_mde_above_margin_cannot_disappear(self):
+        self.assertEqual(aggregate_audit.verdict(
+            (-0.0045, 0.00675), (-0.004, 0.006), 0.0101158932289,
+            0.01, None, difference_rejected=False), "INCONCLUSIVE")
 
     def test_latex_results_reject_incomplete_aggregate(self):
         with self.assertRaisesRegex(aggregate_audit.AuditError, "COMPLETE"):
@@ -147,21 +152,31 @@ class ContractTests(unittest.TestCase):
             )
             + "\n"
         )
-        return {
+        record = {
             "arm": arm,
             "seed": seed,
             "heldout_n": 500,
             "heldout_score": 0.5,
             "last10_reward": 0.4,
             "mean_zvf": 0.2,
-            "mean_gu": 3.0,
+            "mean_gu": 0.8,
             "collapse": False,
             "rollouts": 100,
             "wall_clock_seconds": 60.0,
-            "stack_fingerprint": "sha256:shared-minus-treatment-fields",
+            "stack_fingerprint": "b"*64,
             "treatment_changes": self.prereg["core_stratum"]["arms"][arm]["allowed_changes"],
             "manifest_path": manifest.name,
         }
+        record.update(evidence_class="confirmatory", fingerprint="a"*64,
+                      remote_verification={"hf_repo":"owner/repo", "hf_commit":"c"*40, "wandb":{"state":"finished"}})
+        data = json.loads(manifest.read_text())
+        data.update(evidence_class="confirmatory", audit_record=dict(record),
+                    run_config={**aggregate_audit.execution_contract(self.prereg["core_stratum"]),
+                                "arm":arm, "seed":seed, "treatment_changes":record["treatment_changes"],
+                                "unit_fingerprint": record["fingerprint"],
+                                "stack_fingerprint": record["stack_fingerprint"]})
+        manifest.write_text(json.dumps(data))
+        return record
 
     def test_missing_units_never_emit_verdicts(self):
         with tempfile.TemporaryDirectory() as raw:

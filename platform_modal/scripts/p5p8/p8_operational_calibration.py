@@ -238,8 +238,8 @@ def main() -> None:
             "seed": SEED,
         },
         "excludes_zero_counts": {
-            pair: int((df_b[df_b["pair"].str.contains(pair)]["excludes_zero"] == "YES").sum())
-            for pair in ["24full-20raw", "20raw-4sensor", "24full-4sensor"]
+            pair: int((df_b[df_b["pair"] == pair]["excludes_zero"] == "YES").sum())
+            for pair in sorted(df_b["pair"].unique())
         },
     }
     with (OUT / "p8_operational_calibration_summary.json").open("w") as fp:

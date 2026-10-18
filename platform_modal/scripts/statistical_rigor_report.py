@@ -1,270 +1,178 @@
 #!/usr/bin/env python3
+"""Versioned endpoint/replication audit, not a certificate of statistical power.
+
+Requires genuine per-seed observations. Summary rows and fixed token budgets
+are never treated as repeated seeds. Paired differences use an explicit
+(experiment, configuration, seed, endpoint) join. Archived outputs unchanged.
 """
-platform_modal/scripts/statistical_rigor_report.py
-
-Produces a rigor-classified report of all statistical comparisons in the
-paper, flagging which are well-powered (multi-seed, matched-init,
-n>=5 per group) vs under-powered or descriptive-only.
-
-This directly addresses reviewer weaknesses W4, W5, Q1, Q5:
-  - "Many headline comparisons rely on single-seed runs..."
-  - "BH-adjusted significance table aggregates single-seed data..."
-  - "Restrict F1-F5 to 5-seed >=100-step single-framework runs"
-
-Usage
------
-    python3 platform_modal/scripts/statistical_rigor_report.py
-
-Output
-------
-    platform_hybrid/experiments/results/statistical_rigor_report.tsv
-    schema: comparison_id, claim, n_seeds_A, n_seeds_B, matched_init,
-            well_powered, effect_size, ci_low, ci_high, recommendation
-"""
-
 from __future__ import annotations
 
 import argparse
-import json
+import csv
+import itertools
 import math
-import os
-import sys
 from pathlib import Path
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Tuple
+import sys
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-RESULTS_DIR = REPO_ROOT / "experiments" / "results"
-OUT_TSV = RESULTS_DIR / "statistical_rigor_report.tsv"
+import numpy as np
+from scipy import stats
 
-# Minimum seeds per group to be considered well-powered
+sys.path.append(str(Path(__file__).resolve().parent))
+from _paths import REPO_ROOT
+from _review02_contracts import STATISTIC_VERSION
+
+RESULTS_DIR = REPO_ROOT / 'platform_hybrid/experiments/results'
+OUT_TSV = RESULTS_DIR / 'statistical_rigor_report.tsv'
 MIN_SEEDS = 5
 MIN_STEPS = 100
 
 
-def cohens_d(a: Sequence[float], b: Sequence[float]) -> Tuple[float, float, float]:
-    """Cohen's d with 95% CI using Hedges-Olkin SE."""
+def cohens_d(a, b):
+    """Independent-group sample-pooled d; not used for paired comparisons."""
+    if min(len(a), len(b)) < 2:
+        return (float('nan'),)*3
     n1, n2 = len(a), len(b)
-    if n1 < 2 or n2 < 2:
-        return float("nan"), float("nan"), float("nan")
-    m1, m2 = sum(a) / n1, sum(b) / n2
-    var1 = sum((x - m1) ** 2 for x in a) / (n1 - 1)
-    var2 = sum((x - m2) ** 2 for x in b) / (n2 - 1)
-    s_pooled = math.sqrt(((n1 - 1) * var1 + (n2 - 1) * var2) / (n1 + n2 - 2))
-    if s_pooled == 0:
-        return float("nan"), float("nan"), float("nan")
-    d = (m1 - m2) / s_pooled
-    se = math.sqrt((n1 + n2) / (n1 * n2) + d ** 2 / (2 * (n1 + n2)))
-    ci_low = d - 1.96 * se
-    ci_high = d + 1.96 * se
-    return d, ci_low, ci_high
+    pooled = math.sqrt(((n1-1)*np.var(a, ddof=1)+(n2-1)*np.var(b, ddof=1))/(n1+n2-2))
+    if not pooled:
+        return (float('nan'),)*3
+    d = (np.mean(a)-np.mean(b))/pooled
+    se = math.sqrt((n1+n2)/(n1*n2)+d*d/(2*(n1+n2)))
+    return float(d), float(d-1.96*se), float(d+1.96*se)
 
 
-def bootstrap_ci(
-    a: Sequence[float], b: Sequence[float], n_bootstrap: int = 2000
-) -> Tuple[float, float]:
-    """Bootstrap 95% CI for mean difference."""
-    import random
-
-    rng = random.Random(42)
-    diffs = []
-    for _ in range(n_bootstrap):
-        ba = [rng.choice(a) for _ in range(len(a))]
-        bb = [rng.choice(b) for _ in range(len(b))]
-        diffs.append(sum(ba) / len(ba) - sum(bb) / len(bb))
-    diffs.sort()
-    return diffs[int(0.025 * n_bootstrap)], diffs[int(0.975 * n_bootstrap)]
-
-
-# ---------------------------------------------------------------------------
-# Comparison registry
-# ---------------------------------------------------------------------------
-
-@dataclass
-class Comparison:
-    id: str
-    claim: str
-    source_file: Path
-    group_col: str
-    metric_col: str
-    filter_fn: Optional[callable]
-    group_a: str
-    group_b: str
-    well_powered_fn: callable  # (df) -> bool
-
-
-# We use variance_mitigation.tsv as the primary multi-seed source
-
-def _load_variance_mitigation_last_step() -> Dict[str, List[float]]:
-    """Load last-step heldout_acc per method from variance_mitigation.tsv."""
-    import csv
-
-    path = RESULTS_DIR / "variance_mitigation.tsv"
-    if not path.exists():
-        return {}
-    rows = list(csv.DictReader(path.open(), delimiter="\t"))
-    # Group by method, take last step per seed
-    by_method_seed: Dict[Tuple[str, int], List[float]] = {}
-    for r in rows:
+def endpoint_records(rows, arm_key, metric_keys, default_experiment):
+    """Read numeric endpoints and reject ambiguous duplicates; never row-order last."""
+    records = {}
+    excluded = []
+    for number, row in enumerate(rows, 2):
         try:
-            m, s = r["method"], int(r["seed"])
-            v = float(r["heldout_acc"])
-        except (KeyError, ValueError):
-            continue
-        by_method_seed.setdefault((m, s), []).append(v)
-    # Take last value per seed
-    per_method: Dict[str, List[float]] = {}
-    for (m, s), vals in by_method_seed.items():
-        per_method.setdefault(m, []).append(vals[-1])
-    return per_method
+            arm = str(row[arm_key])
+            seed = int(row['seed'])
+            step = float(row.get('step', row.get('training_step', row.get('n_steps', ''))))
+            metric = next(row[k] for k in metric_keys if k in row and row[k] != '')
+            accuracy = float(metric)
+            if not math.isfinite(step) or step < 0 or not math.isfinite(accuracy) or not 0 <= accuracy <= 1:
+                raise ValueError('invalid step or accuracy')
+            if int(row.get('n_seeds', 1)) != 1:
+                raise ValueError('aggregate rows are not seed observations')
+            experiment = row.get('experiment', default_experiment)
+            configuration = (row.get('configuration_id', ''), row.get('model', ''),
+                             row.get('task', ''), row.get('budget_tokens', ''))
+            key = (experiment, configuration, arm, seed, step)
+            if key in records:
+                raise ValueError(f'duplicate endpoint identity {key}')
+            records[key] = dict(experiment=experiment, configuration=configuration,
+                                arm=arm, seed=seed, step=step, accuracy=accuracy,
+                                init_id=row.get('initialization_id', row.get('initial_checkpoint', '')),
+                                source_row=number)
+        except (KeyError, ValueError, StopIteration) as exc:
+            if 'duplicate endpoint' in str(exc):
+                raise
+            excluded.append(dict(row=number, reason=str(exc)))
+    final = {}
+    for key, record in records.items():
+        identity = key[:-1]
+        if identity not in final or record['step'] > final[identity]['step']:
+            final[identity] = record
+    return list(final.values()), excluded
 
 
-def _load_base_instruct() -> Tuple[Optional[List[float]], Optional[List[float]]]:
-    import csv
-
-    path = RESULTS_DIR / "base_instruct_paired.tsv"
-    if not path.exists():
-        return None, None
-    rows = list(csv.DictReader(path.open(), delimiter="\t"))
-    base = [float(r["accuracy"]) for r in rows if r.get("init") == "base"]
-    instruct = [float(r["accuracy"]) for r in rows if r.get("init") == "instruct"]
-    return base, instruct
+def _read(path):
+    if not path.is_file():
+        return []
+    with path.open() as f:
+        return list(csv.DictReader(f, delimiter='\t'))
 
 
-def _load_group_size() -> Dict[str, List[float]]:
-    import csv
-
-    path = RESULTS_DIR / "group_size_token_normalized.tsv"
-    if not path.exists():
-        return {}
-    rows = list(csv.DictReader(path.open(), delimiter="\t"))
-    out: Dict[str, List[float]] = {}
-    for r in rows:
-        g = r.get("group_size")
-        if g and "accuracy" in r:
-            out.setdefault(g, []).append(float(r["accuracy"]))
-    return out
+def _load_variance_mitigation_last_step():
+    return endpoint_records(_read(RESULTS_DIR/'variance_mitigation.tsv'), 'method',
+                            ['heldout_acc'], 'variance_mitigation')
 
 
-# ---------------------------------------------------------------------------
-# Report generation
-# ---------------------------------------------------------------------------
+def _load_base_instruct():
+    return endpoint_records(_read(RESULTS_DIR/'base_instruct_paired.tsv'), 'init',
+                            ['accuracy', 'heldout_acc'], 'base_instruct')
 
-def generate_report() -> List[Dict[str, str]]:
-    report: List[Dict[str, str]] = []
 
-    # ---- Comparison 1: Variance mitigation head-to-head (well-powered) ----
-    vm = _load_variance_mitigation_last_step()
-    methods = ["aero", "cppo", "ngrpo", "scafgrpo", "mcgrpo", "gift", "areal", "es"]
-    baseline = vm.get("grpo", [])
-    for m in methods:
-        vals = vm.get(m, [])
-        n = len(vals)
-        wp = n >= MIN_SEEDS and len(baseline) >= MIN_SEEDS
-        if n >= 2 and len(baseline) >= 2:
-            d, ci_l, ci_h = cohens_d(vals, baseline)
-            rec = "report_with_ci" if wp else "descriptive_only_no_pvalues"
-        else:
-            d = ci_l = ci_h = float("nan")
-            rec = "insufficient_data"
-        report.append(
-            dict(
-                comparison_id=f"vm_{m}_vs_grpo",
-                claim=f"{m.upper()} vs baseline GRPO (last-step heldout)",
-                n_seeds_A=str(n),
-                n_seeds_B=str(len(baseline)),
-                matched_init="yes",
-                well_powered="yes" if wp else "no",
-                effect_size=f"{d:.3f}" if not math.isnan(d) else "NA",
-                ci_low=f"{ci_l:.3f}" if not math.isnan(ci_l) else "NA",
-                ci_high=f"{ci_h:.3f}" if not math.isnan(ci_h) else "NA",
-                recommendation=rec,
-            )
-        )
+def _load_group_size():
+    rows = _read(RESULTS_DIR/'group_size_token_normalized.tsv')
+    canonical = [dict(r, G=r.get('G', r.get('group_size', ''))) for r in rows]
+    return endpoint_records(canonical, 'G', ['heldout_acc', 'accuracy', 'heldout_acc_mean'], 'group_size')
 
-    # ---- Comparison 2: Base vs Instruct ----
-    base, instruct = _load_base_instruct()
-    if base and instruct:
-        wp = len(base) >= MIN_SEEDS and len(instruct) >= MIN_SEEDS
-        d, ci_l, ci_h = cohens_d(instruct, base)
-        report.append(
-            dict(
-                comparison_id="base_vs_instruct",
-                claim="Instruct vs Base initialization (paired)",
-                n_seeds_A=str(len(instruct)),
-                n_seeds_B=str(len(base)),
-                matched_init="yes",
-                well_powered="yes" if wp else "no",
-                effect_size=f"{d:.3f}",
-                ci_low=f"{ci_l:.3f}",
-                ci_high=f"{ci_h:.3f}",
-                recommendation="report_with_ci" if wp else "descriptive_only_no_pvalues",
-            )
-        )
 
-    # ---- Comparison 3: Group size ablation ----
-    gs = _load_group_size()
-    sizes = sorted(gs.keys())
-    for i in range(len(sizes) - 1):
-        a, b = sizes[i], sizes[i + 1]
-        va, vb = gs[a], gs[b]
-        wp = len(va) >= MIN_SEEDS and len(vb) >= MIN_SEEDS
-        if len(va) >= 2 and len(vb) >= 2:
-            d, ci_l, ci_h = cohens_d(va, vb)
-        else:
-            d = ci_l = ci_h = float("nan")
-        report.append(
-            dict(
-                comparison_id=f"groupsize_{a}_vs_{b}",
-                claim=f"Group size {a} vs {b} (token-normalized)",
-                n_seeds_A=str(len(va)),
-                n_seeds_B=str(len(vb)),
-                matched_init="yes",
-                well_powered="yes" if wp else "no",
-                effect_size=f"{d:.3f}" if not math.isnan(d) else "NA",
-                ci_low=f"{ci_l:.3f}" if not math.isnan(ci_l) else "NA",
-                ci_high=f"{ci_h:.3f}" if not math.isnan(ci_h) else "NA",
-                recommendation="report_with_ci" if wp else "descriptive_only_no_pvalues",
-            )
-        )
+def paired_comparison(records, arm_a, arm_b, comparison_id):
+    def index(arm):
+        return {(r['experiment'], r['configuration'], r['seed'], r['step']): r
+                for r in records if r['arm'] == arm}
+    a, b = index(arm_a), index(arm_b)
+    keys = sorted(set(a) & set(b))
+    differences = np.array([a[k]['accuracy']-b[k]['accuracy'] for k in keys], float)
+    n = len(keys)
+    point = float(differences.mean()) if n else None
+    low = high = standardized = None
+    if n >= 2:
+        sd = float(differences.std(ddof=1))
+        half = float(stats.t.ppf(.975, n-1))*sd/math.sqrt(n)
+        low, high = point-half, point+half
+        standardized = point/sd if sd else None
+    matched_init = ('yes' if keys and all(a[k]['init_id'] and a[k]['init_id'] == b[k]['init_id'] for k in keys)
+                    else 'no' if keys and all(a[k]['init_id'] and b[k]['init_id'] for k in keys) else 'unknown')
+    enough_steps = bool(keys) and all(k[-1] >= MIN_STEPS for k in keys)
+    return dict(comparison_id=comparison_id, claim=f'{arm_a} minus {arm_b} at matched numeric endpoint',
+                n_seeds_A=len(a), n_seeds_B=len(b), n_pairs=n,
+                unmatched_A=len(set(a)-set(b)), unmatched_B=len(set(b)-set(a)),
+                matched_init=matched_init, meets_replication_minimum=n >= MIN_SEEDS,
+                meets_step_minimum=enough_steps, power_status='not_assessed_no_prespecified_effect_or_margin',
+                estimand='mean paired heldout accuracy difference', estimate=point, ci_low=low, ci_high=high,
+                unit='accuracy', method='paired_seed_t_interval' if n >= 2 else 'unavailable',
+                standardized_effect_dz=standardized,
+                standardized_definition='mean paired difference / sample SD of paired differences',
+                uncertainty_source='training seeds conditional on fixed evaluation examples',
+                multiplicity='descriptive; no confirmatory family specified',
+                statistic_version=STATISTIC_VERSION,
+                recommendation='insufficient_data' if n < 2 else 'report_descriptively_with_design_limitations')
 
+
+def generate_report():
+    report = []
+    datasets = [('variance_mitigation', _load_variance_mitigation_last_step()),
+                ('base_instruct', _load_base_instruct()), ('group_size', _load_group_size())]
+    for name, (records, exclusions) in datasets:
+        # Keep fixed budgets/configurations separate rather than treating them as seeds.
+        configurations = sorted({(r['experiment'], r['configuration']) for r in records})
+        if not records:
+            report.append(dict(comparison_id=name, recommendation='insufficient_data',
+                               exclusion_count=len(exclusions), exclusions=str(exclusions),
+                               power_status='not_assessed', statistic_version=STATISTIC_VERSION))
+        for exp, config in configurations:
+            subset = [r for r in records if r['experiment'] == exp and r['configuration'] == config]
+            arms = sorted({r['arm'] for r in subset})
+            pairs = [(a, 'grpo') for a in arms if a != 'grpo'] if name == 'variance_mitigation' and 'grpo' in arms else itertools.combinations(arms, 2)
+            for a, b in pairs:
+                row = paired_comparison(subset, a, b, f'{name}:{config}:{a}_vs_{b}')
+                row.update(exclusion_count=len(exclusions), exclusions=str(exclusions))
+                report.append(row)
     return report
 
 
-def write_report(rows: List[Dict[str, str]], path: Path = OUT_TSV) -> None:
+def write_report(rows, path=OUT_TSV):
     path.parent.mkdir(parents=True, exist_ok=True)
-    header = [
-        "comparison_id",
-        "claim",
-        "n_seeds_A",
-        "n_seeds_B",
-        "matched_init",
-        "well_powered",
-        "effect_size",
-        "ci_low",
-        "ci_high",
-        "recommendation",
-    ]
-    with path.open("w") as f:
-        f.write("\t".join(header) + "\n")
-        for r in rows:
-            f.write("\t".join(str(r.get(h, "")) for h in header) + "\n")
+    fields = list(dict.fromkeys(key for row in rows for key in row))
+    with path.open('w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=fields, delimiter='\t')
+        writer.writeheader()
+        writer.writerows(rows)
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
-    p = argparse.ArgumentParser(description="Statistical rigor report")
-    p.add_argument("--out", default=str(OUT_TSV), help="Output TSV path")
-    args = p.parse_args(argv)
-
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--out', default=str(OUT_TSV))
+    args = parser.parse_args(argv)
     rows = generate_report()
     write_report(rows, Path(args.out))
-
-    well_powered = sum(1 for r in rows if r["well_powered"] == "yes")
-    total = len(rows)
-    print(f"[statistical_rigor] {well_powered}/{total} comparisons well-powered")
-    print(f"[statistical_rigor] wrote {args.out}")
+    print(f'{len(rows)} descriptive comparisons; power not assessed')
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     raise SystemExit(main())

@@ -14,7 +14,14 @@ class FrontierSWEPreflightTests(unittest.TestCase):
     def test_exact_roster_and_smallest_task_are_frozen(self) -> None:
         self.assertEqual(len(harness.OFFICIAL_TASK_IDS), 17)
         self.assertEqual(harness.SMALLEST_TASK_ID, "revideo-perf-opt")
-        self.assertIn("frontier_swe_eval", "frontier_swe_eval")
+        self.assertEqual(harness.OFFICIAL_TASK_IDS, (
+            "cranelift-codegen-opt", "dart-style-haskell", "dependent-type-checker",
+            "ffmpeg-swscale-rewrite", "frogsgame-rl", "git-to-zig",
+            "granite-mamba2-inference-optimization", "inference-system-optimization",
+            "libexpat-to-x86asm", "lua-native-compiler", "modular-stack-wan21",
+            "notebook-compression", "optimizer-design", "pcqm4mv2-autoresearch",
+            "postgres-sqlite-wire-adapter", "pyright-type-checking-optimization", "revideo-perf-opt",
+        ))
 
     def test_task_ids_must_be_disjoint(self) -> None:
         with self.assertRaisesRegex(harness.GateError, "not disjoint"):

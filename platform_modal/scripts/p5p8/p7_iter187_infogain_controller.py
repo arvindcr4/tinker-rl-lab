@@ -18,7 +18,7 @@ from _paths import REPO_ROOT  # noqa: E402
 from _stats import log_beta as lbeta  # noqa: E402
 WORK = REPO_ROOT
 N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
-OUT = WORK / "platform_hybrid/experiments/results/p5p8"
+OUT = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review19-v2"
 METHODS = ["grpo", "aero", "gift", "areal"]
 GB, GE, NS, NP, TAU = 8, 8, 40, 16, 0.70
 SEED, NBOOT = 20260705, 4000
@@ -61,7 +61,7 @@ def tier(k):
 def fire_bit(plist, low):
     n_b = sum(1 for p in plist if p[2] == "boundary")
     zvf = n_b / len(plist)
-    return ((zvf <= 1 - TAU) if low else (zvf > 1 - TAU), zvf)
+    return ((zvf <= 1 - TAU) if low else (zvf >= TAU), zvf)
 
 
 def main():
@@ -89,7 +89,7 @@ def main():
         flo, _ = fire_bit(pl, low=True)
         for (i, k, t, dhv) in pl:
             pp_rows.append({"m": m, "s": st, "i": i, "k": k, "ph": k / GB, "t": t,
-                            "hpre": hbit(k + 1, GB - k + 1), "hpost": hbit(k + 1, GB - k + 1) + dhv,
+                            "hpre": hbit(k + 1, GB - k + 1), "hpost": hbit(k + 1, GB - k + 1) - dhv,
                             "dh": dhv, "fc1": int(fhi), "fanti": int(flo), "z": zvf})
             tier_acc[t].append(dhv)
         fired_mean = statistics.mean([p[3] for p in pl]) if fhi and pl else float("nan")

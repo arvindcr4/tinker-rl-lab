@@ -48,6 +48,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _review02_contracts import stable_seed, finite_json
 from _paths import REPO_ROOT  # noqa: E402
 from _p8_common import (  # noqa: E402
     RAW20,
@@ -73,6 +74,8 @@ N_QUARTILES = 4
 def precision_at_k(y, s, k_pct):
     """Precision@K = fraction of top-K that are positive (defined correctly)."""
     n = len(y)
+    if not n:
+        return float("nan")
     k = max(1, int(round(n * k_pct / 100.0)))
     top = np.argsort(-s)[:k]
     return float(y[top].sum()) / float(k)
@@ -81,9 +84,11 @@ def precision_at_k(y, s, k_pct):
 def hit_rate_at_k(y, s, k_pct):
     """Recall@K = % of true positives in top-K (capped by K/n_pos)."""
     n = len(y)
+    if not n:
+        return float("nan")
     k = max(1, int(round(n * k_pct / 100.0)))
     top = np.argsort(-s)[:k]
-    return float(y[top].sum()) / float(max(1, (y == 1).sum()))
+    return float(y[top].sum()) / float((y == 1).sum()) if (y == 1).sum() else float("nan")
 
 
 def quartile_mask(v_std, q):
@@ -98,6 +103,8 @@ def paired_bootstrap_ci(diff, b, n_boot, seed):
     """5-seed paired bootstrap CI on a 5-element contrast vector diff."""
     rng = np.random.default_rng(seed)
     n = len(diff)
+    if n < 2 or not np.isfinite(diff).all():
+        return dict(mean=float(np.mean(diff)) if n else float("nan"), lo=float("nan"), hi=float("nan"), se=float("nan"), status="insufficient_data")
     means = np.empty(n_boot)
     for i in range(n_boot):
         idx = rng.integers(0, n, size=n)
@@ -106,6 +113,12 @@ def paired_bootstrap_ci(diff, b, n_boot, seed):
             "lo": float(np.quantile(means, 0.025)),
             "hi": float(np.quantile(means, 0.975)),
             "se": float(diff.std(ddof=1) / np.sqrt(n))}
+
+
+def auc_gap_verdict(value, margin=.001):
+    if not np.isfinite(value):
+        return 'INSUFFICIENT_DATA'
+    return 'PASS' if value >= margin else 'FAIL'
 
 
 def main():
@@ -184,9 +197,9 @@ np.array([d["hit_rate_at_1pct"]
                             for d in agg[(fb, q)]])
             d_a = np.array([d["auc"] for d in agg[(fa, q)]]) - \
                   np.array([d["auc"] for d in agg[(fb, q)]])
-            ci_p = paired_bootstrap_ci(d_p, 5, N_BOOT, seed=42 + q + hash(cname) % 100)
-            ci_h = paired_bootstrap_ci(d_h, 5, N_BOOT, seed=43 + q + hash(cname) % 100)
-            ci_a = paired_bootstrap_ci(d_a, 5, N_BOOT, seed=44 + q + hash(cname) % 100)
+            ci_p = paired_bootstrap_ci(d_p, 5, N_BOOT, seed=42 + q + stable_seed(0, cname))
+            ci_h = paired_bootstrap_ci(d_h, 5, N_BOOT, seed=43 + q + stable_seed(0, cname))
+            ci_a = paired_bootstrap_ci(d_a, 5, N_BOOT, seed=44 + q + stable_seed(0, cname))
             gap_rows.append({
                 "contrast": cname,
                 "quartile": q,
@@ -241,33 +254,37 @@ np.array([d["hit_rate_at_1pct"]
                "4sensor_minus_20raw" and d["quartile"] == q) for q in range(4)}
 
     def gap_lo(d):
-        return d["gap_p_at_1_lo"]
+        return d["gap_hit_lo"]
     def gap_mean(d):
-        return d["gap_p_at_1_mean"]
+        return d["gap_hit_mean"]
 
     h1_pass = (gap_lo(g24_20_p[0]) > 0.0)
     h2_pass = all(gap_mean(g24_20_p[q]) <= gap_mean(g24_20_p[q - 1]) + 1e-9
                   for q in range(1, 4))
     h3_pass = True
     for q in range(N_QUARTILES):
-        if gap_mean(g4_20_p[q]) >= 0.0:
+        if not np.isfinite(gap_mean(g4_20_p[q])) or gap_mean(g4_20_p[q]) >= 0.0:
             h3_pass = False
     h4_pass = True
     for cname, fa, fb in [("24full_minus_20raw", "24full", "20raw")]:
         d_q0 = next(r for r in gap_rows if r["contrast"] == cname
                     and r["quartile"] == 0)
-        if d_q0["gap_auc_mean"] < 0.001:
+        if not np.isfinite(d_q0["gap_auc_mean"]) or d_q0["gap_auc_mean"] < 0.001:
             h4_pass = False
             h4_pass = False
     h5_pass = True
     for q in range(N_QUARTILES):
-        if hit_at_1[("24full", q)] <= hit_at_1[("4sensor", q)]:
+        if not np.isfinite([hit_at_1[("24full", q)], hit_at_1[("4sensor", q)]]).all() or hit_at_1[("24full", q)] <= hit_at_1[("4sensor", q)]:
             h5_pass = False
     spread_24 = (max(hit_at_1[("24full", q)] for q in range(N_QUARTILES))
                  - min(hit_at_1[("24full", q)] for q in range(N_QUARTILES)))
     h6_pass = (spread_24 < 0.10)
 
     summary = {
+        "analysis_protocol": "pro-review-02-v2-exploratory-posthoc",
+        "hypothesis_history": {"original": "value of V-stat increases with V_std", "original_monotonic_direction_holds": all(gap_mean(g24_20_p[q]) >= gap_mean(g24_20_p[q-1]) for q in range(1, 4)), "revised": "decreases with V_std after observing first run", "confirmatory_status": "independent replication required"},
+        "uncertainty": "training-seed sensitivity conditional on reused test examples",
+        "resampling_seeds": {name: {str(q): [base+q+stable_seed(0, name) for base in (42, 43, 44)] for q in range(N_QUARTILES)} for name, _, _ in contrasts},
         "iter": 184,
         "n_train": int(Xtr.shape[0]),
         "n_test": int(Xte.shape[0]),
@@ -285,24 +302,24 @@ np.array([d["hit_rate_at_1pct"]
         "hypotheses": {
             "H1_24full_minus_20raw_hit_rate_Q0_gt_0": {
                 "verdict": "PASS" if h1_pass else "FAIL",
-                "gap_lo": g24_20_p[0]["gap_p_at_1_lo"],
-                "gap_mean": g24_20_p[0]["gap_p_at_1_mean"],
+                "gap_lo": g24_20_p[0]["gap_hit_lo"],
+                "gap_mean": g24_20_p[0]["gap_hit_mean"],
                 "note": "24full > 20raw on hit_rate in Q0 (low V_std) -- V-stat features add value where raw features agree"
             },
             "H2_gap_monotone_decreasing_in_V_std_quartile": {
                 "verdict": "PASS" if h2_pass else "FAIL",
-                "gap_means": [round(g24_20_p[q]["gap_p_at_1_mean"], 4)
+                "gap_means": [round(g24_20_p[q]["gap_hit_mean"], 4)
                               for q in range(4)],
                 "note": "gap(24full-20raw) is LARGEST in Q0, SMALLEST in Q3 (V-stat features help most when raw features agree)"
             },
             "H3_4sensor_strictly_worse_than_20raw_in_every_Q": {
                 "verdict": "PASS" if h3_pass else "FAIL",
-                "gap_means": [round(g4_20_p[q]["gap_p_at_1_mean"], 4)
+                "gap_means": [round(g4_20_p[q]["gap_hit_mean"], 4)
                               for q in range(4)],
                 "note": "4sensor alone strictly loses to 20raw everywhere -- V-stat cannot replace raw granularity"
             },
             "H4_24full_minus_20raw_AUC_in_Q0_gte_001": {
-                "verdict": "PASS" if h4_pass else "FAIL",
+                "verdict": auc_gap_verdict(d_q0["gap_auc_mean"]),
                 "gap_auc_q0_mean": round(d_q0["gap_auc_mean"], 4),
                 "note": "V-stat adds AUC headroom in low-V_std regime where raw-feature ranking is weak"
             },
@@ -320,7 +337,7 @@ np.array([d["hit_rate_at_1pct"]
 
     sum_path = RES / "p8_iter184_summary.json"
     with sum_path.open("w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(finite_json(summary), f, indent=2, allow_nan=False)
     print(f"[iter184] wrote {sum_path}")
 
     # Console verdict table.

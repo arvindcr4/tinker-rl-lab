@@ -89,13 +89,15 @@ def load_iter141_per_method_step_rewards():
     return out
 
 
-def compute_d12(reward_means, eps):
+def compute_d12(reward_means, eps, *, simulation=False):
     """D12 = #(cells with CI half-width < eps) / #(total cells).
     For each (method, step), simulate a binomial rollout sample around
     the reward_mean (the n_rollouts=128 binary outcomes), bootstrap, and
     report CI half-width. The iter-141 file has only the mean; we
     synthesize a per-rollout array via binomial draws (this matches the
     ANOVA assumption of n_rollouts Bernoulli outcomes)."""
+    if not simulation:
+        raise ValueError("Raw rollout rewards unavailable: aggregate means cannot establish empirical reward stability")
     rng = np.random.default_rng(SEED)
     cell_results = []
     for (method, step), m in reward_means.items():
@@ -104,6 +106,7 @@ def compute_d12(reward_means, eps):
         mean, lo, hi = bootstrap_reward(rollout_arr)
         half_width = (hi - lo) / 2.0
         cell_results.append({
+            "evidence_kind": "model_based_bernoulli_simulation", "simulation_seed": SEED,
             "method": method, "step": step,
             "reward_mean": m, "boot_mean": mean,
             "ci_lo": lo, "ci_hi": hi,
@@ -116,6 +119,8 @@ def compute_d12(reward_means, eps):
 
 
 def main():
+    from review22_contract import require_independent_unit_contract
+    require_independent_unit_contract()
     print("Loading iter-141 reward means...", flush=True)
     reward_means = load_iter141_per_method_step_rewards()
     print(f"  loaded {len(reward_means)} (method, step) cells", flush=True)

@@ -688,6 +688,9 @@ def collect_appbench_signed_result(
         "grant_fingerprint": verified["grant_fingerprint"],
         "handoff_fingerprint": expected_handoff_fingerprint,
         "provider_signed": True,
+        "provider_signed_result_valid": True,
+        "benchmark_score_independently_verified": False,
+        "evidence_basis": "trusted-provider-signed-assertions",
     }
 
 

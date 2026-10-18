@@ -13,6 +13,13 @@ Usage:
   python world_class_experiments.py --experiment frontier   # Frontier models (235B, 70B)
 """
 
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 4:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
+from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage
+
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -107,21 +114,7 @@ def load_tool_use():
 
 # ── Reward Functions ─────────────────────────────────────────────────────
 def reward_math(response, answer):
-    response = response.strip()
-    boxed = re.findall(r'\\boxed\{([^}]+)\}', response)
-    for b in boxed:
-        b_clean = b.strip().replace(",", "").replace(" ", "")
-        try:
-            if abs(float(b_clean) - float(answer)) < 0.01: return 1.0
-        except:
-            if b_clean == answer: return 1.0
-    all_nums = re.findall(r'[-+]?\d[\d,]*\.?\d*', response)
-    if all_nums:
-        last = all_nums[-1].replace(",", "")
-        try:
-            if abs(float(last) - float(answer)) < 0.01: return 1.0
-        except: pass
-    return 0.0
+    return score_gsm8k(response, answer)
 
 def reward_tool(response, expected):
     score = 0.0
@@ -141,7 +134,7 @@ def reward_tool(response, expected):
 def run_grpo_experiment(model_name, model_id, task, seed=42, rank=32, lr=3e-5, 
                          group=8, steps=200, batch=2, tag=""):
     """Run a single GRPO experiment and save results."""
-    random.seed(seed)
+    rng = random.Random(seed)
     torch.manual_seed(seed)
     
     exp_tag = tag or f"{task}_{model_name}_s{seed}"
@@ -160,12 +153,12 @@ def run_grpo_experiment(model_name, model_id, task, seed=42, rank=32, lr=3e-5,
     else:
         raise ValueError(f"Unknown task: {task}")
     
-    random.shuffle(examples)
+    rng.shuffle(examples)
     print(f"[{exp_tag}] Loaded {len(examples)} examples")
     
     # Connect to Tinker
     svc = tinker.ServiceClient()
-    tc = svc.create_lora_training_client(base_model=model_id, rank=rank)
+    tc = svc.create_lora_training_client(base_model=model_id, rank=rank, seed=seed)
     tok = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
     w0 = tc.save_weights_for_sampler(name="s0").result()
     sc = tc.create_sampling_client(model_path=w0.path)
@@ -174,7 +167,7 @@ def run_grpo_experiment(model_name, model_id, task, seed=42, rank=32, lr=3e-5,
     # Training
     _adv = []
     def loss_fn(data, lp):
-        losses = [(-_adv[i] * lp[i].sum()) for i in range(len(lp))]
+        losses = [(-_adv[i] * response_logprobs(data[i], lp[i]).sum()) for i in range(len(lp))]
         loss = torch.stack(losses).mean()
         return loss, {"loss": loss.item()}
     
@@ -184,13 +177,14 @@ def run_grpo_experiment(model_name, model_id, task, seed=42, rank=32, lr=3e-5,
     step_log = []
     
     for step in range(steps):
-        batch_examples = random.sample(examples, min(batch, len(examples)))
+        batch_examples = rng.sample(examples, min(batch, len(examples)))
         all_data, all_advs, batch_r = [], [], []
+        reward_groups = []
         
         for prompt_text, ans, _ in batch_examples:
             pid = tok.encode(prompt_text, add_special_tokens=False)
             if len(pid) > 1024: pid = pid[:1024]
-            sp = T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95)
+            sp = T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95, seed=stable_seed(seed, step, pid))
             
             try:
                 resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=group, sampling_params=sp).result()
@@ -203,15 +197,13 @@ def run_grpo_experiment(model_name, model_id, task, seed=42, rank=32, lr=3e-5,
             sr = (sum((r - mr) ** 2 for r in rews) / len(rews)) ** 0.5 + 1e-8
             advs = [(r - mr) / sr for r in rews]
             batch_r.extend(rews)
+            reward_groups.append(rews)
             
             for r, a in zip(resp.sequences, advs):
                 rid = list(r.tokens)
                 fid = pid + rid
-                tid = fid[1:] + [0]
-                all_data.append(T.Datum(
-                    model_input=T.ModelInput.from_ints(fid),
-                    loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)])}
-                ))
+                tid = fid[1:]
+                all_data.append(aligned_datum(T, pid, rid))
                 all_advs.append(a)
         
         if not all_data: continue
@@ -227,7 +219,7 @@ def run_grpo_experiment(model_name, model_id, task, seed=42, rank=32, lr=3e-5,
         if avg == 0: zero_reward_steps += 1
         
         # Compute ZVF
-        zvf = 1.0 if len(set(batch_r)) <= 1 else 0.0
+        zvf = group_zvf(reward_groups)
         
         step_log.append({
             "step": step + 1,
@@ -239,7 +231,7 @@ def run_grpo_experiment(model_name, model_id, task, seed=42, rank=32, lr=3e-5,
         print(f"[{exp_tag}] {step+1:3d}/{steps} | loss={loss_val:.4f} | reward={avg:.3f} | acc={avg*100:.1f}%")
         
         # Save checkpoint periodically
-        if (step + 1) % max(steps // 4, 5) == 0:
+        if True:  # v3: sampler refresh after every update
             ckpt = tc.save_weights_for_sampler(name=f"s{step+1}").result()
             sc = tc.create_sampling_client(model_path=ckpt.path)
     

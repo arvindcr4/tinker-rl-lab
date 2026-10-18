@@ -1,91 +1,84 @@
-"""Aggregate the W&B `zvf-audit` runs via direct GraphQL (the wandb python client
-is broken in this env). Reads WANDB_API_KEY from env. Paginates all runs, parses
-difficulty from run names, and breaks ZVF / GU / reward / frac_solved down by
-model / group-size / difficulty. Writes results/zvf_audit_summary.{json,md}.
+"""Read-only audit aggregation with explicit completion and metric contracts.
 
-Usage:  WANDB_API_KEY=... python3 platform_hybrid/experiments/tinker-runs/wandb_zvf_audit_agg.py
+No network or credentials are touched at import. Missing/failed evidence is
+counted as excluded, never pooled as a zero or an equivalent estimand.
 """
-import os, re, json, base64, urllib.request, collections, statistics, pathlib
+from __future__ import annotations
+import base64
+import collections
+import json
+import math
+import os
+from pathlib import Path
+import statistics
+import urllib.request
 
-KEY = os.environ["WANDB_API_KEY"]
 ENT, PROJ = "arvindcr4-pes-university", "zvf-audit"
-URL = "https://api.wandb.ai/graphql"
-AUTH = base64.b64encode(f"api:{KEY}".encode()).decode()
-OUT = pathlib.Path("platform_hybrid/experiments/tinker-runs/results")
-Q = ("query($e:String!,$p:String!,$c:String){ project(name:$p,entityName:$e){ "
-     "runs(first:250,after:$c){ edges{ node{ name state config summaryMetrics } } "
-     "pageInfo{ hasNextPage endCursor } } } }")
+METRICS = {"zvf": ("mean_zvf", "zvf"), "gu": ("gu", "mean_gu"),
+           "reward": ("final_reward", "reward"), "frac_solved": ("frac_solved",)}
 
-def gql(cursor):
-    body = json.dumps({"query": Q, "variables": {"e": ENT, "p": PROJ, "c": cursor}}).encode()
-    req = urllib.request.Request(URL, body, {"Authorization": "Basic " + AUTH,
-                                             "Content-Type": "application/json"})
-    return json.load(urllib.request.urlopen(req, timeout=90))
 
-unwrap = lambda v: v["value"] if isinstance(v, dict) and "value" in v else v
-def pick(d, *names):
-    for n in names:
-        if n in d and d[n] not in (None, ""):
-            return d[n]
-    return None
-def num(x):
-    try: return float(x)
-    except Exception: return None
-def difficulty_of(name):
-    m = re.search(r"_(easy|medium|hard)_", name or "")
-    return m.group(1) if m else None
-
-runs, cursor = [], None
-while True:
-    conn = gql(cursor)["data"]["project"]["runs"]
-    for e in conn["edges"]:
-        n = e["node"]
-        cfg = {k: unwrap(v) for k, v in json.loads(n.get("config") or "{}").items()}
-        summ = json.loads(n.get("summaryMetrics") or "{}")
-        runs.append((n["state"], cfg, summ, n.get("name", "")))
-    if conn["pageInfo"]["hasNextPage"]:
-        cursor = conn["pageInfo"]["endCursor"]
-    else:
-        break
-
-states = dict(collections.Counter(s for s, c, m, nm in runs))
-METRICS = {"zvf": ["mean_zvf", "zvf"], "gu": ["gu", "mean_gu"],
-           "reward": ["final_reward", "reward"], "frac_solved": ["frac_solved"]}
-DIMS = {
-    "model": lambda c, m, nm: pick(c, "model_short", "model", "base_model"),
-    "group_size": lambda c, m, nm: pick(c, "group", "group_size", "G"),
-    "difficulty": lambda c, m, nm: difficulty_of(nm),
-}
-
-def aggregate(dim_fn):
-    g = collections.defaultdict(lambda: collections.defaultdict(list))
-    for s, c, m, nm in runs:
-        dv = dim_fn(c, m, nm)
-        if dv is None:
+def aggregate(runs, dimension="model"):
+    groups = collections.defaultdict(lambda: collections.defaultdict(list))
+    excluded = collections.Counter()
+    for state, config, summary, run_id in runs:
+        if state != "finished" or summary.get("completion_contract_satisfied") is not True:
+            excluded["completion_unverified"] += 1
             continue
-        for mk, names in METRICS.items():
-            v = num(pick(m, *names))
-            if v is not None:
-                g[str(dv)][mk].append(v)
-    return g
+        spec = config.get("comparison_hash")
+        definitions = config.get("metric_definitions", {})
+        if not spec or not isinstance(definitions, dict):
+            excluded["comparison_or_metric_contract_missing"] += 1
+            continue
+        dimension_value = config.get(dimension)
+        if dimension_value is None:
+            excluded["dimension_missing"] += 1
+            continue
+        for metric, names in METRICS.items():
+            definition = definitions.get(metric)
+            value = next((summary[n] for n in names if summary.get(n) is not None), None)
+            if not definition or not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value):
+                excluded[f"{metric}_missing"] += 1
+                continue
+            # Separate estimands and specifications even under the same visible label.
+            key = json.dumps([dimension_value, spec, metric, definition])
+            groups[key][metric].append(float(value))
+    return {"groups": {k: {metric: {"mean": statistics.mean(v), "n": len(v)}
+                               for metric, v in values.items()} for k, values in groups.items()},
+            "excluded": dict(excluded), "input_runs": len(runs)}
 
-summary = {"project": PROJ, "entity": ENT, "total_runs": len(runs), "states": states, "breakdowns": {}}
-md = [f"# zvf-audit summary\n\n{len(runs)} runs · states: {states}\n"]
-for label, fn in DIMS.items():
-    g = aggregate(fn)
-    summary["breakdowns"][label] = {}
-    md.append(f"\n## by {label}\n\n| {label} | n | ZVF | GU | reward | frac_solved |\n|---|---|---|---|---|---|")
-    print(f"\n=== by {label} ===")
-    for k in sorted(g, key=lambda x: -statistics.mean(g[x]["zvf"]) if g[x].get("zvf") else 0):
-        row = {mk: round(statistics.mean(v), 3) for mk, v in g[k].items()}
-        row["n"] = max((len(v) for v in g[k].values()), default=0)
-        summary["breakdowns"][label][k] = row
-        print(f"  {k:30s} n={row['n']:>3}  ZVF={row.get('zvf','-')}  GU={row.get('gu','-')}  "
-              f"reward={row.get('reward','-')}  solved={row.get('frac_solved','-')}")
-        md.append(f"| {k} | {row['n']} | {row.get('zvf','-')} | {row.get('gu','-')} | "
-                  f"{row.get('reward','-')} | {row.get('frac_solved','-')} |")
 
-OUT.mkdir(parents=True, exist_ok=True)
-(OUT / "zvf_audit_summary.json").write_text(json.dumps(summary, indent=2) + "\n")
-(OUT / "zvf_audit_summary.md").write_text("\n".join(md) + "\n")
-print("\nwrote results/zvf_audit_summary.{json,md}  ·", len(runs), "runs")
+def fetch_runs():
+    key = os.environ["WANDB_API_KEY"]
+    auth = base64.b64encode(f"api:{key}".encode()).decode()
+    query = "query($e:String!,$p:String!,$c:String){project(name:$p,entityName:$e){runs(first:250,after:$c){edges{node{name state config summaryMetrics}}pageInfo{hasNextPage endCursor}}}}"
+    runs, cursor = [], None
+    while True:
+        body = json.dumps({"query": query, "variables": {"e": ENT, "p": PROJ, "c": cursor}}).encode()
+        request = urllib.request.Request("https://api.wandb.ai/graphql", body,
+                                         {"Authorization": "Basic " + auth, "Content-Type": "application/json"})
+        with urllib.request.urlopen(request, timeout=90) as response:
+            payload = json.load(response)
+        if payload.get("errors"):
+            raise RuntimeError("W&B inventory incomplete")
+        connection = payload["data"]["project"]["runs"]
+        for edge in connection["edges"]:
+            node = edge["node"]
+            config = {k: v.get("value", v) if isinstance(v, dict) else v
+                      for k, v in json.loads(node.get("config") or "{}").items()}
+            runs.append((node["state"], config, json.loads(node.get("summaryMetrics") or "{}"), node["name"]))
+        if not connection["pageInfo"]["hasNextPage"]:
+            return runs
+        cursor = connection["pageInfo"]["endCursor"]
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    args.output.write_text(json.dumps(aggregate(fetch_runs()), indent=2, allow_nan=False) + "\n")
+
+
+if __name__ == "__main__":
+    main()

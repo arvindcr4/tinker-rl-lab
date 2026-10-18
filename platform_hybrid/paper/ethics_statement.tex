@@ -12,8 +12,8 @@
 This statement is written to satisfy the NeurIPS Code of Ethics and Broader
 Impact requirements. It complements the shorter Limitations and Broader
 Impact subsections embedded in Section~\ref{sec:limitations} by consolidating
-in one place a full dual-use analysis, itemised compute accounting, carbon
-footprint estimation, data provenance disclosures, a candid acknowledgment
+in one place a dual-use analysis, unresolved compute-accounting discrepancies, carbon
+scenarios, data provenance disclosures, a candid acknowledgment
 of the closed-source training backend on which a fraction of our headline
 numbers depends, and a list of methodological limits we are aware of but
 did not have resources to close within the submission window.
@@ -59,15 +59,14 @@ signal, which itself requires expertise and labelled data.
 GRPO, like all policy-gradient RL from a proxy reward, is vulnerable to
 reward hacking: the model learns to exploit idiosyncrasies of the reward
 function rather than solve the intended task \cite{skalse2022specificationgaming,
-krakovna2020specification}. Our length-bias analysis
-(Section~\ref{sec:length_bias}) and the verbosity-trap finding in 4/11
-GRPO runs are concrete demonstrations of this failure mode in our own data.
+krakovna2020specification}. Our length-bias discussion
+(Section~\ref{sec:length_bias}) records suspicious reward trajectories, not
+a verified causal demonstration of reward hacking.
 Users who apply our scripts to under-specified reward functions in
 production settings (e.g., a custom ``helpfulness'' classifier) may observe
 models that appear to improve on held-out metrics while silently
 optimising against unintended proxies. We include the Zero-Variance
-Fraction and reward-stability diagnostics precisely so that downstream
-users can detect such drift.
+Fraction and reward-stability diagnostics precisely as retrospective summaries; they do not identify policy drift or reward hacking.
 
 \paragraph{M3. Circumventing safety training via distillation or tool-use.}
 The tool-use track trains LoRA adapters that teach a base model to emit
@@ -75,16 +74,15 @@ schema-valid JSON function calls \cite{liu2024xlam}. A motivated adversary
 could in principle use the same pipeline to teach a base model to emit
 jailbreak prompts as ``tool calls'' or to invoke an adversarial external
 tool. We mitigate this by (a) releasing only adapters, not merged weights,
-so that the safety-trained instruct checkpoint must be applied separately
-and any instruct-layer guardrails remain active; (b) documenting in model
+while noting that an adapter can still alter safety behavior and does not
+guarantee that instruct-model safeguards remain effective; (b) documenting in model
 cards that the tool-use adapters are trained on a narrow schema (five
 synthetic tools) and have not been safety-evaluated for open-ended function
 calling; and (c) not releasing any function-calling harness that would
 actually execute emitted calls.
 
 \paragraph{M4. Compute-efficiency externalities.}
-Our work argues that critic-free RL with careful group-size selection
-(\(G{=}32\)) can be run on modest budgets. Improved training efficiency is
+This audit makes no demonstrated efficiency claim or group-size recommendation. Improved training efficiency is
 itself dual-use: it lowers the cost of running adversarial fine-tuning at
 scale. We judge this externality to be modest relative to the already-low
 cost of fine-tuning a 0.6B--8B model with commodity LoRA recipes
@@ -103,16 +101,18 @@ reward hacking.
 \label{sec:compute_accounting}
 % ---------------------------------------------------------------------------
 
-Table~\ref{tab:compute_spend} itemises the financial cost of every
-platform used in the project. Costs are real spend for the submitting
-authors; no in-kind credits are omitted. Dollar figures are in USD.
+Table~\ref{tab:compute_spend} retains historical platform entries for audit,
+not verified project accounting. Excluding Colab, their numeric ranges sum to
+USD 147--177, inconsistent with the earlier USD 130--140 total. Colab is an
+additional per-person charge with an unspecified count. The main-text subset
+also previously differed. Cash versus credits, dates, cohort overlap, and
+failed-run inclusion have not been reconciled; no project spend total is certified.
 
 \begin{table}[ht]
 \centering
 \small
-\caption{Itemised compute spend across platforms. Totals include both
-successful and failed runs, because failed-run spend is real and should
-not be hidden from reviewers \cite{henderson2018deep}.}
+\caption{Historical compute-spend entries; unreconciled cohorts and cash/credit status.
+The sum is an arithmetic check, not verified expenditure \cite{henderson2018deep}.}
 \label{tab:compute_spend}
 \begin{tabular}{llrr}
 \toprule
@@ -128,7 +128,7 @@ NVIDIA L4 (TRL baseline)& Qwen2.5-0.5B GSM8K, 5 seeds      & 5  & \$3--5   \\
 HuggingFace Hub    & Model + adapter hosting               & --- & \$0 \\
 Weights \& Biases  & Experiment tracking (academic tier)   & --- & \$0 \\
 \midrule
-\multicolumn{3}{l}{\textbf{Total authors' out-of-pocket spend}} & \textbf{\$130--140} \\
+\multicolumn{3}{l}{\textbf{Project total (unreconciled)}} & \textbf{not available} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -145,16 +145,16 @@ from Thinking Machines, Modal, or any other vendor mentioned.
 (JWT expiry, API stalls for GPT-OSS-20b and Kimi-K2 before re-run,
 KL-tracking gradient bug). We disclose this because reviewers often ask
 whether reported total spend reflects only clean, successful runs; it does
-not. Excluding failed spend would understate the true resource cost of
-reproducing our work by roughly 25\%.
+not. The failed-run subset is not sufficiently reconciled to estimate a verified
+percentage of total spend.
 
 % ---------------------------------------------------------------------------
 \subsection{Carbon Footprint Estimation}
 \label{sec:carbon}
 % ---------------------------------------------------------------------------
 
-Table~\ref{tab:carbon2} computes an energy and CO$_2$-equivalent estimate
-for each platform. We follow the methodology of
+Table~\ref{tab:carbon2} preserves conditional energy/carbon scenarios
+from historical assumptions, not measured emissions or a project total. We follow the methodology of
 \citet{patterson2024empirical} and \citet{strubell2019energy}: for each
 GPU-hour we multiply device TDP by wall-clock GPU-hours and the data-centre
 Power Usage Effectiveness (PUE), then multiply by the grid carbon intensity
@@ -181,16 +181,16 @@ in the region where the hardware is believed to be located.
 \paragraph{GPU-hour estimates.}
 Tinker GPU-hour counts are not disclosed by the platform. We estimate them
 from wall-clock run duration and assume a single H100-class accelerator per
-job, which is consistent with Tinker's published architecture for the
-model sizes we trained. Modal GPU-hours are measured directly from Modal's
-billing dashboard.
+job, which is an unverified hardware-allocation assumption. The 18 Modal GPU-hours
+in this scenario conflict with the 250 GPU-hours in Appendix~\ref{app:compute};
+neither is selected as correct without a cohort-specific billing ledger.
 
 \begin{table}[ht]
 \centering
 \small
-\caption{Energy and carbon footprint estimates. Tinker hardware is not
-publicly disclosed; we assume 1$\times$ H100 equivalent per run. Failed /
-stalled runs are included. Totals rounded to one significant figure.}
+\caption{Historical conditional carbon scenarios, not measured emissions. Tinker hardware
+is undisclosed; 1$\times$ H100 per run is an assumption. Cohort boundaries and
+failed-run coverage are unresolved; the scenario total is not a project estimate.}
 \label{tab:carbon2}
 \begin{tabular}{lrrrrr}
 \toprule
@@ -203,31 +203,23 @@ PES A100 (in-kind)      & \textasciitilde 60  & 400 & 1.1 & \textasciitilde 26  
 Colab Pro T4 (asia-south1) & \textasciitilde 40 & 70 & 1.2 & \textasciitilde 3.4 & \textasciitilde 2.4  \\
 NVIDIA L4 (TRL baseline)   & \textasciitilde 10 & 72 & 1.1 & \textasciitilde 0.8 & \textasciitilde 0.3  \\
 \midrule
-\textbf{Project total (best estimate)} & & & & \textasciitilde 776 & \textasciitilde 296 \\
+\textbf{Scenario sum (not project total)} & & & & \textasciitilde 776 & \textasciitilde 296 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{Interpretation and uncertainty.}
-Our best estimate of \textasciitilde 296\,kg\,CO$_2$-eq for the entire
-project is comparable to a single round-trip economy flight
-Bengaluru--Delhi (\textasciitilde 300\,kg). The dominant uncertainty is
-the Tinker GPU-hour count: because Tinker does not expose hardware telemetry,
-a factor-of-two error in GPU-hours or TDP is plausible. Under a pessimistic
-assumption (2$\times$ GPU-hours, H100 running near 100\% TDP continuously),
-the Tinker contribution could be as high as \textasciitilde 540\,kg CO$_2$-eq.
-Under an optimistic assumption (Tinker backends actually use more
-energy-efficient accelerators than H100, 50\% average utilisation) the
-contribution could be as low as \textasciitilde 130\,kg. We report the
-central estimate in the main table and caution readers that it should not
-be interpreted as precise. \emph{All} numbers should be regarded as upper
-bounds on the carbon cost of reproducing our work, because subsequent
-users can skip the failed runs and the ablation sweeps.
+The tabulated sum is conditional on unreconciled hours, assumed accelerator
+counts, TDP, PUE, and locations. It is not a verified footprint or an upper bound:
+unknown allocation can raise or lower actual consumption. Omitting failed jobs
+in a future replication does not establish a bound on this project. A release
+needs a single ledger with dates, cohort IDs, GPU counts, measured versus assumed
+hours, credits versus cash, and failure status before reporting totals.
 
 \paragraph{Offset and mitigation.}
-We did not purchase carbon offsets. Instead, we have (a) released all
-trained checkpoints on HuggingFace Hub so that downstream users do not
-need to re-run our experiments; (b) released step-level CSV logs so that
+We did not purchase carbon offsets. Instead, we have (a) made available selected
+checkpoint artifacts so that downstream users do not
+need to re-run our experiments; (b) retained local step-level CSV logs so that
 learning curves can be inspected without re-training; and (c) documented
 in Section~\ref{sec:compute_accounting} which runs were wasteful, so that
 replicators can skip them. We regard reproducibility-by-artefact as a
@@ -244,7 +236,7 @@ used. No human annotators were employed during this work. We document
 each dataset below.
 
 \paragraph{GSM8K \cite{cobbe2021training}.}
-8{,}500 grade-school math word problems (7{,}473 train / 1{,}319 test)
+Grade-school math word problems (7{,}473 train / 1{,}319 test)
 authored by human writers contracted by OpenAI. Released under the
 \textbf{MIT License} via \url{https://github.com/openai/grade-school-math}.
 We use the standard train/test splits without modification. The canonical
@@ -269,7 +261,8 @@ xLAM-derived model cards.
 
 \paragraph{HumanEval \cite{chen2021codex}.}
 164 Python programming problems with unit tests, released by OpenAI under
-the \textbf{MIT License}. Used unmodified for pass@$k$ evaluation. Known
+the \textbf{MIT License}. The local restricted sandbox does not implement an unmodified standard
+pass@$k$ evaluation; code results are harness-bound reward probes. Known
 limitations: small scale, English-language docstrings, single-language
 coverage; documented contamination concerns against frontier pretraining
 corpora \cite{riddell2024contamination}.
@@ -288,8 +281,8 @@ release, which is academic-use only.
 
 \paragraph{Synthetic tool-use corpus (authored).}
 We additionally generated a small five-tool synthetic corpus (calculator,
-web-search stub, calendar, file-read, email-send) used for Section 4.1's
-saturation analysis. The corpus is authored by the paper's authors from
+web-search stub, calendar, file-read, email-send) used for the reviewed descriptive
+all-wrong observations. The corpus is authored by the paper's authors from
 publicly documented APIs, contains no third-party content, and is
 released under the \textbf{MIT License} in our repository under
 \texttt{data/synthetic\_tools/}. Generation prompts are included for
@@ -319,43 +312,25 @@ Tinker \cite{thinkingmachines2024tinker} is a managed LLM fine-tuning and
 inference service provided by Thinking Machines, Inc. It exposes a Python
 SDK (\texttt{tinker==0.16.1}) that accepts custom loss functions
 (\texttt{forward\_backward\_custom}), a limited set of optimisers, and
-standard LoRA hyperparameters. It does not expose (i) the exact server-side
-GRPO loss implementation, (ii) reward normalisation or baseline subtraction
-scheme, (iii) minibatch construction or gradient-accumulation strategy,
-(iv) hardware configuration (GPU type, inter-node bandwidth), or (v)
-system-level telemetry (energy, throughput, queueing).
+standard LoRA hyperparameters. Local scripts specify reward normalization, baseline subtraction, custom loss,
+and requested LoRA/optimizer configuration. Undisclosed server-side details
+include hardware placement, scheduling, execution numerics, and some batching
+and sampler behavior. These are separate from the inspectable local objective.
 
 \paragraph{What this means for our claims.}
-Tinker results in this paper measure the \emph{platform's} implementation
-of GRPO, not an abstract specification of the algorithm. A reader who asks
-``why does Tinker GRPO score 99.9\% on GSM8K while open-source TRL GRPO
-scores 73.4\% on the same task'' cannot fully answer that question from
-our data: we are able to rule out a handful of candidate explanations
-(seed variance, model-size confound) but not the implementation itself.
-We therefore draw \emph{quantitative} conclusions only from the
-open-source side (TRL, veRL on Modal H100, OpenRLHF) where every
-hyperparameter is auditable, and use Tinker results primarily as an
-\emph{upper bound} on what a carefully engineered production stack can
-achieve for critic-free RL at our scales.
+We have not ruled out seed variance, checkpoint/model-size confounding, evaluator
+differences, or backend effects. The arithmetic/GSM8K cross-library identity is
+unresolved. Tinker results do not establish an upper bound or algorithmic
+superiority. verl/OpenRLHF Task~4 dry runs are engineering artifacts, not
+measured alternatives. The contribution remains the centered-reward identity,
+descriptive audited cells, and reporting contract.
 
 \paragraph{Reproducibility commitments we can make.}
-\begin{enumerate}
-  \item All Tinker experiment scripts, configuration files, JSON step
-        logs, and per-run W\&B projects are archived in the repository.
-        Researchers with Tinker access can attempt replication with our
-        exact configurations.
-  \item Every figure and every summary statistic derived solely from
-        Tinker data is marked with ``\dag'' and a footnote stating that
-        independent replication requires Tinker API access.
-  \item Primary statistical claims (significance tests, ANOVA variance
-        decompositions) are drawn from open-source Modal H100 and TRL
-        runs. Tinker-only results are reported descriptively.
-  \item We commit to re-running any Tinker-only experiment on an open
-        backend if an equivalent open-source service becomes available,
-        and to issuing a revised version of this paper if the Tinker
-        99.9\% figure is ever shown to be due to an undisclosed
-        implementation choice rather than the algorithm.
-\end{enumerate}
+Section~\ref{sec:reproducibility} distinguishes local source, observed
+configuration, undisclosed internals, and evidence access. A dagger denotes only
+interrupted execution; backend provenance is stated explicitly. Exact checkpoint
+revisions and public access must be verified per artifact; no blanket release
+or future rerun commitment is made here.
 
 \paragraph{Key rotation and credential hygiene.}
 Our Tinker API key (prefix \texttt{tml-...}) is held in a repository
@@ -375,7 +350,8 @@ enumerated in Section~\ref{sec:limitations}, we flag the following
 methodological limits.
 
 \paragraph{Short training horizons.}
-All Tinker GRPO runs were capped at 30--50 gradient steps. This is a
+Most reviewed Tinker runs have short, often 30-step horizons; this is not
+a universal limit for all later scripts or campaigns. This is a
 deliberate cost-control choice and means our Tinker numbers are
 \emph{early-training snapshots}. We cannot rule out that longer training
 would change the qualitative picture. The later 82\%$\to$83.3\% comparison
@@ -386,8 +362,8 @@ evidence; it is not a held-out gain whose size can be extrapolated.
 Each Tinker configuration was run once, not 3--5 times as best practice
 prescribes \cite{henderson2018deep}. Tinker results therefore lack
 variance estimates and do not support significance testing; we report
-them descriptively. Only the 5-seed TRL baseline and the 5-seed held-out
-GSM8K evaluation carry proper confidence intervals.
+them descriptively. Seed-level inference requires the actual independent seed observations and
+an identified estimand; reconstructed seed vectors are not eligible.
 
 \paragraph{Train-set reward as primary Tinker metric.}
 Tinker runs primarily report reward on training prompts. Only the GSM8K
@@ -397,7 +373,8 @@ we cannot distinguish memorisation from generalisation for those
 settings.
 
 \paragraph{LoRA only; no full fine-tuning.}
-All experiments use LoRA \cite{hu2022lora} with ranks 8--64. We have
+The reviewed LLM fine-tuning runs use LoRA \cite{hu2022lora}, with settings
+varying by cohort; the Wave~6 rank sweep also includes rank 4. We have
 \emph{not} tested whether full fine-tuning would re-order the
 library/algorithm comparisons. The LoRA constraint is practical (cost) but
 it means our claims about PPO vs.\ GRPO and TRL vs.\ Tinker are
@@ -430,16 +407,14 @@ Observed differences in reward dynamics are not purely algorithmic.
 \paragraph{Carbon estimates are approximate.}
 As discussed in Section~\ref{sec:carbon}, Tinker GPU-hour and TDP are
 inferred, not measured. Grid intensity is region-average, not marginal.
-Numbers in Table~\ref{tab:carbon2} should be treated as
-order-of-magnitude.
+Numbers in Table~\ref{tab:carbon2} are conditional scenarios with
+unreconciled cohorts, not measured emissions or upper bounds.
 
 \paragraph{Exploratory, not confirmatory.}
 This is an exploratory case study, not a pre-registered confirmatory
-experiment. We did not pre-register primary hypotheses. All $p$-values are
-un-corrected for the number of comparisons actually made across the
-paper; the Bonferroni-surviving comparisons in
-Section~\ref{sec:results} are so flagged, but most of our secondary
-analyses are descriptive.
+experiment. We did not pre-register primary hypotheses. The conflicting historical correction families and step-based significance
+decisions are withdrawn (Section~\ref{sec:statistical-policy}); exploratory
+coefficients do not establish calibrated inference.
 
 \paragraph{Geographic and demographic limits.}
 All authors are based at a single institution in Bengaluru, India. Our

@@ -54,7 +54,7 @@ from _p8_common import (  # noqa: E402
     auc_p8 as auc,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 
 SEED = 20260705
@@ -96,7 +96,7 @@ def apply_gradient_band(p_cheap, p_llm, g_thr, k_top):
 def eval_rule(p_cheap, p_llm, y, k_top):
     comp, n_llm = apply_gradient_band(p_cheap, p_llm, G_THR, k_top)
     recall_K, n_caught_K = pr_at_K(comp, y, K_PCT)
-    cost_per = (n_llm * COST_LLM + (len(y) - n_llm) * COST_XGB) / len(y)
+    cost_per = (n_llm * COST_LLM + len(y) * COST_XGB) / len(y)
     return {
         "auc": auc(comp, y), "recall_at_K2": recall_K,
         "n_caught_at_K2": n_caught_K, "n_llm_calls": n_llm,
@@ -104,20 +104,26 @@ def eval_rule(p_cheap, p_llm, y, k_top):
     }
 
 
-def boot_ci_paired(baseline_arr, perturb_arr, n_pos_total, B, seed):
-    """Paired-row bootstrap on delta = perturb - baseline.
-    Returns (mean, lo, hi, p_zero_excl) of the delta."""
+def boot_ci_paired(baseline_cheap, baseline_full, perturb_cheap, perturb_full, labels, B, seed):
+    """Paired new-batch routing/recall uncertainty, perturbation minus baseline."""
     rng = np.random.default_rng(seed)
-    n = len(baseline_arr)
-    base_b = np.zeros(B)
-    for b in range(B):
-        idx = rng.integers(0, n, n)
-        base_b[b] = perturb_arr[idx].sum() - baseline_arr[idx].sum()
-    base_b /= max(1, n_pos_total)
-    lo, hi = np.percentile(base_b, [2.5, 97.5])
-    p_lo = float((base_b <= 0.0).mean())
-    p_hi = float((base_b >= 0.0).mean())
-    return float(base_b.mean()), float(lo), float(hi), max(p_lo, p_hi)
+    n = len(labels)
+    def delta(idx):
+        y = labels[idx]
+        if y.sum() == 0:
+            return None
+        k = max(1, int(round(len(idx) * K_PCT / 100)))
+        base, _ = apply_gradient_band(baseline_cheap[idx], baseline_full[idx], G_THR, k)
+        pert, _ = apply_gradient_band(perturb_cheap[idx], perturb_full[idx], G_THR, k)
+        return float((y[np.argsort(-pert, kind="stable")[:k]].sum() - y[np.argsort(-base, kind="stable")[:k]].sum()) / y.sum())
+    point = delta(np.arange(n))
+    draws = [delta(rng.integers(0, n, n)) for _ in range(B)]
+    draws = [v for v in draws if v is not None]
+    if point is None or not draws:
+        return float("nan"), float("nan"), float("nan"), False
+    lo, hi = np.quantile(draws, [.025, .975])
+    return point, float(lo), float(hi), bool(lo > 0 or hi < 0)
+
 
 
 def write_tsv(name, rows, cols):
@@ -177,8 +183,8 @@ def main():
             Xte_p = Xte.copy()
             noise = rng.normal(0.0, level * sigma, n_test)
             Xte_p[:, j] += noise
-            p_te_20_p = fit_xgb(Xtr, ytr, Xte_p, RAW20, SEED + 1)
-            p_te_24_p = fit_xgb(Xtr, ytr, Xte_p, ALL24, SEED + 1)
+            p_te_20_p = fit_xgb(Xtr, ytr, Xte_p, RAW20, SEED)
+            p_te_24_p = fit_xgb(Xtr, ytr, Xte_p, ALL24, SEED)
             m_p = eval_rule(p_te_20_p, p_te_24_p, yte, k_top)
             d_recall = m_p["recall_at_K2"] - base_metrics["recall_at_K2"]
             d_caught = m_p["n_caught_at_K2"] - base_metrics["n_caught_at_K2"]
@@ -192,13 +198,13 @@ def main():
             comp_p = np.where(invoke_p, p_te_24_p, p_te_20_p)
             top_p_idx = np.argsort(-comp_p)[:k_top]
             caught_p = np.zeros(n_test, dtype=int); caught_p[top_p_idx] = 1
-            mean_d, lo, hi, p_excl = boot_ci_paired(base_caught, caught_p, n_pos, N_BOOT, SEED + 7 + j)
+            mean_d, lo, hi, p_excl = boot_ci_paired(p_te_20, p_te_24, p_te_20_p, p_te_24_p, yte, N_BOOT, SEED + 7 + j)
             rows.append({
                 "perturb_type": "sigma_noise", "feature": f, "level": f"{level:.3f}",
                 "delta_recall_K2": d_recall, "delta_caught": d_caught, "delta_n_llm": d_llm,
                 "delta_auc": m_p["auc"] - base_metrics["auc"],
                 "ci_lo": lo, "ci_hi": hi, "p_zero_excl": p_excl,
-                "verdict": "DEGRADES" if (lo < 0 < hi) else ("WORSE" if hi < 0 else "BETTER_OR_SAME"),
+                "verdict": "INCONCLUSIVE" if (lo <= 0 <= hi) else ("WORSE" if hi < 0 else "BETTER_OR_SAME"),
                 "sigma": sigma,
             })
             summary["results"].append({
@@ -214,8 +220,8 @@ def main():
         sigma = feat_std[f]
         Xte_p = Xte.copy()
         Xte_p[:, j] += SHIFT_LEVEL * sigma
-        p_te_20_p = fit_xgb(Xtr, ytr, Xte_p, RAW20, SEED + 2)
-        p_te_24_p = fit_xgb(Xtr, ytr, Xte_p, ALL24, SEED + 2)
+        p_te_20_p = fit_xgb(Xtr, ytr, Xte_p, RAW20, SEED)
+        p_te_24_p = fit_xgb(Xtr, ytr, Xte_p, ALL24, SEED)
         m_p = eval_rule(p_te_20_p, p_te_24_p, yte, k_top)
         d_recall = m_p["recall_at_K2"] - base_metrics["recall_at_K2"]
         d_caught = m_p["n_caught_at_K2"] - base_metrics["n_caught_at_K2"]
@@ -228,13 +234,13 @@ def main():
         comp_p = np.where(invoke_p, p_te_24_p, p_te_20_p)
         top_p_idx = np.argsort(-comp_p)[:k_top]
         caught_p = np.zeros(n_test, dtype=int); caught_p[top_p_idx] = 1
-        mean_d, lo, hi, p_excl = boot_ci_paired(base_caught, caught_p, n_pos, N_BOOT, SEED + 11 + j)
+        mean_d, lo, hi, p_excl = boot_ci_paired(p_te_20, p_te_24, p_te_20_p, p_te_24_p, yte, N_BOOT, SEED + 11 + j)
         rows.append({
             "perturb_type": "mean_shift", "feature": f, "level": f"{SHIFT_LEVEL:.3f}",
             "delta_recall_K2": d_recall, "delta_caught": d_caught, "delta_n_llm": d_llm,
             "delta_auc": m_p["auc"] - base_metrics["auc"],
             "ci_lo": lo, "ci_hi": hi, "p_zero_excl": p_excl,
-            "verdict": "DEGRADES" if (lo < 0 < hi) else ("WORSE" if hi < 0 else "BETTER_OR_SAME"),
+            "verdict": "INCONCLUSIVE" if (lo <= 0 <= hi) else ("WORSE" if hi < 0 else "BETTER_OR_SAME"),
             "sigma": sigma,
         })
         summary["results"].append({

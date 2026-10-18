@@ -57,8 +57,10 @@ class GroupStats:
 class StepDiagnostic:
     step: int
     groups: list[GroupStats] = field(default_factory=list)
-    policy_entropy: float = 0.0
-    advantage_variance: float = 0.0
+    policy_entropy: float | None = None
+    advantage_variance: float | None = None
+
+    behavior_policy_version: str | None = None
 
     @property
     def mean_reward(self) -> float:
@@ -110,6 +112,7 @@ class StepDiagnostic:
             "mean_reward": self.mean_reward,
             "policy_entropy": self.policy_entropy,
             "advantage_variance": self.advantage_variance,
+            "behavior_policy_version": self.behavior_policy_version,
         }
 
 
@@ -119,7 +122,7 @@ class SaturationTracker:
     def __init__(self) -> None:
         self.history: list[StepDiagnostic] = []
 
-    def record_step(self, step: int, group_rewards: list[list[float]], policy_entropy: float = 0.0, advantage_variance: float = 0.0) -> StepDiagnostic:
+    def record_step(self, step: int, group_rewards: list[list[float]], policy_entropy: float | None = None, advantage_variance: float | None = None) -> StepDiagnostic:
         groups = [GroupStats(rewards=r) for r in group_rewards]
         diag = StepDiagnostic(step=step, groups=groups, policy_entropy=policy_entropy, advantage_variance=advantage_variance)
         self.history.append(diag)

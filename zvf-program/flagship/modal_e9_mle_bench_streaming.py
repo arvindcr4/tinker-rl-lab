@@ -131,6 +131,19 @@ merged_vllm_signing_secret = modal.Secret.from_name("pavlov-e9-allocation-attest
 merged_vllm_cache = modal.Volume.from_name("pavlov-e1-qwen36-hf-cache", create_if_missing=False)
 
 
+PAID_EXECUTION_POLICY = "blocked-until-enforced-reservation-settlement-v2"
+
+
+def _require_enforced_budget() -> None:
+    """No launch until a provider-bound reservation/settlement contract exists.
+
+    Advisory projections and caller-declared authorization are not spending
+    enforcement. This is intentionally not configurable through a bypass flag.
+    Offline receipt construction and historical inspection remain available.
+    """
+    raise RuntimeError("paid execution blocked: enforced reservation/settlement budget contract unavailable")
+
+
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
@@ -314,6 +327,7 @@ PUBLIC FILE PREVIEW
 def _grade(
     data_dir: Path, competition_id: str, submission: Path, output_path: Path
 ) -> dict[str, Any]:
+    submission_before = submission.read_bytes() if submission.is_file() else None
     script = (
         "import json,sys; from pathlib import Path; "
         "from mlebench.registry import registry; from mlebench.grade import grade_csv; "
@@ -337,6 +351,14 @@ def _grade(
         ],
         timeout=600,
     )
+    submission_after = submission.read_bytes() if submission.is_file() else None
+    if submission_after != submission_before:
+        raise RuntimeError("native grader submission bytes changed during grading")
+    input_binding = {"competition_id": competition_id,
+                     "submission_sha256": hashlib.sha256(submission_before).hexdigest() if submission_before is not None else None,
+                     "grader_revision": MLE_BENCH_COMMIT,
+                     "grader_script_sha256": hashlib.sha256(script.encode()).hexdigest()}
+    output_path.with_suffix(".input.json").write_text(json.dumps(input_binding, sort_keys=True))
     result = json.loads(output_path.read_text(encoding="utf-8"))
     return result
 
@@ -383,6 +405,7 @@ def regrade_saved_submission(
 ) -> dict[str, Any]:
     """Re-run only the native grader for an immutable saved submission."""
 
+    _require_enforced_budget()
     sys.path.insert(0, "/root")
     from e9_mle_bench_streaming import (
         build_run_receipt,
@@ -439,6 +462,8 @@ def regrade_saved_submission(
             ],
             timeout=3600,
         )
+        if submission_path.read_bytes() != submission_bytes:
+            raise RuntimeError("saved submission changed before native regrade")
         native_grade = _grade(
             data_dir,
             competition_id,
@@ -476,6 +501,7 @@ def regrade_saved_submission(
                 },
                 "prepare_log_tail": (prepare.stdout + prepare.stderr)[-3000:],
                 "regrade_provenance": provenance,
+                "grader_input": json.loads(grade_path.with_suffix(".input.json").read_text()),
             }
         )
         unhashed = dict(receipt)
@@ -954,10 +980,13 @@ def run_one(
     merged_vllm_launch_nonce: str | None = None,
     merged_vllm_v3_contract: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    _require_enforced_budget()
     sys.path.insert(0, "/root")
     from e9_mle_bench_streaming import (
         LaunchGateError,
         build_run_receipt,
+        authorize_program_repair,
+        bind_effective_execution,
         extract_python_code,
         identify_known_deterministic_repair,
         preapply_replay_runtime_repair,
@@ -1137,17 +1166,28 @@ def run_one(
                     (solution_code + "\n").encode("utf-8")
                 ).hexdigest()
             sample_reused = False
+            original_solution_code = solution_code
+            repair_records = []
         else:
             solution_code = extract_python_code(solution_code_override)
             sample_reused = True
+            original_solution_code = solution_code
+            repair_records = []
             preapplied_solution_code = preapply_replay_runtime_repair(
                 solution_code, replay_provenance or {}
             )
             if preapplied_solution_code != solution_code:
+                repair_records.append(authorize_program_repair(
+                    competition_id=competition_id, original=(solution_code + "\n").encode(),
+                    effective=(preapplied_solution_code + "\n").encode(),
+                    error=str((replay_provenance or {}).get("native_grade", {}).get("agent_error_tail", ""))))
                 solution_code = preapplied_solution_code
                 deterministic_repair = identify_known_deterministic_repair(solution_code)
             aligned_solution_code = repair_known_submission_alignment(solution_code)
             if aligned_solution_code != solution_code:
+                repair_records.append(authorize_program_repair(
+                    competition_id=competition_id, original=(solution_code + "\n").encode(),
+                    effective=(aligned_solution_code + "\n").encode(), error="submission_alignment"))
                 solution_code = aligned_solution_code
                 if "for i in range(row['seq_length']):" in solution_code:
                     deterministic_repair = (
@@ -1171,6 +1211,10 @@ def run_one(
                     )
             if deterministic_repair is None:
                 deterministic_repair = identify_known_deterministic_repair(solution_code)
+        original_solution_path = artifacts_dir / "original_solution.py"
+        original_solution_path.write_bytes((original_solution_code + "\n").encode())
+        if not repair_records:
+            deterministic_repair = None
         solution_path = code_dir / "solution.py"
         solution_path.write_text(solution_code + "\n", encoding="utf-8")
 
@@ -1218,7 +1262,12 @@ def run_one(
             agent = _run(agent_command, timeout=agent_timeout_seconds, env=agent_env)
         except RuntimeError as exc:
             try:
-                solution_code = repair_known_runtime_error(solution_code, str(exc))
+                proposed = repair_known_runtime_error(solution_code, str(exc))
+                record = authorize_program_repair(
+                    competition_id=competition_id, original=(solution_code + "\n").encode(),
+                    effective=(proposed + "\n").encode(), error=str(exc))
+                repair_records.append(record)
+                solution_code = proposed
             except LaunchGateError:
                 agent = None
                 agent_failure = str(exc)
@@ -1296,6 +1345,12 @@ def run_one(
         submission = submission_dir / "submission.csv"
         grade_path = artifacts_dir / "native_grade.json"
         if agent_failure is None:
+            bind_effective_execution(
+                competition_id=competition_id, original=original_solution_path.read_bytes(),
+                effective=solution_path.read_bytes(),
+                submission=submission.read_bytes() if submission.is_file() else None,
+                native_grade=b'{"score": null, "valid_submission": false}',
+                grader_input=None, repairs=repair_records)
             native_grade = _grade(
                 data_dir,
                 competition_id,
@@ -1313,8 +1368,16 @@ def run_one(
                 "agent_error_tail": agent_failure[-3000:],
             }
             grade_path.write_text(json.dumps(native_grade, sort_keys=True), encoding="utf-8")
+        execution_binding = bind_effective_execution(
+            competition_id=competition_id, original=original_solution_path.read_bytes(),
+            effective=solution_path.read_bytes(),
+            submission=submission.read_bytes() if submission.is_file() else None,
+            native_grade=grade_path.read_bytes(),
+            grader_input=json.loads(grade_path.with_suffix(".input.json").read_text())
+                if agent_failure is None else None, repairs=repair_records)
         elapsed_seconds = time.monotonic() - started
         artifacts = {
+            "original_program_sha256": _sha256(original_solution_path),
             "solution_sha256": _sha256(solution_path),
             "submission_sha256": (_sha256(submission) if submission.is_file() else None),
             "native_grade_sha256": _sha256(artifacts_dir / "native_grade.json"),
@@ -1327,6 +1390,7 @@ def run_one(
             "deterministic_repair": deterministic_repair,
             "elapsed_seconds": round(elapsed_seconds, 3),
             "artifacts": artifacts,
+            "execution_binding": execution_binding,
             "prepare_log_tail": (prepare.stdout + prepare.stderr)[-3000:],
             "agent_log_tail": (
                 (agent.stdout + agent.stderr)[-3000:]
@@ -1342,6 +1406,7 @@ def run_one(
             native_grade = {**native_grade, "competition_id": competition_id}
             grade_path.write_text(json.dumps(native_grade, sort_keys=True), encoding="utf-8")
             artifacts["native_grade_sha256"] = _sha256(grade_path)
+            execution_binding["native_grade_sha256"] = artifacts["native_grade_sha256"]
             receipt = build_task_receipt_v3(
                 competition_id=competition_id,
                 native_grade=native_grade,
@@ -1429,8 +1494,9 @@ def run_one(
         return {
             "receipt": receipt,
             "solution_code": solution_code,
+            "original_solution_code": original_solution_code,
             "submission_csv": (
-                submission.read_text(encoding="utf-8", errors="replace")
+                submission.read_bytes().decode("utf-8")
                 if submission.is_file()
                 else None
             ),
@@ -1451,6 +1517,7 @@ def probe_vllm_pilot(
 ) -> None:
     """Print the no-download rule-access gate for the prospective pilot."""
 
+    _require_enforced_budget()
     result = probe_kaggle_rules.remote(competition_id)
     print(json.dumps(result, indent=2, sort_keys=True))
     if result.get("accepted") is not True:
@@ -1465,6 +1532,7 @@ def main(
     solution_path: str = "",
     submission_path: str = "",
 ) -> None:
+    _require_enforced_budget()
     from e9_mle_bench_streaming import (
         extract_python_code,
         validate_replay_provenance,
@@ -1537,7 +1605,8 @@ def main(
         json.dumps(result["receipt"], indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    (destination / "solution.py").write_text(result["solution_code"] + "\n", encoding="utf-8")
+    (destination / "solution.py").write_bytes((result["solution_code"] + "\n").encode())
+    (destination / "original_solution.py").write_bytes((result["original_solution_code"] + "\n").encode())
     if result["submission_csv"] is not None:
         (destination / "submission.csv").write_text(result["submission_csv"], encoding="utf-8")
     (destination / "native_grade.json").write_text(
@@ -1608,6 +1677,8 @@ def _materialize_run_result(result: dict[str, Any], output_dir: str) -> Path:
             "utf-8"
         ),
     }
+    if "original_solution_code" in result:
+        expected["original_solution.py"] = (result["original_solution_code"] + "\n").encode("utf-8")
     if result["submission_csv"] is not None:
         expected["submission.csv"] = result["submission_csv"].encode("utf-8")
     elif (destination / "submission.csv").exists():
@@ -1689,6 +1760,22 @@ def _validate_returned_replay_result(
     )
     if artifacts.get("submission_sha256") != submission_sha256:
         raise ValueError("remote submission payload does not match receipt")
+    from e9_mle_bench_streaming import bind_effective_execution
+    binding = receipt.get("execution_binding")
+    original = result.get("original_solution_code")
+    if not isinstance(binding, dict) or not isinstance(original, str):
+        raise ValueError("remote effective-execution binding or original program is absent")
+    if hashlib.sha256((original + "\n").encode()).hexdigest() != launch_receipt["source_solution_sha256"]:
+        raise ValueError("remote original program does not match launch source")
+    expected_binding = bind_effective_execution(
+        competition_id=competition_id, original=(original + "\n").encode(),
+        effective=(solution_code + "\n").encode(),
+        submission=submission_csv.encode() if isinstance(submission_csv, str) else None,
+        native_grade=native_grade_bytes, grader_input=binding.get("grader_input"),
+        repairs=binding.get("repairs", []))
+    if binding != expected_binding:
+        raise ValueError("remote effective-execution binding mismatch")
+
 
 
 def _returned_control_metadata(
@@ -1780,6 +1867,7 @@ def spawn_replay(
 ) -> None:
     """Spawn a replay and persist its FunctionCall ID before the client exits."""
 
+    _require_enforced_budget()
     (
         solution_override,
         replay_provenance,
@@ -1898,14 +1986,14 @@ def collect_replay(
         raise ValueError("spawn receipt function_call_id is invalid")
     if launch_receipt.get("status") == "REMOTE_RESULT_MATERIALIZED":
         destination = Path(str(launch_receipt["materialized_output_dir"]))
-        solution_code = (destination / "solution.py").read_text(encoding="utf-8")
+        solution_code = (destination / "solution.py").read_bytes().decode("utf-8")
         if solution_code.endswith("\n"):
             solution_code = solution_code[:-1]
         result = {
             "receipt": json.loads((destination / "receipt.json").read_text(encoding="utf-8")),
             "solution_code": solution_code,
             "submission_csv": (
-                (destination / "submission.csv").read_text(encoding="utf-8")
+                (destination / "submission.csv").read_bytes().decode("utf-8")
                 if (destination / "submission.csv").is_file()
                 else None
             ),
@@ -1913,6 +2001,10 @@ def collect_replay(
                 (destination / "native_grade.json").read_text(encoding="utf-8")
             ),
         }
+        original_path = destination / "original_solution.py"
+        if original_path.is_file():
+            original_text = original_path.read_bytes().decode("utf-8")
+            result["original_solution_code"] = original_text[:-1] if original_text.endswith("\n") else original_text
         _validate_returned_replay_result(result, launch_receipt)
         control_metadata = _returned_control_metadata(result, launch_receipt)
         collection_receipt = json.loads(

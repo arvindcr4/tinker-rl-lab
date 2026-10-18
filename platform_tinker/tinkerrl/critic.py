@@ -11,8 +11,11 @@ trajectory-level counterparts, kept for future token-level use.
 
 from __future__ import annotations
 
+from copy import deepcopy
+import math
 import statistics
-from typing import List, Sequence, Tuple
+from collections.abc import Mapping
+from typing import Any, List, Sequence, Tuple
 
 import torch
 
@@ -71,6 +74,92 @@ class PromptValueCritic(torch.nn.Module):
         return self.mlp(torch.cat([pooled, length_feat], dim=1)).squeeze(1)
 
 
+def require_finite_critic_state(*states: Any) -> None:
+    """Reject nonfinite tensors/scalars without modifying a nested state tree."""
+    pending = list(states)
+    visited = set()
+    while pending:
+        value = pending.pop()
+        if isinstance(value, torch.Tensor):
+            if not torch.isfinite(value).all():
+                raise ValueError("critic state must be finite")
+        elif isinstance(value, float):
+            if not math.isfinite(value):
+                raise ValueError("critic state must be finite")
+        elif isinstance(value, (Mapping, list, tuple)) and id(value) not in visited:
+            visited.add(id(value))
+            pending.extend(value.values() if isinstance(value, Mapping) else value)
+
+
+def restore_critic_state(
+    critic: PromptValueCritic, optimizer: torch.optim.Adam, payload: Mapping[str, Any]
+) -> None:
+    """Restore only state compatible with a fresh configured critic/Adam pair.
+
+    Hash verification is the caller's responsibility. These checks bind shapes,
+    parameter order and optimizer options, including values after dtype casting.
+    Rejection can modify this local pair; no external work should precede it.
+    """
+    error = "critic restore state does not match the configured model and Adam contract"
+    expected_groups = deepcopy(optimizer.state_dict()["param_groups"])
+    try:
+        saved_groups = payload["optimizer"]["param_groups"]
+        if not isinstance(saved_groups, list) or len(saved_groups) != len(expected_groups):
+            raise ValueError(error)
+        for saved, expected in zip(saved_groups, expected_groups, strict=True):
+            ids = saved["params"]
+            if (
+                not isinstance(ids, list)
+                or any(type(value) is not int for value in ids)
+                or ids != expected["params"]
+            ):
+                raise ValueError(error)
+        # The configured critic is real-valued. PyTorch otherwise silently
+        # discards imaginary components when casting complex checkpoint tensors.
+        tensors = list(payload["model"].values())
+        tensors.extend(
+            value for state in payload["optimizer"]["state"].values() for value in state.values()
+        )
+        if any(isinstance(value, torch.Tensor) and value.is_complex() for value in tensors):
+            raise ValueError(error)
+        critic.load_state_dict(payload["model"])
+        optimizer.load_state_dict(payload["optimizer"])
+        # Loading can cast finite float64 checkpoint values to float32 infinity.
+        require_finite_critic_state(critic.state_dict(), optimizer.state_dict())
+        if optimizer.state_dict()["param_groups"] != expected_groups:
+            raise ValueError(error)
+        parameters = [
+            parameter for group in optimizer.param_groups for parameter in group["params"]
+        ]
+        if not set(optimizer.state).issubset(set(parameters)):
+            raise ValueError(error)
+        for parameter in parameters:
+            state = optimizer.state.get(parameter, {})
+            if not state:
+                continue  # Adam legitimately has no moments before its first update.
+            if not isinstance(state, dict) or set(state) != {"step", "exp_avg", "exp_avg_sq"}:
+                raise ValueError(error)
+            step = state["step"]
+            if not isinstance(step, torch.Tensor) or step.numel() != 1 or step.dtype == torch.bool:
+                raise ValueError(error)
+            count = float(step.item())
+            if count < 0 or not count.is_integer():
+                raise ValueError(error)
+            for key in ("exp_avg", "exp_avg_sq"):
+                moment = state[key]
+                if (
+                    not isinstance(moment, torch.Tensor)
+                    or moment.shape != parameter.shape
+                    or moment.dtype != parameter.dtype
+                    or moment.device != parameter.device
+                ):
+                    raise ValueError(error)
+            if (state["exp_avg_sq"] < 0).any():
+                raise ValueError(error)
+    except (KeyError, TypeError, ValueError, RuntimeError, AttributeError) as exc:
+        raise ValueError(error) from exc
+
+
 def train_critic_step(
     critic: PromptValueCritic,
     optimizer: torch.optim.Optimizer,
@@ -81,7 +170,10 @@ def train_critic_step(
     """Fit the critic toward Monte-Carlo returns; return mean half-MSE loss.
 
     Empty batches are a no-op returning ``0.0`` (degenerate steps still
-    reach here when every group is filtered).
+    reach here when every group is filtered). Nonfinite targets, loss or
+    gradients raise before that critic optimizer update; earlier iterations
+    are not rolled back. Model/optimizer state is checked before training and
+    after each update; post-update detection raises without rollback.
     """
     if not batch_ids or steps <= 0:
         return 0.0
@@ -90,14 +182,26 @@ def train_critic_step(
             "critic targets must pair 1:1 with prompts, "
             f"got {len(targets)} targets for {len(batch_ids)} prompts"
         )
+    require_finite_critic_state(critic.state_dict(), optimizer.state_dict())
     targets_t = torch.tensor(list(targets), dtype=torch.float32)
+    if not torch.isfinite(targets_t).all():
+        raise ValueError("critic targets must be finite and representable as float32")
     total = 0.0
     for _ in range(steps):
         optimizer.zero_grad()
         pred = critic(batch_ids)
         loss = value_loss_mse(pred, targets_t.to(pred.device))
+        if not torch.isfinite(loss):
+            raise ValueError("critic loss must be finite; refusing optimizer update")
         loss.backward()
+        if any(
+            parameter.grad is not None and not torch.isfinite(parameter.grad).all()
+            for parameter in critic.parameters()
+        ):
+            optimizer.zero_grad(set_to_none=True)
+            raise ValueError("critic gradients must be finite; refusing optimizer update")
         optimizer.step()
+        require_finite_critic_state(critic.state_dict(), optimizer.state_dict())
         total += loss.item()
     return total / steps
 
@@ -121,7 +225,7 @@ def explained_variance(predicted: Sequence[float], targets: Sequence[float]) -> 
     var_t = statistics.pvariance(targets)
     if var_t <= 1e-12:
         return 0.0
-    residuals = [t - p for t, p in zip(targets, predicted)]
+    residuals = [t - p for t, p in zip(targets, predicted, strict=True)]
     var_r = statistics.pvariance(residuals)
     return 1.0 - var_r / var_t
 
@@ -152,7 +256,7 @@ def compute_gae_advantages(
         delta = rewards[step] + gamma * values[step + 1] * mask - values[step]
         last_gae = delta + gamma * lam * mask * last_gae
         advantages[step] = last_gae
-    returns = [a + v for a, v in zip(advantages, values[:t])]
+    returns = [a + v for a, v in zip(advantages, values[:t], strict=True)]
     return advantages, returns
 
 

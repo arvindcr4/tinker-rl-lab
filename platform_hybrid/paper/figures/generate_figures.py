@@ -160,7 +160,7 @@ ax.set_xlim(0.5)
 
 # Legend – deduplicate
 handles, labels = ax.get_legend_handles_labels()
-by_label = dict(zip(labels, handles))
+by_label = dict(zip(labels, handles, strict=True))
 ax.legend(by_label.values(), by_label.keys(), loc="upper left", framealpha=0.9, ncol=2)
 
 # Add dashed/solid legend annotation
@@ -224,7 +224,7 @@ bar_w = 0.35
 
 fig, ax = plt.subplots(figsize=(12, 5))
 
-for i, (pk, l10, part, algo) in enumerate(zip(peaks, last10s, partials, algos)):
+for i, (pk, l10, part, algo) in enumerate(zip(peaks, last10s, partials, algos, strict=True)):
     color_peak = "#1a5276" if algo == "GRPO" else "#78281f"
     color_last10 = "#5dade2" if algo == "GRPO" else "#e74c3c"
     hatch = "//" if part else ""

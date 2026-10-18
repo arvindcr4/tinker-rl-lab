@@ -12,10 +12,44 @@ set -euo pipefail
 : "${SERVICE_ACCOUNT:=webarena-runner@${GCP_PROJECT}.iam.gserviceaccount.com}"
 : "${BUILDER_MACHINE_TYPE:=n2-standard-8}"
 : "${WEBARENA_TAR_GCS_BUCKET:=}"
-BUILDER_NAME="webarena-builder-$$"
-REPO_DIR="$(cd "$(dirname "$0")"/../.. && pwd)"
+# Configuration crosses a generated-shell boundary; accept bucket identifiers only.
+[[ -z "$WEBARENA_TAR_GCS_BUCKET" || "$WEBARENA_TAR_GCS_BUCKET" =~ ^gs://[a-z0-9][a-z0-9._-]{1,220}[a-z0-9](/[A-Za-z0-9._/-]+)?$ ]] || { echo "Invalid GCS bucket" >&2; exit 2; }
+[[ "$BUILDER_DISK_GB" =~ ^[1-9][0-9]{0,3}$ ]] && (( BUILDER_DISK_GB <= 1000 )) || { echo "Builder disk exceeds safety limit" >&2; exit 2; }
+[[ "$BUILDER_MACHINE_TYPE" = "n2-standard-8" ]] || { echo "Unreviewed builder machine type" >&2; exit 2; }
+command -v timeout >/dev/null || { echo "GNU timeout is required" >&2; exit 2; }
+gcloud() { timeout --kill-after=30s 7200s gcloud "$@"; }
+BUILDER_NAME="webarena-builder-$(python3 -c 'import uuid; print(uuid.uuid4().hex[:20])')"
+BUILDER_ID=""
+SETUP_FILE=$(mktemp)
+cleanup() {
+  status=$?
+  trap - EXIT INT TERM HUP
+  rm -f "$SETUP_FILE"
+  if [ -n "$BUILDER_ID" ]; then
+    current=$(gcloud compute instances describe "$BUILDER_NAME" --zone="$GCP_ZONE" --format='value(id)' 2>/dev/null || true)
+    if [ "$current" = "$BUILDER_ID" ]; then
+      gcloud compute instances delete -q "$BUILDER_NAME" --zone="$GCP_ZONE" || status=1
+    fi
+  fi
+  exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 130' INT TERM HUP
+REPO_DIR="$(cd "$(dirname "$0")"/../../.. && pwd)"
 
 echo "==> Project: $GCP_PROJECT  Zone: $GCP_ZONE  Disk: ${BUILDER_DISK_GB}GB"
+test -d "$REPO_DIR/platform_gcp/infra/gcp/webarena-compose" || { echo "Missing compose inputs" >&2; exit 1; }
+test -f "$REPO_DIR/platform_gcp/infra/gcp/webarena-compose/load_images.sh" || exit 1
+# Validate all local immutable inputs before provisioning a builder.
+: "${WEBARENA_SHA256_MANIFEST:?Provide reviewed archive hashes}"
+: "${WEBARENA_SHA256_ANCHOR:?Provide the independent manifest digest}"
+: "${KIWIX_IMAGE:?Provide a digest-pinned Kiwix image}"
+: "${TINKER_REPO_REVISION:?Provide a full reviewed Tinker commit}"
+: "${WEBARENA_REPO_REVISION:?Provide a full reviewed WebArena commit}"
+[[ "$TINKER_REPO_REVISION" =~ ^[a-f0-9]{40}$ && "$WEBARENA_REPO_REVISION" =~ ^[a-f0-9]{40}$ ]] || exit 2
+[[ "$WEBARENA_SHA256_ANCHOR" =~ ^[a-f0-9]{64}$ ]] || exit 2
+[[ "$KIWIX_IMAGE" =~ ^ghcr.io/kiwix/kiwix-serve@sha256:[a-f0-9]{64}$ ]] || exit 2
+printf '%s  %s\n' "$WEBARENA_SHA256_ANCHOR" "$WEBARENA_SHA256_MANIFEST" | sha256sum -c -
 gcloud config set project "$GCP_PROJECT"
 
 echo "==> Creating builder VM..."
@@ -27,9 +61,12 @@ gcloud compute instances create "$BUILDER_NAME" \
   --boot-disk-size="${BUILDER_DISK_GB}GB" \
   --boot-disk-type=pd-ssd \
   --service-account="$SERVICE_ACCOUNT" \
-  --scopes=cloud-platform
+  --scopes=cloud-platform \
+  --max-run-duration=4h \
+  --instance-termination-action=DELETE \
+  --no-restart-on-failure
+BUILDER_ID=$(gcloud compute instances describe "$BUILDER_NAME" --zone="$GCP_ZONE" --format='value(id)')
 
-trap 'echo "==> Cleaning builder..."; gcloud compute instances delete -q "$BUILDER_NAME" --zone="$GCP_ZONE" || true' EXIT
 
 echo "==> Waiting for SSH..."
 for i in {1..30}; do
@@ -45,7 +82,8 @@ gcloud compute scp --recurse \
   "$BUILDER_NAME:/tmp/webarena-compose" \
   --zone="$GCP_ZONE"
 
-cat > /tmp/webarena_setup.sh <<SETUP
+gcloud compute scp "$WEBARENA_SHA256_MANIFEST" "$BUILDER_NAME:/tmp/webarena-compose/image-sha256.txt" --zone="$GCP_ZONE"
+cat > "$SETUP_FILE" <<SETUP
 #!/usr/bin/env bash
 set -euo pipefail
 export WEBARENA_TAR_GCS_BUCKET="${WEBARENA_TAR_GCS_BUCKET}"
@@ -55,7 +93,7 @@ sudo apt-get install -y ca-certificates curl gnupg git python3-pip python3-venv 
   libgbm1 libasound2t64 libgtk-3-0
 
 # Docker
-curl -fsSL https://get.docker.com | sudo sh
+sudo apt-get install -y docker.io docker-compose-v2
 sudo usermod -aG docker "\$USER" || true
 
 # Python env
@@ -79,7 +117,8 @@ sudo /opt/tinker/bin/playwright install chromium
 
 # Clone tinker-rl-lab for startup script to use
 sudo rm -rf /opt/tinker-rl-lab
-sudo git clone --depth 1 https://github.com/arvindcr4/tinker-rl-lab /opt/tinker-rl-lab || true
+sudo git clone --no-checkout https://github.com/pes-llm-research/tinker-rl-lab /opt/tinker-rl-lab
+sudo git -C /opt/tinker-rl-lab checkout --detach "$TINKER_REPO_REVISION"
 
 # Stage WebArena compose dir
 sudo mkdir -p /opt/webarena-compose
@@ -89,17 +128,22 @@ sudo cp -r /tmp/webarena-compose/* /opt/webarena-compose/
 sudo rm -rf /opt/webarena-homepage
 sudo git clone --depth 1 --filter=blob:none --sparse \\
   https://github.com/web-arena-x/webarena /tmp/wa-src
+sudo git -C /tmp/wa-src fetch origin "$WEBARENA_REPO_REVISION"
+sudo git -C /tmp/wa-src checkout --detach "$WEBARENA_REPO_REVISION"
 (cd /tmp/wa-src && sudo git sparse-checkout set environment_docker/webarena-homepage)
 sudo mv /tmp/wa-src/environment_docker/webarena-homepage /opt/webarena-homepage
 sudo rm -rf /tmp/wa-src
 
 # Download + load WebArena docker images (~5 min from GCS, ~30 min from CMU)
-sudo WEBARENA_TAR_GCS_BUCKET="${WEBARENA_TAR_GCS_BUCKET}" bash /opt/webarena-compose/load_images.sh
+sudo WEBARENA_TAR_GCS_BUCKET="${WEBARENA_TAR_GCS_BUCKET}" \
+  WEBARENA_SHA256_MANIFEST=/opt/webarena-compose/image-sha256.txt \
+  WEBARENA_SHA256_ANCHOR="$WEBARENA_SHA256_ANCHOR" KIWIX_IMAGE="$KIWIX_IMAGE" \
+  bash /opt/webarena-compose/load_images.sh
 
 echo "==> setup complete"
 SETUP
 
-gcloud compute scp /tmp/webarena_setup.sh "$BUILDER_NAME:/tmp/webarena_setup.sh" --zone="$GCP_ZONE"
+gcloud compute scp "$SETUP_FILE" "$BUILDER_NAME:/tmp/webarena_setup.sh" --zone="$GCP_ZONE"
 gcloud compute ssh "$BUILDER_NAME" --zone="$GCP_ZONE" -- "bash /tmp/webarena_setup.sh"
 
 echo "==> Stopping builder for image snapshot..."

@@ -1,31 +1,10 @@
 #!/usr/bin/env python3
-"""P6 JOB B (iter 128): recompute the 8 POINT_ONLY `mean_zvf` CIs from raw
-zvf_iter130_risk_index.tsv per-seed data, close the iter-114 row 128
-prototyped entry to validated, and emit a paper-facing artifact.
-
-The 8 POINT_ONLY entries (per iter-114 audit) are:
-  delta_aero / delta_areal / delta_cppo / delta_es / delta_gift /
-  delta_grpo / delta_mcgrpo / delta_ngrpo / delta_scafgrpo
-each has a `mean_zvf` measured row at zvf130_5seed panel where
-ci_low == ci_high == delta (no per-seed SD was recorded).
-
-This script:
-  1. Loads `platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv` (53 rows,
-     per-method per-seed with mean_zvf and zvf_risk).
-  2. For each of the 9 methods with 5 seeds, computes the per-seed
-     mean_zvf, the per-method mean across seeds, and a paired bootstrap
-     95% CI (B=2000, seed=20260705) on the mean.
-  3. Re-derives the registry delta row `mean_zvf` for each method:
-       - point estimate = mean of per-seed mean_zvf
-       - ci_low, ci_hi = bootstrap 95% CI on the same
-       - ci_method = "bootstrap_paired_5seed" (was "point_no_perseed_sd")
-  4. Writes the recompute TSV + JSON summary and a registry patch plan.
-  5. Compares the recomputed mean to the registry's recorded delta and
-     reports a "drift" row per (delta_id, metric) cell.
-
-Stdlib only. <= 300 lines.
-"""
+"""Recompute review17-v2 mean_zvf effects from explicit, complete seed pairs.
+Uses numpy percentile bootstrap with its actual RNG seed and sample identities.
+Writes prospective versioned results only; missing controls fail closed."""
 from __future__ import annotations
+
+from review17_contract import load_seed_metric, bootstrap, paired_result, source_hash, VERSION
 
 import csv
 import json
@@ -36,7 +15,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scri
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
-RES.mkdir(parents=True, exist_ok=True)
+OUT = RES / "review17_v2"
 
 SEED = 20260705
 N_BOOT = 2000
@@ -53,40 +32,11 @@ METHOD_NAMES = {
 
 
 def load_risk_index():
-    """Return dict {method_name: [mean_zvf_per_seed ...]} for the 9 methods."""
-    out = {}
-    with (ROOT / "platform_hybrid/experiments" / "results" / "zvf_iter130_risk_index.tsv").open() as f:
-        rdr = csv.DictReader(f, delimiter="\t")
-        for row in rdr:
-            m = row["method"]
-            try:
-                v = float(row["mean_zvf"])
-            except (ValueError, KeyError):
-                continue
-            out.setdefault(m, []).append(v)
-    return out
+    return load_seed_metric(ROOT / "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv", "mean_zvf")
 
 
 def boot_ci(values, B, seed):
-    rng_seed = seed
-    n = len(values)
-    if n == 0:
-        return 0.0, 0.0, 0.0
-    means = []
-    # LCG for deterministic LCG bootstrap (matches iter-111 framing)
-    state = [rng_seed & 0xFFFFFFFF]
-    def lcg():
-        state[0] = (state[0] * 1103515245 + 12345) & 0x7FFFFFFF
-        return state[0]
-    for _ in range(B):
-        s = 0.0
-        for _ in range(n):
-            s += values[lcg() % n]
-        means.append(s / n)
-    means.sort()
-    lo = means[int(0.025 * B)]
-    hi = means[int(0.975 * B)]
-    return sum(values) / n, lo, hi
+    return bootstrap(values, B, seed)
 
 
 def load_registry_delta(delta_id):
@@ -104,10 +54,11 @@ def write_tsv(name, rows, cols):
     lines = ["\t".join(cols)]
     for r in rows:
         lines.append("\t".join(f"{r[c]:.6g}" if isinstance(r[c], float) else str(r[c]) for c in cols))
-    (RES / name).write_text("\n".join(lines) + "\n")
+    (OUT / name).write_text("\n".join(lines) + "\n")
 
 
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
     print("# === P6 JOB B (iter 128): recompute 8 POINT_ONLY mean_zvf CIs ===")
     risk = load_risk_index()
     available_methods = sorted(risk.keys())
@@ -124,37 +75,14 @@ def main():
         if mname not in risk:
             print(f"# SKIP {delta_id}: no risk data for {mname}")
             continue
-        per_seed = risk[mname]
+        per_seed = list(risk[mname].values())
         n_seeds = len(per_seed)
         # Compute per-seed mean_zvf aggregated to a single mean (for cross-check)
         mean_perseed = sum(per_seed) / n_seeds
         boot_mean, ci_lo, ci_hi = boot_ci(per_seed, N_BOOT, SEED)
-        # Compute the registry's "delta = method - grpo" with paired bootstrap
-        if mname != "grpo" and "grpo" in risk:
-            grpo_per_seed = risk["grpo"]
-            grpo_mean, grpo_ci_lo, grpo_ci_hi = boot_ci(grpo_per_seed, N_BOOT, SEED + 1)
-            delta_boot = boot_mean - grpo_mean
-            # Paired bootstrap CI on the difference
-            state = [(SEED + 2) & 0xFFFFFFFF]
-            def lcg2():
-                state[0] = (state[0] * 1103515245 + 12345) & 0x7FFFFFFF
-                return state[0]
-            n_p = min(n_seeds, len(grpo_per_seed))
-            diffs = []
-            for _ in range(N_BOOT):
-                s = 0.0
-                for _ in range(n_p):
-                    s += (per_seed[lcg2() % n_p] - grpo_per_seed[lcg2() % n_p])
-                diffs.append(s / n_p)
-            diffs.sort()
-            ci_lo_d = diffs[int(0.025 * N_BOOT)]
-            ci_hi_d = diffs[int(0.975 * N_BOOT)]
-            recomputed_delta = delta_boot
-            new_ci_lo, new_ci_hi = ci_lo_d, ci_hi_d
-        else:
-            # grpo vs grpo: delta = 0 by construction
-            recomputed_delta = 0.0
-            new_ci_lo, new_ci_hi = 0.0, 0.0
+        result = paired_result(risk.get("grpo", {}), risk[mname], N_BOOT, SEED)
+        recomputed_delta = result["delta"]
+        new_ci_lo, new_ci_hi = result["ci_low"], result["ci_high"]
         # Load the registry's existing mean_zvf claim
         measured, registry_zvf_risk = load_registry_delta(delta_id)
         existing_mean_zvf = None
@@ -174,6 +102,8 @@ def main():
         drift = recomputed_delta - (existing_mean_zvf if existing_mean_zvf is not None else 0.0)
         rec = {
             "delta_id": delta_id, "method": mname, "n_seeds": n_seeds,
+            "result": result, "metric": "mean_zvf", "units": "fraction",
+            "source_sha256": source_hash(ROOT / "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv"),
             "recomputed_mean": boot_mean, "ci_lo": ci_lo, "ci_hi": ci_hi,
             "recomputed_delta": recomputed_delta,
             "recomputed_delta_ci_lo": new_ci_lo, "recomputed_delta_ci_hi": new_ci_hi,
@@ -192,7 +122,7 @@ def main():
 
     if not rows:
         print("# ERROR: no rows produced")
-        return
+        raise ValueError("No rows produced")
 
     # Headline synthesis
     n_recomp_ci_includes_old = sum(1 for r in rows if r["ci_includes_existing"])
@@ -215,12 +145,8 @@ def main():
         }
         for r in rows
     }
-    summary["operational_recommendation"] = (
-        "PATCH 8 delta_*.json: replace ci_method=point_no_perseed_sd with "
-        "ci_method=bootstrap_paired_5seed (B=2000, seed=20260705). The "
-        "recomputed CI widths are all >0 (old was 0), making the evidence "
-        "FRAGILE_SIG-eligible rather than POINT_ONLY."
-    )
+    summary["analysis_version"] = VERSION
+    summary["operational_recommendation"] = "Review complete paired-seed result objects; no automatic evidence-tier promotion."
 
     write_tsv("p6_iter128_recompute_point_only.tsv", rows,
               ["delta_id", "method", "n_seeds", "recomputed_mean",
@@ -229,7 +155,7 @@ def main():
                "existing_delta", "existing_ci_low",
                "existing_ci_high", "existing_ci_method", "drift",
                "ci_includes_existing"])
-    (RES / "p6_iter128_recompute_point_only_summary.json").write_text(
+    (OUT / "p6_iter128_recompute_point_only_summary.json").write_text(
         json.dumps(summary, indent=2)
     )
 

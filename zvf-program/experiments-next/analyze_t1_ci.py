@@ -14,10 +14,8 @@ that claim offline against a pool built by build_pool.py:
      contiguous block) to probe the across-group-i.i.d. assumption the theory
      paper flags as its biggest threat to validity.
 
-Decision rule (pre-registered in sweep/README.md amendments): Wald coverage in
-[0.93, 0.97] at M >= 32 under i.i.d. batching validates T1 for controller use;
-systematic under-coverage under correlated batching means the theory needs a
-clustered-variance correction before the controller ships.
+Decision contract: analysis_contract.T1_DECISION. Wilson/shuffled/M>=64 is
+primary; curriculum global inference remains blocked pending validation.
 
 Pure offline analysis — never contacts an API.
 """
@@ -31,11 +29,13 @@ from pathlib import Path
 
 from common import RESULTS_DIR, load_pool, utc_now, write_result
 
+from analysis_contract import validate_design, validate_rewards, zero_variance, T1_DECISION
+
 Z95 = 1.959963984540054
 
 
 def group_is_zero_variance(rewards: list[float]) -> bool:
-    return len(set(rewards)) == 1
+    return zero_variance(rewards)
 
 
 def subsample_indicator(rng: random.Random, rewards: list[float], G: int) -> int:
@@ -67,10 +67,11 @@ def population_zvf(prompts: list[dict], G: int, rng: random.Random,
     the coverage analysis (fixed 2026-07-11). Non-binary rewards fall back
     to resampling."""
     from math import comb
+    validate_design(groups=[G], counts=[draws_per_prompt], n_prompts=len(prompts))
     total = 0.0
     n = 0
     for p in prompts:
-        rewards = p["rewards"]
+        rewards = validate_rewards(p["rewards"])
         m = len(rewards)
         if m < G:
             continue
@@ -83,11 +84,16 @@ def population_zvf(prompts: list[dict], G: int, rng: random.Random,
                 s += subsample_indicator(rng, rewards, G)
             total += s / draws_per_prompt
         n += 1
+    if not n:
+        raise ValueError("no feasible prompt groups")
     return total / n
 
 
 def run_coverage(prompts: list[dict], G: int, M: int, B: int, truth: float,
                  rng: random.Random, correlated: bool) -> dict:
+    validate_design(groups=[G], counts=[M,B], n_prompts=len(prompts))
+    if M > len(prompts):
+        raise ValueError("batch exceeds prompt population")
     ordered = sorted(prompts, key=lambda p: p["p_hat"]) if correlated else None
     wald_hits = wilson_hits = 0
     widths: list[float] = []
@@ -108,6 +114,7 @@ def run_coverage(prompts: list[dict], G: int, M: int, B: int, truth: float,
         "population_zvf": round(truth, 4),
         "wald_coverage": round(wald_hits / B, 4),
         "wilson_coverage": round(wilson_hits / B, 4),
+        "coverage_mc_ci95": {"wald": wilson_ci(wald_hits/B,B), "wilson": wilson_ci(wilson_hits/B,B)},
         "mean_wald_width": round(sum(widths) / len(widths), 4),
     }
 
@@ -126,6 +133,9 @@ def main() -> None:
     pool = load_pool(args.pool)
     prompts = pool["prompts"]
     R = pool["rollouts_per_prompt"]
+    validate_design(groups=args.group_sizes, counts=[args.batches,*args.batch_sizes], available=R, n_prompts=len(prompts))
+    if not any(m <= len(prompts) for m in args.batch_sizes):
+        raise ValueError("no feasible batch sizes")
     rng = random.Random(args.seed)
 
     rows = []
@@ -158,8 +168,7 @@ def main() -> None:
         "seed": args.seed,
         "generated_at": utc_now(),
         "rows": rows,
-        "decision_rule": "T1 usable if Wald coverage in [0.93,0.97] at M>=32 (iid); "
-                         "correlated under-coverage => clustered-variance correction needed",
+        "decision_contract": T1_DECISION,
     })
     print(f"-> {out}")
 

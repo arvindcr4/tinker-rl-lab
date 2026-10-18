@@ -6,7 +6,10 @@ For a prompt with a sampled group of rewards, the submitted runner centers each
 reward by the group mean. If all rewards are homogeneous, every centered
 reward-contrast coefficient is zero; hence the submitted reward-contrast term
 is zero. We call the fraction of such groups ZVF and write its submitted
-complement as Gradient Utilization, $\mathrm{GU}=1-\mathrm{ZVF}$. This is an
+complement as Gradient Utilization, $\mathrm{GU}=1-\mathrm{ZVF}$. GU measures the fraction of groups with nonconstant rewards. Mixed rewards
+guarantee nonzero centered coefficients, not a nonzero aggregate gradient,
+correct reward information, or learning progress: contributions can cancel, masks
+can suppress them, and an erroneous verifier can supply contrast. This is an
 accounting identity for this runner, not a measurement of a total optimizer gradient.
 
 The diagnostic runner is \emph{not canonical GRPO}. It was deliberately minimal
@@ -28,3 +31,34 @@ repair the reviewed record. Under binary rewards, high-reward/high-ZVF is a
 theoretical solved-task regime, not an observed claim here: it yields zero centered
 contrast, may waste rollout budget, and cannot by unsigned ZVF alone choose
 retire/distill over retry/resample/warm-start.
+
+\paragraph{Local objective specification and provenance.}
+The legacy local implementation at repository commit \texttt{ddcbb868}, in
+\path{platform_hybrid/experiments/tinker-runs/scripts/grpo_exp_a_baseline.py}
+(function \texttt{grpo\_loss\_fn} and its group loop), computes
+\begin{align}
+\bar r_q&=G^{-1}\sum_i r_{qi},\qquad
+s_q=\sqrt{G^{-1}\sum_i(r_{qi}-\bar r_q)^2},\\
+a_{qi}&=\operatorname{stopgrad}\left[(r_{qi}-\bar r_q)/(s_q+10^{-8})\right],\\
+L_{\mathrm{local}}&=-\frac{1}{M}\sum_{q,i}a_{qi}
+ \sum_{j=1}^{T_{qi}}\ell_{qij}(\theta).
+\end{align}
+Here $M$ counts collected completions; grouping is per sampled prompt, the SD
+uses divisor $G$, and scalar rewards/advantages are computed outside autograd.
+The callback sums all returned token log-probabilities before averaging over
+completions; it does not length-normalize or apply completion-only token masking.
+The legacy target construction shifts the concatenated prompt/response token
+sequence and appends a dummy zero target. Thus $\ell$ denotes the callback's
+returned log-probabilities, not a claimed correctly masked conditional-completion
+likelihood. There is no ratio, clipping, or local reference-KL term in this loss.
+Backend optimizer state and any unobserved terms are outside the identity.
+
+This source snapshot is evidence of local implementation semantics, not proof
+that a particular reviewed execution used that exact commit. Later corrected
+alignment/masking code must not be projected onto historical runs. The two
+reviewed cell-to-execution mappings remain incomplete.
+For binary rewards, report all-wrong, all-correct, and mixed group fractions
+separately. For graded schema rewards, also identify homogeneous intermediate
+scores; binary Bernoulli formulas do not apply to that entire reward scale.
+Exact equality defines ZVF here; any tolerance-based variant must declare its
+threshold, grouping weights, and treatment of missing/nonfinite rewards.

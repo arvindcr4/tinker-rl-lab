@@ -1,21 +1,9 @@
-"""
-OpenRLHF Integration for tinker-rl-lab
+"""Candidate OpenRLHF 0.8.0 GRPO integration.
 
-OpenRLHF: An Easy-to-use, Scalable and High-performance Agentic RL Framework
-GitHub: https://github.com/OpenRLHF/OpenRLHF
-
-Features:
-- Ray + vLLM distributed architecture
-- PPO, DAPO, REINFORCE++ algorithms
-- Async RL training
-- Multi-GPU and multi-node support
-
-Known limitations (adversarial review; not open work tickets — need multi-seed GPU campaigns):
-- Fix ZVF metric fragility: ZVF breaks down in format-gated tasks and serves mostly as a symptom rather than root cause.
-- Address the "Early-Training Snapshot" Problem: Expand experiments beyond 30-50 gradient steps to observe true RL convergence.
-- Resolve the Closed-Source Confound: Deconfound Tinker API's managed defaults from nominal RL algorithms.
-- Prove Generalization: Address the lack of statistically significant generalization on held-out test sets (e.g., GSM8K and HumanEval) to prevent training-set memorization.
-- Avoid Single-Seed Extrapolations: Run multi-seed experiments to account for high variance in RL training dynamics.
+Real execution is the default and fails closed. Simulation is an explicit,
+separate fixture schema. This candidate protocol has not been validated in a
+GPU image and does not establish objective parity with another framework.
+The independent platform_hybrid Modal 0.8.4 launcher is not this integration.
 """
 
 __version__ = "0.9.0"

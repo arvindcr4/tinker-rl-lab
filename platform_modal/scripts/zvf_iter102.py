@@ -41,11 +41,11 @@ Three fresh analyses on REAL measured data:
      Compare to the iter94 raw-ZVF correlations (rho_Pearson=0.62 / rho_Spear=0.56).
 
 Outputs:
-    platform_hybrid/experiments/results/zvf_iter102_calibration.tsv   (one row per library+experiment)
-    platform_hybrid/experiments/results/zvf_iter102_aero_test.tsv     (AERO vs GRPO paired)
-    platform_hybrid/experiments/results/zvf_iter102_failure_corr.tsv  (Delta vs collapse)
+    platform_hybrid/experiments/results/zvf_iter102_calibration_review28_v2.tsv   (one row per library+experiment)
+    platform_hybrid/experiments/results/zvf_iter102_aero_test_review28_v2.tsv     (AERO vs GRPO paired)
+    platform_hybrid/experiments/results/zvf_iter102_failure_corr_review28_v2.tsv  (Delta vs collapse)
     platform_hybrid/experiments/results/zvf_summary.tsv               (RE-EMIT, +iter102 columns)
-    figures/zvf_vs_failure.pdf                        (RE-EMIT, 5-panel)
+    figures/zvf_vs_failure_102_review28_v2.pdf                        (RE-EMIT, 5-panel)
 """
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ import pathlib
 import sys
 
 import numpy as np
-from _analysis_common import auc_rank as _auc_rank, bootstrap_ci_xy as _bootstrap_ci, write_hash_commented_tsv as _write_tsv
+from _analysis_common import auc_rank as _auc_rank, bootstrap_ci_xy as _bootstrap_ci
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -66,21 +66,18 @@ EPS = 1e-6
 G_DEFAULT = 8
 
 
+def _write_tsv(path, rows, header_comment=None):
+    from _review28_io import write_table
+    write_table(path, rows, comment=header_comment)
+
+
 def _safe_div(a: float, b: float) -> float:
     return a / b if abs(b) > EPS else float("nan")
 
 
-def _spearman(x: np.ndarray, y: np.ndarray) -> float:
-    if len(x) < 2:
-        return float("nan")
-    rx = np.argsort(np.argsort(x)).astype(float)
-    ry = np.argsort(np.argsort(y)).astype(float)
-    rx -= rx.mean()
-    ry -= ry.mean()
-    denom = math.sqrt(float((rx ** 2).sum() * (ry ** 2).sum()))
-    if denom < EPS:
-        return float("nan")
-    return float((rx * ry).sum() / denom)
+def _spearman(x, y):
+    from _review28_statistics import spearman
+    return spearman(x, y)
 
 
 def _pearson(x: np.ndarray, y: np.ndarray) -> float:
@@ -177,25 +174,19 @@ def calibration_table(by_lib_rows, summary_rows):
             p = peak
         else:
             continue  # skip rows with no usable difficulty
-        # group size: arithmetic_groupsize uses 4, gsm8k_real uses 8, others 8
         lib = r["library"]
-        if "arithmetic_groupsize" in lib:
-            G = 4
-        elif "gsm8k_real" in lib:
-            G = 8
-        elif "tool_use" in lib:
-            G = 8
-        elif "samestack" in lib:
-            G = 4
-        elif "drgrpo" in lib:
-            G = 4
-        else:
-            G = G_DEFAULT
+        # Never infer group size from library names. Unprovenanced rows are excluded.
+        try:
+            G = int(r["group_size"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if G < 1: continue
         zvf_iid = p ** G + (1.0 - p) ** G
         delta = zvf_emp - zvf_iid
         rho_pred = _safe_div(zvf_emp, max(zvf_iid, EPS))
         out.append(dict(
             library=lib, model=r["model"], G=G,
+            estimator="homogeneous_plugin_diagnostic", interpretation="not_identified_dependence",
             p_difficulty=round(p, 4),
             zvf_emp=round(zvf_emp, 4),
             zvf_iid_pred=round(zvf_iid, 6),
@@ -219,10 +210,11 @@ def per_library_delta_summary(cal_rows):
         rhos = np.array([r["rho_overdispersion"] for r in rows], dtype=float)
         zvf_iids = np.array([r["zvf_iid_pred"] for r in rows], dtype=float)
         zvf_emps = np.array([r["zvf_emp"] for r in rows], dtype=float)
-        d_lo, d_med, d_hi = _bootstrap_ci(deltas, deltas, lambda x, y: float(x.mean()), B=1000, seed=lib.__hash__() & 0xFFFF)
-        r_lo, r_med, r_hi = _bootstrap_ci(rhos, rhos, lambda x, y: float(x.mean()), B=1000, seed=lib.__hash__() & 0xFFFF)
+        d_lo, d_med, d_hi = _bootstrap_ci(deltas, deltas, lambda x, y: float(x.mean()), B=1000, seed=int.from_bytes(__import__("hashlib").sha256(f"iter102:{lib}".encode()).digest()[:8], "big"))
+        r_lo, r_med, r_hi = _bootstrap_ci(rhos, rhos, lambda x, y: float(x.mean()), B=1000, seed=int.from_bytes(__import__("hashlib").sha256(f"iter102:{lib}".encode()).digest()[:8], "big"))
         out.append(dict(
             library=lib,
+            bootstrap_seed=int.from_bytes(__import__("hashlib").sha256(f"iter102:{lib}".encode()).digest()[:8], "big"),
             n_rows=len(rows),
             delta_mean=round(float(deltas.mean()), 4),
             delta_median=round(float(np.median(deltas)), 4),
@@ -409,23 +401,7 @@ def reemit_summary(per_lib_delta, cal_corr, aero_paired, summary_rows):
         r2["iter102_rho_overdispersion_mean"] = delta.get("rho_mean", "")
         r2["iter102_zvf_iid_pred_mean"] = delta.get("zvf_iid_mean", "")
         out.append(r2)
-    # also writea paired delta correlation onto the LAST row as headline
-    if cal_corr:
-        last = out[-1]
-        for cr in cal_corr:
-            if cr["predictor"] == "delta_calibration":
-                last["iter102_delta_vs_collapse_pearson"] = cr["pearson"]
-                last["iter102_delta_vs_collapse_ci_lo"] = cr["pearson_ci_lo"]
-                last["iter102_delta_vs_collapse_ci_hi"] = cr["pearson_ci_hi"]
-                last["iter102_delta_vs_collapse_spearman"] = cr["spearman"]
-            if cr["predictor"] == "AUC(delta_calibration -> is_collapse)":
-                last["iter102_delta_collapse_auc"] = cr["pearson"]
-    if aero_paired:
-        last = out[-1]
-        for r in aero_paired:
-            if r.get("method") == "__PAIRED_AERO_VS_GRPO__":
-                last["iter102_aero_minus_grpo_delta"] = r["delta_mean"]
-                last["iter102_aero_below_grpo_count"] = r["raw_zvf_above_iid_pct"]
+    # Global summaries already have their own tables; never attach them to a run.
     return out
 
 
@@ -585,40 +561,40 @@ def main():
     print(f"  {len(cal_corr)} calibration-vs-failure correlations computed", flush=True)
 
     # Write outputs
-    _write_tsv(RES / "zvf_iter102_calibration.tsv", cal_rows,
-               header_comment="zvf_iter102_calibration.tsv - per-(library,experiment) calibration gap\n"
+    _write_tsv(RES / "zvf_iter102_calibration_review28_v2.tsv", cal_rows,
+               header_comment="zvf_iter102_calibration_review28_v2.tsv - per-(library,experiment) calibration gap\n"
                               "Delta = ZVF_emp - (p^G+(1-p)^G), i.e. herding/anti-herding residual over the i.i.d. null.\n"
                               "Source: platform_modal/scripts/zvf_iter102.py")
-    _write_tsv(RES / "zvf_iter102_per_library.tsv", per_lib,
-               header_comment="zvf_iter102_per_library.tsv - aggregated calibration gap per library\n"
+    _write_tsv(RES / "zvf_iter102_per_library_review28_v2.tsv", per_lib,
+               header_comment="zvf_iter102_per_library_review28_v2.tsv - aggregated calibration gap per library\n"
                               "with 95% bootstrap CIs. Source: platform_modal/scripts/zvf_iter102.py")
-    _write_tsv(RES / "zvf_iter102_aero_test.tsv", aero_per_lib,
-               header_comment="zvf_iter102_aero_test.tsv - per-method mean ZVF, predicted ZVF_iid,\n"
+    _write_tsv(RES / "zvf_iter102_aero_test_review28_v2.tsv", aero_per_lib,
+               header_comment="zvf_iter102_aero_test_review28_v2.tsv - per-method mean ZVF, predicted ZVF_iid,\n"
                               "and calibration gap on variance_mitigation runs (G=8 assumed).\n"
                               "Last row is the paired AERO-vs-GRPO summary. Source: platform_modal/scripts/zvf_iter102.py")
-    _write_tsv(RES / "zvf_iter102_aero_paired.tsv", aero_paired_detail,
-               header_comment="zvf_iter102_aero_paired.tsv - per-seed AERO vs GRPO paired calibration delta\n"
+    _write_tsv(RES / "zvf_iter102_aero_paired_review28_v2.tsv", aero_paired_detail,
+               header_comment="zvf_iter102_aero_paired_review28_v2.tsv - per-seed AERO vs GRPO paired calibration delta\n"
                               "from variance_mitigation.tsv. Source: platform_modal/scripts/zvf_iter102.py")
-    _write_tsv(RES / "zvf_iter102_failure_corr.tsv", cal_corr,
-               header_comment="zvf_iter102_failure_corr.tsv - correlation of calibration gap (and raw ZVF)\n"
+    _write_tsv(RES / "zvf_iter102_failure_corr_review28_v2.tsv", cal_corr,
+               header_comment="zvf_iter102_failure_corr_review28_v2.tsv - correlation of calibration gap (and raw ZVF)\n"
                               "with is_collapse across all cross-library rows. B=2000 bootstrap CIs.\n"
                               "Source: platform_modal/scripts/zvf_iter102.py")
 
     # Re-emit zvf_summary.tsv
     new_summary = reemit_summary(per_lib, cal_corr, aero_per_lib, summary)
-    with (RES / "zvf_summary.tsv").open("w") as f:
+    with (RES / "zvf_summary_review28_v2.tsv").open("w") as f:
         f.write("# zvf_summary.tsv - Pillar 2 headline dashboard (iter102: +calibration columns).\n")
         f.write("# iter94 base columns + iter98 rho + iter102 delta_calibration, rho_overdispersion,\n"
                 "# delta_vs_collapse correlations and AERO-vs-GRPO paired summary. Source: platform_modal/scripts/zvf_iter102.py\n")
-        cols = list(new_summary[0].keys())
+        cols = list(new_summary[0].keys()) if new_summary else ["status"]
         f.write("\t".join(cols) + "\n")
         for r in new_summary:
             f.write("\t".join(str(r.get(c, "")) for c in cols) + "\n")
 
     # Figure
     make_figure(cal_rows, per_lib, aero_per_lib, aero_paired_detail, cal_corr,
-                FIG / "zvf_vs_failure.pdf", FIG / "zvf_vs_failure.png")
-    print("  wrote figures/zvf_vs_failure.{pdf,png}", flush=True)
+                FIG / "zvf_vs_failure_102_review28_v2.pdf", FIG / "zvf_vs_failure_102_review28_v2.png")
+    print("  wrote figures/zvf_vs_failure_102_review28_v2.{pdf,png}", flush=True)
 
     # Headline console print
     print("\n=== iter102 headline ===", flush=True)

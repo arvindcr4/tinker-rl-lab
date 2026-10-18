@@ -49,10 +49,10 @@ import math
 import random
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 N2_DIR = ROOT / "experiments" / "results" / "n2_reward_tensor_resume"
 N10_DIR = ROOT / "experiments" / "results" / "n10_seed_expansion"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8/corrected-review19-v2"
 
 METHODS = ("grpo", "aero", "gift", "areal")
 G_BASE = 8
@@ -103,11 +103,12 @@ def load_n10_step_log():
 
 
 def per_step_zvf(rewards_16: list) -> float:
-    z = []
-    for p in rewards_16:
-        k = sum(1 for r in p if r >= 0.5)
-        z.append(zvf_iid(k / G_BASE, G_BASE))
-    return sum(z) / len(z) if z else 1.0
+    if not rewards_16:
+        raise ValueError("missing observed prompt rewards")
+    if any(len(r) != G_BASE or any(v not in (0,1) for v in r) for r in rewards_16):
+        raise ValueError("expected binary G_BASE reward groups")
+    return sum(sum(r) in (0, G_BASE) for r in rewards_16) / len(rewards_16)
+
 
 
 def per_step_controllers(z_step: float):

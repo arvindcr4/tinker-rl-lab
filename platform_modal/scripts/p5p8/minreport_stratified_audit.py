@@ -27,7 +27,9 @@ import csv, json, math, re, sys
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+ROOT = REPO_ROOT / "platform_hybrid"
 P5P8 = ROOT / "experiments" / "results" / "p5p8"
 MEGA = ROOT / "experiments" / "results" / "mega_20260704"
 CELLS = MEGA / "cells.tsv"
@@ -123,6 +125,12 @@ def axis_value(meta, axis, r_q, z_q):
 
 def qcut(sv, q):
     return sv[max(0, min(len(sv)-1, int(len(sv) * q)))]
+
+
+def contrast_json(contrast_score, items, axes):
+    return {f'item{it}/{axis}': (round(contrast_score[(it, axis)], 3)
+                                if math.isfinite(contrast_score[(it, axis)]) else None)
+            for it in items for axis in axes}
 
 
 def main():
@@ -230,23 +238,14 @@ def main():
         "stack_invariance_test": {
             "n_pairs": len(flat_stack),
             "n_eta2_lt_005": n_lt_005, "n_eta2_lt_010": n_lt_010,
-            "interpretation": ("If most (item, stack-axis) eta^2 of per-cell "
-                               "item_score are < 0.05, item coverage is "
-                               "STACK-INVARIANT — the manifest emitter treats "
-                               "every stack uniformly. (NaN entries on items "
-                               "1-6 are NOT missing — they are zero-within-"
-                               "variance, the strongest possible invariance.)"),
+            "interpretation": f"{n_lt_005}/{len(flat_stack)} finite item/axis effects are below 0.05. Undefined eta-squared is unavailable evidence, not proof of invariance.",
         },
         "eta2_per_item_per_axis": {
             f"item{it}/{ax}": (round(e, 4) if not math.isnan(e) else None)
             for it in range(1, 8) for ax in ALL_AXES
             for e in [eta2_score[(it, ax)]]
         },
-        "contrast_per_item_per_axis": {
-            f"item{it}/{ax}": (round(contrast_score[(it, axis)], 3)
-                                if not math.isnan(contrast_score[(it, axis)]) else None)
-            for it in range(1, 8) for ax in ALL_AXES
-        },
+        "contrast_per_item_per_axis": contrast_json(contrast_score, range(1, 8), ALL_AXES),
         "per_item_best_axis": per_item_best,
         "per_item_coverage_per_axis_sample": {
             f"item{it}/{ax}": coverage[(it, ax)]

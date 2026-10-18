@@ -39,7 +39,10 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 
-SCHEMA_VERSION = "pavlov-webbench-eval-boundary-v1"
+SCHEMA_VERSION = "pavlov-webbench-eval-boundary-v2"
+TRUSTED_PROVIDER_FINGERPRINTS: frozenset[str] = frozenset()
+TRUSTED_RECEIPT_KEYS: dict[str, str] = {}
+RECEIPT_SIGNATURE_SCHEMA = "pavlov-webbench-authenticated-receipt-v2"
 WEBBENCH_SUITE_ID = "webbench_eval"
 WEBBENCH_NAME = "Halluminate/WebBench"
 WEBBENCH_SOURCE_URL = "https://github.com/Halluminate/WebBench"
@@ -161,6 +164,8 @@ def load_webbench_trust_root(document: Any) -> dict[str, str]:
             raise ValueError
     except (KeyError, TypeError, ValueError):
         raise WebBenchDatasetError("E6 provider trust-root key or validity window is invalid") from None
+    if data["key_fingerprint"] not in TRUSTED_PROVIDER_FINGERPRINTS:
+        raise WebBenchDatasetError("provider key has no independently installed trust anchor")
     return {
         "trust_root_sha256": sha256_hex(data),
         "key_id": data["key_id"],
@@ -239,6 +244,7 @@ def _receipt(value: Any, expected_binding: Mapping[str, Any]) -> tuple[bool, str
     if not isinstance(value, Mapping):
         return False, "receipt_not_object"
     allowed = {
+        "schema_version", "key_id", "signature_b64",
         "receipt_id",
         "record_id",
         "identity",
@@ -297,6 +303,15 @@ def _receipt(value: Any, expected_binding: Mapping[str, Any]) -> tuple[bool, str
         return False, "receipt_payload_not_canonicalizable"
     if value[digests[0]] != expected_digest:
         return False, "receipt_digest_binding_mismatch"
+    key = TRUSTED_RECEIPT_KEYS.get(value.get("key_id"))
+    if key is None or value.get("schema_version") != RECEIPT_SIGNATURE_SCHEMA:
+        return False, "receipt_signer_not_trusted"
+    try:
+        signed = {k: v for k, v in value.items() if k != "signature_b64"}
+        Ed25519PublicKey.from_public_bytes(base64.b64decode(key, validate=True)).verify(
+            base64.b64decode(value["signature_b64"], validate=True), _canonical_json(signed).encode("utf-8"))
+    except (ValueError, TypeError, KeyError, InvalidSignature):
+        return False, "receipt_signature_invalid"
     return True, "ok"
 
 

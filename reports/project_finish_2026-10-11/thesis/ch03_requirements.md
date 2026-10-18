@@ -1,10 +1,10 @@
 # 3. System Requirements Specification
 
-This chapter states what the Tinker RL Lab system must do, what qualities it must hold while doing it, and how each requirement is verified. It inherits the specification of the Phase-1 report and extends it across the Semester-4 additions: the multi-framework benchmark rosters, the Zero-Variance Fraction (ZVF) diagnostic and the adaptive group-size controller derived from it, the minimum reporting standard and the machine-readable GRPO stack registry, and the E1–E14 evaluation campaign with its fail-closed completion gate. It is written as a specification rather than as a retrospective description, but every requirement below corresponds to a component that exists in the repository, and every functional requirement is paired with the concrete test that checks it. These are design requirements, not a claim that every historical run satisfies them. Incomplete framework parity is recorded in §3.2 and §3.8; per-run provenance and loss-form gaps are recorded in Table 4.2. The former cloud-capacity blockers are historical limitations (§3.6), while the white-box gradient requirement is explicitly restricted to models whose internals are exposed.
+This chapter states what the Tinker RL Lab system must do, what qualities it must hold while doing it, and how each requirement is verified. It inherits the specification of the Phase-1 report and extends it across the Semester-4 additions: the multi-framework benchmark rosters, the Zero-Variance Fraction (ZVF) diagnostic and the adaptive group-size controller derived from it, the minimum reporting standard and the machine-readable GRPO stack registry, and the E1–E14 evaluation campaign with its fail-closed completion gate. It is written as a specification rather than as a retrospective description, but every requirement below corresponds to a component that exists in the repository, and each functional requirement lists a verification route whose executed evidence and remaining gaps must be assessed separately. These are design requirements, not a claim that every historical run satisfies them. Incomplete framework parity is recorded in §3.2 and §3.8; per-run provenance and loss-form gaps are recorded in Table 4.2. The former cloud-capacity blockers are historical limitations (§3.6), while the white-box gradient requirement is explicitly restricted to models whose internals are exposed.
 
 ## 3.1 Overview and Actors
 
-The central object of the Phase-1 specification was the **run**: one configuration, one seed, one framework, one training budget, producing per-step telemetry and a persisted set of raw group reward tensors (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex). Semester 4 introduces two further first-class objects. The first is the **lane**: a single benchmark suite evaluated under a named scope — an original contract with the suite's owner, or a declared replacement scope — carrying its own provider, payload, licence, quota and terminal state. The second is the **receipt**: an immutable, hash-bound record that a declared step actually happened, against declared inputs, at a declared revision. Requirements that concern runs, lanes and receipts are distinguished below where the distinction matters.
+The central object of the Phase-1 specification was the **run**: one configuration, one seed, one framework, one training budget, producing per-step telemetry and a persisted set of raw group reward tensors (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex). Semester 4 introduces two further first-class objects. The first is the **lane**: a single benchmark suite evaluated under a named scope — an original contract with the suite's owner, or a declared replacement scope — carrying its own provider, payload, licence, quota and terminal state. The second is the **receipt**: a record of claimed execution that binds stated inputs, outputs and revision to hashes. A digest does not independently prove execution authenticity or scientific validity. Requirements that concern runs, lanes and receipts are distinguished below where the distinction matters.
 
 Four actors interact with the system, and the fourth is new in Semester 4.
 
@@ -59,7 +59,7 @@ Table 3.1 lists the functional requirements. Each row states the requirement and
 | NFR-6 Budget | Spend is recorded per run against a declared envelope; per-run bounds and lead-issued authorisation receipts apply even under an unlimited total | `Pending_Experiments.md` |
 | NFR-7 Fail-closed | Validation defaults to refusal; an unverifiable package is not scored | `e1_e14_completion_gate.py` |
 | NFR-8 Least privilege | Evidence records hold no key material; credential checks record only liveness and scope | `Pending_Experiments.md` |
-| NFR-9 Lost-source auditability | Execution sources for sealed artefacts live in tracked paths; sealed requests and receipts suffice to pin a faithful re-implementation | `E1_E14_FINAL_RESULTS_2026-09-19.md` |
+| NFR-9 Lost-source auditability | Execution sources for sealed artefacts live in tracked paths; sealed requests and receipts constrain a replacement implementation but cannot establish full behavioral equivalence | `E1_E14_FINAL_RESULTS_2026-09-19.md` |
 | NFR-10 External traceability | External payloads are bound by hash and validated against trust roots and schema versions; an unreported field is null, not zero or false | `e1_e14_completion_gate.py`; `paper_P6_registry.tex` |
 
 : Non-functional requirements.
@@ -72,7 +72,7 @@ The test cases below specify checks attached to the requirements. A test specifi
 
 **TC-2 — Recompute the detector metric from raw tensors.** Recompute the Phase-3 detector's area under the ROC curve from raw tensors under five-fold stratified cross-validation. The published figure is an AUROC of $0.84 \pm 0.01$ against $0.43$ for the reward-only comparator (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex). Verifies FR-5 and NFR-3.
 
-**TC-3 — Re-run a matched-budget arm comparison.** Re-run the baseline and the curriculum arm at a matched token budget over three seeds; the Phase-1 result is that both arms average $+0.028$ on the held-out set with no curriculum advantage (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex). Verifies FR-1, FR-2 and FR-6.
+**TC-3 — Re-run a matched-budget arm comparison.** Re-run the baseline and the curriculum arm at a matched token budget over three seeds; the Phase-1 result is that both arms average $+0.028$ on the held-out set with no curriculum advantage (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex). Supports only the executed matched-budget comparison; it does not establish configuration completeness or backend parity for FR-1/FR-2, nor all sweep behavior in FR-6.
 
 **TC-4 — Recompute headline diagnostics.** Recompute each headline diagnostic quoted in a results chapter directly from stored artefacts, with the recomputation recorded next to the published value (source: platform_tinker/reports/esa_phase1/Phase1_Project_Report_ZVF.tex). Verifies NFR-3.
 
@@ -84,7 +84,7 @@ The test cases below specify checks attached to the requirements. A test specifi
 
 **TC-8 — Build the report from source.** Compile the main report and its supplementary through the full LaTeX chain and flag an empty journal field in the bibliography (source: platform_local/scientific_audit.py). Verifies FR-16.
 
-**TC-9 — Dry-run the completion gate against a declared lane.** Present a provider package to the gate and require it to validate the declaration without executing anything: the expected outcomes are acceptance with the declared evidence class, or a specific refusal naming the missing element. A package must never be reported as a benchmark result by this procedure (source: zvf-program/flagship/e1_e14_completion_gate.py). Verifies FR-13, FR-14 and NFR-7.
+**TC-9 — Dry-run the completion gate against a declared lane.** Present a provider package to the gate and require it to validate the declaration without executing anything: the expected outcomes are acceptance with the declared evidence class, or a specific refusal naming the missing element. A package must never be reported as a benchmark result by this procedure (source: zvf-program/flagship/e1_e14_completion_gate.py). Checks gate-declaration behavior within FR-14/NFR-7; it does not verify FR-13 lane runtime execution.
 
 **TC-10 — Registry query and null discipline.** Query the registry for a labelled entry and its delta record, and confirm that a field absent from the source is returned as unreported rather than as a zero value, and that a same-label pair with divergent behaviour triggers the flip-risk verdict (source: platform_hybrid/paper/paper_P6_registry.tex; source: platform_hybrid/registry/query.py). Verifies FR-9, FR-10, FR-11 and NFR-10.
 
@@ -92,36 +92,38 @@ The test cases below specify checks attached to the requirements. A test specifi
 
 **Table 3.3 — Requirements traceability matrix.**
 
-| Requirement | Implemented in | Verified by |
-|---|---|---|
-| FR-1 Configuration object | `platform_local/unified/launcher.py`; run configurations under `platform_hybrid/experiments/` | TC-3 |
-| FR-2 Back-end-agnostic execution | `platform_local/trl_integrations/`; `platform_hybrid/experiments/results/framework_comparison.json` | TC-3; parity shortfall recorded in §3.2 |
-| FR-3 Per-step ZVF | Training-loop telemetry (Phase-1 design) | TC-1 |
-| FR-4 Per-step telemetry | Telemetry writer; `platform_hybrid/experiments/results/p5p8/controller_cf_per_step.tsv` | TC-1, TC-4 |
-| FR-5 Raw tensor persistence | Persisted per-group reward tensors | TC-1, TC-2 |
-| FR-6 Sweeps | Sweep runner | TC-3 |
-| FR-7 White-box gradients | Single-GPU training path | Not automatable in the audit suite; checks in Chapter 5 §5.5 (per-layer gradient profile) |
-| FR-8 Provenance record | `zvf-program/flagship/e1_e14_completion_gate.py`; run provenance records | TC-5, TC-7, TC-9 |
-| FR-9 Minimum-report manifest | `platform_hybrid/experiments/results/p5p8/minreport_audit_summary.json` | TC-10 |
-| FR-10 Registry query | `platform_hybrid/registry/schema.json`, `query.py`, `entries/` | TC-10 |
-| FR-11 Variant deltas, stack-diff | `platform_hybrid/registry/provenance/` | TC-10 |
-| FR-12 Adaptive controller | `platform_hybrid/experiments/results/p5p8/controller_cf_summary.json` | TC-4 |
-| FR-13 Lane harness | `zvf-program/e1_wave10/`, `zvf-program/e5_successor27/`, `zvf-program/e2_core/`, `zvf-program/e13_balrog/`, `zvf-program/e6e9/check_quota_status.py`; runners actually used on 2026-09-27: `outputs/finish_pending_2026-09-27/<lane>/code/` | TC-9 |
-| FR-14 Completion gate | `zvf-program/flagship/e1_e14_completion_gate.py` | TC-9 |
-| FR-15 Scope separation | `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md` | TC-6, TC-9 |
-| FR-16 Blind-review packaging | `platform_local/run_all_audits.py`, `export_guard_audit.py` | TC-6, TC-8 |
-| NFR-1 Attribution | Method sections and comparison artefacts | TC-3, TC-10 |
-| NFR-2 Reproducibility | Seed management in the runner | TC-3 |
-| NFR-3 Recomputability | Documented analysis procedures | TC-1, TC-2, TC-4 |
-| NFR-4 Denominator discipline | Caveat and claim-strength checks | TC-6, TC-7 |
-| NFR-5 Isolation | Process-level execution | Operationally checked; not in the audit suite |
-| NFR-6 Budget | Spend receipts | TC-9 |
-| NFR-7 Fail-closed behaviour | Gate constants and suite exit status | TC-6, TC-9 |
-| NFR-8 Least privilege | Credential-gate receipts | TC-9 |
-| NFR-9 Auditability | Tracked execution paths | TC-9 |
-| NFR-10 External traceability | Hash equality and trust-root validation | TC-9, TC-10 |
+| Requirement | Implemented scope | Verification route | Executed evidence | Remaining gap |
+|---|---|---|---|---|
+| FR-1 Configuration object | `platform_local/unified/launcher.py`; run configurations under `platform_hybrid/experiments/` | TC-3 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-2 Back-end-agnostic execution | `platform_local/trl_integrations/`; `platform_hybrid/experiments/results/framework_comparison.json` | TC-3; parity shortfall recorded in §3.2 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-3 Per-step ZVF | Training-loop telemetry (Phase-1 design) | TC-1 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-4 Per-step telemetry | Telemetry writer; `platform_hybrid/experiments/results/p5p8/controller_cf_per_step.tsv` | TC-1, TC-4 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-5 Raw tensor persistence | Persisted per-group reward tensors | TC-1, TC-2 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-6 Sweeps | Sweep runner | TC-3 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-7 White-box gradients | Single-GPU training path | Not automatable in the audit suite; checks in Chapter 5 §5.5 (per-layer gradient profile) | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-8 Provenance record | `zvf-program/flagship/e1_e14_completion_gate.py`; run provenance records | TC-5, TC-7, TC-9 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-9 Minimum-report manifest | `platform_hybrid/experiments/results/p5p8/minreport_audit_summary.json` | TC-10 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-10 Registry query | `platform_hybrid/registry/schema.json`, `query.py`, `entries/` | TC-10 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-11 Variant deltas, stack-diff | `platform_hybrid/registry/provenance/` | TC-10 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-12 Adaptive controller | `platform_hybrid/experiments/results/p5p8/controller_cf_summary.json` | TC-4 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-13 Lane harness | `zvf-program/e1_wave10/`, `zvf-program/e5_successor27/`, `zvf-program/e2_core/`, `zvf-program/e13_balrog/`, `zvf-program/e6e9/check_quota_status.py`; runners actually used on 2026-09-27: `outputs/finish_pending_2026-09-27/<lane>/code/` | TC-9 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-14 Completion gate | `zvf-program/flagship/e1_e14_completion_gate.py` | TC-9 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-15 Scope separation | `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md` | TC-6, TC-9 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| FR-16 Blind-review packaging | `platform_local/run_all_audits.py`, `export_guard_audit.py` | TC-6, TC-8 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| NFR-1 Attribution | Method sections and comparison artefacts | TC-3, TC-10 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| NFR-2 Reproducibility | Seed management in the runner | TC-3 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| NFR-3 Recomputability | Documented analysis procedures | TC-1, TC-2, TC-4 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| NFR-4 Denominator discipline | Caveat and claim-strength checks | TC-6, TC-7 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| NFR-5 Isolation | Process-level execution | Operationally checked; not in the audit suite | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| NFR-6 Budget | Spend receipts | TC-9 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| NFR-7 Fail-closed behaviour | Gate constants and suite exit status | TC-6, TC-9 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| NFR-8 Least privilege | Credential-gate receipts | TC-9 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| NFR-9 Auditability | Tracked execution paths | TC-9 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
+| NFR-10 External traceability | Hash equality and trust-root validation | TC-9, TC-10 | Route specified; per-run executed receipt not established by this matrix | Scope-specific execution evidence must be bound before a pass claim |
 
-: Requirements traceability matrix: each functional requirement mapped to the artefacts that implement it and the audit check that verifies it.
+: Requirements traceability matrix: implementation and proposed verification routes are distinct from executed evidence. A listed check is not a claim of full requirement satisfaction.
+
+A matched-budget experiment does not establish configuration completeness across backends. Declaration-validation dry runs do not establish runtime spend discipline or least privilege. Offline tests, static inspections and actual execution receipts must be identified separately, with their tested boundary.
 
 Two rows deserve comment. FR-7 has no automated check because the white-box gradient path is a measurement procedure rather than an invariant; its evidence is the result data itself. NFR-5 is likewise checked operationally rather than by the suite, because process isolation is a property of how runs are launched and is not visible in any post-hoc artefact.
 

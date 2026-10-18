@@ -383,7 +383,7 @@ def main():
     print(f"[h2] Iso-G achieves Y*=0.5 in {n_decisive_h2}/5 p cells")
 
     # ---- H3 ----
-    h3_rows, n_recovered = h3_bounded_cone_recovery(per_G)
+    h3_rows, n_recovered = h3_bounded_cone_explains(per_G)
     h3_path = OUT / "iso_g_bounded_cone_recovery.tsv"
     with h3_path.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(h3_rows[0].keys()), delimiter="\t")

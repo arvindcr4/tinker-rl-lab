@@ -23,9 +23,9 @@ from pathlib import Path
 
 from _p5p7_common import bernoulli_z, c_unified_c4, is_boundary, load_tensors_a
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 N2_DIR = ROOT / "experiments" / "results" / "n2_reward_tensor_resume"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8/corrected-review19-v2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 METHODS = ["grpo", "aero", "gift", "areal"]
@@ -210,8 +210,7 @@ def main():
             header += [f"g_{cname}", f"cm_{cname}", f"cost_{cname}"]
         f.write("\t".join(header) + "\n")
         for c in all_cells:
-            row = [str(c[h]) for h in header if h not in ("is_boundary",)]
-            row.append("1" if c["is_boundary"] else "0")
+            row = [("1" if c[h] else "0") if h == "is_boundary" else str(c[h]) for h in header]
             f.write("\t".join(row) + "\n")
     print(f"Wrote {percell_path}")
 

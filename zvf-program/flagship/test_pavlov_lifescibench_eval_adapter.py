@@ -41,7 +41,7 @@ def _synthetic_ready_boundary() -> dict:
     value["native_verifier"]["revision"] = revision
     value["task_manifest"] = [task]
     value["eval_split_manifest_hash"] = e8.task_manifest_hash([task])
-    value["train_split_manifest_hash"] = "b" * 64
+    value["train_split_manifest_hash"] = e8.task_manifest_hash([{"task_id": "train-fixture", "family": "train-fixture-family"}])
     value["provider_package_contract"] = {
         "package_sha256": "1" * 64,
         "license_sha256": "2" * 64,
@@ -117,15 +117,13 @@ def _synthetic_receipt() -> dict:
         "state_hash": "3" * 64,
         "artifact_digest": "4" * 64,
         "task_success": True,
+        "reward": 1.0, "action_count": 1,
     }
-    proof = {
-        "train_split_manifest_hash": boundary["train_split_manifest_hash"],
-        "eval_split_manifest_hash": boundary["eval_split_manifest_hash"],
-        "disjoint_task_ids": True,
-        "disjoint_family_ids": True,
-        "unseen_families": [task["family"]],
-    }
-    proof["proof_hash"] = e8.sha256_json(proof)
+    train_rows = [{"task_id": "train-fixture", "family": "train-fixture-family"}]
+    train = {"rows": train_rows, "manifest_hash": e8.task_manifest_hash(train_rows)}
+    evaluation = {"rows": boundary["task_manifest"], "manifest_hash": boundary["eval_split_manifest_hash"]}
+    boundary["train_split_manifest_hash"] = train["manifest_hash"]
+    proof = e8.build_heldout_proof(train_manifest=train, eval_manifest=evaluation)
     value = {
         "schema_version": e8.RECEIPT_SCHEMA_VERSION,
         "receipt_status": e8.RECEIPT_STATUS_OBSERVED,
@@ -278,7 +276,8 @@ class LifeSciBenchEvalAdapterTests(unittest.TestCase):
         result = e8.validate_e8_receipt(observed, boundary=boundary)
         self.assertTrue(result.ok, result.errors)
         self.assertTrue(result.metrics["primary_eval"])
-        self.assertTrue(result.metrics["receipt_proven_heldout"])
+        self.assertFalse(result.metrics["receipt_proven_heldout"])
+        self.assertTrue(result.metrics["manifest_disjointness_valid"])
         self.assertFalse(result.metrics["portfolio_evidence"])
         self.assertFalse(result.metrics["paid_launch_authorized"])
 
@@ -371,13 +370,13 @@ class LifeSciBenchEvalAdapterTests(unittest.TestCase):
             ),
         )
 
-    def test_no_live_runtime_or_network_imports(self) -> None:
+    def test_import_architecture_excludes_network_clients(self) -> None:
         import ast
         from pathlib import Path
 
         path = Path(e8.__file__)
         tree = ast.parse(path.read_text(), filename=str(path))
-        forbidden = {"requests", "httpx", "browsergym", "playwright", "wandb", "tinker", "os", "subprocess"}
+        forbidden = {"socket", "urllib", "http", "ftplib", "requests", "httpx", "browsergym", "playwright", "wandb", "tinker", "os", "subprocess"}
         imported = set()
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
@@ -455,6 +454,7 @@ def _neutral_plumbing_payload() -> dict:
                 "state_hash": e8.sha256_json(["state", row["task_id"]]),
                 "artifact_digest": e8.sha256_json(["artifact", row["task_id"]]),
                 "task_success": False,
+                "reward": 0.0, "action_count": 0,
             }
             for row in eval_manifest["rows"]
         ],
@@ -641,7 +641,8 @@ class LifeSciBenchLocalBuilderTests(unittest.TestCase):
             payload["receipt"], boundary=payload["boundary"]
         )
         self.assertTrue(receipt_result.ok, receipt_result.errors)
-        self.assertTrue(receipt_result.metrics["receipt_proven_heldout"])
+        self.assertFalse(receipt_result.metrics["receipt_proven_heldout"])
+        self.assertTrue(receipt_result.metrics["manifest_disjointness_valid"])
         # Plumbing completeness never implies portfolio evidence or paid launch.
         self.assertFalse(receipt_result.metrics["portfolio_evidence"])
         self.assertFalse(receipt_result.metrics["paid_launch_authorized"])

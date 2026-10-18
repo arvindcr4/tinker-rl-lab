@@ -1,21 +1,24 @@
 # TODO: Adversarial Review Limitations
-# The managed server tested here represents the Tinker API, which is a closed-source 
-# "black box". The performance gaps observed are likely due to its undisclosed 
-# managed defaults, micro-partitioning, and reference offloading. These factors 
-# confound algorithmic comparisons, and these unit tests do not capture those internal 
-# dynamics. Furthermore, empirical claims relying on this managed infrastructure are 
-# limited by API cost constraints (leading to short 30-50 step snapshots) and 
+# The managed server tested here represents the Tinker API, which is a closed-source
+# "black box". The performance gaps observed are likely due to its undisclosed
+# managed defaults, micro-partitioning, and reference offloading. These factors
+# confound algorithmic comparisons, and these unit tests do not capture those internal
+# dynamics. Furthermore, empirical claims relying on this managed infrastructure are
+# limited by API cost constraints (leading to short 30-50 step snapshots) and
 # single-seed extrapolations.
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from fastapi.testclient import TestClient
-from tinker.types import SampleResponse, SampledSequence
+from types import SimpleNamespace
+
+SampleResponse = SampledSequence = SimpleNamespace
 
 
 @pytest.fixture
 def mock_trainer():
     trainer = MagicMock()
+    trainer.policy_version = "mock-policy"
     trainer.base_model = "meta-llama/Llama-3.1-8B-Instruct"
 
     trainer.tokenizer = MagicMock()
@@ -29,7 +32,7 @@ def mock_trainer():
 
     mock_sequence = SampledSequence(
         tokens=[10, 11, 12],
-        logprobs=[0.9, 0.8, 0.7],
+        logprobs=[-0.9, -0.8, -0.7],
         stop_reason="stop",
     )
     mock_result = SampleResponse(sequences=[mock_sequence])
@@ -41,15 +44,9 @@ def mock_trainer():
 
 @pytest.fixture
 def app_with_trainer(mock_trainer):
-    import tinker_atropos.trainer as trainer_module
+    from tinker_atropos.api import create_app
 
-    original_trainer = trainer_module.trainer
-    trainer_module.trainer = mock_trainer
-
-    # FastAPI TestClient needs an instance of the application as an input parameter
-    yield trainer_module.app
-
-    trainer_module.trainer = original_trainer
+    return create_app(mock_trainer)
 
 
 @pytest.fixture
@@ -92,8 +89,8 @@ class TestCompletionsEndpoint:
         """Test requesting multiple completions (n > 1)"""
         # Update mock to return multiple sequences
         mock_sequences = [
-            SampledSequence(tokens=[10, 11], logprobs=[0.9, 0.8], stop_reason="stop"),
-            SampledSequence(tokens=[12, 13], logprobs=[0.7, 0.6], stop_reason="stop"),
+            SampledSequence(tokens=[10, 11], logprobs=[-0.9, -0.8], stop_reason="stop"),
+            SampledSequence(tokens=[12, 13], logprobs=[-0.7, -0.6], stop_reason="stop"),
         ]
         mock_result = SampleResponse(sequences=mock_sequences)
         mock_trainer.current_sampling_client.sample_async = AsyncMock(return_value=mock_result)
@@ -175,9 +172,9 @@ class TestChatCompletionsEndpoint:
 
     def test_chat_completion_multiple_samples(self, client, mock_trainer):
         mock_sequences = [
-            SampledSequence(tokens=[10, 11], logprobs=[0.9, 0.8], stop_reason="stop"),
-            SampledSequence(tokens=[12, 13], logprobs=[0.7, 0.6], stop_reason="stop"),
-            SampledSequence(tokens=[14, 15], logprobs=[0.5, 0.4], stop_reason="stop"),
+            SampledSequence(tokens=[10, 11], logprobs=[-0.9, -0.8], stop_reason="stop"),
+            SampledSequence(tokens=[12, 13], logprobs=[-0.7, -0.6], stop_reason="stop"),
+            SampledSequence(tokens=[14, 15], logprobs=[-0.5, -0.4], stop_reason="stop"),
         ]
         mock_result = SampleResponse(sequences=mock_sequences)
         mock_trainer.current_sampling_client.sample_async = AsyncMock(return_value=mock_result)
@@ -245,8 +242,8 @@ class TestGenerateEndpoint:
 
     def test_generate_multiple_samples(self, client, mock_trainer):
         mock_sequences = [
-            SampledSequence(tokens=[10, 11], logprobs=[0.9, 0.8], stop_reason="stop"),
-            SampledSequence(tokens=[12, 13], logprobs=[0.7, 0.6], stop_reason="stop"),
+            SampledSequence(tokens=[10, 11], logprobs=[-0.9, -0.8], stop_reason="stop"),
+            SampledSequence(tokens=[12, 13], logprobs=[-0.7, -0.6], stop_reason="stop"),
         ]
         mock_result = SampleResponse(sequences=mock_sequences)
         mock_trainer.current_sampling_client.sample_async = AsyncMock(return_value=mock_result)
@@ -280,7 +277,7 @@ class TestGenerateEndpoint:
         }
 
         response = client.post("/generate", json=request_data)
-        assert response.status_code in [400, 500]
+        assert response.status_code == 400
         assert "input_ids" in response.json()["detail"].lower()
 
     def test_generate_logprobs_format(self, client, mock_trainer):
@@ -302,6 +299,7 @@ class TestGenerateEndpoint:
 
         request_data = {
             "input_ids": [1, 2],
+            "return_text_in_logprobs": True,
             "sampling_params": {
                 "n": 1,
                 "max_new_tokens": 50,
@@ -322,10 +320,9 @@ class TestGenerateEndpoint:
 
 class TestErrorHandling:
     def test_completions_without_trainer(self, app_with_trainer):
-        import tinker_atropos.trainer as trainer_module
 
-        original_trainer = trainer_module.trainer
-        trainer_module.trainer = None
+        original_trainer = app_with_trainer.state.trainer
+        app_with_trainer.state.trainer = None
 
         try:
             client = TestClient(app_with_trainer)
@@ -333,15 +330,14 @@ class TestErrorHandling:
                 "/v1/completions", json={"prompt": "test", "max_tokens": 10, "n": 1}
             )
             assert response.status_code == 503
-            assert "Trainer not initialized" in response.json()["detail"]
+            assert "not ready" in response.json()["detail"]
         finally:
-            trainer_module.trainer = original_trainer
+            app_with_trainer.state.trainer = original_trainer
 
     def test_chat_completions_without_trainer(self, app_with_trainer):
-        import tinker_atropos.trainer as trainer_module
 
-        original_trainer = trainer_module.trainer
-        trainer_module.trainer = None
+        original_trainer = app_with_trainer.state.trainer
+        app_with_trainer.state.trainer = None
 
         try:
             client = TestClient(app_with_trainer)
@@ -354,20 +350,19 @@ class TestErrorHandling:
                 },
             )
             assert response.status_code == 503
-            assert "Trainer not initialized" in response.json()["detail"]
+            assert "not ready" in response.json()["detail"]
         finally:
-            trainer_module.trainer = original_trainer
+            app_with_trainer.state.trainer = original_trainer
 
     def test_generate_without_trainer(self, app_with_trainer):
-        import tinker_atropos.trainer as trainer_module
 
-        original_trainer = trainer_module.trainer
-        trainer_module.trainer = None
+        original_trainer = app_with_trainer.state.trainer
+        app_with_trainer.state.trainer = None
 
         try:
             client = TestClient(app_with_trainer)
             response = client.post("/generate", json={"input_ids": [1, 2, 3]})
             assert response.status_code == 503
-            assert "Trainer not initialized" in response.json()["detail"]
+            assert "not ready" in response.json()["detail"]
         finally:
-            trainer_module.trainer = original_trainer
+            app_with_trainer.state.trainer = original_trainer

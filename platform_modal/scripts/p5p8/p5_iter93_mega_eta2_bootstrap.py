@@ -30,10 +30,10 @@ import random
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-CELLS = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+ROOT = Path(__file__).resolve().parents[3]
+CELLS = ROOT / "platform_hybrid" / "experiments" / "results" / "mega_20260704" / "cells.tsv"
+OUT_DIR = ROOT / "platform_hybrid" / "experiments" / "results" / "p5p8/review17_v2"
+
 
 AXES = (
     "model_family",
@@ -52,6 +52,10 @@ METRICS = (
 N_BOOT = 4000
 SEED = 20260705
 
+
+from p5_review17_stats import additive_r2, ratio_interval
+
+from p5_review17_stats import json_safe
 
 def load_cells():
     rows = []
@@ -106,11 +110,8 @@ def stack_over_seed_ratio(rows, metric_name):
     """Sum of eta^2 over {model_family, task_slice, G, temperature} divided
     by eta^2(seed). NaN/Inf if seed_eta2 is zero."""
     seed_eta2 = eta2_by_axis(rows, "seed", metric_name)
-    stack_eta2 = 0.0
-    for axis in ("model_family", "task_slice", "G", "temperature"):
-        e = eta2_by_axis(rows, axis, metric_name)
-        if not math.isnan(e):
-            stack_eta2 += e
+    stack_eta2 = additive_r2(rows, [r[metric_name] for r in rows],
+                              ("model_family", "task_slice", "G", "temperature"))
     if math.isnan(seed_eta2) or seed_eta2 <= 1e-6:
         return float("inf")
     return stack_eta2 / seed_eta2
@@ -132,6 +133,8 @@ def percentile_ci(values, alpha=0.05):
 
 
 def main() -> int:
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     rows = load_cells()
     if not rows:
         print(f"No rows loaded from {CELLS}", file=sys.stderr)
@@ -239,7 +242,7 @@ def main() -> int:
         finite = [s for s in samples if math.isfinite(s) and s < 1e9]
         n_inf = len(samples) - len(finite)
         if finite:
-            lo, hi = percentile_ci(finite)
+            lo, hi = ratio_interval(finite, N_BOOT)
             mean_b = sum(finite) / len(finite)
             ratio_above_1 = sum(1 for s in finite if s > 1.0) / len(finite)
         else:
@@ -359,6 +362,8 @@ def main() -> int:
     n_loco_drop_30 = sum(1 for r in h4_drops if r["drop_pct"] >= 30.0)
 
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "n_cells": len(rows),
         "n_axes": len(AXES),
         "n_metrics": len(METRICS),
@@ -379,16 +384,14 @@ def main() -> int:
         "rows_h3": h3_rows,
         "rows_h4": h4_rows,
         "interpretation": [
-            "P5-109 closes brief vein (c) on the live mega-98-cell corpus:",
-            "every per-axis eta^2 headline now carries a paired-cell bootstrap",
-            "95% CI. Stack axes (model_family, task_slice, G, temperature)",
-            "explain the majority of variance and remain significantly",
-            "above the noise floor on a strict (UB<=0.05) basis on the",
-            "majority of (axis, metric) cells.",
+            f"Small-effect upper-bound criterion UB<=0.05: {n_strict_sig}/{len(h1_rows)} comparisons.",
+            "This is not evidence that an axis is above a noise floor.",
+            "Joint stack R2 is a categorical OLS fit; marginal eta2 values are not additive.",
+            "Exploratory cell-resampling diagnostics do not establish independent-run replication.",
         ],
     }
     with (OUT_DIR / "p5_iter93_eta2_boot_summary.json").open("w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(json_safe(summary), f, indent=2)
 
     print("\n=== H1: per-axis eta^2 with bootstrap 95% CI ===")
     print(f"  {'axis':>14} | {'metric':>20} | {'point':>7} | "

@@ -36,6 +36,13 @@ trainer:
     use_kl_loss: true
     kl_coef: 0.02
 
+  # Logging (same trainer mapping)
+  logger: "wandb"
+  project_name: "skyrl-colab"
+  run_name: "grpo-math"
+  resume_mode: "null"
+  ckpt_path: "./checkpoints/"
+
 # Data configuration
 data:
   train_data:
@@ -60,11 +67,3 @@ generator:
 # Environment
 environment:
   env_class: "math"
-
-# Logging
-trainer:
-  logger: "wandb"
-  project_name: "skyrl-colab"
-  run_name: "grpo-math"
-  resume_mode: "null"
-  ckpt_path: "./checkpoints/"

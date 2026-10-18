@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "path": "campaign.provenance.json",
+      "signature_required": true,
+      "verification_mode": "historical_inventory",
+      "sha256": "a9bb4c483d82fc802f611b2b5fff1181c2a1d8cd802f0d43d82ebdda1159b8a0",
+      "signature_sha256": "7a0c21dbf94de2f6f9a7b62a0b1b59ed47abd5faf8fff6c508950e8c09152abf"
+    },
+    {
+      "path": "sweep.provenance.json",
+      "signature_required": false,
+      "verification_mode": "historical_inventory",
+      "sha256": "bfa3670fe2db88569ba9e529e4197eacecc2d11d38959a830e5162fd8ff64e79"
+    }
+  ]
+}

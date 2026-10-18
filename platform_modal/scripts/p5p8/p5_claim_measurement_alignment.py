@@ -47,7 +47,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CELLS_TSV = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
 MAN_DIR = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8" / "review16_v2"
+# Versioned protocol outputs; historical artifacts are not overwritten.
 FIG_DIR = OUT_DIR / "figures"
 
 # Six claim axes; each contributes 100/6 pts to the alignment badge.
@@ -117,16 +118,9 @@ def parse_manifest(manifest: dict) -> dict:
 
 def axis_match(axis: str, claimed, measured) -> tuple[float, str]:
     """Return (points 0..16.67, severity string)."""
-    # Special case: decontam has no measured column in cells.tsv, so
-    # we score the manifest's *declaration* against a recognised class
-    # list (no ground-truth measurement to contradict it).
-    if axis == "decontam":
-        if claimed is None or str(claimed).strip() == "":
-            return 0.0, "no_claim"
-        cv_low = str(claimed).strip().lower()
-        if any(tok in cv_low for tok in DECONTAM_CLASSES):
-            return 16.67, "declared_recognised_class"
-        return 8.33, "declared_unrecognised_class"
+    # Protocol v2: declarations without independent measurement earn no credit.
+    if axis == "decontam" and measured is None:
+        return 0.0, "DECLARED_UNVERIFIED" if claimed else "MISSING"
     if measured is None or str(measured).strip() == "":
         return 0.0, "no_measurement"
     if claimed is None or str(claimed).strip() == "":
@@ -135,21 +129,11 @@ def axis_match(axis: str, claimed, measured) -> tuple[float, str]:
     cv = str(claimed).strip()
     mv = str(measured).strip()
     if axis == "model":
-        # Compare model families — claim is the cell_id-prefix slug
-        # like "meta-llama-Llama-3-2-3B"; measurement is the
-        # cells.tsv `model_family` field like "meta-llama/Llama-3.2-3B".
-        # Normalise: drop separators, drop dots between digits, lowercase.
-        def _norm(s: str) -> str:
-            s = s.replace("-", "").replace("_", "").replace(".", "").replace("/", "").lower()
-            return s
-        c = _norm(cv)
-        m = _norm(mv)
-        if c == m:
+        # Exact, documented cell-slug aliases; never substring or punctuation erasure.
+        aliases = {"meta-llama-Llama-3-2-3B": "meta-llama/Llama-3.2-3B",
+                   "Qwen-Qwen3-5-4B": "Qwen/Qwen3.5-4B"}
+        if aliases.get(cv, cv) == aliases.get(mv, mv):
             return 16.67, "match"
-        # Fuzzy: accept substring containment (handles minor formatting
-        # such as a leading org prefix being dropped)
-        if c in m or m in c:
-            return 12.0, "partial_match"
         return 0.0, "catastrophic_mismatch"
     if axis == "task":
         if cv == mv:
@@ -231,7 +215,7 @@ def bootstrap_ci(values: list[float], n_boot: int = 2000, seed: int = 0):
 
 
 def write_outputs(scored):
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     tsv = OUT_DIR / "claim_alignment.tsv"
     with tsv.open("w", newline="") as f:
@@ -333,6 +317,7 @@ def make_figure(scored, summary):
 
 
 def main():
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     if not CELLS_TSV.exists():
         print(f"missing {CELLS_TSV}", file=sys.stderr)
         return 1

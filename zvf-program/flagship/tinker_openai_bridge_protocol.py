@@ -176,6 +176,7 @@ def openai_chat_stream_events(
     tool_calls: list[dict[str, Any]],
     prompt_tokens: int,
     completion_tokens: int,
+    finish_reason: str | None = None,
 ) -> list[str]:
     """Serialize a completed sample as OpenAI chat-completion SSE events.
 
@@ -222,7 +223,7 @@ def openai_chat_stream_events(
                 {
                     "index": 0,
                     "delta": {},
-                    "finish_reason": "tool_calls" if tool_calls else "stop",
+                    "finish_reason": finish_reason or ("tool_calls" if tool_calls else "stop"),
                 }
             ]
         )
@@ -395,5 +396,5 @@ def iter_responses_sse_events(response: dict[str, Any],
                  "output_index": index, "item": item})
             index += 1
     yield _responses_sse(
-        "response.completed",
-        {"type": "response.completed", "response": response})
+        "response.incomplete" if response.get("status") == "incomplete" else "response.completed",
+        {"type": "response.incomplete" if response.get("status") == "incomplete" else "response.completed", "response": response})

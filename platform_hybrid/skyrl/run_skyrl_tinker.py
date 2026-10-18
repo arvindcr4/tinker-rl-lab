@@ -11,34 +11,36 @@ Usage:
     python run_skyrl_tinker.py --config configs/tinker_hosted.yaml --env gsm8k
 """
 
-import atexit
-try:
-    from codecarbon import EmissionsTracker
-    _tracker = EmissionsTracker()
-    _tracker.start()
-    atexit.register(_tracker.stop)
-except ImportError:
-    pass
-
 import argparse
 import importlib
 import json
-import os
 import random
 import sys
 import time
 import warnings
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import tinker
+    import wandb
 
 import yaml
+
+# Direct-script and package invocation resolve the same shared exact grader.
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from platform_hybrid.skyrl.reward_contract import (
+    PROTOCOL_ID, gsm8k_reward, math_reward, tool_reward, refresh_sampler, load_unique_yaml,
+)
 
 warnings.filterwarnings("ignore")
 
 
 def load_config(config_path: str, overrides: dict) -> dict:
     with open(config_path) as f:
-        cfg = yaml.safe_load(f)
+        cfg = load_unique_yaml(f)
     # Apply CLI overrides
     if overrides.get("model"):
         cfg["model"]["name"] = overrides["model"]
@@ -51,6 +53,7 @@ def load_config(config_path: str, overrides: dict) -> dict:
         cfg["tinker"]["lora_rank"] = overrides["lora_rank"]
     if overrides.get("lr"):
         cfg["tinker"]["learning_rate"] = overrides["lr"]
+    cfg["execution_protocol"] = PROTOCOL_ID
     return cfg
 
 
@@ -121,21 +124,7 @@ class GSM8KEnv:
         )
 
     def reward(self, response: str, item: dict) -> float:
-        import re
-        # Extract answer after ####
-        match = re.search(r'####\s*([\d,.\-]+)', response)
-        if not match:
-            # Try last number in response
-            nums = re.findall(r'[\d,]+\.?\d*', response)
-            if not nums:
-                return 0.0
-            pred = nums[-1].replace(",", "")
-        else:
-            pred = match.group(1).replace(",", "")
-        try:
-            return 1.0 if float(pred) == float(item["answer"].replace(",", "")) else 0.1
-        except ValueError:
-            return 0.0
+        return gsm8k_reward(response, item)
 
     def sample_batch(self, n: int) -> list[dict]:
         self.load()
@@ -179,15 +168,7 @@ class MathEnv:
         )
 
     def reward(self, response: str, item: dict) -> float:
-        import re
-        match = re.search(r'\\boxed\{([^}]+)\}', response)
-        if not match:
-            return 0.0
-        pred = match.group(1).strip()
-        gold_match = re.search(r'\\boxed\{([^}]+)\}', item["answer"])
-        if gold_match and pred == gold_match.group(1).strip():
-            return 1.0
-        return 0.1
+        return math_reward(response, item)
 
     def sample_batch(self, n: int) -> list[dict]:
         self.load()
@@ -246,21 +227,7 @@ class ToolUseEnv:
         )
 
     def reward(self, response: str, item: dict) -> float:
-        import re
-        m = re.search(r'\{.*\}', response.strip(), re.DOTALL)
-        if not m:
-            return 0.0
-        try:
-            p = json.loads(m.group())
-        except json.JSONDecodeError:
-            return 0.1
-        score = 0.3
-        if p.get("tool") == item["tool"] or p.get("name") == item["tool"]:
-            score += 0.4
-        pred_args = p.get("arguments", p.get("parameters", {}))
-        if isinstance(pred_args, dict) and item["args"]:
-            score += 0.3 * sum(1 for k in item["args"] if k in pred_args) / len(item["args"])
-        return min(score, 1.0)
+        return tool_reward(response, item)
 
     def sample_batch(self, n: int) -> list[dict]:
         return random.sample(self.prompts, min(n, len(self.prompts)))
@@ -270,6 +237,8 @@ class ToolUseEnv:
 
 def init_wandb(cfg: dict, env_name: str) -> "wandb.sdk.wandb_run.Run | None":
     """Initialize W&B run from config."""
+    if cfg.get("logging", {}).get("backend") != "wandb":
+        return None
     import wandb
     try:
         import torch, wandb
@@ -376,6 +345,103 @@ def log_checkpoint_wandb(run, step: int, ckpt_path: str):
 
 # ── HuggingFace Hub Upload ────────────────────────────────────────────────
 
+MAX_CHECKPOINT_MEMBERS = 10000
+MAX_CHECKPOINT_BYTES = 8 * 1024**3
+
+
+MAX_CHECKPOINT_DOWNLOAD_BYTES = 8 * 1024**3
+MAX_CHECKPOINT_DOWNLOAD_SECONDS = 300
+CHECKPOINT_READ_TIMEOUT_SECONDS = 10
+CHECKPOINT_DOWNLOAD_CHUNK_BYTES = 1024**2
+
+
+def download_checkpoint_archive(url: str, destination: Path) -> None:
+    """Download only provider GCS HTTPS data, with bounded I/O and no URL logging.
+
+    Five-minute wall-clock deadline plus at most one ten-second blocking read.
+    Redirects are rejected rather than forwarding a signed URL to another host.
+    """
+    import urllib.request
+    from urllib.parse import urlsplit
+
+    try:
+        parsed = urlsplit(url)
+        host = parsed.hostname or ""
+        valid = (parsed.scheme == "https" and
+                 (host == "storage.googleapis.com" or host.endswith(".storage.googleapis.com")) and
+                 not parsed.username and not parsed.password and not parsed.fragment and
+                 parsed.port in (None, 443))
+    except (TypeError, ValueError):
+        valid = False
+    if not valid:
+        raise ValueError("checkpoint archive URL is not an approved HTTPS storage target")
+
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            raise ValueError("checkpoint archive redirects are forbidden")
+
+    deadline = time.monotonic() + MAX_CHECKPOINT_DOWNLOAD_SECONDS
+    try:
+        opener = urllib.request.build_opener(NoRedirect())
+        with opener.open(url, timeout=CHECKPOINT_READ_TIMEOUT_SECONDS) as response:
+            length = response.headers.get("Content-Length")
+            if length is not None and (not str(length).isdigit() or int(length) > MAX_CHECKPOINT_DOWNLOAD_BYTES):
+                raise ValueError("checkpoint archive compressed byte limit exceeded")
+            total = 0
+            with destination.open("xb") as stream:
+                while True:
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError("checkpoint archive download deadline exceeded")
+                    # read1 performs a single buffered/raw read, so a trickling
+                    # sender cannot indefinitely extend a full-chunk read.
+                    chunk = response.read1(CHECKPOINT_DOWNLOAD_CHUNK_BYTES)
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError("checkpoint archive download deadline exceeded")
+                    if not chunk:
+                        break
+                    total += len(chunk)
+                    if total > MAX_CHECKPOINT_DOWNLOAD_BYTES:
+                        raise ValueError("checkpoint archive compressed byte limit exceeded")
+                    stream.write(chunk)
+            if length is not None and total != int(length):
+                raise ValueError("checkpoint archive download is truncated")
+    except Exception:
+        # Library HTTP/URL exceptions may contain the complete signed query.
+        raise ValueError("checkpoint archive download failed validation or exceeded its byte/time limit") from None
+
+
+def extract_checkpoint_archive(archive_path: Path, destination: Path) -> None:
+    """Validate the complete bounded inventory before extracting only regular data."""
+    import tarfile
+    from pathlib import PurePosixPath
+
+    members = []
+    names = set()
+    total = 0
+    with tarfile.open(archive_path, "r:*") as archive:
+        for member in archive:
+            if len(members) >= MAX_CHECKPOINT_MEMBERS:
+                raise ValueError("checkpoint archive member limit exceeded")
+            name = PurePosixPath(member.name)
+            if (name.is_absolute() or ".." in name.parts or "\\" in member.name or
+                ":" in member.name or not member.name or not (member.isfile() or member.isdir()) or
+                member.issparse()):
+                raise ValueError("unsafe checkpoint archive member")
+            normalized = str(name)
+            if normalized in names:
+                raise ValueError("duplicate checkpoint archive member")
+            names.add(normalized)
+            if member.size < 0:
+                raise ValueError("invalid checkpoint member size")
+            total += member.size
+            if total > MAX_CHECKPOINT_BYTES:
+                raise ValueError("checkpoint archive byte limit exceeded")
+            members.append(member)
+        if not any(member.isfile() for member in members):
+            raise ValueError("checkpoint archive contains no files")
+        archive.extractall(path=destination, members=members, filter="data")
+
+
 def upload_to_hub(
     cfg: dict,
     env_name: str,
@@ -391,10 +457,7 @@ def upload_to_hub(
         print("\nHF upload disabled in config.")
         return None
 
-    import shutil
-    import tarfile
     import tempfile
-    import urllib.request
 
     from huggingface_hub import HfApi
 
@@ -409,48 +472,38 @@ def upload_to_hub(
 
     api = HfApi()
 
-    # Create repo if needed
-    api.create_repo(repo_id=repo_id, private=private, exist_ok=True)
+    # A fresh private directory owns every file removed by this invocation.
+    with tempfile.TemporaryDirectory(prefix="skyrl-hf-upload-") as staging:
+        local_dir = Path(staging) / "payload"
+        local_dir.mkdir(mode=0o700)
 
-    # Download weights from Tinker via signed archive URL
-    local_dir = Path(f"/tmp/skyrl-hf-upload/{repo_id.replace('/', '_')}")
-    if local_dir.exists():
-        shutil.rmtree(local_dir)
-    local_dir.mkdir(parents=True, exist_ok=True)
+        print(f"  Downloading weights from Tinker: {final_ckpt_path}")
+        rc = svc.create_rest_client()
+        archive_resp = rc.get_checkpoint_archive_url_from_tinker_path(final_ckpt_path).result()
+        archive_url = archive_resp.url
 
-    print(f"  Downloading weights from Tinker: {final_ckpt_path}")
-    rc = svc.create_rest_client()
-    archive_resp = rc.get_checkpoint_archive_url_from_tinker_path(final_ckpt_path).result()
-    archive_url = archive_resp.url
+        # Download and extract
+        archive_path = Path(staging) / "checkpoint.tar.gz"
+        download_checkpoint_archive(archive_url, archive_path)
+        print(f"  Downloaded archive: {archive_path.stat().st_size / 1024 / 1024:.1f} MB")
 
-    # Download and extract
-    archive_path = local_dir / "checkpoint.tar.gz"
-    urllib.request.urlretrieve(archive_url, str(archive_path))
-    print(f"  Downloaded archive: {archive_path.stat().st_size / 1024 / 1024:.1f} MB")
+        extract_checkpoint_archive(archive_path, local_dir)
+        archive_path.unlink()
+        print(f"  Extracted weights to: {local_dir}")
 
-    # Auto-detect archive format (Tinker may return .tar or .tar.gz)
-    try:
-        with tarfile.open(str(archive_path), "r:gz") as tar:
-            tar.extractall(path=str(local_dir))
-    except tarfile.ReadError:
-        with tarfile.open(str(archive_path), "r:") as tar:
-            tar.extractall(path=str(local_dir))
-    archive_path.unlink()
-    print(f"  Extracted weights to: {local_dir}")
+        # Save training config
+        with open(local_dir / "training_config.yaml", "w") as f:
+            yaml.dump(cfg, f, default_flow_style=False)
 
-    # Save training config
-    with open(local_dir / "training_config.yaml", "w") as f:
-        yaml.dump(cfg, f, default_flow_style=False)
+        # Save metrics
+        with open(local_dir / "training_metrics.json", "w") as f:
+            json.dump(metrics, f, indent=2)
 
-    # Save metrics
-    with open(local_dir / "training_metrics.json", "w") as f:
-        json.dump(metrics, f, indent=2)
-
-    # Generate model card
-    if hf_cfg.get("model_card", True):
+        # Shared upload metadata is required even without a model card.
         avg_reward = metrics.get("final_avg_reward", 0)
         total_steps = metrics.get("total_steps", 0)
-        card_content = f"""---
+        if hf_cfg.get("model_card", True):
+            card_content = f"""---
 library_name: peft
 base_model: {model_name}
 tags:
@@ -481,10 +534,10 @@ LoRA fine-tuned with GRPO via [SkyRL](https://github.com/NovaSky-AI/SkyRL) + [Ti
 | Final avg reward | {avg_reward:.3f} |
 | Tinker run ID | `{run_id}` |
 """
-        if wandb_url:
-            card_content += f"| W&B | [{wandb_url}]({wandb_url}) |\n"
+            if wandb_url:
+                card_content += f"| W&B | [{wandb_url}]({wandb_url}) |\n"
 
-        card_content += f"""
+            card_content += f"""
 ## Usage
 
 ```python
@@ -502,28 +555,33 @@ Trained for {total_steps} steps with final average reward of {avg_reward:.3f}.
 
 ## Framework
 
-- **RL Framework**: SkyRL
+- **Trainer implementation**: custom run_skyrl_tinker.py (not the SkyRL trainer)
+- **Training service**: Tinker
+- **Objective protocol**: skyrl-tinker-exact-onpolicy-v2
 - **Training Backend**: Tinker (hosted)
 - **Algorithm**: GRPO
 """
-        with open(local_dir / "README.md", "w") as f:
-            f.write(card_content)
+            with open(local_dir / "README.md", "w") as f:
+                f.write(card_content)
 
-    # Upload all files
-    api.upload_folder(
-        folder_path=str(local_dir),
-        repo_id=repo_id,
-        commit_message=f"Upload GRPO-trained LoRA ({env_name}, {total_steps} steps, reward={avg_reward:.3f})",
-    )
+        # Publish only after the entire archive and local metadata are validated.
+        api.create_repo(repo_id=repo_id, private=private, exist_ok=True)
+        api.upload_folder(
+            folder_path=str(local_dir),
+            repo_id=repo_id,
+            commit_message=f"Upload GRPO-trained LoRA ({env_name}, {total_steps} steps, reward={avg_reward:.3f})",
+        )
 
-    repo_url = f"https://huggingface.co/{repo_id}"
-    print(f"  Uploaded: {repo_url}")
-    return repo_url
+        repo_url = f"https://huggingface.co/{repo_id}"
+        print(f"  Uploaded: {repo_url}")
+        return repo_url
 
 
 # ── Main training loop ────────────────────────────────────────────────────
 
 def train(cfg: dict, env, wandb_run):
+    if cfg.get("execution_protocol") != PROTOCOL_ID:
+        raise ValueError("explicit current execution protocol required")
     import tinker
     import tinker.types as T
     from transformers import AutoTokenizer
@@ -580,6 +638,7 @@ def train(cfg: dict, env, wandb_run):
         batch = env.sample_batch(prompts_per_step)
         all_data = []
         all_advs = []
+        completion_starts = []
         batch_rewards = []
         step_samples = []
 
@@ -632,6 +691,7 @@ def train(cfg: dict, env, wandb_run):
                 )
                 all_data.append(datum)
                 all_advs.append(adv)
+                completion_starts.append(max(0, len(prompt_ids) - 1))
 
         if not all_data:
             continue
@@ -645,7 +705,7 @@ def train(cfg: dict, env, wandb_run):
             losses = []
             for i, logprobs in enumerate(logprobs_list):
                 adv = _step_advs[i]
-                losses.append(-adv * logprobs.sum())
+                losses.append(-adv * logprobs[completion_starts[i]:].sum())
             loss = torch.stack(losses).mean()
             return loss, {"grpo_loss": loss.item()}
 
@@ -660,6 +720,9 @@ def train(cfg: dict, env, wandb_run):
             beta2=opt_cfg.get("beta2", 0.95),
             eps=opt_cfg.get("eps", 1e-8),
         )).result()
+
+        # Sampler synchronization is independent of durable recovery cadence.
+        sc, sampler_path = refresh_sampler(tc, step + 1)
 
         step_time = time.time() - step_start
         avg_r = sum(batch_rewards) / len(batch_rewards)
@@ -677,17 +740,15 @@ def train(cfg: dict, env, wandb_run):
 
         # Checkpoint
         if (step + 1) % save_every == 0:
-            tc.save_state(name=f"state_{step + 1}")
-            ckpt = tc.save_weights_for_sampler(name=f"step_{step + 1}").result()
-            sc = tc.create_sampling_client(model_path=ckpt.path)
-            log_checkpoint_wandb(wandb_run, step + 1, ckpt.path)
+            tc.save_state(name=f"state_{step + 1}").result()
+            log_checkpoint_wandb(wandb_run, step + 1, sampler_path)
             print(f"  -> Checkpoint saved: step_{step + 1}")
 
     # Final save
     # TODO: Implement a robust held-out evaluation loop on unseen test sets to prove
     # true generalization and calculate statistical significance, avoiding training-set overfitting claims.
     total_time = time.time() - train_start
-    tc.save_state(name="final")
+    tc.save_state(name="final").result()
     final_ckpt = tc.save_weights_for_sampler(name="final").result()
 
     final_avg = sum(step_rewards[-10:]) / max(len(step_rewards[-10:]), 1)
@@ -710,6 +771,9 @@ def train(cfg: dict, env, wandb_run):
 
     # Collect metrics for HF model card
     metrics = {
+        "execution_protocol": PROTOCOL_ID,
+        "reward_measurement": "on_policy_training_last10_not_final_heldout",
+        "objective": "unclipped_group_centered_completion_sequence_sum_no_reference_kl",
         "final_avg_reward": final_avg,
         "overall_avg_reward": overall_avg,
         "total_steps": steps,

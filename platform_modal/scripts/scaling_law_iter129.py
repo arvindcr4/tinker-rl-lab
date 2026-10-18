@@ -62,11 +62,10 @@ import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
 from _analysis_common import saturation, write_rows_tsv as _write_tsv
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-FIG_DIR.mkdir(exist_ok=True)
+RESULTS_DIR = REPO / "experiments" / "results" / "review26_v2"
+FIG_DIR = REPO / "figures" / "review26_v2"
 
 MODELS: dict[str, tuple[str, float, str, int]] = {
     # name                              file                                       params_B family        seed
@@ -257,7 +256,14 @@ def bayes_factor_two_models(y: np.ndarray, mu1: np.ndarray, mu2: np.ndarray,
 
 # ---------- main ----------
 
+def summarize_aic_wins(rows):
+    """AIC, AICc, and F flags occupy columns 7, 8, and 9."""
+    return tuple(sum(float(row[i]) == 1.0 for row in rows) for i in (7, 8, 9))
+
+
 def main() -> None:
+    FIG_DIR.mkdir(parents=True, exist_ok=True)
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(SEED)
 
     # ---------- Load traces ----------
@@ -287,6 +293,9 @@ def main() -> None:
         peak_idx = int(np.argmax(y))
         tpk = float(t[max(0, min(peak_idx, n - 2))])
         # 3-parameter piecewise with FIXED t_peak.
+        ss_res = float("nan")
+        pred = None
+        k_pw = 3
         try:
             def pw_fixed(t_arr, r_max, lam, gamma):
                 pre = r_max * (1.0 - np.exp(-lam * t_arr))
@@ -316,7 +325,8 @@ def main() -> None:
             tpk_record = tpk
         except Exception:  # noqa: BLE001
             r_max, lam, gamma = float("nan"), float("nan"), float("nan")
-            rmse, r2, aic_pw, bic_pw, pred, aicc_pw = (float("nan"),) * 6
+            rmse, r2, aic_pw, bic_pw, aicc_pw = (float("nan"),) * 5
+            pred = None
             tpk_record = tpk
         # Compute AICc for sat
         ss_res_sat = float(np.sum((y - sat["pred"]) ** 2)) if sat["pred"] is not None else float("nan")
@@ -387,9 +397,7 @@ def main() -> None:
          "pw_wins_aic", "pw_wins_aicc", "pw_wins_F_p05"],
         aic_rows,
     )
-    n_pw_wins_aic = sum(1 for r in aic_rows if float(r[6]) == 1.0)
-    n_pw_wins_aicc = sum(1 for r in aic_rows if float(r[7]) == 1.0)
-    n_pw_wins_F = sum(1 for r in aic_rows if float(r[8]) == 1.0)
+    n_pw_wins_aic, n_pw_wins_aicc, n_pw_wins_F = summarize_aic_wins(aic_rows)
 
     # ---------- F2: Within-capable-class scaling of t_peak ----------
     # Compute t_peak and gamma for the 3 capable anchors

@@ -1,59 +1,172 @@
-"""Drive one Colab GPU session through a list of same-stack v2 runs, downloading each result as it lands.
+"""Preserve complete versioned Colab bundles before stopping a session.
 
-Usage (from the repository root):
-  python3 platform_colab/samestack_v2/drive_sessions.py SESSION ppo:4096 ppo_8x8:42 ...
-Results land in platform_hybrid/experiments/results/samestack_gsm8k_v2s_colab/ (staging, verified before use).
-Set GPU (default L4) and PARALLEL (runs trained at once per session, default 1); BATCH sets how many runs go
-to the session per exec as one rolling pool (default PARALLEL), downloaded when that exec returns.
-Set STAGE_DIR (repo-relative) to stage elsewhere, e.g. for cross-platform controls.
-Runs already present in staging are skipped, so the command can be rerun after a dropped session.
+Existing JSON does not skip a run. The remote core checks the current immutable
+protocol/config/source identity before reusing a completed run. This is finished
+artifact reuse, not optimizer/RNG-state recovery of interrupted training.
+Downloads enter a temporary per-run directory. Every advertised file and hash,
+run schema, texts, adapters, and tokenizer must verify before atomic promotion.
+A failed transfer leaves the remote session running for a retry.
 """
+from __future__ import annotations
 
+import argparse
+import json
 import os
-import pathlib
+from pathlib import Path, PurePosixPath
 import subprocess
 import sys
+import tempfile
+import zipfile
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
-MODAL_SCRIPT = ROOT / "platform_hybrid/experiments/modal/modal_samestack_gsm8k_cot_v2.py"
+ROOT = Path(__file__).resolve().parents[2]
+HELPERS = ROOT / "platform_hybrid/experiments"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from platform_hybrid.experiments.samestack_contract import completion_path, strict_json_load, validate_completion
+from platform_hybrid.experiments.samestack_protocol import PROTOCOL_HASH, PROTOCOL_ID
+
+MODAL_SCRIPT = HELPERS / "modal/modal_samestack_gsm8k_cot_v2.py"
 RUNNER = ROOT / "platform_colab/samestack_v2/colab_run_arms.py"
-STAGE = ROOT / os.environ.get("STAGE_DIR", "platform_hybrid/experiments/results/samestack_gsm8k_v2s_colab")
+STAGE = ROOT / os.environ.get("STAGE_DIR", "platform_hybrid/experiments/results/" + PROTOCOL_ID + "_colab")
 
 
 def colab(*args, check=True):
-    print("$ colab", " ".join(args), flush=True)
-    return subprocess.run(["colab", *args], check=check)
+    print("$ colab", " ".join(str(arg) for arg in args), flush=True)
+    timeout = 180
+    if args and args[0] == "exec":
+        timeout = int(args[args.index("--timeout") + 1]) + 120 if "--timeout" in args else 10920
+    return subprocess.run(["colab", *map(str, args)], check=check, timeout=timeout)
 
 
-def main():
-    session, runs = sys.argv[1], sys.argv[2:]
-    STAGE.mkdir(parents=True, exist_ok=True)
-    sessions = subprocess.run(["colab", "sessions"], capture_output=True, text=True).stdout
-    if session not in sessions:
-        gpu = os.environ.get("GPU", "L4")
-        colab("new", "--gpu", gpu, *(["--high-mem"] if gpu == "A100" else []), "-s", session)
-    colab("upload", "-s", session, str(MODAL_SCRIPT), "/content/modal_samestack_gsm8k_cot_v2.py")
-    colab("upload", "-s", session, str(RUNNER), "/content/colab_run_arms.py")
-    todo = []
-    for run in runs:
-        if (STAGE / f"{run.replace(':', '_s')}.json").exists():
-            print(f"skip {run}: already staged", flush=True)
-        else:
-            todo.append(run)
-    par = int(os.environ.get("PARALLEL", "1"))
-    batch = int(os.environ.get("BATCH", par))
-    for i in range(0, len(todo), batch):
-        group = todo[i:i + batch]
-        waves = -(-len(group) // par)
-        # kernel env persists between execs, so every variable is set each time
-        colab("exec", "-s", session, "-f", str(RUNNER), "--timeout", str(14400 * waves), "--env", f"RUNS={','.join(group)}",
-              "--env", "SMOKE=0", "--env", f"PARALLEL={par}", check=False)
-        for run in group:
-            name = run.replace(":", "_s")
-            for suffix in (".json", "_texts.json.gz"):
-                colab("download", "-s", session, f"/content/results/samestack_gsm8k_v2s/{name}{suffix}", str(STAGE / f"{name}{suffix}"), check=False)
-            print(f"{'STAGED' if (STAGE / f'{name}.json').exists() else 'MISSING'} {name}", flush=True)
-    colab("stop", "-s", session, check=False)
+def _safe_inventory(marker, name):
+    if not isinstance(marker, dict) or not isinstance(marker.get("files"), dict) or not marker["files"]:
+        raise ValueError("missing remote artifact inventory")
+    files = marker["files"]
+    for relative, entry in files.items():
+        path = PurePosixPath(relative)
+        if (path.is_absolute() or ".." in path.parts or "\\" in relative
+                or str(path) != relative or not isinstance(entry, dict)
+                or (relative not in (name + ".json", name + "_texts.json.gz")
+                    and not relative.startswith("adapters/" + name + "/"))):
+            raise ValueError(f"unsafe or unrelated artifact path: {relative}")
+    return files
+
+
+def preserve_run(session, name, stage, *, expected=None, command=colab):
+    """Download and atomically promote one bundle; retain partial files on failure."""
+    stage = Path(stage)
+    stage.mkdir(parents=True, exist_ok=True)
+    temporary = Path(tempfile.mkdtemp(prefix=f".{name}.partial-", dir=stage))
+    remote = f"/content/results/{PROTOCOL_ID}"
+    result_path = temporary / (name + ".json")
+    marker_path = completion_path(result_path)
+    # Marker is downloaded into the private temporary directory, never published
+    # as complete before its contents have independently passed local validation.
+    command("download", "-s", session, f"{remote}/{marker_path.name}", str(marker_path))
+    inventory = _safe_inventory(strict_json_load(marker_path), name)
+    for relative in sorted(inventory):
+        destination = temporary / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        command("download", "-s", session, f"{remote}/{relative}", str(destination))
+    record = validate_completion(result_path, expected=expected)
+    final = stage / name
+    if final.exists():
+        # Preserve prior bundles, including incomplete or differently identified
+        # ones. Never overwrite old evidence while promoting a retry.
+        archived = stage / f".{name}.previous-{os.urandom(6).hex()}"
+        os.replace(final, archived)
+    os.replace(temporary, final)
+    validate_completion(final / result_path.name, expected=expected)
+    return record
+
+
+def drive_session(session, runs, *, stage=STAGE, command=colab, source=None, parallel=1, batch=None, stop_session=True):
+    """Stop only after all requested bundles have been independently preserved."""
+    from platform_colab.samestack_v2.colab_run_arms import parse_runs
+    parsed = parse_runs(",".join(runs))
+    if not parsed:
+        raise ValueError("at least one run is required")
+    batch = parallel if batch is None else batch
+    if parallel < 1 or batch < 1:
+        raise ValueError("parallel and batch must be positive")
+    # Session creation is explicit to the CLI; this helper never guesses by a
+    # substring match against another session's name.
+    source = source or capture_source()
+    if source.get("status") != "observed" or not source.get("commit") or not source.get("dirty_hash"):
+        raise ValueError("observed source provenance is required before upload")
+    execution_failures, preservation_failures = [], []
+    expected = {"environment": "colab", "protocol_id": PROTOCOL_ID, "protocol_hash": PROTOCOL_HASH,
+                "source_commit": source["commit"], "source_dirty_hash": source["dirty_hash"]}
+    with tempfile.TemporaryDirectory(prefix="samestack-upload-") as directory:
+        source_path = Path(directory) / "samestack_source.json"
+        source_path.write_text(json.dumps(source, allow_nan=False), encoding="utf-8")
+        archive_path = Path(directory) / "samestack_code.zip"
+        with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
+            for relative in source["source_files"]:
+                local = ROOT / relative
+                if not local.resolve().is_relative_to(ROOT.resolve()) or not local.is_file():
+                    raise ValueError(f"source manifest path unavailable: {relative}")
+                bundle.write(local, relative)
+        uploads = [(archive_path, "/content/samestack_code.zip"),
+                   (RUNNER, "/content/" + RUNNER.name),
+                   (source_path, "/content/samestack_source.json")]
+        for local, remote in uploads:
+            command("upload", "-s", session, str(local), remote)
+        for offset in range(0, len(parsed), batch):
+            group = parsed[offset:offset + batch]
+            waves = len(group)  # GPU admission may serialize the entire batch.
+            # Remote core validates every requested identity; staging never skips runs.
+            try:
+                result = command("exec", "-s", session, "-f", str(RUNNER), "--timeout", str(14400 * waves),
+                                 "--env", "RUNS=" + ",".join(f"{arm}:{seed}" for arm, seed in group),
+                                 "--env", "SMOKE=0", "--env", f"PARALLEL={parallel}", check=False)
+                if getattr(result, "returncode", 0):
+                    execution_failures.append(RuntimeError(f"remote batch failed: {group}"))
+            except (OSError, subprocess.SubprocessError) as exc:
+                execution_failures.append(exc)
+            for arm, seed in group:
+                name = f"{arm}_s{seed}"
+                try:
+                    preserve_run(session, name, stage, expected=expected, command=command)
+                    print(f"PRESERVED {name}", flush=True)
+                except (OSError, ValueError, subprocess.SubprocessError) as exc:
+                    preservation_failures.append(exc)
+    if preservation_failures:
+        # Preserve successful siblings but retain remote evidence for retries.
+        # Do not automatically retry paid execution or assume a provider TTL.
+        print(f"Session {session} was not stopped: {len(preservation_failures)} bundle(s) "
+              "could not be preserved. Retry artifact downloads or explicitly stop the "
+              "session after reviewing evidence loss; provider charges may continue.", file=sys.stderr)
+        raise preservation_failures[0]
+    for arm, seed in parsed:
+        validate_completion(Path(stage) / f"{arm}_s{seed}" / f"{arm}_s{seed}.json", expected=expected)
+    if stop_session:
+        command("stop", "-s", session)
+    if execution_failures:
+        raise execution_failures[0]
+
+
+def capture_source():
+    """Obtain provenance locally before upload; no VM git metadata is invented."""
+    from platform_hybrid.experiments.samestack_manifest import capture_source as capture
+    return capture(ROOT)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("session")
+    parser.add_argument("runs", nargs="+")
+    parser.add_argument("--new", action="store_true", help="create the named session first")
+    parser.add_argument("--stage", type=Path, default=STAGE)
+    parser.add_argument("--gpu", default=os.environ.get("GPU", "L4"))
+    parser.add_argument("--parallel", type=int, default=int(os.environ.get("PARALLEL", "1")))
+    parser.add_argument("--batch", type=int, default=int(os.environ["BATCH"]) if "BATCH" in os.environ else None)
+    args = parser.parse_args(argv)
+    if args.parallel < 1 or (args.batch is not None and args.batch < 1):
+        parser.error("parallel and batch must be positive")
+    if args.new:
+        colab("new", "--gpu", args.gpu, *(["--high-mem"] if args.gpu == "A100" else []), "-s", args.session)
+    drive_session(args.session, args.runs, stage=args.stage, parallel=args.parallel, batch=args.batch, stop_session=args.new)
 
 
 if __name__ == "__main__":

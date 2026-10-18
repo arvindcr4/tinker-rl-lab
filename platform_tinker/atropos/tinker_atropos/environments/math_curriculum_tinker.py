@@ -23,7 +23,7 @@ Hypothesis:
   Once that's stable, the correctness reward teaches WHAT the answer should be.
 
 Config: configs/math_curriculum_qwen8b.yaml
-  Extra field: phase1_steps (default 15) — number of wandb-log cycles in phase 1
+  Extra field: phase1_steps (default 15) — number of optimizer updates in phase 1
                Set via env var CURRICULUM_PHASE1_STEPS to override.
 """
 
@@ -32,11 +32,11 @@ import random
 import re
 import sys
 import time
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional, Tuple
 
 from datasets import load_dataset, concatenate_datasets
 from latex2sympy2_extended import NormalizationConfig
-from math_verify import LatexExtractionConfig, parse, verify
+from math_verify import LatexExtractionConfig, parse
 from tqdm.asyncio import tqdm_asyncio
 
 from atroposlib.envs.base import (
@@ -45,8 +45,8 @@ from atroposlib.envs.base import (
     BaseEnvConfig,
     ScoredDataGroup,
 )
-from atroposlib.type_definitions import Item
 from tinker_atropos.config import TinkerAtroposConfig
+from tinker_atropos.grading import authoritative_math_answer, verify_answer
 
 
 def _get_config_path():
@@ -63,7 +63,8 @@ question_suffix = " Provide your answer inside \\boxed{}."
 convo_prefix = [
     {
         "role": "user",
-        "content": "What is the sum of all positive integers n such that n^2 divides 12!?" + question_suffix,
+        "content": "What is the sum of all positive integers n such that n^2 divides 12!?"
+        + question_suffix,
     },
     {
         "role": "assistant",
@@ -108,8 +109,11 @@ def _format_reward(response: str) -> float:
         extraction_config=[
             LatexExtractionConfig(
                 normalization_config=NormalizationConfig(
-                    nits=False, malformed_operators=False,
-                    basic_latex=True, boxed="all", units=True,
+                    nits=False,
+                    malformed_operators=False,
+                    basic_latex=True,
+                    boxed="all",
+                    units=True,
                 ),
                 boxed_match_priority=0,
                 try_extract_without_anchor=False,
@@ -123,12 +127,15 @@ def _format_reward(response: str) -> float:
 def _correctness_reward(response: str, gold_parsed) -> float:
     """Phase 2 reward: standard binary answer correctness."""
     answer_parsed = parse(
-        response.split("</think>")[-1],
+        authoritative_math_answer(response.split("</think>")[-1]),
         extraction_config=[
             LatexExtractionConfig(
                 normalization_config=NormalizationConfig(
-                    nits=False, malformed_operators=False,
-                    basic_latex=True, boxed="all", units=True,
+                    nits=False,
+                    malformed_operators=False,
+                    basic_latex=True,
+                    boxed="all",
+                    units=True,
                 ),
                 boxed_match_priority=0,
                 try_extract_without_anchor=False,
@@ -136,7 +143,7 @@ def _correctness_reward(response: str, gold_parsed) -> float:
         ],
         extraction_mode="first_match",
     )
-    return 1.0 if verify(answer_parsed, gold_parsed) else 0.0
+    return 1.0 if verify_answer(gold_parsed, answer_parsed) else 0.0
 
 
 class MATHCurriculumEnv(BaseEnv):
@@ -160,9 +167,9 @@ class MATHCurriculumEnv(BaseEnv):
         self.percent_correct_buffer = []
         self.eval_metrics = []
         # Phase tracking
-        # phase1_steps: number of wandb_log() calls (≈ training steps) before switching
+        # phase1_steps: number of confirmed optimizer updates before switching
         self.phase1_steps = int(os.environ.get("CURRICULUM_PHASE1_STEPS", "15"))
-        self.wandb_log_calls = 0  # increments in wandb_log()
+        self.optimizer_steps = 0  # refreshed from the trainer state endpoint
         # Per-step metric buffers
         self.format_score_buffer = []
         self.correctness_score_buffer = []
@@ -170,11 +177,14 @@ class MATHCurriculumEnv(BaseEnv):
 
     @property
     def current_phase(self) -> int:
-        return 1 if self.wandb_log_calls < self.phase1_steps else 2
+        return 1 if self.optimizer_steps < self.phase1_steps else 2
 
     @classmethod
     def config_init(cls):
-        config = TinkerAtroposConfig.from_yaml(CONFIG_PATH) if CONFIG_PATH else TinkerAtroposConfig()
+        config = (
+            TinkerAtroposConfig.from_yaml(CONFIG_PATH) if CONFIG_PATH else TinkerAtroposConfig()
+        )
+        cls._full_config = config
         env_config = BaseEnvConfig(
             tokenizer_name=config.base_model,
             group_size=config.group_size,
@@ -218,16 +228,16 @@ class MATHCurriculumEnv(BaseEnv):
             )
 
         train_splits = [
-            load_dataset("EleutherAI/hendrycks_math", subj, split="train")
-            for subj in MATH_SUBJECTS
+            load_dataset("EleutherAI/hendrycks_math", subj, split="train") for subj in MATH_SUBJECTS
         ]
         test_splits = [
-            load_dataset("EleutherAI/hendrycks_math", subj, split="test")
-            for subj in MATH_SUBJECTS
+            load_dataset("EleutherAI/hendrycks_math", subj, split="test") for subj in MATH_SUBJECTS
         ]
         self.train = concatenate_datasets(train_splits).shuffle(seed=42)
         test_data = concatenate_datasets(test_splits).shuffle(seed=42)
-        self.test = [{"problem": item["problem"], "solution": item["solution"]} for item in test_data]
+        self.test = [
+            {"problem": item["problem"], "solution": item["solution"]} for item in test_data
+        ]
 
         print(
             f"[MATHCurriculum] phase1_steps={self.phase1_steps} | "
@@ -256,34 +266,34 @@ class MATHCurriculumEnv(BaseEnv):
             wandb_metrics = {}
 
         if self.percent_correct_buffer:
-            wandb_metrics["train/percent_correct"] = (
-                sum(self.percent_correct_buffer) / len(self.percent_correct_buffer)
+            wandb_metrics["train/percent_correct"] = sum(self.percent_correct_buffer) / len(
+                self.percent_correct_buffer
             )
         self.percent_correct_buffer = []
 
         if self.format_score_buffer:
-            wandb_metrics["train/format_score"] = (
-                sum(self.format_score_buffer) / len(self.format_score_buffer)
+            wandb_metrics["train/format_score"] = sum(self.format_score_buffer) / len(
+                self.format_score_buffer
             )
         self.format_score_buffer = []
 
         if self.correctness_score_buffer:
-            wandb_metrics["train/correctness_score"] = (
-                sum(self.correctness_score_buffer) / len(self.correctness_score_buffer)
+            wandb_metrics["train/correctness_score"] = sum(self.correctness_score_buffer) / len(
+                self.correctness_score_buffer
             )
         self.correctness_score_buffer = []
 
         wandb_metrics["train/current_phase"] = self.current_phase
-        wandb_metrics["train/wandb_log_calls"] = self.wandb_log_calls
+        wandb_metrics["train/optimizer_steps"] = self.optimizer_steps
 
         # Phase transition announcement
-        if self.wandb_log_calls == self.phase1_steps:
+        if self.optimizer_steps == self.phase1_steps:
             print(
                 f"[MATHCurriculum] *** PHASE TRANSITION: switching from format reward "
-                f"to correctness reward at wandb_log call {self.wandb_log_calls} ***"
+                f"to correctness reward at optimizer step {self.optimizer_steps} ***"
             )
 
-        self.wandb_log_calls += 1
+        # Logging does not advance training progress.
 
         for k, v in self.eval_metrics:
             wandb_metrics[k] = v
@@ -306,12 +316,15 @@ class MATHCurriculumEnv(BaseEnv):
             extraction_config=[LatexExtractionConfig()],
         )
         answer_parsed = parse(
-            response_content.split("</think>")[-1],
+            authoritative_math_answer(response_content.split("</think>")[-1]),
             extraction_config=[
                 LatexExtractionConfig(
                     normalization_config=NormalizationConfig(
-                        nits=False, malformed_operators=False,
-                        basic_latex=True, boxed="all", units=True,
+                        nits=False,
+                        malformed_operators=False,
+                        basic_latex=True,
+                        boxed="all",
+                        units=True,
                     ),
                     boxed_match_priority=0,
                     try_extract_without_anchor=False,
@@ -320,7 +333,7 @@ class MATHCurriculumEnv(BaseEnv):
             extraction_mode="first_match",
         )
         # Eval always uses correctness (phase-independent)
-        score = 1 if verify(answer_parsed, gold_parsed) else 0
+        score = 1 if verify_answer(gold_parsed, answer_parsed) else 0
         fmt_score = _format_reward(response_content)
         return {
             "score": score,
@@ -332,8 +345,7 @@ class MATHCurriculumEnv(BaseEnv):
     async def evaluate(self, *args, **kwargs):
         start_time = time.time()
         tasks = [
-            self.rollout_and_score_eval(item["problem"], item["solution"])
-            for item in self.test
+            self.rollout_and_score_eval(item["problem"], item["solution"]) for item in self.test
         ]
         results = await tqdm_asyncio.gather(*tasks)
         scores = [r["score"] for r in results]
@@ -366,6 +378,19 @@ class MATHCurriculumEnv(BaseEnv):
         )
 
     async def collect_trajectories(self, item) -> Tuple[ScoredDataGroup, list]:
+        import aiohttp
+
+        full_cfg = getattr(self.__class__, "_full_config", None)
+        if full_cfg is None:
+            raise RuntimeError("Curriculum requires configured trainer progress endpoint")
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
+            async with session.get(full_cfg.inference_api_url + "/training_state") as response:
+                response.raise_for_status()
+                progress = await response.json()
+        value = progress.get("optimizer_steps")
+        if type(value) is not int or value < self.optimizer_steps:
+            raise ValueError("Invalid or regressing optimizer progress")
+        self.optimizer_steps = value
         user_message = {"role": "user", "content": item["problem"] + question_suffix}
         gold_answer = "\\boxed{" + self._extract_boxed_answer(item["solution"]) + "}"
         messages = [*convo_prefix, user_message]
@@ -383,14 +408,20 @@ class MATHCurriculumEnv(BaseEnv):
 
         to_score = []
         for choice, node in zip(chat_completion.choices, nodes):
-            to_score.append({
-                "messages": (*convo_prefix, user_message, {"role": "assistant", "content": choice.message.content}),
-                "gold_answer": gold_answer,
-                "finish_reason": choice.finish_reason,
-                "tokens": node.tokens,
-                "masked_tokens": node.masked_tokens,
-                "logprobs": node.logprobs,
-            })
+            to_score.append(
+                {
+                    "messages": (
+                        *convo_prefix,
+                        user_message,
+                        {"role": "assistant", "content": choice.message.content},
+                    ),
+                    "gold_answer": gold_answer,
+                    "finish_reason": choice.finish_reason,
+                    "tokens": node.tokens,
+                    "masked_tokens": node.masked_tokens,
+                    "logprobs": node.logprobs,
+                }
+            )
         return await self.score(to_score), []
 
     async def score(self, rollout_group_data) -> Optional[ScoredDataGroup]:
@@ -422,7 +453,7 @@ class MATHCurriculumEnv(BaseEnv):
             else:
                 reward = corr_score
 
-            if len([t for t in item["masked_tokens"] if t != -100]) < 10:
+            if len([t for t in item["masked_tokens"] if t != -100]) < 1:
                 continue
 
             scores["tokens"].append(item["tokens"])

@@ -84,6 +84,8 @@ def test_generated_grpo_script_is_valid_and_wires_quantized_prompt_tuning(tmp_pa
             "load_in_4bit": True,
         },
         data={"train_data": ["train.json"]},
+        reward_callable="task_rewards:reward",
+        output_dir="fresh-trl-output",
     )
 
     script = generate_trl_train_script(config, output_path)
@@ -95,9 +97,9 @@ def test_generated_grpo_script_is_valid_and_wires_quantized_prompt_tuning(tmp_pa
     assert 'bnb_4bit_quant_type="nf4"' in script
     assert "bnb_4bit_compute_dtype=COMPUTE_DTYPE" in script
     assert "quantized=quantization_config is not None" in script
-    assert "BOXED_MARKER = '\\\\boxed{'" in script
-    assert "get_last_checkpoint(trainer_config.output_dir)" in script
-    assert "trainer.train(resume_from_checkpoint=last_checkpoint)" in script
+    assert "prm_reward_fn" not in script
+    assert "get_last_checkpoint" not in script
+    assert "trainer.train(resume_from_checkpoint=None)" in script
 
 
 def test_generated_bitfit_script_avoids_full_model_checkpoints(tmp_path):
@@ -105,6 +107,8 @@ def test_generated_bitfit_script_avoids_full_model_checkpoints(tmp_path):
         TRLConfig(
             model={"peft_method": "bitfit"},
             data={"train_data": ["train.json"]},
+            reward_callable="task_rewards:reward",
+            output_dir="fresh-trl-output",
         ),
         tmp_path / "bitfit.py",
     )
@@ -124,7 +128,7 @@ def test_generator_rejects_missing_data_and_incomplete_algorithms(tmp_path):
         algorithm={"algorithm": "dpo"},
         data={"train_data": ["preferences.json"]},
     )
-    with pytest.raises(NotImplementedError, match="GRPO and iDPO"):
+    with pytest.raises(NotImplementedError, match="GRPO only"):
         generate_trl_train_script(dpo_config, tmp_path / "dpo.py")
 
 
@@ -141,6 +145,10 @@ def test_cli_generates_script_instead_of_running_smoke_training(tmp_path):
             "prefix_tuning",
             "--train-data",
             "train.json",
+            "--reward-callable",
+            "task_rewards:reward",
+            "--output-dir",
+            str(tmp_path / "native-output"),
             "--generate-script",
             str(output_path),
         ],
@@ -180,6 +188,8 @@ def test_generated_grpo_script_round_trips_decoupled_clip(tmp_path):
                 "epsilon_high": 0.28,
             },
             data={"train_data": ["train.json"]},
+            reward_callable="task_rewards:reward",
+            output_dir="fresh-trl-output",
         ),
         tmp_path / "clip.py",
     )
@@ -191,26 +201,28 @@ def test_generated_grpo_script_round_trips_decoupled_clip(tmp_path):
 
 def test_generated_grpo_script_defaults_to_symmetric_clip(tmp_path):
     script = generate_trl_train_script(
-        TRLConfig(data={"train_data": ["train.json"]}),
+        TRLConfig(
+            data={"train_data": ["train.json"]},
+            reward_callable="task_rewards:reward",
+            output_dir="fresh-trl-output",
+        ),
         tmp_path / "clip_default.py",
     )
     assert "epsilon=0.2," in script
     assert "epsilon_high=0.2," in script
 
 
-def test_generated_idpo_script_omits_clip_range(tmp_path):
-    script = generate_trl_train_script(
-        TRLConfig(
-            algorithm={"algorithm": "idpo"},
-            data={"train_data": ["train.json"]},
-        ),
-        tmp_path / "idpo.py",
-    )
-    compile(script, str(tmp_path / "idpo.py"), "exec")
-    assert "epsilon" not in script
+def test_generated_idpo_script_rejected_by_pinned_backend(tmp_path):
+    with pytest.raises(NotImplementedError, match="GRPO only"):
+        generate_trl_train_script(
+            TRLConfig(algorithm={"algorithm": "idpo"}, data={"train_data": ["train.json"]}),
+            tmp_path / "idpo.py",
+        )
+    assert not (tmp_path / "idpo.py").exists()
 
 
-def test_ppo_trainer_warns_when_clip_is_decoupled():
+def test_ppo_trainer_warns_when_clip_is_decoupled(monkeypatch):
+    monkeypatch.setitem(sys.modules, "trl", None)
     from platform_local.trl_integrations.trainer import create_ppo_trainer
 
     config = TRLConfig(algorithm={"algorithm": "ppo", "epsilon_low": 0.2, "epsilon_high": 0.28})
@@ -219,7 +231,8 @@ def test_ppo_trainer_warns_when_clip_is_decoupled():
         create_ppo_trainer(None, None, None, [], config)
 
 
-def test_ppo_trainer_silent_on_symmetric_clip():
+def test_ppo_trainer_silent_on_symmetric_clip(monkeypatch):
+    monkeypatch.setitem(sys.modules, "trl", None)
     import warnings
 
     from platform_local.trl_integrations.trainer import create_ppo_trainer
@@ -243,6 +256,10 @@ def test_cli_rejects_quantized_full_fine_tuning(tmp_path):
             "--load-in-4bit",
             "--train-data",
             "train.json",
+            "--reward-callable",
+            "task_rewards:reward",
+            "--output-dir",
+            str(tmp_path / "native-output"),
             "--generate-script",
             str(tmp_path / "invalid.py"),
         ],

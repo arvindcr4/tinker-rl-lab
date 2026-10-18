@@ -16,12 +16,30 @@ importing this module never adds import-time dependencies to a consumer.
 
 from __future__ import annotations
 
+import contextlib
 import importlib.util
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
+
+
+@contextlib.contextmanager
+def mocked_tinker_export():
+    """Stub provider export, preserving unrelated local subprocess probes."""
+    real_run = subprocess.run
+
+    def without_export(command, *args, **kwargs):
+        if isinstance(command, list) and command[:3] == [sys.executable, "-m", "tinker.cli"]:
+            return SimpleNamespace(returncode=0)
+        return real_run(command, *args, **kwargs)
+
+    with patch.object(subprocess, "run", side_effect=without_export) as mocked:
+        yield mocked
+
 
 __all__ = [
     "HfApi",
@@ -33,6 +51,7 @@ __all__ = [
     "fast_settings",
     "load_module",
     "make_fake_run",
+    "mocked_tinker_export",
 ]
 
 
@@ -41,9 +60,40 @@ def load_module(name: str, path: Path):
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
+    missing = object()
+    previous = sys.modules.get(name, missing)
     sys.modules[name] = module
-    spec.loader.exec_module(module)
+    parent = str(path.resolve().parent)
+    added_parent = parent not in sys.path
+    if added_parent:
+        sys.path.insert(0, parent)
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        if previous is missing:
+            sys.modules.pop(name, None)
+        else:
+            sys.modules[name] = previous
+        raise
+    finally:
+        if added_parent:
+            sys.path.remove(parent)
     return module
+
+
+@contextlib.contextmanager
+def temporary_modules(mapping):
+    missing = object()
+    previous = {key: sys.modules.get(key, missing) for key in mapping}
+    sys.modules.update(mapping)
+    try:
+        yield
+    finally:
+        for key, value in previous.items():
+            if value is missing:
+                sys.modules.pop(key, None)
+            else:
+                sys.modules[key] = value
 
 
 def embedded_payload(script: str, pattern=r"FILES = json\.loads\((.+)\)\n") -> dict[str, str]:
@@ -125,3 +175,18 @@ def fast_settings():
     from hypothesis import HealthCheck, settings
 
     return settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+
+
+def write_native_input_fixture(path, *, rows=500, label="42"):
+    """Write local synthetic chat-message rows, never fetch a provider dataset."""
+    source = Path(path)
+    source.parent.mkdir(parents=True, exist_ok=True)
+    row = {
+        "prompt": [
+            {"role": "system", "content": "Synthetic math fixture"},
+            {"role": "user", "content": "Return a number inside \\boxed{}."},
+        ],
+        "label": label,
+    }
+    source.write_text((json.dumps(row) + "\n") * rows, encoding="utf-8")
+    return str(source)

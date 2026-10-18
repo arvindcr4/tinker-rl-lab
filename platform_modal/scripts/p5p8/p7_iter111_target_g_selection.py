@@ -47,7 +47,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scri
 from _paths import REPO_ROOT  # noqa: E402
 WORK = REPO_ROOT
 N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
-OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review19-v2"
 
 METHODS = ["grpo", "aero", "gift", "areal"]
 G_BASE = 8
@@ -62,7 +62,7 @@ EPS = 1e-12
 # ---------- Closed-form helpers ----------
 
 def zvf_binom(p_hat, G):
-    p = min(max(p_hat, EPS), 1.0 - EPS)
+    p = min(max(p_hat, 0.0), 1.0)
     return p ** G + (1.0 - p) ** G
 
 
@@ -189,20 +189,13 @@ def get_Gstar_adaptive(s):
 # ---------- Bootstrap CI ----------
 
 def bootstrap_ci(values, B=N_BOOT, alpha=0.05, seed=SEED):
+    import random
     if not values:
-        return 0.0, 0.0, 0.0
-    rng_state = seed & 0xFFFFFFFF
-    boots = []
-    n = len(values)
-    for _ in range(B):
-        rng_state = (rng_state * 1103515245 + 12345) & 0x7FFFFFFF
-        idx = rng_state % n
-        s = sum(values[(idx + i) % n] for i in range(min(12, n))) / min(12, n)
-        boots.append(s)
-    boots.sort()
-    return (statistics.mean(values),
-            boots[int(B * alpha / 2)],
-            boots[int(B * (1 - alpha / 2))])
+        return (float("nan"),) * 3
+    rng = random.Random(seed)
+    boots = sorted(statistics.mean(rng.choices(values, k=len(values))) for _ in range(B))
+    return statistics.mean(values), boots[int(B*alpha/2)], boots[min(B-1,int(B*(1-alpha/2)))]
+
 
 
 # ---------- Main ----------

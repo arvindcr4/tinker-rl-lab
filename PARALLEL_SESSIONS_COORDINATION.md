@@ -1,5 +1,7 @@
 # Parallel Sessions Coordination & Clarity Log
 
+**Current isolation rule:** each agent uses a separate worktree and branch. One integration owner validates the integrated revision; shared-file ownership transfers explicitly. Historical shared-index instructions and machine-local links below are archival, not a portable execution recipe.
+
 This document tracks active parallel agent sessions in this repository. It defines agent ownership boundaries, describes in-flight work, and records synchronization points.
 
 ## 1. Active Agent Registry

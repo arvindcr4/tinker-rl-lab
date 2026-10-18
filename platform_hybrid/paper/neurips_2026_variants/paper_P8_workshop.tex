@@ -66,7 +66,7 @@ Post-Training Across Libraries, Models, and Backends}
 % =============================================================================
 
 We instrument GRPO-style training with step-level group reward statistics
-across 79 runs spanning 7 RL libraries (TRL, Stable Baselines3, CleanRL,
+across a historical run collection (census unresolved) spanning 7 RL libraries (TRL, Stable Baselines3, CleanRL,
 Tianshou, PufferLib, rl\_games, d3rlpy), the closed Tinker API, and the open
 Qwen3, Qwen3.5, Llama-3.x, DeepSeek-V3.1, and Nemotron-120B model families at
 total-parameter scales of 0.6B--671B (active 0.6B--37B for the largest MoE
@@ -94,22 +94,13 @@ coefficient in this group-standardized runner; this does not assert a zero total
 gradient for objectives with KL, auxiliary losses, clipping, or token masking.
 \textbf{Gradient Utilization} is $\mathrm{GU}_t = 1 - \mathrm{ZVF}_t$.
 
-Across $N{=}15$ experiments spanning 5 model families and 0.6B--671B total
-parameters (0.6B--37B active for the largest mixture-of-experts checkpoints),
-mean ZVF \emph{co-occurs} with final training performance: Pearson
-$r{=}-0.769$, $p{=}0.0008$ (Spearman $\rho{=}-0.784$, $p{=}0.0005$).
-\textbf{The pooled correlation is confounded by task type.} Tool-use
-experiments reach $\mathrm{ZVF}=100\%$ at $\sim$0\% reward, while GSM8K
-experiments average $\mathrm{ZVF}=8.5\%$ at much higher reward. Stratifying
-by task collapses the apparent relationship within each subgroup; we
-therefore read the pooled $r=-0.769$ as ``tool-use failed and GSM8K did not''
-rather than as a clean diagnostic--performance link.
-Stratifying within GSM8K ($N{=}19$ Tinker GSM8K runs), the apparent monotone
-relationship does not survive: Pearson $r{=}+0.40$ ($p{=}0.09$); restricted to
-the seven model-varying GSM8K runs, $r{=}+0.13$ ($p{=}0.79$). The pooled
-correlation reflects task identity, not within-task ZVF dynamics.
-We treat ZVF as a cheap descriptive logging quantity, not as a standalone
-causal predictor.
+The historical $N=15$ pool reports $r=-0.769$, but the $N=19$ GSM8K
+cohort is not its subset. For the comparable extended $N=29$ pool,
+$r=-0.443$ changes to $-0.026$ with task fixed effects, and its $N=19$
+GSM8K subset has $r=+0.401$. These are descriptive associations, not causal
+or predictive validation. Cohort inclusion IDs and independent-run eligibility
+must accompany any inferential reuse. The $N=15$ plot below is historical;
+it does not by itself isolate a stratification effect.
 
 \begin{figure}[t]
 \centering
@@ -131,17 +122,16 @@ contrast to pooled $r{=}{-}0.769$.}
 \centering\small
 \setlength{\tabcolsep}{5pt}
 \caption{Statistical ablation of the ZVF--last-10 correlation under three
-sample definitions. The sign of the correlation \emph{flips} once task is
-held fixed, and the within-task correlations do not survive a 5\%
-threshold.}
+sample definitions. The historical $N=15$ pool and $N=19$ subset use different cohorts;
+their contrast cannot isolate conditioning. Within-task estimates are descriptive.}
 \label{tab:zvf-stat-ablation}
 \begin{tabular}{@{}l r r r l@{}}
 \toprule
-\textbf{Sample} \& \textbf{$N$} \& \textbf{Pearson $r$} \& \textbf{$p$} \& \textbf{Note} \\
+\textbf{Sample} & \textbf{$N$} & \textbf{Pearson $r$} & \textbf{$p$} & \textbf{Note} \\
 \midrule
-Pooled, cross-stack          \& 15 \& $-0.769$ \& $0.0008$ \& B$^{*}$, task-confounded \\
-Within-GSM8K (all)           \& 19 \& $+0.40$  \& $0.09$   \& marginal, sign flips \\
-Within-GSM8K (model-varying) \&  7 \& $+0.13$  \& $0.79$   \& not significant \\
+Pooled, cross-stack          & 15 & $-0.769$ & $0.0008$ & B$^{*}$, task-confounded \\
+Within-GSM8K (all)           & 19 & $+0.40$  & $0.09$   & extended-pool subset \\
+Within-GSM8K (model-varying) &  7 & $+0.13$  & $0.79$   & descriptive \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -166,28 +156,31 @@ known failure probes. We deliberately do not pool them into one ranking.
 \setlength{\tabcolsep}{4pt}
 \caption{Workshop headline table, segregated by evidence grade. Open-stack
 arms have 5-seed coverage; Tinker arms are single-seed (cost-constrained,
-closed backend) and are reported as case studies.}
+closed backend) and are reported as case studies. For Tinker rows, summaries
+1/2 denote online peak/last-10 reward. The TRL row is a historical seed mean
+(SD 0.0703), not a peak or temporal tail; conflicting task identity and raw
+seed provenance prevent admitting the reported bootstrap IQM interval.}
 \label{tab:headline}
 \begin{tabular}{@{}l l l r r r@{}}
 \toprule
-\textbf{Algo / stack} \& \textbf{Model} \& \textbf{Task} \& \textbf{Seeds} \& \textbf{Peak} \& \textbf{Last-10} \\
+\textbf{Algo / stack} & \textbf{Model} & \textbf{Task} & \textbf{Seeds} & \textbf{Summary 1} & \textbf{Summary 2} \\
 \midrule
 \multicolumn{6}{l}{\textit{Multi-seed open-stack (workshop headline)}} \\
 \midrule
-TRL-GRPO (Modal L4) \& Qwen2.5-0.5B \& GSM8K \& 5 \& 0.747$_{[0.672,0.782]}$ \& 0.734 $\pm$ 0.07 \\
+TRL-GRPO (Modal L4) & Qwen2.5-0.5B & unresolved & 5 reported & IQM withheld & mean 0.734 \\
 \midrule
 \multicolumn{6}{l}{\textit{Single-seed Tinker case studies (\dag closed backend)}} \\
 \midrule
-GRPO\,\dag        \& Qwen3-8B            \& GSM8K     \& 1 \& 62.5\% \& 34.4\% \\
-GRPO\,\dag        \& Llama-3.1-8B-Inst   \& GSM8K     \& 1 \& 100\%  \& 84.4\% \\
-GRPO\,\dag        \& DeepSeek-V3.1       \& GSM8K     \& 1 \& 100\%  \& 85.0\% \\
-GRPO\,\dag        \& Qwen3-235B-A22B     \& GSM8K     \& 1 \& 100\%  \& 100\%  \\
-GRPO\,\dag        \& Nemotron-120B       \& GSM8K     \& 1 \& 87.5\% \& 16.2\% \\
+GRPO\,\dag        & Qwen3-8B            & GSM8K     & 1 & 62.5\% & 34.4\% \\
+GRPO\,\dag        & Llama-3.1-8B-Inst   & GSM8K     & 1 & 100\%  & 84.4\% \\
+GRPO\,\dag        & DeepSeek-V3.1       & GSM8K     & 1 & 100\%  & 85.0\% \\
+GRPO\,\dag        & Qwen3-235B-A22B     & GSM8K     & 1 & 100\%  & 100\%  \\
+GRPO\,\dag        & Nemotron-120B       & GSM8K     & 1 & 87.5\% & 16.2\% \\
 \midrule
 \multicolumn{6}{l}{\textit{Failure probes (released for honesty, not as benchmark numbers)}} \\
 \midrule
-GRPO\,\dag        \& Qwen3-32B           \& Tool-use  \& 1 \& 0\%    \& 0\%    \\
-GRPO\,\dag        \& Llama-3.1-8B-Inst   \& Tool-use  \& 1 \& 0\%    \& 0\%    \\
+GRPO\,\dag        & Qwen3-32B           & Tool-use  & 1 & 0\%    & 0\%    \\
+GRPO\,\dag        & Llama-3.1-8B-Inst   & Tool-use  & 1 & 0\%    & 0\%    \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -219,24 +212,24 @@ step-count for endgame signal exhaustion.
 \begin{table}[htbp]
 \centering\small
 \setlength{\tabcolsep}{4pt}
-\caption{Evidence grade of each main-text claim in the workshop variant.
-\textbf{A}~=~multi-seed open-stack or definitional;
-\textbf{B}~=~multi-seed or pooled with a known caveat;
-\textbf{B$^{*}$}~=~significant in pooled sample but task-confounded;
-\textbf{C}~=~single-seed or closed-backend case study.}
+\caption{Evidence labels follow the run manifest: A = completed multi-seed
+cells, B = completed single-seed descriptions, C = failed/partial cells.
+Theory is marked separately. Replication labels alone do not license inference;
+backend access is independent of replication. Historical pooled associations
+remain descriptive and later panels require their own cohort identity.}
 \label{tab:evidence-grade}
 \begin{tabular}{@{}p{0.50\linewidth} l p{0.32\linewidth}@{}}
 \toprule
-\textbf{Claim} \& \textbf{Grade} \& \textbf{Notes} \\
+\textbf{Claim} & \textbf{Grade} & \textbf{Notes} \\
 \midrule
-ZVF $\to$ zero centered reward contrast is mechanical \& A (def.) \& App.~\ref{sec:appendix:zvf-formalization}. \\
-ZVF--last-10 $r{=}-0.769$ ($N{=}15$, pooled) \& B$^{*}$ \& Confounded by task type. \\
-Later Qwen3-8B GSM8K $83.3\%$ vs.\ fixed-baseline $82.0\%$ \& future evidence \& one-sample seed-level $p{=}0.26$; not paired-seed, not reviewed-record. \\
-Group-size sweep is non-monotonic; no headline winner \& C \& single-seed per $G$. \\
-Matched-budget $G{=}2$ endgame ZVF wall \& B \& 2 seeds/arm; 512-tok cap. \\
-Token-budget fitted apex near $G{\approx}32$ at $T{\ge}16$M \& B \& 3-seed appendix reanalysis; not a universal optimum. \\
-Frontier-scale Tinker case studies \& C \& single-seed, closed backend. \\
-Tool-use $0\%$ reward across runs \& B \& task-design failure, not capability. \\
+ZVF $\to$ zero centered reward contrast is mechanical & theory & App.~\ref{sec:appendix:zvf-formalization}. \\
+ZVF--last-10 $r{=}-0.769$ ($N{=}15$, pooled) & descriptive & Historical cohort, task-confounded. \\
+Later Qwen3-8B GSM8K $83.3\%$ vs.\ fixed-baseline $82.0\%$ & future evidence & one-sample seed-level $p{=}0.26$; not paired-seed, not reviewed-record. \\
+Group-size sweep is non-monotonic; no headline winner & B & single-seed per $G$. \\
+Matched-budget $G{=}2$ endgame ZVF wall & descriptive & 2 seeds/arm; 512-tok cap. \\
+Token-budget fitted apex near $G{\approx}32$ at $T{\ge}16$M & descriptive & 3-seed appendix reanalysis; not a universal optimum. \\
+Frontier-scale Tinker case studies & B & single-seed, closed backend. \\
+Tool-use $0\%$ reward across runs & B & task-design failure, not capability. \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -265,10 +258,10 @@ report them descriptively. (ii)~Empirical evidence concentrates on
 short-horizon GSM8K with binary verifiable rewards; tool-use, code, and
 non-math coverage are sparser and yield negative or descriptive evidence
 only. (iii)~Train-set reward in the Tinker case studies is \emph{descriptive
-instrumentation}, not an inferential signal: our primary inferential claims
-are limited to the mechanical centered-reward-contrast identity
-(Appendix~\ref{sec:appendix:zvf-formalization}) and later Qwen3-8B GSM8K
-evidence: $83.3\%$ vs.\ fixed-baseline $82.0\%$ is a one-sample seed-level
+instrumentation}, not an inferential signal: our primary established statement
+is the mechanical centered-reward-contrast identity
+(Appendix~\ref{sec:appendix:zvf-formalization}) ; separately reported later Qwen3-8B GSM8K
+evidence is not admitted here: $83.3\%$ vs.\ fixed-baseline $82.0\%$ is a one-sample seed-level
 $p{=}0.26$ test, not a paired-seed or reviewed-record test.
 Tinker-derived stratified correlations (e.g., the within-GSM8K ZVF
 re-analysis) are reported as artifact analyses with closed-backend caveats,

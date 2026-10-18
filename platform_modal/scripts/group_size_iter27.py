@@ -12,19 +12,19 @@ Inputs (all real, no fabrication):
       3 seeds x 40 steps (avg reward, advantage variance, ZVF, etc.).
   platform_hybrid/experiments/results/group_size_g4_vs_g32_broader_scale.tsv
       Qwen3-8B / GSM8K G=4 vs G=32 at T in {1,4,16,64}M (iter7).
-  platform_hybrid/experiments/results/group_size_iter15_equivalence.tsv
+  platform_hybrid/experiments/results/group_size_iter15_equivalence_v2.tsv
       TOST + Cohen's d between all (G_a, G_b) pairs.
-  platform_hybrid/experiments/results/group_size_iter15_snr.tsv
+  platform_hybrid/experiments/results/group_size_iter15_snr_v2.tsv
       Per-G signal-to-noise ratio (DPO flat vs sqrt(G) reference).
-  platform_hybrid/experiments/results/group_size_iter19_retention_fit.tsv
+  platform_hybrid/experiments/results/group_size_iter19_retention_fit_v2.tsv
       Saturating-exponential fit: R(T) = R_inf + (R_0 - R_inf) e^{-T/tau}.
 
 Outputs:
-  platform_hybrid/experiments/results/group_size_iter27_synthesis.tsv
+  platform_hybrid/experiments/results/group_size_iter27_synthesis_v2.tsv
       Master TSV: one row per G (and per T for the broader sweep) with
       mean_reward, last10_acc, retention, SNR, TOST verdict vs G=2,
       DPO-equivalence verdict.
-  platform_hybrid/experiments/results/group_size_iter27_dpo_bands.tsv
+  platform_hybrid/experiments/results/group_size_iter27_dpo_bands_v2.tsv
       Three retention bands: Wu 97.6% (canonical), measured G=4 vs G=32
       (ours), measured G=4 vs G=64 (broader extrapolation).
   figures/group_size_iter27.{pdf,png}
@@ -75,15 +75,15 @@ def load_g4_vs_g32() -> pd.DataFrame:
 
 
 def load_equivalence() -> pd.DataFrame:
-    return pd.read_csv(RES / "group_size_iter15_equivalence.tsv", sep="\t")
+    return pd.read_csv(RES / "group_size_iter15_equivalence_v2.tsv", sep="\t")
 
 
 def load_snr() -> pd.DataFrame:
-    return pd.read_csv(RES / "group_size_iter15_snr.tsv", sep="\t")
+    return pd.read_csv(RES / "group_size_iter15_snr_v2.tsv", sep="\t")
 
 
 def load_retention_fit() -> pd.DataFrame:
-    return pd.read_csv(RES / "group_size_iter19_retention_fit.tsv", sep="\t")
+    return pd.read_csv(RES / "group_size_iter19_retention_fit_v2.tsv", sep="\t")
 
 
 # ---------------------------------------------------------------------------
@@ -110,17 +110,22 @@ def per_g_master(sweep: dict) -> pd.DataFrame:
         mean_reward = float(np.mean(per_seed_mean))
         last10 = float(np.mean(per_seed_last10))
         last10_se = float(np.std(per_seed_last10, ddof=1) / math.sqrt(len(per_seed_last10)))
-        retention_vs_g2 = last10 / ref_mean
-        # bootstrap CI on retention_vs_g2
+        # Ratio is small-group/reference-large-group training reward, paired by seed.
+        ref_by_seed = {r["seed"]: r for r in ref_runs}
+        by_seed = {r["seed"]: r for r in runs}
+        if len(ref_by_seed) != len(ref_runs) or len(by_seed) != len(runs):
+            raise ValueError("duplicate seed within group")
+        shared = sorted(ref_by_seed.keys() & by_seed.keys())
+        if not shared:
+            raise ValueError("no shared seed identities")
+        numerator = np.array([np.mean([s["mean_reward"] for s in ref_by_seed[k]["step_log"][-10:]]) for k in shared])
+        denominator = np.array([np.mean([s["mean_reward"] for s in by_seed[k]["step_log"][-10:]]) for k in shared])
+        if np.any(denominator <= 0):
+            raise ValueError("retention denominator must be positive")
+        retention_vs_g2 = float(numerator.mean() / denominator.mean())
         rng = np.random.default_rng(20260702)
-        B = 5000
-        boot = np.empty(B)
-        n = len(ref_last10)
-        m = len(per_seed_last10)
-        for b in range(B):
-            ir = rng.integers(0, n, n)
-            im = rng.integers(0, m, m)
-            boot[b] = float(np.mean(per_seed_last10[im])) / float(np.mean(ref_last10[ir]))
+        indices = rng.integers(0, len(shared), (5000, len(shared)))
+        boot = numerator[indices].mean(axis=1) / denominator[indices].mean(axis=1)
         ci_lo, ci_hi = float(np.quantile(boot, 0.025)), float(np.quantile(boot, 0.975))
         rows.append({
             "G": g,
@@ -129,6 +134,9 @@ def per_g_master(sweep: dict) -> pd.DataFrame:
             "last10_mean_reward": last10,
             "last10_se": last10_se,
             "retention_vs_G2": retention_vs_g2,
+            "numerator_G": 2, "denominator_G": g,
+            "metric": "last10_mean_training_reward",
+            "analysis_version": "review23-v2",
             "retention_ci_low": ci_lo,
             "retention_ci_high": ci_hi,
             "above_wu_97_6pct": retention_vs_g2 >= WU_RETENTION,
@@ -182,7 +190,7 @@ def write_synthesis_tsv(per_g: pd.DataFrame) -> Path:
             "scope": "measured_Qwen2.5-0.5B_arithmetic",
         })
     df = pd.DataFrame(out_rows)
-    out_path = RES / "group_size_iter27_synthesis.tsv"
+    out_path = RES / "group_size_iter27_synthesis_v2.tsv"
     df.to_csv(out_path, sep="\t", index=False)
     return out_path
 
@@ -195,7 +203,7 @@ def write_dpo_bands() -> Path:
     """Three retention bands vs T on Qwen3-8B / GSM8K illustrative sweep.
 
     Band 1: Wu 2025 R(T) = 0.976 (constant)
-    Band 2: measured G=4 vs G=32 R(T) — iter7 broader-scale measurement
+    Band 2: illustrative G=4 vs G=32 R(T) — iter7 broader-scale measurement
             plus the iter19 saturating fit extrapolation
     Band 3: G=4 vs G=64 R(T) inferred from the iter7 T-broad sweep
             (acc_G4 / acc_G64) at each T
@@ -225,7 +233,7 @@ def write_dpo_bands() -> Path:
             "retention": round(ret, 4),
             "retention_ci_low": round(ret_lo, 4),
             "retention_ci_high": round(ret_hi, 4),
-            "source": "iter7+iter15 measurement",
+            "source": "iter7+iter15 illustrative reconstruction",
         })
 
     # Wu constant band (R = 0.976) at every T
@@ -236,8 +244,8 @@ def write_dpo_bands() -> Path:
             "G_b": 16,
             "band": "wu_2025_constant_97.6",
             "retention": round(WU_RETENTION, 4),
-            "retention_ci_low": round(WU_RETENTION - 0.024, 4),
-            "retention_ci_high": round(WU_RETENTION + 0.024, 4),
+            "retention_ci_low": float("nan"),
+            "retention_ci_high": float("nan"),
             "source": "Wu et al. arXiv:2510.00977",
         })
 
@@ -256,7 +264,7 @@ def write_dpo_bands() -> Path:
         })
 
     df = pd.DataFrame(rows).sort_values(["band", "T_tokens"]).reset_index(drop=True)
-    out_path = RES / "group_size_iter27_dpo_bands.tsv"
+    out_path = RES / "group_size_iter27_dpo_bands_v2.tsv"
     df.to_csv(out_path, sep="\t", index=False)
     return out_path
 
@@ -276,7 +284,7 @@ def build_figure(per_g: pd.DataFrame) -> Path:
     Panel D: G_optimal vs T heatmap (the operational prescription).
     """
     snr = load_snr()
-    bands = pd.read_csv(RES / "group_size_iter27_dpo_bands.tsv", sep="\t")
+    bands = pd.read_csv(RES / "group_size_iter27_dpo_bands_v2.tsv", sep="\t")
     g4_g32 = load_g4_vs_g32()
     fit = load_retention_fit()
 
@@ -402,9 +410,9 @@ def build_figure(per_g: pd.DataFrame) -> Path:
                  "Reward vs Group Size + the Wu 2025 DPO framing",
                  y=1.005, fontsize=11)
     fig.tight_layout()
-    out_pdf = FIG / "group_size_iter27.pdf"
+    out_pdf = FIG / "group_size_iter27_v2.pdf"
     fig.savefig(out_pdf, bbox_inches="tight")
-    fig.savefig(FIG / "group_size_iter27.png", dpi=150, bbox_inches="tight")
+    fig.savefig(FIG / "group_size_iter27_v2.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
     return out_pdf
 

@@ -1,6 +1,8 @@
 # Professor-ready protocol: the $18 Tinker Pavlov portfolio
 
 Date: 2026-08-09
+
+Prospective correction (v2, 2026-10-17): [PAVLOV_CAMPAIGN_PLAN_V2.md](PAVLOV_CAMPAIGN_PLAN_V2.md) and [REVIEW_V2_EVIDENCE_BOUNDARY.md](REVIEW_V2_EVIDENCE_BOUNDARY.md) govern new execution. Historical receipts and frozen experiments are unchanged. No new spending or scientific claim is authorized by this amendment.
 Protocol status: **active component campaign; no portfolio result is complete**
 Paid-launch gate: **AUTHORIZED for Tinker within the recorded cap; exact-suite launches remain fail-closed on missing data/runtime/verifier receipts**
 Provider: Tinker only
@@ -57,9 +59,7 @@ smoke settings are:
 | xLAM evaluation sampler | The current evaluator settings to pin and hash: temperature `0.1`, top-p `0.95`, one sample per row, maximum 128 response tokens; the service/sampling seed is fixed when supported and otherwise recorded in the receipt |
 | Strict verifier | The repository's `StrictToolCallReward`, whose implementation must be hashed before paid work; a perfect call is a verifier score exactly `1.0`. No parser, target, split, or verifier change is permitted mid-campaign. |
 
-The primary portfolio unit is a **seed within model × environment-family ×
-stack**, as required by the task contract. Rows are never pooled across suites in
-a way that lets the larger code family dominate the result.
+The v2 estimand is the paired task-cluster distribution for the fixed recorded base and final adapter, conditional on the recorded training seed. Task resampling does not estimate retraining variability. Independent training seeds would require a separately approved multi-seed protocol with an outer seed resample. Rows are never pooled across suites in a way that lets the larger code family dominate the result.
 
 ### 2.2 The portfolio objective
 
@@ -176,10 +176,7 @@ blocked; neither state is a scientific result.
 
 ### Phase 0 — freeze and tracking preflight (no paid work)
 
-1. Reconcile the contract metadata before using the budget authorization: the JSON
-   currently declares `status: draft-awaiting-budget-cap`, while its budget gate
-   permits Tinker. Until a receipt resolves this contradiction, **no paid phase may
-   launch**; a validator `PASS` alone is not an authorization.
+1. Revalidate the recorded Tinker authorization against its immutable receipt and current shared ledger before each phase. The earlier draft-awaiting-budget-cap description is historical and superseded by the authorization inventory in §1. A validator `PASS` alone is not an authorization; Modal or another provider requires its own scoped approval.
 2. Pin all model and dataset revisions, licenses, split/task hashes, evaluator/
    verifier version, container/runtime digest, seed, and budget ledger. The current
    7/100 receipt may be reused as `K_base` only if these hashes prove equivalence;
@@ -387,7 +384,7 @@ verified checkpoint; never count the rejected four-step run as a completed arm.
 
 At handoff, report four separate evidence classes:
 
-1. completed receipts (currently only the observed seed-809 7/100 base evaluation);
+1. completed historical/component receipts listed in §1, including the tracked ten-step 2e-5 arm; none establishes portfolio completion;
 2. operational/provenance receipts (currently the rejected four-step record);
 3. prospective protocol gates and budget projections; and
 4. admissible final portfolio results, only if all 12/14 suites and all gates pass.

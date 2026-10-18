@@ -54,6 +54,24 @@ def include_closure(root_tex: Path) -> tuple[list[Path], list[str]]:
     return sorted(visited), sorted(set(missing))
 
 
+def include_occurrences(root_tex: Path) -> list[Path]:
+    """Expand each include occurrence, rejecting cycles (not a TeX interpreter)."""
+    result = []
+
+    def visit(path, stack):
+        path = path.resolve()
+        if path in stack:
+            raise ValueError("cyclic TeX inclusion")
+        result.append(path)
+        for raw in INPUT_RE.findall(strip_comments(path.read_text(errors="replace"))):
+            child = resolve_input(path.parent, root_tex.parent, raw.strip())
+            if child is not None:
+                visit(child, stack + (path,))
+
+    visit(root_tex, ())
+    return result
+
+
 def expanded_source(root_tex: Path) -> tuple[str, str | None]:
     result = subprocess.run(
         ["latexpand", root_tex.name],
@@ -82,7 +100,9 @@ def key_pages(text: str) -> list[str]:
     selected: list[str] = []
     for page in re.split(r"(?=\n\[PAGE \d+\]\n)", text):
         lower = page.lower()
-        if any(token in lower for token in ("abstract", "limitations", "conclusion", "claim status")):
+        if any(
+            token in lower for token in ("abstract", "limitations", "conclusion", "claim status")
+        ):
             selected.append(page.strip())
     return selected
 
@@ -115,7 +135,7 @@ def main() -> None:
             "characters": len(text),
             "source_files": len(closure),
             "missing_inputs": len(missing),
-            "pdf_current": pdf_path.stat().st_mtime >= latest_source_mtime,
+            "pdf_mtime_not_older_than_tex": pdf_path.stat().st_mtime >= latest_source_mtime,
             "pdf_sha256": sha256(pdf_path),
             "tex_sha256": sha256(tex_path),
         }
@@ -135,7 +155,7 @@ def main() -> None:
         )
         print(
             f"[{index:02d}/{len(PAPERS)}] {identifier}: {row['pages']} pages, "
-            f"{row['source_files']} source files, current={row['pdf_current']}",
+            f"{row['source_files']} source files, current={row['pdf_mtime_not_older_than_tex']}",
             flush=True,
         )
 
@@ -152,7 +172,11 @@ def main() -> None:
     for left_index, left in enumerate(identifiers):
         for right in identifiers[left_index + 1 :]:
             pairs.append(
-                {"left": left, "right": right, "jaccard_7gram": jaccard(shingle_map[left], shingle_map[right])}
+                {
+                    "left": left,
+                    "right": right,
+                    "jaccard_7gram": jaccard(shingle_map[left], shingle_map[right]),
+                }
             )
     pairs.sort(key=lambda row: float(row["jaccard_7gram"]), reverse=True)
     with (OUT / "similarity.tsv").open("w", newline="") as handle:

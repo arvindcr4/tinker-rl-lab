@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""P5 iter-197 — Paired-bootstrap CI on the iter-193 algorithm-vs-stack ratio
+"""P5 iter-197 — Independent-corpus descriptive bootstrap CI on the iter-193 algorithm-vs-stack ratio
 plus one-axis-dropped sensitivity stress test.
 
 Iter-193 (row 206) reported: algorithm-axis eta^2 < 0.10 on every channel and
@@ -14,7 +14,7 @@ weaknesses:
       worst-case stack axis?
 
   (ii) Iter-193 bootstrapped each axis independently. The RATIO CI was not
-       computed. Iter-197 computes a paired bootstrap where, on each resample,
+       computed. Iter-197 computes a independent-corpus descriptive bootstrap where, on each resample,
        both algorithm-axis eta^2 and stack-axis eta^2 are recomputed in lockstep
        (preserving any covariance structure); the CI on the RATIO is then the
        distribution of (eta^2_stack / eta^2_algo) across B resamples.
@@ -30,7 +30,7 @@ Vein:
     discriminative entropy, cross-corpus, manifest sufficiency, predictive power)
   - vein (b) quantify stack-conditioning (iter-45 N2 eta^2, iter-49 mega eta^2,
     iter-141 algorithm-axis, iter-161 factorization, iter-193 ratio)
-  - vein (c) bootstrap CIs (iter-23/89/129/173 covered paired bootstrap on
+  - vein (c) bootstrap CIs (iter-23/89/129/173 covered independent-corpus descriptive bootstrap on
     headline numbers)
   - vein (d) verified related work (iter-109/149)
 
@@ -45,10 +45,10 @@ import csv, json, os, random
 from collections import defaultdict
 from statistics import fmean
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-RES = os.path.join(ROOT, "experiments", "results")
-OUT = os.path.join(RES, "p5p8")
-os.makedirs(OUT, exist_ok=True)
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+RES = os.path.join(ROOT, "platform_hybrid", "experiments", "results")
+OUT = os.path.join(RES, "p5p8/review17_v2")
+
 N2 = os.path.join(RES, "n2_reward_tensor_resume", "n2_metrics.tsv")
 MEGA = os.path.join(RES, "mega_20260704", "cells.tsv")
 B = 2000
@@ -57,6 +57,10 @@ CI = 0.95
 
 
 # ----------------- variance decomposition (mirror iter-193) -----------------
+from p5_review17_stats import additive_r2, ratio_interval
+
+from p5_review17_stats import json_safe
+
 def eta2(groups):
     """groups: dict[label -> list[float]]. Returns (eta2, k, N) -- omega^2 not needed here."""
     grand = [v for vs in groups.values() for v in vs]
@@ -118,7 +122,7 @@ def load_mega():
     return out, factors
 
 
-# ----------------- paired bootstrap on the ratio -----------------
+# ----------------- independent-corpus descriptive bootstrap on the ratio -----------------
 def paired_ratio_bootstrap(algo_groups, stack_groups, rng):
     """Bootstrap B times: resample each level of EACH axis (stratified by level),
     compute eta^2_algo, eta^2_stack, ratio. Returns list of ratios (NaN-skipped)."""
@@ -140,7 +144,7 @@ def paired_ratio_bootstrap(algo_groups, stack_groups, rng):
 
 
 def ci_of_list(xs, ci=CI):
-    if not xs:
+    if len(xs) != B:
         return float("nan"), float("nan")
     ys = sorted(xs)
     lo = ys[int((1 - ci) / 2 * len(ys))]
@@ -166,6 +170,8 @@ def worst_stack_axis_eta2(mega_ch, factors, drop_axis):
 
 # ----------------- main -----------------
 def main():
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    os.makedirs(OUT, exist_ok=True)
     rng = random.Random(SEED)
     n2 = load_n2()
     mega, factors = load_mega()
@@ -319,22 +325,19 @@ def main():
     # H5' (alternative — sharper): after dropping a DOMINANT axis, do OTHER
     # dominant axes still exclude 1? (i.e., does the signal propagate across
     # the dominant axes, not collapse to a single-axis artifact?)
-    jack_drop_dominant = [r for r in jack_rows
-                          if r["channel"] in ("zvf", "reward")
-                          and r["dropped_axis"] in dominant
-                          and r["worst_remaining_axis"] in dominant]
-    verdicts["H5p_drop_dominant_remaining_dominant_still_excludes_1"] = all(
-        r["ci_excludes_1"] for r in jack_drop_dominant
-    )
-    # H6 (NEW — compositeness test): the SUMS of stack-axis eta^2 (computed
-    # at the cell level for mega — i.e. predict zvf/reward from ALL 5 stack
-    # axes simultaneously via eta^2 on cell-mean residuals under stratification)
-    # are large. We use the multi-axis eta^2 from mega across all 5 axes:
-    # for each axis independently compute per-axis predicted value (group mean
-    # of the level); the "additive composite" prediction is the AVERAGE of
-    # the k per-axis predictions; eta^2_composite is then SS_explained / SS_total
-    # using that averaged prediction. This is the standard "no-interaction
-    # additive effects" multi-factor eta^2 (Cohen 1973, Hays 1973).
+    jack_drop_dominant = []
+    for ch in ("zvf", "reward"):
+        for dropped in sorted(dominant):
+            remaining = sorted(dominant - {dropped})
+            fac, _ = worst_stack_axis_eta2(mega[ch], remaining, None)
+            if fac is not None:
+                draws = paired_ratio_bootstrap(n2[ch], mega[ch][fac], rng)
+                lo, hi = ratio_interval(draws, B)
+                jack_drop_dominant.append({"channel": ch, "dropped_axis": dropped,
+                                          "ci_excludes_1": lo > 1})
+    verdicts["H5p_drop_dominant_remaining_dominant_still_excludes_1"] = (
+        len(jack_drop_dominant) == 6 and all(r["ci_excludes_1"] for r in jack_drop_dominant))
+    # Exploratory joint categorical main-effects OLS, refitted per cell draw.
     composite_rows = []
     for ch in channels:
         # load mega rows fresh
@@ -354,19 +357,7 @@ def main():
         all_vals = [v for _, v in per_cell]
         gm = fmean(all_vals)
         ss_total = sum((v - gm) ** 2 for v in all_vals)
-        # per-axis group means
-        axis_preds = []  # axis_preds[fac] = list parallel to per_cell
-        for fac in factors:
-            gmeans = defaultdict(list)
-            for r, v in per_cell:
-                gmeans[str(r[fac])].append(v)
-            gm_per_level = {lab: fmean(vs) for lab, vs in gmeans.items()}
-            axis_preds.append([gm_per_level[str(r[fac])] for r, _ in per_cell])
-        # composite prediction = average across axes (additive main-effects model)
-        composite_pred = [fmean([ap[i] for ap in axis_preds])
-                          for i in range(len(per_cell))]
-        ss_explained = sum((p - gm) ** 2 for p in composite_pred)
-        eta2_composite = ss_explained / ss_total if ss_total > 1e-12 else float("nan")
+        eta2_composite = additive_r2([r for r, _ in per_cell], all_vals, factors)
         algo_e, _, _ = eta2(n2[ch])
         composite_ratio = eta2_composite / algo_e if algo_e > 1e-9 else float("inf")
         composite_rows.append(dict(channel=ch, eta2_composite_5axes=eta2_composite,
@@ -380,17 +371,7 @@ def main():
             ss_total_b = sum((v - fmean(vals_b)) ** 2 for v in vals_b)
             if ss_total_b <= 1e-12:
                 continue
-            axis_preds_b = []
-            for fac in factors:
-                gmeans_b = defaultdict(list)
-                for i in idx:
-                    r, _ = per_cell[i]
-                    gmeans_b[str(r[fac])].append(per_cell[i][1])
-                gm_per_level_b = {lab: fmean(vs) for lab, vs in gmeans_b.items()}
-                axis_preds_b.append([gm_per_level_b[str(per_cell[i][0][fac])] for i in idx])
-            comp_pred_b = [fmean([ap[i] for ap in axis_preds_b]) for i in range(len(idx))]
-            ss_explained_b = sum((p - fmean(vals_b)) ** 2 for p in comp_pred_b)
-            eta2_comp_b = ss_explained_b / ss_total_b
+            eta2_comp_b = additive_r2([per_cell[i][0] for i in idx], vals_b, factors)
             # resample algorithm axis too
             algo_bs = {lab: [vs[rng.randrange(len(vs))] for _ in range(len(vs))]
                        for lab, vs in n2[ch].items() if vs}
@@ -428,17 +409,7 @@ def main():
         gm = fmean(all_vals)
         ss_total = sum((v - gm) ** 2 for v in all_vals)
         dom3 = ["model_family", "task_slice", "G"]
-        axis_preds = []
-        for fac in dom3:
-            gmeans = defaultdict(list)
-            for r, v in per_cell:
-                gmeans[str(r[fac])].append(v)
-            gm_per_level = {lab: fmean(vs) for lab, vs in gmeans.items()}
-            axis_preds.append([gm_per_level[str(r[fac])] for r, _ in per_cell])
-        composite_pred = [fmean([ap[i] for ap in axis_preds])
-                          for i in range(len(per_cell))]
-        ss_explained = sum((p - gm) ** 2 for p in composite_pred)
-        eta2_dom3 = ss_explained / ss_total if ss_total > 1e-12 else float("nan")
+        eta2_dom3 = additive_r2([r for r, _ in per_cell], all_vals, dom3)
         algo_e, _, _ = eta2(n2[ch])
         ratio_dom3 = eta2_dom3 / algo_e if algo_e > 1e-9 else float("inf")
         dom3_rows.append(dict(channel=ch, eta2_dom3=eta2_dom3,
@@ -451,17 +422,7 @@ def main():
             ss_total_b = sum((v - fmean(vals_b)) ** 2 for v in vals_b)
             if ss_total_b <= 1e-12:
                 continue
-            axis_preds_b = []
-            for fac in dom3:
-                gmeans_b = defaultdict(list)
-                for i in idx:
-                    r, _ = per_cell[i]
-                    gmeans_b[str(r[fac])].append(per_cell[i][1])
-                gm_per_level_b = {lab: fmean(vs) for lab, vs in gmeans_b.items()}
-                axis_preds_b.append([gm_per_level_b[str(per_cell[i][0][fac])] for i in idx])
-            comp_pred_b = [fmean([ap[i] for ap in axis_preds_b]) for i in range(len(idx))]
-            ss_explained_b = sum((p - fmean(vals_b)) ** 2 for p in comp_pred_b)
-            eta2_dom3_b = ss_explained_b / ss_total_b
+            eta2_dom3_b = additive_r2([per_cell[i][0] for i in idx], vals_b, dom3)
             algo_bs = {lab: [vs[rng.randrange(len(vs))] for _ in range(len(vs))]
                        for lab, vs in n2[ch].items() if vs}
             e_a_b, _, _ = eta2(algo_bs)
@@ -494,6 +455,8 @@ def main():
             w.writerow({k: (f"{v:.5f}" if isinstance(v, float) else v) for k, v in r.items()})
 
     summary = dict(
+        analysis_protocol="review17-p5-v2", inference_scope="exploratory descriptive cross-corpus comparison; not causal or prospective",
+        ratio_invalid_draws="B minus boot_n; any invalid draw suppresses interval",
         channels=channels, stack_factors=factors, B=B, seed=SEED, ci=CI,
         n_paired_rows=len(paired_rows),
         n_worst_rows=len(worst_rows),
@@ -511,13 +474,13 @@ def main():
     )
     sum_path = os.path.join(OUT, "p5_iter197_summary.json")
     with open(sum_path, "w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(json_safe(summary), f, indent=2)
 
     # ----- print -----
     print(f"B={B} seed={SEED} ci={CI}")
     print(f"paired: {len(paired_rows)} (ch x axis), worst: {len(worst_rows)}, "
           f"jack: {len(jack_rows)}")
-    print("\n=== Paired-bootstrap ratio CI (point vs CI lo/hi) ===")
+    print("\n=== Independent-corpus descriptive bootstrap ratio CI (point vs CI lo/hi) ===")
     for r in paired_rows:
         marker1 = " >1" if r["ci_excludes_1"] else ""
         marker3 = " >3" if r["ci_excludes_3"] else ""

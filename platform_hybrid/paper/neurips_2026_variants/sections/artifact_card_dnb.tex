@@ -11,7 +11,7 @@ from the per-cell run manifest (Appendix~\ref{sec:run-manifest}). One row per
 step-level ZVF/GU + reward traces; ``Ckpt'' is a released LoRA adapter;
 ``Held-out'' indicates a held-out test-split evaluation exists for at least
 one seed in the bucket. Tier classification follows
-Appendix~\ref{sec:run-manifest}: A = multi-seed inferential, B = single-seed
+Appendix~\ref{sec:run-manifest}: A = completed multi-seed (eligibility required), B = single-seed
 descriptive, C = failed/partial.}
 \label{tab:artifact-card}
 \resizebox{\linewidth}{!}{%
@@ -22,8 +22,8 @@ descriptive, C = failed/partial.}
 Modal H100 / CleanRL  & PPO (synthetic math) & math gen      & 5  & \checkmark & \checkmark & ---        & ---        & A \\
 Modal H100 / SB3      & PPO (synthetic math) & math gen      & 5  & \checkmark & \checkmark & ---        & ---        & A \\
 Modal H100 / Tianshou & PPO (synthetic math) & math gen      & 5  & \checkmark & \checkmark & ---        & ---        & A \\
-Modal L4 / TRL        & Qwen2.5-0.5B         & GSM8K         & 5  & \checkmark & \checkmark & \checkmark & ---        & A \\
-Tinker (closed)       & Qwen3-8B Wave-6 ablation & GSM8K     & 12 & ---        & \checkmark & ---        & \checkmark & A \\
+Modal L4 / TRL        & Qwen2.5-0.5B         & task unresolved         & 5  & \checkmark & \checkmark & \checkmark & ---        & A \\
+Tinker (closed)       & Qwen3-8B (12 configurations) & GSM8K     & 1 & ---        & \checkmark & ---        & \checkmark & B \\
 Tinker (closed)       & Llama-3.3-70B-Inst   & GSM8K         & 4  & ---        & \checkmark & ---        & ---        & A \\
 \midrule
 Tinker (closed)       & Qwen3-8B (G=8, base) & GSM8K         & 1  & partial    & \checkmark & ---        & \checkmark & B \\

@@ -1,329 +1,354 @@
-"""Modal: same-stack PPO vs GRPO on GSM8K-CoT, v2 (fixes to the 2026-10-02 rerun).
+"""Corrected same-stack runner, new v3 protocol (legacy v2 artifacts untouched).
 
-v1 (modal_samestack_gsm8k_cot.py, results/samestack_gsm8k_cot.json) had three
-design weaknesses that this version removes:
+Arms retain their historical short labels. The PPO-labelled variant is a
+prompt-end detached linear terminal-reward baseline with no GAE, not a claim
+of general PPO/GRPO equivalence. G8 policy-update prompt schedules match;
+critic warm-up adds PPO exposure and compute. This protocol has no new results.
 
-  1. Token cap. v1 used max_new=200; training completions averaged 190-198
-     tokens and the base model scored 0.20 greedy, so the regime was
-     truncation-bound. v2 uses max_new=512 and logs per-completion truncation
-     (no end-of-turn token) in training and evaluation.
-  2. Cold critic. v1's value head was a randomly initialised linear layer on
-     raw hidden states at lr 1e-5 with no warm-up (initial value loss 0.5-13
-     against a ~0.08 floor), so PPO advantages were mostly noise. v2 uses a
-     zero-initialised linear probe on the detached prompt-end hidden state,
-     its own Adam (lr 1e-3), W_WARM warm-up rollout batches from the initial
-     policy before any policy update, and V_ITERS fitting steps per batch.
-     The baseline for a batch is always predicted BEFORE the head sees that
-     batch's rewards. Warm-up rollouts are extra PPO compute and are logged.
-  3. Exposure and power. v1 had 5 seeds on 200 test items and PPO saw 8x the
-     distinct prompts. v2 has 10 seeds, the full 1,319-item GSM8K test split,
-     and an exposure-matched PPO arm.
-  4. Reward. v1 fell back to the last number in the text when no \\boxed{}
-     was present and compared raw strings. v2 scores the last \\boxed{}
-     only, numerically normalised; greedy eval completions are stored
-     (<arm>_s<seed>_texts.json.gz on the volume) so scoring can be audited.
-
-Arms (64 generations/step, 30 steps, K=2 inner epochs, clip 0.2, per-response
-length normalisation, LoRA r=16 q/k/v/o, policy lr 1e-5, grad clip 1.0, A10G):
-
-  grpo_g8  : 8 prompts x 8,  A=(r-mean_g)/(std_g+eps)
-  grpo_g2  : 32 prompts x 2, same estimator
-  ppo      : 64 prompts x 1, A=r-V(prompt), batch-normalised (standard PPO shape)
-  ppo_8x8  : 8 prompts x 8,  A=r-V(prompt), batch-normalised (exposure-matched)
-
-Pre-specified analysis (fixed before launch, 2026-10-03): unit = seed;
-primary contrasts are post-training accuracy grpo_g8-ppo, grpo_g8-ppo_8x8 and
-grpo_g8-grpo_g2; paired t 95% CI, exact two-sided sign-flip p, Holm across
-the three primary contrasts, TOST at +/-2.0 accuracy points.
-
-Usage (from platform_hybrid/):
-  modal run experiments/modal/modal_samestack_gsm8k_cot_v2.py --smoke   # 1 seed/arm, tiny
-  modal run experiments/modal/modal_samestack_gsm8k_cot_v2.py
+Modal: modal run experiments/modal/modal_samestack_gsm8k_cot_v2.py [--smoke]
+Colab: set SAMESTACK_EXECUTION_ENV=colab, then call run_arm_local explicitly.
+Importing in Colab never creates a Modal stub or launches an experiment.
 """
 import itertools
-import json
 import math
 import os
+from pathlib import Path
+import sys
 import time
 
-import modal
-
-app = modal.App("tinkerrl-samestack-gsm8k-cot-v2")
-results_vol = modal.Volume.from_name("tinkerrl-results", create_if_missing=True)
-RESULTS_DIR = "/results"
-
-image = (
-    modal.Image.debian_slim(python_version="3.11")
-    .pip_install(
-        "torch>=2.3.0", "transformers>=4.46.0", "peft>=0.13.0",
-        "datasets>=3.0.0", "numpy>=1.26.0,<2.0.0", "accelerate>=1.0.0",
-        "safetensors>=0.4.0", "huggingface-hub>=0.26.0",
-    )
+# Works both from repository root and platform_hybrid's historical launch cwd.
+REPO_ROOT = next((parent for parent in Path(__file__).resolve().parents
+                  if (parent / "platform_hybrid/experiments/samestack_protocol.py").is_file()),
+                 Path("/root"))
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+from platform_hybrid.experiments.samestack_protocol import (
+    PROTOCOL_ID, PROTOCOL_HASH, PROTOCOL_SPEC, ANALYSIS_PLAN_ID, GRADING_SPEC_ID,
+    boxed_reward, budget_accounting, canonical_hash, clear_inherited_generation_defaults, generation_configs,
+    prompt_schedules, resolved_token_ids, strict_json_dump,
 )
+from platform_hybrid.experiments.samestack_training import (
+    clipped_response_loss, completion_log_probs, rollout_attention,
+)
+from platform_hybrid.experiments.samestack_manifest import (
+    capture_source, example_ids, hardware_manifest, resolve_revisions, utc_now, verify_source_files,
+)
+from platform_hybrid.experiments.samestack_contract import load_completed, write_completion
+from platform_hybrid.experiments.samestack_dependencies import REQUIREMENTS, lock_manifest, verify_runtime
+
+EXECUTION_ENVIRONMENT = os.environ.get("SAMESTACK_EXECUTION_ENV", "modal")
+RESULTS_DIR = os.environ.get("SAMESTACK_RESULTS_DIR", "/results")
+app = results_vol = image = None
+if EXECUTION_ENVIRONMENT == "modal":
+    import modal
+    app = modal.App("tinkerrl-samestack-gsm8k-cot-v3")
+    results_vol = modal.Volume.from_name("tinkerrl-results", create_if_missing=True)
+    image = modal.Image.debian_slim(python_version="3.11").pip_install(*REQUIREMENTS)
+    for name in ("samestack_protocol", "samestack_training", "samestack_manifest",
+                 "samestack_contract", "samestack_dependencies"):
+        image = image.add_local_file(
+            str(REPO_ROOT / "platform_hybrid/experiments" / f"{name}.py"),
+            f"/root/platform_hybrid/experiments/{name}.py")
+    image = image.add_local_file(str(Path(__file__).resolve()),
+                                "/root/platform_hybrid/experiments/modal/modal_samestack_gsm8k_cot_v2.py")
+elif EXECUTION_ENVIRONMENT != "colab":
+    raise ValueError("SAMESTACK_EXECUTION_ENV must be modal or colab")
 
 SEEDS = [42, 123, 456, 789, 1024, 2048, 3141, 4096, 5555, 7777]
 ARMS = ["grpo_g8", "grpo_g2", "ppo", "ppo_8x8"]
 PRIMARY = [("grpo_g8", "ppo"), ("grpo_g8", "ppo_8x8"), ("grpo_g8", "grpo_g2")]
 MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
-N_STEPS = 30
-N_GEN = 64
+DATASET = "openai/gsm8k"
+N_STEPS, N_GEN = 30, 64
 GROUP = {"grpo_g8": 8, "grpo_g2": 2, "ppo": 1, "ppo_8x8": 8}
-K_EPOCHS = 2
-CLIP = 0.2
-LR = 1e-5
-MAX_NEW = 512
-N_EVAL = None  # None = full 1,319-item test split
-EVAL_BS = 64
-EPS = 1e-6
-CHUNK = 4
-V_LR = 1e-3
-V_ITERS = 50
-W_WARM = 4
+K_EPOCHS, CLIP, LR, MAX_NEW = 2, 0.2, 1e-5, 512
+N_EVAL, EVAL_BS, EPS, CHUNK = None, 64, 1e-6, 4
+V_LR, V_ITERS, W_WARM = 1e-3, 50, 4
 MARGIN = 0.02
 
 
-@app.function(image=image, gpu="A10G", timeout=6 * 3600, volumes={RESULTS_DIR: results_vol},
-              retries=1, secrets=[modal.Secret.from_name("huggingface-secret")])
-def run_arm(arm: str, seed: int, smoke: bool = False) -> dict:
+def run_arm_local(arm: str, seed: int, smoke: bool = False, source_provenance=None) -> dict:
+    """Execute only when explicitly invoked; resume only complete immutable bundles."""
+    if arm not in GROUP or seed not in SEEDS:
+        raise ValueError("Unknown prespecified arm or seed")
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-    sub = "samestack_gsm8k_v2s_smoke" if smoke else "samestack_gsm8k_v2s"  # v2s: strict boxed reward
-    out_path = f"{RESULTS_DIR}/{sub}/{arm}_s{seed}.json"
-    if os.path.exists(out_path):  # resume: a finished arm is not re-run
-        with open(out_path) as f:
-            return json.load(f)
-    n_steps, n_eval, w_warm = (2, 32, 1) if smoke else (N_STEPS, N_EVAL, W_WARM)
-
+    import gzip
     import random
-    import re
     import numpy as np
     import torch
     import torch.nn as nn
-    import torch.nn.functional as F
     from datasets import load_dataset
     from peft import LoraConfig, get_peft_model
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    device = "cuda"
-
-    tok = AutoTokenizer.from_pretrained(MODEL)
-    if tok.pad_token is None:
-        tok.pad_token = tok.eos_token
+    dependencies = verify_runtime()
+    started_at = utc_now()
+    source = source_provenance or capture_source(REPO_ROOT)
+    if source.get("status") != "observed" or not source.get("commit") or not source.get("dirty_hash"):
+        raise ValueError("Verified source commit and dirty hash required before execution")
+    verify_source_files(source, REPO_ROOT)
+    environment = EXECUTION_ENVIRONMENT
+    n_steps, n_eval, w_warm = (2, 32, 1) if smoke else (N_STEPS, N_EVAL, W_WARM)
+    is_ppo = arm.startswith("ppo")
+    w_warm = w_warm if is_ppo else 0
+    G, n_prompts = GROUP[arm], N_GEN // GROUP[arm]
+    revisions = resolve_revisions(
+        MODEL, DATASET, os.environ.get("SAMESTACK_MODEL_REVISION", "main"),
+        os.environ.get("SAMESTACK_TOKENIZER_REVISION"),
+        os.environ.get("SAMESTACK_DATASET_REVISION", "main"))
+    ds = load_dataset(DATASET, "main", revision=revisions["dataset"]["revision"])
+    train = ds["train"]
+    all_test_ids = example_ids(ds["test"], "test")
+    test_indices = list(range(len(ds["test"])))
+    if n_eval is not None:
+        test_indices = np.random.default_rng(0).permutation(len(test_indices))[:n_eval].tolist()
+    test = [ds["test"][i] for i in test_indices]
+    if len(test) != (32 if smoke else 1319):
+        raise ValueError("Resolved dataset does not have the required evaluation size")
+    test_ids = [all_test_ids[i] for i in test_indices]
+    train_ids = example_ids(train, "train")
+    tok = AutoTokenizer.from_pretrained(MODEL, revision=revisions["tokenizer"]["revision"])
     tok.padding_side = "left"
-    # A completion that stopped contains an end token (or post-stop padding); one cut at the cap has neither.
-    stop_ids = {tok.convert_tokens_to_ids("<|im_end|>"), tok.eos_token_id, tok.pad_token_id}
+    # Load config only for EOS resolution before allocating model weights/resuming.
+    from transformers import AutoConfig, GenerationConfig
+    from types import SimpleNamespace
+    config = AutoConfig.from_pretrained(MODEL, revision=revisions["model"]["revision"])
+    config._attn_implementation = "sdpa"
+    model_generation = GenerationConfig.from_pretrained(MODEL, revision=revisions["model"]["revision"])
+    eos_ids, pad_id = resolved_token_ids(tok, SimpleNamespace(config=config, generation_config=model_generation))
+    train_generation, eval_generation = generation_configs(eos_ids, pad_id, MAX_NEW)
+    generations = {"train": train_generation.to_dict(), "eval": eval_generation.to_dict()}
+    critic = {"variant": "prompt-end detached linear terminal-reward baseline; no GAE",
+              "input": "detached prompt-end hidden state", "init": "zeros", "v_lr": V_LR,
+              "v_iters": V_ITERS, "warm_batches": w_warm, "warm_generations": w_warm * N_GEN} if is_ppo else None
+    effective = {"model": MODEL, "tokenizer": MODEL, "dataset": DATASET, "dataset_config": "main",
+                 "model_revision": revisions["model"]["revision"],
+                 "tokenizer_revision": revisions["tokenizer"]["revision"],
+                 "dataset_revision": revisions["dataset"]["revision"],
+                 "arm": arm, "seed": seed, "smoke": smoke, "group": G,
+                 "prompts_per_step": n_prompts, "n_gen": N_GEN, "n_steps": n_steps,
+                 "n_eval": len(test), "k_epochs": K_EPOCHS, "clip": CLIP, "lr": LR,
+                 "max_new": MAX_NEW, "eval_bs": EVAL_BS, "eps": EPS, "chunk": CHUNK,
+                 "critic": critic, "generation": generations,
+                 "policy_optimizer": {"name": "Adam", "betas": [0.9, 0.999], "eps": 1e-8,
+                                      "weight_decay": 0, "max_grad_norm": 1.0},
+                 "lora": {"r": 16, "alpha": 32, "dropout": 0.0,
+                          "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"]},
+                 "loss_normalization": "per-response mean over first-EOS-inclusive tokens",
+                 "reference_kl": None, "policy_dropout_enabled": False,
+                 "attention_backend": "sdpa",
+                 "precision": {"model": "torch.bfloat16", "logprobs": "torch.float32",
+                               "value_head": "torch.float32"},
+                 "advantage_normalization": "batch sample-std" if is_ppo else "group population-std"}
+    config_hash = canonical_hash(effective)
+    hardware = hardware_manifest(torch, SimpleNamespace(config=config), model_dtype="torch.bfloat16")
+    environment_hash = canonical_hash({"environment": environment, "dependencies": dependencies, "hardware": hardware})
+    identity = {"protocol_hash": PROTOCOL_HASH, "config_hash": config_hash,
+                "environment": environment, "environment_hash": environment_hash, "source_commit": source["commit"],
+                "source_dirty_hash": source["dirty_hash"], "run_identity_version": 2,
+                "chat_template_hash": canonical_hash(tok.chat_template),
+                "ordered_train_item_hash": canonical_hash(train_ids),
+                "ordered_test_item_hash": canonical_hash(test_ids)}
+    run_id = canonical_hash(identity)
+    expected = dict(identity, protocol_id=PROTOCOL_ID, run_id=run_id)
+    sub = PROTOCOL_ID + ("_smoke" if smoke else "")
+    out_path = Path(RESULTS_DIR) / sub / f"{arm}_s{seed}.json"
+    if out_path.exists():
+        completed = load_completed(out_path, expected=expected)
+        if completed is not None:
+            return completed
+        # Do not overwrite mismatched/corrupt/incomplete evidence or legacy results.
+        raise ValueError(f"Existing run is not a matching complete artifact bundle: {out_path}")
+
+    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed); torch.cuda.manual_seed_all(seed)
+    device = "cuda"
     model = get_peft_model(
-        AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.bfloat16).to(device),
+        AutoModelForCausalLM.from_pretrained(MODEL, revision=revisions["model"]["revision"],
+                                           dtype=torch.bfloat16, attn_implementation="sdpa").to(device),
         LoraConfig(r=16, lora_alpha=32, lora_dropout=0.0,
-                   target_modules=["q_proj", "k_proj", "v_proj", "o_proj"], task_type="CAUSAL_LM"),
-    )
-    model.train()
+                   target_modules=["q_proj", "k_proj", "v_proj", "o_proj"], task_type="CAUSAL_LM"))
+    # Eval mode disables dropout, not gradients: scoring and sampling see one policy.
+    model.eval()
+    clear_inherited_generation_defaults(model, train_generation)
     params = [p for p in model.parameters() if p.requires_grad]
     opt = torch.optim.Adam(params, lr=LR)
-    is_ppo = arm.startswith("ppo")
     vhead = vopt = None
     if is_ppo:
         vhead = nn.Linear(model.config.hidden_size, 1).to(device=device, dtype=torch.float32)
         nn.init.zeros_(vhead.weight); nn.init.zeros_(vhead.bias)
         vopt = torch.optim.Adam(vhead.parameters(), lr=V_LR)
+    schedules = prompt_schedules(seed, len(train), n_steps, w_warm, n_prompts, N_GEN)
+    schedules["policy_item_ids"] = [[train_ids[i] for i in row] for row in schedules["policy"]]
+    schedules["critic_warmup_item_ids"] = [[train_ids[i] for i in row] for row in schedules["critic_warmup"]]
+    if hardware_manifest(torch, model) != hardware:
+        raise ValueError("Observed model backend/precision differs from the effective runtime manifest")
+    manifest = {"schema_version": 1, "protocol_id": PROTOCOL_ID, "protocol_hash": PROTOCOL_HASH,
+                "protocol_spec": PROTOCOL_SPEC, "grading_spec_id": GRADING_SPEC_ID,
+                "analysis_plan_id": ANALYSIS_PLAN_ID, "run_id": run_id, "run_identity_version": 2,
+                "environment": environment, "source": source, "dependencies": dependencies,
+                "dependency_lock": lock_manifest(), "hardware": hardware,
+                "environment_hash": environment_hash,
+                "revisions": revisions, "chat_template_hash": canonical_hash(tok.chat_template),
+                "train_item_ids": train_ids, "test_item_ids": test_ids,
+                "ordered_train_item_hash": canonical_hash(train_ids),
+                "ordered_test_item_hash": canonical_hash(test_ids), "generation": generations,
+                "schedules": schedules, "budget": budget_accounting(n_steps, N_GEN, G, w_warm),
+                "effective_config": effective, "config_hash": config_hash,
+                "timestamps": {"started_at": started_at}}
 
-    ds = load_dataset("openai/gsm8k", "main")
-    train = ds["train"].shuffle(seed=seed)
-    test = list(ds["test"]) if n_eval is None else list(ds["test"].shuffle(seed=0).select(range(n_eval)))
+    def gold_of(answer):
+        return answer.split("####")[-1].strip()
 
-    def gold_of(ans):
-        return ans.split("####")[-1].strip().replace(",", "")
-
-    def norm_num(s):
-        s = re.sub(r"\\[!,;: ]|\\\$|\$|,|\\text\{[^}]*\}|\\%|%", "", s).strip().rstrip(".")
-        try:
-            return f"{float(s):.6g}"
-        except ValueError:
-            return s
-
-    def extract(t):
-        # Boxed-only: no last-number fallback, so a truncated answer-less completion scores 0.
-        m = re.findall(r"\\boxed\{((?:[^{}]|\{[^{}]*\})+)\}", t)
-        return norm_num(m[-1]) if m else None
-
-    def build(q):
-        msgs = [{"role": "user", "content": q + "\nThink step by step, then give the final answer as \\boxed{ANSWER}."}]
-        return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
-
-    def reward(text, gold):
-        p = extract(text)
-        return 1.0 if (p is not None and p == norm_num(gold)) else 0.0
+    def build(question):
+        messages = [{"role": "user", "content": question + "\nThink step by step, then give the final answer as \\boxed{ANSWER}."}]
+        return tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
     def truncated(ids):
-        return [not any(int(t) in stop_ids for t in row) for row in ids]
+        return [not any(int(token) in eos_ids for token in row) for row in ids]
 
     def gen_batch(prompts, greedy):
-        enc = tok(prompts, return_tensors="pt", padding=True, add_special_tokens=False).to(device)
-        plen = enc["input_ids"].shape[1]
-        kw = dict(do_sample=False) if greedy else dict(do_sample=True, temperature=1.0, top_p=1.0)
+        encoded = tok(prompts, return_tensors="pt", padding=True, add_special_tokens=False).to(device)
+        plen = encoded["input_ids"].shape[1]
         with torch.no_grad():
-            g = model.generate(**enc, max_new_tokens=MAX_NEW, pad_token_id=tok.pad_token_id, **kw)
-        return enc, plen, g[:, plen:]
+            generated = model.generate(**encoded, generation_config=eval_generation if greedy else train_generation)
+        return encoded, plen, generated[:, plen:]
 
     def heldout():
-        model.eval()
-        corr, trunc, texts = [], [], []
+        correct, trunc, texts = [], [], []
         for i in range(0, len(test), EVAL_BS):
-            ch = test[i:i + EVAL_BS]
-            _, _, c = gen_batch([build(x["question"]) for x in ch], greedy=True)
-            trunc += truncated(c)
-            for x, t in zip(ch, tok.batch_decode(c, skip_special_tokens=True)):
-                corr.append(int(reward(t, gold_of(x["answer"])) == 1.0))
-                texts.append(t)
-        model.train()
-        return corr, [int(t) for t in trunc], texts
+            rows = test[i:i + EVAL_BS]
+            _, _, completion = gen_batch([build(row["question"]) for row in rows], greedy=True)
+            trunc.extend(int(value) for value in truncated(completion))
+            for row, text in zip(rows, tok.batch_decode(completion, skip_special_tokens=True)):
+                correct.append(int(boxed_reward(text, gold_of(row["answer"]))))
+                texts.append(text)
+        return correct, trunc, texts
 
-    def forward(full, attn, plen, cs, ce, want_feat):
-        out = model(input_ids=full[cs:ce], attention_mask=attn[cs:ce], output_hidden_states=want_feat)
-        logits = out.logits[:, :-1, :].float()
-        tgt = full[cs:ce][:, 1:]
-        lp = F.log_softmax(logits, dim=-1).gather(-1, tgt.unsqueeze(-1)).squeeze(-1)[:, plen - 1:]
-        feat = out.hidden_states[-1][:, plen - 1, :].detach().float() if want_feat else None
-        del out, logits
-        return lp, feat
+    def forward(full, attention, plen, start, end, want_features):
+        return completion_log_probs(model, full[start:end], attention[start:end], plen, want_features)
 
-    train_iter = iter(train)
-    reshuffles = itertools.count(1)
-
-    def next_batch(n_prompts, G):
-        nonlocal train_iter
-        batch = []
-        for _ in range(n_prompts):
-            try:
-                batch.append(next(train_iter))
-            except StopIteration:
-                train_iter = iter(train.shuffle(seed=seed + next(reshuffles))); batch.append(next(train_iter))
+    def batch_for(indices):
         prompts, golds = [], []
-        for ex in batch:
+        for index in indices:
+            row = train[index]
             for _ in range(G):
-                prompts.append(build(ex["question"])); golds.append(gold_of(ex["answer"]))
+                prompts.append(build(row["question"])); golds.append(gold_of(row["answer"]))
         return prompts, golds
 
     def rollout(prompts, golds):
-        enc, plen, comp_ids = gen_batch(prompts, greedy=False)
-        comp_txt = tok.batch_decode(comp_ids, skip_special_tokens=True)
-        rewards = np.array([reward(t, g) for t, g in zip(comp_txt, golds)], dtype=np.float32)
-        full = torch.cat([enc["input_ids"], comp_ids], dim=1)
-        attn = (full != tok.pad_token_id).long()
-        attn[:, :plen] = enc["attention_mask"]
-        return full, attn, plen, comp_ids, rewards
+        encoded, plen, completion = gen_batch(prompts, greedy=False)
+        texts = tok.batch_decode(completion, skip_special_tokens=True)
+        rewards = np.array([boxed_reward(text, gold) for text, gold in zip(texts, golds)], dtype=np.float32)
+        full = torch.cat([encoded["input_ids"], completion], dim=1)
+        attention, mask = rollout_attention(encoded["attention_mask"], completion, eos_ids)
+        return full, attention, plen, completion, mask.float(), rewards
 
-    def fit_value(feats, rew_t):
+    def fit_value(features, rewards):
         for _ in range(V_ITERS):
             vopt.zero_grad()
-            loss = 0.5 * ((vhead(feats).squeeze(-1) - rew_t) ** 2).mean()
+            loss = 0.5 * ((vhead(features).squeeze(-1) - rewards) ** 2).mean()
             loss.backward(); vopt.step()
         return float(loss.item())
 
-    G = GROUP[arm]
-    n_prompts = N_GEN // G
     t0 = time.time()
     pre_correct, pre_trunc, pre_texts = heldout()
-    t_eval = time.time() - t0
-
-    # Critic warm-up: rollouts from the initial policy, value head only.
+    eval_seconds = time.time() - t0
+    # Separate warm-up and policy sampling RNG; no warm-up shift of policy RNG.
+    torch.manual_seed(schedules["warmup_sampling_seed"])
+    torch.cuda.manual_seed_all(schedules["warmup_sampling_seed"])
     warm_log = []
-    for w in range(w_warm if is_ppo else 0):
-        prompts, golds = next_batch(n_prompts, G)
-        full, attn, plen, _, rewards = rollout(prompts, golds)
+    for warm_step, indices in enumerate(schedules["critic_warmup"]):
+        full, attention, plen, _, _, rewards = rollout(*batch_for(indices))
         rew_t = torch.tensor(rewards, device=device)
         with torch.no_grad():
-            feats = torch.cat([forward(full, attn, plen, cs, min(cs + CHUNK, len(full)), True)[1]
-                               for cs in range(0, len(full), CHUNK)])
-            pre_mse = float(0.5 * ((vhead(feats).squeeze(-1) - rew_t) ** 2).mean())
-        warm_log.append({"warm_step": w, "mean_reward": float(rewards.mean()),
-                         "value_loss_before_fit": pre_mse, "value_loss_after_fit": fit_value(feats, rew_t)})
-
+            features = torch.cat([forward(full, attention, plen, start, min(start + CHUNK, len(full)), True)[1]
+                                  for start in range(0, len(full), CHUNK)])
+            pre_mse = float(0.5 * ((vhead(features).squeeze(-1) - rew_t) ** 2).mean())
+        warm_log.append({"warm_step": warm_step, "mean_reward": float(rewards.mean()),
+                         "value_loss_before_fit": pre_mse, "value_loss_after_fit": fit_value(features, rew_t)})
+    torch.manual_seed(schedules["policy_sampling_seed"])
+    torch.cuda.manual_seed_all(schedules["policy_sampling_seed"])
     step_log = []
-    for step in range(n_steps):
-        prompts, golds = next_batch(n_prompts, G)
-        full, attn, plen, comp_ids, rewards = rollout(prompts, golds)
-        rew_t = torch.tensor(rewards, device=device)
-        B = full.shape[0]
+    for step, indices in enumerate(schedules["policy"]):
+        full, attention, plen, completion, mask, rewards = rollout(*batch_for(indices))
+        rew_t, batch_size = torch.tensor(rewards, device=device), full.shape[0]
         with torch.no_grad():
-            olds, masks, feats = [], [], []
-            for cs in range(0, B, CHUNK):
-                ce = min(cs + CHUNK, B)
-                lp, f = forward(full, attn, plen, cs, ce, is_ppo)
-                olds.append(lp); masks.append((full[cs:ce][:, 1:] != tok.pad_token_id).float()[:, plen - 1:])
+            old_parts, features = [], []
+            for start in range(0, batch_size, CHUNK):
+                lp, feat = forward(full, attention, plen, start, min(start + CHUNK, batch_size), is_ppo)
+                old_parts.append(lp)
                 if is_ppo:
-                    feats.append(f)
-            old_lp, mask = torch.cat(olds), torch.cat(masks)
-        comp_len = float(mask.sum(1).mean().item())
-        trunc_frac = float(np.mean(truncated(comp_ids)))
-
+                    features.append(feat)
+            old_lp = torch.cat(old_parts)
         vl_pre = vl_post = None
         if is_ppo:
-            feats = torch.cat(feats)
+            features = torch.cat(features)
             with torch.no_grad():
-                V_old = vhead(feats).squeeze(-1)  # predicted before seeing this batch's rewards
-            vl_pre = float(0.5 * ((V_old - rew_t) ** 2).mean())
-            adv = rew_t - V_old
-            adv = (adv - adv.mean()) / (adv.std() + EPS)
-            zvf = float("nan")
+                old_value = vhead(features).squeeze(-1)
+            vl_pre = float(0.5 * ((old_value - rew_t) ** 2).mean())
+            advantages = rew_t - old_value
+            advantages = (advantages - advantages.mean()) / (advantages.std() + EPS)
+            zvf = None
         else:
-            R = rewards.reshape(n_prompts, G)
-            gstd = R.std(1, keepdims=True)
-            zvf = float((gstd[:, 0] <= EPS).mean())
-            A = (R - R.mean(1, keepdims=True)) / (gstd + EPS)
-            adv = torch.tensor(A.reshape(-1), dtype=torch.float32, device=device)
-
-        for _ep in range(K_EPOCHS):
+            grouped = rewards.reshape(n_prompts, G)
+            group_std = grouped.std(1, keepdims=True)
+            zvf = float((group_std[:, 0] <= EPS).mean())
+            normalized = (grouped - grouped.mean(1, keepdims=True)) / (group_std + EPS)
+            advantages = torch.tensor(normalized.reshape(-1), dtype=torch.float32, device=device)
+        for _ in range(K_EPOCHS):
             opt.zero_grad()
-            for cs in range(0, B, CHUNK):
-                ce = min(cs + CHUNK, B)
-                lp, _ = forward(full, attn, plen, cs, ce, False)
-                m = mask[cs:ce]; a_i = adv[cs:ce].unsqueeze(1)
-                ratio = torch.exp(lp - old_lp[cs:ce])
-                ptl = -torch.min(ratio * a_i, torch.clamp(ratio, 1 - CLIP, 1 + CLIP) * a_i) * m
-                loss = (ptl.sum(1) / m.sum(1).clamp(min=1.0)).sum() / B
+            for start in range(0, batch_size, CHUNK):
+                end = min(start + CHUNK, batch_size)
+                lp, _ = forward(full, attention, plen, start, end, False)
+                loss = clipped_response_loss(lp, old_lp[start:end], advantages[start:end],
+                                             mask[start:end], CLIP, batch_size)
                 loss.backward()
-                del lp, ptl, loss
-            gnorm = float(torch.nn.utils.clip_grad_norm_(params, 1.0))
+            grad_norm = float(torch.nn.utils.clip_grad_norm_(params, 1.0))
             opt.step()
         if is_ppo:
-            vl_post = fit_value(feats, rew_t)
+            vl_post = fit_value(features, rew_t)
+        comp_len = float(mask.sum(1).mean())
+        trunc_frac = float(np.mean(truncated(completion)))
         step_log.append({"step": step, "mean_reward": float(rewards.mean()),
-                         "reward_var_half": float(0.5 * rewards.var()), "zvf": zvf,
-                         "mean_comp_len": comp_len, "trunc_frac": trunc_frac, "grad_norm": gnorm,
+                         "constant_mean_inbatch_half_mse": float(0.5 * rewards.var()), "zvf": zvf,
+                         "mean_comp_len": comp_len, "trunc_frac": trunc_frac, "grad_norm": grad_norm,
                          "value_loss_pre_fit": vl_pre, "value_loss_post_fit": vl_post})
-        print(f"[{arm} s{seed}] step {step} r={rewards.mean():.3f} len={comp_len:.0f} "
-              f"trunc={trunc_frac:.2f} vl={vl_pre}", flush=True)
-
+        print(f"[{arm} s{seed}] step {step} r={rewards.mean():.3f} len={comp_len:.0f} trunc={trunc_frac:.2f}", flush=True)
+    eval_start = time.time()
     post_correct, post_trunc, post_texts = heldout()
+    eval_seconds += time.time() - eval_start
     pre, post = np.array(pre_correct), np.array(post_correct)
-    res = {"experiment": "samestack_gsm8k_cot_v2", "arm": arm, "seed": seed, "model": MODEL,
-           "smoke": smoke, "group": G, "prompts_per_step": n_prompts, "n_gen": N_GEN,
-           "n_steps": n_steps, "k_epochs": K_EPOCHS, "lr": LR, "max_new": MAX_NEW,
-           "critic": {"v_lr": V_LR, "v_iters": V_ITERS, "warm_batches": len(warm_log),
-                      "warm_generations": len(warm_log) * N_GEN} if is_ppo else None,
-           "heldout_pre_acc": float(pre.mean()), "heldout_post_acc": float(post.mean()),
-           "heldout_pre_trunc": float(np.mean(pre_trunc)), "heldout_post_trunc": float(np.mean(post_trunc)),
-           "n_eval": int(len(pre)),
-           "wrong_to_right": int(((pre == 0) & (post == 1)).sum()),
-           "right_to_wrong": int(((pre == 1) & (post == 0)).sum()),
-           "last10_avg": float(np.mean([s["mean_reward"] for s in step_log[-10:]])),
-           "eval_seconds": t_eval, "elapsed_seconds": time.time() - t0,
-           "pre_correct": pre_correct, "post_correct": post_correct,
-           "pre_trunc": pre_trunc, "post_trunc": post_trunc,
-           "warm_log": warm_log, "step_log": step_log}
-    os.makedirs(f"{RESULTS_DIR}/{sub}/adapters", exist_ok=True)
-    model.save_pretrained(f"{RESULTS_DIR}/{sub}/adapters/{arm}_s{seed}")
-    import gzip
-    with gzip.open(f"{RESULTS_DIR}/{sub}/{arm}_s{seed}_texts.json.gz", "wt") as f:
-        json.dump({"pre": pre_texts, "post": post_texts}, f)
-    with open(out_path, "w") as f:
-        json.dump(res, f)
-    results_vol.commit()
-    print(f"[{arm} s{seed}] pre={pre.mean():.3f} post={post.mean():.3f} "
-          f"trunc {np.mean(pre_trunc):.3f}->{np.mean(post_trunc):.3f} last10={res['last10_avg']:.3f}")
-    return res
+    manifest["timestamps"]["finished_at"] = utc_now()
+    result = {**effective, "experiment": PROTOCOL_ID, "execution_environment": environment,
+              "manifest": manifest, "heldout_pre_acc": float(pre.mean()), "heldout_post_acc": float(post.mean()),
+              "heldout_pre_trunc": float(np.mean(pre_trunc)), "heldout_post_trunc": float(np.mean(post_trunc)),
+              "wrong_to_right": int(((pre == 0) & (post == 1)).sum()),
+              "right_to_wrong": int(((pre == 1) & (post == 0)).sum()),
+              "last10_avg": float(np.mean([row["mean_reward"] for row in step_log[-10:]])),
+              "eval_seconds": eval_seconds, "elapsed_seconds": time.time() - t0,
+              "pre_correct": pre_correct, "post_correct": post_correct,
+              "pre_trunc": pre_trunc, "post_trunc": post_trunc, "warm_log": warm_log, "step_log": step_log}
+    adapter_dir = out_path.parent / "adapters" / out_path.stem
+    adapter_dir.mkdir(parents=True, exist_ok=True)
+    model.save_pretrained(adapter_dir)
+    tok.save_pretrained(adapter_dir)
+    for name, generation in generations.items():
+        with (adapter_dir / f"{name}_generation_config.json").open("w") as handle:
+            strict_json_dump(generation, handle, indent=2)
+    with gzip.open(out_path.with_name(out_path.stem + "_texts.json.gz"), "wt") as handle:
+        strict_json_dump({"pre": pre_texts, "post": post_texts, "test_item_ids": test_ids}, handle)
+    with out_path.open("w") as handle:
+        strict_json_dump(result, handle)
+    write_completion(out_path, expected=expected)
+    if results_vol is not None:
+        results_vol.commit()
+    return result
+
+
+run_arm = (app.function(image=image, gpu="A10G", timeout=6 * 3600,
+                        volumes={RESULTS_DIR: results_vol}, retries=1,
+                        secrets=[modal.Secret.from_name("huggingface-secret")])(run_arm_local)
+           if app is not None else run_arm_local)
 
 
 def _t_cdf(t, df):
@@ -422,12 +447,14 @@ def paired(a: dict, b: dict) -> dict:
     t = md / se if se > 0 else (math.copysign(float("inf"), md) if md else 0.0)
     p = 2 * _t_cdf(-abs(t), df) if se > 0 else (0.0 if md else 1.0)
     tc = _t_ppf(0.975, df)
+    tc90 = _t_ppf(0.95, df)
     # Use one-sided limiting probabilities at zero SE. At the equivalence
     # boundary the null is not rejected; outside it equivalence is false.
     p_lo = _t_cdf(-(md + MARGIN) / se, df) if se > 0 else (0.0 if md > -MARGIN else 0.5 if md == -MARGIN else 1.0)
     p_hi = _t_cdf((md - MARGIN) / se, df) if se > 0 else (0.0 if md < MARGIN else 0.5 if md == MARGIN else 1.0)
     return {"n_seeds": n, "seeds": seeds, "diffs": d, "mean_diff": md, "sd": sd,
-            "ci95": [md - tc * se, md + tc * se], "t": t, "df": df, "p_two_sided": p,
+            "ci95": [md - tc * se, md + tc * se],
+            "ci90": [md - tc90 * se, md + tc90 * se], "t": t, "df": df, "p_two_sided": p,
             "signflip_p": signflip_p(d),
             "tost_margin": MARGIN, "tost_p": max(p_lo, p_hi),
             "equivalent_at_margin": max(p_lo, p_hi) < 0.05}
@@ -442,74 +469,43 @@ def holm(ps: dict) -> dict:
     return out
 
 
-@app.local_entrypoint()
 def main(smoke: bool = False):
+    """Launch explicit jobs; summary remains descriptive until independent analysis."""
+    if app is None:
+        raise RuntimeError("Use run_arm_local explicitly in Colab")
     seeds = SEEDS[:1] if smoke else SEEDS
-    jobs = [(a, s, smoke) for a in ARMS for s in seeds]
-    print(f"Same-stack GSM8K-CoT v2{' SMOKE' if smoke else ''}: {len(jobs)} runs ({ARMS} x {seeds})")
+    source = capture_source(REPO_ROOT)
+    jobs = [(arm, seed, smoke, source) for arm in ARMS for seed in seeds]
     results, errors = [], []
-    for r in run_arm.starmap(jobs, return_exceptions=True):
-        (results if isinstance(r, dict) else errors).append(r)
-    for e in errors:
-        print("FAILED:", repr(e)[:500])
-    by = {a: {r["seed"]: r for r in results if r["arm"] == a} for a in ARMS}
-
-    summ = {}
-    for a in ARMS:
-        rs = list(by[a].values())
-        if not rs:
+    for result in run_arm.starmap(jobs, return_exceptions=True):
+        (results if isinstance(result, dict) else errors).append(result)
+    summary = {}
+    for arm in ARMS:
+        rows = [row for row in results if row["arm"] == arm]
+        if not rows:
             continue
-        mean = lambda k: sum(r[k] for r in rs) / len(rs)
-        summ[a] = {"n_seeds": len(rs), "heldout_pre_mean": mean("heldout_pre_acc"),
-                   "heldout_post_mean": mean("heldout_post_acc"),
-                   "delta_mean": mean("heldout_post_acc") - mean("heldout_pre_acc"),
-                   "heldout_pre_trunc": mean("heldout_pre_trunc"),
-                   "heldout_post_trunc": mean("heldout_post_trunc"),
-                   "train_trunc_mean": sum(sum(s["trunc_frac"] for s in r["step_log"]) / len(r["step_log"])
-                                           for r in rs) / len(rs),
-                   "last10_mean": mean("last10_avg")}
-        if rs[0]["arm"].startswith("ppo"):
-            vl = [s["value_loss_pre_fit"] for r in rs for s in r["step_log"]]
-            floor = [s["reward_var_half"] for r in rs for s in r["step_log"]]
-            summ[a]["critic_value_loss_pre_fit_mean"] = sum(vl) / len(vl)
-            summ[a]["critic_floor_half_reward_var_mean"] = sum(floor) / len(floor)
-        d = {s: r["heldout_post_acc"] - r["heldout_pre_acc"] for s, r in by[a].items()}
-        if len(d) >= 2:
-            summ[a]["delta_vs_pre"] = paired(d, {s: 0.0 for s in d})
-    post_of = {a: {s: r["heldout_post_acc"] for s, r in by[a].items()} for a in ARMS}
-    contrasts = {}
-    for x, y in PRIMARY:
-        if len(set(post_of[x]) & set(post_of[y])) >= 2:
-            contrasts[f"{x}_minus_{y}"] = paired(post_of[x], post_of[y])
-    for k, h in holm({k: c["p_two_sided"] for k, c in contrasts.items()}).items():
-        contrasts[k]["holm_p_t"] = h
-    for k, h in holm({k: c["signflip_p"] for k, c in contrasts.items()}).items():
-        contrasts[k]["holm_p_signflip"] = h
+        summary[arm] = {"n_seeds": len(rows),
+                        "heldout_pre_mean": sum(row["heldout_pre_acc"] for row in rows) / len(rows),
+                        "heldout_post_mean": sum(row["heldout_post_acc"] for row in rows) / len(rows)}
+        if arm.startswith("ppo"):
+            steps = [step for row in rows for step in row["step_log"]]
+            summary[arm]["critic_value_loss_pre_fit_mean"] = sum(step["value_loss_pre_fit"] for step in steps) / len(steps)
+            summary[arm]["constant_mean_inbatch_half_mse_mean"] = sum(step["constant_mean_inbatch_half_mse"] for step in steps) / len(steps)
+    output = {"protocol_id": PROTOCOL_ID, "protocol_hash": PROTOCOL_HASH,
+              "analysis_plan_id": ANALYSIS_PLAN_ID,
+              "analysis_status": "descriptive-only; run the independent fixed-family analysis",
+              "confirmatory_verdict": None, "smoke": smoke,
+              "effective_configs": [row["manifest"]["effective_config"] for row in results],
+              "summary": summary, "n_failed": len(errors), "errors": [str(error) for error in errors],
+              "runs": results}
+    stem = Path(RESULTS_DIR) / (PROTOCOL_ID + ("_smoke" if smoke else "")) / "aggregate.json"
+    # Local aggregates are distinct from immutable per-run bundles and historical results.
+    local = REPO_ROOT / "platform_hybrid/experiments/results" / stem.parent.name / "aggregate.json"
+    local.parent.mkdir(parents=True, exist_ok=True)
+    with local.open("w") as handle:
+        strict_json_dump(output, handle, indent=2)
+    print(f"Saved descriptive aggregate: {local}; failed runs: {len(errors)}")
 
-    out = {"config": {"model": MODEL, "n_steps": N_STEPS, "n_gen": N_GEN, "group": GROUP,
-                      "k_epochs": K_EPOCHS, "lr": LR, "max_new": MAX_NEW,
-                      "n_eval": "full test split (1319)" if N_EVAL is None else N_EVAL,
-                      "critic": {"init": "zeros", "input": "detached prompt-end hidden state",
-                                 "v_lr": V_LR, "v_iters": V_ITERS, "warm_batches": W_WARM},
-                      "seeds": seeds, "tost_margin": MARGIN, "unit": "seed", "smoke": smoke,
-                      "primary_contrasts": [f"{x}_minus_{y}" for x, y in PRIMARY],
-                      "metric": "greedy accuracy on GSM8K test after training"},
-           "summary": summ, "contrasts": contrasts, "n_failed": len(errors),
-           "runs": [{k: v for k, v in r.items()
-                     if k not in ("pre_correct", "post_correct", "pre_trunc", "post_trunc", "step_log", "warm_log")}
-                    for r in results]}
-    stem = "experiments/results/samestack_gsm8k_cot_v2" + ("_smoke" if smoke else "")
-    with open(stem + ".json", "w") as f:
-        json.dump(out, f, indent=2)
-    with open(stem + "_full.json", "w") as f:
-        json.dump({**out, "runs": results}, f)
-    print("\n=== Same-stack GSM8K-CoT v2 (Qwen2.5-1.5B-Instruct, cap 512) ===")
-    for a, s in summ.items():
-        print(f"  {a:8s}: {s['heldout_pre_mean']:.3f} -> {s['heldout_post_mean']:.3f} "
-              f"(Δ{s['delta_mean']:+.3f}, n={s['n_seeds']}) trunc {s['heldout_pre_trunc']:.3f}->"
-              f"{s['heldout_post_trunc']:.3f} last10={s['last10_mean']:.3f}")
-    for k, c in contrasts.items():
-        print(f"  {k}: {c['mean_diff']:+.4f} CI [{c['ci95'][0]:+.4f}, {c['ci95'][1]:+.4f}] "
-              f"p_t={c['p_two_sided']:.4f} signflip={c['signflip_p']:.4f} holm_t={c['holm_p_t']:.4f} "
-              f"TOST p={c['tost_p']:.3f}")
-    print(f"Saved {stem}.json")
+
+if app is not None:
+    main = app.local_entrypoint()(main)

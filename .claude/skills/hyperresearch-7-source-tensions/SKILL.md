@@ -44,14 +44,14 @@ Read these inputs:
 
 3. **If `research/temp/contradiction-graph.json` exists**, read it. Any high-relevance fight cluster that was NOT promoted to a locus is a prime orphan-tension candidate. It was important enough for the contradiction graph but wasn't investigated in depth — these deserve standalone treatment in the draft.
 
-4. **Select 3–7 source tensions.** Combine comparisons.md tensions with orphan tensions. Rank by:
+4. **Select 0–7 evidence-supported source tensions (contract v2).** Combine comparisons.md tensions with orphan tensions. Rank by:
    - **Decision relevance:** does resolving this tension change the report's recommendation?
    - **Evidence quality:** are both sides grounded in real evidence (not just opinion)?
    - **Reader value:** would an expert reader find this tension illuminating?
 
    Drop tensions that are: trivially resolved (one side is clearly wrong), definitional (the disagreement is about word meaning, not substance), or orthogonal to the research query.
 
-5. **For each tension, pre-commit to a resolution.** Do NOT leave tensions open. For each:
+5. **For each tension, record a supported resolution status.** Unresolved is valid; record evidence needed to decide. For each:
    - Name it in 5–10 words (e.g., "NHTSA's 'no defect' vs. NTSB's 'design failure'")
    - State Side A's strongest case with evidence (quote or cite specific sources)
    - State Side B's strongest case with evidence
@@ -73,7 +73,9 @@ Read these inputs:
            "evidence": "strongest evidence with source note ids",
            "proponents": ["source-note-id-3"]
          },
-         "resolution": "one-paragraph committed reading with load-bearing reason",
+         "resolution_status": "resolved|unresolved",
+         "resolution": "supported reading with load-bearing reason, or why evidence cannot decide",
+         "evidence_needed": ["For unresolved: specific missing evidence and how it could distinguish the sides"],
          "origin": "comparisons|contradiction-graph|orphan-scan",
          "decision_relevance": "high|medium"
        }
@@ -81,14 +83,16 @@ Read these inputs:
    }
    ```
 
-This artifact feeds directly into step 10's mandatory Source Tensions section. Every tension named here becomes a subsection in the final report.
+For unresolved tensions, `evidence_needed` must be nonempty and specific; do not force a committed reading. For resolved tensions, cite the resolving evidence in `resolution` and use an empty `evidence_needed` array.
+
+This artifact feeds directly into step 10's conditional Source Tensions section. Every tension named here becomes a subsection in the final report.
 
 ---
 
 ## Exit criterion
 
-- `research/temp/source-tensions.json` exists with 3–7 tensions
-- Each tension has both sides with proponents, a committed resolution, and decision_relevance
+- `research/temp/source-tensions.json` exists with 0–7 supported tensions; for zero, record searched corpus and rationale
+- Each tension has both sides with proponents, a resolution_status (resolved or unresolved), and decision_relevance
 
 ---
 

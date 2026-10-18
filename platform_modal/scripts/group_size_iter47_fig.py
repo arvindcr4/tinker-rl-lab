@@ -25,9 +25,9 @@ FIG = ROOT / "figures"
 
 
 def main() -> None:
-    crit = read_tsv(RES / "group_size_iter47_critical_T.tsv")
-    mono = read_tsv(RES / "group_size_iter47_monotonicity.tsv")
-    diff = read_tsv(RES / "group_size_iter47_diff_Tstar.tsv")
+    crit = read_tsv(RES / "group_size_iter47_critical_T_v2.tsv")
+    mono = read_tsv(RES / "group_size_iter47_monotonicity_v2.tsv")
+    diff = read_tsv(RES / "group_size_iter47_diff_Tstar_v2.tsv")
     raw = read_tsv(RES / "group_size_token_normalized.tsv")
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
@@ -58,7 +58,7 @@ def main() -> None:
     ax = axes[1]
     Ts = sorted({int(r["budget_tokens"]) for r in raw})
     G_set = sorted({int(r["G"]) for r in raw})
-    anchor = {T: max(float(r["heldout_acc_mean"]) for r in raw if int(r["budget_tokens"]) == T)
+    anchor = {T: next(float(r["heldout_acc_mean"]) for r in raw if int(r["budget_tokens"]) == T and int(r["G"]) == max(G_set))
                for T in Ts}
     cmap = plt.cm.viridis
     for j, G in enumerate(G_set):
@@ -95,7 +95,7 @@ def main() -> None:
 
     fig.suptitle("Iter 47 -- Pillar 3: Wu Retention Critical-Budget $T^*$ Decomposition", fontsize=12)
     fig.tight_layout(rect=[0, 0, 1, 0.96])
-    out = FIG / "group_size_iter47.pdf"
+    out = FIG / "group_size_iter47_v2.pdf"
     fig.savefig(out)
     fig.savefig(out.with_suffix(".png"), dpi=130)
     print(f"Wrote {out} and PNG sibling.")

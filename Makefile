@@ -24,6 +24,8 @@ lint: lint-ruff
 
 lint-ruff:
 	$(RUFF) check $(RUFF_PATHS)
+	# Name safety applies beyond the narrower style/formatting gate.
+	$(RUFF) check --select F821,F811 platform_* autoresearch analysis utils tests tools
 
 format:
 	$(RUFF) format $(RUFF_PATHS)
@@ -54,11 +56,13 @@ lock-check:
 		|| { echo "requirements-lock.txt is stale; run: $(LOCK_EXPORT) -o requirements-lock.txt"; exit 1; }
 
 # Secret scan (gitleaks >= 8.30, `brew install gitleaks`; config .gitleaks.toml).
-# `secrets` scans uncommitted changes (fast). `secrets-history` scans every commit
+# `secrets` scans staged and unstaged tracked diffs (fast); newly added files
+# must be staged to be included. `secrets-history` scans every commit
 # and fails until the two leaked Tinker keys are rotated and fingerprinted in
 # .gitleaksignore (see SECURITY notes).
 GITLEAKS ?= gitleaks
 secrets:
+	$(GITLEAKS) git --pre-commit --staged --config .gitleaks.toml --redact --no-banner .
 	$(GITLEAKS) git --pre-commit --config .gitleaks.toml --redact --no-banner .
 
 secrets-history:
@@ -73,8 +77,10 @@ submission-check:
 
 # Standard library only: use `make public-check PYTHON=python3` without uv or a GPU.
 # The 2026-10-03 manifest is read-only; this target never refreshes expected hashes.
-# The unittest suite runs both checkers and both CLIs against the real repository.
+# The historical release gate explicitly targets its pinned Git snapshot; current
+# source checks run separately and do not certify a frozen working-tree release.
 public-check:
+	$(PYTHON) -B tools/check_public_release.py --archived
 	$(PYTHON) -B -m unittest discover -s tests -p 'test_public*.py' -v
 
 # Separate publication-review gate: a frozen inventory match is not proof that

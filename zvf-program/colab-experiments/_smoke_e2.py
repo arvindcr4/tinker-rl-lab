@@ -10,7 +10,7 @@ Run:
   colab run --gpu A100 zvf-program/colab-experiments/_smoke_e2.py
 """
 import json, re, random, statistics, subprocess, sys
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U", "peft", "torchao>=0.16"], check=False)
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "peft", "torchao>=0.16"], check=True)
 import torch, torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, get_peft_model
@@ -117,3 +117,6 @@ for mode in ("lora", "full"):
         results.append(run(mode, seed))
 
 print("SMOKE_RESULT " + json.dumps(results), flush=True)
+# Prospective metadata; historical result files retain their original identity.
+from protocol_stats import fingerprint
+print("E2_RUNTIME " + json.dumps(fingerprint(__file__, {k: v for k,v in globals().copy().items() if k.isupper() and isinstance(v, (int,float,str,list,dict))})), flush=True)

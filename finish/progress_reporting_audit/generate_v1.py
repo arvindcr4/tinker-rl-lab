@@ -40,8 +40,14 @@ BOUNDARIES = [
     '312 attempts across two framings of 156 Verilog problems; retained original result, not a new run.',
     '746 VisualAgentBench paper tasks; 462 released records do not establish full execution. Not original heldout AppBench.',
     '255 BALROG episodes / 58 configurations. BabyAI completed subset is not all families or original OpenReward Games.',
-    '4,428 Omni-MATH dispositions; accepted-report accuracy excludes two parser failures. Not private FrontierMath.'
+    '4,428 Omni-MATH dispositions; accepted-report accuracy excludes declared parser failures. Not private FrontierMath.'
 ]
+
+
+def finite_json_float(value):
+    number = float(value)
+    need(math.isfinite(number), "nonfinite evidence JSON number")
+    return number
 
 
 class EvidenceError(ValueError):
@@ -67,29 +73,89 @@ def measure(label, covered, total, passes=None, score_denominator=None, kind="na
     score = None if passes is None else ratio(passes, covered if score_denominator is None else score_denominator)
     need(not complete or covered == total, "partial scope cannot be complete")
     return {"label": label, "kind": kind, "coverage": coverage, "accuracy_or_success": score,
-            "complete_named_scope": complete, "full_original_suite_claim": False}
+            "complete_named_scope": complete, "full_original_suite_claim": False,
+            "score_denominator_policy": "completed_only" if score_denominator in (None, covered) else "full_scope_errors_as_zero",
+            "evidence_level": "summary_receipt_consistency"}
+
+
+def validate_measurement(m, expected):
+    need(type(m.get('complete_named_scope')) is bool and m.get('full_original_suite_claim') is False, 'typed scope flags required')
+    for key, value in m.items():
+        if isinstance(value, dict) and {'numerator', 'denominator', 'fraction'} & value.keys():
+            need(set(value) == {'numerator', 'denominator', 'fraction'}, 'invalid ratio shape: ' + key)
+            need(value == ratio(value['numerator'], value['denominator']), 'ratio fraction mismatch: ' + key)
+    c = m.get('coverage')
+    if c is None:
+        need(m.get('accuracy_or_success') is None and not m['complete_named_scope'], 'ungraded measurement cannot claim score/completion')
+        for key in ('recovery_coverage', 'terminal_attempt_coverage'):
+            if key in m: need(m[key]['denominator'] == expected, 'original measured scope mismatch')
+        return
+    need(expected is not None and c['denominator'] == expected, 'measured scope mismatch')
+    for key in ('terminal_attempt_coverage', 'attempted_coverage'):
+        if m.get(key) is not None:
+            need(m[key]['denominator'] == expected and m[key]['numerator'] >= c['numerator'], 'terminal/attempted coverage contradicts native coverage')
+    terminal = m.get('terminal_attempt_coverage')
+    terminal_score = m.get('terminal_attempt_success_rate_errors_as_zero')
+    if terminal_score is not None:
+        need(terminal is not None and terminal_score['denominator'] == terminal['numerator'], 'terminal score denominator mismatch')
+        need(m.get('accuracy_or_success') is not None and terminal_score['numerator'] == m['accuracy_or_success']['numerator'], 'terminal success count contradicts native passes')
+    errors = [m[key] for key in ('patch_application_errors', 'empty_patch_errors') if key in m]
+    need(all(integer(value) for value in errors), 'error counts must be nonnegative integers')
+    if errors:
+        need(terminal is not None and sum(errors) == terminal['numerator'] - c['numerator'], 'native and error dispositions do not partition terminal attempts')
+    a = m.get('accuracy_or_success')
+    if a is not None:
+        policy = m.get('score_denominator_policy')
+        need(policy in ('completed_only', 'full_scope_errors_as_zero'), 'explicit score denominator policy required')
+        need(a['numerator'] <= c['numerator'], 'passes exceed graded coverage')
+        need(a['denominator'] == (c['numerator'] if policy == 'completed_only' else c['denominator']), 'score denominator contradicts coverage policy')
+    need(not m['complete_named_scope'] or c['numerator'] == c['denominator'], 'partial complete flag')
 
 
 def validate_report(report):
     rows = report['rows']
     need([r['lane'] for r in rows] == [f'E{i}' for i in range(1,15)], 'ordered 14 unique lanes required')
+    need(type(report.get('total_lanes')) is int and report['total_lanes'] == len(rows) == 14, 'total lane mismatch')
     for i, row in enumerate(rows):
         need(row['original']['suite_id'] == ORIGINAL[i][1], 'original suite substitution')
         need(row['original']['denominator'] == EXPECTED_ORIGINAL[i], 'original denominator drift')
         need(row['portfolio']['suite_id'] == PUBLIC_SUITES[i], 'portfolio suite drift')
         need(row['portfolio']['declared_denominator'] == EXPECTED_PUBLIC[i], 'portfolio denominator drift')
-        for m in row['portfolio']['measurements']:
-            c = m['coverage']
-            need(c == ratio(c['numerator'], c['denominator']), 'coverage fraction mismatch')
-            need(c['denominator'] == EXPECTED_PUBLIC[i], 'measured scope mismatch')
-            a = m.get('accuracy_or_success')
-            if a is not None:
-                need(a == ratio(a['numerator'], a['denominator']), 'score fraction mismatch')
-            need(not m.get('full_original_suite_claim'), 'replacement evidence promoted to original')
-            need(not m['complete_named_scope'] or c['numerator'] == c['denominator'], 'partial complete flag')
+        for section, expected in (('original', EXPECTED_ORIGINAL[i]), ('portfolio', EXPECTED_PUBLIC[i])):
+            for m in row[section].get('measurements', []): validate_measurement(m, expected)
     need(report['all_original_suites_complete'] is False, 'original campaign completion unsupported')
     derived = [r['lane'] for r in rows if any(m.get('accuracy_or_success') is not None for m in r['portfolio']['measurements'])]
-    need(report['replacement_score_lanes'] == derived and report['replacement_score_lane_count'] == len(derived), 'score-progress count mismatch')
+    need(report['replacement_score_lanes'] == derived and type(report['replacement_score_lane_count']) is int and report['replacement_score_lane_count'] == len(derived), 'score-progress count mismatch')
+    complete = [r['lane'] for r in rows if any(m['complete_named_scope'] for m in r['portfolio']['measurements'])]
+    need(report.get('complete_named_portfolio_scopes') == complete, 'completion list mismatch')
+
+
+def claim_receipts(report):
+    """Conservative transitive input inventory per claim; does not upgrade evidence."""
+    import platform
+    report['audit_protocol_version'] = 'publication-evidence-audit-v4-candidate'
+    report['claim_receipts'] = []
+    for i, row in enumerate(report['rows']):
+        for section in ('original', 'portfolio'):
+            for j, m in enumerate(row[section].get('measurements', [])):
+                for field in ('coverage', 'accuracy_or_success'):
+                    if m.get(field) is None: continue
+                    report['claim_receipts'].append({
+                        'claim': row['lane'] + ':' + section + ':' + m['label'] + ':' + field,
+                        'result_field': f"/rows/{i}/{section}/measurements/{j}/{field}",
+                        'analysis_version': report['audit_protocol_version'],
+                        'protocol_version': report['audit_protocol_version'],
+                        'grader_version': m.get('grader_version', 'not_established_from_retained_receipt'),
+                        'selected_runs': [m['run_id']] if m.get('run_id') else [],
+                        'dataset_id': row[section]['suite_id'],
+                        'run_id': m.get('run_id'), 'unit': 'fraction',
+                        'rounding': 'JSON exact counts/fraction; rendered percent 2 decimals',
+                        'evidence_level': m.get('evidence_level', 'summary_receipt_consistency'),
+                        'completion_status': 'complete_named_scope' if m['complete_named_scope'] else 'partial',
+                        'exclusions': m.get('excluded_reports'),
+                        'selected_input_hashes': dict(report.get('sources', {})),
+                        'dependency_versions': {'python': platform.python_version()}})
+    return report
 
 
 class Reader:
@@ -127,11 +193,30 @@ class Reader:
         self.sources[key] = {"sha256": sha, "bytes": len(raw)}
         return raw
 
+    @staticmethod
+    def decode(raw):
+        def pairs(items):
+            result = {}
+            for key, value in items:
+                need(key not in result, 'duplicate evidence JSON key: ' + key)
+                result[key] = value
+            return result
+        def nonfinite(value):
+            raise EvidenceError('nonfinite evidence JSON: ' + value)
+        return json.loads(raw, object_pairs_hook=pairs, parse_constant=nonfinite, parse_float=lambda value: finite_json_float(value))
+
     def load(self, path, expected=None):
-        return json.loads(self.raw(path, expected))
+        return self.decode(self.raw(path, expected))
+
+    def raw_ref(self, ref):
+        need(isinstance(ref, dict), 'REFERENCE_DESCRIPTOR_REQUIRED')
+        digest = ref.get('sha256')
+        need(isinstance(digest, str) and re.fullmatch(r'[0-9a-f]{64}', digest) is not None, 'SHA256_REQUIRED')
+        need(isinstance(ref.get('path'), str) and bool(ref['path']), 'REFERENCE_PATH_REQUIRED')
+        return self.raw(ref['path'], digest)
 
     def ref(self, ref):
-        return self.load(ref['path'], ref['sha256'])
+        return self.decode(self.raw_ref(ref))
 
     def glob(self, pattern):
         self.guard()
@@ -147,24 +232,58 @@ class Reader:
             need(now == prior, f"new receipt appeared during snapshot: {pattern}; rerun")
 
 
-def aggregate_swe(audits):
-    """Union disjoint task identities, keeping terminal errors out of native coverage."""
-    outcomes = {}
+def aggregate_swe(audits, reader=None):
+    """Candidate native coverage requires canonical membership and child outcomes.
+
+    Legacy summary-only receipts cannot satisfy this stricter evidence contract.
+    The canonical manifest is immutable/hash-bound; task count alone is not identity.
+    """
+    outcomes, used_reports = {}, set()
+    canonical_identity = None
     for audit in audits:
         need(audit['full_suite_denominator'] == 300, "SWE Multilingual denominator drift")
+        need(reader is not None, 'SWE canonical manifest/native reader required')
+        manifest = reader.ref(audit.get('task_manifest'))
+        need(manifest.get('schema_version') == 'swe-canonical-task-manifest-v1'
+             and manifest.get('suite_id') == 'swe_bench_multilingual_eval', 'SWE canonical manifest schema/suite')
+        task_ids = manifest.get('task_ids', [])
+        need(len(task_ids) == len(set(task_ids)) == 300 and all(isinstance(x,str) and x for x in task_ids), 'SWE canonical 300-task membership required')
+        binding = audit.get('binding', {})
+        for field in ('suite_id', 'dataset_revision', 'model_id', 'run_id', 'evaluator_version'):
+            need(isinstance(binding.get(field), str) and bool(binding[field]), 'SWE binding required: ' + field)
+        need(binding['suite_id'] == manifest['suite_id'] and binding['dataset_revision'] == manifest.get('dataset_revision'), 'SWE dataset binding mismatch')
+        identity = (audit['task_manifest']['sha256'], binding['suite_id'], binding['dataset_revision'], binding['model_id'], binding['evaluator_version'])
+        need(canonical_identity is None or canonical_identity == identity, 'incompatible SWE batch bindings')
+        canonical_identity = identity
+        reports = {}
+        for ref in audit.get('reports', []):
+            report = reader.ref(ref)
+            need(ref['sha256'] not in used_reports, 'SWE report reused')
+            used_reports.add(ref['sha256'])
+            need(report.get('schema_version') == 'swe-native-task-report-v1' and report.get('binding') == binding, 'SWE native report schema/binding')
+            key = report.get('instance_id')
+            need(key in task_ids and key not in reports, 'foreign/duplicate native SWE task')
+            need(type(report.get('resolved')) is bool, 'native SWE resolution must be boolean')
+            reports[key] = report
         rows = audit['outcomes']
         need(len(rows) == audit['terminal_attempts'], "SWE terminal count mismatch")
+        native_ids = set()
         for row in rows:
             key = row['instance_id']
-            need(key not in outcomes, f"duplicate SWE task across selected receipts: {key}")
+            need(key in task_ids and key not in outcomes, f"foreign/duplicate SWE task: {key}")
             need(row['status'] in ('NATIVE_REPORT_VERIFIED', 'NATIVE_PATCH_APPLY_FAILED', 'NATIVE_EMPTY_PATCH'), "unknown SWE terminal status")
-            need(type(row['resolved']) is bool, "invalid SWE resolution")
-            need(not row['resolved'] or row['status'] == 'NATIVE_REPORT_VERIFIED', "error cannot be resolved")
-            outcomes[key] = row
-        need(sum(r['resolved'] for r in rows) == audit['native_resolved_count'], "SWE pass count mismatch")
+            need(type(row['resolved']) is bool and row.get('run_id') == binding['run_id'], 'invalid SWE resolution/run binding')
+            if row['status'] == 'NATIVE_REPORT_VERIFIED':
+                need(key in reports and row['resolved'] == reports[key]['resolved'], 'missing or contradictory native SWE report')
+                native_ids.add(key)
+            else: need(row['resolved'] is False, 'error cannot be resolved')
+            outcomes[key] = dict(row)
+        need(set(reports) == native_ids, 'SWE native report/outcome correspondence mismatch')
+        need(sum(reports[k]['resolved'] for k in native_ids) == audit['native_resolved_count'], "SWE pass count mismatch")
     native = sum(r['status'] == 'NATIVE_REPORT_VERIFIED' for r in outcomes.values())
     passes = sum(r['resolved'] for r in outcomes.values())
     result = measure('SWE-bench Multilingual native reports', native, 300, passes if native else None)
+    result['evidence_level'] = 'hash_bound_native_reports_recomputed' if audits else 'no_selected_native_evidence'
     result['terminal_attempt_coverage'] = ratio(len(outcomes), 300)
     result['terminal_attempt_success_rate_errors_as_zero'] = ratio(passes, len(outcomes)) if outcomes else None
     result['patch_application_errors'] = sum(r['status'] == 'NATIVE_PATCH_APPLY_FAILED' for r in outcomes.values())
@@ -186,6 +305,7 @@ def tau_run(run_id, episodes, allowed_ids=None):
         passes += int(reward)
     r = measure(run_id + ' only', len(ids), 97, passes if ids else None)
     r['run_id'] = run_id
+    r['evidence_level'] = 'native_episode_outcomes_recomputed'
     r['task_ids'] = sorted(ids)
     r['selection_caveat'] = 'Completed-only native records from this run; no cross-run score pooling or live-status assertion.'
     return r
@@ -285,9 +405,8 @@ def build(reader):
     selections += [max(paths) for paths in groups.values()]
     for path in selections:
         audit = reader.load(path)
-        for ref in audit.get('reports', []): reader.raw(ref['path'], ref['sha256'])
         audits.append(audit)
-    pub(1, aggregate_swe(audits))
+    pub(1, aggregate_swe(audits, reader))
     # Preserve each Tau run separately, including historical repeated starts.
     paths = reader.glob(FINISH + '/e5_runtime/controller_runs/E5-native-*/files/journal/episodes/*.native.json')
     groups = {}
@@ -318,8 +437,8 @@ def build(reader):
     need(len(ids) == len(set(ids)) == baby['completed_episodes'], 'BALROG episode mismatch')
     need(sum(e['native_progression'] == 1 for e in baby['episodes']) == baby['successes'], 'BALROG successes mismatch')
     for ep in baby['episodes']:
-        reader.raw(ep['native_json_ref']['path'],ep['native_json_ref']['sha256'])
-        reader.raw(ep['terminal_ref']['path'],ep['terminal_ref']['sha256'])
+        reader.raw_ref(ep['native_json_ref'])
+        reader.raw_ref(ep['terminal_ref'])
     pub(13, measure('Completed BabyAI subset of BALROG only',baby['completed_episodes'],255,baby['successes']))
     rows[12]['findings'].append(baby['selection_caveat'])
     omni = reader.load(BASE + '/e14_scoring_recheck.json')
@@ -327,7 +446,7 @@ def build(reader):
     need(math.isclose(omni['correct']/omni['accepted'],omni['official_accuracy']), 'Omni accuracy mismatch')
     pub(14, measure('Official parser-accepted Omni-MATH reports',omni['accepted'],4428,omni['correct']))
     rows[13]['portfolio']['measurements'][0].update({'excluded_reports':omni['skipped'], 'strict_full_scope_score':None})
-    rows[13]['findings'].append('Two exclusions are not wrong answers or missing attempts; original FrontierMath remains separate. All 4428 dispositions reviewed in source receipt.')
+    rows[13]['findings'].append(f"{omni['skipped']} exclusions are not wrong answers or missing attempts; original FrontierMath remains separate. All {omni['attempted']} dispositions reviewed in source receipt.")
     rows[11]['findings'].append('Original AppBench: six public task artifacts do not establish heldout denominator. Replacement VisualAgentBench 746 is paper scope, with 284 assets historically unrecovered.')
     for idx in (3,6,8,10,12,13,14):
         rows[idx-1]['original']['noncompletion_reason'] = oldrows[f'E{idx}'].get('remaining_requirement')
@@ -355,7 +474,7 @@ def build(reader):
     reader.stable()
     result['sources'] = reader.sources
     result['discovery_membership'] = reader.discoveries
-    return result
+    return claim_receipts(result)
 
 
 def fmt(r):
@@ -396,7 +515,7 @@ def publish(root, destination, report):
     need(any(dest.is_relative_to(p) and dest != p for p in allowed), 'output must be a NEW subdirectory in owned reporting roots')
     need(not dest.exists(), 'refuse overwrite of existing report')
     need(shutil.disk_usage(root).free >= FLOOR and shutil.disk_usage('/').free >= FLOOR, 'DISK_BELOW_6_GIB')
-    payloads = {'report.json':json.dumps(report,indent=2)+'\n', 'report.md':render(report)}
+    payloads = {'report.json':json.dumps(report,indent=2,allow_nan=False)+'\n', 'report.md':render(report)}
     dest.mkdir(parents=True)
     for name, text in payloads.items():
         need(shutil.disk_usage(root).free >= FLOOR and shutil.disk_usage('/').free >= FLOOR, 'DISK_BELOW_6_GIB')

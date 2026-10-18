@@ -21,12 +21,22 @@ class VastBackend(Backend):
         return LaunchPlan(
             backend="vast",
             framework=framework,
-            command=(
-                f"python -m platform_hybrid.skyrl.backends.vastai_runner "
-                f"--framework {framework} --model {spec.model} "
-                f"--algorithm {spec.algorithm} --instance-type a100-80gb "
-                f"--num-instances 1"
-            ),
+            argv=[
+                "python",
+                "-m",
+                "platform_hybrid.skyrl.backends.vastai_runner",
+                "--framework",
+                framework,
+                "--model",
+                spec.model,
+                "--algorithm",
+                spec.algorithm,
+                "--instance-type",
+                "a100-80gb",
+                "--num-instances",
+                "1",
+            ],
+            blocked_reason="Vast provisioner has no complete effective-spec receipt contract; use its explicit reviewed driver",
             driver_file=_DRIVER,
             output="/root/tinker-rl-lab/platform_tinker/atropos/checkpoints/ + /root/results_summary.json",
             env=["VAST_API_KEY", "TINKER_API_KEY", "HF_TOKEN", "WANDB_API_KEY"],

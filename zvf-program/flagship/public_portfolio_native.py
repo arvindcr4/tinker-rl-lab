@@ -340,11 +340,11 @@ def create_contract(manifest, provenance, wandb, sampling, base_url):
     require(isinstance(sampling["top_p"], (int, float)) and 0 < sampling["top_p"] <= 1, "invalid top_p")
     require(isinstance(sampling["seed"], int), "explicit sampling seed required")
     require(isinstance(sampling["extra_body"], dict), "extra_body must be an object")
-    require(not set(sampling["extra_body"]) & {"model", "messages", "n", "temperature", "top_p", "max_tokens", "seed", "stream"}, "extra_body cannot override locked request fields")
+    require(set(sampling["extra_body"]) <= {"chat_template_kwargs"} and (not sampling["extra_body"] or sampling["extra_body"]["chat_template_kwargs"] == {"enable_thinking": False}), "extra_body only permits explicit disabled thinking; protocol overrides forbidden")
     parsed = urllib.parse.urlsplit(base_url)
     require(parsed.scheme in {"http", "https", "batch"} and parsed.netloc and not parsed.username and not parsed.query and not parsed.fragment, "invalid endpoint URL")
     require(parsed.scheme in {"https", "batch"} or parsed.hostname in {"127.0.0.1", "localhost", "::1"}, "remote endpoints must use HTTPS")
-    return {"schema": SCHEMA, "manifest_sha256": fingerprint(manifest), "provenance": provenance,
+    return {"budget_enforcement": "external_not_established_by_this_bridge", "provenance_assurance": "asserted_unless_external_attestation_supplied", "protocol_guard_version": "effective-request-v2", "schema": SCHEMA, "manifest_sha256": fingerprint(manifest), "provenance": provenance,
             "wandb": wandb, "sampling": sampling, "base_url": base_url.rstrip("/"),
             "runner_sha256": digest(Path(__file__).read_bytes())}
 

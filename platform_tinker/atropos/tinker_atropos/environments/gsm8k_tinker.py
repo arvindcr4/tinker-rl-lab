@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Tuple, TypedDict, Union
 
 from datasets import load_dataset
 from latex2sympy2_extended import NormalizationConfig
-from math_verify import LatexExtractionConfig, parse, verify
+from math_verify import LatexExtractionConfig, parse
 from tqdm.asyncio import tqdm_asyncio
 
 from atroposlib.envs.base import (
@@ -17,6 +17,8 @@ from atroposlib.envs.base import (
 )
 from atroposlib.type_definitions import Item
 from tinker_atropos.config import TinkerAtroposConfig
+from tinker_atropos.grading import authoritative_math_answer, verify_answer
+
 
 # Check for --config CLI arg or env var, fallback to default
 def _get_config_path():
@@ -24,6 +26,7 @@ def _get_config_path():
         if arg == "--config" and i + 1 < len(sys.argv):
             return sys.argv[i + 1]
     return os.environ.get("TINKER_CONFIG_PATH", "configs/default.yaml")
+
 
 CONFIG_PATH = _get_config_path()
 
@@ -124,7 +127,7 @@ class GSM8kEnv(BaseEnv):
 
     async def setup(self):
         # Read experiment control fields from full config
-        full_cfg = getattr(self.__class__, '_full_config', None)
+        full_cfg = getattr(self.__class__, "_full_config", None)
         self.use_prompt_prefix = full_cfg.use_prompt_prefix if full_cfg else True
         data_seed = full_cfg.data_seed if full_cfg else 42
 
@@ -193,7 +196,7 @@ class GSM8kEnv(BaseEnv):
 
         # Parse model answer
         answer_parsed = parse(
-            response_content.split("</think>")[-1],
+            authoritative_math_answer(response_content.split("</think>")[-1]),
             extraction_config=[
                 LatexExtractionConfig(
                     normalization_config=NormalizationConfig(
@@ -210,7 +213,7 @@ class GSM8kEnv(BaseEnv):
             extraction_mode="first_match",
         )
 
-        score = 1 if verify(answer_parsed, gold_parsed) else 0
+        score = 1 if verify_answer(gold_parsed, answer_parsed) else 0
 
         sample = {
             "messages": [
@@ -342,7 +345,9 @@ class GSM8kEnv(BaseEnv):
             for item in rollout_group_data:
                 # Parse model answer
                 answer_parsed = parse(
-                    item["messages"][-1]["content"].split("</think>")[-1],
+                    authoritative_math_answer(
+                        item["messages"][-1]["content"].split("</think>")[-1]
+                    ),
                     extraction_config=[
                         LatexExtractionConfig(
                             normalization_config=NormalizationConfig(
@@ -360,7 +365,7 @@ class GSM8kEnv(BaseEnv):
                     extraction_mode="first_match",
                 )
                 # Binary reward: 1 if correct, 0 otherwise
-                reward = verify(answer_parsed, gold_parsed)
+                reward = verify_answer(gold_parsed, answer_parsed)
 
                 # Use pre-computed tokens and masks from ManagedServer
                 tokens = item["tokens"]  # Full unmasked tokens
@@ -368,7 +373,7 @@ class GSM8kEnv(BaseEnv):
                 logprobs = item["logprobs"]  # Pre-masked (1.0 for prompt)
 
                 # Skip very short completions (less than 10 generated tokens)
-                if len([1 for i in masked_tokens if i != -100]) < 10:
+                if len([1 for i in masked_tokens if i != -100]) < 1:
                     continue
 
                 scores["tokens"].append(tokens)

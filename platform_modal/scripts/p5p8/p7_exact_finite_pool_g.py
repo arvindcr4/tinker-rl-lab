@@ -84,7 +84,7 @@ def alloc_gstar(k, N, tau, use_exact):
     for g in GCAND:
         if fn(k, N, g) >= tau:
             return g, cp_exact(k, N, g), True
-    return N, cp_exact(k, N, N) if N in GCAND else 1.0, False
+    return N, cp_exact(k, N, N), False
 
 
 def main():

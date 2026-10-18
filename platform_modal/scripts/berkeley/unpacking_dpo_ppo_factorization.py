@@ -10,9 +10,9 @@ two axes (data, prompts) are pinned by construction; the remaining two
 
 Hypotheses:
   H1 ALGO axis vs residual (samestack_ppo_grpo): SS_algo / SS_total
-     DECISIVE if <= 0.05 (i.e., algorithm-axis explains <5% of variance).
+     DESCRIPTIVE_THRESHOLD if <= 0.05 (i.e., algorithm-axis explains <5% of variance).
   H2 REWARD axis vs residual (variance_mitigation 9 methods x 5 seeds):
-     DECISIVE if SS_method / SS_total <= 0.20; the 9 algorithmic variants
+     DESCRIPTIVE_THRESHOLD if SS_method / SS_total <= 0.20; the 9 algorithmic variants
      are reward-interventions but should be dominated by seed noise.
   H3 IID hypothesis: |delta_grpo_minus_ppo| <= 0.005 holds (Tulu 3 RLVR
      equivalence claim).
@@ -23,12 +23,17 @@ Hypotheses:
 from __future__ import annotations
 import json, math, os
 from collections import defaultdict
-from statistics import fmean, pstdev, median
+from statistics import fmean, pstdev, stdev
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-RES  = os.path.join(ROOT, "experiments", "results")
-OUT  = os.path.join(RES, "berkeley")
-os.makedirs(OUT, exist_ok=True)
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT, RESULTS_DIR
+from _review01_contracts import OUTPUT_ROOT, evidence_metadata, require_inputs, write_artifact_metadata, json_ready, reject_synthetic_or_failed
+ROOT = WORKTREE = REPO_ROOT
+RES = RESULTS = RESULTS_DIR
+OUT = OUTPUT_ROOT / "unpacking_dpo_ppo_factorization"
+
 
 # ----------------- helpers -----------------
 
@@ -39,7 +44,7 @@ def cohens_d(a, b):
     if len(a) < 2 or len(b) < 2:
         return float("nan")
     ma, mb = fmean(a), fmean(b)
-    sa, sb = pstdev(a), pstdev(b)
+    sa, sb = stdev(a), stdev(b)
     sp = math.sqrt(((len(a)-1)*sa*sa + (len(b)-1)*sb*sb) / (len(a)+len(b)-2))
     return (ma - mb) / sp if sp > 1e-12 else float("nan")
 
@@ -74,7 +79,16 @@ def extract_metric_rows(samestack_ppo_grpo_path):
     out = []
     with open(samestack_ppo_grpo_path) as f:
         data = json.load(f)
+    reject_synthetic_or_failed(data)
+    seen = set()
     for run in data["runs"]:
+        reject_synthetic_or_failed(run)
+        identity = run["algo"], run["seed"]
+        if identity in seen:
+            raise ValueError("Duplicate algorithm/seed identity")
+        seen.add(identity)
+        if run.get("data_kind", "empirical") != "empirical" or run.get("mode") == "dryrun" or run.get("state", "completed") != "completed":
+            raise ValueError("Synthetic or incomplete result cannot enter empirical comparison")
         out.append({
             "algo": run["algo"],
             "seed": run["seed"],
@@ -83,7 +97,7 @@ def extract_metric_rows(samestack_ppo_grpo_path):
         })
     return out
 
-def extract_varmit_rows(variance_mitigation_path):
+def extract_varmit_rows(variance_mitigation_path, *, expected_final_step=None):
     """Per-method per-seed terminal scalars from variance_mitigation.tsv (5 seeds x 9 methods)."""
     out = []
     with open(variance_mitigation_path) as f:
@@ -105,10 +119,21 @@ def extract_varmit_rows(variance_mitigation_path):
     # reduce to terminal-per-(method, seed) using the LAST 5 steps mean
     terminal = defaultdict(list)
     for r in out:
-        terminal[(r["method"], r["seed"])].append(r["heldout_acc"])
+        terminal[(r["method"], r["seed"])].append((r["step"], r["heldout_acc"]))
     terminal_rows = []
-    for (m, s), vs in terminal.items():
+    for (m, s), trajectory in terminal.items():
+        trajectory.sort()
+        steps = [step for step, _ in trajectory]
+        if len(set(steps)) != len(steps):
+            raise ValueError("Duplicate method/seed/step observation")
+        if len(steps) < 5 or steps != list(range(steps[0], steps[-1]+1)):
+            raise ValueError("Incomplete terminal trajectory")
+        if expected_final_step is not None and steps[-1] != expected_final_step:
+            raise ValueError("Trajectory did not reach expected final step")
+        vs = [value for _, value in trajectory]
         terminal_rows.append({
+            "completion_status": "verified" if expected_final_step is not None else "unverified_final_budget",
+            "final_observed_step": steps[-1],
             "method": m,
             "seed":   s,
             "terminal_acc": fmean(vs[-5:]),
@@ -145,55 +170,99 @@ def extract_group_size_rows(group_size_path):
         })
     return rows
 
+
+def match_pairs(rows):
+    by_algo = {"grpo": {}, "ppo": {}}
+    for row in rows:
+        if row["algo"] not in by_algo:
+            continue
+        key = row["seed"]
+        target = by_algo[row["algo"]]
+        if key in target:
+            raise ValueError("Duplicate algorithm/seed identity")
+        value = float(row["heldout_acc"])
+        if not math.isfinite(value):
+            raise ValueError("Nonfinite paired observation")
+        target[key] = value
+    common = sorted(set(by_algo["grpo"]) & set(by_algo["ppo"]))
+    if len(common) < 2:
+        raise ValueError("At least two matched seeds are required")
+    return [(by_algo["grpo"][seed], by_algo["ppo"][seed]) for seed in common], common
+
+
+def exact_paired_permutation(differences):
+    from itertools import product
+    if not differences or len(differences) > 20:
+        raise ValueError("Exact sign enumeration requires 1..20 finite pairs")
+    if not all(math.isfinite(d) for d in differences):
+        raise ValueError("Nonfinite differences")
+    observed = abs(fmean(differences))
+    hits = sum(abs(fmean(d*s for d, s in zip(differences, signs))) >= observed-1e-15
+               for signs in product((-1, 1), repeat=len(differences)))
+    return hits / 2**len(differences)
+
+
+def paired_equivalence(differences, margin, alpha=.05):
+    """Paired t TOST via the corresponding (1-2 alpha) confidence interval.
+
+    The margin must be justified before confirmatory use. This exploratory
+    protocol preserves the legacy .005 candidate margin without calling it
+    preregistered. Degenerate/nonfinite or insufficient data is inconclusive.
+    """
+    from scipy.stats import t
+    result = {"method": "paired_t_TOST_interval", "margin": margin,
+              "confidence": 1-2*alpha, "ci": None, "equivalent": False,
+              "margin_status": "candidate_not_preregistered"}
+    if margin <= 0 or not 0 < alpha < .5:
+        raise ValueError("Invalid equivalence margin or alpha")
+    if len(differences) < 2 or not all(math.isfinite(d) for d in differences):
+        return result
+    se = stdev(differences) / math.sqrt(len(differences))
+    if se == 0:
+        result["status"] = "degenerate_sample_inconclusive"
+        return result
+    radius = float(t.ppf(1-alpha, len(differences)-1))*se
+    mean = fmean(differences)
+    result["ci"] = [mean-radius, mean+radius]
+    result["equivalent"] = mean-radius > -margin and mean+radius < margin
+    return result
+
+
 # ----------------- computations -----------------
 
-def main():
+def main(*, expected_final_step=None):
+    inputs = [RES / "samestack_ppo_grpo.json"]
+    optional_inputs = [RES / name for name in ("variance_mitigation.tsv", "group_size_advantage_variance.tsv")]
+    inputs.extend(path for path in optional_inputs if path.is_file())
+    require_inputs(*inputs)
+    metadata = evidence_metadata("matched_seed_statistics_exact_sign_permutation_and_exploratory_paired_t_equivalence", inputs)
     findings = []
 
     # ----- H1: samestack_ppo_grpo algorithm-axis variance (Ivison axis #2) -----
     shannon("H1: ALGO axis vs residual (samestack PPO/GRPO, n=5 seeds)")
     rows_ss = extract_metric_rows(os.path.join(RES, "samestack_ppo_grpo.json"))
     rows_heldout = [r for r in rows_ss if r.get("heldout_acc") is not None]
-    eta2_heldout, ss_axis, ss_within = axis_variance_fraction(rows_heldout, "algo", "heldout_acc")
-    print(f"  eta^2(algo -> heldout_acc) = {eta2_heldout:.4f}  (SS_axis={ss_axis:.6f}, SS_within={ss_within:.6f})")
 
-    grpo_acc = [r["heldout_acc"] for r in rows_heldout if r["algo"] == "grpo"]
-    ppo_acc  = [r["heldout_acc"] for r in rows_heldout if r["algo"] == "ppo"]
-    delta_acc = fmean(grpo_acc) - fmean(ppo_acc)
+    matched, common = match_pairs(rows_heldout)
+    grpo_acc = [g for g, _ in matched]
+    ppo_acc = [p for _, p in matched]
+    delta_acc = fmean(g-p for g, p in matched)
     d_h1 = cohens_d(grpo_acc, ppo_acc)
-    print(f"  paired delta (grpo - ppo) heldout_acc = {delta_acc:+.4f}, Cohen's d = {d_h1:+.3f}")
-    n_pairs = min(len(grpo_acc), len(ppo_acc))
-
-    # exact p via paired permutation (10k iters)
-    rng_state = []
-    import random
-    random.seed(7)
-    diffs_obs = []
-    pairs = []
-    g_idx = [(i, r) for i, r in enumerate(rows_heldout) if r["algo"] == "grpo"]
-    p_idx = [(i, r) for i, r in enumerate(rows_heldout) if r["algo"] == "ppo"]
-    g_by_seed = {r["seed"]: r["heldout_acc"] for _, r in g_idx}
-    p_by_seed = {r["seed"]: r["heldout_acc"] for _, r in p_idx}
-    common = sorted(set(g_by_seed) & set(p_by_seed))
-    diffs_obs = [g_by_seed[s] - p_by_seed[s] for s in common]
-    obs_mean = fmean(diffs_obs) if diffs_obs else 0.0
-    count = 0
-    n_perm = 10000
-    for _ in range(n_perm):
-        signs = [random.choice([-1, 1]) for _ in diffs_obs]
-        perm_mean = fmean(d * sg for d, sg in zip(diffs_obs, signs))
-        if abs(perm_mean) >= abs(obs_mean):
-            count += 1
-    p_perm = (count + 1) / (n_perm + 1)
-    print(f"  paired permutation p (|delta|>=|obs|) = {p_perm:.4f}")
-    h1_decisive = (eta2_heldout <= 0.05) and (abs(delta_acc) <= 0.005) and (p_perm > 0.10)
-    h1_verdict  = "DECISIVE (algorithm axis <5% AND |delta|<=0.005)" if h1_decisive else \
-                  "SUGGESTIVE" if eta2_heldout <= 0.10 else "NULL"
+    matched_rows = [{"algo": algo, "heldout_acc": value} for pair in matched for algo, value in zip(("grpo", "ppo"), pair)]
+    eta2_heldout, ss_axis, ss_within = axis_variance_fraction(matched_rows, "algo", "heldout_acc")
+    diffs_obs = [g-p for g, p in matched]
+    p_perm = exact_paired_permutation(diffs_obs)
+    equivalence = paired_equivalence(diffs_obs, margin=.005)
+    h1_decisive = eta2_heldout <= .05 and equivalence["equivalent"]
+    h1_verdict = "EXPLORATORY_EQUIVALENCE" if h1_decisive else "INCONCLUSIVE"
     print(f"  verdict: {h1_verdict}")
 
     findings.append({
         "hypothesis": "H1: ALGO axis variance is small (<5%) for samestack PPO vs GRPO",
         "n_pairs": len(common),
+        "paired_seeds": common,
+        "equivalence": equivalence,
+        "permutation_method": "enumerated_sign_assignments",
         "eta2": eta2_heldout,
         "delta_acc": delta_acc,
         "cohens_d": d_h1,
@@ -207,7 +276,9 @@ def main():
     if not os.path.exists(vm_path):
         print("  (variance_mitigation.tsv not found -- skipping H2)")
     else:
-        rows_vm = extract_varmit_rows(vm_path)
+        rows_vm = extract_varmit_rows(vm_path, expected_final_step=expected_final_step)
+        completion_status = "verified" if rows_vm and all(r["completion_status"] == "verified" for r in rows_vm) else "unverified_final_budget"
+        completion_reason = None if completion_status == "verified" else "Planned final step is unknown; only observed-prefix diagnostics are available"
         eta2_method, ss_m_axis, ss_m_within = axis_variance_fraction(rows_vm, "method", "terminal_acc")
         per_method = defaultdict(list)
         for r in rows_vm:
@@ -229,14 +300,21 @@ def main():
         print("  Cohen's d (grpo - other):", {m: round(d, 3) for m, d in pair_d})
 
         h2_decisive = (eta2_method <= 0.20) and (method_spread <= 0.10)
-        h2_verdict  = "DECISIVE (Ivison reward-axis is small fraction + small spread)" if h2_decisive else \
+        h2_verdict  = "DESCRIPTIVE_THRESHOLD (Ivison reward-axis is small fraction + small spread)" if h2_decisive else \
                       "SUGGESTIVE" if eta2_method <= 0.35 else "NULL"
+        if completion_status != "verified":
+            h2_verdict = "INCOMPLETE"
         print(f"  verdict: {h2_verdict}")
 
         findings.append({
             "hypothesis": "H2: REWARD/INTERVENTION axis variance is small (<20%)",
             "n_methods": len(per_method),
             "n_terminal_rows": len(rows_vm),
+            "terminal_rows": rows_vm,
+            "completion_status": completion_status,
+            "completion_reason": completion_reason,
+            "expected_final_step": expected_final_step,
+            "threshold_met_on_observed_prefix": h2_decisive,
             "eta2_method": eta2_method,
             "spread": method_spread,
             "pair_d_grpo_vs": {m: round(d, 4) for m, d in pair_d},
@@ -246,12 +324,13 @@ def main():
     # ----- H3: RLVR/Match-axis equivalence (Tulu 3) -----
     shannon("H3: RLVR equivalence (Tulu 3 arXiv:2411.15124, |delta_grpo_minus_ppo|<=0.005)")
     print(f"  |delta|   = {abs(delta_acc):.4f}  (threshold 0.005)")
-    h3_decisive = (abs(delta_acc) <= 0.005) and (p_perm > 0.10)
-    h3_verdict = "DECISIVE" if h3_decisive else "NULL"
+    h3_decisive = equivalence["equivalent"]
+    h3_verdict = "EXPLORATORY_EQUIVALENCE" if h3_decisive else "INCONCLUSIVE"
     print(f"  verdict: {h3_verdict}")
     findings.append({
         "hypothesis": "H3: |delta_grpo_minus_ppo|<=0.005 (Tulu 3 RLVR-equivalence)",
         "abs_delta": abs(delta_acc),
+        "equivalence": equivalence,
         "perm_p": p_perm,
         "verdict": h3_verdict,
     })
@@ -315,10 +394,16 @@ def main():
             eta2_half, _, _ = axis_variance_fraction(half_lives, "method", "half_step")
             print(f"  eta^2(method -> half_step)    = {eta2_half:.4f}")
             h4_decisive = (eta2_half > 0.30) and (cv_across_methods > cv_within_methods)
-            h4_verdict = "DECISIVE" if h4_decisive else "SUGGESTIVE" if eta2_half > 0.15 else "NULL"
+            h4_verdict = "DESCRIPTIVE_THRESHOLD" if h4_decisive else "SUGGESTIVE" if eta2_half > 0.15 else "NULL"
+            if completion_status != "verified":
+                h4_verdict = "INCOMPLETE"
             print(f"  verdict: {h4_verdict}")
             findings.append({
                 "hypothesis": "H4: convergence-rate axis variance dominates algorithm axis",
+                "completion_status": completion_status,
+                "completion_reason": completion_reason,
+                "expected_final_step": expected_final_step,
+                "threshold_met_on_observed_prefix": h4_decisive,
                 "cv_across_methods": cv_across_methods,
                 "cv_within_methods": cv_within_methods,
                 "eta2_method_half": eta2_half,
@@ -346,7 +431,7 @@ def main():
         d_G = cohens_d(per_G_last10[2], per_G_last10[16])
         print(f"  Cohen's d last10_reward G=2 vs G=16 = {d_G:+.3f}")
         h5_decisive = (eta2_G_grad >= 0.40) and (eta2_G_last10 < 0.40)
-        h5_verdict = "DECISIVE (grad_norm=G-driven, last10=G-shared)" if h5_decisive else \
+        h5_verdict = "DESCRIPTIVE_THRESHOLD (grad_norm=G-driven, last10=G-shared)" if h5_decisive else \
                      "SUGGESTIVE" if eta2_G_grad > eta2_G_last10 else "NULL"
         print(f"  verdict: {h5_verdict}")
         findings.append({
@@ -359,7 +444,9 @@ def main():
         })
 
     # ----------------- save -----------------
+    OUT.mkdir(parents=True, exist_ok=True)
     summary = {
+        **metadata,
         "ts": "2026-07-04",
         "iteration": 14,
         "pillar": "B-SP25",
@@ -385,12 +472,12 @@ def main():
     }
     out_json = os.path.join(OUT, "unpacking_dpo_ppo_factorization.json")
     with open(out_json, "w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(json_ready(summary), f, indent=2, allow_nan=False)
 
     # TSV row per hypothesis
     out_tsv = os.path.join(OUT, "unpacking_dpo_ppo_factorization.tsv")
     with open(out_tsv, "w") as f:
-        f.write("hypothesis\tn_pairs\teta2\tabs_delta\tcohens_d\tperm_p\tverdict\n")
+        f.write("hypothesis\tn_pairs\teta2\tabs_delta\tcohens_d\tperm_p\tverdict\tcompletion_status\tcompletion_reason\n")
         for h in findings:
             f.write("\t".join([
                 h.get("hypothesis", ""),
@@ -400,14 +487,19 @@ def main():
                 safe(h.get("cohens_d", "")),
                 safe(h.get("perm_p", "")),
                 h.get("verdict", ""),
+                h.get("completion_status", ""),
+                h.get("completion_reason") or "",
             ]) + "\n")
 
+    write_artifact_metadata(OUT, metadata)
+
     # ----------------- headline -----------------
-    n_decisive = sum(1 for h in findings if h.get("verdict") == "DECISIVE (algorithm axis <5% AND |delta|<=0.005)" or h.get("verdict") == "DECISIVE")
-    print(f"\n=== HEADLINE: {n_decisive}/{len(findings)} hypotheses DECISIVE")
+    n_decisive = sum(1 for h in findings if h.get("verdict") == "DESCRIPTIVE_THRESHOLD (algorithm axis <5% AND |delta|<=0.005)" or h.get("verdict") == "DESCRIPTIVE_THRESHOLD")
+    print(f"\n=== HEADLINE: {n_decisive}/{len(findings)} hypotheses DESCRIPTIVE_THRESHOLD")
     print(f"  outputs:")
     print(f"    {out_json}")
     print(f"    {out_tsv}")
+    return summary
 
 if __name__ == "__main__":
     main()

@@ -57,9 +57,14 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from _p5p7_common import spearman_v2 as spearman
 
-ROOT = Path(__file__).resolve().parents[2]
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _review02_contracts import sampled_pairs, cell_distance_spearman_ci, finite_json, spearman_coefficient as spearman
+from _minreport_contract import ITEM_ALIASES
+from p5_iter205_manifest_minreport_subfield_audit import normalized_min_report
+from minreport_auditor import score_manifest
+from _paths import REPO_ROOT
+ROOT = REPO_ROOT / "platform_hybrid"
 MANIFEST_DIR = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
 CELLS_TSV = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
 OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
@@ -166,6 +171,13 @@ def main():
     n_cells = len(cells)
     print(f"Loaded {n_cells} cells, {len(manifests)} manifests")
 
+    canonical_items = {legacy: canonical for canonical, legacy in ITEM_ALIASES.items()}
+    normalized = {c['cell_id']: normalized_min_report(manifests.get(c['cell_id'], {})) for c in cells}
+
+    def item_content(cell, item):
+        value = normalized[cell['cell_id']][canonical_items.get(item, item)]
+        return json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False)
+
     # ------------------------------------------------------------------
     # PART 1: per-item Shannon H on v1 (7) and v2 (12 = 7 + 5 stack axes)
     # ------------------------------------------------------------------
@@ -173,9 +185,7 @@ def main():
     for item in V1_ITEMS:
         vals = []
         for c in cells:
-            m = manifests.get(c["cell_id"], {})
-            v = m.get(item, "MISSING")
-            vals.append(str(v))
+            vals.append(item_content(c, item))
         n_unique = len(set(vals))
         h = shannon_entropy_bits(vals)
         is_cell_id = item == "per_step_zvf_path"
@@ -183,7 +193,7 @@ def main():
             cls = "CELL_IDENTIFIER"
             stack_bits = 0.0
         elif n_unique <= 1:
-            cls = "PLACEBO"
+            cls = "CONSTANT_DESCRIPTIVE"
             stack_bits = 0.0
         else:
             cls = "VARYING_STACK_DESCRIPTOR"
@@ -224,8 +234,7 @@ def main():
     # PART 2: fingerprints, Hamming distance, Spearman with |delta zvf|
     # ------------------------------------------------------------------
     def fp_v1(c):
-        m = manifests.get(c["cell_id"], {})
-        return tuple(str(m.get(k, "MISSING")) for k in V1_ITEMS)
+        return tuple(item_content(c, k) for k in V1_ITEMS)
 
     def fp_v2(c):
         return fp_v1(c) + tuple(str(c[k]) for k, _ in V2_STACK_ITEMS)
@@ -236,15 +245,9 @@ def main():
     cell_ids = [c["cell_id"] for c in cells]
     cell_map = {c["cell_id"]: c for c in cells}
     rng_pairs = random.Random(20260705)
-    pairs = []
-    seen = set()
-    while len(pairs) < N_PAIRS:
-        i, j = rng_pairs.sample(range(n_cells), 2)
-        key = (i, j) if i < j else (j, i)
-        if key in seen:
-            continue
-        seen.add(key)
-        pairs.append(key)
+    pairs = sampled_pairs(n_cells, n_cells*(n_cells-1)//2, seed=20260705)
+    if not pairs:
+        raise ValueError('at least two cells required for pair-distance diagnostics')
     deltas = {
         "zvf":    [abs(cell_map[cell_ids[j]]["zvf"] - cell_map[cell_ids[i]]["zvf"])
                   for i, j in pairs],
@@ -282,21 +285,7 @@ for i, j in pairs],
     # PART 3: per-cell badge uplift (deterministic).
     # ------------------------------------------------------------------
     def badge_v1(c) -> float:
-        m = manifests.get(c["cell_id"], {})
-        score = 0.0
-        for k, w in V1_WEIGHTS.items():
-            v = m.get(k)
-            if v is None or str(v).strip() == "":
-                base = 0.0
-            elif str(v).startswith("n/a"):
-                base = 0.5
-            else:
-                base = 1.0
-            score += w * base * (0.5 + 0.5 * 0.5)  # sub_cov ~0.5 default
-        if m.get("per_step_zvf_path"):
-            # already counted; per auditor logic, full weight when path present
-            pass
-        return min(score, 100.0)
+        return score_manifest(manifests.get(c['cell_id'], {}))['badge']
 
     badges_v1 = [badge_v1(c) for c in cells]
     badges_v2 = [b + V2_TOTAL_WEIGHT for b in badges_v1]
@@ -337,23 +326,17 @@ for i, j in pairs],
     # ------------------------------------------------------------------
     n = n_cells
 
-    def boot_spearman(hammings, deltas):
-        boots = []
-        for _ in range(N_BOOT):
-            sh = [hammings[RNG.randrange(n)] for _ in range(n)]
-            sd = [deltas[RNG.randrange(n)] for _ in range(n)]
-            boots.append(spearman(sh, sd))
-        boots.sort()
-        return boots[int(0.025 * N_BOOT)], boots[int(0.975 * N_BOOT) - 1]
-
-    boot_ci = {
-        "rho_v1_zvf": (spearman(h_v1, deltas["zvf"]), *boot_spearman(h_v1, deltas["zvf"])),
-        "rho_v2_zvf": (spearman(h_v2, deltas["zvf"]), *boot_spearman(h_v2, deltas["zvf"])),
-        "rho_v2tn_zvf": (spearman(h_v2tn, deltas["zvf"]), *boot_spearman(h_v2tn, deltas["zvf"])),
-        "rho_v1_reward": (spearman(h_v1, deltas["reward"]), *boot_spearman(h_v1, deltas["reward"])),
-        "rho_v2_reward": (spearman(h_v2, deltas["reward"]), *boot_spearman(h_v2, deltas["reward"])),
-        "rho_v2tn_reward": (spearman(h_v2tn, deltas["reward"]), *boot_spearman(h_v2tn, deltas["reward"])),
-    }
+    # Recompute both distance arrays on the same resampled CELLS. The cell
+    # independence assumption is explicit; correlated experimental blocks need
+    # a block inventory before these can be interpreted as population intervals.
+    def cell_ci(fp, outcome):
+        return cell_distance_spearman_ci([fp(c) for c in cells],
+                                        [c[outcome] for c in cells], N_BOOT, 20260705)
+    boot_ci = {}
+    for label, fp, distances in [('v1', fp_v1, h_v1), ('v2', fp_v2, h_v2),
+                                  ('v2tn', fp_v2_truly_new, h_v2tn)]:
+        for channel, outcome in [('zvf', 'zvf'), ('reward', 'mean_reward')]:
+            boot_ci[f'rho_{label}_{channel}'] = (spearman(distances, deltas[channel]), *cell_ci(fp, outcome))
 
     # ------------------------------------------------------------------
     # OUTPUTS
@@ -374,24 +357,30 @@ for i, j in pairs],
 
     boot_path = OUT_DIR / "p5_stack_axis_minreport_boot.tsv"
     with boot_path.open("w") as f:
-        f.write("metric\tpoint\tci_lo\tci_hi\n")
+        f.write("metric\tpoint\tci_lo\tci_hi\tstatus\n")
         for k, (point, lo, hi) in boot_ci.items():
-            f.write(f"{k}\t{point:+.4f}\t{lo:+.4f}\t{hi:+.4f}\n")
+            f.write(f"{k}\t{point:+.4f}\t{lo:+.4f}\t{hi:+.4f}\t{'ok' if math.isfinite(point) else 'insufficient_data'}\n")
         # H_bits per v2 axis
         for item, _ in V2_STACK_ITEMS:
             vals = [str(c[item]) for c in cells]
             h = shannon_entropy_bits(vals)
-            boots = []
-            for _ in range(N_BOOT):
-                sample = [vals[RNG.randrange(n)] for _ in range(n)]
-                boots.append(shannon_entropy_bits(sample))
-            boots.sort()
-            lo = boots[int(0.025 * N_BOOT)]
-            hi = boots[int(0.975 * N_BOOT) - 1]
-            f.write(f"H_bits_{item}\t{h:.4f}\t{lo:.4f}\t{hi:.4f}\n")
+            f.write(f"H_bits_{item}\t{h:.4f}\tNA\tNA\tdescriptive\n")
     print(f"wrote {boot_path}")
 
+    def show_rho(value):
+        return f'{value:+.4f}' if math.isfinite(value) else 'undefined (insufficient_data: constant or missing ranks)'
+
+    h2_finite = all(math.isfinite(r['zvf']) for r in (rho_v1, rho_v2, rho_v2tn))
+    h2_description = (f"Observed rho difference: all axes={rho_v2['zvf']-rho_v1['zvf']:+.4f}; "
+                      f"new axes={rho_v2tn['zvf']-rho_v1['zvf']:+.4f}. Descriptive association, not independent explanatory information."
+                      if h2_finite else 'insufficient_data: at least one fingerprint/outcome rank vector is constant; correlation differences are undefined.')
     summary = {
+        "statistic_version": "pro-review-02-v2.1",
+        "entropy_estimand": "sum_of_marginal_entropies; fixed-campaign descriptive diversity, not joint information",
+        "correlation_uncertainty": "cell-bootstrap sensitivity assuming independent cells; does not cover training-seed or evaluation-example populations",
+        "n_pairs": len(pairs),
+        "reporting_contract": "canonical typed content; badge uses minreport_auditor",
+        "correlation_status": {k: "ok" if math.isfinite(v[0]) else "insufficient_data" for k, v in boot_ci.items()},
         "iter": 73,
         "n_cells": n_cells,
         "v1_total_h_bits": h_v1_total,
@@ -401,7 +390,7 @@ for i, j in pairs],
         "v2_stack_discriminative_h_bits": h_v2_stack_total,
         "v2_truly_new_h_bits": sum(shannon_entropy_bits([str(c[k]) for c in cells])
                                     for k, _ in V2_TRULY_NEW),
-        "v1_placebo_items": sum(1 for p in per_item_v1 if p["classification"] == "PLACEBO"),
+        "v1_constant_descriptive_items": sum(1 for p in per_item_v1 if p["classification"] == "CONSTANT_DESCRIPTIVE"),
         "v1_varying_items": sum(1 for p in per_item_v1
                                 if p["classification"] == "VARYING_STACK_DESCRIPTOR"),
         "v2_total_weight_pts": V2_TOTAL_WEIGHT,
@@ -419,29 +408,20 @@ for i, j in pairs],
         "fingerprint_length_v1": len(V1_ITEMS),
         "fingerprint_length_v2": len(V1_ITEMS) + len(V2_STACK_ITEMS),
         "fingerprint_length_v2_tn": len(V1_ITEMS) + len(V2_TRULY_NEW),
-        "verdict_H1": ("v2 stack axes add +%.2f bits (>0); v2 total info budget = "
+        "verdict_H1": ("v2 stack axes add %.2f marginal-entropy bits; v2 sum of marginal entropies = "
                        "%.2f bits (vs v1 %.2f bits), +%.1f%% uplift"
                        % (h_v2_stack_axes, h_v2_total, h_v1_total,
                           100 * (h_v2_total - h_v1_total) / max(h_v1_total, 1e-9))),
-        "verdict_H2": ("v2 fingerprint x |dzvf| rho = %+.4f vs v1 = %+.4f "
-                       "(delta = %+.4f); v2_tn fingerprint rho = %+.4f "
-                       "(delta vs v1 = %+.4f).  Adding ALL 5 axes does NOT "
-                       "strengthen coupling; adding ONLY the 3 truly-new axes "
-                       "(model_family + temperature + seed) WEAKENS coupling by "
-                       "%+.4f.  The 2 redundant axes (task_slice, G) are the "
-                       "ones that drive any v2 coupling strength."
-                       % (rho_v2["zvf"], rho_v1["zvf"], rho_v2["zvf"] - rho_v1["zvf"],
-                          rho_v2tn["zvf"], rho_v2tn["zvf"] - rho_v1["zvf"],
-                          rho_v2tn["zvf"] - rho_v1["zvf"])),
+        "verdict_H2": h2_description,
         "verdict_H3": ("badge uplift is deterministic +%d pts (v2) / +%d pts "
                        "(v2_tn) on every cell; bootstrap CI on per-cell "
                        "uplift is degenerate." % (V2_TOTAL_WEIGHT, V2_TRULY_NEW_WEIGHT)),
         "verdict_H4_per_axis": ("Per-axis 1-D Hamming rho with |dzvf|: "
-                                + ", ".join("%s=%+.4f" % (k, per_axis_rho[k]["rho_zvf"])
+                                + ", ".join(f"{k}={show_rho(per_axis_rho[k]['rho_zvf'])}"
                                             for k, _ in V2_STACK_ITEMS)),
     }
     summary_path = OUT_DIR / "p5_stack_axis_minreport_summary.json"
-    summary_path.write_text(json.dumps(summary, indent=2))
+    summary_path.write_text(json.dumps(finite_json(summary), indent=2, allow_nan=False))
     print(f"wrote {summary_path}")
     print()
     print("Summary:")

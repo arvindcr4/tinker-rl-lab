@@ -1,32 +1,29 @@
-import atexit
-try:
-    from codecarbon import EmissionsTracker
-    _tracker = EmissionsTracker()
-    _tracker.start()
-    atexit.register(_tracker.stop)
-except ImportError:
-    pass
-
 import asyncio
 import os
 import time
 import numpy as np
 import torch
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 import tinker
-from tinker.types import AdamParams, ModelInput, SamplingParams
+from tinker.types import AdamParams
 import wandb
+
 try:
     import torch, wandb
-    if not getattr(wandb, '_vram_patched', False):
+
+    if not getattr(wandb, "_vram_patched", False):
         _old_log = wandb.log
+
         def _vram_log(data, *args, **kwargs):
             if torch.cuda.is_available():
-                data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                data["system/vram_peak_allocated_gb"] = torch.cuda.max_memory_allocated() / (
+                    1024**3
+                )
+                data["system/vram_reserved_gb"] = torch.cuda.max_memory_reserved() / (1024**3)
                 torch.cuda.reset_peak_memory_stats()
             _old_log(data, *args, **kwargs)
+
         wandb.log = _vram_log
         wandb._vram_patched = True
 except ImportError:
@@ -34,9 +31,10 @@ except ImportError:
 import requests
 from transformers import AutoTokenizer
 
-from tinker_atropos.config import TinkerAtroposConfig
+from tinker_atropos.config import TinkerAtroposConfig, apply_overrides
 from tinker_atropos.dataset import DatasetPreprocessor
 from tinker_atropos.api import create_app
+
 
 class TinkerAtroposTrainer:
     """
@@ -53,7 +51,7 @@ class TinkerAtroposTrainer:
         self.learning_rate = config.learning_rate
         self.atropos_api_url = config.atropos_api_url
         self.num_steps = config.num_steps
-        
+
         # Dataset Preprocessor
         self.dataset = DatasetPreprocessor(self.atropos_api_url)
 
@@ -62,6 +60,10 @@ class TinkerAtroposTrainer:
         self.training_client = None
         self.current_sampling_client = None
         self.tokenizer = None
+        self.policy_version = None
+        self.last_sampler_path = None
+        self.run_status = "created"
+        self.optimizer_steps = 0
 
         # Atropos registration
         self.trainer_id = None
@@ -90,7 +92,12 @@ class TinkerAtroposTrainer:
             self.training_client = await self.service_client.create_training_client_async(
                 base_model=tinker_model,
             )
-        print("Training client created")
+        from tinker_atropos.runtime_identity import verify_tokenizer, runtime_manifest
+
+        backend_tokenizer = self.training_client.get_tokenizer()
+        verify_tokenizer(backend_tokenizer, self.tokenizer)
+        self.runtime_manifest = runtime_manifest(tinker_model, self.tokenizer)
+        print("Training client created; backend tokenizer compatibility verified")
 
         # Save initial weights and create sampling client
         print("Saving initial weights...")
@@ -98,6 +105,7 @@ class TinkerAtroposTrainer:
         self.current_sampling_client = self.service_client.create_sampling_client(
             model_path=initial_path
         )
+        self.policy_version = self.last_sampler_path = initial_path
         print(f"Initial sampling client created: {initial_path}")
 
         self.wandb_group = self.config.wandb_group or wandb.sdk.lib.runid.generate_id()
@@ -113,6 +121,10 @@ class TinkerAtroposTrainer:
                     name=f"{self.config.wandb_run_name}-trainer-{self.config.wandb_run_suffix}",
                     group=self.wandb_group,
                     tags=["trainer"],
+                    config={
+                        "resolved_config": self.config.to_dict(),
+                        "runtime_manifest": self.runtime_manifest,
+                    },
                 )
                 print(f"Wandb initialized (trainer): {wandb.run.name} in group: {self.wandb_group}")
             except Exception as e:
@@ -134,7 +146,7 @@ class TinkerAtroposTrainer:
             "num_steps": self.num_steps,
         }
 
-        response = requests.post(url, json=payload)
+        response = requests.post(url, json=payload, timeout=15)
         response.raise_for_status()
 
         result = response.json()
@@ -142,16 +154,20 @@ class TinkerAtroposTrainer:
 
     async def train_step(self, step: int) -> Dict[str, Any]:
         """Execute one training step: fetch batch, forward-backward, optimizer step."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Step {step}/{self.num_steps}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         step_start = time.time()
         metrics = {"step": step}
 
         # Fetch batch from Atropos via DatasetPreprocessor
         print("Fetching data from Atropos...")
-        data, has_distil = self.dataset.get_data()
+        data, has_distil = await asyncio.to_thread(self.dataset.get_data)
+        if not data or not any(
+            torch.any(d.loss_fn_inputs["advantages"].to_torch() != 0) for d in data
+        ):
+            return {"step": step, "no_update": True, "reason": "inactive_batch"}
         print(f"Got {len(data)} Datum objects")
         if has_distil:
             print("  with on-policy distillation (advantages = logp_t - logp_s)")
@@ -171,17 +187,16 @@ class TinkerAtroposTrainer:
             data, loss_fn="importance_sampling"
         )
 
-        # Optimizer step
-        print("Running optimizer step...")
-        adam_params = AdamParams(learning_rate=self.learning_rate, beta1=0.9, beta2=0.95, eps=1e-8)
-        optim_result = await self.training_client.optim_step_async(adam_params)
-
         # Await results
         if hasattr(fwd_bwd_result, "result_async"):
             fwd_bwd_result = await fwd_bwd_result.result_async()
         elif hasattr(fwd_bwd_result, "result"):
             fwd_bwd_result = fwd_bwd_result.result()
+        # Only submit an optimizer update after successful forward/backward.
+        adam_params = AdamParams(learning_rate=self.learning_rate, beta1=0.9, beta2=0.95, eps=1e-8)
+        optim_result = await self.training_client.optim_step_async(adam_params)
         optim_result = await optim_result.result_async()
+        self.optimizer_steps += 1
 
         loss_val = (
             fwd_bwd_result.metrics["loss:sum"] if "loss:sum" in fwd_bwd_result.metrics else 0.0
@@ -222,11 +237,12 @@ class TinkerAtroposTrainer:
         # Update sampling client with new weights
         print("Saving checkpoint and updating sampling client...")
         new_path = (
-            self.training_client.save_weights_for_sampler(name=f"step_{step+1}").result().path
+            self.training_client.save_weights_for_sampler(name=f"step_{step + 1}").result().path
         )
         self.current_sampling_client = self.service_client.create_sampling_client(
             model_path=new_path
         )
+        self.policy_version = self.last_sampler_path = new_path
         print(f"Sampling client updated: {new_path}")
 
         step_time = time.time() - step_start
@@ -271,47 +287,61 @@ class TinkerAtroposTrainer:
         print("Starting Tinker-Atropos Training")
         print("=" * 60 + "\n")
 
-        await self.setup()
+        self.run_status = "running"
+        try:
+            await self.setup()
+        except BaseException:
+            self.run_status = "failed"
+            raise
 
         for step in range(self.num_steps):
             try:
                 metrics = await self.train_step(step)
                 print(f"\nStep {step} complete - Loss: {metrics.get('loss', 'N/A')}")
-            except Exception as e:
+            except BaseException as e:
                 print(f"Error in step {step}: {e}")
                 import traceback
 
                 traceback.print_exc()
-                break
+                self.run_status = "failed"
+                raise
 
-        print("\n" + "=" * 60)
-        print("Training complete!")
-        print("=" * 60 + "\n")
-
-        print(
-            f"Final weights are available here: tinker://{str(self.training_client.model_id)}/sampler_weights/final"
-        )
+        try:
+            self.last_sampler_path = (
+                self.training_client.save_weights_for_sampler(name="final").result().path
+            )
+        except BaseException:
+            self.run_status = "failed"
+            raise
+        self.run_status = "completed"
+        print(f"Training complete! Final weights: {self.last_sampler_path}")
 
 
 trainer: TinkerAtroposTrainer | None = None
 app = create_app(trainer)
 
+
 def run_fastapi_server(port=8001):
     """Run FastAPI server in background thread."""
     import uvicorn
+
     if trainer is not None:
         app.state.trainer = trainer
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
+
 
 async def main():
     # TODO: Avoid extrapolating RL training dynamics from single-seed runs. Add support for multiple seeds to address statistical vulnerability.
     global trainer
 
-    config = TinkerAtroposConfig(
-        lora_rank=int(os.getenv("LORA_RANK", "32")),
-        learning_rate=float(os.getenv("LEARNING_RATE", "4e-5")),
-        # TODO: 30-50 steps is an "Early-Training Snapshot" and insufficient to observe meaningful RL convergence, long-horizon reward hacking, catastrophic forgetting, or true policy collapse. Increase num_steps.
-        num_steps=int(os.getenv("NUM_STEPS", "50")),
+    config = apply_overrides(
+        TinkerAtroposConfig(),
+        dict(
+            lora_rank=int(os.getenv("LORA_RANK", "32")),
+            learning_rate=float(os.getenv("LEARNING_RATE", "4e-5")),
+            # TODO: 30-50 steps is an "Early-Training Snapshot" and insufficient to observe meaningful RL convergence, long-horizon reward hacking, catastrophic forgetting, or true policy collapse. Increase num_steps.
+            num_steps=int(os.getenv("NUM_STEPS", "50")),
+        ),
     )
 
     print(f"Using wandb run: {config.wandb_run_name}")
@@ -328,6 +358,7 @@ async def main():
     await asyncio.sleep(3)
 
     await trainer.run()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

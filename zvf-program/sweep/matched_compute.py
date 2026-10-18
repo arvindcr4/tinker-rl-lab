@@ -1,30 +1,15 @@
 #!/usr/bin/env python3
 """
-ZVF Program — Pillar-1 / M1 matched-compute comparison:
-    canonical GRPO  vs  DAPO  vs  GSPO   at EQUAL total compute.
+ZVF Program: prospective matched-budget comparison, execution contract v2.
 
-PURPOSE
-  Define the three RL-loss "arms" and emit the EXACT commands that launch them
-  through the user's existing per-cell runner, with their total rollout/token
-  budget pinned equal so the comparison is fair. This module:
-    * sets up each arm's config,
-    * computes a matched-compute budget (equal total rollouts AND equal total
-      generated tokens across arms),
-    * emits launch commands (does NOT train, does NOT pick a winner).
-
-  A winner is computed POST-HOC by aggregate_sweep.py from the real per-step
-  ZVF/GU logs + held-out scores. See the `# RESULTS:` placeholder at the bottom.
-
-DESIGN OF THE MATCH
-  Compute for one GRPO-style step ~= group_size G * batch_prompts * max_tokens
-  (samples drawn) plus a fixed forward/backward. We hold the TOTAL across the
-  run equal:
-        total_rollouts = G * batch_prompts * steps          (must match across arms)
-        total_tokens   = total_rollouts * max_tokens         (must match across arms)
-  The three arms differ ONLY in the loss/clipping/normalization, NOT in how much
-  compute they spend. Where an arm's canonical recipe uses a different G, we
-  rebalance `steps` so total_rollouts stays equal (integer-rounded; a warning is
-  printed if a residual mismatch remains).
+The displayed rollout * max_tokens budget is an upper bound, not equal measured
+compute. Dynamic/rejected generations and completion lengths change actual use.
+Both launchers share an effective specification and require a runner to report
+attempted/accepted groups, all generated tokens (including rejected samples),
+training tokens, optimizer steps and elapsed GPU time. The generated-token upper
+cap is enforced at admission; the external runner must enforce it before work.
+No measured-compute equality or confirmatory winner follows from this plan.
+Primary contrasts and attempt selection require a prospective registered design.
 
 ARMS (one-line characterization; the real loss lives in the user's runner)
   grpo  — canonical GRPO: group-relative advantage, per-token PG, importance
@@ -44,12 +29,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from dataclasses import dataclass, asdict, field
 from pathlib import Path
 
 import yaml
+from run_contract import bind_spec, render_command
 
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]
@@ -70,6 +55,7 @@ class Arm:
     clip_high: float
     importance_level: str     # "token" | "sequence"
     dynamic_sampling: bool
+    prompt_filter: str = "none"
     notes: str = ""
     # filled by the matcher:
     steps: int = field(default=0)
@@ -117,7 +103,7 @@ def define_arms() -> list[Arm]:
                   "in cell_runner.install_loss_arm; the loss kernel is unchanged.",
         ),
         Arm(
-            name="greso", loss="grpo",
+            name="greso", loss="grpo", prompt_filter="greso",
             description="GRESO-style pre-rollout filtering: skip prompts whose "
                         "rolling success-rate estimate predicts a zero-variance "
                         "group; recycle the saved rollouts into fresh prompts. "
@@ -132,7 +118,7 @@ def define_arms() -> list[Arm]:
                   "rollouts, so recycling is budget-neutral.",
         ),
         Arm(
-            name="zvf_ci_gated", loss="grpo",
+            name="zvf_ci_gated", loss="grpo", prompt_filter="zvf_ci_gated",
             description="ZVF CI-gated controller (ours): identical prompt-skip "
                         "action to greso, but gated on the Wilson 95% interval "
                         "of the rolling estimate (T1) with m>=64 groups of "
@@ -274,14 +260,22 @@ def arm_commands(cfg: dict, arm: Arm, models: list[str], seeds: list[int],
                 "loss": arm.loss, "seed": seed, "group_size": arm.group_size,
                 "lr": cfg["fixed"]["lr"], "steps": arm.steps, "rank": cfg["fixed"]["rank"],
                 "difficulty": difficulty,
+                "prompt_filter": arm.prompt_filter,
+                "batch_prompts": arm.batch_prompts,
+                "max_tokens": arm.max_tokens,
                 "clip_low": arm.clip_low,
                 "clip_high": arm.clip_high,
                 "importance_level": arm.importance_level,
                 "dynamic_sampling": "true" if arm.dynamic_sampling else "false",
             }
-            cmd = " ".join(rc["command_template"].split()).format(**subst)
+            spec, run_id = bind_spec(subst)
+            tag += "_" + run_id[:12]
+            out_json = Path(rc["out_json_template"].format(results_dir=str(results_dir), tag=tag))
+            subst.update(tag=tag, out_json=str(out_json))
+            cmd = render_command(rc["command_template"], subst)
             cmds.append({"tag": tag, "arm": arm.name, "model_short": short,
-                         "seed": seed, "command": cmd, "result_json": str(out_json)})
+                         "seed": seed, "command": cmd, "result_json": str(out_json),
+                         "effective_spec": spec, "run_id": run_id, "cell": subst})
     return cmds
 
 
@@ -299,7 +293,11 @@ def build_plan(cfg: dict) -> dict:
         base_batch_prompts=mc.get("base_batch_prompts", 2),
         max_tokens=mc.get("max_tokens", 512),
     )
-    arms = [fit_arm_to_budget(a, budget) for a in define_arms()]
+    requested = mc["arms"]
+    available = {a.name: a for a in define_arms()}
+    if not requested or len(set(requested)) != len(requested) or set(requested) - set(available):
+        raise ValueError("matched_compute.arms must contain unique registered arms")
+    arms = [fit_arm_to_budget(available[name], budget) for name in requested]
     all_cmds = []
     for arm in arms:
         all_cmds.extend(arm_commands(cfg, arm, mc["models"], mc["seeds"], mc["difficulty"]))
@@ -430,31 +428,17 @@ def main() -> int:
     try:
         print(f"Launching {len(plan['commands'])} matched-compute runs sequentially "
               f"(timeout {args.per_cell_timeout}s/cell)...")
+        failed = False
         for c in plan["commands"]:
             print(f"  $ {c['command']}")
-            try:
-                proc = subprocess.run(
-                    c["command"],
-                    shell=True,
-                    cwd=str(REPO_ROOT),
-                    timeout=args.per_cell_timeout,
-                )
-                rc = proc.returncode
-            except subprocess.TimeoutExpired:
-                rc = "timeout"
-                print(
-                    f"  [warn] cell {c['tag']} exceeded {args.per_cell_timeout}s "
-                    f"timeout; treating as failed. The runner subprocess was "
-                    f"killed by subprocess.run.",
-                    file=sys.stderr,
-                )
-            except Exception as exc:
-                rc = f"exc:{type(exc).__name__}"
-                print(f"  [warn] cell {c['tag']} raised {type(exc).__name__}: {exc}",
-                      file=sys.stderr)
-            print(f"    -> {c['tag']} rc={rc}")
+            from run_sweep import run_one
+            cell = {**c["cell"], "block": "matched", "framework": cfg["runner"]["kind"],
+                    "model_short": c["model_short"], "effective_spec": c["effective_spec"]}
+            row = run_one(c["command"], Path(c["result_json"]), cell)
+            failed = failed or row["status"] != "completed"
+            print(f"    -> {c['tag']} status={row['status']} rc={row['returncode']}")
         print("Done. Compute the comparison with: python3 aggregate_sweep.py --matched")
-        return 0
+        return 1 if failed else 0
     finally:
         if lock_acquired:
             try:

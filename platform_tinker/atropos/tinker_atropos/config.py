@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 def generate_run_suffix() -> str:
@@ -12,11 +12,15 @@ def generate_run_suffix() -> str:
     return "".join(random.choices(string.ascii_lowercase + string.digits, k=4))
 
 
-class EnvConfig(BaseModel):
+class StrictConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
+
+
+class EnvConfig(StrictConfig):
     """Environment configuration - matches Atropos BaseEnvConfig"""
 
-    group_size: int = 16
-    batch_size: int = 128
+    group_size: int = Field(default=16, gt=0)
+    batch_size: int = Field(default=128, gt=0)
     max_batches_offpolicy: int = 3
     # TODO: Add configuration for robust evaluation metrics like ERF since ZVF breaks down outside of math tasks
     tokenizer_name: str = "meta-llama/Llama-3.1-8B-Instruct"
@@ -24,10 +28,10 @@ class EnvConfig(BaseModel):
     rollout_server_url: str = "http://localhost:8000"
     wandb_name: str = "atropos-tinker-env"
     ensure_scores_are_not_same: bool = False
-    max_token_length: int = 256
-    max_num_workers: int = 24
+    max_token_length: int = Field(default=256, gt=0)
+    max_num_workers: int = Field(default=24, gt=0)
     # Fixed "Early-Training Snapshot" limitation: Increased total_steps to allow meaningful RL convergence
-    total_steps: int = 1000
+    total_steps: int = Field(default=1000, gt=0)
     steps_per_eval: int = 100
 
     # Experiment control
@@ -35,8 +39,15 @@ class EnvConfig(BaseModel):
     data_seed: int = 42
     use_prompt_prefix: bool = True
 
+    browsergym_env_ids: List[str] = Field(default_factory=list)
+    browsergym_benchmark: str = "miniwob"
+    browsergym_headless: bool = True
+    browsergym_max_browser_steps: int = Field(default=10, gt=0)
+    browsergym_observation_max_chars: int = Field(default=16000, gt=0)
+    browsergym_eval_episodes: int = Field(default=20, gt=0)
 
-class OpenAIServerConfig(BaseModel):
+
+class OpenAIServerConfig(StrictConfig):
     """OpenAI-compatible server configuration"""
 
     model_name: str
@@ -47,17 +58,19 @@ class OpenAIServerConfig(BaseModel):
     num_requests_for_eval: int = 1500
 
 
-class TinkerConfig(BaseModel):
+class TinkerConfig(StrictConfig):
     """Tinker-specific configuration for LoRA training"""
 
     # LIMITATION: "The Closed-Source Confound" by supporting open-source training backends like TRL
     use_lora: bool = True
     lora_rank: int = 32
-    learning_rate: float = 4e-5
+    learning_rate: float = Field(default=4e-5, gt=0)
     max_token_trainer_length: int = 2048
     checkpoint_dir: str = "./temp/"
     save_checkpoint_interval: int = 0
-    tinker_model_name: Optional[str] = None  # Override model name for Tinker API (if different from tokenizer)
+    tinker_model_name: Optional[str] = (
+        None  # Override model name for Tinker API (if different from tokenizer)
+    )
 
     # Wandb configuration for trainer
     wandb_project: str = "atropos-tinker"
@@ -66,9 +79,10 @@ class TinkerConfig(BaseModel):
     wandb_run_suffix: str = Field(default_factory=generate_run_suffix)
 
 
-class TinkerAtroposConfig(BaseModel):
+class TinkerAtroposConfig(StrictConfig):
     """Complete Tinker-Atropos configuration"""
 
+    protocol_version: str = "tinker-atropos-v2"
     env: EnvConfig = Field(default_factory=EnvConfig)
     openai: List[OpenAIServerConfig] = Field(
         default_factory=lambda: [
@@ -81,6 +95,30 @@ class TinkerAtroposConfig(BaseModel):
     tinker: TinkerConfig = Field(default_factory=TinkerConfig)
     slurm: bool = False
     testing: bool = False
+
+    @property
+    def browsergym_env_ids(self):
+        return self.env.browsergym_env_ids
+
+    @property
+    def browsergym_benchmark(self):
+        return self.env.browsergym_benchmark
+
+    @property
+    def browsergym_headless(self):
+        return self.env.browsergym_headless
+
+    @property
+    def browsergym_max_browser_steps(self):
+        return self.env.browsergym_max_browser_steps
+
+    @property
+    def browsergym_observation_max_chars(self):
+        return self.env.browsergym_observation_max_chars
+
+    @property
+    def browsergym_eval_episodes(self):
+        return self.env.browsergym_eval_episodes
 
     # Convenience properties
     @property
@@ -215,3 +253,32 @@ class TinkerAtroposConfig(BaseModel):
             yaml_data = yaml.safe_load(f)
 
         return cls(**yaml_data)
+
+
+OVERRIDE_PATHS = {
+    "num_steps": ("env", "total_steps"),
+    "batch_size": ("env", "batch_size"),
+    "group_size": ("env", "group_size"),
+    "use_wandb": ("env", "use_wandb"),
+    "learning_rate": ("tinker", "learning_rate"),
+    "lora_rank": ("tinker", "lora_rank"),
+    "use_lora": ("tinker", "use_lora"),
+    "wandb_project": ("tinker", "wandb_project"),
+    "wandb_group": ("tinker", "wandb_group"),
+}
+
+
+def apply_overrides(config, overrides):
+    data = config.to_dict()
+    for key, value in overrides.items():
+        if key == "base_model":
+            data["env"]["tokenizer_name"] = value
+            data["tinker"]["tinker_model_name"] = value
+            for server in data["openai"]:
+                server["model_name"] = value
+        elif key in OVERRIDE_PATHS:
+            section, field = OVERRIDE_PATHS[key]
+            data[section][field] = value
+        else:
+            raise ValueError(f"Unsupported configuration override: {key}")
+    return TinkerAtroposConfig(**data)

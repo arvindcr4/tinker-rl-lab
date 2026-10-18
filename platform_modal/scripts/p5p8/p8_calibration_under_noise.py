@@ -50,7 +50,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review20-v2"
 FIG = OUT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -170,7 +170,7 @@ def main():
                     "obs_rate": obs,
                     "brier_topk": br,
                     "calib_gap": gap,
-                    "n_alerts": int(round(N_TEST * k_pct / 100.0)),
+                    "n_alerts": int(round(len(y_te) * k_pct / 100.0)),
                 })
     pt_df = pd.DataFrame(rows)
     pt_df.to_csv(OUT / "p8_calib_noise.tsv", sep="\t", index=False,
@@ -180,7 +180,7 @@ def main():
     # --------------------------------------------------------- paired bootstrap
     print("[p8_calib_noise] running paired bootstrap (B=%d)..." % N_BOOT)
     boot_rng = np.random.default_rng(SEED)
-    idx_pool = np.arange(N_TEST)
+    idx_pool = np.arange(len(y_te))
 
     boot_rows = []
     for s in SIGMAS:
@@ -194,9 +194,9 @@ def main():
                 gap_b = np.empty(N_BOOT)
                 brier_a = np.empty(N_BOOT)
                 brier_b = np.empty(N_BOOT)
-                k_n = max(1, int(round(N_TEST * k_pct / 100.0)))
+                k_n = max(1, int(round(len(y_te) * k_pct / 100.0)))
                 for b in range(N_BOOT):
-                    ii = boot_rng.choice(idx_pool, size=N_TEST, replace=True)
+                    ii = boot_rng.choice(idx_pool, size=len(y_te), replace=True)
                     probs_a = pa[ii]
                     probs_b = pb[ii]
                     y_b = y_te[ii]

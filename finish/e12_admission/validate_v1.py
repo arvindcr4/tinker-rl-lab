@@ -119,6 +119,7 @@ def validate(manifest, root):
         require(ledger.get("authoritative_complete") is True, "ATTEMPT_HISTORY_UNKNOWN")
         records = ledger.get("attempts", [])
         expected = {(task, n) for task in ids for n in (1, 2, 3)}
+        require(all(type(r.get("ordinal")) is int and 1 <= r["ordinal"] <= 3 for r in records), "STRICT_LEDGER_ORDINALS")
         keys = [(r["task_id"], r["ordinal"]) for r in records]
         require(len(keys) == 18 and set(keys) == expected and len(set(keys)) == len(keys), "COMPLETE_18_SLOT_LEDGER")
         require(all(r.get("state") in ("not_started", "active", "completed", "failed", "unknown") for r in records), "LEDGER_STATE")
@@ -126,9 +127,21 @@ def validate(manifest, root):
         require(len(selected) == 1 and selected[0].get("state") == "not_started", "NO_REPLAY_OR_UNKNOWN")
         require(not any(r.get("state") in ("active", "unknown") for r in records), "RECONCILE_ACTIVE_OR_UNKNOWN")
         require(not any(r.get("run_id") == attempt.get("run_id") for r in records), "RUN_ID_ALREADY_USED")
+        used_run_ids = set()
         for r in records:
+            if r.get("state") == "not_started":
+                require(r.get("receipt") is None and r.get("run_id") in (None, ""), "NOT_STARTED_CANNOT_HAVE_EXECUTION_EVIDENCE")
             if r.get("state") in ("completed", "failed"):
-                file(r.get("receipt"), "attempt_receipt")
+                run_id = r.get("run_id")
+                require(isinstance(run_id, str) and bool(run_id.strip()) and run_id not in used_run_ids, "HISTORICAL_RUN_ID_MISSING_OR_DUPLICATE")
+                if isinstance(run_id, str): used_run_ids.add(run_id)
+                receipt = file(r.get("receipt"), "attempt_receipt")
+                require(receipt.get("schema_version") == "e12-attempt-receipt-v2-candidate"
+                        and receipt.get("binding") == binding
+                        and receipt.get("task_id") == r["task_id"]
+                        and type(receipt.get("ordinal")) is int and receipt["ordinal"] == r["ordinal"]
+                        and receipt.get("run_id") == run_id and receipt.get("state") == r["state"],
+                        "ATTEMPT_RECEIPT_BINDING")
         review = file(refs.get("parent_review"), "parent_review")
         require(review.get("binding") == binding and review.get("attempt") == attempt
                 and review.get("authenticity_and_history_verified") is True and bool(review.get("reviewer"))
@@ -136,7 +149,7 @@ def validate(manifest, root):
         disk()
     except (ValueError, OSError, TypeError, KeyError, AttributeError) as exc:
         errors.append("INVALID_OR_MISSING_INPUT:" + str(exc))
-    return {"schema_version": "e12-offline-admission-result-v1",
+    return {"schema_version": "e12-offline-admission-result-v2-candidate",
             "status": "BLOCKED" if errors else "OFFLINE_EVIDENCE_VALIDATED",
             "blockers": sorted(set(errors)), "launch_authorized": False,
             "score": None, "is_model_score": False,

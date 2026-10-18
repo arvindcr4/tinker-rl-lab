@@ -30,7 +30,10 @@ import csv, json, math, random, statistics, itertools
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent.parent
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+ROOT = REPO_ROOT
 RISK_TSV = ROOT / "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv"
 OUT = ROOT / "platform_hybrid/experiments/results/berkeley"
 
@@ -81,50 +84,48 @@ def topk_match(r1, r2, k):
     return 1 if r1[:k] == r2[:k] else 0
 
 
+def tied_top_set(values, k=1):
+    means = {m: statistics.mean(v) for m, v in values.items()}
+    if not means:
+        return set()
+    threshold = sorted(means.values())[min(k, len(means))-1]
+    return {m for m, value in means.items() if value <= threshold or math.isclose(value, threshold, abs_tol=1e-12)}
+
+
 def h1_mvsp(by_m, n_boot=2000, seed=42):
-    """Cost-efficient sub-sampling: smallest k such that the top-k ranking is
-    stable in ≥P% of random subsets."""
-    random.seed(seed)
-    full = ranking({m: [r["zvf_risk_max"] for r in rows] for m, rows in by_m.items()})
+    """Within-pool seed-subset sensitivity, not future-experiment reliability."""
+    from scipy.stats import spearmanr
+    index = {m: {r['seed']: r['zvf_risk_max'] for r in rows} for m, rows in by_m.items()}
+    common = sorted(set.intersection(*(set(v) for v in index.values()))) if index else []
+    if not common:
+        return dict(rows=[], full_rank=[], full_top1_full_pool=None, status='insufficient_data')
+    full_values = {m: [v[s] for s in common] for m, v in index.items()}
+    full_rank = ranking(full_values)
+    methods = sorted(index)
     rows = []
-    for k in range(1, 6):
-        if k > 5:
-            break
-        # all C(5,k) subsets
-        subsets = list(itertools.combinations(range(5), k))
-        if len(subsets) > n_boot:
-            subsets = random.sample(subsets, n_boot)
-        spearman_list, top1_list, top3_list, top_agree = [], [], [], []
+    rng = random.Random(seed)
+    for k in range(1, len(common)+1):
+        subsets = list(itertools.combinations(common, k))
+        subsets = rng.sample(subsets, min(n_boot, len(subsets)))
+        rhos, top1, top3 = [], [], []
         for combo in subsets:
-            sub_vals = {m: [rows[i]["zvf_risk_max"] for i in combo] for m, rows in by_m.items()}
-            sub_rank = ranking(sub_vals)
-            spearman_list.append(spearman(full, sub_rank))
-            top1_list.append(topk_match(full, sub_rank, 1))
-            top3_list.append(topk_match(full, sub_rank, 3))
-            # the headline claim from iter130 is that scafgrpo is the safest
-            top_agree.append(1 if sub_rank[0] == full[0] else 0)
-        rows.append({
-            "k_seeds": k,
-            "n_subsets": len(subsets),
-            "spearman_mean": round(statistics.mean(spearman_list), 4),
-            "spearman_min":  round(min(spearman_list), 4),
-            "top1_match_rate": round(statistics.mean(top1_list), 4),
-            "top3_match_rate": round(statistics.mean(top3_list), 4),
-            "best_match_rate": round(statistics.mean(top_agree), 4),
-            "mvsp_50": "",  # filled below
-            "mvsp_80": "",
-            "mvsp_95": "",
-        })
-    # find smallest k for each threshold
-    full_top1 = rows[4]["top1_match_rate"]  # k=5 (full)
-    for r in rows:
-        if r["top1_match_rate"] >= 0.50 and not r["mvsp_50"]:
-            r["mvsp_50"] = r["k_seeds"]
-        if r["top1_match_rate"] >= 0.80 and not r["mvsp_80"]:
-            r["mvsp_80"] = r["k_seeds"]
-        if r["top1_match_rate"] >= 0.95 and not r["mvsp_95"]:
-            r["mvsp_95"] = r["k_seeds"]
-    return {"rows": rows, "full_rank": full, "full_top1_full_pool": full_top1}
+            sub = {m: [v[s] for s in combo] for m, v in index.items()}
+            x, y = [statistics.mean(full_values[m]) for m in methods], [statistics.mean(sub[m]) for m in methods]
+            rho = float(spearmanr(x, y).statistic) if len(set(x)) > 1 and len(set(y)) > 1 else float('nan')
+            if math.isfinite(rho):
+                rhos.append(rho)
+            top1.append(tied_top_set(full_values) == tied_top_set(sub))
+            top3.append(tied_top_set(full_values, 3) == tied_top_set(sub, 3))
+        rate = statistics.mean(top1)
+        rows.append(dict(k_seeds=k, n_subsets=len(subsets),
+                         spearman_mean=statistics.mean(rhos) if rhos else None,
+                         spearman_min=min(rhos) if rhos else None,
+                         top1_match_rate=rate, top3_match_rate=statistics.mean(top3), best_match_rate=rate,
+                         mvsp_50=k if rate >= .5 else '', mvsp_80=k if rate >= .8 else '', mvsp_95=k if rate >= .95 else '',
+                         self_comparison=k == len(common)))
+    return dict(rows=rows, full_rank=full_rank, full_top1_full_pool=rows[-1]['top1_match_rate'],
+                tied_full_winners=sorted(tied_top_set(full_values)),
+                interpretation='within-pool sensitivity; full-pool self-comparison is tautological; independent validation required')
 
 
 def h2_robustness(by_m, n_boot=2000, seed=43):
@@ -185,60 +186,17 @@ def h3_ablation(by_m):
 
 
 def h4_clusters(by_m, n_bootstrap=500, seed=44):
-    """τ²-Bench-COMPOSITIONAL: k-means-style 3-cluster assignment on the
-    3-channel signature (frac_mag, frac_csd, frac_drift) and check whether
-    the full-pool ranking is driven by ONE cluster's internal order or by
-    inter-cluster gaps."""
-    random.seed(seed)
-    methods = list(by_m.keys())
-    sig = {m: [] for m in methods}
-    for m in methods:
-        rows_m = by_m[m]
-        mag = statistics.mean([r["risk_mag"]   for r in rows_m])
-        csd = statistics.mean([r["risk_csd"]   for r in rows_m])
-        drf = statistics.mean([r["risk_drift"] for r in rows_m])
-        total = mag + csd + drf
-        sig[m] = [mag / total if total > 0 else 0,
-                  csd / total if total > 0 else 0,
-                  drf / total if total > 0 else 0]
-    # deterministic 3-cluster assignment by descending total zvf_risk_max magnitude
-    full_rank = ranking({m: [r["zvf_risk_max"] for r in by_m[m]] for m in methods})
-    # full_rank is best→worst; so index 0 = best (lowest zvf_risk_max).
-    # bucket by position in this ordering: high = worst (last 3), low = best (first 3).
-    n = len(full_rank)
-    bucket = {m: ("high_risk" if i >= n - 3 else "mid_risk" if i >= 3 else "low_risk")
-              for i, m in enumerate(full_rank)}
-    # signature centroid per bucket
-    centroids = {b: [0, 0, 0] for b in ["high_risk", "mid_risk", "low_risk"]}
-    counts = {b: 0 for b in ["high_risk", "mid_risk", "low_risk"]}
-    for m, s in sig.items():
-        b = bucket[m]
-        for j in range(3):
-            centroids[b][j] += s[j]
-        counts[b] += 1
-    for b in centroids:
-        if counts[b] > 0:
-            centroids[b] = [round(c / counts[b], 4) for c in centroids[b]]
-    # test stability of bucket assignment under leave-one-seed-out
-    stable_count = {b: 0 for b in ["high_risk", "mid_risk", "low_risk"]}
-    n = len(methods)
-    for m, rows_m in by_m.items():
-        for excluded in range(5):
-            # leave-one-out: re-rank by mean zvf_risk_max with seed excluded
-            other = {mm: ([r["zvf_risk_max"] for j, r in enumerate(by_m[mm]) if j != excluded]
-                          if mm == m
-                          else [r["zvf_risk_max"] for r in by_m[mm]])
-                     for mm in methods}
-            rk = ranking(other)
-            pos = rk.index(m)
-            b = ("high_risk" if pos >= n - 3 else "mid_risk" if pos >= 3 else "low_risk")
-            if b == bucket[m]:
-                stable_count[bucket[m]] += 1
-    return {
-        "buckets": {m: bucket[m] for m in methods},
-        "centroids": centroids,
-        "bucket_stability": {b: round(stable_count[b] / 15.0, 4) for b in ["high_risk", "mid_risk", "low_risk"]},
-    }
+    """Legacy entry point: descriptive risk rank buckets, NOT behavioral clusters."""
+    from scipy.stats import rankdata
+    methods = sorted(by_m)
+    if not methods:
+        return dict(buckets={}, centroids={}, bucket_stability={}, status='insufficient_data')
+    means = [statistics.mean(r['zvf_risk_max'] for r in by_m[m]) for m in methods]
+    ranks = rankdata(means, method='average')
+    names = ['low_risk', 'mid_risk', 'high_risk']
+    bucket = {m: names[min(2, int((rank-1)*3/len(methods)))] for m, rank in zip(methods, ranks)}
+    return dict(buckets=bucket, centroids={}, bucket_stability={name: None for name in names},
+                interpretation='descriptive average-rank buckets with tied risks grouped together; not clustering or validated stability')
 
 
 def main():
@@ -276,6 +234,10 @@ def main():
               ["method", "bucket", "stability"])
 
     summary = {
+        "statistic_version": "pro-review-02-v2",
+        "mvsp_interpretation": h1["interpretation"],
+        "tied_full_winners": h1["tied_full_winners"],
+        "bucket_interpretation": h4["interpretation"],
         "iter": 143,
         "pillar": "B-F25",
         "lectures": ["F25 L5 Yehudai (Survey)", "F25 L10 Barres+ (τ²-Bench)"],

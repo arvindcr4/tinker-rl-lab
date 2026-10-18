@@ -633,6 +633,27 @@ a controller.
 
 \section{Discussion}
 
+\paragraph{Contribution and verification boundary.}
+The proposed contribution is the versioned, fail-closed conformance contract
+linking a declared objective, gradient diagnostics, decisions, and immutable
+receipts, together with a restricted decision-theoretic witness. Neither the
+binary-group identity nor the observation that homogeneous rewards are
+ambiguous is claimed as new. Receipt integrity and stored-diagnostic agreement
+are distinct from source recomputation, gradient recomputation, and training
+reproduction; the latter three are not performed by the receipt verifier.
+Format checks on withheld source hashes do not authenticate the source objects.
+
+\paragraph{Prospective controller comparison (not executed here).}
+A controller claim requires a separately preregistered, matched-budget study:
+fixed $G=8$ and $G=16$, a symmetric ZVF-only policy, faithful published adaptive
+sampling/advantage-collapse baselines, and a posterior or budget-aware
+allocation rule. Any implementation deviations must be recorded before scoring.
+Report held-out quality and uncertainty over independent training seeds,
+charged rollouts (including rejected samples), generated tokens, FLOPs, and
+wall time. The accepted campaign and its failed gate are not results of this
+future comparison. The stop-versus-prepaid-batch witness establishes neither
+sufficiency of an additional statistic nor utility of an implemented controller.
+
 \paragraph{Optimizer efficiency is not sample efficiency.}
 For fixed $G$, Eq.~\eqref{eq:boundary-cost} separates group count from rollout
 count; Eq.~\eqref{eq:all-g-cost} gives an all-$G$ lower bound for complete

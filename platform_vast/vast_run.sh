@@ -3,6 +3,7 @@
 # Runs all systematic scaling study experiments sequentially.
 # Environment variables WANDB_API_KEY and HF_TOKEN are injected by vastai create.
 set -euo pipefail
+overall_status=0
 exec > /root/vast_run.log 2>&1   # redirect all output to log file
 
 echo "=== $(date) | vast_run.sh starting ==="
@@ -23,7 +24,7 @@ cd /root/tinker-rl-lab/platform_tinker/atropos
 echo "=== $(date) | repo cloned ==="
 
 # ── 3. WandB login ───────────────────────────────────────────────────────────
-python3 -c "import wandb; wandb.login(key='${WANDB_API_KEY}')"
+python3 -c 'import os, wandb; wandb.login(key=os.environ["WANDB_API_KEY"])'
 export WANDB_API_KEY="${WANDB_API_KEY}"
 export HF_TOKEN="${HF_TOKEN}"
 export ATROPOS_USE_UNSLOTH=1   # enable Unsloth memory-efficient kernels
@@ -37,9 +38,9 @@ run_exp() {
     echo "========================================================"
     echo "=== $(date) | STARTING: $config"
     echo "========================================================"
-    python3 train_grpo_unsloth.py --config "$config" --seed 42 --wandb_key "${WANDB_API_KEY}" \
+    python3 train_grpo_unsloth.py --config "$config" --seed 42 \
         && echo "=== $(date) | DONE: $config" \
-        || echo "=== $(date) | FAILED: $config — continuing ==="
+        || { job_status=$?; echo "=== $(date) | FAILED: $config — continuing ==="; overall_status=$job_status; }
 }
 
 # Block C — smallest first (fail-fast detection)
@@ -84,3 +85,5 @@ with open('/root/results_summary.json', 'w') as f:
 print('Results summary saved to /root/results_summary.json')
 print(json.dumps({k: {'step0': v['step0'], 'final': v['final']} for k,v in results.items()}, indent=2))
 EOF
+
+exit "$overall_status"

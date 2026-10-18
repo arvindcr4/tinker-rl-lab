@@ -1,4 +1,4 @@
-\subsection{Group Relative Policy Optimization}
+\section{Group Relative Policy Optimization}
 \label{sec:grpo}
 
 The preceding sections traced a clear trajectory: PPO
@@ -87,10 +87,11 @@ The key innovation of GRPO is that advantages are computed by
 function:
 \begin{equation}
 \label{eq:grpo-advantage}
+% Stabilization is explicit; this background equation does not certify historical execution.
 \boxed{
 \hat{A}_{i,t} = \tilde{r}_i
   = \frac{r_i - \operatorname{mean}(\mathbf{r})}
-         {\operatorname{std}(\mathbf{r})},
+         {\operatorname{std}(\mathbf{r})+\epsilon},
 \qquad i = 1, \ldots, G,
 \quad t = 1, \ldots, |o_i|.}
 \end{equation}
@@ -189,7 +190,7 @@ $\pi_\theta \leftarrow \pi_{\theta_{\text{init}}}$ \;
       Compute rewards $\{r_i\}_{i=1}^{G}$ using $r_\varphi$ \;
       $\hat{A}_{i,t} \leftarrow
         \dfrac{r_i - \operatorname{mean}(\mathbf{r})}
-              {\operatorname{std}(\mathbf{r})}$
+              {\operatorname{std}(\mathbf{r})+\epsilon}$
         \quad $\forall\, i,t$
         \tcp*{Step 2}
     }
@@ -272,17 +273,14 @@ simpler engineering.
 A distinctive feature of mathematical reasoning tasks is that correctness
 is \emph{verifiable}: one can check whether a model's final answer matches
 the ground truth without relying on a learned reward model.
-\cite{shao2024deepseekmath} exploit this property by designing
-\emph{rule-based} reward functions for their GRPO experiments:
+DeepSeekMath\cite{shao2024deepseekmath} used a learned reward model in its principal GRPO recipe. Rule-based rewards, as in R1-Zero, are a separate choice from the GRPO update rule. An illustrative outcome-reward recipe is:
 
 \begin{itemize}[leftmargin=1.8em,itemsep=2pt]
 \item \textbf{Accuracy reward.}  The primary signal is a binary indicator:
       $r_{\text{acc}}(q, o) = \mathbf{1}[\text{extract}(o) = a^*]$, where
       $a^*$ is the ground-truth answer and $\text{extract}(\cdot)$ is a
       deterministic parser that isolates the final boxed answer from the
-      completion.  This reward is exact, noise-free, and incurs zero
-      inference cost---a stark contrast to learned reward models, which
-      are expensive to serve and susceptible to reward hacking.
+      completion.  This score depends on reference correctness, extraction and equivalence checking; a deterministic verifier is not guaranteed noise-free or faithful.
 \item \textbf{Format reward.}  An auxiliary reward encourages the model
       to produce well-structured chain-of-thought solutions.  For
       instance, a small bonus may be awarded for enclosing the final
@@ -294,18 +292,7 @@ the ground truth without relying on a learned reward model.
 \end{itemize}
 
 \noindent
-The combination of verifiable binary rewards and group-relative
-normalization creates a particularly clean learning signal.  Within a
-group of $G = 64$ completions, some will be correct and others incorrect;
-the z-score normalization assigns positive advantages to correct
-completions and negative advantages to incorrect ones, with the magnitude
-calibrated by the proportion of correct answers in the group.  When the
-model is weak and most completions are wrong, the few correct ones
-receive very large positive advantages, providing a strong gradient
-signal.  As the model improves and more completions become correct, the
-advantage magnitudes shrink, naturally annealing the learning rate.
-This self-regulating property is an appealing feature of GRPO that
-requires no manual scheduling.
+For binary rewards, homogeneous groups remain possible at every finite group size. With population-standardized advantages and no stabilizer, a mixed group has mean squared advantage one; as successes become common, positive advantages shrink while rare negative advantages grow. This is not automatic learning-rate annealing. The displayed additive $\epsilon>0$ convention zeros homogeneous-group advantages; historical implementations must be checked individually. Such groups lack the reward-advantage contribution, but KL terms or optimizer state may still update parameters.
 
 %% ---------- Process supervision ----------
 \paragraph{Extension to process supervision.}

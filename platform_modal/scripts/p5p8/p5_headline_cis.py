@@ -35,8 +35,9 @@ from _stats import bootstrap_ci_mean_pct  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 SWEEP = ROOT / "experiments" / "results" / "groupsize_zvf_sweep.tsv"
 DELTA = ROOT / "experiments" / "results" / "group_size_iter107_bootstrap_delta.tsv"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8" / "review16_v2"
+# Versioned protocol outputs; historical artifacts are not overwritten.
+
 
 N_BOOT = 10000
 SEED = 20260704
@@ -112,54 +113,20 @@ def read_delta():
 
 
 def headline_h1_zvf_monotone(sweep):
-    """H1: ZVF drops with G; bootstrap CI on each G's mean ZVF from n_seeds."""
-    out = []
-    for r in sorted(sweep, key=lambda x: x["G"]):
-        # Reconstruct seeds from n_seeds (we don't have per-seed values here;
-        # the file already stores mean_zvf and heldout_acc_se computed from
-        # them; we instead bootstrap using a per-step diffusion prior of the
-        # mean itself: each seed gives an independent estimate; SE is the
-        # empirical standard error. We approximate per-seed draws as
-        # Normal(mean, SE) and bootstrap from that, which gives a CI
-        # consistent with what we measured (mean ± 1.96*SE).
-        if r["n_seeds"] < 2:
-            ci = (r["mean_zvf"] - 1.96 * r["heldout_acc_se"],
-                  r["mean_zvf"] + 1.96 * r["heldout_acc_se"])
-            out.append({
-                "claim": "H1", "G": r["G"], "metric": "mean_zvf",
-                "n": r["n_seeds"], "point": r["mean_zvf"],
-                "ci_lo": ci[0], "ci_hi": ci[1],
-                "verdict": "info", "note": "n<2 uses Gaussian approx",
-            })
-            continue
-        # Bootstrap from Normal approximation is equivalent to ±1.96 SE
-        # but report the proper percentile CI for transparency.
-        rng = random.Random(SEED + r["G"])
-        draws = [r["mean_zvf"] + rng.gauss(0, r["heldout_acc_se"])
-                 for _ in range(r["n_seeds"])]
-        m, lo, hi, n = bootstrap_ci_mean_pct(draws, N_BOOT, 0.05, SEED)
-        out.append({
-            "claim": "H1", "G": r["G"], "metric": "mean_zvf",
-            "n": n, "point": round(m, 4),
-            "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
-            "verdict": "ok" if lo < hi else "FAIL",
-            "note": "Gaussian-approx per-seed draws",
-        })
-    # Monotone-decay verdict: G=2 CI upper < G=16 CI lower?
-    g2 = next((x for x in out if x["G"] == 2), None)
-    g16 = next((x for x in out if x["G"] == 16), None)
-    if g2 and g16:
-        sep = g16["ci_lo"] - g2["ci_hi"]
-        out.append({
-            "claim": "H1-monotone",
-            "G": "2 vs 16",
-            "metric": "zvf_gap",
-            "n": g2["n"] + g16["n"],
-            "point": round(g16["point"] - g2["point"], 4),
-            "ci_lo": "n/a", "ci_hi": "n/a",
-            "verdict": "DECISIVE" if sep > 0 else "SUGGESTIVE",
-            "note": f"gap_sep={sep:+.4f} (positive => CIs do not overlap)",
-        })
+    """Protocol v2: descriptive ZVF only until independent seed values exist."""
+    rows = sorted(sweep, key=lambda r: r["G"])
+    out = [{"claim": "H1", "G": r["G"], "metric": "mean_zvf",
+            "n": r["n_seeds"], "point": r["mean_zvf"],
+            "ci_lo": "n/a", "ci_hi": "n/a", "verdict": "DESCRIPTIVE_ONLY",
+            "note": "v2: no per-seed ZVF; accuracy SE is not ZVF uncertainty"}
+           for r in rows]
+    if len(rows) > 1:
+        decreasing = all(a["mean_zvf"] >= b["mean_zvf"] for a, b in zip(rows, rows[1:]))
+        out.append({"claim": "H1-monotone", "G": "all adjacent groups",
+            "metric": "zvf_gap", "n": sum(r["n_seeds"] for r in rows),
+            "point": rows[-1]["mean_zvf"] - rows[0]["mean_zvf"],
+            "ci_lo": "n/a", "ci_hi": "n/a", "verdict": "DESCRIPTIVE_ONLY",
+            "note": f"v2: observed nonincreasing means={decreasing}; no inferential monotonicity test"})
     return out
 
 
@@ -219,6 +186,7 @@ def headline_h3_g32_vs_g4(delta):
 
 
 def main() -> int:
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     sweep = read_sweep()
     delta = read_delta()
     h1 = headline_h1_zvf_monotone(sweep)
@@ -242,13 +210,10 @@ def main() -> int:
         "n_sweep_rows": len(sweep),
         "n_delta_rows": len(delta),
         "rows": rows,
+        "protocol_version": "review16-v2",
         "interpretation": [
-            "H1: ZVF is monotone-decaying with G; the CIs do not overlap "
-            "(G=2 vs G=16 gap_sep > 0), supporting the § Item 5 claim.",
-            "H2: Held-out accuracy range across G is small (<2 pp) once the "
-            "bootstrap CIs are honoured — flatness claim survives.",
-            "H3: G32-G4 Δacc is DECISIVE at 4M-token budget (CI excludes 0) "
-            "and NULL at 1M-token budget (CI includes 0).",
+            "H1 is descriptive only: independent ZVF uncertainty is unavailable.",
+            "Read individual rows for H2/H3 outputs; no unconditional headline is inferred.",
         ],
     }
     with (OUT_DIR / "p5_headline_cis.json").open("w") as f:

@@ -1,6 +1,13 @@
 """Parallel Tinker experiment runner with W&B logging + HF Hub checkpointing.
-Launches all experiments concurrently via ThreadPoolExecutor.
+Launches all experiments concurrently via ProcessPoolExecutor.
 """
+
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 4:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
+from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage
+
 
 import atexit
 try:
@@ -13,7 +20,7 @@ except ImportError:
 
 import os, json, re, random, time, traceback, threading, shutil
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 API_KEY = os.environ.get("TINKER_API_KEY", "")
 os.environ["TINKER_API_KEY"] = API_KEY
@@ -25,20 +32,7 @@ import torch, tinker, tinker.types as T
 from transformers import AutoTokenizer
 from datasets import load_dataset
 import wandb
-try:
-    import torch, wandb
-    if not getattr(wandb, '_vram_patched', False):
-        _old_log = wandb.log
-        def _vram_log(data, *args, **kwargs):
-            if torch.cuda.is_available():
-                data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
-                torch.cuda.reset_peak_memory_stats()
-            _old_log(data, *args, **kwargs)
-        wandb.log = _vram_log
-        wandb._vram_patched = True
-except ImportError:
-    pass
+# No process-global W&B log monkeypatch. Managed VRAM is unavailable.
 from huggingface_hub import HfApi, create_repo
 
 HF_USER = "arvindcr4"
@@ -46,7 +40,7 @@ HF_REPO_PREFIX = f"{HF_USER}/tinker-rl-bench"
 WANDB_PROJECT = "tinker-rl-lab-world-class"
 WANDB_ENTITY = None  # offline mode
 
-RESULTS_DIR = "/home/user/workspace/tinker-rl-lab/experiments/tinker-runs/results"
+RESULTS_DIR = "/home/user/workspace/tinker-rl-lab/experiments/tinker-runs/results/framework_v3"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
 SYSTEM_PROMPT_MATH = "You are a math assistant. Solve the problem step by step, then give your final numerical answer inside \\boxed{}."
@@ -96,18 +90,7 @@ def get_tool_use():
 
 # ── Rewards ──────────────────────────────────────────────────────────────
 def reward_math(response, answer):
-    response = response.strip()
-    for b in re.findall(r'\\boxed\{([^}]+)\}', response):
-        try:
-            if abs(float(b.strip().replace(",","")) - float(answer)) < 0.01: return 1.0
-        except:
-            if b.strip().replace(",","") == answer: return 1.0
-    nums = re.findall(r'[-+]?\d[\d,]*\.?\d*', response)
-    if nums:
-        try:
-            if abs(float(nums[-1].replace(",","")) - float(answer)) < 0.01: return 1.0
-        except: pass
-    return 0.0
+    return score_gsm8k(response, answer)
 
 def reward_tool(response, expected):
     score = 0.0
@@ -132,56 +115,13 @@ def upload_to_hf(exp_tag, model_id, results, step_log):
             pass  # repo may already exist
 
         # Create model card
-        card = f"""---
-tags:
-  - grpo
-  - reinforcement-learning
-  - tinker
-  - tinker-rl-bench
-base_model: {model_id}
-datasets:
-  - openai/gsm8k
-library_name: tinker
-license: mit
----
-
-# {exp_tag}
-
-GRPO experiment from TinkerRL-Bench world-class experiment suite.
-
-## Training Details
-- **Base model:** {model_id}
-- **Method:** GRPO (Group Relative Policy Optimization)
-- **Platform:** Tinker API v0.18.1
-- **Task:** {results.get('task', 'gsm8k')}
-- **Seed:** {results.get('seed', 42)}
-- **LoRA rank:** {results.get('rank', 32)}
-- **Learning rate:** {results.get('lr', 3e-5)}
-- **Group size:** {results.get('group', 8)}
-- **Steps:** {results.get('steps', 30)}
-
-## Results
-- **First-5 avg reward:** {results.get('first5_avg', 0)*100:.1f}%
-- **Last-10 avg reward:** {results.get('last10_avg', 0)*100:.1f}%
-- **Peak reward:** {results.get('peak', 0)*100:.1f}%
-- **Zero-loss steps:** {results.get('zero_loss_pct', 0):.0f}%
-- **Tinker Run ID:** {results.get('run_id', 'N/A')}
-
-## Reward Trace
-```
-{json.dumps(results.get('reward_trace', []), indent=2)}
-```
-
-## Citation
-```bibtex
-@misc{{tinker-rl-bench-2026,
-  title={{TinkerRL-Bench: A Unified Benchmark for RL Post-Training}},
-  author={{Arvind C R and Sandhya Jeyaraj and Madhu Kumara L and Mohammad Rafi and Dhruva N Murthy and Arumugam K}},
-  year={{2026}},
-  url={{https://github.com/arvindcr4/tinker-rl-lab}}
-}}
-```
-"""
+        card = (
+            "# Experiment result metadata\n\n"
+            "This repository contains result JSON and rollout telemetry, not adapter weights.\n"
+            f"Source model: {model_id}\nTask: {results.get('task')}\n"
+            f"Protocol: {PROTOCOL_VERSION}\nConfig hash: {results.get('config_hash')}\n"
+            f"Sampler checkpoint: {results.get('checkpoint')}\n"
+        )
         # Upload model card and results
         tmp_dir = f"/tmp/hf_upload_{exp_tag}"
         os.makedirs(tmp_dir, exist_ok=True)
@@ -208,7 +148,7 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
         config={"model": model_id, "model_short": model_name, "task": task,
                 "seed": seed, "rank": rank, "lr": lr, "group": group,
                 "steps": steps, "batch": batch, "platform": "tinker"},
-        reinit=True, tags=["tinker", task, model_name],
+        reinit="create_new", tags=["tinker", task, model_name],
     )
 
     print(f"[{exp}] ▶ START model={model_id} task={task}")
@@ -219,57 +159,64 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
 
     try:
         svc = tinker.ServiceClient(api_key=API_KEY)
-        tc = svc.create_lora_training_client(base_model=model_id, rank=rank)
+        tc = svc.create_lora_training_client(base_model=model_id, rank=rank, seed=seed)
         tok = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
         w0 = tc.save_weights_for_sampler(name="s0").result()
         sc = tc.create_sampling_client(model_path=w0.path)
     except Exception as e:
         print(f"[{exp}] ✗ INIT FAILED: {e}")
         wb_run.finish(exit_code=1)
-        return {"experiment": exp, "model": model_id, "error": str(e), "stage": "init"}
+        return {**completion_receipt(steps, 0, None, None, error=str(e)), "experiment": exp, "model": model_id, "error": str(e), "stage": "init"}
 
     print(f"[{exp}] Connected: {tc.model_id}")
     wb_run.config.update({"tinker_run_id": tc.model_id}, allow_val_change=True)
 
     _adv = []
     def loss_fn(data, lp):
-        losses = [(-_adv[i] * lp[i].sum()) for i in range(len(lp))]
+        losses = [(-_adv[i] * response_logprobs(data[i], lp[i]).sum()) for i in range(len(lp))]
         return torch.stack(losses).mean(), {"loss": torch.stack(losses).mean().item()}
 
     step_rewards, step_log = [], []
+    def failed(error):
+        wb_run.finish(exit_code=1)
+        return {**completion_receipt(steps, len(step_log), tc.model_id, None, error=str(error)),
+                "experiment": exp, "model": model_id, "error": str(error),
+                "step_log": step_log, "reward_trace": step_rewards, "last10_avg": None}
+
     zl, zr = 0, 0
     cumulative_rewards = []
 
     for step in range(steps):
         bex = [examples[i % len(examples)] for i in rng.sample(range(len(examples)), min(batch, len(examples)))]
         all_data, all_advs, batch_r = [], [], []
+        reward_groups = []
 
         for prompt_text, ans, _ in bex:
             pid = tok.encode(prompt_text, add_special_tokens=False)[:1024]
-            sp = T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95)
+            sp = T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95, seed=stable_seed(seed, step, pid))
             try:
                 resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=group, sampling_params=sp).result()
             except Exception as e:
                 print(f"[{exp}] Sample err step {step}: {e}")
-                continue
+                return failed(e)
 
+            if len(resp.sequences) != group:
+                return failed("Incomplete requested sample group")
             rews = [rfn(tok.decode(list(r.tokens), skip_special_tokens=True), ans) for r in resp.sequences]
             mr = sum(rews)/len(rews)
             sr = (sum((r-mr)**2 for r in rews)/len(rews))**0.5 + 1e-8
             advs = [(r-mr)/sr for r in rews]
             batch_r.extend(rews)
+            reward_groups.append(rews)
 
             for r, a in zip(resp.sequences, advs):
                 rid = list(r.tokens)
                 fid = pid + rid
-                tid = fid[1:] + [0]
-                all_data.append(T.Datum(
-                    model_input=T.ModelInput.from_ints(fid),
-                    loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)])}
-                ))
+                tid = fid[1:]
+                all_data.append(aligned_datum(T, pid, rid))
                 all_advs.append(a)
 
-        if not all_data: continue
+        if not all_data: return failed("No rollout data")
         _adv = all_advs
 
         try:
@@ -277,7 +224,7 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
             tc.optim_step(T.AdamParams(learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
         except Exception as e:
             print(f"[{exp}] Train err step {step}: {e}")
-            continue
+            return failed(e)
 
         avg = sum(batch_r)/len(batch_r) if batch_r else 0
         step_rewards.append(avg)
@@ -287,7 +234,7 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
         if avg == 0: zr += 1
 
         # ZVF = fraction of groups where all completions got same reward
-        zvf = 1.0 if len(set(batch_r)) <= 1 else 0.0
+        zvf = group_zvf(reward_groups)
         gu = 1.0 - zvf
 
         step_log.append({"step": step+1, "loss": lv, "reward": avg, "zvf": zvf, "gu": gu})
@@ -308,14 +255,15 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
         if (step+1) % 5 == 0 or step == 0:
             print(f"[{exp}] {step+1:3d}/{steps} loss={lv:.4f} reward={avg:.3f} zvf={zvf:.1f}")
 
-        if (step+1) % max(steps//3, 5) == 0:
+        if True:  # v3: sampler refresh after every update
             try:
                 ckpt = tc.save_weights_for_sampler(name=f"s{step+1}").result()
                 sc = tc.create_sampling_client(model_path=ckpt.path)
-            except: pass
+            except Exception as error:
+                return failed(error)
 
     try:
-        tc.save_state(name="final")
+        tc.save_state(name="final").result()
         fckpt = tc.save_weights_for_sampler(name="final").result()
         ckpt_path = fckpt.path
     except:
@@ -325,6 +273,11 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
     first5 = step_rewards[:5] if len(step_rewards) >= 5 else step_rewards
 
     summary = {
+        **completion_receipt(steps, len(step_log), tc.model_id, None if ckpt_path == "save_failed" else ckpt_path, error="checkpoint_save_failed" if ckpt_path == "save_failed" else None),
+        **experiment_spec(dict(model=model_id, task=task, seed=seed, rank=rank, lr=lr, group=group, steps=steps, batch=batch, scorer_id=SCORER_ID)),
+        "objective_id": "group_standardized_pg_response_sum_v3",
+        "scorer_id": SCORER_ID,
+        "sampler_refresh_every": 1,
         "experiment": exp, "model": model_id, "model_short": model_name,
         "task": task, "seed": seed, "rank": rank, "lr": lr, "group": group, "steps": steps,
         "run_id": tc.model_id, "checkpoint": ckpt_path,
@@ -354,8 +307,8 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
     # ── Upload to HF Hub ──
     hf_repo = upload_to_hf(exp, model_id, summary, step_log)
     if hf_repo:
-        summary["hf_repo"] = hf_repo
-        wb_run.summary["hf_repo"] = hf_repo
+        summary["hf_results_repo"] = hf_repo
+        wb_run.summary["hf_results_repo"] = hf_repo
 
     # ── W&B artifacts ──
     try:
@@ -411,8 +364,14 @@ if __name__ == "__main__":
             try:
                 with open(os.path.join(RESULTS_DIR, fname)) as f:
                     data = json.load(f)
-                if 'error' not in data and data.get('peak', -1) >= 0:
-                    completed_tags.add(tag)
+                if require_completed(data):
+                    planned = next((e for e in exps if e["tag"] == tag), None)
+                    if planned is not None:
+                        expected = experiment_spec(dict(model=planned["model_id"], task=planned["task"],
+                            seed=planned.get("seed",42), rank=planned.get("rank",32), lr=planned.get("lr",3e-5),
+                            group=planned.get("group",8), steps=planned.get("steps",200), batch=planned.get("batch",2), scorer_id=SCORER_ID))
+                        validate_resume(expected, data)
+                        completed_tags.add(tag)
             except Exception:
                 pass
     before = len(exps)
@@ -429,7 +388,7 @@ if __name__ == "__main__":
     get_gsm8k()  # pre-load
 
     all_results = []
-    with ThreadPoolExecutor(max_workers=args.max_parallel) as pool:
+    with ProcessPoolExecutor(max_workers=args.max_parallel) as pool:
         futures = {}
         for exp in exps:
             f = pool.submit(run_single, **{k:v for k,v in exp.items()}, batch=2)
@@ -440,7 +399,7 @@ if __name__ == "__main__":
             try:
                 r = f.result()
                 all_results.append(r)
-                status = "error" not in r
+                status = r.get("status") == "completed"
                 sym = "★" if status else "✗"
                 msg = f"last10={r['last10_avg']*100:.1f}% peak={r['peak']*100:.1f}%" if status else r.get("error","unknown")[:60]
                 print(f"\n{sym} [{tag}] {'COMPLETED' if status else 'FAILED'}: {msg}\n")

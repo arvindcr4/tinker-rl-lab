@@ -39,13 +39,13 @@ import csv, json, math, os, sys, time
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 CELLS = os.path.join(ROOT, "platform_hybrid/experiments/results/mega_20260704/cells.tsv")
 MDIR = os.path.join(ROOT, "platform_hybrid/experiments/results/mega_20260704/manifests")
-OUTDIR = os.path.join(ROOT, "platform_hybrid/experiments/results/p5p8")
+OUTDIR = os.path.join(ROOT, "platform_hybrid/experiments/results/p5p8/review17_v2")
 FIGDIR = os.path.join(OUTDIR, "figures")
-os.makedirs(OUTDIR, exist_ok=True)
-os.makedirs(FIGDIR, exist_ok=True)
+
+
 
 TARGETS = ["zvf", "mean_reward"]
 N_BOOT = 2000
@@ -57,6 +57,8 @@ M_AXES = ["group_size_schedule", "heldout_split", "decontamination_notes"]
 # Cells.tsv-only axes (the iter-25 stack columns).
 C_AXES = ["model_family", "task_slice", "G", "temperature", "seed"]
 
+
+from p5_review17_stats import json_safe
 
 def load():
     rows = list(csv.DictReader(open(CELLS), delimiter="\t"))
@@ -97,7 +99,7 @@ def encode(rows, fields, src="cells"):
             vals = [r[f] for r in rows]
         uniq = sorted(set(vals))
         # continuous?
-        if f in ("G", "temperature", "seed") and src != "manifest":
+        if False:  # Shared fields always use categorical encoding in both sources.
             col = np.array([float(v) for v in vals], dtype=float).reshape(-1, 1)
             if f == "G":
                 col = np.log2(col)
@@ -122,9 +124,14 @@ def fit_r2(X, y):
 
 
 def main():
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    os.makedirs(OUTDIR, exist_ok=True)
+    os.makedirs(FIGDIR, exist_ok=True)
     rows, const = load()
     n = len(rows)
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "n_cells": n, "n_boot": N_BOOT, "seed": SEED,
         "const_manifest_fields": const,
         "manifest_axes_used": M_AXES, "cells_axes_used": C_AXES,
@@ -243,6 +250,9 @@ def main():
                                  note="cells-only eta^2"))
 
         summary["outcomes"][tgt] = {
+            "evaluation": "in_sample_description_only",
+            "manifest_design_rank": int(np.linalg.matrix_rank(np.column_stack([np.ones(n), X_man]))),
+            "cells_design_rank": int(np.linalg.matrix_rank(np.column_stack([np.ones(n), X_cel]))),
             "r2_manifest_only": round(r2_man, 4),
             "r2_manifest_only_ci": [round(lo_man, 4), round(hi_man, 4)],
             "r2_cells_only": round(r2_cel, 4),
@@ -266,9 +276,9 @@ def main():
 
     summary["generated"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     with open(os.path.join(OUTDIR, "p5_manifest_self_sufficiency.json"), "w") as fh:
-        json.dump(summary, fh, indent=2)
+        json.dump(json_safe(summary), fh, indent=2)
 
-    print(json.dumps(summary, indent=2))
+    print(json.dumps(json_safe(summary), indent=2))
 
     # Bar plot of R^2 by axis set for each target.
     try:

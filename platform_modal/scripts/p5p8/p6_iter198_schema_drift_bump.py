@@ -41,19 +41,20 @@ Post-bump target: every registry/entries/*.json parses cleanly under
 registry/schema.json (with jsonschema.Draft202012Validator). This is a CI-grade
 gate the iter-186 audit was the precursor to.
 
-Stdlib only (uses jsonschema if available, otherwise falls back to the iter-186
-branch-dispatch fallback).
+Strict validation requires jsonschema. Dry-run computes and validates a pure
+proposal; --apply persists a validated proposal, reloads disk state and audits it.
 """
 from __future__ import annotations
 
 import argparse, json, pathlib, shutil, sys, datetime
+import copy
 from collections import Counter
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 REG  = ROOT / "registry"
 ENT  = REG / "entries"
-OUT  = ROOT / "experiments" / "results" / "p5p8"
+OUT  = ROOT / "experiments" / "results" / "p5p8" / "review18_v2"
 OUT.mkdir(parents=True, exist_ok=True)
 SCH_PATH = REG / "schema.json"
 SCH_BAK  = REG / "schema.iter198.bak.json"
@@ -130,7 +131,7 @@ def entries_with_bad_status_enum(entries):
 def validate_entry(entry, schema):
     """Iter-186 style branch-dispatch (sidestep oneOf composite error)."""
     if not HAVE_JS:
-        return True, ["jsonschema unavailable; skipped"]
+        return None, ["SKIPPED: jsonschema unavailable"]
     defs = schema.get("$defs", {})
     rt = entry.get("record_type")
     branch_key = {"stack": "stack_record",
@@ -235,47 +236,31 @@ def patch_schema(schema):
     return log, schema
 
 
-def patch_entries(entries_raw):
-    """Mutate ENTRY JSON files to use canonical short enum values.
-
-    Currently only one such mapping is needed: the human-only long-form
-    status string used by zvf130_tool_use_* entries (status
-    'single-seed; same-stack isolation not run' -> the canonical
-    machine-readable alias `single-seed-surrogate`).
-    Returns (entry_patch_log, n_mutated).
-    """
+def plan_entry_patches(entries_raw):
+    """Pure transformation: preserve inputs and never write registry files."""
+    proposed = copy.deepcopy(entries_raw)
     log = []
-    n_mutated = 0
-    long_str = "single-seed; same-stack isolation not run"
-    short_alias = NEW_STATUS_ENUM_VALUE
-    for d in entries_raw:
+    for d in proposed:
+        if d.get("_parse_error") or d.get("_clean") is None:
+            continue
         clean = strip_meta(d)
-        vda = clean.get("variant_deltas_applied") or []
-        if not vda:
-            continue
-        mutated_anywhere = False
-        for v in vda:
-            if isinstance(v, dict) and v.get("status") == long_str:
-                v["status"] = short_alias
-                mutated_anywhere = True
-        if not mutated_anywhere:
-            continue
-        rid = d.get("_id", "?")
-        if not isinstance(rid, str):
-            continue
-        n_mutated += 1
-        path = ENT / f"{rid}.json"
-        if not path.exists():
-            continue
-        # Read the original (preserve JSON formatting), rewrite in place.
-        original = json.loads(path.read_text())
-        for v in (original.get("variant_deltas_applied") or []):
-            if isinstance(v, dict) and v.get("status") == long_str:
-                v["status"] = short_alias
-        path.write_text(json.dumps(original, indent=2) + "\n")
-        log.append(f"{rid}: status `single-seed; same-stack isolation not run` "
-                   f"-> `{short_alias}`")
-    return log, n_mutated
+        changed = False
+        for v in clean.get("variant_deltas_applied") or []:
+            if isinstance(v, dict) and v.get("status") == "single-seed; same-stack isolation not run":
+                v["status"] = NEW_STATUS_ENUM_VALUE
+                changed = True
+        if changed:
+            d.update(clean)
+            d["_clean"] = copy.deepcopy(clean)
+            log.append(f"{d['_id']}: status -> {NEW_STATUS_ENUM_VALUE}")
+    return proposed, log
+
+
+def write_entry_patches(proposed):
+    for d in proposed:
+        if d.get("_parse_error") or d.get("_clean") is None:
+            raise ValueError("Cannot persist malformed registry entry")
+        (ENT / f"{d['_id']}.json").write_text(json.dumps(strip_meta(d), indent=2) + "\n")
 
 
 def main():
@@ -289,6 +274,8 @@ def main():
                          "compute the BEFORE-count; the canonical schema "
                          "on disk is not modified.")
     args = ap.parse_args()
+    if not HAVE_JS:
+        raise SystemExit("SKIPPED: jsonschema is required for this strict audit; no validation performed")
     out = pathlib.Path(args.out_dir); out.mkdir(parents=True, exist_ok=True)
 
     # Use pre-bump schema if provided, else current on-disk schema.
@@ -355,31 +342,28 @@ def main():
     class_rows_dedup.sort(key=lambda r: (r["entry_id"], r["drift_class"]))
 
     # ---- Apply patches (or dry-run) -------------------------------------
+    log, schema_after = patch_schema(copy.deepcopy(json.loads(SCH_PATH.read_text())))
+    proposed, entry_log = plan_entry_patches(entries_raw)
+    log.extend(entry_log)
+    n_mut = len(entry_log)
+    # Validate the complete proposed state before any persistence.
+    for d in proposed:
+        if d.get("_parse_error") or d.get("_clean") is None:
+            raise ValueError("Malformed proposed entry")
+        ok, messages = validate_entry(strip_meta(d), schema_after)
+        if ok is not True:
+            raise ValueError(f"Proposed entry {d['_id']} failed validation: {messages}")
+    applied = False
     if args.apply:
-        SH_BAK = SCH_BAK
-        SH_BAK.write_text(SCH_PATH.read_text())
-        log, new_schema = patch_schema(json.loads(SCH_PATH.read_text()))
-        SCH_PATH.write_text(json.dumps(new_schema, indent=2))
-        schema_after = new_schema
-        # Mutate entry files for canonical enum values
-        entry_log, n_mut = patch_entries(entries_raw)
-        log.extend(entry_log)
+        if not SCH_BAK.exists():
+            SCH_BAK.write_text(SCH_PATH.read_text())
+        write_entry_patches(proposed)
+        SCH_PATH.write_text(json.dumps(schema_after, indent=2) + "\n")
+        entries_raw = load_entries()
+        schema_after = json.loads(SCH_PATH.read_text())
         applied = True
     else:
-        log, schema_after = patch_schema(json.loads(SCH_PATH.read_text()))
-        # In dry-run, also pre-stage the entry mutation to see what would change
-        entry_log_dry, n_mut = patch_entries(entries_raw)
-        # but do not write — re-load to revert
-        for d in entries_raw:
-            rid = d.get("_id", "?")
-            if not isinstance(rid, str):
-                continue
-            path = ENT / f"{rid}.json"
-            if path.exists():
-                d["_clean"] = json.loads(path.read_text())
-        log.append(f"[dry-run only] would mutate {n_mut} entries: "
-                   + "; ".join(entry_log_dry))
-        applied = False
+        entries_raw = proposed
 
     # ---- Post-bump validation (re-run on the patched schema) -------------
     post_rows = []
@@ -424,6 +408,7 @@ def main():
 
     # ---- Summary ---------------------------------------------------------
     summary = {
+        "protocol_version": "review18-v2",
         "iter": 198,
         "pillar": "P6",
         "vein": "(a)+(c) schema-extension drift bump (one targeted patch per class)",
@@ -466,6 +451,8 @@ def main():
         for rid, msgs in post_fail_by_id.items():
             print(f"  {rid}: {'; '.join(msgs)[:200]}")
 
+    return 1 if post_fail else 0
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

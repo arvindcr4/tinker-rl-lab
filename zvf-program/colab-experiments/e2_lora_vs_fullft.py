@@ -12,7 +12,7 @@ Run:  colab run --gpu T4 --timeout 1200 e2_lora_vs_fullft.py
 import json, re, random, statistics, subprocess, sys
 # peft pulls torchao as a dep; the default 0.10.0 is import-incompatible with the
 # VM's torch (needs >=0.16). Install/upgrade torchao explicitly to avoid the crash.
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U", "peft", "torchao>=0.16"], check=False)
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "peft", "torchao>=0.16"], check=True)
 import torch, torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, get_peft_model
@@ -124,4 +124,7 @@ def run(mode):
 results = [run("lora"), run("full")]
 summary = {"experiment": "E2_lora_vs_fullft", "model": MODEL, "seed": SEED,
            "steps": STEPS, "arms": results}
+from protocol_stats import fingerprint
+summary["runtime_fingerprint"] = fingerprint(__file__, {k:v for k,v in globals().copy().items() if k.isupper() and isinstance(v,(int,float,str,list,dict))})
+summary["evidence_tier"] = "legacy_pilot_variant"
 print("E2_RESULT " + json.dumps(summary), flush=True)

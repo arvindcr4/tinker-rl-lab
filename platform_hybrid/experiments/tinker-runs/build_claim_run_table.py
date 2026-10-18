@@ -14,6 +14,13 @@ Outputs:
 
 from __future__ import annotations
 
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 3:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
+from platform_hybrid.experiments.framework_contracts import observed_updates
+
+
 import csv
 import json
 from collections import Counter, defaultdict
@@ -69,21 +76,8 @@ def local_ref(*parts: Any) -> str:
     return "local:" + ":".join(str(part).replace(" ", "_") for part in parts)
 
 
-def get_step(run: dict[str, Any]) -> int | None:
-    config = run.get("config") or {}
-    summary = run.get("summary") or {}
-    for key in ("steps", "n_steps", "total_steps"):
-        value = config.get(key)
-        if isinstance(value, (int, float)) and value > 0:
-            return int(value)
-    value = config.get("max_steps")
-    if isinstance(value, (int, float)) and value > 0:
-        return int(value)
-    for key in ("train/global_step", "train/step", "step"):
-        value = summary.get(key)
-        if isinstance(value, (int, float)) and value >= 0:
-            return int(value)
-    return None
+def get_step(run):
+    return observed_updates(run.get("config", {}), run.get("summary", {}))
 
 
 def get_seed_values(run: dict[str, Any]) -> list[str]:
@@ -496,7 +490,7 @@ def build_rows() -> tuple[list[dict[str, str]], dict[str, Any]]:
             wandb_links=join_refs(run["url"] for run in zvf_audit),
             model_consistency="W&B-ONLY multi-model audit; 0 exact Tinker IDs",
             seed_count=f"{len(audit_seeds)} logged seed labels ({','.join(audit_seeds)}), not a fixed-cell replication count",
-            steps=f"{min(audit_steps)}-{max(audit_steps)} configured steps",
+            steps=f"{min(audit_steps)}-{max(audit_steps)} observed updates" if audit_steps else "UNKNOWN observed updates",
             heldout_metric="NONE; W&B summaries contain no held-out/eval metric",
             evidence_tier="C",
             source_artifact="W&B project zvf-audit",
@@ -722,7 +716,12 @@ def write_outputs(rows: list[dict[str, str]], metadata: dict[str, Any]) -> None:
         "claim_count": len(rows),
         "paper_counts": dict(sorted(Counter(row["paper"] for row in rows).items())),
         "tier_counts": dict(sorted(tier_counts.items())),
-        "validation": "PASS",
+        "validation": "SCHEMA_FAIL" if metadata["registry_validation_failures"] else "SCHEMA_PASS_ONLY",
+        "schema_valid": not bool(metadata["registry_validation_failures"]),
+        "provenance_verified": None,
+        "completion_contract_satisfied": None,
+        "comparison_contract_satisfied": None,
+        "claim_supported": None,
         **{key: value for key, value in metadata.items() if key != "wandb_url_set"},
     }
     (OUTPUT / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
@@ -732,7 +731,7 @@ def main() -> None:
     rows, metadata = build_rows()
     validate_rows(rows, metadata)
     write_outputs(rows, metadata)
-    print(f"PASS: wrote {len(rows)} claims to {OUTPUT}")
+    print(f"SCHEMA_PASS_ONLY: wrote {len(rows)} claims to {OUTPUT}")
 
 
 if __name__ == "__main__":

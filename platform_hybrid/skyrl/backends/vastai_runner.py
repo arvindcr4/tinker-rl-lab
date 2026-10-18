@@ -20,6 +20,8 @@ import json
 import os
 import subprocess
 import time
+import shlex
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any
 
@@ -62,10 +64,11 @@ class VastAILauncher:
         self.instance_type = instance_type
         self.ssh_key_path = ssh_key_path or os.path.expanduser("~/.ssh/id_rsa")
         self.instances: List[VastInstance] = []
+        self.ownership_log = Path(os.environ.get("VAST_OWNERSHIP_LOG", "vast-owned-v2.jsonl"))
 
     def run_command(self, cmd: List[str], timeout: int = 60) -> subprocess.CompletedProcess:
         """Run a vast CLI command."""
-        full_cmd = ["vast", *cmd]
+        full_cmd = ["vastai", *cmd]
         if "--api-key" not in full_cmd:
             full_cmd.extend(["--api-key", self.api_key])
         return subprocess.run(full_cmd, capture_output=True, text=True, timeout=timeout)
@@ -73,7 +76,7 @@ class VastAILauncher:
     async def search_instances(self, instance_type: str = "a100") -> List[Dict[str, Any]]:
         """Search for available instances."""
         print(f"Searching for {instance_type} instances...")
-        result = self.run_command(["search", "instances", instance_type, "--json"])
+        result = self.run_command(["search", "offers", f"gpu_name={instance_type} rentable=true", "--raw"])
 
         if result.returncode != 0:
             print(f"Search failed: {result.stderr}")
@@ -92,7 +95,7 @@ class VastAILauncher:
 
         # Start instance
         result = self.run_command(
-            ["create", "instance", str(instance_id), "--json"],
+            ["create", "instance", str(instance_id), "--image", "pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime", "--ssh", "--raw"],
             timeout=120
         )
 
@@ -102,18 +105,18 @@ class VastAILauncher:
 
         try:
             info = json.loads(result.stdout)
-            instance = VastInstance(
-                id=info["id"],
-                ssh_host=info["ssh_host"],
-                ssh_port=info.get("ssh_port", 22),
-                gpu_name=info.get("gpu_name", "unknown"),
-                num_gpus=info.get("num_gpus", 1),
-                price=info.get("dph_total", 0),
-                status="starting",
-            )
-            print(f"  Launched instance {instance.id} on {instance.ssh_host}")
+            contract = info["new_contract"]
+            if info.get("success") is not True or type(contract) is not int:
+                raise ValueError("invalid creation response")
+            instance = VastInstance(contract, "", 22, "unknown", 1, 0, "starting")
+            # Register ownership before readiness or any fallible remote operation.
+            self.instances.append(instance)
+            with self.ownership_log.open("a") as receipt:
+                receipt.write(json.dumps({"instance_id": contract, "status": "owned", "created_at": time.time()}) + "\n")
+                receipt.flush()
+                os.fsync(receipt.fileno())
             return instance
-        except (json.JSONDecodeError, KeyError) as e:
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
             print(f"Failed to parse instance info: {e}")
             return None
 
@@ -124,12 +127,19 @@ class VastAILauncher:
         start = time.time()
         while time.time() - start < timeout:
             try:
+                result = self.run_command(["show", "instance", str(instance.id), "--raw"])
+                if result.returncode:
+                    raise RuntimeError("instance query failed")
+                info = json.loads(result.stdout)
+                if isinstance(info, list):
+                    info = next(row for row in info if row["id"] == instance.id)
+                instance.ssh_host = info["ssh_host"]
+                instance.ssh_port = int(info["ssh_port"])
                 async with asyncssh.connect(
                     instance.ssh_host,
                     port=instance.ssh_port,
                     username="root",
-                    known_hosts=None,
-                    server_host_key_algs=[],
+                    client_keys=[self.ssh_key_path],
                 ) as conn:
                     result = await conn.run("echo ready", check=True)
                     if result.exit_status == 0:
@@ -153,16 +163,13 @@ class VastAILauncher:
                 instance.ssh_host,
                 port=instance.ssh_port,
                 username="root",
-                known_hosts=None,
-                server_host_key_algs=[],
+                client_keys=[self.ssh_key_path],
             ) as conn:
 
                 # Write setup script
-                async with conn.start_sftp() as sftp:
-                    await sftp.putfo(
-                        setup_script.encode(),
-                        "/root/setup_skyrl.sh"
-                    )
+                async with conn.start_sftp_client() as sftp:
+                    async with sftp.open("/root/setup_skyrl.sh", "w") as remote:
+                        await remote.write(setup_script)
 
                 # Run setup
                 result = await conn.run(
@@ -212,8 +219,7 @@ cat /root/skyrl_server.log
                 instance.ssh_host,
                 port=instance.ssh_port,
                 username="root",
-                known_hosts=None,
-                server_host_key_algs=[],
+                client_keys=[self.ssh_key_path],
             ) as conn:
 
                 result = await conn.run(start_cmd, timeout=30)
@@ -305,8 +311,8 @@ echo "=== Setup Complete (framework={framework}) ==="
         """
         return (
             "cd /root/tinker-rl-lab && source .venv/bin/activate && "
-            f"python -m platform_local.unified --framework {framework} --backend local "
-            f"--model {model_name} --algorithm {algorithm}"
+            f"python -m platform_local.unified --framework {shlex.quote(framework)} --backend local "
+            f"--model {shlex.quote(model_name)} --algorithm {shlex.quote(algorithm)}"
         )
 
     async def run_training(
@@ -319,7 +325,7 @@ echo "=== Setup Complete (framework={framework}) ==="
         print(f"  Running training on instance {instance.id}...")
 
         # Prepare env vars
-        env_setup = "\n".join([f'export {k}="{v}"' for k, v in env_vars.items()])
+        env_setup = "\n".join([f"export {k}={shlex.quote(v)}" for k, v in env_vars.items()])
 
         cmd = f'''
 {env_setup}
@@ -328,7 +334,7 @@ cd /root/SkyRL
 source .venv/bin/activate
 
 # Run training
-bash -c '{training_script}'
+bash -c {shlex.quote(training_script)}
 '''
 
         try:
@@ -336,8 +342,7 @@ bash -c '{training_script}'
                 instance.ssh_host,
                 port=instance.ssh_port,
                 username="root",
-                known_hosts=None,
-                server_host_key_algs=[],
+                client_keys=[self.ssh_key_path],
             ) as conn:
 
                 # LIMITATION: Early-Training Snapshot — increase horizon only with GPU budget.
@@ -360,16 +365,21 @@ bash -c '{training_script}'
     async def cleanup_instance(self, instance: VastInstance):
         """Stop and destroy an instance."""
         print(f"  Cleaning up instance {instance.id}...")
-        self.run_command(["destroy", "instance", str(instance.id)], timeout=60)
+        result = self.run_command(["destroy", "instance", str(instance.id), "--raw"], timeout=60)
+        if result.returncode or json.loads(result.stdout).get("success") is not True:
+            raise RuntimeError(f"Cleanup not confirmed for owned rental {instance.id}")
+        with self.ownership_log.open("a") as receipt:
+            receipt.write(json.dumps({"instance_id": instance.id, "status": "destroyed"}) + "\n")
 
     async def run(
         self,
         model_name: str,
         framework: str = "skyrl",
         algorithm: str = "grpo",
-        epochs: int = 20,
+        epochs: int | None = None,
         num_instances: int = 1,
         training_command: Optional[str] = None,
+        retain_instances: bool = False,
     ):
         """Main execution flow.
 
@@ -378,6 +388,10 @@ bash -c '{training_script}'
         explicit ``training_command`` overrides the generated unified-dispatch
         command.
         """
+        if epochs is not None:
+            raise ValueError("epochs is unsupported by unified dispatch; specify it in an explicit training command")
+        if num_instances < 1:
+            raise ValueError("num_instances must be positive")
         print(f"\n{'='*60}")
         print(f"  vast.ai Launcher (framework={framework})")
         print(f"  Model: {model_name}")
@@ -400,13 +414,13 @@ bash -c '{training_script}'
 
             if not available:
                 print("ERROR: No instances available")
-                return
+                raise RuntimeError("No instances available")
 
             # 2. Launch instances
             for i, inst_info in enumerate(available[:num_instances]):
                 instance = await self.launch_instance(inst_info["id"])
-                if instance:
-                    self.instances.append(instance)
+                if instance is None:
+                    raise RuntimeError("Instance launch failed")
 
             # 3. Wait for instances to be ready
             ready_instances = []
@@ -416,14 +430,14 @@ bash -c '{training_script}'
 
             if not ready_instances:
                 print("ERROR: No instances became ready")
-                return
+                raise RuntimeError("No instances ready")
 
             # 4. Setup the chosen framework on each instance
             setup_script = self.generate_setup_script(model_name, framework, algorithm)
 
             for instance in ready_instances:
                 if not await self.setup_instance(instance, setup_script):
-                    print(f"WARNING: Setup failed for instance {instance.id}")
+                    raise RuntimeError(f"Setup failed for instance {instance.id}")
 
             # 5. Run training (unified dispatch for the chosen framework on each box)
             tasks = []
@@ -439,7 +453,9 @@ bash -c '{training_script}'
                 }
                 tasks.append(self.run_training(inst, training_command, env_vars))
 
-            await asyncio.gather(*tasks)
+            outcomes = await asyncio.gather(*tasks, return_exceptions=True)
+            if len(outcomes) != num_instances or any(outcome is not True for outcome in outcomes):
+                raise RuntimeError(f"Training campaign failed: {outcomes!r}")
 
             print("\n" + "=" * 60)
             print("  All tasks completed!")
@@ -447,9 +463,11 @@ bash -c '{training_script}'
 
         finally:
             # Cleanup
-            if input("Destroy instances? [y/N] ").lower() == "y":
-                for instance in self.instances:
-                    await self.cleanup_instance(instance)
+            if not retain_instances:
+                outcomes = await asyncio.gather(*(self.cleanup_instance(i) for i in self.instances), return_exceptions=True)
+                failures = [str(o) for o in outcomes if isinstance(o, BaseException)]
+                if failures:
+                    raise RuntimeError("Rental cleanup requires attention: " + "; ".join(failures))
 
 
 def main():
@@ -463,7 +481,7 @@ def main():
     parser.add_argument("--algorithm", type=str, default="grpo",
                         choices=["grpo", "ppo", "reinforce"],
                         help="RL algorithm")
-    parser.add_argument("--epochs", type=int, default=20,
+    parser.add_argument("--epochs", type=int, default=None,
                         help="Number of training epochs")
     parser.add_argument("--instance-type", type=str, default="a100-80gb",
                         help="vast.ai instance type")
@@ -476,9 +494,13 @@ def main():
     parser.add_argument("--api-key", type=str, default=None,
                         help="vast.ai API key (or set VAST_API_KEY)")
 
+    parser.add_argument("--retain-instances", action="store_true")
+    parser.add_argument("--ssh-key-path")
     args = parser.parse_args()
+    if args.tensor_parallel_size != 1:
+        parser.error("tensor parallelism is not supported by this dispatcher")
 
-    launcher = VastAILauncher(api_key=args.api_key, instance_type=args.instance_type)
+    launcher = VastAILauncher(api_key=args.api_key, instance_type=args.instance_type, ssh_key_path=args.ssh_key_path)
 
     asyncio.run(launcher.run(
         model_name=args.model,
@@ -487,6 +509,7 @@ def main():
         epochs=args.epochs,
         num_instances=args.num_instances,
         training_command=args.training_command,
+        retain_instances=args.retain_instances,
     ))
 
 

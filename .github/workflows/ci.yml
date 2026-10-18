@@ -25,21 +25,24 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # Archived publication checks require the pinned historical Git objects.
+          fetch-depth: 0
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Check public research release offline
+      - name: Check archived publication and current source contracts offline
         run: make public-check PYTHON=python
 
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
       - name: Install ruff
@@ -51,45 +54,44 @@ jobs:
 
   quality:
     # Type check, coverage gate (fail_under in .coveragerc) and lock freshness.
-    # Separate from test-core because coverage must see the whole suite, not a shard.
+    # Separate from test-core because coverage must see every Python test, not a shard.
+    # Native LaTeX integration runs in docs-build after its bundle is hydrated.
+    needs: docs-build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # Number-audit claims verify historical tagged commits.
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
       - name: Install dev dependencies
         run: |
           python -m pip install --upgrade pip
           pip install uv==0.10.11
-          timeout 15m uv sync --locked --extra dev --python python
+          # cleanrl currently adds only the locked TensorBoard dependency.
+          # Exercise real native event-file parsing instead of skipping it.
+          timeout 15m uv sync --locked --extra dev --extra cleanrl --python python
       - name: Type check (mypy)
         run: timeout 5m make typecheck
       - name: uv.lock and requirements-lock.txt are fresh
         run: timeout 5m make lock-check
-      - name: Install checksum-pinned Tectonic
+      - name: Install local secret gate scanner
         env:
-          TECTONIC_URL: https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-x86_64-unknown-linux-musl.tar.gz
-          TECTONIC_SHA256: 8533d07f9ccbd7a65824b9e0459041bca34af1eb33daba48f59215593753a3b7
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
         run: |
-          curl --fail --location --retry 3 "$TECTONIC_URL" -o "$RUNNER_TEMP/tectonic.tar.gz"
-          echo "$TECTONIC_SHA256  $RUNNER_TEMP/tectonic.tar.gz" | sha256sum -c -
-          mkdir -p "$RUNNER_TEMP/tex-bin"
-          tar -xzf "$RUNNER_TEMP/tectonic.tar.gz" -C "$RUNNER_TEMP/tex-bin" tectonic
-          echo "$RUNNER_TEMP/tex-bin" >> "$GITHUB_PATH"
-      - name: Compile papers to a scratch outdir
-        working-directory: platform_tinker/reports/final
-        run: |
-          mkdir -p "$RUNNER_TEMP/latex-audit"
-          timeout 10m tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" grpo_agentic_llm_paper.tex
-          timeout 10m tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" grpo_agentic_llm_paper_anonymous.tex
-          timeout 10m tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" supplementary_appendix.tex
+          set -euo pipefail
+          curl --fail --location --retry 3 https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          echo "$GITLEAKS_SHA256  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/gitleaks-bin"
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
+          sudo install -m 755 "$RUNNER_TEMP/gitleaks-bin/gitleaks" /usr/local/bin/gitleaks
       - name: Coverage gate
+        env:
+          PYTEST_ADDOPTS: '-m "not latex"'
         run: timeout 20m make coverage
 
   secret-scan:
@@ -98,17 +100,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
       - name: gitleaks
         env:
+          # Official v8.30.1 release checksums.txt, linux_x64 asset.
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
           EVENT_NAME: ${{ github.event_name }}
           PR_BASE: ${{ github.event.pull_request.base.sha }}
           PUSH_BEFORE: ${{ github.event.before }}
           HEAD_SHA: ${{ github.sha }}
         run: |
-          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz | tar -xz gitleaks
+          set -euo pipefail
+          curl --fail --location --retry 3 https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          echo "$GITLEAKS_SHA256  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/gitleaks-bin"
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
           if [ "$EVENT_NAME" = "pull_request" ]; then
             RANGE="$PR_BASE..$HEAD_SHA"
           elif git cat-file -e "$PUSH_BEFORE" 2>/dev/null; then
@@ -116,7 +124,7 @@ jobs:
           else
             RANGE="-1 $HEAD_SHA"
           fi
-          ./gitleaks git --config .gitleaks.toml --redact --no-banner --log-opts="$RANGE" .
+          "$RUNNER_TEMP/gitleaks-bin/gitleaks" git --config .gitleaks.toml --redact --no-banner --log-opts="$RANGE" .
 
   test-core:
     runs-on: ubuntu-latest
@@ -127,12 +135,12 @@ jobs:
         python-version: ["3.11", "3.12"]
         shard: [1, 2]
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # Number-audit claims verify historical tagged commits.
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install core dependencies
@@ -140,6 +148,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install uv==0.10.11
           timeout 15m uv sync --locked --extra dev --python python
+      - name: Install local secret gate scanner
+        env:
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          echo "$GITLEAKS_SHA256  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/gitleaks-bin"
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
+          sudo install -m 755 "$RUNNER_TEMP/gitleaks-bin/gitleaks" /usr/local/bin/gitleaks
       - name: Run sharded unit tests
         run: |
           # NOTE: pytest-xdist is not a dependency (pyproject/requirements pin
@@ -166,9 +184,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
       - name: Install audit test dependencies
@@ -200,9 +218,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
       - name: Build and verify wheel from locked metadata
@@ -214,45 +232,28 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install numpy torch gymnasium
+          pip install numpy torch gymnasium pytest
           # sb3_ppo_math.py imports stable_baselines3 at module scope,
           # so it must be available even for the env-only smoke test.
           pip install "stable-baselines3>=2.1.0"
           pip install -e "."
       - name: Test ArithmeticEnv (SB3 version)
         run: |
-          timeout 10m python -c "
-          import sys, os
-          sys.path.insert(0, '.')
-          # Execute the module's top section (up to the first def main)
-          # providing a real __file__ so the module's own sys.path.insert
-          # logic works when pulled in via exec().
-          src_path = os.path.abspath('platform_hybrid/experiments/implementations/sb3_ppo_math.py')
-          src = open(src_path).read().split('def main')[0]
-          ns = {'__file__': src_path, '__name__': '__main__'}
-          exec(compile(src, src_path, 'exec'), ns)
-          ArithmeticEnv = ns['ArithmeticEnv']
-          env = ArithmeticEnv(max_num=99)
-          obs, _ = env.reset(seed=42)
-          assert obs.shape == (2,), f'Expected shape (2,), got {obs.shape}'
-          action = int(obs[0] + obs[1])
-          _, reward, done, _, info = env.step(action)
-          print(f'Env test passed: obs={obs}, reward={reward}, correct={info[\"correct\"]}')
-          "
+          python -m pytest tests/test_arithmetic_env_contract.py -q
 
   docs-check:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Check required documentation
         run: make docs-check
       - name: Check experiment implementations exist
@@ -268,25 +269,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
-      - name: Install signature verifier
-        run: pip install cryptography==49.0.0
+      - name: Install provenance verifier dependencies
+        run: pip install cryptography==49.0.0 jsonschema==4.26.0
       - name: Verify provenance records
         run: |
-          for f in platform_hybrid/registry/provenance/*.provenance.json; do
-            if [ -f "$f" ]; then
-              echo "Verifying $f..."
-              python platform_hybrid/registry/provenance/minreport.py verify "$f" --strict
-            fi
-          done
-          for sig in platform_hybrid/registry/provenance/*.provenance.json.sig; do
-            if [ -f "$sig" ]; then
-              record="${sig%.sig}"
-              echo "Verifying detached signature for $record..."
-              python platform_hybrid/registry/provenance/sign.py verify "$record"
-            fi
-          done
+          python platform_hybrid/registry/provenance/verify_inventory.py

@@ -17,9 +17,8 @@
 policy-gradient \emph{algorithms} for language models, RL for \emph{reasoning}
 (including process reward models), RL for \emph{tool use} and agentic behaviour,
 empirical \emph{scaling laws} for RL post-training, and the \emph{frameworks}
-and \emph{benchmarks} that instantiate these algorithms. We situate our
-contribution against more than fifty recent works; entries marked with
-\textsuperscript{\dag} appeared at NeurIPS, ICML, or ICLR in the 2025--2026 cycle.
+and \emph{benchmarks} that instantiate these algorithms. The closest diagnostic and methodological precedents are distinguished below
+from the broader literature context.
 
 % -----------------------------------------------------------------------------
 \subsection{RL Algorithms for Large Language Models}
@@ -37,13 +36,12 @@ Optimization~\cite{rafailov2024direct} reframed preference learning as
 contrastive classification and spawned a large family of RL-free alternatives,
 including IPO~\cite{azar2024ipo}, KTO~\cite{ethayarajh2024kto},
 SimPO~\cite{meng2024simpo}, ORPO~\cite{hong2024orpo}, and
-SLiC~\cite{zhao2023slic}, all of which we consider as no-rollout baselines in
-our cross-library protocol.
+SLiC~\cite{zhao2023slic}, which are possible no-rollout baselines for future work, not evaluated
+comparators in this audit.
 
 The current wave is defined by \emph{group-relative} policy gradient methods.
 GRPO was introduced with DeepSeekMath~\cite{shao2024deepseekmath} and
-popularised by DeepSeek-R1~\cite{guo2025deepseekr1, guo2025deepseekr1nature}, the
-first reasoning RL method published in \emph{Nature}, which showed that
+popularised by DeepSeek-R1~\cite{guo2025deepseekr1, guo2025deepseekr1nature}, whose R1-Zero study showed that
 pure outcome-reward RL can elicit chain-of-thought behaviour from a base
 model without supervised cold-start data. A second wave of refinements
 dissects the biases of vanilla GRPO. Dr.~GRPO~\cite{tong2025drgrpo} removes a
@@ -53,15 +51,15 @@ advantage. MC-GRPO (median-centered advantage)~\cite{mcgrpo2025} replaces the
 group-mean baseline in the advantage with the group median to stabilise
 group-relative normalisation under small rollout counts. G$^{2}$RPO~\cite{hu2026openvlthinker} forces per-prompt
 advantages to match $\mathcal{N}(0,1)$ to fix reward-topology variance in
-multimodal settings. Wu et al.~\cite{wu2025grpodpo} prove that GRPO is
-``secretly DPO'' --- the group-level advantage is an implicit contrastive
-objective --- and show that 2-GRPO retains $98.1\%$ of the performance of
-16-GRPO at $12.5\%$ of the rollout budget.
+multimodal settings. Wu et al.~\cite{wu2025grpodpo} relate GRPO and DPO through contrastive-gradient
+representations, with differences in token/group weighting and regularization.
+Group size can change the expected update, not only Monte Carlo variance.
+Their reported efficiency experiments do not establish a saving in our corpus.
 
 Recent 2026 work pre-empts this diagnostic. The Advantage Collapse Rate
 (ACR) of AVSPO~\cite{he2026advantage} measures the same homogeneous-group
-advantage collapse that we call ZVF (the two are equivalent up to
-aggregation granularity) and reports that it predicts stagnation and final
+advantage collapse that we call ZVF (ACR thresholds reward SD while ZVF uses exact equality; matching thresholds
+and prompt weights makes the basic measured object coincide) and reports that it predicts stagnation and final
 performance; Gradient Starvation~\cite{nie2026gradstarvation} proves that the true
 degeneracy rate exceeds the i.i.d.\ Bernoulli prediction by Jensen's
 inequality; DARA~\cite{zheng2026dara} reweights rewards by their active-group
@@ -77,6 +75,22 @@ runner. Accordingly, this paper claims neither priority nor an intervention
 effect: it confines itself to a submitted-runner accounting identity and an
 evidence audit.
 
+\begin{table}[htbp]
+\centering\small
+\caption{Closest diagnostic comparison; external validation does not transfer
+without a matched evaluation.}
+\label{tab:diagnostic-prior}
+\begin{tabular}{p{.17\linewidth}p{.34\linewidth}p{.38\linewidth}}
+\toprule
+Quantity & Definition and assumptions & Evidence boundary \\
+\midrule
+ZVF (this audit) & Exact equality within each sampled group; equal prompt weights & Two descriptive all-wrong cells; no validated operator policy \\
+ACR~\citep{he2026advantage} & Fraction with group reward SD below a specified tolerance & External diagnosis/mitigation experiments; no priority claim here \\
+$h_G(p)$ & Homogeneity probability for conditionally iid binary draws at fixed prompt success $p$ & Mathematical reference, not observed ZVF or an aggregate-reward predictor \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 A parallel thread focuses on \emph{production-scale} refinements. GSPO, from
 the Qwen team~\cite{qwen2025gspo}, redefines the importance ratio at the
 sequence level (rather than token level) and was credited with stabilising the
@@ -84,12 +98,10 @@ Qwen3 series, especially its Mixture-of-Experts variants. DAPO, from
 ByteDance~\cite{yu2025dapo}, contributes asymmetric Clip-Higher, dynamic
 sampling, token-level loss normalisation, and overlong filtering, reaching
 $50$ points on AIME~2024 with a 32B model. Kimi-K1.5~\cite{team2025kimi15, team2025kimik2} and DeepSeek-V3~\cite{deepseek2024v3} both report their own
-GRPO variants and online mirror-descent-style updates. Orthogonal
-production variants include
-VAPO~\cite{bytedance2025vapo} and
-Dr.~SAC~\cite{ahmadian2024backtobasics}; the last argues that classical
-REINFORCE with a value baseline, when carefully implemented, matches GRPO on
-several RLHF tasks.
+GRPO variants and online mirror-descent-style updates. Other policy-gradient work includes VAPO~\cite{bytedance2025vapo}.
+Ahmadian et al.~\cite{ahmadian2024backtobasics} revisit REINFORCE-style
+optimization, including a leave-one-out baseline, against PPO, DPO, and RAFT;
+that contribution is not ``Dr.~SAC'' or evidence of matching GRPO.
 
 A third thread attacks the \emph{zero-variance failure mode} (ZVF) directly.
 GRESO~\cite{zhang2026greso} pre-screens prompts
@@ -105,8 +117,8 @@ SSPO~\cite{yang2025sspo} operates at sentence granularity to balance the
 stability of GSPO against the expressiveness of token-level GRPO, improving
 by $3.56$ points on math benchmarks. Taken together, these results explain at
 a theoretical level why implementation details at the granularity of the
-importance ratio have such large empirical effects --- an explanation our
-benchmark complements with a $73\,\mathrm{pp}$ cross-library measurement.
+importance ratio have such large empirical effects --- a motivation for auditing objective scope and cohort identity; this audit
+does not identify implementation defaults as the cause of a measured gap.
 
 % -----------------------------------------------------------------------------
 \subsection{Reasoning RL and Process Reward Models}
@@ -123,11 +135,12 @@ Monte-Carlo tree search to supervise process rewards without human-in-the-loop,
 while ReasonEval~\cite{xia2024reasoneval} introduces reasoning-specific reward
 models. Implicit PRM~\cite{yuan2024implicitprm} learns PRMs implicitly from
 outcome labels, and VersaPRM~\cite{yuan2025versaprm} extends process rewards
-to multi-domain tasks. These supervision signals are the backbone of recent
-reasoning models, including OpenAI's o1/o3 family~\cite{openai2024o1, openai2025o3}, DeepSeek-R1~\cite{guo2025deepseekr1, guo2025deepseekr1nature},
-Qwen2.5-Math~\cite{yang2024qwen25math}, Qwen3~\cite{qwen2025qwen3},
-Gemini~2.5 Pro's deliberative mode~\cite{google2025gemini25}, and
-Kimi-K2~\cite{team2025kimik2}. Complementary results demonstrate that
+to multi-domain tasks. Process-reward approaches must be distinguished from outcome/format reward
+training. In particular, DeepSeek-R1 discusses process reward models among its
+unsuccessful attempts~\cite{guo2025deepseekr1}. We do not attribute a specific
+reward algorithm to proprietary reasoning systems without disclosed methods.
+
+Complementary results demonstrate that
 self-consistency~\cite{wang2023selfconsistency}, tree-of-thought
 search~\cite{yao2024tot}, and critic-style post-hoc
 verifiers~\cite{mcaleese2024criticgpt} all benefit from or substitute for
@@ -149,10 +162,8 @@ own reasoning chains. GRPO-Lead~\cite{lu2025grpolead}, LCPO~\cite{lu2025lcpo},
 and LIMR~\cite{li2025limr} each tune reasoning depth with length-aware
 rewards. Search-R1~\cite{jin2025searchr1} trains reasoning agents to
 interleave search queries with chain-of-thought. TTRL~\cite{pu2025ttrl}
-performs test-time RL against self-generated verifiers. We use the
-Dr.~GRPO~\cite{tong2025drgrpo} and GSPO~\cite{qwen2025gspo} formulations as
-reference implementations when measuring reasoning accuracy across the
-0.6B--235B frontier.
+performs test-time RL against self-generated verifiers. Dr.~GRPO~\cite{tong2025drgrpo} and GSPO~\cite{qwen2025gspo} are external
+formulations; this audit does not evaluate them as reference implementations.
 
 % -----------------------------------------------------------------------------
 \subsection{Tool-Use and Agentic RL}
@@ -164,9 +175,8 @@ tool-call insertion for a small set of APIs; Gorilla~\cite{patil2023gorilla}
 retrieved from a large API catalogue; and ToolLLM~\cite{qin2024toolllm} scaled
 training to thousands of real-world REST APIs. ReAct~\cite{yao2023react}
 established the interleaved reason--act--observe pattern that most subsequent
-agents inherit. RL specifically for tool use was pioneered by
-ToolACE~\cite{liu2024toolace}, which couples a tool-calling reward with a
-self-evolving synthesis pipeline; ToolRL~\cite{qian2025toolrl} applies GRPO
+agents inherit. ToolACE~\cite{liu2024toolace} generates function-calling data and evaluates
+supervised fine-tuning, rather than establishing a tool-use RL result; ToolRL~\cite{qian2025toolrl} applies GRPO
 with verifiable tool-call rewards; ToRL~\cite{li2025torl} optimises the joint
 reasoning--action trajectory. Further advances include
 APIGen~\cite{lin2024apigen} (high-quality synthetic API data),
@@ -182,8 +192,8 @@ rewards; SWE-Gym~\cite{pan2025swegym} provides an RL training environment for
 real GitHub issues; ARTIST~\cite{singh2025artist} trains tool-integrated
 reasoning agents with GRPO; RAGEN~\cite{wang2025ragen} studies multi-turn
 RL with tool access; OpenAI's Deep Research~\cite{openai2025deepresearch}
-and Perplexity Deep Research~\cite{perplexity2025deepresearch} both report
-GRPO-style training over web-browsing traces. Our benchmark currently focuses
+and Perplexity Deep Research~\cite{perplexity2025deepresearch} motivate
+web-agent evaluation; no specific GRPO implementation is attributed here. Our benchmark currently focuses
 on single-turn verifiable mathematical reasoning; we adopt Tinker's
 \texttt{message\_with\_tool} interface as the neutral substrate for future
 tool-use extensions and explicitly cite these works as concurrent settings in
@@ -211,10 +221,8 @@ MiniCPM~\cite{hu2024minicpm} and the SLM survey of
 Subramanian et al.~\cite{subramanian2025slm} characterise scaling in the
 sub-8B regime that forms the bulk of our frontier. Schaeffer et
 al.~\cite{schaeffer2024emergent} caution that apparent emergent abilities may
-be metric artefacts, a concern that persists into RL. Our measurements
-extend these works by providing cross-family scaling data for RL from
-0.6B to 235B across five families and four frameworks, supplying empirical
-ground truth against which future RL scaling laws can be calibrated.
+be metric artefacts, a concern that persists into RL. Our short heterogeneous traces are descriptive context, not scaling-law
+ground truth or independent scale replications.
 
 % -----------------------------------------------------------------------------
 \subsection{Frameworks, Benchmarks, and Reproducibility}
@@ -228,14 +236,14 @@ trlX~\cite{havrilla2023trlx}, Axolotl~\cite{axolotl2024}, and
 \tinker{}~\cite{thinkingmachines2024tinker}. Each framework makes different
 default choices about advantage normalisation, KL estimators, tokenisation
 loss masking, rollout batching, and importance-sampling granularity; those
-differences are the principal source of the cross-library gap we quantify.
+differences are possible confounders, not identified causes in this audit.
 On the inference side, vLLM~\cite{kwon2023vllm} and
 SGLang~\cite{zheng2024sglang} provide the rollout backends on which all
 modern frameworks depend; FlashAttention~\cite{dao2022flashattention} and
 LoRA~\cite{hu2022lora} are load-bearing kernels.
 
 In the RL \emph{benchmarking} tradition, Henderson et
-al.~\cite{henderson2018deep} first exposed the fragility of deep-RL results
+al.~\cite{henderson2018deep} documented the fragility of deep-RL results
 to implementation choices and seeds;
 \texttt{rliable}~\cite{agarwal2021deep} introduced interquartile-mean
 reporting and performance profiles; BenchMARL~\cite{bettini2023benchmarl}
@@ -249,15 +257,15 @@ al.~\cite{pineau2020improving} formalised NeurIPS reproducibility criteria
 and ACM's Artifact Review and Badging~\cite{acm2020badges} established
 community standards for available, evaluated, and reproduced artifacts.
 Reproducibility studies in adjacent fields include
-\cite{cavenaghi2023systematic, lynnerup2019survey, yamerenko2025generating, paparella2023reproducibility, huang2022state, lopezibañez2021reproducibility, leeser2026artifact, sedghpour2024artifact, colas2019hitchhiker}, alongside
+\cite{cavenaghi2023systematic, lynnerup2019survey, yamerenko2025generating, paparella2023reproducibility, huang2022state, lopezibanez2021reproducibility, leeser2026artifact, sedghpour2024artifact, colas2019hitchhiker}, alongside
 Hoffman et al.'s Acme~\cite{hoffman2022acme}. Classical evaluations rest on
 GSM8K~\cite{cobbe2021training}, MATH~\cite{hendrycks2021math},
 AIME~\cite{maa2024aime}, MMLU~\cite{hendrycks2021mmlu},
 HumanEval~\cite{chen2021codex}, MBPP~\cite{austin2021mbpp}, and
-BBH~\cite{suzgun2023bbh}. \ours{} ports these statistical traditions to the
-LLM RL post-training regime, contributing the first cross-library
-measurement protocol for GRPO-family algorithms, a ZVF diagnostic that
-scales from 0.6B to 235B parameters, and an empirical grounding for the
-scaling laws, frameworks, and algorithmic refinements surveyed above.
+BBH~\cite{suzgun2023bbh}. Implementation Matters~\cite{engstrom2020implementation}
+directly examines how implementation choices affect apparent PPO/TRPO gains.
+Against this prior work, our narrower contribution is an objective-scoped
+identity, an evidence audit, and a reporting contract. We claim neither a first
+cross-library protocol nor novelty for the ZVF definition.
 
 % =============================================================================

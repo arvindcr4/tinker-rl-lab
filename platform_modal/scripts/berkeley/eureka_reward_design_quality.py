@@ -130,7 +130,7 @@ def per_anchor_fits():
 def aic_from_rss(rss, n, k):
     """AICc from residual sum of squares, sample size, number of parameters."""
     if rss <= 0 or n - k - 1 <= 0:
-        return float("nan")
+        return float("inf")
     return n * math.log(rss / n) + 2 * k
 
 
@@ -178,43 +178,21 @@ def _ranks(xs):
 
 
 def _fit_ols(xs, ys, has_intercept=True):
-    """Returns slope, intercept, residuals, RSS, n.  Closed-form OLS.
-
-    Handles the degenerate-intercept case (all xs identical) by returning
-    the intercept-only fit (mean of y, slope=0).  Handles tiny n (n=1) by
-    returning the trivial fit.
-    """
-    n = len(xs)
-    if n < 1:
-        return None
-    if has_intercept:
-        if n < 2:
-            return {"n": n, "intercept": ys[0], "slope": 0.0, "rss": 0.0, "k": 2}
-        mx = sum(xs) / n
-        my = sum(ys) / n
-        sxx = sum((x - mx) ** 2 for x in xs)
-        sxy = sum((xs[i] - mx) * (ys[i] - my) for i in range(n))
-        if sxx == 0:
-            # intercept-only fit
-            return {"n": n, "intercept": my, "slope": 0.0, "rss": sum((y - my) ** 2 for y in ys), "k": 2}
-        slope = sxy / sxx
-        intercept = my - slope * mx
-        rss = sum((ys[i] - (intercept + slope * xs[i])) ** 2 for i in range(n))
-        return {
-            "n": n,
-            "intercept": intercept,
-            "slope": slope,
-            "rss": rss,
-            "k": 2,
-        }
-    # no intercept
-    sxx = sum(x * x for x in xs)
-    if sxx == 0:
-        return None
-    sxy = sum(xs[i] * ys[i] for i in range(n))
-    slope = sxy / sxx
-    rss = sum((ys[i] - slope * xs[i]) ** 2 for i in range(n))
-    return {"n": n, "intercept": 0.0, "slope": slope, "rss": rss, "k": 1}
+    """Separate predictor coefficients; k includes Gaussian residual variance."""
+    import numpy as np
+    x = np.asarray(xs, dtype=float)
+    y = np.asarray(ys, dtype=float)
+    if x.ndim == 1:
+        x = x[:, None]
+    if x.ndim != 2 or y.shape != (len(x),) or not len(y) or not np.isfinite(x).all() or not np.isfinite(y).all():
+        raise ValueError("OLS requires finite aligned observations")
+    X = np.column_stack([np.ones(len(y)), x]) if has_intercept else x
+    beta, _, rank, _ = np.linalg.lstsq(X, y, rcond=None)
+    pred = X @ beta
+    slopes = beta[1:] if has_intercept else beta
+    return {"n": len(y), "intercept": float(beta[0]) if has_intercept else 0.0,
+            "slope": float(slopes[0]) if len(slopes) == 1 else slopes,
+            "predictions": pred, "rss": float(sum((y-pred)**2)), "k": int(rank)+1}
 
 
 def aic_compare_rqs():
@@ -277,10 +255,10 @@ def aic_compare_rqs():
     xs2 = [a["capable"] for a in anchors]
     m2 = _fit_ols(xs2, y)
     # M3
-    xs3 = [a["logN"] + a["RQS"] for a in anchors]
+    xs3 = [[a["logN"], a["RQS"]] for a in anchors]
     m3 = _fit_ols(xs3, y)
     # M4 alt: capability + RQS only (parsimonious)
-    xs4 = [a["capable"] + a["RQS"] for a in anchors]
+    xs4 = [[a["capable"], a["RQS"]] for a in anchors]
     m4 = _fit_ols(xs4, y)
     # M5 alt: capability alone vs M3 capability*RQS
     # (skipped -- n too small for interaction)
@@ -305,6 +283,7 @@ def aic_compare_rqs():
         r[5] = f"{float(r[4]) - best:.4f}"
     # add n_anchors in column 1 redundantly for readability (it's the same n)
     summary["n_anchors"] = n
+    summary["limitation"] = "Exploratory only: five anchors; AICc is not estimable when n <= k + 1 (reported as infinity). k includes noise variance."
     return rows, summary, anchors
 
 
@@ -354,7 +333,7 @@ def residualization():
          "resid_capable", "resid_capable_RQS"]
     ]
     xs_cap = [a["capable"] for a in full]
-    xs_cap_rqs = [a["capable"] + a["RQS"] for a in full]
+    xs_cap_rqs = [[a["capable"], a["RQS"]] for a in full]
     ys = [a["r_mean"] for a in full]
 
     f_cap = _fit_ols(xs_cap, ys)
@@ -363,7 +342,7 @@ def residualization():
     # residuals
     for i, a in enumerate(full):
         pred_cap = f_cap["intercept"] + f_cap["slope"] * xs_cap[i]
-        pred_cap_rqs = f_cap_rqs["intercept"] + f_cap_rqs["slope"] * xs_cap_rqs[i]
+        pred_cap_rqs = f_cap_rqs["predictions"][i]
         rows_out.append(
             [
                 a["model"],
@@ -381,8 +360,7 @@ def residualization():
     # Compute correlations between the two residual sequences
     resid_cap = [a["r_mean"] - (f_cap["intercept"] + f_cap["slope"] * xs_cap[i])
                  for i, a in enumerate(full)]
-    resid_cap_rqs = [a["r_mean"] - (f_cap_rqs["intercept"] + f_cap_rqs["slope"]
-                                     * xs_cap_rqs[i]) for i, a in enumerate(full)]
+    resid_cap_rqs = [a["r_mean"] - f_cap_rqs["predictions"][i] for i, a in enumerate(full)]
     rqs = [a["RQS"] for a in full]
     logN = [a["logN"] for a in full]
     r_rqs_p, p_rqs = pearson(rqs, resid_cap)

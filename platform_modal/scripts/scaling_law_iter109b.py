@@ -42,10 +42,10 @@ import math
 from pathlib import Path
 
 import numpy as np
-from _analysis_common import write_rows_tsv as _write_tsv, ols
+from _analysis_common import write_rows_tsv as _write_tsv, ols as _ols
 
-ROOT = Path(__file__).resolve().parent.parent
-RES = ROOT / "experiments" / "results"
+ROOT = Path(__file__).resolve().parents[2] / "platform_hybrid"
+RES = ROOT / "experiments" / "results" / "review26_v2"
 
 SEED = 1092026
 N_PERM = 10000
@@ -54,11 +54,33 @@ N_BOOT = 5000
 
 # Re-import the iter109 anchors + fits from the meta.json (deterministic;
 # we don't re-run the slow curve_fit bootstrap here).
-META = json.loads((RES / "scaling_law_iter109_meta.json").read_text())
+
+
+
+def ols(x, y):
+    x, y = np.asarray(x, float), np.asarray(y, float)
+    if len(x) < 3 or not np.isfinite(x).all() or not np.isfinite(y).all() or np.ptp(x) == 0:
+        return (float("nan"),) * 3
+    return _ols(x, y)
+
+
+def permutation_pvalue(slopes, observed, alternative="two-sided"):
+    """Undefined fits never become significant through NaN comparisons."""
+    slopes = np.asarray(slopes, float)
+    if not np.isfinite(observed) or not len(slopes) or not np.isfinite(slopes).all():
+        return float("nan")
+    if alternative == "positive":
+        extreme = slopes >= observed
+    elif alternative == "negative":
+        extreme = slopes <= observed
+    else:
+        extreme = np.abs(slopes) >= abs(observed)
+    return float((np.count_nonzero(extreme) + 1) / (len(slopes) + 1))
 
 
 def main() -> None:
-    anchors = META["anchors"]
+    meta_input = json.loads((RES / "scaling_law_iter109_meta.json").read_text())
+    anchors = meta_input["anchors"]
     name2info = {a["name"]: a for a in anchors}
     # Reconstruct the 12-anchor (log10_N, log10_lambda) vectors.
     names = []
@@ -68,7 +90,7 @@ def main() -> None:
     fam = []
     rmse = []
     for a in anchors:
-        if a["lambda_3p"] > 0 and not math.isnan(a["lambda_3p"]):
+        if a.get("valid", False) and a["lambda_3p"] > 0 and np.isfinite([a["lambda_3p"], a["R_inf"], a["rmse"]]).all():
             names.append(a["name"])
             log_n.append(math.log10(MODELS_PARAMS_B[a["name"]]))
             log_lam.append(math.log10(a["lambda_3p"]))
@@ -88,10 +110,10 @@ def main() -> None:
         _, b_perm, _ = ols(log_n[idx], log_lam)
         perm_slopes[i] = b_perm
     # Two-sided p-value: fraction of |perm_slope| >= |observed|
-    p_two = float(np.mean(np.abs(perm_slopes) >= abs(b_obs)))
+    p_two = permutation_pvalue(perm_slopes, b_obs)
     # One-sided p-values
-    p_pos = float(np.mean(perm_slopes >= b_obs))
-    p_neg = float(np.mean(perm_slopes <= b_obs))
+    p_pos = permutation_pvalue(perm_slopes, b_obs, "positive")
+    p_neg = permutation_pvalue(perm_slopes, b_obs, "negative")
     # Permutation null distribution summary
     null_mean = float(perm_slopes.mean())
     null_sd = float(perm_slopes.std())
@@ -104,7 +126,7 @@ def main() -> None:
         idx = rng.permutation(n)
         _, b_perm, _ = ols(log_n[idx], rinf)
         perm_ri_slopes[i] = b_perm
-    p_ri_two = float(np.mean(np.abs(perm_ri_slopes) >= abs(b_ri_obs)))
+    p_ri_two = permutation_pvalue(perm_ri_slopes, b_ri_obs)
     z_ri = (b_ri_obs - perm_ri_slopes.mean()) / perm_ri_slopes.std()
 
     # Save the lambda-vs-N p-value BEFORE the family loop overwrites p_two.
@@ -123,8 +145,8 @@ def main() -> None:
          round(b_ri_obs, 4), round(perm_ri_slopes.mean(), 4),
          round(perm_ri_slopes.std(), 4), round(z_ri, 3),
          round(p_ri_two, 4),
-         round(float(np.mean(perm_ri_slopes >= b_ri_obs)), 4),
-         round(float(np.mean(perm_ri_slopes <= b_ri_obs)), 4),
+         round(permutation_pvalue(perm_ri_slopes, b_ri_obs, "positive"), 4),
+         round(permutation_pvalue(perm_ri_slopes, b_ri_obs, "negative"), 4),
          N_PERM, int(p_ri_two < 0.05)],
     ]
     _write_tsv(RES / "scaling_law_iter109b_permtest.tsv", cols_e, rows_e)
@@ -139,7 +161,7 @@ def main() -> None:
     rng2 = np.random.default_rng(SEED + 1)
     for f in fams_unique:
         mask = fam == f
-        if mask.sum() < 3:
+        if mask.sum() < 3 or np.ptp(log_n[mask]) == 0:
             rows_f.append([f, int(mask.sum()), "nan", "nan", "nan",
                            "nan", "nan", "nan", "nan", "nan",
                            ";".join(np.asarray(names)[mask].tolist())])
@@ -161,7 +183,7 @@ def main() -> None:
             _, bb, _ = ols(ln[idx], ll)
             perm.append(bb)
         perm = np.asarray(perm)
-        p_two = float(np.mean(np.abs(perm) >= abs(b_f)))
+        p_two = permutation_pvalue(perm, b_f)
         rows_f.append([
             f, int(mask.sum()), round(a_f, 4), round(b_f, 4), round(se_f, 4),
             round(bs.mean(), 4), round(float(np.percentile(bs, 2.5)), 4),
@@ -207,14 +229,16 @@ def main() -> None:
         "E_permutation_test": {
             "n_perm": N_PERM,
             "lambda_vs_N": {
+                "status": "available" if np.isfinite(p_lam_save) else "not_evaluable",
                 "observed_slope": round(b_obs, 4),
                 "null_mean": round(null_mean, 4),
                 "null_sd": round(null_sd, 4),
                 "z_score": round(z_score, 3),
-                "p_two_sided": round(p_two, 4),
-                "rejects_H0_at_0.05": bool(p_two < 0.05),
+                "p_two_sided": round(p_lam_save, 4),
+                "rejects_H0_at_0.05": bool(p_lam_save < 0.05),
             },
             "R_inf_vs_N": {
+                "status": "available" if np.isfinite(p_ri_two) else "not_evaluable",
                 "observed_slope": round(b_ri_obs, 4),
                 "p_two_sided": round(p_ri_two, 4),
                 "rejects_H0_at_0.05": bool(p_ri_two < 0.05),
@@ -225,22 +249,11 @@ def main() -> None:
             "n_unidentifiable": n_unident,
             "anchors_unidentifiable": [r[0] for r in rows_g if r[-1] == 1],
         },
-        "frontier_synthesis": ("The permutation test is the most rigorous "
-                               "falsifiability bar: even with 10000 random "
-                               "pairings of model size and learning rate, "
-                               "the OBSERVED slope is not extreme enough to "
-                               "reject the null of zero scaling. Combined "
-                               "with iter109's bootstrap CI including 0, "
-                               "the lambda-vs-N scaling law is rejected at "
-                               "p > 0.05 on all 4 regression specifications "
-                               "(ALL/FILTERED lambda, ALL/FILTERED R_inf). "
-                               "Combined with iter105's failure of R_max*(N) "
-                               "and the new family-stratified analysis "
-                               "showing no within-family scaling either, "
-                               "this closes the scaling-law question for "
-                               "GRPO post-training: model size alone does "
-                               "not predict either the asymptotic ceiling "
-                               "R_inf or the learning rate lambda."),
+        "frontier_synthesis": (
+            "Exploratory permutation results are reported per regression above. "
+            "Non-evaluable regressions support no conclusion; failure to reject "
+            "does not establish absence of scaling."
+        ),
     }
     (RES / "scaling_law_iter109b_meta.json").write_text(json.dumps(meta, indent=2))
     print(f"wrote {RES / 'scaling_law_iter109b_meta.json'}")

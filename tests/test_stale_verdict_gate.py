@@ -18,9 +18,15 @@ def _load_gate():
     return module
 
 
-def test_gate_passes_on_current_tree():
+def test_gate_reports_current_tree_without_whole_file_banner_exemptions():
     gate = _load_gate()
-    assert gate.main() == 0
+    problems = [
+        problem
+        for path in gate.tracked_text_files()
+        if not gate.is_allowlisted(path.relative_to(gate.ROOT).as_posix())
+        for problem in gate.find_unmarked_occurrences(path, path.relative_to(gate.ROOT).as_posix())
+    ]
+    assert gate.main() == (1 if problems else 0)
 
 
 def test_unmarked_occurrence_is_flagged(tmp_path):
@@ -47,9 +53,10 @@ def test_marked_occurrence_passes(tmp_path):
 
 def test_banner_covers_dated_historical_entries(tmp_path):
     gate = _load_gate()
-    lines = ["> Correction banner: DAPO entries below are superseded.", ""]
+    lines = ["<!-- historical-dapo-2026-08-02:start -->", ""]
     lines.extend(f" filler line {index}" for index in range(80))
     lines.append("2026-07-20 entry: aggregate emitted DAPO `DISAPPEARS`.")
+    lines.append("<!-- historical-dapo-2026-08-02:end -->")
     target = tmp_path / "status.md"
     target.write_text("\n".join(lines) + "\n", encoding="utf-8")
     assert gate.find_unmarked_occurrences(target, "status.md") == []
@@ -60,3 +67,27 @@ def test_allowlist_matching():
     assert gate.is_allowlisted("zvf-program/audit/aggregate_audit.py")
     assert gate.is_allowlisted("archive/anything.md")
     assert not gate.is_allowlisted("outputs/new_deck.py")
+
+
+def test_exact_frozen_correction_direction_only(tmp_path):
+    gate = _load_gate()
+    target = tmp_path / "paper.tex"
+    for line in (
+        "because it changes DAPO from DISAPPEARS to INCONCLUSIVE.",
+        r"because it changes DAPO from \texttt{DISAPPEARS} to \texttt{INCONCLUSIVE}.",
+    ):
+        target.write_text(line)
+        assert gate.find_unmarked_occurrences(target, "paper.tex") == []
+    for line in (
+        "because it changes DAPO from INCONCLUSIVE to DISAPPEARS.",
+        "because it changes DAPO from DISAPPEARS to INCONCLUSIVE. DAPO DISAPPEARS today.",
+        "because it changes DAPO from DISAPPEARS to INCONCLUSIVE.\nDAPO DISAPPEARS today.",
+    ):
+        target.write_text(line)
+        assert gate.find_unmarked_occurrences(target, "paper.tex")
+
+
+def test_fixture_allowlist_is_exact():
+    gate = _load_gate()
+    assert gate.is_allowlisted("tests/reviews/test_review09_safe_tools.py")
+    assert not gate.is_allowlisted("tests/reviews/unreviewed_fixture.py")

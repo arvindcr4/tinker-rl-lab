@@ -1,6 +1,8 @@
 # Frontier-model reasoning digest (ChatGPT Pro Extended + Gemini Deep Think)
 
-_Auto-refreshed from a live 30-call cross-examination on the 4 pillars. 2 rounds so far; showing the latest 2. Incorporate relevant points and attribute as (frontier synthesis)._
+**Status: unreviewed historical ideation transcript; not evidence or approved research synthesis.** Claims and truncated equations below require individual verification before reuse. A nonsignificant comparison does not establish equivalence or identify infrastructure causes. A terminal-reward critic can depend on the prefix: V(x, prefix) = E[R | x, prefix]. ZVF residuals do not identify pairwise dependence or temperature mechanisms.
+
+_Auto-refreshed from a live 30-call cross-examination on the 4 pillars. 2 rounds so far; showing the latest 2. Do not incorporate claims without independent verification._
 
 
 ## Round 1 — Pillar 1 (PPO vs GRPO same-stack, p=0.75 no-diff): what deeper claim does 'estimator doesn't matter, stack does' license? Give the sharpest falsifiable version.

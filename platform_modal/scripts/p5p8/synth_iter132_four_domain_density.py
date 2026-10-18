@@ -55,39 +55,10 @@ SEED = 20260705
 N_BOOT = 1500
 
 
-def density_ci(n_fire, n_total, n_boot=N_BOOT, seed=SEED):
-    """Wilson bootstrap CI on a proportion n_fire/n_total."""
-    rng = np.random.default_rng(seed)
-    boots = np.empty(n_boot)
-    p = n_fire / n_total
-    for i in range(n_boot):
-        boots[i] = rng.binomial(n_total, p) / n_total
-    return {
-        "rate": p,
-        "lo": float(np.percentile(boots, 2.5)),
-        "hi": float(np.percentile(boots, 97.5)),
-        "n_fire": n_fire,
-        "n_total": n_total,
-    }
+from review22_contract import density_ci
 
 
-def ratio_ci(num, denom, n_boot=N_BOOT, seed=SEED):
-    """Bootstrap CI on a ratio of two Bernoulli rates."""
-    rng = np.random.default_rng(seed)
-    rn = num["rate"]; rd = denom["rate"]
-    nn = num["n_total"]; nd = denom["n_total"]
-    boots = np.empty(n_boot)
-    for i in range(n_boot):
-        n_i = rng.binomial(nn, rn) / max(1, nn)
-        d_i = rng.binomial(nd, rd) / max(1, nd)
-        boots[i] = n_i / max(1e-9, d_i)
-    point = rn / max(1e-9, rd)
-    return {
-        "ratio": point,
-        "lo": float(np.percentile(boots, 2.5)),
-        "hi": float(np.percentile(boots, 97.5)),
-        "excludes_1.0": point < 0.1 or point > 10.0,
-    }
+from review22_contract import ratio_ci
 
 
 def compute_d4_from_iter131():
@@ -115,7 +86,12 @@ def compute_d4_from_iter131():
     return rows
 
 
+from review22_contract import highest_density
+
+
 def main():
+    from review22_contract import require_independent_unit_contract
+    require_independent_unit_contract()
     print(f"[iter132 SYNTH] loading iter-131 per-prompt table ...")
     cells_pp = compute_d4_from_iter131()
     n_total = len(cells_pp)
@@ -243,8 +219,7 @@ def main():
                 ratios["P7pp_over_P7step"]["excludes_1.0"] is False and
                 ratios["P7pp_over_P5"]["excludes_1.0"] is False
             ),
-            "H2_d4_highest_density": bool(rank[0][0] in ("P7pp", "D4_P7_perprompt_boundary")) or
-                                      bool(densities.get("P7pp", 0) >= densities.get("P5", 0)),
+            "H2_d4_highest_density": highest_density(densities, "D4"),
             "H3_method_rank_inverts_iter127_vs_iter131": bool(rho_h3 < -0.5),
             "H4_prompts_have_nonzero_contrast": bool(p_nonzero > 0.5),
         },

@@ -1,5 +1,7 @@
 # Artifact Description — TinkerRL-Bench
 
+**Revision status:** historical report/checklist; checked boxes do not certify the current tree or every campaign. Source commit and evidence-manifest binding must be supplied for a new release; pending that binding, status is unverified for current release. Preserve historical manifests unchanged. See REPRODUCE.md for current campaign-specific access and seed limitations.
+
 ## A Unified Benchmark for RL Post-Training of Language Models
 
 > **Historical note (July 2026):** this document is the Semester 3 artifact record frozen at the April 19, 2026 submission (commit `9019b5c`). The `v1.0.0-neurips-2026` tag was never pushed, and some linked paths have since moved; see [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) and [`platform_hybrid/sem 3 work/PROVENANCE.md`](platform_hybrid/sem%203%20work/PROVENANCE.md) for current provenance.

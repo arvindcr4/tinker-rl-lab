@@ -31,6 +31,7 @@ class Rollout:
     prompt_ids: tuple[int, ...]
     completion_ids: tuple[int, ...]
     reward: float
+    finish_reason: str | None = None
 
     def __post_init__(self) -> None:
         if not self.prompt_ids:
@@ -52,7 +53,9 @@ class FixedSlots:
     group_class: GroupClass
     charged_generated_tokens: int
     generated_rollouts: int
-    update_applied: bool
+    update_eligible: bool
+    truncated_generated_rollouts: int = 0
+    unknown_finish_rollouts: int = 0
 
     def __post_init__(self) -> None:
         widths = {
@@ -65,7 +68,7 @@ class FixedSlots:
             raise SamplerContractError("fixed output must contain exactly eight aligned slots")
         if self.charged_generated_tokens <= 0 or self.generated_rollouts <= 0:
             raise SamplerContractError("generation accounting must be positive")
-        if self.update_applied and not any(self.active):
+        if self.update_eligible and not any(self.active):
             raise SamplerContractError("an update cannot be applied without active slots")
         for reward, active in zip(self.rewards, self.active, strict=True):
             if active and reward not in (0.0, 1.0):
@@ -132,7 +135,7 @@ def assemble_group(
         rewards: tuple[float | None, ...] = tuple(rollout.reward for rollout in generated)
         completions = tuple(rollout.completion_ids for rollout in generated)
         prompts = tuple(prompt_ids for _ in generated)
-        update_applied = group_class == "mixed"
+        update_eligible = group_class == "mixed"
         # Canonical GRPO naturally yields zero advantages on homogeneous G8
         # groups, but the generated tokens are still fully charged.
     elif initial_class == "mixed":
@@ -144,7 +147,7 @@ def assemble_group(
         rewards = tuple(rollout.reward for rollout in generated)
         completions = tuple(rollout.completion_ids for rollout in generated)
         prompts = tuple(prompt_ids for _ in generated)
-        update_applied = True
+        update_eligible = True
     else:
         if expansion:
             raise SamplerContractError("a homogeneous G2 group may not be expanded")
@@ -154,7 +157,7 @@ def assemble_group(
         completions = tuple((eos_token_id,) for _ in range(GROUP_SIZE))
         rewards = (None,) * GROUP_SIZE
         active = (False,) * GROUP_SIZE
-        update_applied = False
+        update_eligible = False
 
     return FixedSlots(
         prompt_ids=prompts,
@@ -164,7 +167,9 @@ def assemble_group(
         group_class=group_class,
         charged_generated_tokens=sum(len(rollout.completion_ids) for rollout in generated),
         generated_rollouts=len(generated),
-        update_applied=update_applied,
+        update_eligible=update_eligible,
+        truncated_generated_rollouts=sum(r.finish_reason == "length" for r in generated),
+        unknown_finish_rollouts=sum(r.finish_reason not in ("stop", "length") for r in generated),
     )
 
 
@@ -184,7 +189,9 @@ def aggregate_group_telemetry(groups: Sequence[FixedSlots]) -> dict[str, float |
         "rollout_groups": count,
         "generated_rollouts": sum(group.generated_rollouts for group in groups),
         "charged_generated_tokens": sum(group.charged_generated_tokens for group in groups),
-        "updated_groups": sum(group.update_applied for group in groups),
+        "update_eligible_groups": sum(group.update_eligible for group in groups),
+        "truncated_generated_rollouts": sum(g.truncated_generated_rollouts for g in groups),
+        "unknown_finish_rollouts": sum(g.unknown_finish_rollouts for g in groups),
         "all_wrong_fraction": class_counts["all_wrong"] / count,
         "all_correct_fraction": class_counts["all_correct"] / count,
         "mixed_fraction": class_counts["mixed"] / count,

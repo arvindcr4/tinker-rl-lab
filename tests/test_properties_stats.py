@@ -68,7 +68,7 @@ def _lift_functions(rel: str, names: tuple[str, ...], consts: tuple[str, ...] = 
     namespace: dict = {"math": math, "itertools": itertools}
     # Runs this repo's own helper defs extracted from a Modal script (importing it
     # would need the modal package); never untrusted input.
-    exec(compile(ast.Module(body=keep, type_ignores=[]), rel, "exec"), namespace)  # noqa: S102
+    exec(compile(ast.Module(body=keep, type_ignores=[]), rel, "exec"), namespace)  # noqa: S102 - Execute only checked-in helper definitions to isolate optional imports.
     return namespace
 
 
@@ -157,8 +157,8 @@ paired_binary = st.integers(min_value=1, max_value=40).flatmap(
 def test_mcnemar_exact_p_range_counts_and_swap_symmetry(pair):
     trained, base = pair
     b, c, p = evidence.mcnemar(trained, base)
-    assert b == sum(t == 1 and a == 0 for t, a in zip(trained, base))
-    assert c == sum(t == 0 and a == 1 for t, a in zip(trained, base))
+    assert b == sum(t == 1 and a == 0 for t, a in zip(trained, base, strict=True))
+    assert c == sum(t == 0 and a == 1 for t, a in zip(trained, base, strict=True))
     assert 0.0 < p <= 1.0
     b2, c2, p2 = evidence.mcnemar(base, trained)
     assert (b2, c2) == (c, b)

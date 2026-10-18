@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import tempfile
 import unittest
 from importlib import import_module
 from pathlib import Path
@@ -174,16 +175,14 @@ class BFCLAdapterBoundaryTests(unittest.TestCase):
 
     def test_main_reads_manifest_and_emits_status(self) -> None:
         manifest = _valid_manifest()
-        temporary = Path(__file__).resolve().parent / "_tmp_bfcl_manifest.json"
-        try:
+        with tempfile.TemporaryDirectory() as directory:
+            temporary = Path(directory) / "manifest.json"
             temporary.write_text(json.dumps(manifest), encoding="utf-8")
             self.assertEqual(adapter.main(["--manifest", str(temporary)]), 0)
             manifest["suite_id"] = "wrong_suite"
             temporary.write_text(json.dumps(manifest), encoding="utf-8")
             self.assertEqual(adapter.main(["--manifest", str(temporary)]), 1)
-        finally:
-            if temporary.exists():
-                temporary.unlink()
+
 
 
 if __name__ == "__main__":

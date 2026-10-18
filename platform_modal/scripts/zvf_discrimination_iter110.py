@@ -8,8 +8,7 @@ extends with three NEW analyses the previous iterations did not run:
   1. AUROC discrimination
      For each scalar predictor (zvf_emp, delta_calibration, rho_overdispersion),
      compute the area under the ROC curve against the binary collapse label
-     on the 14-row cross-library aggregator, plus a 2-fold leave-one-library-out
-     robust AUROC. The point-Pearson / Spearman-partial ordering from iter106
+     on the 14-row cross-library aggregator, with exploratory development-set AUROC. The point-Pearson / Spearman-partial ordering from iter106
      is rank-based at heart; AUROC is the canonical rank discriminator.
 
   2. Earth Mover's Distance (1-Wasserstein) per predictor
@@ -27,20 +26,21 @@ extends with three NEW analyses the previous iterations did not run:
      "if you have prompts with difficulty near p, you need G >= G_min" table.
 
 Inputs (real, already in the worktree):
-  - platform_hybrid/experiments/results/zvf_iter102_calibration.tsv   (14 rows)
-  - platform_hybrid/experiments/results/zvf_dynamics_leadtime.tsv      (per-run timing)
-  - platform_hybrid/experiments/results/zvf_dynamics_summary.tsv      (per-run pooled ZVF)
+  - platform_hybrid/experiments/results/zvf_iter102_calibration_review28_v2.tsv   (14 rows)
+  - platform_hybrid/experiments/results/zvf_dynamics_leadtime_review28_v2.tsv      (per-run timing)
+  - platform_hybrid/experiments/results/zvf_dynamics_summary_review28_v2.tsv      (per-run pooled ZVF)
 
 Outputs:
-  - platform_hybrid/experiments/results/zvf_iter110_auroc.tsv         (3 predictors x 4 stats)
-  - platform_hybrid/experiments/results/zvf_iter110_emd.tsv           (3 predictors x 3 stats)
-  - platform_hybrid/experiments/results/zvf_iter110_isog_floor.tsv    (p_bin x tau x G_min)
-  - platform_hybrid/experiments/results/zvf_iter110_leadtime.tsv      (lead_steps summary)
-  - figures/zvf_iter110_discrimination.pdf            (3-panel summary)
+  - platform_hybrid/experiments/results/zvf_iter110_auroc_review28_v2.tsv         (3 predictors x 4 stats)
+  - platform_hybrid/experiments/results/zvf_iter110_emd_review28_v2.tsv           (3 predictors x 3 stats)
+  - platform_hybrid/experiments/results/zvf_iter110_isog_floor_review28_v2.tsv    (p_bin x tau x G_min)
+  - platform_hybrid/experiments/results/zvf_iter110_leadtime_review28_v2.tsv      (lead_steps summary)
+  - figures/zvf_iter110_discrimination_review28_v2.pdf            (3-panel summary)
 
 Source: platform_modal/scripts/zvf_discrimination_iter110.py
 Honest-stat note: n=14 rows for AUROC/EMD; we report both point estimates
-and 2-fold-leave-one-out robust estimates with 95% bootstrap CIs (B=2000).
+and full-estimator percentile bootstrap intervals (B=2000); no outer held-out
+validation is implemented. Optimized raw-score directions are exploratory.
 """
 from __future__ import annotations
 
@@ -86,41 +86,12 @@ def _strip_comments(path: pathlib.Path) -> List[str]:
 
 
 def load_calibration_rows() -> List[Dict[str, Any]]:
-    """Re-use the iter102 per-row calibration table (same parser as iter106)."""
-    path = RES / "zvf_iter102_calibration.tsv"
-    rows: List[Dict[str, Any]] = []
-    if not path.exists():
-        return rows
-    with path.open() as fh:
-        for line in fh:
-            if line.startswith("#") or not line.strip():
-                continue
-            parts = line.rstrip("\n").split("\t")
-            if len(parts) < 10:
-                continue
-            try:
-                rows.append(
-                    {
-                        "library": parts[0],
-                        "model": parts[1],
-                        "G": int(float(parts[2])),
-                        "p": float(parts[3]),
-                        "zvf_emp": float(parts[4]),
-                        "zvf_iid": float(parts[5]),
-                        "delta": float(parts[6]),
-                        "rho": float(parts[7]),
-                        "collapse_rate": float(parts[8]),
-                        "converged_rate": float(parts[9]),
-                        "evidence_path": parts[10] if len(parts) > 10 else "",
-                    }
-)
-            except ValueError:
-                continue
-    return rows
+    from _review28_io import read_calibration
+    return read_calibration(RES / "zvf_iter102_calibration_review28_v2.tsv")
 
 
 def load_leadtime_rows() -> List[Dict[str, Any]]:
-    path = RES / "zvf_dynamics_leadtime.tsv"
+    path = RES / "zvf_dynamics_leadtime_review28_v2.tsv"
     rows: List[Dict[str, Any]] = []
     if not path.exists():
         return rows
@@ -205,7 +176,9 @@ def load_groupsize_step_log() -> List[Dict[str, Any]]:
                     "mean_zvf": float(run.get("mean_zvf", 0.0)),
                     "theta": float(theta_z),
                     "first_pass_step": first_z,
-                    "first_collapse_step": first_r,
+                    "first_collapse_step": None,
+                    "first_convergence_step": first_r,
+                    "event_type": "convergence",
                     "lead_steps": first_r - first_z,
                 }
             )
@@ -221,8 +194,10 @@ def _classify_row(collapse_rate: float, p: float) -> str:
     """Same labels used by iter102/106 (must stay in sync)."""
     if collapse_rate >= 0.5:
         return "collapse"
-    if p <= 0.05 or p >= 0.95:
-        return "collapse"
+    if p >= 0.95:
+        return "mastery"
+    if p <= 0.05:
+        return "incapacity"
     if p >= 0.85:
         return "converged"
     return "drift"
@@ -233,32 +208,9 @@ def _classify_row(collapse_rate: float, p: float) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _auc_roc(scores: np.ndarray, y: np.ndarray) -> float:
-    """Mann-Whitney U / AUC. Ties -> 0.5 attribution."""
-    y = y.astype(float)
-    pos = scores[y == 1]
-    neg = scores[y == 0]
-    if len(pos) == 0 or len(neg) == 0:
-        return float("nan")
-    # Pairwise comparison using ranks for stability.
-    combined = np.concatenate([pos, neg])
-    order = np.argsort(combined)
-    ranks = np.empty_like(order, dtype=float)
-    ranks[order] = np.arange(1, len(combined) + 1, dtype=float)
-    # Handle ties by averaging.
-    ranked = combined[order]
-    i = 0
-    while i < len(ranked):
-        j = i
-        while j + 1 < len(ranked) and ranked[j + 1] == ranked[i]:
-            j += 1
-        if j > i:
-            avg = (i + 1 + j + 1) / 2.0
-            ranks[order[i:j + 1]] = avg
-        i = j + 1
-    sum_pos_ranks = ranks[: len(pos)].sum()
-    auc = (sum_pos_ranks - len(pos) * (len(pos) + 1) / 2.0) / (len(pos) * len(neg))
-    return float(auc)
+def _auc_roc(scores, y):
+    from _review28_statistics import auc
+    return auc(scores, y)
 
 
 def _bootstrap_auc_ci(
@@ -317,17 +269,9 @@ def _normalised_em(
     return e / rng
 
 
-def _spearman(x: np.ndarray, y: np.ndarray) -> float:
-    if len(x) < 3:
-        return float("nan")
-    rx = np.argsort(np.argsort(x)).astype(float)
-    ry = np.argsort(np.argsort(y)).astype(float)
-    xm = rx - rx.mean()
-    ym = ry - ry.mean()
-    den = math.sqrt(float((xm ** 2).sum() * (ym ** 2).sum()))
-    if den < EPS:
-        return float("nan")
-    return float((xm * ym).sum() / den)
+def _spearman(x, y):
+    from _review28_statistics import spearman
+    return spearman(x, y)
 
 
 # ---------------------------------------------------------------------------
@@ -488,7 +432,7 @@ def main() -> int:
     groupsize_rows = load_groupsize_step_log()
     # Pool the leadtime streams so the per-(kind,method) IQR is computed
     # over a larger run set than the existing 3-row variance_mitigation file.
-    all_lead_rows = lead_rows + groupsize_rows
+    all_lead_rows = lead_rows  # convergence is a different event, never pooled as collapse
     print(
         f"  loaded {len(cal_rows)} calibration rows, "
         f"{len(lead_rows)} variance-mitigation leadtime rows, "
@@ -496,7 +440,7 @@ def main() -> int:
         flush=True,
     )
     if not cal_rows:
-        print("  ERROR: zvf_iter102_calibration.tsv missing -- run iter102 first")
+        print("  ERROR: zvf_iter102_calibration_review28_v2.tsv missing -- run iter102 first")
         return 1
 
     # Build the binary collapse label and predictor arrays.
@@ -556,37 +500,15 @@ def main() -> int:
     # correlation level; AUROC after residualisation gives the operational
     # rank-discriminator that aligns with iter106's headline.
     _pv = np.array([r["p"] for r in cal_rows], dtype=float)
-    _pv_rank = np.argsort(np.argsort(_pv)).astype(float)
-    _pv_rank = _pv_rank / max(len(_pv_rank) - 1, 1)  # map to [0,1]
-    # Add a constant column for the OLS fit.
-    X = np.column_stack([_pv_rank, np.ones_like(_pv_rank)])
+    from _review28_statistics import partial_auc_bootstrap
     partial_auroc_rows: List[Dict[str, Any]] = []
     for name, arr in (
         ("zvf_emp", zvf_arr),
         ("delta_calibration", delta_arr),
         ("rho_overdispersion", rho_arr),
     ):
-        # Rank-transform the predictor for stability under ties.
-        rk = np.argsort(np.argsort(arr)).astype(float)
-        rk = rk / max(len(rk) - 1, 1)
-        # OLS residual against p_rank with intercept.
-        beta, *_ = np.linalg.lstsq(X, rk, rcond=None)
-        resid = rk - X @ beta
-        # Two-sided AUROC (max of + and -).
-        a_pos, _ = _bootstrap_auc_ci(resid, is_col, B=2000, seed=21)
-        a_neg, _ = _bootstrap_auc_ci(-resid, is_col, B=2000, seed=22)
-        if math.isnan(a_pos) and math.isnan(a_neg):
-            point = float("nan")
-            ci_lo, ci_hi = float("nan"), float("nan")
-            direction = "?"
-        elif math.isnan(a_pos) or a_neg > a_pos:
-            point = a_neg
-            ci_lo, ci_hi = a_neg * 0.95, min(1.0, a_neg * 1.05)  # surrogate CI
-            direction = "-"
-        else:
-            point = a_pos
-            ci_lo, ci_hi = a_pos * 0.95, min(1.0, a_pos * 1.05)
-            direction = "+"
+        point, ci_lo, ci_hi = partial_auc_bootstrap(arr, _pv, is_col, B=2000, seed=21)
+        direction = "+ (frozen; exploratory development cohort)"
         partial_auroc_rows.append(
             {
                 "predictor": name,
@@ -618,10 +540,10 @@ def main() -> int:
             r["spearman_abs_vs_collapse"] = round(abs(_spearman(rho_arr, is_col)), 4)
 
     _write_tsv(
-        RES / "zvf_iter110_auroc.tsv",
+        RES / "zvf_iter110_auroc_review28_v2.tsv",
         auroc_rows,
         header_comment=(
-            "# zvf_iter110_auroc.tsv -- AUROC discrimination vs is_collapse\n"
+            "# zvf_iter110_auroc_review28_v2.tsv -- AUROC discrimination vs is_collapse\n"
             "# on the 14-row cross-library aggregator from iter102.\n"
             "# Higher AUROC = better; direction_used reports the sign\n"
             "# of the predictor that gave the larger AUROC.\n"
@@ -654,10 +576,10 @@ def main() -> int:
             }
         )
     _write_tsv(
-        RES / "zvf_iter110_emd.tsv",
+        RES / "zvf_iter110_emd_review28_v2.tsv",
         emd_rows,
         header_comment=(
-            "# zvf_iter110_emd.tsv -- normalised 1-Wasserstein (EMD) between\n"
+            "# zvf_iter110_emd_review28_v2.tsv -- normalised 1-Wasserstein (EMD) between\n"
             "# the collapse arm and the non-collapse arm, per predictor.\n"
             "# EMD divided by the empirical range of the predictor so the\n"
             "# value sits in [0, 1] across all three predictors.\n"
@@ -668,10 +590,10 @@ def main() -> int:
     # ---- 3. Iso-G saturation floor table.
     iso_rows = _iso_g_floor(0.0)  # argument ignored; written from constants
     _write_tsv(
-        RES / "zvf_iter110_isog_floor.tsv",
+        RES / "zvf_iter110_isog_floor_review28_v2.tsv",
         iso_rows,
         header_comment=(
-            "# zvf_iter110_isog_floor.tsv -- minimum G such that\n"
+            "# zvf_iter110_isog_floor_review28_v2.tsv -- minimum G such that\n"
             "# p^G + (1-p)^G <= tau_sat, evaluated at empirical p coverage.\n"
             "# tau_sat in {0.30, 0.50, 0.70, 0.90} and p in 11 representative\n"
             "# bins spanning [0, 1]; G_max = 64. -1 means no G within range\n"
@@ -712,11 +634,11 @@ def main() -> int:
             }
         )
     _write_tsv(
-        RES / "zvf_iter110_leadtime.tsv",
+        RES / "zvf_iter110_leadtime_review28_v2.tsv",
         lead_summary,
         header_comment=(
-            "# zvf_iter110_leadtime.tsv -- per-(kind, method) pooled lead-steps\n"
-            "# statistics from zvf_dynamics_leadtime.tsv. 'lead_steps' is the\n"
+            "# zvf_iter110_leadtime_review28_v2.tsv -- per-(kind, method) pooled lead-steps\n"
+            "# statistics from zvf_dynamics_leadtime_review28_v2.tsv. 'lead_steps' is the\n"
             "# difference (first_collapse_step - first_pass_step): the number\n"
             "# of training steps the collapse indicator lags the ZVF crossing\n"
             "# of theta. +ve = ZVF leads collapse, -ve = collapse leads ZVF,\n"
@@ -729,8 +651,8 @@ def main() -> int:
         auroc_rows,
         emd_rows,
         iso_rows,
-        FIG / "zvf_iter110_discrimination.pdf",
-        FIG / "zvf_iter110_discrimination.png",
+        FIG / "zvf_iter110_discrimination_review28_v2.pdf",
+        FIG / "zvf_iter110_discrimination_review28_v2.png",
     )
 
     # Headline console print.

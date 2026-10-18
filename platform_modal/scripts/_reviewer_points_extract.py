@@ -1,33 +1,34 @@
 #!/usr/bin/env python3
-"""Emit id|marker|severity rows from reviewer_points.yaml for the shell scorer."""
-import re
+"""Validate complete YAML before emitting scorer rows; no partial fallback."""
 import sys
 
 
 def main(path: str) -> int:
     try:
         import yaml
-        doc = yaml.safe_load(open(path))
-        for w in doc.get("weaknesses", []):
-            sev = w.get("severity", "medium")
-            print(f"{w['id']}|{w['marker']}|{sev}")
+        with open(path) as stream:
+            doc=yaml.safe_load(stream)
+        if not isinstance(doc,dict) or not isinstance(doc.get("weaknesses"),list):
+            raise ValueError("missing weaknesses list")
+        rows=[]; ids=set()
+        for row in doc["weaknesses"]:
+            if not isinstance(row,dict) or any(not isinstance(row.get(k),str) or not row[k].strip() for k in ("id","marker")):
+                raise ValueError("every weakness needs nonempty id and marker")
+            if row["id"] in ids: raise ValueError("duplicate weakness id")
+            ids.add(row["id"])
+            severity=row.get("severity","medium")
+            values=(row["id"],row["marker"],severity)
+            if any(not isinstance(v,str) or any(c in v for c in "|\n\r") for v in values):
+                raise ValueError("invalid scorer field")
+            rows.append("|".join(values))
+        print("\n".join(rows))
         return 0
-    except ImportError:
-        pass
+    except (ImportError,OSError,ValueError,TypeError,KeyError) as exc:
+        print(f"reviewer YAML invalid or parser unavailable: {exc}",file=sys.stderr)
+        return 1
     except Exception as exc:
-        print(f"yaml parse failed: {exc}", file=sys.stderr)
-
-    # Regex fallback
-    text = open(path).read()
-    blocks = re.split(r"\n  - id:\s*", text)[1:]
-    for b in blocks:
-        mid = b.splitlines()[0].strip()
-        mk = re.search(r'marker:\s*"([^"]+)"', b)
-        sv = re.search(r"severity:\s*(\w+)", b)
-        if mk:
-            print(f"{mid}|{mk.group(1)}|{sv.group(1) if sv else 'medium'}")
-    return 0
-
+        print(f"reviewer YAML parse failed: {exc}",file=sys.stderr)
+        return 1
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1]))
+    raise SystemExit(main(sys.argv[1]))

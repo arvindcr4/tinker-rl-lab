@@ -4,6 +4,13 @@ BITTER LESSON CAMPAIGN v2: Correct Tinker SDK API usage.
 Uses forward_backward_custom() + optim_step() pattern.
 """
 
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 3:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
+from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage, validated_sample_sequences
+
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -16,7 +23,7 @@ except ImportError:
 
 import os, re, json, random, sys, warnings, traceback, torch
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 warnings.filterwarnings("ignore")
 
@@ -46,26 +53,8 @@ SYSTEM_PROMPT = "You are a math assistant. Solve the problem step by step, then 
 QUESTION_SUFFIX = " Provide a numerical answer without units, written inside \\boxed{}."
 
 
-def reward_fn(response: str, answer: str) -> float:
-    response = response.strip()
-    boxed = re.findall(r'\\boxed\{([^}]+)\}', response)
-    for b in boxed:
-        b_clean = b.strip().replace(",", "").replace(" ", "")
-        try:
-            if abs(float(b_clean) - float(answer)) < 0.01:
-                return 1.0
-        except:
-            if b_clean == answer:
-                return 1.0
-    all_nums = re.findall(r'[-+]?\d[\d,]*\.?\d*', response)
-    if all_nums:
-        last = all_nums[-1].replace(",", "")
-        try:
-            if abs(float(last) - float(answer)) < 0.01:
-                return 1.0
-        except:
-            pass
-    return 0.0
+def reward_fn(response, answer):
+    return score_gsm8k(response, answer)
 
 
 # ── Experiment Definitions ───────────────────────────────────────────
@@ -133,38 +122,28 @@ def run_experiment(exp):
     print(f"  >> [{tag}] Starting: {model} G={group_size} LR={lr} steps={steps} seed={seed}", flush=True)
 
     try:
-        random.seed(seed)
+        rng = random.Random(seed)
         torch.manual_seed(seed)
 
         # Load tokenizer
         tok = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
 
         # W&B
+        logging_errors = []
         wb_run = None
         try:
             import wandb
-            try:
-                if not getattr(wandb, '_vram_patched', False):
-                    _old_log = wandb.log
-                    def _vram_log(data, *args, **kwargs):
-                        if torch.cuda.is_available():
-                            data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                            data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
-                            torch.cuda.reset_peak_memory_stats()
-                        _old_log(data, *args, **kwargs)
-                    wandb.log = _vram_log
-                    wandb._vram_patched = True
-            except ImportError:
-                pass
+            # No process-global W&B log monkeypatch. Managed VRAM is unavailable.
             wandb.login(key=WANDB_KEY, relogin=True)
             wb_run = wandb.init(
                 project="tinker-rl-lab-world-class",
                 name=f"campaign_{tag}",
                 config={"model": model, "method": "grpo", "task": "gsm8k", "seed": seed,
                         "group_size": group_size, "lr": lr, "steps": steps},
-                reinit=True,
+                reinit="create_new",
             )
         except Exception as e:
+            logging_errors.append(str(e))
             print(f"  [{tag}] W&B init failed: {e}", flush=True)
 
         # Tinker client
@@ -179,16 +158,16 @@ def run_experiment(exp):
         _advs = []
 
         def loss_fn(data, lp):
-            losses = [(-_advs[i] * lp[i].sum()) for i in range(len(lp))]
+            losses = [(-_advs[i] * response_logprobs(data[i], lp[i]).sum()) for i in range(len(lp))]
             loss = torch.stack(losses).mean()
             return loss, {"loss": loss.item()}
 
         step_rewards = []
         examples = list(GSM8K_EXAMPLES)
-        random.shuffle(examples)
+        rng.shuffle(examples)
 
         for step in range(steps):
-            batch = random.sample(examples, min(2, len(examples)))
+            batch = rng.sample(examples, min(2, len(examples)))
             all_data, all_advs, batch_r = [], [], []
             batch_zvf_list = []
 
@@ -200,24 +179,22 @@ def run_experiment(exp):
                 if len(pid) > 1024:
                     pid = pid[:1024]
 
-                sp = T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95)
+                sp = T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95, seed=stable_seed(seed, step, pid))
                 resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=group_size, sampling_params=sp).result()
 
-                rews = [reward_fn(tok.decode(list(r.tokens), skip_special_tokens=True), ans) for r in resp.sequences]
+                sequences = validated_sample_sequences(resp, group_size)
+                rews = [reward_fn(tok.decode(list(r.tokens), skip_special_tokens=True), ans) for r in sequences]
                 mr = sum(rews) / len(rews)
                 sr = (sum((r - mr)**2 for r in rews) / len(rews))**0.5 + 1e-8
                 advs = [(r - mr) / sr for r in rews]
                 batch_r.extend(rews)
                 batch_zvf_list.append(1.0 if all(abs(r - mr) < 1e-6 for r in rews) else 0.0)
 
-                for r_seq, adv in zip(resp.sequences, advs):
+                for r_seq, adv in zip(sequences, advs):
                     rid = list(r_seq.tokens)
                     fid = pid + rid
-                    tid = fid[1:] + [0]
-                    all_data.append(T.Datum(
-                        model_input=T.ModelInput.from_ints(fid),
-                        loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)])},
-                    ))
+                    tid = fid[1:]
+                    all_data.append(aligned_datum(T, pid, rid))
                     all_advs.append(adv)
 
             if not all_data:
@@ -238,11 +215,11 @@ def run_experiment(exp):
             if wb_run:
                 try:
                     wb_run.log({"train/reward": avg, "train/step": step+1, "zvf": avg_zvf})
-                except:
-                    pass
+                except Exception as logging_error:
+                    logging_errors.append(str(logging_error))
 
             # Refresh sampler every 10 steps
-            if (step + 1) % 10 == 0:
+            if True:  # v3: sampler refresh after every update
                 ckpt = tc.save_weights_for_sampler(name=f"s{step+1}").result()
                 sc = tc.create_sampling_client(model_path=ckpt.path)
 
@@ -253,7 +230,13 @@ def run_experiment(exp):
         first5 = sum(step_rewards[:5]) / min(5, len(step_rewards)) if step_rewards else 0
 
         result = {
-            "tag": tag, "model": model, "wave": exp["wave"], "status": "completed",
+            **completion_receipt(steps, len(step_rewards), run_id, final_ckpt.path),
+            **experiment_spec({**exp, "effective_steps": steps, "scorer_id": SCORER_ID, "sampler_refresh_every": 1}),
+            "logging_errors": logging_errors,
+            "scorer_id": SCORER_ID,
+            "objective_id": "group_standardized_pg_response_sum_v3",
+            "sampler_refresh_every": 1,
+            "tag": tag, "model": model, "wave": exp["wave"],
             "run_id": run_id, "seed": seed, "group_size": group_size, "lr": lr,
             "steps": steps, "peak_reward": peak, "last10_avg": last10, "first5_avg": first5,
             "reward_trace": step_rewards, "final_checkpoint": final_ckpt.path,
@@ -301,7 +284,7 @@ def launch(max_parallel=6):
     print(f"{'='*70}\n")
 
     results = []
-    with ThreadPoolExecutor(max_workers=max_parallel) as executor:
+    with ProcessPoolExecutor(max_workers=max_parallel) as executor:
         futures = {executor.submit(run_experiment, exp): exp for exp in sorted_exps}
         for future in as_completed(futures):
             try:

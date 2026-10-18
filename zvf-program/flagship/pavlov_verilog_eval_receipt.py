@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -24,7 +25,7 @@ try:
 except ImportError:  # pragma: no cover - direct execution fallback
     from pavlov_verilog_eval_adapter import _sha256, canonical_json
 
-SCHEMA_VERSION = "pavlov-verilog-eval-receipt-v1"
+SCHEMA_VERSION = "pavlov-verilog-eval-receipt-v2"
 SUITE_ID = "verilog_eval"
 SUITE_ROLE = "primary_eval"
 _EXPECTED_CATEGORY = "code"
@@ -181,6 +182,9 @@ def _load_authority(contract_path: str | Path | None = None) -> Mapping[str, Any
         ) from exc
     if not isinstance(payload, Mapping):
         raise VerilogEvalReceiptError("authority contract must be JSON object")
+    installed = json.loads((base / "pavlovs_domain_contract.json").read_text(encoding="utf-8"))
+    if payload != installed:
+        raise VerilogEvalReceiptError("authority must match independently installed contract")
     registry = payload.get("suite_registry")
     if not isinstance(registry, Mapping):
         raise VerilogEvalReceiptError("authority contract missing suite_registry")
@@ -468,10 +472,6 @@ def _validate_hf_checkpoints(raw: Any) -> list[dict[str, Any]]:
             raise VerilogEvalReceiptError(
                 f"hf_checkpoints[{index}].stage must be one of {', '.join(_REQUIRED_HF_STAGES)}"
             )
-        if checkpoint.get("safe_public_artifact") is not True:
-            raise VerilogEvalReceiptError(
-                f"hf_checkpoints[{index}].safe_public_artifact must be true"
-            )
         visibility = _require_text(
             checkpoint.get("visibility"), f"hf_checkpoints[{index}].visibility"
         ).lower()
@@ -479,6 +479,9 @@ def _validate_hf_checkpoints(raw: Any) -> list[dict[str, Any]]:
             raise VerilogEvalReceiptError(
                 f"hf_checkpoints[{index}].visibility must be public or private"
             )
+        if checkpoint.get("safe_public_artifact") is not (visibility == "public"):
+            raise VerilogEvalReceiptError(f"hf_checkpoints[{index}].safe_public_artifact must match visibility")
+
         if _contains_banned_markers(repo):
             raise VerilogEvalReceiptError(
                 f"hf_checkpoints[{index}] contains blocked checkpoint source"
@@ -502,7 +505,7 @@ def _validate_hf_checkpoints(raw: Any) -> list[dict[str, Any]]:
                 "revision": revision,
                 "url": url,
                 "stage": stage,
-                "safe_public_artifact": True,
+                "safe_public_artifact": visibility == "public",
                 "visibility": visibility,
             }
         )
@@ -524,8 +527,8 @@ def _validate_costs(raw: Any) -> dict[str, Any]:
     total_usd = raw.get("total_usd")
     if not isinstance(total_usd, (int, float)) or isinstance(total_usd, bool):
         raise VerilogEvalReceiptError("costs.total_usd must be a number")
-    if total_usd < 0:
-        raise VerilogEvalReceiptError("costs.total_usd cannot be negative")
+    if not math.isfinite(total_usd) or total_usd < 0:
+        raise VerilogEvalReceiptError("costs.total_usd must be finite and non-negative")
     if raw.get("paid_work") is True:
         raise VerilogEvalReceiptError("costs.paid_work is not allowed")
     return {"status": status, "total_usd": float(total_usd)}
@@ -535,7 +538,7 @@ def _validate_decontamination(value: Any) -> dict[str, Any]:
     if isinstance(value, str):
         receipt_id = _require_hex40(value, "decontamination")
         return {
-            "status": "verified",
+            "status": "asserted_unverified",
             "receipt_id": receipt_id,
             "visibility": "private",
             "safe_public_artifact": True,
@@ -552,7 +555,8 @@ def _validate_decontamination(value: Any) -> dict[str, Any]:
             "public decontamination evidence must set safe_public_artifact=True"
         )
     return {
-        "status": status,
+        "status": "asserted_unverified",
+        "reported_status": status,
         "receipt_id": receipt_id,
         "visibility": visibility,
         "safe_public_artifact": bool(value.get("safe_public_artifact")),
@@ -644,7 +648,7 @@ def build_receipt_record(
         if _contains_banned_markers(evidence):
             raise VerilogEvalReceiptError("receipt contains blocked substitution markers")
 
-        blockers: list[str] = []
+        blockers: list[str] = ["authenticated external decontamination verification is unavailable"]
         _validate_no_network_or_credentials(manifest, blockers)
         blockers = sorted(set(blockers))
 

@@ -89,6 +89,9 @@ def _binary_auc(scores: list[float], labels: list[float]) -> float | None:
     ) / (n_positive * n_negative)
 
 
+from analysis_contract import validate_rewards, completeness, ZVF_DEFINITION
+
+
 def validate_prompts(pool: dict) -> list[dict]:
     prompts = pool.get("prompts")
     if not isinstance(prompts, list) or not prompts:
@@ -103,8 +106,7 @@ def validate_prompts(pool: dict) -> list[dict]:
                 f"prompt {position} has {len(rewards)} rewards, expected "
                 f"{expected_rollouts}"
             )
-        if any(not isinstance(reward, (int, float)) for reward in rewards):
-            raise ValueError(f"prompt {position} has a non-numeric reward")
+        validate_rewards(rewards)
         token_counts = row.get("token_counts")
         if token_counts is not None and len(token_counts) != len(rewards):
             raise ValueError(
@@ -120,12 +122,13 @@ def core_metrics(prompts: list[dict]) -> dict[str, float | int]:
     active_advantages = total_advantages = 0
 
     for row in prompts:
+        validate_rewards(row["rewards"])
         rewards = [float(reward) for reward in row["rewards"]]
         group_mean = _mean(rewards)
         variance = _mean((reward - group_mean) ** 2 for reward in rewards)
         prompt_means.append(group_mean)
         group_variances.append(variance)
-        is_zero = variance <= EPS
+        is_zero = variance == 0.0
         zero_variance += int(is_zero)
         all_correct += int(all(reward > 0.5 for reward in rewards))
         all_incorrect += int(all(reward <= 0.5 for reward in rewards))
@@ -229,6 +232,8 @@ def length_diagnostics(prompts: list[dict]) -> dict:
 
 
 def analyze(pool: dict, *, n_bootstrap: int, seed: int) -> dict:
+    if n_bootstrap < 1:
+        raise ValueError("positive bootstrap count required")
     prompts = validate_prompts(pool)
     core = core_metrics(prompts)
     metric_names = (
@@ -251,6 +256,9 @@ def analyze(pool: dict, *, n_bootstrap: int, seed: int) -> dict:
         "status": "complete",
         "created_at": utc_now(),
         "source": {
+            **completeness(pool),
+            "analysis_contract": pool.get("analysis_contract"),
+            "zvf_definition": ZVF_DEFINITION,
             "tag": pool.get("tag"),
             "model": pool.get("model"),
             "split": pool.get("split"),
@@ -273,7 +281,7 @@ def analyze(pool: dict, *, n_bootstrap: int, seed: int) -> dict:
         "methodology": {
             "bootstrap_seed": seed,
             "bootstrap_replicates": n_bootstrap,
-            "zero_variance_definition": "population variance <= 1e-12 within prompt",
+            "zero_variance_definition": ZVF_DEFINITION,
             "length_auc_interpretation": (
                 "0.5 means length does not rank correct above incorrect responses"
             ),
@@ -297,7 +305,7 @@ def main() -> None:
         parser.error("--bootstrap must be at least 100")
 
     pool = json.loads(args.pool.read_text())
-    if pool.get("status") != "complete" and not args.allow_partial:
+    if completeness(pool)["exploratory_only"] and not args.allow_partial:
         raise SystemExit(
             f"pool status is {pool.get('status')!r}; pass --allow-partial explicitly"
         )

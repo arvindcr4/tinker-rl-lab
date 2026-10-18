@@ -36,7 +36,7 @@ def assert_recomputed_equal(case, actual, expected):
     elif isinstance(expected, list):
         case.assertIsInstance(actual, list)
         case.assertEqual(len(actual), len(expected))
-        for got, want in zip(actual, expected):
+        for got, want in zip(actual, expected, strict=True):
             assert_recomputed_equal(case, got, want)
     elif isinstance(expected, float):
         case.assertIsInstance(actual, float)

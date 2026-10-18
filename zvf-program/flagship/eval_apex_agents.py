@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -388,13 +389,16 @@ DATASET_ACCESS_FILES = {
 }
 
 
-def _local_dataset_gate(dataset_dir: Path) -> tuple[Gate, dict[str, Path] | None]:
-    """Accept an already-downloaded copy, but only on proof of the revision.
+# Expected bytes must come from an independently reviewed manifest, never the
+# local cache being checked. No authoritative content manifest was supplied.
+TRUSTED_LOCAL_DATASET_SHA256: dict[str, str] = {}
 
-    ``hf download`` writes ``.cache/huggingface/download/<file>.metadata`` whose
-    first line is the resolved commit hash.  Requiring it means a hand-assembled
-    directory, or a copy pulled from ``main``, cannot masquerade as the pinned
-    revision.
+
+def _local_dataset_gate(dataset_dir: Path) -> tuple[Gate, dict[str, Path] | None]:
+    """Require pinned cache metadata plus independently trusted content hashes.
+
+    Cache metadata alone is only an assertion: copying it must not authenticate
+    altered bytes. The expected manifest is not derived from this directory.
     """
     missing: list[str] = []
     wrong_revision: list[dict[str, Any]] = []
@@ -449,6 +453,17 @@ def _local_dataset_gate(dataset_dir: Path) -> tuple[Gate, dict[str, Path] | None
                 ],
             },
         ), None
+    expected = TRUSTED_LOCAL_DATASET_SHA256
+    if set(expected) != set(DATASET_ACCESS_FILES.values()) or any(
+        not re.fullmatch(r"[0-9a-f]{64}", str(expected.get(name, "")))
+        or receipts[name]["sha256"] != expected[name] for name in receipts
+    ):
+        return Gate("benchmark_access", "BLOCKED", {
+            "dataset_id": DATASET_ID, "dataset_revision": DATASET_REVISION,
+            "source": "local_dataset_dir", "files": receipts,
+            "message": "independently trusted expected-content manifest missing or bytes mismatch",
+            "content_verified": False,
+        }), None
     return Gate(
         "benchmark_access",
         "PASS",
@@ -457,7 +472,8 @@ def _local_dataset_gate(dataset_dir: Path) -> tuple[Gate, dict[str, Path] | None
             "dataset_revision": DATASET_REVISION,
             "source": "local_dataset_dir",
             "dataset_dir": str(dataset_dir),
-            "revision_proof": "hf cache metadata commit hash matches the pin",
+            "revision_proof": "pinned metadata plus independently configured expected-content hashes",
+            "content_verified": True,
             "files": receipts,
         },
     ), resolved
@@ -956,6 +972,17 @@ def _task_split_gate(
     ), selected
 
 
+def validate_native_score(grades: Any) -> float:
+    """Validate the native numeric result; do not invent an undocumented range."""
+    scoring = grades.get("scoring_results") if isinstance(grades, Mapping) else None
+    score = scoring.get("final_score") if isinstance(scoring, Mapping) else None
+    if isinstance(score, bool) or not isinstance(score, (int, float)):
+        raise RuntimeError("native grader score must be numeric")
+    if not math.isfinite(score):
+        raise RuntimeError("native grader score must be finite")
+    return float(score)
+
+
 def _native_verifier_gate(archipelago_dir: Path) -> Gate:
     grading_dir = archipelago_dir / DEFAULT_NATIVE_VERIFIER_PATH
     required_paths = (
@@ -987,6 +1014,13 @@ def _native_verifier_gate(archipelago_dir: Path) -> Gate:
             text=True,
             stderr=subprocess.STDOUT,
         ).strip()
+        status = subprocess.check_output(
+            ["git", "-C", str(archipelago_dir), "status", "--porcelain", "--untracked-files=all"],
+            text=True, stderr=subprocess.STDOUT,
+        )
+        if status.strip():
+            return Gate("native_verifier", "BLOCKED",
+                        {"reason": "checkout contains local modifications"})
         tree = subprocess.check_output(
             ["git", "-C", str(archipelago_dir), "ls-tree", "-r", "HEAD", "--", "grading"],
             text=True,
@@ -2070,11 +2104,7 @@ def _launch_official_archipelago(
         grades = (
             json.loads(grades_path.read_text(encoding="utf-8")) if grades_path.is_file() else None
         )
-        score = (
-            grades.get("scoring_results", {}).get("final_score")
-            if isinstance(grades, Mapping)
-            else None
-        )
+        score = validate_native_score(grades)
         wandb_run.log(
             {
                 "e5/return_code": return_code,
@@ -2105,6 +2135,8 @@ def _launch_official_archipelago(
         "run_dir": str(run_dir),
         "log_path": str(log_path),
         "grades_path": str(grades_path),
+        "grades_sha256": sha256_bytes(grades_path.read_bytes()),
+        "native_score_validation": "finite-numeric-v2",
         "environment": environment_receipt,
         "wandb": {"run_id": wandb_run.id, "run_url": wandb_run.url, "mode": "online"},
         "bridge": {

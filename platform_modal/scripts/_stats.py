@@ -19,6 +19,18 @@ import statistics
 from collections import defaultdict
 from numbers import Integral
 from statistics import fmean, pstdev
+from typing import NamedTuple
+
+
+class Interval(NamedTuple):
+    estimate: float
+    low: float
+    high: float
+
+    @property
+    def status(self):
+        return "ok" if all(math.isfinite(v) for v in self) else "insufficient_data"
+
 
 
 def _validate_resamples(count):
@@ -69,14 +81,14 @@ def wilson(k, n, z, root=math.sqrt):
 
 
 def wilson_ci(k, n, z=1.96):
-    """``(p, lo, hi)`` Wilson score interval, ``(0, 0, 0)`` when ``n == 0``
+    """``(p, lo, hi)`` Wilson score interval, undefined interval with insufficient_data status when ``n == 0``
     (synth_iter148/152/156/160: ``wilson_ci``)."""
     if n == 0:
         _validate_wilson(k, 1, z)
         if k != 0:
             raise ValueError("successes must be zero when n is zero")
-        return (0.0, 0.0, 0.0)
-    return wilson(k, n, z)
+        return Interval(float("nan"), float("nan"), float("nan"))
+    return Interval(*wilson(k, n, z))
 
 
 def wilson_p_factored(p, n, z):
@@ -98,7 +110,7 @@ def log_beta(a, b):
 
 
 def cohens_d_pstdev_pooled(a, b):
-    """Cohen's d with population-stdev pooling; nan below n=2 or for zero spread."""
+    """LEGACY estimator, not conventional Cohen's d: population-stdev pooling; nan below n=2 or for zero spread."""
     if len(a) < 2 or len(b) < 2:
         return float("nan")
     ma, mb = fmean(a), fmean(b)
@@ -141,12 +153,12 @@ def bootstrap_ci_statmean(values, boot, seed):
 
 
 def bootstrap_ci_rng(values, n_boot, alpha, rng):
-    """Bootstrap CI on the mean drawing from ``rng``: ``(mean, lo, hi)``; zeros if n < 2."""
+    """Bootstrap CI on the mean drawing from ``rng``: ``(mean, lo, hi)``; point only and insufficient_data status if n < 2."""
     _validate_resamples(n_boot)
     _validate_alpha(alpha)
     n = len(values)
     if n < 2:
-        return 0.0, 0.0, 0.0
+        return Interval(float(values[0]) if n else float("nan"), float("nan"), float("nan"))
     means = []
     for _ in range(n_boot):
         s = [values[rng.randrange(n)] for _ in range(n)]
@@ -154,7 +166,7 @@ def bootstrap_ci_rng(values, n_boot, alpha, rng):
     means.sort()
     lo = means[int(alpha / 2 * n_boot)]
     hi = means[int((1 - alpha / 2) * n_boot) - 1]
-    return sum(values) / n, lo, hi
+    return Interval(sum(values) / n, lo, hi)
 
 
 def paired_boot_pct(dv, dg, n_boot, seed):
@@ -180,12 +192,17 @@ def paired_boot_pct(dv, dg, n_boot, seed):
     return sum(d) / n, lo, hi, n
 
 
-def paired_step_bootstrap(rows, fn, b, seed):
+def paired_step_bootstrap(rows, fn, b, seed, *, block_length=1):
     """Resample steps with replacement, keeping every row of a picked step together.
 
+    Descriptive iid-step sensitivity only: does NOT account for temporal dependence.
+    Use a prespecified block_length>1 for circular time-block resampling.
+    Block length and stationarity assumptions require a protocol choice.
     Returns the non-None, non-nan values of ``fn(sample)`` over ``b`` resamples.
     """
     _validate_resamples(b)
+    if isinstance(block_length, bool) or not isinstance(block_length, Integral) or block_length <= 0:
+        raise ValueError("block_length must be a positive integer")
     rng = random.Random(seed)
     by_step = defaultdict(list)
     for r in rows:
@@ -194,7 +211,14 @@ def paired_step_bootstrap(rows, fn, b, seed):
     n_steps = len(steps)
     out = []
     for _ in range(b):
-        pick = [rng.choice(steps) for _ in range(n_steps)]
+        if block_length == 1:
+            pick = [rng.choice(steps) for _ in range(n_steps)]
+        else:
+            pick = []
+            while len(pick) < n_steps:
+                start = rng.randrange(n_steps)
+                pick.extend(steps[(start+j) % n_steps] for j in range(min(block_length, n_steps)))
+            pick = pick[:n_steps]
         sample = []
         for s in pick:
             sample.extend(by_step[s])
@@ -202,3 +226,11 @@ def paired_step_bootstrap(rows, fn, b, seed):
         if v is not None and not (isinstance(v, float) and math.isnan(v)):
             out.append(v)
     return out
+
+
+def cohens_d_sample_pooled(a, b):
+    """Conventional independent-arm Cohen d using sample variances."""
+    if min(len(a), len(b)) < 2:
+        return float("nan")
+    pooled = math.sqrt(((len(a)-1)*statistics.variance(a) + (len(b)-1)*statistics.variance(b)) / (len(a)+len(b)-2))
+    return (fmean(a)-fmean(b))/pooled if pooled else float("nan")

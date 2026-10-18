@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 from statistics import mean
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 MASTER = ROOT / "experiments" / "master_results.json"
 
 # Published claim (see paper/main.tex L906-907, abstract L26-27, intro L69)

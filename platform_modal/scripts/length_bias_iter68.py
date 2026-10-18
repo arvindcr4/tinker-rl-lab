@@ -5,7 +5,7 @@ trajectories from drgrpo_gsm8k_cot_full.json and drgrpo_vs_grpo.json:
 
 1. First-divergence step T*: smallest t where |L_grpo(t) - L_drgrpo(t)| exceeds
    a length-rescaled threshold (0.5 * sigma of pooled L across the two algos).
-   Paired-bootstrap across seeds with bootstrap CI for paired diff.
+   Descriptive seed-bootstrap CI for mean pair-level divergence time; no p-value.
 2. Length-volatility ratio V: sigma(Delta L) per run, paired ratio Dr.GRPO/GRPO.
    Bootstrap CI on the per-seed ratio and the log-ratio.
 3. Reversal rate rho: fraction of steps where sign(Delta L_t) flips relative to
@@ -15,11 +15,11 @@ Negative control: arithmetic_easy should show no meaningful divergence (both
 algos converge to L ~ 4 by step 5).
 
 Outputs:
-  platform_hybrid/experiments/results/length_bias_iter68_first_div.tsv
-  platform_hybrid/experiments/results/length_bias_iter68_volatility.tsv
-  platform_hybrid/experiments/results/length_bias_iter68_reversals.tsv
-  platform_hybrid/experiments/results/length_bias_iter68_summary.tsv
-  platform_hybrid/experiments/results/length_bias_iter68_meta.json
+  platform_hybrid/experiments/results/length_bias_iter68_first_div_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter68_volatility_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter68_reversals_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter68_summary_v2.tsv
+  platform_hybrid/experiments/results/length_bias_iter68_meta_v2.json
 """
 from __future__ import annotations
 
@@ -198,12 +198,25 @@ def reversal_rate_conditional(steps: List[dict], reward_sign: int) -> float:
     return rev / len(eligible)
 
 
-def trajectory_auc(L_a: List[float], L_b: List[float]) -> float:
-    """Area between L_a and L_b curves (trapezoid), positive = L_a above L_b."""
-    n = min(len(L_a), len(L_b))
+def trajectory_auc(L_a: List[float], L_b: List[float], steps=None) -> float:
+    """Signed trapezoidal area, review25-v2; optional strictly increasing step grid."""
+    if len(L_a) != len(L_b):
+        raise ValueError("paired trajectories must have equal lengths")
+    n = len(L_a)
+    steps = list(range(n)) if steps is None else list(steps)
+    if len(steps) != n or any(not math.isfinite(x) for x in [*steps, *L_a, *L_b]):
+        raise ValueError("finite aligned trajectories and steps required")
+    if any(b <= a for a, b in zip(steps, steps[1:])):
+        raise ValueError("steps must increase strictly")
     if n < 2:
         return float("nan")
-    return sum(0.5 * (abs(L_a[t] - L_b[t]) + abs(L_a[t + 1] - L_b[t + 1])) for t in range(n - 1))
+    return sum(.5 * ((L_a[t]-L_b[t]) + (L_a[t+1]-L_b[t+1])) *
+               (steps[t+1]-steps[t]) for t in range(n-1))
+
+
+def signed_auc_summary(values):
+    """Dr.GRPO-minus-GRPO area: negate once, never compare AUC to its negative."""
+    return bootstrap_paired_diff(values, [0.0] * len(values))
 
 
 def analyse(experiment: str, runs: Dict[Tuple[str, int], List[dict]], algo_a: str, algo_b: str) -> dict:
@@ -224,7 +237,16 @@ def analyse(experiment: str, runs: Dict[Tuple[str, int], List[dict]], algo_a: st
         L_a = feat_a["L"]
         L_b = feat_b["L"]
         fds = first_divergence_step(L_a, L_b)
-        auc = trajectory_auc(L_a, L_b)
+        log_a, log_b = runs[(algo_a, seed)], runs[(algo_b, seed)]
+        has_steps = any("step" in row for row in log_a + log_b)
+        grid = None
+        if has_steps:
+            if not all("step" in row for row in log_a + log_b):
+                raise ValueError("incomplete step grid")
+            grid = [row["step"] for row in log_a]
+            if grid != [row["step"] for row in log_b]:
+                raise ValueError("paired step grids must match")
+        auc = trajectory_auc(L_a, L_b, grid)
         raw_rows.append(dict(
             experiment=experiment,
             seed=seed,
@@ -289,13 +311,7 @@ def analyse(experiment: str, runs: Dict[Tuple[str, int], List[dict]], algo_a: st
     sigma_b = [r["sigma_dL_drgrpo"] for r in vol_rows]
     rev_a = [r["rev_rate_grpo"] for r in rev_rows]
     rev_b = [r["rev_rate_drgrpo"] for r in rev_rows]
-    fds_obs, fds_lo, fds_hi, fds_p = bootstrap_paired_diff(fds_vals, fds_vals, statistic="mean")
-    # For FDS: we want Dr.GRPO's FDS vs GRPO's FDS — but they're on the SAME seed, so the paired
-    # diff is 0 by construction. We instead report the *paired signed FDS* using only
-    # (algo_b - algo_a) on FDS-grpo vs FDS-drgrpo computed symmetrically. Since we only have
-    # one trajectory per algo, treat fds_vals as the per-seed FDS for the pair, and the
-    # descriptive statistic is mean FDS across seeds; we also compute whether FDS varies
-    # significantly across seeds via bootstrap on the per-seed FDS values.
+    # FDS is one descriptive statistic per trajectory pair, not an algorithm contrast.
     fds_mean = sum(fds_vals) / len(fds_vals)
     # bootstrap CI on per-seed FDS:
     boot = []
@@ -311,9 +327,9 @@ def analyse(experiment: str, runs: Dict[Tuple[str, int], List[dict]], algo_a: st
     rev_obs, rev_lo, rev_hi, rev_p = bootstrap_paired_diff(rev_a, rev_b)
     summary_rows = [
         dict(experiment=experiment, metric="fds_mean",
-             n_pairs=len(seeds), mean_grpo=fds_mean, mean_drgrpo=fds_mean,
-             mean_diff=0.0, ci_lo=fds_ci_lo, ci_hi=fds_ci_hi,
-             p_le0=fds_p, interpretation="first-divergence-step; same value for both algos on each seed"),
+             n_pairs=len(seeds), mean_grpo=float("nan"), mean_drgrpo=float("nan"),
+             mean_diff=float("nan"), ci_lo=fds_ci_lo, ci_hi=fds_ci_hi,
+             p_le0=float("nan"), interpretation=f"descriptive pair-level mean FDS={fds_mean}; percentile CI; no algorithm contrast or p-value"),
         dict(experiment=experiment, metric="volatility_ratio_drgrpo_over_grpo",
              n_pairs=len(seeds), mean_grpo=sum(sigma_a) / len(sigma_a),
              mean_drgrpo=sum(sigma_b) / len(sigma_b),
@@ -325,6 +341,8 @@ def analyse(experiment: str, runs: Dict[Tuple[str, int], List[dict]], algo_a: st
              mean_diff=rev_obs, ci_lo=rev_lo, ci_hi=rev_hi,
              p_le0=rev_p, interpretation="positive = Dr.GRPO flips sign(dL) more often"),
     ]
+    for row in summary_rows:
+        row["estimate"] = fds_mean if row["metric"] == "fds_mean" else row["mean_diff"]
     return dict(
         first_div=first_div_rows,
         vol=vol_rows,
@@ -339,11 +357,11 @@ def analyse(experiment: str, runs: Dict[Tuple[str, int], List[dict]], algo_a: st
 def main() -> None:
     os.makedirs(OUT_DIR, exist_ok=True)
     out_paths = dict(
-        first_div=os.path.join(OUT_DIR, "length_bias_iter68_first_div.tsv"),
-        vol=os.path.join(OUT_DIR, "length_bias_iter68_volatility.tsv"),
-        rev=os.path.join(OUT_DIR, "length_bias_iter68_reversals.tsv"),
-        raw=os.path.join(OUT_DIR, "length_bias_iter68_per_run.tsv"),
-        summary=os.path.join(OUT_DIR, "length_bias_iter68_summary.tsv"),
+        first_div=os.path.join(OUT_DIR, "length_bias_iter68_first_div_v2.tsv"),
+        vol=os.path.join(OUT_DIR, "length_bias_iter68_volatility_v2.tsv"),
+        rev=os.path.join(OUT_DIR, "length_bias_iter68_reversals_v2.tsv"),
+        raw=os.path.join(OUT_DIR, "length_bias_iter68_per_run_v2.tsv"),
+        summary=os.path.join(OUT_DIR, "length_bias_iter68_summary_v2.tsv"),
     )
     meta = {"experiments": []}
     # GSM8K CoT
@@ -357,23 +375,24 @@ def main() -> None:
     write_tsv(out_paths["vol"], res_gsm["vol"] + res_arith["vol"])
     write_tsv(out_paths["rev"], res_gsm["rev"] + res_arith["rev"])
     write_tsv(out_paths["raw"], res_gsm["raw"] + res_arith["raw"])
+    for row in res_gsm["summary"] + res_arith["summary"]:
+        row.setdefault("estimate", row["mean_diff"])
     write_tsv(out_paths["summary"], res_gsm["summary"] + res_arith["summary"])
-    out_paths["auc"] = os.path.join(OUT_DIR, "length_bias_iter68_auc.tsv")
-    out_paths["rev_cond"] = os.path.join(OUT_DIR, "length_bias_iter68_rev_cond.tsv")
+    out_paths["auc"] = os.path.join(OUT_DIR, "length_bias_iter68_auc_v2.tsv")
+    out_paths["rev_cond"] = os.path.join(OUT_DIR, "length_bias_iter68_rev_cond_v2.tsv")
     write_tsv(out_paths["auc"], res_gsm["auc"] + res_arith["auc"])
     write_tsv(out_paths["rev_cond"], res_gsm["rev_cond"] + res_arith["rev_cond"])
     # summary rows for AUC and conditional reversals
     for res in (res_gsm, res_arith):
         auc_a = [r["auc_grpo_minus_drgrpo"] for r in res["auc"]]
-        auc_b = [-r["auc_grpo_minus_drgrpo"] for r in res["auc"]]
-        # signed: positive when GRPO above Dr.GRPO. The paired diff Dr.GRPO - GRPO = mean(b) - mean(a) = -mean(a)
-        auc_obs, auc_lo, auc_hi, auc_p = bootstrap_paired_diff(auc_a, auc_b)
+        # Negate the GRPO-minus-Dr.GRPO area exactly once.
+        auc_obs, auc_lo, auc_hi, auc_p = signed_auc_summary(auc_a)
         res["summary"].append(dict(
             experiment=res["summary"][0]["experiment"],
             metric="auc_drgrpo_minus_grpo",
             n_pairs=len(auc_a),
-            mean_grpo=sum(auc_a) / len(auc_a),
-            mean_drgrpo=sum(auc_b) / len(auc_b),
+            mean_grpo=float("nan"),
+            mean_drgrpo=float("nan"),
             mean_diff=auc_obs, ci_lo=auc_lo, ci_hi=auc_hi,
             p_le0=auc_p,
             interpretation="signed area (Dr.GRPO - GRPO); positive = Dr.GRPO trace lies above GRPO",
@@ -394,6 +413,8 @@ def main() -> None:
                     mean_diff=obs, ci_lo=lo, ci_hi=hi, p_le0=p,
                     interpretation="positive = Dr.GRPO flips dL direction more on this reward-sign stratum",
                 ))
+    for row in res_gsm["summary"] + res_arith["summary"]:
+        row.setdefault("estimate", row["mean_diff"])
     write_tsv(out_paths["summary"], res_gsm["summary"] + res_arith["summary"])
     meta["experiments"].append(dict(
         name="drgrpo_gsm8k_cot",
@@ -404,7 +425,7 @@ def main() -> None:
         summary_rows=res_arith["summary"],
     ))
     meta["outputs"] = out_paths
-    with open(os.path.join(OUT_DIR, "length_bias_iter68_meta.json"), "w") as fh:
+    with open(os.path.join(OUT_DIR, "length_bias_iter68_meta_v2.json"), "w") as fh:
         json.dump(meta, fh, indent=2)
     print("[iter68] wrote:", json.dumps(out_paths, indent=2))
     # print headline

@@ -37,6 +37,7 @@ import csv
 import json
 import math
 import pathlib
+from _review_replay import stable_seed
 import random
 import statistics
 from typing import Iterable
@@ -47,7 +48,7 @@ from _paths import REPO_ROOT  # noqa: E402
 from _stats import bootstrap_ci_rng  # noqa: E402
 ROOT = REPO_ROOT
 N2_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
-OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review19-v2"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # Stack-conditional constants
@@ -223,7 +224,7 @@ def compute_step_metrics(method: str, step: dict) -> dict:
 
     # Headroom: for boundary prompts in actual, what fraction would
     # G_ESC=16 have RESTORED (bootstrap-simulated)?
-    rng = random.Random(RNG_SEED + step["step"] * 31 + hash(method) % 9973)
+    rng = random.Random(RNG_SEED + step["step"] * 31 + stable_seed(method) % 9973)
     boundary_prompts = [p for p in prompts if p["zvf_actual"] >= 0.5]
     contrast_prompts = [p for p in prompts if p["zvf_actual"] < 0.5]
 

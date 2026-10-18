@@ -1,10 +1,12 @@
-# Causal ZVF Experiment
+> PROTOCOL CORRECTION (review 43): This is a prompt-pool intervention. Pool assignment changes content, difficulty, headroom and length as well as ZVF; it does not isolate a causal ZVF mechanism. The v3 launcher uses fresh directories and never reuses legacy caches. Model revisions remain unresolved unless captured by the service receipt.
+
+# Prompt-Pool Association Experiment
 
 ## Overview
 
-This experiment directly tests the paper's central claim: **GRPO learns only when sampled groups contain reward diversity.**
+This experiment compares learning signals and outcomes across prompt pools selected by estimated base success rate.
 
-By holding everything fixed (model, backend, reward parser, seed, optimizer, LoRA config, group size, evaluator) and changing only the prompt pool, we can determine whether ZVF/GU is merely observational or actually causal.
+The intended training settings are held fixed, but pool assignment changes content, difficulty, headroom and length together with ZVF/GU. This is a confounded prompt-pool association, not an isolated causal test of ZVF.
 
 ## Experiment Design
 
@@ -25,9 +27,9 @@ Qwen3-8B + GSM8K + same GRPO config + saturated prompts
 ### Phase 3: Evaluate on held-out GSM8K
 Evaluate each checkpoint on a held-out GSM8K test slice.
 
-## Primary Success Criterion
+## Descriptive Comparison
 
-The primary endpoint is **NOT** held-out accuracy. The paper's thesis is not "GRPO improves GSM8K"; it is "GRPO has a learning signal only under reward diversity."
+Report first-five-step GU, reward slopes and held-out accuracy by pool. Differences do not identify which pool characteristic caused the outcome.
 
 The primary endpoint is:
 ```
@@ -43,7 +45,7 @@ than the dead and saturated arms.
 | Mixed     |         low |     positive |       improves |     maybe small |
 | Saturated |        ≈1.0 | flat or tiny |   already high |    none / small |
 
-That pattern would make the paper much more credible even if held-out GSM8K still does not improve significantly.
+That pattern would be an association consistent with multiple mechanisms; it would not establish causal ZVF effects, even with a held-out improvement.
 
 ## Usage
 

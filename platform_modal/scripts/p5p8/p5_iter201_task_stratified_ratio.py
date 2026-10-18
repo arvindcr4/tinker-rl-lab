@@ -74,14 +74,16 @@ from _paths import REPO_ROOT  # noqa: E402
 WORKTREE = REPO_ROOT
 CELLS_TSV = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
 N2_METRICS = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume/metrics.tsv"
-OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8/review17_v2"
+
 
 CHANNELS = ["zvf", "mean_reward", "mean_completion_len"]
 STACK_AXES = ["model_family", "G", "temperature", "seed"]
 TASK_SLICES = ["humaneval_subset", "gsm8k_easy", "gsm8k_hard"]
 ALGO_AXIS = "method"  # grpo / aero / gift / areal
 
+
+from p5_review17_stats import json_safe
 
 def load_mega_cells() -> list[dict]:
     """Load 98 mega cells from cells.tsv."""
@@ -122,7 +124,8 @@ def load_n2_metrics() -> list[dict]:
                                 rows.append({
                                     "method": row["method"],
                                     "zvf": float(row.get("zvf", 0)),
-                                    "reward_mean": float(row.get("reward_mean", row.get("mean_reward", 0))),
+                                    "reward_mean": float(row["reward_mean"]),
+                                    "mean_completion_len": float(row["mean_len"]),
                                 })
                             except (ValueError, KeyError):
                                 continue
@@ -135,7 +138,8 @@ def load_n2_metrics() -> list[dict]:
                     rows.append({
                         "method": row["method"],
                         "zvf": float(row.get("zvf", 0)),
-                        "reward_mean": float(row.get("reward_mean", row.get("mean_reward", 0))),
+                        "reward_mean": float(row["reward_mean"]),
+                                    "mean_completion_len": float(row["mean_len"]),
                     })
                 except (ValueError, KeyError):
                     continue
@@ -209,8 +213,10 @@ def stratified_bootstrap_ratio(
         if b_algo > 1e-12:
             boot_ratios.append(b_stack / b_algo)
     boot_ratios.sort()
-    if not boot_ratios:
+    if len(boot_ratios) != n_boot:
         return {
+            "n_valid": len(boot_ratios), "n_invalid": n_boot-len(boot_ratios),
+            "status": "UNBOUNDED_OR_INVALID",
             "point_stack": point_stack,
             "point_algo": point_algo,
             "point_ratio": point_ratio,
@@ -223,17 +229,20 @@ def stratified_bootstrap_ratio(
     hi = boot_ratios[int(0.975 * len(boot_ratios)) - 1]
     med = boot_ratios[len(boot_ratios) // 2]
     return {
+        "n_valid": len(boot_ratios), "n_invalid": 0, "status": "DESCRIPTIVE",
         "point_stack": point_stack,
         "point_algo": point_algo,
         "point_ratio": point_ratio,
         "boot_lo": lo,
         "boot_hi": hi,
         "boot_median": med,
-        "ci_excludes_1": (lo > 1.0) or (hi < 1.0),
+        "ci_excludes_1": (lo > 1.0),
     }
 
 
 def main():
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     mega = load_mega_cells()
     n2 = load_n2_metrics()
 
@@ -259,7 +268,7 @@ def main():
     # For each channel, for each task_slice, for each stack axis
     for ch in CHANNELS:
         # build N2 values
-        algo_values = [r.get(ch, r.get("zvf" if ch == "zvf" else "reward_mean", 0)) for r in n2]
+        algo_values = [r[{"mean_reward": "reward_mean"}.get(ch, ch)] for r in n2]
 
         for task in seen_tasks:
             if task not in TASK_SLICES:
@@ -298,6 +307,9 @@ def main():
                 "boot_median": f"{boot['boot_median']:.4f}",
                 "ci_excludes_1": "yes" if boot["ci_excludes_1"] else "no",
                 "n_task_cells": len(task_cells),
+                "n_valid_ratio_draws": boot["n_valid"],
+                "n_invalid_ratio_draws": boot["n_invalid"],
+                "ratio_status": boot["status"],
             })
             dominant_axis_rows.append({
                 "channel": ch,
@@ -325,14 +337,14 @@ def main():
         w.writerows(dominant_axis_rows)
 
     # H1: point ratio > 1 on every (channel, task_slice) cell
-    h1 = all(float(r["point_ratio"]) > 1.0 for r in per_task_results)
+    h1 = len(per_task_results) == len(CHANNELS) * len(TASK_SLICES) and all(float(r["point_ratio"]) > 1.0 for r in per_task_results)
 
     # H2: bootstrap CI excludes 1 on >= 2/3 task_slices and 3/3 channels
     by_chan_task = defaultdict(list)
     for r in per_task_results:
         by_chan_task[r["channel"]].append(r["ci_excludes_1"] == "yes")
     h2_per_chan = {ch: sum(v) for ch, v in by_chan_task.items()}
-    h2 = all(v >= 2 for v in h2_per_chan.values())
+    h2 = set(h2_per_chan) == set(CHANNELS) and all(v >= 2 for v in h2_per_chan.values())
 
     # H3: between-task_slice ratio variance > 0.5 on every channel
     by_chan = defaultdict(list)
@@ -371,6 +383,8 @@ def main():
     h5 = h5_consistency < 1.0  # i.e., at least one zvf task has a different top axis
 
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "n_mega_cells": len(mega),
         "n_n2_cells": len(n2),
         "task_slices_seen": seen_tasks,
@@ -391,7 +405,7 @@ def main():
     }
 
     with (OUT_DIR / "p5_iter201_summary.json").open("w") as fh:
-        json.dump(summary, fh, indent=2)
+        json.dump(json_safe(summary), fh, indent=2)
 
     print()
     print(f"H1 (point ratio > 1 every cell): {'PASS' if h1 else 'FAIL'}")

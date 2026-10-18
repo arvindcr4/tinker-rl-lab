@@ -14,6 +14,7 @@ side-check.
 Run:  colab run --gpu T4 --timeout 1800 e4_scaling_law.py
 """
 import json, re, random, statistics
+from protocol_stats import finite_pool_summary
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -131,11 +132,7 @@ def main():
         per_emp = [empirical_zvf(pool, K, rng, N_GROUPS) for pool in pools]
         per_pred = [predicted_zvf(p, K) for p in ps]
         emp, pred = statistics.mean(per_emp), statistics.mean(per_pred)
-        boots = sorted(statistics.mean([per_emp[rng.randrange(len(per_emp))] for _ in per_emp])
-                       for _ in range(500))
-        by_K[K] = {"emp_zvf": round(emp, 4), "pred_zvf": round(pred, 4),
-                   "emp_ci95": [round(boots[12], 4), round(boots[-13], 4)],
-                   "abs_err": round(abs(emp - pred), 4)}
+        by_K[K] = finite_pool_summary(pools, K, seed=SEED)
         emp_curve.append(emp); pred_curve.append(pred)
         print(f"[e4] K={K:2d} emp={emp:.4f} pred={pred:.4f} ci={by_K[K]['emp_ci95']}", flush=True)
 

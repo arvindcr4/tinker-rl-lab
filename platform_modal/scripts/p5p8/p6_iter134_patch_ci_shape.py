@@ -1,37 +1,30 @@
 #!/usr/bin/env python3
-"""P6 iter-134 — patch the 8 ci_method string-shape violations.
-
-The schema's $defs/ci_method is {type: object|null}; 8 measured rows have
-`ci_method: "bootstrap_paired_5seed"` (string). Iter-130 patched the
-mag_mean stale CI but did not promote the string-typed ci_method to the
-canonical object shape. This script:
-
-  - Promotes each string to a full {method, n_boot, seed, ci_level, source}
-    object using the iter-130 paired-seed bootstrap provenance.
-  - Writes a patch log to platform_hybrid/experiments/results/p5p8/p6_iter134_patch_log.tsv
-  - Leaves all other rows untouched.
-
-Stdlib only.
-"""
+"""Propose review17-v2 CI-method shape migration without inventing provenance.
+Original method names are preserved; unknown metadata remains null.
+Canonical schema validation precedes publication; original entries are untouched."""
 import csv
 import json
 import pathlib
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
-REG = ROOT / "registry/entries"
-OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from review17_contract import validate_proposals
+from _paths import REPO_ROOT
+ROOT = REPO_ROOT
+REG = ROOT / "platform_hybrid/registry/entries"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
 
-CANON = {
-    "method": "bootstrap_paired_5seed",
-    "n_boot": 5000,
-    "seed": 20260705,
-    "ci_level": 0.95,
-    "source": "platform_modal/scripts/p5p8/p6_iter130_patch_stale_mag.py",
-}
+
+def migrate_method(method):
+    return {"method": method, "n_boot": None, "seed": None, "ci_level": None, "source": None}
 
 
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
+    if not list(REG.glob("*.json")):
+        raise ValueError("Empty registry")
     patch_log = []
+    proposed = {}
     for p in sorted(REG.glob("*.json")):
         d = json.loads(p.read_text())
         if d.get("record_type") != "variant_delta":
@@ -47,12 +40,15 @@ def main():
                     "metric": m.get("metric", ""),
                     "panel": m.get("panel", ""),
                     "before": cm,
-                    "after": json.dumps(CANON),
+                    "after": json.dumps(migrate_method(cm)),
                 })
-                m["ci_method"] = dict(CANON)
+                m["ci_method"] = migrate_method(cm)
                 changed = True
         if changed:
-            p.write_text(json.dumps(d, indent=2) + "\n")
+            proposed[p.stem] = d
+    if proposed:
+        validate_proposals(proposed, ROOT / "platform_hybrid/registry/schema.json")
+    (OUT / "p6_iter134_proposed_entries.json").write_text(json.dumps(proposed, indent=2, allow_nan=False) + "\n")
     with (OUT / "p6_iter134_patch_log.tsv").open("w", newline="") as f:
         if patch_log:
             w = csv.DictWriter(f, fieldnames=list(patch_log[0].keys()), delimiter="\t")

@@ -24,15 +24,15 @@ steps, to test whether the above-median length-drift signature is mediated
 by ZVF collapse.
 
 Outputs (5 TSVs):
-  platform_hybrid/experiments/results/length_bias_iter52_regime_slopes.tsv
+  platform_hybrid/experiments/results/length_bias_iter52_regime_slopes_v2.tsv
     per (task, algo, seed, regime): n_steps, dL/dt, R_mean, L_mean, ZVF_mean
-  platform_hybrid/experiments/results/length_bias_iter52_grpo_vs_drgrpo.tsv
+  platform_hybrid/experiments/results/length_bias_iter52_grpo_vs_drgrpo_v2.tsv
     paired bootstrap on dL/dt per (task, regime)
-  platform_hybrid/experiments/results/length_bias_iter52_above_minus_below.tsv
+  platform_hybrid/experiments/results/length_bias_iter52_above_minus_below_v2.tsv
     paired bootstrap on (above slope - below slope) per (task, algo)
-  platform_hybrid/experiments/results/length_bias_iter52_zvf_coupling.tsv
+  platform_hybrid/experiments/results/length_bias_iter52_zvf_coupling_v2.tsv
     per (task, algo, regime): dL/dt further split by zvf_bin (low/mid/high)
-  platform_hybrid/experiments/results/length_bias_iter52_summary.tsv
+  platform_hybrid/experiments/results/length_bias_iter52_summary_v2.tsv
     one-line rollup per (task, regime) with mean/SD/CI/interpretation
 
 Reads:
@@ -89,6 +89,8 @@ def _median(xs: list[float]) -> float:
 
 
 def _zvf_bin(z: float) -> str:
+    if not math.isfinite(z) or not 0 <= z <= 1:
+        return "unavailable"
     for name, lo, hi in ZVF_BINS:
         if lo <= z < hi:
             return name
@@ -192,7 +194,7 @@ def main() -> None:
     slope_rows: list[dict] = []
     for r in rows:
         slope_rows.extend(per_run_regime_slopes(r))
-    write_tsv(RES / "length_bias_iter52_regime_slopes.tsv", slope_rows,
+    write_tsv(RES / "length_bias_iter52_regime_slopes_v2.tsv", slope_rows,
               fieldnames=list(slope_rows[0].keys()))
 
     # ---- 2. Paired GRPO vs Dr.GRPO bootstrap on slope per (task, regime)
@@ -219,7 +221,7 @@ def main() -> None:
                 "ci_hi": boot["ci_hi"],
                 "p_le0": boot["p_le0"],
             })
-    write_tsv(RES / "length_bias_iter52_grpo_vs_drgrpo.tsv", paired_rows,
+    write_tsv(RES / "length_bias_iter52_grpo_vs_drgrpo_v2.tsv", paired_rows,
               fieldnames=list(paired_rows[0].keys()))
 
     # ---- 3. above - below slope per (task, algo): does the drift gradient
@@ -265,11 +267,11 @@ def main() -> None:
                 "ci_hi": round(boots[int(0.975 * N_BOOT)], 6),
             })
     if hl_paired:
-        write_tsv(RES / "length_bias_iter52_above_minus_below.tsv", hl_paired,
+        write_tsv(RES / "length_bias_iter52_above_minus_below_v2.tsv", hl_paired,
                   fieldnames=list(hl_paired[0].keys()))
     else:
         # write empty
-        write_tsv(RES / "length_bias_iter52_above_minus_below.tsv", [],
+        write_tsv(RES / "length_bias_iter52_above_minus_below_v2.tsv", [],
                   fieldnames=["task", "algo", "n_seeds", "mean_above_minus_below",
                               "sd", "ci_lo", "ci_hi"])
 
@@ -301,10 +303,10 @@ def main() -> None:
                     "L_mean": round(sum(L[i] for i in idx) / len(idx), 6),
                 })
     if zvf_rows:
-        write_tsv(RES / "length_bias_iter52_zvf_coupling.tsv", zvf_rows,
+        write_tsv(RES / "length_bias_iter52_zvf_coupling_v2.tsv", zvf_rows,
                   fieldnames=list(zvf_rows[0].keys()))
     else:
-        write_tsv(RES / "length_bias_iter52_zvf_coupling.tsv", [],
+        write_tsv(RES / "length_bias_iter52_zvf_coupling_v2.tsv", [],
                   fieldnames=["task", "algo", "seed", "regime", "zvf_bin",
                               "n_steps", "slope_dL_dt", "intercept",
                               "R_mean", "L_mean"])
@@ -328,7 +330,7 @@ def main() -> None:
                 else "inconclusive"
             ),
         })
-    write_tsv(RES / "length_bias_iter52_summary.tsv", summary_rows,
+    write_tsv(RES / "length_bias_iter52_summary_v2.tsv", summary_rows,
               fieldnames=list(summary_rows[0].keys()))
 
     print("=== iter52 regime-conditional summary ===")

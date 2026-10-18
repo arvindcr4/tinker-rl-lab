@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from audit_evidence_contract import record_errors, execution_contract
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 import json
@@ -73,8 +74,11 @@ def validate_manifest_pair(
     manifest: dict[str, Any],
     *,
     checkpoint_steps: list[int],
+    expected: dict[str, Any],
 ) -> list[str]:
-    errors: list[str] = []
+    errors: list[str] = record_errors(record, manifest, heldout_n=expected["heldout_n"],
+        expected_execution=expected.get("execution"),
+        expected_changes=expected["treatment_changes"].get(record.get("arm")))
     if record.get("evidence_class") != "confirmatory":
         errors.append("local evidence_class is not confirmatory")
     for field in ("fingerprint", "stack_fingerprint"):
@@ -121,6 +125,7 @@ def verify_unit(
     checkpoint_steps: list[int],
     max_steps: int,
     credentials: dict[str, str],
+    expected: dict[str, Any],
 ) -> dict[str, Any]:
     arm = str(record["arm"])
     seed = int(record["seed"])
@@ -196,7 +201,7 @@ def verify_unit(
         "confirmatory",
     )
     manifest_errors = validate_manifest_pair(
-        record, manifest, checkpoint_steps=checkpoint_steps
+        record, manifest, checkpoint_steps=checkpoint_steps, expected=expected
     )
     if manifest_errors:
         raise RuntimeError(f"{unit}: " + "; ".join(manifest_errors))
@@ -290,6 +295,8 @@ def main(argv: list[str] | None = None) -> int:
                 checkpoint_steps=checkpoint_steps,
                 max_steps=int(core["train_steps"]),
                 credentials=credentials,
+                expected={"heldout_n": core["heldout"]["n"], "execution": execution_contract(core),
+                          "treatment_changes": {arm: config["allowed_changes"] for arm, config in core["arms"].items()}},
             ): (record["arm"], record["seed"])
             for path, record in records
         }

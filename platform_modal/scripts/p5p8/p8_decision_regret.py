@@ -30,24 +30,22 @@ platform_hybrid/experiments/results/p5p8/figures/p8_decision_regret.{png,pdf}
 Stdlib + numpy + pandas + xgboost + sklearn + matplotlib. <=300 lines.
 """
 import json
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from _p8_common import (  # noqa: E402
+from _p8_common import (
+    REPO_ROOT,
     load_split,
 )
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = REPO_ROOT
 TRAIN = ROOT / "fraud_data.csv"
 TEST = ROOT / "test_data.csv"
-OUT = ROOT / "experiments" / "results" / "p5p8"
+OUT = ROOT / "platform_hybrid" / "experiments" / "results" / "p5p8/corrected-review20-v2"
 FIG = OUT / "figures"
-OUT.mkdir(parents=True, exist_ok=True)
-FIG.mkdir(parents=True, exist_ok=True)
 
 V20 = [f"V{i}" for i in range(1, 21)]
 V_AGG = ["V_mean", "V_std", "V_max", "V_min"]
@@ -69,30 +67,10 @@ FEATS = {
 
 
 def argmin_cost(scores, y, c_inv, L, c_sense):
-    """Return (tau_star, cost_star_per_dec, tp_at_star, fp_at_star, fn_at_star).
+    from _review_policy import optimal_threshold
+    r = optimal_threshold(scores, y, c_inv, L, c_sense)
+    return r["tau"], r["cost_per_dec"], r["tp"], r["fp"], r["fn"]
 
-    Vectorized: sort once, sweep rank cutoffs with a cumulative TP sum.
-    cost(k) = (c_inv * k + L * (pos - tp_cum[k]) + c_sense * N) / N
-    """
-    n = len(y)
-    pos = int(y.sum())
-    if pos == 0 or n == 0:
-        return 1.0, c_sense, 0, 0, 0
-    order = np.argsort(-scores, kind="stable")
-    y_sorted = y[order]
-    s_sorted = scores[order]
-    # Cumulative TPs along the rank-1..N sweep
-    tp_cum = np.cumsum(y_sorted)
-    k_arr = np.arange(1, n + 1)
-    cost_arr = (c_inv * k_arr + L * (pos - tp_cum) + c_sense * n) / n
-    best_k = int(np.argmin(cost_arr))  # 0-based
-    best_cost = float(cost_arr[best_k])
-    best_tp = int(tp_cum[best_k])
-    best_fp = int((best_k + 1) - best_tp)
-    best_fn = int(pos - best_tp)
-    # tau_star: smallest score at cutoff k (we alert on scores >= this)
-    tau = float(s_sorted[best_k])
-    return tau, best_cost, best_tp, best_fp, best_fn
 
 
 def oracle_cost_per_dec(y, c_inv, c_sense):
@@ -227,56 +205,43 @@ def boot_grid(scores, y):
     return rows
 
 
+def regret_plot_payloads(grid_rows):
+    """Explicit panel arrays; the ceiling fraction is dimensionless.
+
+    The numerator is gross predictive regret reduction: sensing cost cancels
+    against each model's oracle. A zero raw regret has no capturable ceiling,
+    so its fraction is undefined (NaN), not a dollar difference or forced zero.
+    """
+    raw = np.full((len(C_INV_GRID), len(L_GRID)), np.nan)
+    full = np.full_like(raw, np.nan)
+    model_arrays = {"XGB-20raw": raw, "XGB-24full": full}
+    for row in grid_rows:
+        if row["C_inv"] not in C_INV_GRID or row["L"] not in L_GRID:
+            continue
+        array = model_arrays.get(row["model"])
+        if array is None:
+            continue
+        i, j = C_INV_GRID.index(row["C_inv"]), L_GRID.index(row["L"])
+        array[i, j] = row["regret_per_dec"]
+    closure = raw - full
+    fraction = np.full_like(raw, np.nan)
+    np.divide(closure, raw, out=fraction, where=raw > 0)
+    return {"raw_regret": raw, "full_regret": full,
+            "sensor_closure": closure, "fraction_captured": fraction}
+
+
 def plot_grid(grid_rows, out_png, out_pdf):
-    """3-panel heatmap: regret per model + sensor-closure panel."""
+    """Four heatmaps, with explicit panel IDs instead of title-based dispatch."""
     fig, axes = plt.subplots(2, 2, figsize=(12, 9))
-    titles = [
-        "XGB-20raw regret (\\$/dec vs oracle)",
-        "XGB-24full regret (\\$/dec vs oracle)",
-        "Sensor closure: 20raw - 24full (\\$/dec)",
-        "Fraction of ceiling captured (sensor_closure / sensor_full_ceiling)",
+    panels = [
+        ("raw_regret", "XGB-20raw regret (USD/decision vs oracle)"),
+        ("full_regret", "XGB-24full regret (USD/decision vs oracle)"),
+        ("sensor_closure", "Gross predictive regret closure: raw - full (USD/decision)"),
+        ("fraction_captured", "Fraction of raw regret ceiling captured (dimensionless)"),
     ]
-    keys = [
-        "regret_20raw",
-        "regret_24full",
-        None,  # uses closure row
-        None,  # uses fraction_captured
-    ]
-    for ax, title, key in zip(axes.flat, titles, keys):
-        if key is None and "closure" in title.lower():
-            z = np.full((len(C_INV_GRID), len(L_GRID)), np.nan)
-            for r in grid_rows:
-                if r["C_inv"] not in C_INV_GRID or r["L"] not in L_GRID:
-                    continue
-                if r["model"] != "XGB-24full":
-                    continue
-                i = C_INV_GRID.index(r["C_inv"])
-                j = L_GRID.index(r["L"])
-                z[i, j] = r["regret_per_dec"]  # placeholder -- overwritten below
-            # closure = 20raw.regret - 24full.regret, computed per cell
-            raw_z = np.full_like(z, np.nan)
-            full_z = np.full_like(z, np.nan)
-            for r in grid_rows:
-                if r["model"] == "XGB-20raw":
-                    i = C_INV_GRID.index(r["C_inv"])
-                    j = L_GRID.index(r["L"])
-                    raw_z[i, j] = r["regret_per_dec"]
-                elif r["model"] == "XGB-24full":
-                    i = C_INV_GRID.index(r["C_inv"])
-                    j = L_GRID.index(r["L"])
-                    full_z[i, j] = r["regret_per_dec"]
-            z = raw_z - full_z
-        elif key is None and "fraction" in title.lower():
-            # Not present in grid_rows (it lives in boot_rows).  Fill with NaN.
-            z = np.full((len(C_INV_GRID), len(L_GRID)), np.nan)
-        else:
-            z = np.full((len(C_INV_GRID), len(L_GRID)), np.nan)
-            for r in grid_rows:
-                if r["model"] != key:
-                    continue
-                i = C_INV_GRID.index(r["C_inv"])
-                j = L_GRID.index(r["L"])
-                z[i, j] = r["regret_per_dec"]
+    payloads = regret_plot_payloads(grid_rows)
+    for ax, (panel_id, title) in zip(axes.flat, panels):
+        z = payloads[panel_id]
         im = ax.imshow(z, aspect="auto", origin="lower", cmap="viridis")
         ax.set_title(title)
         ax.set_xticks(range(len(L_GRID)))
@@ -299,6 +264,8 @@ def plot_grid(grid_rows, out_png, out_pdf):
 
 
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
+    FIG.mkdir(parents=True, exist_ok=True)
     print("Fitting trees on V20 / V20+V_AGG / V_AGG feature sets ...")
     scores, y = load_split(TRAIN, TEST, FEATS, TREE_SEED)
     n = len(y)

@@ -99,6 +99,16 @@ def _receipt(*, source_kind: str, successes: set[int], adapter: str | None = Non
 
 
 class PavlovEvalReceiptCompareTests(unittest.TestCase):
+    def test_independent_wilson_reference(self):
+        result = compare.wilson_uncertainty(7, 100)
+        self.assertAlmostEqual(result["wilson_low"], 0.0343192611, places=9)
+        self.assertAlmostEqual(result["wilson_high"], 0.1374951474, places=9)
+        self.assertAlmostEqual(compare.wilson_uncertainty(0, 100)["wilson_low"], 0)
+        self.assertAlmostEqual(compare.wilson_uncertainty(100, 100)["wilson_high"], 1)
+        for k, n in ((-1, 100), (101, 100), (0, 0)):
+            with self.assertRaises(ValueError):
+                compare.wilson_uncertainty(k, n)
+
     def test_valid_paired_component_comparison_passes(self) -> None:
         base = _receipt(source_kind="base_model", successes=set(range(7)))
         trained = _receipt(
@@ -255,7 +265,7 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
         with self.assertRaises(compare.ReceiptComparisonError):
             compare.require_comparable(base, trained)
 
-    def test_cli_is_local_and_writes_blocked_receipt(self) -> None:
+    def test_cli_is_local_and_writes_passing_component_comparison(self) -> None:
         base = _receipt(source_kind="base_model", successes=set(range(7)))
         trained = _receipt(
             source_kind="sampler_path", successes=set(range(10)), adapter=_hex("4", 40)

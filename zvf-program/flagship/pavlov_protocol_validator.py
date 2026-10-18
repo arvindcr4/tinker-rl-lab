@@ -569,10 +569,8 @@ def _find_unqualified_holdout_claims(protocol_text: str) -> list[dict[str, Any]]
         line = raw_line.replace("*", " ")
         if not any(pattern.search(line) for pattern in HOLDOUT_CLAIM_PATTERNS):
             continue
-        context = " ".join(
-            item.replace("*", " ")
-            for item in lines[max(0, index - 1) : min(len(lines), index + 2)]
-        )
+        context = " ".join(sentence for sentence in re.split(r"(?<=[.!?])\s+", line)
+                           if any(pattern.search(sentence) for pattern in HOLDOUT_CLAIM_PATTERNS))
         if CONDITIONAL_HOLDOUT_RE.search(context):
             continue
         claims.append({"line": index + 1, "text": raw_line.strip()})

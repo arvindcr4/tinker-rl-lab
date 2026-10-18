@@ -330,7 +330,7 @@ def _audit_hf(value: Any, path: str, errors: list[str]) -> bool:
             and _immutable(revision)
             and _https_host(url, "huggingface.co")
             and str(url).startswith(str(repo).rstrip("/") + "/")
-            and str(revision) in str(url)
+            and str(url) in {str(repo).rstrip("/") + "/" + kind + "/" + str(revision) for kind in ("tree", "commit")}
             and visibility in {"public", "private"}
             and type(safe) is bool
             and _sha256(_first(record, ("receipt_hash", "publication_hash")))
@@ -627,6 +627,8 @@ def audit_live_receipt(receipt: Mapping[str, Any]) -> list[str]:
     errors: list[str] = []
     if not isinstance(receipt, Mapping):
         return ["live: JSON object is required"]
+    if receipt.get("schema_version") != "pavlov-live-xlam-run-receipt-v1" or receipt.get("receipt_type") != "paid_xlam_component_run":
+        _block(errors, "live.schema", "unsupported schema or receipt type")
     if not _sha256(receipt.get("receipt_hash")):
         _block(errors, "live.receipt_hash", "canonical receipt hash is required")
     elif receipt.get("receipt_hash") != sha256_json(_receipt_hash_payload(receipt)):
@@ -663,6 +665,9 @@ def audit_live_receipt(receipt: Mapping[str, Any]) -> list[str]:
         if not isinstance(debits, list) or not debits:
             _block(errors, "live.budget.debits", "debit list is required")
         else:
+            identities = [item.get("debit_id") for item in debits if isinstance(item, Mapping)]
+            if len(identities) != len(set(identities)):
+                _block(errors, "live.budget.debits", "duplicate debit identities")
             for index, debit in enumerate(debits):
                 record = _mapping(debit)
                 amount = _money(record.get("amount_usd", record.get("amount"))) if record else None
@@ -675,6 +680,8 @@ def audit_live_receipt(receipt: Mapping[str, Any]) -> list[str]:
     evaluator = _mapping(receipt.get("evaluator_provenance", receipt.get("evaluator")))
     if evaluator is None or str(evaluator.get("status", "")).lower() not in {"verified", "complete", "admissible"} or not _immutable(evaluator.get("revision")) or not _immutable(evaluator.get("dataset_revision")) or not all(_sha256(evaluator.get(name)) for name in ("split_manifest_hash", "task_id_hash", "verifier_hash", "container_digest", "provenance_hash")) or not _immutable(evaluator.get("receipt_id")) or evaluator.get("primary_eval_heldout") is True or evaluator.get("held_out") is True:
         _block(errors, "live.evaluator_provenance", "verified evaluator provenance is incomplete or overclaims held-out evidence")
+    if evaluator and evaluator.get("dataset_revision") != _first(_mapping(receipt.get("dataset")) or {}, ("revision", "dataset_revision", "source_revision")):
+        _block(errors, "live.evaluator_provenance", "dataset revision mismatch")
     return errors
 
 
@@ -740,6 +747,19 @@ def audit_receipt_set(
     blockers.extend(audit_campaign(campaign, contract))
     for index, receipt in enumerate(live_receipts):
         blockers.extend(f"live[{index}].{error}" for error in audit_live_receipt(receipt))
+    run_ids = [str(receipt.get("run", {}).get("run_id")) for receipt in live_receipts]
+    if len(run_ids) != len(set(run_ids)):
+        blockers.append("campaign: duplicate run identities")
+    debits = {}
+    for receipt in live_receipts:
+        for debit in receipt.get("budget", {}).get("debits", []):
+            identity = debit.get("debit_id")
+            if identity in debits:
+                blockers.append("campaign: duplicate or conflicting debit identity")
+            debits[identity] = debit
+    total = sum((_money(d.get("amount_usd", d.get("amount"))) or Decimal("0") for d in debits.values()), Decimal("0"))
+    if total > EXACT_MAXIMUM_USD:
+        blockers.append("campaign: aggregate debits exceed authorized cap")
     blockers.extend(audit_cross_bindings(bundle, campaign, live_receipts, bindings))
     return {
         "schema_version": AUDIT_SCHEMA_VERSION,

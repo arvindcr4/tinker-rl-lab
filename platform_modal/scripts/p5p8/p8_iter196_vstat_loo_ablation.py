@@ -19,7 +19,7 @@ Pipeline:
   3. For each fset in {20raw, 24full, 23-V_mean, 23-V_std, 23-V_max,
      23-V_min, 4sensor}, fit XGB-200 with 5 seeds.
   4. For each (fset, c, seed) compute min-cost-per-tx (c in {1, 10, 100,
-     1000}) and per-fset catch-rate at FP budget 1% + Brier + AUC.
+     1000}) and per-fset recall at total flag budget 1% + Brier + AUC.
   5. Per-(c, seed), bootstrap B=2000 paired-seed CI on the gap
         gap_f = min_cost(23_minus_f, c) - min_cost(20raw, c)
      and compare to the FULL 24full-20raw baseline gap.
@@ -52,6 +52,8 @@ import numpy as np
 
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+from _review02_contracts import stable_seed, finite_json
+from _analysis_common import auc_rank
 from _paths import REPO_ROOT  # noqa: E402
 from _p8_common import (  # noqa: E402
     RAW20,
@@ -104,22 +106,59 @@ def cost_curve(s, y, c):
         fp = int(((flagged == 1) & (y == 0)).sum())
         fn = n_pos - tp
         costs[i] = (fn * c + fp * 1.0) / N
-        flagged_frac[i] = fp / N
+        flagged_frac[i] = (tp + fp) / N
     return th, costs, flagged_frac
 
 
+def operating_rates(s, y, threshold):
+    s, y = np.asarray(s), np.asarray(y)
+    flags = s >= threshold
+    n = len(y)
+    fp = int((flags & (y == 0)).sum())
+    negatives = int((y == 0).sum())
+    return dict(flag_rate=float(flags.mean()) if n else float('nan'),
+                fp_per_transaction=fp/n if n else float('nan'),
+                false_positive_rate=fp/negatives if negatives else float('nan'))
+
+
 def min_cost(s, y, c):
-    th, costs, _ = cost_curve(s, y, c)
+    """Empirical oracle minimum over all breakpoints; never prospective test risk.
+
+    For a deployed threshold, call this ONLY on validation labels, then evaluate
+    the frozen threshold on test labels using cost_at_threshold.
+    """
+    s, y = np.asarray(s, float), np.asarray(y)
+    if len(s) != len(y) or not len(s) or not np.isfinite(s).all() or not np.isin(y, [0, 1]).all() or c < 0:
+        raise ValueError('finite scores, binary labels, and nonnegative costs required')
+    thresholds = np.r_[np.unique(s), np.nextafter(s.max(), np.inf)]
+    costs = [cost_at_threshold(s, y, c, t) for t in thresholds]
     i = int(np.argmin(costs))
-    return float(costs[i]), float(th[i])
+    return float(costs[i]), float(thresholds[i])
 
 
-def catch_at_fp(s, y, fp_budget=0.01):
-    """Fraction of positives caught when allowed to flag `fp_budget` of N."""
-    n = s.shape[0]
-    k = max(1, int(round(n * fp_budget)))
-    top_idx = np.argsort(-s)[:k]
-    return float(y[top_idx].sum()) / max(1, int((y == 1).sum()))
+def cost_at_threshold(s, y, c, threshold):
+    flagged = np.asarray(s) >= threshold
+    y = np.asarray(y)
+    return float((c*((~flagged) & (y == 1)).sum() + (flagged & (y == 0)).sum()) / len(y))
+
+
+def recall_at_flag_budget(s, y, flag_budget=0.01):
+    """Recall under a total flag-count budget; ties use stable input order."""
+    s, y = np.asarray(s), np.asarray(y)
+    n_pos = int((y == 1).sum())
+    if not len(y) or n_pos == 0:
+        return float('nan')
+    k = min(len(s), max(0, int(np.floor(len(s)*flag_budget))))
+    top_idx = np.argsort(-s, kind='stable')[:k]
+    return float(y[top_idx].sum())/n_pos
+
+
+def most_damaging_features(auc_full, loo_aucs):
+    if not np.isfinite(auc_full) or not loo_aucs or not all(np.isfinite(x) for x in loo_aucs.values()):
+        return []
+    drops = {key: auc_full-value for key, value in loo_aucs.items()}
+    maximum = max(drops.values())
+    return sorted(key for key, value in drops.items() if np.isclose(value, maximum, rtol=0, atol=1e-12))
 
 
 def brier(s, y):
@@ -127,21 +166,7 @@ def brier(s, y):
 
 
 def auc(s, y):
-    """Mann-Whitney U / n_pos / n_neg."""
-    pos = s[y == 1]
-    neg = s[y == 0]
-    n_pos = pos.shape[0]
-    n_neg = neg.shape[0]
-    if n_pos == 0 or n_neg == 0:
-        return 0.5
-    # rank-sum using sort
-    all_s = np.concatenate([pos, neg])
-    order = np.argsort(all_s, kind="mergesort")
-    ranks = np.empty_like(order, dtype=np.float64)
-    ranks[order] = np.arange(1, all_s.shape[0] + 1, dtype=np.float64)
-    sum_ranks_pos = ranks[:n_pos].sum()
-    u = sum_ranks_pos - n_pos * (n_pos + 1) / 2.0
-    return float(u / (n_pos * n_neg))
+    return auc_rank(np.asarray(y).tolist(), np.asarray(s).tolist())
 
 
 def main():
@@ -174,7 +199,7 @@ def main():
             mc, t_opt = min_cost(s, yte, c)
             minc[(fset, sd, c)] = mc
             optt[(fset, sd, c)] = t_opt
-            catches[(fset, sd, c)] = catch_at_fp(s, yte, fp_budget=0.01)
+            catches[(fset, sd, c)] = recall_at_flag_budget(s, yte, flag_budget=0.01)
 
     # Per-(fset, c) mean across seeds
     minc_mean = {(fset, c): float(np.mean([minc[(fset, sd, c)] for sd in SEEDS]))
@@ -195,13 +220,14 @@ def main():
     # ----- TSV: cost curves -----
     out_curve = RES / "p8_iter196_loo_cost_curve.tsv"
     with out_curve.open("w") as f:
-        f.write("fset\tc\tseed\tthreshold\tcost_per_tx\tflagged_frac\n")
+        f.write("fset\tc\tseed\tthreshold\tcost_per_tx\tflagged_frac\tfp_per_transaction\tfalse_positive_rate\n")
         for (fset, sd) in sorted(probas.keys()):
             s = probas[(fset, sd)]
             for c in COST_RATIOS:
                 th, costs, fps = cost_curve(s, yte, c)
                 for i in range(len(th)):
-                    f.write(f"{fset}\t{c}\t{sd}\t{th[i]:.4f}\t{costs[i]:.6f}\t{fps[i]:.4f}\n")
+                    rates = operating_rates(s, yte, th[i])
+                    f.write(f"{fset}\t{c}\t{sd}\t{th[i]:.4f}\t{costs[i]:.6f}\t{fps[i]:.4f}\t{rates['fp_per_transaction']:.4f}\t{rates['false_positive_rate']:.4f}\n")
 
     # ----- TSV: catches -----
     out_catch = RES / "p8_iter196_loo_catch.tsv"
@@ -240,7 +266,7 @@ def main():
             gaps_per_c[label] = {}
             for c in COST_RATIOS:
                 d = np.array([minc[(fset, sd, c)] - minc[("20raw", sd, c)] for sd in SEEDS])
-                ci = paired_bootstrap_ci(d, N_BOOT, seed=20260706 + c + hash(label) % 10000)
+                ci = paired_bootstrap_ci(d, N_BOOT, seed=20260706 + c + stable_seed(0, label))
                 m_20 = float(np.mean([minc[("20raw", sd, c)] for sd in SEEDS]))
                 m_loo = float(np.mean([minc[(fset, sd, c)] for sd in SEEDS]))
                 # lift fraction: how much of the 24full-20raw gap is preserved?
@@ -290,15 +316,20 @@ def main():
     # AUC gap: per-(LOO set) mean AUC vs 20raw AUC, the most negative
     auc_per_fset = {fset: float(np.mean([aucs[(fset, sd)] for sd in SEEDS]))
                     for fset in FEATURE_SETS}
-    loo_auc_drops = {f: auc_per_fset["20raw"] - auc_per_fset[LOO_KEY[f]]
+    loo_auc_drops = {f: auc_per_fset["24full"] - auc_per_fset[LOO_KEY[f]]
                      for f in AGG4}
-    worst = min(loo_auc_drops, key=loo_auc_drops.get)
-    h5 = worst == "V_std"
+    worst = most_damaging_features(auc_per_fset["24full"], {f: auc_per_fset[LOO_KEY[f]] for f in AGG4})
+    h5 = worst == ["V_std"]
 
     # H6: linearity gap <= 50% of full lift (features are roughly additive)
     h6 = abs(linearity_gap) <= 0.5 * abs(full_lift_c100)
 
     summary = {
+        "analysis_protocol": "pro-review-02-v2-exploratory",
+        "selection": "test-label empirical oracle; no prospective performance claim",
+        "uncertainty": "paired training seeds conditional on fixed reused test set; not example-population uncertainty",
+        "auc_most_damaging_tied_set": worst,
+        "resampling_seeds": {label: {str(c): 20260706+c+stable_seed(0, label) for c in COST_RATIOS} for label, _ in loo_specs},
         "data": {
             "n_train": int(Xtr.shape[0]),
             "n_test": int(Xte.shape[0]),
@@ -337,17 +368,17 @@ def main():
         },
         "ci_per_loo_per_c": {
             label: {str(c): paired_bootstrap_ci(gaps_per_c[label][c], N_BOOT,
-                                                seed=20260706 + c + hash(label) % 10000)
+                                                seed=20260706 + c + stable_seed(0, label))
                     for c in COST_RATIOS}
             for label, _ in loo_specs
         },
     }
-    summary["verdict"] = sum(int(v) for v in summary["hypotheses"].values())
+    summary["descriptive_hypothesis_count"] = sum(int(v) for v in summary["hypotheses"].values())
     summary["contribution_ranking"] = sorted(contributions.keys(),
                                               key=lambda f: contributions[f]["lift_loo_minus_full"],
                                               reverse=True)
     out_sum = RES / "p8_iter196_loo_summary.json"
-    out_sum.write_text(json.dumps(summary, indent=2, default=float))
+    out_sum.write_text(json.dumps(finite_json(summary), indent=2, default=float, allow_nan=False))
     print(f"Wrote {out_sum}", flush=True)
     print(f"H1..H6: {summary['hypotheses']}", flush=True)
     print(f"Headline at c=100: {summary['headline_at_c100']}", flush=True)

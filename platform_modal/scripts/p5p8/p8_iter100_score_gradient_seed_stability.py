@@ -2,7 +2,7 @@
 """P8 JOB A (iter 100): seed-stability check of the iter-80 row 94
 score-stream gradient-band selective-LLM rule.
 
-Closes the seed-stability gap on the iter-80 headline:
+Rechecks the historical iter-80 headline with an explicit full-feature proxy:
   "gradient-band (g_thr=0.0001) matches absolute-band (w=0.10) recall@K=2%
    (141/144=97.92%) using 9 LLM calls vs 21 (57% fewer)"
 
@@ -18,9 +18,8 @@ Reports:
   - Per-rule (gradient-band, absolute-band) recall@K=2%, n_llm_calls,
     cost_per_decision at each seed
   - Per-rule paired bootstrap CI on Δrecall@K=2% (seed42 - seed_orig)
-  - HEADLINE: n_llm_calls for gradient-band is 9 at BOTH seeds; recall
-    at K=2% catches >=141 positives at BOTH seeds; cost difference <1% of
-    baseline.
+  - Computed historical count-bound check (not an assertion of success)
+  - Fixed full-feature XGB second-stage surrogate, not measured LLM outcomes
 
 Outputs:
   platform_hybrid/experiments/results/p5p8/p8_iter100_score_gradient_seed42_per_rule.tsv
@@ -37,16 +36,15 @@ import xgboost as xgb
 
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     ALL24,
     load,
     auc_p8 as auc,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
-RES.mkdir(parents=True, exist_ok=True)
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8" / "corrected-review20-v2"
 
 SEED_ORIG = 20260705
 SEED_NEW = 42
@@ -81,7 +79,7 @@ def boot_recall(scores, y, k_pct, B, seed):
         sb, yb = scores[idx], y[idx]
         top = np.argpartition(-sb, k - 1)[:k]
         npos = int(yb.sum())
-        out[b] = int(yb[top].sum()) / max(1, npos)
+        out[b] = int(yb[top].sum()) / npos if npos else np.nan
     return out
 
 
@@ -107,7 +105,7 @@ def eval_rule(p_cheap, p_llm, y, rule, k_top, g_thr=None, w=None):
     else:
         comp, n_llm = apply_absolute(p_cheap, p_llm, w)
     p_K, r_K, n_caught = pr_K(comp, y, K_PCT)
-    cost_per = (n_llm * COST_LLM + (len(y) - n_llm) * COST_XGB) / len(y)
+    cost_per = (n_llm * COST_LLM + len(y) * COST_XGB) / len(y)
     return {
         "auc": auc(comp, y),
         "recall_at_K2": r_K,
@@ -115,7 +113,7 @@ def eval_rule(p_cheap, p_llm, y, rule, k_top, g_thr=None, w=None):
         "n_caught_at_K2": n_caught,
         "n_llm_calls": n_llm,
         "cost_per_decision": cost_per,
-        "cost_per_fraud_caught": float(cost_per * len(y) / max(1, n_caught)),
+        "cost_per_fraud_caught": float(cost_per * len(y) / n_caught) if n_caught else None,
     }
 
 
@@ -129,24 +127,32 @@ def write_tsv(name, rows):
 
 
 def main():
+    RES.mkdir(parents=True, exist_ok=True)
     print("# === P8 score-gradient seed-stability check (JOB A iter 100) ===")
     Xtr, ytr = load(ROOT / "fraud_data.csv")
     Xte, yte = load(ROOT / "test_data.csv")
     n_test = len(yte); k_top = max(1, int(round(K_PCT / 100 * n_test)))
     print(f"# train={Xtr.shape}, test={Xte.shape}, K_top={k_top}, base_rate={yte.mean():.4f}")
 
+    # Explicit fixed full-feature surrogate for every backbone and seed.
+    # This is an XGB proxy, not measured LLM inference.
+    predictions = {
+        (name, seed): fit(Xtr, ytr, Xte, cols, seed)
+        for name, cols in [("XGB-20raw", RAW20), ("XGB-24full", ALL24)]
+        for seed in (SEED_ORIG, SEED_NEW)
+    }
+    p_llm = predictions[("XGB-24full", SEED_ORIG)]
     # Fit at both seeds
     rows = []
     boot_data = {}  # for paired CI
-    for backbone, cols in [("XGB-20raw", RAW20), ("XGB-24full", ALL24)]:
-        p_te_orig = fit(Xtr, ytr, Xte, cols, SEED_ORIG)
-        p_te_new = fit(Xtr, ytr, Xte, cols, SEED_NEW)
+    for backbone in ("XGB-20raw", "XGB-24full"):
+        p_te_orig = predictions[(backbone, SEED_ORIG)]
+        p_te_new = predictions[(backbone, SEED_NEW)]
         auc_orig = auc(p_te_orig, yte); auc_new = auc(p_te_new, yte)
         print(f"# {backbone} AUC: orig={auc_orig:.6f} new={auc_new:.6f} Δ={auc_new-auc_orig:+.6f}")
         # Replay both rules at both seeds
         for rule in ("gradient-band", "absolute-band"):
-            for label, seed_label, p_cheap in [("orig", SEED_ORIG, p_te_orig), ("new", SEED_NEW, p_te_new)]:
-                p_llm = p_te_orig  # always use orig LLM
+            for seed_label, p_cheap in [(SEED_ORIG, p_te_orig), (SEED_NEW, p_te_new)]:
                 res = eval_rule(p_cheap, p_llm, yte, rule, k_top, g_thr=G_THR, w=W)
                 rows.append({
                     "backbone": backbone, "rule": rule, "seed": seed_label,
@@ -157,17 +163,19 @@ def main():
                     "cost_per_fraud_caught": res["cost_per_fraud_caught"],
                 })
             # paired bootstrap CI on recall_at_K2 (orig vs new), same backbone, same rule
-            comp_orig, n_llm_orig = (apply_gradient(p_te_orig, p_te_orig, G_THR, k_top)
+            comp_orig, n_llm_orig = (apply_gradient(p_te_orig, p_llm, G_THR, k_top)
                                      if rule == "gradient-band"
-                                     else apply_absolute(p_te_orig, p_te_orig, W))
-            comp_new, n_llm_new = (apply_gradient(p_te_new, p_te_orig, G_THR, k_top)
+                                     else apply_absolute(p_te_orig, p_llm, W))
+            comp_new, n_llm_new = (apply_gradient(p_te_new, p_llm, G_THR, k_top)
                                    if rule == "gradient-band"
-                                   else apply_absolute(p_te_new, p_te_orig, W))
+                                   else apply_absolute(p_te_new, p_llm, W))
             b_orig = boot_recall(comp_orig, yte, K_PCT, B=N_BOOT, seed=SEED_ORIG)
-            b_new = boot_recall(comp_new, yte, K_PCT, B=N_BOOT, seed=SEED_NEW)
+            b_new = boot_recall(comp_new, yte, K_PCT, B=N_BOOT, seed=SEED_ORIG)  # identical row draws
             b_diff = b_new - b_orig
             boot_data[(backbone, rule)] = {
                 "b_orig": b_orig, "b_new": b_new, "b_diff": b_diff,
+                "recall_orig": pr_K(comp_orig, yte, K_PCT)[1],
+                "recall_new": pr_K(comp_new, yte, K_PCT)[1],
                 "n_llm_orig": n_llm_orig, "n_llm_new": n_llm_new,
             }
 
@@ -195,17 +203,18 @@ def main():
     for (backbone, rule), d in boot_data.items():
         boot_rows.append({
             "backbone": backbone, "rule": rule,
-            "recall_orig": float(d["b_orig"].mean()),
-            "recall_orig_ci_lo": float(np.percentile(d["b_orig"], 2.5)),
-            "recall_orig_ci_hi": float(np.percentile(d["b_orig"], 97.5)),
-            "recall_new": float(d["b_new"].mean()),
-            "recall_new_ci_lo": float(np.percentile(d["b_new"], 2.5)),
-            "recall_new_ci_hi": float(np.percentile(d["b_new"], 97.5)),
-            "delta_recall": float(d["b_diff"].mean()),
-            "delta_recall_ci_lo": float(np.percentile(d["b_diff"], 2.5)),
-            "delta_recall_ci_hi": float(np.percentile(d["b_diff"], 97.5)),
+            "recall_orig": d["recall_orig"],
+            "recall_orig_ci_lo": float(np.nanpercentile(d["b_orig"], 2.5)),
+            "recall_orig_ci_hi": float(np.nanpercentile(d["b_orig"], 97.5)),
+            "recall_new": d["recall_new"],
+            "recall_new_ci_lo": float(np.nanpercentile(d["b_new"], 2.5)),
+            "recall_new_ci_hi": float(np.nanpercentile(d["b_new"], 97.5)),
+            "delta_recall": d["recall_new"] - d["recall_orig"],
+            "delta_recall_ci_lo": float(np.nanpercentile(d["b_diff"], 2.5)),
+            "delta_recall_ci_hi": float(np.nanpercentile(d["b_diff"], 97.5)),
             "n_llm_orig": d["n_llm_orig"], "n_llm_new": d["n_llm_new"],
             "delta_n_llm": d["n_llm_new"] - d["n_llm_orig"],
+            "valid_paired_bootstrap_replicates": int(np.isfinite(d["b_diff"]).sum()),
         })
     write_tsv("p8_iter100_score_gradient_seed_stability.tsv", boot_rows)
 
@@ -229,17 +238,22 @@ def main():
         "max_abs_delta_n_llm_across_backbones_rules": int(
             max(abs(r["delta_n_llm"]) for r in boot_rows)),
         "n_rule_backbone_cells": len(rows),
-        "verdict": ("GRADIENT-BAND HEADLINE SEED-STABLE" if headline_pass
-                    else "GRADIENT-BAND HEADLINE FAILED SEED STABILITY"),
-        "key_finding": ("Gradient-band selective-LLM (g_thr=0.0001, XGB-20raw backbone) "
-                        f"catches >=141 of 144 positives at K=2% with <=12 LLM calls at "
-                        f"BOTH seed={SEED_ORIG} and seed={SEED_NEW}; the iter-80 row 94 "
-                        "headline is seed-falsifiable and seed-stable. At seed={SEED_NEW} "
-                        f"the rule is even MORE selective: 5 LLM calls recover 143 "
-                        "positives (vs 9 calls recovering 141 at the original seed); "
-                        "the rule is robust because it targets score-stream plateau "
-                        "rows, which are an intrinsic property of the score "
-                        "distribution rather than a seed artefact."),
+        "verdict": ("HISTORICAL COUNT BOUNDS PASSED FOR TWO SEEDS" if headline_pass
+                    else "HISTORICAL COUNT BOUNDS FAILED"),
+        "second_stage": "fixed XGB-24full surrogate at original seed; not measured LLM",
+        "cost_model": {"status": "assumed per-stage prices, not measured billing",
+                       "screening_usd_per_row": COST_XGB,
+                       "second_stage_usd_per_invocation": COST_LLM},
+        "uncertainty_scope": "paired held-out row bootstrap conditional on two fitted seeds",
+        "key_finding": (
+            f"Gradient-band XGB-20raw: seed {SEED_ORIG} caught "
+            f"{headline_grad_20_orig['n_caught_at_K2']}/{int(yte.sum())} positives "
+            f"using {headline_grad_20_orig['n_llm_calls']} surrogate calls; "
+            f"seed {SEED_NEW} caught {headline_grad_20_new['n_caught_at_K2']}/{int(yte.sum())} "
+            f"using {headline_grad_20_new['n_llm_calls']} calls. "
+            f"Historical count-bound check {'passed' if headline_pass else 'failed'}. "
+            "Two fitted seeds do not establish general seed stability."
+        ),
     }
     (RES / "p8_iter100_score_gradient_seed_stability.json").write_text(
         json.dumps(summary, indent=2, default=str))

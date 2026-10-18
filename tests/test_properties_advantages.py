@@ -86,7 +86,7 @@ def test_standardized_advantages_invariant_to_positive_affine_rewards(rs, a, b):
     assume(_std(rs) > 1e-2)
     base = grpo.normalize_rewards(rs)
     moved = grpo.normalize_rewards([a * r + b for r in rs])
-    for x, y in zip(base, moved):
+    for x, y in zip(base, moved, strict=True):
         assert math.isclose(x, y, rel_tol=1e-5, abs_tol=1e-5)
 
 
@@ -100,7 +100,7 @@ def test_unbiased_advantages_shift_invariant_scale_equivariant(rs, a, b):
     base = grpo.normalize_rewards(rs, unbiased=True)
     moved = grpo.normalize_rewards([a * r + b for r in rs], unbiased=True)
     tol = 1e-9 * (1.0 + abs(a) * 10.0 + abs(b))
-    for x, y in zip(base, moved):
+    for x, y in zip(base, moved, strict=True):
         assert math.isclose(a * x, y, rel_tol=1e-9, abs_tol=tol)
 
 
@@ -119,7 +119,7 @@ def test_advantages_preserve_reward_order(rs):
 def test_global_normalization_matches_group_for_single_group(rs, unbiased):
     g = grpo.normalize_advantages_global(rs, unbiased=unbiased)
     n = grpo.normalize_rewards(rs, unbiased=unbiased)
-    for x, y in zip(g, n):
+    for x, y in zip(g, n, strict=True):
         assert math.isclose(x, y, rel_tol=1e-9, abs_tol=1e-9)
 
 
@@ -129,7 +129,7 @@ def test_global_exclude_keeps_alignment_and_zero_mean_basis(rs, data):
     exclude = data.draw(st.lists(st.booleans(), min_size=len(rs), max_size=len(rs)))
     adv = grpo.normalize_advantages_global(rs, unbiased=True, exclude=exclude)
     assert len(adv) == len(rs)
-    basis = [a for a, drop in zip(adv, exclude) if not drop] or adv
+    basis = [a for a, drop in zip(adv, exclude, strict=True) if not drop] or adv
     assert abs(sum(basis)) <= 1e-9 * len(rs) * (1.0 + max(abs(r) for r in rs))
 
 
@@ -139,7 +139,7 @@ def test_truncation_mask_zeroes_exactly_the_truncated(rs, data):
     adv = grpo.normalize_rewards(rs)
     lens = data.draw(st.lists(st.integers(0, 64), min_size=len(rs), max_size=len(rs)))
     masked = grpo.apply_truncation_mask(adv, lens, max_tokens=32)
-    for a, m, n in zip(adv, masked, lens):
+    for a, m, n in zip(adv, masked, lens, strict=True):
         assert m == (0.0 if n >= 32 else a)
 
 
@@ -155,7 +155,8 @@ def test_gae_returns_identity_and_lambda_one_is_discounted_return(t, data):
     gamma = data.draw(st.floats(min_value=0.0, max_value=1.0))
     dones = [False] * (t - 1) + [True]
     adv, ret = critic.compute_gae_advantages(rs, vs, dones, gamma=gamma, lam=1.0)
-    for a, r, v in zip(adv, ret, vs):
+    # The final value is the bootstrap entry, not a state with a return.
+    for a, r, v in zip(adv, ret, vs[:-1], strict=True):
         assert math.isclose(r, a + v, rel_tol=1e-12, abs_tol=1e-12)
     # lam=1 with a terminal at the end: return_t is the discounted reward-to-go.
     g = 0.0
@@ -179,7 +180,7 @@ def batches(draw):
     gen = torch.Generator().manual_seed(seed)
     lps = [
         (-torch.rand(p + r, generator=gen, dtype=torch.float64)).requires_grad_(True)
-        for p, r in zip(prompt, resp)
+        for p, r in zip(prompt, resp, strict=True)
     ]
     return adv, prompt, resp, lps
 
@@ -192,12 +193,16 @@ def test_grpo_loss_scores_only_response_tokens(batch, use_nll, nll_coef):
     loss_fn = grpo.make_grpo_loss_fn(adv, nll_mask=nll_mask, nll_coef=nll_coef, response_lens=resp)
     loss, metrics = loss_fn(None, lps)
     loss.backward()
-    expected = sum(-a * lp[p:].sum().item() for a, p, lp in zip(adv, prompt, lps)) / len(adv)
+    expected = sum(
+        -a * lp[p:].sum().item() for a, p, lp in zip(adv, prompt, lps, strict=True)
+    ) / len(adv)
     if use_nll and nll_coef:
-        expected += nll_coef * (-sum(lp[p:].mean().item() for p, lp in zip(prompt, lps)) / len(adv))
+        expected += nll_coef * (
+            -sum(lp[p:].mean().item() for p, lp in zip(prompt, lps, strict=True)) / len(adv)
+        )
     assert math.isclose(loss.item(), expected, rel_tol=1e-9, abs_tol=1e-9)
     assert math.isclose(metrics["grpo_loss"], loss.item(), rel_tol=1e-12, abs_tol=1e-12)
-    for p, r, a, lp in zip(prompt, resp, adv, lps):
+    for p, r, a, lp in zip(prompt, resp, adv, lps, strict=True):
         assert torch.all(lp.grad[:p] == 0), "prompt tokens must get zero gradient"
         if not use_nll or not nll_coef:
             want = torch.full((r,), -a / len(adv), dtype=lp.dtype)
@@ -223,7 +228,7 @@ def test_gspo_first_epoch_scores_only_response_tokens(batch):
     assert math.isclose(loss.item(), -sum(adv) / len(adv), rel_tol=1e-9, abs_tol=1e-12)
     assert metrics["gspo_clip_frac"] == 0.0
     loss.backward()
-    for p, lp in zip(prompt, lps):
+    for p, lp in zip(prompt, lps, strict=True):
         assert torch.all(lp.grad[:p] == 0)
 
 

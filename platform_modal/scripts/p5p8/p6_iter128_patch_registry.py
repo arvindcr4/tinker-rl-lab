@@ -1,112 +1,59 @@
 #!/usr/bin/env python3
-"""P6 JOB B (iter 128): patch the 9 delta_*.json entries with recomputed
-mean_zvf CIs from the iter-128 recompute run.
+"""Stage complete review17-v2 result objects; validate before publishing proposals.
 
-For each of the 9 GRPO-family methods, find the `mean_zvf` measured row
-at panel zvf130_5seed, replace:
-  - ci_low, ci_high  (with the bootstrap CI from iter-128 recompute)
-  - ci_method         (from "point_no_perseed_sd" to
-                       "bootstrap_paired_5seed")
-and add a comment with the recompute provenance.
-
-This is the literal operational recommendation (a) from iter-114 row
-128: "recompute the 8 POINT_ONLY mean_zvf CIs from raw zvf_iter130*.tsv
-(single 80-LoC script, zero harvest cost) — closes 24% of the gap".
-
-Stdlib only. Idempotent.
+Never overwrite historical registry entries. Applying a reviewed migration is a
+separate operation. Old summaries without verified sample/provenance are rejected.
 """
-from __future__ import annotations
-
-import csv
+import math
+import copy
 import json
 from pathlib import Path
-
 import sys
-sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid" / "experiments" / "results" / "p5p8"
+import jsonschema
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+from review17_contract import VERSION, validate_interval
 
-DELTA_IDS = [
-    "delta_aero", "delta_areal", "delta_cppo", "delta_es", "delta_gift",
-    "delta_grpo", "delta_mcgrpo", "delta_ngrpo", "delta_scafgrpo",
-]
+ROOT = REPO_ROOT
+RES = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
+DELTA_IDS = [f"delta_{m}" for m in ("aero", "areal", "cppo", "es", "gift", "grpo", "mcgrpo", "ngrpo", "scafgrpo")]
+
+
+def proposed_entry(entry, rec):
+    result = rec["result"]
+    if (result.get("analysis_version") != VERSION or rec.get("metric") != "mean_zvf"
+            or not rec.get("source_sha256") or not validate_interval(result["ci_low"], result["ci_high"])
+            or not math.isfinite(result["delta"]) or not result.get("ci_method")
+            or result["n"] < 2 or result["n"] != len(set(result["sample_ids"]))):
+        raise ValueError("Incomplete or invalid recomputation provenance")
+    if result["significant"] != (result["ci_low"] > 0 or result["ci_high"] < 0):
+        raise ValueError("Inconsistent significance")
+    entry = copy.deepcopy(entry)
+    matches = [r for r in entry.get("measured", []) if
+               r.get("metric") == "mean_zvf" and r.get("panel") == "zvf130_5seed"]
+    if len(matches) != 1:
+        raise ValueError("Expected exactly one measurement identity")
+    matches[0].update(copy.deepcopy(result))
+    matches[0].update(source_sha256=rec["source_sha256"], units=rec["units"], base="grpo")
+    return entry
 
 
 def main():
-    print("# === P6 JOB B (iter 128): patch delta_*.json with recomputed CIs ===")
-    # Load recompute summary
-    summary = json.loads(
-        (RES / "p6_iter128_recompute_point_only_summary.json").read_text()
-    )
-    recomp_by_id = {r["delta_id"]: r for r in summary["recomputed"]}
-
-    n_patched = 0
-    n_total = 0
-    n_ci_method_changed = 0
-    for delta_id in DELTA_IDS:
-        fp = ROOT / "platform_hybrid" / "registry" / "entries" / f"{delta_id}.json"
-        if not fp.exists():
-            print(f"# SKIP {delta_id}: not found")
-            continue
-        n_total += 1
-        d = json.loads(fp.read_text())
-        rec = recomp_by_id.get(delta_id)
-        if rec is None:
-            print(f"# SKIP {delta_id}: no recompute result")
-            continue
-        n_measured_changed = 0
-        measured = d.get("measured", [])
-        for row in measured:
-            if (row.get("metric") == "mean_zvf"
-                    and row.get("panel") == "zvf130_5seed"):
-                old_method_obj = row.get("ci_method")
-                old_method_name = (old_method_obj or {}).get("method") if isinstance(old_method_obj, dict) else None
-                row["ci_low"] = round(rec["recomputed_delta_ci_lo"], 6)
-                row["ci_high"] = round(rec["recomputed_delta_ci_hi"], 6)
-                row["ci_method"] = {
-                    "method": "bootstrap_paired_5seed",
-                    "n_boot": 2000,
-                    "seed": 20260705,
-                    "ci_level": 0.95,
-                    "source": "platform_modal/scripts/p5p8/p6_iter128_recompute_point_only.py"
-                }
-                row["iter_recomputed"] = 128
-                if old_method_name == "point_no_perseed_sd":
-                    n_ci_method_changed += 1
-                n_measured_changed += 1
-        # Add provenance comment at the entry root level
-        d["iter128_recompute_note"] = (
-            "Patched by iter 128 JOB B: recomputed mean_zvf CI on zvf130_5seed "
-            "panel from raw zvf_iter130_risk_index.tsv (per-seed n=5) with "
-            "paired bootstrap (B=2000, seed=20260705). Old ci_method="
-            "point_no_perseed_sd (CI width=0) replaced with "
-            "bootstrap_paired_5seed (mean CI width="
-            f"{round(rec['recomputed_delta_ci_hi'] - rec['recomputed_delta_ci_lo'], 6)})."
-        )
-        # Write back
-        fp.write_text(json.dumps(d, indent=2) + "\n")
-        n_patched += 1
-        print(f"# patched {delta_id}: "
-              f"new_ci=[{rec['recomputed_delta_ci_lo']:.4f}, {rec['recomputed_delta_ci_hi']:.4f}] "
-              f"({n_measured_changed} mean_zvf rows changed)")
-
-    # Validate the patched entries with the canonical validator
-    print(f"# summary: patched {n_patched}/{n_total} entries, "
-          f"{n_ci_method_changed} ci_method upgraded point_no_perseed_sd->bootstrap_paired_5seed")
-
-    # Cross-check that schema still passes (run registry_validate.py schema only)
-    try:
-        import subprocess
-        result = subprocess.run(
-            ["python3", str(ROOT / "platform_modal" / "scripts" / "p5p8" / "registry_validate.py"),
-             "--schema-only"],
-            cwd=str(ROOT), capture_output=True, text=True, timeout=60
-        )
-        schema_ok = "PASS" in result.stdout and result.returncode == 0
-        print(f"# schema re-validation: {'PASS' if schema_ok else 'FAIL'}")
-    except Exception as e:
-        print(f"# schema re-validation: ERROR ({e})")
+    summary = json.loads((RES / "p6_iter128_recompute_point_only_summary.json").read_text())
+    if summary.get("analysis_version") != VERSION:
+        raise ValueError("Historical recomputation is not safe to migrate")
+    records = summary["recomputed"]
+    by_id = {r["delta_id"]: r for r in records}
+    if len(by_id) != len(records) or set(by_id) != set(DELTA_IDS):
+        raise ValueError("Incomplete/duplicate recomputation panel")
+    registry = ROOT / "platform_hybrid/registry"
+    schema = json.loads((registry / "schema.json").read_text())
+    proposed = {}
+    for eid in DELTA_IDS:
+        entry = json.loads((registry / "entries" / f"{eid}.json").read_text())
+        proposed[eid] = proposed_entry(entry, by_id[eid])
+        jsonschema.validate(proposed[eid], schema)
+    (RES / "p6_iter128_proposed_entries.json").write_text(json.dumps(proposed, indent=2, allow_nan=False) + "\n")
 
 
 if __name__ == "__main__":

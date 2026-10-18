@@ -36,16 +36,15 @@ from __future__ import annotations
 
 import csv
 import json
-import os
+import math
 import random
 import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
-RES.mkdir(parents=True, exist_ok=True)
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review20-v2"
 
 FEATURES_20 = [f"V{i}" for i in range(1, 21)]
 AGG_4 = ["V_mean", "V_std", "V_max", "V_min"]
@@ -169,7 +168,83 @@ def write_tsv(path: Path, header, rows):
             f.write("\t".join(str(c) for c in r) + "\n")
 
 
+def cost_accounting_rows(timing_record, cpu_usd_per_hour=None,
+                         llm_usd_per_invocation=0.0035, batch_rows=10_000,
+                         sensor_coverage=0.10):
+    """Separate measured batch duration from explicitly assumed dollar rates.
+
+    No CPU billing rate is supplied by the timing artifact, so tree and hybrid
+    total costs stay unavailable unless the caller provides one. The known LLM
+    component is reported separately. The hybrid screens all rows with a tree
+    and acquires one sensor result for each enriched row; no latency is inferred
+    from token price or throughput.
+    """
+    if batch_rows <= 0 or int(batch_rows) != batch_rows:
+        raise ValueError("batch_rows must be a positive integer")
+    if not math.isfinite(sensor_coverage) or not 0 <= sensor_coverage <= 1:
+        raise ValueError("sensor_coverage must lie in [0, 1]")
+    if llm_usd_per_invocation is None:
+        raise ValueError("An explicit finite LLM cost rate is required")
+    for rate in (cpu_usd_per_hour, llm_usd_per_invocation):
+        if rate is not None and (not math.isfinite(rate) or rate < 0):
+            raise ValueError("Cost rates must be finite and nonnegative")
+    duration_10k = None
+    duration_source = None
+    for key, scale in (("infer_time_sec_per_10k", 1.0),
+                       ("inference_us_per_10k", 1e-6), ("inf_us_10k", 1e-6)):
+        value = timing_record.get(key)
+        if value is not None:
+            duration_10k = float(value) * scale
+            if not math.isfinite(duration_10k) or duration_10k < 0:
+                raise ValueError("Tree batch duration must be finite and nonnegative")
+            duration_source = key
+            break
+    duration_batch = duration_10k * batch_rows / 10_000 if duration_10k is not None else None
+    tree_cost = (duration_batch * cpu_usd_per_hour / 3600
+                 if duration_batch is not None and cpu_usd_per_hour is not None else None)
+    sensor_rows = int(round(batch_rows * sensor_coverage))
+
+    def row(role, n, tree_rows, sensor_calls, comment):
+        tree_component = tree_cost if tree_rows else 0.0
+        sensor_component = sensor_calls * llm_usd_per_invocation
+        total = tree_component + sensor_component if tree_component is not None else None
+        return {
+            "model_role": role,
+            "rows_in_batch": n,
+            "tree_rows": tree_rows,
+            "llm_invocations": sensor_calls,
+            "tree_inference_s_batch": duration_batch if tree_rows else None,
+            "tree_timing_source": duration_source if tree_rows else None,
+            "timing_status": ("reported_batch_throughput" if tree_rows and duration_batch is not None
+                              else "unavailable"),
+            "cpu_usd_per_hour": cpu_usd_per_hour if tree_rows else None,
+            "llm_usd_per_invocation": llm_usd_per_invocation if sensor_calls else None,
+            "llm_input_tokens_batch": sensor_calls * 120,
+            "llm_output_tokens_batch": sensor_calls * 5,
+            "tree_cost_usd_batch": tree_component,
+            "llm_cost_usd_batch": sensor_component,
+            "cost_usd_batch": total,
+            "cost_usd_per_decision": total / n if total is not None else None,
+            "cost_status": "assumption_based_estimate" if total is not None else "partial_tree_cost_unavailable",
+            "comment": comment,
+        }
+
+    return [
+        row("XGBoost (scorer)", batch_rows, batch_rows, 0,
+            "Tree duration is reported throughput, not measured per-request latency"),
+        row("Qwen3.5-4B SFT (sensor surrogate)", 1, 0, 1,
+            "Assumed token bill and token counts; sensor latency is unmeasured"),
+        row("Qwen3.5-4B SFT (synchronous scorer surrogate)", 1, 0, 1,
+            "Assumed token bill; synchronous latency is unmeasured"),
+        row(f"Hybrid: XGB+LLM sensor on {sensor_coverage:.0%} of rows", batch_rows,
+            batch_rows, sensor_rows,
+            f"LLM component: ${sensor_rows * llm_usd_per_invocation:g} / {batch_rows} rows; "
+            "add tree cost when an explicit CPU rate is available"),
+    ]
+
+
 def main():
+    RES.mkdir(parents=True, exist_ok=True)
     print("[p8] reading data", file=sys.stderr)
     Xtr, ytr, _ = read_csv(ROOT / "fraud_data.csv")
     Xte, yte, _ = read_csv(ROOT / "test_data.csv")
@@ -334,43 +409,24 @@ def main():
     # ---- Cost-per-decision accounting ----
     # Numbers come from internal records + the xgboost_results.json file in the
     # repo root (released with the paper). LLM cost is a token-bill estimate.
-    cost_rows = []
-    # XGBoost: from xgboost_results.json
+    # XGBoost timing is a duration, never a monetary cost.
     try:
         xgb_json = json.loads((ROOT / "xgboost_results.json").read_text())
-        xgb_infer_us_10k = xgb_json.get("inference_us_per_10k") or xgb_json.get("inf_us_10k")
-    except Exception:
-        xgb_infer_us_10k = None
-    if xgb_infer_us_10k is None:
-        # 6ms-per-10000 of CPU = $0.001 amortised (order-of-magnitude).
-        xgb_infer_us_10k = 1.0
-    cost_rows.append(["XGBoost (scorer)",
-                      10_000,
-                      round(xgb_infer_us_10k, 3),
-                      "0 tokens (numeric)",
-                      "$0 marginal at network scale"])
-
-    # LLM-as-sensor (surrogate): Qwen3.5-4B SFT forward-pass over a serialized
-    # row, ~120 input tokens. P99 latency dominates over the tree path.
-    cost_rows.append(["Qwen3.5-4B SFT (sensor)",
-                      1,
-                      0.0035,
-                      "~120 in / ~5 out",
-                      "Async, post-score OR pre-rank"])
-    cost_rows.append(["Qwen3.5-4B SFT (synchronous scorer)",
-                      1,
-                      0.0035,
-                      "~120 in / ~5 out",
-                      "Hard-real-time budget violation: >>ms"])
-    cost_rows.append(["Hybrid: XGB+LLM as sensor on enriched rows (10% of tx)",
-                      10_000,
-                      round(10_000 * 0.10 * 0.0035, 3),
-                      "0 (9000 x tree) + 1200 tokens (1000 x LLM)",
-                      "$35 / 10k tx (10% LLM coverage)"])
-
-    write_tsv(RES / "p8_cost_accounting.tsv",
-              ["model_role", "rows_in_batch", "cost_usd_batch",
-               "tokens_per_row", "comment"], cost_rows)
+    except (OSError, ValueError):
+        xgb_json = {}
+    cost_rows = cost_accounting_rows(xgb_json)
+    cost_columns = list(cost_rows[0])
+    write_tsv(RES / "p8_cost_accounting.tsv", cost_columns,
+              [[r[c] if r[c] is not None else "" for c in cost_columns] for r in cost_rows])
+    summary["cost_accounting"] = cost_rows
+    summary["cost_assumptions"] = {
+        "llm_usd_per_invocation": 0.0035,
+        "llm_input_tokens_per_invocation": 120,
+        "llm_output_tokens_per_invocation": 5,
+        "sensor_coverage": 0.10,
+        "cpu_usd_per_hour": None,
+        "status": "hypothetical LLM bill; CPU price and LLM latency unavailable",
+    }
 
     def _coerce(o):
         try:

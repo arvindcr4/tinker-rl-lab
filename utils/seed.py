@@ -38,7 +38,9 @@ def set_global_seed(seed: int = 42, deterministic_cudnn: bool = True) -> dict:
     """
     # Python built-in
     random.seed(seed)
-    os.environ["PYTHONHASHSEED"] = str(seed)
+    # Hash randomization was initialized before this function ran. Do not
+    # mutate the environment and pretend the current interpreter changed.
+    hash_seed_environment = os.environ.get("PYTHONHASHSEED")
 
     # NumPy
     try:
@@ -91,7 +93,12 @@ def set_global_seed(seed: int = 42, deterministic_cudnn: bool = True) -> dict:
 
     env_info = {
         "seed": seed,
-        "python_hash_seed": str(seed),
+        "seed_metadata_schema": "seed-runtime-v2",
+        "python_hash_seed": None,
+        "python_hash_seed_requested": str(seed),
+        "python_hash_seed_environment": hash_seed_environment,
+        "python_hash_seed_status": "unverified_startup_configuration",
+        "python_hash_seed_instruction": "Set PYTHONHASHSEED before launching Python; runtime seeding cannot change it",
         "deterministic_cudnn": deterministic_cudnn,
         **torch_info,
     }

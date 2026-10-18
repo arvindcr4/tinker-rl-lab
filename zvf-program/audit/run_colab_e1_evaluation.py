@@ -12,6 +12,7 @@ import tempfile
 from typing import Any
 
 import run_colab_e1_confirmatory as shared
+import run_colab_e1_resume as frozen
 
 
 REPO_ROOT = shared.REPO_ROOT
@@ -47,6 +48,20 @@ def run_recovery(args: argparse.Namespace) -> dict[str, Any]:
         raise RuntimeError(f"cannot read source request: {args.source_request}")
     if source.get("mode") != "confirmatory" or source.get("run_config", {}).get("max_steps") != 30:
         raise RuntimeError("source request is not a 30-step confirmatory unit")
+    paths = frozen.validate_source_request(source, args.source_request)
+    if args.gpu != source.get("accelerator"):
+        raise RuntimeError("recovery GPU differs from the frozen request")
+    # A v1 training request cannot bind evaluation code, progress provenance and
+    # an immutable checkpoint revision. Do not silently manufacture that approval.
+    if source.get("schema_version") == "colab-e1-confirmatory-unit-v1":
+        raise RuntimeError("v1 evaluation recovery disabled: approved v2 evaluation/checkpoint/progress contract required")
+    # Evaluation code was not included in historical source requests. Fail closed
+    # until a separately approved evaluation contract binds its immutable hash.
+    contract = source.get("evaluation_contract")
+    if not isinstance(contract, dict) or contract.get("evaluator_sha256") != shared.sha256_file(EVALUATOR):
+        raise RuntimeError("a versioned evaluation contract binding this evaluator is required")
+    if not contract.get("checkpoint_revision"):
+        raise RuntimeError("evaluation recovery requires an exact checkpoint revision")
     arm = source["arm"]
     seed = source["seed"]
     unit_fingerprint = source["fingerprint"]
@@ -94,10 +109,10 @@ def run_recovery(args: argparse.Namespace) -> dict[str, Any]:
     execution_plan = [
         ["colab", f"--auth={args.auth}", "new", "--gpu", args.gpu, "--session", session],
         ["colab", f"--auth={args.auth}", "upload", "--session", session,
-         str(TRAINING_HELPERS), "/content/e1_grpo_confirmatory.py"],
+         str(paths[frozen.CANONICAL_REMOTE_SCRIPT]), "/content/e1_grpo_confirmatory.py"],
         ["colab", f"--auth={args.auth}", "upload", "--session", session,
          str(EVALUATOR), "/content/e1_evaluate_checkpoint.py"],
-        ["colab", f"--auth={args.auth}", "install", "--session", session, *shared.PACKAGE_PINS],
+        ["colab", f"--auth={args.auth}", "install", "--session", session, *source["runtime_packages"]],
         ["colab", f"--auth={args.auth}", "exec", "--session", session,
          "--file", str(ENVIRONMENT_CHECK), "--timeout", "120"],
         ["colab", f"--auth={args.auth}", "upload", "--session", session,

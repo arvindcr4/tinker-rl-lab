@@ -23,9 +23,9 @@ class TestComputeGaeAdvantages(unittest.TestCase):
             gamma=1.0,
             lam=1.0,
         )
-        for actual, want in zip(advs, [1.5, 0.5, 0.5]):
+        for actual, want in zip(advs, [1.5, 0.5, 0.5], strict=True):
             self.assertTrue(math.isclose(actual, want, rel_tol=1e-9))
-        for actual, want in zip(rets, [2.0, 1.0, 1.0]):
+        for actual, want in zip(rets, [2.0, 1.0, 1.0], strict=True):
             self.assertTrue(math.isclose(actual, want, rel_tol=1e-9))
 
     def test_lambda_zero_is_td_residual(self):
@@ -36,7 +36,7 @@ class TestComputeGaeAdvantages(unittest.TestCase):
             gamma=1.0,
             lam=0.0,
         )
-        for actual, want in zip(advs, [1.0, 0.0, 0.5]):
+        for actual, want in zip(advs, [1.0, 0.0, 0.5], strict=True):
             self.assertTrue(math.isclose(actual, want, rel_tol=1e-9))
 
     def test_gamma_discounts_the_bootstrap(self):
@@ -47,9 +47,9 @@ class TestComputeGaeAdvantages(unittest.TestCase):
             gamma=0.5,
             lam=0.5,
         )
-        for actual, want in zip(advs, [1.25, 1.0]):
+        for actual, want in zip(advs, [1.25, 1.0], strict=True):
             self.assertTrue(math.isclose(actual, want, rel_tol=1e-9))
-        for actual, want in zip(rets, [1.25, 1.0]):
+        for actual, want in zip(rets, [1.25, 1.0], strict=True):
             self.assertTrue(math.isclose(actual, want, rel_tol=1e-9))
 
     def test_zero_gamma_ignores_the_bootstrap_value(self):

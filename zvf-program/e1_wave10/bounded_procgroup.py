@@ -27,6 +27,8 @@ or provider resource deletion.
 from __future__ import annotations
 
 import errno
+import hashlib
+from attempt_store import claim, transition
 import json
 import os
 from pathlib import Path
@@ -341,6 +343,16 @@ def run_child(argv: list[str], *, result_path: Path, receipt_dir: Path,
     final_deadline_mono = deadline_mono + CLEANUP_GRACE_SECONDS
     receipt_dir.mkdir(parents=True, exist_ok=True)
     receipt_path = receipt_dir / GROUP_FINALIZATION_NAME
+    if result_path.exists():
+        return {"status": "UNKNOWN", "result": None, "worker_returncode": None,
+                "group_finalization": None, "unknown_reason": "result path already exists; stale result rejected"}
+    try:
+        nonce = claim(receipt_dir, {"argv": argv, "result_path": str(result_path)})
+    except FileExistsError:
+        return {"status": "UNKNOWN", "result": None, "worker_returncode": None,
+                "group_finalization": None, "unknown_reason": "attempt already claimed; reconcile before retry"}
+    env = dict(os.environ if env is None else env)
+    env["TINKER_ATTEMPT_NONCE"] = nonce
 
     if deadline_epoch <= time.time():
         receipt = finalize_group(None, None, deadline_mono=deadline_mono)
@@ -367,6 +379,7 @@ def run_child(argv: list[str], *, result_path: Path, receipt_dir: Path,
             # start_new_session makes the worker a session and group leader,
             # so the original owned PGID equals the worker PID by construction
             # (setpgid equivalent on POSIX; no unsafe preexec_fn is used).
+            transition(receipt_dir, nonce, "DISPATCHED")
             proc = subprocess.Popen(argv, cwd=None if cwd is None else str(cwd),
                                     env=env, start_new_session=True,
                                     stdin=subprocess.DEVNULL,
@@ -434,6 +447,8 @@ def run_child(argv: list[str], *, result_path: Path, receipt_dir: Path,
             raise UnknownOutcome("worker result artifact absent")
         try:
             result = json.loads(result_path.read_text())
+            if not isinstance(result, dict) or result.get("attempt_nonce") != nonce:
+                raise UnknownOutcome("result does not bind this worker attempt nonce")
         except (OSError, ValueError) as exc:
             raise UnknownOutcome(f"worker result unreadable: {exc}") from exc
     except UnknownOutcome as exc:
@@ -443,6 +458,7 @@ def run_child(argv: list[str], *, result_path: Path, receipt_dir: Path,
                 "worker_returncode": worker_returncode,
                 "group_finalization": receipt, "unknown_reason": exc.reason}
 
+    transition(receipt_dir, nonce, "COMPLETED", result_sha256=hashlib.sha256(result_path.read_bytes()).hexdigest())
     # Result JSON is read only after group absence and durable finalization.
     return {"status": "SUCCESS", "result": result,
             "worker_returncode": worker_returncode,

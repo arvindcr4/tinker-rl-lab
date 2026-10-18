@@ -17,6 +17,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from audit_papers import PAPERS
+from inventory_papers import include_occurrences
 
 
 OUT = Path(__file__).resolve().parent
@@ -50,13 +51,21 @@ def active_lines(text: str) -> list[tuple[int, str]]:
     return rows
 
 
-def bib_keys() -> set[str]:
-    keys: set[str] = set()
-    for base in (ROOT / "platform_hybrid" / "paper", ROOT / "zvf-program"):
-        for path in base.rglob("*.bib"):
-            keys.update(BIB_KEY_RE.findall(path.read_text(errors="replace")))
-        for path in base.rglob("*.tex"):
-            keys.update(BIBITEM_RE.findall(path.read_text(errors="replace")))
+def bib_keys(root_tex: Path) -> set[str]:
+    keys = set()
+    for path in include_occurrences(root_tex):
+        text = "\n".join(line for _, line in active_lines(path.read_text(errors="replace")))
+        keys.update(BIBITEM_RE.findall(text))
+        for group in re.findall(
+            r"\\(?:bibliography|addbibresource)(?:\[[^]]*\])?\{([^}]+)\}", text
+        ):
+            for raw in group.split(","):
+                raw = raw.strip()
+                name = raw if raw.endswith(".bib") else raw + ".bib"
+                for candidate in (root_tex.parent / name, path.parent / name):
+                    if candidate.is_file():
+                        keys.update(BIB_KEY_RE.findall(candidate.read_text(errors="replace")))
+                        break
     return keys
 
 
@@ -99,15 +108,15 @@ def main() -> None:
             source = missing.split(" -> ", 1)[0]
             missing_by_file[source] += 1
 
-    known_bib_keys = bib_keys()
+    known_bib_keys = {paper: bib_keys(ROOT / entry["root"]) for paper, entry in include_map.items()}
     rows: list[dict[str, object]] = []
     snippets: dict[str, list[str]] = {}
     labels_by_paper: dict[str, Counter[str]] = {}
 
     for paper, entry in include_map.items():
         counts: Counter[str] = Counter()
-        for rel in entry["files"]:
-            source = (ROOT / rel).read_text(errors="replace")
+        for source_path in include_occurrences(ROOT / entry["root"]):
+            source = source_path.read_text(errors="replace")
             active_source = "\n".join(line for _, line in active_lines(source))
             counts.update(LABEL_RE.findall(active_source))
         labels_by_paper[paper] = counts
@@ -124,7 +133,10 @@ def main() -> None:
             if key.strip()
         }
         unresolved = sorted(
-            key for key in citations - known_bib_keys if not key.startswith("#")
+            f"{paper}:{key}"
+            for paper in consumers[rel]
+            for key in citations - known_bib_keys[paper]
+            if not key.startswith("#")
         )
         todo_lines = [number for number, line in active if TODO_RE.search(line)]
         placeholder_lines = [number for number, line in active if PLACEHOLDER_RE.search(line)]
@@ -165,7 +177,9 @@ def main() -> None:
                 "placeholder_lines": ",".join(map(str, placeholder_lines)),
                 "claim_risk_lines": ",".join(map(str, risk_lines)),
                 "missing_input_hooks": missing_by_file[rel],
-                "mechanical_status": "attention" if unresolved or todo_lines or placeholder_lines or missing_by_file[rel] else "screened",
+                "mechanical_status": "attention"
+                if unresolved or todo_lines or placeholder_lines or missing_by_file[rel]
+                else "screened",
             }
         )
 

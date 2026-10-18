@@ -102,3 +102,37 @@ def test_figure_module_rejects_an_incomplete_renderer(tmp_path):
     with patch("platform_hybrid.paper.figure_module.runpy.run_path", return_value={}):
         with pytest.raises(RuntimeError, match="did not create expected outputs"):
             FigureModule().render(request)
+
+
+def test_real_profile_renderer_uses_distinct_synthetic_values(tmp_path):
+    import numpy as np
+    from matplotlib.figure import Figure
+    from unittest.mock import patch
+
+    records = FallbackResultsAdapter().load()
+    for index, name in enumerate(records["traces"]):
+        records["traces"][name] = [0.1 + index * 0.1] * 12
+    records["trl_accuracies"] = [0.13, 0.17, 0.23, 0.29, 0.31]
+    records["trl_mean"] = float(np.mean(records["trl_accuracies"]))
+    records["trl_std"] = float(np.std(records["trl_accuracies"]))
+    source = tmp_path / "synthetic.json"
+    source.write_text(json.dumps(records))
+    observed = []
+    real_savefig = Figure.savefig
+
+    def record_and_save(figure, path, *args, **kwargs):
+        observed.extend(text.get_text() for axis in figure.axes for text in axis.texts)
+        return real_savefig(figure, path, *args, **kwargs)
+
+    out = tmp_path / "rendered"
+    with patch.object(Figure, "savefig", record_and_save):
+        FigureModule().render(FigureRequest("profiles", out, JsonResultsAdapter(source)))
+    for name in FigureModule.outputs["profiles"]:
+        data = (out / name).read_bytes()
+        assert len(data) > 1000
+        assert (
+            data.startswith(b"%PDF")
+            if name.endswith(".pdf")
+            else data.startswith(b"\x89PNG\r\n\x1a\n")
+        )
+    assert any("0.310" in text or "0.31" in text for text in observed), observed

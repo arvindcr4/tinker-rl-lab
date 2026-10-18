@@ -14,10 +14,10 @@ Y_target. This script materialises the proposal on real data:
   3. Reports two operational gains:
         (a) Anti-herding savings: mean(G_emp - G_iid) at fixed Y_target.
             This is the rollout-token reduction from the measured
-            anti-herding bonus delta_div.
+            signed sensitivity correction delta_div.
         (b) Iso-G yield uplift at fixed rollout budget: mean(Y_emp(p,G))
             vs mean(Y_iid(p,G)) at G in {2, 4, 8, 16, 32}. This is the
-            contrastive-yield improvement from the anti-herding bonus at
+            contrastive-yield improvement from the signed sensitivity correction at
             a fixed G (i.e. matched-compute comparison).
   4. Bootstrap (B=2000) CI on aggregate savings using a hash-based
      pseudo-random resample (deterministic for reproducibility).
@@ -25,11 +25,11 @@ Y_target. This script materialises the proposal on real data:
      workers so library-level delta_div=0.122 transfers).
 
 Outputs (5 TSVs):
-  zvf_iter46_per_prompt_isog.tsv  -- per-(prompt, Y_target) G_iid, G_emp
-  zvf_iter46_yield_curve.tsv     -- Y(p, G) grid for emp + iid
-  zvf_iter46_library_savings.tsv -- per-library Iso-G at Y_target
-  zvf_iter46_summary.tsv         -- aggregate stats + bootstrap CI
-  zvf_iter46_predictions.tsv     -- pre-registered predictions P1..P4
+  zvf_iter46_per_prompt_isog_review28_v2.tsv  -- per-(prompt, Y_target) G_iid, G_emp
+  zvf_iter46_yield_curve_review28_v2.tsv     -- Y(p, G) grid for emp + iid
+  zvf_iter46_library_savings_review28_v2.tsv -- per-library Iso-G at Y_target
+  zvf_iter46_summary_review28_v2.tsv         -- aggregate stats + bootstrap CI
+  zvf_iter46_predictions_review28_v2.tsv     -- pre-registered predictions P1..P4
 
 Reads:
   platform_hybrid/experiments/results/zvf_contrastive_yield.tsv
@@ -66,23 +66,27 @@ def yield_iid(p, G):
 
 
 def yield_emp(p, G, delta_div):
-    z_iid = zvf_iid(p, G)
-    z_obs = max(0.0, z_iid - max(0.0, delta_div))
-    return 1.0 - z_obs
+    """Signed sensitivity scenario, not a measured empirical yield."""
+    if not 0 <= p <= 1 or G < 1 or int(G) != G or not math.isfinite(delta_div):
+        raise ValueError("invalid probability, group size or correction")
+    if G == 1 or p in (0,1): return 0.0
+    return min(1., max(0., 1-zvf_iid(p,G)+delta_div))
 
 
 def min_G_for_yield(p, target_yield, delta_div=None, G_max=G_MAX):
     """Smallest G such that Y(p, G) >= target_yield.
 
-    If delta_div is None, uses iid baseline (no anti-herding bonus).
+    If delta_div is None, uses iid baseline (no signed sensitivity correction).
     Otherwise uses emp baseline zvf_obs = max(0, zvf_iid - delta_div).
-    Returns G_MAX+1 if unreachable within G_MAX.
+    Returns infinity if unreachable within G_MAX.
     """
+    if not 0 <= p <= 1 or not 0 <= target_yield <= 1 or G_max < 1:
+        raise ValueError("invalid probability, target or search bound")
     for G in range(1, G_max + 1):
         y = yield_emp(p, G, delta_div) if delta_div is not None else yield_iid(p, G)
         if y >= target_yield:
             return G
-    return G_MAX + 1  # unreachable sentinel
+    return float("inf")  # not reached within the searched range
 
 
 def load_contrastive_yield():
@@ -142,7 +146,7 @@ def write_per_prompt_isog(rows, targets):
     Restricts to tinker_gsm8k prompts with p_x in (P_LO, P_HI).
     Unreachable prompts (G > G_MAX) get G_MAX+1 as a sentinel.
     """
-    out_path = os.path.join(RES, "zvf_iter46_per_prompt_isog.tsv")
+    out_path = os.path.join(RES, "zvf_iter46_per_prompt_isog_review28_v2.tsv")
     prompts = [
         r for r in rows
         if r["source"] == "tinker_gsm8k" and P_LO < r["p_x"] < P_HI
@@ -175,7 +179,7 @@ def write_yield_curve(targets):
     """Y(p, G) grid for p in {0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95},
     G in 1..G_MAX. Reports both Y_iid and Y_emp under delta_div=0.122
     (library-level mean from iter38)."""
-    out_path = os.path.join(RES, "zvf_iter46_yield_curve.tsv")
+    out_path = os.path.join(RES, "zvf_iter46_yield_curve_review28_v2.tsv")
     p_grid = [0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95]
     G_grid = list(range(1, G_MAX + 1))
     delta_div_lib = 0.122
@@ -200,7 +204,7 @@ def write_library_savings(libs, targets):
     Iso-G mean over prompts. We approximate per-library p_x = mean_last10
     and use the empirical delta_div measured on tinker_gsm8k (since
     libraries share the rollout workers)."""
-    out_path = os.path.join(RES, "zvf_iter46_library_savings.tsv")
+    out_path = os.path.join(RES, "zvf_iter46_library_savings_review28_v2.tsv")
     delta_div_lib = 0.122
     with open(out_path, "w") as f:
         f.write(
@@ -234,8 +238,8 @@ def write_summary_and_predictions(prompts, targets):
       - savings_vs_static8 = 1 - mean_G_emp / 8 (vs static G=8)
     Bootstrap 95% CI on mean_dG (B=2000 hash-based resample).
     """
-    out_path = os.path.join(RES, "zvf_iter46_summary.tsv")
-    pred_path = os.path.join(RES, "zvf_iter46_predictions.tsv")
+    out_path = os.path.join(RES, "zvf_iter46_summary_review28_v2.tsv")
+    pred_path = os.path.join(RES, "zvf_iter46_predictions_review28_v2.tsv")
 
     # For each Y_target compute (g_iid, g_emp) arrays over prompts.
     agg = {}

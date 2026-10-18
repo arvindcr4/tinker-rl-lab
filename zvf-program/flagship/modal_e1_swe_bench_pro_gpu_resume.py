@@ -98,6 +98,19 @@ merge_image = (
 app = modal.App(APP_NAME, include_source=True)
 
 
+PAID_EXECUTION_POLICY = "blocked-until-enforced-reservation-settlement-v2"
+
+
+def _require_enforced_budget() -> None:
+    """No launch until a provider-bound reservation/settlement contract exists.
+
+    Advisory projections and caller-declared authorization are not spending
+    enforcement. This is intentionally not configurable through a bypass flag.
+    Offline receipt construction and historical inspection remain available.
+    """
+    raise RuntimeError("paid execution blocked: enforced reservation/settlement budget contract unavailable")
+
+
 def _gpu_projection(pending_count: int) -> float:
     seconds = PROJECTED_LOAD_SECONDS + pending_count * PROJECTED_TASK_SECONDS
     return round(seconds * GPU_RATE_USD_PER_SECOND, 6)
@@ -267,6 +280,7 @@ def _adapter_module_plan(module: str) -> tuple[str, str, str | None]:
 )
 def inspect_checkpoint_layout() -> dict[str, Any]:
     """Return tensor metadata only; no weight tensor is materialized."""
+    _require_enforced_budget()
     import re
 
     from huggingface_hub import snapshot_download
@@ -334,6 +348,7 @@ def inspect_checkpoint_layout() -> dict[str, Any]:
 )
 def merge_checkpoint() -> dict[str, Any]:
     """Materialize an exact merged checkpoint when dynamic LoRA is unsupported."""
+    _require_enforced_budget()
     import gc
     import hashlib
     import shutil
@@ -850,6 +865,7 @@ class ExactCheckpointGenerator:
 
     @modal.method()
     def generate(self, payload: dict[str, Any]) -> dict[str, Any]:
+        _require_enforced_budget()
         import wandb
         from vllm import SamplingParams
 
@@ -1046,8 +1062,7 @@ def _validate_existing_run(
     image_manifest = json.loads(
         (run_dir / "image_manifest.json").read_text(encoding="utf-8")
     )
-    if image_manifest.get("count") != base.EXPECTED_TASK_COUNT:
-        raise RuntimeError("saved image manifest is incomplete")
+    base._validate_image_manifest(image_manifest, tasks)
     evaluator_dir = root / "outputs/e1_swe_bench_pro/evaluator"
     evaluator_commit = subprocess.run(
         ["git", "rev-parse", "HEAD"],
@@ -1165,6 +1180,7 @@ def main(
     evaluation_only: bool = False,
     lane: str = "main",
 ) -> None:
+    _require_enforced_budget()
     if not (0 <= index_min <= index_max < base.EXPECTED_TASK_COUNT):
         raise RuntimeError(
             f"invalid task-index range {index_min}..{index_max}"

@@ -13,8 +13,8 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-from collections import Counter
 from pathlib import Path
+from ledger_contract import is_graded, components_match, verification_exit_code
 
 REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "outputs/verification/LEDGER_CODE_CHECK_2026-09-19.json"
@@ -46,8 +46,8 @@ rows = list(
         (REPO / "outputs/e1_e14_results_2026-09-05/e9_competition_receipts.csv").open()
     )
 )
-ms = [r for r in rows if r["arm"] == "modal_streaming" and "GRADED" in r["status"]]
-mv = [r for r in rows if r["arm"] == "merged_vllm" and "GRADED" in r["status"]]
+ms = [r for r in rows if r["arm"] == "modal_streaming" and is_graded(r["status"])]
+mv = [r for r in rows if r["arm"] == "merged_vllm" and is_graded(r["status"])]
 ms_uniq = len({r["competition_id"] for r in ms})
 check(
     "E9_modal_streaming_40_unique_graded_of_75",
@@ -81,9 +81,9 @@ check(
 )
 # component split from the Sep-5 report
 check(
-    "E11_component_split_sums_67_plus_62_equals_129",
-    67 + 62 == 129,
-    "code-completion 67/156 + spec-to-RTL 62/156 = 129/312",
+    "E11_retained_component_total_matches_raw_passes",
+    components_match(d.get("components"), pa["raw"]["passes"]),
+    "component counts must be present in the retained receipt and sum to raw passes",
 )
 
 # 4. E14 — recheck reproduces accepted/skipped and official accuracy --------
@@ -169,3 +169,5 @@ OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(json.dumps(result, indent=1, sort_keys=True) + "\n")
 print(json.dumps(result, indent=1, sort_keys=True))
 print("receipt:", OUT)
+
+raise SystemExit(verification_exit_code(checks))

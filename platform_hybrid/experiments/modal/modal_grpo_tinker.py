@@ -1,6 +1,6 @@
 """Modal GRPO Campaign — Tinker launcher.
 
-Runs the canonical GSM8K GRPO run via the Tinker SDK on a single Modal H100,
+Orchestrates the delegated GSM8K recipe via the Tinker SDK on Modal CPU,
 invoking the repo's own ``platform_tinker/tinkerrl/grpo_cli.py`` (the same entry
 point the local backend's ``_run_tinker`` uses). Sister script to
 ``modal_grpo_trl.py`` / ``modal_grpo_verl.py``. Writes result.json into
@@ -57,7 +57,6 @@ image = (
 
 @app.function(
     image=image,
-    gpu="H100",
     timeout=7200,
     secrets=[
         modal.Secret.from_name("huggingface-secret"),
@@ -68,12 +67,16 @@ image = (
     ],
 )
 def run_tinker_qwen3_8b():
-    """Execute the Tinker GRPO GSM8K run on a single H100 via grpo_cli."""
+    """Execute the delegated recipe; managed worker hardware is unavailable."""
     import subprocess
     import time
 
     MODEL = "Qwen/Qwen3-8B"
     REPO = "/root/tinker-rl-lab"
+    sys.path.insert(0, REPO)
+    from platform_hybrid.experiments.framework_contracts import read_tinker_preset
+    source = read_tinker_preset(f"{REPO}/platform_tinker/tinkerrl/grpo_cli.py")
+    requested = {**source["preset"], "model": MODEL, "steps": 30, "seed": 211}
 
     cmd = [
         sys.executable, "-m", "platform_tinker.tinkerrl.grpo_cli",
@@ -92,12 +95,25 @@ def run_tinker_qwen3_8b():
 
     return {
         "framework": "tinker",
+        "requested_config": requested,
+        "source_sha256": source["source_sha256"],
         "mode": "real",
+        "protocol_version": "framework-comparison-v3",
+        "comparison_mode": "native_framework_recipe",
+        "comparison_contract_satisfied": False,
+        "claim_supported": False,
+        "resolved_config_status": "unavailable_until_adapter_initialization",
         "model": MODEL,
         "algorithm": "GRPO",
         "seed": 211,
         "task": "gsm8k",
-        "platform": "modal-h100",
+        "platform": "modal-cpu-orchestrator",
+        "orchestrator_hardware": "cpu",
+        "training_hardware": None,
+        "sampling_hardware": None,
+        "provider_measurements": {"unavailable": "managed Tinker service"},
+        "status": "failed" if proc.returncode else "unverified",
+        "completion_contract_satisfied": False,
         "duration_s": duration,
         "subprocess_exit": proc.returncode,
         "command": " ".join(cmd),
@@ -106,7 +122,7 @@ def run_tinker_qwen3_8b():
 
 @app.local_entrypoint()
 def main():
-    print("Launching Tinker GRPO (Qwen3-8B, GSM8K, 30 steps) on H100...")
+    print("Launching Tinker GRPO (Qwen3-8B, GSM8K, 30 steps) via a CPU orchestrator...")
     result = run_tinker_qwen3_8b.remote()
     os.makedirs("/home/user/workspace/elevation_outputs", exist_ok=True)
     out = "/home/user/workspace/elevation_outputs/modal_tinker_grpo.json"

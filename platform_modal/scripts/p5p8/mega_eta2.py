@@ -32,8 +32,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CELLS = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8" / "review16_v2"
+# Versioned protocol outputs; historical artifacts are not overwritten.
+
 
 AXES = (
     ("model_family", 4),
@@ -105,8 +106,7 @@ def eta2_by_axis(rows, axis_name, metric_name):
 
 
 def omega2_by_axis(rows, axis_name, metric_name):
-    """Bias-corrected eta^2 (omega^2): 1 - SS_within / (SS_total + ms_within).
-    More honest for small-n factorial designs."""
+    """Standard one-way omega squared; negative estimates are retained."""
     pooled = [r[metric_name] for r in rows]
     n_total = len(pooled)
     if n_total < 2:
@@ -125,12 +125,15 @@ def omega2_by_axis(rows, axis_name, metric_name):
     for g in groups.values():
         gm = sum(g) / len(g)
         ss_within += sum((v - gm) ** 2 for v in g)
-    ms_within = ss_within / max(1, n_total - k)
-    omega2 = 1.0 - ms_within / (ss_total / n_total + ms_within)
+    if n_total <= k:
+        return float("nan")
+    ms_within = ss_within / (n_total - k)
+    omega2 = (ss_total - ss_within - (k - 1) * ms_within) / (ss_total + ms_within)
     return omega2
 
 
 def main() -> int:
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     rows = load_cells()
     if not rows:
         print(f"No rows loaded from {CELLS}", file=sys.stderr)
@@ -192,36 +195,10 @@ def main() -> int:
     # Headline: for each metric, compare "stack" eta^2 (model+task+G+temp) to
     # "noise" eta^2 (seed). Sum-of-SS form: stack_dominance ratio = SS_stack /
     # SS_total divided by SS_seed / SS_total.
-    headline = []
-    for metric in METRICS:
-        stack_ss = 0.0
-        seed_ss = 0.0
-        ss_total = 0.0
-        pooled = [r[metric] for r in rows]
-        grand = sum(pooled) / len(pooled)
-        ss_total = sum((v - grand) ** 2 for v in pooled)
-        for axis, _ in AXES:
-            eta2, _, _, _ = eta2_by_axis(rows, axis, metric)
-            if math.isnan(eta2):
-                continue
-            if axis == "seed":
-                seed_ss += eta2
-            else:
-                stack_ss += eta2
-        ratio = (stack_ss / max(1e-6, seed_ss)) if seed_ss > 0 else float("inf")
-        if seed_ss > 0:
-            interp = (f"stack axes explain {ratio:.1f}x more variance than seed")
-        else:
-            interp = (f"stack axes explain 100% of variance; seed contributes "
-                      f"0.0000 (i.e. ratio >= 10^4)")
-        headline.append({
-            "metric": metric,
-            "ss_total": round(ss_total, 4),
-            "stack_eta2_sum": round(stack_ss, 4),
-            "seed_eta2": round(seed_ss, 4),
-            "ratio_stack_over_seed": round(ratio, 2),
-            "interpretation": interp,
-        })
+    headline = [{"metric": metric, "marginal_eta2": {
+        axis: eta2_by_axis(rows, axis, metric)[0] for axis, _ in AXES},
+        "interpretation": "Marginal associations overlap and are not additive; no stack/seed ratio."}
+        for metric in METRICS]
 
     summary = {
         "n_cells": len(rows),
@@ -231,14 +208,8 @@ def main() -> int:
         "headline": headline,
         "per_task_G": per_task_g,
         "per_axis_groups": detail,
-        "interpretation": [
-            "Stack axes (model_family, task_slice, G, temperature) together",
-            "explain an order of magnitude more variance in ZVF and",
-            "mean_reward than the seed axis on the 98-cell mega corpus.",
-            "This is the corpus-scale counterpart to the 4-method N2 eta^2",
-            "and is the structural backbone of the Pillar-1 'stack",
-            "conditions everything' claim.",
-        ],
+        "protocol_version": 2,
+        "interpretation": ["Separate marginal associations only; correlated factors cannot be summed."],
     }
     with (OUT_DIR / "mega_eta2.json").open("w") as f:
         json.dump(summary, f, indent=2)
@@ -248,11 +219,7 @@ def main() -> int:
     for r in out_rows:
         print(f"  {r['axis']:>14} | {r['metric']:>20} | "
               f"{r['eta2']!s:>6} | {r['omega2']!s:>6} | {r['verdict']}")
-    print("\nheadline (stack vs seed):")
-    for h in headline:
-        print(f"  {h['metric']:>20} | stack_eta2_sum = {h['stack_eta2_sum']:.4f} | "
-              f"seed_eta2 = {h['seed_eta2']:.4f} | "
-              f"ratio = {h['ratio_stack_over_seed']}x  -> {h['interpretation']}")
+    print("\nMarginal eta squared values are non-additive; no aggregate ratio reported.")
 
     print("\nper-task G-axis eta^2 (where does G dominate ZVF/reward?):")
     for p in per_task_g:

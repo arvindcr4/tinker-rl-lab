@@ -35,7 +35,7 @@ from _p8_common import (  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 TRAIN = ROOT / "fraud_data.csv"
 TEST = ROOT / "test_data.csv"
-OUT = ROOT / "experiments" / "results" / "p5p8"
+OUT = ROOT / "experiments" / "results" / "p5p8/corrected-review20-v2"
 FIG = OUT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -60,37 +60,10 @@ FEATS = {
 
 
 def argmin_cost(p, y, C_inv, L, c_sense):
-    """Find the rank cutoff tau minimising E[cost/dec] and return (cost_per_dec, cost_per_caught, tau, tp)."""
-    if L <= 0 or C_inv <= 0:
-        return float("nan"), float("nan"), 0.5, 0
-    # Sort by predicted score descending -- tau is a rank cutoff.
-    pos_mask = y == 1
-    n = len(y)
-    n_pos = int(pos_mask.sum())
-    # Pre-sort.
-    order = np.argsort(-p)
-    sorted_p = p[order]
-    sorted_y = y[order]
-    cum_tp = np.cumsum(sorted_y == 1)
-    cum_fp = np.cumsum(sorted_y == 0)
-    # tau_k = number of alerts at cutoff k = #predicted positives = k
-    k = np.arange(1, n + 1)
-    tp = cum_tp
-    fp = cum_fp
-    fn = n_pos - tp
-    cost = c_sense + (C_inv * (tp + fp) + L * fn) / n
-    best = int(np.argmin(cost))
-    tau = sorted_p[best]
-    best_tp = int(cum_tp[best])
-    cost_per_dec = float(cost[best])
-    if best_tp == 0:
-        # Cost-per-caught is undefined when no fraud caught: return +inf for ranking.
-        cost_per_caught = float("inf")
-    else:
-        # total_cost_USD = (C_inv * (tp+fp) + L * fn) + c_sense * N
-        total = C_inv * (tp[best] + fp[best]) + L * fn[best] + c_sense * n
-        cost_per_caught = float(total / best_tp)
-    return cost_per_dec, cost_per_caught, float(tau), best_tp
+    from _review_policy import optimal_threshold
+    r = optimal_threshold(p, y, C_inv, L, c_sense)
+    return r["cost_per_dec"], (r["cost_per_caught"] if r["cost_per_caught"] is not None else float("inf")), r["tau"], r["tp"]
+
 
 
 def grid_eval(scores, y):

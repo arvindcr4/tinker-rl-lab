@@ -1,3 +1,9 @@
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import json_objects
+
 # ============================================================
 #  ADVANCED EXPERIMENT — Multi-Turn Tool Calling
 #  Model  : Qwen2.5-3B-Instruct + QLoRA
@@ -67,109 +73,38 @@ tokenizer.padding_side = "right"
 
 # ── PARSE TOOLBENCH FORMAT ───────────────────────────────────
 def parse_toolbench_example(row):
-    """
-    Convert one ToolBench row into a fully-formed multi-turn chat string.
-
-    Requirements for a row to be kept (all three must pass):
-      ✅  At least one tool call with non-empty arguments
-      ✅  At least one tool-result turn (observation/function/tool)
-      ✅  A final natural-language answer (Finish action)
-
-    These three together guarantee the model always trains on the
-    complete pattern: tool_call → tool_result → final_answer.
-    """
-    try:
-        convs = row.get("conversations", {})
-        if not convs:
+    convs = row.get("conversations")
+    if isinstance(convs, dict):
+        roles, values = convs.get("from", []), convs.get("value", [])
+        if len(roles) != len(values):
             return None
-
-        if isinstance(convs, list):
-            roles  = [t.get("from", "")  for t in convs]
-            values = [t.get("value", "") for t in convs]
-        elif isinstance(convs, dict):
-            roles  = convs.get("from",  [])
-            values = convs.get("value", [])
-        else:
-            return None
-
-        if len(roles) < 4 or len(roles) != len(values):   # FIX: need ≥4 turns
-            return None
-
-        messages          = [{"role": "system", "content": SYSTEM_PROMPT}]
-        has_tool_call     = False   # saw at least one non-empty tool call
-        has_tool_result   = False   # saw at least one tool result turn
-        has_final_answer  = False   # saw a Finish / final answer turn
-
-        for role, value in zip(roles, values):
-            value = (value or "").strip()
-            if not value:
-                continue
-
-            if role == "system":
-                continue
-
-            elif role == "user":
-                if "This is not the first time" in value:
-                    continue
-                messages.append({"role": "user", "content": value[:500]})
-
-            elif role == "assistant":
-                # ── FIX 4: check Finish BEFORE generic Action ──
-                finish_match = re.search(
-                    r'Action:\s*Finish\s*\nAction Input:\s*(\{.*?\})',
-                    value, re.DOTALL
-                )
-                action_match = re.search(
-                    r'Action:\s*(\w+)\s*\nAction Input:\s*(\{.*?\})',
-                    value, re.DOTALL
-                ) if not finish_match else None
-
-                if finish_match:
-                    try:
-                        obj   = json.loads(finish_match.group(1))
-                        final = obj.get("final_answer", "")
-                        if final and len(final.strip()) > 10:
-                            messages.append({"role": "assistant",
-                                             "content": final.strip()})
-                            has_final_answer = True
-                    except:
-                        pass
-
-                elif action_match:
-                    try:
-                        func_name = action_match.group(1).strip()
-                        func_args = json.loads(action_match.group(2))
-                        # ── FIX 2: reject empty-argument tool calls ──
-                        if not func_args:
-                            continue
-                        tool_call = json.dumps({
-                            "name": func_name,
-                            "arguments": func_args
-                        })
-                        messages.append({"role": "assistant",
-                                         "content": tool_call})
-                        has_tool_call = True
-                    except:
-                        pass
-
-            elif role in ("function", "tool", "observation"):
-                # ── FIX 1 contribution: record that we saw a result ──
-                messages.append({"role": "tool", "content": value[:400]})
-                has_tool_result = True
-
-        # ── FIX 1: require the full pattern ──────────────────
-        if not (has_tool_call and has_tool_result and has_final_answer):
-            return None
-
-        user_turns = sum(1 for m in messages if m["role"] == "user")
-        if user_turns == 0:
-            return None
-
-        return tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=False
-        )
-    except Exception:
+        convs = [{"from": r, "value": v} for r, v in zip(roles, values)]
+    if not isinstance(convs, list):
         return None
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    has_call = has_result = has_final = False
+    for turn in convs:
+        role, value = turn.get("from"), turn.get("value", "")
+        if role == "user":
+            messages.append({"role": "user", "content": value})
+        elif role in ("tool", "function", "observation"):
+            messages.append({"role": "tool", "content": value}); has_result = True
+        elif role == "assistant":
+            match = re.search(r"Action:\s*(\w+)\s*\nAction Input:\s*", value)
+            objects = json_objects(value[match.end():]) if match else []
+            if not objects:
+                return None
+            args = objects[0]
+            if match[1] == "Finish":
+                final = args.get("final_answer")
+                if not isinstance(final, str) or not final.strip():
+                    return None
+                messages.append({"role": "assistant", "content": final}); has_final = True
+            else:
+                messages.append({"role": "assistant", "content": json.dumps({"name": match[1], "arguments": args})}); has_call = True
+    if not (has_call and has_result and has_final):
+        return None
+    return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
 
 # ── PARSE DATASET ────────────────────────────────────────────
 print("Parsing ToolBench examples (strict: tool_call+result+answer required) ...")

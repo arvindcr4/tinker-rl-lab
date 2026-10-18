@@ -25,6 +25,10 @@ import argparse
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 import math
+import hashlib
+import re
+
+ANALYSIS_VERSION = "review27-v3"
 
 # ANSI color codes
 GREEN = "\033[92m"
@@ -77,388 +81,264 @@ def safe_get(d: Dict, key: str, default: Any = None) -> Any:
 
 
 def verify_checksum_manifest() -> Tuple[bool, str]:
-    """Verify SHA256 checksums match."""
-    # Try multiple possible locations
-    sha_candidates = [
-        BASE_DIR / "SHA256SUMS.txt",
-        BASE_DIR / "checksums.sha256",
-        BASE_DIR / "submission" / "contents" / "checksums.sha256",
-    ]
-    
-    sha_file = None
-    for candidate in sha_candidates:
-        if candidate.exists():
-            sha_file = candidate
-            break
-    
-    # Check that main files exist
-    main_files = [
-        EXPERIMENTS_DIR / "master_results.json",
-        PAPER_DIR / "main.tex",
-    ]
-    
-    missing = []
-    for f in main_files:
-        if not f.exists():
-            missing.append(str(f))
-    
-    if missing:
-        return False, f"Missing critical files: {', '.join(missing[:2])}"
-    
-    if not sha_file:
-        return True, f"Main files present (SHA256SUMS.txt not in repo root)"
-    
-    # Check SHA file contents exist relative to repo root
-    # The SHA file may reference files from inside an extracted tarball
-    # So we only verify files that actually exist in the current layout
+    """Hash every manifest member; reject missing, escaped, or ambiguous entries."""
+    candidates = [BASE_DIR / "SHA256SUMS.txt", BASE_DIR / "checksums.sha256", BASE_DIR / "submission/contents/checksums.sha256"]
+    manifest = next((p for p in candidates if p.is_file()), None)
+    if manifest is None:
+        return False, "UNVERIFIED: checksum manifest missing"
     try:
-        with open(sha_file, 'r') as f:
-            content = f.read()
-        
-        # If the SHA file references files that don't exist in current layout,
-        # that's expected for a partial extraction
-        return True, f"SHA256SUMS.txt present (run from extracted bundle root for full verification)"
-    except:
-        return True, f"Main files present"
+        lines = [line for line in manifest.read_text().splitlines() if line.strip()]
+        if not lines:
+            return False, "empty checksum manifest"
+        seen=set()
+        root=BASE_DIR.resolve()
+        for line in lines:
+            match=re.fullmatch(r"([0-9a-fA-F]{64}) [ *](.+)",line)
+            if not match:
+                return False, "malformed checksum entry"
+            digest, member=match.groups()
+            target=(root/member).resolve()
+            if not target.is_relative_to(root) or target in seen:
+                return False, "escaped or duplicate manifest member"
+            seen.add(target)
+            if not target.is_file() or hashlib.sha256(target.read_bytes()).hexdigest()!=digest.lower():
+                return False, f"missing or mismatched checksum: {member}"
+        return True, f"{len(seen)} SHA256 digests verified ({ANALYSIS_VERSION})"
+    except (OSError,ValueError) as exc:
+        return False, str(exc)
 
 
 def verify_qwen3_8b_headline_reward() -> Tuple[bool, str]:
-    """Verify Qwen3-8B GRPO and PPO last-10 values."""
-    master_results = EXPERIMENTS_DIR / "master_results.json"
-    
-    if not master_results.exists():
-        return False, "master_results.json not found"
-    
+    """Exact model/algorithm identity; absent and zero values are distinct."""
     try:
-        data = load_json(master_results)
-        rows = data if isinstance(data, list) else data.get("experiments", [])
-        
-        # Find Qwen3-8B GRPO
-        grpo_row = None
-        ppo_row = None
-        
-        for row in rows:
-            name = str(row.get("name", row.get("experiment_id", ""))).lower()
-            model = str(row.get("model", "")).lower()
-            
-            if "qwen3-8b" in model or "qwen3_8b" in name or "qwen3.5" in model:
-                method = str(row.get("method", row.get("algorithm", ""))).lower()
-                if "grpo" in method and grpo_row is None:
-                    grpo_row = row
-                elif "ppo" in method and ppo_row is None:
-                    ppo_row = row
-        
-        results = []
-        
-        if grpo_row:
-            last10 = safe_get(grpo_row, "last10_avg", safe_get(grpo_row, "last_10_avg", 0))
-            results.append(f"GRPO last10={last10:.4f}")
-        else:
-            results.append("GRPO row not found")
-        
-        if ppo_row:
-            last10 = safe_get(ppo_row, "last10_avg", safe_get(ppo_row, "last_10_avg", 0))
-            results.append(f"PPO last10={last10:.4f}")
-        else:
-            results.append("PPO row not found")
-        
-        details = ", ".join(results)
-        
-        # Check against paper claims (with tolerance)
-        success = True
-        if grpo_row:
-            last10 = safe_get(grpo_row, "last10_avg", safe_get(grpo_row, "last_10_avg", 0))
-            if last10 and abs(last10 - 0.344) > 0.05:
-                success = False
-                details += f" (expected ~0.344)"
-        
-        if ppo_row:
-            last10 = safe_get(ppo_row, "last10_avg", safe_get(ppo_row, "last_10_avg", 0))
-            if last10 and abs(last10 - 0.225) > 0.05:
-                success = False
-                details += f" (expected ~0.225)"
-        
-        return success, details
-    
-    except Exception as e:
-        return False, str(e)
+        data=load_json(EXPERIMENTS_DIR / "master_results.json")
+        rows=data if isinstance(data,list) else data.get("experiments",[])
+        values={}
+        for algorithm in ("grpo","ppo"):
+            matches=[r for r in rows if str(r.get("model","")).lower().split("/")[-1] == "qwen3-8b"
+                     and str(r.get("method",r.get("algorithm",""))).lower() == algorithm]
+            if len(matches)!=1:
+                return False, f"UNVERIFIED: expected one exact Qwen3-8B/{algorithm} run, found {len(matches)}; select explicit run scope"
+            value=matches[0].get("last10_avg",matches[0].get("last_10_avg"))
+            if isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value):
+                return False, f"missing/nonfinite {algorithm} reward"
+            values[algorithm]=value
+        passed=abs(values['grpo']-.344)<=.05 and abs(values['ppo']-.225)<=.05
+        return passed, f"exact Qwen3-8B GRPO={values['grpo']:.4f}, PPO={values['ppo']:.4f}; tolerance=.05"
+    except (OSError,ValueError,TypeError) as exc:
+        return False,str(exc)
 
 
 def verify_gsm8k_heldout() -> Tuple[bool, str]:
-    """Verify held-out GSM8K results."""
-    # Base control - try multiple locations
-    base_candidates = [
-        REPORTS_DIR / "gsm8k_base_control_200.json",
-        BASE_DIR / "reports" / "final" / "gsm8k_base_control_200.json",
-        BASE_DIR / "reports" / "final" / "gsm8k_base_results.json",
-    ]
-    base_file = None
-    for candidate in base_candidates:
-        if candidate.exists():
-            base_file = candidate
-            break
-    
-    # Held-out results - try multiple locations
-    heldout_patterns = [
-        REPORTS_DIR / "gsm8k_heldout_seed42.json",
-        REPORTS_DIR / "gsm8k_heldout_seed137.json",
-        REPORTS_DIR / "gsm8k_heldout_seed256.json",
-        REPORTS_DIR / "gsm8k_heldout_seed512.json",
-        REPORTS_DIR / "gsm8k_heldout_seed999.json",
-        BASE_DIR / "reports" / "final" / "gsm8k_heldout_seed042.json",
-        BASE_DIR / "reports" / "final" / "gsm8k_heldout_seed137.json",
-        BASE_DIR / "reports" / "final" / "gsm8k_heldout_seed256.json",
-        BASE_DIR / "reports" / "final" / "gsm8k_heldout_seed512.json",
-        BASE_DIR / "reports" / "final" / "gsm8k_heldout_seed999.json",
-    ]
-    
+    """Recalculate a seed-level t comparison; no paper-value fallback.
+
+    This is the historical summary-level approximate test, not example-paired
+    inference. Exact test-protocol reproduction requires raw paired outcomes.
+    """
     try:
-        # Base values (from paper)
-        base_correct = 164
-        base_total = 200
-        
-        if base_file:
-            try:
-                base_data = load_json(base_file)
-                if isinstance(base_data, dict):
-                    # Handle nested structure
-                    summary = base_data.get("summary", base_data)
-                    base_correct = safe_get(summary, "correct", base_correct)
-                    base_total = safe_get(summary, "total", safe_get(summary, "attempted", base_total))
-            except:
-                pass
-        
-        base_rate = base_correct / base_total
-        
-        # Load held-out results
-        grpo_results = []
-        for pattern in heldout_patterns:
-            if pattern.exists():
-                try:
-                    data = load_json(pattern)
-                    if isinstance(data, dict):
-                        # Handle nested structure (current file format)
-                        summary = data.get("summary", data)
-                        c = safe_get(summary, "correct", 0)
-                        t = safe_get(summary, "total", safe_get(summary, "attempted", 200))
-                        if c > 0:  # Valid result
-                            grpo_results.append((c, t))
-                except:
-                    pass
-        
-        if not grpo_results:
-            # Return partial pass with explanation
-            return True, f"Base={base_correct}/{base_total}={base_rate:.1%}; held-out files in alternate location"
-        
-        # Compute means
-        grpo_rates = [c / t for c, t in grpo_results]
-        grpo_mean = sum(grpo_rates) / len(grpo_rates)
-        
-        # Approximate p-value
-        import statistics
+        roots=list(dict.fromkeys(p.resolve() for p in [REPORTS_DIR,BASE_DIR / "reports/final"]))
+        bases=[p/name for p in roots for name in ("gsm8k_base_control_200.json","gsm8k_base_results.json") if (p/name).is_file()]
+        if not bases:
+            return False,"UNVERIFIED: measured base evaluation missing"
+        def counts(path):
+            data=load_json(path); summary=data.get("summary",data)
+            c=summary.get("correct"); n=summary.get("total",summary.get("attempted"))
+            if type(c) is not int or type(n) is not int or n<=0 or not 0<=c<=n:
+                raise ValueError(f"invalid evaluation counts: {path.name}")
+            return c,n
+        base_counts={counts(p) for p in bases}
+        if len(base_counts)!=1:
+            return False,"conflicting base evaluations"
+        bc,bn=next(iter(base_counts)); base_rate=bc/bn
+        paths=set(); seeds={}
+        for root in roots:
+            for path in sorted(root.glob("gsm8k_heldout_seed*.json")):
+                resolved=path.resolve()
+                if resolved in paths: continue
+                paths.add(resolved)
+                match=re.fullmatch(r"gsm8k_heldout_seed(\d+)\.json",path.name)
+                if not match: continue
+                seed=int(match[1])
+                if seed in seeds:
+                    return False,f"duplicate seed identity {seed} across different files"
+                data=load_json(path)
+                if 'seed' in data and data['seed']!=seed:
+                    return False,f"filename/record seed mismatch {seed}"
+                c,n=counts(path); seeds[seed]=c/n
+        if len(seeds)<2:
+            return False,f"UNVERIFIED: need at least two distinct measured seeds; n={len(seeds)}"
         from scipy import stats
-        
-        if len(grpo_rates) > 1:
-            std = statistics.stdev(grpo_rates)
-            se = std / math.sqrt(len(grpo_rates))
-            if se > 0:
-                t_stat = (grpo_mean - base_rate) / se
-                try:
-                    p_value = 2 * (1 - stats.t.cdf(abs(t_stat), df=len(grpo_rates)-1))
-                except:
-                    p_value = 0.26  # Paper value
-            else:
-                p_value = 1.0
-        else:
-            p_value = 0.26  # Paper value
-        
-        # Check against paper claims
-        # Note: p-value varies due to different computation methods
-        # Paper reports p=0.26 with specific test setup
-        success = (
-            abs(base_rate - 0.820) < 0.01 and
-            abs(grpo_mean - 0.833) < 0.05 and
-            0.05 < p_value < 0.40  # Broader tolerance
-        )
-        
-        details = f"base={base_correct}/{base_total}={base_rate:.1%}, GRPO mean={grpo_mean:.1%}, p≈{p_value:.2f}"
-        
-        return success, details
-    
-    except Exception as e:
-        return False, str(e)
+        import statistics
+        rates=list(seeds.values()); mean=statistics.mean(rates)
+        se=statistics.stdev(rates)/math.sqrt(len(rates))
+        if se==0:
+            return False,"UNVERIFIED: degenerate zero-variance t statistic"
+        p=float(2*stats.t.sf(abs((mean-base_rate)/se),len(rates)-1))
+        success=abs(base_rate-.820)<.01 and abs(mean-.833)<.05 and .05<p<.40
+        return success,f"base={bc}/{bn}, GRPO mean={mean:.6f}, n_unique_seeds={len(seeds)}, approximate seed-t p={p:.8f}"
+    except (OSError,ValueError,TypeError,ImportError) as exc:
+        return False,str(exc)
 
 
-def verify_zvf_triage() -> Tuple[bool, str]:
-    """Verify ZVF triage claim."""
-    zvf_results = EXPERIMENTS_DIR / "zvf_predictive_validation_results.json"
-    zvf_runs = EXPERIMENTS_DIR / "zvf_predictive_validation_runs.csv"
-    
-    if not (zvf_results.exists() or zvf_runs.exists()):
-        return False, "ZVF validation files not found"
-    
-    # From paper: TP=2, FP=0, FN=0, precision=1.0
-    details = f"first-five-step rule: TP=2, FP=0, precision=1.0 (validation on 22-run corpus)"
-    
-    return True, details
+# review27-v3 evidence contract. These files are deliberately not synthesized
+# from historical summary tables: cohort membership requires a scientific choice.
+# Each claim file contains schema_version, protocol_id, expected_run_ids, rows.
+# Each row has run_id, model, task, split, stack, algorithm, seed, protocol_id.
+# Values below are raw observations/predictions, not precomputed claim statistics.
+IDENTITY_FIELDS = ("run_id", "model", "task", "split", "stack", "algorithm", "protocol_id")
 
 
-def verify_stack_sensitivity() -> Tuple[bool, str]:
-    """Verify framework stack sensitivity claim."""
-    master_results = EXPERIMENTS_DIR / "master_results.json"
-    
-    if not master_results.exists():
-        return False, "master_results.json not found"
-    
+def _number(value):
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise ValueError("expected a finite numeric observation")
+    return float(value)
+
+
+def _claim_rows(claim):
+    path = EXPERIMENTS_DIR / "verification_v3" / (claim + ".json")
+    if not path.is_file():
+        raise FileNotFoundError(f"UNVERIFIED: explicit {claim} cohort contract unavailable: {path}")
+    document = load_json(path)
+    if document.get("schema_version") != "review27-v3" or not document.get("protocol_id"):
+        raise ValueError("unsupported evidence schema or missing protocol identity")
+    rows = document.get("rows")
+    expected = document.get("expected_run_ids")
+    if not isinstance(rows, list) or not rows or not isinstance(expected, list) or not expected:
+        raise ValueError("empty or missing explicit cohort")
+    ids = []
+    for row in rows:
+        if not isinstance(row, dict) or any(not isinstance(row.get(k), str) or not row[k].strip() for k in IDENTITY_FIELDS):
+            raise ValueError("missing run/model/task/split/stack/algorithm/protocol identity")
+        if type(row.get("seed")) is not int or row["protocol_id"] != document["protocol_id"]:
+            raise ValueError("invalid seed or mismatched protocol")
+        ids.append(row["run_id"])
+    if any(not isinstance(i, str) for i in expected) or len(set(expected)) != len(expected) or len(set(ids)) != len(ids) or set(ids) != set(expected):
+        raise ValueError("duplicate, missing, or unexpected cohort run")
+    return rows, hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _verify_evidence(claim, calculator):
     try:
-        data = load_json(master_results)
-        rows = data if isinstance(data, list) else data.get("experiments", [])
-        
-        # Find relevant rows
-        qwen_grpo = None
-        qwen_ppo = None
-        llama_grpo = None
-        llama_ppo = None
-        
+        rows, digest = _claim_rows(claim)
+        passed, detail = calculator(rows)
+        return passed, f"{detail}; n_runs={len(rows)}; evidence_sha256={digest}; review27-v3"
+    except (OSError, ValueError, TypeError, KeyError, ImportError) as exc:
+        return False, str(exc)
+
+
+def verify_zvf_triage():
+    def calculate(rows):
+        counts = dict(TP=0, FP=0, TN=0, FN=0)
         for row in rows:
-            name = str(row.get("name", row.get("experiment_id", ""))).lower()
-            model = str(row.get("model", "")).lower()
-            method = str(row.get("method", row.get("algorithm", ""))).lower()
-            
-            if "qwen" in model or "qwen" in name:
-                if "grpo" in method and qwen_grpo is None:
-                    qwen_grpo = row
-                elif "ppo" in method and qwen_ppo is None:
-                    qwen_ppo = row
-            
-            if "llama" in model or "llama" in name:
-                if "grpo" in method and llama_grpo is None:
-                    llama_grpo = row
-                elif "ppo" in method and llama_ppo is None:
-                    llama_ppo = row
-        
-        results = []
-        
-        if qwen_grpo and qwen_ppo:
-            g = safe_get(qwen_grpo, "last10_avg", safe_get(qwen_grpo, "last_10_avg", 0))
-            p = safe_get(qwen_ppo, "last10_avg", safe_get(qwen_ppo, "last_10_avg", 0))
-            if g is not None and p is not None:
-                qwen_favors_grpo = g > p
-                results.append(f"Qwen: GRPO={g:.3f} {'>' if qwen_favors_grpo else '<'} PPO={p:.3f}")
-        
-        if llama_grpo and llama_ppo:
-            g = safe_get(llama_grpo, "last10_avg", safe_get(llama_grpo, "last_10_avg", 0))
-            p = safe_get(llama_ppo, "last10_avg", safe_get(llama_ppo, "last_10_avg", 0))
-            if g is not None and p is not None:
-                llama_favors_ppo = p > g
-                results.append(f"Llama: GRPO={g:.3f} {'<' if llama_favors_ppo else '>'} PPO={p:.3f}")
-        
-        details = "; ".join(results) if results else "Qwen/Llama PPO/GRPO rows found"
-        
-        return True, details
-    
-    except Exception as e:
-        return False, str(e)
+            # Predictions must be recorded independently of outcome labels.
+            predicted, observed = row["predicted_collapse"], row["observed_collapse"]
+            if type(predicted) is not bool or type(observed) is not bool:
+                raise ValueError("triage requires Boolean rule predictions and observed labels")
+            counts[("T" if predicted == observed else "F") + ("P" if predicted else "N")] += 1
+        return counts["TP"] == 2 and counts["FN"] == 0 and counts["FP"] == 0 and counts["TN"] > 0, json.dumps(counts, sort_keys=True)
+    return _verify_evidence("zvf_triage", calculate)
 
 
-def verify_tool_proxy() -> Tuple[bool, str]:
-    """Verify tool-use rewards are proxy/schema, not execution."""
-    details = "Tool-use rewards score: JSON validity, tool name, argument keys (no execution)"
-    return True, details
+def verify_zvf_correlation():
+    def calculate(rows):
+        from scipy.stats import pearsonr
+        # Reject incomplete cohorts rather than silently selecting favorable cases.
+        x = [_number(r["mean_zvf"]) for r in rows]
+        y = [_number(r["last10_avg"]) for r in rows]
+        units = [r["independent_unit_id"] for r in rows]
+        if len(rows) < 3 or any(not isinstance(u,str) or not u for u in units) or len(set(units)) != len(units) or len(set(x)) < 2 or len(set(y)) < 2:
+            raise ValueError("correlation needs complete nonconstant independent units")
+        rho, p = map(float, pearsonr(x, y))
+        return abs(rho - (-.769)) <= .005 and abs(p - .0008) <= .0005, f"Pearson r={rho:.8g}, two-sided p={p:.8g}, complete_cases={len(rows)}"
+    return _verify_evidence("zvf_correlation", calculate)
 
 
-def verify_proxy_harnesses() -> Tuple[bool, str]:
-    """Verify HumanEval/MATH are reward-environment probes."""
-    details = "MATH/HumanEval: test-split prompts used as reward probes, not held-out tests"
-    return True, details
-
-
-def verify_zvf_correlation() -> Tuple[bool, str]:
-    """Verify ZVF correlation claim."""
-    expected_r = -0.769
-    expected_p = 0.0008
-    details = f"ZVF vs final reward: r={expected_r}, p={expected_p}"
-    return True, details
-
-
-def verify_saturation_fit() -> Tuple[bool, str]:
-    """Verify exponential saturation fit quality."""
-    expected_r2 = 0.210
-    details = f"Exponential saturation mean R²={expected_r2} (descriptive only)"
-    return True, details
-
-
-def verify_trl_baseline() -> Tuple[bool, str]:
-    """Verify TRL GRPO baseline characterization."""
-    master_results = EXPERIMENTS_DIR / "master_results.json"
-    
-    if not master_results.exists():
-        return False, "master_results.json not found"
-    
-    try:
-        data = load_json(master_results)
-        rows = data if isinstance(data, list) else data.get("experiments", [])
-        
-        # Find TRL GRPO rows
-        trl_values = []
+def verify_saturation_fit():
+    def calculate(rows):
+        scores = []
         for row in rows:
-            method = str(row.get("method", row.get("algorithm", ""))).lower()
-            platform = str(row.get("platform", "")).lower()
-            
-            if "trl" in platform or "trl" in method:
-                last10 = safe_get(row, "last10_avg", safe_get(row, "last_10_avg", None))
-                if last10 is not None:
-                    trl_values.append(last10)
-        
-        if trl_values:
-            mean = sum(trl_values) / len(trl_values)
-            details = f"TRL GRPO mean last10={mean:.3f} (paper claims ~0.734)"
-        else:
-            details = "TRL GRPO rows found; paper claims mean≈0.734"
-        
-        return True, details
-    
-    except Exception as e:
-        return False, str(e)
+            if row.get("trace_provenance") != "measured" or row.get("fit_family") != "exponential_saturation":
+                raise ValueError("actual measured traces and exponential-saturation parameters required")
+            t = [_number(v) for v in row["steps"]]
+            y = [_number(v) for v in row["rewards"]]
+            if len(t) != len(y) or len(t) < 3 or any(b <= a for a,b in zip(t,t[1:])):
+                raise ValueError("invalid ordered measured trajectory")
+            initial, asymptote, rate = [_number(row[k]) for k in ("initial", "asymptote", "rate")]
+            if rate <= 0:
+                raise ValueError("positive saturation rate required")
+            predicted = [asymptote + (initial-asymptote)*math.exp(-rate*(v-t[0])) for v in t]
+            mean = sum(y)/len(y)
+            total = sum((v-mean)**2 for v in y)
+            if total == 0:
+                raise ValueError("R2 undefined for constant trace")
+            scores.append(1-sum((a-b)**2 for a,b in zip(y,predicted))/total)
+        score = sum(scores)/len(scores)
+        return abs(score-.21) <= .02, f"equal-run mean measured-trace R2={score:.8g}; individual_R2={scores}"
+    return _verify_evidence("saturation_fit", calculate)
 
 
-def verify_group_size() -> Tuple[bool, str]:
-    """Verify group size ablation results."""
-    master_results = EXPERIMENTS_DIR / "master_results.json"
-    
-    if not master_results.exists():
-        return False, "master_results.json not found"
-    
-    try:
-        data = load_json(master_results)
-        rows = data if isinstance(data, list) else data.get("experiments", [])
-        
-        # Find Qwen3-8B with different group sizes
-        g_values = {}
-        for row in rows:
-            name = str(row.get("name", row.get("experiment_id", ""))).lower()
-            model = str(row.get("model", "")).lower()
-            group_size = safe_get(row, "group_size", safe_get(row, "G", None))
-            
-            if ("qwen3-8b" in model or "qwen3_8b" in name) and group_size:
-                last10 = safe_get(row, "last10_avg", safe_get(row, "last_10_avg", None))
-                if last10 is not None and group_size not in g_values:
-                    g_values[group_size] = last10
-        
-        if g_values:
-            g8 = g_values.get(8, g_values.get("8"))
-            if g8:
-                details = f"G=8 last10={g8:.3f} (paper claims ~0.844)"
-            else:
-                details = f"Group sizes found: {list(g_values.keys())}"
-        else:
-            details = "Qwen3-8B rows with group_size field found"
-        
-        return True, details
-    
-    except Exception as e:
-        return False, str(e)
+def _matched_cells(rows, varying):
+    keys = ("model", "task", "split", "stack", "seed", "protocol_id")
+    keys = tuple(k for k in keys if k != varying)
+    cells = {}
+    for row in rows:
+        key = tuple(row[k] for k in keys)
+        cell = cells.setdefault(key, {})
+        value = row[varying]
+        if value in cell:
+            raise ValueError("duplicate treatment in matched cell")
+        cell[value] = _number(row["last10_avg"])
+    return cells
 
+
+def verify_stack_sensitivity():
+    def calculate(rows):
+        cells = _matched_cells(rows, "algorithm")
+        differences = {}
+        for key, cell in cells.items():
+            if set(cell) != {"grpo", "ppo"}:
+                raise ValueError("every matched cell requires exactly GRPO and PPO")
+            differences.setdefault(key[0], []).append(cell["grpo"]-cell["ppo"])
+        means = {k: sum(v)/len(v) for k,v in differences.items()}
+        return len(means) >= 2 and min(means.values()) < 0 < max(means.values()), f"descriptive matched GRPO-minus-PPO by model={means}; no causal stack attribution"
+    return _verify_evidence("stack_sensitivity", calculate)
+
+
+def verify_trl_baseline():
+    def calculate(rows):
+        if any(r["stack"] != "trl" or r["algorithm"] != "grpo" for r in rows):
+            raise ValueError("exact TRL/GRPO cohort required")
+        scope = {(r["model"], r["task"], r["split"]) for r in rows}
+        if len(scope) != 1 or len({r["seed"] for r in rows}) != len(rows):
+            raise ValueError("one matched task/model/split with distinct seeds required")
+        values = [_number(r["last10_avg"]) for r in rows]
+        mean = sum(values)/len(values)
+        return abs(mean-.734) <= .01, f"equal-seed TRL/GRPO last10 mean={mean:.8g}"
+    return _verify_evidence("trl_baseline", calculate)
+
+
+def verify_group_size():
+    def calculate(rows):
+        if any(type(r.get("group_size")) is not int or r["group_size"] < 2 for r in rows):
+            raise ValueError("explicit integer group sizes >=2 required")
+        # Algorithm is a matching dimension here as well as stack/task/model.
+        if len({r["algorithm"] for r in rows}) != 1:
+            raise ValueError("algorithm must be held fixed in group-size ablation")
+        cells = _matched_cells(rows, "group_size")
+        if any(8 not in c or len(c) < 2 for c in cells.values()) or len({tuple(sorted(c)) for c in cells.values()}) != 1:
+            raise ValueError("matched seeds require G=8 plus identical comparison group-size grid")
+        values = [c[8] for c in cells.values()]
+        mean = sum(values)/len(values)
+        return abs(mean-.844) <= .01, f"matched G=8 equal-cell last10 mean={mean:.8g}; n_cells={len(cells)}"
+    return _verify_evidence("group_size", calculate)
+
+
+def verify_tool_proxy():
+    return False, "UNVERIFIED: documentation scope statement is not an executable numeric claim"
+
+
+def verify_proxy_harnesses():
+    return False, "UNVERIFIED: documentation scope statement is not an executable numeric claim"
 
 def verify_figure_inputs() -> Tuple[bool, str]:
     """Verify figure input files exist."""
@@ -552,7 +432,12 @@ def main():
         help="Show detailed output"
     )
     
+    parser.add_argument("--base-dir", type=Path, default=BASE_DIR, help="Explicit evidence root containing experiments, reports, and checksum manifest")
     args = parser.parse_args()
+    globals()["BASE_DIR"] = args.base_dir.resolve()
+    globals()["EXPERIMENTS_DIR"] = BASE_DIR / "experiments"
+    globals()["REPORTS_DIR"] = BASE_DIR / "reports" / "final"
+    globals()["FIGURES_DIR"] = BASE_DIR / "paper" / "figures" / "v2"
     
     if args.list:
         print("Available checks:")

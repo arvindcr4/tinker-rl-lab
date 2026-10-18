@@ -128,6 +128,14 @@ def main():
             print(f"  - {key} (used {count}x)")
         issues += len(missing)
 
+    # Placeholder drafts are not valid bibliographic evidence, even after --fix.
+    field_content = re.sub(r"(?<!\\)%[^\n]*", "", bib_content)
+    placeholders = re.findall(r"\b(?:TODO|TBD|20XX|PLACEHOLDER)\b", field_content, re.IGNORECASE)
+    if placeholders:
+        print(f"\n## UNRESOLVED BIB PLACEHOLDERS ({len(placeholders)})")
+        print("  Replace TODO/TBD/20XX/placeholder fields with verified references.")
+        issues += len(placeholders)
+
     # 2. Unused bib entries
     unused = bib_set - cite_set
     if unused:
@@ -200,7 +208,7 @@ def main():
     print(f"  Issues found: {issues}")
 
     if issues == 0:
-        print("  All checks passed!")
+        print("  Structural checks passed; claim-to-source verification is still required.")
 
     if args.fix and missing:
         print(f"\n## AUTO-FIX: Generating placeholder entries for {len(missing)} missing keys")

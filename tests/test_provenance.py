@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 from pathlib import Path
 
@@ -14,7 +15,9 @@ def test_minreport_resolves_restructured_source_without_mutating_record():
     record = json.loads(CAMPAIGN.read_text())
     assert record["provenance"]["code_file"] == "experiments/openings/campaign.py"
 
+    before = copy.deepcopy(record)
     report = minreport.verify(record, strict=True)
+    assert record == before
     source_checks = [check for check in report["checks"] if "provenance source" in check["msg"]]
     assert source_checks == [
         {

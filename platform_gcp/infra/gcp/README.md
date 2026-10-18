@@ -1,7 +1,12 @@
+> Review-10 safety gate: the historical commands below are not deployment-ready
+> without the required immutable-input variables and reviewed task/site manifest.
+> Full WebArena is blocked for missing forum/map/Wikipedia/judge contracts.
+> No live deployment was validated. See `docs/reviews/pro_review_10_resolution.md`.
+
 # WebArena-verified parallel eval on GCP
 
 Fastest path to a full WebArena-verified score: 50-way parallel eval across 10 VMs,
-each with its own WebArena stack + 5 Chromium workers. Wall-clock ~60 min after
+each with its own WebArena stack + one Chromium worker. Wall-clock ~60 min after
 image is built.
 
 ## One-time prerequisites
@@ -50,9 +55,9 @@ Each VM:
 1. Boots from `webarena` image (~2 min)
 2. Starts the WebArena Docker stack locally (~3 min)
 3. Fetches Tinker key from Secret Manager
-4. Runs its shard of tasks (`k/N`) at concurrency=5
+4. Runs its shard of tasks (`k/N`) at concurrency=1
 5. Uploads `results_shard_k.jsonl` to `gs://$BUCKET/$RUN_ID/`
-6. Self-shuts down to stop billing
+6. Publishes a terminal shard receipt; the foreground launcher deletes its owned MIG and template after all receipts arrive or the deadline expires
 
 ## Step 3 — Aggregate
 
@@ -122,3 +127,56 @@ python -m platform_hybrid.experiments.webarena.react_eval \
 
 Expected: non-zero success rate on `miniwob.click-button` (easy task).
 If score is 0, debug **before** spending GCP $.
+
+## Lifecycle limits after review 10
+
+The v2 launcher runs a foreground controller (`MAX_RUN_SECONDS`, default six
+hours, plus a 15-minute startup allowance), preserves worker IDs in per-instance
+stateful metadata, restores `--resume` JSONL, and uploads progress every minute.
+Normal completion, failures, and caught signals clean up only resources whose
+recorded immutable IDs still match. Leave this controller running.
+
+This is not an independent expiry service: launcher host loss or SIGKILL, or an
+ambiguous provider create response, still requires operator reconciliation and
+cleanup. Do not deploy unattended until an independently authorized expiry
+controller exists. GCP API/CLI compatibility and replacement behavior require
+staging validation; no cloud test was performed. Up to one minute of progress
+may be repeated after preemption; aggregation must separately validate task IDs,
+artifact hashes and infrastructure-error treatment. Do not pool these runs with
+historical results without their protocol identity.
+
+### Required immutable inputs
+
+Image build now requires `TINKER_REPO_REVISION`, `WEBARENA_REPO_REVISION`,
+`WEBARENA_SHA256_MANIFEST`, its separately trusted `WEBARENA_SHA256_ANCHOR`, and a
+`KIWIX_IMAGE` reference ending in `@sha256:<digest>`. Missing or mismatched inputs
+fail before builder creation. The manifest lists SHA-256 values and exact archive
+basenames. Obtain the anchor from a reviewed release, not from an untrusted
+bundle alongside the archives.
+
+MIG launch requires the image's exact `TINKER_REPO_REVISION`,
+`WEBARENA_TASK_MANIFEST` and its separately reviewed
+`WEBARENA_TASK_MANIFEST_SHA256`. The manifest uses schema
+`webarena-service-contract-v1`, names the benchmark, and enumerates `tasks` as
+objects with `id`, `required_sites`, and optional `requires_judge`. Only
+shopping, shopping_admin, gitlab and homepage task dependencies are currently
+supported. Actual task IDs and dependencies must come from the reviewed benchmark
+manifest; no example or automatically inferred subset is authorized here.
+
+### Security admission ceilings (review 48)
+
+The foreground MIG controller rejects more than 10 workers, disks over 1000 GB,
+worker runtimes over 24 hours, and worker machine types other than
+`e2-standard-4`. Its individual cloud commands have 120-second deadlines.
+These resource ceilings are not a monetary budget or an independent reaper:
+controller loss still requires an independently authorized cleanup service. Do
+not leave this deployment unattended until that service and IAM are reviewed.
+
+The builder accepts only `n2-standard-8`, at most 1000 GB disk, and sets a
+provider-side four-hour DELETE deadline. Local cleanup verifies the recorded VM
+identity. Ambiguous creation requires reconciliation; it never authorizes blind
+deletion. The optional archive cache must be a `gs://bucket[/prefix]` URI with
+simple path characters. The Docker installer uses Ubuntu packages rather than
+executing a downloaded shell script. The full Python/OS runtime is still not an
+immutable, hash-locked release; reviewed image/package provenance remains a
+release requirement.

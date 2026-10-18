@@ -24,6 +24,10 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import base64
+import shutil
+import tempfile
+import uuid
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -32,7 +36,7 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_RECEIPT_DIR = REPO_ROOT / "outputs/jev_receipts"
-SCHEMA_VERSION = "jev-judgment-receipt-v1"
+SCHEMA_VERSION = "jev-judgment-receipt-v2"
 DEFAULT_MODEL = "jev-latest"
 MAX_INLINE_STATE_BYTES = 120_000
 
@@ -75,12 +79,7 @@ def _receipt_path(label: str, receipt_dir: Path) -> Path:
     receipt_dir.mkdir(parents=True, exist_ok=True)
     slug = label.replace(" ", "_").replace("/", "-") or "judgment"
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
-    path = receipt_dir / f"{stamp}__{slug}.json"
-    n = 1
-    while path.exists():
-        path = receipt_dir / f"{stamp}__{slug}__{n}.json"
-        n += 1
-    return path
+    return receipt_dir / f"{stamp}__{slug}__{uuid.uuid4().hex}.json"
 
 
 def _state_bytes(state: Any) -> bytes:
@@ -102,19 +101,38 @@ def _record(
     receipt = {
         "schema_version": SCHEMA_VERSION,
         "recorded_at": _utc_now(),
-        "model": DEFAULT_MODEL,
+        "requested_model": DEFAULT_MODEL,
+        "resolved_model": answer.get("model") or answer.get("model_id"),
+        "resolved_model_verified": bool(answer.get("model") or answer.get("model_id")),
+        "cli_path": shutil.which(_JEV),
+        "cli_sha256": (_sha256_bytes(Path(shutil.which(_JEV)).read_bytes())
+                       if shutil.which(_JEV) and Path(shutil.which(_JEV)).is_file() else None),
         "kind": kind,
         "label": label,
         "state_sha256": _sha256_bytes(raw),
         "state_inline": (
             raw.decode("utf-8", "replace") if len(raw) <= MAX_INLINE_STATE_BYTES else None
         ),
-        "state_truncated": len(raw) > MAX_INLINE_STATE_BYTES,
+        "state_truncated": False,
+        "state_bytes_base64": base64.b64encode(raw).decode("ascii"),
         "input": payload,
         "answer": answer,
     }
     path = _receipt_path(label, receipt_dir)
-    path.write_text(json.dumps(receipt, indent=1, sort_keys=True) + "\n")
+    fd, temporary = tempfile.mkstemp(dir=receipt_dir, prefix=".receipt-")
+    try:
+        with os.fdopen(fd, "w") as stream:
+            stream.write(json.dumps(receipt, indent=1, sort_keys=True) + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.link(temporary, path)  # exclusive atomic publication; never overwrite
+        directory = os.open(receipt_dir, os.O_RDONLY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+    finally:
+        os.unlink(temporary)
     receipt["receipt_path"] = str(path)
     return receipt
 
@@ -224,9 +242,9 @@ def healthcheck(model: str | None = None) -> dict[str, Any]:
         p_yes.write_text(json.dumps({"fruit": "apple"}))
         p_no = Path(td) / "no.json"
         p_no.write_text(json.dumps({"fruit": "apple"}))
-    flag = ["--model", model] if model else []
-    a1 = _call_jev([*flag, "noul", str(p_yes), "Does fruit say apple?"])
-    a2 = _call_jev([*flag, "noul", str(p_no), "Does fruit say banana?"])
+        flag = ["--model", model] if model else []
+        a1 = _call_jev([*flag, "noul", str(p_yes), "Does fruit say apple?"])
+        a2 = _call_jev([*flag, "noul", str(p_no), "Does fruit say banana?"])
     yes_probe = float(a1.get("noul", 0.0))
     no_probe = float(a2.get("noul", 1.0))
     return {

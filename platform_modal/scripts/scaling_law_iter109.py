@@ -9,8 +9,7 @@ iter105 (failure-mode taxonomy + R_max*(N) Chinchilla-analogue failure):
       on the 12-anchor GSM8K panel.  This avoids the 2-param R(t)=0-at-t=0
       bound-hitting artefact that makes 4/5 anchors report lambda=10.0
       (the upper bound of the 2-param fit, a meaningless saturation rate).
-      The 3-param form is identified even when the trace starts near its
-      own ceiling.  Bootstrap-CI lambda, R_inf, r0 per anchor (B=2000).
+      The offset alone does not establish identifiability near the ceiling.  Bootstrap-CI lambda, R_inf, r0 per anchor (B=2000).
 
   (B) Time-to-saturation curves: for each anchor, compute the step at
       which the trace first crosses {0.5, 0.7, 0.8, 0.9} of its peak
@@ -73,13 +72,11 @@ import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
 from _analysis_common import write_rows_tsv as _write_tsv, ols
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TR = ROOT / "experiments" / "tinker-runs" / "results"
-RES = ROOT / "experiments" / "results"
-FIG = ROOT / "figures"
-PAPER_FIG = ROOT / "paper" / "figures"
-FIG.mkdir(exist_ok=True)
-PAPER_FIG.mkdir(exist_ok=True)
+RES = ROOT / "experiments" / "results" / "review26_v2"
+FIG = ROOT / "figures" / "review26_v2"
+PAPER_FIG = ROOT / "paper" / "figures" / "review26_v2"
 
 # 12-anchor pool (matches iter101 / iter105)
 MODELS: dict[str, tuple[float, str, str]] = {
@@ -174,7 +171,13 @@ def fit_sat_3p(t: np.ndarray, y: np.ndarray) -> dict:
 
     t_80 = float(-math.log(0.2) / lam_hat) if (lam_hat and lam_hat > 0) else float("nan")
     t_50 = float(-math.log(0.5) / lam_hat) if (lam_hat and lam_hat > 0) else float("nan")
+    success_fraction = len(boot["lam"]) / N_BOOT if N_BOOT else 0.0
+    valid = bool(np.isfinite([r0_hat, rinf_hat, lam_hat, rmse]).all()
+                 and lam_hat > 0 and success_fraction >= 0.8)
     return {
+        "valid": valid, "bootstrap_success_fraction": success_fraction,
+        "bootstrap_successes": len(boot["lam"]),
+        "exclusion_reason": "" if valid else "nonfinite_fit_or_bootstrap_success_below_0.8",
         "r0": r0_hat, "rinf": rinf_hat, "lam": lam_hat,
         "rmse": rmse, "r2": r2, "ss_res": ss_res,
         "t_50_3p": t_50, "t_80_3p": t_80,
@@ -203,8 +206,10 @@ def bootstrap_slope(x, y, n_boot=N_BOOT):
     n = len(x)
     rng = np.random.default_rng(SEED)
     bs = []
-    for _ in range(n_boot):
+    for _ in range(n_boot if n >= 2 else 0):
         idx = rng.integers(0, n, size=n)
+        if np.unique(x[idx]).size < 2:
+            continue
         _, b, _ = ols(x[idx], y[idx])
         if not math.isnan(b):
             bs.append(b)
@@ -219,6 +224,9 @@ def bootstrap_slope(x, y, n_boot=N_BOOT):
 
 
 def main() -> None:
+    FIG.mkdir(parents=True, exist_ok=True)
+    PAPER_FIG.mkdir(parents=True, exist_ok=True)
+    RES.mkdir(parents=True, exist_ok=True)
     raw = load_traces()
     fits = {name: fit_sat_3p(t, y) for name, (t, y) in raw.items()}
 
@@ -270,7 +278,7 @@ def main() -> None:
     names_all = []
     for name, fit in fits.items():
         params_b, _, fam = MODELS[name]
-        if fit["lam"] > 0 and not math.isnan(fit["lam"]) and not math.isnan(fit["rmse"]):
+        if fit["valid"]:
             log_n_all.append(math.log10(params_b))
             log_lam_all.append(math.log10(fit["lam"]))
             rmse_all.append(fit["rmse"])
@@ -374,7 +382,11 @@ def main() -> None:
              "R_inf": round(fits[n]["rinf"], 4),
              "R_inf_lo": round(fits[n]["ci"]["rinf"]["lo"], 4),
              "R_inf_hi": round(fits[n]["ci"]["rinf"]["hi"], 4),
-             "rmse": round(fits[n]["rmse"], 4)}
+             "rmse": round(fits[n]["rmse"], 4),
+             "valid": fits[n]["valid"],
+             "bootstrap_successes": fits[n]["bootstrap_successes"],
+             "bootstrap_success_fraction": fits[n]["bootstrap_success_fraction"],
+             "exclusion_reason": fits[n]["exclusion_reason"]}
             for n in MODELS
         ],
         "lambda_vs_N": {
@@ -478,7 +490,7 @@ def main() -> None:
     fam_color = {"dense":"tab:blue", "moe": "tab:red"}
     for name, (params_b, _, fam) in MODELS.items():
         fit = fits[name]
-        if fit["lam"] > 0 and not math.isnan(fit["lam"]):
+        if fit["valid"]:
             col = fam_color[fam]
             ax_b.scatter(math.log10(params_b), math.log10(fit["lam"]),
                          color=col, edgecolor="k", s=70, zorder=3,

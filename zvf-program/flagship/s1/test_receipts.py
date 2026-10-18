@@ -31,7 +31,7 @@ class ReceiptCombinationTests(unittest.TestCase):
         self.assertEqual(manifest["status"], "S1_FAIL")
         self.assertIn("cross-stack field differs: fixture_digest", manifest["errors"])
 
-    def test_combiner_accepts_two_matching_passing_receipts(self) -> None:
+    def test_combiner_rejects_two_matching_incomplete_receipts(self) -> None:
         base = {
             "stack": "trl",
             "status": "PASS",
@@ -49,8 +49,8 @@ class ReceiptCombinationTests(unittest.TestCase):
             trl_path.write_text(json.dumps(base))
             verl_path.write_text(json.dumps(dict(base, stack="verl")))
             manifest = combine(trl_path, verl_path)
-        self.assertEqual(manifest["status"], "S1_PASS")
-        self.assertEqual(manifest["errors"], [])
+        self.assertEqual(manifest["status"], "S1_FAIL")
+        self.assertTrue(manifest["errors"])
 
 
 if __name__ == "__main__":

@@ -64,7 +64,8 @@ production settings (e.g., a custom ``helpfulness'' classifier) may observe
 models that appear to improve on held-out metrics while silently
 optimising against unintended proxies. We include the Zero-Variance
 Fraction and reward-stability diagnostics precisely so that downstream
-users can detect such drift.
+users can inspect reward telemetry; detection of policy drift or reward hacking
+requires separate validation. ZVF measures within-group reward contrast.
 
 \paragraph{M3. Circumventing safety training via distillation or tool-use.}
 The tool-use track trains LoRA adapters that teach a base model to emit
@@ -73,7 +74,7 @@ could in principle use the same pipeline to teach a base model to emit
 jailbreak prompts as ``tool calls'' or to invoke an adversarial external
 tool. We mitigate this by (a) releasing only adapters, not merged weights,
 so that the safety-trained instruct checkpoint must be applied separately
-and any instruct-layer guardrails remain active; (b) documenting in model
+but adapter packaging does not establish preserved safety behavior; (b) documenting in model
 cards that the tool-use adapters are trained on a narrow schema (five
 synthetic tools) and have not been safety-evaluated for open-ended function
 calling; and (c) not releasing any function-calling harness that would
@@ -94,8 +95,8 @@ After weighing M1--M4 we judge that the reproducibility, calibration, and
 pedagogical benefits of releasing \ours{} outweigh the residual misuse
 risk. We adopt the standard mitigation of releasing adapters (not merged
 weights), documenting intended use and out-of-scope use in model cards,
-and publishing alongside the diagnostics a researcher would need to detect
-reward hacking.
+and publishing reward diagnostics without claiming validated reward-hacking
+detection. Safety preservation under the released adapters has not been evaluated.
 
 % ---------------------------------------------------------------------------
 \subsection{Compute Cost Accounting}
@@ -103,8 +104,8 @@ reward hacking.
 % ---------------------------------------------------------------------------
 
 Table~\ref{tab:compute_spend} itemises the financial cost of every
-platform used in the project. Costs are real spend for the submitting
-authors; no in-kind credits are omitted. Dollar figures are in USD.
+platform used in the project. These are historical cost entries, not a reconciled billing ledger. Credits,
+overlap and person-dependent charges require verification. Dollar figures are in USD.
 
 \begin{table}[ht]
 \centering
@@ -127,7 +128,7 @@ NVIDIA L4 (TRL baseline)& Qwen2.5-0.5B GSM8K, 5 seeds      & 5  & \$3--5   \\
 HuggingFace Hub    & Model + adapter hosting               & --- & \$0 \\
 Weights \& Biases  & Experiment tracking (academic tier)   & --- & \$0 \\
 \midrule
-\multicolumn{3}{l}{\textbf{Total authors' out-of-pocket spend}} & \textbf{\$130--140} \\
+\multicolumn{3}{l}{\textbf{Arithmetic subtotal (excluding Colab)}} & \textbf{\$147--177} \\
 \bottomrule
 \end{tabular}
 \end{table}

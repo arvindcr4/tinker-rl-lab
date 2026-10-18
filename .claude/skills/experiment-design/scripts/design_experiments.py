@@ -47,7 +47,7 @@ STAGE_TEMPLATES = [
             "Verify training loop works",
         ],
         "max_iterations": 5,
-        "completion_criteria": "Working implementation with non-trivial performance",
+        "completion_criteria": "Planned implementation checks and runs completed, including null or negative results",
     },
     {
         "name": "baseline_tuning",
@@ -58,7 +58,7 @@ STAGE_TEMPLATES = [
             "Test on at least 2 datasets",
         ],
         "max_iterations": 10,
-        "completion_criteria": "Stable training, improvement over baselines",
+        "completion_criteria": "Planned tuning runs and baseline analyses completed, including null or negative results",
     },
     {
         "name": "creative_research",
@@ -69,7 +69,7 @@ STAGE_TEMPLATES = [
             "Test on at least 3 datasets",
         ],
         "max_iterations": 15,
-        "completion_criteria": "Demonstrated novel improvement",
+        "completion_criteria": "Planned research runs and analyses completed, including null or negative results",
     },
     {
         "name": "ablation_studies",
@@ -105,7 +105,25 @@ def generate_design(plan: dict) -> dict:
     baselines = plan.get("baselines", [])
     datasets = plan.get("datasets", [])
     custom_metrics = plan.get("metrics", [])
-    num_seeds = plan.get("num_seeds", 3)
+    # An unfinished plan is useful, but must not silently allocate three seeds.
+    seed_plan = plan.get("seed_plan")
+    num_seeds = plan.get("num_seeds")
+    if seed_plan is not None:
+        required = ("type", "target", "required_num_seeds", "calculation", "experimental_unit")
+        if not isinstance(seed_plan, dict) or any(not seed_plan.get(k) for k in required):
+            raise ValueError("seed_plan requires type, target, required_num_seeds, calculation, experimental_unit")
+        if seed_plan["type"] not in ("power", "precision"):
+            raise ValueError("seed_plan type must be power or precision")
+        minimum = seed_plan["required_num_seeds"]
+        if type(minimum) is not int or minimum < 1:
+            raise ValueError("required_num_seeds must be a positive integer")
+        if num_seeds is None:
+            num_seeds = minimum
+    if num_seeds is not None:
+        if type(num_seeds) is not int or num_seeds < 1:
+            raise ValueError("num_seeds must be a positive integer")
+        if seed_plan is None or num_seeds < seed_plan["required_num_seeds"]:
+            raise ValueError("num_seeds requires a power/precision plan and must meet its calculated minimum")
 
     # Select metrics
     metrics = custom_metrics or DEFAULT_METRICS.get(task_type, DEFAULT_METRICS["general"])
@@ -128,7 +146,8 @@ def generate_design(plan: dict) -> dict:
     n_datasets = max(len(datasets), 1)
     n_ablations = len(ablations)
     n_baselines = max(len(baselines), 1)
-    total_runs = (n_hp_configs + n_ablations + n_baselines) * n_datasets * num_seeds
+    total_runs = ((n_hp_configs + n_ablations + n_baselines) * n_datasets * num_seeds
+                  if num_seeds is not None else None)
 
     design = {
         "method": method,
@@ -142,11 +161,14 @@ def generate_design(plan: dict) -> dict:
         "ablation_matrix": ablations,
         "hyperparameter_grid": hp_grid,
         "num_seeds": num_seeds,
+        "seed_plan": seed_plan,
+        "planning_status": "seed_plan_validated" if seed_plan else "incomplete_seed_plan",
         "estimated_total_runs": total_runs,
         "evaluation_protocol": {
             "report_mean_std": True,
-            "statistical_test": "paired_ttest" if num_seeds >= 3 else "none",
-            "significance_level": 0.05,
+            "statistical_test": "none",
+            "reporting": "descriptive_only",
+            "inference_note": "Prespecify effect, experimental unit, interval/test, and multiplicity before inference",
         },
     }
 
@@ -206,6 +228,9 @@ def format_markdown(design: dict) -> str:
     lines.append(f"## Summary\n")
     lines.append(f"- Seeds: {design['num_seeds']}")
     lines.append(f"- Estimated total runs: {design['estimated_total_runs']}")
+    lines.append(f"- Planning status: {design['planning_status']}")
+    lines.append(f"- Seed plan: {json.dumps(design['seed_plan'], sort_keys=True)}")
+    lines.append(f"- Inference: {design['evaluation_protocol']['inference_note']}")
     lines.append(f"- Statistical test: {design['evaluation_protocol']['statistical_test']}")
 
     return "\n".join(lines) + "\n"
@@ -233,7 +258,10 @@ def main():
         print("Error: specify --plan or --method", file=sys.stderr)
         sys.exit(1)
 
-    design = generate_design(plan)
+    try:
+        design = generate_design(plan)
+    except ValueError as exc:
+        parser.error(str(exc))
 
     if args.format == "markdown":
         output = format_markdown(design)

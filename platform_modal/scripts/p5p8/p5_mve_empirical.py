@@ -46,8 +46,8 @@ from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
 CELLS_TSV = ROOT / "platform_hybrid/experiments" / "results" / "mega_20260704" / "cells.tsv"
 MANIFEST_DIR = ROOT / "platform_hybrid/experiments" / "results" / "mega_20260704" / "manifests"
-OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
-OUT.mkdir(parents=True, exist_ok=True)
+OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/review17_v2"
+
 
 # ----- iter-13 auditor's 7-item schema (copied for self-containment) -----
 SCHEMA_7 = [
@@ -78,6 +78,8 @@ SCHEMA_7 = [
 MVE_FIELDS = ["mean_reward", "zvf", "pcd", "mean_completion_len", "std_completion_len"]
 MVE_WEIGHT = 20
 
+
+from p5_review17_stats import json_safe
 
 def load_cells() -> dict[str, dict]:
     cells = {}
@@ -142,10 +144,13 @@ def score_one(manifest: dict, cells_by_id: dict[str, dict], include_mve: bool) -
             v = cell.get(fld)
             if v is not None and str(v).strip() != "":
                 try:
-                    float(v)
+                    import math
+                    number = float(v)
+                    if not math.isfinite(number) or number < 0 or (fld in {"mean_reward", "zvf", "pcd"} and number > 1):
+                        continue
                     mve_present += 1
                     mve_valid += 1
-                except ValueError:
+                except (ValueError, TypeError):
                     pass
         # 5/5 sub-fields present and numeric -> base=1.0
         base = mve_valid / 5.0
@@ -161,6 +166,8 @@ def score_one(manifest: dict, cells_by_id: dict[str, dict], include_mve: bool) -
 
 
 def main() -> None:
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    OUT.mkdir(parents=True, exist_ok=True)
     print("[p5_mve_empirical] starting")
     cells = load_cells()
     print(f"  cells loaded: {len(cells)}")
@@ -204,10 +211,13 @@ def main() -> None:
 
     # Paired bootstrap B=2000 on per-cell delta-badge
     n = len(baselines)
+    if not n:
+        raise ValueError("No manifest evidence")
     deltas = [a - b for a, b in zip(augmented, baselines)]
     deltas_low = [a - b for a, b in zip(augmented_low, baselines)]
     seed = 20260704
-    rng_state = seed
+    import random
+    rng = random.Random(seed)
     boot_means = []
     boot_means_low = []
     for _ in range(2000):
@@ -215,8 +225,7 @@ def main() -> None:
         sample = []
         sample_low = []
         for _ in range(n):
-            rng_state = (rng_state * 1103515245 + 12345) & 0x7FFFFFFF
-            j = (rng_state >> 16) % n
+            j = rng.randrange(n)
             sample.append(deltas[j])
             sample_low.append(deltas_low[j])
         boot_means.append(sum(sample) / n)
@@ -233,6 +242,10 @@ def main() -> None:
     mean_a = statistics.mean(augmented)
 
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
+        "score_contract": "review17-p5-v2 completeness; seven-field baseline 100, MVE separately 20",
+        "uplift_interpretation": "mechanical addition of nonnegative credit; no evidence of reconstruction or predictive usefulness",
         "n_cells": n,
         "mean_baseline": round(mean_b, 3),
         "mean_augmented_weight20": round(mean_a, 3),
@@ -257,7 +270,7 @@ def main() -> None:
         "augmented_weight_total": sum(w for _, _, w, _, _ in SCHEMA_7) + MVE_WEIGHT,
     }
     with open(OUT / "p5_mve_empirical_summary.json", "w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(json_safe(summary), f, indent=2)
     print(f"  wrote {OUT / 'p5_mve_empirical_summary.json'}")
 
     print(f"  HEADLINE: baseline={mean_b:.2f}, augmented_w20={mean_a:.2f}, "

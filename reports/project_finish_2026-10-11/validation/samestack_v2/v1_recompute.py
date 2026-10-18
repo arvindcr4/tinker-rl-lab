@@ -1,40 +1,102 @@
-import json, sys
-import numpy as np
-sys.path.insert(0, sys.argv[0].rsplit("/", 1)[0])
-from stats_lib import paired, holm, mde, n_needed
+"""Pure historical v1 recomputation; never runs at import time.
 
-R = sys.argv[1] if len(sys.argv) > 1 else "platform_hybrid/experiments/results/"
-R = R.rstrip("/") + "/"
-full = json.load(open(R + "samestack_gsm8k_cot_full.json"))
-by = {}
-for r in full["runs"]:
-    pc, qc = np.array(r["pre_correct"]), np.array(r["post_correct"])
-    assert len(qc) == r["n_eval"] == 200
-    by.setdefault(r["arm"], {})[r["seed"]] = dict(pre=pc, post=qc, stored_post=r["heldout_post_acc"],
-                                                  len=np.mean([s["mean_comp_len"] for s in r["step_log"]]),
-                                                  elapsed=r["elapsed_seconds"])
-out = {}
-for a, d in by.items():
-    mism = [s for s, x in d.items() if abs(x["post"].mean() - x["stored_post"]) > 1e-9]
-    pre_same = all((x["pre"] == next(iter(d.values()))["pre"]).all() for x in d.values())
-    out[a] = {"post_by_seed": {s: x["post"].mean() for s, x in sorted(d.items())},
-              "pre_mean": np.mean([x["pre"].mean() for x in d.values()]), "pre_identical_across_seeds": pre_same,
-              "post_mean": np.mean([x["post"].mean() for x in d.values()]), "stored_mismatch_seeds": mism,
-              "train_comp_len_mean": np.mean([x["len"] for x in d.values()]),
-              "elapsed_s_mean": np.mean([x["elapsed"] for x in d.values()])}
-post = {a: {s: x["post"].mean() for s, x in d.items()} for a, d in by.items()}
-c = {k: paired(post[x], post[y]) for k, (x, y) in
-     {"g8-ppo": ("grpo_g8", "ppo"), "g8-g2": ("grpo_g8", "grpo_g2"), "g2-ppo": ("grpo_g2", "ppo")}.items()}
-h = holm({k: v["p_t"] for k, v in c.items()})
-hs = holm({k: v["p_signflip"] for k, v in c.items()})
-for k in c:
-    c[k]["holm_t"], c[k]["holm_sf"] = h[k], hs[k]
-    c[k]["mde_n5"] = mde(c[k]["sd"], 5)
-# item-level: pooled discordant counts g8 vs ppo
-from scipy.stats import binomtest
-for x, y in [("grpo_g8", "ppo"), ("grpo_g8", "grpo_g2")]:
-    b = sum(int(((by[x][s]["post"] == 1) & (by[y][s]["post"] == 0)).sum()) for s in by[x])
-    cc = sum(int(((by[x][s]["post"] == 0) & (by[y][s]["post"] == 1)).sum()) for s in by[x])
-    c[f"{x}-{y}_pooled_discordant"] = {"x_only": b, "y_only": cc,
-                                        "naive_mcnemar_p": binomtest(b, b + cc).pvalue}
-print(json.dumps({"arms": out, "contrasts": c}, indent=1, default=float))
+This is a retrospective descriptive audit, not a declaration of prespecification.
+CLI output goes to stdout only; historical stored result files are not modified.
+"""
+import argparse
+import json
+import math
+from pathlib import Path
+
+
+def load_runs(directory):
+    from platform_hybrid.experiments.samestack_contract import _unique_object
+    # Historical logs contain bare NaN in unused ZVF diagnostics. Consumed
+    # score fields remain strictly checked by validate_runs.
+    return json.loads((Path(directory) / "samestack_gsm8k_cot_full.json").read_text(),
+                      parse_constant=lambda value: None, object_pairs_hook=_unique_object)["runs"]
+
+
+def validate_runs(records):
+    seen = set()
+    for record in records:
+        identity = (record.get("arm"), record.get("seed"))
+        if not isinstance(identity[0], str) or type(identity[1]) is not int:
+            raise ValueError("invalid v1 arm/seed identity")
+        if identity in seen:
+            raise ValueError(f"duplicate v1 identity: {identity}")
+        seen.add(identity)
+        if record.get("n_eval") != 200:
+            raise ValueError("v1 n_eval must be 200")
+        for field in ("pre_correct", "post_correct"):
+            values = record.get(field)
+            if (not isinstance(values, list) or len(values) != 200 or
+                    any(type(v) is not int or v not in (0, 1) for v in values)):
+                raise ValueError(f"{field} must contain 200 binary integers")
+        value = record.get("heldout_post_acc")
+        if isinstance(value, bool) or not isinstance(value, (float, int)) or not math.isfinite(value) or not 0 <= value <= 1:
+            raise ValueError("stored post accuracy must be finite and in [0, 1]")
+    return records
+
+
+def analyze(records):
+    try:
+        from .stats_lib import holm, mcnemar_exact, mde, paired
+        from .analysis_plan import PRIMARY, EXPLORATORY
+    except ImportError:
+        from stats_lib import holm, mcnemar_exact, mde, paired
+        from analysis_plan import PRIMARY, EXPLORATORY
+    validate_runs(records)
+    by = {}
+    for record in records:
+        by.setdefault(record["arm"], {})[record["seed"]] = record
+    out = {}
+    for arm, runs in by.items():
+        post = {seed: sum(run["post_correct"]) / 200 for seed, run in sorted(runs.items())}
+        first_pre = next(iter(runs.values()))["pre_correct"]
+        out[arm] = {"post_by_seed": post, "post_mean": sum(post.values()) / len(post),
+                    "pre_mean": sum(sum(run["pre_correct"]) / 200 for run in runs.values()) / len(runs),
+                    "pre_identical_across_seeds": all(run["pre_correct"] == first_pre for run in runs.values()),
+                    "stored_mismatch_seeds": [seed for seed, run in runs.items() if not math.isclose(post[seed], run["heldout_post_acc"], abs_tol=1e-12, rel_tol=0)]}
+    post = {arm: values["post_by_seed"] for arm, values in out.items()}
+    primary, exploratory = {}, {}
+    for family, target in ((PRIMARY, primary), (EXPLORATORY, exploratory)):
+        for key, (a, b) in family.items():
+            shared = set(post.get(a, {})) & set(post.get(b, {}))
+            value = {"status": "unavailable", "n": len(shared), "mean": None, "p_t": 1.0, "p_signflip": 1.0, "tost_p": 1.0}
+            if len(shared) >= 2:
+                value = {"status": "available", **paired(post[a], post[b])}
+                value["pilot_mde_n5"] = mde(value["sd"], 5) if value["sd"] > 0 else None
+            target[key] = value
+    for source, destination in (("p_t", "holm_p_t"), ("p_signflip", "holm_p_signflip"), ("tost_p", "holm_tost_p")):
+        adjusted = holm({key: value[source] for key, value in primary.items()})
+        for key, value in primary.items():
+            value[destination] = adjusted[key]
+    items = {}
+    for key, (a, b) in PRIMARY.items():
+        seeds = sorted(set(by.get(a, {})) & set(by.get(b, {})))
+        if not seeds:
+            continue
+        pairs = [(x, y) for seed in seeds for x, y in zip(by[a][seed]["post_correct"], by[b][seed]["post_correct"])]
+        b_only, a_only = sum(x == 0 and y == 1 for x, y in pairs), sum(x == 1 and y == 0 for x, y in pairs)
+        items[key] = {"x_only": a_only, "y_only": b_only, "naive_mcnemar_p": mcnemar_exact(a_only, b_only),
+                      "scope": "Nonprimary pooled diagnostic; repeated seed-item observations are not independent"}
+    return {"status": "historical_descriptive", "final_eligible": False,
+            "provenance": "Historical v1 records have no independently verified environment/protocol/item manifest; this is not a canonical selected cohort",
+            "family_note": "Retrospective fixed family with missing exposure-matched contrast p=1; G2-PPO exploratory. No retroactive prespecification claim",
+            "arms": out, "primary_contrasts": primary, "exploratory_contrasts": exploratory,
+            "item_level": items, "power_scope": "Pilot unadjusted t sensitivity only; not actual-design family or TOST power"}
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("directory", nargs="?", default="platform_hybrid/experiments/results")
+    args = parser.parse_args(argv)
+    print(json.dumps(analyze(load_runs(args.directory)), indent=2, allow_nan=False))
+
+
+if __name__ == "__main__":
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    main()

@@ -6,18 +6,11 @@ Vein (a) of the brief at the transfer/sharpening level:
   - Calibrate trigger threshold tau in-method on each of the 4 N2 methods.
   - TRANSFER test: apply grpo's optimal tau to aero/gift/areal; measure
     contrast_magnitude retention vs in-method-tuned tau. Bootstrap CI per method.
-  - Per-step FAILURE-MODE TAXONOMY: classify each (method, step) into one of
-    5 disjoint classes:
-      (A) HIT      -- trigger correctly fires when zvf >= tau and there is genuine
-                      non-degenerate prompt room to recover
-      (B) FN_BDRY  -- false negative: high zvf but the step is ALL-DEGENERATE so
-                      escalation cannot recover contrast (structurally unreachable)
-      (C) FN_DRIFT -- false negative: triggers but Delta-contrast at G=16 would be
-                      small (less than floor). I.e. missed-but-irrelevant.
-      (D) FP_BDRY  -- false positive: trigger fires but step's pcd>0.20 (C0-style
-                      reject) or zvf hard-zero (boundary)
-      (E) TN       -- correctly does NOT fire (low zvf, low opportunity)
-  - Bootstrap CIs on failure-class shares (per method + pooled).
+  - Per-step model-action taxonomy: useful escalation, low-gain escalation,
+    guard blocked, trigger no-op at cap, missed modeled gain, or no-gain/no-action.
+    Gain is incremental relative to the no-triage Dualformer action, not absolute
+    contrast at G16. These are descriptive IID-model diagnostics, not observed
+    training failures. Bootstrap CIs are conditional step-level uncertainty.
 
 Outputs (platform_hybrid/experiments/results/p5p8/):
   p7_iter107_taut_in_method.tsv          per-method optimal tau + metric
@@ -42,7 +35,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_mo
 from _paths import REPO_ROOT  # noqa: E402
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
-OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
+OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8" / "corrected-review19-v5"
 OUT.mkdir(parents=True, exist_ok=True)
 METHODS = ("grpo", "aero", "gift", "areal")
 TAUS = (0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90)
@@ -55,7 +48,27 @@ N_BOOT = 4000
 BOOT_SEED = 20260705
 EPS = 1e-9
 DEGEN_ZVF = 0.99  # if zvf_i >= 0.99 under iid binomial, prompt is structurally degenerate
+FAILURE_CLASSES = ("USEFUL_ESCALATION", "LOW_GAIN_ESCALATION", "GUARD_BLOCKED",
+                   "TRIGGER_NOOP", "MISSED_MODELED_GAIN", "NO_GAIN_NO_ACTION")
 G_ESC_GRID = (8, 16)  # what G to escalate to for failure-budget eval
+
+
+def pooled_failure_shares(by_method, classes, n_boot, rng):
+    """Stratified step bootstrap; no independent-run uncertainty is implied."""
+    groups = [records for records in by_method.values() if records]
+    total = sum(map(len, groups))
+    if not total:
+        raise ValueError("no observations for pooled shares")
+    rows = []
+    for column, cls in enumerate(classes):
+        point = sum(r[column] for group in groups for r in group) / total
+        draws = sorted(sum(group[rng.randrange(len(group))][column]
+                           for group in groups for _ in group) / total
+                       for _ in range(n_boot))
+        lo, hi = draws[int(.025*n_boot)], draws[int(.975*n_boot)]
+        rows.append({"method": "POOLED", "class": cls, "share_obs": point,
+                     "ci_lo": lo, "ci_hi": hi, "ci_excludes_zero": int(lo > 0)})
+    return rows
 
 
 def load_tensors():
@@ -95,7 +108,7 @@ def contrast_magnitude(per_p, gs):
 
 def step_structural_opportunity(per_p, g_new=G_ESC):
     """Max contrast-magnitude achievable at G_new under iid binomial.
-    High = genuine escalation headroom. Zero = structurally unreachable."""
+    Absolute yield only; this is not incremental escalation headroom."""
     s = 0.0
     for p in per_p:
         s += 1 - iid_zvf(p, g_new)
@@ -118,8 +131,9 @@ def decide_gs_c3(per_p, zvf, pcd, tau):
     if zvf >= tau and pcd <= PCD_GUARD:
         idx_map = {2: 0, 4: 1, 8: 2, 16: 3}
         bump_map = {0: 4, 1: 8, 2: 16, 3: 16}
-        gs = [bump_map[idx_map[g]] for g in gs]
-        fired = True
+        bumped = [bump_map[idx_map[g]] for g in gs]
+        fired = any(new > old for new, old in zip(bumped, gs))
+        gs = bumped
     return gs, fired
 
 
@@ -169,28 +183,31 @@ def transfer_eval(steps_m, tau):
             "fires": fires, "rollouts": rollouts, "magnitude": mag}
 
 
+def action_diagnostics(s, tau):
+    """Compare actual and potential triage bumps with the same unbumped action."""
+    ps = s["per_p"]
+    baseline, _ = decide_gs_c3(ps, s["zvf"], s["pcd"], float("inf"))
+    potential, _ = decide_gs_c3(ps, 1.0, 0.0, 0.0)
+    actual, fired = decide_gs_c3(ps, s["zvf"], s["pcd"], tau)
+    base_yield = contrast_magnitude(ps, baseline)
+    return {"baseline_groups": baseline, "actual_groups": actual,
+            "trigger_eligible": bool(s["zvf"] >= tau and s["pcd"] <= PCD_GUARD),
+            "guard_blocked": bool(s["zvf"] >= tau and s["pcd"] > PCD_GUARD),
+            "fired": fired,
+            "incremental_opportunity": contrast_magnitude(ps, potential) - base_yield,
+            "incremental_gain": contrast_magnitude(ps, actual) - base_yield}
+
+
 def failure_classify(s, tau):
-    """Classify (method, step) into one of {HIT, FN_BDRY, FN_DRIFT, FP_BDRY, TN}."""
-    zvf, pcd, per_p = s["zvf"], s["pcd"], s["per_p"]
-    opp = step_structural_opportunity(per_p, g_new=G_ESC)
-    fires_correctly = (zvf >= tau) and (pcd <= PCD_GUARD)
-    if fires_correctly:
-        if opp > 0.05:  # meaningful non-degenerate room recovered
-            return "A_HIT"
-        # Fires but opp is negligible -- a wasteful fire on a boundary step
-        return "D_FP_BDRY"
-    # Doesn't fire -- split by opportunity:
-    if opp <= 0.05:
-        # No headroom regardless of trigger -- correctly skipped
-        return "E_TN"
-    if zvf >= tau:
-        # Would fire on zvf alone, but pcd guard rejects (off-manifold drift)
-        return "D_FP_BDRY"
-    # zvf < tau but opp > 0.05: missed escalation -- split by whether opp is
-    # big enough that we should have fired if the trigger looked further ahead
-    if opp >= 1.5:
-        return "C_FN_DRIFT"  # meaningful magnitude on the table (>=1.5 prompt-mag)
-    return "B_FN_BDRY"  # mid-tier missed (small but non-zero opportunity)
+    """Versioned action taxonomy; guard rejection is never a false-positive fire."""
+    d = action_diagnostics(s, tau)
+    if d["guard_blocked"]:
+        return "GUARD_BLOCKED"
+    if d["trigger_eligible"] and not d["fired"]:
+        return "TRIGGER_NOOP"
+    if d["fired"]:
+        return "USEFUL_ESCALATION" if d["incremental_gain"] > 0.05 else "LOW_GAIN_ESCALATION"
+    return "MISSED_MODELED_GAIN" if d["incremental_opportunity"] > 0.05 else "NO_GAIN_NO_ACTION"
 
 
 def bootstrap_ci(values, n_boot=N_BOOT, seed=BOOT_SEED, alpha=0.05):
@@ -297,28 +314,26 @@ def main():
     # =========================================================================
     # PART 2: per-step failure-mode taxonomy + bootstrap CIs
     # =========================================================================
-    # We pick a CANONICAL tau = mean of the 4 per-method optimal taus, so the
-    # failure taxonomy uses one shared operating point (else the mapping
-    # tau -> step classes is method-private). For reporting we also save a
-    # per-method tau used.
+    # Taxonomy uses each method's selected threshold. The average below is
+    # descriptive only, not the threshold used by the classification rows.
     canonical_tau = sum(opt_tau.values()) / len(opt_tau)
     failure_rows = []
-    summary_counts = {m: {"A_HIT": 0, "B_FN_BDRY": 0, "C_FN_DRIFT": 0,
-                          "D_FP_BDRY": 0, "E_TN": 0, "_total": 0}
+    summary_counts = {m: {**dict.fromkeys(FAILURE_CLASSES, 0), "_total": 0}
                       for m in METHODS}
     per_step_records = []  # for bootstrap
     for m in METHODS:
         for s in step_info_per_method[m]:
             tau_for_step = opt_tau[m]
             cls = failure_classify(s, tau_for_step)
-            opp = step_structural_opportunity(s["per_p"], g_new=G_ESC)
+            diagnostic = action_diagnostics(s, tau_for_step)
             per_step_records.append({
                 "method": m, "step": s["step"],
                 "tau": tau_for_step,
                 "zvf": s["zvf"], "pcd": s["pcd"],
-                "opp_esc16": opp,
-                "fired": int((s["zvf"] >= tau_for_step)
-                             and (s["pcd"] <= PCD_GUARD)),
+                "incremental_opportunity": diagnostic["incremental_opportunity"],
+                "incremental_gain": diagnostic["incremental_gain"],
+                "trigger_eligible": int(diagnostic["trigger_eligible"]),
+                "fired": int(diagnostic["fired"]),
                 "failure_class": cls,
             })
             failure_rows.append(per_step_records[-1])
@@ -328,7 +343,7 @@ def main():
     # Bootstrap CIs on per-method failure-class shares by re-sampling steps with
     # replacement
     rng = random.Random(BOOT_SEED + 1)
-    classes = ["A_HIT", "B_FN_BDRY", "C_FN_DRIFT", "D_FP_BDRY", "E_TN"]
+    classes = FAILURE_CLASSES
     fail_share_boot_rows = []
     # Group per-step class dummies by method
     by_method = {m: [] for m in METHODS}
@@ -352,24 +367,12 @@ def main():
                 "method": m, "class": cls,
                 "share_obs": sum(shares) / n,
                 "ci_lo": lo, "ci_hi": hi,
-                "ci_excludes_zero": int(hi < 0.001),
+                "ci_excludes_zero": int(lo > 0),
             })
-    # Also pooled (across methods) per class
-    pooled_boots = {cls: [] for cls in classes}
-    ci = {cls: 0.0 for cls in classes}
-    for m in METHODS:
-        for ci_i, cls in enumerate(classes):
-            ci[cls] += summary_counts[m][cls]
-    pool_total = sum(ci.values())
-    pool_shares = {cls: ci[cls] / pool_total for cls in classes}
-    for cls in classes:
-        # Pooled is a single mean, not bootstrap-able -- still record it.
-        fail_share_boot_rows.append({
-            "method": "POOLED", "class": cls,
-            "share_obs": pool_shares[cls],
-            "ci_lo": pool_shares[cls], "ci_hi": pool_shares[cls],
-            "ci_excludes_zero": 0,
-        })
+    # Conditional within-method step bootstrap; preserves observed method weights.
+    pooled_rows = pooled_failure_shares(by_method, classes, N_BOOT, rng)
+    fail_share_boot_rows.extend(pooled_rows)
+    pool_shares = {r["class"]: r["share_obs"] for r in pooled_rows}
 
     # Failure summary table
     failure_summary_rows = []
@@ -421,7 +424,9 @@ def main():
         "ts": "2026-07-05",
         "iter": 107,
         "method_optimal_tau": opt_tau,
-        "canonical_tau_for_taxonomy": round(canonical_tau, 4),
+        "mean_optimal_tau_descriptive": round(canonical_tau, 4),
+        "taxonomy_tau_policy": "per_method_selected_threshold",
+        "taxonomy_protocol": "corrected-review19-v5-incremental-action",
         "in_method_optimal_tau_per_method": opt_tau,
         "transfer_rows": transfer_rows,
         "failure_counts_per_method": summary_counts,

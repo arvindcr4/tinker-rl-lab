@@ -14,6 +14,12 @@ Writes experiments/results/<tag>.json + <tag>.csv. Requires TINKER_API_KEY env.
 
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import gsm8k_reward, math_reward
+
+
 import argparse
 import csv
 import json
@@ -45,40 +51,16 @@ def require_env():
         )
 
 
-def reward_gsm8k(response, answer):
-    response = response.strip()
-    boxed = re.findall(r"\\boxed\{([^}]+)\}", response)
-    for item in boxed:
-        cleaned = item.strip().replace(",", "").replace(" ", "")
-        try:
-            if abs(float(cleaned) - float(answer)) < 0.01:
-                return 1.0
-        except ValueError:
-            if cleaned == answer:
-                return 1.0
-    nums = re.findall(r"[-+]?\d[\d,]*\.?\d*", response)
-    if nums:
-        try:
-            if abs(float(nums[-1].replace(",", "")) - float(answer)) < 0.01:
-                return 1.0
-        except ValueError:
-            pass
-    return 0.0
+def reward_gsm8k(resp, ans):
+    return gsm8k_reward(resp, ans)
 
 
-def reward_arith(response, answer):
-    nums = re.findall(r"[-+]?\d+", response)
-    try:
-        target = int(answer)
-    except ValueError:
-        return 0.0
-    for n in nums:
-        try:
-            if int(n) == target:
-                return 1.0
-        except ValueError:
-            continue
-    return 0.0
+def reward_math500(resp, ans):
+    return math_reward(resp, ans, require_box=True)
+
+
+def reward_arith(resp, ans):
+    return gsm8k_reward(resp, ans)
 
 
 def build_prompt(system, user):
@@ -134,7 +116,7 @@ def load_arith(limit, seed):
 
 TASKS = {
     "gsm8k": (load_gsm8k, reward_gsm8k),
-    "math500": (load_math500, reward_gsm8k),
+    "math500": (load_math500, reward_math500),
     "arith": (load_arith, reward_arith),
 }
 

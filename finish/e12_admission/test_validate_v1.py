@@ -14,9 +14,11 @@ REPO = Path(__file__).resolve().parents[2]
 
 class AdmissionTests(unittest.TestCase):
     def setUp(self):
+        if not (REPO / "outputs/e12_appbench/split_manifest.json").exists():
+            self.skipTest("Retained E12 asset fixtures unavailable; candidate synthetic admission tests cover ledger checks")
         if shutil.disk_usage(REPO).free < v.FLOOR:
             self.skipTest("Disk floor: no fixture writes")
-        self.temp = tempfile.TemporaryDirectory(dir=REPO / ".codex-run/finish_20260912/e12_admission")
+        self.temp = tempfile.TemporaryDirectory(prefix="review11-e12-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.m = {"schema_version": "e12-offline-admission-v1", "suite_id": "appbench_eval",

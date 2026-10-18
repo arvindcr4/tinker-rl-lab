@@ -82,12 +82,12 @@ def build_prompt(question: str) -> str:
     )
 
 
-def load_gsm8k(split: str, limit: int, seed: int) -> list[tuple[str, str]]:
+def load_gsm8k(split: str, limit: int, seed: int, revision: str | None = None) -> list[tuple[str, str]]:
     """Return [(prompt, answer)] from GSM8K. split: 'train' (pool) or 'test'
     (held-out pass@k). Shuffled with the given seed before truncation."""
     from datasets import load_dataset
 
-    ds = load_dataset("openai/gsm8k", "main", split=split)
+    ds = load_dataset("openai/gsm8k", "main", split=split, revision=revision)
     examples: list[tuple[str, str]] = []
     for row in ds:
         match = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
@@ -100,7 +100,7 @@ def load_gsm8k(split: str, limit: int, seed: int) -> list[tuple[str, str]]:
     return examples[:limit] if limit else examples
 
 
-def make_sampler(model: str, sampler_path: str | None, lora_rank: int = 4):
+def make_sampler(model: str, sampler_path: str | None, lora_rank: int = 4, tokenizer_revision: str | None = None):
     """Return (sampling_client, tokenizer, sampler_path_used).
 
     If sampler_path is given (an existing tinker:// weights path from a prior
@@ -112,7 +112,7 @@ def make_sampler(model: str, sampler_path: str | None, lora_rank: int = 4):
     from transformers import AutoTokenizer
 
     svc = tinker.ServiceClient(base_url=None)
-    tok = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
+    tok = AutoTokenizer.from_pretrained(model, revision=tokenizer_revision, trust_remote_code=True)
     if sampler_path:
         sc = svc.create_sampling_client(model_path=sampler_path)
         return sc, tok, sampler_path
@@ -138,11 +138,16 @@ def write_result(path: Path, payload: dict) -> None:
     os.replace(temporary, path)
 
 
-def load_pool(path: Path) -> dict:
+def load_pool(path: Path, *, allow_exploratory=False) -> dict:
     pool = json.loads(path.read_text())
     if pool.get("status") != "complete":
         raise SystemExit(
             f"Pool {path} has status={pool.get('status')!r}; refusing to "
             "analyze an incomplete pool (provenance rule)."
         )
+    from analysis_contract import validate_full_pool, validate_rewards
+    for row in pool.get("prompts", []):
+        validate_rewards(row.get("rewards"))
+    if not allow_exploratory:
+        validate_full_pool(pool)
     return pool

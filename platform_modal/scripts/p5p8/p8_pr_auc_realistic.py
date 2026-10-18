@@ -43,10 +43,10 @@ import pandas as pd
 import xgboost as xgb
 from sklearn.metrics import average_precision_score, precision_recall_curve
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 TRAIN = ROOT / "fraud_data.csv"
 TEST = ROOT / "test_data.csv"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8/corrected-review21-v2"
 RANDOM_SEED = 42
 BOOT_SEED = 2026
 N_BOOT = 400
@@ -101,8 +101,6 @@ def downsample_positives(
     n_neg = neg_idx.size
     target_pos = int(round(target_pos_rate * n_neg / max(1e-9, 1.0 - target_pos_rate)))
     target_pos = min(target_pos, pos_idx.size)
-    if target_pos <= 0:
-        return np.zeros_like(y, dtype=bool)
     keep_pos = rng.choice(pos_idx, size=target_pos, replace=False)
     mask = np.zeros_like(y, dtype=bool)
     mask[neg_idx] = True
@@ -169,8 +167,9 @@ def main() -> None:
         ),
     }
     feature_sets = {"XGB-20raw": X20_te, "XGB-24full": X24_te, "XGB-4sensor": X4_te}
+    retained_masks = {tgt: downsample_positives(y_te, tgt, rng_down) for tgt in target_rates}
     for tgt, lbl in zip(target_rates, rate_labels):
-        mask = downsample_positives(y_te, tgt, rng_down)
+        mask = retained_masks[tgt]
         y_sub = y_te[mask]
         for name, X in feature_sets.items():
             p_all = trees[name].predict_proba(X)[:, 1]
@@ -181,13 +180,15 @@ def main() -> None:
                     "model": name,
                     "rate_label": lbl,
                     "target_rate": tgt,
+                    "actual_rate": float(y_sub.mean()),
+                    "n_test": len(y_sub), "n_pos": int(y_sub.sum()),
                     **met,
                 }
             )
     # Paired bootstrap CIs for XGB-24full - XGB-20raw at each rate.
     boot_rows = []
     for tgt, lbl in zip(target_rates, rate_labels):
-        mask = downsample_positives(y_te, tgt, rng_down)
+        mask = retained_masks[tgt]
         y_sub = y_te[mask]
         p_full = trees["XGB-24full"].predict_proba(feature_sets["XGB-24full"])[:, 1][mask]
         p_raw = trees["XGB-20raw"].predict_proba(feature_sets["XGB-20raw"])[:, 1][mask]
@@ -214,6 +215,8 @@ def main() -> None:
                     {
                         "rate_label": lbl,
                         "target_rate": tgt,
+                        "actual_rate": float(y_sub.mean()),
+                        "n_test": len(y_sub), "n_pos": int(y_sub.sum()),
                         "a_minus_b": f"{a}-{b}",
                         "metric": mname,
                         "point_diff": base,
@@ -227,6 +230,7 @@ def main() -> None:
     pd.DataFrame(boot_rows).to_csv(OUT_DIR / "p8_pr_auc_boot.tsv", sep="\t", index=False)
     summary = {
         "rates": list(zip(rate_labels, target_rates)),
+        "retained_row_ids": {str(tgt): np.flatnonzero(mask).tolist() for tgt, mask in retained_masks.items()},
         "per_cell": rows,
         "bootstrap": boot_rows,
     }

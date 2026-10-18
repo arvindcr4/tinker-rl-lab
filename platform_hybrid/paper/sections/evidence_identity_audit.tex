@@ -1,0 +1,53 @@
+\subsection{Audited Cells and Unresolved Cohorts}
+\label{sec:evidence-identity}
+The primary empirical record is the following two descriptive cells. Task and
+model labels identify manuscript observations, not immutable execution IDs.
+Exact checkpoint revisions, authenticated run IDs, evaluator revisions, and
+complete rollout hashes have not been reconciled for these reviewed cells;
+we do not manufacture them from similarly named later files.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Reviewed synthetic tool-use observations under the schema reward.
+These are all-wrong cases, not executed-tool success or held-out evaluation.}
+\label{tab:audited-tool-cells}
+\begin{tabular}{lcccc}
+\toprule
+Model & Reward & ZVF & GU & Held-out \\
+\midrule
+Qwen3-32B & 0 & 1 & 0 & not evaluated \\
+Llama-3.1-8B-Instruct & 0 & 1 & 0 & not evaluated \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Immutable-cohort contract.}
+Every future empirical display must bind run IDs and source hashes to checkpoint
+and tokenizer revisions, runner/objective version, dataset split, evaluator,
+metric window, logging cadence, aggregation rule, seed count, completion status,
+and evidence tier. A training-step count is not a logged-observation count.
+The historical tables below remain descriptive manuscript summaries where this
+contract is incomplete; they are not an identified controlled benchmark.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Unresolved display identities. Candidate values document conflicts;
+none is selected as the corrected result.}
+\label{tab:identity-conflicts}
+\begin{tabular}{p{.25\linewidth}p{.64\linewidth}}
+\toprule
+Display & Conflict and disposition \\
+\midrule
+TRL arithmetic row & $0.734$ is also labeled five-seed GSM8K on Qwen2.5-0.5B;
+cross-task comparison withheld \\
+Tinker arithmetic row & Summary statistics only; reconstructed-seed intervals withheld \\
+Llama PPO tail & $97.5\%$ versus $95.0\%$; unresolved, no directional comparison \\
+Task~4 Tinker tail & $85.6\%$ versus $84.4\%$; matched-cohort identity unresolved \\
+Kimi-K2 tail & $62.5\%$ versus $80.0\%$; unresolved window/run identity \\
+GPT-OSS-120B & 30 reported steps versus six logged observations; ``last-10'' window unresolved \\
+Group-size panels & Single-seed sweep and pooled historical $G=8$ panel differ;
+no common optimum inferred \\
+Qwen PPO & quarantined provenance conflict; not available for numerical comparison \\
+\bottomrule
+\end{tabular}
+\end{table}

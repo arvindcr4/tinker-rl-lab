@@ -9,6 +9,12 @@ PufferLib features:
 - High throughput with async environments
 """
 
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import simulation_result
+
+
 import os
 import sys
 import logging
@@ -147,83 +153,11 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    """
-    Main training function for PufferLib.
-
-    Note: Full PufferLib integration requires pufferlib package.
-    This shows the configuration and environment setup pattern.
-    """
-    args = parse_args()
-    seed = args.seed if args.seed is not None else get_seed_from_args()
-    set_global_seed(seed)
-    
-    if args.track:
-        wandb.init(
-            project=args.wandb_project_name,
-            entity=args.wandb_entity,
-            sync_tensorboard=False,
-            config=vars(args),
-            name=args.exp_name,
-        )
-
-    logger.info("=" * 60)
-    logger.info("PufferLib Math RL Configuration")
-    logger.info("=" * 60)
-
-    config = PufferLibConfig()
-    config.train.learning_rate = args.learning_rate
-
-    logger.info("Training Config:")
-    for key, value in config.train.__dict__.items():
-        logger.info("  %s: %s", key, value)
-
-    logger.info("Environment Config:")
-    for key, value in config.env.__dict__.items():
-        logger.info("  %s: %s", key, value)
-
-    # Create environment for testing
-    env = ArithmeticEnv(max_num=config.env.max_num)
-
-    logger.info("--- Testing Environment ---")
-    obs, _ = env.reset()
-    logger.info("Observation shape: %s", obs.shape)
-    logger.info("Action space: %s", env.action_space)
-
-    # Test a few steps
-    correct = 0
-    for i in range(10):
-        obs, _ = env.reset()
-        # Random action
-        action = env.action_space.sample()
-        _, reward, _, _, info = env.step(action)
-        if info["correct"]:
-            correct += 1
-        logger.info("  Problem %d: %s, Predicted: %s, Correct: %s", 
-                    i+1, info['expected'], info['predicted'], info['correct'])
-
-    logger.info("Random baseline: %d/10 = %d%%", correct, correct*10)
-
-    if args.track:
-        wandb.log({
-            "custom/accuracy": correct * 10,
-            "step": 0,
-        })
-
-    # Full PufferLib training message
-    logger.info("--- Full PufferLib Training (requires pufferlib) ---")
-    logger.info("To train, use pufferl.PPO(env_creator=make_env_creator(config), config=config.train, ...)")
-
-    # Model Checkpointing and HuggingFace Hub
-    checkpoint_path = "pufferlib_math_agent.pt"
-    with open(checkpoint_path, "w") as f:
-        f.write("dummy model data")
-    logger.info(f"Model saved to {checkpoint_path}")
-
-    if args.push_to_hub:
-        push_to_hub(args.hf_repo_id, checkpoint_path, checkpoint_path)
-
-    if args.track:
-        wandb.finish()
+    parser = argparse.ArgumentParser(description="Arithmetic environment simulation only")
+    parser.add_argument("--simulation", action="store_true")
+    parser.add_argument("--output-dir", default=".")
+    args = parser.parse_args()
+    print(simulation_result("pufferlib_math", {}, simulation=args.simulation, output_dir=args.output_dir))
 
 
 if __name__ == "__main__":

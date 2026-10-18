@@ -7,7 +7,6 @@ Episode dispatch is a separate, sealed step — this app only serves generations
 
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
 
 import modal
@@ -87,16 +86,16 @@ def bench(n: int = 256):
     print(out[:300])
 
 
-@modal.web_server(port=8000, startup_timeout=30 * 60)
+@app.function(
+    image=actor_image, gpu="H200", cpu=4.0, memory=131072,
+    timeout=WALL_SECONDS, max_containers=1, scaledown_window=3600,
+    secrets=[core_secret, auth_secret],
+    volumes={"/root/.cache/huggingface": hf_cache_vol},
+)
+@modal.asgi_app()
 def serve():
-    cmd = [
-        "uvicorn", "hf_actor_server:app",
-        "--host", "0.0.0.0", "--port", "8000", "--workers", "1",
-        "--app-dir", "/root",
-    ]
-    proc = subprocess.Popen(cmd, cwd="/root")
-    try:
-        proc.wait()
-    finally:
-        if proc.poll() is None:
-            proc.terminate()
+    """Registered ASGI lifecycle; Modal owns startup and shutdown."""
+    import sys
+    sys.path.insert(0, "/root")
+    from hf_actor_server import app as actor_app
+    return actor_app

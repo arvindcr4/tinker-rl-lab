@@ -45,12 +45,16 @@ def main() -> None:
         "status": "complete",
         "tag": new_tag,
         "truncated": True,
+        "sampling_completeness": "truncated", "actual_prompts": banked,
+        "exploratory_only": True,
         "planned_prompts": planned,
         "n_prompts": banked,
         "truncation_reason": args.reason,
         "finalized_at": utc_now(),
     })
     out = RESULTS_DIR / f"pool_{new_tag}.json"
+    if out.exists():
+        raise SystemExit("refusing to overwrite an existing finalized artifact")
     write_result(out, pool)
     print(f"finalized {banked}/{planned} prompts -> {out}")
 

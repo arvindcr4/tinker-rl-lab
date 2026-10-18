@@ -16,7 +16,16 @@
 
 set -euo pipefail
 
-OUTPUT_DIR="${1:-../tinker-rl-lab-anonymous}"
+SOURCE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+OUTPUT_DIR="$(realpath -m -- "${1:-${SOURCE_DIR}/../tinker-rl-lab-anonymous}")"
+# Fail before any mutation: packaging never deletes an existing destination.
+if [[ -e "$OUTPUT_DIR" || -L "$OUTPUT_DIR" ]]; then
+    echo "Refusing existing destination: $OUTPUT_DIR" >&2; exit 2
+fi
+case "$OUTPUT_DIR/" in "$SOURCE_DIR/"*) echo "Destination overlaps source" >&2; exit 2;; esac
+case "$SOURCE_DIR/" in "$OUTPUT_DIR/"*) echo "Destination overlaps source" >&2; exit 2;; esac
+STAGING_DIR="$(mktemp -d "${OUTPUT_DIR}.tmp.XXXXXXXX")"
+trap 'rm -rf -- "$STAGING_DIR"' EXIT
 
 echo "============================================"
 echo "Anonymizing tinker-rl-lab for NeurIPS review"
@@ -25,13 +34,24 @@ echo "============================================"
 
 # 1. Create clean copy (no .git)
 echo "[1/6] Creating clean copy..."
-rm -rf "${OUTPUT_DIR}"
-mkdir -p "${OUTPUT_DIR}"
-rsync -av --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' \
-    --exclude='.env' --exclude='wandb/' --exclude='results/*.jsonl' \
-    . "${OUTPUT_DIR}/"
 
-cd "${OUTPUT_DIR}"
+rsync -av --exclude='platform_modal/scripts/anonymize.sh' --exclude='platform_modal/scripts/_anonymization_validate.py' --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' \
+    --exclude='.env' --exclude='wandb/' --exclude='results/*.jsonl' \
+    "${SOURCE_DIR}/" "${STAGING_DIR}/"
+
+cd "${STAGING_DIR}"
+# Full identifier mappings precede generic username mappings.
+find . -type f \( -name "*.md" -o -name "*.py" -o -name "*.yaml" -o -name "*.yml" -o -name "*.tex" -o -name "*.txt" \) \
+    -exec sed -i -e 's|https://github.com/arvindcr4/tinker-rl-lab|https://anonymous.4open.science/r/tinker-rl-lab|g' \
+    -e 's|https://github.com/pes-llm-research/tinker-rl-lab|https://anonymous.4open.science/r/tinker-rl-lab|g' \
+    -e 's|pes-llm-research/tinker-rl-|anonymous/tinker-rl-|g' \
+    -e 's/ArvindCR/Anonymous/g' {} +
+while IFS= read -r -d '' file; do
+    renamed="${file//ArvindCR/Anonymous}"
+    [[ ! -e "$renamed" ]] || { echo "Anonymized filename collision" >&2; exit 2; }
+    mv -- "$file" "$renamed"
+done < <(find . -depth -name '*ArvindCR*' -print0)
+
 
 # 2. Remove / replace author identifiers
 echo "[2/6] Removing author identifiers..."
@@ -84,6 +104,13 @@ rm -f .gitconfig 2>/dev/null || true
 
 echo ""
 echo "============================================"
+# Validate all remaining names and file bytes before publishing the staged copy.
+python3 "$SOURCE_DIR/platform_modal/scripts/_anonymization_validate.py" "$STAGING_DIR"
+# Refuse a concurrently created destination rather than nesting the staging copy.
+if [[ -e "$OUTPUT_DIR" || -L "$OUTPUT_DIR" ]]; then exit 2; fi
+mv -T -n -- "$STAGING_DIR" "$OUTPUT_DIR"
+if [[ -d "$STAGING_DIR" ]]; then echo "Destination appeared during packaging" >&2; exit 2; fi
+trap - EXIT
 echo "Anonymization complete!"
 echo "Output directory: ${OUTPUT_DIR}"
 echo "============================================"

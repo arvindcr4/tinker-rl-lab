@@ -18,9 +18,9 @@ from pathlib import Path
 
 from _p5p7_common import bernoulli_z, load_tensors_a
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 N2_DIR = ROOT / "experiments" / "results" / "n2_reward_tensor_resume"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8/corrected-review19-v2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 METHODS = ["grpo", "aero", "gift", "areal"]
@@ -129,10 +129,10 @@ def aggregate_step(decisions: list, n_boot: int = BOOT_N) -> dict:
         boot_fire.append(statistics.mean(1 if d["fired"] else 0 for d in samp))
     for arr in (boot_cost, boot_sav, boot_cr, boot_fire):
         arr.sort()
-    ci_cost = (boot_cost[100], boot_cost[1900])  # 95% CI for B=2000
-    ci_sav = (boot_sav[100], boot_sav[1900])
-    ci_cr = (boot_cr[100], boot_cr[1900])
-    ci_fire = (boot_fire[100], boot_fire[1900])
+    ci_cost = (boot_cost[int(.025 * len(boot_cost))], boot_cost[min(len(boot_cost)-1, int(.975 * len(boot_cost)))])  # 95% CI for B=2000
+    ci_sav = (boot_sav[int(.025 * len(boot_sav))], boot_sav[min(len(boot_sav)-1, int(.975 * len(boot_sav)))])
+    ci_cr = (boot_cr[int(.025 * len(boot_cr))], boot_cr[min(len(boot_cr)-1, int(.975 * len(boot_cr)))])
+    ci_fire = (boot_fire[int(.025 * len(boot_fire))], boot_fire[min(len(boot_fire)-1, int(.975 * len(boot_fire)))])
     return {
         "n_decisions": n, "mean_g": mean_g, "mean_cost_ratio": mean_cost,
         "mean_savings_vs_g16": mean_sav, "mean_contrast_retention": mean_cr,

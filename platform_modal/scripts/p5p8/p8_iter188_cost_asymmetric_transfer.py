@@ -40,7 +40,7 @@ Outputs (platform_hybrid/experiments/results/p5p8/):
   p8_iter188_min_cost.tsv       3 fsets x 4 c x 5 seeds = 60 rows
   p8_iter188_min_cost_gap.tsv   2 contrasts x 4 c = 8 rows (gap + CI)
   p8_iter188_transfer.tsv       3 fsets x 4 c = 12 rows (transfer ratio)
-  p8_iter188_catch_at_fp.tsv    3 fsets x 4 c x 5 seeds (catches @ fixed FP)
+  p8_iter188_catch_at_alert.tsv    3 fsets x 4 c x 5 seeds (catches @ fixed alert count)
   p8_iter188_thresholds.tsv     3 fsets x 4 c x 5 seeds (t*)
   p8_iter188_summary.json       H1..H6 verdicts + headline numbers
 """
@@ -64,7 +64,7 @@ from _p8_common import (  # noqa: E402
     paired_bootstrap_ci,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 
 FEATURE_SETS = {"20raw": RAW20, "24full": ALL24, "4sensor": AGG4}
@@ -76,13 +76,13 @@ N_TH = 100  # thresholds per curve
 
 def cost_curve(s, y, c):
     """Cost per tx as function of threshold t.  FP=1, FN=c (one FN == c FP)."""
-    th = np.linspace(0.0, 1.0, N_TH + 1)[1:]  # skip t=0 (all flagged)
+    th = np.r_[np.inf, np.unique(s)[::-1]]  # skip t=0 (all flagged)
     n_pos = int((y == 1).sum())
     n_neg = int((y == 0).sum())
     N = n_pos + n_neg
-    costs = np.empty(N_TH)
-    pos_at_t = np.empty(N_TH)
-    fps_at_t = np.empty(N_TH)
+    costs = np.empty(len(th))
+    pos_at_t = np.empty(len(th))
+    fps_at_t = np.empty(len(th))
     for i, t in enumerate(th):
         flagged = (s >= t).astype(np.int32)
         tp = int(((flagged == 1) & (y == 1)).sum())
@@ -91,7 +91,7 @@ def cost_curve(s, y, c):
         cost = (fn * c + fp * 1.0) / N  # cost per transaction
         costs[i] = cost
         pos_at_t[i] = t
-        fps_at_t[i] = fp / N
+        fps_at_t[i] = (tp + fp) / N
     return th, costs, fps_at_t
 
 
@@ -127,7 +127,7 @@ def main():
             minc[(fset, sd, c)] = mc
             optt[(fset, sd, c)] = t_opt
 
-    # Per-(fset, c) catch at fixed FP-rate budget
+    # Per-(fset, c) catch at fixed alert count-rate budget
     print("Computing catch@FP curves...", flush=True)
     catches = {}  # (fset, c, sd) -> frac of frauds caught at total-FP budget = K1_PCT*N
     for (fset, sd), s in probas.items():
@@ -195,9 +195,9 @@ def main():
                     f"{float(np.mean([minc[('4sensor',sd,c)] for sd in SEEDS])):.6f}\t"
                     f"{int(h4_worse)}\t{int((d_4_20 > 0).sum())}\n")
 
-    # ----- catches @ fixed FP budget 1% -----
+    # ----- catches @ fixed alert count budget 1% -----
     print("Writing catches TSV...", flush=True)
-    out_catch = RES / "p8_iter188_catch_at_fp.tsv"
+    out_catch = RES / "p8_iter188_catch_at_alert.tsv"
     with out_catch.open("w") as f:
         f.write("fset\tc\tseed\tcatch_frac\n")
         for (fset, sd, c) in sorted(catches.keys()):
@@ -239,7 +239,7 @@ def main():
     ci_h2 = gap_ci(1, "24full-20raw")
     h2 = ci_h2["lo"] >= 0.0 or ci_h2["hi"] > 0.0  # either includes 0 or positive
 
-    # H3: at c=100, 24full catches STRICTLY more fraud $ at fixed FP budget
+    # H3: at c=100, 24full catches STRICTLY more fraud $ at fixed alert count budget
     fset24_catch = np.array([catches[("24full", sd, 100)] for sd in SEEDS])
     fset20_catch = np.array([catches[("20raw", sd, 100)] for sd in SEEDS])
     ci_h3 = paired_bootstrap_ci(fset24_catch - fset20_catch, N_BOOT, seed=20260706 + 99)
@@ -294,13 +294,13 @@ def main():
         "hypotheses": {
             "H1_gap_24full_c100_strictly_negative": bool(h1),
             "H2_gap_24full_c1_not_strictly_negative": bool(h2),
-            "H3_24full_catches_more_fraud_at_fp_budget_c100": bool(h3),
+            "H3_24full_catches_more_fraud_at_alert_budget_c100": bool(h3),
             "H4_24full_threshold_closer_to_base_rate_at_c_ge_10": bool(h4),
             "H5_24full_test_cost_cv_lower_than_20raw_at_c100": bool(h5),
             "H6_4sensor_strictly_worse_than_20raw_at_c_in_10_100": bool(h6),
         },
         "headline_c100": headline_c100,
-        "headline_catch_at_fp_budget_c100": headline_catch,
+        "headline_catch_at_alert_budget_c100": headline_catch,
         "ci_24full_minus_20raw_per_c": {
             str(c): gap_ci(c, "24full-20raw") for c in COST_RATIOS
         },

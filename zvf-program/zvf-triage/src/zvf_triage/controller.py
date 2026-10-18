@@ -66,6 +66,7 @@ class Regime(str, Enum):
     # consumers should treat this as a "no data" signal and skip
     # classification. auto_stop is NEVER set under this regime.
     ALL_DROPPED = "all_dropped"
+    DIAGNOSTIC_ONLY = "diagnostic_only"
 
 
 # Signal an upstream callback may act on. "noop" means "no special action".
@@ -93,6 +94,16 @@ class StepDecision:
     # dropped by the per-prompt drop logic. Observability field
     # only; the exclusion happens at the top of step().
     filtered_rewards: int = 0
+    observation_kind: str = "raw_rewards"
+    recommended_group_size: Optional[int] = None
+    applied_group_size: Optional[int] = None
+    verifier_zvf: Optional[float] = None
+    effective_training_reward_zvf: Optional[float] = None
+    reward_source: str = "verifier"
+    reward_reduction: str = "per_sequence"
+    reward_scale: str = "unit_interval"
+    variance_convention: str = "sample_ddof_1"
+    variance_tolerance: float = core.DEFAULT_VAR_EPS
 
     def as_dict(self) -> dict:
         d = {
@@ -110,6 +121,10 @@ class StepDecision:
             "notes": self.notes,
             "filtered_rewards": self.filtered_rewards,
         }
+        for name in ("observation_kind", "recommended_group_size", "applied_group_size",
+                     "verifier_zvf", "effective_training_reward_zvf", "reward_source", "reward_reduction", "reward_scale",
+                     "variance_convention", "variance_tolerance"):
+            d[name] = getattr(self, name)
         return d
 
 
@@ -244,154 +259,80 @@ class ZVFController:
         self._dropped.clear()
         self._stopped = False
 
-    def step(
-        self,
-        rewards: ArrayLike,
-        group_ids: ArrayLike,
-    ) -> StepDecision:
-        """Ingest one batch of rollout rewards and return a triage decision.
+    def observe_summary(self, zvf: float, mean_reward: float, *, step_id: int) -> StepDecision:
+        """Preserve aggregate telemetry without inventing prompt histories or actions.
 
-        Args:
-            rewards: flat sequence of scalar rollout rewards for this step.
-            group_ids: same-length sequence labelling the prompt-group of each
-                reward.
-
-        Returns:
-            A :class:`StepDecision`.
-
-        Dropped-prompt handling: prompts whose ZVF has been 1.0 for
-        `drop_k` consecutive steps are added to ``self.dropped_prompts``.
-        On the *next* call to ``step()``, the rewards and group_ids
-        corresponding to dropped prompts are filtered out before any ZVF
-        / mean-reward computation, so the dropped prompts do not
-        continue to drag the batch's ZVF. The number of filtered
-        rewards is recorded as ``filtered_rewards`` in the returned
-        decision for observability. The previous version merely
-        *identified* dropped prompts in the ``dropped_prompts`` field
-        but never excluded them from future rollouts, which made the
-        drop an "identification, not an action" (per the prior
-        review).
+        Summary observations are diagnostic only, even when a log reports a
+        collapse. They cannot establish sampler identity or applied control.
         """
-        self._step += 1
-        rewards_arr = np.asarray(rewards, dtype=float).ravel()
-        group_ids_arr = np.asarray(group_ids).ravel()
+        if not all(math.isfinite(x) and 0 <= x <= 1 for x in (zvf, mean_reward)):
+            raise ValueError("summary metrics must be finite values in [0, 1]")
+        regime, _ = self._classify(zvf, mean_reward)
+        return StepDecision(step=step_id, zvf=zvf, gu=1-zvf, mean_reward=mean_reward,
+                            regime=regime, signal="noop", group_size=self.G0,
+                            rolling_zvf=zvf, observation_kind="summary_only",
+                            notes="aggregate telemetry only; prompt and training controls disabled")
 
-        # Filter out rewards belonging to dropped prompts BEFORE any
-        # ZVF / mean-reward computation. We log the number of filtered
-        # rewards so a downstream consumer can see how much the
-        # batch shrank.
-        keep_mask = np.array(
-            [gid not in self._dropped for gid in group_ids_arr.tolist()],
-            dtype=bool,
-        )
-        filtered_rewards_count = int((~keep_mask).sum())
-        if filtered_rewards_count > 0:
-            rewards_arr = rewards_arr[keep_mask]
-            group_ids_arr = group_ids_arr[keep_mask]
+    def step(self, rewards: ArrayLike, group_ids: ArrayLike, *,
+             prompt_ids: Optional[Sequence[object]] = None,
+             step_id: Optional[int] = None) -> StepDecision:
+        """Measure every observed reward; only stable prompt_ids enable drop recommendations.
 
-        # If the keep-mask filtered out every reward (every prompt in
-        # the batch was already in self._dropped), the batch is empty
-        # and ZVF / mean-reward are vacuous. We report Regime.ALL_DROPPED
-        # so a downstream consumer does not mis-interpret
-        # (zvf=1.0, mean_reward=0.0) as a cold-start collapse (the
-        # reviewer-flagged "misleading COLD_START_COLLAPSE" case).
-        # auto_stop is NEVER set under this regime; the per-prompt
-        # drop tracking is also skipped (there is nothing to drop).
-        all_dropped = rewards_arr.size == 0
-        if all_dropped:
-            self._zvf_history.append(1.0)
-            roll = float(core.rolling_zvf(self._zvf_history, window=self.window)[-1])
-            return StepDecision(
-                step=self._step,
-                zvf=1.0,
-                gu=0.0,
-                mean_reward=0.0,
-                regime=Regime.ALL_DROPPED,
-                signal="noop",
-                group_size=self._adaptive_group_size(roll),
-                rolling_zvf=roll,
-                dropped_prompts=[],
-                auto_stop=False,
-                n_groups=0,
-                notes="all prompts in batch had been dropped; vacuous ZVF/mean_reward",
-                filtered_rewards=filtered_rewards_count,
-            )
-
-        batch_zvf = core.zvf(rewards_arr, group_ids_arr, eps=self.var_eps)
-        batch_gu = 1.0 - batch_zvf
-        mean_reward = float(np.mean(rewards_arr)) if rewards_arr.size else 0.0
-        n_groups = len(set(group_ids_arr.tolist()))
-
+        group_ids identify groups within this batch, never persistent dataset rows.
+        The sampler must acknowledge recommendations separately. No observations
+        are censored here merely because a prior recommendation was emitted.
+        """
+        values = np.asarray(rewards, dtype=float).ravel()
+        ids = np.asarray(group_ids).ravel()
+        if values.size != ids.size or not np.isfinite(values).all():
+            raise ValueError("aligned finite rewards and group IDs are required")
+        if np.any((values < 0) | (values > 1)):
+            raise ValueError("controller classification requires unit-interval verifier rewards")
+        stable = None if prompt_ids is None else np.asarray(prompt_ids).ravel()
+        if stable is not None:
+            if stable.size != values.size:
+                raise ValueError("stable prompt IDs must align with rewards")
+            prompt_for_group = []
+            for gid in set(ids.tolist()):
+                if len(set(stable[ids == gid].tolist())) != 1:
+                    raise ValueError("each within-batch group must bind one stable prompt")
+                prompt_for_group.append(stable[ids == gid][0])
+            if len(set(prompt_for_group)) != len(prompt_for_group):
+                raise ValueError("a stable prompt may appear in only one group per observation")
+        if step_id is not None and (type(step_id) is not int or step_id <= self._step):
+            raise ValueError("step_id must advance strictly; logging events are not steps")
+        self._step = self._step + 1 if step_id is None else step_id
+        if values.size == 0:
+            self._stopped = True
+            return StepDecision(self._step, 1., 0., 0., Regime.ALL_DROPPED, "abort",
+                                self.G0, 1., auto_stop=True,
+                                notes="empty observed pool; stop or replenish upstream")
+        batch_zvf = core.zvf(values, ids, eps=self.var_eps)
+        mean = float(np.mean(values))
         self._zvf_history.append(batch_zvf)
-        roll = float(core.rolling_zvf(self._zvf_history, window=self.window)[-1])
-
-        regime, signal = self._classify(batch_zvf, mean_reward)
-
-        # --- per-prompt drop tracking ---
-        newly_dropped: List[object] = []
-        per_prompt = core.per_prompt_zvf(rewards_arr, group_ids_arr, eps=self.var_eps)
-        for gid, is_zero_var in per_prompt.items():
-            if gid in self._dropped:
-                continue
-            if is_zero_var >= 1.0:
-                self._prompt_streaks[gid] = self._prompt_streaks.get(gid, 0) + 1
-                if self._prompt_streaks[gid] >= self.drop_k:
-                    self._dropped.add(gid)
-                    newly_dropped.append(gid)
-            else:
-                self._prompt_streaks[gid] = 0
-
-        # --- global auto-stop tracking ---
-        # "global ZVF == 1" => the entire batch collapsed to zero variance.
-        # Auto-stop fires ONLY on cold-start collapse (high ZVF + low
-        # reward), not on saturation (high ZVF + high reward). A
-        # saturated run that has solved every prompt is healthy: the
-        # batch is collapsing to a uniform "all correct" outcome, not
-        # to a degenerate "all zero-gradient" failure mode. The
-        # previous version would abort "everything solved" runs as
-        # if they were collapsing. We now require mean_reward <
-        # self.eps_lo (cold-start) before setting auto_stop=True;
-        # saturation is left as a no-op and the regime is reported
-        # but the run continues.
-        if batch_zvf >= 1.0 - 1e-12 and mean_reward < self.eps_lo:
-            self._global_collapse_streak += 1
-        else:
-            self._global_collapse_streak = 0
-        auto_stop = (
-            self._global_collapse_streak >= self.stop_k
-            and mean_reward < self.eps_lo
-        )
+        rolling = float(core.rolling_zvf(self._zvf_history, self.window)[-1])
+        regime, signal = self._classify(batch_zvf, mean)
+        newly_dropped = []
+        if stable is not None:
+            for gid, zero in core.per_prompt_zvf(values, ids, eps=self.var_eps).items():
+                pid = stable[ids == gid][0].item() if hasattr(stable[ids == gid][0], "item") else stable[ids == gid][0]
+                self._prompt_streaks[pid] = self._prompt_streaks.get(pid, 0) + 1 if zero else 0
+                if self._prompt_streaks[pid] >= self.drop_k and pid not in self._dropped:
+                    self._dropped.add(pid)
+                    newly_dropped.append(pid)
+        self._global_collapse_streak = (self._global_collapse_streak + 1
+                                       if batch_zvf >= 1-1e-12 and mean < self.eps_lo else 0)
+        auto_stop = self._global_collapse_streak >= self.stop_k
         if auto_stop:
             self._stopped = True
             signal = "abort"
-            regime = Regime.COLD_START_COLLAPSE
-
-        # Use the rolling-window SMOOTHED ZVF for the adaptive_G
-        # decision, not the raw per-step value. The raw value is
-        # noisy (a single step can flip between 0.6 and 1.0 by
-        # chance) and would cause the controller to oscillate G
-        # between Gmin and Gmax every few steps under realistic
-        # training conditions. The smoothed value (rolling mean
-        # over `window` steps) is what the parent paper calls
-        # "rolling ZVF" and is the natural input to a
-        # decision-of-control.
-        group_size = self._adaptive_group_size(roll)
-
-        return StepDecision(
-            step=self._step,
-            zvf=batch_zvf,
-            gu=batch_gu,
-            mean_reward=mean_reward,
-            regime=regime,
-            signal=signal,
-            group_size=group_size,
-            rolling_zvf=roll,
-            dropped_prompts=newly_dropped,
-            auto_stop=auto_stop,
-            n_groups=n_groups,
-            notes=self._notes(regime, batch_zvf, mean_reward),
-            filtered_rewards=filtered_rewards_count,
-        )
+        recommended = self._adaptive_group_size(rolling)
+        return StepDecision(self._step, batch_zvf, 1-batch_zvf, mean, regime,
+                            signal, recommended, rolling, dropped_prompts=newly_dropped,
+                            auto_stop=auto_stop, n_groups=len(set(ids.tolist())),
+                            notes=self._notes(regime, batch_zvf, mean),
+                            recommended_group_size=recommended, verifier_zvf=batch_zvf,
+                            variance_tolerance=self.var_eps)
 
     # ------------------------------------------------------------------ private
 

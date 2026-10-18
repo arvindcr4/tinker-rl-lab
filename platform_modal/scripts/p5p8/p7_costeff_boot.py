@@ -28,7 +28,7 @@ from _p5p7_common import load_tensors_d  # noqa: E402
 from _stats import log_beta as betaln  # noqa: E402
 WORKTREE = REPO_ROOT
 TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
-OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8/corrected-review19-v2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 METHODS = ("grpo", "aero", "gift", "areal")
@@ -48,9 +48,15 @@ def bb_postpred(k: int, n: int, yp: int, gp: int, alpha: float = 1.0, beta: floa
 
 
 def restore_prob(k: int, n: int = G_BASE, gp: int = G_NEW) -> float:
-    p0 = bb_postpred(k, n, 0, gp)
-    pgp = bb_postpred(k, n, gp, gp)
-    return max(0.0, min(1.0, 1.0 - p0 - pgp))
+    """New contrast from appending gp-n draws; pilot already observed."""
+    if not 0 <= k <= n or gp < n:
+        raise ValueError("invalid observed or target group size")
+    if 0 < k < n or gp == n:
+        return 0.0
+    extra = gp - n
+    same = bb_postpred(k, n, 0 if k == 0 else extra, extra)
+    return max(0.0, min(1.0, 1.0 - same))
+
 
 
 def midrange_prob(k: int, n: int = G_BASE, alpha: float = 1.0, beta: float = 1.0) -> float:

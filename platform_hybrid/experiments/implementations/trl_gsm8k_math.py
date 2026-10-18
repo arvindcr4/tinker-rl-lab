@@ -10,6 +10,12 @@ Unlike arithmetic, this requires:
 - More complex verification
 """
 
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import final_numeric
+
+
 import re
 import sys
 import os
@@ -25,24 +31,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils.seed import set_global_seed, get_seed_from_args, log_experiment_metadata
 
 
-def extract_gsm8k_answer(text: str) -> Optional[float]:
-    """
-    Extract numeric answer from GSM8K-style response.
-
-    GSM8K answers are typically formatted as:
-    "#### 42" or just a number at the end.
-    """
-    # Look for #### pattern first
-    match = re.search(r'####\s*([-+]?\d*\.?\d+)', text)
-    if match:
-        return float(match.group(1))
-
-    # Fall back to last number in text
-    numbers = re.findall(r'[-+]?\d*\.?\d+', text)
-    if numbers:
-        return float(numbers[-1])
-
-    return None
+def extract_gsm8k_answer(text):
+    return final_numeric(text)
 
 
 def verify_gsm8k_answer(predicted: Optional[float], expected: float, tolerance: float = 0.01) -> bool:

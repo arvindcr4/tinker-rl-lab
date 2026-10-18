@@ -148,19 +148,9 @@ def iso_to_epoch(value: str | None) -> float | None:
         return None
 
 
-def normalize_model(value: Any) -> str:
-    if value is None:
-        return ""
-    model = str(value).strip().lower().split("/")[-1]
-    substitutions = {
-        "-instruct-2507": "",
-        "-instruct": "",
-        "-it": "",
-        "_": "-",
-    }
-    for old, new in substitutions.items():
-        model = model.replace(old, new)
-    return re.sub(r"[^a-z0-9]", "", model)
+def normalize_model(value):
+    """Preserve namespace, base/instruct distinction and revision."""
+    return str(value).strip().lower() if value is not None else ""
 
 
 def first_value(mapping: dict[str, Any], names: Iterable[str]) -> Any:
@@ -299,6 +289,20 @@ def fetch_wandb(entity: str) -> tuple[list[str], list[dict[str, Any]]]:
     return projects, runs
 
 
+def training_owner(run: dict[str, Any]) -> str | None:
+    """Return the sole consistent explicit owner, never a matching alias alone."""
+    config = run.get("config", {})
+    owners = []
+    for key in ("tinker_run_id", "training_run_id"):
+        value = config.get(key)
+        if value is None:
+            continue
+        if not isinstance(value, str) or not TINKER_ID_RE.fullmatch(value.strip()):
+            return None
+        owners.append(value.strip().lower())
+    return owners[0] if owners and len(set(owners)) == 1 else None
+
+
 def correlate(
     tinker_runs: list[dict[str, Any]],
     wandb_runs: list[dict[str, Any]],
@@ -319,21 +323,20 @@ def correlate(
         base_uuid = tinker_run["base_uuid"]
         matches = exact_index.get(run_id, [])
         if matches:
+            model = normalize_model(tinker_run.get("base_model"))
+            model_ok = model and all(normalize_model(m.get("model")) == model for m in matches)
+            owners = [m for m in matches if training_owner(m) == run_id]
+            verified = model_ok and len(owners) == 1 and len(matches) == 1
             match_info[run_id] = {
                 "matches": matches,
-                "method": "exact_tinker_id",
-                "confidence": "exact",
+                "method": "verified_training_owner" if verified else "text_reference_quarantined",
+                "confidence": "exact" if verified else "conflict_or_unverified",
                 "delta_minutes": None,
             }
-        elif tinker_uuid_counts[base_uuid] == 1:
-            matches = uuid_index.get(base_uuid, [])
-            if matches:
-                match_info[run_id] = {
-                    "matches": matches,
-                    "method": "unique_base_uuid",
-                    "confidence": "strong",
-                    "delta_minutes": None,
-                }
+        elif uuid_index.get(base_uuid):
+            match_info[run_id] = {"matches": uuid_index[base_uuid],
+                                 "method": "ambiguous_uuid", "confidence": "unresolved",
+                                 "delta_minutes": None}
 
     # For non-exact rows, accept a time/model candidate only when the pair is
     # mutually nearest and clearly separated from each side's runner-up. This
@@ -420,7 +423,7 @@ def correlate(
             key=lambda run: run.get("updated_at") or run.get("created_at") or "",
             reverse=True,
         )
-        primary = matches[0] if matches else {}
+        primary = matches[0] if matches and confidence == "exact" else {}
         config = primary.get("config", {})
         summary = primary.get("summary", {})
         final_metric = first_value(
@@ -449,6 +452,14 @@ def correlate(
                     or (tinker_run.get("last_checkpoint") or {}).get("tinker_path")
                 ),
                 "match_confidence": confidence,
+                "provenance_verified": confidence == "exact",
+                "evidence_role": {
+                    "exact": "trained_as",
+                    "conflict_or_unverified": "textual_reference",
+                    "unresolved": "ambiguous_uuid",
+                    "candidate": "time_model_candidate",
+                    "unmatched": "no_evidence",
+                }[confidence],
                 "match_method": method,
                 "matched_wandb_runs": len(matches),
                 "wandb_project": primary.get("project"),

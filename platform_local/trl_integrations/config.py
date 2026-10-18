@@ -56,6 +56,8 @@ class TRLAlgorithmConfig(BaseModel):
     epsilon_low: float = 0.2
     epsilon_high: float = 0.2
     kl_coef: float = 0.01
+    num_generations: int = Field(default=8, ge=2)
+    temperature: float = Field(default=1.0, gt=0)
     max_grad_norm: float = 1.0
 
     @model_validator(mode="before")
@@ -79,7 +81,8 @@ class TRLDataConfig(BaseModel):
 
     train_data: List[str] = Field(default_factory=list)
     val_data: List[str] = Field(default_factory=list)
-    max_prompt_length: int = 512
+    # TRL 1.2.0 has no max_prompt_length option; native generation rejects a cap.
+    max_prompt_length: Optional[int] = None
     max_response_length: int = 1024
     train_batch_size: int = 8
     gradient_accumulation_steps: int = 4
@@ -93,12 +96,22 @@ class TRLConfig(BaseModel):
     algorithm: TRLAlgorithmConfig = Field(default_factory=TRLAlgorithmConfig)
     data: TRLDataConfig = Field(default_factory=TRLDataConfig)
 
+    # Native script execution requires an explicit task-specific reward and fresh output.
+    execution_contract: Literal["native", "scientific"] = "native"
+    reward_callable: Optional[str] = None  # importable module:attribute
+    output_dir: Optional[str] = None
+
     # Training settings
     epochs: int = 20
     micro_batch_size: int = 1
     eval_interval: int = 5
     save_interval: int = 10
     max_steps: int = -1  # -1 for epochs
+    seed: int = 211
+    num_generations: int = Field(default=8, ge=2)
+    output_root: str = "./checkpoints"
+    resume_from_checkpoint: Optional[str] = None
+    simulator: bool = False
 
     # Hardware
     num_gpus: int = 1
@@ -114,8 +127,37 @@ class TRLConfig(BaseModel):
     # DeepSpeed Integration
     deepspeed: Optional[str] = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_generation_alias(cls, values):
+        # Preserve the review contract's top-level alias without two budgets.
+        if isinstance(values, dict):
+            values = dict(values)
+            algorithm = values.get("algorithm", {})
+            if isinstance(algorithm, TRLAlgorithmConfig):
+                algorithm = algorithm.model_dump()
+            if isinstance(algorithm, dict):
+                algorithm = dict(algorithm)
+                outer, inner = values.get("num_generations"), algorithm.get("num_generations")
+                if outer is not None and inner is not None and outer != inner:
+                    raise ValueError("num_generations aliases must agree")
+                generations = inner if inner is not None else outer
+                if generations is not None:
+                    values["num_generations"] = generations
+                    algorithm["num_generations"] = generations
+                    values["algorithm"] = algorithm
+        return values
+
     @model_validator(mode="after")
     def validate_precision(self) -> "TRLConfig":
+        if self.algorithm.algorithm.lower() == "grpo":
+            batch = (
+                self.data.train_batch_size * self.data.gradient_accumulation_steps * self.num_gpus
+            )
+            if batch <= 0 or batch % self.algorithm.num_generations:
+                raise ValueError(
+                    "GRPO effective batch must be positive and divisible by num_generations"
+                )
         if self.bf16 and self.fp16:
             raise ValueError("bf16 and fp16 are mutually exclusive")
         return self

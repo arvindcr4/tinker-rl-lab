@@ -1,3 +1,4 @@
+% ARCHIVAL INDEPENDENT DRAFT: not the canonical build. Use chapter2_foundation.tex.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RL for LLMs: A Systematic GRPO Scaling Study
 %% Capstone Project — Group 6
@@ -393,7 +394,7 @@ DPO enjoys several benefits: (1)~no separate reward model or RL optimizer requir
 DPO has well-documented shortcomings: (1)~dependence on offline, static preference data leading to distribution shift; (2)~no online exploration; (3)~likelihood displacement; (4)~weak credit assignment for long-horizon reasoning tasks.
 
 \paragraph{Why DPO is insufficient for mathematical reasoning.}
-Mathematical reasoning is \emph{verifiable}---a derivation either reaches the correct answer or not---and this binary outcome signal is far richer and cheaper to obtain than human preference annotations. DPO cannot exploit this signal because it requires pre-collected pairwise preferences. Furthermore, the credit-assignment problem is severe: a single error in one step renders the entire completion incorrect, but DPO's completion-level loss provides no mechanism to localise fault. These shortcomings motivate GRPO, introduced next.
+Correctness can define DPO preference pairs: a correct completion is preferred to an incorrect completion for the same prompt. Fixed-data DPO differs from iterative preference generation; both completion-level DPO and outcome-GRPO lack direct step-level supervision. Parser and reference reliability remain assumptions.
 
 
 %% ================================================================
@@ -421,10 +422,12 @@ For each prompt $q$, the current policy generates a group of $G$ independent com
 A reward function scores each completion, yielding $\mathbf{r} = \{r_1, \ldots, r_G\}$. Advantages are computed by z-score normalization within the group:
 \begin{equation}
 \label{eq:grpo-advantage}
+% Stabilization is explicit; this background equation does not certify historical execution.
+
 \boxed{
 \hat{A}_{i,t} = \tilde{r}_i
   = \frac{r_i - \operatorname{mean}(\mathbf{r})}
-         {\operatorname{std}(\mathbf{r})},
+         {\operatorname{std}(\mathbf{r})+\epsilon},
 \qquad i = 1, \ldots, G,
 \quad t = 1, \ldots, |o_i|.}
 \end{equation}
@@ -487,7 +490,7 @@ $\pi_\theta \leftarrow \pi_{\theta_{\text{init}}}$ \;
       Compute rewards $\{r_i\}_{i=1}^{G}$ using $r_\varphi$ \;
       $\hat{A}_{i,t} \leftarrow
         \dfrac{r_i - \operatorname{mean}(\mathbf{r})}
-              {\operatorname{std}(\mathbf{r})}$
+              {\operatorname{std}(\mathbf{r})+\epsilon}$
         \quad $\forall\, i,t$
         \tcp*{Step 2}
     }
@@ -537,13 +540,13 @@ Hyperparameters &
 \end{table}
 
 \paragraph{Reward design for mathematical reasoning.}
-\cite{shao2024deepseekmath} exploit the verifiability of mathematics through rule-based reward functions:
+DeepSeekMath\cite{shao2024deepseekmath} used a learned reward model in its principal recipe. R1-Zero uses rule-based rewards; the following is an illustrative rule-based recipe, separate from the GRPO update rule:
 \begin{itemize}[leftmargin=1.8em,itemsep=2pt]
 \item \textbf{Accuracy reward:} $r_{\text{acc}}(q, o) = \mathbf{1}[\text{extract}(o) = a^*]$, where $a^*$ is the ground-truth answer.
 \item \textbf{Format reward:} A small bonus for structured chain-of-thought output (e.g., enclosing the final answer in \verb|\boxed{}|).
 \end{itemize}
 
-The combination of verifiable binary rewards and group-relative normalization creates a self-regulating learning signal: when the model is weak and most completions are wrong, the few correct ones receive very large positive advantages; as the model improves, advantage magnitudes naturally shrink.
+Homogeneous groups have zero centered reward advantage under the displayed additive-$\epsilon$ convention. For mixed binary groups without stabilization, population-standardized mean squared advantage equals one: rare negative advantages grow as success becomes common. This is not automatic annealing, and KL or optimizer state may still cause updates.
 
 \paragraph{DeepSeekMath results.}
 On the competition-level MATH benchmark, DeepSeekMath-RL 7B achieved \textbf{51.7\%} top-1 accuracy---competitive with Gemini-Ultra (53.2\%) and GPT-4 (52.9\%). With self-consistency over 64 samples, accuracy rose to \textbf{60.9\%}. On GSM8K, GRPO improved accuracy from 82.9\% to 88.2\%, with gains transferring to out-of-domain benchmarks.
@@ -590,7 +593,7 @@ To address R1-Zero's limitations (poor readability, language mixing), DeepSeek-R
 
 \begin{table}[ht]
 \centering
-\caption{Benchmark comparison of DeepSeek models and OpenAI o1-1217. All figures are pass@1 (\%).}
+\caption{Benchmark comparison of DeepSeek models and OpenAI o1-1217. Rows name their metrics: accuracy/pass@1 in percent; Codeforces is percentile, not pass@1.}
 \label{tab:deepseek-r1-results}
 \begin{tabular}{lccc}
 \toprule
@@ -783,7 +786,7 @@ GPQA Diamond has served as a critical benchmark for tracking the frontier of sci
 
 The Massive Multitask Language Understanding (MMLU) benchmark \cite{hendrycks2021mmlu} evaluates knowledge and reasoning across 57 diverse subjects spanning STEM, humanities, social sciences, and professional domains. Each subject contains multiple-choice questions at difficulty levels ranging from elementary to advanced professional. MMLU has been one of the most widely cited LLM benchmarks, though frontier models now routinely exceed 90\%, reducing its discriminative power.
 
-MMLU-Pro \cite{wang2024mmlupro} addresses these limitations by expanding answer choices from 4 to 10, eliminating trivially solvable questions, and focusing on reasoning-intensive tasks. The resulting benchmark of over 12,000 questions causes a 16--33\% accuracy drop compared to original MMLU, restoring discriminative power. DeepSeek-R1 achieved 85.5\% on MMLU, demonstrating that RL-trained reasoning capabilities transfer beyond mathematics to general knowledge domains.
+MMLU-Pro \cite{wang2024mmlupro} addresses these limitations by expanding answer choices from 4 to 10, eliminating trivially solvable questions, and focusing on reasoning-intensive tasks. The resulting benchmark of over 12,000 questions causes a 16--33\% accuracy drop compared to original MMLU, restoring discriminative power. DeepSeek-R1 reported 90.8\% on MMLU and 84.0\% on MMLU-Pro, demonstrating that RL-trained reasoning capabilities transfer beyond mathematics to general knowledge domains.
 
 \subsubsection{OlympiadBench}
 
@@ -916,7 +919,7 @@ Hoffmann et al.\ showed that model size and training tokens should be scaled equ
   L(N, D) = \frac{A}{N^{\alpha}} + \frac{B}{D^{\beta}} + E,
   \label{eq:chinchilla}
 \end{equation}
-with $\alpha \approx 0.34$, $\beta \approx 0.28$. Under fixed compute $C \propto 6ND$, optimal allocation scales both $N$ and $D$ proportionally. Chinchilla (70B, 4$\times$ more data) uniformly outperformed Gopher (280B).
+with $\alpha \approx 0.34$, $\beta \approx 0.28$. Under fixed compute $C \propto 6ND$, optimal allocation has $N^*(C)\propto C^{\beta/(\alpha+\beta)}$ and $D^*(C)\propto C^{\alpha/(\alpha+\beta)}$. Chinchilla (70B, 4$\times$ more data) uniformly outperformed Gopher (280B).
 
 \subsection{Scaling Laws for Reinforcement Learning Fine-Tuning}
 
@@ -927,7 +930,7 @@ RL training exhibits \emph{sigmoidal} rather than power-law performance curves. 
 \end{equation}
 where $A$ is the asymptotic pass rate and $B$ governs compute efficiency. Key findings: (1)~not all RL recipes reach the same ceiling; (2)~methods superior at small compute can be inferior at scale; (3)~scaling model size substantially improves both asymptotic performance and downstream generalization.
 
-The effect of \emph{group size} $G$ is a scaling dimension unique to GRPO. DeepSeek-R1 used $G = 64$; academic reproductions find $G \in [8, 32]$ offers a practical trade-off.
+The effect of \emph{group size} $G$ is a scaling dimension unique to GRPO. DeepSeekMath used $G = 64$; the revised DeepSeek-R1-Zero report uses $G = 16$; academic reproductions find $G \in [8, 32]$ offers a practical trade-off.
 
 \subsection{Test-Time Compute Scaling}
 
@@ -939,7 +942,7 @@ Gao et al.\ characterised reward model overoptimisation \cite{gao2023scaling}: g
 
 \subsection{Implications for the Present Study}
 
-This capstone focuses on the effect of base model size on GRPO training dynamics, holding the algorithm (GRPO), adaptation method (LoRA), training framework (TRL \cite{vonwerra2022trl}), reward structure (rule-based verification), and benchmarks (GSM8K, MATH) constant. This design isolates what the scaling literature identifies as one of the most consequential variables, aiming to empirically locate the transition point below which distillation dominates direct RL, and to provide actionable guidance for practitioners under resource constraints.
+This historical proposal compares specified checkpoints under a documented GRPO recipe. It characterizes model-and-checkpoint differences, not parameter-count causation independent of pretraining and instruction tuning. Prior work includes systematic scaling studies. A distillation crossover requires comparable distillation arms and is not identified by a GRPO-only sweep.
 
 
 %% ================================================================
@@ -964,7 +967,7 @@ The foundational paradigm of \textbf{RLHF with PPO} established that human prefe
 
 A \textbf{growing ecosystem of open-source reproductions}---TinyZero~\cite{wen2025tinyzero}, SimpleRL-Zoo~\cite{zeng2025simplerl}, DeepScaleR~\cite{luo2025deepscaler}, and DeepCoder~\cite{xu2025deepcoder}---has validated that GRPO-based training can be replicated at various scales using open data and commodity hardware.
 
-\paragraph{Positioning of this study.} The present capstone project contributes to this landscape by conducting a controlled, systematic investigation of how GRPO training dynamics, emergent reasoning behaviours, and downstream mathematical performance scale across model sizes. By holding the algorithm (GRPO), the adaptation method (LoRA), the training framework (TRL~\cite{vonwerra2022trl}), and the evaluation benchmarks constant while varying model capacity, this study isolates the effect of scale on reinforcement-learned reasoning---a dimension that existing work has explored only incidentally.
+This historical proposal compares specified checkpoints under a documented GRPO recipe. It characterizes model-and-checkpoint differences, not parameter-count causation independent of pretraining and instruction tuning. Prior work includes systematic scaling studies. A distillation crossover requires comparable distillation arms and is not identified by a GRPO-only sweep.
 
 
 %% ================================================================

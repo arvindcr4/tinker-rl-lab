@@ -44,7 +44,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 DATA_DIR = str(REPO_ROOT)
-OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8"
+OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8/corrected-review21-v2"
 TRAIN = f"{DATA_DIR}/fraud_data.csv"
 TEST = f"{DATA_DIR}/test_data.csv"
 
@@ -92,52 +92,14 @@ def ece(probs, labels, n_bin=N_BIN):
 
 
 def isotonic_pava(xs, ys):
-    """Pool Adjacent Violators Algorithm."""
-    n = len(xs)
-    if n == 0:
-        return []
-    order = sorted(range(n), key=lambda i: xs[i])
-    blocks = []
-    for i in order:
-        x = xs[i]
-        y = ys[i]
-        if blocks and blocks[-1][2] == x:
-            blocks[-1][0] += y
-            blocks[-1][1] += 1
-            blocks[-1][3] = x
-        else:
-            blocks.append([y, 1, x, x])
-    changed = True
-    while changed:
-        changed = False
-        i = 0
-        while i < len(blocks) - 1:
-            mean_i = blocks[i][0] / blocks[i][1]
-            mean_ip1 = blocks[i + 1][0] / blocks[i + 1][1]
-            if mean_i > mean_ip1:
-                blocks[i][0] += blocks[i + 1][0]
-                blocks[i][1] += blocks[i + 1][1]
-                blocks[i][3] = blocks[i + 1][3]
-                del blocks[i + 1]
-                changed = True
-                if i > 0:
-                    i -= 1
-                continue
-            i += 1
-    return sorted([(b[2], b[3], b[0] / b[1]) for b in blocks])
+    from sklearn.isotonic import IsotonicRegression
+    return IsotonicRegression(increasing=True, out_of_bounds="clip", y_min=0, y_max=1).fit(xs, ys)
+
 
 
 def apply_isotonic(bps, p):
-    if not bps:
-        return p
-    if p < bps[0][0]:
-        return bps[0][2]
-    if p >= bps[-1][1]:
-        return bps[-1][2]
-    for lo, hi, v in bps:
-        if lo <= p < hi:
-            return v
-    return bps[-1][2]
+    return float(bps.predict([p])[0])
+
 
 
 def make_quantiles(values, q):

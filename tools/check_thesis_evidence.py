@@ -107,8 +107,8 @@ def unique(items, label):
 
 
 def mcnemar(trained, base):
-    b = sum(t == 1 and a == 0 for t, a in zip(trained, base))
-    c = sum(t == 0 and a == 1 for t, a in zip(trained, base))
+    b = sum(t == 1 and a == 0 for t, a in zip(trained, base, strict=True))
+    c = sum(t == 0 and a == 1 for t, a in zip(trained, base, strict=True))
     n = b + c
     p = min(1.0, 2 * sum(math.comb(n, k) for k in range(min(b, c) + 1)) / 2**n)
     return b, c, p
@@ -118,7 +118,7 @@ def paired_metric(record, trained, base, difference_key, binary=True, staged_rou
     trained_mean, base_mean = statistics.mean(trained), statistics.mean(base)
     same(record["trained_value"], trained_mean, "trained mean", digits=4)
     same(record["base_value"], base_mean, "base mean", digits=4)
-    raw_delta = statistics.mean(t - b for t, b in zip(trained, base))
+    raw_delta = statistics.mean(t - b for t, b in zip(trained, base, strict=True))
     if staged_rounding:
         # E3/code/paired_finalize.py also builds E7 and E12: each arm's k/n
         # is rounded to four places before subtracting and rounding again.
@@ -131,6 +131,13 @@ def paired_metric(record, trained, base, difference_key, binary=True, staged_rou
         prefix = "discordant_" if "discordant_b_trained_only" in record else ""
         same(count(record[prefix + "b_trained_only"]), b, "trained-only discordances")
         same(count(record[prefix + "c_base_only"]), c, "base-only discordances")
+        # Both spellings are supported, but an unused alias must not contradict
+        # the counts established by the actual paired outcomes.
+        for alias_prefix in ("", "discordant_"):
+            for field, computed in (("b_trained_only", b), ("c_base_only", c)):
+                alias = alias_prefix + field
+                if alias in record:
+                    same(count(record[alias]), computed, f"discordance alias {alias}")
         same(record["mcnemar_exact_p"], p, "McNemar exact p", digits=4)
 
 
@@ -146,7 +153,7 @@ def check_m1b(data):
         same(count(short["config"][cfg_key]), expected, f"M1b config {cfg_key}")
     require(len(short["runs"]) == len(full["runs"]) == 15, "M1b requires 15 runs")
     runs: dict[tuple[str, int], dict[str, Any]] = {}
-    for small, run in zip(short["runs"], full["runs"]):
+    for small, run in zip(short["runs"], full["runs"], strict=True):
         projected = {
             k: v for k, v in run.items() if k not in ("pre_correct", "post_correct", "step_log")
         }
@@ -201,7 +208,7 @@ def check_m1b(data):
             runs["grpo_g8", s]["heldout_post_acc"] - runs[arm, s]["heldout_post_acc"] for s in seeds
         ]
         require(len(contrast["diffs"]) == 5, f"{arm} missing contrast differences")
-        for recorded, computed in zip(contrast["diffs"], diffs):
+        for recorded, computed in zip(contrast["diffs"], diffs, strict=True):
             same(recorded, computed, f"{arm} paired seed difference")
         same(contrast["mean_diff"], statistics.mean(diffs), f"{arm} mean difference")
         same(contrast["sd"], statistics.stdev(diffs), f"{arm} SD")
@@ -252,12 +259,20 @@ def check_replacement(lane, d):
         for field, expected in (("attempted", n), ("graded", graded), ("resolved", success)):
             same(sum(count(p[field]) for p in parts), expected, f"E1 partition {field}")
         for part in [*parts, d["prior_waves_separate_not_pooled"]]:
+            require(
+                count(part["resolved"]) <= count(part["graded"]),
+                "E1 partition resolved exceeds graded",
+            )
             same(
                 count(part["attempted"]),
                 count(part["graded"])
                 + count(part["errors_patch_apply_or_eval"])
                 + count(part["empty_patch"]),
                 "E1 outcome partition",
+            )
+            require(
+                part["resolved"] <= part["graded"] <= part["attempted"],
+                "E1 impossible partition counts",
             )
             same(count(part["resolved"]), len(part["resolved_ids"]), "E1 resolved IDs")
             unique(part["resolved_ids"], "E1 resolved IDs")
@@ -270,6 +285,10 @@ def check_replacement(lane, d):
                 )
         for field in ("errors_patch_apply_or_eval", "empty_patch"):
             same(count(d["outcome_counts"][field]), sum(p[field] for p in parts), f"E1 {field}")
+        unique(d["resolved_ids"], "E1 headline resolved task IDs")
+        unique(
+            [i for part in parts for i in part["resolved_ids"]], "E1 cross-wave resolved task IDs"
+        )
         same(success, len(d["resolved_ids"]), "E1 headline resolved IDs")
         require(
             sorted(d["resolved_ids"]) == sorted(i for p in parts for i in p["resolved_ids"]),
@@ -293,6 +312,10 @@ def check_replacement(lane, d):
         same(sum(values(rows, "correct", binary=True)), success, "E2 task successes")
         same(sum(r["status"] == "completed" for r in rows), graded, "E2 graded count")
         require(
+            all(not r["correct"] or r["status"] == "completed" for r in rows),
+            "E2 correct task must be completed (graded)",
+        )
+        require(
             dict(Counter(f"{r['status']}/{r['end']}" for r in rows)) == d["outcome_breakdown"],
             "E2 completion partition mismatch",
         )
@@ -314,16 +337,29 @@ def check_replacement(lane, d):
         same(sum(count(p["n"]) for p in parts), n, "E5 subset counts")
         same(sum(count(p["passes"]) for p in parts), success, "E5 subset successes")
         for part in parts:
+            require(
+                0 <= count(part["passes"]) <= count(part["n"]) and part["n"] > 0,
+                "E5 subset successes exceed task count or impossible subset counts",
+            )
             same(part["pass1"], part["passes"] / part["n"], "E5 subset pass1", digits=4)
     elif lane == "E6":
         pending = count(d["n_ungraded_judge_unavailable"])
         same(graded + pending, n, "E6 graded+ungraded")
         require(count(d["n_errors"]) <= graded, "E6 error count exceeds graded")
+        require(
+            d["n_errors"] + success <= graded,
+            "E6 errors and successes exceed graded",
+        )
         secondary = d["secondary"]
         parts = list(secondary["per_split"].values())
         require(len(parts) == 5, "E6 split partition changed")
         for field, expected in (("n", n), ("success", success), ("judge_pending", pending)):
             same(sum(count(p[field]) for p in parts), expected, f"E6 split {field}")
+        for part in parts:
+            require(
+                part["success"] + part["judge_pending"] <= part["n"],
+                "E6 split successes and pending exceed task count",
+            )
         same(secondary["score_over_graded_only"], success / graded, "E6 graded score", digits=4)
         same(
             secondary["score_upper_bound_if_all_ungraded_passed"],
@@ -336,6 +372,12 @@ def check_replacement(lane, d):
         same(len(rows), n, "E9 per-task count")
         unique([r["task"] for r in rows], "E9 tasks")
         same(sum(values(rows, "success", binary=True)), success, "E9 task successes")
+        for row in rows:
+            require(type(row["rc"]) is int, "E9 return code must be an integer")
+            require(
+                not row["success"] or row["rc"] == 0,
+                "E9 successful task has a nonzero return code; ungraded task",
+            )
         errors = sum(r["rc"] != 0 for r in rows)
         same(count(d["n_errors_or_timeouts"]), errors, "E9 errors")
         same(graded, n - errors, "E9 graded")
@@ -414,13 +456,13 @@ def check_paired(lane, d):
         )
         same(
             d["mean_item_difference"],
-            statistics.mean(t - b for t, b in zip(trained, base)),
+            statistics.mean(t - b for t, b in zip(trained, base, strict=True)),
             "E13 mean item difference",
             digits=4,
         )
         same(
             count(d["n_items_identical_progression"]),
-            sum(t == b for t, b in zip(trained, base)),
+            sum(t == b for t, b in zip(trained, base, strict=True)),
             "E13 identical episodes",
         )
         b, c, p = mcnemar([int(t == 1) for t in trained], [int(b == 1) for b in base])
@@ -436,7 +478,7 @@ def check_paired(lane, d):
         if lane == "E4":
             same(
                 d["paired_mean_difference"],
-                statistics.mean(t - b for t, b in zip(trained, base)),
+                statistics.mean(t - b for t, b in zip(trained, base, strict=True)),
                 "E4 paired mean difference",
                 digits=4,
             )
@@ -445,7 +487,7 @@ def check_paired(lane, d):
     if lane in ("E3", "E7", "E12"):
         return {
             "description": f"{len(rows)} outcomes: means, exact staged-rounding delta, McNemar",
-            "raw_paired_delta": statistics.mean(t - b for t, b in zip(trained, base)),
+            "raw_paired_delta": statistics.mean(t - b for t, b in zip(trained, base, strict=True)),
             "recorded_delta": d["difference_trained_minus_base"],
             "rounding_rule": "round(round(mean(trained), 4) - round(mean(base), 4), 4)",
             "generator": f"{PAIRED}/E3/code/paired_finalize.py",

@@ -20,7 +20,7 @@ import re
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-SCHEMA_VERSION = "pavlov-bfcl-t4-split-manifest-v1"
+SCHEMA_VERSION = "pavlov-bfcl-t4-split-manifest-v2"
 SUITE_ID = "bfcl_train"
 NATIVE_CATEGORY = "tool_use"
 ROLE_TRAIN = "train"
@@ -428,10 +428,29 @@ def build_split_manifest_record(manifest: Mapping[str, Any]) -> dict[str, Any]:
         }
 
 
-def validate_split_manifest_record(record: Mapping[str, Any]) -> list[str]:
+def validate_split_manifest_record(
+    record: Mapping[str, Any], source_manifest: Mapping[str, Any] | None = None,
+) -> list[str]:
+    """Recompute against separately supplied source; READY is never authority.
+
+    The caller must obtain the source from its trusted input path. This verifies
+    consistency and split policy, not authenticity of self-authored manifests.
+    """
     if not isinstance(record, Mapping):
         return ["record root must be a JSON object"]
-    return [] if record.get("status") == "READY" else list(record.get("blockers", []))
+    if record.get("schema_version") != SCHEMA_VERSION:
+        return ["unsupported schema"]
+    if record.get("status") != "READY":
+        blockers = record.get("blockers")
+        return list(blockers) if isinstance(blockers, list) and blockers else ["record is not READY"]
+    if not isinstance(source_manifest, Mapping):
+        return ["trusted source manifest required to revalidate READY record"]
+    expected = build_split_manifest_record(source_manifest)
+    if expected.get("status") != "READY":
+        return list(expected.get("blockers") or ["source manifest is blocked"])
+    if canonical_json(record) != canonical_json(expected):
+        return ["record differs from recomputed source manifest"]
+    return []
 
 
 def main(argv: list[str] | None = None) -> int:

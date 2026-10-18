@@ -305,7 +305,7 @@ def _official_test_names(value: Any, path: str) -> list[str]:
         parsed = ast.literal_eval(raw)
     except (SyntaxError, ValueError) as exc:
         raise BoundaryValidationError(f"{path} is not a literal test-name list") from exc
-    if not isinstance(parsed, list) or not parsed:
+    if not isinstance(parsed, list) or (not parsed and "pass_to_pass" not in path.lower()):
         raise BoundaryValidationError(f"{path} must encode a non-empty list")
     names: list[str] = []
     for index, name in enumerate(parsed):
@@ -665,8 +665,8 @@ def _validate_task_results(
         if status not in {"resolved", "unresolved"}:
             raise BoundaryValidationError("task result status is unsupported")
         tests = item["tests"]
-        if not isinstance(tests, list) or not tests:
-            raise BoundaryValidationError("task result tests must be non-empty")
+        if not isinstance(tests, list):
+            raise BoundaryValidationError("task result tests must be a list")
         passed: set[str] = set()
         observed_names: set[str] = set()
         normalized_tests: list[dict[str, Any]] = []
@@ -684,10 +684,7 @@ def _validate_task_results(
             normalized_tests.append(dict(test))
         required_tests = set(_official_test_names(task["fail_to_pass"], "fail_to_pass"))
         required_tests.update(_official_test_names(task["pass_to_pass"], "pass_to_pass"))
-        if not required_tests <= observed_names:
-            raise BoundaryValidationError(
-                "task result must include evidence for every fail-to-pass/pass-to-pass test"
-            )
+        # Missing output is an unsuccessful attempt under the fixed denominator.
         expected_resolved = required_tests <= passed
         if (status == "resolved") != expected_resolved:
             raise BoundaryValidationError("task result status disagrees with native test evidence")
@@ -766,10 +763,14 @@ def validate_result_receipt(
     if verifier.get("kind") != "swe_bench_pro_official":
         raise BoundaryValidationError("verifier receipt is not official")
     if (
-        verifier.get("fail_to_pass_passed") is not True
-        or verifier.get("pass_to_pass_passed") is not True
+        type(verifier.get("fail_to_pass_passed")) is not bool
+        or type(verifier.get("pass_to_pass_passed")) is not bool
     ):
         raise BoundaryValidationError("native fail-to-pass and pass-to-pass receipts are required")
+    for field, test_field in (("fail_to_pass_passed", "fail_to_pass"), ("pass_to_pass_passed", "pass_to_pass")):
+        expected = all(set(_official_test_names(task[test_field], test_field)) <= {test["name"] for test in result["tests"] if test["status"] == "PASSED"} for task, result in zip(checked_manifest["tasks"], task_results))
+        if verifier[field] is not expected:
+            raise BoundaryValidationError("verifier aggregate disagrees with task evidence")
     if manifest_role == RECEIPT_PROVEN_HELDOUT:
         if checked_manifest.get("heldout_proof", {}).get("status") != "receipt_proven":
             raise BoundaryValidationError("held-out result lacks receipt proof")

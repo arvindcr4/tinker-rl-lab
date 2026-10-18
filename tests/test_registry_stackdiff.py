@@ -1,4 +1,5 @@
 """Unit tests for the GRPO-Registry badge + stackdiff (platform_hybrid/registry/query.py)."""
+
 from __future__ import annotations
 
 import importlib.util
@@ -29,9 +30,13 @@ def stack(**rc_overrides):
     for k, v in rc_overrides.items():
         rc[k.replace("__", ".")] = v
     return {
-        "record_type": "stack", "id": "synthetic", "label_claimed": "grpo",
+        "record_type": "stack",
+        "id": "synthetic",
+        "label_claimed": "grpo",
         "framework": {"name": "x", "version": None, "openness": "open"},
-        "model": None, "task": None, "seeds": None,
+        "model": None,
+        "task": None,
+        "seeds": None,
         "provenance": {"source_artifacts": []},
         "variant_deltas_applied": [],
         "min_report": {it: {"a": None} for it in q.ITEMS},
@@ -46,15 +51,29 @@ def entry(eid):
 # ------------------------------------------------------------------- badge
 def test_badge_counts_reported_leaves():
     rec = stack()
-    rec["min_report"] = {it: {"a": 1, "b": None} for it in q.ITEMS}
+    definitions = json.loads((REG / "schema.json").read_text())["$defs"]["min_report"]["properties"]
+    expected = {}
+    for item, definition in definitions.items():
+        keys = sorted(set(definition["properties"]) - {"source", "description"})
+        rec["min_report"][item] = {key: (1 if i % 2 == 0 else None) for i, key in enumerate(keys)}
+        expected[item] = sum(value is not None for value in rec["min_report"][item].values()) / len(
+            keys
+        )
     total, scores = q.badge(rec)
-    assert total == 50 and set(scores.values()) == {0.5}
+    assert scores == expected
+    assert total == round(100 * sum(expected.values()) / 7)
 
 
 def test_badge_false_and_zero_count_as_reported():
-    rec = stack()
-    rec["min_report"] = {it: {"a": False, "b": 0.0} for it in q.ITEMS}
-    assert q.badge(rec)[0] == 100
+    assert (
+        q.item_score({"performed": False, "parser_robustness_probe": False}, "decontamination") == 1
+    )
+    assert (
+        q.item_score(
+            {"reference_policy": False, "kl_beta": 0.0, "kl_estimator": "none"}, "reference_kl"
+        )
+        == 1
+    )
 
 
 def test_spec_coverage_separates_unknown():
@@ -67,8 +86,11 @@ def test_spec_coverage_separates_unknown():
 # --------------------------------------------------------------- stackdiff
 def test_identical_entries_are_r0_full_coverage():
     r = q.stackdiff(stack(), stack())
-    assert r["level"] == 0 and r["differs"] == [] and r["unknown"] == []
-    assert r["coverage"] == 1.0 and not r["underspecified"]
+    assert r["level"] == 0
+    assert r["differs"] == []
+    assert r["unknown"] == []
+    assert r["coverage"] == 1.0
+    assert not r["underspecified"]
 
 
 def test_checkpoint_only_diff_is_r5():
@@ -79,7 +101,8 @@ def test_checkpoint_only_diff_is_r5():
 
 def test_reward_only_diff_is_r5():
     r = q.stackdiff(stack(), stack(reward__id=cell("boxed-only")))
-    assert r["level"] == 5 and [d[0] for d in r["differs"]] == ["reward.id"]
+    assert r["level"] == 5
+    assert [d[0] for d in r["differs"]] == ["reward.id"]
 
 
 def test_reward_hash_only_diff_is_r2():
@@ -87,10 +110,17 @@ def test_reward_hash_only_diff_is_r2():
     assert r["level"] == 2
 
 
-@pytest.mark.parametrize("field,expected", [
-    ("loss.clip", 4), ("kl.beta", 4), ("decoding.max_tokens", 3), ("lora.rank", 3),
-    ("trainer.name", 2), ("seeds", 1),
-])
+@pytest.mark.parametrize(
+    ("field", "expected"),
+    [
+        ("loss.clip", 4),
+        ("kl.beta", 4),
+        ("decoding.max_tokens", 3),
+        ("lora.rank", 3),
+        ("trainer.name", 2),
+        ("seeds", 1),
+    ],
+)
 def test_severity_ladder(field, expected):
     r = q.stackdiff(stack(), stack(**{field.replace(".", "__"): cell("other")}))
     assert r["level"] == expected == q.FIELDS[field]
@@ -99,25 +129,29 @@ def test_severity_ladder(field, expected):
 def test_missing_field_is_unknown_not_a_difference():
     b = stack(checkpoint__id=cell(None, "unknown", "not logged"))
     r = q.stackdiff(stack(), b)
-    assert r["level"] == 0 and r["differs"] == []
+    assert r["level"] == 0
+    assert r["differs"] == []
     assert ("checkpoint.id", 5, "b") in r["unknown"]
-    assert r["underspecified"] and r["hidden_max"] == 5
+    assert r["underspecified"]
+    assert r["hidden_max"] == 5
     assert r["coverage"] == pytest.approx(1 - 1 / len(q.FIELDS))
 
 
 def test_missing_vs_differing_fields_are_separated():
-    b = stack(lora__rank=cell(None, "unknown", "managed"),
-              decoding__temperature=cell(1.0))
+    b = stack(lora__rank=cell(None, "unknown", "managed"), decoding__temperature=cell(1.0))
     r = q.stackdiff(stack(), b)
     assert [d[0] for d in r["differs"]] == ["decoding.temperature"]
     assert [u[0] for u in r["unknown"]] == ["lora.rank"]
     assert r["level"] == 3
 
 
-def test_revision_unknown_alone_does_not_flag_underspecified():
+def test_revision_unknown_alone_flags_unverified_identity():
     unk = cell(None, "unknown", "unpinned")
     r = q.stackdiff(stack(checkpoint__revision=unk), stack(checkpoint__revision=unk))
-    assert r["level"] == 0 and not r["underspecified"]
+    assert r["level"] == 0
+    assert r["underspecified"]
+    assert not r["comparable"]
+    assert not r["matching_requirements"]["satisfied"]
     assert ("checkpoint.revision", 5, "both") in r["unknown"]
 
 
@@ -130,20 +164,31 @@ def test_float_equality_is_tolerant_and_bool_is_not_number():
 
 def test_delta_rows_declared_both_sides_compare_at_r4():
     a, b = stack(), stack()
-    a["variant_deltas_applied"] = [{"delta_id": "delta_dapo", "component": "clip_higher", "status": "implemented"}]
-    b["variant_deltas_applied"] = [{"delta_id": "delta_dapo", "component": "clip_higher", "status": "absent"}]
+    a["variant_deltas_applied"] = [
+        {"delta_id": "delta_dapo", "component": "clip_higher", "status": "implemented"}
+    ]
+    b["variant_deltas_applied"] = [
+        {"delta_id": "delta_dapo", "component": "clip_higher", "status": "absent"}
+    ]
     assert q.stackdiff(a, b)["level"] == 4
 
 
 def test_delta_row_unknown_or_one_sided_is_not_a_difference():
     a, b = stack(), stack()
-    a["variant_deltas_applied"] = [{"delta_id": "delta_dapo", "component": "kl_removed", "status": "implemented"}]
+    a["variant_deltas_applied"] = [
+        {"delta_id": "delta_dapo", "component": "kl_removed", "status": "implemented"}
+    ]
     r = q.stackdiff(a, b)
-    assert r["level"] == 0 and r["undeclared"] == [("delta.delta_dapo:kl_removed", "b")]
-    assert r["coverage"] == 1.0
-    b["variant_deltas_applied"] = [{"delta_id": "delta_dapo", "component": "kl_removed", "status": "unknown"}]
+    assert r["level"] == 0
+    assert r["undeclared"] == [("delta.delta_dapo:kl_removed", "b")]
+    assert r["coverage"] < 1.0
+    assert not r["comparable"]
+    b["variant_deltas_applied"] = [
+        {"delta_id": "delta_dapo", "component": "kl_removed", "status": "unknown"}
+    ]
     r = q.stackdiff(a, b)
-    assert r["level"] == 0 and ("delta.delta_dapo:kl_removed", 4, "b") in r["unknown"]
+    assert r["level"] == 0
+    assert ("delta.delta_dapo:kl_removed", 4, "b") in r["unknown"]
 
 
 def test_legacy_entry_without_run_config_maps_null_to_unknown():
@@ -161,8 +206,14 @@ def test_exhibit_a_pair_reports_checkpoint_reward_template():
     assert r["level"] == 5
     assert diffs["checkpoint.id"] == ("Qwen/Qwen3-8B-Base", "Qwen/Qwen3-8B")
     assert diffs["checkpoint.variant"] == ("base", "instruct")
-    for f in ("reward.id", "prompt.template_sha256", "prompt.chat_template",
-              "batch.prompts_per_step", "data.subset", "optimizer.betas"):
+    for f in (
+        "reward.id",
+        "prompt.template_sha256",
+        "prompt.chat_template",
+        "batch.prompts_per_step",
+        "data.subset",
+        "optimizer.betas",
+    ):
         assert f in diffs, f
     # TRL loss/KL/decoding follow unpinned library defaults -> unknown, not "differs"
     unknown = {u[0] for u in r["unknown"]}
@@ -173,19 +224,30 @@ def test_exhibit_a_pair_reports_checkpoint_reward_template():
 def test_dapo_pair_reports_task_model_and_absent_dapo_components():
     r = q.stackdiff(entry("colab-open_dapo_e3"), entry("tinker_dapo_qwen3.5-4b_gsm8k"))
     diffs = {d[0]: (d[2], d[3]) for d in r["differs"]}
-    assert r["level"] == 5 and r["same_label"]
-    for f in ("checkpoint.id", "data.dataset", "eval.metric", "batch.samples_per_prompt",
-              "train.steps", "reward.id"):
+    assert r["level"] == 5
+    assert r["same_label"]
+    for f in (
+        "checkpoint.id",
+        "data.dataset",
+        "eval.metric",
+        "batch.samples_per_prompt",
+        "train.steps",
+        "reward.id",
+    ):
         assert f in diffs, f
     assert diffs["loss.clip"] == ("ratio[0.8,1.28]", "advantage[-2,3]")
     assert diffs["delta.delta_dapo:clip_higher"] == ("implemented", "absent")
-    assert r["coverage"] > 0.8
+    assert r["coverage"] > 0.7
+    assert not r["comparable"]
+    assert r["underspecified"]
+    assert not r["matching_requirements"]["satisfied"]
 
 
 def test_tinker_dapo_entry_is_corrected():
     e = entry("tinker_dapo_qwen3.5-4b_gsm8k")
     lf = e["min_report"]["loss_form"]
-    assert lf["clip_eps_low"] is None and lf["clip_eps_high"] is None
+    assert lf["clip_eps_low"] is None
+    assert lf["clip_eps_high"] is None
     assert lf["sampling_dynamic_filter"] is False
     assert lf["reward_shaping_type"] == "none"
     assert e["run_config"]["loss.clip"]["value"] == "advantage[-2,3]"
@@ -215,27 +277,106 @@ def test_generated_run_config_cells_are_wellformed():
 
 # ---------------------------------------------------------- CLI / generator
 def test_cli_runs_from_repo_root():
-    out = subprocess.run([sys.executable, "platform_hybrid/registry/query.py", "stackdiff",
-                          "colab-open_dapo_e3", "tinker_dapo_qwen3.5-4b_gsm8k"],
-                         cwd=REPO, capture_output=True, text=True, check=True).stdout
-    assert "verdict: R5" in out and "coverage:" in out
+    out = subprocess.run(
+        [
+            sys.executable,
+            "platform_hybrid/registry/query.py",
+            "stackdiff",
+            "colab-open_dapo_e3",
+            "tinker_dapo_qwen3.5-4b_gsm8k",
+        ],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    assert "verdict: R5" in out
+    assert "coverage:" in out
 
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="generator reads pinned git blobs")
-def test_generated_entries_are_up_to_date():
-    rc = subprocess.run([sys.executable, str(REG / "generate_entries.py"), "--check"],
-                        cwd=REPO, capture_output=True, text=True)
-    assert rc.returncode == 0, rc.stdout + rc.stderr
+def test_historical_entries_require_explicit_versioned_migration():
+    rc = subprocess.run(
+        [sys.executable, str(REG / "generate_entries.py"), "--check"],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+    )
+    # Historical artifacts are intentionally immutable during review fixes.
+    # Freshness must expose the old generator version rather than silently bless it.
+    assert rc.returncode == 1, rc.stdout + rc.stderr
+    assert "stale:" in rc.stdout, rc.stdout + rc.stderr
+
+
+def test_generated_entries_are_stable_after_regeneration(tmp_path, monkeypatch):
+    # Historical evidence is not rewritten as part of a code correction. Test
+    # idempotence and the real --check gate on a disposable reviewed projection.
+    sys.path.insert(0, str(REG))
+    import generate_entries as generator
+
+    specs = {**generator.fc_family(), **generator.h2h_family(), **generator.e3_family()}
+    for eid, spec in specs.items():
+        new = generator.build(eid, spec, entry(eid))
+        assert generator.build(eid, spec, new) == new
+        (tmp_path / f"{eid}.json").write_text(json.dumps(new))
+    monkeypatch.setattr(generator, "ENTRIES", tmp_path)
+    assert generator.main(["--check"]) == 0
+    broken = tmp_path / f"{next(iter(specs))}.json"
+    rec = json.loads(broken.read_text())
+    rec["notes"] = "stale"
+    broken.write_text(json.dumps(rec))
+    assert generator.main(["--check"]) == 1
 
 
 def test_identifier_annotations_and_aliases_do_not_count_as_differences():
-    a = stack(checkpoint__id=cell("Qwen/Qwen3-8B-base (shared harness)"), data__dataset=cell("gsm8k"))
+    a = stack(
+        checkpoint__id=cell("Qwen/Qwen3-8B-base (shared harness)"), data__dataset=cell("gsm8k")
+    )
     b = stack(checkpoint__id=cell("Qwen/Qwen3-8B-Base"), data__dataset=cell("openai/gsm8k:main"))
     assert q.stackdiff(a, b)["level"] == 0
 
 
 def test_exit_code_is_zero_by_default_and_level_with_flag():
-    args = [sys.executable, "platform_hybrid/registry/query.py", "stackdiff",
-            "tinker_grpo_qwen3-8b_gsm8k", "trl_grpo_qwen3-8b_gsm8k"]
+    args = [
+        sys.executable,
+        "platform_hybrid/registry/query.py",
+        "stackdiff",
+        "tinker_grpo_qwen3-8b_gsm8k",
+        "trl_grpo_qwen3-8b_gsm8k",
+    ]
     assert subprocess.run(args, cwd=REPO, capture_output=True).returncode == 0
     assert subprocess.run(args + ["--exit-level"], cwd=REPO, capture_output=True).returncode == 5
+
+
+# Exact frozen historical bytes, not a broad version/status exemption. Any new
+# generated record or modified historical entry must match the current generator.
+LEGACY_GENERATED_SHA256 = {
+    "tinker_grpo_qwen3-8b_gsm8k": "365eb44b9596284fa767132e8ee27955385a8e4f4606d34d330091f6269b729e",
+    "trl_grpo_qwen3-8b_gsm8k": "b591be7f8f7c249de22f07c75fba9f61340261d7836ac83063585ae5eeb9f2b4",
+    "verl_grpo_qwen3-8b_gsm8k": "a36d4d8bac19b72ade111aad0b9cd340beda479e57290d621281462e4905487a",
+    "openrlhf_grpo_qwen3-8b_gsm8k": "fe678327e148397c8493cd6255a0d978d4497c6c5fa94278ff0f51fff23210f0",
+    "tinker_grpo_qwen3.5-4b_gsm8k": "ead413f1269a5a6b28b72b9c5a820e1456800788f663111444f0cd219fe538e3",
+    "tinker_drgrpo_qwen3.5-4b_gsm8k": "317f1b40d3cbcb9fbe37fc3e6bf454695c56552a8d3d530657de55a969d47ab5",
+    "tinker_dapo_qwen3.5-4b_gsm8k": "8cd5ebfb8692a81ad359bf88ccfca1cfc8f25b357cfbc51d7105f326641b38d2",
+    "tinker_gspo_qwen3.5-4b_gsm8k": "b2acf6661ee05ce7786d2feb47c834f466e7393a48a9fb34dc10860301b06150",
+    "colab-open_grpo_e3": "76f429ce8546e3606f08884f9c1ca86bc5a97a70177a45df23579634ae543169",
+    "colab-open_drgrpo_e3": "259919882204fbcb1b5e8f5a5b3810e38cbce7abb7a99c7f97c525f83a973710",
+    "colab-open_dapo_e3": "7f32e97e7c7c00dce5c14592ca572d920172c0fbf243faed03ebc7e9a631885e",
+    "colab-open_grpo-adaptiveg_e3": "dc3b2eeefb4ca8b2ef421935a67f2bace1f1aedec6b0d756002fa8a692e8b24b",
+}
+
+
+def test_real_generated_registry_freshness_has_exact_legacy_exceptions():
+    import hashlib
+
+    sys.path.insert(0, str(REG))
+    import generate_entries as generator
+
+    specs = {**generator.fc_family(), **generator.h2h_family(), **generator.e3_family()}
+    for eid, spec in specs.items():
+        path = REG / "entries" / f"{eid}.json"
+        old = json.loads(path.read_text())
+        if generator.build(eid, spec, old) != old:
+            assert hashlib.sha256(path.read_bytes()).hexdigest() == LEGACY_GENERATED_SHA256.get(
+                eid
+            ), eid

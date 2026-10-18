@@ -35,6 +35,13 @@ trainer:
     advantage_estimator: "grpo"
     use_kl_loss: true
 
+  # Logging (same trainer mapping)
+  logger: "wandb"
+  project_name: "skyrl-colab"
+  run_name: "grpo-gsm8k"
+  resume_mode: "null"
+  ckpt_path: "./checkpoints/"
+
 # Data configuration
 data:
   train_data:
@@ -59,11 +66,3 @@ generator:
 # Environment
 environment:
   env_class: "gsm8k"
-
-# Logging
-trainer:
-  logger: "wandb"
-  project_name: "skyrl-colab"
-  run_name: "grpo-gsm8k"
-  resume_mode: "null"
-  ckpt_path: "./checkpoints/"

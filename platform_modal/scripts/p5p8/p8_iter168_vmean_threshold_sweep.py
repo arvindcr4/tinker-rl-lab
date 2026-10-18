@@ -49,7 +49,7 @@ from _p8_common import (  # noqa: E402
     downsample_positives,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 SEEDS = [20260706, 20260708, 20260710, 20260712, 20260714]
 K_PCT = 2.0
@@ -157,9 +157,9 @@ def main():
                         n_llm_only = c["n_llm_only"]
                         value_rate = n_lift / max(1, c["n_xgb_missed_pos"])
                         esc_prec = n_lift / max(1, n_lift + n_waste)
-                        esc_cost = (n_lift + n_waste) * cost_llm / max(1, n_lift)
+                        esc_cost = (n_lift + n_waste) * cost_llm / n_lift if n_lift else float("inf")
                         esc_value = n_lift * VALUE_PER_CATCH
-                        breakeven = esc_cost <= VALUE_PER_CATCH
+                        breakeven = n_lift > 0 and n_lift * VALUE_PER_CATCH >= (n_lift + n_waste) * cost_llm
                         matrix_rows.append({
                             "seed": seed,
                             "rate_pct": rate_pct,

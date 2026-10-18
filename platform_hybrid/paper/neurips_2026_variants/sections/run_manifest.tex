@@ -15,20 +15,15 @@
 \section{Run Manifest}
 \label{sec:run-manifest}
 
-This manifest summarises every (backend, model, task) cell in the benchmark
-at submission time, organised by evidence tier. Cells marked \textbf{A} have at
-least three completed seeds and support inference statistics. Cells marked
-\textbf{B} are single-seed completed runs and are reported descriptively only;
-where these single-seed runs are used as data points in within-task
-correlation analyses (e.g.\ the ZVF $N{=}7$ stratified Pearson on
-model-varying GSM8K), the cell carries a $\dagger$. Cells marked
-\textbf{C} failed, partially completed, or never started; we list
-them for honesty and exclude them from headline claims. ``Held-out'' indicates
-that a held-out test-split evaluation exists for at least one seed in that cell.
-``Logs'' indicates that step-level group reward traces are released.
-``Ckpt'' indicates that a usable LoRA checkpoint is released.
-``Reward'' is binary verifiable (BV), shaped (SH), or pairwise (PW). Raw
-step-level reward traces are released for every Tier-A and Tier-B row.
+This historical manifest records cells, not a reconciled corpus census.
+Its displayed run counts total 75, whereas earlier summaries said 79; no missing
+run identities are inferred. Tier A denotes completed multi-seed cells (at least
+three independent seeds at fixed configuration), B completed descriptive
+single-seed cells, and C failed, partial or unstarted cells. These labels do
+not by themselves authorize inference: task, endpoint and independence must
+also be verified. Backend access is a separate field. Configuration sweeps
+are not seed replication. Artifact checks are historical availability claims,
+not a certification that every current output is independently reproducible.
 
 \begin{table}[h]
 \centering\scriptsize
@@ -38,13 +33,13 @@ step-level reward traces are released for every Tier-A and Tier-B row.
 \toprule
 Tier & Backend & Model & Task & Split & N & Seeds & Steps$_{\max}$ & Reward & Held-out & Logs & Ckpt \\
 \midrule
-\multicolumn{12}{l}{\textit{Tier A --- multi-seed completed cells, used for inference statistics}} \\
+\multicolumn{12}{l}{\textit{Tier A --- multi-seed completed cells, replication metadata; inference requires eligibility}} \\
 \midrule
 A & Modal       & cleanrl-ppo               & math                & gen     & 5 & 5 & 97280  & BV & --- & \checkmark & --- \\
 A & Modal       & sb3-ppo                   & math                & gen     & 5 & 5 & 100352 & BV & --- & \checkmark & --- \\
 A & Modal       & tianshou-ppo              & math                & gen     & 5 & 5 & 100000 & BV & --- & \checkmark & --- \\
 A & Modal L4    & qwen2.5-0.5b              & math                & gen     & 5 & 5 & 125    & BV & --- & \checkmark & \checkmark \\
-A & Tinker      & qwen3-8b (Wave-6 ablation)& gsm8k               & train+held-out & 12 & 1 & 30 & BV & \checkmark & \checkmark & --- \\
+B & Tinker      & qwen3-8b (Wave-6: 12 configurations)& gsm8k               & train+held-out & 12 & 1 & 30 & BV & \checkmark & \checkmark & --- \\
 A & Tinker      & llama-3.3-70b-inst        & gsm8k               & train   & 4 & 4 & 30     & BV & --- & \checkmark & --- \\
 \midrule
 \multicolumn{12}{l}{\textit{Tier B --- single-seed completed Tinker case studies}} \\
@@ -102,11 +97,11 @@ C & Tinker      & qwen3.5-27b               & gsm8k (partial)     & train   & 1 
 \end{tabular}
 }
 \caption{Per-(backend, model, task) run manifest at submission time.
-Tier classification: \textbf{A}~$\geq3$ seeds completed (or, for the
-Wave-6 single-seed sensitivity ablation, $\geq12$ runs at fixed seed
-sweeping a hyperparameter), used for inference; \textbf{B}~single seed
-completed, used descriptively; \textbf{C}~failed, partial, or not
-started, listed for honesty. Rows marked $\dagger$ in the Tinker case-study
+Tier classification: \textbf{A}~at least three independent seeds at fixed
+configuration, completed; \textbf{B}~completed single-seed observations,
+including Wave-6 (12 configurations $\times$ one seed), descriptive only;
+\textbf{C}~failed, partial, or unstarted. A is replication metadata, not an
+automatic inferential license. Backend openness is reported separately. Rows marked $\dagger$ in the Tinker case-study
 block are the seven single-seed Tinker GSM8K cells used as data points in
 the ZVF model-varying within-task stratified Pearson ($N{=}7$,
 Section~\ref{sec:zvf-analysis} of the ZVF variant); the additional

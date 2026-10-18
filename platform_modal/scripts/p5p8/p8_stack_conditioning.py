@@ -37,10 +37,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 TRAIN = ROOT / "fraud_data.csv"
 TEST = ROOT / "test_data.csv"
-OUT = ROOT / "experiments" / "results" / "p5p8"
+OUT = ROOT / "experiments" / "results" / "p5p8/corrected-review21-v2"
 FIG = OUT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)

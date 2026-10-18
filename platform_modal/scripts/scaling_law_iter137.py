@@ -78,11 +78,10 @@ from scipy.optimize import curve_fit  # noqa: E402
 from scipy.stats import mannwhitneyu, spearmanr  # noqa: E402
 from _analysis_common import ols
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-FIG_DIR.mkdir(exist_ok=True)
+RESULTS_DIR = REPO / "experiments" / "results" / "review26_v2"
+FIG_DIR = REPO / "figures" / "review26_v2"
 
 MODELS: dict[str, tuple[str, float, str, str]] = {
     # name               : (trace_file,                       params_B, family, capability)
@@ -133,8 +132,9 @@ def fit_2p(t: np.ndarray, y: np.ndarray) -> dict:
         r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
         lam_at_bound = int(lam >= 9.999)
     except Exception:  # noqa: BLE001
-        r_max, lam, rmse, r2 = float("nan"), float("nan"), float("nan"), float("nan")
-        lam_at_bound = 1
+        return dict(R_max=float("nan"), lam=float("nan"), t_80=float("nan"),
+                    rmse=float("nan"), r2=float("nan"), lam_at_bound=1,
+                    aicc=float("nan"), status="fit_failed")
     t_80 = float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
     # AICc (Gaussian residual assumption)
     k = 2
@@ -145,7 +145,7 @@ def fit_2p(t: np.ndarray, y: np.ndarray) -> dict:
     aic = 2 * k - 2 * ll
     aicc = aic + (2 * k * (k + 1)) / max(n - k - 1, 1)
     return dict(R_max=r_max, lam=lam, t_80=t_80, rmse=rmse, r2=r2,
-                lam_at_bound=lam_at_bound, aicc=aicc)
+                lam_at_bound=lam_at_bound, aicc=aicc, status="available")
 
 
 def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
@@ -163,7 +163,7 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
     best = None
     for p0 in starts:
         try:
-            popt, _ = curve_fit(
+            popt, pcov = curve_fit(
                 saturation_3p, t, y,
                 p0=p0,
                 bounds=([0.0, 0.0, 1e-4], [1.0, 1.05, 10.0]),
@@ -179,7 +179,10 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
             rmse = float(math.sqrt(np.mean(resid ** 2)))
             ss_tot = float(np.sum((y - y.mean()) ** 2))
             r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
-            lam_at_bound = int(lam >= 9.999)
+            lam_at_bound = int(lam >= 9.999 or lam <= 1.001e-4)
+            covariance_condition = float(np.linalg.cond(pcov)) if np.isfinite(pcov).all() else float("inf")
+            identifiable = bool(covariance_condition < 1e10 and not lam_at_bound
+                                and abs(r_max - c) > 1e-4 and n > 4)
             k = 3
             if ss_res > 0:
                 ll = -n / 2.0 * (math.log(2 * math.pi) + 1 + math.log(ss_res / n))
@@ -188,6 +191,7 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
             aic = 2 * k - 2 * ll
             aicc = aic + (2 * k * (k + 1)) / max(n - k - 1, 1)
             cand = dict(c=c, R_max=r_max, lam=lam, rmse=rmse, r2=r2,
+                        identifiable=identifiable, covariance_condition=covariance_condition,
                         lam_at_bound=lam_at_bound, aicc=aicc)
             if best is None or cand["rmse"] < best["rmse"]:
                 best = cand
@@ -196,7 +200,7 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
     if best is None:
         return dict(c=float("nan"), R_max=float("nan"), lam=float("nan"),
                     rmse=float("nan"), r2=float("nan"), lam_at_bound=1,
-                    aicc=float("nan"))
+                    aicc=float("nan"), t_80=float("nan"), identifiable=False, covariance_condition=float("inf"))
     # t_80_offset: time to reach R_max - 0.2*(R_max - c).
     # Solving R(t) = R_max - 0.2*(R_max - c)
     #   c + (R_max - c)(1 - e^-lt) = R_max - 0.2*(R_max - c)
@@ -205,11 +209,20 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
     #   t = -ln(0.2) / lambda = same as iter117!
     lam = best["lam"]
     t_80 = float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
-    best["t_80"] = t_80
+    best["t_80"] = t_80 if best["identifiable"] else float("nan")
     return best
 
 
+def comparison_winner(fit_2p, fit_3p):
+    """A failed comparator cannot win through the false branch of NaN < x."""
+    if not all(np.isfinite(f["aicc"]) for f in (fit_2p, fit_3p)):
+        return "not_evaluable"
+    return "3p" if fit_3p["aicc"] < fit_2p["aicc"] else "2p"
+
+
 def main() -> None:
+    FIG_DIR.mkdir(parents=True, exist_ok=True)
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     # ------------------------------------------------------------------
     # Load per-step reward traces (same source as iter117).
     # ------------------------------------------------------------------
@@ -276,6 +289,7 @@ def main() -> None:
             f"{f3['aicc']:.2f}",
             # comparison
             f"{delta_rmse:+.4f}", f"{delta_aicc:+.2f}", f"{t80_ratio:.4f}",
+            f3["identifiable"], f3["covariance_condition"],
         ])
     cols = [
         "model", "params_B", "family", "capability", "n_steps",
@@ -285,6 +299,7 @@ def main() -> None:
         "c_3p", "R_max_3p", "lambda_3p", "t80_3p", "rmse_3p", "r2_3p",
         "lam_at_bound_3p", "aicc_3p",
         "delta_rmse_3p_minus_2p", "delta_aicc_3p_minus_2p", "t80_ratio_3p_over_2p",
+        "identifiable_screen", "covariance_condition",
     ]
     out_path = RESULTS_DIR / "scaling_law_iter137_offset_fit.tsv"
     with out_path.open("w", newline="") as f:
@@ -301,11 +316,11 @@ def main() -> None:
     for name in MODELS:
         f2 = fits_2p[name]
         f3 = fits_3p[name]
-        wins_3p = f3["aicc"] < f2["aicc"]
+        winner = comparison_winner(f2, f3)
         aic_rows.append([
             name, f"{f2['aicc']:.2f}", f"{f3['aicc']:.2f}",
             f"{f3['aicc'] - f2['aicc']:.2f}",
-            "3p" if wins_3p else "2p",
+            winner,
         ])
     # Summary row: how many anchors prefer 3p?
     n_3p_wins = sum(1 for r in aic_rows if r[4] == "3p")
@@ -331,7 +346,8 @@ def main() -> None:
     log_t80_2p = np.array([
         math.log10(max(fits_2p[n]["t_80"], 1e-3)) for n in MODELS
     ], dtype=float)
-    a_3p, b_3p, se_3p = ols(log_n, log_t80_3p)
+    eligible = np.isfinite(log_t80_3p)
+    a_3p, b_3p, se_3p = ols(log_n[eligible], log_t80_3p[eligible])
     a_2p, b_2p, se_2p = ols(log_n, log_t80_2p)
     # R_max vs N
     r_max_3p = np.array([fits_3p[n]["R_max"] for n in MODELS], dtype=float)
@@ -342,7 +358,7 @@ def main() -> None:
     a_c, b_c, se_c = ols(log_n, c_3p)
     # lambda vs N
     lam_3p = np.array([fits_3p[n]["lam"] for n in MODELS], dtype=float)
-    a_lam, b_lam, se_lam = ols(log_n, lam_3p)
+    a_lam, b_lam, se_lam = ols(log_n[eligible], lam_3p[eligible])
     # Capability-class Spearman rho(R_max, log10(N))
     rho_r, p_r = spearmanr(log_n, r_max_3p)
     t80_rows: list[list] = []
@@ -354,7 +370,7 @@ def main() -> None:
     t80_rows.append([
         "log10(t80) ~ log10(N) | 3p", f"{a_3p:.4f}", f"{b_3p:.4f}", f"{se_3p:.4f}",
         f"{(b_3p / se_3p) if se_3p > 0 else float('nan'):.4f}",
-        "all 5 anchors informative (3p un-binds lambda)",
+        "Only covariance-conditioned, non-bound fits are eligible; offset does not identify lambda",
     ])
     t80_rows.append([
         "R_max ~ log10(N) | 3p", f"{a_rmax:.4f}", f"{b_rmax:.4f}", f"{se_rmax:.4f}",
@@ -537,21 +553,10 @@ def main() -> None:
             "scale-significance remains untestable at n=5."
         ),
         frontier_synthesis=(
-            "iter137 Pillar 1 sharpens the iter117 'no scaling law' verdict "
-            "in a way that iter117 alone could not: removing the R(0)=0 "
-            "boundary condition via the 3-param offset model (a) un-binds "
-            "lambda on every anchor (0/5 anchored at bound, down from 4/5), "
-            "(b) still loses to 2-param by AICc on 5/5 anchors (so the "
-            "saturation family is not the right model class), (c) produces "
-            "a real but UNDERPOWERED cross-scale slope (log t_80 ~ log N: "
-            f"slope={b_3p:.3f}, SE={se_3p:.3f}, t={b_3p/se_3p:.2f}; R_max ~ "
-            f"log N: slope={b_rmax:.3f}, SE={se_rmax:.3f}, t={b_rmax/se_rmax:.2f}), "
-            "and (d) preserves the iter133 capability-class axis. The "
-            "sharpest single sentence: GRPO saturation is real (capable "
-            "anchors have R_max > 0.8, incapable have R_max < 0.3) but its "
-            "t_80, lambda, and R_max do not scale with N on this evidence "
-            "base even when the boundary-condition pathology is removed. "
-            "The cross-scale law is ABSENT in two model classes, not one."
+            "Exploratory protocol review26_v2. Outcome-selected clusters and pair-violation "
+            "counts are descriptive, not independent inferential evidence. Synthetic "
+            "recovery assesses direct regression only; offset fitting does not establish "
+            "identifiability. Historical fixed conclusions are superseded."
         ),
     )
     meta_path = RESULTS_DIR / "scaling_law_iter137_meta.json"

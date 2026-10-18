@@ -1,20 +1,11 @@
-"""Iter 138 (Berkeley SP25 L2 — Weston; DPO, Iterative RPO, Chain-of-Verification):
-sharpen the Pillar 3 'GRPO is secretly DPO' claim by showing Iterative RPO is
-exactly GRPO-with-DPO-loss applied to per-prompt winning/losing CoT pairs.
+"""DPO/GRPO v2: local gradient relationship and explicitly unmeasured IRPO hypotheses.
 
-Verified citations (no fabrication):
-- DPO: Rafailov et al. 2023, arXiv:2305.18290, NeurIPS 2023.
-- Iterative Reasoning Preference Optimization (Iterative RPO): Pang, Yuan,
-  Cho, He, Sukhbaatar, Weston (Meta/NYU), 2024, arXiv:2404.19733.
-- Chain-of-Verification: Dhuliawala, Komeili, Xu, Raileanu, Li, Celikyilmaz,
-  Weston (Meta), 2023, arXiv:2309.11495.
-- Tulu 3: Lambert et al. (AI2), 2024, arXiv:2411.15124 (DPO + RLVR).
-
-Reads iter115 + iter123 + iter127 Pillar 3 evidence; writes 4 TSVs to
-platform_hybrid/experiments/results/berkeley/. No new training; re-analysis only.
+A shared winner/loser construction does not imply objective, trajectory or
+optimal-group-size equivalence. These are retrospective/theoretical diagnostics.
 """
 
 import json
+import csv
 import math
 from pathlib import Path
 import sys
@@ -22,10 +13,15 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from _analysis_common import read_tsv_lines as _read_tsv
 
-ROOT = Path(__file__).resolve().parents[2]
-RESULTS = ROOT / "experiments" / "results"
-OUT = RESULTS / "berkeley"
-OUT.mkdir(parents=True, exist_ok=True)
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT, RESULTS_DIR
+from _review01_contracts import OUTPUT_ROOT, evidence_metadata, require_inputs, write_artifact_metadata, json_ready
+ROOT = WORKTREE = REPO_ROOT
+RES = RESULTS = RESULTS_DIR
+OUT = OUTPUT_ROOT / "dpo_iterative_rpo_vs_grpo"
+
 
 # Input TSVs
 ZVFLINK = RESULTS / "group_size_iter115_zvf_linkage.tsv"
@@ -175,267 +171,78 @@ def load_bounded():
     return out
 
 
+
 def dpo_implicit_reward_equivalence():
-    """Section A: Iterative RPO loss reduces to GRPO policy-gradient with a
-    sigmoid weighting when the prompt has exactly one winner and one loser.
-
-    For each prompt with G samples:
-      GRPO advantage  A_i = (r_i - mu_g) / sigma_g
-      Iterative-RPO winner-vs-loser: log sigmoid(beta * (d_w - d_l))
-        where d_x = log(pi_theta(y_x|x) / pi_ref(y_x|x))
-    Both are monotone functions of the within-group reward contrast; both
-    vanish when the group is all-correct or all-wrong.
-
-    Output: per-T retention table under both framings.
-    """
-    zvf = load_zvflink()
-    out = []
-    for row in zvf:
-        T = row["T"]
-        R = row["retention"]
-        GU_ratio = row["GU_ratio"]
-        # GU_ratio = (1 - ZVF_G4) / (1 - ZVF_G32) ; >1 means G=4 preserves more
-        # useful contrast-yield per step. Iterative RPO needs at least one
-        # winner-loser pair per prompt per round -> requires 1 - ZVF > 0.
-        irpo_feasible = GU_ratio > 1.0  # G=4 has strictly more signal/pair
-        out.append({
-            "T": T,
-            "acc_G4": row["acc_G4"],
-            "acc_G32": row["acc_G32"],
-            "retention_G4_over_G32": R,
-            "GU_ratio": GU_ratio,
-            "iterative_rpo_feasible_at_G4": irpo_feasible,
-            "iterative_rpo_feasible_at_G32": True,  # G=32 always has 0.42-0.88 > 0
-            "note": "GRPO/Iterative-RPO both need within-group contrast; G=4 has 4-5x more contrast-yield per prompt, but G=32 wins on absolute accuracy once retention matters.",
-        })
-    return out
+    """Report observed contrast yield; ratios cannot establish usable pair counts."""
+    return [{**row, "iterative_rpo_feasible_at_G4": None,
+             "iterative_rpo_feasible_at_G32": None,
+             "status": "unmeasured_hypothesis",
+             "note": "Actual usable-group or winner-loser-pair counts are required; yield ratio is not feasibility"}
+            for row in load_zvflink()]
 
 
 def snr_scaling_validation():
-    """Section B: Iterative RPO with G candidates has SNR scaling
-    proportional to sqrt(G) (number of contrast pairs). GRPO has the same.
-
-    The repo's iter123 noise-mechanism measurement gave slope=+0.366/decade
-    [0.148, 0.583], 95%CI includes the theoretical +0.500. This validates
-    the GRPO=Iterative-RPO-with-binary-rewards equivalence at the variance
-    level: doubling G buys ~30-40% more SNR per decade of G.
-    """
-    snr = load_snr_scaling()
-    return {
-        "n_G": snr["n_G"],
-        "empirical_slope_per_decade_G": snr["slope"],
-        "ci95_lo": snr["ci_lo"],
-        "ci95_hi": snr["ci_hi"],
-        "R_squared": snr["R2"],
-        "p_value": snr["p"],
-        "theoretical_slope_sqrt_G": snr["theoretical"],
-        "slope_in_ci_of_theory": (snr["ci_lo"] <= snr["theoretical"] <= snr["ci_hi"]),
-        "at_G_pred_vs_emp": snr["at_G"],
-        "interpretation": "slope=+0.366 is 0.27 sigma below the GRPO/Iterative-RPO theoretical +0.500; consistent with theory at p=0.30 tolerance. Empirically doubling G buys 2^(0.366)=29% more SNR per doubling.",
-    }
-
-
-def irpo_optimal_g_vs_iter127():
-    """Section C: Iterative RPO's optimal G (from the iter127 G*(T) rule)
-    matches the GRPO optimum, with a 1-step offset because Iterative RPO
-    only needs 1 contrast pair per prompt (G=2 is the floor; G=32 saturates
-    at T=64M).
-
-    Use the iso-acc table at T=64M to derive Iterative RPO's effective G*
-    (the G that achieves a target accuracy with the minimum contrast pairs).
-    """
-    iso = load_iso_reward()
-    optimal = load_optimal_g()
-
-    # The iter127 G*(T) curve: T=1M -> G*=8, T=4M -> G*=16, T>=16M -> G*=32
-    # In Iterative RPO terms: each round needs >=1 contrast pair; the
-    # achievable acc(G=2) is limited by ZVF(G=2) on hard prompts.
-    # Equivalently: Iterative RPO is GRPO where the loss is DPO+NLL but
-    # the data-construction is identical. So G*_IRPO == G*_GRPO.
-    out = []
-    for T, gstar in optimal.items():
-        out.append({
-            "T": T,
-            "GRPO_optimal_G": gstar,
-            "Iterative_RPO_optimal_G": gstar,  # same data construction
-            "rationale": "Iterative RPO draws G candidates per prompt and labels winner/loser by correctness; GRPO does the same with a group-mean baseline; both need the same number of within-group contrasts to escape ZVF.",
-            "IrPO_uses_DPO_loss": True,
-            "IrPO_uses_NLL_term": True,
-        })
-    return out
-
-
-def dpo_loss_vs_grpo_loss():
-    """Section D: Show the connection between GRPO policy gradient and DPO
-    loss on a binary-reward within-group pair.
-
-    GRPO loss per sample (in expectation):
-        L_GRPO = -E_i [ A_i * log pi_theta(y_i|x) ]
-              = -E_i [ ((r_i - mu_g) / sigma_g)) * log pi_theta(y_i|x) ]
-
-    For one winner (r=1) and one loser (r=0) within the same group,
-    mu_g = 0.5 and sigma_g = 0.5, so A_w = +1, A_l = -1.
-        L_GRPO_pair = -log pi_theta(y_w|x) + log pi_theta(y_l|x)
-                   = log(pi_theta(y_l|x) / pi_theta(y_w|x))
-
-    DPO loss on the same pair (with beta -> 0, no KL regularization):
-        L_DPO_pair = -log sigmoid(beta * (log pi_theta(y_w) - log pi_theta(y_l)
-                                          - log pi_ref(y_w)   + log pi_ref(y_l)))
-    Under pi_ref = pi_theta (online setting), the implicit reward difference
-    vanishes and thegradient of L_DPO matches L_GRPO_pair.
-
-    So GRPO on a single winner-loser pair IS the small-beta, no-KL limit of
-    DPO. The full DPO objective (with KL) is the regularized version.
-    """
-    out = []
-    out.append({
-        "setting": "single (winner,loser) pair within a group of G=2",
-        "GRPO_loss_form": "-log pi(y_w) + log pi(y_l)  (A_w=+1, A_l=-1)",
-        "DPO_loss_form": "-log sigmoid(beta*(log(pi(y_w)/pi_ref(y_w)) - log(pi(y_l)/pi_ref(y_l))))",
-        "match": "small-beta, pi_ref==pi_theta (online), no KL: DPO gradient = GRPO gradient",
-        "interpretation": "GRPO with G=2 is the no-KL, online limit of DPO; GRPO with G>2 is a multi-pair batched DPO loss with group-mean centering instead of pair-wise sigmoid.",
-    })
-    out.append({
-        "setting": "Iterative RPO with self-sampled CoTs (Pang et al. 2024)",
-        "loss_form": "L_IRPO = L_DPO + alpha * NLL(y_w)  (with KL via pi_ref)",
-        "GRPO_counterpart": "L_GRPO+replay = L_GRPO + beta * NLL(y_winning)",
-        "match": "NLL term on winning traces is identical; Iterative RPO's pi_ref (the SFT model) plays the same anchoring role as the GRPO reference policy.",
-        "interpretation": "Iterative RPO is GRPO with the per-sample policy-gradient loss replaced by the DPO pair-loss. The performance gap (if any) is purely from the loss-function shape, not from the data-construction.",
-    })
-    return out
+    """Reported GRPO slope diagnostics, with no inference about unmeasured IRPO."""
+    source = load_snr_scaling()
+    available = all(source[key] is not None for key in ["ci_lo", "ci_hi", "theoretical"])
+    return {**source, "slope_in_ci_of_theory": source["ci_lo"] <= source["theoretical"] <= source["ci_hi"] if available else None,
+            "interpretation": "Descriptive interval containment is not objective or algorithm equivalence"}
 
 
 def write_tsv(path, rows, header):
-    with open(path, "w") as f:
-        f.write("\t".join(header) + "\n")
-        for r in rows:
-            f.write("\t".join(str(r.get(k, "")) for k in header) + "\n")
+    with Path(path).open("w") as stream:
+        writer = csv.DictWriter(stream, fieldnames=header, delimiter="\t", extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def irpo_optimal_g_vs_iter127():
+    return [{"T": budget, "GRPO_optimal_G": size, "Iterative_RPO_optimal_G": None,
+             "status": "unmeasured_hypothesis",
+             "rationale": "No IRPO training comparison was performed"}
+            for budget, size in load_optimal_g().items()]
+
+
+def dpo_pair_gradient_scale(beta, log_ratio_difference):
+    """Scale multiplying gradient of the unaveraged pair loss -D, frozen ref."""
+    if beta <= 0:
+        raise ValueError("beta must be positive")
+    z = beta * log_ratio_difference
+    return beta * (math.exp(-z)/(1+math.exp(-z)) if z >= 0 else 1/(1+math.exp(z)))
+
+
+def dpo_loss_vs_grpo_loss():
+    return [{"setting": "one winner-loser pair; frozen reference snapshot equals current policy",
+             "GRPO_loss_form": "-D (unaveraged pair, population-SD advantages +1,-1)",
+             "DPO_loss_form": "-log sigmoid(beta * (D-D_ref))",
+             "gradient_scale_at_snapshot": "beta/2 relative to -D",
+             "general_gradient_scale": "beta * sigmoid(-beta*(D-D_ref))",
+             "match": "Aligned local update directions only, after scale and loss normalization",
+             "interpretation": "No trajectory or optimal group-size equivalence. Differentiably tied reference gives zero gradient. Unscaled gradient tends to zero as beta tends to zero."}]
 
 
 def main():
-    # ---- Section A: DPO implicit reward equivalence ----
-    sec_a = dpo_implicit_reward_equivalence()
-    header_a = ["T", "acc_G4", "acc_G32", "retention_G4_over_G32", "GU_ratio",
-                "iterative_rpo_feasible_at_G4", "iterative_rpo_feasible_at_G32", "note"]
-    write_tsv(OUT / "dpo_iterative_rpo_grpo_equivalence.tsv", sec_a, header_a)
-
-    # ---- Section B: SNR scaling validation ----
-    sec_b = snr_scaling_validation()
-    header_b = ["n_G", "empirical_slope_per_decade_G", "ci95_lo", "ci95_hi",
-                "R_squared", "p_value", "theoretical_slope_sqrt_G",
-                "slope_in_ci_of_theory", "at_G_pred_vs_emp",
-                "interpretation"]
-    # Pack the at_G dict into a single printable string
-    row_b = dict(sec_b)
-    row_b["at_G_pred_vs_emp"] = "; ".join(
-        f"G={g}: pred={p:.3f}, emp={e:.3f}" for g, (p, e) in sec_b["at_G_pred_vs_emp"].items()
-    )
-    write_tsv(OUT / "dpo_iterative_rpo_snr_scaling.tsv", [row_b], header_b)
-
-    # ---- Section C: Iterative RPO optimal G vs iter127 G*(T) ----
-    sec_c = irpo_optimal_g_vs_iter127()
-    header_c = ["T", "GRPO_optimal_G", "Iterative_RPO_optimal_G", "rationale",
-                "IrPO_uses_DPO_loss", "IrPO_uses_NLL_term"]
-    write_tsv(OUT / "dpo_iterative_rpo_optimal_g.tsv", sec_c, header_c)
-
-    # ---- Section D: DPO loss vs GRPO loss formal equivalence ----
-    sec_d = dpo_loss_vs_grpo_loss()
-    header_d = ["setting", "GRPO_loss_form", "DPO_loss_form", "match", "interpretation"]
-    write_tsv(OUT / "dpo_iterative_rpo_loss_equivalence.tsv", sec_d, header_d)
-
-    # ---- Summary ----
-    summary = {
-        "pillar": "B-SP25 (Berkeley SP25 L2 — Weston; DPO / Iterative RPO / Chain-of-Verification)",
-        "verified_citations": [
-            "DPO: Rafailov et al. 2023, arXiv:2305.18290, NeurIPS 2023.",
-            "Iterative RPO: Pang, Yuan, Cho, He, Sukhbaatar, Weston 2024, arXiv:2404.19733.",
-            "Chain-of-Verification: Dhuliawala, Komeili, Xu, Raileanu, Li, Celikyilmaz, Weston 2023, arXiv:2309.11495.",
-            "Tulu 3: Lambert et al. (AI2) 2024, arXiv:2411.15124.",
-        ],
-        "headline_claim": (
-            "GRPO with G samples per prompt and binary reward is exactly the small-beta, no-KL, "
-            "online limit of DPO applied to (G choose 2) winner-loser pairs. Iterative RPO "
-            "(Pang et al. 2024) is the natural specialization of this construction to chain-of-thought "
-            "reasoning: sample G CoTs, label by correctness, fit DPO+NLL. The repo's Pillar 3 evidence "
-            "(iter115 retention, iter127 joint fit, iter123 SNR slope) confirms the formal equivalence "
-            "empirically."
-        ),
-        "section_A_finding": (
-            "G=4 has 4-5x more contrast-yield per prompt than G=32 (GU_ratio 4.15-5.03), but G=32 "
-            "wins on absolute accuracy once T >= 4M tokens. Both Iterative RPO and GRPO need the "
-            "same G* to escape the within-group contrast collapse (ZVF); G=4 fails at T >= 4M "
-            "because the absolute reward signal is too low (acc(G=4, T=4M) = 0.55)."
-        ),
-        "section_B_finding": (
-            "Empirical SNR slope in G is +0.366 per decade of G (95% CI [+0.148, +0.583]); "
-            "theoretical slope from sqrt(G) is +0.500. CI contains theory at p=0.30 tolerance. "
-            "This is the GRPO=Iterative-RPO equivalence at the variance level."
-        ),
-        "section_C_finding": (
-            "Iterative RPO's optimal G == GRPO's optimal G at every T (G*=8,16,32,32 for "
-            "T=1M,4M,16M,64M). The shared data-construction makes the two algorithms "
-            "loss-function-equivalent on the same rollout set."
-        ),
-        "section_D_finding": (
-            "On a single winner-loser pair within a G=2 group, GRPO loss equals the small-beta, "
-            "no-KL, online limit of DPO loss. Iterative RPO's full objective (DPO + NLL on winners) "
-            "corresponds to GRPO+replay (group-mean baseline + SFT-loss on winning trajectories)."
-        ),
-        "recommendation": (
-            "GO. Pillar 3 should explicitly cite Iterative RPO (Pang et al. 2024) as the "
-            "DPO-loss counterpart of the GRPO group-mean construction, and re-state the "
-            "G*(T) rule in DPO language: 'G* is the smallest group size such that the per-prompt "
-            "winner-loser pair is recoverable above the within-group noise floor.' The repo's "
-            "iter115 + iter127 evidence already supports this framing."
-        ),
-        "evidence_files": [
-            "platform_hybrid/experiments/results/group_size_iter115_zvf_linkage.tsv",
-            "platform_hybrid/experiments/results/group_size_iter127_joint_fit.tsv",
-            "platform_hybrid/experiments/results/group_size_iter127_optimal_g.tsv",
-            "platform_hybrid/experiments/results/group_size_iter123_iso_reward.tsv",
-            "platform_hybrid/experiments/results/group_size_iter123_noise_mech.tsv",
-            "platform_hybrid/experiments/results/group_size_iter123_effect_size.tsv",
-        ],
-        "prototype_outputs": [
-            "platform_hybrid/experiments/results/berkeley/dpo_iterative_rpo_grpo_equivalence.tsv",
-            "platform_hybrid/experiments/results/berkeley/dpo_iterative_rpo_snr_scaling.tsv",
-            "platform_hybrid/experiments/results/berkeley/dpo_iterative_rpo_optimal_g.tsv",
-            "platform_hybrid/experiments/results/berkeley/dpo_iterative_rpo_loss_equivalence.tsv",
-        ],
-    }
-    with open(OUT / "dpo_iterative_rpo_summary.json", "w") as f:
-        json.dump(summary, f, indent=2)
-
-    # ---- Print summary ----
-    print("== Section A: DPO/Iterative-RPO GRPO equivalence (per T) ==")
-    for r in sec_a:
-        print(f"  T={r['T']:>10,}  acc_G4={r['acc_G4']:.2f}  acc_G32={r['acc_G32']:.2f}  "
-              f"retention={r['retention_G4_over_G32']:.4f}  GU_ratio={r['GU_ratio']:.2f}")
-
-    print("\n== Section B: SNR scaling in G ==")
-    print(f"  empirical slope = +{sec_b['empirical_slope_per_decade_G']:.3f}/decade, "
-          f"95% CI [{sec_b['ci95_lo']:.3f}, {sec_b['ci95_hi']:.3f}], R^2={sec_b['R_squared']:.3f}")
-    print(f"  theoretical slope (sqrt G) = +{sec_b['theoretical_slope_sqrt_G']:.3f}/decade")
-    print(f"  CI contains theory? {sec_b['slope_in_ci_of_theory']}")
-
-    print("\n==Section C: Iterative RPO optimal G vs iter127 G*(T) ==")
-    for r in sec_c:
-        print(f"  T={r['T']:>10,}  G*_GRPO={r['GRPO_optimal_G']}  G*_Iterative_RPO={r['Iterative_RPO_optimal_G']}")
-
-    print("\n== Section D: loss-function equivalence ==")
-    for r in sec_d:
-        print(f"  setting: {r['setting']}")
-        # the dict has GRPO_loss_form + DPO_loss_form for row 0; the second
-        # row uses loss_form + GRPO_counterpart. Print whatever's there.
-        keys = list(r.keys())
-        print(f"    keys: {keys}")
-        for k, v in r.items():
-            if k == "setting":
-                continue
-            print(f"    {k}: {v}")
-
-    print("\nWrote 4 TSVs + 1 JSON summary to platform_hybrid/experiments/results/berkeley/")
+    inputs = [ZVFLINK, OPTG, NOISE]
+    require_inputs(*inputs)
+    summary = {**evidence_metadata("frozen_reference_pair_gradient_identity_and_unmeasured_IRPO_hypotheses", inputs),
+               "contrast_yield": dpo_implicit_reward_equivalence(),
+               "optimal_group_sizes": irpo_optimal_g_vs_iter127(),
+               "loss_relationship": dpo_loss_vs_grpo_loss(),
+               "grpo_snr_source": snr_scaling_validation(),
+               "headline_claim": "A frozen equal reference aligns one-pair local directions up to beta/2 scaling; objective and trajectory equivalence are not established",
+               "IRPO_comparison_status": "unmeasured_hypothesis"}
+    OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / "dpo_iterative_rpo_summary.json").write_text(json.dumps(json_ready(summary), indent=2, allow_nan=False) + "\n")
+    for name, rows in [
+        ("dpo_iterative_rpo_grpo_equivalence.tsv", summary["contrast_yield"]),
+        ("dpo_iterative_rpo_snr_scaling.tsv", [summary["grpo_snr_source"]]),
+        ("dpo_iterative_rpo_optimal_g.tsv", summary["optimal_group_sizes"]),
+        ("dpo_iterative_rpo_loss_equivalence.tsv", summary["loss_relationship"]),
+    ]:
+        write_tsv(OUT/name, rows, list(rows[0]) if rows else ["status"])
+    write_artifact_metadata(OUT, {key: summary[key] for key in ["protocol", "evidence_type", "analysis_method", "inputs", "confirmatory"]})
+    return summary
 
 
 if __name__ == "__main__":
-    main()
+    print(json.dumps(main(), indent=2))

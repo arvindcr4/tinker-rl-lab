@@ -27,7 +27,7 @@ Per-method metrics (n=4 methods × 40 steps = 160 step-units):
   savings_vs_C0   (total_G_C0 - total_G_Ci) / total_G_C0
   n_fire          number of steps with G_t != 8
   select_rate     n_fire / 40
-  headroom_bad    steps fired on zvf >= 0.99 (saturated, no escalation value)
+  headroom_bad    steps escalated above baseline on zvf >= 0.99 (saturated, no escalation value)
 
 Statistical rigor:
   - Per-method total_G (point estimate; n=40 steps too few to bootstrap).
@@ -50,6 +50,7 @@ Outputs (worktree-relative paths):
 """
 from __future__ import annotations
 import csv
+import math
 import json
 import random
 import statistics
@@ -60,9 +61,9 @@ from _p5p7_common import c3_hybrid
 # ----------------------------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 N2_DIR = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
-OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v5"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 TAU = 0.7           # primary zvf-triage threshold
@@ -92,7 +93,12 @@ def load_n2_methods() -> list[dict]:
                 rows.append(d)
         if len(rows) != N_STEPS:
             continue
-        zvfs = [float(d.get("zvf", 0.0)) for d in rows]
+        zvfs = []
+        for row in rows:
+            value = row.get("zvf")
+            if value is None or not math.isfinite(float(value)) or not 0 <= float(value) <= 1:
+                raise ValueError(f"{path}: missing or invalid ZVF")
+            zvfs.append(float(value))
         out.append({"method": method, "zvfs": zvfs})
     return out
 
@@ -120,7 +126,7 @@ def metrics(G_t: list[int], z: list[float]) -> dict:
     total = sum(G_t)
     n_fire = sum(1 for g in G_t if g != G_BASE)
     sel = n_fire / n
-    headroom_bad = sum(1 for g, zt in zip(G_t, z) if g != G_BASE and zt >= 0.99)
+    headroom_bad = sum(1 for g, zt in zip(G_t, z) if g > G_BASE and zt >= 0.99)
     sat_band_fired = sum(1 for g, zt in zip(G_t, z) if g != G_BASE and zt >= SATURATION_THRESHOLD)
     return {
         "total_G": total,
@@ -320,8 +326,8 @@ def main() -> None:
         summary["per_controller_pooled"][ctrl_name] = {
             "n_step_units": len(pooled_per_step[ctrl_name]),
             "mean_G_t": ci["mean"],
-            "mean_G_t_lo": ci["lo"] / N_STEPS,  # per-method total_G mean from per-step CI sum / 40
-            "mean_G_t_hi": ci["hi"] / N_STEPS,
+            "mean_G_t_lo": ci["lo"] / len(pooled_per_step[ctrl_name]),  # pooled mean uses actual sample count
+            "mean_G_t_hi": ci["hi"] / len(pooled_per_step[ctrl_name]),
             "total_G_pooled": ci["sum"],
             "total_G_pooled_lo": ci["lo"],
             "total_G_pooled_hi": ci["hi"],

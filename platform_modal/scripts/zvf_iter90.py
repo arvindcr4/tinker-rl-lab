@@ -30,9 +30,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-ROOT = Path(__file__).resolve().parent.parent
-SRC  = ROOT / "experiments" / "results" / "variance_mitigation.tsv"
-OUT  = ROOT / "experiments" / "results"
+ROOT = Path(__file__).resolve().parents[2]
+SRC  = ROOT / "platform_hybrid" / "experiments" / "results" / "variance_mitigation.tsv"
+OUT  = ROOT / "platform_hybrid" / "experiments" / "results"
 FIG  = ROOT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -73,41 +73,34 @@ def rolling(seq, k):
 
 
 def detect_episodes(trace):
-    """Return list of dicts: {start, end, len_alarm,
-                                recovered: bool, recovery_step or None}."""
-    episodes, cur = [], None
-    n = len(trace)
-    ha_roll = rolling([d["ha"] for d in trace], ROLL)
-    for i, d in enumerate(trace):
-        alarmed = d["zvf"] > TAU
-        if alarmed and cur is None:
-            cur = {"start": i, "end": i}
-        elif alarmed and cur is not None:
-            cur["end"] = i
-        elif not alarmed and cur is not None:
-            j = i
-            recovered_within = False
-            recovery_step = None
-            while j < min(n, cur["end"] + 1 + K_RECOVER):
-                if j >= n:
-                    break
-                if trace[j]["zvf"] <= TAU:
-                    recovered_within = True
-                    recovery_step = j
-                    break
-                j += 1
-            cur["len_alarm"]      = cur["end"] - cur["start"] + 1
-            cur["recovered"]      = recovered_within
-            cur["recovery_step"]  = recovery_step
-            cur["ha_at_alarm"]    = trace[cur["start"]]["ha"]
-            episodes.append(cur)
-            cur = None
-    if cur is not None:
-        cur["len_alarm"]      = cur["end"] - cur["start"] + 1
-        cur["recovered"]      = False
-        cur["recovery_step"]  = None
-        cur["ha_at_alarm"]    = trace[cur["start"]]["ha"]
-        episodes.append(cur)
+    """ZVF exit within K_RECOVER steps of onset, not accuracy recovery.
+
+    An episode without a full follow-up window is censored, not sustained.
+    """
+    if any(not math.isfinite(d["zvf"]) or not 0 <= d["zvf"] <= 1 or not math.isfinite(d["ha"]) or not 0 <= d["ha"] <= 1 for d in trace):
+        raise ValueError("finite ZVF and accuracy probabilities required")
+    if any(b["step"] != a["step"] + 1 for a,b in zip(trace,trace[1:])):
+        raise ValueError("consecutive observation steps required")
+    episodes = []
+    i = 0
+    while i < len(trace):
+        if trace[i]["zvf"] <= TAU:
+            i += 1
+            continue
+        start = i
+        while i < len(trace) and trace[i]["zvf"] > TAU:
+            i += 1
+        end = i - 1
+        exit_index = i if i < len(trace) else None
+        recovered = exit_index is not None and exit_index - start <= K_RECOVER
+        censored = not recovered and len(trace) - 1 < start + K_RECOVER
+        episodes.append({
+            "start": start, "end": end, "len_alarm": end - start + 1,
+            "recovered": None if censored else recovered,
+            "censored": censored, "estimand": "zvf_exit_within_five_from_onset",
+            "recovery_step": exit_index if recovered else None,
+            "ha_at_alarm": trace[start]["ha"],
+        })
     return episodes
 
 
@@ -123,15 +116,15 @@ def main():
     with open(OUT / "zvf_iter90_episodes.tsv", "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["method", "seed", "start", "end", "len_alarm",
-                    "recovered", "recovery_step", "ha_at_alarm"])
+                    "recovered", "recovery_step", "ha_at_alarm", "censored", "estimand"])
         for (m, s), tr in traces.items():
             for ep in detect_episodes(tr):
                 w.writerow([m, s, ep["start"], ep["end"], ep["len_alarm"],
-                            int(ep["recovered"]),
+                            "NA" if ep["recovered"] is None else int(ep["recovered"]),
                             -1 if ep["recovery_step"] is None else ep["recovery_step"],
-                            f"{ep['ha_at_alarm']:.6f}"])
+                            f"{ep['ha_at_alarm']:.6f}", int(ep["censored"]), ep["estimand"]])
     # Per-method recovery rate + per-cat post-ha delta
-    by_method   = defaultdict(lambda: {"n_ep": 0, "n_rec": 0, "ha_post_rec": [],
+    by_method   = defaultdict(lambda: {"n_ep": 0, "n_rec": 0, "n_censored": 0, "ha_post_rec": [],
                                         "ha_post_sus": [], "ha_never": []})
     for (m, s), tr in traces.items():
         ep = detect_episodes(tr)
@@ -141,6 +134,9 @@ def main():
         if not seen_alarm:
             b["ha_never"].extend([d["ha"] for d in tr if d["step"] >= 5])
         for e in ep:
+            if e["censored"]:
+                b["n_censored"] += 1
+                continue
             b["n_ep"] += 1
             if e["recovered"]:
                 b["n_rec"] += 1
@@ -171,35 +167,39 @@ def main():
     with open(OUT / "zvf_iter90_recovery.tsv", "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["method", "n_episodes", "n_recovered", "n_sustained",
-                    "recovery_rate", "n_never_alarmed_traces", "trajectory_count"])
+                    "recovery_rate", "n_never_alarmed_traces", "trajectory_count", "n_censored"])
         for m, b in by_method.items():
             ne, nr = b["n_ep"], b["n_rec"]
             ns     = ne - nr
-            rec    = nr / ne if ne else 0.0
+            rec    = nr / ne if ne else None
             nna    = len([1 for (mm, _), tr in traces.items()
                           if mm == m and not detect_episodes(tr)])
             tc     = sum(1 for (mm, _) in traces if mm == m)
-            w.writerow([m, ne, nr, ns, f"{rec:.4f}", nna, tc])
+            w.writerow([m, ne, nr, ns, "NA" if rec is None else f"{rec:.4f}", nna, tc, b["n_censored"]])
             rows.append((m, ne, nr, ns, rec, nna, tc))
     # Headline summary
     total_ep  = sum(r[1] for r in rows)
     total_rec = sum(r[2] for r in rows)
     total_sus = sum(r[3] for r in rows)
-    pooled_rec = (total_rec / total_ep) if total_ep else 0.0
+    pooled_rec = (total_rec / total_ep) if total_ep else None
+    valid_rows = [r for r in rows if r[4] is not None]
     never_tr   = sum(r[5] for r in rows)
     summary ={
+        "protocol_id": "zvf-episodes-v2-onset-window-censoring",
+        "estimand": "ZVF exit, not accuracy recovery",
+        "n_censored": sum(b["n_censored"] for b in by_method.values()),
         "n_traces":               len(traces),
         "n_pooled_episodes":      total_ep,
         "n_pooled_recovered":     total_rec,
         "n_pooled_sustained":     total_sus,
-        "pooled_recovery_rate":   round(pooled_rec, 4),
+        "pooled_recovery_rate":   round(pooled_rec, 4) if pooled_rec is not None else None,
         "tau":                    TAU,
         "k_recover":              K_RECOVER,
-        "best_method_recovery":   max(rows, key=lambda r: r[4])[0] if rows else None,
-        "best_recovery_rate":     round(max((r[4] for r in rows), default=0.0), 4),
-        "worst_method_recovery":  min(rows, key=lambda r: r[4])[0] if rows else None,
-        "worst_recovery_rate":    round(min((r[4] for r in rows), default=0.0), 4),
-        "by_method_recovery":     {r[0]: round(r[4], 4) for r in rows},
+        "best_method_recovery":   max(valid_rows, key=lambda r: r[4])[0] if valid_rows else None,
+        "best_recovery_rate":     round(max(r[4] for r in valid_rows), 4) if valid_rows else None,
+        "worst_method_recovery":  min(valid_rows, key=lambda r: r[4])[0] if valid_rows else None,
+        "worst_recovery_rate":    round(min(r[4] for r in valid_rows), 4) if valid_rows else None,
+        "by_method_recovery":     {r[0]: round(r[4], 4) if r[4] is not None else None for r in rows},
     }
     with open(OUT / "zvf_iter90_summary.tsv", "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
@@ -211,9 +211,12 @@ def main():
                 w.writerow([k, v])
     with open(OUT / "zvf_iter90_summary.json", "w") as f:
         json.dump(summary, f, indent=2)
+    # No estimable denominator: do not plot or rank an invented zero rate.
+    if pooled_rec is None:
+        return summary
     # Plot
-    methods = [r[0] for r in rows]
-    rates   = [r[4] for r in rows]
+    methods = [r[0] for r in valid_rows]
+    rates   = [r[4] for r in valid_rows]
     plt.figure(figsize=(8, 4))
     order = sorted(range(len(methods)), key=lambda i: rates[i])
     plt.barh([methods[i] for i in order],

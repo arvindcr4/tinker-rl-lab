@@ -1,3 +1,9 @@
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import json_objects
+
 # ============================================================
 #  EXPERIMENT — STEP 2: GRPO Reinforcement Learning
 #  Starts from the SFT adapter and improves with RL rewards
@@ -147,8 +153,8 @@ def extract_prompt(row):
         chat_raw = row.get("chat", "")
         system_raw = row.get("system", "")
 
-        func_match = re.search(r'\{.*?\}', system_raw, re.DOTALL)
-        func_schema = func_match.group(0).strip() if func_match else ""
+        schemas = json_objects(system_raw)
+        func_schema = json.dumps(schemas[0]) if schemas else ""
 
         # Get first USER turn only
         user_match = re.search(r'USER:\s*(.*?)(?=ASSISTANT:|$)', chat_raw, re.DOTALL)

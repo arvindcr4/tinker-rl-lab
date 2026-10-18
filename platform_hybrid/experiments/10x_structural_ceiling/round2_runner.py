@@ -10,6 +10,18 @@ All experiments log ZVF/GU saturation diagnostics to W&B.
 
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import EvidenceUnavailable
+
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import gsm8k_reward, math_reward, humaneval_reward, tool_score, completion_alignment, GRADER_VERSION, PROTOCOL_VERSION
+
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -112,92 +124,19 @@ def load_humaneval_prompts(tokenizer, max_examples: int = 164) -> list[dict]:
 # ── Reward functions ─────────────────────────────────────────────────────
 
 def reward_gsm8k(response: str, answer: str) -> float:
-    m = re.search(r'####\s*(.+?)(?:\s|$)', response)
-    if not m:
-        m = re.search(r'(?:answer|Answer).*?(\-?\d[\d,]*\.?\d*)', response)
-    if not m:
-        return 0.0
-    pred = m.group(1).replace(",", "").strip()
-    target = answer.replace(",", "").strip()
-    try:
-        return 1.0 if abs(float(pred) - float(target)) < 1e-4 else 0.0
-    except ValueError:
-        return 1.0 if pred == target else 0.0
+    return gsm8k_reward(response, answer)
 
 
 def reward_math(response: str, answer: str) -> float:
-    m = re.search(r'\\boxed\{(.+?)\}', response)
-    if not m:
-        return 0.0
-    pred = m.group(1).strip()
-    if pred == answer.strip():
-        return 1.0
-    return 0.3
+    return math_reward(response, answer, require_box=True)
 
 
-def reward_humaneval_binary(response: str, test_code: str, entry_point: str) -> float:
-    """Original binary reward."""
-    try:
-        full_code = response + "\n" + test_code
-        exec(full_code, {"__builtins__": {}})
-        return 1.0
-    except Exception:
-        try:
-            compile(response, "<string>", "exec")
-            return 0.3
-        except SyntaxError:
-            return 0.0
+def reward_humaneval_binary(response: str, test_code: str, entry_point: str, prompt: str = "") -> float:
+    return humaneval_reward(response, test_code, entry_point, prompt)
 
 
-def reward_humaneval_dense(response: str, test_code: str, entry_point: str) -> float:
-    """Dense reward for code: graduated signal to break ZVF deadlock.
-
-    0.10 — syntactically valid Python
-    0.25 — contains a function definition
-    0.40 — function name matches entry_point
-    0.60 — function is callable (no import/runtime errors on def)
-    0.80 — passes at least one assertion in test_code
-    1.00 — passes all assertions
-    """
-    score = 0.0
-
-    # Level 1: Syntax validity
-    try:
-        compile(response, "<string>", "exec")
-        score = 0.10
-    except SyntaxError:
-        return 0.0
-
-    # Level 2: Contains function definition
-    if re.search(r'def\s+\w+\s*\(', response):
-        score = 0.25
-
-    # Level 3: Function name matches
-    if re.search(rf'def\s+{re.escape(entry_point)}\s*\(', response):
-        score = 0.40
-
-    # Level 4: Function is callable
-    local_ns = {}
-    try:
-        exec(response, {"__builtins__": __builtins__}, local_ns)
-        if entry_point in local_ns and callable(local_ns[entry_point]):
-            score = 0.60
-    except Exception:
-        return score
-
-    # Level 5-6: Test execution
-    try:
-        full_code = response + "\n" + test_code
-        exec_ns = {"__builtins__": __builtins__}
-        exec(full_code, exec_ns)
-        score = 1.0  # All tests passed
-    except AssertionError:
-        # At least the function ran — partial credit
-        score = 0.80
-    except Exception:
-        pass
-
-    return score
+def reward_humaneval_dense(response: str, test_code: str, entry_point: str, prompt: str = "") -> float:
+    return humaneval_reward(response, test_code, entry_point, prompt)
 
 
 def get_reward(example: dict, response: str, dense_code: bool = False) -> float:
@@ -209,10 +148,10 @@ def get_reward(example: dict, response: str, dense_code: bool = False) -> float:
     elif benchmark == "humaneval":
         if dense_code:
             return reward_humaneval_dense(
-                response, example.get("test", ""), example.get("entry_point", "")
+                response, example.get("test", ""), example.get("entry_point", ""), example.get("prompt_text", "")
             )
         return reward_humaneval_binary(
-            response, example.get("test", ""), example.get("entry_point", "")
+            response, example.get("test", ""), example.get("entry_point", ""), example.get("prompt_text", "")
         )
     raise ValueError(f"Unknown benchmark: {benchmark}")
 
@@ -278,6 +217,8 @@ def detect_benchmark(config: dict) -> str:
 
 
 def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False) -> None:
+    if resume:
+        raise ValueError("Legacy resume lacks RNG/baseline manifest; start a new protocol-v2 run")
     import torch
     import tinker
     import tinker.types as T
@@ -417,6 +358,8 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
             # Use pre-computed bins (from prebin_gsm8k.py)
             print(f"Loading pre-computed bins from {bins_file}")
             bin_data = json.loads(bins_file.read_text())
+            if bin_data.get("protocol_version") != PROTOCOL_VERSION or bin_data.get("grader_version") != GRADER_VERSION:
+                raise EvidenceUnavailable("Legacy phase bins lack generating contract; explicit v2 remeasurement required")
             indices = bin_data["bins"][difficulty_bin]["indices"]
             rates = bin_data["bins"][difficulty_bin]["rates"]
             examples = [examples[i] for i in indices if i < len(examples)]
@@ -453,7 +396,8 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
         losses = []
         for i, logprobs in enumerate(logprobs_list):
             adv = _advantages[i]
-            losses.append(-adv * logprobs.sum())
+            mask = torch.tensor(data[i].loss_fn_inputs["completion_mask"].data, device=logprobs.device, dtype=logprobs.dtype)
+            losses.append(-adv * (logprobs * mask).sum())
         loss = torch.stack(losses).mean()
         return loss, {"grpo_loss": loss.item()}
 
@@ -461,6 +405,9 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     prompts_per_step = 4
     step_rewards = []
     save_interval = tinker_cfg.get("save_checkpoint_interval", 10)
+    cfg["protocol_version"] = PROTOCOL_VERSION
+    cfg["grader_version"] = GRADER_VERSION
+    cfg["evaluation_scope"] = "training_adaptation_only"
 
     for step in range(start_step, total_steps):
         batch = random.sample(examples, min(prompts_per_step, len(examples)))
@@ -507,16 +454,18 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
 
             for resp, adv in zip(responses.sequences, advs):
                 resp_ids = list(resp.tokens)
+                input_ids, target_ids, completion_mask = completion_alignment(prompt_ids, resp_ids)
                 full_ids = prompt_ids + resp_ids
                 # next-token alignment; old `+ [0]` trained a spurious token-0
                 # target at the final position (fixed 2026-07-11)
                 target_ids = full_ids[1:]
                 datum = T.Datum(
-                    model_input=T.ModelInput.from_ints(full_ids[:-1]),
+                    model_input=T.ModelInput.from_ints(input_ids),
                     loss_fn_inputs={
                         "target_tokens": T.TensorData(
                             data=target_ids, dtype="int64", shape=[len(target_ids)]
                         ),
+                        "completion_mask": T.TensorData(data=completion_mask, dtype="float32", shape=[len(completion_mask)]),
                     },
                 )
                 all_data.append(datum)
@@ -526,6 +475,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
             continue
 
         diag = tracker.record_step(step, group_reward_lists)
+        diag.behavior_policy_version = f"update-{step}"
         log_to_wandb(diag)
 
         _advantages = all_advs
@@ -536,6 +486,8 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
             loss_type_input="logprobs",
         ).result()
         tc.optim_step(T.AdamParams(learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
+        # Sampling policy is refreshed independently of durable checkpoint cadence.
+        sc = tc.save_weights_and_get_sampling_client()
 
         avg_r = sum(batch_rewards) / len(batch_rewards)
         step_rewards.append(avg_r)
@@ -602,6 +554,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     # Save saturation diagnostic
     ckpt_dir = Path(log_path)
     tracker.save(ckpt_dir / "group_saturation.json")
+    (ckpt_dir / "study_scope_v2.json").write_text(json.dumps({"protocol_version": PROTOCOL_VERSION, "grader_version": GRADER_VERSION, "resolved_config": cfg, "evaluation_scope": "training_adaptation_only", "heldout_measured": False, "claim_eligible": False, "optimizer_updates_requested": total_steps}, indent=2))
 
     summary = tracker.summary()
     print(f"\nGroup Saturation Summary:")

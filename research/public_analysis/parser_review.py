@@ -1,7 +1,7 @@
 """Public derivative: extracted scientific functions; operational code removed.
 
-Selected definitions are unchanged from the retained source identified in
-PROVENANCE.json. This module alone cannot authenticate empirical evidence.
+Candidate parser review protocol v2. Historical unchanged definitions are retained
+in parser_review_historical_v1.py and identified in PROVENANCE.json. This module alone cannot authenticate empirical evidence.
 """
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from collections import Counter
 from datetime import datetime, timezone
 from fractions import Fraction
 import json
+import hashlib
 import re
 import secrets
 
@@ -36,7 +37,37 @@ def utc(text):
     return x.timestamp()
 
 
+REVIEW_PROTOCOL_VERSION = "parser-review-v2-candidate"
+
+
+def unique_records(records):
+    seen = set()
+    for record in records:
+        rid = record['request']['logical_request_id']
+        require(isinstance(rid, str) and bool(rid) and rid not in seen, 'duplicate or invalid logical_request_id')
+        seen.add(rid)
+    return records
+
+
+def packet_digest(packet):
+    return hashlib.sha256(json.dumps(sorted(packet, key=lambda row:row['case_id']), sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+
+
+def review_and_decide(records, packet, mapping, reviews):
+    """Publication entry point: validate identity, raw packet and both reviews."""
+    unique_records(records)
+    validate_packet(packet, mapping, records)
+    digest = packet_digest(packet)
+    require(len(reviews) == 2, 'exactly two reviews required')
+    for review in reviews: validate_review(review, digest, set(mapping))
+    result = decide(records, mapping, reviews)
+    result.update(protocol_version=REVIEW_PROTOCOL_VERSION, packet_sha256=digest,
+                  validation_status='PACKET_AND_REVIEWS_VALIDATED')
+    return result
+
+
 def packet_rows(records):
+    unique_records(records)
     rows=[];mapping={}
     for rec in records:
         if rec['v2']==rec['v3']:continue
@@ -45,6 +76,7 @@ def packet_rows(records):
 
 
 def validate_packet(packet,mapping,records):
+    unique_records(records)
     changed={r['request']['logical_request_id']:r for r in records if r['v2']!=r['v3']}
     require(set(mapping.values())==set(changed) and len(mapping)==len(changed),'packet mapping not all changed requests')
     seen=set()
@@ -86,9 +118,14 @@ def wrapper_labels(raw):
 
 
 def decide(records,mapping,reviews):
+    unique_records(records)
+    require(len(reviews) == 2, "exactly two reviews required")
     r1,r2=reviews;require(r1['reviewer_id']!=r2['reviewer_id'],'reviewers must be distinct')
     changes={r['request']['logical_request_id']:r for r in records if r['v2']!=r['v3']}
     require(set(mapping.values())==set(changes) and len(mapping)==len(changes),'changed mapping mismatch')
+    reconstructed = [{'case_id':case, 'raw_completion_text':changes[rid]['raw_completion_text']} for case,rid in mapping.items()]
+    digest = packet_digest(reconstructed)
+    for review in reviews: validate_review(review, digest, set(mapping))
     annotations=[{x['case_id']:x for x in r['cases']} for r in reviews]
     disagreement=bad=0;full=[]
     for case,rid in mapping.items():

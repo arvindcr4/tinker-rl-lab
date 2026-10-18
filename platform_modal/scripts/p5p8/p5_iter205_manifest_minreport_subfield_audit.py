@@ -45,6 +45,7 @@ from __future__ import annotations
 import csv
 import json
 import random
+from _minreport_contract import (literal_field, valid_literal, verify_trajectory, PRECISIONS, load_inventory_manifests, inventory_counts, field_report, VERSION)
 from collections import defaultdict
 from pathlib import Path
 
@@ -123,36 +124,23 @@ def parse_group_size_schedule(s: str) -> dict:
 
 
 def parse_sampler_backend_precision(s: str) -> dict:
-    """Parse 'tinker-closed' -> {backend: 'tinker', precision: 'closed'}.
-
-    Returns {} if no match.
-    """
-    out: dict = {}
-    if not s or "-" not in s:
-        return out
-    parts = s.split("-", 1)
-    out["backend"] = parts[0]
-    out["precision"] = parts[1] if len(parts) > 1 else None
-    return out
+    if not isinstance(s, str) or not s:
+        return {}
+    parts = s.split('-', 1)
+    result = {'backend': parts[0]}
+    if len(parts) == 2 and parts[1] in PRECISIONS:
+        result['precision'] = parts[1]
+    return result
 
 
 def parse_heldout_split(s: str) -> dict:
-    """Parse 'gsm8k_easy' -> {description: 'gsm8k_easy',
-    disjoint_from_reward_env: True}.
-
-    Heuristic: heldout split name is disjoint from reward env by definition
-    (otherwise it wouldn't be a heldout).
-    """
-    return {"description": s, "disjoint_from_reward_env": True} if s else {}
+    return {'description': s} if isinstance(s, str) and s else {}
 
 
 def parse_decontamination_notes(s: str) -> dict:
-    """Parse 'gsm8k-train-slice' -> {performed: True,
-    parser_robustness_probe: None}.
-
-    Heuristic: non-empty note indicates decontamination was performed.
-    """
-    return {"performed": bool(s), "parser_robustness_probe": None} if s else {}
+    if not isinstance(s, str):
+        return {}
+    return {'performed': False} if s.strip().lower() in {'not performed', 'not done', 'none'} else {}
 
 
 def parse_loss_form(s: str) -> dict:
@@ -186,13 +174,11 @@ def parse_ref_policy_kl(s: str) -> dict:
 
 
 def parse_per_step_zvf_path(s: str) -> dict:
-    """Parse per_step_zvf_path. Non-empty path means per_step_zvf is True."""
-    out: dict = {}
-    if not s:
-        return out
-    out["per_step_zvf"] = True
-    out["per_step_gu"] = None  # GU not separately logged in mega
-    out["source"] = s
+    result = verify_trajectory(s, WORKTREE)
+    out = {'source': s} if result['reported'] else {}
+    if result['verified']:
+        out['per_step_zvf'] = result['per_step_zvf']
+        out['per_step_gu'] = result['per_step_gu']
     return out
 
 
@@ -209,17 +195,7 @@ PARSERS = {
 
 
 def load_manifests() -> list[dict]:
-    """Load all 98 mega manifests."""
-    rows: list[dict] = []
-    for fp in sorted(MANIFEST_DIR.glob("*.json")):
-        try:
-            with fp.open() as fh:
-                d = json.load(fh)
-                d["_manifest_path"] = str(fp)
-                rows.append(d)
-        except (OSError, json.JSONDecodeError):
-            continue
-    return rows
+    return load_inventory_manifests(MANIFEST_DIR, CELLS_TSV)
 
 
 def load_cells_tsv() -> dict:
@@ -241,60 +217,58 @@ def load_cells_tsv() -> dict:
     return cells
 
 
-def classify_subfield(
-    manifest: dict, item: str, sub_field: str, parser_key: str | None,
-    cells_index: dict,
-) -> str:
-    """Classify a sub-field into one of:
-      EXTRACTABLE_LITERAL  - sub-key present in manifest body with the
-        right type.
-      EXTRACTABLE_PARSED   - not a literal sub-key but unambiguously
-        derivable from a top-level string via the canonical parser.
-      AMBIGUOUS            - multiple plausible parses; requires domain
-        choice; would need operator confirmation.
-      MISSING              - cannot be recovered from the manifest body.
+def extract_subfield(manifest, item, sub_field, parser_key, cells_index):
+    """One typed validation gate for literal, parsed and inventory values."""
+    present, value = literal_field(manifest, item, sub_field)
+    if present:
+        kind = 'EXTRACTABLE_LITERAL'
+    elif parser_key == 'cells_tsv':
+        cell_row = cells_index.get(manifest.get('cell_id', ''), {})
+        present = sub_field in cell_row
+        value = cell_row.get(sub_field)
+        kind = 'EXTRACTABLE_PARSED'
+    else:
+        raw = manifest.get(parser_key) if parser_key else None
+        parser = PARSERS.get(parser_key)
+        if raw is None or parser is None:
+            return 'MISSING', None
+        parsed = parser(raw) if isinstance(raw, str) else {}
+        present = sub_field in parsed
+        value = parsed.get(sub_field)
+        kind = 'EXTRACTABLE_PARSED'
+        if not present:
+            return 'AMBIGUOUS', None
+    if not present:
+        return 'MISSING', None
+    if not valid_literal(sub_field, value):
+        return 'AMBIGUOUS', None
+    return kind, value
 
-    Returns the classification string.
+
+def classify_subfield(manifest, item, sub_field, parser_key, cells_index):
+    """Reporting recoverability; every source obeys the same typed contract."""
+    return extract_subfield(manifest, item, sub_field, parser_key, cells_index)[0]
+
+
+def normalized_min_report(manifest, cells_index=None):
+    """Canonical typed content for fingerprints, independent of source syntax.
+
+    Unknown/invalid values cannot become distinguishing reported facts. Explicit
+    N/A reasons remain content; source provenance stays in the separate audit.
     """
-    cell_id = manifest.get("cell_id", "")
-    cell_row = cells_index.get(cell_id, {})
-
-    # Special-case: temperature is in cells_tsv, not the manifest.
-    if parser_key == "cells_tsv":
-        if sub_field == "temperature":
-            if "temperature" in cell_row:
-                return "EXTRACTABLE_PARSED"
-        return "MISSING"
-
-    if parser_key is None:
-        # No parser configured: assume MISSING (audit-mode strict).
-        return "MISSING"
-
-    raw = manifest.get(parser_key)
-    if raw is None:
-        return "MISSING"
-
-    parser = PARSERS.get(parser_key)
-    if parser is None:
-        return "MISSING"
-    parsed = parser(raw)
-
-    if sub_field in parsed and parsed[sub_field] is not None:
-        return "EXTRACTABLE_PARSED"
-    # Heuristic: bool fields with True default from non-empty raw also count
-    if sub_field == "performed" and raw:
-        return "EXTRACTABLE_PARSED"
-    if sub_field == "disjoint_from_reward_env" and raw:
-        return "EXTRACTABLE_PARSED"
-    if sub_field == "per_step_zvf" and raw:
-        return "EXTRACTABLE_PARSED"
-    return "AMBIGUOUS"
+    normalized = {}
+    for item, field, parser_key in MIN_REPORT_FIELDS:
+        kind, value = extract_subfield(manifest, item, field, parser_key, cells_index or {})
+        normalized.setdefault(item, {})[field] = (value if field_report(value)['applicable'] is False else field_report(value)['value']) if kind.startswith('EXTRACTABLE_') else None
+    return normalized
 
 
 def main() -> None:
     manifests = load_manifests()
     cells_index = load_cells_tsv()
     n_manifests = len(manifests)
+    if not n_manifests:
+        raise ValueError("no eligible manifest inventory; audit unavailable")
     print(f"[iter205] Loaded {n_manifests} manifests, {len(cells_index)} cells")
 
     # --- (a) per-sub-field classification ---
@@ -483,7 +457,10 @@ def main() -> None:
             })
 
     summary = {
+        "contract_version": VERSION,
         "n_manifests": n_manifests,
+        "inventory_counts": inventory_counts(manifests),
+        "reporting_contract": "minreport-review02-v2; presence is not verification",
         "n_subfields": len(MIN_REPORT_FIELDS),
         "n_items": len({it for it, _, _ in MIN_REPORT_FIELDS}),
         "hypotheses": {

@@ -81,7 +81,14 @@ echo "  Logs: $LOG_DIR/"
 echo "  W&B: https://wandb.ai/arvindcr4-pes-university/tinker-structural-ceiling"
 echo "============================================================"
 
-wait $PID_1A $PID_1B $PID_1C $PID_2 $PID_3A $PID_3B $PID_3C $PID_4
+failed=0
+for pid in "$PID_1A" "$PID_1B" "$PID_1C" "$PID_2" "$PID_3A" "$PID_3B" "$PID_3C" "$PID_4"; do
+    if wait "$pid"; then :; else failed=$((failed + 1)); fi
+done
+if (( failed > 0 )); then
+    echo "Round 2 FAILED: $failed child processes failed" >&2
+    exit 1
+fi
 
 echo ""
 echo "============================================================"

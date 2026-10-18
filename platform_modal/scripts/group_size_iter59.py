@@ -86,9 +86,6 @@ def find_T_for_acc(rows, G, target_acc):
     # Already met at smallest budget?
     if cells[0]["acc"] >= target_acc:
         return cells[0]["T"]
-    # Already exceeded at largest budget?
-    if cells[-1]["acc"] < target_acc:
-        return float("inf")
     for i in range(len(cells) - 1):
         a0, a1 = cells[i]["acc"], cells[i + 1]["acc"]
         if a0 < target_acc <= a1:

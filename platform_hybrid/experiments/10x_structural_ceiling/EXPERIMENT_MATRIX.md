@@ -1,3 +1,5 @@
+> REPRODUCTION WARNING (review 43): Configuration filenames are historical aliases, not resolved model identities. Read the model field and generated config_identity_v2.json. Historical run attribution requires a provider receipt and model revision; missing identities are unresolved.
+
 # 10x Structural Ceiling — Experiment Matrix
 
 **Goal:** Systematically map when RL fine-tuning helps vs. doesn't, establishing a "structural ceiling" thesis with NeurIPS-caliber evidence.

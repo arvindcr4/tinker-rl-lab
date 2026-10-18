@@ -51,6 +51,7 @@ Stdlib + numpy + pandas + xgboost + matplotlib. <=290 lines.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -67,7 +68,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 FIG = OUT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -173,10 +174,7 @@ def heterogeneity_summary(per_bin: list[dict]) -> dict:
     ]) / max(1, np.nansum([r["n_bin"] for r in per_bin])))
     # Expected alert rate per bin if perfectly proportional to n_bin
     n_bins = len(per_bin)
-    expected_alert_rate = np.array([
-        sum(r["n_bin"] for r in per_bin) / (
-            sum(rr["n_bin"] for rr in per_bin) * n_bins) for _ in range(n_bins)
-    ])
+    expected_alert_rate = np.full(n_bins, total_alerts / max(1, sum(r["n_bin"] for r in per_bin)))
     # L1 alerting-bias from population baseline (uniform across bins)
     l1_bias = float(np.sum(np.abs(arr_alert_rate - expected_alert_rate)))
     return {
@@ -184,7 +182,7 @@ def heterogeneity_summary(per_bin: list[dict]) -> dict:
         "gini_recall": gini(arr_recall),
         "std_recall": float(np.std(arr_recall, ddof=0)) if n_bins > 1 else 0.0,
         "std_precision": float(np.std(arr_prec, ddof=0)) if n_bins > 1 else 0.0,
-        "l1_alert_bias_vs_uniform": l1_bias,
+        "l1_alert_rate_gap_vs_global": l1_bias,
     }
 
 
@@ -199,7 +197,7 @@ def paired_heterogeneity_bootstrap(
     """
     n = len(y)
     rng = np.random.default_rng(seed)
-    metrics = ("gini_alerts", "std_recall", "std_precision", "l1_alert_bias_vs_uniform")
+    metrics = ("gini_alerts", "std_recall", "std_precision", "l1_alert_rate_gap_vs_global")
     arr_a = {m: np.empty(n_boot) for m in metrics}
     arr_b = {m: np.empty(n_boot) for m in metrics}
     for j in range(n_boot):
@@ -269,7 +267,7 @@ def main() -> None:
                 "gini_alerts": hs["gini_alerts"],
                 "std_recall": hs["std_recall"],
                 "std_precision": hs["std_precision"],
-                "l1_alert_bias_vs_uniform": hs["l1_alert_bias_vs_uniform"],
+                "l1_alert_rate_gap_vs_global": hs["l1_alert_rate_gap_vs_global"],
             })
     df_a = pd.DataFrame(rows)
     df_a.to_csv(OUT / "p8_subgroup_fairness.tsv", sep="\t", index=False)
@@ -287,7 +285,7 @@ def main() -> None:
         for ka, kb, na, nb in pair_defs:
             rows_b = paired_heterogeneity_bootstrap(
                 scores[ka], scores[kb], y, stratum,
-                K_GLOBAL_PCT, N_BINS, N_BOOT, SEED + hash((strat_label, ka, kb)) % 100000,
+                K_GLOBAL_PCT, N_BINS, N_BOOT, SEED + int.from_bytes(hashlib.sha256(repr((strat_label, ka, kb)).encode()).digest()[:8], "big") % 100000,
             )
             for rb in rows_b:
                 boot_rows.append({
@@ -309,7 +307,7 @@ def main() -> None:
         "rows_boot": int(len(df_b)),
         "excludes_zero_counts": {
             pair: int((df_b[df_b["pair"] == pair]["excludes_zero"] == "YES").sum())
-            for _, _, _, pair in [(k, k, n, f"{n}-{m}") for k, m, n, _ in pair_defs]
+            for pair in sorted(df_b["pair"].unique())
         },
         "headline": "Tree-level per-stratum alert-distribution heterogeneity",
     }

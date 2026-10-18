@@ -11,7 +11,7 @@ Pipeline
    panel. Each carries 15 (step, reward, zvf) tuples.
 2. For each threshold tau in a 11-point sweep
    {0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80}:
-   - Fire rate per seed = fraction of 15 steps with zvf < tau
+   - Fire rate per seed = fraction of 15 steps with zvf >= tau
    - Mean fire rate across 5 seeds
    - Cross-seed SD on fire rate
    - Cross-seed CV (SD/mean)
@@ -30,6 +30,7 @@ Stdlib only. ~250 LoC.
 """
 
 import csv
+from _review19_policy import high_zvf_fire
 import json
 import math
 import os
@@ -41,7 +42,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scri
 from _paths import REPO_ROOT  # noqa: E402
 REPO = REPO_ROOT
 PANEL = REPO / "platform_hybrid/experiments/results/n10_seed_expansion"
-OUT = REPO / "platform_hybrid/experiments/results/p5p8"
+OUT = REPO / "platform_hybrid/experiments/results/p5p8/corrected-review19-v4"
 SEEDS = [42, 179, 316, 453, 590]
 TAUS = [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80]
 N_BOOT = 2000
@@ -86,7 +87,7 @@ def bootstrap_ci(values, n_boot=N_BOOT, seed=BOOT_SEED, alpha=0.05):
 def fire_rate(zvf_list, tau):
     if not zvf_list:
         return 0.0
-    return sum(1 for z in zvf_list if z < tau) / len(zvf_list)
+    return sum(1 for z in zvf_list if high_zvf_fire(z, tau)) / len(zvf_list)
 
 
 def main():
@@ -101,7 +102,7 @@ def main():
             per_seed_rows.append({
                 "seed": s["seed"],
                 "tau": tau,
-                "fire_count": sum(1 for z in s["zvf"] if z < tau),
+                "fire_count": sum(1 for z in s["zvf"] if high_zvf_fire(z, tau)),
                 "n_steps": s["n_steps"],
                 "fire_rate": round(fr, 4),
                 "heldout_acc": s["heldout_acc"],

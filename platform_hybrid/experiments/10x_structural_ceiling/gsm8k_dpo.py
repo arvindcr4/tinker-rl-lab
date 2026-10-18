@@ -8,6 +8,12 @@ Creates preference pairs from GSM8K:
 Calls train_dpo.main directly with a custom GSM8K comparison builder.
 """
 
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import numeric_value
+
+
 import re
 import random
 import datasets
@@ -25,16 +31,11 @@ from tinker_cookbook import checkpoint_utils
 
 
 def corrupt_answer(answer: str) -> str:
-    """Create a plausible but wrong answer by perturbing the number."""
-    num_match = re.search(r"[\d,]+\.?\d*", answer.replace(",", ""))
-    if not num_match:
-        return answer + " (wrong)"
-    num = float(num_match.group().replace(",", ""))
-    offset = random.choice([1, 2, 3, 5, 10, -1, -2, -3, -5])
-    wrong_num = int(num + offset) if num == int(num) else round(num + offset, 2)
-    if wrong_num < 0:
-        wrong_num = abs(wrong_num)
-    return str(wrong_num)
+    """Numeric rejected label must differ even for chosen=1 and offset=-2."""
+    chosen = numeric_value(answer)
+    rejected = chosen + random.choice([-3, -2, -1, 1, 2, 3])
+    assert rejected != chosen
+    return str(rejected.numerator) if rejected.denominator == 1 else str(float(rejected))
 
 
 def extract_gsm8k_answer(solution: str) -> str:

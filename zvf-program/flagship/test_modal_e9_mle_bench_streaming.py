@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import sys
@@ -50,7 +51,7 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             json.dumps(source_receipt, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
-        returned_solution = "print('returned')"
+        returned_solution = source_solution
         native_grade = {"score": None, "valid_submission": False}
         provenance = core.validate_replay_provenance(
             competition_id=competition_id,
@@ -73,12 +74,18 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                 "submission_sha256": None,
             },
         }
+        receipt["execution_binding"] = core.bind_effective_execution(
+            competition_id=competition_id, original=(source_solution + "\n").encode(),
+            effective=(returned_solution + "\n").encode(), submission=None,
+            native_grade=json.dumps(native_grade, sort_keys=True).encode(),
+            grader_input=None, repairs=[])
         receipt["receipt_sha256"] = hashlib.sha256(
             json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
         result: dict[str, object] = {
             "receipt": receipt,
             "solution_code": returned_solution,
+            "original_solution_code": source_solution,
             "submission_csv": None,
             "native_grade_json": native_grade,
         }
@@ -122,6 +129,17 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
         receipt["artifacts"]["native_grade_sha256"] = hashlib.sha256(
             json.dumps(native_grade, sort_keys=True).encode()
         ).hexdigest()
+        result["submission_csv"] = "id,prediction\r\na,0.42\r\n"
+        receipt["artifacts"]["submission_sha256"] = hashlib.sha256(result["submission_csv"].encode()).hexdigest()
+        receipt["execution_binding"] = core.bind_effective_execution(
+            competition_id=str(launch["competition_id"]),
+            original=(result["original_solution_code"] + "\n").encode(),
+            effective=(result["solution_code"] + "\n").encode(),
+            submission=result["submission_csv"].encode(),
+            native_grade=json.dumps(native_grade, sort_keys=True).encode(),
+            grader_input={"competition_id": str(launch["competition_id"]),
+                          "submission_sha256": receipt["artifacts"]["submission_sha256"],
+                          "grader_revision": "synthetic-fixture"}, repairs=[])
         self._rehash_receipt(receipt)
         result["native_grade_json"] = native_grade
         return result, launch
@@ -134,6 +152,17 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             first = runner._materialize_run_result(result, str(root / "out"))
             second = runner._materialize_run_result(result, str(root / "out"))
             self.assertEqual(first, second)
+
+    def test_rehashed_unregistered_program_change_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            result, launch = self._valid_contract(Path(directory))
+            result["solution_code"] = "print('different treatment')"
+            digest = hashlib.sha256((result["solution_code"] + "\n").encode()).hexdigest()
+            result["receipt"]["artifacts"]["solution_sha256"] = digest
+            result["receipt"]["execution_binding"]["effective_program_sha256"] = digest
+            self._rehash_receipt(result["receipt"])
+            with self.assertRaisesRegex(core.LaunchGateError, "without a registered repair"):
+                runner._validate_returned_replay_result(result, launch)
 
     def test_returned_result_rejects_competition_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -520,7 +549,14 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             preflight_completed_at="2026-08-30T04:00:01+00:00",
         )
         reservation = merged_arm.reserve_pilot_budget(gpu_usd=1.0, cpu_usd=0.25)
-        raw_run_one = runner.run_one.get_raw_f()
+        # Execute the production function body with only its Modal decorator
+        # removed, avoiding SDK-version-specific private unwrapping methods.
+        node = next(node for node in ast.parse(Path(runner.__file__).read_text()).body
+                    if isinstance(node, ast.FunctionDef) and node.name == "run_one")
+        node.decorator_list = []
+        namespace = dict(vars(runner))
+        exec(compile(ast.Module(body=[node], type_ignores=[]), runner.__file__, "exec"), namespace)
+        raw_run_one = namespace["run_one"]
         outcomes = {
             "prepare timeout": TimeoutError("prepare timed out"),
             "missing prepared directories": mock.DEFAULT,
@@ -547,6 +583,8 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                         side_effect=AssertionError("prompt was built after prepare failed"),
                     ) as prompt,
                 ):
+                    namespace.update(vars(runner))
+                    namespace["_require_enforced_budget"] = lambda: None  # local fake execution only
                     result = raw_run_one(
                         competition_id="alaska2-image-steganalysis",
                         generation_backend="merged_vllm",
@@ -583,6 +621,8 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                 side_effect=AssertionError("GPU generator was constructed while frozen"),
             ) as generator,
         ):
+            namespace.update(vars(runner))
+            namespace["_require_enforced_budget"] = lambda: None
             with self.assertRaisesRegex(core.LaunchGateError, "remote boundary"):
                 raw_run_one(
                     competition_id="alaska2-image-steganalysis",

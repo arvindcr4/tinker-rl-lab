@@ -30,9 +30,9 @@ VERSION = "v1.2.2"
 SOURCE_MANIFEST_SHA256 = "e0032399790567f9c19314fd304bd9e9034f48a1905565ca4ccf704d6c6d2c05"
 COUNTS = {"banking": 16, "slack": 21, "travel": 20, "workspace": 40}
 TOTAL = sum(COUNTS.values())
-SCHEMA = "public-agentdojo-native-v1"
+SCHEMA = "public-agentdojo-native-v2"
 DEFAULT_SETUP = Path(__file__).resolve().parents[2] / "outputs/public_portfolio_2026-09-05/agentdojo_setup"
-PROTOCOL = {"benchmark_version": VERSION, "attack": None, "defense": None,
+PROTOCOL = {"outcome_policy": "pavlov-conservative-native-error-unscored-v2", "benchmark_version": VERSION, "attack": None, "defense": None,
             "metric": "benign_task_utility", "episode_count": TOTAL,
             "tool_output_format": "yaml", "system_message": "native_default",
             "security_evaluation": False, "heldout_claim": False}
@@ -315,13 +315,16 @@ def summarize(output):
         result = read_json(path)
         require(result == task_result(output, row, run_hash), f"task receipt or trace drift: {row['evaluation_id']}")
         results.append(result)
-    finished = not missing
+    invalid = [row["evaluation_id"] for row in results if row["native_error"]]
+    finished = not missing and not invalid
     utility_passes = sum(row["utility"] for row in results)
     report = {"schema_version": SCHEMA, "suite_id": "agentdojo_eval", "protocol": PROTOCOL,
               "status": "COMPLETE_NATIVE_BENIGN_UTILITY" if finished else "PARTIAL_NATIVE_BENIGN_UTILITY",
               "score": utility_passes / TOTAL if finished else None, "score_denominator": TOTAL,
               "completed_episodes": len(results), "utility_passes": utility_passes,
               "native_handled_error_count": sum(bool(row["native_error"]) for row in results),
+              "invalid_execution_ids": invalid,
+              "outcome_policy": "pavlov-conservative-native-error-unscored-v2",
               "missing_evaluation_ids": missing, "run_manifest_sha256": run_hash,
               "model_identity": run["model_identity"], "decontamination": run["decontamination"],
               "declared_inference_limits": run["model_identity"].get("runtime_limits", {}),

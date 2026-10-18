@@ -11,15 +11,6 @@ Usage:
     python platform_modal/scripts/hyperparam_sensitivity.py --seed 42 --output-dir results/sensitivity
 """
 
-import atexit
-try:
-    from codecarbon import EmissionsTracker
-    _tracker = EmissionsTracker()
-    _tracker.start()
-    atexit.register(_tracker.stop)
-except ImportError:
-    pass
-
 
 import sys
 import os
@@ -44,7 +35,7 @@ try:
     HAS_TORCH = True
 except ImportError:
     HAS_TORCH = False
-    print("WARNING: PyTorch not installed. Running in dry-run mode.")
+    print("WARNING: PyTorch unavailable; only explicit --dry-run is supported.")
 
 
 # ---------------------------------------------------------------------------
@@ -63,8 +54,6 @@ SWEEPS = {
     "learning_rate": [1e-5, 5e-5, 1e-4, 5e-4, 1e-3],
     "clip_range": [0.05, 0.1, 0.2, 0.3, 0.5],
     "entropy_coef": [0.0, 0.001, 0.01, 0.05, 0.1],
-    "gamma": [0.9, 0.95, 0.99, 0.995, 1.0],
-    "gae_lambda": [0.8, 0.9, 0.95, 0.98, 1.0],
 }
 
 # PPO training constants
@@ -121,7 +110,7 @@ def _make_mlp(input_dim: int, hidden: int, output_dim: int) -> "nn.Sequential":
     )
 
 
-class PPOAgent(nn.Module):
+class PPOAgent(nn.Module if HAS_TORCH else object):
     """
     Separate actor and critic networks, each a 2-layer MLP with 64 hidden units.
     """
@@ -192,6 +181,7 @@ def train_and_evaluate(
     seed: int,
     num_steps: int = 20_000,
     eval_episodes: int = 200,
+    dry_run: bool = False,
 ) -> float:
     """
     Train a PPO agent on ArithmeticEnv with the given hyperparameters and
@@ -208,9 +198,12 @@ def train_and_evaluate(
     -------
     accuracy : float in [0, 1]
     """
-    if not HAS_TORCH:
+    if dry_run:
         # Dry-run: return synthetic values based on hyperparams
         return float(np.clip(np.random.default_rng(seed).normal(0.5, 0.1), 0, 1))
+
+    if not HAS_TORCH:
+        raise RuntimeError("PyTorch required for training; use explicit dry_run=True for synthetic output")
 
     lr           = hyperparams["learning_rate"]
     clip_range   = hyperparams["clip_range"]
@@ -358,6 +351,7 @@ def main():
                 hyperparams=hp,
                 seed=args.seed,
                 num_steps=args.num_steps,
+                dry_run=args.dry_run,
             )
             elapsed = time.time() - t0
 
@@ -366,13 +360,14 @@ def main():
                 "value": val,
                 "accuracy": round(accuracy, 4),
                 "seed": args.seed,
+                "evidence_kind": "synthetic_dry_run" if args.dry_run else "measured_training",
             })
             done += 1
             print(f"  {param_name}={val:<10}  accuracy={accuracy:.3f}  [{elapsed:.1f}s]  ({done}/{total_configs})")
 
     # --- Save CSV ---
-    csv_path = os.path.join(args.output_dir, f"sensitivity_seed{args.seed}.csv")
-    fieldnames = ["hyperparameter", "value", "accuracy", "seed"]
+    csv_path = os.path.join(args.output_dir, f"sensitivity_v2_{'dry_run' if args.dry_run else 'training'}_seed{args.seed}.csv")
+    fieldnames = ["hyperparameter", "value", "accuracy", "seed", "evidence_kind"]
     with open(csv_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()

@@ -270,16 +270,14 @@ def h5_practitioner_iso_g():
                 g_star[T] = G
             except (IndexError, ValueError):
                 continue
-    # empirical Iso-G corrected prescription:
-    # mean_G_emp(Y=0.5)=2.56 in iter46; over-herding correction +1 → ~3.56
-    # rounded up to nearest power of 2 → 4
+    # Test the stated empirical median plus correction without hidden rounding.
     G_emp_median = 4
     G_correction = 1
-    G_iso_corrected = G_emp_median + G_correction   # = 5, but bound is the >= floor
+    G_iso_corrected = G_emp_median + G_correction   # = 5, the tested minimum
     # The corrected synthesis interprets G_iso_corrected as the minimum
     # contrast-budget; G*_raw is the compute-budget optimum and must
     # be >= G_iso_corrected to satisfy both constraints.
-    G_iso_floor = 4   # contrast-only minimum
+    G_iso_floor = G_iso_corrected  # authoritative corrected policy, no hidden rounding
     rows = []
     n_floor_ok = 0
     for T, G_raw in sorted(g_star.items()):
@@ -289,7 +287,7 @@ def h5_practitioner_iso_g():
         rows.append({
             "T": T,
             "G_raw_GRPO": G_raw,
-            "G_iso_floor_contrast_only": G_iso_floor,
+            "G_iso_corrected_policy": G_iso_floor,
             "delta_G_raw_minus_iso": f"{G_raw - G_iso_floor:+d}",
             "iso_is_lower_bound": ok,
         })
@@ -345,7 +343,7 @@ def main():
     print(f"[h4] cross-pillar Spearman ρ={rho:+.3f} p={p_one_sided:.4f}")
 
     # ---- H5 ----
-    h5_rows, n_close, g_iso = h5_practitioner_iso_g()
+    h5_rows, n_floor_ok, g_iso = h5_practitioner_iso_g()
     h5_path = OUT / "iso_g_corrected_practitioner.tsv"
     with h5_path.open("w", newline="") as fh:
         if h5_rows:

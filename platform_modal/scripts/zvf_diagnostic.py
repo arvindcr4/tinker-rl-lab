@@ -1,82 +1,10 @@
 #!/usr/bin/env python3
-"""Pillar 2 cross-experiment Zero-Variance Fraction (ZVF) diagnostic.
+"""Versioned exploratory ZVF diagnostics.
 
-Aggregates ZVF measurement streams from every per-experiment training run
-that surfaced a per-group rollout trace, then correlates mean-ZVF with
-training-failure outcomes (Nemotron-120B collapse, tool-use 0%, arithmetic
-distillation failure) and emits a single one-row-per-experiment summary
-table.
-
-Inputs (real, measured; produced earlier in this repo):
-
-    platform_hybrid/experiments/results/tinker_gsm8k_zvf_summary.json
-        Real Qwen3-8B / GSM8K rollouts, 3 seeds x 200 problems, K=8.
-    platform_hybrid/experiments/results/tinker_gsm8k_zvf_s42.json (+ s123, s456)
-        Per-problem reward tensors (length-8 lists) for each seed.
-    platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv
-        4 G-sweep rows (G in {2,4,8,16}, 3 seeds each, x 40 steps).
-    platform_hybrid/experiments/results/variance_mitigation.tsv
-        Per-step ZVF and a "collapse" label flagged by the heldout-acc
-        going to zero across an entire 30-step trajectory.
-    platform_hybrid/experiments/results/tool_code_reward_diagnostics.tsv
-        Cross-tool tool-use runs (Qwen3-32B, Llama-8B-Instruct) whose
-        trajectory collapses (last10_avg == 0.0).
-    platform_hybrid/experiments/results/scaling_law_three_phase.tsv
-        5-model scaling-law study with a "collapse" phase row for
-        Nemotron-120B (peak=0.875, late_mean=0.2083).
-    platform_hybrid/experiments/results/drgrpo_vs_grpo.json
-        Per-run mean_zvf for the DRGRPO vs GRPO comparison.
-    platform_hybrid/experiments/results/samestack_ppo_grpo.json
-        Per-run metrics for the PPO/GRPO shared-stack diagnostic.
-
-Output:
-
-    platform_hybrid/experiments/results/zvf_summary.tsv
-        One row per (experiment, condition). Columns: experiment, model,
-        task, group_size, n_seeds, mean_zvf, max_zvf, mean_reward, peak,
-        last10_avg, collapse_label, n_steps, evidence_path.
-
-It also writes a secondary wide correlation table:
-
-    platform_hybrid/experiments/results/zvf_failure_correlation.tsv
-        Spearman + Pearson rho between (mean_zvf, collapse) and the
-        heldout_acc / last10_avg columns of the summary; reported with
-        bootstrap CIs from B=2000 resamples over rows (treat the n=14
-        per-experiment rows as the unit, since per-step rows are
-        autocorrelated).
-
-Failure taxonomy
-----------------
-
-collapse_label is computed deterministically from the per-experiment
-summary using only public thresholds documented in this script:
-
-    "collapse"      peak_holdout > 0.7 AND last10_avg < 0.35
-                    (Nemotron-120B/DeepSeek-V3.1 plateau -> drift
-                    and tool-use trajectories.)
-    "drift"         last10_avg < 0.85 * peak_holdout but not collapse.
-    "plateau"       peak_holdout < 0.5 (loss moved at all but plateaued).
-    "converged"     last10_avg >= 0.85 * peak_holdout.
-
-This mirrors the four-state scheme used in scaling_law_three_phase.tsv
-("collapse", "drift", "saturation", "plateau") but uses heldout_acc as
-the ground truth because all our diagnostic rows carry it.
-
-Why include this script (vs reusing zvf_compute_cross_framework.py)
-----------------------------------------------------------
-
-zvf_compute_cross_framework.py is the *per-step time-series* ZVF
-emitter used during a run. This script is the *post-hoc aggregator*
-that lifts every existing time-series summary in platform_hybrid/experiments/results/
-into a single small TSV, attaches a collapse label, and emits a
-correlation matrix against failure outcomes -- the artifact reviewers
-will actually open.
-
-Honest statistics note: the per-step ZVF rows are autocorrelated
-(typical lag-1 correlation about 0.9). We therefore aggregate to
-one row per experiment first, and ONLY THEN compute correlations
-across experiments. Per-experiment bootstrap CIs respect the
-seed-level averaging each summary already did.
+Static sampling accuracy, training reward, and held-out trajectory accuracy
+are distinct estimands. Missing measurements remain unavailable. Conditions
+are never treated as independent experimental units for inferential intervals
+without a documented sampling design.
 """
 from __future__ import annotations
 
@@ -89,8 +17,9 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-RESULTS = REPO_ROOT / "experiments" / "results"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+RESULTS = REPO_ROOT / "platform_hybrid" / "experiments" / "results"
+ANALYSIS_VERSION = "review27-v3"
 
 
 # ---------------------------------------------------------------------------
@@ -100,7 +29,7 @@ RESULTS = REPO_ROOT / "experiments" / "results"
 
 def _stat(xs: Sequence[float]) -> Tuple[float, float, float]:
     """mean, min, max with NaN-safe handling."""
-    xs = [float(x) for x in xs if x is not None and not (isinstance(x, float) and math.isnan(x))]
+    xs = [float(x) for x in xs if _finite(x)]
     if not xs:
         return (float("nan"), float("nan"), float("nan"))
     return (statistics.fmean(xs), min(xs), max(xs))
@@ -111,6 +40,8 @@ def load_tinker_gsm8k() -> List[Dict[str, Any]]:
     summary_path = RESULTS / "tinker_gsm8k_zvf_summary.json"
     summary = json.loads(summary_path.read_text())
     rows: List[Dict[str, Any]] = []
+    if len({len(summary[k]) for k in ("seeds", "zvf_per_seed", "sampling_accuracy_per_seed")}) != 1 or len(set(summary["seeds"])) != len(summary["seeds"]):
+        raise ValueError("inconsistent or duplicate sampling seed identities")
     for seed, zvf_val, acc in zip(
         summary["seeds"], summary["zvf_per_seed"], summary["sampling_accuracy_per_seed"]
     ):
@@ -129,13 +60,14 @@ def load_tinker_gsm8k() -> List[Dict[str, Any]]:
                 "mean_zvf": zvf_mean,
                 "min_zvf": zvf_min,
                 "max_zvf": zvf_max,
-                "mean_reward": summary.get("sampling_accuracy_mean", acc),
-                "peak": acc,
-                "last10_avg": acc,
+                "mean_reward": acc,
+                "sampling_accuracy": acc,
+                "peak": None,
+                "last10_avg": None,
                 "n_problems": len(per_problem),
-                "n_steps": len(per_problem),
+                "n_steps": None,
                 "evidence_path": str(
-                    (RESULTS / f"tinker_gsm8k_zvf_s{seed}.json").relative_to(REPO_ROOT)
+                    (RESULTS / f"tinker_gsm8k_zvf_s{seed}.json").resolve()
                 ),
                 "seed": seed,
             }
@@ -152,11 +84,12 @@ def load_tinker_gsm8k() -> List[Dict[str, Any]]:
             "min_zvf": min(summary["zvf_per_seed"]),
             "max_zvf": max(summary["zvf_per_seed"]),
             "mean_reward": summary["sampling_accuracy_mean"],
-            "peak": max(summary["sampling_accuracy_per_seed"]),
-            "last10_avg": summary["sampling_accuracy_mean"],
+            "peak": None,
+            "last10_avg": None,
+            "sampling_accuracy": summary["sampling_accuracy_mean"],
             "n_problems": summary["n_problems_total"],
-            "n_steps": summary["n_problems_total"],
-            "evidence_path": "platform_hybrid/experiments/results/tinker_gsm8k_zvf_summary.json",
+            "n_steps": None,
+            "evidence_path": str((RESULTS / "tinker_gsm8k_zvf_summary.json").resolve()),
             "seed": "agg",
         }
     )
@@ -190,14 +123,16 @@ def load_groupsize_sweep() -> List[Dict[str, Any]]:
                     "group_size": G,
                     "n_seeds": n_seeds,
                     "mean_zvf": mean_zvf,
-                    "min_zvf": mean_zvf - heldout_acc_se,
-                    "max_zvf": mean_zvf + heldout_acc_se,
+                    "min_zvf": None,
+                    "max_zvf": None,
                     "mean_reward": mean_train,
-                    "peak": heldout_acc_mean + heldout_acc_se,
+                    "peak": None,
+                    "heldout_accuracy": heldout_acc_mean,
+                    "heldout_accuracy_se": heldout_acc_se,
                     "last10_avg": last10_mean,
-                    "n_problems": 0,
-                    "n_steps": 40 * n_seeds,
-                    "evidence_path": "platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv",
+                    "n_problems": None,
+                    "n_steps": None,
+                    "evidence_path": str((RESULTS / "groupsize_zvf_sweep.tsv").resolve()),
                     "seed": "agg",
                 }
             )
@@ -220,6 +155,9 @@ def load_variance_mitigation() -> List[Dict[str, Any]]:
             rows_by_method.setdefault(key, []).append(r)
     rows: List[Dict[str, Any]] = []
     for (method, seed), recs in rows_by_method.items():
+        recs = sorted(recs, key=lambda r: int(r["step"]))
+        if len({int(r["step"]) for r in recs}) != len(recs) or any(r["collapse"] not in ("0", "1") for r in recs):
+            raise ValueError("duplicate step or invalid collapse flag")
         zvfs = [float(r["zvf"]) for r in recs]
         rewards = [float(r["reward_mean"]) for r in recs]
         heldout = [float(r["heldout_acc"]) for r in recs]
@@ -227,7 +165,8 @@ def load_variance_mitigation() -> List[Dict[str, Any]]:
         rows.append(
             {
                 "experiment": "variance_mitigation",
-                "model": method.upper(),
+                "model": "unknown",
+                "metric_definition": "heldout_accuracy",
                 "task": "math_verifiable_rl",
                 "group_size": 8,
                 "n_seeds": 1,
@@ -237,11 +176,14 @@ def load_variance_mitigation() -> List[Dict[str, Any]]:
                 "mean_reward": statistics.fmean(rewards),
                 "peak": max(heldout),
                 "last10_avg": statistics.fmean(heldout[-10:]),
-                "n_problems": 0,
+                "n_problems": None,
                 "n_steps": len(recs),
-                "evidence_path": "platform_hybrid/experiments/results/variance_mitigation.tsv",
+                "evidence_path": str((RESULTS / "variance_mitigation.tsv").resolve()),
                 "seed": seed,
                 "_collapse_flag": collapse,
+                "collapse_steps": sum(int(r["collapse"]) for r in recs),
+                "observed_steps": len(recs),
+                "algorithm": method,
             }
         )
     return rows
@@ -269,18 +211,19 @@ def load_tool_use_diagnostics() -> List[Dict[str, Any]]:
                     "experiment": r["experiment"],
                     "model": r["model"],
                     "task": r["task"],
-                    "group_size": 1,
-                    "n_seeds": 1,
+                    "group_size": None,
+                    "n_seeds": None,
                     "mean_zvf": float(r["zvf"]),
                     "min_zvf": float(r["zvf"]),
                     "max_zvf": float(r["zvf"]),
                     "mean_reward": float(r["reward_mean"]),
                     "peak": float(r["peak"]),
                     "last10_avg": float(r["last10_avg"]),
-                    "n_problems": 0,
+                    "n_problems": None,
                     "n_steps": int(r["n_steps"]),
-                    "evidence_path": "platform_hybrid/experiments/results/tool_code_reward_diagnostics.tsv",
-                    "seed": 0,
+                    "evidence_path": str((RESULTS / "tool_code_reward_diagnostics.tsv").resolve()),
+                    "seed": None,
+                    "row_kind": "summary",
                 }
             )
     return rows
@@ -299,7 +242,7 @@ def load_scaling_law_phases() -> List[Dict[str, Any]]:
         header = fh.readline()
         for line in fh:
             parts = line.rstrip("\n").split("\t")
-            if len(parts) < 8:
+            if len(parts) < 15:
                 continue
             rows.append(
                 {
@@ -307,18 +250,20 @@ def load_scaling_law_phases() -> List[Dict[str, Any]]:
                     "model": parts[0],
                     "params_B": float(parts[1]),
                     "task": "gsm8k_reasoning",
-                    "phase": parts[2],
-                    "group_size": 8,
-                    "n_seeds": 1,
+                    "phase": parts[11],
+                    "peak_segment_mean": float(parts[13]),
+                    "late_segment_mean": float(parts[14]),
+                    "group_size": None,
+                    "n_seeds": None,
                     "mean_zvf": float("nan"),
                     "min_zvf": float("nan"),
                     "max_zvf": float("nan"),
-                    "mean_reward": float(parts[13]),
-                    "peak": float(parts[13]),
-                    "last10_avg": float(parts[14]),
-                    "n_problems": 0,
-                    "n_steps": 30,
-                    "evidence_path": "platform_hybrid/experiments/results/scaling_law_three_phase.tsv",
+                    "mean_reward": None,
+                    "peak": None,
+                    "last10_avg": None,
+                    "n_problems": None,
+                    "n_steps": None,
+                    "evidence_path": str((RESULTS / "scaling_law_three_phase.tsv").resolve()),
                     "seed": "agg",
                 }
             )
@@ -342,11 +287,12 @@ def load_drgrpo_vs_grpo() -> List[Dict[str, Any]]:
                 "min_zvf": min(s["zvf"] for s in r["step_log"]),
                 "max_zvf": max(s["zvf"] for s in r["step_log"]),
                 "mean_reward": statistics.fmean(s["mean_reward"] for s in r["step_log"]),
-                "peak": r["heldout_acc"],
+                "peak": None,
+                "heldout_accuracy": r["heldout_acc"],
                 "last10_avg": r["last10_avg"],
-                "n_problems": 0,
+                "n_problems": None,
                 "n_steps": len(r["step_log"]),
-                "evidence_path": "platform_hybrid/experiments/results/drgrpo_vs_grpo.json",
+                "evidence_path": str((RESULTS / "drgrpo_vs_grpo.json").resolve()),
                 "seed": r["seed"],
                 "algo": r["algo"],
             }
@@ -374,11 +320,13 @@ def load_samestack_ppo_grpo() -> List[Dict[str, Any]]:
                 "min_zvf": r.get("min_zvf", float("nan")),
                 "max_zvf": r.get("max_zvf", float("nan")),
                 "mean_reward": r.get("mean_reward", float("nan")),
-                "peak": r.get("heldout_acc", float("nan")),
+                "peak": r.get("peak"),
+                "heldout_accuracy": r.get("heldout_acc"),
+                "algorithm": r.get("algorithm", r.get("algo", r.get("method", "unknown"))),
                 "last10_avg": r.get("last10_avg", float("nan")),
-                "n_problems": 0,
+                "n_problems": None,
                 "n_steps": r.get("n_steps", 0),
-                "evidence_path": "platform_hybrid/experiments/results/samestack_ppo_grpo.json",
+                "evidence_path": str((RESULTS / "samestack_ppo_grpo.json").resolve()),
                 "seed": r.get("seed", 0),
             }
         )
@@ -391,9 +339,9 @@ def load_samestack_ppo_grpo() -> List[Dict[str, Any]]:
 
 
 def classify(row: Dict[str, Any]) -> str:
-    peak = float(row.get("peak", float("nan")))
-    last = float(row.get("last10_avg", float("nan")))
-    if math.isnan(peak) or math.isnan(last):
+    peak = row.get("peak")
+    last = row.get("last10_avg")
+    if not _finite(peak) or not _finite(last):
         return "unknown"
     if last <= 0.001:
         # True zero-out (tool-use collapse, Nemotron final collapse).
@@ -507,357 +455,111 @@ SUMMARY_HEADERS = (
 )
 
 
-def write_summary(rows: List[Dict[str, Any]], out_path: Path) -> None:
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with out_path.open("w") as fh:
-        fh.write("# Pillar 2 cross-experiment ZVF summary\n")
-        fh.write(
-            "# Aggregated from per-experiment training-log sources under\n"
-            "# platform_hybrid/experiments/results/. Each row corresponds to a single\n"
-            "# (experiment, configuration, seed or aggregate). failure_label\n"
-            "# is computed deterministically from peak vs last10_avg:\n"
-            "#   collapse  peak > 0.7 AND last10_avg < 0.35\n"
-            "#   drift     last10_avg < 0.85 * peak (and not collapse)\n"
-            "#   plateau   peak < 0.5\n"
-            "#   converged last10_avg >= 0.85 * peak\n"
-            "# Source: platform_modal/scripts/zvf_diagnostic.py\n"
-        )
-        writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
-        writer.writerow(SUMMARY_HEADERS)
-        for r in rows:
-            writer.writerow(
-                [
-                    r.get("experiment", ""),
-                    r.get("model", ""),
-                    r.get("task", ""),
-                    r.get("phase", ""),
-                    r.get("group_size", ""),
-                    r.get("n_seeds", ""),
-                    _fmt(r.get("mean_zvf")),
-                    _fmt(r.get("min_zvf")),
-                    _fmt(r.get("max_zvf")),
-                    _fmt(r.get("mean_reward")),
-                    _fmt(r.get("peak")),
-                    _fmt(r.get("last10_avg")),
-                    classify(r),
-                    r.get("n_steps", ""),
-                    r.get("evidence_path", ""),
-                    r.get("seed", ""),
-                ]
-            )
+def _finite(value):
+    return not isinstance(value, bool) and isinstance(value, (int, float)) and math.isfinite(value)
 
 
-def _fmt(v: Any) -> str:
-    if v is None or (isinstance(v, float) and math.isnan(v)):
+def observation(row):
+    """Explicit measurement and condition identity; never infer an algorithm."""
+    r = dict(row)
+    r.setdefault("algorithm", r.get("algo", "unknown"))
+    r.setdefault("row_kind", "aggregate" if r.get("seed") == "agg" else "run")
+    r.setdefault("metric_definition", "sampling_accuracy" if r.get("experiment") == "tinker_gsm8k_zvf" else "source_reported_training_reward")
+    r.setdefault("condition_id", "|".join(str(r.get(k, "unknown")) for k in
+                 ("experiment", "model", "task", "group_size", "algorithm", "metric_definition")))
+    return r
+
+
+def independent_rows(rows):
+    """Exclude a condition aggregate whenever constituent runs are available."""
+    rows = [observation(r) for r in rows]
+    run_conditions = {r["condition_id"] for r in rows if r["row_kind"] == "run"}
+    result = [r for r in rows if r["row_kind"] != "aggregate" or r["condition_id"] not in run_conditions]
+    identities = [(r["condition_id"], r["row_kind"], str(r.get("seed"))) for r in result]
+    if len(identities) != len(set(identities)):
+        raise ValueError("duplicate condition/run identity")
+    return result
+
+
+def _fmt(v):
+    if v is None or isinstance(v, float) and not math.isfinite(v):
         return "NA"
-    if isinstance(v, float):
-        return f"{v:.4f}"
-    return str(v)
+    return f"{v:.6g}" if isinstance(v, float) else str(v)
 
 
-def write_by_library(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str, Any]:
-    """Per-library aggregation of ZVF vs failure taxonomy.
+def _write_records(path, records, fields):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w") as fh:
+        fh.write("# review27-v3: descriptive; missing measurements are NA\n")
+        writer = csv.DictWriter(fh, fields, delimiter="\t", lineterminator="\n")
+        writer.writeheader()
+        for record in records:
+            writer.writerow({k: _fmt(record.get(k)) for k in fields})
 
-    Lifts the 80-row long-form summary into one row per *library*
-    (GRPO, AERO, CPPO, NGRPO, SCAFGRPO, MCGRPO, GIFT, AREAL, ES,
-    cross-tool tool-use, and the canonical GSM8K baseline). Computes
-    mean-ZVF, mean peak/last10, and the failure-tally percentages.
-    Designed to support the cross-library AERO comparison: we want
-    one row per mitigation method plus one row for each baseline
-    experiment family.
 
-    Output columns:
-        library, model, n_rows, n_seeds, mean_zvf, max_zvf,
-        mean_peak, mean_last10, n_collapse, n_drift, n_plateau,
-        n_converged, collapse_rate, drift_rate, plateau_rate,
-        converged_rate, evidence_path
+def write_summary(rows, out_path):
+    records = [dict(observation(r), failure_label=classify(r)) for r in rows]
+    fields = list(SUMMARY_HEADERS) + ["algorithm", "condition_id", "row_kind", "metric_definition", "sampling_accuracy", "peak_segment_mean", "late_segment_mean", "heldout_accuracy", "heldout_accuracy_se", "collapse_steps", "observed_steps"]
+    _write_records(out_path, records, fields)
+
+
+def write_by_library(rows, out_path):
+    buckets = {}
+    for r in independent_rows(rows):
+        buckets.setdefault(r["condition_id"], []).append(r)
+    output = []
+    for condition, recs in sorted(buckets.items()):
+        first = recs[0]
+        labels = [classify(r) for r in recs]
+        classified = sum(label != "unknown" for label in labels)
+        def avg(key):
+            values = [r[key] for r in recs if _finite(r.get(key))]
+            return statistics.fmean(values) if values else None
+        counted = [r for r in recs if type(r.get("collapse_steps")) is int and type(r.get("observed_steps")) is int and 0 <= r["collapse_steps"] <= r["observed_steps"] and r["observed_steps"] > 0]
+        steps = sum(r["observed_steps"] for r in counted)
+        collapsed = sum(r["collapse_steps"] for r in counted)
+        seeds = {str(r["seed"]) for r in recs if r["row_kind"] == "run" and r.get("seed") is not None}
+        record = dict(condition_id=condition, library=first.get("algorithm", "unknown"), model=first.get("model"), algorithm=first["algorithm"], row_kind=first["row_kind"], n_rows=len(recs), n_seeds=len(seeds), n_classified=classified,
+            mean_zvf=avg("mean_zvf"), mean_peak=avg("peak"), mean_last10=avg("last10_avg"), collapse_steps=collapsed, observed_steps=steps,
+            per_step_collapse_rate=collapsed/steps if steps else None,
+            run_ever_collapsed_rate=sum(r["collapse_steps"] > 0 for r in counted)/len(counted) if counted else None,
+            evidence_path=";".join(sorted({r.get("evidence_path", "") for r in recs})))
+        for label in ("collapse", "drift", "plateau", "converged"):
+            record["n_"+label] = labels.count(label)
+            record[label+"_rate"] = labels.count(label)/classified if classified else None
+        output.append(record)
+    fields = list(output[0]) if output else ["condition_id", "n_rows"]
+    _write_records(out_path, output, fields)
+    return {"rows": output}
+
+
+def write_correlation(rows, out_path):
+    """Complete-case descriptive associations, stratified by metric definition.
+
+    Shared models, prompts and protocols can make distinct conditions dependent.
+    No CI is claimed until independent-cluster metadata is supplied and validated.
     """
-    # Group by (library, model) where library is either the lower-case
-    # method name from variance_mitigation, or the experiment label
-    # for everything else.
-    buckets: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
-    for r in rows:
-        m = str(r.get("model", "")).strip().lower()
-        exp = str(r.get("experiment", "")).strip()
-        if exp == "variance_mitigation":
-            lib = m  # aero, grpo, cppo, etc.
-        elif exp.startswith("cross_tool"):
-            lib = "tool_use"
-        elif exp == "tinker_gsm8k_zvf":
-            lib = "gsm8k_real"
-        elif exp == "groupsize_zvf_sweep":
-            lib = "arithmetic_groupsize"
-        elif exp == "scaling_law_three_phase":
-            lib = "scaling_law"
-        elif exp in ("drgrpo_vs_grpo", "samestack_ppo_grpo"):
-            lib = exp
-        else:
-            lib = exp
-        buckets.setdefault((lib, str(r.get("model", ""))), []).append(r)
-
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    agg_rows: List[Dict[str, Any]] = []
-    with out_path.open("w") as fh:
-        fh.write("# Pillar 2 by-library ZVF aggregation (cross-library diagnostic)\n")
-        fh.write(
-            "# One row per (library, model). Library = method for variance_mitigation rows\n"
-            "# (aero, grpo, cppo, ngrpo, scafgrpo, mcgrpo, gift, areal, es) or\n"
-            "# experiment family for non-variance_mitigation rows (tool_use, gsm8k_real,\n"
-            "# arithmetic_groupsize, scaling_law). failure counts are computed by the\n"
-            "# deterministic classify() rule (see top of this file).\n"
-            "# Source: platform_modal/scripts/zvf_diagnostic.py\n"
-        )
-        writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
-        writer.writerow(
-            (
-                "library",
-                "model",
-                "n_rows",
-                "n_seeds",
-                "mean_zvf",
-                "max_zvf",
-                "mean_peak",
-                "mean_last10",
-                "n_collapse",
-                "n_drift",
-                "n_plateau",
-                "n_converged",
-                "collapse_rate",
-                "drift_rate",
-                "plateau_rate",
-                "converged_rate",
-                "per_step_collapse_rate",
-                "evidence_path",
-            )
-        )
-        # Stable ordering: variance_mitigation methods first, then everything else.
-        method_order = (
-            "grpo",
-            "aero",
-            "cppo",
-            "ngrpo",
-            "scafgrpo",
-            "mcgrpo",
-            "gift",
-            "areal",
-            "es",
-        )
-        sorted_keys = []
-        for m in method_order:
-            for key in buckets.keys():
-                if key[0] == m:
-                    sorted_keys.append(key)
-        for key in buckets.keys():
-            if key not in sorted_keys:
-                sorted_keys.append(key)
-
-        for key in sorted_keys:
-            lib, model_label = key
-            recs = buckets[key]
-            n_rows = len(recs)
-            n_seeds_set = {r.get("seed") for r in recs}
-            n_seeds = len(n_seeds_set)
-            zvfs = [
-                float(r["mean_zvf"])
-                for r in recs
-                if r.get("mean_zvf") is not None and not (isinstance(r["mean_zvf"], float) and math.isnan(r["mean_zvf"]))
-            ]
-            peaks = [
-                float(r["peak"])
-                for r in recs
-                if r.get("peak") is not None and not (isinstance(r["peak"], float) and math.isnan(r["peak"]))
-            ]
-            lasts = [
-                float(r["last10_avg"])
-                for r in recs
-                if r.get("last10_avg") is not None and not (isinstance(r["last10_avg"], float) and math.isnan(r["last10_avg"]))
-            ]
-            labels = [classify(r) for r in recs]
-            n_collapse = sum(1 for l in labels if l == "collapse")
-            n_drift = sum(1 for l in labels if l == "drift")
-            n_plateau = sum(1 for l in labels if l == "plateau")
-            n_converged = sum(1 for l in labels if l == "converged")
-            mean_zvf = statistics.fmean(zvfs) if zvfs else float("nan")
-            max_zvf = max(zvfs) if zvfs else float("nan")
-            mean_peak = statistics.fmean(peaks) if peaks else float("nan")
-            mean_last10 = statistics.fmean(lasts) if lasts else float("nan")
-            # Per-step collapse rate (only meaningful for variance_mitigation
-            # rows where the underlying TSV carries a per-step collapse flag).
-            per_step_collapse_vals = [
-                int(r["_collapse_flag"])
-                for r in recs
-                if "_collapse_flag" in r
-            ]
-            per_step_collapse_rate = (
-                sum(per_step_collapse_vals) / len(per_step_collapse_vals)
-                if per_step_collapse_vals
-                else float("nan")
-            )
-            ev = recs[0].get("evidence_path", "")
-            writer.writerow(
-                (
-                    lib,
-                    model_label,
-                    n_rows,
-                    n_seeds,
-                    _fmt(mean_zvf),
-                    _fmt(max_zvf),
-                    _fmt(mean_peak),
-                    _fmt(mean_last10),
-                    n_collapse,
-                    n_drift,
-                    n_plateau,
-                    n_converged,
-                    _fmt(n_collapse / n_rows) if n_rows else "NA",
-                    _fmt(n_drift / n_rows) if n_rows else "NA",
-                    _fmt(n_plateau / n_rows) if n_rows else "NA",
-                    _fmt(n_converged / n_rows) if n_rows else "NA",
-                    _fmt(per_step_collapse_rate),
-                    ev,
-                )
-            )
-            agg_rows.append(
-                {
-                    "library": lib,
-                    "model": model_label,
-                    "n_rows": n_rows,
-                    "n_seeds": n_seeds,
-                    "mean_zvf": mean_zvf,
-                    "max_zvf": max_zvf,
-                    "mean_peak": mean_peak,
-                    "mean_last10": mean_last10,
-                    "n_collapse": n_collapse,
-                    "n_drift": n_drift,
-                    "n_plateau": n_plateau,
-                    "n_converged": n_converged,
-                    "per_step_collapse_rate": per_step_collapse_rate,
-                    "evidence_path": ev,
-                }
-            )
-    return {"rows": agg_rows}
-
-
-def write_correlation(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str, Any]:
-    """Per-experiment collapse-label correlations.
-
-    We collapse the 14 per-experiment rows by averaging across
-    seeds within an (experiment, condition) pair, then correlate
-    mean_zvf against last10_avg / collapse_binary.
-    """
-    keys: Dict[Tuple[str, str, int], List[Dict[str, Any]]] = {}
-    for r in rows:
-        key = (r["experiment"], str(r.get("model", "")), int(r.get("group_size", 0) or 0))
-        keys.setdefault(key, []).append(r)
-    pooled: List[Dict[str, Any]] = []
-    for key, recs in keys.items():
-        mz_vals = [r["mean_zvf"] for r in recs if not math.isnan(r["mean_zvf"])]
-        la_vals = [r["last10_avg"] for r in recs if not math.isnan(r["last10_avg"])]
-        pk_vals = [r["peak"] for r in recs if not math.isnan(r["peak"])]
-        # Only keep rows that have at least a non-NaN last10_avg and peak;
-        # ZVF is optional for the scaling-law-only rows.
-        if not la_vals or not pk_vals:
-            continue
-        mz = statistics.fmean(mz_vals) if mz_vals else float("nan")
-        la = statistics.fmean(la_vals)
-        pk = statistics.fmean(pk_vals)
-        pooled.append(
-            {
-                "experiment": key[0],
-                "model": key[1],
-                "group_size": key[2],
-                "mean_zvf": mz,
-                "last10_avg": la,
-                "peak": pk,
-                "failure": classify(
-                    {"peak": pk, "last10_avg": la}
-                ),
-            }
-        )
-
-    zvfs = [p["mean_zvf"] for p in pooled if not math.isnan(p["mean_zvf"])]
-    paired_lasts = [p["last10_avg"] for p in pooled if not math.isnan(p["mean_zvf"])]
-    paired_zvfs = zvfs
-    paired_collapse = [
-        (1.0 if p["failure"] == "collapse" else 0.0)
-        for p in pooled
-        if not math.isnan(p["mean_zvf"])
-    ]
-
-    pear_r, pear_lo_hi = bootstrap_ci(paired_zvfs, paired_lasts, _pearson, B=2000, seed=11)
-    spear_r, spear_lo_hi = bootstrap_ci(paired_zvfs, paired_lasts, _spearman, B=2000, seed=22)
-    pear_collapse, _ = bootstrap_ci(paired_zvfs, paired_collapse, _pearson, B=2000, seed=33)
-    spear_collapse, _ = bootstrap_ci(paired_zvfs, paired_collapse, _spearman, B=2000, seed=44)
-
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with out_path.open("w") as fh:
-        fh.write("# Pillar 2 ZVF vs training-failure correlation table\n")
-        fh.write(
-            "# Rows are per-(experiment, model, group_size) pooled means,\n"
-            "# not per-step rows; per-step ZVF rows are autocorrelated and\n"
-            "# would inflate apparent significance. Bootstrap CIs are B=2000\n"
-            "# percentile resamples over the pooled rows. Source:\n"
-            "# platform_modal/scripts/zvf_diagnostic.py\n"
-        )
-        writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
-        writer.writerow(
-            (
-                "test",
-                "n_pooled_rows",
-                "rho",
-                "ci_lo",
-                "ci_hi",
-                "method",
-            )
-        )
-        writer.writerow(
-            (
-                "mean_zvf vs last10_avg",
-                len(pooled),
-                _fmt(pear_r),
-                _fmt(pear_lo_hi[0]),
-                _fmt(pear_lo_hi[1]),
-                "Pearson + 95% bootstrap CI",
-            )
-        )
-        writer.writerow(
-            (
-                "mean_zvf vs last10_avg",
-                len(pooled),
-                _fmt(spear_r),
-                _fmt(spear_lo_hi[0]),
-                _fmt(spear_lo_hi[1]),
-                "Spearman + 95% bootstrap CI",
-            )
-        )
-        writer.writerow(
-            (
-                "mean_zvf vs is_collapse",
-                len(pooled),
-                _fmt(pear_collapse),
-                "NA",
-                "NA",
-                "Pearson point-biserial (CI NaN, deterministic at n=14)",
-            )
-        )
-        writer.writerow(
-            (
-                "mean_zvf vs is_collapse",
-                len(pooled),
-                _fmt(spear_collapse),
-                "NA",
-                "NA",
-                "Spearman point-biserial (CI NaN, deterministic at n=14)",
-            )
-        )
-    return {
-        "n_pooled_rows": len(paired_zvfs),
-        "pearson_mean_zvf_last10": pear_r,
-        "spearman_mean_zvf_last10": spear_r,
-        "pearson_mean_zvf_collapse_binary": pear_collapse,
-        "spearman_mean_zvf_collapse_binary": spear_collapse,
-        "ci_pearson": pear_lo_hi,
-        "ci_spearman": spear_lo_hi,
-    }
+    rows = independent_rows(rows)
+    strata = sorted({r["metric_definition"] for r in rows}) or ["unavailable"]
+    output = []
+    for stratum in strata:
+        subset = [r for r in rows if r["metric_definition"] == stratum]
+        for outcome in ("last10_avg", "is_collapse"):
+            buckets = {}
+            for r in subset:
+                y = r.get("last10_avg") if outcome == "last10_avg" else (None if classify(r) == "unknown" else float(classify(r) == "collapse"))
+                if _finite(r.get("mean_zvf")) and _finite(y):
+                    buckets.setdefault(r["condition_id"], []).append((r["mean_zvf"], y))
+            pairs = [(statistics.fmean(x for x,y in values), statistics.fmean(y for x,y in values)) for values in buckets.values()]
+            xs, ys = [p[0] for p in pairs], [p[1] for p in pairs]
+            for name, metric in (("Pearson", _pearson), ("Spearman", _spearman)):
+                output.append(dict(test="mean_zvf vs "+outcome, metric_definition=stratum, n_pooled_rows=len(pairs), n_complete_run_rows=sum(map(len,buckets.values())), rho=metric(xs, ys), ci_lo=None, ci_hi=None, method=name+" descriptive; independent sampling design unavailable"))
+    _write_records(out_path, output, list(output[0]))
+    # Compatibility fields are unavailable when multiple estimands exist;
+    # callers must consume the explicit per-stratum records instead of mixing.
+    def value(index):
+        return output[index]["rho"] if len(strata) == 1 else float("nan")
+    return dict(rows=output, n_pooled_rows=output[0]["n_pooled_rows"] if len(strata)==1 else None, pearson_mean_zvf_last10=value(0), spearman_mean_zvf_last10=value(1), pearson_mean_zvf_collapse_binary=value(2), spearman_mean_zvf_collapse_binary=value(3), ci_pearson=(float("nan"),)*2, ci_spearman=(float("nan"),)*2)
 
 
 # ---------------------------------------------------------------------------
@@ -891,21 +593,16 @@ def write_figure(rows: List[Dict[str, Any]], out_path: Path) -> Optional[str]:
         return None
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig, ax = plt.subplots(figsize=(6.2, 4.0))
-    pooled: Dict[Tuple[str, str, int], List[Dict[str, Any]]] = {}
-    for r in rows:
-        key = (r["experiment"], str(r.get("model", "")), int(r.get("group_size", 0) or 0))
-        pooled.setdefault(key, []).append(r)
+    pooled = {}
+    for r in independent_rows(rows):
+        if _finite(r.get("mean_zvf")) and _finite(r.get("last10_avg")):
+            pooled.setdefault(r["condition_id"], []).append(r)
     plotted = 0
     for key, recs in pooled.items():
-        mz_vals = [r["mean_zvf"] for r in recs if not math.isnan(r["mean_zvf"])]
-        la_vals = [r["last10_avg"] for r in recs if not math.isnan(r["last10_avg"])]
-        if not la_vals or not mz_vals:
-            continue
-        mz = statistics.fmean(mz_vals)
-        la = statistics.fmean(la_vals)
-        if math.isnan(mz) or math.isnan(la):
-            continue
-        label = classify({"peak": max(r["peak"] for r in recs), "last10_avg": la})
+        mz = statistics.fmean(r["mean_zvf"] for r in recs)
+        la = statistics.fmean(r["last10_avg"] for r in recs)
+        peaks = [r["peak"] for r in recs if _finite(r.get("peak"))]
+        label = classify({"peak": statistics.fmean(peaks) if peaks else None, "last10_avg": la})
         ax.scatter(
             mz,
             la,
@@ -919,9 +616,9 @@ def write_figure(rows: List[Dict[str, Any]], out_path: Path) -> Optional[str]:
     ax.set_xlim(-0.02, 1.05)
     ax.set_ylim(-0.02, 1.05)
     ax.set_xlabel("Mean ZVF across training trajectory")
-    ax.set_ylabel("Heldout accuracy (last-10-window average)")
+    ax.set_ylabel("Source-reported last-10 outcome (heterogeneous metrics)")
     ax.set_title(
-        "ZVF vs training outcome across %d (experiment, model, G) cells\n"
+        "ZVF vs training outcome across %d condition cells\n"
         "color = collapse taxonomy" % plotted
     )
     # Inline legend without overlapping points.
@@ -946,7 +643,7 @@ def write_figure(rows: List[Dict[str, Any]], out_path: Path) -> Optional[str]:
     fig.savefig(out_path, format="pdf")
     fig.savefig(out_path.with_suffix(".png"), format="png", dpi=140)
     plt.close(fig)
-    return str(out_path.relative_to(REPO_ROOT))
+    return str(out_path.resolve())
 
 
 # Highlight colour for the AERO / RL-ZVP marker on the cross-library plot.
@@ -980,13 +677,13 @@ def write_by_library_figure(
     others.sort(key=lambda r: r["library"])
     ordered = methods + others
 
-    labels = [r["library"] for r in ordered]
-    mean_zvfs = [r["mean_zvf"] for r in ordered]
+    labels = [r["condition_id"] for r in ordered]
+    mean_zvfs = [r["mean_zvf"] if r["mean_zvf"] is not None else float("nan") for r in ordered]
     n_collapse = [r["n_collapse"] for r in ordered]
     n_drift = [r["n_drift"] for r in ordered]
     n_plateau = [r["n_plateau"] for r in ordered]
     n_converged = [r["n_converged"] for r in ordered]
-    n_rows = [max(1, r["n_rows"]) for r in ordered]
+    n_rows = [max(1, r["n_classified"]) for r in ordered]
 
     fig, (axL, axR) = plt.subplots(1, 2, figsize=(13.5, 4.6))
 
@@ -996,7 +693,7 @@ def write_by_library_figure(
     ]
     bars = axL.bar(labels, mean_zvfs, color=bar_colors, edgecolor="white", linewidth=0.6)
     axL.set_ylabel("Mean ZVF across training trajectory")
-    axL.set_title("Mean ZVF per library (AERO highlighted)")
+    axL.set_title("Mean ZVF per condition")
     axL.set_ylim(0, max(0.6, max(mean_zvfs) * 1.18) if mean_zvfs else 0.6)
     axL.tick_params(axis="x", rotation=45, labelsize=8)
     for bar, val in zip(bars, mean_zvfs):
@@ -1039,14 +736,14 @@ def write_by_library_figure(
     axR.legend(loc="upper right", fontsize=8, frameon=False)
 
     fig.suptitle(
-        "ZVF as a cross-library diagnostic: AERO vs GRPO and the full run matrix",
+        "Exploratory condition summaries; unknown outcomes excluded from taxonomy denominator",
         y=1.02,
     )
     fig.tight_layout()
     fig.savefig(out_path, format="pdf")
     fig.savefig(out_path.with_suffix(".png"), format="png", dpi=140)
     plt.close(fig)
-    return str(out_path.relative_to(REPO_ROOT))
+    return str(out_path.resolve())
 
 
 # ---------------------------------------------------------------------------
@@ -1057,30 +754,38 @@ def write_by_library_figure(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--out-summary", type=Path, default=RESULTS / "zvf_summary.tsv"
+        "--out-summary", type=Path, default=RESULTS / "zvf_summary_v3.tsv"
     )
     parser.add_argument(
-        "--out-correlation", type=Path, default=RESULTS / "zvf_failure_correlation.tsv"
+        "--out-correlation", type=Path, default=RESULTS / "zvf_failure_correlation_v3.tsv"
     )
     parser.add_argument(
-        "--out-figure", type=Path, default=REPO_ROOT / "figures" / "zvf_vs_failure.pdf"
+        "--out-figure", type=Path, default=REPO_ROOT / "figures" / "zvf_vs_failure_v3.pdf"
     )
     parser.add_argument(
         "--out-by-library",
         type=Path,
-        default=RESULTS / "zvf_by_library.tsv",
+        default=RESULTS / "zvf_by_library_v3.tsv",
         help="Per-library ZVF/failure aggregation (cross-library diagnostic vs AERO)",
     )
     parser.add_argument(
         "--out-library-figure",
         type=Path,
-        default=REPO_ROOT / "figures" / "zvf_by_library.pdf",
+        default=REPO_ROOT / "figures" / "zvf_by_library_v3.pdf",
         help="Per-library bar chart emphasising AERO vs GRPO contrast",
     )
     parser.add_argument(
         "--self-test", action="store_true", help="Run on a small synthetic slice"
     )
+    parser.add_argument("--input-dir", type=Path, default=RESULTS)
     args = parser.parse_args()
+    globals()["RESULTS"] = args.input_dir
+    if args.self_test:
+        assert _pearson([1.,2.,3.],[2.,4.,6.]) > .999
+        assert _pearson([1.,2.,3.],[6.,4.,2.]) < -.999
+        print("synthetic numerical self-test passed; no inputs loaded or artifacts written")
+        return 0
+
 
     rows: List[Dict[str, Any]] = []
     rows += load_tinker_gsm8k()
@@ -1090,16 +795,6 @@ def main() -> int:
     rows += load_scaling_law_phases()
     rows += load_drgrpo_vs_grpo()
     rows += load_samestack_ppo_grpo()
-
-    # Optional self-test: keep just one representative row per loader.
-    if args.self_test:
-        keep = []
-        seen_exp = set()
-        for r in rows:
-            if r["experiment"] not in seen_exp:
-                keep.append(r)
-                seen_exp.add(r["experiment"])
-        rows = keep
 
     write_summary(rows, args.out_summary)
     by_lib = write_by_library(rows, args.out_by_library)
@@ -1132,9 +827,9 @@ def main() -> int:
         if r["library"] in ("grpo", "aero"):
             print(
                 f"[zvf-diagnostic] {r['library']:>4}: "
-                f"mean_zvf={r['mean_zvf']:.3f}  "
+                f"mean_zvf={_fmt(r['mean_zvf'])}  "
                 f"collapse={r['n_collapse']}/{r['n_rows']}  "
-                f"mean_last10={r['mean_last10']:.3f}"
+                f"mean_last10={_fmt(r['mean_last10'])}"
             )
     return 0
 

@@ -36,6 +36,7 @@ gap).
 """
 from __future__ import annotations
 
+from _minreport_contract import load_inventory_manifests, inventory_counts
 import csv
 import json
 import re
@@ -43,7 +44,9 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+ROOT = REPO_ROOT / "platform_hybrid"
 MANIFEST_DIRS = [
     ROOT / "experiments" / "results" / "mega_20260704" / "manifests",
     ROOT / "experiments" / "results" / "quick_20260704",
@@ -207,22 +210,12 @@ def probe_axis(manifest: dict, axis_keys: list[str], val_regex) -> tuple[str, st
 
 def load_manifests() -> list[dict]:
     out = []
-    for mdir in MANIFEST_DIRS:
-        if not mdir.is_dir():
-            continue
-        for jf in sorted(mdir.glob("*.json")):
-            try:
-                with jf.open() as f:
-                    d = json.load(f)
-            except Exception as e:
-                print(f"warn: bad json {jf}: {e}", file=sys.stderr)
-                continue
-            if not any(any(k in d for k in keys)
-                       for _, _, keys, _, _ in MC_AXES + DS_AXES):
-                continue
-            d["_path"] = jf.name
-            d["_corpus"] = mdir.name
-            out.append(d)
+    for directory in MANIFEST_DIRS:
+        inventory = directory.parent / 'cells.tsv'
+        rows = load_inventory_manifests(directory, inventory)
+        for r in rows:
+            r['_corpus'] = directory.name
+        out.extend(rows)
     return out
 
 

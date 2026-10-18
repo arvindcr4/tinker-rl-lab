@@ -87,7 +87,7 @@ def test_plot_preserves_coordinates_and_labels(monkeypatch, explicit):
         monkeypatch.setattr(stats.plt, name, MagicMock())
     records = [{"reward/mean": np.float32(1)}, {"reward/mean": np.float64(0.5)}]
     if explicit:
-        for row, step in zip(records, [np.int64(100), np.int64(500)]):
+        for row, step in zip(records, [np.int64(100), np.int64(500)], strict=True):
             row["step"] = step
     stats.plot_learning_curves_with_ci({"a": {42: records}})
     assert axes.plot.call_args.args[0] == ([100, 500] if explicit else [1, 2])

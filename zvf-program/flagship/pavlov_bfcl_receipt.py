@@ -12,12 +12,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = "pavlov-bfcl-receipt-v1"
+SCHEMA_VERSION = "pavlov-bfcl-receipt-v2"
 SUITE_ID = "bfcl_train"
 NATIVE_CATEGORY = "tool_use"
 _NATIVE_VERDICTS = frozenset({"pass", "fail", "error"})
@@ -245,6 +246,8 @@ def _validate_costs(raw: Any) -> dict[str, Any]:
     total_usd = raw.get("total_usd")
     if not isinstance(total_usd, (int, float)) or isinstance(total_usd, bool):
         raise BFCLReceiptBoundaryError("costs.total_usd must be a number")
+    if not math.isfinite(total_usd):
+        raise BFCLReceiptBoundaryError("costs.total_usd must be finite")
     if total_usd < 0:
         raise BFCLReceiptBoundaryError("costs.total_usd cannot be negative")
 

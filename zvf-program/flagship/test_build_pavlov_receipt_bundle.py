@@ -132,7 +132,7 @@ class PavlovReceiptBundleTests(unittest.TestCase):
         self.assertTrue(any("wandb_run_identity" in error for error in errors))
         self.assertTrue(any("hf_checkpoints" in error for error in errors))
 
-    def test_complete_local_receipts_validate_without_authorizing_a_launch(self) -> None:
+    def test_legacy_unsigned_receipts_do_not_clear_v2_gate(self) -> None:
         contract = copy.deepcopy(self.contract)
         contract["status"] = "authorized"
         contract["budget_gate"]["status"] = "AUTHORIZED_TINKER_ONLY"
@@ -189,10 +189,10 @@ class PavlovReceiptBundleTests(unittest.TestCase):
             )
         }
         bundle = build_bundle(contract, overrides)
-        self.assertEqual(bundle["status"], "READY")
+        self.assertEqual(bundle["status"], "BLOCKED")
         self.assertFalse(bundle["launchable"])
         self.assertFalse(bundle["launches_any_job"])
-        self.assertEqual(validate_bundle(bundle, contract), [])
+        self.assertTrue(validate_bundle(bundle, contract))
 
 
 if __name__ == "__main__":

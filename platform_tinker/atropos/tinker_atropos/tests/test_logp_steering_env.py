@@ -1,4 +1,5 @@
 """Tests for the logp_steering environment logic (no network, no tinker)."""
+
 import pytest
 
 
@@ -7,6 +8,9 @@ class TestExtractFirstTurn:
 
     def _make_env(self):
         """Create a minimal LogpSteeringEnv without full init."""
+        pytest.importorskip(
+            "atroposlib", reason="optional Atropos integration dependency is not installed"
+        )
         from tinker_atropos.environments.logp_steering import LogpSteeringEnv
 
         env = object.__new__(LogpSteeringEnv)

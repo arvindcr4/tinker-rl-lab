@@ -556,7 +556,7 @@ strict machine contract, full local/W&B/HF reconciliation, treatment
 fingerprints, held-out completion hashes, and equivalence-aware fail-closed
 aggregation form a distinctive benchmark methodology. The E1 finding—four
 arms `INCONCLUSIVE` after the 2026-08-02 exact-t reanalysis superseded the
-DAPO `DISAPPEARS` verdict, with no arm declared a failure—is also a
+former DAPO `DISAPPEARS` verdict, with no arm declared a failure—is also a
 disciplined negative result.
 
 **Remaining gap.** To be an archival benchmark rather than a bounded case

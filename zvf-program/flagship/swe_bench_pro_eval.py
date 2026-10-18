@@ -220,7 +220,7 @@ def _parse_declared_license(readme: str) -> str | None:
 
 
 def fetch_benchmark_metadata() -> dict[str, Any]:
-    api_url = f"https://huggingface.co/api/datasets/{DATASET_ID}"
+    api_url = f"https://huggingface.co/api/datasets/{DATASET_ID}/revision/{DATASET_REVISION}"
     try:
         metadata = _json_request(api_url)
     except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
@@ -288,15 +288,10 @@ def acquire_evaluator_checkout(runtime_dir: Path) -> Path:
     if (checkout / ".git").exists():
         current = _run(["git", "rev-parse", "HEAD"], cwd=checkout)
         if current.returncode == 0 and current.stdout.strip() == EVALUATOR_REVISION:
+            if not inspect_local_evaluator(checkout).get("clean"):
+                raise PreflightBlocked("evaluator checkout contains modified or untracked files")
             return checkout
-        fetch = _run(["git", "fetch", "--depth", "1", "origin", EVALUATOR_REVISION], cwd=checkout)
-        if fetch.returncode == 0:
-            checkout_result = _run(["git", "checkout", "--detach", EVALUATOR_REVISION], cwd=checkout)
-            if checkout_result.returncode == 0:
-                return checkout
-        raise PreflightBlocked(
-            f"evaluator checkout exists but is not pinned to {EVALUATOR_REVISION}"
-        )
+        raise PreflightBlocked("existing evaluator has a different revision; choose a fresh runtime directory instead of modifying it")
     clone = _run(
         [
             "git",
@@ -323,6 +318,7 @@ def inspect_local_evaluator(checkout: Path) -> dict[str, Any]:
     if not checkout.is_dir():
         return {"present": False, "revision": None, "license": None}
     current = _run(["git", "rev-parse", "HEAD"], cwd=checkout)
+    dirty = _run(["git", "status", "--porcelain", "--untracked-files=all"], cwd=checkout)
     license_path = checkout / "LICENSE"
     license_sha = sha256_file(license_path) if license_path.exists() else None
     return {
@@ -330,6 +326,8 @@ def inspect_local_evaluator(checkout: Path) -> dict[str, Any]:
         "revision": current.stdout.strip() if current.returncode == 0 else None,
         "license": EVALUATOR_LICENSE if license_path.exists() else None,
         "license_sha256": license_sha,
+        "clean": dirty.returncode == 0 and not dirty.stdout.strip(),
+        "runner_sha256": sha256_file(checkout / "swe_bench_pro_eval.py") if (checkout / "swe_bench_pro_eval.py").is_file() else None,
         "has_runner": (checkout / "swe_bench_pro_eval.py").is_file(),
         "has_run_scripts": (checkout / "run_scripts").is_dir(),
         "has_instance_dockerfiles": (checkout / "dockerfiles" / "instance_dockerfile").is_dir(),
@@ -559,6 +557,10 @@ def validate_patch_artifact(path: Path | None, task_ids: Sequence[str]) -> dict[
             error = "each patch entry needs instance_id and patch"
             break
         instance_id = item["instance_id"]
+        if "patch" in item and "model_patch" in item and item["patch"] != item["model_patch"]:
+            valid = False
+            error = "conflicting patch aliases"
+            break
         patch = item.get("patch", item.get("model_patch"))
         if not isinstance(patch, str) or not patch.strip():
             valid = False
@@ -571,7 +573,7 @@ def validate_patch_artifact(path: Path | None, task_ids: Sequence[str]) -> dict[
     if sorted(seen) != sorted(task_ids):
         valid = False
         error = "patch IDs must exactly equal the selected disjoint task IDs"
-    return {"present": True, "valid": valid, "path": str(path), "count": len(payload), "task_id_hash": task_id_hash(seen), "error": error}
+    return {"present": True, "valid": valid, "path": str(path), "count": len(payload), "task_id_hash": task_id_hash(seen), "predictions_sha256": sha256_text(json.dumps(payload, sort_keys=True, separators=(",", ":"))), "attribution": "provided_patch_verification_only", "error": error}
 
 
 def _unique(values: Iterable[str]) -> list[str]:
@@ -594,6 +596,8 @@ def build_preflight(
     rows: Sequence[Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     blockers: list[str] = []
+    if require_tinker:
+        blockers.append("Tinker generation is unsupported; this runner verifies provided patches only")
     root = _repo_root()
     selected_ids = list(task_ids or [DEFAULT_TASK_ID])
     if len(selected_ids) != len(set(selected_ids)):
@@ -656,6 +660,8 @@ def build_preflight(
         except PreflightBlocked as exc:
             blockers.append(str(exc))
     local_evaluator = inspect_local_evaluator(checkout)
+    if local_evaluator.get("present") and not local_evaluator.get("clean"):
+        blockers.append("evaluator checkout has modified or untracked content")
     if not local_evaluator.get("present"):
         blockers.append("native SWE-bench Pro evaluator checkout is absent; acquire the pinned official checkout")
     else:
@@ -696,7 +702,7 @@ def build_preflight(
     model: dict[str, Any] = {"model_id": model_id, "revision": model_revision, "source": "huggingface_base"}
     if network:
         try:
-            model_meta = _json_request(f"https://huggingface.co/api/models/{model_id}")
+            model_meta = _json_request(f"https://huggingface.co/api/models/{model_id}/revision/{model_revision}")
             model["hub_revision"] = model_meta.get("sha")
             model["hub_private"] = bool(model_meta.get("private"))
             model["hub_gated"] = bool(model_meta.get("gated"))
@@ -748,7 +754,7 @@ def build_preflight(
         external_receipts.append({"kind": "wandb_online", "required_fields": ["online=true", "run_id", "run_url"]})
 
     return {
-        "schema_version": "e1-swe-bench-pro-receipt-v1",
+        "schema_version": "e1-swe-bench-pro-receipt-v2",
         "suite_id": SUITE_ID,
         "status": "READY" if not _unique(blockers) else "BLOCKED",
         "launchable": not _unique(blockers),
@@ -763,7 +769,8 @@ def build_preflight(
             "selected_task_id_hash": task_id_hash(selected_ids),
             "training_task_ids": sorted(set(training_task_ids)),
             "training_task_id_hash": task_id_hash(training_task_ids),
-            "task_ids_disjoint": not bool(set(selected_ids) & set(training_task_ids)),
+            "task_ids_disjoint": not bool(set(selected_ids) & set(training_task_ids)) if training_task_ids else None,
+            "contamination_status": "checked_supplied_inventory_only" if training_task_ids else "not_checked",
             "selected_split_manifest_hash": selected_manifest_hash,
             "selected_row_count": len(selected_rows),
             "total_row_count": len(dataset_rows),
@@ -803,7 +810,15 @@ def start_wandb_online(config: Mapping[str, Any]) -> dict[str, Any]:
 
 def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    import os
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode="w", dir=path.parent, delete=False, encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2, sort_keys=True, allow_nan=False)
+        handle.write("\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+        temporary = handle.name
+    os.replace(temporary, path)
 
 
 def _write_rows(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
@@ -846,43 +861,69 @@ def run_evaluation(
     rows: Sequence[Mapping[str, Any]],
     patch_path: Path,
     docker_platform: str | None = None,
+    receipt_path: Path | None = None,
 ) -> dict[str, Any]:
     if not receipt.get("launchable"):
         raise PreflightBlocked("launch blocked: " + "; ".join(receipt.get("blockers", [])))
-    environment = receipt["native_environment"]["isolated"]
-    python_path = Path(str(environment["python"]))
-    output_dir = runtime_dir / "evaluation"
-    raw_samples = runtime_dir / "selected_samples.jsonl"
+    runtime_dir, evaluator, patch_path = runtime_dir.resolve(), evaluator.resolve(), patch_path.resolve()
+    task_ids = receipt["benchmark"]["selected_task_ids"]
+    checked = validate_patch_artifact(patch_path, task_ids)
+    if not checked.get("valid"):
+        raise PreflightBlocked("invalid patch artifact: " + str(checked.get("error")))
+    inspected = inspect_local_evaluator(evaluator)
+    if not inspected.get("clean") or inspected.get("revision") != EVALUATOR_REVISION:
+        raise PreflightBlocked("evaluator snapshot is not clean and pinned")
+    payload = _load_json_file(patch_path)
+    normalized = sorted(({"instance_id": item["instance_id"], "model_patch": item.get("model_patch", item.get("patch"))} for item in payload), key=lambda item: item["instance_id"])
+    identity = {"predictions": normalized, "dataset_revision": DATASET_REVISION,
+                "selected_rows": list(rows), "evaluator": inspected, "protocol": "provided-patch-verifier-v2",
+                "docker_platform": docker_platform}
+    evaluation_id = sha256_text(json.dumps(identity, sort_keys=True, separators=(",", ":")))
+    output_dir = runtime_dir / "evaluation" / evaluation_id
+    output_dir.mkdir(parents=True, exist_ok=True)
+    raw_samples = output_dir / "selected_samples.jsonl"
+    normalized_path = output_dir / "predictions.json"
     _write_rows(raw_samples, rows)
-    command = _official_eval_command(
-        python_path=python_path,
-        evaluator=evaluator,
-        raw_samples=raw_samples,
-        patches=patch_path,
-        output_dir=output_dir,
-        docker_platform=docker_platform or ("linux/amd64" if platform.machine().lower() in {"arm64", "aarch64"} else None),
-    )
-    result = _run(command, cwd=evaluator, timeout=24 * 60 * 60)
-    receipt["launches_any_job"] = True
-    receipt["launch"] = {"command": command, "returncode": result.returncode, "output_dir": str(output_dir)}
-    if result.returncode != 0:
-        receipt["status"] = "FAILED"
-        receipt["evidence_class"] = "execution_failed"
-        receipt["blockers"] = _unique([*receipt.get("blockers", []), "official native evaluator exited non-zero"])
-        return receipt
-    results_path = output_dir / "eval_results.json"
-    if not results_path.is_file():
-        receipt["status"] = "FAILED"
-        receipt["evidence_class"] = "execution_failed"
-        receipt["blockers"] = _unique([*receipt.get("blockers", []), "official evaluator produced no eval_results.json"])
-        return receipt
-    results = _load_json_file(results_path)
-    if not isinstance(results, Mapping):
-        raise PreflightBlocked("official evaluator result is not a mapping")
-    values = [bool(results.get(task_id)) for task_id in receipt["benchmark"]["selected_task_ids"]]
-    receipt["score"] = {"resolved": sum(values), "total": len(values), "accuracy": sum(values) / len(values) if values else None, "per_task": dict(results)}
-    receipt["status"] = "COMPLETE"
-    receipt["evidence_class"] = "native_model_evaluation"
+    _write_json(normalized_path, normalized)
+    environment = receipt["native_environment"]["isolated"]
+    command = _official_eval_command(python_path=Path(str(environment["python"])).resolve(), evaluator=evaluator,
+        raw_samples=raw_samples, patches=normalized_path, output_dir=output_dir,
+        docker_platform=docker_platform or ("linux/amd64" if platform.machine().lower() in {"arm64", "aarch64"} else None))
+    import uuid
+    attempt_id = uuid.uuid4().hex
+    terminal_path = output_dir / ("attempt-" + attempt_id + ".json")
+    receipt.update(status="STARTED", launches_any_job=True, attempt_id=attempt_id,
+                   evaluation_id=evaluation_id, evidence_class="provided_patch_verification_only",
+                   launch={"command":command,"output_dir":str(output_dir)}, cleanup_status="not_established")
+    _write_json(terminal_path, receipt)
+    if receipt_path is not None:
+        _write_json(receipt_path, receipt)
+    try:
+        result = _run(command, cwd=evaluator, timeout=24 * 60 * 60)
+        receipt["launch"]["returncode"] = result.returncode
+        if result.returncode != 0:
+            raise PreflightBlocked("official native evaluator exited non-zero")
+        results_path = output_dir / "eval_results.json"
+        if not results_path.is_file():
+            raise PreflightBlocked("official evaluator produced no eval_results.json")
+        results = _load_json_file(results_path)
+        if not isinstance(results, Mapping) or set(results) != set(task_ids) or not task_ids or any(type(value) is not bool for value in results.values()):
+            raise PreflightBlocked("native results require exact task coverage and strict JSON booleans")
+        values = [results[task_id] for task_id in task_ids]
+        receipt["score"] = {"resolved":sum(values),"total":len(values),"accuracy":sum(values)/len(values),"per_task":dict(results)}
+        receipt["status"] = "COMPLETE"
+    except (subprocess.TimeoutExpired, KeyboardInterrupt, OSError, ValueError, PreflightBlocked) as exc:
+        receipt.update(status="FAILED", evidence_class="execution_failed", score=None,
+                       outstanding_reservation=True, cleanup_status="unverified_requires_reconciliation")
+        receipt["blockers"] = _unique([*receipt.get("blockers", []), str(exc) or type(exc).__name__])
+        for field in ("stdout", "stderr"):
+            value = getattr(exc, field, None)
+            if value is not None:
+                receipt["launch"][field] = value.decode(errors="replace") if isinstance(value, bytes) else str(value)
+    finally:
+        _write_json(terminal_path, receipt)
+        if receipt_path is not None:
+            _write_json(receipt_path, receipt)
     return receipt
 
 
@@ -922,6 +963,10 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    for name in ("out", "runtime_dir", "license_receipt", "checkpoint_receipt", "patches", "evaluator_dir"):
+        value = getattr(args, name)
+        if value is not None:
+            setattr(args, name, value.expanduser().resolve())
     root = _repo_root()
     runtime_dir = args.runtime_dir or _default_runtime(root)
     out = args.out or (root / "outputs" / "e1_swe_bench_pro" / "receipt.json")
@@ -939,22 +984,27 @@ def main(argv: Sequence[str] | None = None) -> int:
         bootstrap_environment=args.bootstrap,
         require_tinker=args.tinker,
     )
-    if args.command == "run" and receipt.get("launchable"):
-        rows = load_dataset_rows(cache_dir=runtime_dir / "hf-cache")
-        evaluator = Path(receipt["evaluator"]["local"].get("revision") and (args.evaluator_dir or runtime_dir / "evaluator"))
-        receipt = run_evaluation(
-            receipt=receipt,
-            runtime_dir=runtime_dir,
-            evaluator=evaluator,
-            rows=[row for row in rows if row.get("instance_id") in task_ids],
-            patch_path=Path(args.patches),
-            docker_platform=args.docker_platform,
-        )
-    elif args.command == "run":
-        receipt["status"] = "BLOCKED"
+    try:
+        if args.command == "run" and receipt.get("launchable"):
+            rows = load_dataset_rows(cache_dir=runtime_dir / "hf-cache")
+            evaluator = Path(receipt["evaluator"]["local"].get("revision") and (args.evaluator_dir or runtime_dir / "evaluator"))
+            receipt = run_evaluation(
+                receipt=receipt,
+                runtime_dir=runtime_dir,
+                evaluator=evaluator,
+                rows=[row for row in rows if row.get("instance_id") in task_ids],
+                patch_path=Path(args.patches),
+                docker_platform=args.docker_platform,
+                receipt_path=out,
+            )
+        elif args.command == "run":
+            receipt["status"] = "BLOCKED"
+    except (PreflightBlocked, OSError, ValueError, KeyboardInterrupt) as exc:
+        receipt.update(status="FAILED", evidence_class="execution_failed", score=None)
+        receipt["blockers"] = _unique([*receipt.get("blockers", []), str(exc) or type(exc).__name__])
     _write_json(out, receipt)
     print(json.dumps({"status": receipt.get("status"), "launchable": receipt.get("launchable"), "receipt": str(out), "blockers": receipt.get("blockers", [])}, indent=2))
-    return 0
+    return 0 if receipt.get("status") in {"READY", "COMPLETE"} else 1
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -20,7 +20,7 @@ Per-seed metrics (n=5 seeds):
   savings_vs_C0 (total_G_C0 - total_G_Ci) / total_G_C0
   n_fire        number of steps with G_t != 8
   select_rate   n_fire / 15
-  headroom_bad  number of steps where the controller fired on z_t >= 0.99
+  headroom_bad  number of steps where the controller escalated above baseline on z_t >= 0.99
                 (saturated prompt, no escalation value) — should be 0 for C1/C3
 
 Statistical rigor:
@@ -52,9 +52,9 @@ from _p5p7_common import c3_hybrid
 # ----------------------------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 N10_DIR = ROOT / "platform_hybrid/experiments/results/n10_seed_expansion"
-OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v5"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 TAU = 0.7           # primary zvf-triage threshold
@@ -116,7 +116,7 @@ def per_seed_metrics(G_t: list[int], z: list[float]) -> dict:
     total = sum(G_t)
     n_fire = sum(1 for g in G_t if g != G_BASE)
     sel = n_fire / n
-    headroom_bad = sum(1 for g, zt in zip(G_t, z) if g != G_BASE and zt >= 0.99)
+    headroom_bad = sum(1 for g, zt in zip(G_t, z) if g > G_BASE and zt >= 0.99)
     return {
         "total_G": total,
         "n_fire": n_fire,

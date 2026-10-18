@@ -17,6 +17,7 @@ spec.loader.exec_module(CAMPAIGN)
 class E1CampaignTests(unittest.TestCase):
     def setUp(self):
         self.expected = {
+            "execution": CAMPAIGN.load_contract()[1]["execution"],
             "heldout_n": 500,
             "checkpoint_steps": [5, 10, 15, 20, 25, 30],
             "treatment_changes": {"grpo": []},
@@ -27,18 +28,21 @@ class E1CampaignTests(unittest.TestCase):
             "evidence_class": "confirmatory",
             "heldout_n": 500,
             "treatment_changes": [],
-            "fingerprint": "u" * 64,
-            "stack_fingerprint": "s" * 64,
-            "heldout_score": 0.5,
+            "fingerprint": "a" * 64,
+            "stack_fingerprint": "b" * 64,
+            "heldout_score": 0.5, "last10_reward": 0.5, "mean_zvf": 0.5,
+            "mean_gu": 0.5, "wall_clock_seconds": 60., "rollouts": 32, "collapse": False,
             "manifest_path": "manifests/grpo-seed-11.json",
             "remote_verification": {
                 "hf_checkpoint_steps": [5, 10, 15, 20, 25, 30],
                 "hf_repo": "owner/private-repo",
-                "hf_commit": "commit",
+                "hf_commit": "c"*40,
                 "wandb": {"state": "finished"},
             },
         }
         self.good_manifest = {
+            "evidence_class": "confirmatory", "audit_record": dict(self.good),
+            "run_config": {**self.expected["execution"], "arm":"grpo", "seed":11, "treatment_changes":[], "unit_fingerprint": self.good["fingerprint"], "stack_fingerprint": self.good["stack_fingerprint"]},
             "heldout_trace": [
                 {
                     "index": index,
@@ -52,13 +56,13 @@ class E1CampaignTests(unittest.TestCase):
     def test_strict_result_validation_requires_remote_reconciliation(self):
         with mock.patch.object(CAMPAIGN, "read_json", return_value=self.good_manifest):
             valid, reason = CAMPAIGN.validate_result(
-                ("grpo", 11), self.good, self.expected, stack_fingerprint="s" * 64
+                ("grpo", 11), self.good, self.expected, stack_fingerprint="b" * 64
             )
         self.assertTrue(valid, reason)
         broken = {**self.good, "remote_verification": {}}
         with mock.patch.object(CAMPAIGN, "read_json", return_value=self.good_manifest):
             valid, reason = CAMPAIGN.validate_result(
-                ("grpo", 11), broken, self.expected, stack_fingerprint="s" * 64
+                ("grpo", 11), broken, self.expected, stack_fingerprint="b" * 64
             )
         self.assertFalse(valid)
         self.assertIn("wandb_finished", reason)
@@ -73,21 +77,20 @@ class E1CampaignTests(unittest.TestCase):
         }
         with mock.patch.object(CAMPAIGN, "read_json", return_value=unhashed):
             valid, reason = CAMPAIGN.validate_result(
-                ("grpo", 11), self.good, self.expected, stack_fingerprint="s" * 64
+                ("grpo", 11), self.good, self.expected, stack_fingerprint="b" * 64
             )
         self.assertFalse(valid)
         self.assertIn("heldout_hashes", reason)
 
-        duplicate = {"heldout_trace": [dict(row) for row in self.good_manifest["heldout_trace"]]}
+        duplicate = {**self.good_manifest, "heldout_trace": [dict(row) for row in self.good_manifest["heldout_trace"]]}
         duplicate["heldout_trace"][1]["completion_sha256"] = duplicate["heldout_trace"][0][
             "completion_sha256"
         ]
         with mock.patch.object(CAMPAIGN, "read_json", return_value=duplicate):
             valid, reason = CAMPAIGN.validate_result(
-                ("grpo", 11), self.good, self.expected, stack_fingerprint="s" * 64
+                ("grpo", 11), self.good, self.expected, stack_fingerprint="b" * 64
             )
-        self.assertFalse(valid)
-        self.assertIn("unique_completion_hashes", reason)
+        self.assertTrue(valid, reason)  # repeated completion text is legal
 
     def test_process_parser_only_accepts_confirmatory_unit_runner(self):
         command = (
@@ -446,7 +449,7 @@ class E1CampaignTests(unittest.TestCase):
                 ("evaluation-recovery", source_path),
             )
 
-    def test_verified_recovery_bypasses_consumed_attempt_budget(self):
+    def test_verified_recovery_respects_consumed_attempt_budget(self):
         unit = ("dapo", 131)
         self.assertEqual(
             CAMPAIGN.choose_launches(
@@ -458,7 +461,7 @@ class E1CampaignTests(unittest.TestCase):
                 max_attempts=3,
                 recovery_kinds={unit: "evaluation-recovery"},
             ),
-            [unit],
+            [],
         )
 
     def test_active_process_scan_excludes_zombie_wrappers(self):

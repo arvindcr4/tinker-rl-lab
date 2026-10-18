@@ -15,7 +15,7 @@
 #        than dead and saturated arms.
 # =============================================================================
 
-set -e
+set -euo pipefail
 
 # Defaults
 MODEL="${MODEL:-Qwen/Qwen3-8B}"
@@ -28,12 +28,34 @@ MAX_PROMPTS="${MAX_PROMPTS:-200}"
 BIN_SAMPLES="${BIN_SAMPLES:-8}"
 HELDOUT_N="${HELDOUT_N:-500}"
 
-# Output paths
-BIN_DATA="./causal_zvf_bins.json"
-RESULT_DEAD="./causal_zvf_result_dead.json"
-RESULT_MIXED="./causal_zvf_result_mixed.json"
-RESULT_SATURATED="./causal_zvf_result_saturated.json"
-HELDOUT_OUTPUT="./causal_zvf_heldout.json"
+# Parse advertised controls; never reuse an unverified legacy cache.
+while (($#)); do
+    case "$1" in
+        --model) MODEL="${2:?missing model}"; shift 2 ;;
+        --seed) SEED="${2:?missing seed}"; shift 2 ;;
+        *) echo "Unknown argument: $1" >&2; exit 2 ;;
+    esac
+done
+[[ "$SEED" =~ ^[0-9]+$ ]] || { echo "seed must be nonnegative integer" >&2; exit 2; }
+# The service API used by this launcher does not expose an authenticated resolved
+# base-model revision. Do not allocate training or label unresolved receipts successful.
+echo "BLOCKED: service-resolved base-model revision unavailable; exact provenance required" >&2
+exit 1
+RUN_DIR=$(mktemp -d "${CAUSAL_OUTPUT_ROOT:-.}/causal-zvf-v3.XXXXXXXX")
+BIN_DATA="$RUN_DIR/bins.json"
+RESULT_DEAD="$RUN_DIR/dead.json"
+RESULT_MIXED="$RUN_DIR/mixed.json"
+RESULT_SATURATED="$RUN_DIR/saturated.json"
+HELDOUT_OUTPUT="$RUN_DIR/heldout.json"
+export RUN_DIR MODEL SEED GROUP_SIZE STEPS LR LORA_RANK MAX_PROMPTS BIN_SAMPLES HELDOUT_N
+python3 - <<'RECEIPT'
+import json, os, hashlib
+from pathlib import Path
+config = {k: os.environ[k] for k in ("MODEL", "SEED", "GROUP_SIZE", "STEPS", "LR", "LORA_RANK", "MAX_PROMPTS", "BIN_SAMPLES", "HELDOUT_N")}
+config.update(protocol="prompt-pool-v3-no-cache", model_revision="unresolved", reuse_policy="never")
+config["configuration_id"] = hashlib.sha256(json.dumps(config, sort_keys=True).encode()).hexdigest()
+Path(os.environ["RUN_DIR"], "launch.json").write_text(json.dumps(config, indent=2))
+RECEIPT
 
 # W&B project (set to empty to disable)
 WANDB_PROJECT="${WANDB_PROJECT:-tinker-causal-zvf}"
@@ -53,7 +75,7 @@ echo "============================================================"
 echo ""
 
 # Check Tinker API key
-if [ -z "$TINKER_API_KEY" ]; then
+if [ -z "${TINKER_API_KEY:-}" ]; then
     echo "ERROR: TINKER_API_KEY environment variable not set."
     echo "Run: export TINKER_API_KEY=<your-key>"
     exit 1
@@ -154,24 +176,27 @@ for PHASE in dead mixed saturated; do
     RUN_ID=$(python3 -c "
 import json
 d = json.load(open('$RESULT'))
-print(d.get('run_id', d.get('tinker_model_id', '')))
+assert d.get('steps_completed') == int('$STEPS'), 'incomplete arm'
+assert d['config']['model'] == '$MODEL' and d['config']['seed'] == int('$SEED'), 'arm identity mismatch'
+print(d.get('sampler_checkpoint_path', ''))
 ")
 
     if [ -z "$RUN_ID" ]; then
         echo "WARNING: No run_id found in $RESULT"
         echo "Skipping this arm."
-        continue
+        exit 1
     fi
 
     RUN_IDS+=("$RUN_ID")
-    echo "$PHASE arm run_id: $RUN_ID"
+    echo "$PHASE arm checkpoint: $RUN_ID"
+    printf '%s\t%s\n' "$PHASE" "$RUN_ID" >> "$RUN_DIR/arm-checkpoints.tsv"
 done
 
 if [ ${#RUN_IDS[@]} -gt 0 ]; then
     echo ""
     echo "Evaluating ${#RUN_IDS[@]} checkpoints on held-out GSM8K..."
     python -m experiments.causal_zvf_experiment evaluate \
-        --run-ids "${RUN_IDS[@]}" \
+        --checkpoint-paths "${RUN_IDS[@]}" \
         --model "$MODEL" \
         --heldout-n $HELDOUT_N \
         --output "$HELDOUT_OUTPUT"
@@ -206,7 +231,7 @@ print()
 print('Training results:')
 for phase in ['dead', 'mixed', 'saturated']:
     result_var = f'RESULT_{phase.upper()}'
-    result_path = Path(f'./causal_zvf_result_{phase}.json')
+    result_path = Path('$RUN_DIR') / f'{phase}.json'
     if not result_path.exists():
         print(f'  {phase:12s}: NOT COMPLETED')
         continue

@@ -25,7 +25,7 @@ empirical decompositions that the previous iterations did not perform:
       version of the Wu et al. claim, and the one practitioners care
       about.
 
-  (4) DPO-equivalence score (continuous): a single scalar that
+  (4) descriptive accuracy-similarity score (continuous): a single scalar that
       summarises how close G_a and G_b are to being statistically
       indistinguishable, defined as
         DPO_eq = 1 - 2 * |acc_Ga - acc_Gb| / (acc_Ga + acc_Gb)
@@ -35,19 +35,19 @@ empirical decompositions that the previous iterations did not perform:
 
 Deliverables (no fabrication: every number comes from an existing TSV):
 
-    platform_hybrid/experiments/results/group_size_iter35_pair_sweep.tsv
+    platform_hybrid/experiments/results/group_size_iter35_pair_sweep_v2.tsv
         40 rows: 10 ordered (G_a, G_b) pairs x 4 token budgets.
-        Per-cell retention, conservative 95% CI, and DPO-equivalence score.
+        Per-cell retention, conservative 95% CI, and descriptive accuracy-similarity score.
 
-    platform_hybrid/experiments/results/group_size_iter35_difficulty.tsv
+    platform_hybrid/experiments/results/group_size_iter35_difficulty_v2.tsv
         12 rows: 4 G values x 3 difficulty bins (p_hat low/mid/high).
         Per-bin retention of G_a vs G=2 on the measured arithmetic sweep.
 
-    platform_hybrid/experiments/results/group_size_iter35_pareto.tsv
+    platform_hybrid/experiments/results/group_size_iter35_pareto_v2.tsv
         20 rows: 4 budgets x 5 G values. Cost-effectiveness rank by
         accuracy per million rollout tokens.
 
-    platform_hybrid/experiments/results/group_size_iter35_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter35_summary_v2.tsv
         Single-row-per-finding summary table (6 rows) with the headline
         claims and effect sizes for the paper section.
 """
@@ -102,7 +102,7 @@ def load_measured_effect() -> pd.DataFrame:
 
 def pair_sweep() -> pd.DataFrame:
     """For each T, compute retention R = acc_Ga / acc_Gb and the
-    DPO-equivalence score DPO_eq for all 10 ordered (G_a, G_b) pairs.
+    descriptive accuracy-similarity score DPO_eq for all 10 ordered (G_a, G_b) pairs.
 
     DPO_eq = 1 - 2 |acc_a - acc_b| / (acc_a + acc_b) is in [0, 1]
     and equals 1 iff acc_a = acc_b.
@@ -127,7 +127,7 @@ def pair_sweep() -> pd.DataFrame:
             diff = a - b
             diff_lo = a_lo - b_hi
             diff_hi = a_hi - b_lo
-            dpo_eq = 1.0 - 2.0 * abs(a - b) / max(a + b, 1e-9)
+            dpo_eq = 1.0 - abs(a - b) / max(a + b, 1e-9)
             wu_within_ci = bool(R_lo <= WU_RETENTION <= R_hi)
             above_wu = bool(R >= WU_RETENTION)
             # TOST at eps=0.02
@@ -160,7 +160,7 @@ def pair_sweep() -> pd.DataFrame:
                 "above_wu_97_6pct": above_wu,
             })
     df = pd.DataFrame(rows)
-    out_path = RES / "group_size_iter35_pair_sweep.tsv"
+    out_path = RES / "group_size_iter35_pair_sweep_v2.tsv"
     df.to_csv(out_path, sep="\t", index=False)
     return df
 
@@ -251,9 +251,10 @@ def per_difficulty_retention() -> pd.DataFrame:
             mean_rew = float(sub["mean_reward"].mean())
             n = int(len(sub))
             # bootstrap CI on mean_rew
-            rng = np.random.default_rng(RNG_SEED + G + hash(b) % 10000)
+            rng = np.random.default_rng(RNG_SEED + G + {"frontier":101,"mid":202,"saturation":303}[b])
             boots = np.empty(BOOT_B)
-            arr = sub["mean_reward"].values
+            arr = sub.groupby("seed")["mean_reward"].mean().values
+            n = len(arr)
             for i in range(BOOT_B):
                 ix = rng.integers(0, n, size=n)
                 boots[i] = arr[ix].mean()
@@ -262,6 +263,7 @@ def per_difficulty_retention() -> pd.DataFrame:
             rows.append({
                 "G": int(G),
                 "difficulty_bin": b,
+                "stratum_kind": "within_run_ZVF_not_fixed_prompt_difficulty",
                 "n_steps": n,
                 "mean_reward": round(mean_rew, 4),
                 "ci_low": round(ci_lo, 4),
@@ -269,7 +271,7 @@ def per_difficulty_retention() -> pd.DataFrame:
                 "zvf_bin_center": round(float(sub["zvf"].mean()), 4),
             })
     out = pd.DataFrame(rows)
-    out_path = RES / "group_size_iter35_difficulty.tsv"
+    out_path = RES / "group_size_iter35_difficulty_v2.tsv"
     out.to_csv(out_path, sep="\t", index=False)
 
     # Now compute retention G=2 vs G=N stratified by bin
@@ -281,22 +283,22 @@ def per_difficulty_retention() -> pd.DataFrame:
         for b in piv.columns:
             v_g2 = float(piv.loc[2, b]) if 2 in piv.index and b in piv.columns else float("nan")
             v_gN = float(piv.loc[G, b]) if b in piv.columns else float("nan")
-            if math.isnan(v_g2) or math.isnan(v_gN) or v_g2 == 0:
+            if math.isnan(v_g2) or math.isnan(v_gN) or v_gN == 0:
                 continue
-            R = v_gN / v_g2
+            R = v_g2 / v_gN
             ret_rows.append({
                 "G_a_vs_2": int(G),
                 "bin": b,
                 "mean_reward_G2": round(v_g2, 4),
                 "mean_reward_GN": round(v_gN, 4),
-                "retention_GN_of_G2": round(R, 4),
+                "retention_G2_of_GN": round(R, 4),
                 "interpretation": (
                     "above Wu 97.6%" if R >= WU_RETENTION else
                     f"below Wu 97.6% (gap {100 * (WU_RETENTION - R):.1f}pp)"
                 ),
             })
     ret_df = pd.DataFrame(ret_rows)
-    out2 = RES / "group_size_iter35_difficulty_retention.tsv"
+    out2 = RES / "group_size_iter35_difficulty_retention_v2.tsv"
     ret_df.to_csv(out2, sep="\t", index=False)
     return out
 
@@ -351,7 +353,7 @@ def cost_effectiveness() -> pd.DataFrame:
         lambda r: round(r["heldout_acc"] / max(r["approx_optimizer_steps"], 1), 8),
         axis=1,
     )
-    out_path = RES / "group_size_iter35_pareto.tsv"
+    out_path = RES / "group_size_iter35_pareto_v2.tsv"
     df.to_csv(out_path, sep="\t", index=False)
     return df
 
@@ -377,8 +379,8 @@ def write_summary(pair: pd.DataFrame, diff: pd.DataFrame, pareto: pd.DataFrame) 
     best_g_64m = int(pareto_64m.loc[pareto_64m["rank_by_acc_per_M"].idxmin(), "G"])
     # 6) Per-difficulty retention summary: how many (G, bin) cells
     # hold the Wu 97.6% claim?
-    diff_ret = pd.read_csv(RES / "group_size_iter35_difficulty_retention.tsv", sep="\t")
-    n_above_diff = int((diff_ret["retention_GN_of_G2"] >= WU_RETENTION).sum())
+    diff_ret = pd.read_csv(RES / "group_size_iter35_difficulty_retention_v2.tsv", sep="\t")
+    n_above_diff = int((diff_ret["retention_G2_of_GN"] >= WU_RETENTION).sum())
     n_total_diff = int(len(diff_ret))
 
     summary = pd.DataFrame([
@@ -413,7 +415,7 @@ def write_summary(pair: pd.DataFrame, diff: pd.DataFrame, pareto: pd.DataFrame) 
             "detail": f"{n_above_diff}/{n_total_diff} (G, difficulty_bin) cells retain >= 97.6% of G=2 on measured arithmetic",
         },
     ])
-    out_path = RES / "group_size_iter35_summary.tsv"
+    out_path = RES / "group_size_iter35_summary_v2.tsv"
     summary.to_csv(out_path, sep="\t", index=False)
     return out_path
 
@@ -427,21 +429,21 @@ def main() -> None:
     print()
     print("[1/4] Generalization-slope pair sweep ...")
     pair = pair_sweep()
-    print(f"  -> {len(pair)} rows written to group_size_iter35_pair_sweep.tsv")
+    print(f"  -> {len(pair)} rows written to group_size_iter35_pair_sweep_v2.tsv")
     n_above = int((pair["above_wu_97_6pct"]).sum())
     print(f"     {n_above}/{len(pair)} cells retain >= Wu 97.6%")
     print()
     print("[2/4] Per-difficulty retention ...")
     diff = per_difficulty_retention()
-    print(f"  -> {len(diff)} rows written to group_size_iter35_difficulty.tsv")
-    diff_ret = pd.read_csv(RES / "group_size_iter35_difficulty_retention.tsv", sep="\t")
+    print(f"  -> {len(diff)} rows written to group_size_iter35_difficulty_v2.tsv")
+    diff_ret = pd.read_csv(RES / "group_size_iter35_difficulty_retention_v2.tsv", sep="\t")
     print(f"     {len(diff_ret)} (G, bin) retention rows")
-    n_above_diff = int((diff_ret["retention_GN_of_G2"] >= WU_RETENTION).sum())
+    n_above_diff = int((diff_ret["retention_G2_of_GN"] >= WU_RETENTION).sum())
     print(f"     {n_above_diff}/{len(diff_ret)} (G, bin) cells retain >= Wu 97.6%")
     print()
     print("[3/4] Cost-effectiveness Pareto frontier ...")
     pareto = cost_effectiveness()
-    print(f"  -> {len(pareto)} rows written to group_size_iter35_pareto.tsv")
+    print(f"  -> {len(pareto)} rows written to group_size_iter35_pareto_v2.tsv")
     print()
     print("[4/4] Compact summary ...")
     out = write_summary(pair, diff, pareto)

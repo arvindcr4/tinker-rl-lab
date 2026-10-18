@@ -57,7 +57,11 @@ from collections import Counter
 from pathlib import Path
 from statistics import fmean, pstdev
 
-ROOT = Path(__file__).resolve().parents[2]
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _review02_contracts import finite_json
+from _paths import REPO_ROOT
+ROOT = REPO_ROOT / "platform_hybrid"
 RES = ROOT / "experiments" / "results" / "p5p8"
 MEGA = ROOT / "experiments" / "results" / "mega_20260704"
 RES.mkdir(parents=True, exist_ok=True)
@@ -134,8 +138,8 @@ V2_CANDIDATES = [
 
 
 def compute_v1_info_budget(manifests):
-    """Per-item info budget using iter-65 row 76 functional classification:
-    - PLACEBO: H_bits = 0 (constant across cells, e.g. loss_form)
+    """Per-item marginal diversity sum using iter-65 row 76 functional classification:
+    - CONSTANT_DESCRIPTIVE: H_bits = 0 (constant across cells, e.g. loss_form)
     - CELL_IDENTIFIER: H_bits > 0 but varies only as a cell-ID (e.g. per_step_zvf_path);
       contributes 0 stack-discriminative bits
     - VARYING_STACK_DESCRIPTOR: H_bits > 0 and describes a stack property
@@ -152,7 +156,7 @@ def compute_v1_info_budget(manifests):
             classification = "CELL_IDENTIFIER"
             stack_discriminative_bits = 0.0
         elif n_unique <= 1:
-            classification = "PLACEBO"
+            classification = "CONSTANT_DESCRIPTIVE"
             stack_discriminative_bits = 0.0
         else:
             classification = "VARYING_STACK_DESCRIPTOR"
@@ -182,7 +186,7 @@ def project_v2_info_budget(manifests, cells):
         "live_corpus_value": "0.0 (Tinker-closed RLVR default)",
         "n_unique": 1,
         "H_bits": 0.0,
-        "classification": "WOULD-BE PLACEBO (single-stack corpus)",
+        "classification": "WOULD-BE CONSTANT_DESCRIPTIVE (single-stack corpus)",
         "uplift_bits": 0.0,
     })
     # 2) clip_range_low: Tinker-closed -> constant -> placebo
@@ -191,7 +195,7 @@ def project_v2_info_budget(manifests, cells):
         "live_corpus_value": "0.2 (PPO/GRPO default)",
         "n_unique": 1,
         "H_bits": 0.0,
-        "classification": "WOULD-BE PLACEBO (single-stack corpus)",
+        "classification": "WOULD-BE CONSTANT_DESCRIPTIVE (single-stack corpus)",
         "uplift_bits": 0.0,
     })
     # 3) advantage_normalization: Tinker-closed -> constant -> placebo
@@ -200,7 +204,7 @@ def project_v2_info_budget(manifests, cells):
         "live_corpus_value": "per-group (GRPO default)",
         "n_unique": 1,
         "H_bits": 0.0,
-        "classification": "WOULD-BE PLACEBO (single-stack corpus)",
+        "classification": "WOULD-BE CONSTANT_DESCRIPTIVE (single-stack corpus)",
         "uplift_bits": 0.0,
     })
     # 4) mini_batch_size: Tinker-closed -> constant -> placebo
@@ -209,7 +213,7 @@ def project_v2_info_budget(manifests, cells):
         "live_corpus_value": "1 (Tinker RLVR per-step default)",
         "n_unique": 1,
         "H_bits": 0.0,
-        "classification": "WOULD-BE PLACEBO (single-stack corpus)",
+        "classification": "WOULD-BE CONSTANT_DESCRIPTIVE (single-stack corpus)",
         "uplift_bits": 0.0,
     })
     # 5) temperature_schedule: cells.tsv varies T in {0.6, 1.0} -> varies!
@@ -288,34 +292,14 @@ def eta_squared_algo_vs_stack(manifests, cells):
 # -----------------------------------------------------------------------------
 
 def boot_total_h(manifests, n_boot=B_BOOT, seed=SEED):
-    rng = random.Random(seed)
-    n = len(manifests)
-    boots = []
-    for _ in range(n_boot):
-        sample = [manifests[rng.randrange(n)] for _ in range(n)]
-        per_item, total, _ = compute_v1_info_budget(sample)
-        boots.append(total)
-    boots.sort()
-    lo = boots[int(0.025 * n_boot)]
-    hi = boots[int(0.975 * n_boot)]
-    return fmean(boots), lo, hi
+    """Fixed campaign descriptive marginal sum; no sampling population specified."""
+    _, total, _ = compute_v1_info_budget(manifests)
+    return total, float('nan'), float('nan')
 
 
 def boot_per_item_h(manifests, item, n_boot=B_BOOT, seed=SEED):
-    rng = random.Random(seed)
-    n = len(manifests)
-    boots = []
-    for _ in range(n_boot):
-        sample = [manifests[rng.randrange(n)] for _ in range(n)]
-        vals = [m[item] for _, m in sample]
-        boots.append(shannon_entropy_bits(vals))
-    boots.sort()
-    return fmean(boots), boots[int(0.025 * n_boot)], boots[int(0.975 * n_boot)]
+    return shannon_entropy_bits([m.get(item) for _, m in manifests]), float('nan'), float('nan')
 
-
-# -----------------------------------------------------------------------------
-# main
-# -----------------------------------------------------------------------------
 
 def main():
     manifests = load_manifests()
@@ -324,7 +308,7 @@ def main():
     assert n == 98, f"expected 98 manifests, got {n}"
     assert len(cells) == 98, f"expected 98 cells, got {len(cells)}"
 
-    # ---------------- H1/H2: v1 + projected v2 info budget ----------------
+    # ---------------- H1/H2: v1 + projected v2 marginal diversity sum ----------------
     v1_items, v1_total, v1_stack_disc = compute_v1_info_budget(manifests)
     v2_items = project_v2_info_budget(manifests, cells)
     v2_total = v1_total + sum(it["uplift_bits"] for it in v2_items)
@@ -332,7 +316,7 @@ def main():
     # ---------------- H3: eta^2 algorithm-axis vs stack-axis -------------
     eta2 = eta_squared_algo_vs_stack(manifests, cells)
 
-    # ---------------- Bootstrap CI on v1 total info budget ----------------
+    # ---------------- Bootstrap CI on v1 total marginal diversity sum ----------------
     boot_mean, boot_lo, boot_hi = boot_total_h(manifests)
     # bootstrap CI on the VARYING items only (group_size, heldout, decontam)
     vary_items = ["group_size_schedule", "heldout_split", "decontamination_notes"]
@@ -385,6 +369,9 @@ def main():
                  f"v1 + 4 hyperparameter candidates (each uplift=0)\n")
 
     summary = {
+        "statistic_version": "pro-review-02-v2",
+        "entropy_estimand": "sum_of_marginal_entropies; dependent fields may double-count; no scientific-information claim",
+        "reporting_value": "Completeness is separate from variability. Constant precision/KL settings remain necessary for reproducibility.",
         "ts": "2026-07-05",
         "iter": 69,
         "pillar": "P5",
@@ -394,7 +381,7 @@ def main():
         "n_v2_candidates": len(v2_items),
         "H1": {
             "claim": "GRPO/PPO hyperparameter candidates (kl_coeff, clip_range, adv_norm, mini_batch_size) would all be placebos on the live corpus (single-stack Tinker-closed campaign)",
-            "n_placebo_candidates": sum(1 for r in v2_items if "PLACEBO" in r["classification"]),
+            "n_placebo_candidates": sum(1 for r in v2_items if "CONSTANT_DESCRIPTIVE" in r["classification"]),
             "n_varying_candidates": sum(1 for r in v2_items if "WOULD VARY" in r["classification"]),
             "total_uplift_bits_from_hyperparam_candidates": sum(
                 r["uplift_bits"] for r in v2_items if "hyperparameter" in r["classification"] or
@@ -408,7 +395,7 @@ def main():
             "temperature_H_bits": shannon_entropy_bits([c["temperature"] for c in cells]),
             "temperature_n_unique": len(set(c["temperature"] for c in cells)),
             "model_H_bits_redundant": shannon_entropy_bits([c["model_family"] for c in cells]),
-            "verdict": "temperature_schedule would add ~0.98 bits to live info budget; model_family adds ~0.85 bits but is redundant (already in cells.tsv)",
+            "verdict": "temperature_schedule would add ~0.98 bits to live marginal diversity sum; model_family adds ~0.85 bits but is redundant (already in cells.tsv)",
         },
         "H3": {
             "claim": "eta^2 algorithm-axis vs stack-axis on the live corpus: algorithm axis contributes 0 (single algo), stack axes dominate",
@@ -423,7 +410,7 @@ def main():
             "verdict": "stack axes (G, task, T, model) account for the entire explainable variance on this corpus; algorithm-axis eta^2 = 0 by construction (single-algorithm campaign)",
         },
         "v1_info_budget": {
-            "total_bits_observed": v1_total,
+            "sum_of_marginal_entropies_observed": v1_total,
             "total_stack_discriminative_bits": v1_stack_disc,
             "per_item": [
                 {"item": r["item"], "H_bits": r["H_bits"],
@@ -445,14 +432,7 @@ def main():
             "v1_total_observed_bits": v1_total,
             "v1_total_bootstrap_mean_bits": boot_mean,
             "v1_total_bootstrap_ci95": [boot_lo, boot_hi],
-            "interpretation": (
-                "Bootstrap CI is the sampling distribution of the test statistic "
-                "IF a different 98-cell sample were drawn from the same population; "
-                "the lower CI boundreflects the well-known negative bias of entropy "
-                "under bootstrap resampling (birthday-paradox duplicates). The "
-                "observed point estimate 11.41 bits is the actual measured value on "
-                "the live corpus, not a bootstrap-derived statistic."
-            ),
+            "interpretation": "Intervals unavailable: fixed-campaign census with no declared population sampling model; identity fields are excluded from scientific-information claims.",
             "per_varying_item_observed_and_ci95": {
                 it: {
                     "observed": v1_items[next(i for i, r in enumerate(v1_items) if r["item"] == it)]["H_bits"],
@@ -485,15 +465,15 @@ def main():
         },
     }
     with open(RES / "p5_placebo_replacement_summary.json", "w") as fh:
-        json.dump(summary, fh, indent=2)
+        json.dump(finite_json(summary), fh, indent=2, allow_nan=False)
 
     # ---------------- print headline ----------------
     print("=" * 60)
     print(f"Iter 69 (P5) -- Placebo-replacement feasibility on live 98-cell corpus")
-    print(f"v1 (7-item) total info budget:        {v1_total:.4f} bits "
+    print(f"v1 (7-item) total marginal diversity sum:        {v1_total:.4f} bits "
           f"[{boot_lo:.4f}, {boot_hi:.4f}] (B={B_BOOT} bootstrap)")
     print(f"v1 stack-discriminative bits:         {v1_stack_disc:.4f} "
-          f"(PLACEBO+CELL_ID = {sum(1 for r in v1_items if r['classification'] != 'VARYING_STACK_DESCRIPTOR')}/7 "
+          f"(CONSTANT_DESCRIPTIVE+CELL_ID = {sum(1 for r in v1_items if r['classification'] != 'VARYING_STACK_DESCRIPTOR')}/7 "
           f"contribute 0 stack-discriminative bits)")
     print(f"v2 candidates (4 hyperparam):         4/4 would-be placebos (single-stack corpus)")
     print(f"v2 temperature_schedule:              {shannon_entropy_bits([c['temperature'] for c in cells]):.4f} bits (varies on corpus)")

@@ -28,11 +28,12 @@ of every other figure in this repo).
 from __future__ import annotations
 
 import csv
+import math
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-ROOT = Path(__file__).resolve().parents[1]
-RES = ROOT / "experiments" / "results"
+ROOT = Path(__file__).resolve().parents[2]
+RES = ROOT / "platform_hybrid" / "experiments" / "results"
 FIG = ROOT / "figures"
 FIG.mkdir(parents=True, exist_ok=True)
 
@@ -84,7 +85,7 @@ def load_matrix() -> Dict[str, List[List[float]]]:
 def load_bfcl_seed0() -> Tuple[List[int], List[float]]:
     # Load raw per-step zvf directly from bfclv4 tool_use seed 0
     steps, zvfs = [], []
-    with (ROOT / "experiments" / "results" / "bfclv4_tool_use.tsv").open() as fh:
+    with (ROOT / "platform_hybrid" / "experiments" / "results" / "bfclv4_tool_use.tsv").open() as fh:
         for line in fh:
             if line.startswith("seed\t"):
                 continue
@@ -186,7 +187,7 @@ def main() -> None:
         xs = [min(ah), max(ah)]
         ys = [slope * x + intercept for x in xs]
         ax.plot(xs, ys, color="grey", linestyle="--", linewidth=1,
-                label=f"Pearson r(per-method n=9)\n= -0.77 (CI [-0.98,-0.12])")
+                label=f"OLS fit; Pearson r={num / math.sqrt(dx * sum((y - my)**2 for y in l10)) if dx > 0 and sum((y - my)**2 for y in l10) > 0 else float('nan'):.2f}, n={n}")
         ax.legend(loc="upper right", fontsize=8)
     ax.set_xlabel("absorbing_H")
     ax.set_ylabel("last10_acc (heldout acc, last 10 steps)")

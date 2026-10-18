@@ -91,7 +91,9 @@ def signal_metrics(
         "pam": pam,
         "gsr": gsr,
         "egm": egm,
-        "exact_zero_update": egm == 0.0,
+        "zero_policy_coefficient_mass": egm == 0.0,
+        "gradient_norm": None,
+        "parameter_update_norm": None,
     }
 
 

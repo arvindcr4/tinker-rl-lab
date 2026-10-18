@@ -45,11 +45,30 @@ def env_info():
 
 def run_arm(arm: str, seed: int, out_dir: str, smoke: bool = False) -> dict:
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-    out_path = f"{out_dir}/{arm}_s{seed}.json"
-    if os.path.exists(out_path):  # resume: a finished arm is not re-run
-        with open(out_path) as f:
-            return json.load(f)
+    if arm not in GROUP:
+        raise ValueError("Unknown arm")
     n_steps, n_eval, w_warm = (2, 32, 1) if smoke else (N_STEPS, N_EVAL, W_WARM)
+    protocol = "samestack-colab-v2-validated-reuse"
+    out_dir = os.path.join(out_dir, protocol, "smoke" if smoke else "full")
+    out_path = f"{out_dir}/{arm}_s{seed}.json"
+    if os.path.exists(out_path):
+        import gzip
+        with open(out_path) as handle:
+            cached = json.load(handle)
+        expected = {"protocol": protocol, "arm": arm, "seed": seed, "smoke": smoke,
+                    "model": MODEL, "n_steps": n_steps, "n_eval": n_eval or 1319,
+                    "group": GROUP[arm], "n_gen": N_GEN, "lr": LR, "max_new": MAX_NEW,
+                    "k_epochs": K_EPOCHS}
+        if any(cached.get(k) != v for k, v in expected.items()):
+            raise ValueError("Existing result manifest does not match request")
+        with gzip.open(f"{out_dir}/{arm}_s{seed}_texts.json.gz", "rt") as handle:
+            texts = json.load(handle)
+        if any(len(texts.get(k, [])) != expected["n_eval"] for k in ("pre", "post")):
+            raise ValueError("Existing completion bundle is incomplete")
+        raise ValueError(
+            "Cached legacy run lacks a verified adapter/tokenizer/result hash bundle; "
+            "choose a fresh output root instead of reusing this evidence"
+        )
     wall_start_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
     import random
@@ -257,7 +276,7 @@ def run_arm(arm: str, seed: int, out_dir: str, smoke: bool = False) -> dict:
 
     post_correct, post_trunc, post_texts = heldout()
     pre, post = np.array(pre_correct), np.array(post_correct)
-    res = {"experiment": "samestack_gsm8k_cot_v2", "arm": arm, "seed": seed, "model": MODEL,
+    res = {"protocol": protocol, "experiment": "samestack_gsm8k_cot_v2", "arm": arm, "seed": seed, "model": MODEL,
            "smoke": smoke, "group": G, "prompts_per_step": n_prompts, "n_gen": N_GEN,
            "n_steps": n_steps, "k_epochs": K_EPOCHS, "lr": LR, "max_new": MAX_NEW,
            "critic": {"v_lr": V_LR, "v_iters": V_ITERS, "warm_batches": len(warm_log),

@@ -1,51 +1,80 @@
 #!/usr/bin/env python3
-"""Verify the defense snapshot using only Python's standard library."""
+"""Verify evidence against an independently supplied reviewed manifest digest.
+
+No digest is minted from the evidence being verified. The caller must obtain the
+manifest SHA-256 from a trusted release/signature, separately from this bundle.
+"""
 
 from __future__ import annotations
-
+import argparse
+import datetime
 import hashlib
 import json
+import os
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parent
 SNAPSHOT = ROOT / "evidence_snapshot.json"
 IMAGES = (ROOT / "wandb_claim2.png", ROOT / "wandb_run_hygiene.png")
 
 
-def sha256(path: Path) -> str:
+def sha256(path):
     digest = hashlib.sha256()
-    with path.open("rb") as handle:
+    with Path(path).open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
 
 
-def verify() -> dict:
-    data = json.loads(SNAPSHOT.read_text(encoding="utf-8"))
-    runs = data["claim_2_matched_budget"]
-    checks = {
-        "snapshot_date_present": bool(data.get("snapshot_date")),
-        "account_object_count_is_983": data["audit"]["account_object_count"] == 983,
-        "curated_telemetry_is_70_plus": (
-            data["audit"]["curated_telemetry_runs_minimum"] == 70
-            and data["audit"]["curated_telemetry_label"] == "70+"
-        ),
-        "gold_rows_are_19": data["audit"]["gold_rows"] == 19,
-        "claim_2_has_G2_and_G16": {row["group_size"] for row in runs} == {2, 16},
-        "run_ids_are_unique": len({row["run_id"] for row in runs}) == len(runs),
-        "all_run_links_are_https": all(row["url"].startswith("https://") for row in runs),
-        "bundled_images_present": all(path.is_file() for path in IMAGES),
-    }
+def verify(manifest_path=None, expected_manifest_sha256=None):
+    manifest_path = manifest_path or os.environ.get("EVIDENCE_MANIFEST_PATH")
+    anchor = expected_manifest_sha256 or os.environ.get("EVIDENCE_MANIFEST_SHA256")
+    checks = {"trusted_manifest_present": bool(manifest_path and anchor)}
+    hashes = {}
+    try:
+        if not checks["trusted_manifest_present"]:
+            return {
+                "status": "FAIL",
+                "checks": checks,
+                "sha256": hashes,
+                "reason": "An independently trusted manifest digest is required",
+            }
+        checks["manifest_integrity"] = sha256(manifest_path) == anchor
+        manifest = json.loads(Path(manifest_path).read_text())
+        paths = [SNAPSHOT, *IMAGES]
+        hashes = {p.name: sha256(p) for p in paths}
+        checks["artifact_integrity"] = (
+            set(manifest["sha256"]) == set(hashes) and manifest["sha256"] == hashes
+        )
+        data = json.loads(SNAPSHOT.read_text())
+        datetime.date.fromisoformat(data["snapshot_date"])
+        checks["valid_date"] = True
+        runs = data["claim_2_matched_budget"]
+        checks["exact_run_identity"] = sorted(r["run_id"] for r in runs) == sorted(
+            manifest["run_ids"]
+        )
+        checks["unique_runs"] = len(set(r["run_id"] for r in runs)) == len(runs)
+        checks["png_format"] = all(p.read_bytes().startswith(b"\x89PNG\r\n\x1a\n") for p in IMAGES)
+        checks["https_links"] = all(isinstance(r["url"], str) and r["url"].startswith("https://") for r in runs)
+    except (OSError, ValueError, KeyError, TypeError):
+        checks["readable_valid_schema"] = False
     return {
         "status": "PASS" if all(checks.values()) else "FAIL",
         "checks": checks,
-        "sha256": {
-            SNAPSHOT.name: sha256(SNAPSHOT),
-            **{path.name: sha256(path) for path in IMAGES if path.is_file()},
-        },
+        "sha256": hashes,
+        "scope": "release artifact integrity; audit counts require a separate reconciled inventory",
     }
 
 
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--manifest-sha256")
+    args = parser.parse_args(argv)
+    result = verify(args.manifest, args.manifest_sha256)
+    print(json.dumps(result, indent=2))
+    return 0 if result["status"] == "PASS" else 1
+
+
 if __name__ == "__main__":
-    print(json.dumps(verify(), indent=2))
+    raise SystemExit(main())

@@ -17,9 +17,9 @@ Iter 79 closes two open P7 veins simultaneously on REAL data:
 
   (d) bootstrap CIs on every P7 headline.
       Iter 71 row 83 / iter 76 row 90 reported point estimates of
-      `net_saves` per method without a paired-prompt bootstrap CI on
-      `cost_ratio` and the four `(rollout_saves, zvf_saves, net_saves,
-      cost_ratio)` headline metrics. We add prompt-resampled (B=2000,
+      `net_rollouts_saved` per method without a paired-prompt bootstrap CI on
+      `cost_ratio` and the four `(rollout_saves, predicted_restored_prompts, net_rollouts_saved,
+      cost_ratio)` headline metrics. We add step-cluster-resampled (B=2000,
       seed=20260705) CIs to the joint-controller headline at τ=0.05
       and τ=0.07 — the two operating points named in iter 71 row 83.
 
@@ -51,19 +51,22 @@ from __future__ import annotations
 
 import csv
 import json
-import math
 import pathlib
 import random
 import statistics
 
 import sys
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from p7_joint_controller import (
+    JOINT_RULE_ID, METRICS, bootstrap_controller_metrics, joint_controller,
+)
 WORK = REPO_ROOT
 N10 = WORK / "platform_hybrid/experiments" / "results" / "n10_seed_expansion"
 N2 = WORK / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
-OUT = WORK / "platform_hybrid/experiments" / "results" / "p5p8"
-OUT.mkdir(parents=True, exist_ok=True)
+OUT = WORK / "platform_hybrid/experiments" / "results" / "p5p8" / "corrected-review20-v2"
+
 
 # Three trigger axes registered in P7:
 #   T1 = ZVF-triage   (iter 51 row 74)
@@ -332,145 +335,42 @@ def load_n2_records():
     return out
 
 
+def flatten_step_records(method_records):
+    """Adapt the step-grouped representation to the shared versioned policy."""
+    records = []
+    for sr in method_records:
+        for prompt_idx, p in enumerate(sr["prompts"]):
+            records.append({
+                **p, "step": sr["step"], "prompt_idx": prompt_idx,
+                "method": sr.get("method"), "step_delta_div": sr["ddiv_step"],
+                "zvf_actual": p["zvf_actual"],
+            })
+    return records
+
+
 def joint_controller_one_step(step_rec, ddiv_tau):
-    """Replay the joint controller on one step. Returns
-    (rollout_saves, zvf_saves, net_saves, n_contrast, n_bdy_fire, cost_ratio).
+    """Legacy tuple API: gross rollouts, predicted restoration, net rollouts,
+    de-escalations, boundary escalations, retrospective cost ratio.
 
-    Saves vs the G=8 baseline:
-      Dualformer branch (per contrast prompt): G'=2 -> saves 6 rollouts.
-      ddiv-triage branch (per boundary prompt where ddiv>=tau):
-        G_esc=16 -> 1 ZVF save (boundary zvf_actual==1).
-      Non-fired contrast branch (boundary but ddiv<tau): keeps G=8.
-
-    Cost ratio: cost / baseline-cost. Baseline cost = G=8 rollouts per
-    prompt. Joint cost = sum over prompts of (G'=2 if contrast and
-    ddiv>=tau... NO wait -- Dualformer branch is fired on CONTRAST
-    prompts where ddiv<tau (Dualformer takes precedence per iter 71
-    rule). Let's re-derive the iter 71 rule exactly:
-
-      If contrast_prompt: G'=2 (Dualformer) -- ALWAYS, no ddiv check.
-      Elif boundary_prompt AND ddiv>=tau: G'=16 (escalate) -- ddiv-triage.
-      Else: G=8.
-
-    Cost ratio = sum_over_prompts(G'_used) / (n_prompts * 8).
+    It shares the step-first action policy with the original analysis. None of
+    these fields represents an observed intervention outcome.
     """
-    rollout_saves = 0
-    zvf_saves = 0
-    cost_used = 0
-    n_contrast = step_rec["contrast_count"]
-    n_bdy_fire = 0
-    for p in step_rec["prompts"]:
-        if p["contrast"]:
-            # Dualformer branch
-            rollout_saves += (G_BASE - G_DUALFORMER)  # 6 saved
-            cost_used += G_DUALFORMER
-        elif p["boundary"] and step_rec["ddiv_step"] >= ddiv_tau:
-            # ddiv-triage escalate
-            zvf_saves += 1
-            n_bdy_fire += 1
-            cost_used += G_ESC
-        else:
-            cost_used += G_BASE
-    baseline_cost = step_rec["n_prompts"] * G_BASE
-    cost_ratio = cost_used / baseline_cost
-    return (rollout_saves, zvf_saves, rollout_saves + zvf_saves,
-            n_contrast, n_bdy_fire, cost_ratio)
+    result = joint_controller(flatten_step_records([step_rec]), ddiv_tau)
+    return (result["rollout_saves"], result["predicted_restored_prompts"],
+            result["net_rollouts_saved"], result["n_contrast"],
+            result["n_boundary_escalated"], result["cost_ratio"])
 
 
 def headline_for_method(method_records, ddiv_tau):
-    """Aggregate joint controller across all steps for one method.
-
-    cost_ratio is the TOTAL-cost / TOTAL-baseline-cost (sum over steps of
-    cost_used, divided by sum over steps of n_prompts*G_BASE) — this is
-    what the joint controller script in iter 71 reports as the headline
-    ratio (it is dimensionless and bootstrap-consistent).
-    """
-    tot_rollout = 0
-    tot_zvf = 0
-    tot_net = 0
-    tot_cost_used = 0
-    tot_baseline_cost = 0
-    for sr in method_records:
-        r, z, n, _, _, cr = joint_controller_one_step(sr, ddiv_tau)
-        tot_rollout += r
-        tot_zvf += z
-        tot_net += n
-        # Reconstruct cost_used from the (cr * baseline_per_step) inverse:
-        # cr = cost_used / baseline_per_step; cost_used = cr * baseline
-        tot_cost_used += cr * (sr["n_prompts"] * G_BASE)
-        tot_baseline_cost += sr["n_prompts"] * G_BASE
-    return {
-        "rollout_saves": tot_rollout,
-        "zvf_saves": tot_zvf,
-        "net_saves": tot_net,
-        "cost_ratio": tot_cost_used / tot_baseline_cost if tot_baseline_cost else 0.0,
-    }
+    return joint_controller(flatten_step_records(method_records), ddiv_tau)
 
 
-def bootstrap_ci_net_saves(method_records, ddiv_tau, n_boot=N_BOOT_PROMPT, seed=SEED):
-    """Prompt-resampled bootstrap on net_saves / cost_ratio per method.
-
-    Resample prompt-steps with replacement from the 16 × 40 grid of
-    (contrast / boundary / ddiv_step) tuples per method, then apply
-    the joint controller to the resampled grid and recompute the
-    total-rollout, total-zvf, total-net, and total-cost_ratio metrics.
-    Sort bootstrap replicates by net_saves and extract 2.5% / 97.5%
-    percentile CIs (95% percentile bootstrap).
-    """
-    rng = random.Random(seed)
-    flat = []  # list of dicts with prompt-level fields + step-level ddiv
-    for sr in method_records:
-        for p in sr["prompts"]:
-            flat.append({
-                "contrast": p["contrast"],
-                "boundary": p["boundary"],
-                "zvf_iid_g16": p["zvf_iid_g16"],
-                "ddiv_step": sr["ddiv_step"],
-            })
-    n = len(flat)
-    boots = []
-    for _ in range(n_boot):
-        sample = [flat[rng.randrange(n)] for _ in range(n)]
-        rollout_saves = 0
-        zvf_saves = 0
-        cost_used = 0
-        for ps in sample:
-            if ps["contrast"]:
-                rollout_saves += (G_BASE - G_DUALFORMER)
-                cost_used += G_DUALFORMER
-            elif ps["boundary"] and ps["ddiv_step"] >= ddiv_tau:
-                zvf_saves += 1
-                cost_used += G_ESC
-            else:
-                cost_used += G_BASE
-        baseline_cost = n * G_BASE
-        net = rollout_saves + zvf_saves
-        cost_ratio = cost_used / baseline_cost
-        boots.append((rollout_saves, zvf_saves, net, cost_ratio))
-    # Sort bootstrap replicates independently by each metric for that
-    # metric's percentile CI (sort-by-net is insufficient because the
-    # four headline metrics are not monotonically co-ordered).
-    def pct_ci(values, alpha=0.05):
-        s = sorted(values)
-        return s[int(alpha / 2 * len(s))], s[int((1 - alpha / 2) * len(s)) - 1]
-    r_vals = [b[0] for b in boots]
-    z_vals = [b[1] for b in boots]
-    n_vals = [b[2] for b in boots]
-    cr_vals = [b[3] for b in boots]
-    r_lo, r_hi = pct_ci(r_vals)
-    z_lo, z_hi = pct_ci(z_vals)
-    n_lo, n_hi = pct_ci(n_vals)
-    cr_lo, cr_hi = pct_ci(cr_vals)
-    return {
-        "net_saves_ci_lo": n_lo,
-        "net_saves_ci_hi": n_hi,
-        "rollout_saves_ci_lo": r_lo,
-        "rollout_saves_ci_hi": r_hi,
-        "zvf_saves_ci_lo": z_lo,
-        "zvf_saves_ci_hi": z_hi,
-        "cost_ratio_ci_lo": cr_lo,
-        "cost_ratio_ci_hi": cr_hi,
-    }
+def bootstrap_ci_metrics(method_records, ddiv_tau, n_boot=N_BOOT_PROMPT, seed=SEED):
+    """Step-cluster paired intervals using the exact headline policy."""
+    result = bootstrap_controller_metrics(flatten_step_records(method_records),
+                                          ddiv_tau, n_boot, seed)
+    return {f"{metric}_ci_{endpoint}": result[metric][endpoint]
+            for metric in METRICS for endpoint in ("lo", "hi")}
 
 
 # ---------------------------------------------------------------------------
@@ -486,6 +386,7 @@ def write_tsv(path, rows, fieldnames):
 
 
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
     # --- N10 multi-trigger ---
     seeds = load_n10_seeds()
     per_seed = per_seed_fire_counts(seeds)
@@ -526,20 +427,26 @@ def main():
     for tau in DDIV_TAU_HEADLINE:
         for m in METHODS:
             point = headline_for_method(n2[m], tau)
-            ci = bootstrap_ci_net_saves(n2[m], tau)
+            ci = bootstrap_ci_metrics(n2[m], tau)
             boot_rows.append({
                 "method": m,
                 "tau": f"{tau:.2f}",
+                "rule_id": JOINT_RULE_ID,
+                "n_fired_steps": point["n_fired_steps"],
+                "n_fired_prompts": point["n_fired_prompts"],
+                "n_boundary_escalated": point["n_boundary_escalated"],
+                "observed_restored_prompts": None,
+                "extra_rollouts": point["extra_rollouts"],
                 "rollout_saves": point["rollout_saves"],
-                "zvf_saves": point["zvf_saves"],
-                "net_saves": point["net_saves"],
+                "predicted_restored_prompts": point["predicted_restored_prompts"],
+                "net_rollouts_saved": point["net_rollouts_saved"],
                 "cost_ratio": f"{point['cost_ratio']:.6f}",
-                "net_saves_ci_lo": ci["net_saves_ci_lo"],
-                "net_saves_ci_hi": ci["net_saves_ci_hi"],
+                "net_rollouts_saved_ci_lo": ci["net_rollouts_saved_ci_lo"],
+                "net_rollouts_saved_ci_hi": ci["net_rollouts_saved_ci_hi"],
                 "rollout_saves_ci_lo": ci["rollout_saves_ci_lo"],
                 "rollout_saves_ci_hi": ci["rollout_saves_ci_hi"],
-                "zvf_saves_ci_lo": ci["zvf_saves_ci_lo"],
-                "zvf_saves_ci_hi": ci["zvf_saves_ci_hi"],
+                "predicted_restored_prompts_ci_lo": ci["predicted_restored_prompts_ci_lo"],
+                "predicted_restored_prompts_ci_hi": ci["predicted_restored_prompts_ci_hi"],
                 "cost_ratio_ci_lo": f"{ci['cost_ratio_ci_lo']:.6f}",
                 "cost_ratio_ci_hi": f"{ci['cost_ratio_ci_hi']:.6f}",
             })
@@ -547,11 +454,12 @@ def main():
         OUT / "p7_joint_controller_ci.tsv",
         boot_rows,
         fieldnames=[
-            "method", "tau",
-            "rollout_saves", "zvf_saves", "net_saves", "cost_ratio",
-            "net_saves_ci_lo", "net_saves_ci_hi",
+            "method", "tau", "rule_id", "n_fired_steps", "n_fired_prompts",
+            "n_boundary_escalated", "observed_restored_prompts", "extra_rollouts",
+            "rollout_saves", "predicted_restored_prompts", "net_rollouts_saved", "cost_ratio",
+            "net_rollouts_saved_ci_lo", "net_rollouts_saved_ci_hi",
             "rollout_saves_ci_lo", "rollout_saves_ci_hi",
-            "zvf_saves_ci_lo", "zvf_saves_ci_hi",
+            "predicted_restored_prompts_ci_lo", "predicted_restored_prompts_ci_hi",
             "cost_ratio_ci_lo", "cost_ratio_ci_hi",
         ],
     )
@@ -559,12 +467,17 @@ def main():
     # --- JSON summary ---
     summary_json = {
         "iter": 79,
+        "joint_rule_id": JOINT_RULE_ID,
+        "joint_bootstrap_unit": "step_cluster",
+        "restoration_status": "same_sample_plugin_prediction_only",
+        "observed_restored_prompts": None,
+        "budget_status": "retrospective_allocation_excludes_pilot_cost",
         "pillar": "P7",
         "vein": "(c) seed-robustness of the trigger threshold + (d) bootstrap CIs on joint controller headline",
         "n_seeds": len(seeds),
-        "n_prompts_per_method": 16 * 40,
+        "n_prompts_per_method": {m: sum(len(s["prompts"]) for s in rows) for m, rows in n2.items()},
         "n_boot_seed": N_BOOT_SEED,
-        "n_boot_prompt": N_BOOT_PROMPT,
+        "n_boot_step": N_BOOT_PROMPT,
         "seed": SEED,
         "triggers": list(TRIGGERS),
         "tau_grids": {k: list(v) for k, v in TAU_GRID.items()},
@@ -592,7 +505,7 @@ def main():
             },
             "H2_joint_ci_width_at_tau_0_05": {
                 row["method"]: {
-                    "net_ci_width": row["net_saves_ci_hi"] - row["net_saves_ci_lo"],
+                    "net_ci_width": row["net_rollouts_saved_ci_hi"] - row["net_rollouts_saved_ci_lo"],
                     "cost_ratio_ci_width_pct": round(
                         100 * (float(row["cost_ratio_ci_hi"]) - float(row["cost_ratio_ci_lo"]))
                         / float(row["cost_ratio"]),
@@ -603,7 +516,7 @@ def main():
             },
             "H3_joint_ci_at_tau_0_07": {
                 row["method"]: {
-                    "net_ci_width": row["net_saves_ci_hi"] - row["net_saves_ci_lo"],
+                    "net_ci_width": row["net_rollouts_saved_ci_hi"] - row["net_rollouts_saved_ci_lo"],
                 }
                 for row in boot_rows if row["tau"] == "0.07"
             },
@@ -624,14 +537,14 @@ def main():
     print(f"\n=== Joint-controller CIs at τ=0.05 ===")
     for row in boot_rows:
         if row["tau"] == "0.05":
-            ci_w = row["net_saves_ci_hi"] - row["net_saves_ci_lo"]
+            ci_w = row["net_rollouts_saved_ci_hi"] - row["net_rollouts_saved_ci_lo"]
             cr_w = 100 * (float(row["cost_ratio_ci_hi"]) - float(row["cost_ratio_ci_lo"])) / float(row["cost_ratio"])
-            print(f"  {row['method']:6s}: net_saves={row['net_saves']:4d} [{row['net_saves_ci_lo']:4d}, {row['net_saves_ci_hi']:4d}] (CI width={ci_w}); cost_ratio={row['cost_ratio']} ±{cr_w:.2f}%")
+            print(f"  {row['method']:6s}: net_rollouts_saved={row['net_rollouts_saved']:4d} [{row['net_rollouts_saved_ci_lo']:4d}, {row['net_rollouts_saved_ci_hi']:4d}] (CI width={ci_w}); cost_ratio={row['cost_ratio']} ±{cr_w:.2f}%")
     print(f"\n=== Joint-controller CIs at τ=0.07 ===")
     for row in boot_rows:
         if row["tau"] == "0.07":
-            ci_w = row["net_saves_ci_hi"] - row["net_saves_ci_lo"]
-            print(f"  {row['method']:6s}: net_saves={row['net_saves']:4d} [{row['net_saves_ci_lo']:4d}, {row['net_saves_ci_hi']:4d}] (CI width={ci_w})")
+            ci_w = row["net_rollouts_saved_ci_hi"] - row["net_rollouts_saved_ci_lo"]
+            print(f"  {row['method']:6s}: net_rollouts_saved={row['net_rollouts_saved']:4d} [{row['net_rollouts_saved_ci_lo']:4d}, {row['net_rollouts_saved_ci_hi']:4d}] (CI width={ci_w})")
     print(f"\nDONE — wrote outputs to {OUT}")
 
 

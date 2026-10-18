@@ -13,17 +13,13 @@ Inputs:  platform_hybrid/experiments/results/groupsize_zvf_sweep.json      (G in
 Outputs: platform_hybrid/experiments/results/group_size_effect.tsv
          figures/group_size.pdf
 
-Angles (three concrete findings):
-A. REWARD-vs-G CURVE on the small-scale sweep, fit per-seed and averaged,
-   plus a log-G linear fit to extract the empirical slope of
-   acc-vs-G. Cross-link with mean_zvf via the log-log ZVF fit.
-B. BROADER-SCALE G=4~=G=32 EQUIVALENCE TEST: retention(acc_G4 / acc_G32)
-   across the 4 T-budgets. The Wu et al. (2025) 97.6% claim is
-   budget-conditional: true at T=1M (97.62%) but falsified at T=64M
-   (72.73%). Quantify with TOST at each T and Spearman(retention, log10 T).
-C. CROSS-PILLAR LINKAGE: mean_zvf(G=2)=0.838, mean_zvf(G=16)=0.631
-   -- 25% absolute drop in noise signal. The G=4 vs G=32 retention
-   drop (97.62 -> 72.73) tracks the ZVF contrast-budget exhaustion.
+Analysis protocol pro-review-02-v2.1:
+A. Descriptive reward and ZVF semilog fits across fixed group sizes.
+B. Ratio-of-means retention at each token budget. Noninferiority is tested
+   only from genuine paired seed observations as E[G4] - .976 E[G32] > 0.
+   Aggregate CIs are never simulated into observations. Equivalence is not tested.
+C. Descriptive ZVF/GU changes in percentage points; no causal mechanism inferred.
+Archived outputs have not been regenerated or revalidated.
 """
 import json, math, os, sys
 from pathlib import Path
@@ -31,6 +27,7 @@ import numpy as np
 from scipy import stats
 
 sys.path.append(str(Path(__file__).resolve().parent))  # platform_modal/scripts, for _paths
+from _review02_contracts import retention_noninferiority, exact_small_spearman, finite_json
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
 RES = ROOT / 'platform_hybrid/experiments' / 'results'
@@ -106,8 +103,8 @@ def fit_reward_vs_G(runs):
     log_G = np.log10(Gs)
     slope, intercept, r, p, se = stats.linregress(log_G, rewards)
     coeffs = np.polyfit(log_G, rewards, 2)
-    rho_l10, p_l10 = stats.spearmanr(Gs, last10s)
-    rho_zvf, p_zvf = stats.spearmanr(Gs, zvfs)
+    rho_l10, p_l10 = exact_small_spearman(Gs, last10s)
+    rho_zvf, p_zvf = exact_small_spearman(Gs, zvfs)
     zvf_slope, zvf_int, zvf_r, zvf_p, zvf_se = stats.linregress(log_G, zvfs)
 
     return {
@@ -121,80 +118,125 @@ def fit_reward_vs_G(runs):
         'spearman_p_G_vs_last10reward': p_l10,
         'spearman_rho_G_vs_zvf': rho_zvf,
         'spearman_p_G_vs_zvf': p_zvf,
-        'loglog_zvf_slope_per_decade': zvf_slope,
-        'loglog_zvf_intercept': zvf_int,
-        'loglog_zvf_r': zvf_r,
-        'loglog_zvf_p': zvf_p,
+        'semilog_zvf_slope_per_decade': zvf_slope,
+        'semilog_zvf_intercept': zvf_int,
+        'semilog_zvf_r': zvf_r,
+        'semilog_zvf_p': zvf_p,
     }
+
+
+PAIRING_IDENTITY_FIELDS = {
+    'model': ('model_id', 'model_name', 'model'),
+    'task': ('task_id', 'task_name', 'task', 'task_slice'),
+    'evaluation': ('evaluation_id', 'eval_id', 'heldout_ids_sha256', 'evaluation_dataset_id'),
+    # This identity must exclude the varied group size, token budget and seed.
+    'configuration': ('comparison_config_id', 'invariant_config_id'),
+}
+
+
+def pairing_identity_status(records):
+    """Seed equality is meaningful only within declared invariant identities."""
+    missing, mismatched = [], []
+    identity = {}
+    for dimension, aliases in PAIRING_IDENTITY_FIELDS.items():
+        values = []
+        for row in records:
+            candidates = [str(row[key]).strip() for key in aliases if isinstance(row.get(key), str)]
+            candidates = [v for v in candidates if v.lower() not in {'', 'unknown', 'unspecified', 'tbd', 'none', 'null', 'nan', 'n/a'}]
+            if not candidates:
+                missing.append(dimension)
+            else:
+                values.append(candidates[0])
+        if len(set(values)) > 1:
+            mismatched.append(dimension)
+        elif values:
+            identity[dimension] = values[0]
+    # Revisions/splits and other supplied training settings must also agree.
+    optional = ('model_revision', 'tokenizer_revision', 'dataset_revision', 'eval_revision',
+                'evaluation_split', 'heldout_split', 'learning_rate', 'temperature',
+                'optimizer', 'loss_type', 'reward_model', 'training_config',
+                'heldout_ids_sha256', 'evaluation_dataset_id')
+    for key in optional:
+        if any(key in row for row in records):
+            values = [json.dumps(row[key], sort_keys=True) for row in records if key in row and row[key] is not None]
+            if len(values) != len(records):
+                missing.append(key)
+            if len(set(values)) > 1:
+                mismatched.append(key)
+    status = 'mismatched' if mismatched else 'unknown' if missing else 'matched'
+    return dict(status=status, identity=identity, missing_fields=sorted(set(missing)),
+                mismatched_fields=sorted(set(mismatched)))
 
 
 def broader_g4_vs_g32(grid_rows):
-    """B. Broader-scale G=4~=G=32 equivalence test across T-budgets."""
+    """Budget-specific paired noninferiority; summary CIs are never observations.
+
+    Raw rows require seed, heldout_acc, and matching model/task/evaluation plus
+    invariant comparison_config_id identities. Missing identity means unknown,
+    never a certified pair. Summary-only input supplies a descriptive point
+    ratio, with inference explicitly unavailable. Budgets are fixed conditions.
+    """
     by_T = {}
-    for r in grid_rows:
-        T = int(r['budget_tokens'])
-        G = int(r['G'])
-        a = float(r['heldout_acc_mean'])
-        cl = float(r['heldout_acc_ci_low'])
-        ch = float(r['heldout_acc_ci_high'])
-        by_T.setdefault(T, {})[G] = (a, cl, ch)
-
+    for row in grid_rows:
+        if int(row['G']) not in (4, 32):
+            continue
+        by_T.setdefault(int(row['budget_tokens']), {}).setdefault(int(row['G']), []).append(row)
     rows = []
-    Ts = sorted(by_T.keys())
-    rets = []
-    log_Ts = []
-    for T in Ts:
-        d = by_T[T]
-        a4, c4l, c4h = d[4]
-        a32, c32l, c32h = d[32]
-        rng = np.random.default_rng(seed=T)
-        a4_draws = rng.uniform(c4l, c4h, size=10000)
-        a32_draws = rng.uniform(c32l, c32h, size=10000)
-        ret_draws = a4_draws / a32_draws
-        ret = float(np.mean(ret_draws))
-        ret_lo = float(np.percentile(ret_draws, 2.5))
-        ret_hi = float(np.percentile(ret_draws, 97.5))
-
-        def tost(thr):
-            eps = 1.0 - thr
-            se_lo = max((ret - ret_lo) / 1.96, 1e-6)
-            se_hi = max((ret_hi - ret) / 1.96, 1e-6)
-            t_low = (ret - (-eps)) / se_lo
-            t_high = ((+eps) - ret) / se_hi
-            p_low = 1 - stats.norm.cdf(t_low)
-            p_high = 1 - stats.norm.cdf(t_high)
-            return max(p_low, p_high)
-
-        tost_976 = tost(0.976)
-        tost_95 = tost(0.95)
-        tost_90 = tost(0.90)
-        rows.append({
-            'T_tokens': T,
-            'acc_G4': a4, 'acc_G4_ci_low': c4l, 'acc_G4_ci_high': c4h,
-            'acc_G32': a32, 'acc_G32_ci_low': c32l, 'acc_G32_ci_high': c32h,
-            'retention': ret, 'retention_ci_low': ret_lo, 'retention_ci_high': ret_hi,
-            'tost_p_at_0.976': tost_976,
-            'tost_p_at_0.95': tost_95,
-            'tost_p_at_0.90': tost_90,
-            'wu_claim_holds': tost_976 < 0.05,
-        })
-        rets.append(ret)
-        log_Ts.append(math.log10(T))
-
-    rho, p = stats.spearmanr(log_Ts, rets)
-    slope, intercept, r_val, p_val, se = stats.linregress(log_Ts, rets)
-
-    return {
-        'per_T': rows,
-        'spearman_rho_retention_vs_logT': rho,
-        'spearman_p': p,
-        'linear_slope_per_decade_T': slope,
-        'linear_intercept': intercept,
-        'linear_r': r_val,
-        'linear_p': p_val,
-        'wu_claim_T_min': min((r['T_tokens'] for r in rows if r['wu_claim_holds']), default=None),
-        'wu_claim_T_max_holds': sum(1 for r in rows if r['wu_claim_holds']),
-    }
+    for T, arms in sorted(by_T.items()):
+        if not all(g in arms for g in (4, 32)):
+            continue
+        raw = all('seed' in r and 'heldout_acc' in r for g in (4, 32) for r in arms[g])
+        matching = pairing_identity_status([r for g in (4, 32) for r in arms[g]])
+        paired = {}
+        common = []
+        ret_lo = ret_hi = float("nan")
+        if raw:
+            for g in (4, 32):
+                paired[g] = {}
+                for r in arms[g]:
+                    if str(r['seed']) in paired[g]:
+                        raise ValueError('duplicate seed within budget and group')
+                    paired[g][str(r['seed'])] = float(r['heldout_acc'])
+            common = sorted(set(paired[4]) & set(paired[32]))
+            aa, bb = [paired[4][k] for k in common], [paired[32][k] for k in common]
+            certified = matching['status'] == 'matched'
+            result = retention_noninferiority(aa, bb) if certified else retention_noninferiority([], [])
+            a4 = float(np.mean(aa)) if certified and aa else float(np.mean(list(paired[4].values())))
+            a32 = float(np.mean(bb)) if certified and bb else float(np.mean(list(paired[32].values())))
+            if certified and len(aa) >= 2 and a32 > 0:
+                rng = np.random.default_rng(T)
+                idx = rng.integers(len(aa), size=(2000, len(aa)))
+                numer, denom = np.asarray(aa)[idx].mean(axis=1), np.asarray(bb)[idx].mean(axis=1)
+                if np.all(denom > 0):
+                    ret_lo, ret_hi = map(float, np.quantile(numer/denom, [.025,.975]))
+        else:
+            if any(len(arms[g]) != 1 for g in (4, 32)):
+                raise ValueError('summary rows must be unique per budget and group')
+            a4, a32 = [float(arms[g][0]['heldout_acc_mean']) for g in (4, 32)]
+            result = retention_noninferiority([], [])
+        result['matching'] = matching
+        ret = a4 / a32 if a32 > 0 and matching['status'] != 'mismatched' else float('nan')
+        rows.append(dict(T_tokens=T, acc_G4=a4, acc_G32=a32, retention=ret,
+                         retention_ci_low=ret_lo, retention_ci_high=ret_hi,
+                         retention_interval_method='paired_seed_percentile_ratio_of_means' if math.isfinite(ret_lo) else 'unavailable',
+                         noninferiority=result, status=result['status'],
+                         matching_status=matching['status'], n_pairs=result['n_pairs'],
+                         n_candidate_seed_pairs=len(common) if raw else None,
+                         wu_claim_holds=result.get('noninferior'),
+                         n_unmatched_seeds=(sum(len(paired[g]) for g in (4, 32))-2*result['n_pairs']) if raw else None))
+    log_Ts = [math.log10(r['T_tokens']) for r in rows]
+    rets = [r['retention'] for r in rows]
+    rho = float(stats.spearmanr(log_Ts, rets).statistic) if len(rows) > 1 else float('nan')
+    slope, intercept, r_val = (float('nan'),)*3
+    if len(rows) > 1:
+        fit = stats.linregress(log_Ts, rets)
+        slope, intercept, r_val = fit.slope, fit.intercept, fit.rvalue
+    return dict(per_T=rows, spearman_rho_retention_vs_logT=rho, spearman_p=float('nan'),
+                linear_slope_per_decade_T=slope, linear_intercept=intercept, linear_r=r_val,
+                linear_p=float('nan'), uncertainty='descriptive fixed-budget trend; no budget-resampling inference',
+                statistic_version='pro-review-02-v2.1',
+                wu_claim_T_min=min((r['T_tokens'] for r in rows if r['wu_claim_holds']), default=None),
+                wu_claim_T_max_holds=sum(r['wu_claim_holds'] is True for r in rows))
 
 
 def write_outputs(a, b):
@@ -208,26 +250,25 @@ def write_outputs(a, b):
     lines.append(f'A_reward_vs_G\tquadratic_coeffs\t"parabola coeffs (log10 G space): {a["quad_coeffs"]}"')
     lines.append(f'A_reward_vs_G\tspearman_G_vs_last10reward\t"Spearman rho(G, last10_reward)={a["spearman_rho_G_vs_last10reward"]:.3f}, p={a["spearman_p_G_vs_last10reward"]:.4f}"')
     lines.append(f'A_reward_vs_G\tspearman_G_vs_mean_zvf\t"Spearman rho(G, mean_zvf)={a["spearman_rho_G_vs_zvf"]:.3f}, p={a["spearman_p_G_vs_zvf"]:.4f}"')
-    lines.append(f'A_reward_vs_G\tzvf_loglog_slope\t"log10(mean_zvf) ~ {a["loglog_zvf_intercept"]:.4f} + {a["loglog_zvf_slope_per_decade"]:.4f}*log10(G), R={a["loglog_zvf_r"]:.3f}"')
+    lines.append(f'A_reward_vs_G\tzvf_loglog_slope\t"mean_zvf ~ {a["semilog_zvf_intercept"]:.4f} + {a["semilog_zvf_slope_per_decade"]:.4f}*log10(G), R={a["semilog_zvf_r"]:.3f}"')
 
     for r in b['per_T']:
-        lines.append(
-            f'B_broader_g4_vs_g32\tT={r["T_tokens"]}\t'
-            f'"retention={r["retention"]:.4f} CI [{r["retention_ci_low"]:.4f},{r["retention_ci_high"]:.4f}]; '
-            f'TOST@0.976 p={r["tost_p_at_0.976"]:.4f}; TOST@0.95 p={r["tost_p_at_0.95"]:.4f}; '
-            f'TOST@0.90 p={r["tost_p_at_0.90"]:.4f}; wu_claim_holds={r["wu_claim_holds"]}"'
-        )
+        lines.append('B_broader_g4_vs_g32\tT=' + str(r['T_tokens']) + '\t' + json.dumps(finite_json(r), default=str, allow_nan=False))
 
     lines.append(f'B_broader_g4_vs_g32\tspearman_retention_vs_logT\t"Spearman rho(retention, log10 T)={b["spearman_rho_retention_vs_logT"]:.3f}, p={b["spearman_p"]:.4f}"')
     lines.append(f'B_broader_g4_vs_g32\tlinear_slope_per_decade\t"retention ~ {b["linear_intercept"]:.4f} + {b["linear_slope_per_decade_T"]:.4f} * log10(T), R={b["linear_r"]:.3f}, p={b["linear_p"]:.4f}"')
-    lines.append(f'B_broader_g4_vs_g32\twu_claim_T_budget_conditional\t"Wu et al. (2025) 97.6% retention holds ONLY at T<=T_min={b["wu_claim_T_min"]}; holds at {b["wu_claim_T_max_holds"]}/4 budgets"')
+    lines.append(f'B_broader_g4_vs_g32\twu_claim_T_budget_conditional\t"97.6% noninferiority established first at T={b["wu_claim_T_min"]}; holds at {b["wu_claim_T_max_holds"]}/{len(b["per_T"])} budgets"')
 
-    zvf_drop = 0.8380 - 0.6312
-    ret_drop = 0.9762 - 0.7273
-    lines.append(f'C_cross_pillar\tzvf_drop_G2_to_G16\t"mean_zvf drops {zvf_drop:.3f} (0.838 -> 0.631) as G grows 2->16: 24.7% absolute loss of within-group contrast"')
-    lines.append(f'C_cross_pillar\tretention_drop_T1M_to_T64M\t"G=4 retention of G=32 drops {ret_drop:.3f} (97.62% -> 72.73%) as T grows 1M -> 64M"')
-    lines.append(f'C_cross_pillar\tmechanism\t"Lower G -> higher ZVF noise (more wasted rollouts); higher T exposes the saturation limit because G=4 cannot amortize over many steps once mean reward is high"')
-    lines.append(f'C_cross_pillar\tisoT_value_of_G\t"Value of G=4->G=32 grows monotonically with log10 T: 0.01 (T=1M), 0.11 (T=4M), 0.21 (T=16M), 0.24 (T=64M) (iter127 complementarity)"')
+    per_g = {row['G']: row for row in a['per_G']}
+    if 2 in per_g and 16 in per_g:
+        zvf2, zvf16 = per_g[2]['mean_zvf_mean'], per_g[16]['mean_zvf_mean']
+        decrease = zvf2-zvf16
+        relative = decrease/zvf2 if zvf2 else float('nan')
+        lines.append(f'C_cross_pillar\tzvf_and_gu_change\tZVF decreases by {100*decrease:.2f} percentage points ({100*relative:.2f}% relative); GU=1-ZVF increases by {100*decrease:.2f} percentage points')
+    if b['per_T']:
+        first, last = b['per_T'][0], b['per_T'][-1]
+        lines.append(f'C_cross_pillar\tretention_change\tRetention change from T={first["T_tokens"]} to T={last["T_tokens"]}: {last["retention"]-first["retention"]:+.4f}')
+    lines.append('C_cross_pillar\tinterpretation\tDescriptive comparison across different experiments; no causal mechanism established')
 
     out_path.write_text('\n'.join(lines) + '\n')
     print(f'Wrote {out_path}')
@@ -245,8 +286,8 @@ def write_figure(a, b, fig_path):
     ax.errorbar(Gs, rws, yerr=rws_se, marker='o', lw=2, capsize=4, color='#1f77b4')
     ax.set_xscale('log', base=2)
     ax.set_xlabel('Group size G')
-    ax.set_ylabel('Mean reward across 40 steps')
-    ax.set_title('A1. Reward vs G (Qwen2.5-0.5B / arithmetic, n=3)')
+    ax.set_ylabel('Mean reward across observed steps')
+    ax.set_title('A1. Reward vs G (source experiment)')
     ax.grid(True, alpha=0.3)
     for s in a['per_G']:
         ax.annotate(f"{s['reward_mean']:.3f}", (s['G'], s['reward_mean']),
@@ -256,9 +297,9 @@ def write_figure(a, b, fig_path):
     ax = axes[0, 1]
     zvfs = [s['mean_zvf_mean'] for s in a['per_G']]
     ax.plot(Gs, zvfs, marker='s', lw=2, color='#d62728')
-    zvf_pred = [a['loglog_zvf_intercept'] + a['loglog_zvf_slope_per_decade'] * math.log10(G) for G in Gs]
+    zvf_pred = [a['semilog_zvf_intercept'] + a['semilog_zvf_slope_per_decade'] * math.log10(G) for G in Gs]
     ax.plot(Gs, zvf_pred, '--', lw=1, color='#d62728', alpha=0.5,
-            label=f"log-log fit slope={a['loglog_zvf_slope_per_decade']:.3f}/dec")
+            label=f"semilog fit slope={a['semilog_zvf_slope_per_decade']:.3f}/dec")
     ax.set_xscale('log', base=2)
     ax.set_xlabel('Group size G')
     ax.set_ylabel('Mean ZVF (zero-variance fraction)')
@@ -275,14 +316,16 @@ def write_figure(a, b, fig_path):
     rets = [r['retention'] for r in b['per_T']]
     ret_lo = [r['retention_ci_low'] for r in b['per_T']]
     ret_hi = [r['retention_ci_high'] for r in b['per_T']]
-    ax.errorbar(Ts, rets, yerr=[np.subtract(rets, ret_lo), np.subtract(ret_hi, rets)],
-                marker='o', lw=2, capsize=4, color='#2ca02c')
+    ax.plot(Ts, rets, marker='o', lw=2, color='#2ca02c')
+    for t, point, low, high in zip(Ts, rets, ret_lo, ret_hi):
+        if math.isfinite(low) and math.isfinite(high):
+            ax.errorbar([t], [point], yerr=[[max(0, point-low)], [max(0, high-point)]], capsize=4, color='#2ca02c')
     ax.axhline(0.976, color='red', ls='--', lw=1.2, label='Wu et al. 97.6% claim')
     ax.axhline(1.0, color='gray', ls=':', lw=1)
     ax.set_xscale('log')
     ax.set_xlabel('Budget T (tokens)')
     ax.set_ylabel('G=4 retention of G=32 accuracy')
-    ax.set_title('B. Broader-scale G=4 ~ G=32 (Qwen3-8B / GSM8K)')
+    ax.set_title('B. G=4 vs G=32 (source experiment)')
     ax.legend()
     ax.grid(True, alpha=0.3)
     ax.set_ylim(0.6, 1.05)
@@ -297,15 +340,14 @@ def write_figure(a, b, fig_path):
     ax.plot(logTs, losses, marker='o', lw=2, color='#9467bd')
     ax.set_xlabel('log10(T)')
     ax.set_ylabel('1 - retention  (G=4 vs G=32)')
-    ax.set_title('C. Retention loss vs log-T (mechanism)')
+    ax.set_title('C. Descriptive retention loss vs log-T')
     ax.grid(True, alpha=0.3)
     for r, lt, ls_ in zip(b['per_T'], logTs, losses):
         ax.annotate(f"{ls_:.3f}", (lt, ls_), textcoords='offset points', xytext=(8, 8), fontsize=9)
 
     fig.suptitle(
         'Iter 131 -- G=4 vs G=32 vs the Broader Sweep\n'
-        '(Wu et al. 2025 97.6% retention is BUDGET-CONDITIONAL; '
-        'falsified at T>=4M on Qwen3-8B GSM8K)',
+        'Budget-specific accuracy ratios; inference requires matched seed observations',
         fontsize=12, y=1.00)
     fig.tight_layout()
     fig.savefig(fig_path, dpi=130, bbox_inches='tight')
@@ -329,14 +371,14 @@ def main():
     print('---KEY FINDINGS---')
     print('A. Reward-vs-G slope:', round(a['linear_slope_reward_per_decade'], 4),
           'p=', round(a['linear_p'], 4))
-    print('A. ZVF log-log slope:', round(a['loglog_zvf_slope_per_decade'], 4),
-          'r=', round(a['loglog_zvf_r'], 4))
+    print('A. ZVF semilog slope:', round(a['semilog_zvf_slope_per_decade'], 4),
+          'r=', round(a['semilog_zvf_r'], 4))
     print('B. Spearman rho(retention, log10 T):', round(b['spearman_rho_retention_vs_logT'], 4),
           'p=', round(b['spearman_p'], 6))
     print('B. Wu claim holds at', b['wu_claim_T_max_holds'], '/4 budgets')
     for r in b['per_T']:
         print(f'  T={r["T_tokens"]:>10d}: ret={r["retention"]:.4f}, '
-              f'TOST@0.976 p={r["tost_p_at_0.976"]:.4f}, '
+              f'noninferiority status={r["status"]}, '
               f'holds={r["wu_claim_holds"]}')
 
 

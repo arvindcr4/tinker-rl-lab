@@ -69,6 +69,7 @@ import json
 import math
 import os
 import random
+from _review_calibration import stable_seed
 import statistics
 from collections import defaultdict
 
@@ -77,7 +78,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 DATA_DIR = str(REPO_ROOT)
-OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8"
+OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8/corrected-review21-v2"
 TRAIN = f"{DATA_DIR}/fraud_data.csv"
 TEST = f"{DATA_DIR}/test_data.csv"
 
@@ -103,7 +104,7 @@ def isotonic_pava(y: list[float], w: list[float] | None = None) -> list[float]:
     blocks: list[list[float]] = []
     for i in range(n):
         s_y, s_w, sz = y[i] * w[i], w[i], 1
-        while blocks and (blocks[-1][0] / blocks[-1][1]) <= (s_y / s_w):
+        while blocks and (blocks[-1][0] / blocks[-1][1]) > (s_y / s_w):
             s_y += blocks[-1][0]
             s_w += blocks[-1][1]
             sz += blocks[-1][2]
@@ -116,31 +117,10 @@ def isotonic_pava(y: list[float], w: list[float] | None = None) -> list[float]:
     return out
 
 
-def isotonic_fit_predict(x_train, y_train, x_test) -> list[float]:
-    paired = sorted(zip(x_train, y_train), key=lambda r: r[0])
-    xs = [p[0] for p in paired]
-    ys = [p[1] for p in paired]
-    yhat = isotonic_pava(ys)
-    step_x: list[float] = []
-    step_y: list[float] = []
-    for xi, yi in zip(xs, yhat):
-        if not step_x or step_x[-1] != xi:
-            step_x.append(xi)
-            step_y.append(yi)
-        else:
-            step_y[-1] = yi
-    out = []
-    for xt in x_test:
-        lo, hi = 0, len(step_x)
-        while lo < hi:
-            mid = (lo + hi) // 2
-            if step_x[mid] <= xt:
-                lo = mid + 1
-            else:
-                hi = mid
-        idx = max(0, lo - 1)
-        out.append(step_y[idx])
-    return out
+def isotonic_fit_predict(x_train, y_train, x_test):
+    from _review_calibration import isotonic_predict
+    return isotonic_predict(x_train, y_train, x_test)
+
 
 
 def rate_rescale(scores, labels) -> tuple[list[float], float]:
@@ -154,7 +134,7 @@ def rate_rescale(scores, labels) -> tuple[list[float], float]:
     if mean_pred <= 0:
         return list(scores), 1.0
     scale = obs_rate / mean_pred
-    return [s * scale for s in scores], scale
+    return [min(1.0, max(0.0, s * scale)) for s in scores], scale
 
 
 # ---------------------------------------------------------------------------
@@ -304,37 +284,9 @@ def assign_cohorts(test_meta):
 # ---------------------------------------------------------------------------
 
 def cv_recal(scores, idx, te_y, method="isotonic", seed=SEED, n_folds=N_FOLDS):
-    """Apply `method` 5-fold CV on the rows in `idx`."""
-    rng = random.Random(seed)
-    perm = idx[:]
-    rng.shuffle(perm)
-    fsize = max(1, len(perm) // n_folds)
-    folds = []
-    for f in range(n_folds):
-        lo = f * fsize
-        hi = (f + 1) * fsize if f < n_folds - 1 else len(perm)
-        folds.append(perm[lo:hi])
-    oof = [None] * len(perm)
-    for f in range(n_folds):
-        held = folds[f]
-        train_idx = [i for j, f_idx in enumerate(folds) if j != f for i in f_idx]
-        if not train_idx:
-            continue
-        x_tr = [scores[i] for i in train_idx]
-        y_tr = [te_y[i] for i in train_idx]
-        x_te = [scores[i] for i in held]
-        if method == "isotonic":
-            y_te_pred = isotonic_fit_predict(x_tr, y_tr, x_te)
-        elif method == "rate":
-            y_te_pred, _ = rate_rescale(x_tr, y_tr)
-            # apply the per-fold scale to the held scores
-            scale = sum(y_tr) / len(y_tr) / max(1e-9, sum(x_tr) / len(x_tr))
-            y_te_pred = [s * scale for s in x_te]
-        else:
-            y_te_pred = x_te
-        for k, i in enumerate(held):
-            oof[perm.index(i)] = y_te_pred[k]
-    return oof  # in `perm` order; convert with: out[perm[i]] = oof[i]
+    from _review_calibration import crossfit
+    return crossfit(scores, te_y, idx, method, seed, n_folds)
+
 
 
 # ---------------------------------------------------------------------------
@@ -386,7 +338,7 @@ def main():
     print(f"  strata sizes: {n_strata}")
 
     print("[3/5] Training two XGB backbones ...")
-    p20 = predict_proba(fit_gbt(tr_X, tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED),
+    p20 = predict_proba(fit_gbt([row[:20] for row in tr_X], tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED),
                         [r[:20] for r in te_X])
     p24 = predict_proba(fit_gbt(tr_X, tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED + 1),
                         te_X)
@@ -402,13 +354,13 @@ def main():
         # Global isotonic
         idx_all = list(range(len(te_X)))
         oof = cv_recal(raw_scores, idx_all, te_y, "isotonic",
-                       seed=SEED + hash(tree_name) % 1000)
+                       seed=SEED + stable_seed(tree_name) % 1000)
         cal_scores = [None] * len(te_X)
         for k, i in enumerate(idx_all):
             cal_scores[i] = oof[k] if oof[k] is not None else raw_scores[i]
         cal[(tree_name, "global", "isotonic")] = cal_scores
         # Global rate-rescale
-        cal_scores, _ = rate_rescale(raw_scores, te_y)
+        cal_scores = cv_recal(raw_scores, idx_all, te_y, "rate", seed=SEED)
         cal[(tree_name, "global", "rate")] = cal_scores
 
         # Per-cohort
@@ -421,7 +373,7 @@ def main():
                 if len(idx) < 10:
                     continue
                 oof = cv_recal(raw_scores, idx, te_y, "isotonic",
-                               seed=SEED + stratum * 31 + hash((tree_name, ck, "iso")) % 9973)
+                               seed=SEED + stratum * 31 + stable_seed((tree_name, ck, "iso")) % 9973)
                 for k, i in enumerate(idx):
                     cal_scores[i] = oof[k] if oof[k] is not None else raw_scores[i]
             cal[(tree_name, ck, "isotonic")] = cal_scores
@@ -432,7 +384,7 @@ def main():
                 if len(idx) < 10:
                     continue
                 # CV rate rescale: 5 folds, each fold gets scale from other 4
-                rng = random.Random(SEED + stratum * 31 + hash((tree_name, ck, "rate")) % 9973)
+                rng = random.Random(SEED + stratum * 31 + stable_seed((tree_name, ck, "rate")) % 9973)
                 perm = idx[:]
                 rng.shuffle(perm)
                 fsize = max(1, len(perm) // N_FOLDS)
@@ -453,18 +405,13 @@ def main():
                         continue
                     scale = (sum(y_tr) / len(y_tr)) / (sum(x_tr) / len(x_tr))
                     for i in held:
-                        oof[perm.index(i)] = raw_scores[i] * scale
+                        oof[idx.index(i)] = min(1.0, max(0.0, raw_scores[i] * scale))
                 for k, i in enumerate(idx):
                     cal_scores[i] = oof[k] if oof[k] is not None else raw_scores[i]
             cal[(tree_name, ck, "rate")] = cal_scores
-            # Per-cohort isotonic + global isotonic stacked ("linked isotonic")
-            iso_per_cohort = cal[(tree_name, ck, "isotonic")]
-            oof = cv_recal(iso_per_cohort, idx_all, te_y, "isotonic",
-                           seed=SEED + 13 + hash((tree_name, ck)) % 9973)
-            cal_scores = [None] * len(te_X)
-            for k, i in enumerate(idx_all):
-                cal_scores[i] = oof[k] if oof[k] is not None else iso_per_cohort[i]
-            cal[(tree_name, ck, "stacked")] = cal_scores
+            from _review_calibration import stacked_crossfit
+            cal[(tree_name, ck, "stacked")] = stacked_crossfit(
+                raw_scores, te_y, cohort_idx, seed=SEED + 13, n_folds=N_FOLDS)
 
     print("[5/5] Per-(cohort, stratum, tree, calibration) cell metrics + global top-K ...")
     rows = []

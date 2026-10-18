@@ -1,3 +1,4 @@
+reward_version: "v1"
 # smoke test: Qwen3-4B (0.5B unavailable on Tinker), 2 steps, tiny batch
 # validates 3-process stack + Tinker round-trip
 env:

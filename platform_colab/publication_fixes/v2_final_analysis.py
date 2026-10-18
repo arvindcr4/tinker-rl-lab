@@ -7,7 +7,7 @@ ppo_8x8, the Colab completions, and the hardware-parity reruns.
 MODAL_DIR: Modal volume copies (<arm>_s<seed>.json + _texts.json.gz)
 COLAB_DIR: Colab runs, same format (parity reruns ppo_s42 / grpo_g8_s42 are kept separate)
 """
-import glob, gzip, itertools, json, os, re, sys
+import glob, gzip, itertools, json, re, sys
 import numpy as np
 from scipy import stats
 from scipy.stats import binomtest
@@ -87,8 +87,26 @@ def grade(t, g):
 gold = [t["answer"].split("####")[-1].strip().replace(",", "") for t in json.load(open(GOLD))["test"]]
 
 
-def load(path, hw):
+def hardware_label(result):
+    env = result.get("execution_environment")
+    if isinstance(env, str):
+        manifest = result.get("manifest")
+        hardware = manifest.get("hardware") if isinstance(manifest, dict) else None
+        names = hardware.get("gpu_names") if isinstance(hardware, dict) else None
+        if (not env.strip() or not isinstance(names, list) or not names
+                or any(not isinstance(name, str) or not name.strip() for name in names)):
+            raise ValueError("Per-run GPU and platform provenance is required; directory names are not evidence")
+        return f"{', '.join(names)} ({env})"
+    if env is None:
+        env = result.get("env")
+    if not isinstance(env, dict) or any(not isinstance(env.get(k), str) or not env[k].strip() for k in ("gpu", "platform")):
+        raise ValueError("Per-run GPU and platform provenance is required; directory names are not evidence")
+    return f"{env['gpu']} ({env['platform']})"
+
+
+def load(path):
     r = json.load(open(path))
+    hw = hardware_label(r)
     tx = json.load(gzip.open(path.replace(".json", "_texts.json.gz"), "rt"))
     mine = np.array([grade(t, g) for t, g in zip(tx["post"], gold)])
     return {"arm": r["arm"], "seed": r["seed"], "hw": hw, "post": np.array(r["post_correct"]), "pre": np.array(r["pre_correct"]),
@@ -97,13 +115,13 @@ def load(path, hw):
             "step_reward": [s["mean_reward"] for s in r["step_log"]], "last10": r["last10_avg"],
             "elapsed_s": r["elapsed_seconds"], "post_trunc": float(np.mean(r["post_trunc"])),
             "train_trunc": float(np.mean([s["trunc_frac"] for s in r["step_log"]])),
-            "env": r.get("env", {"platform": "modal", "gpu": "A10G"}),
+            "env": r.get("execution_environment") or r["env"],
             "critic_vl_pre_mean": (float(np.mean([s["value_loss_pre_fit"] for s in r["step_log"]])) if r["arm"].startswith("ppo") else None),
             "floor_half_var_mean": float(np.mean([s["reward_var_half"] for s in r["step_log"]]))}
 
 
-modal = [load(f, "A10G (Modal)") for f in sorted(glob.glob(f"{MODAL}/*_s*.json"))]
-colab = [load(f, "A100-40GB (Colab)") for f in sorted(glob.glob(f"{COLAB}/*_s*.json"))]
+modal = [load(f) for f in sorted(glob.glob(f"{MODAL}/*_s*.json"))]
+colab = [load(f) for f in sorted(glob.glob(f"{COLAB}/*_s*.json"))]
 parity_runs = [c for c in colab if (c["arm"], c["seed"]) in PARITY]
 new_runs = [c for c in colab if (c["arm"], c["seed"]) not in PARITY]
 runs = {}
@@ -138,7 +156,7 @@ for fam, ks in families.items():
     R["holm"][fam] = {"p_t": holm({k: R["contrasts"][k]["p_t"] for k in ks}),
                       "p_signflip": holm({k: R["contrasts"][k]["p_signflip"] for k in ks})}
 # Sensitivity: same-hardware seeds only (drops Colab-trained seeds from any contrast).
-same_hw = {a: {s: v for s, v in d.items() if runs[a][s]["hw"].startswith("A10G")} for a, d in post.items()}
+same_hw = {a: {s: v for s, v in d.items() if "A10G" in runs[a][s]["env"]["gpu"]} for a, d in post.items()}
 R["contrasts_same_hardware_only"] = {k: paired(same_hw[x], same_hw[y]) for k, (x, y) in pairs.items()
                                      if x in same_hw and y in same_hw and len(set(same_hw[x]) & set(same_hw[y])) >= 2}
 

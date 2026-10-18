@@ -1,4 +1,4 @@
-\subsection{Direct Preference Optimization}
+\section{Direct Preference Optimization}
 \label{sec:dpo}
 
 The RLHF pipeline described in Section~\ref{sec:rlhf} is effective but
@@ -123,23 +123,5 @@ Despite its elegance, DPO has several well-documented shortcomings:
       outcome-level rewards.
 \end{itemize}
 
-\paragraph{Why DPO is insufficient for mathematical reasoning.}
-The limitations above are particularly acute in the domain of mathematical
-problem solving.  First, mathematical reasoning is \emph{verifiable}: a
-derivation either reaches the correct answer or it does not, and this binary
-outcome signal is far richer and cheaper to obtain than human preference
-annotations.  DPO cannot exploit this signal because it requires pre-collected
-\emph{pairwise} preferences rather than scalar correctness labels.  Second,
-the solution space for mathematical problems is vast and compositional; a
-model must explore diverse multi-step reasoning paths to improve, yet DPO's
-offline nature precludes such exploration.  Third, the credit-assignment
-problem is severe: a single algebraic error in the fifth step of a ten-step
-proof renders the entire completion incorrect, but DPO's completion-level loss
-provides no mechanism to localise fault.
-
-These shortcomings motivate the search for alignment methods that (i)~leverage
-verifiable outcome rewards rather than pairwise preferences, (ii)~sample from
-the current policy during training to enable on-policy exploration, and
-(iii)~achieve the computational simplicity of DPO without sacrificing the
-performance benefits of online RL.  \emph{Group Relative Policy Optimization}
-(GRPO), introduced in Section~\ref{sec:grpo}, addresses precisely this gap.
+\paragraph{Correctness-derived preferences and online sampling.}
+Correct and incorrect completions for the same prompt can form DPO preference pairs. Fixed-data DPO does not refresh those pairs, whereas iterative preference optimization can regenerate them from the current policy. Completion-level DPO and outcome-GRPO both lack direct step-level correctness supervision; process supervision is a separate design choice. The comparison concerns data generation, pairing and update objectives, not whether correctness can be used at all.

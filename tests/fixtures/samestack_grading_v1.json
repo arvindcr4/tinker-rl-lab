@@ -1,0 +1,176 @@
+{
+  "spec_id": "boxed-exact-rational-v1",
+  "cases": [
+    {
+      "text": "\\boxed{1234568}",
+      "gold": "1234567",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{1000001}",
+      "gold": "1000000",
+      "reward": 0
+    },
+    {
+      "text": "\\boxedX{42}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed99 then text {42}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{\\frac{1}{0}}",
+      "gold": "0",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{1/0}",
+      "gold": "1",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{NaN}",
+      "gold": "NaN",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{Infinity}",
+      "gold": "Infinity",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{42.000}",
+      "gold": "42",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed {4.2e1}",
+      "gold": "42",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{1,234,567}",
+      "gold": "1234567",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{12,34}",
+      "gold": "1234",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{\\frac{1}{2}}",
+      "gold": "0.5",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{-\\dfrac{3}{2}}",
+      "gold": "-1.5",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{2/4}",
+      "gold": ".5",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{$42$}",
+      "gold": "42",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{42%}",
+      "gold": "42",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{42 \\text{dollars}}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{99} then \\boxed{42}",
+      "gold": "42",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{42} then \\boxed{oops}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{42",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "Final answer 42",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{0.10000000000000001}",
+      "gold": "0.1",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{-0}",
+      "gold": "0",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{\\$125}",
+      "gold": "125",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{$125}",
+      "gold": "125",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{10\\% }",
+      "gold": "10",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{216 \\, \\text{seconds}}",
+      "gold": "216",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{216 seconds}",
+      "gold": "216",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{42\\text{seconds 99}}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{42\\text{or forty three}}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{\\$42\\%}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{\\frac{50\\%}{100}}",
+      "gold": ".5",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{\\text{42 seconds}}",
+      "gold": "42",
+      "reward": 0
+    }
+  ],
+  "decorations": "One currency prefix/wrapper, percent suffix (numeric coefficient), or second/seconds suffix; no decorations in fraction operands or numeric/prose unit payloads"
+}

@@ -14,6 +14,12 @@ Usage:
 
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import gsm8k_reward, math_reward, humaneval_reward, tool_score, completion_alignment, GRADER_VERSION, PROTOCOL_VERSION
+
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -175,62 +181,19 @@ def load_tool_use_prompts(tokenizer) -> list[dict]:
 # ── Reward functions ─────────────────────────────────────────────────────
 
 def reward_gsm8k(response: str, answer: str) -> float:
-    """Binary reward: 1.0 if final answer matches, 0.0 otherwise."""
-    m = re.search(r'####\s*(.+?)(?:\s|$)', response)
-    if not m:
-        m = re.search(r'(?:answer|Answer).*?(\-?\d[\d,]*\.?\d*)', response)
-    if not m:
-        return 0.0
-    pred = m.group(1).replace(",", "").strip()
-    target = answer.replace(",", "").strip()
-    try:
-        return 1.0 if abs(float(pred) - float(target)) < 1e-4 else 0.0
-    except ValueError:
-        return 1.0 if pred == target else 0.0
+    return gsm8k_reward(response, answer)
 
 
 def reward_math(response: str, answer: str) -> float:
-    """Partial reward for MATH: 1.0 exact, 0.3 boxed present."""
-    m = re.search(r'\\boxed\{(.+?)\}', response)
-    if not m:
-        return 0.0
-    pred = m.group(1).strip()
-    if pred == answer.strip():
-        return 1.0
-    return 0.3
+    return math_reward(response, answer, require_box=True)
 
 
-def reward_humaneval(response: str, test_code: str, entry_point: str) -> float:
-    """Execute-based reward for HumanEval (sandboxed)."""
-    try:
-        full_code = response + "\n" + test_code
-        exec(full_code, {"__builtins__": {}})
-        return 1.0
-    except Exception:
-        # Partial credit for syntactically valid Python
-        try:
-            compile(response, "<string>", "exec")
-            return 0.3
-        except SyntaxError:
-            return 0.0
+def reward_humaneval(response: str, test_code: str, entry_point: str, prompt: str = "") -> float:
+    return humaneval_reward(response, test_code, entry_point, prompt)
 
 
 def reward_tool_use(response: str, tool_name: str, arguments: dict) -> float:
-    """Structured tool-call reward (from grpo_tooluse_tinker.py)."""
-    m = re.search(r'\{.*\}', response.strip(), re.DOTALL)
-    if not m:
-        return 0.0
-    try:
-        p = json.loads(m.group())
-    except json.JSONDecodeError:
-        return 0.1
-    score = 0.3
-    if p.get("tool") == tool_name or p.get("name") == tool_name:
-        score += 0.4
-    pred_args = p.get("arguments", p.get("parameters", {}))
-    if isinstance(pred_args, dict) and arguments:
-        score += 0.3 * sum(1 for k in arguments if k in pred_args) / len(arguments)
-    return min(score, 1.0)
+    return tool_score(response, tool_name, arguments)
 
 
 def get_reward(example: dict, response: str) -> float:
@@ -240,7 +203,7 @@ def get_reward(example: dict, response: str) -> float:
     elif benchmark == "math":
         return reward_math(response, example["answer"])
     elif benchmark == "humaneval":
-        return reward_humaneval(response, example.get("test", ""), example.get("entry_point", ""))
+        return reward_humaneval(response, example.get("test", ""), example.get("entry_point", ""), example.get("prompt_text", ""))
     elif benchmark == "tool_use":
         return reward_tool_use(response, example["tool_name"], example["arguments"])
     raise ValueError(f"Unknown benchmark: {benchmark}")
@@ -261,6 +224,8 @@ def detect_benchmark(config: dict) -> str:
 
 
 def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False) -> None:
+    if resume:
+        raise ValueError("Legacy resume lacks RNG/baseline manifest; start a new protocol-v2 run")
     import torch
     import tinker
     import tinker.types as T
@@ -393,7 +358,8 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
         losses = []
         for i, logprobs in enumerate(logprobs_list):
             adv = _advantages[i]
-            losses.append(-adv * logprobs.sum())
+            mask = torch.tensor(data[i].loss_fn_inputs["completion_mask"].data, device=logprobs.device, dtype=logprobs.dtype)
+            losses.append(-adv * (logprobs * mask).sum())
         loss = torch.stack(losses).mean()
         return loss, {"grpo_loss": loss.item()}
 
@@ -401,6 +367,9 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     prompts_per_step = 4
     step_rewards = []
     save_interval = tinker_cfg.get("save_checkpoint_interval", 10)
+    cfg["protocol_version"] = PROTOCOL_VERSION
+    cfg["grader_version"] = GRADER_VERSION
+    cfg["evaluation_scope"] = "training_adaptation_only"
 
     for step in range(start_step, total_steps):
         batch = random.sample(examples, min(prompts_per_step, len(examples)))
@@ -434,16 +403,18 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
 
             for resp, adv in zip(responses.sequences, advs):
                 resp_ids = list(resp.tokens)
+                input_ids, target_ids, completion_mask = completion_alignment(prompt_ids, resp_ids)
                 full_ids = prompt_ids + resp_ids
                 # next-token alignment; old `+ [0]` trained a spurious token-0
                 # target at the final position (fixed 2026-07-11)
                 target_ids = full_ids[1:]
                 datum = T.Datum(
-                    model_input=T.ModelInput.from_ints(full_ids[:-1]),
+                    model_input=T.ModelInput.from_ints(input_ids),
                     loss_fn_inputs={
                         "target_tokens": T.TensorData(
                             data=target_ids, dtype="int64", shape=[len(target_ids)]
                         ),
+                        "completion_mask": T.TensorData(data=completion_mask, dtype="float32", shape=[len(completion_mask)]),
                     },
                 )
                 all_data.append(datum)
@@ -454,6 +425,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
 
         # Record group saturation diagnostic
         diag = tracker.record_step(step, group_reward_lists)
+        diag.behavior_policy_version = f"update-{step}"
         log_to_wandb(diag)
 
         _advantages = all_advs
@@ -464,6 +436,8 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
             loss_type_input="logprobs",
         ).result()
         tc.optim_step(T.AdamParams(learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
+        # Sampling policy is refreshed independently of durable checkpoint cadence.
+        sc = tc.save_weights_and_get_sampling_client()
 
         avg_r = sum(batch_rewards) / len(batch_rewards)
         step_rewards.append(avg_r)
@@ -529,6 +503,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     # Save saturation diagnostic
     ckpt_dir = Path(log_path)
     tracker.save(ckpt_dir / "group_saturation.json")
+    (ckpt_dir / "study_scope_v2.json").write_text(json.dumps({"protocol_version": PROTOCOL_VERSION, "grader_version": GRADER_VERSION, "resolved_config": cfg, "evaluation_scope": "training_adaptation_only", "heldout_measured": False, "claim_eligible": False, "optimizer_updates_requested": total_steps}, indent=2))
     print(f"Saturation diagnostic: {ckpt_dir / 'group_saturation.json'}")
 
     summary = tracker.summary()

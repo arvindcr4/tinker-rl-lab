@@ -75,7 +75,7 @@ from _p8_common import (  # noqa: E402
     recall_at_K,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 SEED = 20260705
 N_BOOT = 1500
@@ -175,7 +175,7 @@ def bootstrap_acd(fire_grad, n_test_q, cost_xgb=COST_XGB, cost_llm=0.0010,
     for bi in range(n_boot):
         idx = rng.integers(0, len(fire_grad), len(fire_grad))
         n_llm_s = int(fire_grad[idx].sum())
-        cpd_grad = (n_test_q * cost_xgb + n_llm_s * (cost_llm - cost_xgb)) / n_test_q
+        cpd_grad = (n_test_q * cost_xgb + n_llm_s * cost_llm) / n_test_q
         ratios[bi] = cpd_grad / cpd_xgb
     return float(ratios.mean()), float(np.percentile(ratios, 2.5)), float(np.percentile(ratios, 97.5))
 
@@ -185,7 +185,7 @@ def sweet_spot_price(fire_grad, n_test_q, n_pos_recalled_xgb,
     """Return the max LLM price at which cppr(grad-band) <= cppr(xgb-only).
 
     cppr_xgb  = n_test_q * cost_xgb / n_pos_recalled_xgb
-    cppr_grad = (n_test_q * cost_xgb + n_llm * (cost_llm - cost_xgb))
+    cppr_grad = (n_test_q * cost_xgb + n_llm * cost_llm)
               / n_pos_recalled_combined
 
     Closed-form: cppr_grad <= cppr_xgb  iff
@@ -195,7 +195,7 @@ def sweet_spot_price(fire_grad, n_test_q, n_pos_recalled_xgb,
     if n_llm == 0:
         return float("inf")  # grad-band never fires: always sweet
     pos_caught = n_pos_recalled_xgb  # grad-band can only ADD recall
-    return float(cost_xgb * pos_caught / n_llm)
+    return 0.0 if n_pos_recalled_xgb > 0 else float("nan")  # additive cascade, equal catches assumed
 
 
 def main():
@@ -300,9 +300,9 @@ def main():
             sweet_per_q[(stat, q)] = sweet
             for tier_name, cost_llm in LLM_PRICE_TIERS:
                 cpd_xgb_q = COST_XGB
-                cpd_grad_q = (n_q * COST_XGB + n_llm_q * (cost_llm - COST_XGB)) / n_q
+                cpd_grad_q = (n_q * COST_XGB + n_llm_q * cost_llm) / n_q
                 cppr_xgb_q = (n_q * COST_XGB) / max(1, sub_caught)
-                cppr_grad_q = (n_q * COST_XGB + n_llm_q * (cost_llm - COST_XGB)) / max(1, sub_caught)
+                cppr_grad_q = (n_q * COST_XGB + n_llm_q * cost_llm) / max(1, sub_caught)
                 acd_q = cpd_grad_q / cpd_xgb_q
                 sweep_rows.append({
                     "stat": stat,
@@ -347,7 +347,7 @@ def main():
     # Since grad-band fires on TOP-K rows already, it doesn't add new
     # positives -- cppr changes only via the LLM-call cost.
     # So H1 here is whether cppr(grad-band) <= cppr(xgb-only) for any
-    # tier: equivalent to n_llm_q * (cost_llm - cost_xgb) <= 0,
+    # tier: equivalent to n_llm_q * cost_llm <= 0,
     # i.e., only when cost_llm <= cost_xgb.  Let's report this honestly.
     # ----------------------------------------------------------------
     h1_verdict = {}
@@ -355,7 +355,7 @@ def main():
         rows_t = [r for r in sweep_rows if r["tier"] == tier_name]
         # global: total cost / total caught across all 16 cells
         total_cost_xgb = sum(r["n_test_q"] * COST_XGB for r in rows_t) / 16  # average
-        total_cost_grad = sum(r["n_test_q"] * COST_XGB + r["n_llm_q"] * (cost_llm - COST_XGB) for r in rows_t) / 16
+        total_cost_grad = sum(r["n_test_q"] * COST_XGB + r["n_llm_q"] * cost_llm for r in rows_t) / 16
         total_caught = sum(r["xgb_caught_q"] for r in rows_t)
         cppr_xgb_g = total_cost_xgb * 16 / max(1, total_caught)
         cppr_grad_g = total_cost_grad * 16 / max(1, total_caught)

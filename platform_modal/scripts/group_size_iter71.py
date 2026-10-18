@@ -21,12 +21,12 @@ Inputs:
   platform_hybrid/experiments/results/group_size_iter67_iaf_ratios.tsv
 
 Outputs:
-  platform_hybrid/experiments/results/group_size_iter71_signal_loss.tsv
-  platform_hybrid/experiments/results/group_size_iter71_eff_batch.tsv
-  platform_hybrid/experiments/results/group_size_iter71_decomp.tsv
-  platform_hybrid/experiments/results/group_size_iter71_summary.tsv
-  figures/group_size_iter71_decomp.pdf
-  figures/group_size_iter71_decomp.png
+  platform_hybrid/experiments/results/group_size_iter71_signal_loss_v2.tsv
+  platform_hybrid/experiments/results/group_size_iter71_eff_batch_v2.tsv
+  platform_hybrid/experiments/results/group_size_iter71_decomp_v2.tsv
+  platform_hybrid/experiments/results/group_size_iter71_summary_v2.tsv
+  figures/group_size_iter71_decomp_v2.pdf
+  figures/group_size_iter71_decomp_v2.png
 """
 from __future__ import annotations
 
@@ -76,7 +76,9 @@ def main() -> None:
         T = int(r["budget_tokens"])
         G = int(r["G"])
         zr = zvf_idx.get((T, G), {})
-        gu_prob = float(zr["gu_theoretical"]) if zr else 1.0
+        if not zr:
+            raise ValueError(f"missing ZVF evidence for T={T}, G={G}")
+        gu_prob = float(zr["gu_theoretical"])
         by_TG[(T, G)] = {
             "T": T, "G": G,
             "acc": float(r["heldout_acc_mean"]),
@@ -91,7 +93,9 @@ def main() -> None:
         if T in gu_ref_by_T:
             continue
         ref_row = by_TG.get((T, G_REF))
-        gu_ref_by_T[T] = ref_row["gu_prob"] if ref_row else 1.0
+        if ref_row is None:
+            raise ValueError(f"missing reference group for T={T}")
+        gu_ref_by_T[T] = ref_row["gu_prob"]
 
     # Per-token-budget reference (use T=64M as the largest observed)
     T_REF = max(int(r["budget_tokens"]) for r in tok_rows)
@@ -270,11 +274,11 @@ def main() -> None:
     }
 
     # Persist outputs
-    write_tsv(RES / "group_size_iter71_signal_loss.tsv", signal_rows)
-    write_tsv(RES / "group_size_iter71_eff_batch.tsv", eff_batch_rows)
-    write_tsv(RES / "group_size_iter71_decomp.tsv", decomp_rows)
-    write_tsv(RES / "group_size_iter71_multiplicative.tsv", multi_rows)
-    write_tsv(RES / "group_size_iter71_fixed_budget.tsv", [
+    write_tsv(RES / "group_size_iter71_signal_loss_v2.tsv", signal_rows)
+    write_tsv(RES / "group_size_iter71_eff_batch_v2.tsv", eff_batch_rows)
+    write_tsv(RES / "group_size_iter71_decomp_v2.tsv", decomp_rows)
+    write_tsv(RES / "group_size_iter71_multiplicative_v2.tsv", multi_rows)
+    write_tsv(RES / "group_size_iter71_fixed_budget_v2.tsv", [
         {"T_tokens": T_REF, "G": r["G"],
          "acc_observed": r["acc_observed"],
          "acc_predicted": r["acc_predicted_additive"],
@@ -284,7 +288,7 @@ def main() -> None:
          "residual_pp": r["residual_pp"]}
         for r in fixed_rows
     ])
-    write_tsv(RES / "group_size_iter71_summary.tsv",
+    write_tsv(RES / "group_size_iter71_summary_v2.tsv",
               [{"metric": k, "value": v} for k, v in headline.items()])
 
     meta = {
@@ -296,14 +300,14 @@ def main() -> None:
             "platform_hybrid/experiments/results/group_size_iter67_iaf_ratios.tsv",
         ],
         "outputs": [
-            "platform_hybrid/experiments/results/group_size_iter71_signal_loss.tsv",
-            "platform_hybrid/experiments/results/group_size_iter71_eff_batch.tsv",
-            "platform_hybrid/experiments/results/group_size_iter71_decomp.tsv",
-            "platform_hybrid/experiments/results/group_size_iter71_multiplicative.tsv",
-            "platform_hybrid/experiments/results/group_size_iter71_fixed_budget.tsv",
-            "platform_hybrid/experiments/results/group_size_iter71_summary.tsv",
-            "figures/group_size_iter71_decomp.pdf",
-            "figures/group_size_iter71_decomp.png",
+            "platform_hybrid/experiments/results/group_size_iter71_signal_loss_v2.tsv",
+            "platform_hybrid/experiments/results/group_size_iter71_eff_batch_v2.tsv",
+            "platform_hybrid/experiments/results/group_size_iter71_decomp_v2.tsv",
+            "platform_hybrid/experiments/results/group_size_iter71_multiplicative_v2.tsv",
+            "platform_hybrid/experiments/results/group_size_iter71_fixed_budget_v2.tsv",
+            "platform_hybrid/experiments/results/group_size_iter71_summary_v2.tsv",
+            "figures/group_size_iter71_decomp_v2.pdf",
+            "figures/group_size_iter71_decomp_v2.png",
         ],
         "method": (
             "Three-component additive decomposition: signal (1 - GU(G)/GU(G_ref)), "
@@ -312,7 +316,7 @@ def main() -> None:
         ),
         "headline_metrics": {k: v for k, v in headline.items()},
     }
-    (RES / "group_size_iter71_iter_meta.json").write_text(json.dumps(meta, indent=2))
+    (RES / "group_size_iter71_iter_meta_v2.json").write_text(json.dumps(meta, indent=2))
 
     # Plot — two panels: stacked-bar attribution per G, and a
     # predicted-vs-observed scatter.
@@ -353,8 +357,8 @@ def main() -> None:
     ax[1].grid(True, alpha=0.3)
 
     fig.tight_layout()
-    fig.savefig(FIG / "group_size_iter71_decomp.pdf")
-    fig.savefig(FIG / "group_size_iter71_decomp.png", dpi=130)
+    fig.savefig(FIG / "group_size_iter71_decomp_v2.pdf")
+    fig.savefig(FIG / "group_size_iter71_decomp_v2.png", dpi=130)
     plt.close(fig)
 
     # Plot #2: G=4 attribution stacked per budget.

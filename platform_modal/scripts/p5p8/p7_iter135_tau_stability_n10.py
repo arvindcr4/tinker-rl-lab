@@ -26,6 +26,7 @@ Headline hypotheses (6):
 Outputs: platform_hybrid/experiments/results/p5p8/p7_iter135_{tau_grid,fire_rate,concordance,
   tau_flip,bootstrap_ci,summary}
 """
+from _review19_policy import high_zvf_fire
 import json
 import statistics
 from pathlib import Path
@@ -35,7 +36,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scri
 from _paths import REPO_ROOT  # noqa: E402
 WORK = REPO_ROOT
 N10_DIR = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
-OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review19-v5"
 
 SEEDS = [42, 179, 316, 453, 590]
 TAU_GRID = [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85]
@@ -53,7 +54,7 @@ def load_n10():
 
 def fire(z, t):
     """zvf-triage: fire iff z >= tau."""
-    return 1 if z >= t else 0
+    return int(high_zvf_fire(z, t))
 
 
 def build_tau_grid(by_seed):
@@ -174,6 +175,21 @@ def check_h1_replication(grid):
                 abs(mean_n - 4.20) < 1.0 and abs(stdev_n - 1.48) < 1.0)}
 
 
+def adjacent_rate_slopes(rates):
+    """Signed slope for every adjacent supplied threshold pair."""
+    items = sorted(rates.items())
+    return {lo: round((f_hi-f_lo)/(hi-lo), 4)
+            for (lo, f_lo), (hi, f_hi) in zip(items, items[1:])}
+
+
+def decline_near_max(slopes, tau):
+    """Compare decline magnitudes; a flat/increasing curve is not a decline."""
+    peak = max((max(0.0, -s) for s in slopes.values()), default=0.0)
+    at_tau = max(0.0, -slopes[tau]) if tau in slopes else None
+    passed = peak > 0 and at_tau is not None and at_tau >= .9 * peak
+    return peak, at_tau, passed
+
+
 def main():
     print("[iter 135] P7 tau-stability sweep on N10 5-seed panel")
     by_seed = load_n10()
@@ -188,9 +204,7 @@ def main():
     pooled_fire_rate = {tau: round(sum(r[f"tau_{tau:.2f}"] for r in grid) / len(grid), 4)
                         for tau in TAU_GRID}
 
-    pairwise_slope = {tau: round((pooled_fire_rate[tau + 0.05] - pooled_fire_rate[tau]) / 0.05, 4)
-                      for tau in [0.55, 0.60, 0.65, 0.70, 0.75, 0.80]
-                      if tau + 0.05 in pooled_fire_rate}
+    pairwise_slope = adjacent_rate_slopes(pooled_fire_rate)
 
     inflection_taus = []
     fr_items = sorted(pooled_fire_rate.items())
@@ -238,9 +252,7 @@ def main():
     write_tsv(OUT_DIR / "p7_iter135_bootstrap_ci.tsv", bootstrap_ci,
               ["scope", "tau", "point", "boot_mean", "ci_lo", "ci_hi", "n"])
 
-    h4_max_slope = max(pairwise_slope.values()) if pairwise_slope else 0
-    h4_at_070 = pairwise_slope.get(0.70, 0)
-    h4_pass = h4_at_070 >= 0.90 * abs(h4_max_slope) if h4_max_slope else False
+    h4_max_decline, h4_decline_at_070, h4_pass = decline_near_max(pairwise_slope, CANONICAL_TAU)
     h5_verdict = ("PASS"
                   if inflection_tau and inflection_tau["tau_lo"] <= 0.60
                   and inflection_tau["tau_hi"] <= 0.70
@@ -261,8 +273,8 @@ def main():
                             "verdict": "PASS" if stable_band["frac_partial"] >= 0.30 else "REPORTED"},
         "h3_sigmoid_slope_at_070": pairwise_slope.get(0.70, 0),
         "h4_pairwise_slopes": pairwise_slope,
-        "h4_max_slope": h4_max_slope,
-        "h4_at_070": h4_at_070,
+        "h4_max_decline_magnitude": h4_max_decline,
+        "h4_decline_magnitude_at_070": h4_decline_at_070,
         "h4_pass": h4_pass,
         "h5_inflection_taus": inflection_taus,
         "h5_inflection_tau": inflection_tau,

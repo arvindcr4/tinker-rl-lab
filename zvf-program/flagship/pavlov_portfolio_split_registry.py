@@ -363,8 +363,11 @@ def _extract_task_hashes(manifest: Mapping[str, Any], role: str) -> tuple[list[s
             if key and key in value:
                 hashes = value[key]
                 break
-        if hashes is None and len(value) == 1:
-            hashes = next(iter(value.values()))
+        allowed = {role, "test", "eval", "primary_eval"} if role == PRIMARY_EVAL_ROLE else {"train"}
+        if set(value) - allowed:
+            return [], ["task-hash roles disagree with suite role"]
+        if any(item != hashes for item in value.values()):
+            return [], ["contradictory task-hash aliases"]
     elif _is_sequence(value):
         hashes = value
     if hashes is None:
@@ -373,7 +376,10 @@ def _extract_task_hashes(manifest: Mapping[str, Any], role: str) -> tuple[list[s
             if role == PRIMARY_EVAL_ROLE
             else ("train_task_hashes",)
         )
-        hashes = _first_value(manifest, aliases[0])
+        hashes = _first_value(manifest, aliases)
+        supplied = [manifest[key] for key in aliases if key in manifest]
+        if any(item != hashes for item in supplied):
+            return [], ["contradictory task-hash aliases"]
     errors: list[str] = []
     if not _is_sequence(hashes):
         errors.append(f"{role} task hashes must be a non-empty ordered list")
@@ -780,10 +786,15 @@ def _xlam_preflight(
             "blockers": ["xLAM component preflight missing"],
         }
     blockers: list[str] = []
+    upstream = value.get("blockers", [])
+    if not isinstance(upstream, list) or any(not isinstance(item, str) for item in upstream):
+        blockers.append("invalid upstream xLAM blockers")
+    else:
+        blockers.extend(upstream)
     suite_id = str(value.get("suite_id", value.get("id", "pavlov_xlam")))
     if suite_id in EXPECTED_TRAIN_SUITE_IDS or suite_id in EXPECTED_PRIMARY_EVAL_SUITE_IDS:
         blockers.append("xLAM component suite ID collides with a portfolio suite")
-    if value.get("status") not in (None, "READY") and "blockers" not in value:
+    if value.get("status") not in (None, "READY"):
         blockers.append("xLAM component preflight is not READY")
     try:
         revision = _extract_revision(value)

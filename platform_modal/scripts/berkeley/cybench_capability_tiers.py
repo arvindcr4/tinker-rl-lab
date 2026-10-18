@@ -140,22 +140,16 @@ def load_rqs():
 
 
 def cybench_tier(R_max):
-    """Cybench-style 4-tier capability classification by R_max quartile
-    boundaries derived from the 5-anchor distribution. The Cybench paper
-    uses 4 tiers; with n=5 we use k=3 quantile boundaries (so 4 bins may
-    collapse). We use the n=5 empirical quantiles for a stratified split.
-    """
-    # Anchors sorted: 0.182, 0.285, 0.817, 0.844, 0.869.
-    # 4-bin edges: [0, 0.25, 0.55, 0.83, 1.0] chosen to mirror the
-    # natural gaps in the bimodal R_max distribution and Cybench's
-    # Easy/Medium/Hard/Expert gradient.
+    """Fixed descriptive capability bands, not empirical quantiles or difficulty tiers."""
+    if not math.isfinite(R_max) or not 0 <= R_max <= 1:
+        raise ValueError("invalid capability score")
     if R_max < 0.25:
-        return "L4_Expert"  # collapse regime
+        return "C1_Low"  # collapse regime
     if R_max < 0.55:
-        return "L3_Hard"  # plateau
+        return "C2_Lower"  # plateau
     if R_max < 0.83:
-        return "L2_Medium"  # mid-capable
-    return "L1_Easy"  # frontier-capable
+        return "C3_Upper"  # mid-capable
+    return "C4_High"  # frontier-capable
 
 
 def assign_tiers(anchors):
@@ -173,13 +167,14 @@ def per_tier_scaling(anchors):
     for a in anchors:
         tiers.setdefault(a["tier"], []).append(a)
     # canonical tier order
-    for tier in ["L1_Easy", "L2_Medium", "L3_Hard", "L4_Expert"]:
+    for tier in ["C4_High", "C3_Upper", "C2_Lower", "C1_Low"]:
         grp = tiers.get(tier, [])
         if not grp:
             out.append(
                 {
                     "tier": tier,
                     "n": 0,
+                    "status": "NOT_ESTIMABLE",
                     "R_mean": float("nan"),
                     "logN_mean": float("nan"),
                     "r_Rmax_logN": float("nan"),
@@ -191,11 +186,12 @@ def per_tier_scaling(anchors):
             continue
         x = [a["logN"] for a in grp]
         y = [a["R_max"] for a in grp]
-        r, slope, intercept = _pearson(x, y)
+        r, slope, intercept = _pearson(x, y) if len(grp) >= 3 else (float("nan"),)*3
         out.append(
             {
                 "tier": tier,
                 "n": len(grp),
+                "status": "EXPLORATORY" if len(grp) >= 3 else "NOT_ESTIMABLE",
                 "R_mean": float(np.mean(y)),
                 "logN_mean": float(np.mean(x)),
                 "r_Rmax_logN": r,
@@ -263,7 +259,7 @@ def write_tier_scaling(per_tier, anchors, rqs):
     y = [a["R_max"] for a in anchors]
     r_global, slope_global, intercept_global = _pearson(x, y)
     # Cybench-style tier-frontier (T1 only)
-    t1 = [a for a in anchors if a["tier"] == "L1_Easy"]
+    t1 = [a for a in anchors if a["tier"] == "C4_High"]
     r_t1, slope_t1, intercept_t1 = (
         _pearson([a["logN"] for a in t1], [a["R_max"] for a in t1])
         if len(t1) >= 2
@@ -363,8 +359,8 @@ def write_tier_shift(per_tier, anchors):
     to 4-tier (this) gradient."""
     path = BERK / "cybench_tier_shift.tsv"
     # 2-tier: capable vs incapable
-    capable = [a for a in anchors if a["tier"] in ("L1_Easy", "L2_Medium")]
-    incapable = [a for a in anchors if a["tier"] in ("L3_Hard", "L4_Expert")]
+    capable = [a for a in anchors if a["tier"] in ("C4_High", "C3_Upper")]
+    incapable = [a for a in anchors if a["tier"] in ("C2_Lower", "C1_Low")]
     gap_2tier = (
         float(np.mean([a["R_max"] for a in capable]))
         - float(np.mean([a["R_max"] for a in incapable]))
@@ -375,13 +371,13 @@ def write_tier_shift(per_tier, anchors):
     means = [row["R_mean"] for row in per_tier if row["n"] > 0]
     gap_4tier = float(np.max(means) - np.min(means)) if means else float("nan")
     # tier-1 vs tier-4 (frontier vs collapse)
-    r_t1 = next((r["R_mean"] for r in per_tier if r["tier"] == "L1_Easy"), float("nan"))
-    r_t4 = next((r["R_mean"] for r in per_tier if r["tier"] == "L4_Expert"), float("nan"))
+    r_t1 = next((r["R_mean"] for r in per_tier if r["tier"] == "C4_High"), float("nan"))
+    r_t4 = next((r["R_mean"] for r in per_tier if r["tier"] == "C1_Low"), float("nan"))
     gap_t1_t4 = r_t1 - r_t4 if not (math.isnan(r_t1) or math.isnan(r_t4)) else float("nan")
     # bimodality-vs-trimodality test (H3): is the 2-cluster dip-test gap
     # (0.5313 at R_max ~0.55) actually the L2/L3 boundary?
-    L2 = [a for a in anchors if a["tier"] == "L2_Medium"]
-    L3 = [a for a in anchors if a["tier"] == "L3_Hard"]
+    L2 = [a for a in anchors if a["tier"] == "C3_Upper"]
+    L3 = [a for a in anchors if a["tier"] == "C2_Lower"]
     boundary_near_055 = (
         abs(np.mean([a["R_max"] for a in L2 + L3]) - 0.55) < 0.3
         if (L2 or L3)
@@ -411,19 +407,19 @@ def write_tier_shift(per_tier, anchors):
             "is iter125's dip boundary the L2/L3 cut?\n"
         )
         f.write(
-            f"L1 n\t{sum(1 for a in anchors if a['tier'] == 'L1_Easy')}\t"
+            f"L1 n\t{sum(1 for a in anchors if a['tier'] == 'C4_High')}\t"
             "Tier 1 anchor count\n"
         )
         f.write(
-            f"L2 n\t{sum(1 for a in anchors if a['tier'] == 'L2_Medium')}\t"
+            f"L2 n\t{sum(1 for a in anchors if a['tier'] == 'C3_Upper')}\t"
             "Tier 2 anchor count\n"
         )
         f.write(
-            f"L3 n\t{sum(1 for a in anchors if a['tier'] == 'L3_Hard')}\t"
+            f"L3 n\t{sum(1 for a in anchors if a['tier'] == 'C2_Lower')}\t"
             "Tier 3 anchor count\n"
         )
         f.write(
-            f"L4 n\t{sum(1 for a in anchors if a['tier'] == 'L4_Expert')}\t"
+            f"L4 n\t{sum(1 for a in anchors if a['tier'] == 'C1_Low')}\t"
             "Tier 4 anchor count\n"
         )
     return path, gap_2tier, gap_t1_t4, gap_4tier
@@ -457,17 +453,17 @@ def main():
     print(f"[cybench] wrote {p3}")
 
     # verdicts
-    n_t1 = sum(1 for a in anchors if a["tier"] == "L1_Easy")
-    n_t2 = sum(1 for a in anchors if a["tier"] == "L2_Medium")
-    n_t3 = sum(1 for a in anchors if a["tier"] == "L3_Hard")
-    n_t4 = sum(1 for a in anchors if a["tier"] == "L4_Expert")
+    n_t1 = sum(1 for a in anchors if a["tier"] == "C4_High")
+    n_t2 = sum(1 for a in anchors if a["tier"] == "C3_Upper")
+    n_t3 = sum(1 for a in anchors if a["tier"] == "C2_Lower")
+    n_t4 = sum(1 for a in anchors if a["tier"] == "C1_Low")
     h2_decisive = (
         not math.isnan(r_t1)
         and not math.isnan(r_global)
         and abs(r_t1) > abs(r_global) + 0.10
     )
     h3_decisive = gap_t1_t4 > 0.5  # any front-vs-collapse gap > 0.5 is decisive at n=5
-    h1_decisive = sum(1 for r in per_tier if r["n"] >= 3) >= 1
+    h1_decisive = False  # descriptive bins do not establish scaling significance
 
     summary = {
         "iter": 140,
@@ -476,7 +472,7 @@ def main():
         "source_lecture": "F24 L10 -- Percy Liang (Cybench capability-graded framework)",
         "target": "A2 (eval methodology) + A1 (scaling-law statistical rigor)",
         "n_anchors": len(anchors),
-        "tier_counts": {"L1_Easy": n_t1, "L2_Medium": n_t2, "L3_Hard": n_t3, "L4_Expert": n_t4},
+        "tier_counts": {"C4_High": n_t1, "C3_Upper": n_t2, "C2_Lower": n_t3, "C1_Low": n_t4},
         "per_tier": per_tier,
         "global": {
             "r_Rmax_logN": r_global,
@@ -500,18 +496,7 @@ def main():
                 and abs(gap_t1_t4 - gap_2) < 0.15
             ),
         },
-        "frontier_synthesis": (
-            "Iter 140 (Cybench) re-frames the iter125/129 2-tier decomposition as a "
-            "4-tier Cybench-style capability gradient. The 5-anchor pool assigns to "
-            f"tiers: L1={n_t1}, L2={n_t2}, L3={n_t3}, L4={n_t4}. Tier 1 frontier rho "
-            f"is {r_t1:+.4f} (n={n_t1}); the global rho is {r_global:+.4f}. "
-            "Per (frontier synthesis) Round 1: Pillar-1 'scaling law' is "
-            "under-identified at n=5, so a sharper test is the *gap structure*, not "
-            "the slope. The 4-tier gradient gives a 3-decisive test battery "
-            "(H1 within-tier, H2 tier-frontier, H3 bimodality origin) and a "
-            "structural recommendation to the Pillar-1 paper: report Cybench-style "
-            "tier-conditional frontier curves, not a single scaling exponent."
-        ),
+        "frontier_synthesis": "Fixed descriptive capability bands on five anchors; no confirmatory scaling or difficulty-tier claim. Within-band estimates with fewer than three anchors are NOT_ESTIMABLE.",
         "evidence_paths": {
             "tier_assignment": str(p1.relative_to(ROOT)),
             "tier_scaling": str(p2.relative_to(ROOT)),

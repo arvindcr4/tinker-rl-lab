@@ -44,7 +44,11 @@ from pathlib import Path
 
 from _p5p7_common import spearman_v1 as spearman
 
-ROOT = Path(__file__).resolve().parents[2]
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _review02_contracts import finite_json
+from _paths import REPO_ROOT
+ROOT = REPO_ROOT / "platform_hybrid"
 CELLS = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
 MANIFEST_DIR = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
 OUT = ROOT / "experiments" / "results" / "p5p8"
@@ -107,16 +111,26 @@ def hamming(a, b):
     return sum(1 for x, y in zip(a, b) if x != y)
 
 
-def delta_div(c):
-    """zvf_yield_residual = ZVF_obs - ZVF_iid_collision."""
-    p = (c.get("mean_reward") or 0.0) / 100.0
-    p = max(0.0, min(1.0, p))
-    G = c["G"]
-    zvf_iid = p ** G + (1 - p) ** G
-    zvf_obs = c.get("zvf")
-    if zvf_obs is None:
+def delta_div(c, reward_unit='percent'):
+    """Observed telemetry minus homogeneous pooled Bernoulli null.
+
+    Legacy corpus declares percent reward units. Override explicitly for a
+    fraction corpus; never infer units, replace missing reward with zero, or
+    clamp invalid data. This residual also captures prompt heterogeneity.
+    """
+    reward, zvf_obs = c.get('mean_reward'), c.get('zvf')
+    if reward is None or zvf_obs is None:
         return None
-    return float(zvf_obs - zvf_iid)
+    unit = c.get('reward_unit', reward_unit)
+    if unit not in {'percent', 'fraction'}:
+        raise ValueError('explicit reward unit percent or fraction required')
+    p = float(reward) / (100 if unit == 'percent' else 1)
+    G = c['G']
+    if not math.isfinite(p) or not 0 <= p <= 1 or not math.isfinite(zvf_obs) or not 0 <= zvf_obs <= 1:
+        raise ValueError('invalid reward/ZVF units or missingness')
+    if isinstance(G, bool) or int(G) != G or G < 1:
+        raise ValueError('positive integer group size required')
+    return float(zvf_obs - (p**G + (1-p)**G))
 
 
 def main():
@@ -181,7 +195,7 @@ def main():
         for i in range(n):
             for j in range(i + 1, n):
                 all_pairs.append((i, j))
-        sampled = RNG.sample(all_pairs, min(N_PAIRS, len(all_pairs)))
+        sampled = random.Random(20260705).sample(all_pairs, min(N_PAIRS, len(all_pairs)))
         for i, j in sampled:
             z_i = cells[i].get("zvf"); z_j = cells[j].get("zvf")
             if z_i is None or z_j is None:
@@ -198,60 +212,16 @@ def main():
     rho_v21, n_v21 = rho_for_axis_set({"v1", "v2_stack", "v2.1_yield"})
     print(f"# Spearman(Hamming, |dzvf|): v1={rho_v1:.4f} (n={n_v1}); v2_stack={rho_v2_stack:.4f} (n={n_v2}); v2.1={rho_v21:.4f} (n={n_v21})")
 
-    # --- Bootstrap CIs on the 4 headline comparisons ---
-    boot = []
-    # 1. CI on H_bits(Item 13)
-    boot_h13 = []
-    for b in range(N_BOOT):
-        sample = RNG.choices(vals13, k=n)
-        boot_h13.append(shannon([str(v) for v in sample]))
-    boot.append({"metric": "H_bits_item13", "point": float(h13),
-                 "ci_lo": float(min(boot_h13)), "ci_hi": float(max(boot_h13)),
-                 "ci_p2.5": float(sorted(boot_h13)[N_BOOT // 40]),
-                 "ci_p97.5": float(sorted(boot_h13)[-N_BOOT // 40])})
-    # 2. CI on Spearman v2.1 - v2_stack
-    diffs = []
-    for b in range(min(N_BOOT, 200)):
-        all_pairs = [(i, j) for i in range(n) for j in range(i + 1, n)]
-        sample = RNG.sample(all_pairs, min(N_PAIRS, len(all_pairs)))
-        d_zvf = []; h_v2 = []; h_v21 = []
-        for i, j in sample:
-            z_i = cells[i].get("zvf"); z_j = cells[j].get("zvf")
-            if z_i is None or z_j is None:
-                continue
-            d_zvf.append(abs(z_i - z_j))
-            h_v2.append(hamming(build_fingerprint(cells[i], {"v1", "v2_stack"}),
-                                build_fingerprint(cells[j], {"v1", "v2_stack"})))
-            h_v21.append(hamming(build_fingerprint(cells[i], {"v1", "v2_stack", "v2.1_yield"}),
-                                 build_fingerprint(cells[j], {"v1", "v2_stack", "v2.1_yield"})))
-        r_v2 = spearman(h_v2, d_zvf); r_v21 = spearman(h_v21, d_zvf)
-        diffs.append(r_v21 - r_v2)
-    diffs.sort()
-    diff_lo = diffs[len(diffs) // 40]
-    diff_hi = diffs[-len(diffs) // 40]
-    print(f"# paired Δrho (v2.1 - v2_stack): {sum(diffs) / len(diffs):+.4f} CI [{diff_lo:+.4f}, {diff_hi:+.4f}]")
-    boot.append({"metric": "delta_rho_v21_minus_v2stack", "point": float(sum(diffs) / len(diffs)),
-                 "ci_lo": float(diff_lo), "ci_hi": float(diff_hi),
-                 "ci_p2.5": float(diff_lo), "ci_p97.5": float(diff_hi)})
-    # 3. CI on H_v2.1 - H_v2 (item13 bits uplift)
-    h21 = []; h2 = []
-    for b in range(N_BOOT):
-        sample_v13 = RNG.choices(vals13, k=n)
-        h21_b = h_v2_total + shannon([str(v) for v in sample_v13])
-        h2_b = h_v2_total
-        h21.append(h21_b); h2.append(h2_b)
-    diff_h = [a - b for a, b in zip(h21, h2)]
-    diff_h.sort()
-    h_diff_lo = diff_h[N_BOOT // 40]
-    h_diff_hi = diff_h[-N_BOOT // 40]
-    print(f"# H_bits uplift v2.1-v2: {h13:+.4f} CI [{h_diff_lo:+.4f}, {h_diff_hi:+.4f}]")
-    boot.append({"metric": "H_bits_uplift_v2.1_minus_v2", "point": float(h13),
-                 "ci_lo": float(h_diff_lo), "ci_hi": float(h_diff_hi),
-                 "ci_p2.5": float(h_diff_lo), "ci_p97.5": float(h_diff_hi)})
-    # 4. Bad uplift per cell (deterministic, +/-20 points)
-    boot.append({"metric": "badge_uplift_per_cell_item13", "point": float(ITEM13_WEIGHT),
-                 "ci_lo": float(ITEM13_WEIGHT), "ci_hi": float(ITEM13_WEIGHT),
-                 "ci_p2.5": float(ITEM13_WEIGHT), "ci_p97.5": float(ITEM13_WEIGHT)})
+    # Fixed-campaign census, with outcome-derived descriptors. No population
+    # entropy/correlation intervals or predictive claims are identifiable here.
+    diffs = [rho_v21 - rho_v2_stack]
+    diff_lo = diff_hi = h_diff_lo = h_diff_hi = float('nan')
+    boot = [dict(metric=metric, point=float(point), ci_lo=float('nan'), ci_hi=float('nan'),
+                 **{'ci_p2.5': float('nan'), 'ci_p97.5': float('nan')})
+            for metric, point in [('H_bits_item13', h13),
+                                  ('delta_rho_v21_minus_v2stack', diffs[0]),
+                                  ('H_bits_uplift_v2.1_minus_v2', h13),
+                                  ('badge_uplift_per_cell_item13', ITEM13_WEIGHT)]]
 
     # --- Save outputs ---
     tsv_path = OUT / "p5_delta_div_minreport.tsv"
@@ -268,6 +238,10 @@ def main():
             f.write("\t".join(str(b[k]) for k in keys) + "\n")
     summary = {
         "n_cells": n, "n_item13_present": n13_present,
+        "statistic_version": "pro-review-02-v2",
+        "entropy_estimand": "sum_of_marginal_entropies; descriptive diversity only",
+        "construct_warning": "delta_div contains observed ZVF. Association with differences in the same ZVF is outcome leakage, not independent predictive validation. Pooled homogeneous Bernoulli null does not adjust for prompt difficulty.",
+        "inference_status": "fixed_campaign_descriptive_only",
         "H_bits_v1": h_v1, "H_bits_v2_stack": h_v2_stack,
         "H_bits_v2_total": h_v2_total, "H_bits_item13": h13,
         "H_bits_v21_total": h_v21_total,
@@ -278,13 +252,13 @@ def main():
         "delta_rho_v21_minus_v2stack_ci_hi": float(diff_hi),
         "item13_n_unique": n_unique13,
         "item13_per_cell_uplift_weight": ITEM13_WEIGHT,
-        "verdict": ("SIGNAL-BEARING" if h13 > 0.1 else "PLACEBO" if h13 < 0.001 else "WEAK"),
+        "verdict": ("VARYING_DESCRIPTIVE" if h13 > 0 else "CONSTANT_DESCRIPTIVE"),
         "key_finding": (f"Item 13 contributes +{h13:.4f} bits to the v2.0 fingerprint; "
                         f"Spearman coupling to |dzvf| changes by "
-                        f"{sum(diffs) / len(diffs):+.4f} (CI excludes zero).")
+                        f"{sum(diffs) / len(diffs):+.4f} (descriptive; no inferential interval).")
     }
-    (OUT / "p5_delta_div_minreport_summary.json").write_text(json.dumps(summary, indent=2, default=str))
-    print("# summary:", json.dumps(summary, indent=2, default=str))
+    (OUT / "p5_delta_div_minreport_summary.json").write_text(json.dumps(finite_json(summary), indent=2, default=str, allow_nan=False))
+    print("# summary:", json.dumps(finite_json(summary), indent=2, default=str, allow_nan=False))
     print("# === iter 80 JOB B complete; outputs in platform_hybrid/experiments/results/p5p8/ ===")
 
 

@@ -39,48 +39,31 @@ MAX_DEPTH = 3
 MAX_JSON_FILES = 200
 
 
-def vol_ls(volume: str, path: str = "") -> list[str]:
-    cmd = [str(MODAL), "volume", "ls", volume]
-    if path:
-        cmd.append(path)
-    p = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-    if p.returncode != 0:
-        return []
-    entries = []
-    for line in p.stdout.splitlines():
-        line = line.strip()
-        if not line or line.startswith(("┏", "┡", "└", "│", "Name", "===")):
-            # plain output has no table borders when piped; keep simple lines
-            if line.startswith("│"):
-                continue
-        if line and " " not in line:
-            entries.append(line)
-    return entries
+def vol_ls(volume, path=""):
+    import modal
+    vol = modal.Volume.from_name(volume)
+    return [{"path": item.path, "type": getattr(item.type, "name", str(item.type)).lower()}
+            for item in vol.iterdir(path or "/", recursive=False)]
 
 
-def walk(volume: str) -> list[str]:
-    files: list[str] = []
-    frontier = [("", 0)]
-    seen: set[str] = set()
+def walk(volume):
+    files, frontier, seen = [], [("/", 0)], set()
     while frontier:
         path, depth = frontier.pop()
         for entry in vol_ls(volume, path):
-            # `modal volume ls <vol> <dir>` returns entries already prefixed
-            # with <dir>/ — don't double the prefix.
-            if path and entry.startswith(path + "/"):
-                full = entry
-            elif path:
-                full = f"{path}/{entry}"
-            else:
-                full = entry
+            full = entry["path"].lstrip("/")
             if full in seen:
                 continue
             seen.add(full)
-            if "." in full.rsplit("/", 1)[-1]:
+            kind = entry["type"]
+            if kind in {"file"}:
                 files.append(full)
-            elif depth + 1 <= MAX_DEPTH:
-                frontier.append((full, depth + 1))
-    return sorted(set(files))
+            elif kind in {"directory", "dir"}:
+                if depth < MAX_DEPTH:
+                    frontier.append((full, depth + 1))
+            else:
+                raise ValueError(f"Unknown Modal entry type: {entry}")
+    return sorted(files)
 
 
 def main() -> None:
@@ -90,14 +73,23 @@ def main() -> None:
 
     inventory: list[dict] = []
     fetched = 0
+    coverage = {"requested_volumes": len(VOLUMES), "listed_volumes": 0, "failed": [], "truncated_files": 0}
     for vol in VOLUMES:
-        files = walk(vol)
+        try:
+            files = walk(vol)
+            coverage["listed_volumes"] += 1
+        except Exception as exc:
+            coverage["failed"].append({"volume": vol, "error": str(exc)})
+            continue
         print(f"[modal] {vol}: {len(files)} files", flush=True)
         for f in files:
             inventory.append({"volume": vol, "path": f,
                               "ref": f"modal://{vol}/{f}"})
         for f in files:
-            if not f.endswith(".json") or fetched >= MAX_JSON_FILES:
+            if not f.endswith(".json"):
+                continue
+            if fetched >= MAX_JSON_FILES:
+                coverage["truncated_files"] += 1
                 continue
             dest = ART_DIR / vol / f
             dest.parent.mkdir(parents=True, exist_ok=True)
@@ -110,8 +102,12 @@ def main() -> None:
             if p.returncode == 0:
                 fetched += 1
             else:
+                coverage["failed"].append({"volume": vol, "path": f, "error": p.stderr})
                 print(f"[modal] WARN get failed {vol}/{f}", flush=True)
 
+    coverage.update(discovered_files=len(inventory), fetched_files=fetched,
+                    status="partial" if coverage["failed"] or coverage["truncated_files"] else "complete")
+    (OUT_DIR / "coverage.json").write_text(json.dumps(coverage, indent=2))
     with (OUT_DIR / "modal_volumes.jsonl").open("w") as fh:
         for row in inventory:
             fh.write(json.dumps(row) + "\n")
@@ -121,7 +117,7 @@ def main() -> None:
         "",
         f"Generated: {datetime.now(timezone.utc).isoformat()}",
         "",
-        f"- Volumes scanned: {len(VOLUMES)}",
+        f"- Coverage: {coverage['status']}; requested volumes: {len(VOLUMES)}, listed: {coverage['listed_volumes']}",
         f"- Files inventoried: {len(inventory)}",
         f"- Metrics JSONs downloaded to `modal_artifacts/`: {fetched}",
         "",

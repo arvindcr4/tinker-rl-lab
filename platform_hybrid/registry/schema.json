@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/tinker-rl-lab/grpo-registry/schema.json",
+  "$id": "https://github.com/tinker-rl-lab/grpo-registry/schema-v3.json",
   "title": "GRPO-Registry record",
   "description": "A machine-readable catalog record for a group-relative RL (GRPO-family) training stack, or for a variant-delta (the set of changes a named GRPO variant makes to the base algorithm). Field convention: JSON null means UNREPORTED; explicit false / 0.0 / 'none' means reported-as-absent. The MIN-REPORT auditor scores reporting coverage, not configuration virtue.",
   "oneOf": [
@@ -118,8 +118,78 @@
             },
             "generated_by": {
               "$ref": "#/$defs/nullable_string"
+            },
+            "generator_version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "execution_binding": {
+              "type": "string",
+              "minLength": 1
+            },
+            "outcome_provenance": {
+              "type": "object",
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/artifact_lineage"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "source",
+                      "input_artifacts",
+                      "computation_version",
+                      "seeds",
+                      "execution_binding"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "computation_version": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "note": {
+                        "type": "string"
+                      },
+                      "input_artifacts": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "pattern": "^.+ sha256:[0-9a-f]{64}$"
+                        }
+                      },
+                      "seeds": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
+                      "execution_binding": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "coverage_provenance": {
+              "$ref": "#/$defs/artifact_lineage"
+            },
+            "manual_annotations": {
+              "type": "object"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "variant_deltas_applied": {
           "type": "array",
@@ -204,7 +274,7 @@
                 "object",
                 "null"
               ],
-              "description": "Iter-62: self-reported coverage of the entry's reporting blocks. All fields nullable; null = not yet audited. min_report_coverage is the fraction of7 MIN-REPORT items with at least one sub-field populated. declared_deltas_coverage is the fraction of variant_deltas_applied entries with status in {implemented, surrogate}. measured_coverage is variant: measured_rows / delta_components, or stack: outcomes_fields_populated / 5. ci_method_present mirrors outcomes.ci_method being non-null. audit_source is the script path that produced the block.",
+              "description": "Iter-62: self-reported coverage of the entry's reporting blocks. All fields nullable; null = not yet audited. min_report_coverage is the fraction of7 MIN-REPORT items with at least one sub-field populated. declared_deltas_coverage is the fraction of variant_deltas_applied entries with status in {implemented, surrogate}. measured_coverage is variant: measured_rows / delta_components, or stack: outcomes_fields_populated / 5. ci_method_present mirrors outcomes.ci_method being non-null. audit_source is the script path that produced the block. Versioned metrics below supersede ambiguous legacy names for newly generated entries; reporting completeness is independent of implementation presence.",
               "properties": {
                 "min_report_coverage": {
                   "type": [
@@ -241,6 +311,66 @@
                     "string",
                     "null"
                   ]
+                },
+                "min_report_item_presence_v1": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Fraction of seven MIN-REPORT items with at least one reported leaf; false and zero count as reported."
+                },
+                "min_report_leaf_mean_v2": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Equal-weight mean of each MIN-REPORT item reported-leaf fraction (badge/100 before badge rounding)."
+                },
+                "declared_delta_reporting_completeness_v2": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Fraction of declared delta rows whose status is implemented, surrogate or absent. Unknown is unreported. Null when no rows exist."
+                },
+                "declared_delta_implementation_fraction_v1": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Fraction of declared delta rows with status implemented, excluding surrogate and absent. Null when no rows exist."
+                },
+                "declared_delta_surrogate_fraction_v1": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Fraction of declared delta rows with status surrogate. Null when no rows exist."
+                },
+                "item_presence_coverage_v3": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Fraction of seven items with at least one reported substantive schema leaf; source/description excluded."
+                },
+                "reported_leaf_coverage_v3": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Equal-weight mean of seven schema-defined substantive leaf fractions; explicit disabled clipping makes epsilons inapplicable."
+                },
+                "coverage_version": {
+                  "const": "reported-substantive-leaf-mean-v3"
                 }
               },
               "additionalProperties": false
@@ -320,7 +450,7 @@
                 "object",
                 "null"
               ],
-              "description": "Iter-70: per-(method × trigger × threshold) controller savings predictions for the iter-51 adaptive-G controller on this stack. All fields nullable; null = not yet audited. Sourced from iter-67 p7_antiherding_controller_cf_summary.tsv.",
+              "description": "Iter-70: per-(method \u00d7 trigger \u00d7 threshold) controller savings predictions for the iter-51 adaptive-G controller on this stack. All fields nullable; null = not yet audited. Sourced from iter-67 p7_antiherding_controller_cf_summary.tsv.",
               "properties": {
                 "panel": {
                   "$ref": "#/$defs/nullable_string"
@@ -401,6 +531,605 @@
           "additionalProperties": {
             "$ref": "#/$defs/run_config_cell"
           }
+        },
+        "effective_manifest": {
+          "type": "object",
+          "description": "Typed supported observations; other runtime telemetry is permitted but is not promoted into catalogue evidence.",
+          "properties": {
+            "execution.mode": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "checkpoint.id": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "checkpoint.variant": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "checkpoint.revision": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "reward.id": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "prompt.template_sha256": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "prompt.chat_template": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "data.dataset": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "eval.metric": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "eval.heldout": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "tokenizer.id": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "tokenizer.revision": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "data.revision": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "data.ordered_example_identity": {
+              "type": [
+                "object",
+                "string",
+                "null"
+              ]
+            },
+            "loss.objective": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "loss.importance_ratio": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "loss.clip": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "loss.aggregation": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "loss.advantage_norm": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "loss.token_mask": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "loss.length_normalization": {
+              "type": [
+                "string",
+                "boolean",
+                "null"
+              ]
+            },
+            "loss.dynamic_sampling": {
+              "$ref": "#/$defs/nullable_boolean"
+            },
+            "loss.reward_shaping": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "loss.inner_epochs": {
+              "$ref": "#/$defs/nullable_integer"
+            },
+            "kl.reference_policy": {
+              "type": [
+                "string",
+                "boolean",
+                "null"
+              ]
+            },
+            "kl.beta": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "kl.estimator": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "decoding.temperature": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "decoding.top_p": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "decoding.max_tokens": {
+              "$ref": "#/$defs/nullable_integer"
+            },
+            "decoding.top_k": {
+              "$ref": "#/$defs/nullable_integer"
+            },
+            "decoding.repetition_penalty": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "batch.prompts_per_step": {
+              "$ref": "#/$defs/nullable_integer"
+            },
+            "batch.samples_per_prompt": {
+              "$ref": "#/$defs/nullable_integer"
+            },
+            "batch.group_schedule": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "batch.adaptation_rule": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "train.steps": {
+              "$ref": "#/$defs/nullable_integer"
+            },
+            "train.sampler_refresh": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "data.subset": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "data.selection": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "optimizer.name": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "optimizer.lr": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "optimizer.betas": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "optimizer.eps": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "optimizer.weight_decay": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "lora.rank": {
+              "$ref": "#/$defs/nullable_integer"
+            },
+            "lora.alpha": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "lora.dropout": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "lora.targets": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "trainer.name": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "runtime.backend": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "runtime.precision": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "reward.fn_sha256": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "runtime.gpu": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "runtime.environment": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "implementation.identity": {
+              "type": [
+                "object",
+                "string",
+                "null"
+              ]
+            },
+            "trainer.version": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "seeds": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "integer"
+              }
+            },
+            "revisions": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "properties": {
+                "model": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "id": {
+                      "$ref": "#/$defs/nullable_string"
+                    },
+                    "revision": {
+                      "$ref": "#/$defs/nullable_string"
+                    }
+                  }
+                },
+                "tokenizer": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "id": {
+                      "$ref": "#/$defs/nullable_string"
+                    },
+                    "revision": {
+                      "$ref": "#/$defs/nullable_string"
+                    }
+                  }
+                },
+                "dataset": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "id": {
+                      "$ref": "#/$defs/nullable_string"
+                    },
+                    "revision": {
+                      "$ref": "#/$defs/nullable_string"
+                    }
+                  }
+                }
+              }
+            },
+            "model": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "properties": {
+                "id": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "revision": {
+                  "$ref": "#/$defs/nullable_string"
+                }
+              }
+            },
+            "model_id": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "model_revision": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "tokenizer": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "properties": {
+                "id": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "revision": {
+                  "$ref": "#/$defs/nullable_string"
+                }
+              }
+            },
+            "tokenizer_id": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "tokenizer_revision": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "hardware": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "properties": {
+                "gpu_names": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/nullable_string"
+                    },
+                    {
+                      "type": [
+                        "array",
+                        "null"
+                      ],
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                },
+                "model_dtype": {
+                  "$ref": "#/$defs/nullable_string"
+                }
+              }
+            },
+            "runtime": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "properties": {
+                "gpu": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/nullable_string"
+                    },
+                    {
+                      "type": [
+                        "array",
+                        "null"
+                      ],
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                },
+                "environment": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "precision": {
+                  "$ref": "#/$defs/nullable_string"
+                }
+              }
+            },
+            "gpu": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "environment_hash": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "precision": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "dataset": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "properties": {
+                "id": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "revision": {
+                  "$ref": "#/$defs/nullable_string"
+                }
+              }
+            },
+            "dataset_id": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "dataset_revision": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "data": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "properties": {
+                "ordered_example_identity": {
+                  "type": [
+                    "object",
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "ordered_example_identity": {
+              "type": [
+                "object",
+                "string",
+                "null"
+              ]
+            },
+            "ordered_example_ids_sha256": {
+              "type": [
+                "object",
+                "string",
+                "null"
+              ]
+            },
+            "implementation": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "properties": {
+                "identity": {
+                  "type": [
+                    "object",
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "implementation_identity": {
+              "type": [
+                "object",
+                "string",
+                "null"
+              ]
+            },
+            "source": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "properties": {
+                "status": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "commit": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "dirty": {
+                  "$ref": "#/$defs/nullable_boolean"
+                },
+                "dirty_hash": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "source_files": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                }
+              }
+            },
+            "generation": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "properties": {
+                "train": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "top_k": {
+                      "$ref": "#/$defs/nullable_integer"
+                    },
+                    "repetition_penalty": {
+                      "$ref": "#/$defs/nullable_number"
+                    },
+                    "temperature": {
+                      "$ref": "#/$defs/nullable_number"
+                    },
+                    "top_p": {
+                      "$ref": "#/$defs/nullable_number"
+                    },
+                    "max_new_tokens": {
+                      "$ref": "#/$defs/nullable_integer"
+                    }
+                  }
+                },
+                "top_k": {
+                  "$ref": "#/$defs/nullable_integer"
+                },
+                "repetition_penalty": {
+                  "$ref": "#/$defs/nullable_number"
+                },
+                "temperature": {
+                  "$ref": "#/$defs/nullable_number"
+                },
+                "top_p": {
+                  "$ref": "#/$defs/nullable_number"
+                },
+                "max_new_tokens": {
+                  "$ref": "#/$defs/nullable_integer"
+                }
+              }
+            },
+            "generation_config": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "properties": {
+                "top_k": {
+                  "$ref": "#/$defs/nullable_integer"
+                },
+                "repetition_penalty": {
+                  "$ref": "#/$defs/nullable_number"
+                },
+                "temperature": {
+                  "$ref": "#/$defs/nullable_number"
+                },
+                "top_p": {
+                  "$ref": "#/$defs/nullable_number"
+                },
+                "max_new_tokens": {
+                  "$ref": "#/$defs/nullable_integer"
+                }
+              }
+            },
+            "train_item_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            "test_item_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            }
+          }
+        },
+        "intended_config": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/run_config_cell"
+          }
+        },
+        "synthetic_diagnostics": {
+          "type": "object"
         }
       },
       "additionalProperties": false
@@ -460,6 +1189,10 @@
             "sampling_dynamic_filter": {
               "$ref": "#/$defs/nullable_boolean",
               "description": "Iter-32 extension: whether the sampler applies dynamic filtering (e.g. DAPO dynamic_sampling)."
+            },
+            "clipping_applied": {
+              "$ref": "#/$defs/nullable_boolean",
+              "description": "False explicitly disables ratio clipping; epsilon fields are then inapplicable"
             }
           },
           "required": [
@@ -568,6 +1301,10 @@
             },
             "description": {
               "$ref": "#/$defs/nullable_string"
+            },
+            "n": {
+              "$ref": "#/$defs/nullable_integer",
+              "description": "Number of saved held-out example identifiers; null when unverified"
             }
           },
           "required": [
@@ -773,7 +1510,7 @@
             "object",
             "null"
           ],
-          "description": "Iter-70: per-(trigger × threshold) controller savings predictions for the variant on the N2 same-stack corpus. Inherits from the variant's measured method; predictions carry the iter-67 saved_per_fire and savings_per_rollout paired-bootstrap estimates.",
+          "description": "Iter-70: per-(trigger \u00d7 threshold) controller savings predictions for the variant on the N2 same-stack corpus. Inherits from the variant's measured method; predictions carry the iter-67 saved_per_fire and savings_per_rollout paired-bootstrap estimates.",
           "properties": {
             "panel": {
               "$ref": "#/$defs/nullable_string"
@@ -1129,7 +1866,7 @@
         "source"
       ],
       "additionalProperties": false,
-      "description": "One derived run field with provenance. status: logged (results/log artifact, source <path>#<key>), code (constant in the pinned run script, source <path>@<commit>:L<n>), default (argparse/library default in the pinned script; launcher not in repo), inferred (stated rule), unknown (not derivable; value must be null).",
+      "description": "One derived run field with provenance. logged means observed artifact; code means extracted pinned implementation; default requires resolved runtime evidence, never an absent launch command; inferred requires a stated supported rule; unknown requires value=null.",
       "properties": {
         "value": {},
         "status": {
@@ -1160,6 +1897,32 @@
           "value": {
             "type": "null"
           }
+        }
+      }
+    },
+    "artifact_lineage": {
+      "type": "object",
+      "required": [
+        "source",
+        "input_sha256",
+        "computation_version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "computation_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "note": {
+          "type": "string"
         }
       }
     }

@@ -119,7 +119,7 @@ def _valid_manifest() -> dict[str, Any]:
                 "revision": "b" * 40,
                 "url": "https://huggingface.co/example-org/verilog-runner/commit/b",
                 "stage": "periodic",
-                "safe_public_artifact": True,
+                "safe_public_artifact": False,
                 "visibility": "private",
             },
             {
@@ -141,8 +141,8 @@ def _valid_manifest() -> dict[str, Any]:
 class VerilogEvalReceiptBoundaryTests(unittest.TestCase):
     def test_valid_receipt_builds_ready_and_disables_launch(self) -> None:
         report = validator.build_receipt_record(_valid_manifest())
-        self.assertEqual(report["status"], "READY")
-        self.assertTrue(report["receipt_ready"])
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertFalse(report["receipt_ready"])
         self.assertFalse(report["paid_launch_allowed"])
         self.assertFalse(report["launch"]["allowed"])
         self.assertIn("launch is intentionally disabled", report["launch"]["reasons"])
@@ -237,7 +237,7 @@ class VerilogEvalReceiptBoundaryTests(unittest.TestCase):
         manifest["costs"]["total_usd"] = -1
         blocked = validator.build_receipt_record(manifest)
         self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("cannot be negative" in item for item in blocked["blockers"]))
+        self.assertTrue(any("finite and non-negative" in item for item in blocked["blockers"]))
 
     def test_held_out_semantics_are_explicit(self) -> None:
         manifest = _valid_manifest()
@@ -259,7 +259,7 @@ class VerilogEvalReceiptBoundaryTests(unittest.TestCase):
         manifest["scope"]["is_held_out"] = True
         manifest["held_out_receipt_ref"] = "sha256:" + ("a" * 64)
         report = validator.build_receipt_record(manifest)
-        self.assertEqual(report["status"], "READY")
+        self.assertEqual(report["status"], "BLOCKED")
         self.assertTrue(report["held_out"])
         self.assertTrue(report["held_out_receipt_proven"])
 
@@ -292,7 +292,7 @@ class VerilogEvalReceiptBoundaryTests(unittest.TestCase):
     def test_task_and_split_hashes_are_deterministic(self) -> None:
         first = validator.build_receipt_record(_valid_manifest())
         second = validator.build_receipt_record(copy.deepcopy(_valid_manifest()))
-        self.assertEqual(first["status"], "READY")
+        self.assertEqual(first["status"], "BLOCKED")
         self.assertEqual(first["per_example_digest"], second["per_example_digest"])
         self.assertEqual(first["receipt_identity_digest"], second["receipt_identity_digest"])
 
@@ -304,7 +304,7 @@ class VerilogEvalReceiptBoundaryTests(unittest.TestCase):
 
     def test_validate_record_helper_matches_status(self) -> None:
         ready = validator.build_receipt_record(_valid_manifest())
-        self.assertEqual(validator.validate_verilog_eval_receipt_record(ready), [])
+        self.assertIn("authenticated external", " ".join(validator.validate_verilog_eval_receipt_record(ready)))
 
         blocked = validator.build_receipt_record({"suite_id": "x"})
         self.assertNotEqual(validator.validate_verilog_eval_receipt_record(blocked), [])
@@ -314,7 +314,7 @@ class VerilogEvalReceiptBoundaryTests(unittest.TestCase):
         try:
             manifest = _valid_manifest()
             temporary.write_text(json.dumps(manifest), encoding="utf-8")
-            self.assertEqual(validator.main(["--manifest", str(temporary)]), 0)
+            self.assertEqual(validator.main(["--manifest", str(temporary)]), 1)
 
             manifest["suite_id"] = "not-verilog"
             temporary.write_text(json.dumps(manifest), encoding="utf-8")

@@ -107,6 +107,7 @@ def main():
         if args.smoke and not run_name.endswith("_smoke"):
             run_name += "_smoke"
 
+    args.out_dir = os.path.join(args.out_dir, "framework_v3")
     os.makedirs(args.out_dir, exist_ok=True)
 
     print("Loading GSM8K dataset...")
@@ -183,7 +184,7 @@ def main():
             write_header = not os.path.exists(tsv_path)
             tsv_f = open(tsv_path, "a")
             if write_header:
-                tsv_f.write("method\tseed\tstep\tgroup_size\tzvf\tfrac_all_zero\tfrac_all_one\tpcd\tlarq\treward_mean\tmean_len\tcv_len\tlag1_autocorr\tloss\n")
+                tsv_f.write("method\tseed\tstep\tgroup_size\tzvf\tfrac_all_zero\tfrac_all_one\tmean_group_population_variance\tlarq\treward_mean\tmean_len\tcv_len\tlag1_autocorr\tloss\n")
             
             reward_mean_series = []
 
@@ -332,7 +333,7 @@ def main():
                     "zvf": zvf,
                     "frac_all_zero": frac_all_zero,
                     "frac_all_one": frac_all_one,
-                    "pcd": pcd,
+                    "mean_group_population_variance": pcd,
                     "larq": larq,
                     "larq_term1": larq_term1,
                     "larq_term2": larq_term2,
@@ -356,7 +357,7 @@ def main():
                         f"{method}/zvf": zvf,
                         f"{method}/frac_all_zero": frac_all_zero,
                         f"{method}/frac_all_one": frac_all_one,
-                        f"{method}/pcd": pcd,
+                        f"{method}/mean_group_population_variance": pcd,
                         f"{method}/larq": larq,
                         f"{method}/reward_mean": rmean,
                         f"{method}/mean_len": lmean,

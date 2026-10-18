@@ -21,14 +21,29 @@ class LocalBackend(InProcessBackend):
         return LaunchPlan(
             backend="local",
             framework=framework,
-            command=(
-                f"python -m platform_local.unified --backend local "
-                f"--framework {framework} --model {spec.model}"
-            ),
+            argv=[
+                "python",
+                "-m",
+                "platform_local.unified",
+                "--backend",
+                "local",
+                "--framework",
+                framework,
+                "--model",
+                spec.model,
+                "--algorithm",
+                spec.algorithm,
+                "--task",
+                spec.task,
+                "--seed",
+                str(spec.seed),
+                "--epochs",
+                str(spec.training_steps),
+            ],
             driver_file=_DRIVERS.get(framework, "?"),
             output="./checkpoints/",
             env=["TINKER_API_KEY"] if framework in ("tinker", "skyrl") else [],
-            notes="in-process framework dispatch",
+            notes=f"in-process dispatch; protocol={spec.protocol}; spec_hash={spec.spec_hash}",
         )
 
     # run() is inherited from InProcessBackend (in-process dispatch_framework).

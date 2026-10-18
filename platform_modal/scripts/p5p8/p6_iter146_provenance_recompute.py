@@ -18,10 +18,11 @@ import os
 import math
 import sys
 from collections import defaultdict
+from _review18_pairing import keyed_metric, paired_values
 
 WORKTREE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 REG_DIR = os.path.join(WORKTREE, "registry", "entries")
-OUT_DIR = os.path.join(WORKTREE, "experiments", "results", "p5p8")
+OUT_DIR = os.path.join(WORKTREE, "experiments", "results", "p5p8", "review18_v2")
 BOOT_SEED = 20260705
 B_BOOT = 2000
 
@@ -109,8 +110,22 @@ def recompute_n2_panel(panel, method_variant, metric, last_k):
     n2 = load_n2_metrics()
     if method_variant not in n2 or "grpo" not in n2:
         return None
-    v, g = n2[method_variant][-last_k:], n2["grpo"][-last_k:]
-    diffs = [rv[metric] - rg[metric] for rv, rg in zip(v, g)]
+    if not 1 <= last_k <= 40:
+        raise ValueError("N2 protocol has exactly 40 steps")
+    expected = set(range(40 - last_k, 40))
+    selected = []
+    for method in ("grpo", method_variant):
+        rows = [r for r in n2[method] if int(r["step"]) in expected]
+        if {int(r["step"]) for r in rows} != expected:
+            raise ValueError("Incomplete declared N2 last-K window")
+        keys = ("seed", "step") if any("seed" in r for r in rows) else ("step",)
+        if "seed" in keys:
+            for seed in {r["seed"] for r in rows}:
+                if {int(r["step"]) for r in rows if r["seed"] == seed} != expected:
+                    raise ValueError("Incomplete seed-specific N2 window")
+        selected.append(keyed_metric(rows, metric, keys))
+    g, v = paired_values(*selected)
+    diffs = [rv - rg for rv, rg in zip(v, g)]
     point, lo, hi = paired_bootstrap(diffs)
     return point, lo, hi, len(diffs), (lo > 0) or (hi < 0)
 
@@ -120,10 +135,10 @@ def recompute_zvf130_risk_metric(metric, method_variant):
     zvf = load_zvf130_risk_index()
     if method_variant not in zvf or "grpo" not in zvf or metric not in zvf[method_variant][0]:
         return None
-    vs = [float(r[metric]) for r in zvf[method_variant]]
-    gs = [float(r[metric]) for r in zvf["grpo"]]
-    n = min(len(vs), len(gs))
-    diffs = [v - g for v, g in zip(vs[:n], gs[:n])]
+    gs, vs = paired_values(keyed_metric(zvf["grpo"], metric, ("seed",)),
+                           keyed_metric(zvf[method_variant], metric, ("seed",)))
+    n = len(gs)
+    diffs = [v - g for v, g in zip(vs, gs)]
     point, lo, hi = paired_bootstrap(diffs)
     return point, lo, hi, n, (lo > 0) or (hi < 0)
 

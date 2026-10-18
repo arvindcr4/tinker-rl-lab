@@ -18,17 +18,16 @@ Reward:
     0.25 — wrong answer but produced at least one correct tool call
     0.0  — wrong answer with no valid tool calls
 """
-import json
-import math
+
 import os
 import random
 import re
 import sys
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 from datasets import load_dataset
 from latex2sympy2_extended import NormalizationConfig
-from math_verify import LatexExtractionConfig, parse, verify
+from math_verify import LatexExtractionConfig, parse
 
 from atroposlib.envs.base import (
     APIServerConfig,
@@ -36,17 +35,15 @@ from atroposlib.envs.base import (
     BaseEnvConfig,
     ScoredDataGroup,
 )
-from atroposlib.type_definitions import Item
 from tinker_atropos.config import TinkerAtroposConfig
+from tinker_atropos.grading import authoritative_math_answer, verify_answer
 
 
 def _get_config_path():
     for i, arg in enumerate(sys.argv):
         if arg == "--config" and i + 1 < len(sys.argv):
             return sys.argv[i + 1]
-    return os.environ.get(
-        "TINKER_CONFIG_PATH", "configs/multistep_tool_math_qwen_8b.yaml"
-    )
+    return os.environ.get("TINKER_CONFIG_PATH", "configs/multistep_tool_math_qwen_8b.yaml")
 
 
 CONFIG_PATH = _get_config_path()
@@ -78,30 +75,20 @@ Answer: \\boxed{{<number>}}
 
 Always break the problem into explicit calculation steps. Do NOT skip to the answer."""
 
-QUESTION_SUFFIX = " Solve step by step using the tools. Provide the final numerical answer inside \\boxed{}."
+QUESTION_SUFFIX = (
+    " Solve step by step using the tools. Provide the final numerical answer inside \\boxed{}."
+)
 
 
 # ---------------------------------------------------------------------------
-# Deterministic tool sandbox
+# Bounded arithmetic interpreter (not a Python sandbox)
 # ---------------------------------------------------------------------------
-
-_SAFE_NAMES = {
-    "abs": abs, "round": round, "min": min, "max": max,
-    "int": int, "float": float,
-    "math": math,
-    "sqrt": math.sqrt, "ceil": math.ceil, "floor": math.floor,
-    "pi": math.pi, "e": math.e,
-    "pow": pow, "sum": sum,
-}
 
 
 def _safe_eval(expr: str) -> Optional[float]:
-    """Evaluate a math expression in a restricted namespace."""
-    try:
-        result = eval(expr, {"__builtins__": {}}, _SAFE_NAMES)
-        return float(result)
-    except Exception:
-        return None
+    from tinker_atropos.safe_execution import arithmetic_value
+
+    return arithmetic_value(expr)
 
 
 def _execute_trace(text: str) -> Tuple[str, int, int]:
@@ -202,7 +189,7 @@ def _score_trace(
 
     # Parse model answer
     answer_parsed = parse(
-        response.split("</think>")[-1],
+        authoritative_math_answer(response.split("</think>")[-1]),
         extraction_config=[
             LatexExtractionConfig(
                 normalization_config=NormalizationConfig(
@@ -219,7 +206,7 @@ def _score_trace(
         extraction_mode="first_match",
     )
 
-    correct = bool(verify(answer_parsed, gold_parsed)) if gold_parsed else False
+    correct = bool(verify_answer(gold_parsed, answer_parsed)) if gold_parsed else False
 
     if correct and used_tools:
         return 1.0
@@ -234,6 +221,22 @@ def _score_trace(
 # ---------------------------------------------------------------------------
 # Atropos environment
 # ---------------------------------------------------------------------------
+
+
+def _math_observation(trace, text):
+    if re.search(r"^Answer:\s*", text, re.M):
+        if re.search(r"^Action:", text, re.M):
+            raise ValueError("A final answer must follow a completed tool observation turn")
+        return "", True
+    filled, _, _ = _execute_trace(trace)
+    observations = [
+        line.partition(":")[2].strip()
+        for line in filled.splitlines()
+        if line.startswith("Observation:")
+    ]
+    return (
+        observations[-1] if observations else "Error: expected a calculate, store or recall action"
+    ), False
 
 
 class MultistepToolMathEnv(BaseEnv):
@@ -251,9 +254,7 @@ class MultistepToolMathEnv(BaseEnv):
     @classmethod
     def config_init(cls):
         config = (
-            TinkerAtroposConfig.from_yaml(CONFIG_PATH)
-            if CONFIG_PATH
-            else TinkerAtroposConfig()
+            TinkerAtroposConfig.from_yaml(CONFIG_PATH) if CONFIG_PATH else TinkerAtroposConfig()
         )
         cls._full_config = config
 
@@ -317,9 +318,9 @@ class MultistepToolMathEnv(BaseEnv):
         if wandb_metrics is None:
             wandb_metrics = {}
         if self.percent_correct_buffer:
-            wandb_metrics["train/percent_correct"] = sum(
+            wandb_metrics["train/percent_correct"] = sum(self.percent_correct_buffer) / len(
                 self.percent_correct_buffer
-            ) / len(self.percent_correct_buffer)
+            )
         if self.tool_use_buffer:
             wandb_metrics["train/tool_use_rate"] = sum(self.tool_use_buffer) / len(
                 self.tool_use_buffer
@@ -332,17 +333,19 @@ class MultistepToolMathEnv(BaseEnv):
         await super().wandb_log(wandb_metrics)
 
     async def rollout_and_score_eval(self, question: str, gold_answer: str) -> dict:
-        completion = await self.server.chat_completion(
-            messages=[
+        from tinker_atropos.interaction import interactive_rollout
+
+        response, _ = await interactive_rollout(
+            self.server,
+            self.tokenizer,
+            [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": question + QUESTION_SUFFIX},
             ],
-            n=1,
+            _math_observation,
             max_tokens=self.config.max_token_length,
             temperature=0.0,
-            split="eval",
         )
-        response = completion.choices[0].message.content
         score = _score_trace(response, gold_answer)
         _, valid_calls, total_actions = _execute_trace(response)
         return {
@@ -367,9 +370,7 @@ class MultistepToolMathEnv(BaseEnv):
         scores = [r["score"] for r in results]
         full_correct = sum(1 for s in scores if s >= 1.0) / len(scores)
         any_correct = sum(1 for s in scores if s >= 0.5) / len(scores)
-        tool_use_rate = sum(
-            1 for r in results if r["valid_tool_calls"] > 0
-        ) / len(results)
+        tool_use_rate = sum(1 for r in results if r["valid_tool_calls"] > 0) / len(results)
         avg_tool_calls = sum(r["valid_tool_calls"] for r in results) / len(results)
 
         self.eval_metrics.append(("eval/agentic_accuracy", full_correct))
@@ -408,25 +409,20 @@ class MultistepToolMathEnv(BaseEnv):
             {"role": "user", "content": item["question"] + QUESTION_SUFFIX},
         ]
 
-        async with self.server.managed_server(tokenizer=self.tokenizer) as managed:
-            completions = await managed.chat_completion(
-                messages=messages,
-                n=self.config.group_size,
-                max_tokens=self.config.max_token_length,
-                temperature=1.0,
-                stop=[self.tokenizer.eos_token_id],
-            )
-            state = managed.get_state()
-            nodes = state["nodes"]
+        from tinker_atropos.interaction import interactive_rollout
 
         to_score = []
-        for choice, node in zip(completions.choices, nodes):
+        for _ in range(self.config.group_size):
+            response, node = await interactive_rollout(
+                self.server,
+                self.tokenizer,
+                messages,
+                _math_observation,
+                max_tokens=self.config.max_token_length,
+            )
             to_score.append(
                 {
-                    "messages": (
-                        *messages,
-                        {"role": "assistant", "content": choice.message.content},
-                    ),
+                    "messages": (*messages, {"role": "assistant", "content": response}),
                     "gold_answer": gold_answer,
                     "tokens": node.tokens,
                     "masked_tokens": node.masked_tokens,
@@ -450,7 +446,7 @@ class MultistepToolMathEnv(BaseEnv):
             _, valid_calls, _ = _execute_trace(response)
 
             masked_tokens = item["masked_tokens"]
-            if len([t for t in masked_tokens if t != -100]) < 10:
+            if len([t for t in masked_tokens if t != -100]) < 1:
                 continue
 
             scores["tokens"].append(item["tokens"])

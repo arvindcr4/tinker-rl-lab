@@ -20,6 +20,8 @@ import time
 from typing import Any, Callable
 from urllib.request import Request, urlopen
 
+from preflight_evidence_contract import validate_diagnostic_seed, seal_request, validate_identity, validate_counts, completed_receipt as completed_receipt
+
 from huggingface_hub import HfApi, hf_hub_download
 
 
@@ -136,7 +138,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--task", choices=TASKS)
     parser.add_argument("--arm", choices=ARMS)
-    parser.add_argument("--seed", type=int, default=211)
+    parser.add_argument("--seed", type=int, default=1009)
     parser.add_argument("--gpu", default="A100")
     parser.add_argument("--auth", choices=("oauth2", "adc"), default="oauth2")
     parser.add_argument("--setup-timeout", type=int, default=1800)
@@ -319,7 +321,10 @@ def validate_manifest(
     manifest: dict[str, Any],
     result: dict[str, Any],
     request: dict[str, Any],
+    *, protocol: dict[str, Any] | None = None, expected_source_files: dict[str, str] | None = None,
 ) -> None:
+    if request.get("contract_version") == "preflight-evidence-v2":
+        validate_identity(request)
     if manifest.get("schema_version") != "aiml-next-preflight-run-v1":
         raise RuntimeError("remote manifest schema mismatch")
     if (
@@ -334,6 +339,27 @@ def validate_manifest(
     if result.get("evidence_class") != "preflight-not-evidence":
         raise RuntimeError("remote result was promoted beyond preflight")
     run_config = manifest.get("run_config") or {}
+    try:
+        validate_counts(manifest.get("audit_record", {}), request["arm"], run_config)
+    except ValueError as exc:
+        raise RuntimeError(str(exc)) from exc
+    protocol = protocol or json.loads(PROTOCOL.read_text())
+    treatment = protocol["treatment"]
+    if run_config.get("model") != treatment["model"]:
+        raise RuntimeError("model differs from registered experiment")
+    if run_config.get("objective_fingerprint") != fingerprint(treatment["objective"]):
+        raise RuntimeError("objective differs from registered experiment")
+    task = next((row for row in protocol["tasks"] if row["task_id"] == request["task"]), None)
+    if task is None:
+        raise RuntimeError("unregistered task")
+    expected_dataset = {"training_dataset": task["training_dataset"],
+                        "training_revision": task["training_dataset_revision"],
+                        "evaluation_dataset": task.get("evaluation_dataset", task["training_dataset"]),
+                        "evaluation_revision": task.get("evaluation_dataset_revision", task["training_dataset_revision"])}
+    if run_config.get("dataset_bindings") != expected_dataset:
+        raise RuntimeError("dataset bindings differ from registered experiment")
+    if run_config.get("model_revision") != "b968826d9c46dd6066d109eabc6255188de91218":
+        raise RuntimeError("model revision differs from registered source contract")
     if result.get("run_config") != run_config:
         raise RuntimeError("manifest and result run configs differ")
     preflight_class = request.get("preflight_class", "matrix_infrastructure")
@@ -424,7 +450,7 @@ def validate_manifest(
     if request["arm"] == "grpo_g8" and generated != groups * 8:
         raise RuntimeError("baseline did not generate G8 for every prompt")
     mixed_groups = round(fractions[2] * groups)
-    if updated_groups != mixed_groups or not 0 <= updated_groups <= groups:
+    if not 0 <= updated_groups <= mixed_groups:
         raise RuntimeError("updated-group count disagrees with mixed-group telemetry")
     if request["arm"] == "contrast_early_stop_g2_to_g8":
         if generated != groups * 2 + mixed_groups * 6:
@@ -446,7 +472,7 @@ def validate_manifest(
     if sum(row.get("correct") is True for row in trace) != audit["heldout_correct"]:
         raise RuntimeError("held-out trace disagrees with audit count")
     source_files = manifest.get("source_files") or {}
-    expected_source_files = {
+    expected_source_files = expected_source_files or {
         path.name: sha256_file(path) for path in (REMOTE_SCRIPT, SAMPLER, TRL_ADAPTER)
     }
     if source_files != expected_source_files:
@@ -922,14 +948,9 @@ def recover_request_artifact(args: argparse.Namespace) -> dict[str, Any]:
         failed = {**base, "status": "failed", "return_code": 1, "failed_step": "recovery", "error": str(exc)}
         helpers.atomic_json(result_path, failed)
         return {"status": "failed", "result_path": str(result_path)}
-    complete = {
-        **base,
-        "status": "completed",
-        "payload": result,
-        "manifest": manifest,
-        "remote_verification": verification,
-        "fingerprint": request["fingerprint"],
-    }
+    complete = completed_receipt(base, result=result, manifest=manifest,
+                                 verification=verification, cleanup=base["cleanup"],
+                                 return_code=base["return_code"])
     if recovery is not None:
         complete["recovery"] = recovery
     helpers.atomic_json(result_path, complete)
@@ -937,6 +958,7 @@ def recover_request_artifact(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def run_unit(args: argparse.Namespace) -> dict[str, Any]:
+    validate_diagnostic_seed(args.seed, json.loads(PROTOCOL.read_text()))
     helpers = load_e1_helpers()
     output_dir = args.output_dir.expanduser().resolve()
     subprocess.run([sys.executable, str(DESIGN_VERIFIER)], cwd=REPO_ROOT, check=True)
@@ -992,7 +1014,9 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         "tracking": tracking,
         "source_snapshots": snapshots,
     }
-    request["fingerprint"] = fingerprint(request)
+    request = seal_request(request, decoder=DECODER_CONTRACT, tracking=tracking,
+                           source_files={p.name: sha256_file(p) for p in (REMOTE_SCRIPT, SAMPLER, TRL_ADAPTER)})
+    stack_fingerprint = request["stack_fingerprint"]
     session = f"next-pre-{args.task[:4]}-{args.arm[:8]}-{request['fingerprint'][:6]}"[:40]
     hf_repo = expected_hf_repo(request)
     wandb_run_name = (
@@ -1145,14 +1169,9 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         failed = {**base, "status": "failed", "error": str(exc)}
         helpers.atomic_json(result_path, failed)
         return {"status": "failed", "result_path": str(result_path)}
-    complete = {
-        **base,
-        "status": "completed",
-        "payload": result,
-        "manifest": manifest,
-        "remote_verification": verification,
-        "fingerprint": request["fingerprint"],
-    }
+    complete = completed_receipt(base, result=result, manifest=manifest,
+                                 verification=verification, cleanup=base["cleanup"],
+                                 return_code=base["return_code"])
     if recovery is not None:
         complete["recovery"] = recovery
     helpers.atomic_json(result_path, complete)

@@ -17,10 +17,10 @@ Produces four new TSVs and one new figure, all derived from
       bootstrap 95% CI across per-step points. Tests the
       frontier-synthesis claim delta_div in [0.13, 0.23].
 
-  platform_hybrid/experiments/results/group_size_isog_sizing.tsv
+  platform_hybrid/experiments/results/group_size_isog_sizing_v2.tsv
       Empirical Iso-G sizing: for each (Y_target, p_emp) find the
       smallest G satisfying GU(p_emp, G) >= Y_target. Contrast
-      G_min_empirical (from the measured ZVF) against G_min_iid
+      G_min_projected (from the measured ZVF) against G_min_iid
       (from the Bernoulli formula).
 
   platform_hybrid/experiments/results/group_size_convergence.tsv
@@ -200,7 +200,7 @@ def write_deltadiv_decomp_tsv(sweep: dict) -> Path:
 # ---------------------------------------------------------------------------
 
 def write_isog_sizing_tsv(sweep: dict) -> Path:
-    """Empirical Iso-G sizing from the measured p_emp distribution.
+    """Exploratory projected Iso-G sizing from the measured p_emp distribution.
 
     For each Y_target in {0.50, 0.60, 0.70, 0.80, 0.90}, find the smallest
     G satisfying GU(p, G) >= Y_target, both:
@@ -211,9 +211,9 @@ def write_isog_sizing_tsv(sweep: dict) -> Path:
     Sign convention: delta_div = ZVF_iid - ZVF_emp, so positive means
     the empirical sampler produces more contrast (anti-herd).
     """
-    out = RESULTS / "group_size_isog_sizing.tsv"
-    cols = ["Y_target", "p_bin", "n_in_bin", "G_min_iid", "G_min_empirical",
-            "delta_G", "p_emp_mean", "delta_div_bin",
+    out = RESULTS / "group_size_isog_sizing_v2.tsv"
+    cols = ["Y_target", "p_bin", "n_in_bin", "G_min_iid", "G_min_projected",
+            "G_min_observed", "sizing_kind", "delta_G", "p_emp_mean", "delta_div_bin",
             "iid_meets_target", "emp_meets_target", "interpretation"]
     rows_out = []
     # Pool per-step (p, zvf) pairs across all (G, seed)
@@ -270,7 +270,9 @@ def write_isog_sizing_tsv(sweep: dict) -> Path:
                 "p_bin": f"[{p_lo:.2f}, {p_hi:.2f}]",
                 "n_in_bin": n,
                 "G_min_iid": G_min_iid if G_min_iid is not None else ">128",
-                "G_min_empirical": G_min_emp if G_min_emp is not None else ">128",
+                "G_min_projected": G_min_emp if G_min_emp is not None else ">128",
+                "G_min_observed": min((g for g in sorted({g for g,_,_ in in_bin}) if np.mean([1-z for gg,_,z in in_bin if gg==g]) >= Y), default="unavailable"),
+                "sizing_kind": "pooled_residual_projection_not_measured",
                 "delta_G": (
                     (G_min_emp - G_min_iid)
                     if (G_min_emp is not None and G_min_iid is not None)
@@ -306,7 +308,7 @@ def write_convergence_tsv(sweep: dict) -> Path:
     """
     out = RESULTS / "group_size_convergence.tsv"
     cols = ["G", "seed", "threshold", "first_step", "reached",
-            "last_step_mean_reward"]
+            "last_step_mean_reward", "observation_horizon"]
     rows_out = []
     by_G_seed: dict[int, dict[int, list[dict]]] = {}
     for run in sweep["runs"]:
@@ -319,13 +321,14 @@ def write_convergence_tsv(sweep: dict) -> Path:
                 first_step = None
                 for t, mr in enumerate(mean_rewards):
                     if mr >= X:
-                        first_step = t
+                        first_step = int(steps[t]["step"])
                         break
                 rows_out.append({
                     "G": G, "seed": seed, "threshold": X,
                     "first_step": first_step if first_step is not None else "never",
                     "reached": "yes" if first_step is not None else "no",
                     "last_step_mean_reward": round(mean_rewards[-1], 4),
+                    "observation_horizon": int(steps[-1]["step"]),
                 })
     with open(out, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
@@ -445,7 +448,7 @@ def main() -> None:
                 dg_str = str(dg)
             print(
                 f"  Y={r['Y_target']} p_bin={r['p_bin']} p_emp={r['p_emp_mean']}  "
-                f"G_iid={r['G_min_iid']}  G_emp={r['G_min_empirical']}  "
+                f"G_iid={r['G_min_iid']}  G_emp={r['G_min_projected']}  "
                 f"delta_G={dg_str}"
             )
 

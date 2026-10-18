@@ -9,9 +9,9 @@ Issues and PRDs live as GitHub issues on `pes-llm-research/tinker-rl-lab` (via t
 Default canonical vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.
 
 <!-- hyperresearch:start -->
-## Research Base (hyperresearch) — Today is 2026-07-20
+## Research Base (hyperresearch) — last reviewed 2026-07-20
 
-**CLI path: `/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch`** — use this exact path for every hyperresearch command. It may not be on your system PATH.
+**CLI:** use `hyperresearch` on PATH, or set `HYPERRESEARCH_BIN` to a locally installed executable. Check `--version` and `--help` before use; no portable pinned version is established here.
 
 **Paths in this document are relative to your current working directory**, not to the CLI binary's location. Use `research/notes/final_report_<vault_tag>.md` (not a prefix with the binary path) when you save files.
 
@@ -23,7 +23,7 @@ This project uses hyperresearch as an agent-driven research knowledge base. The 
 
 Step 1 classifies the query into one of two tiers (`light` or `full`) and the rest of the pipeline scales accordingly — short bounded queries skip the depth investigations, critics, and patcher (~30-40 min); argumentative deep-research queries run all 16 steps with adversarial review (~1.5-2.5 hours).
 
-**Do NOT use WebFetch for source pages** — use `/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch fetch` instead. The skill files explain when to fetch vs. search.
+**Do NOT use WebFetch for source pages** — use `"${HYPERRESEARCH_BIN:-hyperresearch}" fetch` instead. The skill files explain when to fetch vs. search.
 
 ### What the skill files own
 
@@ -39,7 +39,7 @@ If you need to know how hyperresearch works, read the skill file. This document 
 
 ### Canonical research query
 
-In a normal run, the canonical research query is the user's verbatim prompt. In wrapped runs, if `research/prompt.txt` exists, that file is gospel and overrides any wrapping instructions. The pipeline persists the query as `research/query-<vault_tag>.md` with YAML frontmatter — this is the canonical query reference for all downstream layers. Wrapper requirements (save path, citation format, terminal sections) are a separate contract, captured in the scaffold — not pasted into the `## User Prompt (VERBATIM — gospel)` section.
+The current request defines the task. A prompt file supplies query content only when explicitly selected for this run; record its path and digest. Existing files do not override current task instructions. The pipeline persists the query as `research/query-<vault_tag>.md` with YAML frontmatter — this is the canonical query reference for all downstream layers. Wrapper requirements (save path, citation format, terminal sections) are a separate contract, captured in the scaffold — not pasted into the `## User Prompt (VERBATIM — gospel)` section.
 
 ### Academic APIs before web search
 
@@ -54,57 +54,57 @@ After the academic sweep, run web searches for context, news, non-academic angle
 
 ### PDFs fetch directly
 
-`/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch fetch` auto-detects PDF URLs (arXiv, NBER, SSRN, direct `.pdf` links) and extracts full text via pymupdf. Fetch them aggressively. Raw PDFs land in `research/raw/<note-id>.pdf` and the note's frontmatter links back via `raw_file:`.
+`"${HYPERRESEARCH_BIN:-hyperresearch}" fetch` auto-detects PDF URLs (arXiv, NBER, SSRN, direct `.pdf` links) and extracts full text via pymupdf. Fetch them aggressively. Raw PDFs land in `research/raw/<note-id>.pdf` and the note's frontmatter links back via `raw_file:`.
 
 ### Searching the vault
 
 ```bash
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch search "query" --json                # Full-text search
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch search "query" --tag ml --json       # Filter by tag / status / date / parent
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch search "query" --include-body --json # Full-body search, not just titles
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch note show <id> --json                # Read one note
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch note show <id1> <id2> <id3> --json   # Batch-read notes in one call
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch note list --json                     # List all notes with summaries
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch tags --json                          # Existing tag vocabulary
+"${HYPERRESEARCH_BIN:-hyperresearch}" search "query" --json                # Full-text search
+"${HYPERRESEARCH_BIN:-hyperresearch}" search "query" --tag ml --json       # Filter by tag / status / date / parent
+"${HYPERRESEARCH_BIN:-hyperresearch}" search "query" --include-body --json # Full-body search, not just titles
+"${HYPERRESEARCH_BIN:-hyperresearch}" note show <id> --json                # Read one note
+"${HYPERRESEARCH_BIN:-hyperresearch}" note show <id1> <id2> <id3> --json   # Batch-read notes in one call
+"${HYPERRESEARCH_BIN:-hyperresearch}" note list --json                     # List all notes with summaries
+"${HYPERRESEARCH_BIN:-hyperresearch}" tags --json                          # Existing tag vocabulary
 ```
 
 ### Images, screenshots, and assets
 
 ```bash
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch fetch "<url>" --tag <topic> --save-assets -j   # Saves screenshot + top images
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch assets list --note <note-id> --json            # Assets for a specific note
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch assets path <note-id> --type screenshot -j     # Get screenshot path (viewable with Read)
+"${HYPERRESEARCH_BIN:-hyperresearch}" fetch "<url>" --tag <topic> --save-assets -j   # Saves screenshot + top images
+"${HYPERRESEARCH_BIN:-hyperresearch}" assets list --note <note-id> --json            # Assets for a specific note
+"${HYPERRESEARCH_BIN:-hyperresearch}" assets path <note-id> --type screenshot -j     # Get screenshot path (viewable with Read)
 ```
 
 ### Authenticated crawling
 
-Login-gated content (LinkedIn, Twitter, paywalled news) needs a browser profile. Set up once via `/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch setup` or `crwl profiles`. Config in `.hyperresearch/config.toml` under `[web]`: `profile = "research"`, `magic = true`. LinkedIn / Twitter / Facebook / Instagram / TikTok auto-use a visible browser to avoid session kills.
+Login-gated content (LinkedIn, Twitter, paywalled news) needs a browser profile. Set up once via `"${HYPERRESEARCH_BIN:-hyperresearch}" setup` or `crwl profiles`. Config in `.hyperresearch/config.toml` under `[web]`: `profile = "research"`, `magic = true`. LinkedIn / Twitter / Facebook / Instagram / TikTok auto-use a visible browser to avoid session kills.
 
-If a fetch returns a login wall, tell the user to run `/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch setup` and create a login profile.
+If a fetch returns a login wall, tell the user to run `"${HYPERRESEARCH_BIN:-hyperresearch}" setup` and create a login profile.
 
 ### Curate after every session
 
 Every research session must end with a curation pass:
 
 ```bash
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch note list --status draft -j                                        # Find unprocessed notes
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch note show <id> -j                                                  # Read the content
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch note update <id> --summary "<specific summary>" --add-tag <t> -j   # Add summary + tags
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch lint -j                                                            # Find missing tags / summaries / broken links
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch repair -j                                                          # Auto-fix broken links, rebuild indexes
-/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch status -j                                                          # Overall vault health
+"${HYPERRESEARCH_BIN:-hyperresearch}" note list --status draft -j                                        # Find unprocessed notes
+"${HYPERRESEARCH_BIN:-hyperresearch}" note show <id> -j                                                  # Read the content
+"${HYPERRESEARCH_BIN:-hyperresearch}" note update <id> --summary "<specific summary>" --add-tag <t> -j   # Add summary + tags
+"${HYPERRESEARCH_BIN:-hyperresearch}" lint -j                                                            # Find missing tags / summaries / broken links
+"${HYPERRESEARCH_BIN:-hyperresearch}" repair -j                                                          # Auto-fix broken links, rebuild indexes
+"${HYPERRESEARCH_BIN:-hyperresearch}" status -j                                                          # Overall vault health
 ```
 
 Lifecycle: `draft` → `review` → `evergreen` (or `stale` → `deprecated` → `archive` for outdated material).
 
-Summaries must be specific — "Mamba achieves linear-time sequence modeling via selective state spaces" beats "Paper about Mamba". Reuse the existing tag vocabulary (`/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch tags -j`) rather than inventing new tags.
+Summaries must be specific — "Mamba achieves linear-time sequence modeling via selective state spaces" beats "Paper about Mamba". Reuse the existing tag vocabulary (`"${HYPERRESEARCH_BIN:-hyperresearch}" tags -j`) rather than inventing new tags.
 
 ### Key conventions
 
 - Notes live in `research/notes/` as markdown with YAML frontmatter
 - Link notes with `[[note-id]]` syntax
-- After editing `.md` files directly, run `/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch sync` to update the index
-- Run `/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch --help` for the full command list
+- After editing `.md` files directly, run `"${HYPERRESEARCH_BIN:-hyperresearch}" sync` to update the index
+- Run `"${HYPERRESEARCH_BIN:-hyperresearch}" --help` for the full command list
 <!-- hyperresearch:end -->
 
 ## Squad Collaboration

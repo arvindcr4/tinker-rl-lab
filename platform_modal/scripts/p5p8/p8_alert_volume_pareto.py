@@ -50,7 +50,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review20-v2"
 FIG = OUT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -126,7 +126,7 @@ def metrics_at_topk(scores: np.ndarray, y: np.ndarray, k_pct: float) -> dict:
         "fp": fp,
         "fn": fn,
         "n_pos": int(y.sum()),
-        "alert_rate": k / n,
+        "alert_rate": k / n, "n_rows": n,
         "precision": prec,
         "recall": rec,
         "f1": f1,
@@ -136,12 +136,12 @@ def metrics_at_topk(scores: np.ndarray, y: np.ndarray, k_pct: float) -> dict:
 def compute_dollar_at_k(m: dict, model_kind: str) -> tuple[float, float]:
     """$/dec and $/fraud_caught at this operating point (for canonical L=$100)."""
     L = 100.0
-    n = int(round(m["tp"] / max(m["alert_rate"], 1e-9)))
-    cost = m["fp"] * C_INV + m["fn"] * L
+    n = m["n_rows"]
+    cost = (m["tp"] + m["fp"]) * C_INV + m["fn"] * L
     c_sense = (C_SENSE if model_kind in ("24full", "4sensor") else 0.0) * n
     total = cost + c_sense
     per_dec = total / n
-    per_caught = total / max(m["tp"], 1)
+    per_caught = total / m["tp"] if m["tp"] else None
     return per_dec, per_caught
 
 
@@ -311,7 +311,7 @@ def main() -> None:
 def _dominance_switch(boot_df: pd.DataFrame) -> dict:
     """Find the K at which 24full starts strictly dominating 20raw on recall gap."""
     sub = boot_df[(boot_df["model_a"] == "24full") & (boot_df["model_b"] == "20raw")].sort_values("K_pct")
-    first_strictly_dominant = sub[sub["ci_excludes_zero"] == "YES"]
+    first_strictly_dominant = sub[sub["ci_lo"] > 0]
     if len(first_strictly_dominant) == 0:
         return {"24full_strictly_dominates_20raw_at_no_K": True}
     first_row = first_strictly_dominant.iloc[0]

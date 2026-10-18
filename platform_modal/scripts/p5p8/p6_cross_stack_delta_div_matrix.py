@@ -43,9 +43,11 @@ import pathlib
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
-WORKTREE = HERE.parent.parent
+sys.path.append(str(HERE.parent))
+from _paths import REPO_ROOT
+WORKTREE = REPO_ROOT / "platform_hybrid"
 P5P8 = WORKTREE / "experiments" / "results" / "p5p8"
-P5P8.mkdir(parents=True, exist_ok=True)
+OUTPUT = P5P8 / "review17_v2"
 
 METHODS = ["grpo", "aero", "areal", "gift"]
 PAIRS = [(a, b) for i, a in enumerate(METHODS) for b in METHODS[i + 1:]]
@@ -57,9 +59,9 @@ AUDIT_SOURCE = "platform_modal/scripts/p5p8/p6_cross_stack_delta_div_matrix.py"
 
 INPUT_TSV = P5P8 / "p6_zvf_antiherding_per_step.tsv"
 SUMMARY_TSV = P5P8 / "p6_zvf_antiherding_summary.tsv"
-OUTPUT_TSV = P5P8 / "p6_cross_stack_delta_div_matrix.tsv"
-OUTPUT_JSON = P5P8 / "p6_cross_stack_delta_div_matrix.json"
-RANK_JSON = P5P8 / "p6_cross_stack_delta_div_matrix_summary.json"
+OUTPUT_TSV = OUTPUT / "p6_cross_stack_delta_div_matrix.tsv"
+OUTPUT_JSON = OUTPUT / "p6_cross_stack_delta_div_matrix.json"
+RANK_JSON = OUTPUT / "p6_cross_stack_delta_div_matrix_summary.json"
 
 
 def read_per_step_tsv(path):
@@ -91,8 +93,8 @@ def paired_step_bootstrap(values_a, values_b, n_boot, seed):
     import random
     rng = random.Random(seed)
     n = len(values_a)
-    if n == 0 or len(values_b) != n:
-        return None
+    if n < 2 or len(values_b) != n or not all(math.isfinite(x) for x in values_a + values_b):
+        raise ValueError("Invalid paired observations")
     diffs = [a - b for a, b in zip(values_a, values_b)]
     mean_a = sum(values_a) / n
     mean_b = sum(values_b) / n
@@ -156,6 +158,7 @@ def rank_methods(summary):
 
 
 def main():
+    OUTPUT.mkdir(parents=True, exist_ok=True)
     per_step = read_per_step_tsv(INPUT_TSV)
     summary = load_summary()
 
@@ -165,11 +168,12 @@ def main():
     significant_pairs = {"delta_div": [], "y_obs": [], "zvf_obs": []}
     for (a, b) in PAIRS:
         if a not in per_step or b not in per_step:
-            continue
+            raise ValueError("Missing required method")
         sa = per_step[a]
         sb = per_step[b]
-        if len(sa) != len(sb):
-            continue
+        if ([r["step"] for r in sa] != [r["step"] for r in sb]
+                or len({r["step"] for r in sa}) != len(sa)):
+            raise ValueError("Incomplete or duplicate step pairing")
         record = {"a": a, "b": b, "n_steps": len(sa)}
         for axis in ("delta_div", "y_obs", "zvf_obs"):
             res = paired_step_bootstrap(
@@ -241,6 +245,8 @@ def main():
         "audit_date": AUDIT_DATE,
         "audit_source": AUDIT_SOURCE,
         "panel": "n2_same_stack_40step",
+        "inference_scope": "exploratory conditional within-run; n_independent_runs=1",
+        "dependent_axes": "y_obs = 1 - zvf_obs; not independent corroboration",
         "n_steps_per_method": 40,
         "G": 8,
         "ci_level": CI_LEVEL,

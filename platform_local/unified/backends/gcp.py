@@ -16,6 +16,7 @@ backend.
 from __future__ import annotations
 
 from platform_local.unified.backends.base import Backend, LaunchPlan
+from platform_local.unified.canonical import require_supported_overrides
 
 _FROZEN_LAUNCHER = "zvf-program/next-submission/run_gcp_preflight.py"
 _UNIFIED_LAUNCHER = "platform_gcp/run_unified_dispatch.py"
@@ -26,20 +27,40 @@ class GCPBackend(Backend):
 
     def plan(self, framework: str, spec) -> LaunchPlan:
         if framework == "trl":
-            command = (
-                f"python {_FROZEN_LAUNCHER} --task {spec.task} --arm grpo_g8 "
-                f"--seed {spec.seed} --wait"
-            )
+            require_supported_overrides(spec, supported=("task", "seed"))
+            command = [
+                "python",
+                _FROZEN_LAUNCHER,
+                "--task",
+                spec.task,
+                "--arm",
+                "grpo_g8",
+                "--seed",
+                str(spec.seed),
+                "--wait",
+            ]
             driver_file = _FROZEN_LAUNCHER
             notes = (
                 "single A100 Spot (a2-highgpu-1g); validated TRL preflight "
                 "(frozen, hash-anchored) with HF/W&B/GCS receipts"
             )
         else:
-            command = (
-                f"python {_UNIFIED_LAUNCHER} --framework {framework} "
-                f"--task {spec.task} --seed {spec.seed} --wait"
-            )
+            require_supported_overrides(spec, supported=("model", "algorithm", "task", "seed"))
+            command = [
+                "python",
+                _UNIFIED_LAUNCHER,
+                "--framework",
+                framework,
+                "--model",
+                spec.model,
+                "--algorithm",
+                spec.algorithm,
+                "--task",
+                spec.task,
+                "--seed",
+                str(spec.seed),
+                "--wait",
+            ]
             driver_file = _UNIFIED_LAUNCHER
             notes = (
                 f"single A100 Spot (a2-highgpu-1g); non-frozen launcher runs "
@@ -48,7 +69,10 @@ class GCPBackend(Backend):
         return LaunchPlan(
             backend="gcp",
             framework=framework,
-            command=command,
+            argv=command,
+            blocked_reason="Framework lacks a validated scientific training receipt adapter"
+            if framework in ("skyrl", "verl")
+            else "",
             driver_file=driver_file,
             output=(
                 "HF repo arvindcr4/tinker-rl-next-preflight-gcp-* + W&B "

@@ -50,7 +50,7 @@ from _p5p7_common import bernoulli_z, c_unified_c4, is_boundary  # noqa: E402
 WORKTREE = REPO_ROOT
 TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 HELDOUT = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
-OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8/corrected-review19-v2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---- Controller parameters (matching iter-147 source) ----
@@ -111,11 +111,12 @@ CONTROLLERS = [
 # Bootstrap primitives
 # ---------------------------------------------------------------------------
 def lcg_boot_indices(n: int, rng_state: list[int]) -> list[int]:
-    out = []
-    for _ in range(n):
-        rng_state[0] = (rng_state[0] * 1103515245 + 12345) & 0x7FFFFFFF
-        out.append(rng_state[0] % n)
-    return out
+    """Compatibility interface backed by a standard RNG, not LCG low bits."""
+    import random
+    if not isinstance(rng_state[0], random.Random):
+        rng_state[0] = random.Random(rng_state[0])
+    return [rng_state[0].randrange(n) for _ in range(n)]
+
 
 
 def mean(xs: list[float]) -> float:
@@ -253,7 +254,8 @@ def main():
             mag_per_cost = [cm / max(1e-9, cost) for cm, cost in zip(cms, costs)]
 
             cost_mu, cost_lo, cost_hi = bootstrap_ci(costs, B, SEED)
-            ret_mu, ret_lo, ret_hi = bootstrap_ci(retention, B, SEED + 1)
+            from _review_replay import ratio_bootstrap
+            ret_mu, ret_lo, ret_hi = ratio_bootstrap(cms, cm_base, B, SEED + 1)
             mpc_mu, mpc_lo, mpc_hi = bootstrap_ci(mag_per_cost, B, SEED + 2)
 
             pm_rows.append(
@@ -382,7 +384,7 @@ def main():
             ret_x = [cx / max(1e-9, b) for cx, b in zip(cm_x, cm_base)]
             d_ret = [a - b for a, b in zip(ret_c4, ret_x)]
             d_cost = [a - b for a, b in zip(cost_c4, cost_x)]
-            ret_mu, ret_lo, ret_hi = paired_bootstrap_ci(d_ret, B, SEED + 20)
+            ret_mu, ret_lo, ret_hi = ratio_bootstrap([a-b for a,b in zip(cm_c4, cm_x)], cm_base, B, SEED + 20)
             cost_mu, cost_lo, cost_hi = paired_bootstrap_ci(d_cost, B, SEED + 30)
             pb_rows.append(
                 {

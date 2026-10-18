@@ -44,11 +44,10 @@ import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
 from _analysis_common import saturation, write_rows_tsv as _write_tsv, ols
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-FIG_DIR.mkdir(exist_ok=True)
+RESULTS_DIR = REPO / "experiments" / "results" / "review26_v2"
+FIG_DIR = REPO / "figures" / "review26_v2"
 
 MODELS: dict[str, tuple[str, float, str]] = {
     # name               : (trace_file,                       params_B, family)
@@ -183,6 +182,8 @@ def trace_stats(rt: list[float]) -> dict:
 
 
 def main() -> None:
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    FIG_DIR.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(SEED)
 
     # ---------- 1. Load traces ----------
@@ -531,64 +532,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-    # Iter 129 follow-on: piecewise saturate+collapse model + LOOCV + Bayes
-    # factor.  We invoke the standalone iter129 analysis as a subprocess so
-    # the canonical script regenerates both layers of outputs (and adds
-    # the iter129 columns to scaling_law_fits.tsv).
-    import subprocess as _sp
-    import sys as _sys
-    _rc = _sp.run(
-        [_sys.executable, str(Path(__file__).resolve().parent / "scaling_law_iter129.py")],
-        check=False, capture_output=True, text=True,
-    )
-    if _rc.returncode != 0:
-        print(_rc.stdout)
-        print(_rc.stderr)
-        raise SystemExit(_rc.returncode)
-    print(_rc.stdout.splitlines()[-1] if _rc.stdout else "iter129 ok")
-
-    # Append the iter129 piecewise columns to the canonical TSV so the
-    # canonical 2-param and the iter129 3-param fits live side-by-side.
-    try:
-        import csv as _csv
-        _pw_path = RESULTS_DIR / "scaling_law_iter129_piecewise_fit.tsv"
-        if _pw_path.exists():
-            with _pw_path.open() as _pf:
-                _rows = list(_csv.DictReader(_pf, delimiter="\t"))
-            _extra = {r["model"]: r for r in _rows}
-            _fits_path = RESULTS_DIR / "scaling_law_fits.tsv"
-            with _fits_path.open() as _ff:
-                _lines = _ff.read().splitlines()
-            _header = _lines[0].split("\t")
-            _extra_cols = ["t_peak_pw", "gamma_pw", "R_max_pw",
-                           "delta_aicc_pw_vs_sat", "F_p_pw_vs_sat"]
-            for c in _extra_cols:
-                if c not in _header:
-                    _header.append(c)
-            _out = ["\t".join(_header)]
-            for _line in _lines[1:]:
-                _cells = _line.split("\t")
-                _name = _cells[0]
-                _rec = _extra.get(_name)
-                if _rec is None:
-                    _cells.extend([""] * len(_extra_cols))
-                else:
-                    _cells.append(_rec.get("t_peak_pw", ""))
-                    _cells.append(_rec.get("gamma_pw", ""))
-                    _cells.append(_rec.get("R_max_pw", ""))
-                    _cells.append(_rec.get("delta_aicc", ""))
-                    _cells.append(_rec.get("F_p", ""))
-                _out.append("\t".join(_cells))
-            with _fits_path.open("w") as _of:
-                _of.write("\n".join(_out) + "\n")
-            print(f"appended iter129 columns to {_fits_path}")
-    except Exception as _exc:  # noqa: BLE001
-        print(f"could not append iter129 columns: {_exc}")
-    # Iter 129 follow-on: piecewise saturate+collapse model + LOOCV + Bayes factor.
-    # See platform_modal/scripts/scaling_law_iter129.py for the full analysis.  We invoke it
-    # here as a thin wrapper so the canonical script regenerates both outputs.
-    try:
-        from scaling_law_iter129 import main as iter129_main
-        iter129_main()
-    except Exception as exc:  # noqa: BLE001
-        print(f"iter129 wrapper failed: {exc}; run platform_modal/scripts/scaling_law_iter129.py manually.")

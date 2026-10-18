@@ -258,41 +258,26 @@ def _fit_log_log(points: list[tuple[float, float, float]]) -> dict:
     return {"a": beta[0], "b": beta[1], "c": beta[2], "R2": R2}
 
 
-def _sample_iter127_points() -> list[tuple[float, float, float]]:
-    """Construct a deterministic synthetic (G, T, acc) lattice matching iter127's
-    published joint-fit coefficients (a=1.669, b=-0.141, c=-0.293)."""
-    import random
-    rng = random.Random(20260704)
+def load_measured_points(path: Path) -> list[tuple[float, float, float]]:
+    """Explicit measured-cell input only; aggregate coefficient tables are not data."""
+    rows = _read_tsv(path)
     points = []
-    Gs = [4, 8, 16, 32, 64]
-    Ts = [1, 4, 16, 64]  # in millions
-    for g in Gs:
-        for t in Ts:
-            x = math.log10(g)
-            y = math.log10(t * 1_000_000)
-            mu = 1.669 + (-0.141) * x + (-0.293) * y
-            acc = 1.0 - 10 ** (mu + rng.gauss(0, 0.10))
-            acc = max(0.0, min(1.0, acc))
-            points.append((float(g), float(t * 1_000_000), acc))
+    for row in rows:
+        g, t, accuracy = (float(row[key]) for key in ("G", "T", "accuracy"))
+        if not all(math.isfinite(v) for v in (g, t, accuracy)) or g <= 0 or t <= 0 or not 0 <= accuracy < 1:
+            raise ValueError("invalid measured G/T/accuracy cell")
+        points.append((g, t, accuracy))
+    if len(points) < 4:
+        raise ValueError("INSUFFICIENT_DATA: at least four measured cells required")
     return points
 
 
-def _sample_iter135_points() -> list[tuple[float, float, float]]:
-    """Synthetic iter135 cells (held-out slice). Same generation law but different RNG seed."""
-    import random
-    rng = random.Random(20260705)
-    points = []
-    Gs = [2, 8, 32]
-    Ts = [2, 8, 32]
-    for g in Gs:
-        for t in Ts:
-            x = math.log10(g)
-            y = math.log10(t * 1_000_000)
-            mu = 1.669 + (-0.141) * x + (-0.293) * y
-            acc = 1.0 - 10 ** (mu + rng.gauss(0, 0.12))
-            acc = max(0.0, min(1.0, acc))
-            points.append((float(g), float(t * 1_000_000), acc))
-    return points
+def _sample_iter127_points():
+    raise ValueError("MISSING_MEASURED_DATA: pass measured iter127 cells; synthetic reproduction disabled")
+
+
+def _sample_iter135_points():
+    raise ValueError("MISSING_MEASURED_DATA: independent iter135 holdout and frozen prediction recipe required")
 
 
 def verify_pillar3_recipe(recipe: dict, points: list[tuple[float, float, float]], slice_label: str) -> dict:

@@ -29,13 +29,13 @@ question from two complementary angles:
         reported; the model with the lowest median MAFE wins.
 
 Outputs:
-  platform_hybrid/experiments/results/scaling_law_iter89_loocv.tsv
-  platform_hybrid/experiments/results/scaling_law_iter89_bootstrap.tsv
-  platform_hybrid/experiments/results/scaling_law_iter89_bic.tsv
-  platform_hybrid/experiments/results/scaling_law_iter89_kfold_forecast.tsv
-  platform_hybrid/experiments/results/scaling_law_iter89_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter89_loocv_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter89_bootstrap_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter89_bic_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter89_kfold_forecast_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter89_meta_v3.json
   figures/scaling_law_iter89.{pdf,png}
-  paper/sections/scaling_law_iter89.tex
+  paper/sections/scaling_law_iter89_v3.tex
 
 Citations (verified):
   - nimmaturi2025predictive (arXiv:2507.18014) -- 3-phase template.
@@ -48,6 +48,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+from _review27_models import best_candidate
 from pathlib import Path
 
 import matplotlib
@@ -56,13 +57,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-FIG_DIR.mkdir(exist_ok=True)
-PAPER_FIG = REPO / "paper" / "figures"
-PAPER_FIG.mkdir(exist_ok=True)
+RESULTS_DIR = REPO / "experiments" / "results" / "review27_v3"
+FIG_DIR = REPO / "figures" / "review27_v3"
+PAPER_FIG = REPO / "paper" / "figures" / "review27_v3"
 
 # 12-anchor pool (kept identical to iter81/85 for comparability).
 MODELS: dict[str, tuple[str, float, str]] = {
@@ -93,7 +92,7 @@ def fit_constant(y: np.ndarray) -> dict:
     n = len(y)
     mu = float(np.mean(y))
     rss = float(np.sum((y - mu) ** 2))
-    return {"name": "constant", "k": 1, "rss": rss, "pred": np.full(n, mu),
+    return {"name": "constant", "k": 2, "rss": rss, "pred": np.full(n, mu),
             "params": {"mu": mu}}
 
 
@@ -109,187 +108,104 @@ def fit_1seg(y: np.ndarray) -> dict:
 
 
 def fit_saturation(y: np.ndarray) -> dict:
-    """R_max*(1 - exp(-lambda*t)) fit (k=2).  Uses closed-form regression
-    in the linearised domain then a small grid refinement for lambda.
-    """
-    n = len(y)
-    if n < 3:
-        mu = float(np.mean(y))
-        return {"name": "saturation", "k": 2, "rss": float(np.sum((y - mu) ** 2)),
-                "pred": np.full(n, mu), "params": {"R_max": mu, "lam": 0.01}}
-
-    # Linearised regression: y ~ 1 - (1 - y/R_max)*exp(-lam t).  Without
-    # a fixed R_max this is awkward; use a coarse R_max grid and for each
-    # R_max do a linear regression on log(1 - y/R_max).
-    x = np.arange(n, dtype=float)
-    best = (math.inf, 1.0, 0.01)
-    for r_max in np.linspace(0.5, 1.5, 21):
-        # protect against |y| >= r_max
-        with np.errstate(divide="ignore", invalid="ignore"):
-            mask = (1 - y / r_max) > 0
-        if mask.sum() < 4:
-            continue
-        ratio = 1 - y[mask] / r_max
-        # OLS for log(ratio) = -lam * t + c
-        xt = x[mask]
-        z = np.log(np.clip(ratio, 1e-6, None))
-        if not np.all(np.isfinite(z)):
-            continue
-        sl, ic = np.polyfit(xt, z, 1)
-        lam = max(1e-3, -sl)
-        pred = r_max * (1 - np.exp(-lam * x))
-        rss = float(np.sum((y - pred) ** 2))
-        if rss < best[0]:
-            best = (rss, r_max, lam)
-    rss, r_max, lam = best
-    pred = r_max * (1 - np.exp(-lam * x))
-    return {"name": "saturation", "k": 2, "rss": float(np.sum((y - pred) ** 2)),
-            "pred": pred, "params": {"R_max": float(r_max), "lam": float(lam)}}
+    """Original-scale constrained least squares with the exact dispatcher predictor."""
+    return fit_family('saturation',y)
 
 
-def fit_3seg(y: np.ndarray) -> dict:
-    """Iter85 greedy 3-segment piecewise-linear fit (k=5 free: 3 slopes + 2 CPs)."""
-    from scaling_law_iter85 import fit_piecewise_linear
-
-    n = len(y)
-    sse, cps, sl, ic, lens = fit_piecewise_linear(y, 3)
-    if len(sl) != 3:
-        return fit_1seg(y) | {"name": "3seg_failed"}
-    # Reconstruct prediction
-    pred = np.zeros(n)
-    segments = [(0, cps[0]), (cps[0], cps[1]), (cps[1], n)] if len(cps) == 2 else []
-    if not segments:
-        return fit_1seg(y) | {"name": "3seg_failed"}
-    for (a, b), s, i in zip(segments, sl, ic):
-        x = np.arange(a, b, dtype=float)
-        pred[a:b] = s * x + i
-    return {"name": "3seg", "k": 8,  # 3*(slope+intercept) + 2 CPs + sigma
-            "rss": float(sse), "pred": pred,
-            "params": {"cp1": int(cps[0]), "cp2": int(cps[1]),
-                       "slope1": float(sl[0]), "slope2": float(sl[1]), "slope3": float(sl[2])}}
+def fit_3seg(y: np.ndarray, x=None) -> dict:
+    """Continuous hinge regression; search knots in original time coordinates."""
+    from itertools import combinations
+    x = np.arange(len(y), dtype=float) if x is None else np.asarray(x, float)
+    best = None
+    for i, j in combinations(range(2, len(y)-1), 2):
+        if j-i < 2: continue
+        c1, c2 = x[i], x[j]
+        A = np.column_stack([np.ones(len(x)), x, np.maximum(x-c1,0), np.maximum(x-c2,0)])
+        coef, _, rank, _ = np.linalg.lstsq(A, y, rcond=None)
+        if rank < 4: continue
+        pred=A@coef; rss=float(np.sum((y-pred)**2))
+        if best is None or rss < best['rss']:
+            a,b,d,e=coef
+            best={'name':'3seg', 'k':7, 'rss':rss, 'pred':pred,
+                  'params':{'cp1':float(c1),'cp2':float(c2),
+                            'slope1':float(b),'slope2':float(b+d),'slope3':float(b+d+e),
+                            'intercept1':float(a),'intercept2':float(a-d*c1),
+                            'intercept3':float(a-d*c1-e*c2)}}
+    if best is None: raise ValueError('insufficient observations for three segments')
+    return best
 
 
 FAMILIES = ["constant", "1seg_ols", "saturation", "3seg"]
 
 
-def fit_family(name: str, y: np.ndarray) -> dict:
-    if name == "constant":
-        return fit_constant(y)
-    if name == "1seg_ols":
-        return fit_1seg(y)
-    if name == "saturation":
-        return fit_saturation(y)
-    if name == "3seg":
-        return fit_3seg(y)
+def fit_family(name: str, y: np.ndarray, x=None) -> dict:
+    x=np.arange(len(y),dtype=float) if x is None else np.asarray(x,float)
+    if len(y)<2 or not np.all(np.isfinite(y)): raise ValueError('invalid trace')
+    if name=='constant': return fit_constant(y)
+    if name=='3seg': return fit_3seg(y,x)
+    if name=='1seg_ols':
+        sl,ic=np.polyfit(x,y,1); pred=sl*x+ic
+        return dict(name=name,k=3,rss=float(np.sum((y-pred)**2)),pred=pred,
+                    params={'slope':float(sl),'intercept':float(ic)})
+    if name=='saturation':
+        from scipy.optimize import curve_fit
+        pars,_=curve_fit(lambda t,r,l:r*(-np.expm1(-l*t)),x,y,
+                         p0=(max(float(np.max(y)),.1),.1),bounds=([0,1e-9],[1.5,100]),maxfev=10000)
+        pred=pars[0]*(-np.expm1(-pars[1]*x))
+        return dict(name=name,k=3,rss=float(np.sum((y-pred)**2)),pred=pred,
+                    params={'R_max':float(pars[0]),'lam':float(pars[1])})
     raise ValueError(name)
 
 
 # ---------------------------------------------------------------------------
 # information criteria
 # ---------------------------------------------------------------------------
-def aic_bic(rss: float, n: int, k: int) -> tuple[float, float]:
-    if n <= 0 or rss <= 0:
-        return float("nan"), float("nan")
-    aic = n * math.log(rss / n) + 2 * k
-    bic = n * math.log(rss / n) + k * math.log(n)
-    return float(aic), float(bic)
+def aic_bic(rss: float, n: int, k: int) -> tuple[float,float]:
+    from _review27_models import information_criteria
+    return information_criteria(rss,n,k)
 
 
 # ---------------------------------------------------------------------------
 # LOOCV (Bishop PRML 4.3 / Efron 1983)
 # ---------------------------------------------------------------------------
 def loocv(y: np.ndarray, family: str) -> dict:
-    """Leave-one-out CV: leave each step out in turn, refit, predict.
-    Returns CV-RMSE and CV-MAE.
-    """
-    n = len(y)
-    sq, ab = 0.0, 0.0
-    for i in range(n):
-        mask = np.ones(n, dtype=bool)
-        mask[i] = False
-        fit = fit_family(family, y[mask])
-        try:
-            p = float(fit["pred"][i]) if i == 0 else _predict_at(fit, i)
-            # if the family doesn't expose a closed-form predictor, fall
-            # back to using the in-sample position from the held-in subset
-            if not math.isfinite(p):
-                p = float(np.mean(y[mask]))
-        except Exception:
-            p = float(np.mean(y[mask]))
-        err = float(y[i]) - p
-        sq += err * err
-        ab += abs(err)
-    return {"cv_rmse": math.sqrt(sq / n), "cv_mae": ab / n}
+    errors=[]; x=np.arange(len(y),dtype=float)
+    for i in range(len(y)):
+        mask=np.arange(len(y))!=i
+        try: errors.append(float(y[i])-_predict_at(fit_family(family,y[mask],x[mask]),x[i]))
+        except (ValueError, RuntimeError): pass
+    return {'cv_rmse':float(np.sqrt(np.mean(np.square(errors)))) if len(errors)==len(y) else float('nan'),
+            'cv_mae':float(np.mean(np.abs(errors))) if len(errors)==len(y) else float('nan'),
+            'n_attempted':len(y),'n_success':len(errors)}
 
 
-def _predict_at(fit: dict, idx: int) -> float:
-    """Evaluate a fitted family at held-out step idx."""
-    n = len(fit["pred"]) + 1  # the dropped step was inserted somewhere
-    name = fit["name"]
-    if name == "constant":
-        return fit["params"]["mu"]
-    if name == "1seg_ols":
-        return fit["params"]["slope"] * idx + fit["params"]["intercept"]
-    if name == "saturation":
-        return fit["params"]["R_max"] * (1 - math.exp(-fit["params"]["lam"] * idx))
-    if name == "3seg":
-        cp1 = fit["params"]["cp1"]
-        cp2 = fit["params"]["cp2"]
-        # NB: cps were fit on n-1 points; an idx that landed *before* the new
-        # gap shouldn't appear (iter85 greedy fit) but for safety clamp.
-        if idx < cp1:
-            return fit["params"]["slope1"] * idx + 0.0
-        if idx < cp2:
-            return fit["params"]["slope2"] * idx + 0.0
-        return fit["params"]["slope3"] * idx + 0.0
-    return float("nan")
+def _predict_at(fit: dict, idx: float) -> float:
+    p=fit['params']; name=fit['name']
+    if name=='constant': return p['mu']
+    if name=='1seg_ols': return p['slope']*idx+p['intercept']
+    if name=='saturation': return p['R_max']*(-math.expm1(-p['lam']*idx))
+    if name=='3seg':
+        s=1 if idx<p['cp1'] else 2 if idx<p['cp2'] else 3
+        return p[f'slope{s}']*idx+p[f'intercept{s}']
+    raise ValueError(name)
 
 
 # ---------------------------------------------------------------------------
 # k-fold forecast on last k steps
 # ---------------------------------------------------------------------------
 def kfold_forecast(y: np.ndarray, k_hold: int = 4) -> dict:
-    """Fit each family on the first (n-k_hold) steps; predict y[k_hold-4..n-1].
-
-    Returns dict[family] = {'forecast': np.ndarray, 'mae': float, 'rmse': float}.
-    """
-    n = len(y)
-    train = y[: n - k_hold]
-    test = y[n - k_hold:]
-    out = {}
+    if not 0<k_hold<len(y): raise ValueError('invalid forecast horizon')
+    train=y[:-k_hold]; test=y[-k_hold:]; out={}
     for fam in FAMILIES:
-        fit = fit_family(fam, train)
-        idxs = np.arange(n - k_hold, n)
-        if fam == "constant":
-            preds = np.full(k_hold, fit["params"]["mu"])
-        elif fam == "1seg_ols":
-            s = fit["params"]["slope"]
-            i = fit["params"]["intercept"]
-            preds = s * idxs + i
-        elif fam == "saturation":
-            preds = fit["params"]["R_max"] * (1 - np.exp(-fit["params"]["lam"] * idxs))
-        elif fam == "3seg":
-            cp1 = fit["params"]["cp1"]
-            cp2 = fit["params"]["cp2"]
-            preds = np.zeros(k_hold)
-            for j, idx in enumerate(idxs):
-                if idx < cp1:
-                    preds[j] = fit["params"]["slope1"] * idx
-                elif idx < cp2:
-                    preds[j] = fit["params"]["slope2"] * idx
-                else:
-                    preds[j] = fit["params"]["slope3"] * idx
-        else:
-            preds = np.full(k_hold, float(np.mean(train)))
-        # clip to reward bounds [0,1] (GRPO is sparse-binary reward trace)
-        preds = np.clip(preds, 0.0, 1.0)
-        err = test - preds
-        out[fam] = {
-            "mae": float(np.mean(np.abs(err))),
-            "rmse": float(np.sqrt(np.mean(err * err))),
-            "preds": [round(float(p), 4) for p in preds],
-            "test": [round(float(t), 4) for t in test],
-        }
+        try:
+            fit=fit_family(fam,train)
+            preds=np.array([_predict_at(fit,i) for i in range(len(train),len(y))])
+            status='ok'
+        except (ValueError,RuntimeError):
+            preds=np.full(k_hold,np.nan); status='fit_failed'
+        err=test-preds
+        out[fam]={'mae':float(np.mean(np.abs(err))),'rmse':float(np.sqrt(np.mean(err**2))),
+                  'preds':preds.tolist(),'test':test.tolist(),'status':status}
     return out
 
 
@@ -308,11 +224,23 @@ def bootstrap_3seg(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
     canon_orders = 0
     spurt_largest_count = 0
     failed = 0
+    try:
+        fitted = fit_3seg(y)['pred']
+    except ValueError:
+        fitted = np.asarray(y,float).copy()  # all short refits report failure below
+    residual = y-fitted
+    residual -= residual.mean()
+    rng = np.random.default_rng(42)
+    block = max(2, int(round(n**(1/3))))
     for _ in range(n_boot):
-        idx = RNG.integers(0, n, size=n)
-        boot = y[idx]
+        starts = rng.integers(0,n,size=math.ceil(n/block))
+        idx = np.concatenate([(s+np.arange(block))%n for s in starts])[:n]
+        boot = fitted + residual[idx]
         try:
-            _, cps, sls, _, _ = fit_piecewise_linear(boot, 3)
+            fit = fit_3seg(boot)
+            pp = fit['params']
+            cps = [pp['cp1'],pp['cp2']]
+            sls = [pp['slope1'],pp['slope2'],pp['slope3']]
             if len(cps) != 2 or len(sls) != 3:
                 failed += 1
                 continue
@@ -321,14 +249,9 @@ def bootstrap_3seg(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
             sl1s.append(float(sls[0]))
             sl2s.append(float(sls[1]))
             sl3s.append(float(sls[2]))
-            abs3 = [abs(s) for s in sls]
-            spurt_index = int(np.argmax(abs3))
-            creep_index = int(np.argmin(abs3))
-            level_index = next(i for i in range(3) if i not in (creep_index, spurt_index))
-            if creep_index < spurt_index < level_index:
-                canon_orders += 1
-            if abs(sls[1]) >= abs(sls[0]) and abs(sls[1]) >= abs(sls[2]):
-                spurt_largest_count += 1
+            from _review27_models import signed_phases
+            if signed_phases(sls): canon_orders += 1
+            if sls[1] > max(sls[0],sls[2]) and sls[1] > 0: spurt_largest_count += 1
         except Exception:
             failed += 1
     n_eff = len(cp1s)
@@ -348,8 +271,8 @@ def bootstrap_3seg(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
         "slope1_sd": float(np.std(sl1s)) if sl1s else float("nan"),
         "slope2_sd": float(np.std(sl2s)) if sl2s else float("nan"),
         "slope3_sd": float(np.std(sl3s)) if sl3s else float("nan"),
-        "canon_order_rate": float(canon_orders / max(n_eff, 1)),
-        "spurt_largest_rate": float(spurt_largest_count / max(n_eff, 1)),
+        "canon_order_rate": float(canon_orders / n_eff) if n_eff else float("nan"),
+        "spurt_largest_rate": float(spurt_largest_count / n_eff) if n_eff else float("nan"),
     }
     return out
 
@@ -392,8 +315,8 @@ def main() -> None:
             a, b = aic_bic(f["rss"], n, f["k"])
             aics[fam] = a
             bics[fam] = b
-        best_aic = min(aics.values())
-        best_bic = min(bics.values())
+        best_aic = aics.get(best_candidate(aics), float("nan"))
+        best_bic = bics.get(best_candidate(bics), float("nan"))
         bic_rows.append({
             "model": model_name, "model_short": short, "params_B": params_b,
             "n_steps": n,
@@ -409,8 +332,8 @@ def main() -> None:
             "bic_1seg": round(bics["1seg_ols"], 3),
             "bic_sat": round(bics["saturation"], 3),
             "bic_3seg": round(bics["3seg"], 3),
-            "best_aic_family": min(aics, key=aics.get),
-            "best_bic_family": min(bics, key=bics.get),
+            "best_aic_family": best_candidate(aics),
+            "best_bic_family": best_candidate(bics),
             "delta_aic_3v1": round(aics["3seg"] - aics["1seg_ols"], 3),
             "delta_aic_3v0": round(aics["3seg"] - aics["constant"], 3),
             "delta_bic_3v1": round(bics["3seg"] - bics["1seg_ols"], 3),
@@ -474,14 +397,14 @@ def main() -> None:
 
     # ----- write outputs -----
     keys = bic_rows[0].keys() if bic_rows else []
-    with open(RESULTS_DIR / "scaling_law_iter89_bic.tsv", "w", newline="") as f:
+    with open(RESULTS_DIR / "scaling_law_iter89_bic_v3.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=keys, delimiter="\t")
         w.writeheader()
         for r in bic_rows:
             w.writerow(r)
 
     keys = loocv_rows[0].keys() if loocv_rows else ["model", "note"]
-    with open(RESULTS_DIR / "scaling_law_iter89_loocv.tsv", "w", newline="") as f:
+    with open(RESULTS_DIR / "scaling_law_iter89_loocv_v3.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=keys, delimiter="\t")
         w.writeheader()
         for r in loocv_rows:
@@ -490,14 +413,14 @@ def main() -> None:
             f.write("model\tnote\nEMPTY\tno anchor with n>=8\n")
 
     keys = bs_rows[0].keys() if bs_rows else []
-    with open(RESULTS_DIR / "scaling_law_iter89_bootstrap.tsv", "w", newline="") as f:
+    with open(RESULTS_DIR / "scaling_law_iter89_bootstrap_v3.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=keys, delimiter="\t")
         w.writeheader()
         for r in bs_rows:
             w.writerow(r)
 
     keys = kfold_rows[0].keys() if kfold_rows else ["model", "note"]
-    with open(RESULTS_DIR / "scaling_law_iter89_kfold_forecast.tsv", "w", newline="") as f:
+    with open(RESULTS_DIR / "scaling_law_iter89_kfold_forecast_v3.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=keys, delimiter="\t")
         w.writeheader()
         for r in kfold_rows:
@@ -528,7 +451,7 @@ def main() -> None:
     by_anchor_loocv: dict[str, dict[str, float]] = {}
     for r in loocv_rows:
         by_anchor_loocv.setdefault(r["model"], {})[r["family"]] = r["cv_rmse"]
-    loo_winners = {a: min(d, key=d.get) for a, d in by_anchor_loocv.items()}
+    loo_winners = {a: best_candidate(d) for a, d in by_anchor_loocv.items()}
     n_loo_3seg = sum(1 for v in loo_winners.values() if v == "3seg")
     n_loo_const = sum(1 for v in loo_winners.values() if v == "constant")
     n_loo_1seg = sum(1 for v in loo_winners.values() if v == "1seg_ols")
@@ -538,7 +461,7 @@ def main() -> None:
     by_anchor_kf: dict[str, dict[str, float]] = {}
     for r in kfold_rows:
         by_anchor_kf.setdefault(r["model"], {})[r["family"]] = r["forecast_mae"]
-    kf_winners = {a: min(d, key=d.get) for a, d in by_anchor_kf.items()}
+    kf_winners = {a: best_candidate(d) for a, d in by_anchor_kf.items()}
     n_kf_3seg = sum(1 for v in kf_winners.values() if v == "3seg")
     n_kf_const = sum(1 for v in kf_winners.values() if v == "constant")
     n_kf_1seg = sum(1 for v in kf_winners.values() if v == "1seg_ols")
@@ -581,7 +504,7 @@ def main() -> None:
         "bic_winners_per_anchor": {r["model"]: r["best_bic_family"] for r in bic_rows},
         "aic_winners_per_anchor": {r["model"]: r["best_aic_family"] for r in bic_rows},
     }
-    with open(RESULTS_DIR / "scaling_law_iter89_meta.json", "w") as f:
+    with open(RESULTS_DIR / "scaling_law_iter89_meta_v3.json", "w") as f:
         json.dump(meta, f, indent=2)
 
     # ----- figure (4-panel) -----
@@ -651,10 +574,10 @@ def main() -> None:
     fig.suptitle(f"Iter89 -- LOOCV / BIC / bootstrap / k-fold on iter81 anchor pool (12 anchors; N_BOOT={N_BOOT})",
                  fontsize=11)
     fig.tight_layout(rect=[0, 0, 1, 0.97])
-    fig.savefig(FIG_DIR / "scaling_law_iter89.png", dpi=120)
-    fig.savefig(FIG_DIR / "scaling_law_iter89.pdf")
-    fig.savefig(PAPER_FIG / "scaling_law_iter89.png", dpi=120)
-    fig.savefig(PAPER_FIG / "scaling_law_iter89.pdf")
+    fig.savefig(FIG_DIR / "scaling_law_iter89_v3.png", dpi=120)
+    fig.savefig(FIG_DIR / "scaling_law_iter89_v3.pdf")
+    fig.savefig(PAPER_FIG / "scaling_law_iter89_v3.png", dpi=120)
+    fig.savefig(PAPER_FIG / "scaling_law_iter89_v3.pdf")
 
     print("\n===== iter89 summary =====")
     print(f"Anchors parsed:                    {n_anchors}")
@@ -675,4 +598,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    from _review27_models import configure_paths
+    configure_paths(globals())
     main()
+    from _review27_models import write_manifest
+    write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

@@ -57,12 +57,16 @@ except ImportError:
     print("FATAL: jsonschema not installed", flush=True)
     raise SystemExit(2)
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
-ENTRIES = ROOT / "registry" / "entries"
-SCHEMA = json.load(open(ROOT / "registry" / "schema.json"))
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+from review17_contract import keyed_rows
+ROOT = REPO_ROOT
+ENTRIES = ROOT / "platform_hybrid/registry" / "entries"
+SCHEMA = json.load(open(ROOT / "platform_hybrid/registry" / "schema.json"))
 V = jsonschema.Draft202012Validator(SCHEMA)
-OUT = ROOT / "experiments" / "results" / "p5p8"
-OUT.mkdir(parents=True, exist_ok=True)
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
+
 
 SEED = 20260704
 N_BOOT = 2000
@@ -100,11 +104,11 @@ def paired_boot(deltas, n_boot=N_BOOT, seed=SEED):
 def adaptiveg_measured():
     """arm B (adaptive 4->6->8) vs arm A (fixed G=4). Paired by step."""
     rows = read_tsv(ADAPTIVE_TSV)
-    a_by_step = {int(r["step"]): r for r in rows if r["arm"] == "A"}
-    b_by_step = {int(r["step"]): r for r in rows if r["arm"] == "B"}
+    a_by_step = keyed_rows([dict(r, step=int(r["step"])) for r in rows if r["arm"] == "A"], "step")
+    b_by_step = keyed_rows([dict(r, step=int(r["step"])) for r in rows if r["arm"] == "B"], "step", a_by_step)
     common_steps = sorted(set(a_by_step) & set(b_by_step))
     if not common_steps:
-        return []
+        raise ValueError("Incomplete adaptive-G step panel")
     out = []
     for metric in ("reward_mean", "zvf"):
         deltas = []
@@ -325,6 +329,7 @@ def missing_delta_audit():
 # 5. Driver
 # ---------------------------------------------------------------------------
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
     # 5a. Build + write the three new entries
     new_records = [
         build_adaptiveg_entry(),
@@ -336,7 +341,7 @@ def main():
     for rec in new_records:
         errs = list(V.iter_errors(rec))
         assert not errs, (rec["id"], errs[0].message)
-        path = ENTRIES / f"{rec['id']}.json"
+        path = OUT / f"{rec['id']}_proposal.json"
         path.write_text(json.dumps(rec, indent=2) + "\n")
         written += 1
         n_measured = len(rec.get("measured") or [])

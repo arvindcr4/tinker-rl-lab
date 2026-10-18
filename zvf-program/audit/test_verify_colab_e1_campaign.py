@@ -15,6 +15,9 @@ SPEC.loader.exec_module(VERIFY)
 
 class CampaignVerificationTests(unittest.TestCase):
     def setUp(self):
+        self.execution = {"mode":"confirmatory", "model":"Qwen/Qwen3-8B", "task":"GSM8K",
+                          "max_steps":10, "heldout_n":4, "max_completion_length":1024, "batch_prompts":4}
+        self.expected = {"execution":self.execution,"heldout_n":4,"treatment_changes":{"grpo":[]}}
         self.record = {
             "arm": "grpo",
             "seed": 11,
@@ -31,12 +34,15 @@ class CampaignVerificationTests(unittest.TestCase):
             "fingerprint": "f" * 64,
             "treatment_changes": [],
             "remote": {"wandb_run_id": "run123"},
+            "remote_verification": {"hf_repo":"owner/repo", "hf_commit":"c"*40, "wandb":{"state":"finished"}},
         }
         self.manifest = {
+            "evidence_class": "confirmatory",
             "audit_record": {
                 field: self.record[field] for field in VERIFY.AUDIT_FIELDS
             },
             "run_config": {
+                **self.execution, "arm":"grpo", "seed":11, "treatment_changes":[],
                 "unit_fingerprint": "f" * 64,
                 "stack_fingerprint": "a" * 64,
             },
@@ -62,7 +68,7 @@ class CampaignVerificationTests(unittest.TestCase):
     def test_matching_manifest_pair_is_accepted(self):
         self.assertEqual(
             VERIFY.validate_manifest_pair(
-                self.record, self.manifest, checkpoint_steps=[5, 10]
+                self.record, self.manifest, checkpoint_steps=[5, 10], expected=self.expected
             ),
             [],
         )
@@ -73,7 +79,7 @@ class CampaignVerificationTests(unittest.TestCase):
         broken["heldout_trace"][0]["correct"] = False
         broken["wandb"]["run_id"] = "other"
         errors = VERIFY.validate_manifest_pair(
-            self.record, broken, checkpoint_steps=[5, 10]
+            self.record, broken, checkpoint_steps=[5, 10], expected=self.expected
         )
         self.assertTrue(any("unit fingerprint" in error for error in errors))
         self.assertTrue(any("held-out trace" in error for error in errors))

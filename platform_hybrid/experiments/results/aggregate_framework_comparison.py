@@ -1,7 +1,7 @@
 """Aggregate Task 4 framework-gap results into framework_comparison.json.
 
 Produces ``experiments/results/framework_comparison.json`` with one entry per
-framework (Tinker, TRL, verl, OpenRLHF) for the fixed config:
+framework (Tinker, TRL, verl, OpenRLHF) with this historical nominal config (not imputed into source artifacts):
 
     Qwen3-8B, seed=42, G=8, lr=1e-5, GSM8K[:500], 30 steps.
 
@@ -13,9 +13,9 @@ Input sources (in priority order per framework):
   TRL      -> experiments/master_results.json :: modal_trl_trl_qwen3_8b
               (TRL-GRPO on Modal H100)
   verl     -> /home/user/workspace/elevation_outputs/modal_verl_grpo.json
-              if present (real), else dryrun via verl.VERLTrainer
+              completed empirical artifact required; no training/simulation fallback
   OpenRLHF -> /home/user/workspace/elevation_outputs/modal_openrlhf_grpo.json
-              if present (real), else dryrun via openrlhf.OpenRLHFTrainer
+              completed empirical artifact required; no training/simulation fallback
 
 Usage:
     python experiments/results/aggregate_framework_comparison.py
@@ -23,20 +23,19 @@ Usage:
 
 from __future__ import annotations
 
-import asyncio
 import json
-import os
+import math
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
-MASTER = REPO_ROOT / "experiments" / "master_results.json"
-OUT = REPO_ROOT / "experiments" / "results" / "framework_comparison.json"
+MASTER = REPO_ROOT / "platform_hybrid" / "experiments" / "master_results.json"
+OUT = REPO_ROOT / "platform_hybrid/experiments/results/protocols/pro-review-01-v2/framework_comparison.json"
 VERL_RESULT = Path("/home/user/workspace/elevation_outputs/modal_verl_grpo.json")
 OPENRLHF_RESULT = Path("/home/user/workspace/elevation_outputs/modal_openrlhf_grpo.json")
 
@@ -60,121 +59,67 @@ def _find_experiment(master: Dict[str, Any], experiment_id: str) -> Optional[Dic
 
 def _last10(trace: List[float]) -> float:
     if not trace:
-        return 0.0
+        raise ValueError("Cannot summarize absent reward observations")
     t = trace[-10:] if len(trace) >= 10 else trace
     return float(np.mean(t))
 
 
 def _coerce(trace: List[Any]) -> List[float]:
-    out: List[float] = []
-    for v in trace or []:
-        try:
-            out.append(float(v))
-        except Exception:
-            continue
-    return out
+    if not trace:
+        raise ValueError("Missing reward observations")
+    result = [float(value) for value in trace]
+    if not all(math.isfinite(value) for value in result):
+        raise ValueError("Nonfinite reward observations")
+    return result
+
+
+def _validate_measured(payload):
+    if payload.get("data_kind") != "empirical" or payload.get("state") != "completed":
+        raise ValueError("Only provenance-labeled completed empirical artifacts may be aggregated; legacy artifacts need independent validation")
+    if payload.get("mode") == "dryrun" or payload.get("subprocess_exit", 0) != 0:
+        raise ValueError("Synthetic or failed attempt cannot enter empirical aggregate")
+    _coerce(payload.get("reward_trace"))
+    return payload
+
+
+def _load_master(experiment_id: str, framework: str) -> Dict[str, Any]:
+    master = json.loads(MASTER.read_text())
+    row = _find_experiment(master, experiment_id)
+    if row is None:
+        raise ValueError(f"Missing experiment {experiment_id}")
+    payload = dict(_validate_measured(row))
+    trace = _coerce(payload["reward_trace"])
+    payload.update(framework=framework, peak_reward=max(trace), last10_avg=_last10(trace),
+                   comparison_configuration_status="as_recorded_no_imputation")
+    payload.setdefault("mode", "real")
+    return payload
 
 
 def _load_tinker() -> Dict[str, Any]:
-    master = json.loads(MASTER.read_text())
-    # Prefer the campaign_v2 Qwen3-8B-Base run (exact G=8 + lr=1e-5).
-    row = _find_experiment(master, "campaign_v2_w1_qwen3-8b-base") or {}
-    trace = _coerce(row.get("reward_trace") or [])
-    return {
-        "framework": "Tinker",
-        "mode": "real",
-        **BASE_CONFIG,
-        # The Tinker framework-gap run initialises from Qwen3-8B-Base, not the
-        # instruction-tuned Qwen3-8B used by the open frameworks. Override the
-        # BASE_CONFIG default so the emitted artifact reflects the actual
-        # checkpoint and matches the Base-vs-Instruct confound noted in the paper.
-        "model": "Qwen/Qwen3-8B-Base",
-        "platform": row.get("platform", "tinker"),
-        "peak_reward": float(row.get("peak_reward") or (max(trace) if trace else 0)),
-        "last10_avg": float(row.get("last_10_avg") or row.get("last10_avg") or _last10(trace)),
-        "reward_trace": trace,
-        "wandb_run_url": row.get("wandb_run_url"),
-        "source": row.get("source", "bitter_lesson_campaign_v2"),
-        "experiment_id": row.get("experiment_id"),
-    }
+    return _load_master("campaign_v2_w1_qwen3-8b-base", "Tinker")
 
 
 def _load_trl() -> Dict[str, Any]:
-    master = json.loads(MASTER.read_text())
-    row = _find_experiment(master, "modal_trl_trl_qwen3_8b") or {}
-    trace = _coerce(row.get("reward_trace") or [])
-    return {
-        "framework": "TRL",
-        "mode": "real",
-        **BASE_CONFIG,
-        "platform": row.get("platform", "modal-h100"),
-        "peak_reward": float(row.get("peak_reward") or (max(trace) if trace else 0)),
-        "last10_avg": float(row.get("last_10_avg") or row.get("last10_avg") or _last10(trace)),
-        "reward_trace": trace,
-        "duration_s": row.get("duration_s"),
-        "source": row.get("source", "modal_trl_grpo_campaign"),
-        "experiment_id": row.get("experiment_id"),
-    }
+    return _load_master("modal_trl_trl_qwen3_8b", "TRL")
+
+
+def _load_saved(path: Path, framework: str) -> Dict[str, Any]:
+    if not path.is_file():
+        raise FileNotFoundError(f"Missing completed {framework} artifact: {path}; aggregation never launches training")
+    payload = dict(_validate_measured(json.loads(path.read_text())))
+    trace = _coerce(payload["reward_trace"])
+    payload.update(framework=framework, reward_trace=trace, peak_reward=max(trace),
+                   last10_avg=_last10(trace), comparison_configuration_status="as_recorded_no_imputation")
+    payload.setdefault("mode", "real")
+    return payload
 
 
 def _load_verl() -> Dict[str, Any]:
-    if VERL_RESULT.exists():
-        payload = json.loads(VERL_RESULT.read_text())
-        payload.setdefault("framework", "verl")
-        payload.setdefault("mode", "real")
-        for k, v in BASE_CONFIG.items():
-            payload.setdefault(k, v)
-        return payload
-    # Dryrun fallback — deterministic seeded trace from verl.VERLTrainer.
-    from verl import VERLConfig, VERLTrainer  # type: ignore
-    cfg = VERLConfig()
-    cfg.model.model_name = BASE_CONFIG["model"]
-    cfg.optimizer.learning_rate = BASE_CONFIG["learning_rate"]
-    cfg.algorithm.algorithm = "grpo"
-    cfg.epochs = BASE_CONFIG["steps"]
-    cfg.project_name = "tinker-rl-lab-world-class"
-    cfg.run_name = "verl-dryrun"
-    result = asyncio.run(VERLTrainer(cfg).run())
-    return {
-        "framework": "verl",
-        "mode": "dryrun",
-        **BASE_CONFIG,
-        "platform": "sandbox-cpu",
-        "peak_reward": result["peak_reward"],
-        "last10_avg": result["last10_avg"],
-        "reward_trace": result["reward_trace"],
-        "note": "Seeded deterministic fallback from verl.VERLTrainer (verl not installed in sandbox). Overwrite by running experiments/modal/modal_grpo_verl.py.",
-    }
+    return _load_saved(VERL_RESULT, "verl")
 
 
 def _load_openrlhf() -> Dict[str, Any]:
-    if OPENRLHF_RESULT.exists():
-        payload = json.loads(OPENRLHF_RESULT.read_text())
-        payload.setdefault("framework", "OpenRLHF")
-        payload.setdefault("mode", "real")
-        for k, v in BASE_CONFIG.items():
-            payload.setdefault(k, v)
-        return payload
-    from openrlhf import OpenRLHFConfig, OpenRLHFTrainer  # type: ignore
-    cfg = OpenRLHFConfig()
-    cfg.model.model_name = BASE_CONFIG["model"]
-    cfg.optimizer.learning_rate = BASE_CONFIG["learning_rate"]
-    cfg.algorithm.algorithm = "grpo"
-    cfg.algorithm.sample_num = BASE_CONFIG["group_size"]
-    cfg.epochs = BASE_CONFIG["steps"]
-    cfg.project_name = "tinker-rl-lab-world-class"
-    cfg.run_name = "openrlhf-dryrun"
-    result = asyncio.run(OpenRLHFTrainer(cfg).run())
-    return {
-        "framework": "OpenRLHF",
-        "mode": "dryrun",
-        **BASE_CONFIG,
-        "platform": "sandbox-cpu",
-        "peak_reward": result["peak_reward"],
-        "last10_avg": result["last10_avg"],
-        "reward_trace": result["reward_trace"],
-        "note": "Seeded deterministic fallback from openrlhf.OpenRLHFTrainer (openrlhf not installed in sandbox). Overwrite by running experiments/modal/modal_grpo_openrlhf.py.",
-    }
+    return _load_saved(OPENRLHF_RESULT, "OpenRLHF")
 
 
 def build() -> Dict[str, Any]:
@@ -183,10 +128,16 @@ def build() -> Dict[str, Any]:
     verl = _load_verl()
     openrlhf = _load_openrlhf()
     order = [tinker, trl, verl, openrlhf]
+    for result in order:
+        _validate_measured(result)
     modes = {r["framework"]: r["mode"] for r in order}
     return {
+        "protocol": "pro-review-01-v2",
+        "evidence_type": "heterogeneous_empirical_description",
+        "matched_objective_equivalence": False,
         "task": "task-4-framework-gap",
-        "config": BASE_CONFIG,
+        "nominal_legacy_config": BASE_CONFIG,
+        "configuration_policy": "use each source artifact; no inferred missing settings",
         "metric": "last10_avg (mean of final 10 reported training rewards)",
         "frameworks": order,
         "summary": {

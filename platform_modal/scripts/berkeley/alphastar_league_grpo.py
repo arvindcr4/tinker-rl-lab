@@ -26,19 +26,19 @@ Core mapping (the paper-facing claim):
   - Both are in-group / in-league sampling for variance reduction in
     policy-gradient RL. The G-axis is GRPO's league-size axis.
 
-Pre-registered hypotheses on real iter127 Pillar-3 data:
+Exploratory retrospective analogies on existing iter127 artifacts:
 
   H1 [LEAGUE-SIZE LAW]: AlphaStar used ~3-5 main + 1 exploiter (league size
       ~5). GRPO's G* (the optimal G) follows log10(G*) = a + b*log10(T)
       (row 19 row 02). The predicted league-size scaling is:
       log10(G*) = a + 0.5*log10(T)  (slope = 0.5/decade).
-      We test: iter127 b = +0.500/decade over 2 T-values. DECISIVE if
+      We test: iter127 b = +0.500/decade over 2 T-values. DESCRIPTIVE_THRESHOLD if
       b within [+0.40, +0.60] AND G* saturates at G=32 at large T.
 
   H2 [BOUNDED CONE AT G*]: Both AlphaStar (league size ~5) and Pluribus
       (64 samples/node) found further samples offered no additional value.
       Our iter127 bounded-cone shows acc(G=64) <= acc(G=32) at 4/4 T.
-      DECISIVE if 4/4 deltas non-positive AND G*=G*=32 saturated.
+      DESCRIPTIVE_THRESHOLD if 4/4 deltas non-positive AND G*=G*=32 saturated.
 
   H3 [LEAGUE DIVERSITY BONUS]: AlphaStar's league main+exploiter mix
       produces higher game-balance diversity than uniform self-play. For
@@ -46,7 +46,7 @@ Pre-registered hypotheses on real iter127 Pillar-3 data:
       iter107 deltadiv_decomp: delta_div < 0, n=4 G values). If
       autoregressive sampling is analog to a heterogeneous league
       (different temperature seeds), we expect delta_div to be PERSISTENTLY
-      NEGATIVE (herd direction) across all G. DECISIVE if sign-stable
+      NEGATIVE (baseline deviation; mechanism unidentified) across all G. DESCRIPTIVE_THRESHOLD if sign-stable
       (>= 3/4 G values) AND mean delta_div < -0.02.
 
   H4 [LEAGUE POPULATION COMPLEMENTARITY]: AlphaStar's league was
@@ -54,13 +54,13 @@ Pre-registered hypotheses on real iter127 Pillar-3 data:
       table (iter127) shows isoG value amplifies 24x from T=1M to T=64M.
       If the league (G-axis) unlocks more value at higher T (as compute
       grows), we expect Spearman rho(value-of-T, G) = +1 (monotone).
-      DECISIVE if Spearman rho > +0.9.
+      DESCRIPTIVE_THRESHOLD if Spearman rho > +0.9.
 
   H5 [LEAGUE THROUGHPUT MAPPING]: OpenAI Five used 1000+ years of self-play
       per day (massive league). The bounded cone at G=64 (4/4 T) means the
       per-step league is already saturated at G=32. We expect the
       RETURNS-TO-COMPUTE per G (iter107) to be FLAT (delta_R_C decays)
-      for G >= 16. DECISIVE if R_C(3window) at G=32 < R_C at G=8.
+      for G >= 16. DESCRIPTIVE_THRESHOLD if R_C(3window) at G=32 < R_C at G=8.
 
 Outputs (under platform_hybrid/experiments/results/berkeley/):
   alphastar_league_{league_law, bounded_cone, diversity_bonus,
@@ -69,14 +69,17 @@ Outputs (under platform_hybrid/experiments/results/berkeley/):
 """
 
 from __future__ import annotations
-import csv, json, math, datetime, ast
+import csv, json, math, datetime, ast, re
 from pathlib import Path
-from collections import defaultdict
 
-ROOT = Path(__file__).resolve().parents[2]
-RES = ROOT / "experiments" / "results"
-OUT = RES / "berkeley"
-OUT.mkdir(parents=True, exist_ok=True)
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT, RESULTS_DIR
+from _review01_contracts import OUTPUT_ROOT, evidence_metadata, require_inputs, spearman_or_none, write_artifact_metadata, json_ready
+ROOT = WORKTREE = REPO_ROOT
+RES = RESULTS = RESULTS_DIR
+OUT = OUTPUT_ROOT / "alphastar_league_grpo"
+
 
 
 def _read_tsv(path: Path) -> list[dict]:
@@ -107,7 +110,11 @@ def h1_league_law():
             Gstar_pred = float(Gstar_pred_str)
         except (IndexError, ValueError):
             continue
-        saturated = "SATURATED" in r["headline"]
+        if T <= 0 or Gstar <= 0 or not math.isfinite(Gstar_pred):
+            raise ValueError("Invalid optimum budget/group evidence")
+        if any(p["T"] == T for p in points):
+            raise ValueError("Duplicate optimum budget")
+        saturated = bool(re.search(r"(?<![A-Za-z_])SATURATED(?![A-Za-z_])", r["headline"]))
         points.append({"T": T, "Gstar": Gstar, "Gstar_pred": Gstar_pred, "saturated": saturated})
     points.sort(key=lambda r: r["T"])
 
@@ -134,10 +141,13 @@ def h1_league_law():
             "log10_Gstar": f"{math.log10(p['Gstar']):.3f}",
         })
 
-    # DECISIVE if b in [0.40, 0.60] AND last 2 Ts saturated at G=32
+    # DESCRIPTIVE_THRESHOLD if b in [0.40, 0.60] AND last 2 Ts saturated at G=32
     n_sat = sum(1 for p in points if p["saturated"])
     b_in_range = (b is not None and 0.40 <= b <= 0.60)
-    decisive = b_in_range and n_sat >= 2
+    high = [p for p in points if p["T"] in {16_000_000, 64_000_000}]
+    saturated_at_32 = (len(high) == 2 and all(p["saturated"] and p["Gstar"] == 32 for p in high))
+    complete = {p["T"] for p in points} == {1_000_000, 4_000_000, 16_000_000, 64_000_000}
+    decisive = b_in_range and complete and saturated_at_32
     return rows, b, a, n_sat, decisive
 
 
@@ -160,20 +170,28 @@ def h2_bounded_cone():
             d = float(r["headline"].split("delta=")[1].split()[0])
         except (IndexError, ValueError):
             continue
-        deltas.append({"T": r["metric_key"].split("=")[1], "delta_G64_G32": d})
+        T = int(float(r["metric_key"].split("=")[1]))
+        if T <= 0 or not math.isfinite(d):
+            raise ValueError("Invalid bounded-cone budget/delta")
+        if any(int(float(row["T"])) == T for row in deltas):
+            raise ValueError("Duplicate bounded-cone budget")
+        deltas.append({"T": str(T), "delta_G64_G32": d})
     n_nonpos = sum(1 for d in deltas if d["delta_G64_G32"] <= 0)
 
     # Saturation check (G* = 32 at high T)
     opt = _read_tsv(RES / "group_size_iter127_optimal_g.tsv")
-    Gstar_highT = []
+    Gstar_highT = {}
     for r in opt:
         if not r["metric_key"].startswith("T="):
             continue
         T = int(float(r["metric_key"].split("=")[1].replace("e+", "e")))
         if T >= 16_000_000:
             Gstar = int(r["headline"].split("G*(T)=")[1].split(",")[0])
-            Gstar_highT.append(Gstar)
-    all_sat_32 = all(g == 32 for g in Gstar_highT)
+            if T in Gstar_highT:
+                raise ValueError("Duplicate high-budget optimum")
+            Gstar_highT[T] = Gstar
+    saturation_complete = set(Gstar_highT) == {16_000_000, 64_000_000}
+    all_sat_32 = saturation_complete and all(g == 32 for g in Gstar_highT.values())
 
     rows = []
     for d in deltas:
@@ -181,22 +199,23 @@ def h2_bounded_cone():
             "T": d["T"],
             "delta_G64_G32": f"{d['delta_G64_G32']:+.4f}",
             "non_positive": "yes" if d["delta_G64_G32"] <= 0 else "no",
-            "alphastar_pluribus_predict": "G* saturated past league size",
+            "alphastar_pluribus_predict": "untested analogy",
+            "status": "observed" if saturation_complete else "INCOMPLETE",
         })
 
-    decisive = (n_nonpos == 4 and all_sat_32)
+    decisive = (n_nonpos == 4 and all_sat_32 and {int(float(d["T"])) for d in deltas} == {1_000_000, 4_000_000, 16_000_000, 64_000_000})
     return rows, n_nonpos, all_sat_32, decisive
 
 
 # ---------------------------------------------------------------------------
-# H3: league diversity bonus (ZVF herd direction)
+# H3: league diversity bonus (ZVF baseline deviation; mechanism unidentified)
 # ---------------------------------------------------------------------------
 def h3_league_diversity_bonus():
     """
     AlphaStar's league has heterogeneous policies (main + exploiters).
     GRPO's group has heterogeneous rollouts (different samples from the
     same prompt). The empirical ZVF under-predicts the iid baseline
-    (herd direction): delta_div = zvf_emp - zvf_iid < 0, mean ~ -0.07
+    (baseline deviation; mechanism unidentified): delta_div = zvf_emp - zvf_iid < 0, mean ~ -0.07
     across 4 G values (iter107 deltadiv_decomp). Test: sign-stable
     (>= 3/4) AND mean delta_div < -0.02.
     """
@@ -221,7 +240,7 @@ def h3_league_diversity_bonus():
             "delta_div_ci_high": f"{dd_hi:+.4f}",
             "zvf_emp": f"{zvf_e:.4f}",
             "zvf_iid": f"{zvf_i:.4f}",
-            "direction": "herd (emp < iid)" if dd < 0 else "anti-herd",
+            "direction": "below_iid_baseline" if dd < 0 else "at_or_above_iid_baseline",
             "sign_stable_negative": "yes" if dd < 0 else "no",
         })
     n_neg = sum(1 for d in deltas if d < 0)
@@ -254,30 +273,10 @@ def h4_complementarity():
     Gs = sorted(int(g) for g in isoG.keys())
     isoG_values = [isoG[str(g)] for g in Gs]
 
-    # Spearman rho
-    n = len(isoG_values)
-    rx = list(range(1, n + 1))  # ranks of G
-    ry = sorted(range(n), key=lambda i: isoG_values[i])
-    ry = [ry.index(i) + 1 for i in range(n)]
-    # if ties: handle via mean rank (none here, but keep simple)
-    mx = sum(rx) / n; my = sum(ry) / n
-    cov = sum((rx[i] - mx) * (ry[i] - my) for i in range(n))
-    sx = math.sqrt(sum((r - mx) ** 2 for r in rx))
-    sy = math.sqrt(sum((r - my) ** 2 for r in ry))
-    rho_isoG = cov / (sx * sy) if sx > 0 and sy > 0 else float("nan")
-
+    rho_isoG = spearman_or_none(Gs, isoG_values)
     Ts = sorted(int(t) for t in isoT.keys())
     isoT_values = [isoT[str(t)] for t in Ts]
-    n2 = len(isoT_values)
-    rx2 = sorted(range(n2), key=lambda i: Ts[i])
-    rx2 = [rx2.index(i) + 1 for i in range(n2)]
-    ry2 = sorted(range(n2), key=lambda i: isoT_values[i])
-    ry2 = [ry2.index(i) + 1 for i in range(n2)]
-    mx2 = sum(rx2) / n2; my2 = sum(ry2) / n2
-    cov2 = sum((rx2[i] - mx2) * (ry2[i] - my2) for i in range(n2))
-    sx2 = math.sqrt(sum((r - mx2) ** 2 for r in rx2))
-    sy2 = math.sqrt(sum((r - my2) ** 2 for r in ry2))
-    rho_isoT = cov2 / (sx2 * sy2) if sx2 > 0 and sy2 > 0 else float("nan")
+    rho_isoT = spearman_or_none(Ts, isoT_values)
 
     rows = []
     for g, v in zip(Gs, isoG_values):
@@ -294,7 +293,7 @@ def h4_complementarity():
     else:
         amp = float("nan")
 
-    decisive = rho_isoG > 0.9
+    decisive = rho_isoG is not None and rho_isoG > 0.9
     return rows, rho_isoG, rho_isoT, amp, decisive
 
 
@@ -361,7 +360,14 @@ def h5_throughput_decay():
 
     # Net league cost at G=64 = late_gain - |bounded_cone_penalty|
     # bounded_cone_penalty at T=16M: acc(G=64) - acc(G=32) = 0.800 - 0.840 = -0.04
-    cone_penalty = abs(-0.04)  # at T=16M
+    cone_penalty = float("nan")
+    for row in _read_tsv(RES / "group_size_iter127_bounded_cone.tsv"):
+        if row.get("metric_key", "").startswith("T="):
+            try:
+                if int(float(row["metric_key"].split("=")[1])) == 16_000_000:
+                    cone_penalty = abs(float(row["headline"].split("delta=")[1].split()[0]))
+            except (ValueError, IndexError):
+                continue
     net_cost = late_gain - cone_penalty  # if negative, league is over-sized
 
     decisive = decay_holds and net_cost < 0
@@ -372,45 +378,53 @@ def h5_throughput_decay():
 # Main
 # ---------------------------------------------------------------------------
 def main():
+    inputs = [RES / name for name in ["group_size_iter127_optimal_g.tsv", "group_size_iter127_bounded_cone.tsv", "group_size_deltadiv_decomp.tsv", "group_size_iter127_complementarity.tsv", "group_size_iter107_returns_to_compute.tsv"]]
+    require_inputs(*inputs)
+    metadata = evidence_metadata("retrospective_analogy_and_descriptive_thresholds", inputs)
+    OUT.mkdir(parents=True, exist_ok=True)
     t0 = datetime.datetime.now(datetime.timezone.utc).isoformat()
     print(f"[alphastar_league] start {t0}")
 
     h1_rows, b, a, n_sat, h1_decisive = h1_league_law()
     h1_path = OUT / "alphastar_league_law.tsv"
     with h1_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h1_rows[0].keys()), delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(h1_rows[0].keys()) if h1_rows else ["status"], delimiter="\t")
         w.writeheader(); w.writerows(h1_rows)
-    print(f"[h1] league-size law: b={b:.4f}/decade, n_sat={n_sat}, decisive={h1_decisive}")
+    print(f"[h1] league-size law: b={b}/decade, n_sat={n_sat}, decisive={h1_decisive}")
 
     h2_rows, n_nonpos, all_sat_32, h2_decisive = h2_bounded_cone()
     h2_path = OUT / "alphastar_league_bounded_cone.tsv"
     with h2_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h2_rows[0].keys()), delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(h2_rows[0].keys()) if h2_rows else ["status"], delimiter="\t")
         w.writeheader(); w.writerows(h2_rows)
     print(f"[h2] bounded cone: n_nonpos={n_nonpos}/4, all_sat_32={all_sat_32}, decisive={h2_decisive}")
 
     h3_rows, n_stable, mean_dd, h3_decisive = h3_league_diversity_bonus()
     h3_path = OUT / "alphastar_league_diversity_bonus.tsv"
     with h3_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h3_rows[0].keys()), delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(h3_rows[0].keys()) if h3_rows else ["status"], delimiter="\t")
         w.writeheader(); w.writerows(h3_rows)
     print(f"[h3] diversity bonus: n_neg={n_stable}/4, mean_dd={mean_dd:.4f}, decisive={h3_decisive}")
 
     h4_rows, rho_isoG, rho_isoT, amp, h4_decisive = h4_complementarity()
     h4_path = OUT / "alphastar_league_complementarity.tsv"
     with h4_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h4_rows[0].keys()), delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(h4_rows[0].keys()) if h4_rows else ["status"], delimiter="\t")
         w.writeheader(); w.writerows(h4_rows)
-    print(f"[h4] complementarity: rho_isoG={rho_isoG:.3f}, amp={amp:.2f}x, decisive={h4_decisive}")
+    print(f"[h4] complementarity: rho_isoG={rho_isoG}, amp={amp:.2f}x, decisive={h4_decisive}")
 
     h5_rows, per_rollout, decay_holds, ratio, late_gain, cone_penalty, net_cost, h5_decisive = h5_throughput_decay()
     h5_path = OUT / "alphastar_league_throughput.tsv"
     with h5_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h5_rows[0].keys()), delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(h5_rows[0].keys()) if h5_rows else ["status"], delimiter="\t")
         w.writeheader(); w.writerows(h5_rows)
     print(f"[h5] per-rollout decay G=64<G=16: {decay_holds}, ratio={ratio:.3f}, net_cost={net_cost:.4f}, decisive={h5_decisive}")
 
     summary = {
+        **metadata,
+        "mechanism_identified": False,
+        "causal_analogy_status": "untested",
+        "source_provenance": "legacy_artifacts_not_independently_validated",
         "ts": t0,
         "iter": 23,
         "lecture": "F25 L11 Oriol Vinyals (Multi-Agent Systems in the Era of LLMs)",
@@ -422,26 +436,26 @@ def main():
         "all_verified_via": "arxiv.org/abs/1708.04782 + arxiv.org/abs/1912.06680 (Nature 2019 is open access DOI 10.1038/s41586-019-1724-z)",
         "hypotheses": {
             "H1_league_size_law": {
-                "slope_b_per_decade": f"{b:.4f}" if b is not None else "NA",
+                "slope_b_per_decade": f"{b}" if b is not None else "NA",
                 "intercept_a": f"{a:.4f}" if a is not None else "NA",
                 "n_saturated_at_G32": n_sat,
-                "verdict": "DECISIVE" if h1_decisive else "NULL",
+                "verdict": "DESCRIPTIVE_THRESHOLD" if h1_decisive else "NULL",
             },
             "H2_bounded_cone_Gstar": {
                 "n_nonpositive_deltas": f"{n_nonpos}/4",
                 "all_Gstar_saturated_at_32": all_sat_32,
-                "verdict": "DECISIVE" if h2_decisive else "NULL",
+                "verdict": "INCOMPLETE" if not h2_rows or any(r["status"] == "INCOMPLETE" for r in h2_rows) else "DESCRIPTIVE_THRESHOLD" if h2_decisive else "THRESHOLD_NOT_MET",
             },
             "H3_league_diversity_bonus": {
                 "n_negative_delta_div": f"{n_stable}/4",
                 "mean_delta_div": f"{mean_dd:+.4f}",
-                "verdict": "DECISIVE" if h3_decisive else "NULL",
+                "verdict": "DESCRIPTIVE_THRESHOLD" if h3_decisive else "NULL",
             },
             "H4_complementarity": {
-                "spearman_isoG": f"{rho_isoG:.4f}",
-                "spearman_isoT": f"{rho_isoT:.4f}",
+                "spearman_isoG": rho_isoG,
+                "spearman_isoT": rho_isoT,
                 "amplification_factor": f"{amp:.2f}x",
-                "verdict": "DECISIVE" if h4_decisive else "NULL",
+                "verdict": "DESCRIPTIVE_THRESHOLD" if h4_decisive else "NULL",
             },
             "H5_throughput_decay": {
                 "per_rollout_R_C_G16": f"{per_rollout.get(16, float('nan')):.5f}",
@@ -451,11 +465,11 @@ def main():
                 "late_R_C_gain_G64_vs_G32": f"{late_gain:+.4f}",
                 "bounded_cone_penalty_T16M": f"{cone_penalty:.4f}",
                 "net_league_cost_G64": f"{net_cost:+.4f}",
-                "verdict": "DECISIVE" if h5_decisive else "NULL",
+                "verdict": "DESCRIPTIVE_THRESHOLD" if h5_decisive else "NULL",
             },
         },
         "verdict_counts": {
-            "DECISIVE": sum([h1_decisive, h2_decisive, h3_decisive, h4_decisive, h5_decisive]),
+            "DESCRIPTIVE_THRESHOLD": sum([h1_decisive, h2_decisive, h3_decisive, h4_decisive, h5_decisive]),
             "TOTAL": 5,
         },
         "outputs": {
@@ -474,7 +488,8 @@ def main():
         ],
     }
     out_json = OUT / "alphastar_league_summary.json"
-    out_json.write_text(json.dumps(summary, indent=2))
+    out_json.write_text(json.dumps(json_ready(summary), indent=2, allow_nan=False))
+    write_artifact_metadata(OUT, metadata)
     print(f"[alphastar_league] wrote {out_json.relative_to(ROOT)}")
     print(f"[alphastar_league] verdict: {summary['verdict_counts']}")
 

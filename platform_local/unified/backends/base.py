@@ -24,11 +24,17 @@ class LaunchPlan:
 
     backend: str
     framework: str
-    command: str  # exact command (modal/gcloud/python/...)
+    argv: list[str]  # Preserve argument boundaries through execution
     driver_file: str  # repo file that actually executes the training
     output: str = ""  # where results land
     env: list[str] = field(default_factory=list)  # required env vars
     notes: str = ""
+
+    blocked_reason: str = ""
+
+    @property
+    def command(self):
+        return shlex.join(self.argv)
 
     def format(self) -> str:
         lines = [
@@ -39,6 +45,8 @@ class LaunchPlan:
             lines.append(f"  output: {self.output}")
         if self.env:
             lines.append(f"  env:    {', '.join(self.env)}")
+        if self.blocked_reason:
+            lines.append(f"  BLOCKED: {self.blocked_reason}")
         if self.notes:
             lines.append(f"  notes:  {self.notes}")
         return "\n".join(lines)
@@ -71,7 +79,9 @@ class Backend(ABC):
     def _execute(self, plan: LaunchPlan, spec: "CanonicalSpec", *, launcher=None):
         # WARNING: was shell=True on an f-string built from CLI-provided spec fields
         # (model/task/seed) -> shell injection. Plans are plain argv, so tokenize instead.
-        subprocess.run(shlex.split(plan.command), check=True)
+        if plan.blocked_reason:
+            raise NotImplementedError(plan.blocked_reason)
+        subprocess.run(plan.argv, check=True)
         return None
 
 

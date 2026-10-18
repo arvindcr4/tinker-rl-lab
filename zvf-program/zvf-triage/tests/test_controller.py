@@ -1,6 +1,5 @@
 """Unit tests for the ZVF triage controller state machine."""
 
-import numpy as np
 import pytest
 
 from zvf_triage.controller import Regime, ZVFController
@@ -111,7 +110,7 @@ def test_per_prompt_drop_after_k_consecutive():
     for step in range(1, 4):
         rewards = [0.0, 0.0, 1.0, 0.0]  # g0 uniform, g1 mixed
         gids = [0, 0, 1, 1]
-        d = c.step(rewards, gids)
+        d = c.step(rewards, gids, prompt_ids=gids)
         if step < 3:
             assert d.dropped_prompts == []
         else:

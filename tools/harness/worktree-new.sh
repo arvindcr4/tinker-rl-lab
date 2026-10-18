@@ -4,7 +4,7 @@
 # unattended run, so parallel/long runs never dirty your main checkout.
 #
 # Usage: tools/harness/worktree-new.sh <run-name> [base-ref]
-set -uo pipefail
+set -euo pipefail
 [ $# -ge 1 ] || { echo "usage: worktree-new.sh <run-name> [base-ref]" >&2; exit 2; }
 NAME="$1"; BASE="${2:-main}"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"

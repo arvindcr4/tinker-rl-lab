@@ -19,9 +19,17 @@ PLAN = REPO_ROOT / "zvf-program/flagship/paper/MAY_REVIEW_RESPONSE_AND_ACL_PLAN.
 def _postable(text: str) -> str:
     start = "<!-- POSTABLE_REPLY_START -->"
     end = "<!-- POSTABLE_REPLY_END -->"
-    if start not in text or end not in text:
+    if text.count(start) != 1 or text.count(end) != 1 or text.index(start) >= text.index(end):
         return ""
     return text.split(start, 1)[1].split(end, 1)[0].strip()
+
+
+def valid_cells(cells):
+    expected = {(a, c) for a in ("stack_sensitivity", "heldout_capability", "ppo_grpo", "zvf_gu", "early_triage") for c in ("gsm8k", "humaneval", "math", "synthetic_tool_use")}
+    return (isinstance(cells, list) and len(cells) == 20
+            and all(isinstance(c, dict) and c.get("status") in {"evaluated", "not_evaluated", "quarantined"}
+                    and all(isinstance(c.get(k), str) and c[k].strip() for k in ("seed_basis", "reviewed_result", "permitted_inference")) for c in cells)
+            and {(c.get("analysis_id"), c.get("corpus")) for c in cells} == expected)
 
 
 def evaluate() -> dict[str, object]:
@@ -84,13 +92,7 @@ def evaluate() -> dict[str, object]:
         ),
         (
             "complete_scope_ledger",
-            len(cells) == 20
-            and {(cell.get("analysis_id"), cell.get("corpus")) for cell in cells}
-            == {
-                (analysis, corpus)
-                for analysis in ("stack_sensitivity", "heldout_capability", "ppo_grpo", "zvf_gu", "early_triage")
-                for corpus in ("gsm8k", "humaneval", "math", "synthetic_tool_use")
-            },
+            valid_cells(cells),
         ),
         (
             "ledger_cells_are_adjudicated",
@@ -132,6 +134,9 @@ def evaluate() -> dict[str, object]:
 
     passed = sum(bool(ok) for _, ok in checks)
     return {
+        "schema_version": 2,
+        "metric": "response_contract_checks",
+        "semantic_evidence_validated": False,
         "score": passed,
         "maximum": len(checks),
         "checks": [{"name": name, "passed": bool(ok)} for name, ok in checks],

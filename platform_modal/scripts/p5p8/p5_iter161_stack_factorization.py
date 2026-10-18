@@ -146,9 +146,6 @@ def main():
     per_method = defaultdict(list)
     for r in n2_rows:
         per_method[r["method"]].append(r["reward_mean"])
-    per_method_mean = {m: fmean(v) for m, vs in per_method.items() for _ in [None]
-                       if False}
-    # rebuild cleanly
     per_method_mean = {m: fmean(vs) for m, vs in per_method.items()}
     method_spread = (max(per_method_mean.values())
                      - min(per_method_mean.values()))

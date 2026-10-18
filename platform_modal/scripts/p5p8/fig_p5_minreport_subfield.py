@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import csv
 import math
+import json
 from pathlib import Path
 
 import matplotlib
@@ -18,13 +19,22 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[2]
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+from _review02_contracts import profile_target_increment
+ROOT = REPO_ROOT / "platform_hybrid"
 OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
 FIG_DIR = OUT_DIR / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 SUB_TSV = OUT_DIR / "p5_minreport_subfield_audit.tsv"
 MVE_TSV = OUT_DIR / "p5_minreport_mve.tsv"
+
+analysis = json.loads((OUT_DIR / "p5_minreport_mve_summary.json").read_text())
+population_size = analysis["n_cells"]
+baseline_profiles = analysis["baseline"]["n_distinct_minrep_alone"]
+target_increment = profile_target_increment(population_size, baseline_profiles)
 
 # ---- panel (a): sub-field coverage + H ----
 with open(SUB_TSV) as f:
@@ -40,10 +50,10 @@ sub_vacuous = [r["vacuous"] == "True" for r in sub_rows]
 
 # color by vacuous state
 colors_a = []
-for v in sub_vacuous:
+for v, coverage in zip(sub_vacuous, sub_cov):
     if v:
         colors_a.append("#cccccc")
-    elif sub_cov[sub_rows.index(next(r for r in sub_rows if r["vacuous"] == str(v)))] < 1.0:
+    elif coverage < 1.0:
         colors_a.append("#888888")
     else:
         colors_a.append("#1b7837")
@@ -56,7 +66,7 @@ mve_rows.sort(key=lambda r: int(r["rank_by_delta_distinct"]))
 mve_labels = [r["extension_field"] for r in mve_rows]
 mve_delta_distinct = [int(r["delta_distinct"]) for r in mve_rows]
 mve_n_distinct_after = [int(r["n_distinct_with_extension"]) for r in mve_rows]
-mve_cumul_lift_pct = [100.0 * (int(r["n_distinct_with_extension"]) - 15) / 98
+mve_cumul_lift_pct = [100.0 * (int(r["n_distinct_with_extension"]) - baseline_profiles) / population_size
                        for r in mve_rows]
 
 # color top contributors
@@ -73,13 +83,13 @@ for i, (cov, H, vac) in enumerate(zip(sub_cov, sub_H, sub_vacuous)):
     if not vac:
         ax_a.text(cov + 1, i, f"H={H:.2f}", va="center", fontsize=7)
     elif cov == 100.0:
-        ax_a.text(cov - 5, i, "VACUOUS", va="center", ha="right",
+        ax_a.text(cov - 5, i, "CONSTANT", va="center", ha="right",
                   color="white", fontsize=6, fontweight="bold")
 ax_a.set_yticks(y_pos)
 ax_a.set_yticklabels(sub_labels, fontsize=6.5)
 ax_a.set_xlim(0, 115)
 ax_a.set_xlabel("Coverage %", fontsize=9)
-ax_a.set_title("Per-sub-field coverage & entropy\n(n=98 manifests; vacuous in grey/green)",
+ax_a.set_title(f"Per-sub-field coverage & entropy\n(n={population_size} manifests; constant fields in grey)",
                fontsize=9)
 ax_a.invert_yaxis()
 ax_a.grid(axis="x", alpha=0.3)
@@ -89,17 +99,17 @@ x_pos = np.arange(len(mve_labels))
 ax_b.bar(x_pos, mve_delta_distinct, color=colors_b, edgecolor="black", linewidth=0.4)
 for i, (d, n, p) in enumerate(zip(mve_delta_distinct, mve_n_distinct_after,
                                    mve_cumul_lift_pct)):
-    ax_b.text(i, d + 1.5, f"→ {n}/98", ha="center", fontsize=7)
+    ax_b.text(i, d + 1.5, f"→ {n}/{population_size}", ha="center", fontsize=7)
 ax_b.set_xticks(x_pos)
 ax_b.set_xticklabels([l.replace("_", "\n") for l in mve_labels],
                      fontsize=7, rotation=0)
 ax_b.set_ylabel("Δ distinct profiles vs MIN-REPORT-alone", fontsize=9)
 ax_b.set_title("MVE: extension-field lift in distinct profiles\n"
-                "(content baseline = 15/98; n=98 cells)",
+                f"(content baseline = {baseline_profiles}/{population_size})",
                 fontsize=9)
 ax_b.grid(axis="y", alpha=0.3)
-ax_b.axhline(y=49, color="red", linestyle="--", linewidth=1, alpha=0.6,
-             label="n/2 threshold")
+ax_b.axhline(y=target_increment, color="red", linestyle="--", linewidth=1, alpha=0.6,
+             label="increment needed for n/2 profiles")
 ax_b.legend(loc="upper right", fontsize=8)
 
 plt.tight_layout()

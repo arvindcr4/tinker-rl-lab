@@ -15,21 +15,12 @@ proposing a registry amendment that aligns the prose with the measurement.
   R5. cross-panel consistency — does the same direction hold on the
       5-seed zvf130 panel?
 
-Amendment proposal: change predicted_sign for the 2 reward_mean entries
-from ">=0" (which is falsified) to "<=0" (which fits the data) and add a
-caveat about the "reward tax" of off-policy / decoupled rollout designs.
-
-Outputs (5 TSV + 1 JSON):
-  p6_iter194_robustness_multiseed.tsv
-  p6_iter194_robustness_bca.tsv
-  p6_iter194_robustness_jackknife.tsv
-  p6_iter194_robustness_window.tsv
-  p6_iter194_robustness_cross_panel.tsv
-  p6_iter194_summary.json
-  + platform_hybrid/registry/entries/delta_aero.json (PATCHED: predicted_sign -> "<=0", caveat added)
-  + platform_hybrid/registry/entries/delta_areal.json (PATCHED: predicted_sign -> "<=0", caveat added)
-  + platform_hybrid/registry/entries/delta_aero.amendment.json (provenance trail)
-  + platform_hybrid/registry/entries/delta_areal.amendment.json (provenance trail)
+Protocol review18-v2: read-only robustness audit and append-only proposal.
+Only complete passing checks permit a proposal for human review. This script
+never rewrites claims or marks retrospective predictions SUPPORTS. R1 varies
+bootstrap RNG seeds on one dataset, not independent training seeds.
+Outputs are versioned under p5p8/review18_v2; original entries are preserved
+inside each uniquely named proposal record for provenance.
 """
 from __future__ import annotations
 import csv
@@ -43,7 +34,7 @@ from pathlib import Path
 WORKTREE = Path(__file__).resolve().parents[2]
 REG = WORKTREE / "registry"
 ENT = REG / "entries"
-RES = WORKTREE / "experiments" / "results" / "p5p8"
+RES = WORKTREE / "experiments" / "results" / "p5p8" / "review18_v2"
 RES.mkdir(parents=True, exist_ok=True)
 N2_TSV = WORKTREE / "experiments" / "results" / "n2_reward_tensor_resume" / "n2_metrics.tsv"
 ZVFRISK_TSV = WORKTREE / "experiments" / "results" / "zvf_iter130_method_risk.tsv"
@@ -218,6 +209,16 @@ def leave_one_out_jackknife(a, b):
     var = sum((j - jk_mean) ** 2 for j in jk) / max(1, len(jk) - 1)
     se = math.sqrt(var)
     return point, se, point - 1.96 * se, point + 1.96 * se
+
+
+def amendment_proposal(checks, evidence_complete):
+    required = {"h1", "h2b", "h3", "h4", "h5"}
+    eligible = evidence_complete and set(checks) == required and all(v is True for v in checks.values())
+    return {"protocol_version": "review18-v2", "robustness": checks,
+            "eligible_for_human_review": bool(eligible),
+            "status": "PROPOSED_REQUIRES_INDEPENDENT_VALIDATION" if eligible else "FAILED_OR_INCONCLUSIVE",
+            "proposed_sign": "<=0" if eligible else None,
+            "registry_mutated": False}
 
 
 def main():
@@ -409,75 +410,20 @@ def main():
         for r in cross_panel_rows
     )
 
-    # ----- Apply registry amendment -----
-    amendment_records = {}
-    for variant in VARIANTS:
-        fp = ENT / f"delta_{variant}.json"
-        with open(fp) as f:
-            entry = json.load(f)
-        old_expected = [dict(e) for e in entry.get("expected_effects", [])]
-        for e in old_expected:
-            if e.get("metric") == "reward_mean" and e.get("panel") == "n2_same_stack_last10":
-                old_sign = e["predicted_sign"]
-                e["predicted_sign"] = "<=0"
-                e["rationale"] = (
-                    f"AMENDED in iter-194 (was '{old_sign}' before iter-190 audit "
-                    f"found raw data significantly negative): {variant.upper()}'s "
-                    f"off-policy rollout (AERO) / decoupled rollout (AREAL) "
-                    f"redistributes compute from current-policy learning to "
-                    f"reference sampling, lowering ZVF risk but producing a "
-                    f"reward tax on this exact same-stack panel."
-                )
-        # also update claim_validation verdict
-        for cv in entry.get("claim_validation", []):
-            if cv.get("metric") == "reward_mean" and cv.get("panel") == "n2_same_stack_last10":
-                cv["predicted_sign"] = "<=0"
-                cv["verdict"] = "SUPPORTS"
-                cv["rationale"] = (
-                    f"AMENDED in iter-194: predicted_sign relaxed from '>=0' to '<=0'; "
-                    f"observed delta={cv['observed_delta']:.4f} CI=[{cv['ci_low']:.4f},"
-                    f"{cv['ci_high']:.4f}] is now CONSISTENT with the new prediction."
-                )
-        entry["expected_effects"] = old_expected
-        # record the iter-194 amendment
-        notes_addon = (
-            " | iter-194 amendment: predicted_sign for (reward_mean, "
-            "n2_same_stack_last10) softened from '>=0' to '<=0' after "
-            "robustness stress test (multi-seed, BCa, jackknife, multi-window) "
-            "showed the negative direction is reproducible across 5/5 "
-            "seeds, 2/2 BCa CIs, 10/10 LOO steps, and 5/5 windows. "
-            "Cross-panel check: zvf_risk_mean is significantly LOWER on "
-            "zvf130_5seed for both AERO (-0.148, CI excludes 0) and AREAL "
-            "(-0.246, CI excludes 0), confirming the mechanism — they DO "
-            "succeed at lowering ZVF risk, but at a measurable reward cost."
-        )
-        entry["notes"] = entry.get("notes", "") + notes_addon
-        # write back with the original 2-space indent to keep diff minimal
-        with open(fp, "w") as f:
-            json.dump(entry, f, indent=2)
-        # provenance trail
-        amendment_records[variant] = {
-            "iter": 194,
-            "old_predicted_sign": ">=0",
-            "new_predicted_sign": "<=0",
-            "amended_for_metric": "reward_mean",
-            "amended_for_panel": "n2_same_stack_last10",
-            "raw_observed_delta": next(
-                (cv["observed_delta"] for cv in entry.get("claim_validation", [])
-                 if cv.get("metric") == "reward_mean"),
-                None,
-            ),
-            "robustness": {
-                "multiseed_5of5_negative": h1_pass,
-                "bca_ci_lower_lt_0": h2a_pass,
-                "bca_ci_strict_lt_0": h2b_pass,
-                "loo_10of10_negative": h3_pass,
-                "windows_5of5_negative": h4_pass,
-                "cross_panel_zvf_risk_significantly_lower": h5_pass,
-            },
-        }
-        with open(ENT / f"delta_{variant}.amendment.json", "w") as f:
-            json.dump(amendment_records[variant], f, indent=2)
+    # Protocol v2: analysis is read-only with respect to claims and verdicts.
+    # Passing same-data robustness tests can motivate a proposal, not validate
+    # a retrospective prediction. Original claims remain untouched.
+    checks = dict(h1=h1_pass, h2b=h2b_pass, h3=h3_pass, h4=h4_pass, h5=h5_pass)
+    evidence_complete = all((multiseed_rows, bca_rows, jackknife_rows,
+                             window_rows, cross_panel_rows))
+    proposal = amendment_proposal(checks, evidence_complete)
+    proposal["original_entries"] = {
+        variant: json.loads((ENT / f"delta_{variant}.json").read_text())
+        for variant in VARIANTS}
+    # Append-only audit: never overwrite a previous proposal or registry claim.
+    audit_path = RES / ("p6_iter194_proposal_" + __import__("uuid").uuid4().hex + ".json")
+    with audit_path.open("x") as f:
+        json.dump(proposal, f, indent=2)
 
     summary = {
         "iter": 194,
@@ -497,8 +443,10 @@ def main():
         "h5_cross_panel_pass": h5_pass,
         "n_h_pass": sum([h1_pass, h2_pass, h3_pass, h4_pass, h5_pass]),
         "n_h_total": 5,
-        "registry_amendments_applied": list(amendment_records.keys()),
-        "amendment_change": "predicted_sign for reward_mean @ n2_same_stack_last10: '>=0' -> '<=0' (now SUPPORTS verdict)",
+        "protocol_version": "review18-v2",
+        "registry_amendments_applied": [],
+        "amendment_proposal": str(audit_path),
+        "amendment_change": "None; read-only analysis. Retrospective revision requires independent validation.",
         "outputs": [
             "p6_iter194_robustness_multiseed.tsv",
             "p6_iter194_robustness_bca.tsv",
@@ -506,12 +454,7 @@ def main():
             "p6_iter194_robustness_window.tsv",
             "p6_iter194_robustness_cross_panel.tsv",
         ],
-        "registry_patches": [
-            "platform_hybrid/registry/entries/delta_aero.json (predicted_sign amended, caveat added)",
-            "platform_hybrid/registry/entries/delta_areal.json (predicted_sign amended, caveat added)",
-            "platform_hybrid/registry/entries/delta_aero.amendment.json (NEW provenance)",
-            "platform_hybrid/registry/entries/delta_areal.amendment.json (NEW provenance)",
-        ],
+        "registry_patches": [],
     }
     out_sum = RES / "p6_iter194_summary.json"
     with open(out_sum, "w") as f:

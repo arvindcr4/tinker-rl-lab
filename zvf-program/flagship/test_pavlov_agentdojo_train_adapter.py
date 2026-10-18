@@ -253,7 +253,7 @@ class PavlovAgentdojoTrainAdapterTests(unittest.TestCase):
             errors,
         )
 
-    def test_validate_rejects_public_checkpoint_without_required_proof(self) -> None:
+    def test_validate_rejects_primary_eval_dataset_substitution(self) -> None:
         bad = self._with_complete_receipts()
         bad["boundaries"][0]["receipts"]["dataset_id"] = "salesforce/xlam-function-calling-60k"
         self._with_resigned_bundle(bad)

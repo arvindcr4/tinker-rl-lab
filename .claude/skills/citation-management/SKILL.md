@@ -17,7 +17,7 @@ Manage the full lifecycle of citations in a LaTeX paper.
 
 ### Validate citations (check all cite keys resolve)
 ```bash
-python ~/.claude/skills/citation-management/scripts/validate_citations.py \
+python ${SKILLS_ROOT:?Set SKILLS_ROOT to the installed skill package}/citation-management/scripts/validate_citations.py \
   --tex paper/main.tex --bib paper/references.bib --check-figures --figures-dir paper/figures/
 ```
 
@@ -25,20 +25,20 @@ Reports: missing citations, unused bib entries, duplicate keys, duplicate sectio
 
 ### Generate BibTeX from paper database
 ```bash
-python ~/.claude/skills/deep-research/scripts/bibtex_manager.py \
+python ${SKILLS_ROOT:?Set SKILLS_ROOT to the installed skill package}/deep-research/scripts/bibtex_manager.py \
   --jsonl paper_db.jsonl --output references.bib
 ```
 
 ### Search for a specific paper to add
 ```bash
-python ~/.claude/skills/deep-research/scripts/search_semantic_scholar.py \
+python ${SKILLS_ROOT:?Set SKILLS_ROOT to the installed skill package}/deep-research/scripts/search_semantic_scholar.py \
   --query "attention is all you need" --max-results 5 \
-  --api-key "$(grep S2_API_Key /Users/lingzhi/Code/keys.md 2>/dev/null | cut -d: -f2 | tr -d ' ')"
+  --api-key "${S2_API_KEY:?Set S2_API_KEY in the environment}"
 ```
 
 ### Harvest missing citations automatically
 ```bash
-python ~/.claude/skills/citation-management/scripts/harvest_citations.py \
+python ${SKILLS_ROOT:?Set SKILLS_ROOT to the installed skill package}/citation-management/scripts/harvest_citations.py \
   --tex paper/main.tex --bib paper/references.bib --output candidates.bib --max-rounds 10
 ```
 
@@ -47,7 +47,7 @@ Key flags: `--dry-run` (preview only), `--verbose`, `--api-key`
 
 ### Auto-fix missing citation placeholders
 ```bash
-python ~/.claude/skills/citation-management/scripts/validate_citations.py \
+python ${SKILLS_ROOT:?Set SKILLS_ROOT to the installed skill package}/citation-management/scripts/validate_citations.py \
   --tex paper/main.tex --bib paper/references.bib --fix
 ```
 
@@ -92,3 +92,7 @@ BibTeX key format: `firstAuthorLastNameYearFirstContentWord` (e.g., `vaswani2017
 
 ## Related Skills
 - Upstream: [literature-search](../literature-search/)
+
+## Evidence contract v2
+
+A citation must have claim-to-source support: source identity, supporting passage/page, scope, and verification status. Bibliographic existence alone does not verify a claim. Placeholder entries remain unresolved and block publication validation. Novelty judgments may be inconclusive/insufficient_evidence; failed counter-searches are bounded search outcomes, not increased confidence. Credentials must come from environment variables; never read a personal keys.md file. Resolve helpers from the installed skill package and report missing configuration explicitly.

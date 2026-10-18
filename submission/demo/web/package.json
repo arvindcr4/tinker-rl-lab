@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build && node -e \"require('fs').copyFileSync('dist/index.html','tinkerrl_demo.html')\"",
     "preview": "vite preview",
-    "test": "node tests/grade_all.mjs && python3 tests/test_demo.py"
+    "test": "node --test tests/test_*.mjs && python3 tests/test_export.py && vite build && DEMO_PAGE=dist/index.html python3 tests/test_demo.py && node tests/grade_all.mjs"
   },
   "dependencies": {
     "react": "18.3.1",

@@ -175,17 +175,26 @@ def run_verl_qwen3_8b():
     start = time.time()
     env = os.environ.copy()
     env["PYTHONPATH"] = ""
-    env["WANDB_RUN_ID"] = run.id
+    from uuid import uuid4
+    trainer_run_id = uuid4().hex
+    env["WANDB_RUN_ID"] = trainer_run_id
     proc = subprocess.run(cmd, cwd=WORK, env=env)
     duration = time.time() - start
     print(f"[verl] subprocess exit={proc.returncode} in {duration:.1f}s")
+
+    if proc.returncode:
+        run.finish(exit_code=1)
+        return {"framework": "verl", "status": "failed", "subprocess_exit": proc.returncode,
+                "successful_updates": None, "requested_updates": 30, "trainer_run_id": trainer_run_id,
+                "final_checkpoint": None, "last10_avg": None, "evidence_error": "trainer_subprocess_failed",
+                "completion_contract_satisfied": False, "comparison_contract_satisfied": False}
 
     # ---- pull reward trace from W&B ----
     reward_trace = []
     wandb_url = run.url
     try:
         api = wandb.Api()
-        api_run = api.run(f"{api.default_entity}/{PROJECT}/{run.id}")
+        api_run = api.run(f"{run.entity}/{PROJECT}/{trainer_run_id}")
         hist = api_run.history(
             keys=["critic/rewards/mean", "train/reward_mean", "reward/mean"],
         )
@@ -196,9 +205,16 @@ def run_verl_qwen3_8b():
     except Exception as exc:
         print(f"[verl] could not fetch W&B history: {exc}")
 
-    last10 = float(np.mean(reward_trace[-10:])) if len(reward_trace) >= 10 else float(np.mean(reward_trace or [0]))
-    peak = float(max(reward_trace or [0]))
-    first5 = float(np.mean(reward_trace[:5])) if reward_trace else 0.0
+    if not reward_trace:
+        run.finish(exit_code=1)
+        return {"framework": "verl", "status": "partial", "last10_avg": None,
+                "trainer_run_id": trainer_run_id, "successful_updates": None,
+                "requested_updates": 30, "final_checkpoint": None,
+                "evidence_error": "reward_history_missing", "completion_contract_satisfied": False,
+                "comparison_contract_satisfied": False}
+    last10 = float(np.mean(reward_trace[-10:]))
+    peak = float(max(reward_trace))
+    first5 = float(np.mean(reward_trace[:5]))
 
     wandb.log({"final_peak": peak, "final_last10": last10, "duration_s": duration})
     wandb.finish()
@@ -223,6 +239,17 @@ def run_verl_qwen3_8b():
     return {
         "framework": "verl",
         "mode": "real",
+        "status": "partial",
+        "successful_updates": None,
+        "requested_updates": 30,
+        "trainer_run_id": trainer_run_id,
+        "evidence_error": "observed_updates_and_checkpoint_unverified",
+        "completion_contract_satisfied": False,
+        "protocol_version": "framework-comparison-v3",
+        "comparison_mode": "native_framework_recipe",
+        "comparison_contract_satisfied": False,
+        "claim_supported": False,
+        "resolved_config_status": "unavailable_until_adapter_initialization",
         "model": MODEL,
         "algorithm": "GRPO",
         "seed": 42,

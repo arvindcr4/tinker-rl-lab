@@ -15,8 +15,8 @@ difficulty stratum and pooled:
   - the earlier naive P_mixed/G argmax, for contrast
 
 Divergence between the J-argmax and the naive argmax localizes how much the
-Bernoulli-variance weighting in S(p,G) matters; agreement between analytic
-and empirical J-argmax is the E-T3a validation the theory needs.
+Bernoulli-variance weighting in S(p,G) matters; agreement is only a proxy sanity check. J(2)=J(3) algebraically for every p;
+there is no unique learning optimum established.
 """
 
 from __future__ import annotations
@@ -24,6 +24,8 @@ from __future__ import annotations
 import argparse
 import random
 from pathlib import Path
+
+from analysis_contract import validate_design, strata_all
 
 from common import RESULTS_DIR, load_pool, utc_now, write_result
 
@@ -77,12 +79,12 @@ def main() -> None:
     pool = load_pool(args.pool)
     prompts = pool["prompts"]
     R = pool["rollouts_per_prompt"]
+    validate_design(groups=GRID, counts=[args.n_strata], available=R, n_prompts=len(prompts))
     grid = [G for G in GRID if G <= R]
     rng = random.Random(args.seed)
 
     ordered = sorted(prompts, key=lambda p: p["p_hat"])
-    k = max(1, len(ordered) // args.n_strata)
-    strata = [ordered[i:i + k] for i in range(0, len(ordered), k)][:args.n_strata]
+    strata = strata_all(ordered, args.n_strata)
     strata.append(prompts)  # pooled, as the final "stratum"
 
     rows = []
@@ -110,6 +112,9 @@ def main() -> None:
                 if r["t3_gstar_prediction"] == r["empirical_J_argmax"])
     out = RESULTS_DIR / f"t3_gstar_v2_{pool['tag']}.json"
     write_result(out, {
+        "claim_scope": "proxy_objective_only",
+        "unique_learning_optimum_established": False,
+        "objective_id": "variance_weighted_mixed_per_rollout_v1",
         "kind": "t3_gstar_v2_prediction_fill",
         "status": "complete",
         "pool": str(args.pool),

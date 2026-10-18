@@ -44,7 +44,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 FIG = RES / "figures"
 RES.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -122,7 +122,7 @@ def add_noise(X_te: np.ndarray, agg_idx: list[int], sigma_mult: float, sd_per: n
     if sigma_mult == 0.0:
         return out
     for j, col in enumerate(agg_idx):
-        out[:, col] = X_te[:, col] + rng.gauss(0.0, sigma_mult * sd_per[j])
+        out[:, col] = X_te[:, col] + np.array([rng.gauss(0.0, sigma_mult * sd_per[j]) for _ in range(len(X_te))])
     return out
 
 
@@ -313,7 +313,7 @@ def main() -> None:
                 p24 = p_24_noisy_cache[sigma]
                 for k_pct in (1.5, 2.0, 3.0):
                     ci = stratified_pair_bootstrap(
-                        y_st, st, p_20[mask], p24[mask], k_pct, 0.0, 0.0035,
+                        y_st, st, p24[mask], p_20[mask], k_pct, 0.0035, 0.0,
                     )
                     boot_rows.append(dict(
                         axis=axis_name, stratum=int(s),
@@ -340,8 +340,8 @@ def main() -> None:
 
     # Cross-coupling: amount-Q0 had iter-99 worst ECE on XGB-20raw — does it
     # also flip the cost frontier earliest?
-    amount_q0_unfav_sigma = [s for (a, s), sig in first_unfav.items() if a == "Amount_q" and s == 0]
-    vmean_q2_unfav_sigma = [s for (a, s), sig in first_unfav.items() if a == "V_mean_q" and s == 2]
+    amount_q0_unfav_sigma = [sig for (a, s), sig in first_unfav.items() if a == "Amount_q" and s == 0]
+    vmean_q2_unfav_sigma = [sig for (a, s), sig in first_unfav.items() if a == "V_mean_q" and s == 2]
 
     summary = {
         "n_test": int(len(y_te)),

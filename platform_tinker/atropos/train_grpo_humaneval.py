@@ -20,29 +20,12 @@ After training the LoRA adapter is pushed to HuggingFace when HF_PUSH=1.
 
 from __future__ import annotations
 
-import atexit
-try:
-    from codecarbon import EmissionsTracker
-    _tracker = EmissionsTracker()
-    _tracker.start()
-    atexit.register(_tracker.stop)
-except ImportError:
-    pass
-
-
 import argparse
-import ast
-import contextlib
-import io
 import json
 import os
 import re
 import shutil
-import signal
-import sys
-import textwrap
 import time
-import traceback
 from pathlib import Path
 from typing import Any, List
 
@@ -58,16 +41,22 @@ except Exception:
     pass
 
 import wandb
+
 try:
     import torch, wandb
-    if not getattr(wandb, '_vram_patched', False):
+
+    if not getattr(wandb, "_vram_patched", False):
         _old_log = wandb.log
+
         def _vram_log(data, *args, **kwargs):
             if torch.cuda.is_available():
-                data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                data["system/vram_peak_allocated_gb"] = torch.cuda.max_memory_allocated() / (
+                    1024**3
+                )
+                data["system/vram_reserved_gb"] = torch.cuda.max_memory_reserved() / (1024**3)
                 torch.cuda.reset_peak_memory_stats()
             _old_log(data, *args, **kwargs)
+
         wandb.log = _vram_log
         wandb._vram_patched = True
 except ImportError:
@@ -87,51 +76,19 @@ def _extract_code(text: str) -> str:
     return m.group(1).strip() if m else text.strip()
 
 
-def _run_humaneval_test(completion_code: str, test_code: str, entry_point: str,
-                        timeout: float = 5.0) -> float:
-    """
-    Execute the completion + HumanEval test harness in a restricted subprocess.
-    Returns 1.0 if all assert statements pass, else 0.0.
-    """
-    full_code = textwrap.dedent(f"""
-{completion_code}
+def _run_humaneval_test(
+    completion_code: str, test_code: str, entry_point: str, timeout: float = 5.0
+) -> float:
+    from tinker_atropos.safe_execution import evaluate_python
 
-{test_code}
+    return float(
+        evaluate_python(
+            code=completion_code, tests=test_code, entry_point=entry_point, timeout=timeout
+        )
+    )
 
-check({entry_point})
-""")
-    # Restrict dangerous builtins
-    safe_globals: dict[str, Any] = {
-        "__builtins__": {
-            k: __builtins__[k]  # type: ignore[index]
-            for k in (
-                "abs", "all", "any", "bin", "bool", "chr", "dict", "divmod",
-                "enumerate", "filter", "float", "frozenset", "getattr", "hasattr",
-                "hash", "hex", "int", "isinstance", "issubclass", "iter", "len",
-                "list", "map", "max", "min", "next", "oct", "ord", "pow", "print",
-                "range", "repr", "reversed", "round", "set", "setattr", "slice",
-                "sorted", "str", "sum", "tuple", "type", "zip",
-            )
-            if k in __builtins__  # type: ignore[operator]
-        }
-    }
 
-    def _exec():
-        exec(compile(full_code, "<humaneval>", "exec"), safe_globals)  # noqa: S102
-
-    def _timeout_handler(signum, frame):
-        raise TimeoutError("execution timed out")
-
-    old = signal.signal(signal.SIGALRM, _timeout_handler)
-    signal.alarm(int(timeout) + 1)
-    try:
-        _exec()
-        return 1.0
-    except Exception:
-        return 0.0
-    finally:
-        signal.alarm(0)
-        signal.signal(signal.SIGALRM, old)
+REWARD_VERSION = "binary-outcome-v2-no-shaping"
 
 
 def make_humaneval_reward_fn(dataset, group_size: int):
@@ -160,24 +117,20 @@ def make_humaneval_reward_fn(dataset, group_size: int):
                 meta = lookup.get(tid, {})
                 # prepend the original prompt so the function signature is defined
                 full_code = meta.get("prompt", "") + "\n" + code
-                score = _run_humaneval_test(full_code, meta.get("test", ""), meta.get("entry_point", ""))
+                score = _run_humaneval_test(
+                    full_code, meta.get("test", ""), meta.get("entry_point", "")
+                )
             else:
                 score = 0.0
-                
-            # Basic PRM for code (e.g. tracking docstrings or comments as reasoning steps)
-            step_reward = 0.0
-            text_lower = code.lower()
-            if "# step" in text_lower or '"""' in text_lower:
-                step_reward += 0.2
-            
-            rewards.append(score + step_reward)
-        
+
+            rewards.append(score)
+
         zvf_sum = 0.0
         advantage_variances = []
         n_groups = len(rewards) // group_size
         if n_groups > 0:
             for idx in range(n_groups):
-                chunk = rewards[idx*group_size:(idx+1)*group_size]
+                chunk = rewards[idx * group_size : (idx + 1) * group_size]
                 var = np.var(chunk)
                 advantage_variances.append(var)
                 mr = sum(chunk) / group_size
@@ -187,16 +140,16 @@ def make_humaneval_reward_fn(dataset, group_size: int):
             _last_zvf = zvf_sum / n_groups
             _last_adv_var = float(np.mean(advantage_variances))
             _last_acr = 1.0 if _last_adv_var < 1e-4 else 0.0
-            
+
         # Length confounding panel
         lengths = [len(c if isinstance(c, str) else str(c)) for c in completions]
         correct_lens = [l for l, r in zip(lengths, rewards) if r > 0.5]
         incorrect_lens = [l for l, r in zip(lengths, rewards) if r <= 0.5]
-        
+
         global _last_mean_len_correct, _last_mean_len_incorrect, _last_len_reward_corr
         _last_mean_len_correct = float(np.mean(correct_lens)) if correct_lens else 0.0
         _last_mean_len_incorrect = float(np.mean(incorrect_lens)) if incorrect_lens else 0.0
-        
+
         if correct_lens and incorrect_lens:
             mean_y1 = _last_mean_len_correct
             mean_y0 = _last_mean_len_incorrect
@@ -204,10 +157,12 @@ def make_humaneval_reward_fn(dataset, group_size: int):
             n0 = len(incorrect_lens)
             n = n1 + n0
             std_y = np.std(lengths)
-            _last_len_reward_corr = float(((mean_y1 - mean_y0) / (std_y + 1e-8)) * np.sqrt((n1 * n0) / (n * (n - 1))))
+            _last_len_reward_corr = float(
+                ((mean_y1 - mean_y0) / (std_y + 1e-8)) * np.sqrt((n1 * n0) / (n * (n - 1)))
+            )
         else:
             _last_len_reward_corr = 0.0
-            
+
         return rewards
 
     return reward_fn
@@ -220,10 +175,7 @@ def build_humaneval_dataset(tokenizer, max_token_length: int = 1024, split: str 
     ds = ds.train_test_split(test_size=0.1, seed=42)
     ds = ds[split]
 
-    SUFFIX = (
-        "\n# Write a complete Python solution. "
-        "Enclose your code in a ```python``` block."
-    )
+    SUFFIX = "\n# Write a complete Python solution. Enclose your code in a ```python``` block."
 
     def _fmt(ex):
         messages = [{"role": "user", "content": ex["prompt"] + SUFFIX}]
@@ -239,21 +191,43 @@ def build_humaneval_dataset(tokenizer, max_token_length: int = 1024, split: str 
 
 # ── reward: tool use ─────────────────────────────────────────────────────────
 
+from tinker_atropos.safe_execution import arithmetic_value
+
 # Simple synthetic tool-use dataset: given a question, the model must emit
 # a JSON blob with {"tool": "<name>", "args": {...}} and then answer.
 _TOOL_SCHEMA = {
     "calculator": {"description": "Evaluate a math expression.", "args": {"expression": "str"}},
-    "lookup":     {"description": "Look up a fact.",            "args": {"query": "str"}},
-    "search":     {"description": "Search the web.",             "args": {"query": "str"}},
+    "lookup": {"description": "Look up a fact.", "args": {"query": "str"}},
+    "search": {"description": "Search the web.", "args": {"query": "str"}},
 }
 
 _TOOL_EXAMPLES = [
     # (question, tool, args_match_fn, gold_answer)
-    ("What is 17 * 23?",               "calculator", lambda a: "17" in a.get("expression","") and "23" in a.get("expression",""), "391"),
-    ("What is the capital of France?",  "lookup",     lambda a: "france" in a.get("query","").lower(), "Paris"),
-    ("Search for recent AI news.",      "search",     lambda a: "ai" in a.get("query","").lower(), None),
-    ("Calculate 144 / 12.",             "calculator", lambda a: "144" in a.get("expression",""), "12"),
-    ("Who wrote Hamlet?",               "lookup",     lambda a: "hamlet" in a.get("query","").lower(), "Shakespeare"),
+    (
+        "What is 17 * 23?",
+        "calculator",
+        lambda a: set(a) == {"expression"} and arithmetic_value(a["expression"]) == 391,
+        "391",
+    ),
+    (
+        "What is the capital of France?",
+        "lookup",
+        lambda a: "france" in a.get("query", "").lower(),
+        "Paris",
+    ),
+    ("Search for recent AI news.", "search", lambda a: "ai" in a.get("query", "").lower(), None),
+    (
+        "Calculate 144 / 12.",
+        "calculator",
+        lambda a: set(a) == {"expression"} and arithmetic_value(a["expression"]) == 12,
+        "12",
+    ),
+    (
+        "Who wrote Hamlet?",
+        "lookup",
+        lambda a: "hamlet" in a.get("query", "").lower(),
+        "Shakespeare",
+    ),
 ]
 
 
@@ -262,47 +236,60 @@ def _score_tool_call(response: str, gold_tool: str, args_ok_fn, gold_answer) -> 
     Score a tool-use response.
     +0.5 for correct tool call in JSON, +0.5 for correct final answer.
     """
-    score = 0.0
+    from tinker_atropos.grading import extract_json_object
+
+    call = extract_json_object(response)
+    if (
+        not isinstance(call, dict)
+        or call.get("tool") != gold_tool
+        or not isinstance(call.get("args"), dict)
+    ):
+        return 0.0
     try:
-        m = re.search(r"\{.*?\}", response, re.DOTALL)
-        if m:
-            call = json.loads(m.group())
-            if call.get("tool") == gold_tool and args_ok_fn(call.get("args", {})):
-                score += 0.5
-    except Exception:
-        pass
-    if gold_answer and gold_answer.lower() in response.lower():
-        score += 0.5
-    return score
+        call_ok = bool(args_ok_fn(call["args"]))
+    except (TypeError, ValueError, AttributeError):
+        call_ok = False
+    # A numeric target must not match a longer number, nor a number inside the call.
+    end = response.find("{")
+    if end >= 0:
+        try:
+            _, consumed = json.JSONDecoder().raw_decode(response[end:])
+            answer_text = response[end + consumed :]
+        except ValueError:
+            answer_text = ""
+    else:
+        answer_text = response
+    final_answer = (
+        re.sub(r"^(?:final answer|answer)\s*:\s*", "", answer_text.strip(), flags=re.I)
+        .strip()
+        .rstrip(".")
+    )
+    answer_ok = not gold_answer or final_answer.casefold() == str(gold_answer).casefold()
+    return 1.0 if call_ok and answer_ok else 0.0
 
 
 def make_tool_use_reward_fn(group_size: int):
     """Return a GRPOTrainer-compatible reward function for tool use."""
+
     def reward_fn(completions: List[str], prompts=None, **kwargs) -> List[float]:
-        gold_tools   = kwargs.get("gold_tool",   None)
+        gold_tools = kwargs.get("gold_tool", None)
         gold_answers = kwargs.get("gold_answer", None)
-        gold_args    = kwargs.get("gold_args",   None)   # serialised lambda index
+        gold_args = kwargs.get("gold_args", None)  # serialised lambda index
 
         rewards = []
         for i, completion in enumerate(completions):
             text = completion if isinstance(completion, str) else str(completion)
             if gold_tools is not None:
-                gt   = gold_tools[i][0]   if isinstance(gold_tools[i],   list) else gold_tools[i]
-                ga   = gold_answers[i][0] if isinstance(gold_answers[i], list) else gold_answers[i]
-                idx  = int(gold_args[i][0] if isinstance(gold_args[i], list) else gold_args[i])
+                gt = gold_tools[i][0] if isinstance(gold_tools[i], list) else gold_tools[i]
+                ga = gold_answers[i][0] if isinstance(gold_answers[i], list) else gold_answers[i]
+                idx = int(gold_args[i][0] if isinstance(gold_args[i], list) else gold_args[i])
                 _, _, args_fn, _ = _TOOL_EXAMPLES[idx % len(_TOOL_EXAMPLES)]
                 base_reward = _score_tool_call(text, gt, args_fn, ga)
             else:
                 base_reward = 0.0
-                
-            # PRM for tool use (rewarding step-by-step thinking before tool call)
-            step_reward = 0.0
-            text_lower = text.lower()
-            if "thought:" in text_lower or "step" in text_lower:
-                step_reward += 0.2
-                
-            rewards.append(base_reward + step_reward)
-        
+
+            rewards.append(base_reward)
+
         # TODO: Adversarial review notes that ZVF completely breaks down outside of math tasks.
         # In format-gated tasks (like tool-use), ZVF saturates at 1.0 because the base model
         # consistently fails schema parsing. Replace ZVF with ERF (Effective-Rollout Fraction).
@@ -311,7 +298,7 @@ def make_tool_use_reward_fn(group_size: int):
         n_groups = len(rewards) // group_size
         if n_groups > 0:
             for idx in range(n_groups):
-                chunk = rewards[idx*group_size:(idx+1)*group_size]
+                chunk = rewards[idx * group_size : (idx + 1) * group_size]
                 var = np.var(chunk)
                 advantage_variances.append(var)
                 mr = sum(chunk) / group_size
@@ -321,16 +308,16 @@ def make_tool_use_reward_fn(group_size: int):
             _last_zvf = zvf_sum / n_groups
             _last_adv_var = float(np.mean(advantage_variances))
             _last_acr = 1.0 if _last_adv_var < 1e-4 else 0.0
-            
+
         # Length confounding panel
         lengths = [len(c if isinstance(c, str) else str(c)) for c in completions]
         correct_lens = [l for l, r in zip(lengths, rewards) if r > 0.5]
         incorrect_lens = [l for l, r in zip(lengths, rewards) if r <= 0.5]
-        
+
         global _last_mean_len_correct, _last_mean_len_incorrect, _last_len_reward_corr
         _last_mean_len_correct = float(np.mean(correct_lens)) if correct_lens else 0.0
         _last_mean_len_incorrect = float(np.mean(incorrect_lens)) if incorrect_lens else 0.0
-        
+
         if correct_lens and incorrect_lens:
             mean_y1 = _last_mean_len_correct
             mean_y0 = _last_mean_len_incorrect
@@ -338,10 +325,12 @@ def make_tool_use_reward_fn(group_size: int):
             n0 = len(incorrect_lens)
             n = n1 + n0
             std_y = np.std(lengths)
-            _last_len_reward_corr = float(((mean_y1 - mean_y0) / (std_y + 1e-8)) * np.sqrt((n1 * n0) / (n * (n - 1))))
+            _last_len_reward_corr = float(
+                ((mean_y1 - mean_y0) / (std_y + 1e-8)) * np.sqrt((n1 * n0) / (n * (n - 1)))
+            )
         else:
             _last_len_reward_corr = 0.0
-            
+
         return rewards
 
     return reward_fn
@@ -352,60 +341,67 @@ def build_tool_use_dataset(tokenizer, seed: int = 42, split: str = "train"):
 
     SYSTEM = (
         "You have access to tools. To use a tool, output JSON: "
-        '{{"tool": "<name>", "args": {{...}}}} then give your final answer.'
+        '{"tool": "<name>", "args": {...}} then give your final answer.'
     )
+    import random
+
+    task_ids = list(range(len(_TOOL_EXAMPLES)))
+    random.Random(seed).shuffle(task_ids)
+    selected = task_ids[:-1] if split == "train" else task_ids[-1:]
     rows = []
-    for i, (q, tool, _, ans) in enumerate(_TOOL_EXAMPLES * 200):   # repeat to get 1000 examples
+    for i in selected * 200:
+        q, tool, _, ans = _TOOL_EXAMPLES[i]  # repeat to get 1000 examples
         messages = [
-            {"role": "system",    "content": SYSTEM},
-            {"role": "user",      "content": q},
+            {"role": "system", "content": SYSTEM},
+            {"role": "user", "content": q},
         ]
-        rows.append({
-            "prompt":      tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True),
-            "gold_tool":   tool,
-            "gold_answer": ans or "",
-            "gold_args":   str(i % len(_TOOL_EXAMPLES)),
-        })
+        rows.append(
+            {
+                "prompt": tokenizer.apply_chat_template(
+                    messages, tokenize=False, add_generation_prompt=True
+                ),
+                "gold_tool": tool,
+                "gold_answer": ans or "",
+                "gold_args": str(i % len(_TOOL_EXAMPLES)),
+            }
+        )
 
     import random
+
     rng = random.Random(seed)
     rng.shuffle(rows)
-    
-    split_idx = int(len(rows) * 0.9)
-    if split == "train":
-        rows = rows[:split_idx]
-    else:
-        rows = rows[split_idx:]
-        
+
     return Dataset.from_list(rows)
 
 
 # ── shared: config loader + model loader (same as train_grpo_unsloth.py) ────
 
+
 def load_config(path: str) -> dict:
     with open(path) as f:
         raw = yaml.safe_load(f)
     cfg = raw.get("env", {})
-    t   = raw.get("tinker", {})
-    oi  = (raw.get("openai") or [{}])[0]
+    t = raw.get("tinker", {})
+    oi = (raw.get("openai") or [{}])[0]
     return {
-        "model_name":              oi.get("model_name") or cfg.get("tokenizer_name"),
+        "reward_version": REWARD_VERSION,
+        "model_name": oi.get("model_name") or cfg.get("tokenizer_name"),
         # TODO: The "Early-Training Snapshot" Problem. 30-50 steps are insufficient to
         # observe meaningful RL convergence, long-horizon reward hacking, or true policy collapse.
         # Increase total_steps significantly for full training runs rather than just "snapshots".
-        "total_steps":             cfg.get("total_steps",       50),
-        "batch_size":              cfg.get("batch_size",        128),
-        "group_size":              cfg.get("group_size",        16),
-        "max_token_length":        cfg.get("max_token_length",  512),
+        "total_steps": cfg.get("total_steps", 50),
+        "batch_size": cfg.get("batch_size", 128),
+        "group_size": cfg.get("group_size", 16),
+        "max_token_length": cfg.get("max_token_length", 512),
         "max_token_trainer_length": t.get("max_token_trainer_length", 2048),
-        "lora_rank":               t.get("lora_rank",           32),
-        "learning_rate":           t.get("learning_rate",       4e-5),
-        "wandb_project":           t.get("wandb_project",       "tinker-rl-scaling"),
-        "wandb_group":             t.get("wandb_group",         "coding-scaling"),
-        "wandb_run_name":          t.get("wandb_run_name",      "grpo-run"),
-        "checkpoint_dir":          t.get("checkpoint_dir",      "./checkpoints/run/"),
+        "lora_rank": t.get("lora_rank", 32),
+        "learning_rate": t.get("learning_rate", 4e-5),
+        "wandb_project": t.get("wandb_project", "tinker-rl-scaling"),
+        "wandb_group": t.get("wandb_group", "coding-scaling"),
+        "wandb_run_name": t.get("wandb_run_name", "grpo-run"),
+        "checkpoint_dir": t.get("checkpoint_dir", "./checkpoints/run/"),
         "early_stopping_patience": t.get("early_stopping_patience", 3),
-        "eval_steps":              t.get("eval_steps",          10),
+        "eval_steps": t.get("eval_steps", 10),
     }
 
 
@@ -422,16 +418,30 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
     if use_unsloth:
         try:
             from unsloth import FastLanguageModel
+
             model, tokenizer = FastLanguageModel.from_pretrained(
-                model_name=model_name, max_seq_length=max_seq_len,
-                load_in_4bit=load_in_4bit, dtype=None,
+                model_name=model_name,
+                max_seq_length=max_seq_len,
+                load_in_4bit=load_in_4bit,
+                dtype=None,
             )
             model = FastLanguageModel.get_peft_model(
-                model, r=lora_rank,
-                target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                                 "gate_proj", "up_proj", "down_proj"],
-                lora_alpha=lora_rank, lora_dropout=0, bias="none",
-                use_gradient_checkpointing="unsloth", random_state=42,
+                model,
+                r=lora_rank,
+                target_modules=[
+                    "q_proj",
+                    "k_proj",
+                    "v_proj",
+                    "o_proj",
+                    "gate_proj",
+                    "up_proj",
+                    "down_proj",
+                ],
+                lora_alpha=lora_rank,
+                lora_dropout=0,
+                bias="none",
+                use_gradient_checkpointing="unsloth",
+                random_state=42,
             )
             print(f"  Loaded {model_name} with Unsloth ({params_b}B, 4-bit={load_in_4bit})")
         except Exception as exc:
@@ -444,24 +454,42 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
         from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
         tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-        kwargs: dict[str, Any] = {"trust_remote_code": True, "device_map": "auto",
-                                  "torch_dtype": torch.bfloat16}
+        kwargs: dict[str, Any] = {
+            "trust_remote_code": True,
+            "device_map": "auto",
+            "torch_dtype": torch.bfloat16,
+        }
         if load_in_4bit:
             kwargs["quantization_config"] = BitsAndBytesConfig(
-                load_in_4bit=True, bnb_4bit_quant_type="nf4",
-                bnb_4bit_use_double_quant=True, bnb_4bit_compute_dtype=torch.bfloat16,
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
             )
         model = AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
         model.config.use_cache = False
         if load_in_4bit:
             model = prepare_model_for_kbit_training(model)
         model.gradient_checkpointing_enable()
-        model = get_peft_model(model, LoraConfig(
-            r=lora_rank, lora_alpha=lora_rank, lora_dropout=0.0, bias="none",
-            task_type="CAUSAL_LM",
-            target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                             "gate_proj", "up_proj", "down_proj"],
-        ))
+        model = get_peft_model(
+            model,
+            LoraConfig(
+                r=lora_rank,
+                lora_alpha=lora_rank,
+                lora_dropout=0.0,
+                bias="none",
+                task_type="CAUSAL_LM",
+                target_modules=[
+                    "q_proj",
+                    "k_proj",
+                    "v_proj",
+                    "o_proj",
+                    "gate_proj",
+                    "up_proj",
+                    "down_proj",
+                ],
+            ),
+        )
         print(f"  Loaded {model_name} with HF/PEFT ({params_b}B, 4-bit={load_in_4bit})")
 
     if tokenizer.chat_template is None:
@@ -480,6 +508,7 @@ def maybe_push_to_hub(final_dir: str, cfg: dict, config_path: str, seed: int) ->
     if os.environ.get("HF_PUSH", "0").lower() not in {"1", "true", "yes"}:
         return
     from huggingface_hub import HfApi, create_repo
+
     token = os.environ.get("HF_TOKEN")
     api = HfApi(token=token)
     owner = os.environ.get("HF_REPO_OWNER") or api.whoami(token=token)["name"]
@@ -487,67 +516,107 @@ def maybe_push_to_hub(final_dir: str, cfg: dict, config_path: str, seed: int) ->
     repo_id = f"{owner}/{repo_name}"
     private = os.environ.get("HF_PUSH_PRIVATE", "1") in {"1", "true", "yes"}
     create_repo(repo_id=repo_id, token=token, private=private, exist_ok=True, repo_type="model")
-    api.upload_folder(repo_id=repo_id, folder_path=final_dir, repo_type="model", token=token,
-                      commit_message=f"Upload {cfg['wandb_run_name']} adapter")
+    api.upload_folder(
+        repo_id=repo_id,
+        folder_path=final_dir,
+        repo_type="model",
+        token=token,
+        commit_message=f"Upload {cfg['wandb_run_name']} adapter",
+    )
     print(f"  HuggingFace upload → {repo_id}")
 
 
 # ── main ─────────────────────────────────────────────────────────────────────
 
-def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None = None,
-          total_token_budget: int | None = None, tokens_per_sample: int = 2048,
-          group_size_override: int | None = None, batch_size_override: int | None = None):
+
+def train(
+    config_path: str,
+    task: str,
+    seed: int = 42,
+    wandb_api_key: str | None = None,
+    total_token_budget: int | None = None,
+    tokens_per_sample: int = 2048,
+    group_size_override: int | None = None,
+    batch_size_override: int | None = None,
+):
+    import random
+    import torch
+
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if task == "humaneval":
+        from tinker_atropos.safe_execution import require_isolated_evaluator
+
+        require_isolated_evaluator()
     cfg = load_config(config_path)
-    if group_size_override:
-        cfg['group_size'] = group_size_override
-    if batch_size_override:
-        cfg['batch_size'] = batch_size_override
-        
-    if total_token_budget:
-        total_samples = total_token_budget / tokens_per_sample
-        effective_batch_size = cfg['batch_size']
-        cfg['total_steps'] = max(1, int(total_samples / effective_batch_size))
-        print(f"[P1 Ablation] Matching token budget: {total_token_budget} tokens -> total_steps={cfg['total_steps']}")
-        
-    print(f"\n{'='*60}")
+    if group_size_override is not None:
+        cfg["group_size"] = group_size_override
+    if batch_size_override is not None:
+        cfg["batch_size"] = batch_size_override
+
+    if total_token_budget is not None:
+        from tinker_atropos.budgets import budget_steps
+
+        per_device = cfg["group_size"]
+        accumulation = max(1, cfg["batch_size"] // per_device)
+        cfg["total_steps"] = budget_steps(
+            total_token_budget,
+            tokens_per_sample,
+            per_device,
+            accumulation,
+            int(os.environ.get("WORLD_SIZE", "1")),
+        )
+        print(
+            f"[P1 Ablation] Matching token budget: {total_token_budget} tokens -> total_steps={cfg['total_steps']}"
+        )
+
+    print(f"\n{'=' * 60}")
     print(f"  GRPO ({task}) — {cfg['model_name']}")
     print(f"  Steps: {cfg['total_steps']}  batch: {cfg['batch_size']}  group: {cfg['group_size']}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     os.environ["WANDB_MODE"] = "online"
     if wandb_api_key:
         wandb.login(key=wandb_api_key)
     run_name = f"{cfg['wandb_run_name']}-seed{seed}" if seed != 42 else cfg["wandb_run_name"]
-    wandb.init(project=cfg["wandb_project"], group=cfg["wandb_group"], name=run_name,
-               config={**cfg, "task": task, "seed": seed, "config_file": config_path})
+    wandb.init(
+        project=cfg["wandb_project"],
+        group=cfg["wandb_group"],
+        name=run_name,
+        config={**cfg, "task": task, "seed": seed, "config_file": config_path},
+    )
 
     model, tokenizer = load_model_and_tokenizer(
         cfg["model_name"], cfg["lora_rank"], cfg["max_token_trainer_length"]
     )
 
     if task == "humaneval":
-        dataset    = build_humaneval_dataset(tokenizer, cfg["max_token_length"], split="train")
+        dataset = build_humaneval_dataset(tokenizer, cfg["max_token_length"], split="train")
         eval_dataset = build_humaneval_dataset(tokenizer, cfg["max_token_length"], split="test")
-        reward_fn  = make_humaneval_reward_fn(
-            __import__("datasets").load_dataset("openai/openai_humaneval", split="test"), cfg["group_size"]
+        reward_fn = make_humaneval_reward_fn(
+            __import__("datasets").load_dataset("openai/openai_humaneval", split="test"),
+            cfg["group_size"],
         )
         extra_cols = ["task_id"]
     elif task == "tool_use":
-        dataset    = build_tool_use_dataset(tokenizer, seed=seed, split="train")
+        dataset = build_tool_use_dataset(tokenizer, seed=seed, split="train")
         eval_dataset = build_tool_use_dataset(tokenizer, seed=seed, split="test")
-        reward_fn  = make_tool_use_reward_fn(cfg["group_size"])
+        reward_fn = make_tool_use_reward_fn(cfg["group_size"])
         extra_cols = ["gold_tool", "gold_answer", "gold_args"]
     else:
         raise ValueError(f"Unknown task: {task}")
 
     from trl import GRPOConfig, GRPOTrainer
+
     _per_device_bs = cfg["batch_size"] // cfg["group_size"]
-    _num_gen       = cfg["group_size"]
+    _num_gen = cfg["group_size"]
 
     push_to_hub_flag = os.environ.get("HF_PUSH", "0").lower() in {"1", "true", "yes"}
     hub_model_id = None
     if push_to_hub_flag:
         from huggingface_hub import HfApi
+
         token = os.environ.get("HF_TOKEN")
         api = HfApi(token=token)
         owner = os.environ.get("HF_REPO_OWNER") or api.whoami(token=token)["name"]
@@ -573,7 +642,8 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
         seed=seed,
         report_to="wandb",
         run_name=run_name,
-        bf16=True, fp16=False,
+        bf16=True,
+        fp16=False,
         gradient_checkpointing=True,
         dataloader_num_workers=0,
         remove_unused_columns=False,
@@ -583,9 +653,10 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
         hub_private_repo=os.environ.get("HF_PUSH_PRIVATE", "1") in {"1", "true", "yes"},
     )
     from transformers import EarlyStoppingCallback
-    
+
     trainer = GRPOTrainer(
-        model=model, args=grpo_config,
+        model=model,
+        args=grpo_config,
         train_dataset=dataset,
         eval_dataset=eval_dataset,
         reward_funcs=[reward_fn],
@@ -594,6 +665,7 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
     )
 
     from transformers import TrainerCallback
+
     step_log: list[float] = []
 
     class RewardLogCallback(TrainerCallback):
@@ -605,33 +677,46 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
                 step_log.append(float(mean_r))
                 # TODO: ZVF is borderline tautological and a symptom, not a root cause.
                 # Consider monitoring advantage variance or policy entropy directly instead of ZVF.
-                global _last_zvf, _last_adv_var, _last_acr, _last_mean_len_correct, _last_mean_len_incorrect, _last_len_reward_corr
-                log_dict = {"train/percent_correct": float(mean_r), "train/step": state.global_step}
-                if '_last_zvf' in globals():
+                global \
+                    _last_zvf, \
+                    _last_adv_var, \
+                    _last_acr, \
+                    _last_mean_len_correct, \
+                    _last_mean_len_incorrect, \
+                    _last_len_reward_corr
+                log_dict = {
+                    "train/outcome_accuracy": float(mean_r),
+                    "train/total_reward": float(mean_r),
+                    "train/shaping_reward": 0.0,
+                    "train/step": state.global_step,
+                }
+                if "_last_zvf" in globals():
                     log_dict["zvf"] = _last_zvf
-                if '_last_adv_var' in globals():
+                if "_last_adv_var" in globals():
                     log_dict["diagnostics/advantage_variance"] = _last_adv_var
-                if '_last_acr' in globals():
+                if "_last_acr" in globals():
                     log_dict["diagnostics/advantage_collapse_rate"] = _last_acr
-                if '_last_mean_len_correct' in globals():
+                if "_last_mean_len_correct" in globals():
                     log_dict["diagnostics/mean_len_correct"] = _last_mean_len_correct
-                if '_last_mean_len_incorrect' in globals():
+                if "_last_mean_len_incorrect" in globals():
                     log_dict["diagnostics/mean_len_incorrect"] = _last_mean_len_incorrect
-                if '_last_len_reward_corr' in globals():
+                if "_last_len_reward_corr" in globals():
                     log_dict["diagnostics/length_reward_corr"] = _last_len_reward_corr
-                    
+
                 if "objective/entropy" in logs:
                     log_dict["train/policy_entropy"] = logs["objective/entropy"]
                 wandb.log(log_dict, step=state.global_step, commit=False)
-                print(f"  step {state.global_step:3d}  mean_reward={float(mean_r):.4f} zvf={_last_zvf:.2f}")
+                print(
+                    f"  step {state.global_step:3d}  mean_reward={float(mean_r):.4f} zvf={_last_zvf:.2f}"
+                )
 
     trainer.add_callback(RewardLogCallback())
 
     t0 = time.time()
     trainer.train()
-    print(f"\n  Training complete in {(time.time()-t0)/60:.1f} min")
+    print(f"\n  Training complete in {(time.time() - t0) / 60:.1f} min")
 
-    csv_path  = os.path.join(cfg["checkpoint_dir"], "reward_log.csv")
+    csv_path = os.path.join(cfg["checkpoint_dir"], "reward_log.csv")
     final_dir = os.path.join(cfg["checkpoint_dir"], "final")
     Path(csv_path).parent.mkdir(parents=True, exist_ok=True)
     Path(final_dir).mkdir(parents=True, exist_ok=True)
@@ -651,17 +736,32 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config",    required=True)
-    parser.add_argument("--task",      required=True, choices=["humaneval", "tool_use"])
+    parser.add_argument("--config", required=True)
+    parser.add_argument("--task", required=True, choices=["humaneval", "tool_use"])
     # TODO: Single-Seed Extrapolations are a major statistical vulnerability.
     # Extrapolating RL training dynamics from N=1 runs is highly initialization-dependent.
     # We should run these experiments across multiple seeds (e.g. N=5) to compute variance.
-    parser.add_argument("--seed",      type=int, default=42)
+    parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--wandb_key", default=None)
-    parser.add_argument("--total_token_budget", type=int, default=None, help="Total token budget for causal SFT warm-up ablation")
+    parser.add_argument(
+        "--total_token_budget",
+        type=int,
+        default=None,
+        help="Total token budget for causal SFT warm-up ablation",
+    )
     parser.add_argument("--tokens_per_sample", type=int, default=2048, help="Avg tokens per sample")
-    parser.add_argument("--group_size", type=int, default=None, help="Override config group_size for Pareto ablation")
-    parser.add_argument("--batch_size", type=int, default=None, help="Override config batch_size for Pareto ablation")
+    parser.add_argument(
+        "--group_size",
+        type=int,
+        default=None,
+        help="Override config group_size for Pareto ablation",
+    )
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=None,
+        help="Override config batch_size for Pareto ablation",
+    )
     args = parser.parse_args()
     train(
         config_path=args.config,

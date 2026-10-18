@@ -2,9 +2,12 @@
 
 ## Purpose
 
-This analysis addresses the reviewer objection that ZVF is tautologically
-correlated with reward on binary-reward tasks (since ZVF = p^G + (1-p)^G
-is a deterministic function of accuracy p).
+For conditionally independent binary rollouts, a prompt with success probability
+p_x has homogeneous-group probability p_x^G + (1-p_x)^G. Across prompts,
+E[ZVF] = E_x[p_x^G + (1-p_x)^G], generally not the same function of mean accuracy.
+Finite-sample ZVF is random. At G=8, uniform p_x=0.5 gives 1/128, whereas
+half always-correct and half always-wrong prompts give 1 at the same mean accuracy.
+This relationship does not apply unchanged to multi-level shaped rewards.
 
 If ZVF is merely a restatement of accuracy, then after controlling for
 current reward R_t, ZVF_t should have NO additional predictive power for

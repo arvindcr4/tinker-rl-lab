@@ -318,7 +318,26 @@ def score(setup, prepared, run_dir, output):
         for name, expected in terminal["execution_receipt"]["artifacts_sha256"].items():
             require(not Path(name).is_absolute() and ".." not in Path(name).parts, "unsafe retained artifact path")
             require(digest((directory / "artifacts" / name).read_bytes()) == expected, "retained execution artifact drift")
-        terminals.append(terminal)
+        execution = terminal["execution_receipt"]
+        require(execution.get("capsule_id") == task["capsule_id"] and execution.get("submission_sha256") == fingerprint(submission), "execution/submission mismatch")
+        require(execution.get("benchmark_level") == LEVEL and execution.get("source_revision") == REVISION, "execution source drift")
+        require(execution.get("terminal") is True and execution.get("outcome") in {"completed", "timeout", "agent_failed"}, "terminal execution missing")
+        require(execution.get("model_provenance_sha256") == fingerprint(contract["model"]), "execution model drift")
+        require(execution.get("native_results_sha256") == terminal["native_results_sha256"], "execution result binding drift")
+        raw_rows = read_json(directory / "native_result_file.json").get("capsule_results", [])
+        matching = [row for row in raw_rows if row.get("capsule_id") == task["capsule_id"]]
+        require(len(matching) == 1, "retained native result coverage mismatch")
+        raw_row = matching[0]
+        require(GRADE_KEYS <= set(raw_row) and all(raw_row.get(key) == submission["task"][key] for key in ("field", "language", "capsule_title")), "retained native task drift")
+        if execution.get("report_status") == "present":
+            require("report.json" in execution["artifacts_sha256"], "retained report hash missing")
+            report = read_json(directory / "artifacts" / "report.json")
+            require(isinstance(report, dict), "retained report must be object")
+        else:
+            require(execution.get("report_status") == "missing_or_invalid" and raw_row.get("result_report") == {}, "native missing report fallback mismatch")
+            report = {}
+        require(terminal["native_result"] == raw_row and terminal["original_report"] == report, "terminal cache differs from retained raw evidence")
+        terminals.append({**terminal, "native_result": raw_row, "original_report": report})
     receipt = {"schema": SCHEMA, "suite_id": "core_bench_eval", "experiment": "E2 replacement", "benchmark_level": LEVEL,
                "expected_total": EXPECTED_TOTAL, "expected_questions": EXPECTED_QUESTIONS, "native_terminal_capsules": len(terminals),
                "missing_capsules": missing, "score": None, "native_summary": None,

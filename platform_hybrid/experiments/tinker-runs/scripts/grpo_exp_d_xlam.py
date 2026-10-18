@@ -1,5 +1,12 @@
 """Experiment D: GRPO with Salesforce/xlam-function-calling-60k real dataset"""
 
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 4:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
+from platform_hybrid.experiments.framework_contracts import aligned_datum, response_logprobs, PROTOCOL_VERSION, stable_seed
+
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -70,7 +77,7 @@ for row in ds:
     except (json.JSONDecodeError, KeyError, TypeError):
         continue
 
-random.shuffle(examples)
+random.Random(42).shuffle(examples)
 train_examples = examples[:2000]  # cap at 2000 for speed
 test_examples = examples[2000:2500]
 print(f"[{EXP_NAME}] Parsed {len(train_examples)} train examples, {len(test_examples)} test examples")
@@ -94,7 +101,7 @@ _advantages = []
 def grpo_loss_fn(data, logprobs_list):
     losses = []
     for i, logprobs in enumerate(logprobs_list):
-        losses.append(-_advantages[i] * logprobs.sum())
+        losses.append(-_advantages[i] * response_logprobs(data[i], logprobs).sum())
     loss = torch.stack(losses).mean()
     return loss, {"grpo_loss": loss.item()}
 
@@ -102,12 +109,12 @@ def grpo_loss_fn(data, logprobs_list):
 
 for seed in range(NUM_SEEDS):
     print(f"\n==================================================\nRunning seed {seed} ({seed+1}/{NUM_SEEDS})\n==================================================")
-    random.seed(seed)
+    rng = random.Random(seed)
     torch.manual_seed(seed)
     
     print(f"[{EXP_NAME}] Connecting...")
     svc = tinker.ServiceClient(base_url=None)
-    tc  = svc.create_lora_training_client(base_model=MODEL, rank=LORA_RANK)
+    tc  = svc.create_lora_training_client(base_model=MODEL, rank=LORA_RANK, seed=seed)
     tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
     w0  = tc.save_weights_for_sampler(name=f"seed{seed}_step_0").result()
     sc  = tc.create_sampling_client(model_path=w0.path)
@@ -116,7 +123,7 @@ for seed in range(NUM_SEEDS):
     # ── GRPO loop ────────────────────────────────────────────────────────────
     step_rewards = []
     for step in range(STEPS):
-        batch = random.sample(train_examples, 4)
+        batch = rng.sample(train_examples, 4)
         all_data, all_advs, batch_rewards = [], [], []
 
         for prompt_text, tool_name, args in batch:
@@ -137,11 +144,8 @@ for seed in range(NUM_SEEDS):
             for resp, adv in zip(responses.sequences, advs):
                 resp_ids = list(resp.tokens)
                 full_ids = prompt_ids + resp_ids
-                target_ids = full_ids[1:] + [0]
-                all_data.append(T.Datum(
-                    model_input=T.ModelInput.from_ints(full_ids),
-                    loss_fn_inputs={"target_tokens": T.TensorData(data=target_ids, dtype="int64", shape=[len(target_ids)])}
-                ))
+                target_ids = full_ids[1:]
+                all_data.append(aligned_datum(T, prompt_ids, resp_ids))
                 all_advs.append(adv)
 
         if not all_data: continue
@@ -152,13 +156,14 @@ for seed in range(NUM_SEEDS):
         step_rewards.append(avg_r)
         loss_val = result.metrics.get("grpo_loss", float("nan"))
         print(f"[{EXP_NAME}] Step {step+1:3d}/{STEPS} | loss={loss_val:.4f} | reward={avg_r:.3f}")
-        if (step + 1) % SAVE_EVERY == 0:
-            tc.save_state(name=f"state_{step+1}")
+        if True:  # v3 current-policy sampler; persistence is separately gated
+            if (step + 1) % SAVE_EVERY == 0:
+                tc.save_state(name=f"state_{step+1}")
             ckpt = tc.save_weights_for_sampler(name=f"step_{step+1}").result()
             sc = tc.create_sampling_client(model_path=ckpt.path)
             print(f"[{EXP_NAME}]   -> Checkpoint step_{step+1}")
 
-    tc.save_state(name=f"seed{seed}_final")
+    tc.save_state(name=f"seed{seed}_final").result()
     final = tc.save_weights_for_sampler(name=f"seed{seed}_final").result()
     print(f"\n[{EXP_NAME}] DONE | avg_reward_last10={sum(step_rewards[-10:])/max(len(step_rewards[-10:]),1):.3f}")
     print(f"[{EXP_NAME}] Run ID: {tc.model_id}")

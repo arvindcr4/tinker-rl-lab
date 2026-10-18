@@ -45,7 +45,7 @@ This iteration delivers four falsifiable findings:
 
   (4) Bimodality of R_max distribution.
         Test whether the 5 R_max values are consistent with a single
-        unimodal distribution (Hartigan dip test approximation by
+        unimodal distribution (Uniform-CDF descriptive distance (not a unimodality test) by
         Silverman-bandwidth bootstrap).  Show that the 5 R_max values
         cleanly split into "capable" (~0.85) and "incapable" (~0.20)
         clusters, supporting the view that scale has weak leverage when
@@ -80,11 +80,10 @@ import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
 from _analysis_common import saturation, write_rows_tsv as _write_tsv
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-FIG_DIR.mkdir(exist_ok=True)
+RESULTS_DIR = REPO / "experiments" / "results" / "review26_v2"
+FIG_DIR = REPO / "figures" / "review26_v2"
 
 MODELS: dict[str, tuple[str, float, str]] = {
     "Qwen3.5-4B":            ("scale_gsm8k_qwen3.5-4b.json",      4.0,   "dense-instruct"),
@@ -225,63 +224,28 @@ def three_phase_diagnostic(rt: list[float]) -> dict:
     )
 
 
-def hartigan_dip_bootstrap(values: np.ndarray,
-                           rng: np.random.Generator,
-                           n_boot: int = 2000,
-                           n_grid: int = 256) -> tuple[float, float]:
-    """Approximate Hartigan dip test via Silverman bootstrap.  Compute the
-    empirical CDF gap from a uniform unimodal alternative, then bootstrap
-    under the null that the sample is from a unimodal distribution.  Returns
-    (dip_statistic, bootstrap_p_value)."""
-    x = np.sort(values)
-    n = len(x)
-    if n < 4:
+def uniform_cdf_deviation(values, rng=None, n_boot=0, n_grid=256):
+    """Descriptive distance from a fitted uniform CDF; no unimodality inference.
+
+    The former approximate dip/bootstrap was invalid. A p-value is deliberately
+    unavailable until a validated unimodality protocol is selected.
+    """
+    x = np.sort(np.asarray(values, dtype=float))
+    if len(x) < 2 or not np.isfinite(x).all() or x[-1] == x[0]:
         return float("nan"), float("nan")
-    # CDF
-    ecdf = np.arange(1, n + 1) / n
-    # Critical values from a uniform grid for unimodal null.
-    grid = np.linspace(x[0], x[-1], n_grid)
-    dip_obs = 0.0
-    for g in grid:
-        f_hat = np.searchsorted(x, g, side="right") / n
-        # Distance to nearest convex combination of point masses at x[0], x[-1].
-        cdf_at_g = f_hat
-        # Linear upper bound for unimodal distribution: the greatest convex
-        # minorant of the empirical CDF.
-        # Approximation: find the slope between endpoints and project.
-        slope = 1.0 / (x[-1] - x[0] + 1e-12)
-        unimodal_cdf = np.clip(slope * (g - x[0]), 0.0, 1.0)
-        dip_obs = max(dip_obs, abs(ecdf[np.searchsorted(x, g, side="right") - 1] - unimodal_cdf))
-    # Bootstrap p-value: under the null, values are drawn from the empirical
-    # distribution with unimodal smoothing (Silverman).
-    # Approximation: use a smoothed bootstrap via kernel density with
-    # Silverman's rule of thumb bandwidth.
-    sigma = float(np.std(values, ddof=1))
-    q75, q25 = np.percentile(values, [75, 25])
-    iqr = q75 - q25
-    h = 0.9 * min(sigma, iqr / 1.34) * n ** (-1 / 5)
-    count_extreme = 0
-    for _ in range(n_boot):
-        # Sample with replacement, then jitter with Gaussian noise scaled by h.
-        idx = rng.integers(0, n, size=n)
-        sample = values[idx] + rng.normal(0, h, size=n)
-        # Compute dip on sample (cheap approximation: reuse grid).
-        x_s = np.sort(sample)
-        dip_s = 0.0
-        for g in grid:
-            f_hat_s = np.searchsorted(x_s, g, side="right") / n
-            slope_s = 1.0 / (x_s[-1] - x_s[0] + 1e-12)
-            unimodal_cdf_s = np.clip(slope_s * (g - x_s[0]), 0.0, 1.0)
-            dip_s = max(dip_s, abs(f_hat_s - unimodal_cdf_s))
-        if dip_s >= dip_obs:
-            count_extreme += 1
-    p = (count_extreme + 1) / (n_boot + 1)
-    return dip_obs, p
+    u = (x - x[0]) / (x[-1] - x[0])
+    n = len(x)
+    distance = max(np.max(np.arange(1, n + 1) / n - u),
+                   np.max(u - np.arange(n) / n))
+    return float(distance), float("nan")
+
 
 
 # ---------- main ----------
 
 def main() -> None:
+    FIG_DIR.mkdir(parents=True, exist_ok=True)
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(SEED)
 
     # ---------- Load traces ----------
@@ -301,8 +265,7 @@ def main() -> None:
         m = monotonicity_violations(rt)
         # Binomial test of violation_rate vs 0.05 (i.i.d. nominal noise floor).
         from scipy.stats import binomtest
-        p_mono = binomtest(m["n_viol"], m["n_pairs"], 0.05,
-                           alternative="greater").pvalue if m["n_pairs"] > 0 else float("nan")
+        p_mono = float("nan")  # dependent pairs: descriptive only
         # Changepoint BIC-selected structure.
         cp = changepoint_3segment(rt)
         monotone = (m["violation_rate"] < 0.05) and (cp["k"] == 1)
@@ -331,12 +294,11 @@ def main() -> None:
          "n_violations", "n_pairs", "violation_rate",
          "max_drop", "max_drop_loc",
          "cp_k", "cp_bic", "cp_rss", "cp_means", "cp_pattern",
-         "binom_p_vs_0p05", "monotone"],
+         "pair_inference_unavailable", "monotone"],
         mono_rows,
     )
     n_violators = sum(1 for r in mono_rows if int(r[15]) == 0)
     # Binomial test against H0: P(monotone) = 0.5 (would need majority).
-    from scipy.stats import binomtest
     p_majority_violate = binomtest(n_violators, len(mono_rows), 0.5,
                                    alternative="greater").pvalue
 
@@ -436,8 +398,8 @@ def main() -> None:
     gaps = np.diff(sorted_rmax)
     largest_gap = float(gaps.max())
     largest_gap_loc = int(np.argmax(gaps))
-    # Hartigan dip test approximation.
-    dip, dip_p = hartigan_dip_bootstrap(rmax_arr, rng, n_boot=N_BOOT)
+    # Uniform-CDF descriptive distance (not a unimodality test).
+    dip, dip_p = uniform_cdf_deviation(rmax_arr, rng, n_boot=N_BOOT)
     # Bimodality: cluster the 5 anchors via 2-means (1-D).
     from scipy.cluster.hierarchy import fcluster, linkage
     Z = linkage(rmax_arr.reshape(-1, 1), method="ward")
@@ -454,8 +416,8 @@ def main() -> None:
         ["largest_gap_split_low_high",
          ";".join(f"{v:.4f}" for v in sorted_rmax[:largest_gap_loc + 1]) + "|" +
          ";".join(f"{v:.4f}" for v in sorted_rmax[largest_gap_loc + 1:]), ""],
-        ["dip_statistic", f"{dip:.4f}", ""],
-        ["dip_p_value", f"{dip_p:.4f}", N_BOOT],
+        ["uniform_cdf_deviation", f"{dip:.4f}", ""],
+        ["unimodality_p_unavailable", f"{dip_p:.4f}", N_BOOT],
         ["cluster_capable", ";".join(capable_ids), ""],
         ["cluster_incapable", ";".join(incapable_ids), ""],
     ]
@@ -481,29 +443,15 @@ def main() -> None:
         ),
         three_phase_counts=phase_counts,
         bimodality=dict(
-            dip=dip, dip_p=dip_p, n_boot=N_BOOT,
+            uniform_cdf_deviation=dip, unimodality_p_unavailable=dip_p, n_boot=N_BOOT,
             largest_gap=largest_gap, largest_gap_loc=largest_gap_loc,
             cluster_capable=capable_ids, cluster_incapable=incapable_ids,
         ),
         frontier_synthesis=(
-            "iter125 Pillar 1 advances from 'no scaling law' (iter117) and "
-            "'undetectable at n=5' (iter121) to a SHARP structural "
-            "falsification: the saturation model R(t) = R_max * (1 - e^{-lambda*t}) "
-            "implies strict monotonicity, yet 4/5 anchors violate monotonicity "
-            f"with p > 0.05 against the 5% i.i.d. noise floor "
-            f"(n_violators={n_violators}/{len(mono_rows)}, "
-            f"majority-violate p={p_majority_violate:.3f}). The three-phase "
-            f"hypothesis (arXiv 2507.18014) is also falsified: only "
-            f"{phase_counts['three_phase_full']}/{len(MODELS)} anchors exhibit "
-            "all three phases; the dominant signature is 'monotone_or_plateau' "
-            f"({phase_counts['monotone_or_plateau']}/{len(MODELS)}), not the "
-            "improvement-then-plateau-then-collapse sequence the hypothesis "
-            "predicts. Finally, the 5 R_max values cluster cleanly into "
-            f"capable (~{np.mean([rmax_map[n] for n in capable_ids]):.3f}) vs "
-            f"incapable (~{np.mean([rmax_map[n] for n in incapable_ids]):.3f}) "
-            f"groups, with a dip-test p={dip_p:.3f}.  Conclusion: scale has "
-            "weak leverage on GRPO reward trajectory when the model is already "
-            "capable, and the dominant axis is capability-class, not size."
+            "Exploratory protocol review26_v2. Outcome-selected clusters and pair-violation "
+            "counts are descriptive, not independent inferential evidence. Synthetic "
+            "recovery assesses direct regression only; offset fitting does not establish "
+            "identifiability. Historical fixed conclusions are superseded."
         ),
     )
     (RESULTS_DIR / "scaling_law_iter125_meta.json").write_text(
@@ -606,7 +554,7 @@ fontsize=11,
     print(f"Three-phase counts: {phase_counts}")
     print(f"R_max distribution: {sorted_rmax.tolist()}")
     print(f"Largest gap: {largest_gap:.4f} at index {largest_gap_loc}")
-    print(f"Dip test: dip={dip:.4f}, p={dip_p:.4f}")
+    print(f"Descriptive uniform-CDF distance={dip:.4f}, p={dip_p:.4f}")
 
 
 if __name__ == "__main__":

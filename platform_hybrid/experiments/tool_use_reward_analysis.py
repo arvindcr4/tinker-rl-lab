@@ -11,9 +11,8 @@ compute:
 
     - reward_mean, reward_std over the reward trace
     - nonzero_fraction     (fraction of steps with strictly positive reward)
-    - ZVF                  (zero-variance fraction — step-level surrogate
-                            here since per-group rollout detail is not
-                            always preserved in the summary JSON)
+    - ZVF                  (not computed: per-group rollout rewards are required;
+                            step-level summary traces cannot establish ZVF)
     - ERF                  (effective-rollout fraction =
                             format_pass AND nonzero_reward; when explicit
                             format_pass is absent we fall back to
@@ -76,24 +75,8 @@ def _is_non_math_record(record: dict, filename: str) -> bool:
 
 
 def _zvf_from_trace(trace):
-    """Step-level ZVF surrogate: fraction of adjacent pairs with identical
-    reward. For summary JSONs that don't preserve per-rollout groups,
-    this is a weak but defensible lower-bound proxy for true per-group
-    ZVF; when actual zero-variance groups are present it converges to
-    them. For all-zero traces it returns 1.0, matching the theoretical
-    value.
-    
-    LIMITATION: Fragility Across Domains — ZVF/tool-use metrics may not transfer outside the measured domain.
-    ZVF breaks down outside of math tasks. In format-gated tasks (like tool-use),
-    ZVF saturates at 1.0 because the base model consistently fails schema parsing.
-    We currently rely on ERF, but ZVF's utility here is fundamentally limited.
-    """
-    if not trace:
-        return float("nan")
-    if len(trace) == 1:
-        return 1.0
-    identical = sum(1 for a, b in zip(trace[:-1], trace[1:]) if a == b)
-    return identical / (len(trace) - 1)
+    """Step means do not identify within-group reward variance."""
+    return None
 
 
 def _erf_from_trace(trace, fmt_pass=None):
@@ -269,7 +252,7 @@ def print_latex_table(rows):
     print(r"\end{tabular}")
     print(r"\caption{Tool-use / code reward diagnostics. "
           r"$\bar r$, $\sigma_r$: reward mean and std over the step "
-          r"trace. ZVF: step-level zero-variance-fraction surrogate. "
+          r"trace. ZVF is not computed without per-group rollout rewards. "
           r"ERF: Effective-Rollout Fraction "
           r"(\texttt{format\_pass} $\wedge$ \texttt{nonzero\_reward}; "
           r"lower-bounded by nonzero fraction when "

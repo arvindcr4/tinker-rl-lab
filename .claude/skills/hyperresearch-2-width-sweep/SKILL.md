@@ -168,7 +168,7 @@ Append a few lines with `Edit` or `Write` every 30-60 seconds. Productive thinki
 PYTHONIOENCODING=utf-8 $HPR search "" --tag <vault_tag> --json | python -c "import sys,json; d=json.load(sys.stdin); print(f'Notes in vault: {len(d.get(\"data\",{}).get(\"results\",[]))}')"
 ```
 
-The wave is done when the vault note count is ≥80% of total URLs queued.
+Contract v2: the wave is done only when EVERY dispatched fetch task has a terminal status. Record each queued URL, outcome, accepted source ID and content hash; freeze this corpus manifest before advancing. An 80% success fraction is a coverage policy, never a completion barrier.
 
 ---
 

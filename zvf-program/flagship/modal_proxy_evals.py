@@ -3,10 +3,12 @@
 
 Own-benchmark numbers only. Never E-lane scores. `modal run` entrypoint.
 """
+
 import ast
 import json
 import random
 import re
+from decimal import Decimal, InvalidOperation
 
 import modal
 
@@ -28,9 +30,26 @@ def norm(s: str) -> str:
     return re.sub(r"\s+", "", s)
 
 
+def exact_proxy_match(pred: str, gold: str) -> bool:
+    pred, gold = norm(pred), norm(gold)
+    if not pred or not gold:
+        return False
+    if pred == gold:
+        return True
+    try:
+        a, b = Decimal(pred), Decimal(gold)
+        return a.is_finite() and b.is_finite() and a == b
+    except InvalidOperation:
+        return False
+
+
+def final_choice(text: str) -> str | None:
+    match = re.fullmatch(r"\s*(?:FINAL:\s*)?([A-D])\s*[.]?\s*", text)
+    return match.group(1) if match else None
+
+
 @app.function(image=image, gpu="A10G", timeout=3600)
 def run_proxies() -> dict:
-    import torch
     from datasets import load_dataset
     from transformers import pipeline
 
@@ -42,9 +61,7 @@ def run_proxies() -> dict:
     )
 
     full = load_dataset("KbsdJames/Omni-MATH", split="test")
-    omni = full.select(
-        [i for i, r in enumerate(full) if float(r["difficulty"]) <= 6.0][:N_OMNI]
-    )
+    omni = full.select([i for i, r in enumerate(full) if float(r["difficulty"]) <= 6.0][:N_OMNI])
     res = []
     for i, row in enumerate(omni):
         out = gen(
@@ -57,8 +74,17 @@ def run_proxies() -> dict:
             m = re.findall(r"FINAL:\s*(.+)", out)
         pred = norm(m[-1]) if m else ""
         gold = norm(row["answer"])
-        ok = bool(pred) and (pred == gold or pred in gold or gold in pred)
-        res.append({"i": i, "correct": bool(ok)})
+        ok = exact_proxy_match(pred, gold)
+        res.append(
+            {
+                "i": i,
+                "correct": bool(ok),
+                "raw_output": out,
+                "prediction": pred,
+                "target": row["answer"],
+                "grader_version": "exact-v2",
+            }
+        )
 
     lit = load_dataset("futurehouse/lab-bench", "LitQA2", split=f"train[:{N_LIT}]")
     random.seed(211)
@@ -76,9 +102,18 @@ def run_proxies() -> dict:
             + "\nAnswer with only the letter."
         )
         out = gen(prompt, return_full_text=False)[0]["generated_text"]
-        m = re.search(r"\b([A-D])\b", out)
-        pred = opts[letters.index(m.group(1))] if m else ""
-        res2.append({"id": row["id"], "correct": bool(pred == row["ideal"])})
+        choice = final_choice(out)
+        pred = opts[letters.index(choice)] if choice else ""
+        res2.append(
+            {
+                "id": row["id"],
+                "correct": bool(pred == row["ideal"]),
+                "raw_output": out,
+                "options": opts,
+                "target": row["ideal"],
+                "grader_version": "strict-choice-v2",
+            }
+        )
 
     return {
         "proxy_omnimath": {

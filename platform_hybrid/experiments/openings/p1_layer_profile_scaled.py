@@ -17,6 +17,12 @@ then aggregates (mean +/- spread) across seeds.
 Needs a GPU (per-layer gradient access; Tinker can't do this). Launch via `colab run`.
 Prints `RESULT: {json}` to stdout.
 """
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import topk_overlap, response_token_mask
+
 import subprocess
 import sys
 
@@ -169,7 +175,9 @@ def grpo_step(model, tokenizer, problem):
 
     # Advantage-weighted policy-gradient loss over the group.
     model.train()
-    attn = (seqs != (tokenizer.pad_token_id or tokenizer.eos_token_id)).long()
+    attn = torch.ones_like(seqs)
+    for j in range(len(seqs)):
+        attn[j, prompt_len:] = torch.tensor(response_token_mask(seqs[j, prompt_len:].tolist(), tokenizer.eos_token_id), device=seqs.device)
     out = model(input_ids=seqs, attention_mask=attn)
     logits = out.logits[:, :-1, :]
     targets = seqs[:, 1:]
@@ -228,16 +236,16 @@ def run_seed(seed, problems, tokenizer):
     # Aggregate.
     k = max(1, round(n_layers * 0.25))
     step1 = step_norms[0]
-    total = [sum(step_norms[s][l] for s in range(N_STEPS)) for l in range(n_layers)]
+    total = [sum(step_norms[s][l] for s in range(1, N_STEPS)) for l in range(n_layers)]
 
     top1 = set(sorted(range(n_layers), key=lambda l: step1[l], reverse=True)[:k])
-    topF = set(sorted(range(n_layers), key=lambda l: total[l], reverse=True)[:k])
-    overlap = len(top1 & topF) / k
+    topF = set(sorted(range(n_layers), key=lambda l: total[l], reverse=True)[:k]) if any(total) else set()
+    overlap = topk_overlap(step1, total, k)
 
     tot_sum = sum(total) or 1.0
     conc = sum(sorted(total, reverse=True)[:k]) / tot_sum
 
-    mean_by_layer = [t / N_STEPS for t in total]
+    mean_by_layer = [t / max(N_STEPS - 1, 1) for t in total]
 
     del model
     if DEVICE == "cuda":
@@ -264,7 +272,7 @@ def main():
 
     per_seed = [run_seed(s, problems, tokenizer) for s in SEEDS]
 
-    overlaps = [r["step1_predicts_final_topk_overlap"] for r in per_seed]
+    overlaps = [r["step1_predicts_final_topk_overlap"] for r in per_seed if r["step1_predicts_final_topk_overlap"] is not None]
     concs = [r["concentration_top25pct_share"] for r in per_seed]
 
     def _std(xs):
@@ -278,8 +286,8 @@ def main():
         "group_size": GROUP_SIZE,
         "seeds": SEEDS,
         "n_layers": per_seed[0]["n_layers"],
-        "step1_predicts_final_topk_overlap_mean": round(statistics.mean(overlaps), 4),
-        "step1_predicts_final_topk_overlap_std": round(_std(overlaps), 4),
+        "step1_predicts_final_topk_overlap_mean": round(statistics.mean(overlaps), 4) if overlaps else None,
+        "step1_predicts_final_topk_overlap_std": round(_std(overlaps), 4) if overlaps else None,
         "concentration_top25pct_share_mean": round(statistics.mean(concs), 4),
         "concentration_top25pct_share_std": round(_std(concs), 4),
         "per_seed": per_seed,

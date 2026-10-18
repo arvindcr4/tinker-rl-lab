@@ -21,7 +21,7 @@ Post-Training of Large Language Models''\par}
 \vspace{0.4em}
 {\normalsize A multi-framework training harness and studies of GRPO signal starvation\par}
 \vspace{0.4em}
-{\small\bfseries PES EVALUATION REVIEW COPY\quad 11 October 2026\par}
+{\small\bfseries PES EVALUATION REVIEW COPY\quad 17 October 2026\par}
 
 \vfill
 
@@ -65,7 +65,9 @@ Electronic City, Hosur Road, Bengaluru -- 560 100, Karnataka, India\par}
 %---------------------------------------------------------------------
 \chapter*{Evaluation Review Revision Record}
 \addcontentsline{toc}{chapter}{Evaluation Review Revision Record}
-This 11 October 2026 review copy derives from the 3 October coverage-recovery manuscript and incorporates the 4 October draft's five numerical and provenance corrections. Appendix J distinguishes artifact comparisons, arithmetic from printed counts and context-only occurrences. No new training or benchmark evaluation was performed, and no frozen source, reference label, cohort selection or primary score was changed. Historical releases remain separate and unchanged.
+This source-only amendment dated 17 October 2026 retains the historical evidence snapshots of the 11 October review copy and the explicitly identified 16 October tool audit. It derives from the 3 October coverage-recovery manuscript and incorporates the 4 October draft's five numerical and provenance corrections. Appendix J distinguishes artifact comparisons, arithmetic from printed counts and context-only occurrences. No new training or benchmark evaluation was performed, and no frozen source, reference label, cohort selection or primary score was changed. Historical releases remain separate and unchanged.
+
+Revision binding remains incomplete: the manuscript revision is identified by this source commit, while experiment protocol/data snapshot, analysis source and dirty-diff, and registry source/entry snapshot must each have their own immutable identifiers. A moving repository HEAD cannot identify an older tool version. Missing historical bindings remain unknown. Table 6.2 retains its provisional snapshot; this amendment performs no new evaluation.
 
 This public derivative omits operational and account identifiers, access correspondence, financial details, signature images and student registration data. Private provider exports and recovery archives are not bundled. It is not a certified institutional submission and does not carry the historical certificate. Six recovered original files resolved five primary-file gaps; the scientific recovery conclusions and E14 denominator correction remain, with inclusion and withholding boundaries in Appendix I and the public availability manifest.
 
@@ -215,8 +217,8 @@ find no detectable difference on saturated, in-distribution arithmetic draws;
 neither establishes equivalence or an optimum. On an unsaturated GSM8K rerun, an initial 5.0-point GRPO advantage over an
 untuned-critic PPO under a binding 200-token cap did not survive a corrected
 rerun (512-token cap, warm-started critic, 1,319 test items): GRPO minus PPO
-is $+0.76$ percentage points ($+0.0076$; 95\% CI $[-0.34, +1.85]$ points),
-equivalent within $\pm 2$ points ($\pm 0.02$; provisional; seven PPO seeds), and $G = 8$ versus $G = 2$ is not significant
+is $+0.76$ percentage points ($+0.0076$; 95\% CI $[-0.34, +1.85]$ points), with an interim TOST at $\pm 2$ points ($\pm 0.02$), not a final equivalence claim
+(provisional; seven PPO seeds), and $G = 8$ versus $G = 2$ is not significant
 after multiplicity adjustment. ZVF, studied concurrently as advantage collapse, is recomputable, but its
 predictive validity is unestablished: the historical pooled association mixes
 simulation and measured records with inconsistent outcome definitions. An adaptive group-size controller

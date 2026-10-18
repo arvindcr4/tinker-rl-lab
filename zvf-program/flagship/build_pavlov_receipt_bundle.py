@@ -10,9 +10,18 @@ W&B, Hugging Face, Tinker, or any other external service.
 
 from __future__ import annotations
 
+try:
+    from .evidence_v2 import approval_valid
+    from .campaign_plan_v2 import plan_contract, checkpoint_errors, launch_feasibility_errors
+except ImportError:
+    from evidence_v2 import approval_valid
+    from campaign_plan_v2 import plan_contract, checkpoint_errors, launch_feasibility_errors
+
+
 import argparse
 import hashlib
 import json
+import math
 import re
 from collections import Counter
 from collections.abc import Mapping, Sequence
@@ -25,12 +34,10 @@ except ImportError:  # Direct execution from the flagship directory.
     from pavlovs_domain_contract import CONTRACT_PATH, load_contract, validate_contract
 
 
-SCHEMA_VERSION = "pavlov-receipt-bundle-v1"
+SCHEMA_VERSION = "pavlov-receipt-bundle-v2"
 EXPECTED_TRAINING_SUITE_COUNT = 12
 EXPECTED_PRIMARY_EVAL_SUITE_COUNT = 14
-EXPECTED_TOTAL_SUITE_COUNT = (
-    EXPECTED_TRAINING_SUITE_COUNT + EXPECTED_PRIMARY_EVAL_SUITE_COUNT
-)
+EXPECTED_TOTAL_SUITE_COUNT = EXPECTED_TRAINING_SUITE_COUNT + EXPECTED_PRIMARY_EVAL_SUITE_COUNT
 LR_ARMS: tuple[tuple[str, float], ...] = (
     ("lr-1e-5", 1e-5),
     ("lr-2e-5", 2e-5),
@@ -198,29 +205,9 @@ def _split_task_hash_valid(record: Mapping[str, Any]) -> bool:
     return _sha256_digest(combined)
 
 
-def _license_receipt_valid(value: Any) -> bool:
-    if isinstance(value, Mapping):
-        approved = value.get("approved") is True or value.get("signoff") is True
-        identity = _first_value(value, ("receipt_id", "approval_id", "license_id"))
-        if approved and _nonempty_text(identity):
-            return True
-        if any(not _is_placeholder(value.get(key)) for key in ("receipt_id", "approval_id", "license_id", "sha256")):
-            return any(
-                _immutable_revision(value.get(key)) or _sha256_digest(value.get(key))
-                for key in ("receipt_id", "approval_id", "license_id", "sha256")
-            )
-        return False
-    if not _nonempty_text(value):
-        return False
-    lowered = value.strip().lower()
-    if lowered in _PLACEHOLDER_WORDS or "placeholder" in lowered or "to_be_" in lowered:
-        return False
-    # A concrete license identifier/approval label is sufficient; a generic
-    # string such as "license-receipt" is intentionally rejected above.
-    return bool(
-        _immutable_revision(value)
-        or _sha256_digest(value)
-        or any(token in lowered for token in ("approved", "approval", "signoff", "cc-", "apache", "mit", "license:"))
+def _license_receipt_valid(value: Any, *, trusted_issuers=None, expected_identity=None) -> bool:
+    return approval_valid(
+        value, "license", trusted_issuers=trusted_issuers, expected_identity=expected_identity
     )
 
 
@@ -276,51 +263,26 @@ def _cost_status_valid(value: Any) -> bool:
     }
 
 
-def _budget_receipt_valid(value: Any) -> bool:
-    if isinstance(value, Mapping):
-        identity = _first_value(value, ("receipt_id", "authorization_id", "sha256", "hash"))
-        amount = value.get("maximum_usd", value.get("max_usd"))
-        authorized = value.get("authorized") is True or str(value.get("status", "")).lower() in {
-            "authorized",
-            "approved",
-        }
-        return bool(
-            _nonempty_text(identity)
-            and (_immutable_revision(identity) or _sha256_digest(identity) or authorized)
-            and isinstance(amount, (int, float))
-            and amount > 0
-        )
-    return _immutable_revision(value) or _sha256_digest(value)
+def _budget_receipt_valid(value: Any, *, trusted_issuers=None, expected_identity=None) -> bool:
+    return approval_valid(
+        value, "budget", trusted_issuers=trusted_issuers, expected_identity=expected_identity
+    )
 
 
-def _hf_checkpoints_valid(value: Any) -> bool:
-    if not isinstance(value, list) or not value:
+def _hf_checkpoints_valid(value: Any, *, expected_identity=None) -> bool:
+    if not isinstance(value, Mapping):
         return False
-    seen: set[tuple[str, str, str]] = set()
-    seen_repo_revisions: set[tuple[str, str]] = set()
-    stages: set[str] = set()
-    for checkpoint in value:
-        if not isinstance(checkpoint, Mapping):
-            return False
-        repo = _first_value(checkpoint, ("repo_url", "repo", "repository"))
-        revision = _first_value(checkpoint, ("revision", "commit", "sha"))
-        url = _first_value(checkpoint, ("url", "checkpoint_url", "repo_url"))
-        visibility = checkpoint.get("visibility")
-        safe = checkpoint.get("safe_public_artifact")
-        if not _valid_url(repo) or not _immutable_revision(revision) or not _valid_url(url):
-            return False
-        if visibility not in {"public", "private"} or safe is not True:
-            return False
-        stage = str(checkpoint.get("stage", "")).strip().lower()
-        if stage:
-            stages.add(stage)
-        identity = (str(repo), str(revision), str(url))
-        repo_revision = (str(repo), str(revision))
-        if identity in seen or repo_revision in seen_repo_revisions:
-            return False
-        seen.add(identity)
-        seen_repo_revisions.add(repo_revision)
-    return {"initial", "periodic", "final"}.issubset(stages)
+    identity = expected_identity
+    if not isinstance(identity, Mapping) or not all(identity.get(k) for k in ("campaign", "run")):
+        return False
+    return not checkpoint_errors(
+        value.get("checkpoints"),
+        stage=value.get("stage", "launch"),
+        expected_identity=identity,
+        scheduled_steps=value.get("scheduled_steps", []),
+        current_step=value.get("current_step", 0),
+        final_step=value.get("final_step", 0),
+    )
 
 
 def _receipt_completeness(record: Mapping[str, Any]) -> dict[str, bool]:
@@ -371,6 +333,10 @@ def _record_blockers(record: Mapping[str, Any]) -> list[str]:
         for field in REQUIRED_RECEIPT_FIELDS
         if not complete[field]
     ]
+    if record.get("evidence_status") == "rejected":
+        blockers.append(
+            f"{record.get('suite_id', '<missing>')}: rejected evidence cannot establish readiness"
+        )
     if record.get("evidence_status") not in EVIDENCE_STATUSES:
         blockers.append(f"{record.get('suite_id', '<missing>')}: invalid evidence_status")
     return blockers
@@ -483,14 +449,29 @@ def _budget_guard(contract: Mapping[str, Any]) -> tuple[dict[str, Any], list[str
     budget = contract.get("budget_gate")
     if not isinstance(budget, Mapping):
         return {"status": "BLOCKED", "paid_jobs_may_launch": False}, ["budget_gate is missing"]
-    blockers: list[str] = []
+    blockers: list[str] = launch_feasibility_errors(contract)
     contract_status = str(contract.get("status", "")).strip().lower()
     budget_status = str(budget.get("status", "")).strip().upper()
-    authorized_contract = contract_status in {"authorized", "authorized_tinker_only", "ready", "ready_to_run"}
-    authorized_budget = budget_status in {"AUTHORIZED", "AUTHORIZED_TINKER_ONLY", "READY", "READY_TO_RUN"}
+    authorized_contract = contract_status in {
+        "authorized",
+        "authorized_tinker_only",
+        "ready",
+        "ready_to_run",
+    }
+    authorized_budget = budget_status in {
+        "AUTHORIZED",
+        "AUTHORIZED_TINKER_ONLY",
+        "READY",
+        "READY_TO_RUN",
+    }
     paid = budget.get("paid_jobs_may_launch") is True
     maximum = budget.get("maximum_usd")
-    if not isinstance(maximum, (int, float)) or maximum <= 0:
+    if (
+        isinstance(maximum, bool)
+        or not isinstance(maximum, (int, float))
+        or not math.isfinite(maximum)
+        or maximum <= 0
+    ):
         blockers.append("budget: maximum_usd is unset or not positive")
     if paid and not (authorized_contract and authorized_budget):
         blockers.append(
@@ -512,53 +493,7 @@ def _budget_guard(contract: Mapping[str, Any]) -> tuple[dict[str, Any], list[str
 
 
 def _successive_halving() -> dict[str, Any]:
-    arm_ids = [arm_id for arm_id, _ in LR_ARMS]
-    return {
-        "method": "successive_halving",
-        "arms": arm_ids,
-        "screening_arm_ids": arm_ids,
-        "screening_learning_rates": [rate for _, rate in LR_ARMS],
-        "short_screening_steps": 10,
-        "checkpoint_steps": [5, 10],
-        "selection_metric": "sealed selection slice perfect-call rate",
-        "selection_rule": "maximize sealed selection slice perfect-call rate",
-        "tie_breakers": ["strict mean reward", "lower estimated cost"],
-        "winner_extension": "extend only the winning arm",
-        "decision_gates": [
-            {
-                "id": "receipt_preflight",
-                "requires": [
-                    "all suite receipts and immutable model revisions",
-                    "online W&B run identity",
-                    "HF receipt for every periodic and final checkpoint",
-                ],
-                "on_failure": "BLOCKED; do not allocate a job",
-            },
-            {
-                "id": "short_screening",
-                "requires": ["all three arms use the same immutable train split and sealed selection slice"],
-                "decision": "select by sealed selection slice metric",
-            },
-            {
-                "id": "winner_extension",
-                "requires": ["exactly one winner and valid receipts"],
-                "decision": "extend only the winning arm",
-            },
-            {
-                "id": "final_evaluation",
-                "requires": ["final evaluation split is immutable and disjoint from selection"],
-                "decision": "evaluate once; never promote xLAM-only evidence",
-            },
-        ],
-        "selection_final_separation": {
-            "selection_split_name": "sealed_selection_slice",
-            "final_eval_split_name": "primary_eval_final",
-            "selection_consulted_during_selection": True,
-            "final_eval_consulted_during_selection": False,
-            "must_be_disjoint": True,
-            "held_out_label_requires_independent_receipt": True,
-        },
-    }
+    return plan_contract()
 
 
 def build_bundle(
@@ -782,8 +717,12 @@ def validate_bundle(
     entries = bundle.get("suites")
     if not isinstance(entries, list):
         return errors + ["suites must be a list with one entry per contract suite"]
-    suite_ids = [str(entry.get("suite_id", "")) if isinstance(entry, Mapping) else "" for entry in entries]
-    duplicates = sorted(suite_id for suite_id, count in Counter(suite_ids).items() if count > 1 and suite_id)
+    suite_ids = [
+        str(entry.get("suite_id", "")) if isinstance(entry, Mapping) else "" for entry in entries
+    ]
+    duplicates = sorted(
+        suite_id for suite_id, count in Counter(suite_ids).items() if count > 1 and suite_id
+    )
     if duplicates:
         errors.append("duplicate suite entries: " + ", ".join(duplicates))
     actual = set(suite_ids)
@@ -839,13 +778,17 @@ def validate_bundle(
         missing_fields = [field for field in REQUIRED_RECEIPT_FIELDS if not completeness[field]]
         receipt_blockers.extend(_record_blockers(entry))
         if missing_fields:
-            errors.extend(f"{suite_id}: missing or invalid {field} receipt" for field in missing_fields)
+            errors.extend(
+                f"{suite_id}: missing or invalid {field} receipt" for field in missing_fields
+            )
         computed_launchable = not missing_fields and evidence != "rejected"
         computed_admissible = computed_launchable and evidence in {"observed", "admissible"}
         if "launchable" in entry and entry.get("launchable") != computed_launchable:
             errors.append(f"{suite_id}: launchable flag does not match receipt completeness")
         if "admissible" in entry and entry.get("admissible") != computed_admissible:
             errors.append(f"{suite_id}: admissible flag does not match evidence status")
+        if "entry_hash" not in entry:
+            errors.append(f"{suite_id}: entry_hash is required")
         if "entry_hash" in entry:
             expected_hash = sha256_json(_record_entry_hash_payload(entry))
             if entry.get("entry_hash") != expected_hash:
@@ -872,7 +815,9 @@ def validate_bundle(
         errors.append("structural_held_out_suite_ids must contain only explicitly described suites")
     expected_not_designated = sorted(set(primary_eval) - set(expected_structural_held_out))
     if bundle.get("primary_eval_not_designated_held_out_suite_ids") != expected_not_designated:
-        errors.append("primary_eval_not_designated_held_out_suite_ids must preserve the eight non-held-out descriptions")
+        errors.append(
+            "primary_eval_not_designated_held_out_suite_ids must preserve the eight non-held-out descriptions"
+        )
     proven = bundle.get("held_out_receipt_proven_suite_ids")
     if not isinstance(proven, list) or not set(proven).issubset(set(expected_structural_held_out)):
         errors.append("held_out_receipt_proven_suite_ids cannot include all primary_eval suites")
@@ -906,16 +851,8 @@ def validate_bundle(
         errors.append("domain_to_training_suite_ids does not span all declared domains")
     if bundle.get("domain_to_primary_eval_suite_ids") != expected_domain_to_eval:
         errors.append("domain_to_primary_eval_suite_ids does not span all declared domains")
-    train_union = {
-        domain
-        for suite in training.values()
-        for domain in suite.get("domains", [])
-    }
-    eval_union = {
-        domain
-        for suite in primary_eval.values()
-        for domain in suite.get("domains", [])
-    }
+    train_union = {domain for suite in training.values() for domain in suite.get("domains", [])}
+    eval_union = {domain for suite in primary_eval.values() for domain in suite.get("domains", [])}
     if train_union != set(domains):
         errors.append("training suite domains do not span all declared domains")
     if eval_union != set(domains):
@@ -924,24 +861,18 @@ def validate_bundle(
     if company_errors:
         errors.extend(company_errors)
     if bundle.get("company_domain_coverage") != company_coverage:
-        errors.append("company_domain_coverage does not prove every required domain in train and primary_eval")
+        errors.append(
+            "company_domain_coverage does not prove every required domain in train and primary_eval"
+        )
     expected_company_train = {
         company: sorted(
-            {
-                suite_id
-                for suite_ids in details["training"].values()
-                for suite_id in suite_ids
-            }
+            {suite_id for suite_ids in details["training"].values() for suite_id in suite_ids}
         )
         for company, details in company_coverage.items()
     }
     expected_company_eval = {
         company: sorted(
-            {
-                suite_id
-                for suite_ids in details["primary_eval"].values()
-                for suite_id in suite_ids
-            }
+            {suite_id for suite_ids in details["primary_eval"].values() for suite_id in suite_ids}
         )
         for company, details in company_coverage.items()
     }
@@ -951,10 +882,19 @@ def validate_bundle(
         errors.append("company_eval_coverage does not match per-domain primary_eval coverage")
 
     gsm8k = bundle.get("gsm8k")
-    if not isinstance(gsm8k, Mapping) or gsm8k.get("role") != "calibration_only" or gsm8k.get("primary_claim_allowed") is not False:
+    if (
+        not isinstance(gsm8k, Mapping)
+        or gsm8k.get("role") != "calibration_only"
+        or gsm8k.get("primary_claim_allowed") is not False
+    ):
         errors.append("GSM8K must remain calibration_only and excluded from primary claims")
     xlam = bundle.get("xlam_component")
-    if not isinstance(xlam, Mapping) or xlam.get("claim_scope") != "component_only" or xlam.get("launchable") is not False or xlam.get("admissible") is not False:
+    if (
+        not isinstance(xlam, Mapping)
+        or xlam.get("claim_scope") != "component_only"
+        or xlam.get("launchable") is not False
+        or xlam.get("admissible") is not False
+    ):
         errors.append("xLAM must remain component-only and non-launchable")
     hf_policy = bundle.get("hf_policy")
     if (
@@ -965,7 +905,9 @@ def validate_bundle(
         or hf_policy.get("unique_repo_revision_url_required") is not True
         or hf_policy.get("safe_public_artifact_rule") is not True
     ):
-        errors.append("HF policy must cover every checkpoint with safe per-artifact visibility and unique URLs")
+        errors.append(
+            "HF policy must cover every checkpoint with safe per-artifact visibility and unique URLs"
+        )
 
     budget_guard, budget_errors = _budget_guard(contract)
     if bundle.get("budget_guard") != budget_guard:
@@ -979,9 +921,19 @@ def validate_bundle(
     # A READY label is only meaningful when no receipt/contract blocker was
     # found.  BLOCKED remains valid (and is the generator's placeholder
     # preview), while launchable stays false in either state.
+    ready = (
+        not errors
+        and not expected_blockers
+        and all(entry.get("launchable") is True for entry in entries if isinstance(entry, Mapping))
+    )
+    if bundle.get("status") != ("READY" if ready else "BLOCKED"):
+        errors.append("aggregate status does not match independently computed readiness")
+    errors.extend(item for item in receipt_blockers if item not in errors)
     if bundle.get("status") == "READY" and errors:
         errors.append("status READY is not allowed while receipt blockers remain")
 
+    if "bundle_hash" not in bundle:
+        errors.append("bundle_hash is required")
     if "bundle_hash" in bundle:
         expected_hash = sha256_json(_bundle_hash_payload(bundle))
         if bundle.get("bundle_hash") != expected_hash:

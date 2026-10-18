@@ -45,7 +45,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 
 FEATURES_20 = [f"V{i}" for i in range(1, 21)]
@@ -203,9 +203,12 @@ def main():
     summary_info = {"baseline": {"auc_24_clean": round(auc_24_clean, 4)},
                     "sweep": []}
 
+    noise_rng = random.Random(2026)
+    noise_tr = [noise_rng.gauss(0,1) for _ in ytr]
+    noise_te = [noise_rng.gauss(0,1) for _ in yte]
     for strength in strength_grid:
-        Xtr_i = [list(r) + [strength * (y - 0.5)] for r, y in zip(Xtr, ytr)]
-        Xte_i = [list(r) + [strength * (y - 0.5)] for r, y in zip(Xte, yte)]
+        Xtr_i = [list(r) + [strength * (2*y - 1) + noise] for r, y, noise in zip(Xtr, ytr, noise_tr)]
+        Xte_i = [list(r) + [strength * (2*y - 1) + noise] for r, y, noise in zip(Xte, yte, noise_te)]
         preds_i = fit_predict(Xtr_i, ytr, Xte_i, idx_24 + [24])
         auc_i = roc_auc_score(yte, preds_i)
         _, _, lo, hi = paired_bootstrap_ci(preds_i, preds_24_clean, yte,
@@ -215,7 +218,7 @@ def main():
                           round(auc_i - auc_24_clean, 4),
                           round(lo, 4), round(hi, 4), excl])
         summary_info["sweep"].append({
-            "strength": strength,
+            "strength": strength, "standalone_sensor_auc": float(roc_auc_score(yte, [r[-1] for r in Xte_i])), "status": "label_conditioned_simulation",
             "auc_25": round(auc_i, 4),
             "delta_auc_vs_24clean": round(auc_i - auc_24_clean, 4),
             "ci_lo": round(lo, 4),

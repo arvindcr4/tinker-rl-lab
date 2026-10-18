@@ -33,7 +33,7 @@ from pathlib import Path
 # 4. Failure to Prove Generalization: +1.3% gain on GSM8K is not statistically significant (p=0.26).
 # 5. Single-Seed Extrapolations: N=1 runs are statistically vulnerable.
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "paper" / "main.tex"
 DST = ROOT / "paper" / "main_anon.tex"
 LOG = ROOT / "blind_review" / "paper_changes.log"

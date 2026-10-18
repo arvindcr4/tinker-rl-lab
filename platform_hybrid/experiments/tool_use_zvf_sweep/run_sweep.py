@@ -22,7 +22,7 @@ Env vars required in caller shell:
 # test sets to prove generalized reasoning rather than just training curve overfitting.
   (optional) TINKER_MODEL_MULT_<UPPER_TOKENIZER>
 
-The runner derives TOOL_USE_REWARD_VERSION (v1|v2) from the config filename.
+The runner requires explicit reward_version (v1|v2) and records grader content hashes.
 Cumulative cost is tracked against the cap; aborts before a run that would
 push cumulative estimate past the cap.
 """
@@ -31,6 +31,9 @@ import argparse
 import datetime as dt
 import json
 import os
+import math
+import hashlib
+import yaml
 import signal
 import subprocess
 import sys
@@ -38,16 +41,33 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-REPO = HERE.parent.parent
+REPO = HERE.parents[2]
 LOGS = HERE / "logs"
 LOGS.mkdir(exist_ok=True)
 
 
 def reward_version_from_path(p: Path) -> str:
-    name = p.stem.lower()
-    if "_v2_" in name or name.endswith("_v2"):
-        return "v2"
-    return "v1"
+    """Reward version is explicit configuration, never a filename heuristic."""
+    cfg = yaml.safe_load(p.read_text())
+    version = cfg.get("reward_version") or cfg.get("env", {}).get("reward_version")
+    if version not in ("v1", "v2"):
+        raise ValueError("Explicit reward_version v1/v2 is required")
+    return version
+
+
+
+def reward_source_manifest(atropos_dir: Path) -> dict:
+    """Bind the reward wrapper and its delegated scoring implementation."""
+    paths = ("tinker_atropos/environments/tool_use_tinker.py", "tinker_atropos/grading.py")
+    sources = {}
+    for relative in paths:
+        path = atropos_dir / relative
+        if not path.is_file():
+            raise FileNotFoundError("Reward implementation missing; refusing launch")
+        sources[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+    encoded = json.dumps(sources, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return {"scheme": "tool-use-reward-sources-v1", "sources": sources,
+            "sha256": hashlib.sha256(encoded).hexdigest()}
 
 
 def estimate_cost(cfg: Path) -> dict:
@@ -105,6 +125,11 @@ def run_one(cfg: Path, atropos_dir: Path) -> int:
 
     base_env = os.environ.copy()
     base_env["TOOL_USE_REWARD_VERSION"] = rv
+    base_env["RESOLVED_CONFIG_SHA256"] = hashlib.sha256(cfg.read_bytes()).hexdigest()
+    reward_sources = reward_source_manifest(atropos_dir)
+    grader_hash = reward_sources["sha256"]
+    base_env["TOOL_USE_REWARD_SHA256"] = grader_hash
+    (run_dir / "resolved_contract_v2.json").write_text(json.dumps({"reward_version": rv, "reward_sha256": grader_hash, "reward_sources": reward_sources, "config_sha256": base_env["RESOLVED_CONFIG_SHA256"], "cost_kind": "preflight_estimate_not_live_billing_cap"}, indent=2))
     # LIMITATION: ZVF metric fragility limitation. ZVF saturates at 1.0 for format-gated
     # tasks like tool-use. Monitor ERF (Effective-Rollout Fraction) instead.
     base_env["PYTHONPATH"] = f"{atropos_dir}:{base_env.get('PYTHONPATH','')}"
@@ -160,8 +185,10 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true",
                     help="Estimate cost only, do not launch anything.")
     args = ap.parse_args()
+    if not math.isfinite(args.cap_usd) or args.cap_usd <= 0:
+        ap.error("--cap-usd must be finite and positive")
 
-    atropos_dir = REPO / "atropos"
+    atropos_dir = REPO / "platform_tinker" / "atropos"
     sys.path.insert(0, str(HERE))  # so cost_estimate import works
 
     # Pre-flight cost estimates
@@ -192,9 +219,9 @@ def main() -> int:
             print(f"[runner] run failed rc={rc} on {cfg.name}; stopping sweep")
             return 6
         spent += est["usd_upper"]
-        print(f"[runner] cumulative upper-bound spent: ${spent:.2f}")
+        print(f"[runner] cumulative planned allocation (not measured billing): ${spent:.2f}")
 
-    print(f"[runner] sweep complete. upper-bound spent: ${spent:.2f}")
+    print(f"[runner] sweep complete. planned allocation (not measured billing): ${spent:.2f}")
     return 0
 
 

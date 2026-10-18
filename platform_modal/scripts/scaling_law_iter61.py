@@ -1,53 +1,6 @@
-"""Pillar 1 iter61 -- ZVF-conditioned saturation-fit identifiability.
-
-iter25 proved that 0/5 per-trace saturation-rate estimates are
-identifiable (constant model wins every AICc). iter57 showed 4/5 anchors
-hit the lambda=10 upper bound, with Nemotron-120B as the sole
-identifiable exception. iter49 reported a weak two-parameter iso-FLOP
-fit (R^2 = 0.18) on 12 anchors.
-
-What has NOT been done is to test whether the saturation-fit
-**degeneracy** is itself structured by the per-trace variance
-landscape that Pillar 2 (ZVF) measures. Concretely, Pillar 2's
-contrastive-yield decomposition attributes the saturation-bound
-degeneracy to a single cause: when the trace's within-group contrast
-is small (ZVF high, i.e., reward distribution concentrated near 0/1
-extremes), the saturation curve degenerates onto a constant.
-
-This iteration answers three sharp questions:
-
-  Q1. Per-trace ZVF proxy: from each anchor's reward trace, compute
-      ZVF_proxy = P(R=0) + P(R=1) (the fraction of steps at the two
-      extremes; this is a step-level proxy for the rollout-level ZVF
-      measured by Pillar 2). Stratify anchors into HIGH (ZVF_proxy >=
-      0.10) and LOW (ZVF_proxy < 0.10) strata.
-
-  Q2. Saturation-fit identifiability by ZVF stratum: refit the
-      canonical saturation model on each stratum. Pre-reg: the
-      HIGH-ZVF stratum is fully bound-degenerate; the LOW-ZVF
-      stratum (Nemotron-120B alone) is the only identifiable cell.
-
-  Q3. Jackknife cross-scale stability: leave-one-out refit of the
-      iter-49 two-parameter joint fit. Report slope/intercept
-      stability per held-out anchor. Pre-reg: removing Nemotron-120B
-      flips the sign of alpha_logP (collapse is the structural anchor
-      that pulls the dense slope negative).
-
-  Q4. Cross-pillar prediction: does Pillar 2's empirical ZVF (from
-      tinker_gsm8k_zvf_summary.json, mean_zvf = 0.158 at G=8) predict
-      the saturation-bound degeneracy rate observed across the
-      frontier? Pillar 2 says: 15.8% of groups are zero-variance at
-      G=8; iter61 should report a comparable **per-step**
-      zero-fraction for the saturation-bound anchors.
-
-Outputs (5 artefacts):
-  platform_hybrid/experiments/results/scaling_law_iter61_zvf_proxy.tsv
-  platform_hybrid/experiments/results/scaling_law_iter61_stratum_fit.tsv
-  platform_hybrid/experiments/results/scaling_law_iter61_jackknife.tsv
-  platform_hybrid/experiments/results/scaling_law_iter61_cross_pillar.tsv
-  platform_hybrid/experiments/results/scaling_law_iter61_predictions.tsv
-  paper/sections/scaling_law_iter61.tex
-  figures/scaling_law_iter61.{pdf,png}
+"""Exploratory recorded-group ZVF and saturation optimizer diagnostics.
+Extreme step means are a distinct descriptive statistic, never group ZVF.
+Cross-cohort summaries do not identify causal effects or matched protocols.
 """
 
 from __future__ import annotations
@@ -64,14 +17,13 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
+CANDIDATE = REPO / "experiments" / "results" / "review27_v3"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-PAPER_SEC = REPO / "paper" / "sections"
-PAPER_FIG = REPO / "paper" / "figures"
-for d in (FIG_DIR, PAPER_SEC, PAPER_FIG):
-    d.mkdir(parents=True, exist_ok=True)
+RESULTS_DIR = CANDIDATE
+FIG_DIR = CANDIDATE / "figures"
+PAPER_SEC = CANDIDATE / "sections"
+PAPER_FIG = CANDIDATE / "paper_figures"
 
 # 12-anchor pool: identical to iter13 / iter49.
 MODELS: dict[str, dict] = {
@@ -89,30 +41,18 @@ MODELS: dict[str, dict] = {
     "Kimi-K2-Thinking":      {"file": "arch_gsm8k_kimi-k2.json",         "params":1000.0, "arch": "moe"},
 }
 
-# ZVF proxy threshold (P(R=0) + P(R=1) > THRESHOLD => HIGH-ZVF stratum).
+# Threshold for recorded group-ZVF measurements only.
 ZVF_THRESHOLD = 0.10
 
-SEED = 20260702
-N_BOOT = 5000
 LAM_BOUND = 10.0
-RNG = np.random.default_rng(SEED)
 
 
 def _load_trace(fname: str) -> list[float]:
-    fp = TRACE_DIR / fname
-    if not fp.exists():
-        return []
-    obj = json.loads(fp.read_text())
-    rewards: list[float] = []
-    # The trace files use ``reward_trace`` (preferred) or fall back to
-    # ``rewards`` / ``reward``.  Some old traces store reward in step_log.
-    if isinstance(obj.get("reward_trace"), list) and obj["reward_trace"]:
-        rewards = [float(r) for r in obj["reward_trace"] if r is not None]
-    if not rewards and isinstance(obj.get("rewards"), list):
-        rewards = [float(r) for r in obj["rewards"] if r is not None]
-    if not rewards and isinstance(obj.get("step_log"), list):
-        rewards = [float(s.get("reward", 0.0)) for s in obj["step_log"]]
-    return rewards
+    try:
+        from ._review27_rank import load_reward_trace
+    except ImportError:
+        from _review27_rank import load_reward_trace
+    return load_reward_trace(TRACE_DIR / fname)
 
 
 def _load_step_log(fname: str) -> list[dict]:
@@ -133,9 +73,8 @@ def _fit_sat(t, y, lam_bound=LAM_BOUND):
     """Fit canonical saturation R(t) = R_max * (1 - exp(-lambda * t))."""
     t = np.asarray(t, dtype=float)
     y = np.asarray(y, dtype=float)
-    if len(t) < 3 or np.std(y) < 1e-6:
-        # Pure-constant trace: pin R_max at mean and lam at bound.
-        return float(np.mean(y)), lam_bound, 0.0, 0.0
+    if t.ndim != 1 or y.shape != t.shape or len(t) < 3 or not np.isfinite(t).all() or not np.isfinite(y).all() or np.ptp(y) < 1e-6:
+        return (math.nan, math.nan, math.nan, math.nan)
     try:
         p0 = (float(np.mean(y)), 1.0)
         popt, _ = curve_fit(
@@ -152,21 +91,23 @@ def _fit_sat(t, y, lam_bound=LAM_BOUND):
         r2 = 1.0 - float(np.sum(resid ** 2)) / max(1e-12, ss_tot)
         return rmax, lam, rmse, r2
     except Exception:
-        return float(np.mean(y)), lam_bound, 0.0, 0.0
+        return (math.nan, math.nan, math.nan, math.nan)
 
 
 def _zvf_proxy(rewards: list[float]) -> dict[str, float]:
-    """Per-trace ZVF proxy. Step-level, not rollout-level."""
+    """Fraction of extreme step means; not an estimator of group ZVF."""
     if not rewards:
-        return dict(p_zero=0.0, p_one=0.0, zvf_proxy=0.0,
-                    p_extreme=0.0, p_mid=1.0, mean_r=0.0, var_r=0.0)
+        return dict(p_zero=math.nan, p_one=math.nan, fraction_extreme_step_means=math.nan,
+                    p_extreme=math.nan, p_mid=math.nan, mean_r=math.nan, var_r=math.nan)
     arr = np.asarray(rewards, dtype=float)
+    if arr.ndim != 1 or not np.isfinite(arr).all() or np.any((arr < 0) | (arr > 1)):
+        raise ValueError("finite reward probabilities required")
     p_zero = float(np.mean(arr <= 0.0 + 1e-9))
     p_one = float(np.mean(arr >= 1.0 - 1e-9))
     p_extreme = p_zero + p_one
     p_mid = float(np.mean((arr > 0.0 + 1e-9) & (arr < 1.0 - 1e-9)))
     return dict(
-        p_zero=p_zero, p_one=p_one, zvf_proxy=p_extreme,
+        p_zero=p_zero, p_one=p_one, fraction_extreme_step_means=p_extreme,
         p_extreme=p_extreme, p_mid=p_mid,
         mean_r=float(np.mean(arr)), var_r=float(np.var(arr, ddof=1)) if len(arr) > 1 else 0.0,
     )
@@ -198,13 +139,16 @@ def artefact_zvf_proxy() -> Path:
         # Per-step empirical ZVF from the trace's step_log (when present):
         # this is the direct analogue of Pillar 2's rollout-level ZVF,
         # measured at the per-step aggregation scale.
-        zvf_per_step = [float(s.get("zvf", 0.0)) for s in log if "zvf" in s]
+        zvf_per_step = [float(s["zvf"]) for s in log if s.get("zvf") is not None]
+        if any(not math.isfinite(v) or not 0 <= v <= 1 for v in zvf_per_step):
+            raise ValueError("recorded group ZVF must be finite and in [0, 1]")
         gu_per_step = [float(s.get("gu", 0.0)) for s in log if "gu" in s]
         z.update(
             zvf_per_step_mean=(float(np.mean(zvf_per_step)) if zvf_per_step else float("nan")),
             zvf_per_step_max=(float(np.max(zvf_per_step)) if zvf_per_step else float("nan")),
             gu_per_step_mean=(float(np.mean(gu_per_step)) if gu_per_step else float("nan")),
             has_step_zvf=bool(zvf_per_step),
+            n_recorded_zvf_steps=len(zvf_per_step),
         )
         rows.append({
             "model": label,
@@ -229,7 +173,9 @@ def artefact_stratum_fit(zvf_path: Path) -> Path:
     proxy = list(csv.DictReader(zvf_path.open(), delimiter="\t"))
     high, low = [], []
     for row in proxy:
-        stratum = "HIGH" if float(row["zvf_proxy"]) >= ZVF_THRESHOLD else "LOW"
+        if not math.isfinite(float(row["zvf_per_step_mean"])):
+            continue
+        stratum = "HIGH" if float(row["zvf_per_step_mean"]) >= ZVF_THRESHOLD else "LOW"
         (high if stratum == "HIGH" else low).append(row["model"])
 
     rows = []
@@ -244,19 +190,22 @@ def artefact_stratum_fit(zvf_path: Path) -> Path:
                 continue
             t = np.arange(1, len(rew) + 1, dtype=float)
             rmax, lam, rmse, r2 = _fit_sat(t, rew)
+            if not all(math.isfinite(v) for v in (rmax, lam, rmse)):
+                continue
             lam_at_bound += int(abs(lam - LAM_BOUND) < 1e-3)
             lam_below += int(abs(lam - LAM_BOUND) >= 1e-3)
             rmses.append(rmse)
             lam_list.append(lam)
         rows.append({
             "stratum": stratum_name,
-            "n_anchors": len(stratum_models),
+            "n_anchors": len(lam_list),
+            "n_anchors_attempted": len(stratum_models),
             "n_lam_at_bound": lam_at_bound,
             "n_lam_below_bound": lam_below,
-            "frac_at_bound": (lam_at_bound / max(1, len(stratum_models))),
-            "mean_rmse": float(np.mean(rmses)) if rmses else 0.0,
-            "mean_lambda": float(np.mean(lam_list)) if lam_list else 0.0,
-            "median_lambda": float(np.median(lam_list)) if lam_list else 0.0,
+            "frac_at_bound": (lam_at_bound / len(lam_list) if lam_list else math.nan),
+            "mean_rmse": float(np.mean(rmses)) if rmses else math.nan,
+            "mean_lambda": float(np.mean(lam_list)) if lam_list else math.nan,
+            "median_lambda": float(np.median(lam_list)) if lam_list else math.nan,
             "models": "|".join(stratum_models),
         })
     out = RESULTS_DIR / "scaling_law_iter61_stratum_fit.tsv"
@@ -282,9 +231,10 @@ def artefact_jackknife() -> Path:
             continue
         t = np.arange(1, len(rew) + 1, dtype=float)
         rmax, lam, rmse, r2 = _fit_sat(t, rew)
-        # robust R_max = max(0.75-percentile, fitted)
-        q75 = float(np.quantile(rew, 0.75))
-        rmax_robust = max(q75, rmax)
+        if not all(math.isfinite(v) for v in (rmax, lam, rmse)):
+            continue
+        # Fitted saturation target; no quantile substitution for an asymptote.
+        rmax_robust = rmax
         all_data.append({
             "model": label, "params": meta["params"], "arch": meta["arch"],
             "n_steps": len(rew), "rmax_robust": rmax_robust,
@@ -292,6 +242,8 @@ def artefact_jackknife() -> Path:
             "log10C": math.log10(meta["params"] * len(rew)),
         })
 
+    if len(all_data) < 4:
+        raise ValueError("jackknife requires at least four successful fits")
     # full fit
     X_full = np.array([[d["log10P"], d["log10C"], 1.0] for d in all_data])
     Y_full = np.array([d["rmax_robust"] for d in all_data])
@@ -309,7 +261,7 @@ def artefact_jackknife() -> Path:
             "held_out": held["model"],
             "params_B": held["params"],
             "arch": held["arch"],
-            "rmax_observed": held["rmax_robust"],
+            "rmax_fitted": held["rmax_robust"],
             "rmax_predicted": float(pred_held),
             "residual": float(held["rmax_robust"] - pred_held),
             "abs_residual": float(abs(held["rmax_robust"] - pred_held)),
@@ -332,88 +284,27 @@ def artefact_jackknife() -> Path:
 # (4) Cross-pillar ZVF prediction
 # ----------------------------------------------------------------------
 def artefact_cross_pillar(zvf_path: Path) -> Path:
-    """Compare Pillar 2's empirical mean_zvf (G=8, from
-    tinker_gsm8k_zvf_summary.json) against iter61's per-step ZVF proxy."""
-    zvf_summary = REPO / "experiments" / "results" / "tinker_gsm8k_zvf_summary.json"
-    summary = json.loads(zvf_summary.read_text())
-    p2_mean_zvf = float(summary["mean_zvf"])
-    p2_p_zero = float(summary["frac_all_correct"]) + float(summary["frac_all_wrong"])
-    p2_frac_mixed = float(summary["frac_mixed"])
-
+    """Export separate-cohort descriptive means without a compatibility claim."""
+    source = REPO / "experiments/results/tinker_gsm8k_zvf_summary.json"
+    summary = json.loads(source.read_text()) if source.exists() else {}
     proxy = list(csv.DictReader(zvf_path.open(), delimiter="\t"))
-    # per-anchor per-step ZVF
-    zvfs = [float(r["zvf_proxy"]) for r in proxy]
-    p_zeros = [float(r["p_zero"]) for r in proxy]
+    finite = [float(r["zvf_per_step_mean"]) for r in proxy
+              if math.isfinite(float(r["zvf_per_step_mean"]))]
+    pzero = [float(r["p_zero"]) for r in proxy if math.isfinite(float(r["p_zero"]))]
     rows = []
-    rows.append({
-        "source": "Pillar2_tinker_G8",
-        "metric": "mean_zvf_per_group",
-        "value": p2_mean_zvf,
-        "n": int(summary["n_problems_total"]),
-        "scale": "group_rollout",
-    })
-    rows.append({
-        "source": "Pillar2_tinker_G8",
-        "metric": "p_extreme_per_group",
-        "value": p2_p_zero,
-        "n": int(summary["n_problems_total"]),
-        "scale": "group_rollout",
-    })
-    rows.append({
-        "source": "Pillar2_tinker_G8",
-        "metric": "p_mixed_per_group",
-        "value": p2_frac_mixed,
-        "n": int(summary["n_problems_total"]),
-        "scale": "group_rollout",
-    })
-    rows.append({
-        "source": "Pillar1_iter61_step_zvf",
-        "metric": "mean_zvf_proxy_per_step",
-        "value": float(np.mean(zvfs)),
-        "n": sum(int(r["n_steps"]) for r in proxy),
-        "scale": "training_step",
-    })
-    rows.append({
-        "source": "Pillar1_iter61_step_zvf",
-        "metric": "median_zvf_proxy_per_step",
-        "value": float(np.median(zvfs)),
-        "n": sum(int(r["n_steps"]) for r in proxy),
-        "scale": "training_step",
-    })
-    rows.append({
-        "source": "Pillar1_iter61_step_zvf",
-        "metric": "mean_p_zero_per_step",
-        "value": float(np.mean(p_zeros)),
-        "n": sum(int(r["n_steps"]) for r in proxy),
-        "scale": "training_step",
-    })
-    rows.append({
-        "source": "Pillar1_iter61_step_zvf",
-        "metric": "median_p_zero_per_step",
-        "value": float(np.median(p_zeros)),
-        "n": sum(int(r["n_steps"]) for r in proxy),
-        "scale": "training_step",
-    })
-
-    # Predictions
-    # Pre-reg: mean step-level ZVF_proxy should be HIGHER than the rollout-level
-    # mean_zvf because per-step aggregation cannot de-correlate within-group
-    # successes.
-    pred_ratio = float(np.mean(zvfs)) / max(1e-9, p2_mean_zvf)
-    rows.append({
-        "source": "Prediction",
-        "metric": "step_zvf_over_rollout_zvf",
-        "value": pred_ratio,
-        "n": 0,
-        "scale": "ratio",
-    })
-
+    for source_name, metric, value, n, unit in (
+        ("Pillar2_tinker_G8", "mean_zvf_per_group", summary.get("mean_zvf", math.nan), summary.get("n_problems_total", 0), "group_rollout"),
+        ("Pillar1_iter61_step_zvf", "mean_recorded_group_zvf_per_step", np.mean(finite) if finite else math.nan, len(finite), "anchor_mean"),
+        ("Pillar1_iter61_step_zvf", "median_recorded_group_zvf_per_step", np.median(finite) if finite else math.nan, len(finite), "anchor_mean"),
+        ("Pillar1_iter61_step_zvf", "mean_p_zero_per_step", np.mean(pzero) if pzero else math.nan, len(pzero), "anchor_mean"),
+        ("Pillar1_iter61_step_zvf", "median_p_zero_per_step", np.median(pzero) if pzero else math.nan, len(pzero), "anchor_mean"),
+    ):
+        rows.append(dict(source=source_name, metric=metric, value=value, n=n, scale=unit,
+                         comparison_status="unavailable_protocol_match"))
     out = RESULTS_DIR / "scaling_law_iter61_cross_pillar.tsv"
     with out.open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), delimiter="\t")
-        w.writeheader()
-        for r in rows: w.writerow(r)
-    print(f"[iter61] wrote {out}  (Pillar2 mean_zvf={p2_mean_zvf:.3f}, iter61 mean_zvf_proxy={float(np.mean(zvfs)):.3f})")
+        writer = csv.DictWriter(f, fieldnames=list(rows[0]), delimiter="\t")
+        writer.writeheader(); writer.writerows(rows)
     return out
 
 
@@ -438,14 +329,14 @@ def artefact_predictions(stratum_path: Path, jack_path: Path, cross_path: Path) 
              f"{float(high['frac_at_bound']):.2f} > {float(low['frac_at_bound']):.2f}",
              "HIGH > LOW"),
         ("P2_nemotron_in_high_floor",
-         "Nemotron-120B sits in HIGH-ZVF via P(R=0)=0.55 (floor-collapse, not ceiling)",
+         "Nemotron-120B has recorded mean group ZVF at or above the threshold",
              "Nemotron-120B" in high["models"].split("|"),
              "Nemotron-120B" in high["models"].split("|"),
              True),
         ("P3_nemotron_largest_jackknife_residual",
          "Nemotron-120B has the largest |LOO residual| in the cross-scale fit",
-             abs_residuals[0][0] == "Nemotron-120B",
-             abs_residuals[0][0],
+             (abs_residuals[0][0] if abs_residuals else "unavailable") == "Nemotron-120B",
+             (abs_residuals[0][0] if abs_residuals else "unavailable"),
              "Nemotron-120B"),
         ("P4_nemotron_alpha_logP_shift",
          "Removing Nemotron-120B shifts alpha_logP (signed, in same direction as the full-fit residual)",
@@ -457,10 +348,10 @@ def artefact_predictions(stratum_path: Path, jack_path: Path, cross_path: Path) 
                    if r["held_out"] == "Nemotron-120B"), float("nan")),
              "sign(residual)*sign(shift)>0"),
         ("P5_step_zvf_above_rollout_zvf",
-         "Mean per-step ZVF proxy > Pillar 2 rollout-level mean_zvf",
-             float(next(r["value"] for r in cross if r["metric"] == "mean_zvf_proxy_per_step"))
+         "Cross-cohort ZVF comparison requires matching model, task, and group protocol",
+             float(next(r["value"] for r in cross if r["metric"] == "mean_recorded_group_zvf_per_step"))
              > float(next(r["value"] for r in cross if r["metric"] == "mean_zvf_per_group")),
-             float(next(r["value"] for r in cross if r["metric"] == "mean_zvf_proxy_per_step")),
+             float(next(r["value"] for r in cross if r["metric"] == "mean_recorded_group_zvf_per_step")),
              "> rollout-level"),
     ]
     rows = []
@@ -470,7 +361,10 @@ def artefact_predictions(stratum_path: Path, jack_path: Path, cross_path: Path) 
             "claim": claim,
             "observed": observed,
             "expected": expected,
-            "pass_fail": "PASS" if passed else "FAIL",
+            "pass_fail": ("UNAVAILABLE" if pid.startswith("P5_") or
+                          (pid.startswith(("P2_", "P3_", "P4_")) and not any(r["held_out"] == "Nemotron-120B" for r in jack)) or
+                          (pid.startswith("P1_") and not all(math.isfinite(float(r["frac_at_bound"])) for r in (high, low)))
+                          else "PASS" if passed else "FAIL"),
         })
     out = RESULTS_DIR / "scaling_law_iter61_predictions.tsv"
     with out.open("w") as f:
@@ -500,7 +394,7 @@ def plot_all(zvf_path: Path, stratum_path: Path, jack_path: Path, cross_path: Pa
         t = np.arange(1, len(rew) + 1, dtype=float)
         _, lam, _, _ = _fit_sat(t, rew)
         colors.append("tab:red" if abs(lam - LAM_BOUND) < 1e-3 else "tab:green")
-    xs = [float(r["zvf_proxy"]) for r in proxy]
+    xs = [float(r["zvf_per_step_mean"]) for r in proxy]
     ys = [float(r["mean_r"]) for r in proxy]
     ax.scatter(xs, ys, c=colors, s=80, edgecolor="black")
     for r, x, y in zip(proxy, xs, ys):
@@ -508,9 +402,9 @@ def plot_all(zvf_path: Path, stratum_path: Path, jack_path: Path, cross_path: Pa
                     fontsize=7, xytext=(5, 5), textcoords="offset points")
     ax.axvline(ZVF_THRESHOLD, color="grey", ls="--", lw=1,
                label=f"ZVF threshold = {ZVF_THRESHOLD}")
-    ax.set_xlabel("Per-step ZVF proxy  P(R=0) + P(R=1)")
+    ax.set_xlabel("Recorded mean group ZVF")
     ax.set_ylabel("Mean reward")
-    ax.set_title("(A) ZVF proxy vs mean R\nred = λ at bound, green = λ below")
+    ax.set_title("(A) Recorded group ZVF vs mean reward")
     ax.legend(loc="lower left", fontsize=8)
 
     # (B) Stratum fit: fraction at bound
@@ -538,7 +432,7 @@ def plot_all(zvf_path: Path, stratum_path: Path, jack_path: Path, cross_path: Pa
     ax.barh(range(len(labels_sorted)), abs_res_sorted, color=colors_sorted)
     ax.set_yticks(range(len(labels_sorted)))
     ax.set_yticklabels(labels_sorted, fontsize=8)
-    ax.set_xlabel("|LOO residual|  R_max_robust − R_max_predicted")
+    ax.set_xlabel("|LOO residual|  Fitted R_max − LOO predicted R_max")
     ax.set_title("(C) Jackknife LOO residual per held-out anchor")
 
     # (D) Cross-pillar comparison: rollout ZVF vs step ZVF
@@ -549,7 +443,7 @@ def plot_all(zvf_path: Path, stratum_path: Path, jack_path: Path, cross_path: Pa
     p2_vals = [float(r["value"]) for r in p2_rows]
     p1_labels = [r["metric"] for r in p1_rows]
     p1_vals = [float(r["value"]) for r in p1_rows]
-    short_p2 = ["zvf", "p_extreme", "p_mixed"]
+    short_p2 = ["zvf"]
     short_p1 = ["step_zvf", "step_med_zvf", "p_zero", "med_p_zero"]
     width = 0.35
     x_p2 = np.arange(len(p2_vals))
@@ -562,7 +456,7 @@ def plot_all(zvf_path: Path, stratum_path: Path, jack_path: Path, cross_path: Pa
     ax.set_title("(D) Cross-pillar ZVF: rollout-level vs step-level")
     ax.legend(fontsize=8)
 
-    fig.suptitle("Iter 61 — ZVF-conditioned saturation-fit identifiability (Pillar 1 × Pillar 2)",
+    fig.suptitle("Iter 61 — Recorded ZVF and saturation optimizer diagnostics (Pillar 1 × Pillar 2)",
                  fontsize=12)
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     out_pdf = FIG_DIR / "scaling_law_iter61.pdf"
@@ -581,263 +475,41 @@ def plot_all(zvf_path: Path, stratum_path: Path, jack_path: Path, cross_path: Pa
 # ----------------------------------------------------------------------
 def write_section(zvf_path: Path, stratum_path: Path, jack_path: Path,
                   cross_path: Path, pred_path: Path, fig_path: Path) -> Path:
-    proxy = list(csv.DictReader(zvf_path.open(), delimiter="\t"))
-    stratum = list(csv.DictReader(stratum_path.open(), delimiter="\t"))
-    jack = list(csv.DictReader(jack_path.open(), delimiter="\t"))
-    cross = list(csv.DictReader(cross_path.open(), delimiter="\t"))
-    preds = list(csv.DictReader(pred_path.open(), delimiter="\t"))
-
-    high = next(r for r in stratum if r["stratum"] == "HIGH_zvf")
-    low = next(r for r in stratum if r["stratum"] == "LOW_zvf")
-    alls = next(r for r in stratum if r["stratum"] == "ALL")
-
-    mean_step_zvf = float(next(r["value"] for r in cross
-                                if r["metric"] == "mean_zvf_proxy_per_step"))
-    mean_rollout_zvf = float(next(r["value"] for r in cross
-                                   if r["metric"] == "mean_zvf_per_group"))
-
-    high_anchors = high["models"].replace("|", ", ")
-    low_anchors = low["models"].replace("|", ", ")
-
-    pred_lines = "\n".join(
-        f"  \\item {r['prediction_id']}: \\textbf{{{r['pass_fail']}}}. "
-        f"{r['claim']} (observed={r['observed']}, expected={r['expected']})"
-        for r in preds)
-
-    tex = f"""% paper/sections/scaling_law_iter61.tex -- iter 61 ZVF-conditioned identifiability
-% Auto-generated by platform_modal/scripts/scaling_law_iter61.py
-\\paragraph{{Iter 61 elevation: ZVF-conditioned saturation-fit identifiability.}}
-\\label{{par:scaling-iter61}}
-The iter 25 audit established that 0/5 per-trace saturation-rate
-estimates are identifiable at this benchmark's noise floor.  The
-iter 57 audit sharpened this to 4/5 anchors at the \\(\\lambda = 10\\)
-optimiser bound, with Nemotron-120B as the sole identifiable
-exception.  What neither audit explains is \\emph{{why}} the
-bound-degeneracy concentrates on these anchors.  This iteration
-closes that gap by tying the saturation-fit degeneracy to the same
-structural axis that Pillar 2 (\\textsc{{zvf}}) measures: the
-per-trace concentration of reward mass at the \\(R \\in \\{{0, 1\\}}\\)
-extremes.
-
-We define a per-step ZVF proxy
-\\begin{{equation}}
-  \\widetilde{{\\mathrm{{ZVF}}}} \\;=\\; \\mathbb{{P}}(R = 0) + \\mathbb{{P}}(R = 1),
-  \\label{{eq:zvf-proxy}}
-\\end{{equation}}
-computed on each anchor's reward trace (\\tableref{{tab:scaling-iter61-zvf}}).
-This is the step-level analogue of Pillar 2's rollout-level
-\\(\\mathrm{{ZVF}} = \\mathbb{{P}}(K_x = 0) + \\mathbb{{P}}(K_x = G)\\)
-that measures within-group collision.  The two scales differ but
-both measure the same property: how much of the binary-outcome
-probability mass sits at the all-same extremes.
-
-\\begin{{table}}[t]
-  \\centering
-  \\small
-  \\begin{{tabular}}{{lrrrrrr}}
-    \\toprule
-    Model & \\(N\\) (B) & arch & \\(\\bar R\\) & \\(P(R=0)\\) & \\(P(R=1)\\) & \\(\\widetilde{{\\mathrm{{ZVF}}}}\\) \\\\
-    \\midrule
-"""
-    for r in sorted(proxy, key=lambda x: -float(x["zvf_proxy"])):
-        tex += (f"    {r['model'].replace('Instruct', '-Inst')} & "
-                f"{float(r['params_B']):.1f} & "
-                f"{r['arch']} & {float(r['mean_r']):.3f} & "
-                f"{float(r['p_zero']):.3f} & "
-                f"{float(r['p_one']):.3f} & "
-                f"{float(r['zvf_proxy']):.3f} \\\\\n")
-    tex += f"""    \\bottomrule
-  \\end{{tabular}}
-  \\caption{{\\textbf{{Per-step ZVF proxy across the 12-anchor pool.}}
-    \\(\\widetilde{{\\mathrm{{ZVF}}}} = P(R=0) + P(R=1)\\) is the
-    step-level counterpart of Pillar 2's rollout-level ZVF.
-    Crucially, the extreme-mass concentration comes from two
-    distinct sources: \\emph{{ceiling-degenerate}} anchors
-    (Qwen3.5-4B, Llama-3.1-8B-Instruct, DeepSeek-V3.1, Kimi-K2,
-    Qwen3-30B-MoE-Inst, Qwen3-235B-MoE) carry high \\(P(R=1)\\) but
-    near-zero \\(P(R=0)\\); the
-    \\emph{{floor-degenerate}} anchor Nemotron-120B is the unique
-    model with high \\(P(R=0)=0.55\\) and \\(\\bar R = 0.175\\).
-    Both archetypes concentrate mass at one extreme, but for
-    structurally different reasons -- and the saturation curve
-    degenerates in both.  \\texttt{{platform_modal/scripts/scaling\\_law\\_iter61.py}}
-    \\(\\to\\) \\texttt{{scaling\\_law\\_iter61\\_zvf\\_proxy.tsv}}.}}
-  \\label{{tab:scaling-iter61-zvf}}
-\\end{{table}}
-
-We stratify the 12-anchor pool into HIGH (\\(\\widetilde{{\\mathrm{{ZVF}}}} \\geq {ZVF_THRESHOLD}\\),
-\\({high['n_anchors']} anchors) and LOW (\\(\\widetilde{{\\mathrm{{ZVF}}}} < {ZVF_THRESHOLD}\\),
-\\({low['n_anchors']} anchors) strata and refit the canonical
-saturation model on each stratum
-(\\tableref{{tab:scaling-iter61-stratum}}):
-
-\\begin{{table}}[t]
-  \\centering
-  \\small
-  \\begin{{tabular}}{{lrrrr}}
-    \\toprule
-    Stratum & \\(n\\) & \\(\\hat\\lambda\\) at bound & mean RMSE & mean \\(\\hat\\lambda\\) \\\\
-    \\midrule
-    HIGH-ZVF ({high['n_anchors']} anchors)  & {high['n_anchors']} & {int(high['n_lam_at_bound'])}/{high['n_anchors']} & {float(high['mean_rmse']):.4f} & {float(high['mean_lambda']):.2f} \\\\
-    LOW-ZVF ({low['n_anchors']} anchor{'' if low['n_anchors']==1 else 's'})  & {low['n_anchors']} & {int(low['n_lam_at_bound'])}/{low['n_anchors']} & {float(low['mean_rmse']):.4f} & {float(low['mean_lambda']):.2f} \\\\
-    ALL ({alls['n_anchors']} anchors)                       & {alls['n_anchors']} & {int(alls['n_lam_at_bound'])}/{alls['n_anchors']} & {float(alls['mean_rmse']):.4f} & {float(alls['mean_lambda']):.2f} \\\\
-    \\bottomrule
-  \\end{{tabular}}
-  \\caption{{\\textbf{{Saturation-fit identifiability by ZVF stratum.}}
-    The HIGH-ZVF stratum has the higher bound-degenerate rate:
-    \\({int(high['n_lam_at_bound'])}/{high['n_anchors']}\\)
-    ({float(high['frac_at_bound'])*100:.0f}\\%) vs
-    \\({int(low['n_lam_at_bound'])}/{low['n_anchors']}\\)
-    ({float(low['frac_at_bound'])*100:.0f}\\%) in the LOW-ZVF
-    stratum.  Both strata are dominated by the
-    \\(\\lambda = 10\\) optimiser ceiling, but the
-    ceiling-degenerate mode (HIGH) is more concentrated than the
-    unsaturated mode (LOW).  This is the structural correlate of
-    Pillar 2's contrastive-yield decomposition: when reward mass is
-    concentrated at the extremes, the saturation curve has no
-    curvature to fit.  \\texttt{{platform_modal/scripts/scaling\\_law\\_iter61.py}}
-    \\(\\to\\) \\texttt{{scaling\\_law\\_iter61\\_stratum\\_fit.tsv}}.}}
-  \\label{{tab:scaling-iter61-stratum}}
-\\end{{table}}
-
-The HIGH-ZVF stratum anchors are: {high_anchors}.  The LOW-ZVF
-stratum contains {low_anchors}.  Notably, Nemotron-120B sits in the
-HIGH-ZVF stratum via its \\(P(R=0) = 0.55\\) floor-collapse path --
-this is structurally distinct from the other HIGH-ZVF anchors
-(ceiling-degenerate via \\(P(R=1) > 0.3\\)).  Both archetypes hit
-the \\(\\lambda = 10\\) bound, but for different reasons: the
-ceiling anchors pin \\(R_{{\\max}}\\) at \\(\\bar R\\) with a
-near-step transient; the floor anchor pins \\(R_{{\\max}}\\) at the
-post-peak reward (\\(\\hat R_{{\\max}} = 0.875\\)) with a
-non-monotone decay that the fit cannot describe.
-
-We then stress-test the cross-scale joint fit from iter 49 by
-leave-one-out refit (\\tableref{{tab:scaling-iter61-jack}}):
-
-\\begin{{table}}[t]
-  \\centering
-  \\small
-  \\begin{{tabular}}{{lrrrr}}
-    \\toprule
-    Held-out anchor & \\(R_{{\\max}}\\) obs & \\(R_{{\\max}}\\) pred & \\(|\\mathrm{{residual}}\\)| & \\(\\Delta\\alpha_{{\\log P}}\\) \\\\
-    \\midrule
-"""
-    jack_sorted = sorted(jack, key=lambda x: -float(x["abs_residual"]))
-    for r in jack_sorted[:8]:
-        tex += (f"    {r['held_out'].replace('Instruct', '-Inst')} & "
-                f"{float(r['rmax_observed']):.3f} & "
-                f"{float(r['rmax_predicted']):.3f} & "
-                f"{float(r['abs_residual']):.3f} & "
-                f"{float(r['delta_alpha_logP']):+.3f} \\\\\n")
-    tex += f"""    \\bottomrule
-  \\end{{tabular}}
-  \\caption{{\\textbf{{Jackknife LOO residual of the iter-49 two-parameter
-    cross-scale fit.}}  Top 8 anchors by \\(|\\mathrm{{residual}}|\\).
-    Nemotron-120B has the single largest LOO residual
-    ({float(jack_sorted[0]['abs_residual']):.3f} reward units),
-    confirming that the cross-scale slope is anchor-driven: removing
-    any other anchor produces a smaller shift in the
-    \\(R_{{\\max}}\\) prediction.  This is the same axis that the
-    iter 21 audit identified as architecture-contingent, but the
-    jackknife isolates the structural collapse anchor that pulls
-    the cross-scale slope negative.  \\texttt{{platform_modal/scripts/scaling\\_law\\_iter61.py}}
-    \\(\\to\\) \\texttt{{scaling\\_law\\_iter61\\_jackknife.tsv}}.}}
-  \\label{{tab:scaling-iter61-jack}}
-\\end{{table}}
-
-The cross-pillar ZVF comparison
-(\\tableref{{tab:scaling-iter61-cross}}) shows that the per-step
-ZVF proxy across the 12 anchors is
-\\(\\widetilde{{\\mathrm{{ZVF}}}}_{{\\mathrm{{step}}}} = {mean_step_zvf:.3f}\\)
-versus Pillar 2's rollout-level
-\\(\\mathrm{{ZVF}}_{{\\mathrm{{rollout}}}} = {mean_rollout_zvf:.3f}\\)
-(Qwen3-8B, G=8, 600 problems).  The step-level proxy is
-{mean_step_zvf - mean_rollout_zvf:+.3f} units
-{{\\emph{{higher}}}} than the rollout-level ZVF -- the expected
-direction, because per-step aggregation cannot de-correlate
-within-group successes that the rollout-level grouping sees as
-mixed.  This validates Pillar 2's claim that the saturation-bound
-degeneracy is a within-group contrast problem, not a sampling-noise
-problem.
-
-\\begin{{table}}[t]
-  \\centering
-  \\small
-  \\begin{{tabular}}{{lll}}
-    \\toprule
-    Source & Metric & Value \\\\
-    \\midrule
-"""
-    for r in cross:
-        metric_esc = r['metric'].replace('_', '\\_')
-        tex += (f"    {r['source']} & {metric_esc} & "
-                f"{float(r['value']):.4f} \\\\\n")
-    tex += f"""    \\bottomrule
-  \\end{{tabular}}
-  \\caption{{\\textbf{{Cross-pillar ZVF: rollout-level (Pillar 2) vs
-    step-level (Pillar 1 iter 61).}}  The two scales agree on
-    direction (extreme-mass concentration predicts bound-degeneracy)
-    but differ in magnitude because per-step aggregation cannot
-    de-correlate within-group successes.  Pillar 2's 15.8\\%
-    rollout-level ZVF is the per-group estimate at G=8; the iter 61
-    step-level proxy is the per-step aggregation across the
-    12-anchor pool, which is necessarily higher because each
-    step contributes an entire group worth of variance.
-    \\texttt{{platform_modal/scripts/scaling\\_law\\_iter61.py}}
-    \\(\\to\\) \\texttt{{scaling\\_law\\_iter61\\_cross\\_pillar.tsv}}.}}
-  \\label{{tab:scaling-iter61-cross}}
-\\end{{table}}
-
-\\paragraph{{Pre-registered predictions.}}
-The five predictions in \\texttt{{scaling\\_law\\_iter61\\_predictions.tsv}}:
-\\begin{{itemize}}
-{pred_lines}
-\\end{{itemize}}
-
-\\paragraph{{What iter 61 proves.}}
-The iter 25/57/21 audits established that the canonical saturation
-fit is degenerate on this benchmark.  Iter 61 closes the structural
-gap by showing that the degeneracy has \\emph{{two}} distinct
-sources -- ceiling-collapse (P(R=1) high, anchors that have
-saturated) and floor-collapse (P(R=0) high, the Nemotron-120B
-counterexample) -- both of which concentrate reward mass at one
-extreme and pin the saturation-curve \\(R_{{\\max}}\\) parameter at
-that extreme.  The cross-scale regression slope is therefore
-anchor-driven, with Nemotron-120B acting as the structural outlier
-whose removal shifts \\(\\alpha_{{\\log P}}\\) by more than 0.05
-units (the largest single-anchor shift in the LOO sweep).
-Pillar 2's contrastive-yield decomposition is the structural
-explainer for the iter 25/57 saturation-fit degeneracy: the
-saturation law's role is taxonomic (partitioning the frontier into
-saturated vs unsaturated) rather than predictive, and the iter 61
-step-level ZVF proxy is the diagnostic that operationalises this
-link without requiring rollout-level data.
-
-\\begin{{figure}}[t]
-  \\centering
-  \\IfFileExists{{figures/scaling_law_iter61.pdf}}{{%
-  \\includegraphics[width=0.95\\linewidth]{{figures/scaling_law_iter61.pdf}}%
-  }}{{%
-  \\fbox{{\\parbox{{0.86\\linewidth}}{{\\centering\\small\\vspace{{1em}}\\textit{{[Figure placeholder: scaling\\_law\\_iter61.pdf pending regeneration.]}}\\vspace{{1em}}}}%
-  }}
-  \\caption{{\\textbf{{Iter 61 cross-pillar ZVF diagnostics.}}
-    \\textbf{{(A)}} per-step \\(\\widetilde{{\\mathrm{{ZVF}}}}\\)
-    vs mean reward; red = \\(\\lambda\\) at bound, green = \\(\\lambda\\)
-    below.  \\textbf{{(B)}} fraction of anchors with \\(\\lambda\\) at
-    the upper bound by ZVF stratum.  \\textbf{{(C)}} Jackknife LOO
-    residual per held-out anchor; Nemotron-120B is the largest.
-    \\textbf{{(D)}} cross-pillar comparison: rollout-level ZVF
-    (Pillar 2) vs step-level ZVF proxy (Pillar 1 iter 61).}}
-  \\label{{fig:scaling-iter61}}
-\\end{{figure}}
-"""
-    out = PAPER_SEC / "scaling_law_iter61.tex"
-    out.write_text(tex)
-    print(f"[iter61] wrote {out}  ({len(tex.splitlines())} lines)")
+    """Render only supplied observations, with no hard-coded causal verdict."""
+    strata=list(csv.DictReader(stratum_path.open(),delimiter="\t"))
+    preds=list(csv.DictReader(pred_path.open(),delimiter="\t"))
+    lines=[r"\subsection{Exploratory saturation diagnostics (review27 v3)}",
+           "Extreme step-mean fractions are not group ZVF. Only recorded group-level measurements define ZVF strata. Missing traces and failed fits are excluded with counts; these associations do not establish a causal mechanism.",
+           r"\begin{tabular}{lrr}",r"Stratum & Attempted & Fitted \\"]
+    for row in strata:
+        label=row["stratum"].replace("_",r"\_")
+        lines.append(f"{label} & {row.get('n_anchors_attempted',row['n_anchors'])} & {row['n_anchors']} " + r"\\")
+    lines.append(r"\end{tabular}")
+    for row in preds:
+        label=row["prediction_id"].replace("_",r"\_")
+        lines.append(f"Descriptive check {label}: {row['pass_fail']}.")
+    out=PAPER_SEC/"scaling_law_iter61_review27_v3.tex"
+    out.write_text("\n".join(lines)+"\n")
     return out
 
 
-def main():
+
+
+def main(output_dir=None, source_root=None):
+    global REPO, CANDIDATE, FIG_DIR, PAPER_SEC
+    global RESULTS_DIR, TRACE_DIR, PAPER_FIG
+    if source_root is not None:
+        REPO = Path(source_root)
+    if output_dir is not None:
+        CANDIDATE = Path(output_dir)
+    RESULTS_DIR = CANDIDATE
+    TRACE_DIR = REPO / "experiments/tinker-runs/results"
+    PAPER_FIG = CANDIDATE / "paper_figures"
+    PAPER_FIG.mkdir(parents=True, exist_ok=True)
+    FIG_DIR, PAPER_SEC = CANDIDATE / "figures", CANDIDATE / "sections"
+    for directory in (CANDIDATE, FIG_DIR, PAPER_SEC):
+        directory.mkdir(parents=True, exist_ok=True)
+
     zvf_path = artefact_zvf_proxy()
     stratum_path = artefact_stratum_fit(zvf_path)
     jack_path = artefact_jackknife()
@@ -846,6 +518,12 @@ def main():
     fig_path = plot_all(zvf_path, stratum_path, jack_path, cross_path)
     write_section(zvf_path, stratum_path, jack_path, cross_path, pred_path, fig_path)
     print("[iter61] all artefacts landed.")
+
+    try:
+        from ._review27_rank import write_manifest
+    except ImportError:
+        from _review27_rank import write_manifest
+    write_manifest(__file__, CANDIDATE, [TRACE_DIR / cfg["file"] for cfg in MODELS.values()] + [REPO / "experiments/results/tinker_gsm8k_zvf_summary.json"], seed=None)
 
 
 if __name__ == "__main__":

@@ -628,8 +628,6 @@ class AgentharmSplitBindingTests(unittest.TestCase):
         self.assertEqual(3, receipt["task_count"])
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class AgentHarmProviderGrantTests(unittest.TestCase):
@@ -640,7 +638,7 @@ class AgentHarmProviderGrantTests(unittest.TestCase):
     }
     @staticmethod
     def _sign(payload: dict, private_hex: str = "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60") -> dict:
-        signed = dict(payload)
+        signed = {key: value for key, value in payload.items() if key not in {"signature", "signature_key_id"}}
         signed["signature_key_id"] = AgentHarmProviderGrantTests.TEST_ROOT["key_id"]
         signed["signature"] = base64.b64encode(
             Ed25519PrivateKey.from_private_bytes(bytes.fromhex(private_hex)).sign(
@@ -708,13 +706,13 @@ class AgentHarmProviderGrantTests(unittest.TestCase):
                 "model_revision": adapter.MODEL_REVISION,
                 "artifact_sha256": "2" * 64,
                 "metric": "agentharm_safety_score",
-                "score": 0.5,
+                "score": 0.2,
                 "completed_at": "2026-08-01T00:00:00Z",
             }
         )
         receipt = adapter.collect_agentharm_signed_result(grant, request, result, trust_root=self.TEST_ROOT)
         self.assertEqual(receipt["status"], "COMPLETE")
-        self.assertEqual(receipt["score"], 0.5)
+        self.assertEqual(receipt["score"], 0.2)
 
         forged = self._sign(
             {key: value for key, value in result.items() if key not in {"signature", "signature_key_id"}},
@@ -762,5 +760,10 @@ class AgentHarmProviderGrantTests(unittest.TestCase):
         ).decode()
         self.assertEqual(adapter.validate_agentharm_provider_grant(grant, trust_root=self.TEST_ROOT)["grant_id"], "g1")
         grant["private_split"]["files"] = ["benchmark/chat_public_test.json"]
-        with self.assertRaises(adapter.HeldoutSplitUnavailable):
+        grant = self._sign(grant)
+        with self.assertRaisesRegex(adapter.HeldoutSplitUnavailable, "immutable complete private split"):
             adapter.validate_agentharm_provider_grant(grant, trust_root=self.TEST_ROOT)
+
+
+if __name__ == "__main__":
+    unittest.main()

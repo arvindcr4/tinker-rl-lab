@@ -200,6 +200,22 @@ def _as_gate_result(gates: Mapping[str, Any] | None) -> dict[str, Any]:
     no_regression = gates.get("no_regression")
     safety = gates.get("safety")
     if isinstance(no_regression, Mapping) and isinstance(safety, Mapping):
+        nr = no_regression.get("by_domain")
+        sf = safety.get("by_domain")
+        if not isinstance(nr, Mapping) or not nr or not isinstance(sf, Mapping) or set(nr) != set(sf):
+            raise StopRuleInputError("domain gates require complete domain measurements")
+        calculated = evaluate_domain_gates(
+            {k: v["delta"] for k, v in nr.items()},
+            {k: [v["lower_bound"], max(v["lower_bound"], v["delta"])] for k, v in nr.items()},
+            {k: v["increase"] for k, v in sf.items()},
+            {k: [min(v["increase"], v["upper_bound"]), v["upper_bound"]] for k, v in sf.items()},
+        )
+        for section in ("no_regression", "safety"):
+            for key in ("passed", "failures", "by_domain"):
+                if _json_value(gates[section].get(key)) != calculated[section][key]:
+                    raise StopRuleInputError("domain gate contradicts domain measurements")
+        if gates.get("passed") != calculated["passed"]:
+            raise StopRuleInputError("aggregate domain gate contradiction")
         if not isinstance(no_regression.get("passed"), bool) or not isinstance(
             safety.get("passed"), bool
         ):
@@ -406,6 +422,8 @@ class _ArmView:
     mean_strict_reward: float
     domain_gates: Mapping[str, Any]
     paired_metrics_validated: bool
+    baseline_count: int | None = None
+    baseline_mean: float | None = None
 
     @property
     def perfect_call_rate(self) -> float:
@@ -456,10 +474,14 @@ def _normalise_arm(record: Mapping[str, Any] | PairedArmMetrics) -> _ArmView:
             mean_strict_reward=record.mean_strict_reward,
             domain_gates=record.domain_gates,
             paired_metrics_validated=True,
+            baseline_count=sum(value == 1.0 for value in record.base_scores),
+            baseline_mean=math.fsum(record.base_scores) / len(record.base_scores),
         )
     if not isinstance(record, Mapping):
         raise StopRuleInputError("each arm must be a mapping or PairedArmMetrics")
 
+    if "final_used_for_selection" in record and record["final_used_for_selection"] is not False:
+        raise StopRuleInputError("final split metrics must not be used for selection")
     # If paired rows are present, derive the summary rather than trusting
     # caller-provided counts.  This prevents a stale summary from being used
     # for selection.
@@ -680,12 +702,12 @@ def validate_selection_vs_final_split(
                 f"selection and final example identities overlap ({len(overlap)} rows)"
             )
     return {
-        "separate": True,
+        "separate": True if selection_ids is not None and final_ids is not None else None,
         "selection_split_id": selection_split_id,
         "final_split_id": final_split_id,
         "selection_examples": None if selection_ids is None else len(selection_ids),
         "final_examples": None if final_ids is None else len(final_ids),
-        "overlap_examples": len(overlap),
+        "overlap_examples": len(overlap) if selection_ids is not None and final_ids is not None else None,
         "final_used_for_selection": False,
         "selection_only": True,
         "final_evaluation_required": True,
@@ -753,6 +775,8 @@ def _eligibility(
     details: list[dict[str, Any]] = []
     for arm in arms:
         reasons: list[str] = []
+        if arm.baseline_count is not None and (arm.baseline_count != base.perfect_call_count or not math.isclose(arm.baseline_mean, base.mean_strict_reward, abs_tol=1e-15)):
+            reasons.append("paired_baseline_differs_from_frozen_base")
         if arm.trials != base.trials:
             reasons.append("paired_trial_count_differs_from_base")
         quality = arm.trials == base.trials and (

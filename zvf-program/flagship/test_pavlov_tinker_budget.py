@@ -72,6 +72,7 @@ class PavlovTinkerBudgetTests(unittest.TestCase):
     def test_live_billing_is_known_and_not_double_counted_as_estimate(self) -> None:
         receipt = {
             "status": "completed",
+            "billing_final": True,
             "model": self.budget["model"],
             "billed_cost_usd": 3.125,
             "estimated_cost_usd": 3.5,
@@ -87,6 +88,7 @@ class PavlovTinkerBudgetTests(unittest.TestCase):
         receipt = {
             "schema_version": "pavlov-xlam-eval-v1",
             "status": "completed",
+            "billing_final": True,
             "model": self.budget["model"],
             "billed_cost_usd": Decimal("3.125"),
             "base_eval_estimated_usd": Decimal("2.25"),
@@ -114,6 +116,7 @@ class PavlovTinkerBudgetTests(unittest.TestCase):
     def test_unknown_model_fails_closed(self) -> None:
         receipt = {
             "status": "completed",
+            "billing_final": True,
             "model": "unknown/model",
             "billed_cost_usd": 1.0,
         }
@@ -227,6 +230,7 @@ class PavlovTinkerBudgetTests(unittest.TestCase):
         receipt = {
             "receipt_id": "run-1",
             "status": "completed",
+            "billing_final": True,
             "model": self.budget["model"],
             "billed_cost_usd": Decimal("1"),
             "suite_id": "T1",
@@ -257,6 +261,7 @@ class PavlovTinkerBudgetTests(unittest.TestCase):
         receipt = {
             "receipt_id": "eval-1",
             "status": "completed",
+            "billing_final": True,
             "model": self.budget["model"],
             "billed_cost_usd": Decimal("1"),
             "suite_id": "E1",
@@ -269,9 +274,9 @@ class PavlovTinkerBudgetTests(unittest.TestCase):
             },
         }
         ledger = build_ledger(self.budget, [receipt], portfolio_contract=self.portfolio)
-        self.assertEqual(ledger["heldout_receipt_proven_count"], 1)
-        self.assertEqual(ledger["heldout_pending_count"], 13)
-        self.assertEqual(ledger["heldout_receipt_proven_suite_ids"], [self.portfolio["primary_eval_suite_ids"][0]])
+        self.assertEqual(ledger["heldout_receipt_proven_count"], 0)
+        self.assertEqual(ledger["heldout_pending_count"], 14)
+        self.assertEqual(ledger["heldout_receipt_proven_suite_ids"], [])
         self.assertNotIn("all 14 held-out", repr(ledger).lower())
 
     def test_heldout_claim_without_immutable_receipts_rejects_launch(self) -> None:
@@ -287,6 +292,7 @@ class PavlovTinkerBudgetTests(unittest.TestCase):
     def test_heldout_claim_does_not_treat_plain_split_labels_as_receipts(self) -> None:
         receipt = {
             "status": "completed",
+            "billing_final": True,
             "model": self.budget["model"],
             "billed_cost_usd": Decimal("1"),
             "suite_id": "E1",

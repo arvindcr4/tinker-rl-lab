@@ -10,7 +10,7 @@ answers:
         same way on the rollout trace?  (CDF overlay + Kolmogorov-
         Smirnov distance between empirical CDFs of per-step ZVF.)
 
-    Q2. How strong is the *anti-herding* signature for each library,
+    Q2. How strong is the *homogeneous plug-in discrepancy* signature for each library,
         relative to the i.i.d. Binomial(G, p_bar) prediction?
         (Anti-herding = observed ZVF below the i.i.d. lower bound.)
 
@@ -25,37 +25,37 @@ a similar mean?
 
 Outputs (8 artifacts):
 
-    platform_hybrid/experiments/results/zvf_iter66_cdf_overlay.tsv
+    platform_hybrid/experiments/results/zvf_iter66_cdf_overlay_review28_v2.tsv
         Long-form CDF grid (50 zvf-bins x 9 methods) for the overlay
         figure.  Columns: zvf, method, ecdf.
 
-    platform_hybrid/experiments/results/zvf_iter66_ks_matrix.tsv
+    platform_hybrid/experiments/results/zvf_iter66_ks_matrix_review28_v2.tsv
         Pairwise Kolmogorov-Smirnov distance between per-step ZVF
         samples (9x9 methods).  Columns: method_a, method_b, ks_D,
         ks_pvalue, n_a, n_b.
 
-    platform_hybrid/experiments/results/zvf_iter66_dendrogram.tsv
+    platform_hybrid/experiments/results/zvf_iter66_dendrogram_review28_v2.tsv
         Hierarchical clustering linkage matrix (agglomerative,
         average-linkage on KS distance) flattened to 8 merge rows.
         Columns: merge_a, merge_b, height, n_in_cluster_a, n_in_cluster_b.
 
-    platform_hybrid/experiments/results/zvf_iter66_cluster_assign.tsv
+    platform_hybrid/experiments/results/zvf_iter66_cluster_assign_review28_v2.tsv
         Flat cluster assignment at k=3 (cut of the dendrogram),
         one row per library.  Columns: method, cluster, mean_zvf,
         mean_acc, ks_to_grpo.
 
-    platform_hybrid/experiments/results/zvf_iter66_anti_herding.tsv
-        Per-library anti-herding signature: observed_mean_zvf,
+    platform_hybrid/experiments/results/zvf_iter66_anti_herding_review28_v2.tsv
+        Per-library homogeneous plug-in discrepancy signature: observed_mean_zvf,
         iid_predicted_zvf (Binomial(G, p_bar)), iid_lower_bound
         (Beta(1,1) prior predictive 5th percentile), delta_obs_minus_pred,
         delta_obs_minus_lower, signature_label
         (anti_herd / neutral / over_herd).  9 rows.
 
-    platform_hybrid/experiments/results/zvf_iter66_summary.tsv
+    platform_hybrid/experiments/results/zvf_iter66_summary_review28_v2.tsv
         9-row summary combining everything for paper Table.
 
-    figures/zvf_iter66_distshape.pdf
-    figures/zvf_iter66_distshape.png
+    figures/zvf_iter66_distshape_review28_v2.pdf
+    figures/zvf_iter66_distshape_review28_v2.png
         Two-panel figure: left = CDF overlay of per-step ZVF (one curve
         per library); right = KS distance heatmap with cluster boundary
         overlay.
@@ -70,16 +70,16 @@ different here.  The KS distance matrix is a numerical signature of
 that.  The hierarchical clustering tells us which library families
 are actually different from each other in their ZVF time-series.
 
-The anti-herding table operationalises the (frontier synthesis)
+The homogeneous plug-in discrepancy table operationalises the (frontier synthesis)
 framing of ZVF as "signal availability, not difficulty": an
 observed-mean ZVF that is *below* the i.i.d. binomial lower bound
-demonstrates autoregressive anti-herding (rho<0 sampling diversity),
+demonstrates autoregressive homogeneous plug-in discrepancy (rho<0 sampling diversity),
 which is the *opposite* of the naive difficulty story.  A library
 whose observed ZVF matches the i.i.d. prediction is a "naive"
-library; one that under-shoots it is "anti-herding"; one that
+library; one that under-shoots it is "homogeneous plug-in discrepancy"; one that
 over-shoots it is "over-herding" (sampler collapses more than
-i.i.d.).  These are structural properties of the library's sampling
-behaviour, not of the difficulty distribution.
+i.i.d.).  These are homogeneous plug-in diagnostics, confounded by prompt heterogeneity;
+they do not identify sampling dependence.
 
 Pure stdlib + matplotlib.  No external stats deps.  The KS test is a
 direct translation of scipy.stats.ks_2samp using only basic numpy-style
@@ -148,51 +148,10 @@ def ecdf(samples, grid):
 # closed-form asymptotic complement (matches scipy.stats.ks_2samp).
 # ---------------------------------------------------------------------------
 def ks_2samp(a, b):
-    a = sorted(a)
-    b = sorted(b)
-    n, m = len(a), len(b)
-    if n == 0 or m == 0:
-        return float("nan"), float("nan")
-    # Walk both sorted lists and compute max |F_a(x) - F_b(x)|.
-    i, j = 0, 0
-    D = 0.0
-    while i < n and j < m:
-        if a[i] <= b[j]:
-            x = a[i]
-            while i < n and a[i] == x:
-                i += 1
-            while j < m and b[j] < x:
-                j += 1
-        else:
-            x = b[j]
-            while j < m and b[j] == x:
-                j += 1
-            while i < n and a[i] < x:
-                i += 1
-        d = abs(i / n - j / m)
-        if d > D:
-            D = d
-    en = math.sqrt(n * m / (n + m))
-    lam = (en + 0.12 + 0.11 / en) * D
-    # Smirnov complement Q_KS(lam) = sum_{j=1..inf} (-1)^(j-1) exp(-2 j^2 lam^2)
-    # (Smirnov 1948 asymptotic).  Truncate when term < 1e-12.
-    p = 0.0
-    if lam < 1e-12:
-        p = 1.0
-    else:
-        term = math.exp(-2.0 * lam * lam)
-        p = term
-        sign = -1.0
-        j = 2
-        while True:
-            t = math.exp(-2.0 * j * j * lam * lam)
-            if t < 1e-12:
-                break
-            p += sign * t
-            sign = -sign
-            j += 1
-        p = min(max(p, 0.0), 1.0)
-    return D, p
+    """Descriptive KS distance. Repeated steps are not independent samples."""
+    from scipy.stats import ks_2samp as scipy_ks
+    if not len(a) or not len(b): return float("nan"), float("nan")
+    return float(scipy_ks(a, b).statistic), float("nan")
 
 
 # ---------------------------------------------------------------------------
@@ -200,148 +159,27 @@ def ks_2samp(a, b):
 # matrix.  Pure-Python; distances are KS distances.
 # ---------------------------------------------------------------------------
 def hclust_average(dist, labels):
-    """Average-linkage agglomerative clustering on a square distance matrix.
-
-    Returns a linkage table in chronological order: each merge row gives
-    (left_id, right_id, height_D, size_left, size_right) where left/right
-    are cluster IDs (0..n-1 for original leaves, n, n+1, ... for merged
-    internal nodes).
-    """
-    n = len(labels)
-    contents = [frozenset({i}) for i in range(n)]
-
-    def cluster_dist(c1, c2):
-        tot = 0.0
-        cnt = 0
-        for a in c1:
-            for b in c2:
-                tot += dist[a][b]
-                cnt += 1
-        return tot / cnt if cnt else 0.0
-
-    d = {}
-    for i in range(n):
-        for j in range(i + 1, n):
-            d[(contents[i], contents[j])] = cluster_dist(
-                contents[i], contents[j]
-            )
-
-    linkage = []
-    next_id = n
-    while len(contents) > 1:
-        best = None
-        best_h = math.inf
-        for k, v in d.items():
-            if v < best_h:
-                best_h = v
-                best = k
-        if best is None:
-            break
-        c1, c2 = best
-        merged = c1 | c2
-        # Identify the IDs of c1 and c2 from contents list.
-        id_c1 = contents.index(c1)
-        id_c2 = contents.index(c2)
-        linkage.append((id_c1, id_c2, best_h, len(c1), len(c2)))
-        # Drop distances touching c1 or c2.
-        to_drop = [k for k in d if k[0] in (c1, c2) or k[1] in (c1, c2)]
-        for k in to_drop:
-            d.pop(k, None)
-        # Compute distances from merged to every remaining cluster.
-        for c in contents:
-            if c in (c1, c2):
-                continue
-            key = (
-                (merged, c) if hash(merged) < hash(c) else (c, merged)
-            )
-            d[key] = cluster_dist(merged, c)
-        # Replace c1, c2 with merged; the new cluster will be appended
-        # at position len(contents) before we pop the merged-out ones.
-        contents = [c for c in contents if c not in (c1, c2)] + [merged]
-        next_id += 1
-    return linkage
+    from scipy.cluster.hierarchy import linkage
+    from scipy.spatial.distance import squareform
+    import numpy as np
+    matrix = np.asarray(dist, float)
+    z = linkage(squareform(matrix, checks=True), method="average")
+    sizes = {i: 1 for i in range(len(labels))}
+    rows = []
+    for i, (a, b, height, count) in enumerate(z):
+        a, b = int(a), int(b)
+        rows.append((a,b,float(height),sizes[a],sizes[b]))
+        sizes[len(labels)+i] = int(count)
+    return rows
 
 
 def cut_tree(linkage, n_leaves, k):
-    """Cut an agglomerative tree into k clusters.
-
-    linkage rows are (left_id, right_id, height, size_left, size_right)
-    in chronological order. Internal merged nodes get sequential IDs
-    n_leaves, n_leaves+1, ..., n_leaves+len(linkage)-1.
-
-    Returns dict original_index -> cluster_id (0..k-1).
-    """
-    if k >= n_leaves:
-        return {i: i for i in range(n_leaves)}
-    # Build contents map keyed by cluster id.
-    contents = {i: {i} for i in range(n_leaves)}
-    next_id = n_leaves
-    for (a, b, h, na, nb) in linkage:
-        contents[next_id] = contents[a] | contents[b]
-        next_id += 1
-    root = next_id - 1
-
-    def collect_active(cid, undone, out):
-        """Walk the tree; collect leaves reached via non-undone nodes."""
-        if cid < n_leaves:
-            out.append(cid)
-            return
-        if cid in undone:
-            mi = cid - n_leaves
-            a, b, h, na, nb = linkage[mi]
-            collect_active(a, undone, out)
-            collect_active(b, undone, out)
-        else:
-            # Active internal node: report it (the leaves inside it
-            # are one cluster).
-            out.append(cid)
-
-    undone = set()
-    while True:
-        active = []
-        collect_active(root, undone, active)
-        if len(active) >= k:
-            break
-        # Find the active *internal* node with the largest size (= most
-        # leaves inside it). If none are internal, we cannot split
-        # further and stop.
-        candidates = [
-            cid for cid in active
-            if cid >= n_leaves and cid not in undone
-        ]
-        if not candidates:
-            break
-        # Pick the active internal node with the most leaves inside it
-        # (tie-break by highest merge height).
-        candidates.sort(
-            key=lambda c: (len(contents[c]), -linkage[c - n_leaves][2]),
-            reverse=True,
-        )
-        target = candidates[0]
-        undone.add(target)
-
-    # Map each leaf to its active cluster id (using the active cluster
-    # id as the cluster label, then re-map to 0..k-1).
-    seen = {}
-    assign = {}
-    for cid in active:
-        for orig in contents[cid]:
-            if cid not in seen:
-                seen[cid] = len(seen)
-            assign[orig] = seen[cid]
-    return assign
-
-    # Map each leaf to its active cluster id.
-    assign = {}
-    seen = {}
-    for cid in active:
-        for orig in contents[cid]:
-            assign[orig] = cid
-    for orig, cid in assign.items():
-        if cid not in seen:
-            seen[cid] = len(seen)
-        assign[orig] = seen[cid]
-    return assign
+    """Undo merges in chronology, preserving each original leaf exactly once."""
+    if not 1 <= k <= n_leaves: raise ValueError("invalid cluster count")
+    active = {i: {i} for i in range(n_leaves)}
+    for i, (a,b,*_) in enumerate(linkage[:n_leaves-k]):
+        active[n_leaves+i] = active.pop(a) | active.pop(b)
+    return {leaf: label for label, leaves in enumerate(active.values()) for leaf in leaves}
 
 
 # ---------------------------------------------------------------------------
@@ -433,7 +271,7 @@ def main():
         e = ecdf(zvfs, grid)
         for x, y in zip(grid, e):
             cdf_rows.append((m, x, y))
-    with open(os.path.join(RES, "zvf_iter66_cdf_overlay.tsv"), "w") as f:
+    with open(os.path.join(RES, "zvf_iter66_cdf_overlay_review28_v2.tsv"), "w") as f:
         f.write("# Pillar 2 Iter 66 — empirical CDF of per-step ZVF per library\n")
         f.write("# Columns: method, zvf, ecdf\n")
         w = csv.writer(f, delimiter="\t")
@@ -464,9 +302,9 @@ def main():
             ks_pv[j][i] = p
 
     # Write KS matrix as TSV (header has method names).
-    with open(os.path.join(RES, "zvf_iter66_ks_matrix.tsv"), "w") as f:
+    with open(os.path.join(RES, "zvf_iter66_ks_matrix_review28_v2.tsv"), "w") as f:
         f.write("# Pillar 2 Iter 66 — pairwise KS distance between per-step ZVF\n")
-        f.write("# cells are KS distance D; p-values in zvf_iter66_ks_pvalues.tsv\n")
+        f.write("# cells are KS distance D; p-values in zvf_iter66_ks_pvalues_review28_v2.tsv\n")
         f.write("# Source: platform_modal/scripts/zvf_iter66_distshape.py\n")
         w = csv.writer(f, delimiter="\t")
         w.writerow(["method_a", "method_b", "ks_D", "ks_pvalue", "n_a", "n_b"])
@@ -489,7 +327,7 @@ def main():
     print(f"[iter66] computing hierarchical clustering ...", flush=True)
     linkage = hclust_average(ks_mat, methods)
     print(f"[iter66] clustering done, {len(linkage)} merges", flush=True)
-    with open(os.path.join(RES, "zvf_iter66_dendrogram.tsv"), "w") as f:
+    with open(os.path.join(RES, "zvf_iter66_dendrogram_review28_v2.tsv"), "w") as f:
         f.write("# Pillar 2 Iter 66 — hierarchical clustering linkage\n")
         f.write("# Average-linkage on the 9x9 KS distance matrix.\n")
         f.write("# Rows are merges in chronological order; final row is the\n")
@@ -547,7 +385,7 @@ def main():
                 f"{D_grpo:.4f}",
             )
         )
-    with open(os.path.join(RES, "zvf_iter66_cluster_assign.tsv"), "w") as f:
+    with open(os.path.join(RES, "zvf_iter66_cluster_assign_review28_v2.tsv"), "w") as f:
         f.write("# Pillar 2 Iter 66 — cluster assignment at k=3\n")
         f.write("# Source: platform_modal/scripts/zvf_iter66_distshape.py\n")
         w = csv.writer(f, delimiter="\t")
@@ -558,7 +396,7 @@ def main():
             w.writerow(r)
 
     # ---- Anti-herding quantification -------------------------------------
-    print(f"[iter66] computing anti-herding signatures ...", flush=True)
+    print(f"[iter66] computing homogeneous plug-in discrepancy signatures ...", flush=True)
     G = 8
     anti_rows = []
     for m in methods:
@@ -567,19 +405,19 @@ def main():
         mean_zvf = statistics.mean(zvfs)
         mean_acc = statistics.mean(accs)
         iid_zvf = iid_predicted_zvf(mean_acc, G)
-        lower = beta_lower_bound(mean_acc, G, n_eff=200, q=0.05)
+        lower = float("nan")  # no justified independent effective sample size
         # delta_div = iid - observed (positive => anti-herd, sampler
         # produces *more* contrast than independent draws).
-        delta_div = iid_zvf - mean_zvf
+        delta_div = mean_zvf - iid_zvf
         # Signature label: anti_herd if observed ZVF is below the 5th
         # percentile of the iid-predictive, herd if above the iid point
         # prediction, neutral otherwise. Naming follows the iter50
         # convention (zvf_antiherding_falsification.tsv) where positive
         # delta_div = anti_herd.
         if mean_zvf < lower:
-            label = "anti_herd"
+            label = "homogeneous_plugin_below"
         elif mean_zvf > iid_zvf:
-            label = "herd"
+            label = "homogeneous_plugin_above"
         else:
             label = "neutral"
         anti_rows.append(
@@ -595,8 +433,8 @@ def main():
                 len(zvfs),
             )
         )
-    with open(os.path.join(RES, "zvf_iter66_anti_herding.tsv"), "w") as f:
-        f.write("# Pillar 2 Iter 66 — anti-herding signature per library\n")
+    with open(os.path.join(RES, "zvf_iter66_anti_herding_review28_v2.tsv"), "w") as f:
+        f.write("# Pillar 2 Iter 66 — homogeneous plug-in discrepancy signature per library\n")
         f.write("# delta_div = zvf_iid - zvf_obs (positive = anti_herd)\n")
         f.write("# iid_pred = p^G + (1-p)^G (Binomial(G,p_bar) ZVF).\n")
         f.write("# beta_lo_05 = 5th pct of Beta(1+n*p,1+n*(1-p))-Binomial\n")
@@ -623,10 +461,10 @@ def main():
             w.writerow(r)
 
     # ---- Combined summary table ------------------------------------------
-    with open(os.path.join(RES, "zvf_iter66_summary.tsv"), "w") as f:
+    with open(os.path.join(RES, "zvf_iter66_summary_review28_v2.tsv"), "w") as f:
         f.write("# Pillar 2 Iter 66 — combined cross-library ZVF shape summary\n")
         f.write("# Mean ZVF, mean acc, cluster id (k=3), KS to GRPO,\n")
-        f.write("# observed-vs-iid delta, anti-herding label.\n")
+        f.write("# observed-vs-iid delta, homogeneous plug-in discrepancy label.\n")
         f.write("# Source: platform_modal/scripts/zvf_iter66_distshape.py\n")
         w = csv.writer(f, delimiter="\t")
         w.writerow(
@@ -639,7 +477,7 @@ def main():
                 "ks_to_grpo",
                 "iid_pred_zvf",
                 "delta_obs_minus_pred",
-                "anti_herding_label",
+                "homogeneous_plugin_label",
             ]
         )
         cluster_lookup = {r[0]: r[1] for r in cluster_rows}
@@ -651,7 +489,7 @@ def main():
                 [
                     m,
                     a[8],
-                    a[0],
+                    a[1],
                     a[2],
                     cl,
                     f"{float(ks_mat[methods.index(m)][methods.index('grpo')]):.4f}",
@@ -768,8 +606,8 @@ def main():
         )
 
         plt.tight_layout()
-        out_pdf = os.path.join(FIG, "zvf_iter66_distshape.pdf")
-        out_png = os.path.join(FIG, "zvf_iter66_distshape.png")
+        out_pdf = os.path.join(FIG, "zvf_iter66_distshape_review28_v2.pdf")
+        out_png = os.path.join(FIG, "zvf_iter66_distshape_review28_v2.png")
         plt.savefig(out_pdf, bbox_inches="tight")
         plt.savefig(out_png, dpi=160, bbox_inches="tight")
         plt.close(fig)

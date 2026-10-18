@@ -56,7 +56,7 @@ from _stats import bootstrap_ci_rng  # noqa: E402
 ROOT = REPO_ROOT
 N10_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n10_seed_expansion"
 N2_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
-OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review19-v5"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # Stack-conditional constants used by the controller family.
@@ -132,7 +132,7 @@ def replay_unified(zvfs: list[float], tau_esc: float, tau_des: float) -> list[in
     """Per-step G_t decisions: de-escalate / escalate / baseline."""
     out = []
     for z in zvfs:
-        if z >= tau_des:
+        if tau_des > tau_esc and z >= tau_des:
             out.append(G_DES)
         elif z >= tau_esc:
             out.append(G_ESC)
@@ -152,8 +152,8 @@ def n10_per_seed_metrics(zvfs: list[float], tau_esc: float, tau_des: float) -> d
     fires = sum(1 for g in G_t if g != G_BASE)
     escalations = sum(1 for g in G_t if g == G_ESC)
     deescalations = sum(1 for g in G_t if g == G_DES)
-    # Headroom-bad: "fire" (any non-base) on z_t >= 0.99 -> wasteful
-    headroom_bad = sum(1 for g, zt in zip(G_t, zvfs) if g != G_BASE and zt >= 0.99)
+    # Headroom-bad: escalation above baseline on z_t >= 0.99 (saturated proxy)
+    headroom_bad = sum(1 for g, zt in zip(G_t, zvfs) if g > G_BASE and zt >= 0.99)
     return {
         "total_G": total,
         "savings": (G_BASE * n - total) / (G_BASE * n),

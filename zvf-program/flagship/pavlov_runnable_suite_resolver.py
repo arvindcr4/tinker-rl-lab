@@ -414,6 +414,7 @@ def _resolve_one(
     suite_id: str,
     registry_record: Mapping[str, Any],
     runtime_record: Mapping[str, Any] | None,
+    registry_sha256: str | None = None,
 ) -> dict[str, Any]:
     role = str(registry_record.get("role"))
     held_out_proven, held_out_ref = _held_out_state(registry_record)
@@ -482,7 +483,7 @@ def _resolve_one(
         blockers.append("runtime aggregate hash mismatch")
     if runtime_hashes is not None and runtime_aggregate != registry_aggregate:
         blockers.append("runtime aggregate does not match registry")
-    if runtime_record.get("registry_sha256") is not None and runtime_record["registry_sha256"] != registry_record.get("registry_sha256"):
+    if runtime_record.get("registry_sha256") is not None and runtime_record["registry_sha256"] != registry_sha256:
         blockers.append("runtime registry digest mismatch")
     runtime_status = runtime_record.get("status", runtime_record.get("state"))
     if runtime_status is not None and str(runtime_status).lower() not in {"ready", "verified", "complete", "completed", "runnable"}:
@@ -494,6 +495,11 @@ def _resolve_one(
         or runtime_role in (HELD_OUT_ROLE, PRIVATE_ROLE)
         or "held_out" in receipts
     )
+    for flag in ("held_out", "is_held_out", "private"):
+        if flag in runtime_record and type(runtime_record[flag]) is not bool:
+            blockers.append(f"{flag} must be boolean")
+    if explicit_held and receipts.get("held_out") != held_out_ref:
+        blockers.append("runtime held-out proof differs from registry proof")
     if explicit_held and not held_out_proven:
         blockers.append("heldout/private classification is not receipt-proven")
     held_private = explicit_held and held_out_proven and not blockers
@@ -541,6 +547,11 @@ def _xlam_resolution(component: Mapping[str, Any] | None) -> dict[str, Any]:
         }
     receipts, errors = _extract_receipts(component)
     blockers = list(errors)
+    upstream = component.get("blockers", [])
+    if not isinstance(upstream, list) or any(not isinstance(item, str) for item in upstream):
+        blockers.append("invalid upstream blockers")
+    else:
+        blockers.extend(upstream)
     revision = _revision(component)
     if revision is None:
         blockers.append("xLAM runtime revision is missing or mutable")
@@ -606,7 +617,7 @@ def resolve_runnable_suites(
         errors.append("extra runtime receipt suite IDs: " + ", ".join(unknown))
     global_blockers = _registry_global_blockers(registry_value)
     resolutions = [
-        _resolve_one(suite_id, registry_records[suite_id], by_id.get(suite_id))
+        _resolve_one(suite_id, registry_records[suite_id], by_id.get(suite_id), registry_value.get("registry_sha256"))
         for role in ROLES
         for suite_id in EXPECTED_SUITE_IDS[role]
     ]

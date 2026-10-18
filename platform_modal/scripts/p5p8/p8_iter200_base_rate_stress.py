@@ -56,7 +56,7 @@ from _p8_common import (  # noqa: E402
     paired_bootstrap_ci,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 
 
@@ -90,8 +90,10 @@ def make_subsample(Xte, yte, target_rate, rng):
     if n_neg_target <= 0:
         raise ValueError(f"target_rate={target_rate} too high for {n_pos} positives")
     neg_idx_pool = np.where(yte == 0)[0]
-    if n_neg_target >= len(neg_idx_pool):
-        # use all negatives + repeat as needed
+    if n_neg_target == len(neg_idx_pool):
+        return Xte.copy(), yte.copy(), np.arange(len(yte))
+    if n_neg_target > len(neg_idx_pool):
+        # Lower-than-release rates require an explicitly synthetic expanded pool.
         chosen_neg = rng.choice(neg_idx_pool, size=n_neg_target, replace=True)
     else:
         chosen_neg = rng.choice(neg_idx_pool, size=n_neg_target, replace=False)
@@ -101,11 +103,11 @@ def make_subsample(Xte, yte, target_rate, rng):
 
 
 def cost_curve(s, y, c):
-    th = np.linspace(0.0, 1.0, N_TH + 1)[1:]
+    th = np.r_[np.inf, np.unique(s)[::-1]]
     n_pos = int((y == 1).sum())
     n_neg = int((y == 0).sum())
     N = n_pos + n_neg
-    costs = np.empty(N_TH)
+    costs = np.empty(len(th))
     for i, t in enumerate(th):
         flagged = (s >= t).astype(np.int32)
         tp = int(((flagged == 1) & (y == 1)).sum())
@@ -121,9 +123,9 @@ def min_cost(s, y, c):
     return float(costs[i]), float(th[i])
 
 
-def catch_at_fp(s, y, fp_budget=0.01):
+def recall_at_alert_budget(s, y, alert_budget=0.01):
     n = s.shape[0]
-    k = max(1, int(round(n * fp_budget)))
+    k = max(1, int(round(n * alert_budget)))
     top_idx = np.argsort(-s)[:k]
     return float(y[top_idx].sum()) / max(1, int((y == 1).sum()))
 
@@ -166,7 +168,7 @@ def main():
                     s = s_full[chosen]  # restrict to subsample rows
                     mc, ot = min_cost(s, ys, C_DEFAULT)
                     minc[(fset, rate, sd, rr)] = (mc, ot)
-                    catch[(fset, rate, sd, rr)] = catch_at_fp(s, ys, 0.01)
+                    catch[(fset, rate, sd, rr)] = recall_at_alert_budget(s, ys, 0.01)
             print(f"  rate={rate:.4f} rr={rr} eff_rate={eff_rate:.4f} n={int(ys.shape[0])}", flush=True)
 
     # ----- TSV: per-(fset, rate, seed, resample) min-cost + catch -----

@@ -30,7 +30,7 @@ this back into results/e2_lora_vs_fullft_4b.json + W&B.
 import json, re, random, statistics, subprocess, sys
 
 # peft pulls torchao as a dep; 0.10.0 is incompatible with Colab's torch.
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U", "peft", "torchao>=0.16"], check=False)
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "peft", "torchao>=0.16"], check=True)
 
 import torch, torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -207,4 +207,7 @@ summary = {
     "delta_lora_minus_full": round(
         aggregate(lora_arms)["mean_heldout_delta"] - aggregate(full_arms)["mean_heldout_delta"], 3),
 }
+from protocol_stats import fingerprint
+summary["runtime_fingerprint"] = fingerprint(__file__, {k:v for k,v in globals().copy().items() if k.isupper() and isinstance(v,(int,float,str,list,dict))})
+summary["evidence_tier"] = "legacy_pilot_variant"
 print("E2_RESULT " + json.dumps(summary), flush=True)

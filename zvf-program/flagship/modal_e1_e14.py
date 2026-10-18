@@ -12,8 +12,21 @@ single lane. No related benchmark is substituted for a blocked E-suite.
 
 from __future__ import annotations
 
+try:
+    from .evidence_v2 import approval_valid, canonical
+    from .campaign_ledger_v2 import CampaignLedger
+except ImportError:
+    from evidence_v2 import approval_valid, canonical
+    from campaign_ledger_v2 import CampaignLedger
+
+E11_EVALUATOR_VERSION = "e11-trusted-supervisor-v2"
+E11_EXTRACTOR_VERSION = "final-module-after-think-v2"
+E11_TRUSTED_SUPERVISOR_IMPLEMENTED = False
+
+
 import hashlib
 import json
+import math
 import os
 import platform
 import re
@@ -55,8 +68,9 @@ USD_PER_M_PREFILL = 0.54
 USD_PER_M_CACHED_PREFILL = 0.108
 USD_PER_M_SAMPLE = 1.335
 E11_MAX_PROJECTED_TINKER_USD = 0.60
-TINKER_OPERATIONAL_CAP_USD = 16.50
+TINKER_HARD_CAP_USD = 18.00
 TINKER_SAFETY_RESERVE_USD = 1.50
+TINKER_OPERATIONAL_CAP_USD = TINKER_HARD_CAP_USD - TINKER_SAFETY_RESERVE_USD
 
 LANES: dict[str, dict[str, Any]] = {
     "E1": {
@@ -443,6 +457,7 @@ if modal.is_local():
         .pip_install(
             "jinja2==3.1.6",
             "tinker==0.24.1",
+            "cryptography==50.0.0",
             "transformers==5.5.4",
             "wandb==0.21.0",
         )
@@ -497,6 +512,9 @@ def run_lane_preflight(lane: str) -> dict[str, Any]:
     source_is_model_score = source.get("is_model_score") is True and source_score is not None
     blockers = _collect_blockers(source)
     launch_ready = _receipt_ready(source) and _receipt_launch_allowed(source)
+    if lane == "E11" and not E11_TRUSTED_SUPERVISOR_IMPLEMENTED:
+        launch_ready = False
+        blockers.append("trusted isolated E11 supervisor unavailable; paid execution disabled")
     if not launch_ready and not source_is_model_score and not blockers:
         blockers.append("exact suite has no launch authorization or completed model-score receipt")
 
@@ -559,10 +577,78 @@ def run_lane_preflight(lane: str) -> dict[str, Any]:
 
 def _e11_load_prompts(dataset: str) -> list[tuple[str, str]]:
     directory = Path("/opt/verilog-eval") / f"dataset_{dataset}"
+    if not directory.is_dir():
+        raise ValueError(f"missing frozen prompt directory: {directory}")
     return [
         (path.name[: -len("_prompt.txt")], path.read_text(encoding="utf-8"))
         for path in sorted(directory.glob("*_prompt.txt"))
     ]
+
+
+def _e11_validate_prompts(prompts, frozen):
+    actual = {
+        f"{dataset}/{task}": _sha256_bytes(text.encode())
+        for dataset, rows in prompts.items()
+        for task, text in rows
+    }
+    if (
+        not isinstance(frozen, dict)
+        or not frozen
+        or actual != frozen
+        or sum(len(rows) for rows in prompts.values()) != len(actual)
+    ):
+        raise ValueError("exact frozen task IDs and prompt hashes required")
+    return _sha256_bytes(canonical(actual))
+
+
+def _e11_generation_identity(*, prompt_sha256, seed, max_tokens, temperature, enable_thinking):
+    return {
+        "sampler": FINAL_SAMPLER_PATH,
+        "checkpoint": FINAL_HF_COMMIT,
+        "model_revision": MODEL_REVISION,
+        "tokenizer_revision": MODEL_REVISION,
+        "dataset_revision": E11_DATASET_REVISION,
+        "prompt_sha256": prompt_sha256,
+        "seed": seed,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "top_p": 0.95,
+        "enable_thinking": enable_thinking,
+    }
+
+
+def _e11_resume_record(record, identity):
+    if record.get("generation_identity") != identity:
+        raise ValueError("cached generation identity mismatch; historical record is inadmissible")
+    raw = record.get("response_text")
+    if not isinstance(raw, str) or record.get("response_sha256") != _sha256_bytes(raw.encode()):
+        raise ValueError("cached generation lacks intact raw response evidence")
+    result = dict(record)
+    source = _e11_extract_module(raw, thinking_enabled=identity["enable_thinking"])
+    result.update(
+        module_source=source,
+        extracted_module=source is not None,
+        module_sha256=_sha256_bytes(source.encode()) if source else None,
+        extractor_version=E11_EXTRACTOR_VERSION,
+        truncated_in_thinking=source is None
+        and identity["enable_thinking"]
+        and "</think>" not in raw,
+    )
+    return result
+
+
+def _e11_atomic_checkpoint(path, record):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(dir=path.parent, prefix=path.name + ".")
+    try:
+        with os.fdopen(fd, "w") as stream:
+            stream.write(json.dumps(record, sort_keys=True, allow_nan=False) + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
 
 def _e11_extract_module(response: str, *, thinking_enabled: bool = True) -> str | None:
@@ -656,7 +742,14 @@ def _e11_write_sample(build: Path, problem_id: str, record: dict[str, Any]) -> N
     )
 
 
-def _e11_run_harness(build: Path, problem_ids: list[str]) -> dict[str, Any]:
+def _e11_run_harness(
+    build: Path,
+    problem_ids: list[str],
+    *,
+    supervisor_receipt=None,
+    trusted_issuers=None,
+    expected_identity=None,
+) -> dict[str, Any]:
     env = os.environ.copy()
     env["PATH"] = "/opt/iverilog/bin:/usr/local/bin:/usr/bin:/bin"
     tested = subprocess.run(
@@ -675,17 +768,55 @@ def _e11_run_harness(build: Path, problem_ids: list[str]) -> dict[str, Any]:
         text=True,
         timeout=1800,
     )
+    # Candidate stdout is never authoritative. A separately provisioned trusted
+    # supervisor signs one outcome per task and the exact generated source hash.
+    valid = approval_valid(
+        supervisor_receipt,
+        "e11_outcomes",
+        trusted_issuers=trusted_issuers,
+        expected_identity=expected_identity,
+    )
+    rows = supervisor_receipt.get("outcomes", []) if valid else []
+    outcomes = {row.get("task_id"): row for row in rows if isinstance(row, dict)}
+    valid = (
+        valid
+        and len(rows) == len(outcomes) == len(problem_ids)
+        and set(outcomes) == set(problem_ids)
+    )
+    allowed = {
+        "PASS",
+        "MODEL_COMPILE_FAILURE",
+        "MODEL_TEST_FAILURE",
+        "HARNESS_ERROR",
+        "MISSING_EVIDENCE",
+    }
     results: dict[str, bool] = {}
     log_receipts: dict[str, dict[str, Any]] = {}
     for problem_id in problem_ids:
         log = build / problem_id / f"{problem_id}_sample01-sv-iv-test.log"
-        text = log.read_text(encoding="utf-8") if log.is_file() else ""
-        passed = bool(re.search(r"(?m)^Mismatches:\s+0\s+in\s+\d+\s+samples\s*$", text))
-        results[problem_id] = passed
+        log_bytes = log.read_bytes() if log.is_file() else None
+        row = outcomes.get(problem_id, {}) if valid else {}
+        source = build / problem_id / f"{problem_id}_sample01.sv"
+        bound = (
+            source.is_file()
+            and row.get("source_sha256") == _sha256_bytes(source.read_bytes())
+            and log_bytes is not None
+            and row.get("log_sha256") == _sha256_bytes(log_bytes)
+        )
+        outcome = (
+            row.get("outcome")
+            if bound
+            else ("MISSING_EVIDENCE" if log_bytes is None else "HARNESS_ERROR")
+        )
+        if outcome not in allowed:
+            outcome = "HARNESS_ERROR"
+        if outcome in {"PASS", "MODEL_COMPILE_FAILURE", "MODEL_TEST_FAILURE"}:
+            results[problem_id] = outcome == "PASS"
         log_receipts[problem_id] = {
-            "present": log.is_file(),
-            "sha256": _sha256_bytes(log.read_bytes()) if log.is_file() else None,
-            "verdict": "PASS" if passed else "FAIL",
+            "present": log_bytes is not None,
+            "sha256": _sha256_bytes(log_bytes) if log_bytes is not None else None,
+            "verdict": outcome,
+            "trusted_supervisor": bool(valid and bound),
         }
     summary = build / "summary.csv"
     return {
@@ -694,6 +825,8 @@ def _e11_run_harness(build: Path, problem_ids: list[str]) -> dict[str, Any]:
         "summary_csv_present": summary.is_file(),
         "summary_csv_sha256": _sha256_bytes(summary.read_bytes()) if summary.is_file() else None,
         "direct_results": results,
+        "complete": set(results) == set(problem_ids) and len(problem_ids) == len(set(problem_ids)),
+        "outcomes": {task: row["verdict"] for task, row in log_receipts.items()},
         "log_receipts": log_receipts,
         "test_output_tail": (tested.stdout + tested.stderr)[-3000:],
         "analyze_output_tail": (analyzed.stdout + analyzed.stderr)[-3000:],
@@ -767,6 +900,11 @@ def run_e11_full(
     both and report ``finish_reason: null``.
     """
 
+    if not E11_TRUSTED_SUPERVISOR_IMPLEMENTED:
+        raise RuntimeError(
+            "paid E11 disabled: isolated trusted supervisor runtime is not provisioned; historical stdout cannot establish a score"
+        )
+
     launch_gate_path = (
         REMOTE_ROOT / "outputs/modal_e1_e14/2026-08-16/e11/launch_preflight_receipt.json"
     )
@@ -781,22 +919,75 @@ def run_e11_full(
     ):
         raise RuntimeError("E11 decontamination receipt identity drifted")
 
-    if billed_tinker_usd_before < 0:
+    if not math.isfinite(billed_tinker_usd_before) or billed_tinker_usd_before < 0:
         raise ValueError("billed_tinker_usd_before must be non-negative")
-    spendable = TINKER_OPERATIONAL_CAP_USD - TINKER_SAFETY_RESERVE_USD
+    spendable = TINKER_OPERATIONAL_CAP_USD
     if billed_tinker_usd_before >= spendable:
         raise RuntimeError("Tinker spendable cap is already exhausted")
 
+    trusted_issuers = json.loads(Path(os.environ["TINKER_TRUSTED_ISSUERS_PATH"]).read_bytes())
+    launch_identity = {
+        "campaign": "pavlov-e1-e14",
+        "phase": "evaluation",
+        "suite": "verilog_eval",
+        "run": launch_gate.get("run_id", ""),
+        "checkpoint": FINAL_HF_COMMIT,
+        "plan": "pavlov-campaign-v2",
+    }
+    if not approval_valid(
+        launch_gate.get("execution_authorization"),
+        "e11_execution",
+        trusted_issuers=trusted_issuers,
+        expected_identity=launch_identity,
+    ):
+        raise RuntimeError(
+            "trusted execution authorization binding frozen prompts, sampler and both providers required"
+        )
+    authorization = launch_gate["execution_authorization"]
+    if authorization.get("providers") != ["modal", "tinker"]:
+        raise RuntimeError("separate Modal and Tinker provider authorization required")
     prompts = {dataset: _e11_load_prompts(dataset) for dataset in E11_DATASETS}
+    manifest_sha256 = _e11_validate_prompts(prompts, authorization.get("frozen_prompt_manifest"))
+    campaign_ledger = CampaignLedger(
+        os.environ["TINKER_CAMPAIGN_LEDGER_PATH"], campaign="pavlov-e1-e14"
+    )
     projection = _e11_project_cost(prompts, max_tokens)
     if not projection["within_function_cap"]:
         raise RuntimeError(f"E11 projection exceeds function cap: {projection}")
     if billed_tinker_usd_before + projection["projected_usd"] > spendable:
         raise RuntimeError("E11 projection would consume the protected Tinker reserve")
 
-    run_key = f"final_full_seed{seed}_mt{max_tokens}_t{str(temperature).replace('.', 'p')}"
+    run_key = f"v2_{manifest_sha256[:16]}_final_full_seed{seed}_mt{max_tokens}_t{str(temperature).replace('.', 'p')}"
     if not enable_thinking:
         run_key += "_nothink"
+    from transformers import AutoTokenizer
+
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, revision=MODEL_REVISION)
+    rendered_tokens = {
+        f"{dataset}/{task}": tokenizer.encode(
+            tokenizer.apply_chat_template(
+                [{"role": "user", "content": text}],
+                tokenize=False,
+                add_generation_prompt=True,
+                enable_thinking=enable_thinking,
+            ),
+            add_special_tokens=False,
+        )
+        for dataset, rows in prompts.items()
+        for task, text in rows
+    }
+    exact_prompt_tokens = sum(len(tokens) for tokens in rendered_tokens.values())
+    projection["projected_prefill_tokens"] = exact_prompt_tokens
+    projection["projected_usd"] = (
+        exact_prompt_tokens / 1e6 * USD_PER_M_PREFILL
+        + projection["projected_output_tokens"] / 1e6 * USD_PER_M_SAMPLE
+    )
+    projection["projection_kind"] = "rendered_tokens_plus_bounded_outputs"
+    if projection["projected_usd"] > E11_MAX_PROJECTED_TINKER_USD:
+        raise RuntimeError("exact token projection exceeds function cap")
+    reservation_id = campaign_ledger.reserve(
+        run_key, projection["projected_usd"], identity=_sha256_bytes(canonical(launch_identity))
+    )
     wandb_id_path = _e11_wandb_id_path(run_key)
     wandb_id_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -873,10 +1064,19 @@ def run_e11_full(
 
     for dataset, rows in prompts.items():
         sampled_records[dataset] = {}
-        for problem_index, (problem_id, prompt_text) in enumerate(rows):
+        for problem_id, prompt_text in rows:
             checkpoint = _e11_checkpoint_path(run_key, dataset, problem_id)
+            generation_identity = _e11_generation_identity(
+                prompt_sha256=_sha256_bytes(prompt_text.encode()),
+                seed=seed,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                enable_thinking=enable_thinking,
+            )
             if checkpoint.is_file():
-                record = json.loads(checkpoint.read_text(encoding="utf-8"))
+                record = _e11_resume_record(
+                    json.loads(checkpoint.read_bytes()), generation_identity
+                )
                 resumed_samples += 1
             else:
                 chat = tokenizer.apply_chat_template(
@@ -902,14 +1102,14 @@ def run_e11_full(
                 finish_reason = _e11_finish_reason(
                     getattr(sequence, "stop_reason", None), len(response_tokens), max_tokens
                 )
-                module_source = _e11_extract_module(
-                    response_text, thinking_enabled=enable_thinking
-                )
+                module_source = _e11_extract_module(response_text, thinking_enabled=enable_thinking)
                 estimated_cost = (
                     len(prompt_ids) / 1e6 * USD_PER_M_PREFILL
                     + len(response_tokens) / 1e6 * USD_PER_M_SAMPLE
                 )
                 record = {
+                    "generation_identity": generation_identity,
+                    "extractor_version": E11_EXTRACTOR_VERSION,
                     "dataset": dataset,
                     "problem_id": problem_id,
                     "prompt_sha256": _sha256_bytes(prompt_text.encode("utf-8")),
@@ -934,9 +1134,7 @@ def run_e11_full(
                     "sampled_at": _utc_now(),
                 }
                 checkpoint.parent.mkdir(parents=True, exist_ok=True)
-                checkpoint.write_text(
-                    json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-                )
+                _e11_atomic_checkpoint(checkpoint, record)
                 new_samples += 1
                 if new_samples % 8 == 0:
                     results_volume.commit()
@@ -973,19 +1171,35 @@ def run_e11_full(
             key: value for key, value in harness.items() if key != "direct_results"
         }
 
+    expected_tasks = {
+        f"verilog_eval/{dataset}/{task}" for dataset, rows in prompts.items() for task, _ in rows
+    }
+    complete = set(merged_results) == expected_tasks and all(
+        r["complete"] for r in verifier_receipts.values()
+    )
+    blockers = (
+        []
+        if complete
+        else ["trusted complete supervisor outcomes missing; candidate stdout is inadmissible"]
+    )
     score = _e11_score(merged_results)
+    if not complete:
+        score["raw"]["pass_at_1"] = None
+        score["corrected"]["pass_at_1"] = None
     actual_estimated_usd = (
         total_prompt_tokens / 1e6 * USD_PER_M_PREFILL
         + total_response_tokens / 1e6 * USD_PER_M_SAMPLE
     )
     receipt: dict[str, Any] = {
-        "schema_version": "e11-modal-full-pass-at-1-receipt-v1",
+        "schema_version": "e11-modal-full-pass-at-1-receipt-v2",
         "recorded_at": _utc_now(),
         "lane": "E11",
         "suite_id": "verilog_eval",
         "suite_role": "primary_eval",
-        "status": "SCORED",
-        "is_model_score": True,
+        "status": "SCORED" if complete else "INCOMPLETE",
+        "is_model_score": complete,
+        "frozen_prompt_manifest_sha256": manifest_sha256,
+        "generation_and_grading_version": E11_EVALUATOR_VERSION,
         "evidence_class": "primary_evaluation/pass@1",
         "model": {
             "model_id": MODEL_ID,
@@ -1056,8 +1270,9 @@ def run_e11_full(
             "cpu_count": os.cpu_count(),
             "memory_request_mib": 32768,
         },
-        "outstanding_blockers": [],
+        "outstanding_blockers": blockers,
     }
+    campaign_ledger.settle(reservation_id, actual_estimated_usd)
     receipt["receipt_sha256"] = _sha256_bytes(_stable_json(receipt).encode("utf-8"))
     _write_volume_json(f"{RUN_DATE}/e11/{run_key}/final_receipt.json", receipt)
     wandb_run.log(
@@ -1075,7 +1290,7 @@ def run_e11_full(
     )
     wandb_run.summary.update(
         {
-            "status": "SCORED",
+            "status": receipt["status"],
             "score": receipt["score"],
             "receipt_sha256": receipt["receipt_sha256"],
         }

@@ -61,23 +61,7 @@ SEED = 20260705
 N_BOOT = 1500
 
 
-def density_ci(n_fire, n_total, n_boot=N_BOOT, seed=SEED):
-    """Wilson bootstrap CI on a proportion n_fire/n_total."""
-    rng = np.random.default_rng(seed)
-    boots = np.empty(n_boot)
-    for i in range(n_boot):
-        idx = rng.integers(0, n_total, n_total)
-        # n_fire is the count of "fire" rows; we need per-row binary mask.
-        # We don't have the mask here, so use the closed-form Bernoulli
-        # bootstrap on the rate.
-        boots[i] = rng.binomial(n_total, n_fire / n_total) / n_total
-    return {
-        "rate": n_fire / n_total,
-        "lo": float(np.percentile(boots, 2.5)),
-        "hi": float(np.percentile(boots, 97.5)),
-        "n_fire": n_fire,
-        "n_total": n_total,
-    }
+from review22_contract import density_ci
 
 
 def load_mega_cells():
@@ -144,27 +128,12 @@ def per_G_density(cells, threshold=0.7):
     return out
 
 
-def ratio_ci(num, denom, n_boot=N_BOOT, seed=SEED):
-    """Bootstrap CI on a ratio of two Bernoulli rates."""
-    rng = np.random.default_rng(seed)
-    rates_n = num["rate"]
-    rates_d = denom["rate"]
-    n_n, n_d = num["n_total"], denom["n_total"]
-    boots = np.empty(n_boot)
-    for i in range(n_boot):
-        n_i = rng.binomial(n_n, rates_n) / max(1, n_n)
-        d_i = rng.binomial(n_d, rates_d) / max(1, n_d)
-        boots[i] = n_i / max(1e-9, d_i)
-    point = rates_n / max(1e-9, rates_d)
-    return {
-        "ratio": point,
-        "lo": float(np.percentile(boots, 2.5)),
-        "hi": float(np.percentile(boots, 97.5)),
-        "excludes_1.0": point < 1.0 / 10 or point > 10.0,
-    }
+from review22_contract import ratio_ci
 
 
 def main():
+    from review22_contract import require_independent_unit_contract
+    require_independent_unit_contract()
     print(f"[iter124] loading mega cells ...")
     cells = load_mega_cells()
     print(f"[iter124] n_cells = {len(cells)}")

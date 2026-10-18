@@ -42,14 +42,14 @@ import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[2]
 MEGA = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
-OUT = ROOT / "experiments" / "results" / "p5p8"
+OUT = ROOT / "experiments" / "results" / "p5p8" / "review16_v2"
 REG = ROOT / "registry" / "entries"
 FIG = OUT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
 
 CLAIM_TSV = OUT / "claim_alignment.tsv"
-DELTA_TSV = OUT / "delta_minreport_consistency.tsv"
+DELTA_TSV = OUT.parent / "delta_minreport_consistency.tsv"
 ENTRIES_DIR = REG
 
 ITEMS = [
@@ -200,17 +200,15 @@ def pearson(xs, ys):
 
 
 def classify_cell(A, B, C):
-    """4-profile honesty classification."""
+    """Protocol v2: exhaustive three-axis classification (five profiles)."""
     A_pass = (not math.isnan(A)) and A >= 90.0
     B_pass = (not math.isnan(B)) and B >= 0.5
     C_pass = (not math.isnan(C)) and C >= 0.5
     if not A_pass:
         return "claim_alignment_fail"
-    if A_pass and C_pass:
-        return "honest_and_informative"
-    if A_pass and not C_pass:
-        return "honest_but_vacuous"   # headline gap
-    return "informative_but_unaudited"
+    if not B_pass:
+        return "informative_but_unaudited" if C_pass else "alignment_pass_registry_fail"
+    return "honest_and_informative" if C_pass else "honest_but_vacuous"
 
 
 def parse_cell_id(cid):
@@ -342,6 +340,7 @@ def main():
         "honest_but_vacuous": "#d62728",
         "claim_alignment_fail": "#9467bd",
         "informative_but_unaudited": "#1f77b4",
+        "alignment_pass_registry_fail": "#7f7f7f",
     }
     titles = [
         f"A (claim-alignment) vs B (registry match)  r={boot_rows[0]['pearson_r']!s}",

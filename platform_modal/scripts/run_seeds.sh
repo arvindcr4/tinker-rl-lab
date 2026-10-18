@@ -1,55 +1,24 @@
 #!/bin/bash
-# =============================================================================
-# Multi-Seed Experiment Runner
-# =============================================================================
-# Runs an experiment command with multiple seeds for statistical validity.
-#
-# Usage:
-#   ./platform_modal/scripts/run_seeds.sh "python experiment.py" [seed1 seed2 ...]
-#
-# Default seeds: 42 123 456 789 1024
-# =============================================================================
-
+# Protocol v2: run_seeds.sh [--seed N ...] -- executable [argument ...]
+# Command arguments are never reparsed as shell syntax.
 set -euo pipefail
-
-COMMAND="${1:?Usage: ./run_seeds.sh \"command\" [seed1 seed2 ...]}"
-shift
-
-# Default seeds if none provided
-if [ $# -eq 0 ]; then
-    SEEDS=(42 123 456 789 1024 2048 4096 8192 16384 32768)
-else
-    SEEDS=("$@")
-fi
-
-echo "============================================"
-echo "Multi-Seed Runner"
-echo "Command: ${COMMAND}"
-echo "Seeds: ${SEEDS[*]}"
-echo "============================================"
-
-TOTAL=${#SEEDS[@]}
-COMPLETED=0
-FAILED=0
-
-for SEED in "${SEEDS[@]}"; do
-    echo ""
-    echo "--- Running seed ${SEED} ($(( COMPLETED + 1 ))/${TOTAL}) ---"
-    
-    START_TIME=$(date +%s)
-    
-    if eval "${COMMAND} --seed ${SEED}"; then
-        END_TIME=$(date +%s)
-        ELAPSED=$(( END_TIME - START_TIME ))
-        echo "Seed ${SEED} completed in ${ELAPSED}s"
-        COMPLETED=$((COMPLETED + 1))
-    else
-        echo "ERROR: Seed ${SEED} failed!"
-        FAILED=$((FAILED + 1))
-    fi
+SEEDS=()
+while (( $# )); do
+    case "$1" in
+        --seed) [[ $# -ge 2 && "$2" =~ ^[0-9]+$ ]] || { echo 'Invalid seed' >&2; exit 2; }; SEEDS+=("$2"); shift 2 ;;
+        --) shift; break ;;
+        *) echo 'Usage: run_seeds.sh [--seed N ...] -- executable [arguments ...]' >&2; exit 2 ;;
+    esac
 done
-
-echo ""
-echo "============================================"
-echo "Results: ${COMPLETED} completed, ${FAILED} failed out of ${TOTAL}"
-echo "============================================"
+(( $# )) || { echo 'Missing command' >&2; exit 2; }
+(( ${#SEEDS[@]} )) || SEEDS=(42 123 456 789 1024 2048 4096 8192 16384 32768)
+COMMAND=("$@")
+FAILED=0
+for SEED in "${SEEDS[@]}"; do
+    START=$(date -u +%FT%TZ)
+    if "${COMMAND[@]}" --seed "$SEED"; then STATUS=0; else STATUS=$?; FAILED=$((FAILED+1)); fi
+    printf 'seed=%s\tstart=%s\tend=%s\texit_status=%s\tcommand=' "$SEED" "$START" "$(date -u +%FT%TZ)" "$STATUS"
+    printf '%q ' "${COMMAND[@]}" --seed "$SEED"
+    printf '\n'
+done
+(( FAILED == 0 ))

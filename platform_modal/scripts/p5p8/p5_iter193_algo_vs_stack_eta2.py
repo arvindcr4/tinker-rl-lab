@@ -21,10 +21,10 @@ import csv, json, math, os, random
 from collections import defaultdict
 from statistics import fmean
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-RES = os.path.join(ROOT, "experiments", "results")
-OUT = os.path.join(RES, "p5p8")
-os.makedirs(OUT, exist_ok=True)
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+RES = os.path.join(ROOT, "platform_hybrid", "experiments", "results")
+OUT = os.path.join(RES, "p5p8/review17_v2")
+
 N2 = os.path.join(RES, "n2_reward_tensor_resume", "n2_metrics.tsv")
 MEGA = os.path.join(RES, "mega_20260704", "cells.tsv")
 B = 2000
@@ -33,6 +33,8 @@ CI = 0.95
 
 
 # ----------------- variance decomposition -----------------
+from p5_review17_stats import json_safe
+
 def eta2_omega2(groups):
     """groups: dict[label -> list[float]]. Returns (eta2, omega2, k, N)."""
     grand = [v for vs in groups.values() for v in vs]
@@ -131,6 +133,8 @@ def load_mega():
 
 # ----------------- main -----------------
 def main():
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    os.makedirs(OUT, exist_ok=True)
     rng = random.Random(SEED)
     n2, n_methods, n_steps = load_n2()
     mega, n_cells, factors = load_mega()
@@ -206,6 +210,7 @@ def main():
         if rr["channel"] in ("zvf", "reward"))
 
     summary = dict(
+        analysis_protocol="review17-p5-v2", inference_scope="exploratory descriptive cross-corpus comparison; not causal or prospective",
         n2_methods=n_methods, n2_steps_per_method=n_steps, mega_cells=n_cells,
         stack_factors=factors, channels=channels,
         algorithm_axis_eta2={r["channel"]: r["eta2"] for r in rows if r["axis"] == "algorithm"},
@@ -213,7 +218,7 @@ def main():
         n_pass=sum(verdicts.values()), n_total=len(verdicts),
         params=dict(B=B, seed=SEED, ci=CI))
     with open(os.path.join(OUT, "p5_iter193_summary.json"), "w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(json_safe(summary), f, indent=2)
 
     print(f"N2: {n_methods} methods x ~{n_steps} steps | mega: {n_cells} cells")
     print("\n=== eta^2 by axis ===")

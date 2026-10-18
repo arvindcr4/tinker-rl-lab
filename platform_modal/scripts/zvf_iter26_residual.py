@@ -8,7 +8,7 @@ difficulty. We regress last10 ~ reward on each library slice, then
 correlate the residuals against ZVF.
 
 Outputs:
-    platform_hybrid/experiments/results/zvf_iter26_residual.tsv
+    platform_hybrid/experiments/results/zvf_iter26_residual_review28_v2.tsv
         per-library slice: n, naive r, r(reward,last10), residual r.
 """
 from __future__ import annotations
@@ -121,15 +121,8 @@ def analyse_slice(slice_rows, label, B=2000, seed=0):
 
     naive = _bootstrap(zvfs, lasts, _pearson, B=B, seed=seed)
     reward = _bootstrap(rewards, lasts, _pearson, B=B, seed=seed + 1)
-    # Residual last10 ~ reward
-    mx = statistics.fmean(rewards)
-    my = statistics.fmean(lasts)
-    num = sum((x - mx) * (y - my) for x, y in zip(rewards, lasts))
-    den = sum((x - mx) ** 2 for x in rewards)
-    b1 = num / den if den != 0 else 0.0
-    b0 = my - b1 * mx
-    resid = [y - (b0 + b1 * x) for x, y in zip(rewards, lasts)]
-    residual = _bootstrap(zvfs, resid, _pearson, B=B, seed=seed + 2)
+    from _review28_statistics import partial_correlation_bootstrap
+    residual = partial_correlation_bootstrap(zvfs, lasts, rewards, B=B, seed=seed+2)
 
     out.update(
         {
@@ -146,42 +139,29 @@ def analyse_slice(slice_rows, label, B=2000, seed=0):
 
 
 def _library_level_pool(rows):
-    """Per-step rows in zvf_summary.tsv are autocorrelated; we instead
-    pool at the (experiment, model, group_size) level for variance_mitigation
-    and report one row per (method) with method-level means across all of
-    its per-step rows. This keeps the matched-stack cross-library signal
-    honest (each method has 500-1500 rollout steps)."""
-    # Read the underlying variance_mitigation.tsv directly.
+    """Average per-seed sorted last-ten outcomes, equally weighting independent runs."""
     path = RESULTS / "variance_mitigation.tsv"
-    method_groups: dict[str, list] = {}
-    if path.exists():
-        with path.open() as fh:
-            rdr = csv.DictReader(fh, delimiter="\t")
-            for r in rdr:
-                method_groups.setdefault(r["method"], []).append(
-                    (float(r["zvf"]), float(r["heldout_acc"]), float(r["reward_mean"]))
-                )
-    method_pool = []
-    for m, vals in sorted(method_groups.items()):
-        zs = [v[0] for v in vals]
-        ls = [v[1] for v in vals]
-        rs = [v[2] for v in vals]
-        method_pool.append(
-            {
-                "method": m,
-                "mean_zvf": statistics.fmean(zs),
-                "last10": statistics.fmean(ls),
-                "mean_reward": statistics.fmean(rs),
-                "n_steps": len(vals),
-            }
-        )
-    return method_pool
+    if not path.exists(): return []
+    runs = {}
+    with path.open() as fh:
+        for row in csv.DictReader(fh, delimiter="\t"):
+            runs.setdefault((row["method"], row["seed"]), []).append(row)
+    methods = {}
+    for (method,seed), records in runs.items():
+        records.sort(key=lambda row:float(row["step"]))
+        zs = [float(row["zvf"]) for row in records]
+        rs = [float(row["reward_mean"]) for row in records]
+        last = [float(row["heldout_acc"]) for row in records[-10:]]
+        methods.setdefault(method, []).append((statistics.fmean(zs),statistics.fmean(last),statistics.fmean(rs),len(records)))
+    return [dict(method=method,mean_zvf=statistics.fmean(v[0] for v in values),
+                 last10=statistics.fmean(v[1] for v in values),mean_reward=statistics.fmean(v[2] for v in values),
+                 n_steps=sum(v[3] for v in values),n_seeds=len(values)) for method,values in sorted(methods.items())]
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--out", type=Path, default=RESULTS / "zvf_iter26_residual.tsv"
+        "--out", type=Path, default=RESULTS / "zvf_iter26_residual_review28_v2.tsv"
     )
     parser.add_argument("--B", type=int, default=2000)
     args = parser.parse_args()
@@ -222,7 +202,7 @@ def main():
         fh.write(
             "# Per-slice table: n_pooled, naive r(ZVF, last10),\n"
             "# r(reward, last10) (the confounder), and\n"
-            "# r(residual(last10 ~ reward), ZVF) -- the residualised\n"
+            "# r(residual(last10 ~ reward), residual(ZVF ~ reward)) -- the residualised\n"
             "# partial correlation that isolates the ZVF contribution.\n"
             "# Bootstrap CIs use B=2000 percentile resamples.\n"
             "# Source: platform_modal/scripts/zvf_iter26_residual.py\n"

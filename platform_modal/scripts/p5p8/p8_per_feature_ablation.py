@@ -61,7 +61,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 FIG = RES / "figures"
 RES.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
@@ -370,7 +370,7 @@ def main() -> None:
         out = []
         for b, members in enumerate(bins):
             if not members:
-                out.append((None, None, 0))
+                out.append((None, None, 0, None, None))
                 continue
             conf = sum(pi for _, pi in members) / len(members)
             acc = sum(yi for yi, _ in members) / len(members)

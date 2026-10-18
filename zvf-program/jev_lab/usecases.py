@@ -33,18 +33,20 @@ Known service caveats this design respects (2026-09-19 incident + briefing):
 from __future__ import annotations
 
 import json
-import math
+import functools
+import inspect
+from dataclasses import asdict
 import re
 import subprocess
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from jev_judge import DEFAULT_RECEIPT_DIR, healthcheck, run_ask  # noqa: E402
+from jev_judge import DEFAULT_RECEIPT_DIR, healthcheck, run_ask, _record  # noqa: E402
 
 REPO_ROOT = HERE.parents[1]
 
@@ -77,6 +79,29 @@ class Routing:
     note: str = ""
 
 
+def _persist_routing(function):
+    @functools.wraps(function)
+    def wrapped(*args, **kwargs):
+        bound = inspect.signature(function).bind(*args, **kwargs)
+        bound.apply_defaults()
+        values = bound.arguments
+        try:
+            outcome = function(*args, **kwargs)
+        except (OSError, subprocess.SubprocessError, RuntimeError, ValueError, KeyError, TypeError) as exc:
+            outcome = Routing("FALLBACK_OUTAGE", note=f"{type(exc).__name__}: {exc}")
+        policy = values.get("policy") or AbstainPolicy()
+        receipt = _record(kind="routing", label=values["label"]+"_routing", state=values["state"],
+            payload={"policy_version": "jev-routing-v2", "instructions": values["instructions"],
+                     "policy": asdict(policy), "choices": values.get("choices"),
+                     "min_confidence": values.get("min_confidence"),
+                     "raw_receipt_path": outcome.receipt_path},
+            answer=asdict(outcome), receipt_dir=values["receipt_dir"])
+        outcome.receipt_path = receipt["receipt_path"]
+        return outcome
+    return wrapped
+
+
+@_persist_routing
 def judged(
     state: Any,
     instructions: str,
@@ -109,6 +134,7 @@ def judged(
     return Routing(route, noul=noul, answer=answers, receipt_path=receipt.get("receipt_path"))
 
 
+@_persist_routing
 def judged_choice(
     state: Any,
     instructions: str,
@@ -204,9 +230,9 @@ def rerank_fuse(
             c[id_key]: {
                 "type": "score",
                 "instructions": (
-                    f"Score this candidate's relevance to the query on an ordered "
-                    f"scale: 0=irrelevant, 1=mentions the topic tangentially, "
-                    f"2=substantively on-topic, 3=directly answers the query."
+                    "Score this candidate's relevance to the query on an ordered "
+                    "scale: 0=irrelevant, 1=mentions the topic tangentially, "
+                    "2=substantively on-topic, 3=directly answers the query."
                 ),
             }
             for c in candidates
@@ -356,7 +382,7 @@ def mine_ledgers(
     for path in ledgers[:limit]:
         try:
             text = path.read_text()[:4000]
-            data = json.loads(path.read_text())
+            json.loads(path.read_text())
         except (OSError, json.JSONDecodeError):
             continue
         lane_hint = next(
@@ -386,16 +412,24 @@ def mine_ledgers(
 
 
 def _keyword_status(text: str) -> str:
-    t = text.lower()
-    if any(k in t for k in ("blocked_external", "wait_provider", "private")):
-        return "blocked_external"
-    if any(k in t for k in ("quota", "vcpulimit", "pending", "unreserved")):
-        return "blocked_paid_or_quota"
-    if any(k in t for k in ("terminal", "complete", "scored")):
+    try:
+        data = json.loads(text)
+        status = data.get("status") if isinstance(data, dict) else None
+    except ValueError:
+        status = text.strip()
+    status = str(status).upper()
+    if status in {"COMPLETE", "COMPLETED", "SCORED", "GRADED", "TERMINAL_COMPLETE"}:
         return "terminal_complete"
-    if any(k in t for k in ("sealed", "review", "validation")):
+    if status in {"INCOMPLETE", "UNSCORED", "UNGRADED", "NOT_TERMINAL", "RUNNING", "IN_PROGRESS"}:
+        return "in_progress"
+    if status in {"BLOCKED_EXTERNAL", "WAIT_PROVIDER"}:
+        return "blocked_external"
+    if status in {"QUOTA", "VCPULIMIT", "PENDING", "UNRESERVED"}:
+        return "blocked_paid_or_quota"
+    if status in {"SEALED", "REVIEW", "VALIDATION"}:
         return "review_or_seal_record"
     return "other"
+
 
 
 if __name__ == "__main__":

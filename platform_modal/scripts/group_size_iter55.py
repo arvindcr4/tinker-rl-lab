@@ -23,12 +23,12 @@ Inputs (read-only):
   platform_hybrid/experiments/results/group_size_iter43_summary.tsv     (Wu retention at 4 budgets)
 
 Outputs (TSVs):
-  group_size_iter55_d_eff.tsv            d_eff(G) and contrast yield
-  group_size_iter55_antiherd.tsv         delta_div(G) and G-invariance test
-  group_size_iter55_isoyield_pred.tsv    predicted argmax G per budget
-  group_size_iter55_coupling.tsv         empirical - predicted residual
-  group_size_iter55_wu_model.tsv         Wu retention model fits/predictions
-  group_size_iter55_summary.tsv          headline rollup
+  group_size_iter55_d_eff_v2.tsv            d_eff(G) and contrast yield
+  group_size_iter55_antiherd_v2.tsv         delta_div(G) and G-invariance test
+  group_size_iter55_isoyield_pred_v2.tsv    predicted argmax G per budget
+  group_size_iter55_coupling_v2.tsv         empirical - predicted residual
+  group_size_iter55_wu_model_v2.tsv         Wu retention model fits/predictions
+  group_size_iter55_summary_v2.tsv          headline rollup
 """
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ np.random.seed(SEED)
 
 
 def effective_size(zvf):
-    """Compute d_eff and Contrastive Yield per G from the zvf sweep."""
+    """Compute heuristic G*(1-ZVF) score, not a variance-derived effective sample size."""
     out = []
     for r in zvf:
         G = r["G"]
@@ -74,6 +74,7 @@ def effective_size(zvf):
                 "Y_obs": Y_obs,
                 "Y_iid": Y_th,
                 "d_eff_obs": d_eff_obs,
+                "estimand_kind": "heuristic_G_times_nonzero_group_fraction",
                 "d_eff_iid": d_eff_th,
                 "ratio_d_eff_Yratio": Y_obs / Y_th if Y_th > 0 else float("nan"),
             }
@@ -209,7 +210,7 @@ def isoyield_pred(rows, eff, zvf_raw):
                 de = de_map[G]
             else:
                 # Extrapolate d_eff from p + delta_div
-                zvf_pred = p**G + (1 - p) ** G - delta_div_mean
+                zvf_pred = p**G + (1 - p) ** G + delta_div_mean
                 zvf_pred = max(0.0, min(1.0, zvf_pred))
                 de = G * (1.0 - zvf_pred)
             steps = per_token_opt_steps(G, T)
@@ -301,7 +302,7 @@ def wu_retention_stepaware(rows, zvf, eff):
         for r in zvf:
             if r["G"] == G:
                 return G * (1.0 - r["mean_zvf"])
-        zvf_pred = p**G + (1 - p) ** G - delta_div_mean
+        zvf_pred = p**G + (1 - p) ** G + delta_div_mean
         zvf_pred = max(0.0, min(1.0, zvf_pred))
         return G * (1.0 - zvf_pred)
 
@@ -317,7 +318,7 @@ def wu_retention_stepaware(rows, zvf, eff):
         g4 = next(r for r in rows if r["T"] == T and r["G"] == 4)
         g32 = next(r for r in rows if r["T"] == T and r["G"] == 32)
         R = g4["acc"] / g32["acc"] if g32["acc"] > 0 else float("nan")
-        pairs.append((T, math.log10(T), math.log(R)))
+        pairs.append((T, math.log(T), math.log(R)))
 
     # Calibration fit on T={1M, 4M}; OLS on the 2-point line gives gamma and c.
     cal = [p for p in pairs if p[0] in (budgets[0], budgets[1])]
@@ -332,7 +333,7 @@ def wu_retention_stepaware(rows, zvf, eff):
     else:
         gamma_cal, logc_cal = float("nan"), float("nan")
     # alpha from c = (de_ratio)^alpha → alpha = log(c) / log(de_ratio)
-    c_cal = 10**logc_cal if not math.isnan(logc_cal) else float("nan")
+    c_cal = math.exp(logc_cal) if not math.isnan(logc_cal) else float("nan")
     alpha_cal = math.log(c_cal) / math.log(de_ratio) if (de_ratio > 0 and de_ratio != 1 and c_cal > 0) else float("nan")
 
     # Also fit free OLS on all 4 points (for comparison)
@@ -343,7 +344,7 @@ def wu_retention_stepaware(rows, zvf, eff):
     sxx, sxy = (x_all * x_all).sum(), (x_all * y_all).sum()
     gamma_all = (n_all * sxy - sx * sy) / (n_all * sxx - sx * sx + 1e-12)
     logc_all = (sy - gamma_all * sx) / n_all
-    c_all = 10**logc_all
+    c_all = math.exp(logc_all)
     alpha_all = math.log(c_all) / math.log(de_ratio) if (de_ratio > 0 and de_ratio != 1 and c_all > 0) else float("nan")
     # R^2 of the free fit
     yhat_all = gamma_all * x_all + logc_all
@@ -356,8 +357,8 @@ def wu_retention_stepaware(rows, zvf, eff):
         g32 = next(r for r in rows if r["T"] == T and r["G"] == 32)
         R_emp = g4["acc"] / g32["acc"] if g32["acc"] > 0 else float("nan")
         # Predicted at this T using calibration (T={1M,4M} only) free model
-        R_pred_cal = 10 ** (gamma_cal * math.log10(T) + logc_cal)
-        R_pred_all = 10 ** (gamma_all * math.log10(T) + logc_all)
+        R_pred_cal = math.exp(gamma_cal * math.log(T) + logc_cal)
+        R_pred_all = math.exp(gamma_all * math.log(T) + logc_all)
         is_cal = T in (budgets[0], budgets[1])
         out.append(
             {
@@ -399,7 +400,7 @@ def wu_retention_model(rows, zvf, eff):
         for r in zvf:
             if r["G"] == G:
                 return G * (1.0 - r["mean_zvf"])
-        zvf_pred = p**G + (1 - p) ** G - delta_div_mean
+        zvf_pred = p**G + (1 - p) ** G + delta_div_mean
         zvf_pred = max(0.0, min(1.0, zvf_pred))
         return G * (1.0 - zvf_pred)
 
@@ -513,43 +514,43 @@ def main():
     # A
     eff = effective_size(zvf)
     write_tsv(
-        RES / "group_size_iter55_d_eff.tsv",
-        ["G", "n_seeds", "zvf_obs", "zvf_iid", "Y_obs", "Y_iid", "d_eff_obs", "d_eff_iid", "ratio_d_eff_Yratio"],
+        RES / "group_size_iter55_d_eff_v2.tsv",
+        ["G", "n_seeds", "estimand_kind", "zvf_obs", "zvf_iid", "Y_obs", "Y_iid", "d_eff_obs", "d_eff_iid", "ratio_d_eff_Yratio"],
         eff,
     )
-    print(f"Wrote group_size_iter55_d_eff.tsv ({len(eff)} rows)")
+    print(f"Wrote group_size_iter55_d_eff_v2.tsv ({len(eff)} rows)")
 
     # B
     anti = antiherding_test(eff)
     write_tsv(
-        RES / "group_size_iter55_antiherd.tsv",
+        RES / "group_size_iter55_antiherd_v2.tsv",
         ["G", "zvf_obs", "zvf_iid", "delta_div", "delta_div_rel", "in_frontier_range"],
         anti,
     )
-    print(f"Wrote group_size_iter55_antiherd.tsv ({len(anti)} rows)")
+    print(f"Wrote group_size_iter55_antiherd_v2.tsv ({len(anti)} rows)")
 
     # C
     pred = isoyield_pred(rows, eff, zvf)
     write_tsv(
-        RES / "group_size_iter55_isoyield_pred.tsv",
+        RES / "group_size_iter55_isoyield_pred_v2.tsv",
         ["T_tokens", "G", "d_eff", "steps_per_prompt", "score", "is_predicted_peak", "predicted_argmax_G"],
         pred,
     )
-    print(f"Wrote group_size_iter55_isoyield_pred.tsv ({len(pred)} rows)")
+    print(f"Wrote group_size_iter55_isoyield_pred_v2.tsv ({len(pred)} rows)")
 
     # D
     coup = coupling(rows, pred)
     write_tsv(
-        RES / "group_size_iter55_coupling.tsv",
+        RES / "group_size_iter55_coupling_v2.tsv",
         ["T_tokens", "empirical_argmax_G", "predicted_argmax_G", "ratio_emp_over_pred", "residual_log10", "within_factor_2"],
         coup,
     )
-    print(f"Wrote group_size_iter55_coupling.tsv ({len(coup)} rows)")
+    print(f"Wrote group_size_iter55_coupling_v2.tsv ({len(coup)} rows)")
 
     # E
     wu, alpha, de_ratio = wu_retention_model(rows, zvf, eff)
     write_tsv(
-        RES / "group_size_iter55_wu_model.tsv",
+        RES / "group_size_iter55_wu_model_v2.tsv",
         [
             "T_tokens",
             "G4_acc",
@@ -563,12 +564,12 @@ def main():
         ],
         wu,
     )
-    print(f"Wrote group_size_iter55_wu_model.tsv ({len(wu)} rows)")
+    print(f"Wrote group_size_iter55_wu_model_v2.tsv ({len(wu)} rows)")
 
     # E2: budget-aware retention model
     step, alpha_cal, alpha_all, gamma_cal, gamma_all, r2_all = wu_retention_stepaware(rows, zvf, eff)
     write_tsv(
-        RES / "group_size_iter55_stepaware.tsv",
+        RES / "group_size_iter55_stepaware_v2.tsv",
         [
             "T_tokens",
             "G4_acc",
@@ -583,12 +584,12 @@ def main():
         ],
         step,
     )
-    print(f"Wrote group_size_iter55_stepaware.tsv ({len(step)} rows)")
+    print(f"Wrote group_size_iter55_stepaware_v2.tsv ({len(step)} rows)")
 
     # F
     summ = summarize(eff, anti, coup, wu, step, alpha, alpha_all, gamma_all, de_ratio)
-    write_tsv(RES / "group_size_iter55_summary.tsv", ["metric", "value"], summ)
-    print(f"Wrote group_size_iter55_summary.tsv ({len(summ)} rows)")
+    write_tsv(RES / "group_size_iter55_summary_v2.tsv", ["metric", "value"], summ)
+    print(f"Wrote group_size_iter55_summary_v2.tsv ({len(summ)} rows)")
 
     # Headline
     print("\n=== Iter 55 Headline ===")

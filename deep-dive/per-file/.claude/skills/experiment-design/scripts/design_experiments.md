@@ -1,9 +1,11 @@
 # Deep Dive: `.claude/skills/experiment-design/scripts/design_experiments.py`
 
+**Static generated summary, unverified; execution_evidence: false.** This report does not establish an executed experiment or outcomes. Planning/source inspection must not be represented as experimental measurement. Exact reviewed commit and source digest are not recorded.
+
 > AntiVibe &middot; compact mode &middot; 2026-10-03 &middot; source: `.claude/skills/experiment-design/scripts/design_experiments.py` (252 lines)
 
 ## Overview
-`design_experiments.py` is an experiment script that exercises a specific research configuration end-to-end. It wires a chosen model, dataset, algorithm, and backend into one reproducible run and records the outcome.
+`design_experiments.py` generates structured experiment plans from research-plan inputs, including baselines, ablations, stages and analysis metadata. It does not launch training, execute the planned experiments, or record empirical outcomes.
 It leans on **argparse, config** to do its work.
 *Self-description:* "Generate experiment design from a research plan.  Takes a research plan (JSON or text description) and generates a structured experiment design with baselines, "
 

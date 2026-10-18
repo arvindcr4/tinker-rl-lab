@@ -1,5 +1,12 @@
 """100-step GRPO on MATH problems — optimized for speed"""
 
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 4:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
+from platform_hybrid.experiments.framework_contracts import aligned_datum, response_logprobs, PROTOCOL_VERSION, stable_seed
+
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -70,7 +77,7 @@ def make_prompt(q):
     return f"<|im_start|>system\n{SYSTEM_PROMPT}<|im_end|>\n<|im_start|>user\n{q}<|im_end|>\n<|im_start|>assistant\n"
 
 examples = [(make_prompt(q), a) for q, a in MATH_PROBLEMS] * 20
-random.shuffle(examples)
+random.Random(42).shuffle(examples)
 print(f"[{EXP}] {len(examples)} examples, {len(MATH_PROBLEMS)} unique problems")
 
 def reward(response, answer):
@@ -110,12 +117,12 @@ def reward(response, answer):
 
 _adv = []
 def loss_fn(data, lp):
-    losses = [(-_adv[i]*lp[i].sum()) for i in range(len(lp))]
+    losses = [(-_adv[i]*response_logprobs(data[i], lp[i]).sum()) for i in range(len(lp))]
     loss = torch.stack(losses).mean(); return loss, {"loss": loss.item()}
 
 print(f"[{EXP}] Connecting...")
 svc = tinker.ServiceClient(base_url=None)
-tc = svc.create_lora_training_client(base_model=MODEL, rank=32)
+tc = svc.create_lora_training_client(base_model=MODEL, rank=32, seed=42)
 tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
 w0 = tc.save_weights_for_sampler(name="s0").result()
 sc = tc.create_sampling_client(model_path=w0.path)
@@ -123,7 +130,7 @@ print(f"[{EXP}] Run: {tc.model_id}")
 
 step_rewards = []
 for step in range(STEPS):
-    batch = random.sample(examples, 2)
+    batch = random.Random(42 + step).sample(examples, 2)
     all_data, all_advs, batch_r = [], [], []
     for pt, ans in batch:
         pid = tok.encode(pt, add_special_tokens=False)
@@ -133,8 +140,8 @@ for step in range(STEPS):
         mr = sum(rews)/len(rews); sr = (sum((r-mr)**2 for r in rews)/len(rews))**0.5+1e-8
         advs = [(r-mr)/sr for r in rews]; batch_r.extend(rews)
         for r, a in zip(resp.sequences, advs):
-            rid = list(r.tokens); fid = pid+rid; tid = fid[1:]+[0]
-            all_data.append(T.Datum(model_input=T.ModelInput.from_ints(fid), loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)])}))
+            rid = list(r.tokens); fid = pid+rid; tid = fid[1:]
+            all_data.append(aligned_datum(T, pid, rid))
             all_advs.append(a)
     if not all_data: continue
     _adv = all_advs
@@ -142,8 +149,10 @@ for step in range(STEPS):
     tc.optim_step(T.AdamParams(learning_rate=LR, beta1=0.9, beta2=0.95, eps=1e-8)).result()
     avg = sum(batch_r)/len(batch_r); step_rewards.append(avg)
     print(f"[{EXP}] {step+1:3d}/{STEPS} | loss={result.metrics.get('loss',0):.4f} | reward={avg:.3f}")
-    if (step+1) % SAVE_EVERY == 0:
-        tc.save_state(name=f"s{step+1}"); ckpt = tc.save_weights_for_sampler(name=f"s{step+1}").result()
+    if True:  # v3 current-policy sampler; persistence is separately gated
+        if (step + 1) % SAVE_EVERY == 0:
+            tc.save_state(name=f"s{step+1}")
+        ckpt = tc.save_weights_for_sampler(name=f"s{step+1}").result()
         sc = tc.create_sampling_client(model_path=ckpt.path)
         print(f"[{EXP}]   -> ckpt s{step+1}")
 

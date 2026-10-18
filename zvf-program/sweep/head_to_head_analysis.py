@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import statistics
 import sys
 from collections import defaultdict
@@ -43,6 +44,8 @@ def load_results(results_dir: Path) -> list[dict]:
         if status != "completed" or arm is None:
             print(f"[skip] {path.name}: status={status!r} arm={arm!r}")
             continue
+        d["loss_arm"] = arm
+        d["source_path"] = str(path)
         out.append(d)
     return out
 
@@ -55,13 +58,16 @@ def per_arm_summary(runs: list[dict]) -> dict[str, dict]:
 
     summary: dict[str, dict] = {}
     for arm, rs in sorted(by_arm.items()):
-        last10 = [r.get("last10_avg", 0.0) for r in rs]
-        peak = [r.get("peak_reward", 0.0) for r in rs]
-        zero = [r.get("zero_reward_pct", 0.0) for r in rs]
+        last10 = [r.get("last10_avg") for r in rs]
+        peak = [r.get("peak_reward") for r in rs]
+        zero = [r.get("zero_reward_pct") for r in rs]
         zvfs = []
         for r in rs:
-            zvfs.extend(s.get("zvf", 0.0) for s in r.get("step_log", []))
+            zvfs.extend(s.get("zvf") for s in r.get("step_log", []))
+        missing = {k: sum(not _finite(r.get(k)) for r in rs) for k in ("last10_avg", "peak_reward", "zero_reward_pct")}
+        last10, peak, zero, zvfs = ([v for v in xs if _finite(v)] for xs in (last10, peak, zero, zvfs))
         summary[arm] = {
+            "excluded_missing_measurements": missing,
             "n_runs": len(rs),
             "n_seeds": len(set(r.get("seed") for r in rs)),
             "last10_avg_mean": statistics.mean(last10) if last10 else float("nan"),
@@ -70,17 +76,16 @@ def per_arm_summary(runs: list[dict]) -> dict[str, dict]:
             "peak_reward_std": statistics.stdev(peak) if len(peak) > 1 else 0.0,
             "zero_reward_pct_mean": statistics.mean(zero) if zero else float("nan"),
             "mean_zvf_across_steps": statistics.mean(zvfs) if zvfs else float("nan"),
-            "per_seed_last10": {r.get("seed"): r.get("last10_avg", 0.0) for r in rs},
+            "per_seed_last10": {r.get("seed"): r.get("last10_avg") for r in rs},
         }
     return summary
 
 
 def sign_test(deltas: list[float]) -> dict:
     """Non-parametric paired sign test: count positive vs negative deltas.
-    For n=3, p-values are 0.25 (3-0), 0.5 (2-1), 1.0 (1-2 or 0-3)."""
+    For n=3, unanimous signs give p=.25; a 2-to-1 split gives p=1."""
     pos = sum(1 for d in deltas if d > 0)
     neg = sum(1 for d in deltas if d < 0)
-    zeros = sum(1 for d in deltas if d == 0)
     n = pos + neg  # ignore zeros for the test
     if n == 0:
         return {"pos": pos, "neg": neg, "n": 0, "p_value": float("nan")}
@@ -92,37 +97,43 @@ def sign_test(deltas: list[float]) -> dict:
     return {"pos": pos, "neg": neg, "n": n, "p_value": p_two}
 
 
+BLOCK_FIELDS = ("model_id", "dataset", "split", "steps", "group_size", "batch_prompts",
+                "max_tokens", "parser_version", "stack_fingerprint")
+
+
+def _finite(value):
+    return type(value) in (int, float) and math.isfinite(value)
+
+
 def paired_comparison(runs: list[dict], baseline: str = "grpo") -> list[dict]:
-    """For each non-baseline arm, compute per-seed (last10) delta vs the
-    baseline arm at the SAME seed. Report mean delta + sign test."""
-    by_seed_arm: dict[tuple[int, str], dict] = {}
-    for r in runs:
-        by_seed_arm[(r.get("seed"), r.get("loss_arm"))] = r
+    """Pair within an explicitly bound experimental block, never by seed alone.
 
-    seeds = sorted({s for (s, _a) in by_seed_arm.keys()})
-    others = sorted({a for (_s, a) in by_seed_arm.keys() if a != baseline})
-
-    rows = []
-    for arm in others:
-        deltas = []
-        for s in seeds:
-            base = by_seed_arm.get((s, baseline))
-            oth = by_seed_arm.get((s, arm))
-            if base is None or oth is None:
-                continue
-            deltas.append(oth.get("last10_avg", 0.0) - base.get("last10_avg", 0.0))
-        if not deltas:
+    Missing identity/measurement excludes a row with a stated reason. Duplicate
+    attempts fail closed until an attempt-selection rule is preregistered.
+    """
+    indexed = {}
+    for run in runs:
+        missing = [k for k in (*BLOCK_FIELDS, "seed") if run.get(k) is None]
+        if missing or not _finite(run.get("last10_avg")):
+            print(f"[exclude] {run.get('source_path', '<record>')}: missing block/metric {missing}", file=sys.stderr)
             continue
-        rows.append({
-            "arm": arm,
-            "baseline": baseline,
-            "n_pairs": len(deltas),
-            "mean_delta": statistics.mean(deltas),
-            "delta_seeds": {s: round(d, 4) for s, d in zip(
-                [s for s in seeds if (s, baseline) in by_seed_arm and (s, arm) in by_seed_arm],
-                deltas)},
-            "sign_test": sign_test(deltas),
-        })
+        block = tuple(run[k] for k in BLOCK_FIELDS)
+        key = (block, run["seed"], run.get("loss_arm") or run.get("loss"))
+        if key in indexed:
+            raise ValueError(f"duplicate experimental block/seed/arm; no attempt-selection policy: {key}")
+        indexed[key] = run
+    rows = []
+    for block in sorted({k[0] for k in indexed}, key=repr):
+        seeds = sorted({k[1] for k in indexed if k[0] == block})
+        for arm in sorted({k[2] for k in indexed if k[0] == block and k[2] != baseline}):
+            pairs = [(seed, indexed[(block, seed, arm)]["last10_avg"] - indexed[(block, seed, baseline)]["last10_avg"])
+                     for seed in seeds if (block, seed, arm) in indexed and (block, seed, baseline) in indexed]
+            if pairs:
+                deltas = [value for _, value in pairs]
+                rows.append({"arm": arm, "baseline": baseline, "block": dict(zip(BLOCK_FIELDS, block)),
+                    "n_pairs": len(pairs), "mean_delta": statistics.mean(deltas),
+                    "delta_seeds": dict(pairs), "sign_test": sign_test(deltas),
+                    "claim_scope": "exploratory; primary comparisons and attempt selection require preregistration"})
     return rows
 
 

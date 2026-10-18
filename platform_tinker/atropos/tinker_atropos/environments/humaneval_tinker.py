@@ -4,17 +4,14 @@ Trains models to write correct Python functions verified by unit tests.
 
 Dataset: openai/openai_humaneval
 Reward: 1.0 if generated code passes all test cases, 0.0 otherwise.
-Execution: subprocess with 10s timeout (safe, no network access).
+Execution: fail-closed until a trusted isolated evaluator is integrated.
 """
-import ast
+
 import os
 import random
 import re
-import subprocess
 import sys
-import tempfile
-import textwrap
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Optional, Tuple
 
 from datasets import load_dataset
 from atroposlib.envs.base import (
@@ -23,14 +20,15 @@ from atroposlib.envs.base import (
     BaseEnvConfig,
     ScoredDataGroup,
 )
-from atroposlib.type_definitions import Item
 from tinker_atropos.config import TinkerAtroposConfig
+
 
 def _get_config_path():
     for i, arg in enumerate(sys.argv):
         if arg == "--config" and i + 1 < len(sys.argv):
             return sys.argv[i + 1]
     return os.environ.get("TINKER_CONFIG_PATH", "configs/humaneval_qwen_8b.yaml")
+
 
 CONFIG_PATH = _get_config_path()
 
@@ -52,47 +50,9 @@ def _extract_code(text: str) -> str:
 
 
 def _run_tests(code: str, test_code: str, entry_point: str, timeout: int = 10) -> bool:
-    """
-    Execute generated code + test harness in a subprocess.
-    Returns True if all tests pass, False otherwise.
-    """
-    full_code = textwrap.dedent(f"""
-import sys
-import traceback
+    from tinker_atropos.safe_execution import evaluate_python
 
-# Generated function
-{code}
-
-# Test harness
-{test_code}
-
-# Run tests
-try:
-    check({entry_point})
-    sys.exit(0)
-except Exception as e:
-    traceback.print_exc()
-    sys.exit(1)
-""")
-    try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write(full_code)
-            fname = f.name
-        result = subprocess.run(
-            [sys.executable, fname],
-            capture_output=True,
-            timeout=timeout,
-        )
-        return result.returncode == 0
-    except subprocess.TimeoutExpired:
-        return False
-    except Exception:
-        return False
-    finally:
-        try:
-            os.unlink(fname)
-        except Exception:
-            pass
+    return evaluate_python(code=code, tests=test_code, entry_point=entry_point, timeout=timeout)
 
 
 class HumanEvalEnv(BaseEnv):
@@ -113,7 +73,10 @@ class HumanEvalEnv(BaseEnv):
 
     @classmethod
     def config_init(cls):
-        config = TinkerAtroposConfig.from_yaml(CONFIG_PATH) if CONFIG_PATH else TinkerAtroposConfig()
+        config = (
+            TinkerAtroposConfig.from_yaml(CONFIG_PATH) if CONFIG_PATH else TinkerAtroposConfig()
+        )
+        cls._full_config = config
         env_config = BaseEnvConfig(
             tokenizer_name=config.base_model,
             group_size=config.group_size,
@@ -139,15 +102,33 @@ class HumanEvalEnv(BaseEnv):
         ]
         return env_config, server_configs
 
+    def save_checkpoint(self, step, data=None):
+        data = dict(data or {})
+        data["split_manifest"] = self.split_manifest
+        return super().save_checkpoint(step, data)
+
     async def setup(self):
+        from tinker_atropos.safe_execution import require_isolated_evaluator
+
+        require_isolated_evaluator()
         print("Loading HumanEval dataset...")
         dataset = load_dataset("openai/openai_humaneval", split="test")
         all_items = list(dataset)
-        random.shuffle(all_items)
+        random.Random(
+            getattr(getattr(self.__class__, "_full_config", None), "data_seed", 42)
+        ).shuffle(all_items)
         # Use 80% for train (cycle through), 20% for eval
         split = int(0.8 * len(all_items))
         self.train_data = all_items[:split]
         self.eval_data = all_items[split:]
+        from tinker_atropos.data_identity import split_manifest
+
+        self.split_manifest = split_manifest(
+            self.train_data,
+            self.eval_data,
+            data_seed=getattr(getattr(self.__class__, "_full_config", None), "data_seed", 42),
+            label="internal_humaneval_holdout",
+        )
         print(f"Loaded {len(self.train_data)} train / {len(self.eval_data)} eval problems")
         self.iter = 0
 
@@ -158,7 +139,9 @@ class HumanEvalEnv(BaseEnv):
         if wandb_metrics is None:
             wandb_metrics = {}
         if self.percent_correct_buffer:
-            wandb_metrics["train/pass_rate"] = sum(self.percent_correct_buffer) / len(self.percent_correct_buffer)
+            wandb_metrics["train/pass_rate"] = sum(self.percent_correct_buffer) / len(
+                self.percent_correct_buffer
+            )
         self.percent_correct_buffer = []
         for k, v in self.eval_metrics:
             wandb_metrics[k] = v
@@ -186,15 +169,18 @@ class HumanEvalEnv(BaseEnv):
     async def evaluate(self, *args, **kwargs):
         import time
         from tqdm.asyncio import tqdm_asyncio
+
         start = time.time()
         tasks = [self.rollout_and_score_eval(ex) for ex in self.eval_data]
         results = await tqdm_asyncio.gather(*tasks)
         scores = [r["score"] for r in results]
         pass_rate = sum(scores) / len(scores) if scores else 0.0
-        self.eval_metrics.append(("eval/pass_at_1", pass_rate))
+        self.eval_metrics.append(("eval/internal_holdout_pass_at_1", pass_rate))
         await self.evaluate_log(
-            metrics={"eval/pass_at_1": pass_rate},
-            samples=[{"messages": [], "score": r["score"], "task_id": r["task_id"]} for r in results],
+            metrics={"eval/internal_holdout_pass_at_1": pass_rate},
+            samples=[
+                {"messages": [], "score": r["score"], "task_id": r["task_id"]} for r in results
+            ],
             start_time=start,
             end_time=time.time(),
             generation_parameters={"temperature": 0.0, "max_tokens": self.config.max_token_length},
@@ -219,26 +205,34 @@ class HumanEvalEnv(BaseEnv):
 
         to_score = []
         for choice, node in zip(completions.choices, nodes):
-            to_score.append({
-                "messages": (*messages, {"role": "assistant", "content": choice.message.content}),
-                "prompt": item["prompt"],
-                "test": item["test"],
-                "entry_point": item["entry_point"],
-                "tokens": node.tokens,
-                "masked_tokens": node.masked_tokens,
-                "logprobs": node.logprobs,
-            })
+            to_score.append(
+                {
+                    "messages": (
+                        *messages,
+                        {"role": "assistant", "content": choice.message.content},
+                    ),
+                    "prompt": item["prompt"],
+                    "test": item["test"],
+                    "entry_point": item["entry_point"],
+                    "tokens": node.tokens,
+                    "masked_tokens": node.masked_tokens,
+                    "logprobs": node.logprobs,
+                }
+            )
         return await self.score(to_score), []
 
     async def score(self, rollout_group_data) -> Optional[ScoredDataGroup]:
         import asyncio
+
         scores_obj = ScoredDataGroup()
         scores_obj["tokens"] = []
         scores_obj["masks"] = []
         scores_obj["scores"] = []
         scores_obj["inference_logprobs"] = []
 
-        random.shuffle(rollout_group_data)
+        random.Random(
+            getattr(getattr(self.__class__, "_full_config", None), "data_seed", 42)
+        ).shuffle(rollout_group_data)
         for item in rollout_group_data:
             response = item["messages"][-1]["content"]
             code = _extract_code(response)
@@ -251,7 +245,7 @@ class HumanEvalEnv(BaseEnv):
             reward = 1.0 if passed else 0.0
 
             masked_tokens = item["masked_tokens"]
-            if len([t for t in masked_tokens if t != -100]) < 10:
+            if len([t for t in masked_tokens if t != -100]) < 1:
                 continue
 
             scores_obj["tokens"].append(item["tokens"])

@@ -10,10 +10,9 @@ from __future__ import annotations
 
 import contextlib
 import json
-import sys
 import types
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 import torch
@@ -28,7 +27,15 @@ from platform_tinker.tinkerrl.grpo import (
     make_gspo_loss_fn,
 )
 
-from tests._shared_fakes import HfApi, _Future, _Tokenizer, _config, _example, make_fake_run
+from tests._shared_fakes import (
+    HfApi,
+    _Future,
+    _Tokenizer,
+    _config,
+    _example,
+    make_fake_run,
+    mocked_tinker_export,
+)
 
 PROMPT = [11, 12, 13, 14, 15]
 PROMPT_LP = -5.0  # trainer logprob on prompt positions
@@ -133,7 +140,7 @@ def _runtime(monkeypatch, *, sample_fn=None, seeded=False):
     monkeypatch.delenv("WANDB_MODE", raising=False)
     monkeypatch.delenv("WANDB_DISABLED", raising=False)
     monkeypatch.delenv("HF_PUSH", raising=False)
-    holder = {"params": [], "grads": [], "metrics": [], "logs": []}
+    holder = {"params": [], "grads": [], "metrics": [], "logs": [], "optim_calls": 0}
     run = SimpleNamespace(id="wandb-cal", mode="online", summary={}, logs=holder["logs"])
     run.log = lambda payload: holder["logs"].append(payload) or True
     run.finish = Mock()
@@ -143,7 +150,14 @@ def _runtime(monkeypatch, *, sample_fn=None, seeded=False):
             holder["params"].append(sampling_params)
             if sample_fn is not None:
                 return _Future(sample_fn(prompt, num_samples, sampling_params))
-            return _Future(SimpleNamespace(sequences=[_seq([1, 7]), _seq([2, 7])]))
+            return _Future(
+                SimpleNamespace(
+                    sequences=[
+                        _seq([1, 7], logprobs=[-1.0, -1.0]),
+                        _seq([2, 7], logprobs=[-1.0, -1.0]),
+                    ]
+                )
+            )
 
     class TrainingClient:
         model_id = "tinker-cal"
@@ -168,6 +182,7 @@ def _runtime(monkeypatch, *, sample_fn=None, seeded=False):
             return _Future(SimpleNamespace(metrics=dict(metrics)))
 
         def optim_step(self, _params):
+            holder["optim_calls"] += 1
             return _Future(None)
 
         def save_state(self, name, overwrite):
@@ -193,13 +208,18 @@ def _runtime(monkeypatch, *, sample_fn=None, seeded=False):
     tt.ModelInput = SimpleNamespace(from_ints=lambda values: values)
     tt.TensorData = lambda **kwargs: SimpleNamespace(**kwargs)
     tt.Datum = lambda **kwargs: SimpleNamespace(**kwargs)
-    tt.SamplingParams = _SeededParams if seeded else (lambda **kwargs: SimpleNamespace(**kwargs))
+
+    def unseeded_params(*, max_tokens, temperature, top_p):
+        return SimpleNamespace(max_tokens=max_tokens, temperature=temperature, top_p=top_p)
+
+    tt.SamplingParams = _SeededParams if seeded else unseeded_params
     tt.AdamParams = lambda **kwargs: SimpleNamespace(**kwargs)
     tinker.types = tt
     modules = {"wandb": wandb, "huggingface_hub": hf, "tinker": tinker, "tinker.types": tt}
-    with patch.dict(sys.modules, modules, clear=False):
-        with patch.object(grpo.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
-            yield holder
+    from tests._shared_fakes import temporary_modules
+
+    with temporary_modules(modules), mocked_tinker_export():
+        yield holder
 
 
 def _run(config, dataset=None, logs=None):
@@ -211,6 +231,23 @@ def _run(config, dataset=None, logs=None):
         _Tokenizer(tokens=PROMPT, decode_first_only=True),
         logger=(logs.append if logs is not None else (lambda _m: None)),
     )
+
+
+def test_gspo_nonfinite_unclipped_objective_prevents_optimizer_step(tmp_path, monkeypatch):
+    def stale_sampler(_prompt, _num_samples, _sampling_params):
+        return SimpleNamespace(
+            sequences=[
+                _seq([1, 7], logprobs=[-1000.0, -1000.0]),
+                _seq([2, 7], logprobs=[-1000.0, -1000.0]),
+            ]
+        )
+
+    with _runtime(monkeypatch, sample_fn=stale_sampler) as holder:
+        with pytest.raises(ValueError, match="GSPO objective is non-finite"):
+            _run(_config(tmp_path, name="overflow", gspo_enabled=True))
+    assert holder["optim_calls"] == 0
+    assert holder["grads"] == []
+    assert not (tmp_path / "overflow_seed42.json").exists()
 
 
 # ------------------------------------------------- (1) prompt mask, every path
@@ -260,14 +297,13 @@ def test_gspo_uses_stale_sampler_logprobs_and_clips(tmp_path, monkeypatch):
     assert step_log["train/gspo_sampler_old"] == 1.0
 
 
-def test_gspo_without_sampler_logprobs_falls_back_and_logs(tmp_path, monkeypatch):
-    logs = []
-    with _runtime(monkeypatch) as holder:
-        _run(_config(tmp_path, name="cal", gspo_enabled=True), logs=logs)
-    assert holder["metrics"][0]["gspo_clip_frac"] == 0.0
-    assert any("GSPO falls back" in message for message in logs)
-    step_log = next(item for item in holder["logs"] if "train/gspo_sampler_old" in item)
-    assert step_log["train/gspo_sampler_old"] == 0.0
+def test_gspo_without_sampler_logprobs_fails_closed(tmp_path, monkeypatch):
+    def sample_fn(*args):
+        return SimpleNamespace(sequences=[_seq([1, 7]), _seq([2, 7])])
+
+    with _runtime(monkeypatch, sample_fn=sample_fn):
+        with pytest.raises(ValueError, match="requires complete behavior"):
+            _run(_config(tmp_path, name="cal", gspo_enabled=True))
 
 
 # --------------------------------------------------- (3) held-out failures
@@ -282,7 +318,9 @@ def test_heldout_failures_score_zero_and_are_logged(tmp_path, monkeypatch):
             if calls["heldout"] == 1:
                 raise RuntimeError("sampler blip")
             return SimpleNamespace(sequences=[_seq([1])])
-        return SimpleNamespace(sequences=[_seq([1, 7]), _seq([2, 7])])
+        return SimpleNamespace(
+            sequences=[_seq([1, 7], logprobs=[-1.0, -1.0]), _seq([2, 7], logprobs=[-1.0, -1.0])]
+        )
 
     dataset = InMemoryDataset(train=[_example()], test=[_example(), _example()])
     logs = []
@@ -316,7 +354,7 @@ def test_sampling_is_seeded_per_step_and_index(tmp_path, monkeypatch):
 
 def test_sampling_seed_skipped_when_params_have_no_seed_field(tmp_path, monkeypatch):
     with _runtime(monkeypatch) as holder:
-        _run(_config(tmp_path, name="cal"))
+        _run(_config(tmp_path, name="cal", seed_sampling=True))
     assert all(not hasattr(params, "seed") for params in holder["params"])
 
 
@@ -388,7 +426,9 @@ def test_dynamic_sampling_reward_includes_degenerate_groups(tmp_path, monkeypatc
         calls["n"] += 1
         if calls["n"] == 1:  # degenerate all-correct group, then a mixed one
             return SimpleNamespace(sequences=[_seq([1, 7]), _seq([1, 8])])
-        return SimpleNamespace(sequences=[_seq([1, 7]), _seq([2, 7])])
+        return SimpleNamespace(
+            sequences=[_seq([1, 7], logprobs=[-1.0, -1.0]), _seq([2, 7], logprobs=[-1.0, -1.0])]
+        )
 
     config = _config(tmp_path, name="cal", dynamic_sampling=True, dynamic_sampling_max_resamples=1)
     with _runtime(monkeypatch, sample_fn=sample_fn) as holder:

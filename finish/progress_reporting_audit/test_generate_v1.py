@@ -46,11 +46,9 @@ class MetricsTests(unittest.TestCase):
         with self.assertRaises(g.EvidenceError): g.measure('partial',13,255,13,complete=True)
 
     def test_swe_errors_separate(self):
-        m=g.aggregate_swe([audit([outcome('a',resolved=True),outcome('b','NATIVE_PATCH_APPLY_FAILED'),outcome('c','NATIVE_EMPTY_PATCH')])])
-        self.assertEqual(m['coverage']['numerator'],1)
-        self.assertEqual(m['terminal_attempt_coverage']['numerator'],3)
-        self.assertEqual(m['accuracy_or_success']['fraction'],1)
-        self.assertEqual(m['terminal_attempt_success_rate_errors_as_zero']['fraction'],1/3)
+        # Summary-only evidence is no longer sufficient for native coverage.
+        with self.assertRaises(g.EvidenceError):
+            g.aggregate_swe([audit([outcome('a',resolved=True),outcome('b','NATIVE_PATCH_APPLY_FAILED'),outcome('c','NATIVE_EMPTY_PATCH')])])
 
     def test_swe_duplicate_replay_rejected(self):
         a=audit([outcome('a')])
@@ -98,7 +96,7 @@ class MetricsTests(unittest.TestCase):
                  'portfolio':{'suite_id':g.PUBLIC_SUITES[i],'declared_denominator':g.EXPECTED_PUBLIC[i], 'measurements':[]}}
                 for i in range(14)]
         rows[7]['portfolio']['measurements']=[g.measure('public',1967,1967,450,complete=True)]
-        report={'rows':rows,'all_original_suites_complete':False,'replacement_score_lanes':['E8'],'replacement_score_lane_count':1}
+        report={'rows':rows,'total_lanes':14,'complete_named_portfolio_scopes':['E8'],'all_original_suites_complete':False,'replacement_score_lanes':['E8'],'replacement_score_lane_count':1}
         g.validate_report(report)
         altered=copy.deepcopy(report);altered['rows'][6]['original']['denominator']=46
         with self.assertRaises(g.EvidenceError): g.validate_report(altered)
@@ -113,7 +111,10 @@ class MetricsTests(unittest.TestCase):
 class FileTests(unittest.TestCase):
     def setUp(self):
         if shutil.disk_usage(ROOT).free<g.FLOOR: self.skipTest('Disk floor: no writes')
-        self.temp=tempfile.TemporaryDirectory(dir=ROOT/'.codex-run/finish_20260912/progress_reporting')
+        # Synthetic tests model adequate disk; the explicit floor test overrides it.
+        disk_patch = patch.object(g.shutil, 'disk_usage', return_value=shutil.disk_usage(ROOT))
+        disk_patch.start(); self.addCleanup(disk_patch.stop)
+        self.temp=tempfile.TemporaryDirectory(prefix='review11-report-', dir=ROOT)
         self.addCleanup(self.temp.cleanup)
         self.root=Path(self.temp.name)
 

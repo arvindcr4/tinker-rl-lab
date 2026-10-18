@@ -75,7 +75,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--task", choices=TASKS, required=True)
     parser.add_argument("--arm", choices=ARMS, required=True)
-    parser.add_argument("--seed", type=int, default=211)
+    parser.add_argument("--seed", type=int, default=1009)
     parser.add_argument("--project", default=PROJECT)
     parser.add_argument("--zone", default=ZONE)
     parser.add_argument("--service-account", default=SERVICE_ACCOUNT)
@@ -395,26 +395,45 @@ def create_command(
 
 
 def instance_status(gcloud: str, *, instance: str, project: str, zone: str) -> str:
-    described = subprocess.run(
-        [
-            gcloud,
-            "compute",
-            "instances",
-            "describe",
-            instance,
-            f"--project={project}",
-            f"--zone={zone}",
-            "--format=value(status)",
-        ],
-        cwd=REPO_ROOT,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=False,
-    )
+    """Only a bound structured NOT_FOUND is absence; failed lookup is unresolved."""
+    try:
+        described = subprocess.run(
+            [
+                gcloud,
+                "compute",
+                "instances",
+                "describe",
+                instance,
+                f"--project={project}",
+                f"--zone={zone}",
+                "--format=json",
+            ],
+            cwd=REPO_ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=60,
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        return "LOOKUP_FAILED"
+    try:
+        payload = json.loads(described.stdout)
+    except (ValueError, TypeError):
+        return "LOOKUP_FAILED"
+    identity = f"projects/{project}/zones/{zone}/instances/{instance}"
     if described.returncode:
-        return "ABSENT"
-    return described.stdout.strip().upper() or "UNKNOWN"
+        error = payload.get("error", {})
+        if (
+            error.get("code") == 404
+            and error.get("status") == "NOT_FOUND"
+            and error.get("resource") == identity
+        ):
+            return "ABSENT"
+        return "LOOKUP_FAILED"
+    if payload.get("name") != instance or not str(payload.get("selfLink", "")).endswith(identity):
+        return "LOOKUP_FAILED"
+    return str(payload.get("status", "PRESENT")).upper()
 
 
 def wait_for_instance(
@@ -487,7 +506,10 @@ def remote_exit_code(output: str) -> int | None:
     for line in reversed(output.splitlines()):
         if marker not in line:
             continue
-        value = line.rsplit(marker, 1)[1].strip().split()[0]
+        tokens = line.rsplit(marker, 1)[1].strip().split()
+        if not tokens:
+            return None
+        value = tokens[0]
         try:
             return int(value)
         except ValueError:
@@ -565,32 +587,46 @@ def download_gcs_receipts(
 
 
 def delete_instance(gcloud: str, *, instance: str, project: str, zone: str) -> dict[str, Any]:
-    deleted = subprocess.run(
-        [
-            gcloud,
-            "compute",
-            "instances",
-            "delete",
-            instance,
-            f"--project={project}",
-            f"--zone={zone}",
-            "--quiet",
-        ],
-        cwd=REPO_ROOT,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=False,
-    )
-    absent = instance_status(gcloud, instance=instance, project=project, zone=zone) == "ABSENT"
+    try:
+        deleted = subprocess.run(
+            [
+                gcloud,
+                "compute",
+                "instances",
+                "delete",
+                instance,
+                f"--project={project}",
+                f"--zone={zone}",
+                "--quiet",
+            ],
+            cwd=REPO_ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+            timeout=60,
+        )
+        code = deleted.returncode
+    except (subprocess.TimeoutExpired, OSError):
+        code = None
+    observed = instance_status(gcloud, instance=instance, project=project, zone=zone)
     return {
-        "delete_return_code": deleted.returncode,
-        "instance_absent_verified": absent,
+        "delete_return_code": code,
+        "instance_absent_verified": observed == "ABSENT",
+        "session_absent_verified": observed == "ABSENT",
+        "lookup_outcome": observed,
+        "resource_id": f"projects/{project}/zones/{zone}/instances/{instance}",
+        "observed_at": utc_now(),
     }
 
 
 def run_unit(args: argparse.Namespace) -> dict[str, Any]:
+    if args.framework != "trl":
+        raise ValueError(
+            "alternate frameworks do not implement the frozen preflight contract; no allocation permitted"
+        )
     common = load_common()
+    common.validate_diagnostic_seed(args.seed, json.loads(PROTOCOL.read_text()))
     helpers = common.load_e1_helpers()
     output_dir = args.output_dir.expanduser().resolve()
     subprocess.run([sys.executable, str(DESIGN_VERIFIER)], cwd=REPO_ROOT, check=True)
@@ -628,6 +664,7 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         "seed": args.seed,
         "gpu": GPU,
         "provider": "gcp_compute",
+        "framework": "trl",
         "hardware_flavor": HARDWARE_FLAVOR,
         "project": args.project,
         "zone": args.zone,
@@ -643,7 +680,18 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         "removed_unused_optional_packages": list(REMOVED_UNUSED_OPTIONAL_PACKAGES),
         "source_snapshots": snapshots,
     }
-    request["fingerprint"] = common.fingerprint(request)
+    request = common.seal_request(
+        request,
+        decoder=common.DECODER_CONTRACT,
+        tracking={
+            "hf_repo_prefix": args.hf_repo_prefix,
+            "wandb_project": args.wandb_project,
+            "wandb_entity": args.wandb_entity,
+            "wandb_group": args.wandb_group,
+        },
+        source_files={p.name: common.sha256_file(p) for p in (REMOTE_SCRIPT, SAMPLER, TRL_ADAPTER)},
+    )
+    stack_fingerprint = request["stack_fingerprint"]
     receipt_prefix = f"preflight/{request['fingerprint']}"
     request["receipt_bucket"] = RECEIPT_BUCKET
     request["receipt_prefix"] = receipt_prefix
@@ -759,200 +807,214 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         }
 
     gcloud = gcloud_binary()
-    created = subprocess.run(
-        create_command(
-            gcloud=gcloud,
-            instance=instance,
-            project=args.project,
-            zone=args.zone,
-            service_account=args.service_account,
-            max_run_duration=args.max_run_duration,
-            startup_script=startup_path,
-        ),
-        cwd=REPO_ROOT,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=False,
-    )
-    if created.returncode:
-        error = common.failure_summary(created.stdout.splitlines())
-        partial_stage = instance_status(
-            gcloud, instance=instance, project=args.project, zone=args.zone
-        )
-        cleanup = (
-            delete_instance(gcloud, instance=instance, project=args.project, zone=args.zone)
-            if partial_stage != "ABSENT"
-            else {"delete_return_code": None, "instance_absent_verified": True}
-        )
-        rejected = {
-            **launched,
-            "status": "allocation-rejected",
-            "failure_phase": "provider-submission",
-            "allocation_started": False,
-            "cleanup": cleanup,
-            "error": error,
-            "updated_at": utc_now(),
-        }
-        helpers.atomic_json(request_path, rejected)
-        failed = {
-            **request,
-            "status": "failed",
-            "failure_phase": "provider-submission",
-            "allocation_started": False,
-            "cleanup": cleanup,
-            "instance": instance,
-            "console_url": console_url,
-            "request_path": str(request_path),
-            "completed_at": utc_now(),
-            "error": error,
-        }
-        helpers.atomic_json(result_path, failed)
-        return {"status": "failed", "result_path": str(result_path), "console_url": None}
-
-    submitted_at = utc_now()
-    submitted = {
-        **launched,
-        "status": "submitted",
-        "submission_output": common.failure_summary(created.stdout.splitlines()),
-        "submitted_at": submitted_at,
-        "updated_at": submitted_at,
-    }
-    helpers.atomic_json(request_path, submitted)
-    print(
-        "[gcp-submitted] "
-        + json.dumps(
-            {"instance": instance, "url": console_url, "cost_cap_usd": 3.0},
-            sort_keys=True,
-        ),
-        flush=True,
-    )
-    if not args.wait:
-        return {
-            "status": "submitted",
-            "instance": instance,
-            "console_url": console_url,
-            "request_path": str(request_path),
-        }
-
-    outcome: dict[str, Any]
+    cleanup = None
     try:
-        stage = wait_for_instance(
-            gcloud=gcloud,
-            instance=instance,
-            project=args.project,
-            zone=args.zone,
-            timeout_seconds=args.wait_timeout_seconds,
-            poll_seconds=args.poll_seconds,
+        created = subprocess.run(
+            create_command(
+                gcloud=gcloud,
+                instance=instance,
+                project=args.project,
+                zone=args.zone,
+                service_account=args.service_account,
+                max_run_duration=args.max_run_duration,
+                startup_script=startup_path,
+            ),
+            cwd=REPO_ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
         )
-        downloaded_result_path = output_dir / "downloads" / request["fingerprint"] / "result.json"
-        gcs_receipt = download_gcs_receipts(
-            gcloud,
-            bucket=RECEIPT_BUCKET,
-            object_prefix=receipt_prefix,
-            log_path=serial_path,
-            result_path=downloaded_result_path,
-        )
-        if serial_path.is_file():
-            serial_return_code = int(gcs_receipt["log_download_return_code"] or 0)
-            serial = serial_path.read_text(encoding="utf-8")
-        else:
-            serial_return_code, serial = serial_output_with_retry(
+        if created.returncode:
+            error = common.failure_summary(created.stdout.splitlines())
+            partial_stage = instance_status(
                 gcloud, instance=instance, project=args.project, zone=args.zone
             )
-            serial_path.parent.mkdir(parents=True, exist_ok=True)
-            serial_path.write_text(serial, encoding="utf-8")
-        base = {
-            **request,
-            "instance": instance,
-            "console_url": console_url,
-            "provider_job_stage": stage,
-            "request_path": str(request_path),
-            "serial_log_path": str(serial_path),
-            "serial_return_code": serial_return_code,
-            "gcs_receipt": gcs_receipt,
-            "completed_at": utc_now(),
-            "allocation_started": True,
-            "remote_exit_code": remote_exit_code(serial),
+            cleanup = (
+                delete_instance(gcloud, instance=instance, project=args.project, zone=args.zone)
+                if partial_stage != "ABSENT"
+                else {"delete_return_code": None, "instance_absent_verified": True}
+            )
+            rejected = {
+                **launched,
+                "status": "allocation-rejected",
+                "failure_phase": "provider-submission",
+                "allocation_started": False,
+                "cleanup": cleanup,
+                "error": error,
+                "updated_at": utc_now(),
+            }
+            helpers.atomic_json(request_path, rejected)
+            failed = {
+                **request,
+                "status": "failed",
+                "failure_phase": "provider-submission",
+                "allocation_started": False,
+                "cleanup": cleanup,
+                "instance": instance,
+                "console_url": console_url,
+                "request_path": str(request_path),
+                "completed_at": utc_now(),
+                "error": error,
+            }
+            helpers.atomic_json(result_path, failed)
+            return {"status": "failed", "result_path": str(result_path), "console_url": None}
+
+        submitted_at = utc_now()
+        submitted = {
+            **launched,
+            "status": "submitted",
+            "submission_output": common.failure_summary(created.stdout.splitlines()),
+            "submitted_at": submitted_at,
+            "updated_at": submitted_at,
         }
-        if stage != "TERMINATED" or serial_return_code:
-            outcome = {
-                **base,
-                "status": "failed",
-                "failure_phase": "vm-runtime",
-                "error": common.failure_summary(serial.splitlines()),
+        helpers.atomic_json(request_path, submitted)
+        print(
+            "[gcp-submitted] "
+            + json.dumps(
+                {"instance": instance, "url": console_url, "cost_cap_usd": 3.0},
+                sort_keys=True,
+            ),
+            flush=True,
+        )
+        if not args.wait:
+            return {
+                "status": "submitted",
+                "instance": instance,
+                "console_url": console_url,
+                "request_path": str(request_path),
             }
-        elif base["remote_exit_code"] not in (None, 0):
-            outcome = {
-                **base,
-                "status": "failed",
-                "failure_phase": "remote-runtime",
-                "error": common.failure_summary(serial.splitlines()),
-            }
-        else:
-            try:
-                result = (
-                    json.loads(downloaded_result_path.read_text(encoding="utf-8"))
-                    if downloaded_result_path.is_file()
-                    else common.result_from_log(serial.splitlines())
+
+        outcome: dict[str, Any]
+        try:
+            stage = wait_for_instance(
+                gcloud=gcloud,
+                instance=instance,
+                project=args.project,
+                zone=args.zone,
+                timeout_seconds=args.wait_timeout_seconds,
+                poll_seconds=args.poll_seconds,
+            )
+            downloaded_result_path = (
+                output_dir / "downloads" / request["fingerprint"] / "result.json"
+            )
+            gcs_receipt = download_gcs_receipts(
+                gcloud,
+                bucket=RECEIPT_BUCKET,
+                object_prefix=receipt_prefix,
+                log_path=serial_path,
+                result_path=downloaded_result_path,
+            )
+            if serial_path.is_file():
+                serial_return_code = int(gcs_receipt["log_download_return_code"] or 0)
+                serial = serial_path.read_text(encoding="utf-8")
+            else:
+                serial_return_code, serial = serial_output_with_retry(
+                    gcloud, instance=instance, project=args.project, zone=args.zone
                 )
-                credentials = helpers.load_credentials()
-                manifest, verification = common.verify_remote(credentials, result, request)
-                outcome = {
-                    **base,
-                    "status": "completed",
-                    "payload": result,
-                    "manifest": manifest,
-                    "remote_verification": verification,
-                    "fingerprint": request["fingerprint"],
-                }
-            except Exception as exc:
+                serial_path.parent.mkdir(parents=True, exist_ok=True)
+                serial_path.write_text(serial, encoding="utf-8")
+            base = {
+                **request,
+                "instance": instance,
+                "console_url": console_url,
+                "provider_job_stage": stage,
+                "request_path": str(request_path),
+                "serial_log_path": str(serial_path),
+                "serial_return_code": serial_return_code,
+                "gcs_receipt": gcs_receipt,
+                "completed_at": utc_now(),
+                "allocation_started": True,
+                "remote_exit_code": remote_exit_code(serial),
+            }
+            if stage != "TERMINATED" or serial_return_code:
                 outcome = {
                     **base,
                     "status": "failed",
-                    "failure_phase": "receipt-verification",
-                    "error": str(exc),
+                    "failure_phase": "vm-runtime",
+                    "error": common.failure_summary(serial.splitlines()),
                 }
-    except Exception as exc:
-        outcome = {
-            **request,
-            "status": "failed",
-            "failure_phase": "launcher-runtime",
-            "instance": instance,
-            "console_url": console_url,
-            "request_path": str(request_path),
-            "completed_at": utc_now(),
-            "error": str(exc),
-        }
-    cleanup = delete_instance(gcloud, instance=instance, project=args.project, zone=args.zone)
-    outcome["cleanup"] = cleanup
-    if not cleanup["instance_absent_verified"]:
-        outcome["pre_cleanup_status"] = outcome["status"]
-        outcome["status"] = "failed"
-        outcome["failure_phase"] = "cleanup"
-        outcome["error"] = "temporary GCP instance deletion was not verified"
-    helpers.atomic_json(result_path, outcome)
-    terminal_request = {
-        **submitted,
-        "status": outcome["status"],
-        "provider_job_stage": outcome.get("provider_job_stage"),
-        "completed_at": outcome["completed_at"],
-        "cleanup": cleanup,
-        "updated_at": utc_now(),
-    }
-    if outcome["status"] == "failed":
-        terminal_request.update(
-            {
-                "failure_phase": outcome.get("failure_phase"),
-                "error": outcome.get("error"),
+            elif base["remote_exit_code"] != 0:
+                outcome = {
+                    **base,
+                    "status": "failed",
+                    "failure_phase": "remote-runtime",
+                    "error": common.failure_summary(serial.splitlines()),
+                }
+            else:
+                try:
+                    result = (
+                        json.loads(downloaded_result_path.read_text(encoding="utf-8"))
+                        if downloaded_result_path.is_file()
+                        else common.result_from_log(serial.splitlines())
+                    )
+                    credentials = helpers.load_credentials()
+                    manifest, verification = common.verify_remote(credentials, result, request)
+                    outcome = common.completed_receipt(
+                        base,
+                        result=result,
+                        manifest=manifest,
+                        verification=verification,
+                        cleanup={},
+                        return_code=0,
+                    )
+                    # The finally block below attaches the observed deletion result.
+                except Exception as exc:
+                    outcome = {
+                        **base,
+                        "status": "failed",
+                        "failure_phase": "receipt-verification",
+                        "error": str(exc),
+                    }
+        except Exception as exc:
+            outcome = {
+                **request,
+                "status": "failed",
+                "failure_phase": "launcher-runtime",
+                "instance": instance,
+                "console_url": console_url,
+                "request_path": str(request_path),
+                "completed_at": utc_now(),
+                "error": str(exc),
             }
-        )
-    helpers.atomic_json(request_path, terminal_request)
-    return {
-        "status": outcome["status"],
-        "result_path": str(result_path),
-        "console_url": console_url,
-    }
+        finally:
+            cleanup = delete_instance(
+                gcloud, instance=instance, project=args.project, zone=args.zone
+            )
+        outcome["cleanup"] = cleanup
+        if not cleanup["instance_absent_verified"]:
+            outcome["pre_cleanup_status"] = outcome["status"]
+            outcome["status"] = "failed"
+            outcome["failure_phase"] = "cleanup"
+            outcome["error"] = "temporary GCP instance deletion was not verified"
+        helpers.atomic_json(result_path, outcome)
+        terminal_request = {
+            **submitted,
+            "status": outcome["status"],
+            "provider_job_stage": outcome.get("provider_job_stage"),
+            "completed_at": outcome["completed_at"],
+            "cleanup": cleanup,
+            "updated_at": utc_now(),
+        }
+        if outcome["status"] == "failed":
+            terminal_request.update(
+                {
+                    "failure_phase": outcome.get("failure_phase"),
+                    "error": outcome.get("error"),
+                }
+            )
+        helpers.atomic_json(request_path, terminal_request)
+        return {
+            "status": outcome["status"],
+            "result_path": str(result_path),
+            "console_url": console_url,
+        }
+    finally:
+        if cleanup is None and (args.wait or sys.exc_info()[0] is not None):
+            cleanup = delete_instance(
+                gcloud, instance=instance, project=args.project, zone=args.zone
+            )
+            helpers.atomic_json(output_dir / "cleanup" / f"{instance}.json", cleanup)
 
 
 def validate_args(args: argparse.Namespace) -> None:

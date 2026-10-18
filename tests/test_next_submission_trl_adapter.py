@@ -26,6 +26,7 @@ class FakeTokenizer:
 
 class FakeTrainer:
     num_generations = 8
+    max_completion_length = 1
     _tokenizer = FakeTokenizer()
     processing_class = _tokenizer
 
@@ -75,7 +76,9 @@ def test_intervention_generates_six_extra_only_for_mixed_initial_groups():
         "rollout_groups": 2,
         "generated_rollouts": 10,
         "charged_generated_tokens": 10,
-        "updated_groups": 1,
+        "update_eligible_groups": 1,
+        "truncated_generated_rollouts": 8,
+        "unknown_finish_rollouts": 0,
         "all_wrong_fraction": 0.0,
         "all_correct_fraction": 0.5,
         "mixed_fraction": 0.5,

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Independent holdout checks for the Reviewer 9kjk response candidate."""
+"""Response contract checks v2; human evidence review remains mandatory."""
 
 from __future__ import annotations
 
 import hashlib
 import json
 import re
+from reviewer_response_metric import _postable, valid_cells
 from pathlib import Path
 
 
@@ -25,9 +26,8 @@ def require(condition: bool, message: str) -> None:
 
 def main() -> int:
     text = RESPONSE.read_text(encoding="utf-8")
-    postable = text.split("<!-- POSTABLE_REPLY_START -->", 1)[1].split(
-        "<!-- POSTABLE_REPLY_END -->", 1
-    )[0]
+    postable = _postable(text)
+    require(bool(postable), "invalid postable markers")
     ledger = json.loads(LEDGER.read_text(encoding="utf-8"))
     early = json.loads(EARLY.read_text(encoding="utf-8"))["metrics"]
     pdf_sha = hashlib.sha256(REVIEWED_PDF.read_bytes()).hexdigest()
@@ -41,7 +41,7 @@ def main() -> int:
     require(early["collapse_auc"]["early_reward_low"]["auc"] == 1.0, "reward baseline drift")
 
     cells = ledger["coverage_cells"]
-    require(len(cells) == 20, "coverage ledger is not 5 analyses by 4 corpora")
+    require(valid_cells(cells), "coverage ledger is not 5 analyses by 4 corpora")
     require(
         all(cell["status"] in {"evaluated", "not_evaluated", "quarantined"} for cell in cells),
         "unadjudicated coverage cell",
@@ -71,7 +71,7 @@ def main() -> int:
         "artifact filename or repository path leaked into postable reply",
     )
 
-    print("HOLDOUT_REVIEWER_9KJK_PASS")
+    print("RESPONSE_CONTRACT_CHECKS_V2_PASS")
     return 0
 
 

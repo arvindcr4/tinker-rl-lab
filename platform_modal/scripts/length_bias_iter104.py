@@ -62,11 +62,11 @@ platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json  (gsm8k_cot,    n
 
 OUTPUTS
 -------
-platform_hybrid/experiments/results/length_bias_iter104_perrun.tsv      per-run per-quantile CCF
-platform_hybrid/experiments/results/length_bias_iter104_paired.tsv      Dr-GR - GR delta per (task, q, key)
-platform_hybrid/experiments/results/length_bias_iter104_summary.tsv     task-level ratios
-platform_hybrid/experiments/results/length_bias_iter104_trendtest.tsv  Page's L + Spearman trend
-platform_hybrid/experiments/results/length_bias_iter104_meta.json       run configuration
+platform_hybrid/experiments/results/length_bias_iter104_perrun_v2.tsv      per-run per-quantile CCF
+platform_hybrid/experiments/results/length_bias_iter104_paired_v2.tsv      Dr-GR - GR delta per (task, q, key)
+platform_hybrid/experiments/results/length_bias_iter104_summary_v2.tsv     task-level ratios
+platform_hybrid/experiments/results/length_bias_iter104_trendtest_v2.tsv  Page's L + Spearman trend
+platform_hybrid/experiments/results/length_bias_iter104_meta_v2.json       run configuration
 
 USAGE
 -----
@@ -84,7 +84,7 @@ from typing import Any
 
 import numpy as np
 from scipy import stats
-from _analysis_common import ccf_at_lags, load_step_log, paired_bootstrap_delta
+from _analysis_common import ccf_at_lags, load_step_log
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS = os.path.join(ROOT, "experiments", "results")
@@ -114,6 +114,8 @@ def lag_label(k: int) -> str:
 # ---------------------------------------------------------------------------
 #  Per-run, per-quantile CCF
 # ---------------------------------------------------------------------------
+
+from _review24_statistics import conditional_ccf, stable_seed, paired_available as paired_bootstrap_delta
 
 def per_run_quantile_icca(L: np.ndarray, R: np.ndarray, K: int,
                           n_q: int) -> dict[str, Any]:
@@ -147,23 +149,13 @@ def per_run_quantile_icca(L: np.ndarray, R: np.ndarray, K: int,
     for q_idx in range(n_q):
         mask = bins == q_idx
         n_in_bin = int(mask.sum())
-        if n_in_bin < 4:
-            rec["q"][q_idx] = {
-                "size": n_in_bin,
-                "ccf": [0.0] * (2 * K + 1),
-                "fwd": 0.0,
-                "bwd": 0.0,
-                "fwd_signed": 0.0,
-                "bwd_signed": 0.0,
-            }
-            continue
-        cc = ccf_at_lags(e_L[mask], e_R[mask], K=K)
+        cc, pair_counts = conditional_ccf(e_L, e_R, mask, K)
         fwd = float(np.sum(np.abs(cc[K + 1 :])))
         bwd = float(np.sum(np.abs(cc[:K])))
         fwd_signed = float(np.sum(cc[K + 1 :]))
         bwd_signed = float(np.sum(cc[:K]))
         rec["q"][q_idx] = {
-            "size": n_in_bin,
+            "size": n_in_bin, "pair_counts": pair_counts,
             "ccf": [float(cc[i]) for i in range(2 * K + 1)],
             "fwd": fwd,
             "bwd": bwd,
@@ -243,9 +235,9 @@ def main(argv: list[str] | None = None) -> int:
     keys = ["task", "algo", "seed", "n",
             "phi_L", "phi_R", "c_L", "c_R", "e_L_std", "e_R_std"]
     for q in range(n_q):
-        keys += [f"q{q}_size", f"q{q}_fwd", f"q{q}_bwd",
+        keys += [f"q{q}_size", f"q{q}_pair_counts", f"q{q}_fwd", f"q{q}_bwd",
                  f"q{q}_fwd_signed", f"q{q}_bwd_signed"]
-    perrun_path = os.path.join(RESULTS, "length_bias_iter104_perrun.tsv")
+    perrun_path = os.path.join(RESULTS, "length_bias_iter104_perrun_v2.tsv")
     with open(perrun_path, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=keys, delimiter="\t")
         w.writeheader()
@@ -254,6 +246,7 @@ def main(argv: list[str] | None = None) -> int:
             for q in range(n_q):
                 qq = rec["q"][q]
                 row[f"q{q}_size"] = qq["size"]
+                row[f"q{q}_pair_counts"] = json.dumps(qq["pair_counts"])
                 row[f"q{q}_fwd"] = qq["fwd"]
                 row[f"q{q}_bwd"] = qq["bwd"]
                 row[f"q{q}_fwd_signed"] = qq["fwd_signed"]
@@ -273,7 +266,7 @@ def main(argv: list[str] | None = None) -> int:
             for side in ["fwd", "bwd", "fwd_signed", "bwd_signed"]:
                 g = [float(seeds_g[s]["q"][q][side]) for s in common]
                 d = [float(seeds_d[s]["q"][q][side]) for s in common]
-                stat = paired_bootstrap_delta(g, d, B=B, seed=0xC0FFEE, statistic=np.median)
+                stat = paired_bootstrap_delta(g, d, B=B, seed=stable_seed(seed_base, task, q, side), statistic=np.median)
                 paired_rows.append({
                     "task": task, "q": q, "side": side, **stat,
                 })
@@ -281,14 +274,14 @@ def main(argv: list[str] | None = None) -> int:
                 lag = i - K
                 g = [float(seeds_g[s]["q"][q]["ccf"][i]) for s in common]
                 d = [float(seeds_d[s]["q"][q]["ccf"][i]) for s in common]
-                stat = paired_bootstrap_delta(g, d, B=B, seed=0xC0FFEE, statistic=np.median)
+                stat = paired_bootstrap_delta(g, d, B=B, seed=stable_seed(seed_base, task, q, lag), statistic=np.median)
                 paired_rows.append({
                     "task": task, "q": q, "side": lag_label(lag), **stat,
                 })
-    paired_path = os.path.join(RESULTS, "length_bias_iter104_paired.tsv")
+    paired_path = os.path.join(RESULTS, "length_bias_iter104_paired_v2.tsv")
     with open(paired_path, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=["task", "q", "side", "delta",
-                                            "ci_lo", "ci_hi", "p", "n"],
+                                            "ci_lo", "ci_hi", "p", "n", "n_excluded"],
                            delimiter="\t")
         w.writeheader()
         for r in paired_rows:
@@ -317,7 +310,7 @@ def main(argv: list[str] | None = None) -> int:
                     "fwd_ratio": float(fwd_q[q] / tot_fwd),
                     "bwd_ratio": float(bwd_q[q] / tot_bwd),
                 })
-    summary_path = os.path.join(RESULTS, "length_bias_iter104_summary.tsv")
+    summary_path = os.path.join(RESULTS, "length_bias_iter104_summary_v2.tsv")
     with open(summary_path, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=["task", "algo", "q", "n_seeds",
                                             "fwd_abs_mean", "bwd_abs_mean",
@@ -349,7 +342,7 @@ def main(argv: list[str] | None = None) -> int:
                     "spearman_rho": float(sp.statistic),
                     "spearman_p": float(sp.pvalue),
                 })
-    trend_path = os.path.join(RESULTS, "length_bias_iter104_trendtest.tsv")
+    trend_path = os.path.join(RESULTS, "length_bias_iter104_trendtest_v2.tsv")
     with open(trend_path, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=["task", "algo", "side",
                                             "vals_q0", "vals_q_last",
@@ -370,7 +363,7 @@ def main(argv: list[str] | None = None) -> int:
         "tasks": sorted(set(r["task"] for r in perrun_rows)),
         "algos": sorted(set(r["algo"] for r in perrun_rows)),
     }
-    meta_path = os.path.join(RESULTS, "length_bias_iter104_meta.json")
+    meta_path = os.path.join(RESULTS, "length_bias_iter104_meta_v2.json")
     with open(meta_path, "w") as fh:
         json.dump(meta, fh, indent=2)
     print(f"[iter104] wrote {meta_path}")

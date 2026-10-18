@@ -1,87 +1,42 @@
 #!/usr/bin/env python3
+"""Plot a declared W&B metric with a checksummed full-history input export."""
 import argparse
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import wandb
-import os
+from _plot_provenance import archive_history, metric_spec
+
 
 def main():
-    parser = argparse.ArgumentParser(description="Plot Effective Rollout Fraction (ERF) over time from W&B.")
-    parser.add_argument("--project", type=str, required=True, help="W&B project name (e.g., 'tinker-rl-scaling' or 'entity/project')")
-    parser.add_argument("--metric", type=str, default="train/erf", help="Name of the ERF metric in W&B (e.g., train/erf, eval/erf, or train/accuracy)")
-    parser.add_argument("--output", type=str, default="erf_plot.png", help="Output plot filename")
-    parser.add_argument("--group", type=str, default=None, help="Filter runs by a specific group")
-    parser.add_argument("--runs", nargs="+", help="Specific run IDs to plot. If not provided, plots all matching runs.")
-    parser.add_argument("--smooth", type=int, default=1, help="Smoothing window size for the plot")
-    
+    import matplotlib.pyplot as plt
+    import wandb
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--project', required=True)
+    parser.add_argument('--metric', default='train/erf')
+    parser.add_argument('--label')
+    parser.add_argument('--unit', choices=['fraction', 'percent', 'scalar'])
+    parser.add_argument('--output', default='erf_plot.png')
+    parser.add_argument('--group')
+    parser.add_argument('--runs', nargs='+')
+    parser.add_argument('--smooth', type=int, default=1)
     args = parser.parse_args()
-    
+    spec = metric_spec(args.metric, args.label, args.unit)
     api = wandb.Api()
-    
-    filters = {}
-    if args.group:
-        filters["group"] = args.group
-        
-    if args.runs:
-        # Fetch specific runs
-        runs = []
-        for run_id in args.runs:
-            # Handle if the user passes full path or just ID
-            path = run_id if "/" in run_id else f"{args.project}/{run_id}"
-            try:
-                runs.append(api.run(path))
-            except Exception as e:
-                print(f"Could not find run {path}: {e}")
-    else:
-        # Fetch runs by project (and optionally group)
-        print(f"Fetching runs from project '{args.project}'...")
-        runs = api.runs(args.project, filters=filters)
-        
-    plt.figure(figsize=(10, 6))
-    sns.set_theme(style="whitegrid")
-    
-    data_found = False
-    
+    runs = ([api.run(r if '/' in r else f'{args.project}/{r}') for r in args.runs]
+            if args.runs else api.runs(args.project, filters={'group': args.group} if args.group else {}))
+    figure, axes = plt.subplots(figsize=(10, 6))
+    count = 0
     for run in runs:
-        # Check if metric exists in the run's summary or if we should just try fetching history anyway
-        print(f"Processing run: {run.name} ({run.id})")
-        
-        # Fetch the metric history
-        # We also fetch _step to plot against time
-        try:
-            history = run.history(keys=["_step", args.metric], samples=10000)
-            if not history.empty and args.metric in history.columns:
-                history = history.dropna(subset=[args.metric])
-                if not history.empty:
-                    # Apply smoothing if requested
-                    if args.smooth > 1:
-                        history[args.metric] = history[args.metric].rolling(window=args.smooth, min_periods=1).mean()
-                    
-                    plt.plot(history["_step"], history[args.metric], label=run.name, alpha=0.8)
-                    data_found = True
-                else:
-                    print(f"  -> Metric '{args.metric}' is all NaNs for this run.")
-            else:
-                print(f"  -> Metric '{args.metric}' not found in run history.")
-        except Exception as e:
-            print(f"  -> Error fetching history for {run.name}: {e}")
-                
-    if not data_found:
-        print(f"\nNo data found for metric '{args.metric}'. Please check the metric name.")
-        print("Tip: If ERF is logged under a different name (like train/accuracy), use --metric train/accuracy")
-        return
-        
-    plt.xlabel("Step")
-    plt.ylabel(f"Effective Rollout Fraction ({args.metric})")
-    plt.title("Effective Rollout Fraction (ERF) over Time")
-    
-    # Place legend outside the plot
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', title="Runs")
-    plt.tight_layout()
-    
-    plt.savefig(args.output, dpi=300, bbox_inches="tight")
-    print(f"\nPlot successfully saved to {args.output}")
+        rows, metadata = archive_history(run, spec, args.output, args.smooth)
+        axes.plot([r['step'] for r in rows], [r['plotted_value'] for r in rows], label=run.name)
+        count += 1
+    if not count:
+        raise ValueError('no eligible runs; no plot created')
+    axes.set_xlabel('W&B logging step (_step)')
+    axes.set_ylabel(f"{spec['label']} ({spec['unit']})")
+    axes.set_title(f"{spec['label']} over logging steps")
+    axes.legend()
+    figure.tight_layout()
+    figure.savefig(args.output, dpi=300)
+    plt.close(figure)
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()

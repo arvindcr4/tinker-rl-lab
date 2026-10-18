@@ -90,7 +90,10 @@ def make_rollout_func(
                 except KeyError as exc:
                     raise SamplerContractError("prompt is not bound to a verifier target") from exc
                 reward = float(reward_parser(text, gold))
-                generated.append(Rollout(_tokens(prompt_tokens), completion_tuple, reward))
+                eos = trainer._tokenizer.eos_token_id
+                finish = "stop" if eos in completion_tuple else (
+                    "length" if len(completion_tuple) >= trainer.max_completion_length else None)
+                generated.append(Rollout(_tokens(prompt_tokens), completion_tuple, reward, finish))
             return generated
 
         group_indices = list(range(len(unique_prompts)))
@@ -132,27 +135,31 @@ def make_rollout_func(
                 "charged_generated_tokens": 0,
                 "generated_rollouts": 0,
                 "rollout_groups": 0,
-                "updated_groups": 0,
+                "update_eligible_groups": 0,
                 "all_wrong_groups": 0,
                 "all_correct_groups": 0,
                 "mixed_groups": 0,
             },
         )
         for key in (
+            "truncated_generated_rollouts",
+            "unknown_finish_rollouts",
             "charged_generated_tokens",
             "generated_rollouts",
             "rollout_groups",
-            "updated_groups",
+            "update_eligible_groups",
             "all_wrong_groups",
             "all_correct_groups",
             "mixed_groups",
         ):
             cumulative.setdefault(key, 0)
         for key in (
+            "truncated_generated_rollouts",
+            "unknown_finish_rollouts",
             "charged_generated_tokens",
             "generated_rollouts",
             "rollout_groups",
-            "updated_groups",
+            "update_eligible_groups",
         ):
             cumulative[key] += int(telemetry[key])
         group_count = int(telemetry["rollout_groups"])
@@ -206,6 +213,16 @@ def build_sampler_trainer_class(base_class: type[Any]) -> type[Any]:
     """Attach truthful sampler telemetry after TRL prepares each train batch."""
 
     class SamplerTrainer(base_class):
+        def compute_loss(self, model, inputs, *args, **kwargs):
+            # Count tokens actually passed to the loss, with nonzero advantages.
+            mask, advantage = inputs.get("completion_mask"), inputs.get("advantages")
+            if mask is not None and advantage is not None:
+                active = mask * (advantage.reshape(-1, 1) != 0)
+                if inputs.get("env_mask") is not None:
+                    active = active * inputs["env_mask"]
+                self._next_loss_tokens = getattr(self, "_next_loss_tokens", 0) + int(active.sum().item())
+            return super().compute_loss(model, inputs, *args, **kwargs)
+
         def _generate_and_score_completions(self, inputs: list[dict[str, Any]]) -> dict[str, Any]:
             output = super()._generate_and_score_completions(inputs)
             mode = "train" if self.model.training else "eval"
@@ -221,3 +238,46 @@ def build_sampler_trainer_class(base_class: type[Any]) -> type[Any]:
 
     SamplerTrainer.__name__ = "ContrastAwareGRPOTrainer"
     return SamplerTrainer
+
+
+def make_optimizer_observer(trainer, callback_base, tensor_lib, *, stop_on_applied=False):
+    """Observe tokens, gradients and parameter change; dependencies are injectable."""
+    import math
+    class ObserveOptimizerUpdate(callback_base):
+        """Measured optimizer evidence; rollout eligibility alone never proves an update."""
+        def __init__(self):
+            self.before = None
+            self.gradient_norm = None
+            self.eligible_previous = 0
+            trainer._next_update_observations = []
+
+        def on_pre_optimizer_step(self, args_, state, control, **kwargs):
+            params = [p for p in trainer.model.parameters() if p.requires_grad]
+            self.before = [p.detach().clone() for p in params]
+            grads = [p.grad for p in params if p.grad is not None]
+            self.gradient_norm = (float(tensor_lib.sqrt(sum((g.detach().float()**2).sum() for g in grads)).item())
+                                  if grads else None)
+            return control
+
+        def on_optimizer_step(self, args_, state, control, **kwargs):
+            params = [p for p in trainer.model.parameters() if p.requires_grad]
+            changed = self.before is not None and any(not tensor_lib.equal(a, p.detach())
+                                                       for a, p in zip(self.before, params, strict=True))
+            tokens = int(getattr(trainer, "_next_loss_tokens", 0))
+            eligible = int(trainer._next_sampler_cumulative.get("update_eligible_groups", 0))
+            finite_gradient = self.gradient_norm is not None and math.isfinite(self.gradient_norm)
+            finite_parameters = all(bool(tensor_lib.isfinite(p.detach()).all()) for p in params)
+            applied = bool(changed and finite_parameters and tokens > 0 and finite_gradient and self.gradient_norm > 0)
+            trainer._next_update_observations.append({
+                "optimizer_step": int(state.global_step)+1, "active_loss_tokens": tokens,
+                "finite_gradient_norm": self.gradient_norm, "parameter_changed": bool(changed), "finite_parameters": finite_parameters,
+                "optimizer_step_observed": True, "update_applied": applied,
+                "update_eligible_groups": eligible-self.eligible_previous})
+            self.eligible_previous = eligible
+            self.before = None
+            trainer._next_loss_tokens = 0
+            if applied and stop_on_applied:
+                control.should_training_stop = True
+            return control
+
+    return ObserveOptimizerUpdate()

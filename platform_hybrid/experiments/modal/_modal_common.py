@@ -1,35 +1,23 @@
 """Helpers shared by the Modal GSM8K launchers in this directory.
 
 Stdlib-only at import time so it can ride along in any Modal image via
-``.add_local_python_source("_modal_common")``; torch/wandb are imported lazily.
+``.add_local_python_source("_modal_common", "platform_hybrid")``; torch/wandb are imported lazily.
 """
+
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 3:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
+from platform_hybrid.experiments.framework_contracts import score_gsm8k, score_batch, SCORER_ID, completion_receipt
+
 
 import os
 import re
 
 
 def patch_wandb_vram():
-    """Wrap ``wandb.log`` once so every call also records peak/reserved VRAM."""
-    try:
-        import torch
-        import wandb
-
-        if not getattr(wandb, "_vram_patched", False):
-            _old_log = wandb.log
-
-            def _vram_log(data, *args, **kwargs):
-                if torch.cuda.is_available():
-                    data["system/vram_peak_allocated_gb"] = torch.cuda.max_memory_allocated() / (
-                        1024**3
-                    )
-                    data["system/vram_reserved_gb"] = torch.cuda.max_memory_reserved() / (1024**3)
-                    torch.cuda.reset_peak_memory_stats()
-                _old_log(data, *args, **kwargs)
-
-            wandb.log = _vram_log
-            wandb._vram_patched = True
-    except ImportError:
-        pass
+    """Deprecated no-op. Use per-run orchestrator telemetry; never patch global logging."""
+    return None
 
 
 def push_to_hub_private(model, tok, repo_id):
@@ -57,38 +45,11 @@ def gsm8k_gold(answer):
     return m.group(1).replace(",", "").strip() if m else None
 
 
-def boxed_or_last_number_reward(response: str, answer: str) -> float:
-    """Boxed answer (numeric or exact string), else the last number in the text."""
-    response = response.strip()
-    boxed = re.findall(r"\\boxed\{([^}]+)\}", response)
-    for b in boxed:
-        b_clean = b.strip().replace(",", "").replace(" ", "")
-        try:
-            if abs(float(b_clean) - float(answer)) < 0.01:
-                return 1.0
-        except Exception:
-            if b_clean == answer:
-                return 1.0
-    all_nums = re.findall(r"[-+]?\d[\d,]*\.?\d*", response)
-    if all_nums:
-        last = all_nums[-1].replace(",", "")
-        try:
-            if abs(float(last) - float(answer)) < 0.01:
-                return 1.0
-        except Exception:
-            pass
-    return 0.0
+def boxed_or_last_number_reward(response, answer):
+    """Compatibility alias for the shared v3 final-answer scorer."""
+    return score_gsm8k(response, answer)
 
 
 def boxed_only_reward(text, gt):
-    """Boxed answer only (numeric or exact string); no last-number fallback."""
-    boxed = re.findall(r"\\boxed\{([^}]+)\}", text or "")
-    for b in boxed:
-        b_clean = b.strip().replace(",", "")
-        try:
-            if gt and abs(float(b_clean) - float(gt)) < 1e-2:
-                return 1.0
-        except Exception:
-            if b_clean == gt:
-                return 1.0
-    return 0.0
+    """Compatibility alias for the shared v3 final-answer scorer."""
+    return score_gsm8k(text, gt)

@@ -115,14 +115,15 @@ class _FakeWandb(types.ModuleType):
     Artifact = _FakeArtifact
 
 
-def _fake_runtime(events: list[tuple[str, object]]) -> dict[str, types.ModuleType]:
+def _fake_runtime(events: list[tuple[str, object]], *, examples=None, responses=None) -> dict[str, types.ModuleType]:
+    response_iterator = iter(responses) if responses is not None else None
     class Example:
         prompt = "call the tool"
         target = {"name": "tool", "arguments": {"x": 1}}
 
     class Dataset:
         def test_examples(self) -> list[Example]:
-            return [Example()]
+            return examples if examples is not None else [Example()]
 
     class Tokenizer:
         def __init__(self, model_name: str, revision: str | None) -> None:
@@ -136,7 +137,7 @@ def _fake_runtime(events: list[tuple[str, object]]) -> dict[str, types.ModuleTyp
 
         def decode(self, tokens: list[int], *, skip_special_tokens: bool) -> str:
             del tokens, skip_special_tokens
-            return "raw model response must not be logged"
+            return next(response_iterator) if response_iterator is not None else "raw model response must not be logged"
 
     class Future:
         def result(self) -> types.SimpleNamespace:
@@ -270,6 +271,12 @@ class PavlovXlamWandbTests(unittest.TestCase):
             argv.extend(["--adapter-revision", adapter_revision])
         if extra_args:
             argv.extend(extra_args)
+        ids = [harness._sha256(json.dumps({"prompt": "call the tool", "target": {"name": "tool", "arguments": {"x": 1}}}, sort_keys=True, separators=(",", ":")))]
+        manifest = out.with_suffix(".manifest.json")
+        manifest.write_text(json.dumps(ids))
+        argv.extend(["--evaluation-manifest", str(manifest)])
+        if "--task-id-sha256" in argv and argv[argv.index("--task-id-sha256") + 1] == "c" * 64:
+            argv[argv.index("--task-id-sha256") + 1] = harness._sha256("\n".join(ids))
         return argv
 
     def _run_main(
@@ -301,6 +308,37 @@ class PavlovXlamWandbTests(unittest.TestCase):
             kept = Path(tempfile.mkdtemp()) / "receipt.json"
             kept.write_text(out.read_text(encoding="utf-8"), encoding="utf-8")
             return kept
+
+    def test_real_component_grader_counts_mixed_calls(self) -> None:
+        from platform_tinker.tinkerrl.grpo import StrictToolCallReward
+        events = []
+        examples = [types.SimpleNamespace(prompt=f"synthetic tool task {i}",
+                    target={"name": "tool", "arguments": {"x": 1}}) for i in range(5)]
+        responses = ['{"name":"tool","arguments":{"x":1}}',
+                     '{"name":"wrong","arguments":{"x":1}}',
+                     '{"name":"tool","arguments":{"x":2}}',
+                     'not json',
+                     '[{"name":"tool","arguments":{"x":1}}, {"name":"extra","arguments":{}}]']
+        modules = _fake_runtime(events, examples=examples, responses=responses)
+        modules["platform_tinker.tinkerrl.grpo"].StrictToolCallReward = StrictToolCallReward
+        modules["wandb"] = _FakeWandb(events)
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory) / "receipt.json"
+            argv = self._build_argv(out)
+            argv[argv.index("--limit") + 1] = "5"
+            ids = [harness._sha256(json.dumps({"prompt": example.prompt, "target": example.target},
+                         sort_keys=True, separators=(",", ":"))) for example in examples]
+            Path(argv[argv.index("--evaluation-manifest") + 1]).write_text(json.dumps(ids))
+            argv[argv.index("--task-id-sha256") + 1] = harness._sha256("\n".join(ids))
+            with patch.dict(sys.modules, modules), patch.object(sys, "argv", argv):
+                self.assertEqual(harness.main(), 0)
+            receipt = json.loads(out.read_text())
+        # This is the real custom component grader, including its partial-credit
+        # semantics. It is explicitly not an official xLAM-equivalence oracle.
+        self.assertEqual(receipt["examples"], 5)
+        self.assertAlmostEqual(receipt["mean_strict_reward"], 1.8 / 5)
+        self.assertEqual(receipt["perfect_call_rate"], 1 / 5)
+        self.assertEqual(len([event for event in events if event[0] == "sample"]), 5)
 
     def test_online_wandb_precedes_tinker_and_logs_portfolio_receipt(self) -> None:
         events: list[tuple[str, object]] = []
@@ -553,21 +591,15 @@ class PavlovXlamWandbTests(unittest.TestCase):
 
         datasets.load_dataset = load_dataset
         modules["datasets"] = datasets
-        wandb = _FakeWandb(events)
-        receipt_path = self._run_main(
-            wandb,
-            events,
-            runtime_modules=modules,
-        )
+        with patch.dict(sys.modules, modules):
+            dataset, binding = harness._load_xlam_dataset(seed=809, revision="a" * 40)
         load_event = next(value for name, value in events if name == "load_dataset")
         self.assertEqual(load_event["dataset_id"], harness.XLAM_DATASET_ID)
         self.assertEqual(load_event["split"], "train")
         self.assertEqual(load_event["revision"], "a" * 40)
         self.assertNotIn("unbound_dataset_loader", [name for name, _ in events])
-        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
-        self.assertEqual(
-            receipt["dataset_loader_binding"]["mode"], "local_revision_bound_loader"
-        )
+        self.assertEqual(binding["mode"], "local_revision_bound_loader")
+        self.assertEqual(len(dataset.test_examples()), 500)
 
     def test_non_positive_or_non_finite_limits_block_before_wandb_and_tinker(self) -> None:
         cases = (

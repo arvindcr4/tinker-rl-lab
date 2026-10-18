@@ -1,37 +1,9 @@
-"""Pillar 1 iter65 -- Three-phase hypothesis phase-conformity geometry.
+"""Exploratory continuous slow-growth / rapid-growth / plateau diagnostics.
 
-iter33 ran a 5-prediction battery on the canonical 3-phase hypothesis
-(slow start, rapid improvement, plateau) and reported 4/5 falsified:
-P1 (peak after 10% in) 9/12 (borderline), P2 (late > early) 5/12,
-P3 (plateau late near peak) 7/12 (borderline), P4 (phase score
-predicts mean) rho=0.046 (decisively falsified), P5 (Nemotron-120B
-uniqueness) sustained. iter41 introduced a 12-anchor pool. iter45
-ran iso-compute extrapolation. iter49 produced the canonical
-two-parameter cross-scale fit (R^2 = 0.18). iter57 audited the
-saturation-fit identifiability (4/5 at lambda bound). iter61
-conditioned the degeneracy on per-step ZVF (HIGH vs LOW strata).
-
-What iter33/37/41 left as a gap: the three-phase hypothesis is
-exclusively tested with summary statistics (peak_frac, late>early,
-plateau-variance). What is missing is a GEOMETRIC test that
-characterises the per-phase SHAPE -- slope of the slow-start phase,
-slope of the rapid-improvement phase, slope of the plateau phase --
-and asks whether the trace's per-phase slopes match the canonical
-"low, high, near-zero" template.
-
-This iteration formalises the test via a phase-conformity index (PCI)
-that compares each trace's three OLS slopes against the canonical
-template, with bootstrap CIs for the phase boundaries, and contrasts
-the per-architecture composition of phase classes.
-
-Outputs (5 artefacts + 1 fig):
-  platform_hybrid/experiments/results/scaling_law_iter65_phase_pieces.tsv
-  platform_hybrid/experiments/results/scaling_law_iter65_conformity.tsv
-  platform_hybrid/experiments/results/scaling_law_iter65_boundaries.tsv
-  platform_hybrid/experiments/results/scaling_law_iter65_arch_phase.tsv
-  platform_hybrid/experiments/results/scaling_law_iter65_predictions.tsv
-  paper/sections/scaling_law_iter65.tex
-  figures/scaling_law_iter65.{pdf,png}
+Fits minimize original-space residuals with continuous hinge segments.
+Signed shape checks are distinct from fit quality. Residual-block boundary
+intervals are conditional on the fitted trend and are not coverage validation.
+Candidate outputs go to review27_v3 or an explicitly supplied output directory.
 """
 
 from __future__ import annotations
@@ -46,16 +18,19 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import numpy as np
+try:
+    from ._review27_rank import rank_correlation
+except ImportError:
+    from _review27_rank import rank_correlation  # noqa: E402
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
+CANDIDATE = REPO / "experiments" / "results" / "review27_v3"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-PAPER_SEC = REPO / "paper" / "sections"
-PAPER_FIG = REPO / "paper" / "figures"
-for d in (FIG_DIR, PAPER_SEC, PAPER_FIG):
-    d.mkdir(parents=True, exist_ok=True)
+RESULTS_DIR = CANDIDATE
+FIG_DIR = CANDIDATE / "figures"
+PAPER_SEC = CANDIDATE / "sections"
+PAPER_FIG = CANDIDATE / "paper_figures"
 
 MODELS: dict[str, dict] = {
     "Qwen3.5-4B":            {"file": "scale_gsm8k_qwen3.5-4b.json",     "params":   4.0, "arch": "dense"},
@@ -74,7 +49,6 @@ MODELS: dict[str, dict] = {
 
 SEED = 20260702
 N_BOOT = 2000
-RNG = np.random.default_rng(SEED)
 
 # Canonical three-phase template (target slopes per phase, in
 # reward units per step).  The hypothesis is that the slow-start
@@ -88,100 +62,60 @@ PLATEAU_VAR_FRAC = 0.50     # plateau variance < 0.5 * mean variance
 
 
 def _load_trace(fname: str) -> list[float]:
-    fp = TRACE_DIR / fname
-    if not fp.exists():
-        return []
-    obj = json.loads(fp.read_text())
-    rt = obj.get("reward_trace") or []
-    return [float(r) for r in rt if r is not None]
+    try:
+        from ._review27_rank import load_reward_trace
+    except ImportError:
+        from _review27_rank import load_reward_trace
+    return load_reward_trace(TRACE_DIR / fname)
 
 
 def _fit_3piece(t: np.ndarray, y: np.ndarray) -> tuple:
-    """Find the two best changepoints (i, j) that minimise total SSE
-    over a 3-piece OLS (each piece is a linear fit, no continuity
-    constraint).  Returns (i, j, sse, slopes, intercepts, residuals_per_piece,
-    seg_means, seg_stds).
+    """Exhaustive continuous three-segment OLS with two points per segment."""
+    t,y=np.asarray(t,float),np.asarray(y,float)
+    missing=(None,None,math.nan,*( (math.nan,)*3 for _ in range(5)))
+    if t.ndim!=1 or t.shape!=y.shape or len(t)<6 or not np.isfinite(t).all() or not np.isfinite(y).all() or np.any(np.diff(t)<=0):
+        return missing
+    best=None
+    for i in range(2,len(t)-3):
+        for j in range(i+2,len(t)-1):
+            k1,k2=t[i],t[j]
+            design=np.column_stack([np.ones(len(t)),t,np.maximum(0,t-k1),np.maximum(0,t-k2)])
+            beta,*_=np.linalg.lstsq(design,y,rcond=None)
+            predicted=design@beta
+            sse=float(np.sum((y-predicted)**2))
+            if best is None or sse<best[0]:best=(sse,i,j,beta,predicted)
+    if best is None:return missing
+    sse,i,j,beta,predicted=best
+    slopes=(float(beta[1]),float(beta[1]+beta[2]),float(beta[1]+beta[2]+beta[3]))
+    intercepts=(float(beta[0]),float(beta[0]-beta[2]*t[i]),float(beta[0]-beta[2]*t[i]-beta[3]*t[j]))
+    slices=(slice(None,i),slice(i,j),slice(j,None))
+    residuals=tuple(float(np.sqrt(np.mean((y[k]-predicted[k])**2))) for k in slices)
+    means=tuple(float(y[k].mean()) for k in slices)
+    stds=tuple(float(y[k].std()) for k in slices)
+    return i,j,sse,slopes,intercepts,residuals,means,stds
 
-    For short traces (n < 6) we use one-point-per-segment to avoid
-    the "constant" misclassification on already-saturated anchors.
-    """
-    n = len(t)
-    if n < 3:
-        return (None, None, 0.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
-    if n == 3:
-        i, j, sse = 1, 2, 0.0
-        segs = (y[:1], y[1:2], y[2:3])
-        ts = (t[:1], t[1:2], t[2:3])
-    elif n < 6:
-        # split into three pieces of size n/3 each
-        i = max(1, n // 3); j = max(i + 1, 2 * n // 3)
-        sse = 0.0
-        segs = (y[:i], y[i:j], y[j:])
-        ts = (t[:i], t[i:j], t[j:])
-    else:
-        best = (None, None, math.inf)
-        for i in range(2, n - 3):
-            for j in range(i + 1, n - 1):
-                p1, p2, p3 = y[:i], y[i:j], y[j:]
-                if len(p1) < 2 or len(p2) < 2 or len(p3) < 2:
-                    continue
-                sse = (
-                    float(np.sum((p1 - p1.mean()) ** 2))
-                    + float(np.sum((p2 - p2.mean()) ** 2))
-                    + float(np.sum((p3 - p3.mean()) ** 2))
-                )
-                if sse < best[2]:
-                    best = (i, j, sse)
-        if best[0] is None:
-            return (None, None, math.inf, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
-        i, j, sse = best
-        segs = (y[:i], y[i:j], y[j:])
-        ts = (t[:i], t[i:j], t[j:])
-    slopes, intercepts, residuals = [], [], []
-    means, stds = [], []
-    for seg, tt in zip(segs, ts):
-        # always use seg.mean() and seg.std() (handle seg of length 1)
-        means.append(float(seg.mean()))
-        stds.append(float(seg.std()) if len(seg) > 1 else 0.0)
-        if len(seg) < 2:
-            slopes.append(0.0); intercepts.append(0.0); residuals.append(0.0)
-            continue
-        m, b = np.polyfit(tt, seg, 1)
-        slopes.append(float(m)); intercepts.append(float(b))
-        residuals.append(float(np.sqrt(np.mean((seg - (m * tt + b)) ** 2))))
-    return (i, j, sse, tuple(slopes), tuple(intercepts), tuple(residuals), tuple(means), tuple(stds))
+
 
 
 def _classify(slopes: tuple, residuals: tuple, n: int, i: int, j: int,
               seg_means: tuple, seg_stds: tuple) -> str:
-    """Classify a 3-piece trace into one of the canonical phase classes.
-
-    Classes (frontier synthesis + iter33 prior):
-      - "three-phase": mu1 < mu2 >= mu3 (the canonical hill).
-      - "monotonic-saturation": mu1 < mu2 < mu3 with shrinking slope.
-      - "monotonic-rising": mu1 < mu2 < mu3 (still climbing).
-      - "monotonic-decline": mu1 > mu2 > mu3 (steady decay).
-      - "valley": mu1 > mu2 < mu3 (mid-trace dip).
-      - "rise-then-decline": mu1 < mu2 > mu3 == mu1 (peak in P2, late
-        decay back to early level).
-      - "collapse": peak-then-floor (mu1 > mu2 < mu3 AND mu3 < 0.2).
-      - "constant": all segment means equal.
-
-    The PRIMARY classification is by the 3-segment mean ordering,
-    which is the most distinctive feature of the three-phase
-    hypothesis.  Slope thresholds are too strict for short
-    bounded-reward traces.
-    """
+    """Signed slow/rise/plateau; drift is late decline without a low floor."""
+    if i is None or j is None or not np.isfinite(slopes).all():
+        return "insufficient_data"
     m1, m2, m3 = slopes
     mu1, mu2, mu3 = seg_means
     sd_means = float(np.std([mu1, mu2, mu3]))
     if sd_means < 1e-6:
         return "constant"
-    if abs(m1) < SLOW_SLOPE_MAX and abs(m2) >= FAST_SLOPE_MIN and abs(m3) < PLATEAU_SLOPE_MAX:
+    if 0 <= m1 < SLOW_SLOPE_MAX and m2 >= FAST_SLOPE_MIN and abs(m3) < PLATEAU_SLOPE_MAX and mu3 > mu1 and mu3 >= mu2 and min(i,j-i,n-j) >= 2:
         return "three-phase"
-    # Hill-shape: P2 is the peak
+    if mu3 < 0.2 and max(mu1, mu2) - mu3 > 0.2:
+        return "collapse"
+    if m3 < -PLATEAU_SLOPE_MAX:
+        return "drift"
+    # A hill is a rise-then-decline, not slow-fast-plateau confirmation.
     if mu2 > mu1 and mu2 > mu3:
-        return "three-phase"
+        return "rise-then-decline"
     # Valley: P2 is the trough
     if mu1 > mu2 and mu2 < mu3:
         # Distinguish collapse (low floor) from valley-recovery (high floor)
@@ -205,66 +139,49 @@ def _classify(slopes: tuple, residuals: tuple, n: int, i: int, j: int,
 
 
 def _phase_conformity(slopes: tuple, seg_means: tuple, seg_stds: tuple) -> float:
-    """Quantify how well the trace's three pieces match the canonical
-    three-phase template.
-
-    The hypothesis is that the trace has (slow, fast, plateau) shape:
-      - phase 1 mean < phase 2 mean (rising)
-      - phase 2 mean >= phase 3 mean (peak in phase 2)
-      - phase 3 std < phase 2 std (plateau is flat)
-      - peak_step is in phase 2
-      - phase 1 slope >= 0 (slow start is still rising)
-      - phase 3 slope small (plateau has zero slope)
-
-    PCI counts how many of these 6 constraints are satisfied, each
-    contributing 0.5 (so PCI in [0, 3]).
-    """
+    """Half a point for each of six signed slow/rise/plateau conditions."""
+    if not all(np.isfinite(v).all() for v in (slopes, seg_means, seg_stds)):
+        return math.nan
     m1, m2, m3 = slopes
     mu1, mu2, mu3 = seg_means
-    sd1, sd2, sd3 = seg_stds
-    score = 0.0
-    # C1: rising (phase 2 higher than phase 1)
-    if mu2 > mu1:
-        score += 0.5
-    # C2: peak in phase 2 (phase 2 mean >= phase 3 mean)
-    if mu2 >= mu3:
-        score += 0.5
-    # C3: plateau is flat (phase 3 std <= phase 2 std)
-    if sd3 <= sd2:
-        score += 0.5
-    # C4: phase 1 slope >= 0 (slow start is still rising)
-    if m1 >= 0:
-        score += 0.5
-    # C5: phase 3 slope is small (plateau)
-    if abs(m3) < PLATEAU_SLOPE_MAX:
-        score += 0.5
-    # C6: phase 1 mean is below mid-range (slow start is below 0.5)
-    if mu1 < 0.5:
-        score += 0.5
-    return score
+    conditions = (0 <= m1 < SLOW_SLOPE_MAX,
+                  m2 >= FAST_SLOPE_MIN,
+                  abs(m3) < PLATEAU_SLOPE_MAX,
+                  mu2 > mu1,
+                  mu3 > mu1 and mu3 >= mu2,
+                  seg_stds[2] <= seg_stds[1])
+    return 0.5 * sum(conditions)
 
 
 def _bootstrap_boundaries(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
-    """Block-bootstrap (block size = max(2, len(y)//6)) the two
-    changepoints; report 2.5/50/97.5 percentiles for each boundary.
+    """Residual circular-block bootstrap around the fitted continuous trend.
 
-    We use a circular block bootstrap so the boundary index wraps
-    around if the trace is short.
+    Exploratory conditional boundary intervals, not a preregistered coverage claim.
     """
     n = len(y)
-    if n < 6:
+    if n < 6 or not np.isfinite(y).all():
         return {"cp1_lo": -1, "cp1_med": -1, "cp1_hi": -1,
-                "cp2_lo": -1, "cp2_med": -1, "cp2_hi": -1}
+                "cp2_lo": -1, "cp2_med": -1, "cp2_hi": -1, "n_boot_success": 0}
+    tt = np.arange(1, n + 1, dtype=float)
+    i, j, _, slopes, intercepts, *_ = _fit_3piece(tt, y)
+    if i is None:
+        return {"cp1_lo": -1, "cp1_med": -1, "cp1_hi": -1,
+                "cp2_lo": -1, "cp2_med": -1, "cp2_hi": -1, "n_boot_success": 0}
+    fitted = np.concatenate([slopes[k]*tt[a:b]+intercepts[k]
+                             for k,(a,b) in enumerate(((0,i),(i,j),(j,n)))])
+    residual = np.asarray(y) - fitted
+    residual -= residual.mean()
+    rng = np.random.default_rng(SEED)
     block = max(2, n // 6)
     cps1, cps2 = [], []
     for _ in range(n_boot):
         idx = []
         while len(idx) < n:
-            start = int(RNG.integers(0, n))
+            start = int(rng.integers(0, n))
             take = min(block, n - len(idx))
             idx.extend(((start + k) % n) for k in range(take))
         idx = np.array(idx[:n], dtype=int)
-        yy = y[idx]
+        yy = fitted + residual[idx]
         tt = np.arange(1, n + 1, dtype=float)
         i, j, _, _, _, _, _, _ = _fit_3piece(tt, yy)
         if i is not None and j is not None:
@@ -272,7 +189,7 @@ def _bootstrap_boundaries(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
             cps2.append(int(j))
     if not cps1:
         return {"cp1_lo": -1, "cp1_med": -1, "cp1_hi": -1,
-                "cp2_lo": -1, "cp2_med": -1, "cp2_hi": -1}
+                "cp2_lo": -1, "cp2_med": -1, "cp2_hi": -1, "n_boot_success": 0}
     return {
         "cp1_lo": int(np.percentile(cps1, 2.5)),
         "cp1_med": int(np.percentile(cps1, 50.0)),
@@ -284,7 +201,21 @@ def _bootstrap_boundaries(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
     }
 
 
-def main() -> None:
+def main(output_dir=None, source_root=None):
+    global REPO, CANDIDATE, FIG_DIR, PAPER_SEC
+    global RESULTS_DIR, TRACE_DIR, PAPER_FIG
+    if source_root is not None:
+        REPO = Path(source_root)
+    if output_dir is not None:
+        CANDIDATE = Path(output_dir)
+    RESULTS_DIR = CANDIDATE
+    TRACE_DIR = REPO / "experiments/tinker-runs/results"
+    PAPER_FIG = CANDIDATE / "paper_figures"
+    PAPER_FIG.mkdir(parents=True, exist_ok=True)
+    FIG_DIR, PAPER_SEC = CANDIDATE / "figures", CANDIDATE / "sections"
+    for directory in (CANDIDATE, FIG_DIR, PAPER_SEC):
+        directory.mkdir(parents=True, exist_ok=True)
+
     # ---- main per-trace analysis
     phase_rows = []
     conformity_rows = []
@@ -297,13 +228,13 @@ def main() -> None:
         n = len(y)
         t = np.arange(1, n + 1, dtype=float)
         i, j, sse, slopes, intercepts, residuals, seg_means, seg_stds = _fit_3piece(t, y)
-        cls = _classify(slopes, residuals, n, i or 0, j or 0, seg_means, seg_stds)
+        cls = _classify(slopes, residuals, n, i, j, seg_means, seg_stds)
         pci = _phase_conformity(slopes, seg_means, seg_stds)
         # n_phase_well: how many of the three template constraints
         # (slow, fast, plateau) the trace satisfies.
         m1, m2, m3 = slopes
-        n_slow = int(abs(m1) < SLOW_SLOPE_MAX)
-        n_fast = int(abs(m2) >= FAST_SLOPE_MIN)
+        n_slow = int(0 <= m1 < SLOW_SLOPE_MAX)
+        n_fast = int(m2 >= FAST_SLOPE_MIN)
         n_plateau = int(abs(m3) < PLATEAU_SLOPE_MAX)
         # template score: number of 6 template constraints satisfied
         template_score = int(pci / 0.5) if pci > 0 else 0
@@ -321,13 +252,15 @@ def main() -> None:
             "seg_mean_p1": seg_means[0], "seg_mean_p2": seg_means[1], "seg_mean_p3": seg_means[2],
             "seg_std_p1": seg_stds[0], "seg_std_p2": seg_stds[1], "seg_std_p3": seg_stds[2],
             "n_slow": n_slow, "n_fast": n_fast, "n_plateau": n_plateau,
-            "n_template_ok": template_score,
+            "n_shape_conditions_ok": template_score,
+            "n_slope_conditions_ok": n_slow + n_fast + n_plateau,
         })
         conformity_rows.append({
             "model": m, "params_B": cfg["params"], "arch": cfg["arch"],
             "pci": pci, "phase_class": cls,
             "n_slow_ok": n_slow, "n_fast_ok": n_fast, "n_plateau_ok": n_plateau,
-            "n_template_ok": n_slow + n_fast + n_plateau,
+            "n_slope_conditions_ok": n_slow + n_fast + n_plateau,
+            "n_shape_conditions_ok": template_score,
         })
         # bootstrap phase boundaries
         boot = _bootstrap_boundaries(y, n_boot=N_BOOT)
@@ -340,23 +273,31 @@ def main() -> None:
             **boot,
         })
 
+    if not phase_rows:
+        raise ValueError("no observed reward traces available")
     # ---- write per-trace outputs
-    phase_path = RESULTS_DIR / "scaling_law_iter65_phase_pieces.tsv"
+    phase_path = RESULTS_DIR / "scaling_law_iter65_phase_pieces_v2.tsv"
     with phase_path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(phase_rows[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(phase_rows)
-    conformity_path = RESULTS_DIR / "scaling_law_iter65_conformity.tsv"
+    conformity_path = RESULTS_DIR / "scaling_law_iter65_conformity_v2.tsv"
     with conformity_path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(conformity_rows[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(conformity_rows)
-    boundary_path = RESULTS_DIR / "scaling_law_iter65_boundaries.tsv"
+    boundary_path = RESULTS_DIR / "scaling_law_iter65_boundaries_v2.tsv"
     with boundary_path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(boundary_rows[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(boundary_rows)
 
+    attempted_count = len(phase_rows)
+    phase_rows = [r for r in phase_rows if math.isfinite(r["pci"])]
+    if not phase_rows:
+        raise ValueError("no eligible six-step phase fits available")
+    eligible_models = {r["model"] for r in phase_rows}
+    boundary_rows = [r for r in boundary_rows if r["model"] in eligible_models]
     # ---- architecture-level phase composition
     arch_phase_rows = []
     for arch in ("dense", "moe"):
@@ -372,7 +313,7 @@ def main() -> None:
         three_phase = cls_counts.get("three-phase", 0)
         collapse = cls_counts.get("collapse", 0)
         drift = cls_counts.get("drift", 0)
-        n_template_full = sum(1 for r in sub if r["n_template_ok"] == 3)
+        n_template_full = sum(1 for r in sub if r["n_slope_conditions_ok"] == 3)
         arch_phase_rows.append({
             "arch": arch, "n_anchors": n,
             "n_three_phase": three_phase, "frac_three_phase": three_phase / n,
@@ -382,46 +323,44 @@ def main() -> None:
             "pci_mean": pci_mean, "pci_median": pci_med,
             "class_counts": ";".join(f"{k}:{v}" for k, v in sorted(cls_counts.items())),
         })
-    arch_path = RESULTS_DIR / "scaling_law_iter65_arch_phase.tsv"
+    arch_path = RESULTS_DIR / "scaling_law_iter65_arch_phase_v2.tsv"
     with arch_path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(arch_phase_rows[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(arch_phase_rows)
 
-    # ---- pre-registered predictions
+    # ---- exploratory predictions
     n_total = len(phase_rows)
     n_three_phase = sum(1 for r in phase_rows if r["phase_class"] == "three-phase")
     n_collapse = sum(1 for r in phase_rows if r["phase_class"] == "collapse")
     n_drift = sum(1 for r in phase_rows if r["phase_class"] == "drift")
-    n_template_full = sum(1 for r in phase_rows if r["n_template_ok"] == 3)
-    n_template_partial = sum(1 for r in phase_rows if r["n_template_ok"] >= 2)
+    n_template_full = sum(1 for r in phase_rows if r["n_slope_conditions_ok"] == 3)
+    n_template_partial = sum(1 for r in phase_rows if r["n_slope_conditions_ok"] >= 2)
     pci_values = [r["pci"] for r in phase_rows]
     pci_mean = float(np.mean(pci_values))
     # Spearman correlation between params and pci
     params = np.array([r["params_B"] for r in phase_rows])
     pci = np.array(pci_values)
-    if len(params) > 2:
-        sp = float(np.corrcoef(params, pci)[0, 1])
-    else:
-        sp = 0.0
+    finite = np.isfinite(params) & np.isfinite(pci)
+    sp = rank_correlation(params[finite], pci[finite])
     # PCI of Nemotron-120B vs others
     nem = next((r for r in phase_rows if r["model"] == "Nemotron-120B"), None)
     others = [r["pci"] for r in phase_rows if r["model"] != "Nemotron-120B"]
-    others_med = float(np.median(others)) if others else 0.0
-    nem_pci = float(nem["pci"]) if nem else 0.0
+    others_med = float(np.median(others)) if others else math.nan
+    nem_pci = float(nem["pci"]) if nem else math.nan
     # Per-arch three-phase rate
     dense_3p = sum(1 for r in phase_rows if r["arch"] == "dense" and r["phase_class"] == "three-phase")
     dense_n = sum(1 for r in phase_rows if r["arch"] == "dense")
     moe_3p = sum(1 for r in phase_rows if r["arch"] == "moe" and r["phase_class"] == "three-phase")
     moe_n = sum(1 for r in phase_rows if r["arch"] == "moe")
-    # Pre-reg predictions
+    # Exploratory predictions
     pred_rows = [
         {
             "prediction_id": "P1_three_phase_majority",
-            "claim": "At least half of the 12 anchors match the canonical three-phase pattern (slow, fast, plateau).",
-            "observed": f"{n_three_phase}/12 = {n_three_phase/12:.3f}",
+            "claim": "At least half of eligible anchors match the canonical three-phase pattern (slow, fast, plateau).",
+            "observed": f"{n_three_phase}/{n_total} = {n_three_phase/n_total:.3f}",
             "expected": ">= 0.50",
-            "pass_fail": "PASS" if n_three_phase >= 6 else "FAIL",
+            "pass_fail": "PASS" if n_three_phase/n_total >= 0.5 else "FAIL",
         },
         {
             "prediction_id": "P2_nemotron_classified_collapse",
@@ -439,15 +378,15 @@ def main() -> None:
         },
         {
             "prediction_id": "P4_nemotron_lowest_pci",
-            "claim": "Nemotron-120B has the lowest PCI in the 12-anchor pool.",
+            "claim": "Nemotron-120B has the lowest PCI in the eligible pool.",
             "observed": f"nemotron_pci={nem_pci:.3f}, others_median={others_med:.3f}, all_pci={[round(x,2) for x in pci_values]}",
             "expected": "nemotron_pci <= min(others)",
-            "pass_fail": "PASS" if (nem and nem_pci <= min(others)) else "FAIL",
+            "pass_fail": "PASS" if (nem and others and nem_pci <= min(others)) else "FAIL",
         },
         {
             "prediction_id": "P5_template_full_at_most_3",
-            "claim": "At most 3/12 anchors satisfy ALL three phase-template constraints (slow, fast, plateau).",
-            "observed": f"{n_template_full}/12",
+            "claim": "At most three eligible anchors satisfy ALL three phase-template constraints (slow, fast, plateau).",
+            "observed": f"{n_template_full}/{n_total}",
             "expected": "<= 3",
             "pass_fail": "PASS" if n_template_full <= 3 else "FAIL",
         },
@@ -463,17 +402,21 @@ def main() -> None:
             "claim": "Spearman(params_B, PCI) is non-negative (larger models => more phase-conformity).",
             "observed": f"spearman_log={sp:.3f}",
             "expected": ">= 0",
-            "pass_fail": "PASS" if sp >= 0 else "FAIL",
+            "pass_fail": "UNAVAILABLE" if not math.isfinite(sp) else "PASS" if sp >= 0 else "FAIL",
         },
         {
             "prediction_id": "P8_drift_count_3plus",
-            "claim": "At least 3/12 anchors are 'drift' (late slope negative, no early collapse).",
+            "claim": "At least three eligible anchors are 'drift' (late slope negative, no early collapse).",
             "observed": f"n_drift={n_drift}",
             "expected": ">= 3",
             "pass_fail": "PASS" if n_drift >= 3 else "FAIL",
         },
     ]
-    pred_path = RESULTS_DIR / "scaling_law_iter65_predictions.tsv"
+    for result in pred_rows:
+        if ((result["prediction_id"].startswith(("P2_", "P4_")) and nem is None)
+                or (result["prediction_id"].startswith("P6_") and not (dense_n and moe_n))):
+            result["pass_fail"] = "UNAVAILABLE"
+    pred_path = RESULTS_DIR / "scaling_law_iter65_predictions_v2.tsv"
     with pred_path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(pred_rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -504,14 +447,14 @@ def main() -> None:
     ax.set_xticks(x)
     ax.set_xticklabels(labels, rotation=60, ha="right", fontsize=8)
     ax.set_ylabel("OLS slope (reward / step)")
-    ax.set_title("(A) per-phase OLS slopes across 12 anchors")
+    ax.set_title("(A) per-phase OLS slopes across eligible anchors")
     ax.legend(fontsize=7, loc="upper left")
     # Panel B: phase-conformity index (PCI) per anchor
     ax = axes[0, 1]
     pcis = [r["pci"] for r in phase_rows]
     colors = [color_map.get(r["phase_class"], "#000000") for r in phase_rows]
     ax.bar(x, pcis, color=colors)
-    ax.axhline(1.5, color="black", linestyle=":", label="PCI=1.5 (mean expectation)")
+    ax.axhline(1.5, color="black", linestyle=":", label="PCI=1.5 (descriptive threshold)")
     ax.set_xticks(x)
     ax.set_xticklabels(labels, rotation=60, ha="right", fontsize=8)
     ax.set_ylabel("phase-conformity index (PCI)")
@@ -556,14 +499,14 @@ def main() -> None:
     ax.set_ylabel("phase-conformity index (PCI)")
     ax.set_title(f"(D) per-architecture PCI\n(dense n={len(dense_pci)}, moe n={len(moe_pci)})")
     plt.tight_layout()
-    out_pdf = FIG_DIR / "scaling_law_iter65.pdf"
-    out_png = FIG_DIR / "scaling_law_iter65.png"
+    out_pdf = FIG_DIR / "scaling_law_iter65_v2.pdf"
+    out_png = FIG_DIR / "scaling_law_iter65_v2.png"
     fig.savefig(out_pdf, bbox_inches="tight")
     fig.savefig(out_png, bbox_inches="tight", dpi=130)
     plt.close(fig)
     # mirror to paper/figures/
-    (PAPER_FIG / "scaling_law_iter65.pdf").write_bytes(out_pdf.read_bytes())
-    (PAPER_FIG / "scaling_law_iter65.png").write_bytes(out_png.read_bytes())
+    (PAPER_FIG / "scaling_law_iter65_v2.pdf").write_bytes(out_pdf.read_bytes())
+    (PAPER_FIG / "scaling_law_iter65_v2.png").write_bytes(out_png.read_bytes())
 
     # ---- write LaTeX section
     cls_counts = {}
@@ -595,185 +538,29 @@ def main() -> None:
         f"{r['n_template_full']}/{r['n_anchors']} & {r['pci_mean']:.2f} \\\\"
         for r in arch_phase_rows
     )
-    sec = r"""\paragraph{Iter 65 elevation: phase-conformity geometry of the three-phase hypothesis.}
-\label{par:scaling-iter65}
-The iter 33 battery tested the canonical three-phase hypothesis
-(\emph{slow start, rapid improvement, plateau}) of
-\citet{nimmaturi2025predictive} with five summary statistics
-and reported $4/5$ falsified.  Iter 37 sharpened the test with
-hold-out anchors; iter 41 re-ran on the canonical 12-anchor pool;
-iter 45 reframed it as iso-compute extrapolation.  What remained
-as a gap is a \emph{geometric} test that characterises the
-per-phase OLS slopes (slow, fast, plateau) and quantifies how
-well each trace's three slopes match the canonical template.
-
-This iteration formalises the test with a phase-conformity index
-(PCI) and bootstrap-resampled phase boundaries.
-
-\paragraph{Per-trace three-piece decomposition.}
-We fit three OLS segments per trace
-($n \geq 6$): pick two changepoints $(i, j)$ that minimise the
-sum of within-segment squared errors.  The three canonical slope
-targets are
-\begin{equation}
-  |m_1| < \text{SLOW\_SLOPE\_MAX} = 0.020,\quad
-  |m_2| \geq \text{FAST\_SLOPE\_MIN} = 0.040,\quad
-  |m_3| < \text{PLATEAU\_SLOPE\_MAX} = 0.015,
-  \label{eq:iter65-pci}
-\end{equation}
-in reward units per step.  The PCI is then
-\[
-  \mathrm{PCI} = \sum_{k=1}^{3} \mathbb{1}[\text{constraint}_k] \cdot \left(1 + 0.5 \cdot w_k\right),
-\]
-with $w_k \in [0, 1]$ the proximity-to-bound weight.  A trace
-matching all three constraints has $\mathrm{PCI} = 3.0$; a trace
-failing all three has $\mathrm{PCI} \in [-1.5, 0]$.
-
-\paragraph{Phase-class distribution across the 12 anchors.}
-The classifier labels each trace as one of seven classes
-(\tableref{tab:iter65-class-dist}).
-
-\begin{table}[t]
-  \centering
-  \small
-  \begin{tabular}{lrl}
-    \toprule
-    Class & Count & Frac \\
-    \midrule
-    three-phase & """ + str(n_three_phase) + r""" & """ + f"{n_three_phase/12:.2f}" + r""" \\
-    monotonic-saturation & """ + str(n_monosat) + r""" & """ + f"{n_monosat/12:.2f}" + r""" \\
-    monotonic & """ + str(n_mono) + r""" & """ + f"{n_mono/12:.2f}" + r""" \\
-    drift & """ + str(n_drift) + r""" & """ + f"{n_drift/12:.2f}" + r""" \\
-    collapse & """ + str(n_collapse) + r""" & """ + f"{n_collapse/12:.2f}" + r""" \\
-    constant & """ + str(n_const) + r""" & """ + f"{n_const/12:.2f}" + r""" \\
-anomalous & """ + str(n_anom) + r""" & """ + f"{n_anom/12:.2f}" + r""" \\
-    \bottomrule
-  \end{tabular}
-  \caption{\textbf{Phase-class distribution across the 12-anchor
-    pool.}  Only \textbf{""" + str(n_three_phase) + r"""/12}
-    anchors match the canonical three-phase pattern.  The
-    collapse class is uniquely occupied by Nemotron-120B; the
-    drift class contains the late-decay anchors (Llama-3.1-8B-Inst,
-    Kimi-K2-Thinking, Qwen3.5-27B).  The remaining
-    anchors are either already-saturated (constant) or
-    monotonically rising.  \texttt{platform_modal/scripts/scaling\_law\_iter65.py}
-    $\to$ \texttt{scaling\_law\_iter65\_phase\_pieces.tsv}.}
-  \label{tab:iter65-class-dist}
-\end{table}
-
-\paragraph{Per-phase slopes.}
-The top-6 traces by $|m_3|$ (the plateau-phase slope) are
-shown in \tableref{tab:iter65-top-slopes}.  Five of the six
-have $|m_3| \geq 0.005$, meaning the late trace is not actually
-plateau.  The strongest counterexample is Nemotron-120B:
-$m_3 = """ + f"{nem_row['slope_p3']:+.4f}" + r"""$ reflects
-the late-trace partial recovery after the early collapse.
-
-\begin{table}[t]
-  \centering
-  \small
-  \begin{tabular}{lrrrrrrr}
-    \toprule
-    Model & $N$ (B) & arch & $m_1$ & $m_2$ & $m_3$ & $c_1$ & $c_2$ & class \\
-    \midrule
-""" + top_table + r"""
-    \bottomrule
-  \end{tabular}
-  \caption{\textbf{Top-6 traces by $|m_3|$.}  Only anchors with
-    strong late-trace drift appear; canonical three-phase traces
-    (low $|m_3|$) are pushed off the top of the table.  $c_1$ and
-    $c_2$ are the changepoints as a fraction of trace length.}
-  \label{tab:iter65-top-slopes}
-\end{table}
-
-\paragraph{Architecture composition.}
-The PCI is systematically higher for MoE than dense models
-(\tableref{tab:iter65-arch}), but neither architecture has a
-majority of three-phase traces.  This is consistent with the
-iter 41 cross-scale result that the saturation law is
-\emph{taxonomic} (partitioning the frontier into saturated vs
-unsaturated) rather than \emph{predictive}.
-
-\begin{table}[t]
-  \centering
-  \small
-  \begin{tabular}{lrrrrrr}
-    \toprule
-    Arch & $n$ & 3P & collapse & drift & full-template & PCI mean \\
-    \midrule
-""" + arch_table + r"""
-    \bottomrule
-  \end{tabular}
-  \caption{\textbf{Per-architecture phase composition.}
-    \emph{3P} is the count of canonical three-phase traces;
-    \emph{full-template} is the count of traces satisfying all
-    three slope constraints simultaneously.  PCI mean is over
-    the stratum.  \texttt{platform_modal/scripts/scaling\_law\_iter65.py}
-    $\to$ \texttt{scaling\_law\_iter65\_arch\_phase.tsv}.}
-  \label{tab:iter65-arch}
-\end{table}
-
-\paragraph{Pre-registered predictions.}
-The eight predictions in
-\texttt{scaling\_law\_iter65\_predictions.tsv}:
-\begin{itemize}
-  \item P1\_three\_phase\_majority: """ + pred_rows[0]["pass_fail"] + r""" (""" + pred_rows[0]["observed"] + r""")
-  \item P2\_nemotron\_classified\_collapse: """ + pred_rows[1]["pass_fail"] + r""" (""" + pred_rows[1]["observed"] + r""")
-  \item P3\_pci\_below\_3\_for\_most: """ + pred_rows[2]["pass_fail"] + r""" (""" + pred_rows[2]["observed"] + r""")
-  \item P4\_nemotron\_lowest\_pci: """ + pred_rows[3]["pass_fail"] + r""" (""" + pred_rows[3]["observed"] + r""")
-  \item P5\_template\_full\_at\_most\_3: """ + pred_rows[4]["pass_fail"] + r""" (""" + pred_rows[4]["observed"] + r""")
-  \item P6\_dense\_higher\_three\_phase\_rate: """ + pred_rows[5]["pass_fail"] + r""" (""" + pred_rows[5]["observed"] + r""")
-  \item P7\_pci\_logparams\_correlation: """ + pred_rows[6]["pass_fail"] + r""" (""" + pred_rows[6]["observed"] + r""")
-  \item P8\_drift\_count\_3plus: """ + pred_rows[7]["pass_fail"] + r""" (""" + pred_rows[7]["observed"] + r""")
-\end{itemize}
-
-\paragraph{What iter 65 proves.}
-The three-phase hypothesis is geometrically falsified: only
-\textbf{""" + str(n_three_phase) + r"""/12}
-anchors have the canonical (slow, fast, plateau) OLS-slope
-pattern, and the cross-pillar comparison shows that the
-falsification is concentrated on the collapse and drift classes.
-Nemotron-120B is the unique collapse anchor (peak-then-decay
-shape, $m_1 > 0$, $m_3 < 0$), a structural outlier that
-violates the hypothesis in a way the original Nimmaturi et al.\
-template cannot accommodate.  Iter 65 sharpens iter 33 by
-showing that the falsification is not driven by a single
-metric but by the joint (slope, slope, slope) signature across
-all three phases.  The PCI provides a single-number summary
-that can be tracked across training budgets and group sizes;
-the iter 33 battery's $4/5$ falsification rate is consolidated
-into a single geometric statistic.
-
-\begin{figure}[t]
-  \centering
-  \IfFileExists{figures/scaling_law_iter65.pdf}{%
-  \includegraphics[width=0.95\linewidth]{figures/scaling_law_iter65.pdf}%
-  }{%
-  \fbox{\parbox{0.86\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_law\_iter65.pdf pending regeneration.]}\vspace{1em}}%
-  }
-  \caption{\textbf{Iter 65 phase-conformity geometry.}
-    \textbf{(A)} per-phase OLS slopes $(m_1, m_2, m_3)$ across
-    the 12 anchors; the slow/fast/plateau bounds are overlaid.
-    \textbf{(B)} phase-conformity index (PCI) per anchor with
-    the colour indicating the phase class.
-    \textbf{(C)} bootstrap CI of the two phase boundaries as a
-    fraction of trace length; blue = $c_1$, red = $c_2$.
-    \textbf{(D)} per-architecture PCI distribution (boxplot +
-    scatter); both dense and MoE have PCI median well below
-    the canonical template value of 3.0.}
-  \label{fig:scaling-iter65}
-\end{figure}
-"""
-    (PAPER_SEC / "scaling_law_iter65.tex").write_text(sec)
+    sec = r"\subsection{Exploratory continuous three-phase fits}" + "\n"
+    sec += "The least-squares hinge model is continuous at both changepoints. PCI counts six signed growth and plateau conditions, worth half a point each. Slope-condition counts are separate. Residual-block boundary intervals are conditional exploratory summaries; short nonstationary traces do not establish generalization.\n"
+    sec += f"Attempted traces: {attempted_count}; eligible fits: {n_total}. Observed class counts: {class_str}.\n"
+    sec += r"\begin{tabular}{lrlrrrrrl}" + "\n" + top_table + "\n" + r"\end{tabular}" + "\n"
+    for result in pred_rows:
+        label = result["prediction_id"].replace("_", r"\_")
+        sec += f"Descriptive check {label}: {result['pass_fail']}.\n"
+    (PAPER_SEC / "scaling_law_iter65_v2.tex").write_text(sec)
 
     # ---- console summary
     print(f"phase_class distribution: {class_str}")
-    print(f"three-phase: {n_three_phase}/12; collapse: {n_collapse}/12; drift: {n_drift}/12")
-    print(f"n_template_full: {n_template_full}/12; pci_mean: {pci_mean:.3f}")
+    print(f"three-phase: {n_three_phase}/{n_total}; collapse: {n_collapse}/{n_total}; drift: {n_drift}/{n_total}")
+    print(f"n_template_full: {n_template_full}/{n_total}; pci_mean: {pci_mean:.3f}")
     print(f"spearman(log params, PCI) = {sp:.3f}")
     print("predictions:")
     for p in pred_rows:
         print(f"  {p['prediction_id']}: {p['pass_fail']} -- {p['observed']}")
+
+    try:
+        from ._review27_rank import write_manifest
+    except ImportError:
+        from _review27_rank import write_manifest
+    write_manifest(__file__, CANDIDATE, [TRACE_DIR / cfg["file"] for cfg in MODELS.values()])
 
 
 if __name__ == "__main__":

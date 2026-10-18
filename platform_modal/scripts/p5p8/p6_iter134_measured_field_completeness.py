@@ -13,7 +13,7 @@ Output:
   platform_hybrid/experiments/results/p5p8/p6_iter134_per_row.tsv         (one row per measured row)
   platform_hybrid/experiments/results/p5p8/p6_iter134_per_entry.tsv      (one row per entry)
   platform_hybrid/experiments/results/p5p8/p6_iter134_per_field.tsv      (one row per field)
-  platform_hybrid/experiments/results/p5p8/p6_iter134_summary.json
+  platform_hybrid/experiments/results/p5p8/p6_iter134_completeness_summary.json
 
 Stdlib only.
 """
@@ -23,10 +23,11 @@ import pathlib
 import sys
 from collections import defaultdict, Counter
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
-REG = ROOT / "registry/entries"
-OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
-OUT.mkdir(parents=True, exist_ok=True)
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+ROOT = REPO_ROOT
+REG = ROOT / "platform_hybrid/registry/entries"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
 
 BASE_FIELDS = [
     "metric", "panel", "base", "delta", "ci_low", "ci_high",
@@ -63,7 +64,7 @@ def audit_entry(entry_path):
         row = {"id": eid, "record_type": rt, "row_idx": i}
         # Per-field classification
         for f in ALL_FIELDS:
-            row[f + "_state"] = classify(f, m.get(f))
+            row[f + "_state"] = classify(f, m[f]) if f in m else "MISSING"
         # CI consistency
         try:
             d = float(m.get("delta"))
@@ -87,6 +88,9 @@ def audit_entry(entry_path):
 
 
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
+    if not list(REG.glob("*.json")):
+        raise ValueError("Empty registry")
     per_row = []
     per_entry = []
     for p in sorted(REG.glob("*.json")):
@@ -184,7 +188,7 @@ def main():
         w = csv.DictWriter(f, fieldnames=list(per_field[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(per_field)
-    (OUT / "p6_iter134_summary.json").write_text(json.dumps(summary, indent=2))
+    (OUT / "p6_iter134_completeness_summary.json").write_text(json.dumps(summary, indent=2))
     print(f"WROTE per_row={len(per_row)} per_entry={len(per_entry)} per_field={len(per_field)}")
     print(f"CI consistent: {n_ci_cons}/{n_rows}, src present: {n_src_yes}/{n_rows}, sig=true: {n_sig}")
     # Per-field quick view

@@ -1,0 +1,374 @@
+{
+  "spec_id": "boxed-exact-rational-v2",
+  "cases": [
+    {
+      "text": "\\boxed{1234568}",
+      "gold": "1234567",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{1000001}",
+      "gold": "1000000",
+      "reward": 0
+    },
+    {
+      "text": "\\boxedX{42}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed99 then text {42}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{\\frac{1}{0}}",
+      "gold": "0",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{1/0}",
+      "gold": "1",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{NaN}",
+      "gold": "NaN",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{Infinity}",
+      "gold": "Infinity",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{42.000}",
+      "gold": "42",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed {4.2e1}",
+      "gold": "42",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{1,234,567}",
+      "gold": "1234567",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{12,34}",
+      "gold": "1234",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{\\frac{1}{2}}",
+      "gold": "0.5",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{-\\dfrac{3}{2}}",
+      "gold": "-1.5",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{2/4}",
+      "gold": ".5",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{$42$}",
+      "gold": "42",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{42%}",
+      "gold": "42",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{42 \\text{dollars}}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{99} then \\boxed{42}",
+      "gold": "42",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{42} then \\boxed{oops}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{42",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "Final answer 42",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{0.10000000000000001}",
+      "gold": "0.1",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{-0}",
+      "gold": "0",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{\\$125}",
+      "gold": "125",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{$125}",
+      "gold": "125",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{10\\% }",
+      "gold": "10",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{216 \\, \\text{seconds}}",
+      "gold": "216",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{216 seconds}",
+      "gold": "216",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{42\\text{seconds 99}}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{42\\text{or forty three}}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{\\$42\\%}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{\\frac{50\\%}{100}}",
+      "gold": ".5",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{\\text{42 seconds}}",
+      "gold": "42",
+      "reward": 0
+    },
+    {
+      "text": "\\boxed{42.0,000}",
+      "gold": "42",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{4.2,000}",
+      "gold": "4.2",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{.0,000}",
+      "gold": "0",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{0.000,000}",
+      "gold": "0",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{1e0,000}",
+      "gold": "1",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{1e+0,000}",
+      "gold": "1",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{1e-0,000}",
+      "gold": "1",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{1E1,000}",
+      "gold": "1e1000",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{1,234.5,678}",
+      "gold": "1234.5678",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{1234,567}",
+      "gold": "1234567",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{1,00}",
+      "gold": "100",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{1,000,00}",
+      "gold": "100000",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{1,,000}",
+      "gold": "1000",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{,1000}",
+      "gold": "1000",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{1000,}",
+      "gold": "1000",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{42.0,000/2}",
+      "gold": "21",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{42/1.0,000}",
+      "gold": "42",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{\\frac{42.0,000}{2}}",
+      "gold": "21",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{\\frac{42}{1e0,000}}",
+      "gold": "42",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{\\$42.0,000}",
+      "gold": "42",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{42.0,000%}",
+      "gold": "42",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{42.0,000\\text{seconds}}",
+      "gold": "42",
+      "reward": 0,
+      "status": "unparsable"
+    },
+    {
+      "text": "\\boxed{1,234.50}",
+      "gold": "1234.5",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{+1,234.50e-2}",
+      "gold": "12.345",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{-12,345.}",
+      "gold": "-12345",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{1,234e2}",
+      "gold": "123400",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{1,000/2,000}",
+      "gold": ".5",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{\\frac{1,000}{2,000}}",
+      "gold": ".5",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{-\\dfrac{1,234.5}{2.5}}",
+      "gold": "-493.8",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{1,234e-2/2}",
+      "gold": "6.17",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{\\$1,234.50}",
+      "gold": "1234.5",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{1,234.50%}",
+      "gold": "1234.5",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{1,234 seconds}",
+      "gold": "1234",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{1234.5}",
+      "gold": "1,234.50",
+      "reward": 1
+    },
+    {
+      "text": "\\boxed{.00042e5}",
+      "gold": "42",
+      "reward": 1
+    }
+  ],
+  "decorations": "One currency prefix/wrapper, percent suffix (numeric coefficient), or second/seconds suffix; no decorations in fraction operands or numeric/prose unit payloads",
+  "numeric_grouping": "Commas separate three-digit groups only in the integer portion of each complete numeric atom, including fraction operands; never in decimal digits or exponents"
+}

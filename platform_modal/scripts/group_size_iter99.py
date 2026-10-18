@@ -33,24 +33,24 @@ Inputs (real, measured):
         40 steps, G in {2,4,8,16}, 3 seeds each.
 
 Outputs:
-    platform_hybrid/experiments/results/group_size_iter99_signal_amplitude.tsv
+    platform_hybrid/experiments/results/group_size_iter99_signal_amplitude_v2.tsv
         Signal-amplitude decomposition per (G, step): advantage-variance
         term, the 1-ZVF predicted, and the empirical residual.
 
-    platform_hybrid/experiments/results/group_size_iter99_snr_at_g.tsv
+    platform_hybrid/experiments/results/group_size_iter99_snr_at_g_v2.tsv
         Per-G SNR = mean(|ΔR|) / sqrt(sigma_A^2 / G), aggregated over
         the second half of training.
 
-    platform_hybrid/experiments/results/group_size_iter99_noise_floor.tsv
+    platform_hybrid/experiments/results/group_size_iter99_noise_floor_v2.tsv
         Per-G noise floor (across 3 seeds) at each step: std / MAD / IQR
         and the cross-G compression ratio.
 
-    platform_hybrid/experiments/results/group_size_iter99_trajectory_equiv.tsv
+    platform_hybrid/experiments/results/group_size_iter99_trajectory_equiv_v2.tsv
         Pairwise curve discrepancy between G=2,4,8,16: Kolmogorov-
         Smirnov style max-distance on the 40-step mean reward trace,
         plus permutation-of-runs p-value.
 
-    figures/group_size_iter99.pdf
+    figures/group_size_iter99_v2.pdf
         Two-panel figure:
           (Left)  Per-step mean-reward trace (full sweep) for each G
                   with shaded seed-spread band.
@@ -100,7 +100,7 @@ def per_step_data(runs: list[dict]) -> dict[int, dict[int, list[dict]]]:
 
 
 def write_signal_amplitude(per_step: dict[int, dict[int, list[dict]]]) -> Path:
-    out = OUT_DIR / "group_size_iter99_signal_amplitude.tsv"
+    out = OUT_DIR / "group_size_iter99_signal_amplitude_v2.tsv"
     gs_list = sorted({g for d in per_step.values() for g in d.keys()})
     rows = []
     rows.append(
@@ -129,7 +129,7 @@ def write_signal_amplitude(per_step: dict[int, dict[int, list[dict]]]) -> Path:
 
 
 def write_snr(per_step: dict[int, dict[int, list[dict]]]) -> Path:
-    out = OUT_DIR / "group_size_iter99_snr_at_g.tsv"
+    out = OUT_DIR / "group_size_iter99_snr_at_g_v2.tsv"
     gs_list = sorted({g for d in per_step.values() for g in d.keys()})
     rows = ["G\tmean_delta_R\tsigma_A2\tpred_mc_noise\tsnr_pred_implicit_dpo\n"]
     half = sorted(per_step.keys())[len(per_step) // 2 :]
@@ -172,7 +172,7 @@ def write_snr(per_step: dict[int, dict[int, list[dict]]]) -> Path:
 
 
 def write_noise_floor(per_step: dict[int, dict[int, list[dict]]]) -> Path:
-    out = OUT_DIR / "group_size_iter99_noise_floor.tsv"
+    out = OUT_DIR / "group_size_iter99_noise_floor_v2.tsv"
     gs_list = sorted({g for d in per_step.values() for g in d.keys()})
     rows = []
     rows.append(
@@ -229,7 +229,7 @@ def _curve_max_distance(curve_a: list[float], curve_b: list[float]) -> float:
 
 
 def _perm_pvalue_curves(
-    pool: list[list[float]], n_perm: int = 999, seed: int = 7
+    pool: list[list[float]], labels: list[int], n_perm: int = 999, seed: int = 7
 ) -> float:
     """Two-sample curve-discrepancy test by label permutation.
 
@@ -245,11 +245,10 @@ def _perm_pvalue_curves(
     import random
     rng = random.Random(seed)
     n = len(pool)
-    labels = []
-    for i, _ in enumerate(pool):
-        labels.append(i % 4)  # original G identity
-    # observed statistic
-    obs_pairs = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)]
+    if len(labels) != n or len(set(labels)) < 2 or not pool:
+        raise ValueError("explicit group identity required for every trajectory")
+    groups = sorted(set(labels))
+    obs_pairs = [(a,b) for a in groups for b in groups if a < b]
     obs_stat = _between_group_stat(pool, labels, obs_pairs)
     cnt = 0
     for _ in range(n_perm):
@@ -294,7 +293,7 @@ def _between_group_stat(
 
 
 def write_trajectory_equiv(per_step: dict[int, dict[int, list[dict]]]) -> Path:
-    out = OUT_DIR / "group_size_iter99_trajectory_equiv.tsv"
+    out = OUT_DIR / "group_size_iter99_trajectory_equiv_v2.tsv"
     gs_list = sorted({g for d in per_step.values() for g in d.keys()})
     # collect trajectories (per seed) for each G
     traj_by_g: dict[int, list[list[float]]] = {G: [] for G in gs_list}
@@ -321,7 +320,8 @@ def write_trajectory_equiv(per_step: dict[int, dict[int, list[dict]]]) -> Path:
     pool = []
     for G in gs_list:
         pool.extend(traj_by_g[G])
-    p_value = _perm_pvalue_curves(pool)
+    labels = [G for G in gs_list for _ in traj_by_g[G]]
+    p_value = _perm_pvalue_curves(pool, labels)
     eps_implicit_dpo = 0.5  # tolerance for "MCs within implicit-DPO band"
     # pairwise curve discrepancies
     for ga in gs_list:
@@ -413,8 +413,8 @@ def write_figure(per_step: dict[int, dict[int, list[dict]]]) -> Path:
         "(Qwen2.5-0.5B / arithmetic, 3 seeds × 40 steps)"
     )
     fig.tight_layout(rect=[0, 0, 1, 0.94])
-    pdf = FIG_DIR / "group_size_iter99.pdf"
-    png = FIG_DIR / "group_size_iter99.png"
+    pdf = FIG_DIR / "group_size_iter99_v2.pdf"
+    png = FIG_DIR / "group_size_iter99_v2.png"
     fig.savefig(pdf)
     fig.savefig(png, dpi=140)
     plt.close(fig)

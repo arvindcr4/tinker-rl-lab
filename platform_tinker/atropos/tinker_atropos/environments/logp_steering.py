@@ -11,6 +11,7 @@ trainer applies on-policy distillation (advantage = logp_teacher - logp_student)
 """
 
 import asyncio
+import math
 import copy
 from typing import Dict, List, Optional, Tuple
 
@@ -66,7 +67,7 @@ class LogpSteeringEnv(BaseEnv):
         self.iter = 0
         # URL of the tinker-atropos FastAPI server (where /logprobs lives)
         # This is the same server that serves /v1/ and /generate
-        self.tinker_api_url = "http://localhost:8001"
+        self.tinker_api_url = str(server_configs[0].base_url).removesuffix("/v1").rstrip("/")
 
     @classmethod
     def config_init(cls) -> Tuple[BaseEnvConfig, List[APIServerConfig]]:
@@ -157,21 +158,30 @@ class LogpSteeringEnv(BaseEnv):
         for a token sequence (with steering prompt baked in).
         """
         payload = {"input_ids": token_ids}
-        try:
-            async with self._http_session.post(
-                f"{self.tinker_api_url}/logprobs",
-                json=payload,
-                timeout=aiohttp.ClientTimeout(total=120),
-            ) as resp:
-                if resp.status != 200:
-                    text = await resp.text()
-                    raise RuntimeError(f"/logprobs returned {resp.status}: {text}")
-                data = await resp.json()
-                return [entry["logprob"] for entry in data["logprobs"]]
-        except Exception as e:
-            print(f"[TEACHER] /logprobs call failed: {e}")
-            # Return zeros so training can continue without teacher signal
-            return [0.0] * len(token_ids)
+        for attempt in range(3):
+            try:
+                async with self._http_session.post(
+                    f"{self.tinker_api_url}/logprobs",
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=30),
+                ) as resp:
+                    if resp.status in {429, 502, 503, 504}:
+                        raise RuntimeError(f"transient teacher status {resp.status}")
+                    resp.raise_for_status()
+                    data = await resp.json()
+                entries = data["logprobs"]
+                if len(entries) != len(token_ids) or [e["token_id"] for e in entries] != token_ids:
+                    raise ValueError("Teacher token alignment mismatch")
+                return {
+                    "values": [e["logprob"] for e in entries],
+                    "policy_version": data.get("policy_version"),
+                }
+            except (aiohttp.ClientError, asyncio.TimeoutError, RuntimeError):
+                if attempt < 2:
+                    await asyncio.sleep(0.25 * 2**attempt)
+            except (ValueError, KeyError, TypeError):
+                break
+        return None  # unavailable is unscored, never probability one
 
     # ── main trajectory collection ───────────────────────────────────
 
@@ -238,6 +248,33 @@ class LogpSteeringEnv(BaseEnv):
         # Gather all teacher logprob calls concurrently
         teacher_results = await asyncio.gather(*teacher_tasks)
 
+        versions = {result["policy_version"] for result in teacher_results if result is not None}
+        if (
+            None in versions
+            or len(versions) != 1
+            or any(result is None for result in teacher_results)
+        ):
+            return None, []
+        scored_data["teacher_policy_version"] = next(iter(versions))
+        teacher_results = [result["values"] for result in teacher_results]
+
+        # Fail the group closed if any generated token lacks an aligned teacher value.
+        for i, values in enumerate(teacher_results):
+            tokens = scored_data["tokens"][i]
+            if values is None or len(values) != len(self._steering_prefix_ids) + len(tokens):
+                return None, []
+            aligned = values[-len(tokens) :]
+            behavior = scored_data["inference_logprobs"][i]
+            if len(behavior) != len(tokens):
+                return None, []
+            for lp, teacher_lp in zip(behavior, aligned):
+                if lp != 1.0 and (
+                    teacher_lp is None or not math.isfinite(teacher_lp) or teacher_lp > 0
+                ):
+                    return None, []
+            # Unavailable prompt positions remain null and are masked by the preprocessor.
+            teacher_results[i] = aligned
+
         all_length_penalty = True
         for i, choice in enumerate(chat_completions.choices):
             teacher_lps_full = teacher_results[i]
@@ -246,13 +283,7 @@ class LogpSteeringEnv(BaseEnv):
             # The teacher token sequence is longer (has system prompt tokens).
             # Align: take the LAST len(student_tokens) positions from the
             # teacher logprobs so the completion portion lines up.
-            n_student = len(student_tokens)
-
-            if len(teacher_lps_full) >= n_student:
-                teacher_lps_aligned = teacher_lps_full[-n_student:]
-            else:
-                pad = [0.0] * (n_student - len(teacher_lps_full))
-                teacher_lps_aligned = pad + teacher_lps_full
+            teacher_lps_aligned = teacher_lps_full
 
             # distill format: [seq_len, K] where K=1 for tinker
             scored_data["distill_token_ids"].append([[tid] for tid in student_tokens])

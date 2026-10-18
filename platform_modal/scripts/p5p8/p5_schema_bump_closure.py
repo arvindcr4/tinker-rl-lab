@@ -15,10 +15,12 @@ iter-32 uses, then re-audits.
 from __future__ import annotations
 import csv, datetime, json, pathlib, random, sys
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
-REG = ROOT / "registry" / "entries"
-RES = ROOT / "experiments" / "results" / "p5p8"
-RES.mkdir(parents=True, exist_ok=True)
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+ROOT = REPO_ROOT
+REG = ROOT / "platform_hybrid/registry" / "entries"
+RES = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
+
 
 NEW_FIELDS = ("token_aggregation", "reward_shaping_type", "sampling_dynamic_filter")
 # (delta_id) -> tuple of NEW_FIELDS this variant touches. Mirrored from
@@ -46,9 +48,25 @@ def _loss(entry, leaf):
     return lf.get(leaf) if isinstance(lf, dict) else None
 
 
+def active_deltas(entry):
+    return [d for d in entry.get("variant_deltas_applied", [])
+            if d.get("status") in ("implemented", "surrogate")]
+
+
+def closure_values(entry, fields):
+    result = {}
+    for d in active_deltas(entry):
+        for field, value in DELTA_FIELD_VALUE.get(d["delta_id"], {}).items():
+            if field not in fields:
+                continue
+            if field in result and result[field] != value:
+                raise ValueError(f"Conflicting active variants for {field}")
+            result[field] = value
+    return result
+
+
 def classify(entry, field):
-    deltas = [d for d in entry.get("variant_deltas_applied", [])
-              if d.get("status") in ("implemented", "surrogate")]
+    deltas = active_deltas(entry)
     if not deltas:
         return "NOT_APPLICABLE"
     if not any(field in DELTA_FIELD_APPLIES.get(d["delta_id"], ()) for d in deltas):
@@ -69,8 +87,9 @@ def entry_score(entry):
 
 
 def main():
+    RES.mkdir(parents=True, exist_ok=True)
     # CLI: --no-apply skips the side-effecting closure act; default applies.
-    apply_changes = "--no-apply" not in sys.argv[1:]
+    apply_changes = "--apply" in sys.argv[1:] and "--no-apply" not in sys.argv[1:]
     if not REG.exists():
         print(f"ERROR: {REG} missing", file=sys.stderr); return 1
     entries = [json.loads(p.read_text()) for p in sorted(REG.glob("*.json"))
@@ -165,8 +184,9 @@ def main():
 
     # ------ Closure act: populate worklist from DELTA_FIELD_VALUE ------
     populated, failures = [], []
+    staged = {}
     if not apply_changes:
-        print("(skipping closure act; rerun without --no-apply to apply)")
+        print("(dry run; explicit --apply required to mutate the registry)")
     for w in worklist:
         ep = REG / f"{w['entry_id']}.json"
         if not ep.exists():
@@ -176,15 +196,23 @@ def main():
         if not isinstance(lf, dict):
             failures.append({"entry_id": w["entry_id"], "reason": "loss_form_not_dict"}); continue
         changes = {}
-        for d in entry.get("variant_deltas_applied", []):
-            for field, val in DELTA_FIELD_VALUE.get(d["delta_id"], {}).items():
-                if field in w["unpopulated_fields"] and lf.get(field) is None:
-                    lf[field] = val; changes[field] = val
+        for field, val in closure_values(entry, w["unpopulated_fields"]).items():
+            if lf.get(field) is None:
+                lf[field] = val
+                changes[field] = val
         if changes:
             if apply_changes:
                 entry["min_report"]["loss_form"] = lf
-                ep.write_text(json.dumps(entry, indent=2) + "\n")
-            populated.append({"entry_id": w["entry_id"], "fields_populated": changes})
+                staged[ep] = entry
+            if apply_changes:
+                populated.append({"entry_id": w["entry_id"], "fields_populated": changes})
+
+    if apply_changes:
+        from review17_contract import validate_proposals
+        if staged:
+            validate_proposals({p.stem: e for p, e in staged.items()}, REG.parent / "schema.json")
+        for path, entry in staged.items():
+            path.write_text(json.dumps(entry, indent=2, allow_nan=False) + "\n")
 
     # Re-audit
     post = {f: {s: 0 for s in counts[f]} for f in NEW_FIELDS}

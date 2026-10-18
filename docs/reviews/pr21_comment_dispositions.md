@@ -1,0 +1,77 @@
+# PR21 comment dispositions
+
+Offline review repairs. Historical result artifacts are not recomputed. Provider execution is not claimed.
+
+- 4305491485: fixed — Successful native receipts declare empirical/completed admission fields.
+- 4305491488: fixed — Grouped GRPO rejects zero-temperature rollout configuration.
+- 4305495285: fixed — Curriculum summary consumes renamed scalar-loss metric.
+- 4305495293: fixed — Corrected string platform IDs use measured manifest GPU names.
+- 4305495295: fixed — Modal manifest GPU names accepted; missing provenance still rejected.
+- 4305495298: fixed — Sweep configs and generator explicitly declare reward version.
+- 4305495302: fixed — Fixed: every historical finding and summary is explicitly quarantined; completion overclaims withdrawn; observations preserved.
+- 4305495303: fixed — Historical v1 records cannot pass v2 publication gate. Added explicit historical_inventory mode with pinned record/signature byte hashes and strict JSON validation; successful inventory explicitly reports publication_accepted=false. This checks inventory drift, not signature authenticity or scientific acceptance.
+- 4305495308: fixed — Publication-mode inventory now requires caller-supplied independently trusted key and forwards it to both verifiers. Historical v1 records are not silently upgraded or authenticated.
+- 4305495311: partly fixed — Partly fixed: minimum eligibility is 15 disjoint steps and all 22-run historical metrics are quarantined. Recalculation deferred to preserve stored results and avoid generated outputs; no corrected count claimed.
+- 4305495314: fixed — Separate Qwen3-8B recipe matches launcher; output model derives from recipe.
+- 4305495318: fixed — schema_valid and validation label now reflect registry_validation_failures.
+- 4305495319: fixed — Fixed: removed paragraph break inside GRPO equation; static equation regression passes. Full LaTeX build blocked by missing pdflatex.fmt.
+- 4305495326: fixed — Math500 uses boxed mathematical grading.
+- 4305495328: fixed — Fixed: overview and endpoint now describe confounded prompt-pool associations and withdraw causal success claim.
+- 4305495331: fixed — Fixed: explicit optional tinker-cookbook installation precedes recipe commands.
+- 4305495332: fixed — Fixed: baseline comparison and effective batch 128 are explicitly proposed and runtime-unverified.
+- 4305495333: fixed — Fixed: length association remains descriptive; parser/verbosity mechanisms unresolved pending separate failure measurements.
+- 4305495335: fixed — Fixed: Generator defaults to descriptive reporting without seed-count-triggered inference.
+- 4305495339: fixed — Fixed: Gap producers require stable unique IDs and separate namespaces.
+- 4305495340: fixed — Inventory manifest uses shared duplicate-rejecting strict_json_loads.
+- 4305495345: fixed — Exact, textual reference, ambiguous UUID, time/model candidate, unmatched have distinct evidence roles; unmatched is no_evidence.
+- 4305495349: fixed — Unverified legacy cache fails closed without automatic rerun.
+- 4305495353: fixed — Disabled argparse implicit help, preventing option-like positional --help from returning success before contract validation.
+- 4305495355: fixed — Malformed negative/noninteger existing quota counters roll back and return quota_unavailable.
+- 4305495357: fixed — Insufficient independent-run coverage writes status=not_reproducible, null AUROCs, claim_eligible=false, and reason rather than crashing or leaking step folds. Updated method description. Synthetic only, committed results untouched.
+- 4305495359: fixed — Fixed: configuration templates no longer claim exact/canonical matched runtime dumps; default export commands labeled appropriately.
+- 4305495363: fixed — Fixed: Failed/null critic envelopes remain incomplete; only completed envelopes require findings arrays.
+- 4305495364: fixed — BFCL synthetic dry-run writes the exact --out path advertised to callers.
+- 4305495366: fixed — Modal traversal tracks depth and stops enqueueing directories past MAX_DEPTH.
+- 4305495368: fixed — Fixed: Novelty workflow/schema supports inconclusive status and missing-evidence/search-limit fields.
+- 4305495371: fixed — Fixed: Generated completion criteria accept planned null and negative outcomes.
+- 4305495374: fixed — Fixed: Validator rejects TODO/TBD/20XX/placeholder fields, including generated --fix output.
+- 4305495377: fixed — Fixed: Same placeholder-validation fix as comment 32.
+- 4305495379: fixed — Fixed: all chapter inputs use section-level top headings with child headings promoted consistently; static hierarchy regression passes.
+- 4305495381: fixed — Backfill prefers immutable content identities, with namespaced name fallback only for legacy runs lacking identity.
+- 4305495382: fixed — Reward identity binds environment wrapper and delegated grading source.
+- 4305495384: fixed — Fixed: explicit local Atropos editable installation includes declared atroposlib dependency before commands.
+- 4305495387: fixed — Fixed: prerequisite activates .venv and instructs activation in every terminal.
+- 4305495390: fixed — Offline evidence URL type is validated, so numeric URLs fail verification without escaping it.
+- 4305495393: fixed — Fixed: positive-threshold table measure renamed near-constant fraction and distinguished from exact ZVF throughout caption/results.
+- 4305495395: fixed — Scalar config aliases restored through substring matching; nested arbitrary values still excluded.
+- 4305495397: fixed — Tool-use analysis docstring/table caption now explicitly say ZVF is not computed without per-group reward evidence.
+- 4305495398: fixed — Fixed: Removed implicit three seeds; validates supplied power/precision calculation minimum; incomplete drafts remain unallocated.
+- 4305495399: fixed — Fixed: Preflight fetching completes before critic dispatch; stable IDs preserve mandatory gaps.
+- 4305495401: fixed — Fixed: claims hierarchy and limitations both exclude separate five-seed control from admitted inferential evidence.
+- 4305495404: fixed — Fixed: five-seed instruct row marked descriptive only and caption clarifies unresolved test identity.
+- 4305495406: fixed — Incomplete heldout receipts retain model, seed, experiment/run IDs, training_last10_avg and source fields.
+- 4305495408: fixed — Success-filtered best-of-4 SFT gets its own experiment name, HF destination derived from that name, W&B method tag and local adapter prefix; historical PPO checkpoint namespace protected. Existing callable name retained for compatibility.
+- 4305495411: fixed — Measured summary endpoints promoted into analysis namespace.
+- 4305495415: fixed — Fixed: Final-byte review precedes terminal completion; exit requires manifest and successful receipt.
+- 4305495417: fixed — Fixed: Run-scoped executable integrity check requires completed review envelopes; removes premature shipping claims.
+- 4305495421: partly — SAFETY MITIGATION, not feature completion: causal launcher now exits nonzero before allocation because it has no authenticated service-resolved base-model revision contract. It cannot safely produce successful unresolved receipts. Re-enabling requires a service metadata endpoint/receipt proving the actual resolved revision and propagating it through training; an arbitrary environment revision would not establish that. No service calls were made to discover private runtime capability.
+- 4305495422: fixed — Fixed: resolution table now gives scoped fixed/partly fixed statuses and explicitly deferred companion work rather than blanket completion.
+- 4305495423: fixed — Fixed: byte-identical statement narrowed; actual calibration empty-input, insufficient-pair and Holm-family changes described against 72812969.
+- 4305495427: fixed — Fixed: Overview describes static plan generation and explicitly excludes execution/outcomes.
+- 4305495428: fixed — Offline tab describes actual integrity/date/identity/PNG/HTTPS checks and explicitly separates audit-count reconciliation.
+- 4305495430: fixed — Numeric train/eval token-count metrics remain visible under a narrow count-key pattern; credential-like keys/values remain redacted recursively.
+- 4305495433: fixed — PID output is offset from initial base group size, avoiding double-integrated integral drift at target. Updated prior saturation regression for positional PID dynamics, checking saturation, anti-windup stability and target settling.
+- 4305495435: fixed — Removed unused gsm8k_reward import; no unsupported contract-grade claim in the layer profiler import surface.
+- 4305495438: fixed — Empty-data steps use their own counter and are excluded from computed-loss denominator; zero evaluated losses returns null rather than a fabricated zero fraction.
+- 4305495442: fixed — Fixed: Schema defines resolution_status and unresolved evidence_needed.
+
+## Six follow-up comments on the previous head
+
+- 4305592330: fixed — Contrast tests cover the automatic dark-mode selector as well as explicit light/dark palettes and reject missing selectors.
+- 4305592337: fixed — Static fixtures render all nine routes; section-option counts are scoped to the navigation selector rather than unrelated view controls.
+- 4305592340: fixed — Successful native execution may remain completed, but measured-analysis admission additionally requires observed finite reward metrics and matching observed rollout count.
+- 4305592342: fixed — npm test builds source directly to dist and targets that page with the same data input; the historical HTML artifact is not overwritten.
+- 4305592344: fixed — Standalone Atropos declares its runtime tenacity dependency.
+- 4305592349: fixed — Shortcut toggle keeps a constant accessible label, with aria-pressed conveying state.
+
+Follow-up validation: 41 JavaScript tests and Vite build passed; 130 Python tests passed with 3 scanner skips. Browser execution was attempted but Chromium could not start under the local sandbox (socket operation denied); no browser-pass claim is made.

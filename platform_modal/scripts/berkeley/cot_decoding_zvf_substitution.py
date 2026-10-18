@@ -112,9 +112,12 @@ def load_gsm8k(seed: str):
     for prob in data["per_problem"]:
         r = list(prob["rewards"])
         if len(r) != G:
-            # skip / pad — defensive; shouldn't happen in practice
-            r = (r + [0.0] * G)[:G]
+            raise ValueError(f"{seed}: expected {G} rewards, got {len(r)}")
+        if any(isinstance(x, bool) or x not in (0.0, 1.0) for x in r):
+            raise ValueError("Expected binary rewards")
         out.append(r)
+    if not out or data.get("group_size", G) != G:
+        raise ValueError("empty prompts or incompatible native group size")
     return out
 
 

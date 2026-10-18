@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import sqrt
+from math import sqrt, isfinite
 from typing import Literal, Sequence
 
 import torch
@@ -13,16 +13,26 @@ ATOL = 1e-8
 
 Arm = Literal["grpo", "dapo", "gspo", "drgrpo", "aero"]
 Policy = Literal[
-    "static_g8", "static_g16", "symmetric_zvf", "failure_only",
-    "boundary_aware", "full_triage",
+    "static_g8",
+    "static_g16",
+    "symmetric_zvf",
+    "failure_only",
+    "boundary_aware",
+    "full_triage",
 ]
 RewardStatus = Literal["observed", "noisy", "missing", "delayed"]
 
 _ARMS = frozenset(("grpo", "dapo", "gspo", "drgrpo", "aero"))
-_POLICIES = frozenset((
-    "static_g8", "static_g16", "symmetric_zvf", "failure_only",
-    "boundary_aware", "full_triage",
-))
+_POLICIES = frozenset(
+    (
+        "static_g8",
+        "static_g16",
+        "symmetric_zvf",
+        "failure_only",
+        "boundary_aware",
+        "full_triage",
+    )
+)
 
 
 @dataclass(frozen=True)
@@ -51,13 +61,17 @@ def _tensor(value: torch.Tensor | Sequence[float]) -> torch.Tensor:
     return torch.as_tensor(value, dtype=torch.float64)
 
 
-def _validate(rewards: torch.Tensor, logps: torch.Tensor, old: torch.Tensor, mask: torch.Tensor) -> None:
+def _validate(
+    rewards: torch.Tensor, logps: torch.Tensor, old: torch.Tensor, mask: torch.Tensor
+) -> None:
     if rewards.ndim != 2 or logps.ndim != 2:
         raise ValueError("rewards and logps must both be rank two")
     if logps.shape != old.shape or logps.shape != mask.shape:
         raise ValueError("logps, old_logps, and mask must have identical shapes")
     if rewards.numel() != logps.shape[0]:
         raise ValueError("flattened rewards must match completion rows")
+    if not all(torch.isfinite(t).all() for t in (rewards, logps, old, mask)):
+        raise ValueError("reward and objective tensors must be finite")
     if torch.any(mask < 0) or torch.any(mask > 1):
         raise ValueError("mask values must be in [0, 1]")
     if not torch.any(mask.sum(dim=1) > 0):
@@ -72,6 +86,18 @@ def _advantages(
     aero_successes: Sequence[int] | None,
     aero_observations: Sequence[int] | None,
 ) -> torch.Tensor:
+    if not torch.isfinite(rewards).all() or not torch.isfinite(active_rows).all():
+        raise ValueError("rewards and active rows must be finite")
+    if aero_successes is not None or aero_observations is not None:
+        if (
+            aero_successes is None
+            or aero_observations is None
+            or len(aero_successes) != rewards.shape[0]
+            or len(aero_observations) != rewards.shape[0]
+        ):
+            raise ValueError("complete AERO statistics required")
+        for successes, observations in zip(aero_successes, aero_observations):
+            _validate_history(successes, observations)
     result = torch.zeros_like(rewards)
     active = active_rows.reshape_as(rewards).bool()
     for group in range(rewards.shape[0]):
@@ -82,14 +108,21 @@ def _advantages(
         if arm == "drgrpo":
             result[group][active[group]] = centered
             continue
-        std = values.std(correction=1) if values.numel() > 1 else torch.tensor(0.0, dtype=values.dtype)
-        if std > ATOL:
+        std = (
+            values.std(correction=1)
+            if values.numel() > 1
+            else torch.tensor(0.0, dtype=values.dtype)
+        )
+        if not reward_degenerate(values.tolist()):
             result[group][active[group]] = centered / std
             continue
         if arm == "aero":
             if aero_successes is None or aero_observations is None:
                 raise ValueError("AERO requires successes and observations")
-            if len(aero_successes) != rewards.shape[0] or len(aero_observations) != rewards.shape[0]:
+            if (
+                len(aero_successes) != rewards.shape[0]
+                or len(aero_observations) != rewards.shape[0]
+            ):
                 raise ValueError("AERO statistics must have one entry per group")
             successes, observations = int(aero_successes[group]), int(aero_observations[group])
             if observations <= 0 or not 0 <= successes <= observations:
@@ -167,8 +200,31 @@ def objective_trace(
                  surrogate.detach(), loss.detach(), gradient.detach(), chosen)
 
 
+def _validate_history(successes, total):
+    if (
+        isinstance(successes, bool)
+        or isinstance(total, bool)
+        or not isinstance(successes, int)
+        or not isinstance(total, int)
+        or total < 0
+        or not 0 <= successes <= total
+    ):
+        raise ValueError("historical counts must be nonnegative integers with successes <= total")
+
+
+def reward_degenerate(values: Sequence[float]) -> bool:
+    """Sample-standard-deviation <= ATOL, correction=1, active rows only."""
+    if not values or any(not isfinite(float(x)) for x in values):
+        raise ValueError("finite active rewards required")
+    if len(values) < 2:
+        return True
+    mean = sum(values) / len(values)
+    return sqrt(sum((x - mean) ** 2 for x in values) / (len(values) - 1)) <= ATOL
+
+
 def _wilson(successes: int, total: int, z: float = 1.959963984540054) -> tuple[float, float]:
-    if total <= 0 or not 0 <= successes <= total:
+    _validate_history(successes, total)
+    if total <= 0:
         raise ValueError("invalid Wilson counts")
     p = successes / total
     denominator = 1 + z * z / total
@@ -188,14 +244,21 @@ def decide_policy(
 ) -> PolicyDecision:
     if arm not in _POLICIES:
         raise ValueError(f"unknown policy: {arm}")
+    _validate_history(history_successes, history_total)
+    if not (
+        isfinite(retry_floor)
+        and isfinite(mastery_threshold)
+        and 0 <= retry_floor <= mastery_threshold <= 1
+    ):
+        raise ValueError("invalid policy thresholds")
     values = [float(x) for x in rewards]
-    if len(values) < 2 or any(x < 0 or x > 1 for x in values):
+    if len(values) < 2 or any(not isfinite(x) or x < 0 or x > 1 for x in values):
         raise ValueError("at least two rewards in [0,1] are required")
     successes = history_successes + sum(x >= 1 - ATOL for x in values)
     low, high = _wilson(successes, history_total + len(values))
     all_wrong = all(abs(x) <= ATOL for x in values)
     all_correct = all(abs(x - 1) <= ATOL for x in values)
-    zero_variance = max(values) - min(values) <= ATOL
+    zero_variance = reward_degenerate(values)
     if arm == "static_g8":
         action, size, reason = "keep", 8, "fixed"
     elif arm == "static_g16":
@@ -214,6 +277,12 @@ def decide_policy(
             action, size, reason = "drop", 0, "mastered"
         else:
             action, size, reason = "keep", 8, "insufficient confidence"
+    elif zero_variance and arm == "full_triage":
+        action, size, reason = (
+            "recheck",
+            0,
+            "graded plateau requires separate task_success evidence",
+        )
     else:
         action, size, reason = "keep", 8, "informative"
     return PolicyDecision(arm, action, size, reason, low, high)
@@ -230,6 +299,7 @@ def decide_policy_observation(
     """Fail closed when a reward observation is unresolved or explicitly noisy."""
     if arm not in _POLICIES:
         raise ValueError(f"unknown policy: {arm}")
+    _validate_history(history_successes, history_total)
     if status not in {"observed", "noisy", "missing", "delayed"}:
         raise ValueError(f"unknown reward status: {status}")
     if status != "observed":

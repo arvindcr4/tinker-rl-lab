@@ -18,11 +18,11 @@ import os
 import random
 import sys
 import time
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional, Tuple
 
 from datasets import load_dataset
 from latex2sympy2_extended import NormalizationConfig
-from math_verify import LatexExtractionConfig, parse, verify
+from math_verify import LatexExtractionConfig, parse
 from tqdm.asyncio import tqdm_asyncio
 
 from atroposlib.envs.base import (
@@ -31,8 +31,8 @@ from atroposlib.envs.base import (
     BaseEnvConfig,
     ScoredDataGroup,
 )
-from atroposlib.type_definitions import Item
 from tinker_atropos.config import TinkerAtroposConfig
+from tinker_atropos.grading import authoritative_math_answer, verify_answer
 
 
 def _get_config_path():
@@ -86,7 +86,9 @@ def _bin_by_difficulty(dataset, bin_name: str):
     Returns the filtered subset.
     """
     if bin_name not in DIFFICULTY_BINS:
-        raise ValueError(f"Unknown difficulty_bin '{bin_name}'. Choose from {list(DIFFICULTY_BINS)}")
+        raise ValueError(
+            f"Unknown difficulty_bin '{bin_name}'. Choose from {list(DIFFICULTY_BINS)}"
+        )
 
     lo, hi = DIFFICULTY_BINS[bin_name]
     if bin_name == "all":
@@ -100,8 +102,7 @@ def _bin_by_difficulty(dataset, bin_name: str):
     hi_thresh = sorted_lengths[int(hi * n) - 1] if hi < 1.0 else sorted_lengths[-1]
 
     binned = [
-        item for item in all_items
-        if lo_thresh <= _solution_word_count(item["answer"]) <= hi_thresh
+        item for item in all_items if lo_thresh <= _solution_word_count(item["answer"]) <= hi_thresh
     ]
     return binned
 
@@ -113,7 +114,7 @@ class BootstrapThresholdEnv(BaseEnv):
     GRPO converges when step-0 accuracy is near zero.
 
     Key extra metrics:
-      train/frac_zero_signal  — fraction of steps where all G rollouts scored 0
+      train/all_failure_fraction  — fraction of steps where all G rollouts scored 0
       train/mean_group_reward — mean reward per group (tracks whether signal exists)
       train/difficulty_bin    — which bin is being used (logged once)
     """
@@ -125,7 +126,7 @@ class BootstrapThresholdEnv(BaseEnv):
         self.percent_correct_buffer = []
         self.eval_metrics = []
         # Threshold-specific buffers
-        self.zero_signal_steps = 0   # steps where all group scores == 0
+        self.zero_signal_steps = 0  # steps where all group scores == 0
         self.total_steps_logged = 0
         self.group_reward_buffer = []
         self.difficulty_bin = os.environ.get("BOOTSTRAP_DIFFICULTY_BIN", "easy")
@@ -133,7 +134,9 @@ class BootstrapThresholdEnv(BaseEnv):
 
     @classmethod
     def config_init(cls):
-        config = TinkerAtroposConfig.from_yaml(CONFIG_PATH) if CONFIG_PATH else TinkerAtroposConfig()
+        config = (
+            TinkerAtroposConfig.from_yaml(CONFIG_PATH) if CONFIG_PATH else TinkerAtroposConfig()
+        )
         env_config = BaseEnvConfig(
             tokenizer_name=config.base_model,
             group_size=config.group_size,
@@ -206,19 +209,19 @@ class BootstrapThresholdEnv(BaseEnv):
             wandb_metrics = {}
 
         if self.percent_correct_buffer:
-            wandb_metrics["train/percent_correct"] = (
-                sum(self.percent_correct_buffer) / len(self.percent_correct_buffer)
+            wandb_metrics["train/percent_correct"] = sum(self.percent_correct_buffer) / len(
+                self.percent_correct_buffer
             )
         self.percent_correct_buffer = []
 
         if self.group_reward_buffer:
-            wandb_metrics["train/mean_group_reward"] = (
-                sum(self.group_reward_buffer) / len(self.group_reward_buffer)
+            wandb_metrics["train/mean_group_reward"] = sum(self.group_reward_buffer) / len(
+                self.group_reward_buffer
             )
         self.group_reward_buffer = []
 
         if self.total_steps_logged > 0:
-            wandb_metrics["train/frac_zero_signal"] = (
+            wandb_metrics["train/all_failure_fraction"] = (
                 self.zero_signal_steps / self.total_steps_logged
             )
         self.zero_signal_steps = 0
@@ -249,12 +252,15 @@ class BootstrapThresholdEnv(BaseEnv):
             extraction_config=[LatexExtractionConfig()],
         )
         answer_parsed = parse(
-            response_content.split("</think>")[-1],
+            authoritative_math_answer(response_content.split("</think>")[-1]),
             extraction_config=[
                 LatexExtractionConfig(
                     normalization_config=NormalizationConfig(
-                        nits=False, malformed_operators=False,
-                        basic_latex=True, boxed="all", units=True,
+                        nits=False,
+                        malformed_operators=False,
+                        basic_latex=True,
+                        boxed="all",
+                        units=True,
                     ),
                     boxed_match_priority=0,
                     try_extract_without_anchor=False,
@@ -262,14 +268,13 @@ class BootstrapThresholdEnv(BaseEnv):
             ],
             extraction_mode="first_match",
         )
-        score = 1 if verify(answer_parsed, gold_parsed) else 0
+        score = 1 if verify_answer(gold_parsed, answer_parsed) else 0
         return {"score": score, "question": question, "gold_answer": answer}
 
     async def evaluate(self, *args, **kwargs):
         start_time = time.time()
         tasks = [
-            self.rollout_and_score_eval(item["question"], item["gold_answer"])
-            for item in self.test
+            self.rollout_and_score_eval(item["question"], item["gold_answer"]) for item in self.test
         ]
         results = await tqdm_asyncio.gather(*tasks)
         scores = [r["score"] for r in results]
@@ -301,14 +306,20 @@ class BootstrapThresholdEnv(BaseEnv):
 
         to_score = []
         for choice, node in zip(chat_completion.choices, nodes):
-            to_score.append({
-                "messages": (*convo_prefix, user_message, {"role": "assistant", "content": choice.message.content}),
-                "gold_answer": gold_answer,
-                "finish_reason": choice.finish_reason,
-                "tokens": node.tokens,
-                "masked_tokens": node.masked_tokens,
-                "logprobs": node.logprobs,
-            })
+            to_score.append(
+                {
+                    "messages": (
+                        *convo_prefix,
+                        user_message,
+                        {"role": "assistant", "content": choice.message.content},
+                    ),
+                    "gold_answer": gold_answer,
+                    "finish_reason": choice.finish_reason,
+                    "tokens": node.tokens,
+                    "masked_tokens": node.masked_tokens,
+                    "logprobs": node.logprobs,
+                }
+            )
         return await self.score(to_score), []
 
     async def score(self, rollout_group_data) -> Optional[ScoredDataGroup]:
@@ -331,12 +342,15 @@ class BootstrapThresholdEnv(BaseEnv):
 
         for item in rollout_group_data:
             answer_parsed = parse(
-                item["messages"][-1]["content"].split("</think>")[-1],
+                authoritative_math_answer(item["messages"][-1]["content"].split("</think>")[-1]),
                 extraction_config=[
                     LatexExtractionConfig(
                         normalization_config=NormalizationConfig(
-                            nits=False, malformed_operators=False,
-                            basic_latex=True, boxed="all", units=True,
+                            nits=False,
+                            malformed_operators=False,
+                            basic_latex=True,
+                            boxed="all",
+                            units=True,
                         ),
                         boxed_match_priority=0,
                         try_extract_without_anchor=False,
@@ -344,9 +358,9 @@ class BootstrapThresholdEnv(BaseEnv):
                 ],
                 extraction_mode="first_match",
             )
-            reward = 1.0 if verify(answer_parsed, gold_parsed) else 0.0
+            reward = 1.0 if verify_answer(gold_parsed, answer_parsed) else 0.0
 
-            if len([t for t in item["masked_tokens"] if t != -100]) < 10:
+            if len([t for t in item["masked_tokens"] if t != -100]) < 1:
                 continue
 
             scores["tokens"].append(item["tokens"])

@@ -21,7 +21,7 @@ from .fixtures import (
     TRANSLATED_FIXTURE,
     ZERO_MASK_FIXTURE,
 )
-from .reference import ATOL, RTOL, decide_policy, decide_policy_observation
+from .reference import ATOL, RTOL, decide_policy_observation
 
 ARMS = ("grpo", "dapo", "gspo", "drgrpo", "aero")
 POLICIES = (
@@ -59,10 +59,7 @@ def _sha256_file(path: Path) -> str:
 
 
 def _fixture_digest() -> str:
-    payload = {
-        name: asdict(fixture)
-        for name, fixture in sorted(FIXTURES.items())
-    }
+    payload = {name: asdict(fixture) for name, fixture in sorted(FIXTURES.items())}
     return _sha256_bytes(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode())
 
 
@@ -72,33 +69,109 @@ def _compact(result: Any) -> tuple[dict[str, Any], dict[str, Any]]:
     return summary, provenance
 
 
-def _controller_matrix() -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    observed = {
-        "all_wrong": [0.0, 0.0],
-        "all_correct": [1.0, 1.0],
-        "mixed": [0.0, 1.0],
-    }
+def controller_fixtures():
+    """Frozen expected actions independent of the controller under test."""
+    rows = []
     for policy in POLICIES:
-        for case, rewards in observed.items():
-            decision = decide_policy(policy, rewards)
-            rows.append({
-                "policy": policy,
-                "case": case,
-                "status": "observed",
-                "decision": asdict(decision),
-                "charged_rollouts": decision.group_size,
-            })
+        expected = {
+            "static_g8": [("keep", 8)] * 5,
+            "static_g16": [("keep", 16)] * 5,
+            "symmetric_zvf": [
+                ("escalate", 16),
+                ("escalate", 16),
+                ("keep", 8),
+                ("escalate", 16),
+                ("escalate", 16),
+            ],
+            "failure_only": [
+                ("escalate", 16),
+                ("keep", 8),
+                ("keep", 8),
+                ("escalate", 16),
+                ("keep", 8),
+            ],
+            "boundary_aware": [
+                ("escalate", 16),
+                ("drop", 0),
+                ("keep", 8),
+                ("escalate", 16),
+                ("drop", 0),
+            ],
+            "full_triage": [("escalate", 16), ("keep", 8), ("keep", 8), ("drop", 0), ("drop", 0)],
+        }[policy]
+        cases = [
+            ("all_wrong", [0.0, 0.0], 0, 0),
+            ("all_correct", [1.0, 1.0], 0, 0),
+            ("mixed", [0.0, 1.0], 0, 0),
+            ("failure_confidence", [0.0, 0.0], 0, 1000),
+            ("mastery_confidence", [1.0, 1.0], 1000, 1000),
+        ]
+        for (case, rewards, successes, total), (action, size) in zip(cases, expected):
+            rows.append(
+                {
+                    "policy": policy,
+                    "case": case,
+                    "status": "observed",
+                    "rewards": rewards,
+                    "history_successes": successes,
+                    "history_total": total,
+                    "expected_action": action,
+                    "expected_group_size": size,
+                }
+            )
         for status in ("noisy", "missing", "delayed"):
-            decision = decide_policy_observation(policy, [None, None], status=status)
-            rows.append({
-                "policy": policy,
-                "case": status,
-                "status": status,
+            rows.append(
+                {
+                    "policy": policy,
+                    "case": status,
+                    "status": status,
+                    "rewards": [None, None],
+                    "history_successes": 0,
+                    "history_total": 0,
+                    "expected_action": "recheck",
+                    "expected_group_size": 0,
+                }
+            )
+    return rows
+
+
+def _controller_matrix() -> list[dict[str, Any]]:
+    rows = []
+    for fixture in controller_fixtures():
+        decision = decide_policy_observation(
+            fixture["policy"],
+            fixture["rewards"],
+            status=fixture["status"],
+            history_successes=fixture["history_successes"],
+            history_total=fixture["history_total"],
+        )
+        rows.append(
+            {
+                **fixture,
                 "decision": asdict(decision),
                 "charged_rollouts": decision.group_size,
-            })
+                "selected_ids": list(range(decision.group_size)),
+            }
+        )
     return rows
+
+
+def validate_controller_matrix(rows) -> bool:
+    expected = controller_fixtures()
+    if not isinstance(rows, list) or len(rows) != len(expected):
+        return False
+    for actual, fixture in zip(rows, expected):
+        if not isinstance(actual, dict) or any(actual.get(k) != v for k, v in fixture.items()):
+            return False
+        size = fixture["expected_group_size"]
+        if (
+            actual.get("decision", {}).get("action") != fixture["expected_action"]
+            or actual.get("decision", {}).get("group_size") != size
+            or actual.get("charged_rollouts") != size
+            or actual.get("selected_ids") != list(range(size))
+        ):
+            return False
+    return True
 
 
 def build_receipt(stack: str) -> dict[str, Any]:
@@ -178,9 +251,14 @@ def build_receipt(stack: str) -> dict[str, Any]:
     controllers = _controller_matrix()
     action_set = sorted({row["decision"]["action"] for row in controllers})
     intended_pass = all(case["verdict"] == "PASS" for case in intended_cases)
-    controller_pass = action_set == ["drop", "escalate", "keep", "recheck"]
+    controller_pass = validate_controller_matrix(controllers)
     return {
-        "schema_version": 1,
+        "schema_version": 2,
+        "evidence_class": "KERNEL_FIXTURES_PASS"
+        if intended_pass and controller_pass
+        else "KERNEL_FIXTURES_FAIL",
+        "training_integration_status": "NOT_TESTED",
+        "scientific_claim_eligible": False,
         "stack": stack,
         "status": "PASS" if intended_pass and controller_pass else "FAIL",
         "tolerances": {"rtol": RTOL, "atol": ATOL, "dtype": "float64"},

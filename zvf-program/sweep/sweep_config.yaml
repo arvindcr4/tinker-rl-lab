@@ -70,6 +70,9 @@ runner:
       --clip-high {clip_high}
       --importance-level {importance_level}
       --dynamic-sampling {dynamic_sampling}
+      --prompt-filter {prompt_filter}
+      --batch-prompts {batch_prompts}
+      --max-tokens {max_tokens}
       --out {out_json}
     # Where each cell writes its result JSON (must contain step_log w/ zvf+gu).
     # {tag} is the unique per-cell id. Kept inside the existing results dir so

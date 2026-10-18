@@ -3,7 +3,7 @@ lever move the headline, and -- for a large bf16->fp32 swing -- is it real or a
 training/numerics artifact?
 
 A naive run couples dtype with generation distribution, optimizer numerics, and
-possible bf16 update instability. This version decouples them:
+possible bf16 update instability. This version measures these coupled effects; it does not identify a precision-only causal effect:
   * Zero-update generation baseline per dtype (gen quality before any training).
   * Per-step diagnostics: total grad-norm, last-layer param-delta norm, and
     non-finite-grad counts (bf16 instability detector).
@@ -193,4 +193,9 @@ for arm in ARMS:
     }
 print("E7_RESULT " + json.dumps({"experiment": "E7_stack_levers", "model": MODEL, "seeds": SEEDS,
                                 "reference": "bf16/sdpa/temp1.0/top_p0.95/lr2e-6",
+                                "protocol_version": "colab-exploratory-v2",
+                                "claim_scope": "exploratory_precision_lr_factorial",
+                                "arm_matrix": {a: [str(v) if i == 0 else v for i,v in enumerate(cfg)] for a,cfg in ARMS.items()},
+                                "paired_seed_deltas": {a: [{"seed": r["seed"], "delta_p": r["last3_p"]-ref[r["seed"]]["last3_p"]} for r in results if r["arm"] == a] for a in ARMS},
+                                "n_independent_seeds": len(SEEDS), "generalization_established": False,
                                 "by_lever": by_lever, "runs": results}), flush=True)

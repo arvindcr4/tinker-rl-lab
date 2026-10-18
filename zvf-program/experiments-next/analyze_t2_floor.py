@@ -10,13 +10,13 @@ group) when the observed ZVF is high. Instantiated here:
     =>  reliability budget = G * n(delta, ZVF)        rollouts
 
 This is a quantile, NOT a minimum: an informative group arrives within the
-first G rollouts with probability 1-ZVF. The check below validates that the
+first G rollouts with probability 1-ZVF. The check below descriptively compares the
 empirical (1-delta)-quantile matches (and, given the ceiling, does not
 exceed) the geometric model's quantile.
 
 NOTE: cross-check the constant against the theorem statement in
 zvf_theory.tex before citing (the theorem carries proof-gap markers — this
-script is evidence, not proof).
+script is exploratory, not validation or proof).
 
 Method (pure offline, resampled from a build_pool.py pool):
   1. Stratify prompts by p_hat into strata whose group-level ZVF(G) spans
@@ -37,40 +37,43 @@ import math
 import random
 from pathlib import Path
 
+from analysis_contract import validate_design, strata_all
+from analyze_t1_ci import population_zvf, wilson_ci
+
 from common import RESULTS_DIR, load_pool, utc_now, write_result
 
 
 def group_zvf_of_stratum(rng: random.Random, stratum: list[dict], G: int,
                          draws: int = 4000) -> float:
-    hits = 0
-    for _ in range(draws):
-        p = rng.choice(stratum)
-        group = rng.sample(p["rewards"], G)
-        hits += int(len(set(group)) == 1)
-    return hits / draws
+    return population_zvf(stratum, G, rng)
 
 
 def rollouts_until_mixed(rng: random.Random, stratum: list[dict], G: int,
-                         cap_groups: int = 100000) -> int:
+                         cap_groups: int = 100000) -> dict:
+    validate_design(groups=[G], counts=[cap_groups], n_prompts=len(stratum))
     n = 0
     while n < cap_groups:
         n += 1
         p = rng.choice(stratum)
         group = rng.sample(p["rewards"], G)
         if len(set(group)) > 1:
-            return n * G
-    return cap_groups * G  # censored
+            return {"rollouts": n * G, "censored": False}
+    return {"rollouts": cap_groups * G, "censored": True}
 
 
 def floor_rollouts(zvf: float, delta: float, G: int) -> float:
+    if not 0 < delta < 1 or G < 2:
+        raise ValueError("require 0 < delta < 1 and G >= 2")
     if zvf <= 0.0 or zvf >= 1.0:
         return float("nan")
     return G * math.ceil(math.log(delta) / math.log(zvf))
 
 
 def quantile(xs: list[int], q: float) -> float:
+    if not xs or not 0 <= q <= 1:
+        raise ValueError("nonempty sample and quantile in [0,1] required")
     ys = sorted(xs)
-    idx = min(len(ys) - 1, max(0, int(q * len(ys))))
+    idx = max(0, math.ceil(q * len(ys))-1)
     return float(ys[idx])
 
 
@@ -88,14 +91,16 @@ def main() -> None:
     pool = load_pool(args.pool)
     prompts = pool["prompts"]
     G = args.group_size
+    validate_design(groups=[G], counts=[args.trials,args.n_strata], available=pool["rollouts_per_prompt"], n_prompts=len(prompts))
+    if any(not 0 < d < 1 for d in args.deltas):
+        raise ValueError("all deltas must lie strictly between zero and one")
     if G > pool["rollouts_per_prompt"]:
         raise SystemExit(f"G={G} exceeds pool rollouts_per_prompt")
     rng = random.Random(args.seed)
 
     # Stratify by p_hat quantiles; extreme p_hat strata have high ZVF(G).
     ordered = sorted(prompts, key=lambda p: p["p_hat"])
-    k = max(1, len(ordered) // args.n_strata)
-    strata = [ordered[i:i + k] for i in range(0, len(ordered), k)][:args.n_strata]
+    strata = strata_all(ordered, args.n_strata)
 
     rows = []
     for si, stratum in enumerate(strata):
@@ -105,6 +110,14 @@ def main() -> None:
         else:
             note = ""
         obs = [rollouts_until_mixed(rng, stratum, G) for _ in range(args.trials)]
+        times = [o["rollouts"] for o in obs]
+        censoring_fraction = sum(o["censored"] for o in obs)/len(obs)
+        epsilon = math.sqrt(math.log(40)/(2*len(obs)))
+        def identifiable_quantile(q):
+            value = quantile(times,q)
+            if any(o["censored"] and o["rollouts"] <= value for o in obs):
+                return None
+            return value
         row = {
             "stratum": si,
             "n_prompts": len(stratum),
@@ -112,25 +125,41 @@ def main() -> None:
             "zvf_G": round(zvf, 4),
             "G": G,
             "trials": args.trials,
-            "observed_mean_rollouts": round(sum(obs) / len(obs), 1),
+            "observed_mean_rollouts": round(sum(times)/len(times),1),
+            "mean_is_lower_bound": censoring_fraction > 0,
+            "censoring_fraction": censoring_fraction,
+            "quantile_convention": "nearest_rank",
             "note": note,
             "bounds": [],
         }
         for delta in args.deltas:
             fl = floor_rollouts(zvf, delta, G)
-            q = quantile(obs, 1.0 - delta)
+            q = identifiable_quantile(1.0-delta)
+            q_ci = [identifiable_quantile(max(0,1-delta-epsilon)),
+                    identifiable_quantile(min(1,1-delta+epsilon))]
             # fl is the geometric-model (1-delta)-quantile of rollouts to the
             # first informative group (a reliability budget, NOT a minimum).
             # The ceiling makes fl an upper estimate of the exact quantile, so
             # the model-consistency check is q <= fl; the earlier `q >= fl`
             # tested the inverted statement.
-            quantile_ok = (math.isnan(fl)) or (q <= fl)
+            quantile_ok = None if q is None or math.isnan(fl) else q <= fl
+            # The event T <= budget is observed only if censoring occurs after
+            # the budget. Otherwise its coverage remains unidentified.
+            coverage_identified = not math.isnan(fl) and all(
+                not o["censored"] or o["rollouts"] >= fl for o in obs)
+            hits = sum(not o["censored"] and o["rollouts"] <= fl for o in obs) if coverage_identified else None
             row["bounds"].append({
                 "delta": delta,
                 "reliability_budget_rollouts": None if math.isnan(fl) else fl,
                 "observed_q_at_1_minus_delta": q,
-                "quantile_within_budget": bool(quantile_ok),
-                "fit_ratio_obs_over_model": None if (math.isnan(fl) or fl == 0)
+                "quantile_within_budget": quantile_ok,
+                "quantile_ci95_dkw": q_ci,
+                "ratio_ci95_dkw": [v/fl if v is not None and not math.isnan(fl) and fl else None for v in q_ci],
+                "model_validation_established": False,
+                "budget_event_coverage": hits/len(obs) if hits is not None else None,
+                "budget_event_mc_ci95": wilson_ci(hits/len(obs),len(obs)) if hits is not None else None,
+                "coverage_target": 1-delta,
+                "fit_ratio_obs_over_model": None if (q is None or math.isnan(fl) or fl == 0)
                                             else round(q / fl, 3),
             })
         rows.append(row)

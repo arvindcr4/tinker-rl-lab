@@ -70,8 +70,7 @@ logs.
 
 ## 3. Theory, assumptions and proofs: NA (B: Partial)
 
-C makes no theorems. For B, the binomial identity ZVF = E[p^G + (1−p)^G] holds by
-definition, and the paper should present it as such. The gradient link is supported
+C makes no theorems. For B, empirical ZVF is the fraction of homogeneous reward groups. The expression E[p^G + (1−p)^G] is its expected value under conditionally independent Bernoulli sampling, not its definition. The gradient link is supported
 only at toy scale (`platform_hybrid/paper/sections/p7_abstract.tex`), and there are no
 formal proofs.
 

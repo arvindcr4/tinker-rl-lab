@@ -22,7 +22,8 @@ from typing import Optional, Sequence, Tuple, Union
 import numpy as np
 
 from ..callback import ZVFCallback
-from ..controller import StepDecision
+from ..controller import StepDecision, Regime
+from .. import core
 
 ArrayLike = Union[Sequence[float], np.ndarray]
 
@@ -76,7 +77,25 @@ class BaseZVFAdapter:
         regime, adaptive ``G``, dropped prompts and auto-stop flag.
         """
         rewards, group_ids = self._extract_rollout_rewards(batch)
-        return self.callback.on_step(rewards, group_ids)
+        values = np.asarray(rewards, dtype=float)
+        if not np.isfinite(values).all():
+            raise ValueError("finite observed rewards required")
+        source = getattr(self, "observed_reward_key", "verifier")
+        shaped = source in ("token_level_rewards", "token_level_reward")
+        if shaped or np.any((values < 0) | (values > 1)):
+            z = core.zvf(values, group_ids, self.callback.controller.var_eps)
+            decision = StepDecision(len(self.callback.decisions)+1, z, 1-z, float(values.mean()),
+                Regime.DIAGNOSTIC_ONLY, "noop", self.callback.controller.G0, z,
+                n_groups=len(set(np.asarray(group_ids).tolist())), observation_kind="raw_rewards_diagnostic_only",
+                reward_source=source, reward_reduction="token_sum", reward_scale="unbounded",
+                effective_training_reward_zvf=z if shaped else None,
+                verifier_zvf=None if shaped else z,
+                notes="unbounded/shaped reward scale; unit-interval controls disabled")
+            self.callback.decisions.append(decision)
+            return decision
+        decision = self.callback.on_step(rewards, group_ids)
+        decision.reward_source = source
+        return decision
 
     # ------------------------------------------------------------- framework API
     def _extract_rollout_rewards(self, batch: object) -> Tuple[ArrayLike, ArrayLike]:

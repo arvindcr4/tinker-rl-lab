@@ -301,7 +301,7 @@ def _validate_checkpoints(receipt: Mapping[str, Any], errors: list[str]) -> None
             _error(errors, f"{path}.url", "verified HTTPS checkpoint URL is required")
         elif _https_url(repo_url) and not str(url).startswith(str(repo_url).rstrip("/") + "/"):
             _error(errors, f"{path}.url", "URL must be under repo_url")
-        elif _commit_40(revision) and revision not in str(url):
+        elif _commit_40(revision) and (urlparse(str(url)).query or urlparse(str(url)).fragment or urlparse(str(url)).path not in {urlparse(str(repo_url)).path.rstrip("/") + "/" + kind + "/" + revision for kind in ("tree", "commit")}):
             _error(errors, f"{path}.url", "URL must contain the immutable commit")
         if checkpoint.get("url_verified", checkpoint.get("verified")) is not True:
             _error(errors, f"{path}.url_verified", "must be true")
@@ -425,6 +425,9 @@ def _validate_evaluator(receipt: Mapping[str, Any], errors: list[str]) -> None:
         _error(errors, "evaluator_provenance.revision", "immutable evaluator revision is required")
     if not _immutable_revision(_first(evaluator, ("dataset_revision", "source_revision"))):
         _error(errors, "evaluator_provenance.dataset_revision", "immutable evaluator dataset revision is required")
+    dataset = _mapping(receipt.get("dataset")) or {}
+    if evaluator.get("dataset_revision") != _first(dataset, ("revision", "dataset_revision", "source_revision")):
+        _error(errors, "evaluator_provenance.dataset_revision", "must match declared dataset")
     for name in ("split_manifest_hash", "task_id_hash", "task_id_hashes", "verifier_hash"):
         if name in {"task_id_hashes"} and name not in evaluator:
             continue

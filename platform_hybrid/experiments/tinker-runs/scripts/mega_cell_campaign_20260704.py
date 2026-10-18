@@ -13,6 +13,13 @@ the bottleneck.
 """
 from __future__ import annotations
 
+import sys as _contract_sys
+from pathlib import Path as _ContractPath
+if len(_ContractPath(__file__).resolve().parents) > 4:
+    _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
+from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, content_hash, experiment_spec, validate_resume, stable_seed, validated_sample_sequences
+
+
 import argparse
 import asyncio
 import csv
@@ -41,7 +48,7 @@ import tinker.types as T
 from datasets import load_dataset
 
 ROOT = Path("/home/claude/tinker-rl-lab")
-OUT_DIR = ROOT / "experiments/results/mega_20260704"
+OUT_DIR = ROOT / "experiments/results/mega_20260704_v3"
 GROUP_DIR = OUT_DIR / "group_tensors"
 MANIFEST_DIR = OUT_DIR / "manifests"
 LOG_DIR = ROOT / "experiments/tinker-runs/logs"
@@ -75,6 +82,10 @@ class Cell:
     group_size: int
     temperature: float
     seed: int
+    max_tokens: int = 512
+    top_p: float = 0.95
+    max_prompt_tokens: int = 1024
+    scorer_id: str = SCORER_ID
 
     @property
     def model_family(self) -> str:
@@ -82,7 +93,7 @@ class Cell:
 
     @property
     def id(self) -> str:
-        raw = f"{self.model}|{self.task_slice}|{self.group_size}|{self.temperature}|{self.seed}"
+        raw = json.dumps(asdict(self), sort_keys=True)
         h = hashlib.sha1(raw.encode()).hexdigest()[:10]
         fam = re.sub(r"[^A-Za-z0-9]+", "-", self.model_family).strip("-")[:36]
         return f"{fam}_{self.task_slice}_G{self.group_size}_t{self.temperature:g}_s{self.seed}_{h}"
@@ -210,73 +221,36 @@ def ensure_dirs() -> None:
         p.mkdir(parents=True, exist_ok=True)
 
 
-def gsm_reward(response: str, answer: str) -> float:
-    response = response.strip()
-    boxed = re.findall(r"\\boxed\{([^}]+)\}", response)
-    for b in boxed:
-        b_clean = b.strip().replace(",", "").replace(" ", "").replace("$", "")
-        try:
-            if abs(float(b_clean) - float(answer)) < 0.01:
-                return 1.0
-        except Exception:
-            if b_clean.lower() == answer.lower():
-                return 1.0
-    nums = re.findall(r"[-+]?\d[\d,]*\.?\d*", response)
-    if nums:
-        last = nums[-1].replace(",", "")
-        try:
-            if abs(float(last) - float(answer)) < 0.01:
-                return 1.0
-        except Exception:
-            pass
-    return 0.0
+def gsm_reward(response, answer):
+    return score_gsm8k(response, answer)
 
 
-_CODE_FENCE = re.compile(r"```(?:python)?\s*(.*?)```", re.DOTALL)
+_CODE_FENCE = re.compile(r"```(?:python)?[ \t]*(?:\r?\n)?(.*?)```", re.DOTALL)
 
 
 def extract_code(text: str) -> str:
     m = _CODE_FENCE.search(text)
     text = m.group(1) if m else text
     text = re.sub(r"```", "", text)
-    return text.strip()
+    # Body-only completions depend on their leading indentation.
+    return text.strip("\r\n")
 
 
-def run_humaneval_test(prompt: str, completion: str, test_code: str, entry_point: str, timeout: float = 3.0) -> float:
+def humaneval_script(prompt, completion, test_code, entry_point):
+    if not entry_point.isidentifier():
+        raise ValueError("Invalid HumanEval entry point")
     code = extract_code(completion)
-    if "def " not in code[:200]:
-        full = prompt + "\n" + code
-    else:
-        full = code
-    script = textwrap.dedent(
-        f"""
-        import math
-        import re
-        import sys
-        from typing import *
+    defines_entry_point = re.search(r"(?m)^(?:async )?def\s+" + re.escape(entry_point) + r"\s*\(", code)
+    full = code if defines_entry_point else prompt + "\n" + code
+    prelude = "import math\nimport re\nimport sys\nfrom typing import *"
+    return prelude + "\n" + full + "\n\n" + test_code + "\n\n" + f"check({entry_point})\n"
 
-        {full}
 
-        {test_code}
-
-        check({entry_point})
-        """
-    )
-    fname = None
-    try:
-        with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
-            f.write(script)
-            fname = f.name
-        result = subprocess.run([sys.executable, fname], capture_output=True, timeout=timeout)
-        return 1.0 if result.returncode == 0 else 0.0
-    except Exception:
-        return 0.0
-    finally:
-        if fname:
-            try:
-                os.unlink(fname)
-            except Exception:
-                pass
+def run_humaneval_test(prompt, completion, test_code, entry_point, timeout=3.0):
+    from platform_hybrid.experiments.research_contracts import IsolatedEvaluatorUnavailable
+    # Compile only to distinguish assembly errors from candidate evaluation.
+    compile(humaneval_script(prompt, completion, test_code, entry_point), "<humaneval>", "exec")
+    raise IsolatedEvaluatorUnavailable("Configure a trusted isolated evaluator before HumanEval execution")
 
 
 def load_task_examples(seed: int) -> dict[str, list[dict[str, Any]]]:
@@ -332,6 +306,11 @@ def score_completion(task_slice: str, ex: dict[str, Any], completion: str) -> fl
 
 
 def metric_summary(reward_groups: list[list[float]], length_groups: list[list[int]], G: int) -> dict[str, float]:
+    if (G <= 0 or not reward_groups or len(reward_groups) != len(length_groups)
+            or any(len(group) != G for group in reward_groups)
+            or any(len(group) != G or any(length <= 0 for length in group)
+                   for group in length_groups)):
+        raise ValueError("Complete fixed-size nonempty reward and length groups required")
     rewards = [r for group in reward_groups for r in group]
     lengths = [l for group in length_groups for l in group]
     n_groups = len(reward_groups)
@@ -339,7 +318,7 @@ def metric_summary(reward_groups: list[list[float]], length_groups: list[list[in
     return {
         "mean_reward": sum(rewards) / len(rewards) if rewards else 0.0,
         "zvf": (sum(1 for g in reward_groups if len(set(g)) == 1) / n_groups) if n_groups else 0.0,
-        "pcd": (((G - 1) / G) * (sum(p * (1 - p) for p in phats) / len(phats))) if phats else 0.0,
+        "scaled_plugin_bernoulli_variance": (((G - 1) / G) * (sum(p * (1 - p) for p in phats) / len(phats))) if phats else 0.0,
         "mean_completion_len": sum(lengths) / len(lengths) if lengths else 0.0,
         "std_completion_len": statistics.pstdev(lengths) if len(lengths) > 1 else 0.0,
     }
@@ -451,7 +430,7 @@ def normalize_task(task: str) -> str | None:
     return None
 
 
-def ordered_cells(models: list[str], covered: set[tuple[str, str, int, float]]) -> tuple[list[Cell], list[tuple[Cell, str]]]:
+def ordered_cells(models: list[str], covered: set[tuple[str, str, int, float]], *, max_tokens=512, top_p=0.95, max_prompt_tokens=1024) -> tuple[list[Cell], list[tuple[Cell, str]]]:
     tasks = ["humaneval_subset", "gsm8k_hard", "gsm8k_easy"]
     gs = [2, 32, 4, 8, 16]
     temps = [0.6, 1.0]
@@ -463,8 +442,8 @@ def ordered_cells(models: list[str], covered: set[tuple[str, str, int, float]]) 
             for g in gs:
                 for temp in temps:
                     for seed in seeds:
-                        c = Cell(model, task, g, temp, seed)
-                        if (c.model_family, task, g, temp) in covered:
+                        c = Cell(model, task, g, temp, seed, max_tokens, top_p, max_prompt_tokens)
+                        if False:  # legacy coverage lacks immutable v3 specification
                             skipped.append((c, "covered_by_inventory_or_zvf_audit"))
                         else:
                             cells.append(c)
@@ -577,8 +556,10 @@ class Campaign:
         pool = list(self.examples[cell.task_slice])
         rng.shuffle(pool)
         selected = pool[:PROMPTS_PER_CELL]
+        if not selected or len(selected) != PROMPTS_PER_CELL:
+            raise ValueError("Fixed prompt population incomplete")
         sc = await asyncio.to_thread(lambda: self.svc.create_sampling_client(base_model=cell.model))
-        sp = T.SamplingParams(max_tokens=self.args.max_tokens, temperature=cell.temperature, top_p=self.args.top_p)
+        sp = T.SamplingParams(max_tokens=cell.max_tokens, temperature=cell.temperature, top_p=cell.top_p, seed=stable_seed(cell.id))
 
         reward_groups: list[list[float]] = []
         length_groups: list[list[int]] = []
@@ -597,8 +578,9 @@ class Campaign:
                     resp = await sc.sample_async(
                         prompt=T.ModelInput.from_ints(ids),
                         num_samples=cell.group_size,
-                        sampling_params=sp,
+                        sampling_params=sp.model_copy(update={"seed": stable_seed(cell.id, ids)}),
                     )
+                    validated_sample_sequences(resp, cell.group_size)
                     break
                 except Exception:
                     if attempt == 2:
@@ -607,7 +589,7 @@ class Campaign:
                     await asyncio.sleep(2 * (attempt + 1))
             rewards: list[float] = []
             lengths: list[int] = []
-            for seq in resp.sequences:
+            for seq in validated_sample_sequences(resp, cell.group_size):
                 tokens = list(seq.tokens)
                 text = tok.decode(tokens, skip_special_tokens=True)
                 rewards.append(score_completion(cell.task_slice, ex, text))
@@ -617,8 +599,8 @@ class Campaign:
             prompt_indices.append(ex.get("source_idx", ex.get("task_id", idx)))
 
         await asyncio.gather(*(one_group(i, ex) for i, ex in enumerate(selected)))
-        if not reward_groups:
-            raise RuntimeError("no successful prompt groups")
+        if sample_errors or len(reward_groups) != len(selected):
+            raise RuntimeError("Fixed prompt population incomplete")
 
         metrics = metric_summary(reward_groups, length_groups, cell.group_size)
         sampled_tokens = sum(sum(g) for g in length_groups)
@@ -661,7 +643,7 @@ class Campaign:
             "sample_errors": sample_errors,
             "mean_reward": metrics["mean_reward"],
             "zvf": metrics["zvf"],
-            "pcd": metrics["pcd"],
+            "scaled_plugin_bernoulli_variance": metrics["scaled_plugin_bernoulli_variance"],
             "mean_completion_len": metrics["mean_completion_len"],
             "std_completion_len": metrics["std_completion_len"],
             "sampled_tokens": sampled_tokens,
@@ -674,7 +656,7 @@ class Campaign:
         self.wandb.log_cell(row, cell)
         print(
             f"[done] {cell.id} reward={metrics['mean_reward']:.3f} zvf={metrics['zvf']:.3f} "
-            f"pcd={metrics['pcd']:.4f} tokens={sampled_tokens} cumulative={cumulative}",
+            f"pcd={metrics['scaled_plugin_bernoulli_variance']:.4f} tokens={sampled_tokens} cumulative={cumulative}",
             flush=True,
         )
 
@@ -757,7 +739,7 @@ async def async_main() -> int:
     svc = tinker.ServiceClient(base_url=None)
     models = await asyncio.to_thread(discover_models, svc, args.target_cells, args.max_models)
     covered = await asyncio.to_thread(inventory_covered)
-    cells, skipped = ordered_cells(models, covered)
+    cells, skipped = ordered_cells(models, covered, max_tokens=args.max_tokens, top_p=args.top_p, max_prompt_tokens=args.max_prompt_tokens)
     done_ids = load_done_ids()
     cells = [c for c in cells if c.id not in done_ids]
     if args.smoke:

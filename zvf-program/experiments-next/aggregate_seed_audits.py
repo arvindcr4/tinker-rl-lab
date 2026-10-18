@@ -18,6 +18,8 @@ from pathlib import Path
 from common import RESULTS_DIR, utc_now, write_result
 
 
+from analysis_contract import validate_identity
+
 CORE_METRICS = (
     "pass_at_1",
     "zero_variance_prompt_rate",
@@ -44,6 +46,8 @@ def _percentile(sorted_values: list[float], probability: float) -> float:
 
 
 def summarize(values: list[float], *, seed: int, n_bootstrap: int) -> dict:
+    if not values or any(not math.isfinite(v) for v in values):
+        raise ValueError("finite nonempty seed metrics required")
     rng = random.Random(seed)
     means = []
     for _ in range(n_bootstrap):
@@ -63,13 +67,22 @@ def summarize(values: list[float], *, seed: int, n_bootstrap: int) -> dict:
 
 
 def aggregate(audits: list[dict], *, seed: int, n_bootstrap: int) -> dict:
+    if n_bootstrap < 1:
+        raise ValueError("positive bootstrap count required")
     if not audits:
         raise ValueError("no audits supplied")
     for index, audit in enumerate(audits):
         if audit.get("kind") != "rollout_quality_audit" or audit.get("status") != "complete":
             raise ValueError(f"input {index} is not a completed rollout quality audit")
 
+    for audit in audits:
+        source = audit["source"]
+        if source.get("sampling_completeness") != "full" or source.get("exploratory_only", True):
+            raise ValueError("seed aggregation requires full, non-exploratory input pools")
+        validate_identity(source.get("analysis_contract"))
+
     compatibility_keys = (
+        "analysis_contract", "sampling_completeness", "zvf_definition",
         "model", "checkpoint_identity", "split", "temperature", "top_p",
         "rollouts_per_prompt", "n_prompts", "max_tokens"
     )

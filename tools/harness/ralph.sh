@@ -27,15 +27,14 @@ VERIFY_CMD="${VERIFY_CMD:-make lint-ruff && make test}"
 TASK_FILE="${TASK_FILE:-backlog.md}"
 DRY_RUN=0
 ALLOW_DIRTY=0
-STOP_FILE="$HARNESS/STOP"
-STATE_FILE="$HARNESS/.ralph-state"
-LOG_DIR="$HARNESS/logs"
+VERIFY_TIMEOUT="${VERIFY_TIMEOUT:-300}"
 MAX_CONSEC_FAIL=3
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --max-iters) MAX_ITERS="$2"; shift 2 ;;
     --cycle-timeout) CYCLE_TIMEOUT="$2"; shift 2 ;;
+    --verify-timeout) VERIFY_TIMEOUT="$2"; shift 2 ;;
     --max-steps) MAX_STEPS="$2"; shift 2 ;;
     --effort) EFFORT="$2"; shift 2 ;;
     --verify) VERIFY_CMD="$2"; shift 2 ;;
@@ -56,6 +55,12 @@ if [ "$DRY_RUN" = 0 ] && [ "$ALLOW_DIRTY" = 0 ] && [ -n "$(git -C "$WORKDIR" sta
   echo "error: dirty tree — commit/stash first or pass --allow-dirty" >&2; exit 1
 fi
 
+WORKDIR="$(cd "$WORKDIR" && pwd)"
+# Worktree git metadata keeps state outside the tracked/dirty working tree.
+STATE_DIR="$(git -C "$WORKDIR" rev-parse --absolute-git-dir)/ralph-run"
+STOP_FILE="$STATE_DIR/STOP"
+STATE_FILE="$STATE_DIR/state"
+LOG_DIR="$STATE_DIR/logs"
 mkdir -p "$LOG_DIR"
 ITER=0; CONSEC_FAIL=0
 # shellcheck source=/dev/null
@@ -71,6 +76,7 @@ build_prompt() {
       "$HARNESS/PROMPT.md"
 }
 
+log "state=$STATE_DIR"
 log "workdir=$WORKDIR max_iters=$MAX_ITERS timeout=${CYCLE_TIMEOUT}s verify=[$VERIFY_CMD]"
 [ "$DRY_RUN" = 1 ] && { log "DRY RUN — prompt for iter $((ITER + 1)):"; ITER=$((ITER + 1)); build_prompt; exit 0; }
 
@@ -109,7 +115,7 @@ while :; do
     CONSEC_FAIL=$((CONSEC_FAIL + 1))
   else
     log "iter $ITER: verifying [$VERIFY_CMD]"
-    if (cd "$WORKDIR" && eval "$VERIFY_CMD" >/dev/null 2>&1); then
+    if (cd "$WORKDIR" && "$TIMEOUT_BIN" "$VERIFY_TIMEOUT" bash -c "$VERIFY_CMD" >/dev/null 2>&1); then
       git -C "$WORKDIR" add -A
       git -C "$WORKDIR" commit -qm "chore(ralph): cycle $ITER $TS" --no-verify
       log "iter $ITER: PASS, committed"

@@ -26,8 +26,8 @@ PES University\\\texttt{arvindcr4@gmail.com}}
 We audit whether a smooth size-scaling law is identifiable for group-relative
 policy optimization (GRPO) post-training on a multi-family GSM8K anchor panel
 ($0.6$B--$1$T, managed Tinker runs, mostly single-seed). The answer is negative
-and recomputable offline: the cross-scale slope of mean training reward is
-consistent with zero under permutation tests; saturation-rate $\lambda$ is
+and recomputable offline: the reported tests on fitted convergence rate and asymptotic reward
+do not reject their respective zero-slope nulls; neither establishes practical flatness; saturation-rate $\lambda$ is
 pinned at the fit boundary on four of five frontier traces; a constant model
 wins AICc on every anchor family tested in the elevation suite; and the sole
 dramatic outlier (Nemotron-120B) is a collapse phase (zero-reward step fraction
@@ -68,8 +68,8 @@ up to Kimi-K2 ($1$T) and DeepSeek-V3.1 ($685$B class), plus Nemotron-120B
 \toprule
 Check & Outcome \\
 \midrule
-Cross-scale slope of mean reward vs $\log_{10}N$
-  & Flat within uncertainty; permutation tests fail to reject zero slope
+Fitted convergence rate $\lambda$ and asymptotic reward $R_\infty$ vs $\log_{10}N$
+  & Separate estimands; failure to reject is not practical equivalence
     (e.g.\ $\lambda$--$N$ and $R_\infty$--$N$ two-sided $p{=}0.74$ / $0.51$ on
     the 12-anchor panel, $10^4$ permutations) \\
 Saturation $\lambda$

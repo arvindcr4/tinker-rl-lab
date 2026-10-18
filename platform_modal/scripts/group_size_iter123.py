@@ -21,13 +21,12 @@ existing data:
       and asks: is R>=0.976 achieved at ANY target reward? It is not:
       R is *itself* a function of the target reward and decays.
 
-  (B) **Noise-floor mechanism test (sigma^2/G × iter99 SNR).** The
-      per-step baseline variance sigma^2/G is the mechanism behind
-      iter 119 (D). iter 99 produced an SNR-at-G table from the
-      Qwen2.5-0.5B reward-channel. iter 123 joins the two: SNR(G)
-      should scale as sqrt(G) by theory (sigma/sqrt(G) baseline
-      estimate precision); the empirical SNR-vs-G slope is regressed
-      and tested against the theoretical +0.5/decade line.
+  (B) **Model-derived SNR scaling projection (sigma^2/G × iter99).**
+      The input column snr_pred_implicit_dpo contains projected SNR values.
+      Regress their log-log scaling and compare it with a G^0.5 reference.
+      This is a model-internal comparison, not measured SNR or validation
+      of a causal noise/drift mechanism. Fit intervals describe these
+      projected points, not independent experimental uncertainty.
 
   (C) **Broader G-pair sweep -- Wu at G=4~=G=32, G=8~=G=32, G=16~=G=32.**
       The Wu et al.\ headline is G=2/G=16 (rollouts-frac=0.125). At
@@ -37,10 +36,9 @@ existing data:
       and only (32, 64) hits 0.976 at T=64M. Wu's 12.5% claim
       generalizes only at large G_large.
 
-  (D) **Effect-size magnitude test.** iter 107 reported the *statistical*
-      significance of Delta at T=64M (p<0.001). iter 123 reports the
-      *practical* magnitude: Cohen's d on the per-seed heldout-accuracy
-      distribution. d=4.7 at T=64M (very large).
+  (D) **Observed accuracy difference.** Summary confidence intervals do not
+      identify per-seed standard deviations. Report the raw G32-minus-G4
+      difference; Cohen's d is unavailable without replicate SDs/counts.
 
 Inputs:
     platform_hybrid/experiments/results/group_size_token_normalized.tsv
@@ -162,19 +160,21 @@ def iso_reward_retention(iso: pd.DataFrame) -> list[dict]:
 
 
 # =============================================================================
-# (B) Noise-floor mechanism: SNR(G) vs theoretical +0.5/decade
+# (B) Model-derived SNR projection vs G^0.5 reference
 # =============================================================================
 def noise_mechanism(snr: pd.DataFrame) -> list[dict]:
-    """Join iter 99 SNR-at-G with iter 119 D (sigma^2/G).
-    Test the predicted scaling: snr(G) ~ G^0.5.
+    """Describe model-derived snr_pred_implicit_dpo scaling against G^0.5.
+
+    Regression diagnostics concern projected points, not observed SNR or
+    independent experimental uncertainty; they do not validate a mechanism.
     """
     out = []
     if snr.empty:
         return [{"metric_kind": "error", "metric_key": "no_snr_data",
-                 "headline": "No iter99 SNR-at-G data"}]
+                 "headline": "No iter99 model-derived SNR projection data"}]
     out.append({
         "metric_kind": "snr_pool_size", "metric_key": "n_G",
-        "headline": f"SNR-at-G pool: n={len(snr)} G-values: {sorted(snr['G'].astype(int).tolist())}",
+        "headline": f"Model-derived SNR-at-G projection pool: n={len(snr)} G-values: {sorted(snr['G'].astype(int).tolist())}",
     })
     # OLS on log10(SNR) ~ log10(G) with theoretical slope +0.5 prediction
     g = snr["G"].astype(float).values
@@ -187,17 +187,17 @@ def noise_mechanism(snr: pd.DataFrame) -> list[dict]:
     slope, intercept, r, p, se = stats.linregress(logG, logS)
     out.append({
         "metric_kind": "snr_scaling", "metric_key": "ols_log10_snr_vs_log10_G",
-        "headline": f"OLS log10(SNR) ~ log10(G): slope={slope:+.3f}/decade  95%CI [{slope-1.96*se:+.3f},{slope+1.96*se:+.3f}]  R^2={r**2:.3f}  p={p:.2e}",
+        "headline": f"OLS on model-derived projection log10(SNR) ~ log10(G): slope={slope:+.3f}/decade  projection-fit 95%CI [{slope-1.96*se:+.3f},{slope+1.96*se:+.3f}]  R^2={r**2:.3f}  p={p:.2e}",
     })
     out.append({
         "metric_kind": "snr_scaling", "metric_key": "theoretical_pred_+0.5",
-        "headline": f"Theoretical SNR~G^0.5 predicts slope=+0.500/decade; empirical={slope:+.3f}/decade -- slope is {'CONSISTENT' if abs(slope-0.5)<0.30 else 'INCONSISTENT'} with theory at 0.30 tolerance",
+        "headline": f"Theoretical SNR~G^0.5 predicts slope=+0.500/decade; model-derived projection={slope:+.3f}/decade -- slope is {'CONSISTENT' if abs(slope-0.5)<0.30 else 'INCONSISTENT'} with the reference at 0.30 tolerance (model-internal comparison only)",
     })
     # Per-G predictions and residuals
     pred = 10 ** (intercept + 0.5 * logG)
     out.append({
         "metric_kind": "snr_scaling", "metric_key": "pred_at_G",
-        "headline": "Predicted vs empirical SNR at G: " +
+        "headline": "Model-derived SNR / G^0.5 reference at G: " +
                      ", ".join(f"G={int(gi)}={snr_pred[i]:.3f}/{pred[i]:.3f}"
                                for i, gi in enumerate(g)),
     })
@@ -246,6 +246,7 @@ def wu_broader_pairs(iso: pd.DataFrame) -> list[dict]:
         holds = sub[sub["wu_holds"]]
         out.append({
             "metric_kind": "wu_broader_at_T", "metric_key": f"T={T:.0e}",
+            "n_holds": len(holds), "n_pairs": len(sub),
             "headline": f"T={T/1e6:.0f}M: {len(holds)}/{len(sub)} pairs satisfy R>=0.976 -- " +
                         ", ".join(f"({int(r.G_small)},{int(r.G_large)})={r.R:.3f}"
                                   for r in holds.itertuples()) if len(holds) else
@@ -281,49 +282,32 @@ def wu_broader_pairs(iso: pd.DataFrame) -> list[dict]:
 
 
 # =============================================================================
-# (D) Effect-size magnitude: Cohen's d at each T
+# (D) Raw accuracy difference; standardized effect is not identifiable
 # =============================================================================
 def effect_size(iso: pd.DataFrame, boot: pd.DataFrame) -> list[dict]:
-    """Cohen's d on the per-seed heldout-accuracy distribution at each T.
-    Use the bootstrap SE to reconstruct the per-seed SD.
+    """Report observed difference, never equate a mean's SE with replicate SD.
+
+    `boot` is retained for API compatibility. Its difference SE cannot recover
+    the per-cell replicate SDs/counts needed for Cohen's d.
     """
     out = []
-    Ts = [1_000_000, 4_000_000, 16_000_000, 64_000_000]
-    # SD per cell from CI half-width
-    for T in Ts:
+    for T in [1_000_000, 4_000_000, 16_000_000, 64_000_000]:
         sub = iso[iso["budget_tokens"] == T]
         a4 = sub[sub["G"] == 4]
         a32 = sub[sub["G"] == 32]
         if a4.empty or a32.empty:
             continue
-        a4_mean = float(a4["heldout_acc_mean"].iloc[0])
-        a32_mean = float(a32["heldout_acc_mean"].iloc[0])
-        a4_se = (float(a4["heldout_acc_ci_high"].iloc[0]) - float(a4["heldout_acc_ci_low"].iloc[0])) / (2 * 1.96)
-        a32_se = (float(a32["heldout_acc_ci_high"].iloc[0]) - float(a32["heldout_acc_ci_low"].iloc[0])) / (2 * 1.96)
-        # Assume the bootstrap SE reflects the n_seeds SD / sqrt(n_seeds) -> SD = SE * sqrt(n)
-        # n_seeds is unknown from the TSV but the bootstrap table reports SE ~ 0.0216 across budgets.
-        # We'll compute pooled SD from the SE assuming the SE reflects pooled std error
-        # i.e. SD_pooled = sqrt((SE_a4^2 + SE_a32^2)/2) if equal n. Use this as a proxy.
-        # Better: assume the bootstrap SE equals the SD of a paired-difference sampling distribution
-        # and treat SE as SD of per-seed accuracy difference ~ sqrt(2) * SD_pooled
-        boot_row = boot[boot["budget_tokens"] == T]
-        if not boot_row.empty:
-            diff_se = float(boot_row["delta_boot_se"].iloc[0])
-        else:
-            diff_se = math.sqrt(a4_se**2 + a32_se**2)
-        # Use the per-cell SE as a within-cell SD proxy
-        sd_proxy = math.sqrt((a4_se**2 + a32_se**2) / 2.0)
-        # Cohen's d = mean_diff / sd_pooled (sd_proxy if the per-cell SE is the per-cell SD)
-        # If SE is the SE of the mean (so SD = SE * sqrt(n)), and n_seeds unknown, use sqrt of 2 SEs as proxy.
-        d = (a32_mean - a4_mean) / sd_proxy if sd_proxy > 0 else float("nan")
-        # Confidence on d via Fieller; simpler: report d and its SE
+        if len(a4) != 1 or len(a32) != 1:
+            raise ValueError(f"duplicate summary cell at T={T}")
+        difference = float(a32["heldout_acc_mean"].iloc[0]) - float(a4["heldout_acc_mean"].iloc[0])
+        if not math.isfinite(difference):
+            raise ValueError(f"nonfinite accuracy difference at T={T}")
         out.append({
             "metric_kind": "effect_size", "metric_key": f"T={T:.0e}",
-            "headline": f"T={T/1e6:.0f}M: Cohen's d(G=32 vs G=4) = {d:+.2f}  (|d|>0.8 = large; |d|>1.2 = very large)",
-        })
-        out.append({
-            "metric_kind": "effect_size_detail", "metric_key": f"T={T:.0e}",
-            "headline": f"T={T/1e6:.0f}M: acc(G=4)={a4_mean:.3f}+/-{a4_se:.3f}, acc(G=32)={a32_mean:.3f}+/-{a32_se:.3f}, diff={a32_mean-a4_mean:+.3f}, diff_SE={diff_se:.3f}",
+            "mean_difference": difference, "cohens_d": None,
+            "effect_size_status": "NOT_IDENTIFIABLE_FROM_SUMMARY_CIS",
+            "headline": f"T={T/1e6:.0f}M: accuracy difference (G=32 minus G=4) = {difference:+.3f}; "
+                        "Cohen's d unavailable: replicate SDs/counts absent",
         })
     return out
 
@@ -422,8 +406,8 @@ def make_figure(iso_reward, noise, wu, es, cross, out_pdf: Path) -> None:
 
     # (B) SNR scaling
     ax =axes[0, 1]
-    ax.set_title("(B) SNR vs G: predicted slope +0.5/decade (sqrt(G))")
-    # We don't have the raw df here; show predicted curve and overlay empirical SNR if available
+    ax.set_title("(B) Model-derived SNR projection vs sqrt(G) reference")
+    # Display model-derived input projections and an anchored reference curve
     # (noise extras would have records; we don't have that here so just show the headline prediction)
     slope_row = next((r for r in noise if r["metric_key"] == "ols_log10_snr_vs_log10_G"), None)
     pred_row = next((r for r in noise if r["metric_key"] == "pred_at_G"), None)
@@ -438,24 +422,24 @@ def make_figure(iso_reward, noise, wu, es, cross, out_pdf: Path) -> None:
         if pred_row:
             # parse "G=2=x.x/G=4=y.y..."
             parts = pred_row["headline"].split(",")
-            Gs_emp = []
-            snr_emp = []
+            Gs_projected = []
+            snr_projected = []
             for p in parts:
-                # Pattern: "G=<gi>=<snr_emp>/<snr_pred>"
+                # Pattern: "G=<gi>=<snr_projected>/<snr_pred>"
                 # Use a regex-style parse
                 import re
                 m = re.match(r"\s*G=(\d+)=([\d.]+)/", p)
                 if m:
-                    Gs_emp.append(int(m.group(1)))
-                    snr_emp.append(float(m.group(2)))
-            if Gs_emp:
-                ax.scatter(Gs_emp, snr_emp, color="#d62728", s=80, zorder=3, label="empirical SNR")
+                    Gs_projected.append(int(m.group(1)))
+                    snr_projected.append(float(m.group(2)))
+            if Gs_projected:
+                ax.scatter(Gs_projected, snr_projected, color="#d62728", s=80, zorder=3, label="model-derived SNR projection")
                 # Theory: snr ~ G^0.5; pick a single anchor to align
-                s_theory = snr_emp[len(snr_emp)//2] / (Gs_emp[len(Gs_emp)//2] ** 0.5)
-                ax.plot(Gs_th, s_theory * Gs_th ** 0.5, color="#1f77b4", lw=2, label="theory: snr ~ G^0.5")
+                s_theory = snr_projected[len(snr_projected)//2] / (Gs_projected[len(Gs_projected)//2] ** 0.5)
+                ax.plot(Gs_th, s_theory * Gs_th ** 0.5, color="#1f77b4", lw=2, label="anchored G^0.5 reference")
         ax.set_xscale("log"); ax.set_yscale("log")
         ax.set_xlabel("Group size G")
-        ax.set_ylabel("Predicted SNR")
+        ax.set_ylabel("Model-derived SNR projection")
         ax.legend(fontsize=8)
         ax.grid(True, alpha=0.3)
 
@@ -466,50 +450,35 @@ def make_figure(iso_reward, noise, wu, es, cross, out_pdf: Path) -> None:
     n_holds = []
     for T in Ts:
         r = next((r for r in wu if r["metric_kind"] == "wu_broader_at_T" and r["metric_key"] == f"T={T:.0e}"), None)
-        if r:
-            # Parse the "{n}/{N}" prefix
-            try:
-                n_h = int(r["headline"].split(":")[1].split("/")[0].strip())
-                n_holds.append(n_h)
-            except Exception:
-                n_holds.append(0)
-        else:
-            n_holds.append(0)
+        n_holds.append(r["n_holds"] if r and "n_holds" in r else float("nan"))
     ax.plot(Ts_M, n_holds, "o-", color="#1f77b4", lw=2, markersize=10, label="Wu-passing pairs")
     ax.set_xscale("log")
     ax.set_xlabel("Total token budget T (M)")
-    ax.set_ylabel("Wu-passing pairs (out of 9)")
-    ax.set_title("(C) Wu claim holds for fewer pairs as T grows")
+    ax.set_ylabel("Wu-passing pairs")
+    ax.set_title("(C) Observed Wu-passing pair counts")
     ax.legend(fontsize=8)
     ax.grid(True, alpha=0.3)
 
-    # (D) Effect size Cohen's d
+    # (D) Raw effect in accuracy units; no unidentified standardized effect.
     ax = axes[1, 1]
     ds = []
     for T in Ts:
-        r = next((r for r in es if r["metric_kind"] == "effect_size" and r["metric_key"] == f"T={T:.0e}"), None)
-        if r:
-            try:
-                d = float(r["headline"].split("=")[1].split("(")[0].strip())
-                ds.append(d)
-            except Exception:
-                ds.append(0.0)
-        else:
-            ds.append(0.0)
+        row = next((r for r in es if r["metric_kind"] == "effect_size" and r["metric_key"] == f"T={T:.0e}"), None)
+        value = row.get("mean_difference") if row else None
+        ds.append(float(value) if value is not None else float("nan"))
     colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
     bars = ax.bar([str(t) + "M" for t in Ts_M], ds, color=colors)
-    ax.axhline(0.8, color="green", ls="--", lw=1, label="large effect (d=0.8)")
-    ax.axhline(1.2, color="purple", ls="--", lw=1, label="very large effect (d=1.2)")
+    ax.axhline(0, color="gray", lw=1)
     ax.set_xlabel("Total token budget T")
-    ax.set_ylabel("Cohen's d(G=32 vs G=4)")
-    ax.set_title("(D) Effect-size magnitude grows with T")
-    ax.legend(fontsize=8)
+    ax.set_ylabel("Accuracy difference (G=32 minus G=4)")
+    ax.set_title("(D) Observed accuracy difference; Cohen's d unavailable")
     ax.grid(True, alpha=0.3)
-    for bar, d in zip(bars, ds):
-        ax.text(bar.get_x() + bar.get_width() / 2, d + 0.05, f"{d:.2f}",
-                ha="center", va="bottom", fontsize=9)
+    for bar, difference in zip(bars, ds):
+        if math.isfinite(difference):
+            ax.text(bar.get_x() + bar.get_width() / 2, difference, f"{difference:+.3f}",
+                    ha="center", va="bottom", fontsize=9)
 
-    fig.suptitle("Pillar 3 / Iter 123 -- Wu et al. (2025) G=2~=G=16 at broader scale:\niso-reward, noise-mechanism, broader G-pair sweep, effect-size magnitude",
+    fig.suptitle("Pillar 3 / Iter 123 -- Wu et al. (2025) G=2~=G=16 at broader scale:\niso-reward, model-derived SNR projection, broader G-pair sweep, effect-size magnitude",
                  fontsize=11, fontweight="bold")
     fig.tight_layout()
     fig.savefig(out_pdf, bbox_inches="tight")
@@ -517,7 +486,8 @@ def make_figure(iso_reward, noise, wu, es, cross, out_pdf: Path) -> None:
 
 
 def write_tsv(path: Path, rows: list[dict], cols: list[str]) -> None:
-    pd.DataFrame(rows, columns=cols).to_csv(path, sep="\t", index=False)
+    extra_cols = sorted({key for row in rows for key in row} - set(cols))
+    pd.DataFrame(rows, columns=cols + extra_cols).to_csv(path, sep="\t", index=False)
 
 
 def main() -> None:
@@ -532,13 +502,13 @@ def main() -> None:
     es = effect_size(iso, boot)
     cross = cross_pillar_noise(zvf)
 
-    write_tsv(RES / "group_size_iter123_iso_reward.tsv", iso_r,
+    write_tsv(RES / "group_size_iter123_iso_reward_v3.tsv", iso_r,
               ["metric_kind", "metric_key", "headline"])
-    write_tsv(RES / "group_size_iter123_noise_mech.tsv", noise,
+    write_tsv(RES / "group_size_iter123_noise_mech_v3.tsv", noise,
               ["metric_kind", "metric_key", "headline"])
-    write_tsv(RES / "group_size_iter123_wu_broader.tsv", wu,
+    write_tsv(RES / "group_size_iter123_wu_broader_v3.tsv", wu,
               ["metric_kind", "metric_key", "headline"])
-    write_tsv(RES / "group_size_iter123_effect_size.tsv", es,
+    write_tsv(RES / "group_size_iter123_effect_size_v3.tsv", es,
               ["metric_kind", "metric_key", "headline"])
     # Summary combines all
     summary = []
@@ -558,16 +528,16 @@ def main() -> None:
         if r["metric_kind"] != "_extras":
             summary.append({"section": "E_cross_pillar", "metric_key": r["metric_key"],
                             "headline": r["headline"]})
-    write_tsv(RES / "group_size_iter123_summary.tsv", summary,
+    write_tsv(RES / "group_size_iter123_summary_v3.tsv", summary,
               ["section", "metric_key", "headline"])
 
-    make_figure(iso_r, noise, wu, es, cross, FIG / "group_size_iter123.pdf")
+    make_figure(iso_r, noise, wu, es, cross, FIG / "group_size_iter123_v3.pdf")
 
     print("=== Iter 123 (A) Iso-reward retention ===")
     for r in iso_r:
         if r["metric_kind"] in ("iso_reward_setup", "iso_reward_pairs", "iso_reward_best"):
             print(f"  {r['metric_key']!s:>40}  ::  {r['headline']}")
-    print("\n=== Iter 123 (B) Noise mechanism SNR~G^0.5 ===")
+    print("\n=== Iter 123 (B) Model-derived SNR projection vs G^0.5 ===")
     for r in noise:
         if r["metric_kind"] in ("snr_scaling", "snr_pool_size"):
             print(f"  {r['metric_key']!s:>40}  ::  {r['headline']}")

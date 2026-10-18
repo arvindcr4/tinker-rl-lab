@@ -5,7 +5,7 @@ Elevates ZVF from a single scalar to a *difficulty-stratified* function
 ZVF(q) where q is a reward-quintile bin of training steps (proxy for the
 prompt-difficulty distribution the policy currently sees). We then show
 that AERO and the other variance-mitigation libraries attack the
-*starvation* ZVF in the *lowest* reward quintile (hard prompts) more
+*starvation* ZVF in the *lowest* reward quintile (low within-method held-out-accuracy ranks) more
 strongly than vanilla GRPO, and that the gap reverses at the high end.
 
 Inputs (real):
@@ -14,19 +14,19 @@ Inputs (real):
         (zvf, heldout_acc) pairs.
 
 Outputs:
-    platform_hybrid/experiments/results/zvf_iter62_difficulty_strata.tsv
+    platform_hybrid/experiments/results/zvf_iter62_difficulty_strata_review28_v2.tsv
         (method, quintile) -> mean_zvf, mean_acc, n_steps
-    platform_hybrid/experiments/results/zvf_iter62_aero_minus_grpo.tsv
+    platform_hybrid/experiments/results/zvf_iter62_aero_minus_grpo_review28_v2.tsv
         per-quintile AERO-GRPO delta with bootstrap CI
-    platform_hybrid/experiments/results/zvf_iter62_quintile_separability.tsv
+    platform_hybrid/experiments/results/zvf_iter62_quintile_separability_review28_v2.tsv
         Mann-Whitney AUC per (method, quintile) for collapse vs healthy
-    platform_hybrid/experiments/results/zvf_iter62_summary.tsv
+    platform_hybrid/experiments/results/zvf_iter62_summary_review28_v2.tsv
         one-row-per-method summary of stratification
     figures/zvf_iter62_difficulty_strata.{pdf,png}
 
 Methodology:
     1. Pool all (method, seed) steps; heldout_acc defines the "current
-       difficulty the policy sees" (low acc ~ hard prompts dominate).
+       difficulty the policy sees" (low acc ~ low within-method held-out-accuracy ranks dominate).
     2. Within each method, bin steps by heldout_acc into 5 equal-mass
        quintiles (so quintiles are defined per-method, isolating the
        cross-method contrast from any global accuracy shift).
@@ -126,17 +126,10 @@ def stratified_zvf(rows: list[dict]) -> dict:
     return out
 
 
-def bootstrap_diff(a: list[float], b: list[float], B: int = 2000) -> tuple[float, float, float]:
-    """(mean diff, 2.5%ile, 97.5%ile) of a - b."""
-    if not a or not b:
-        return float("nan"), float("nan"), float("nan")
-    diffs = []
-    for _ in range(B):
-        sa = [random.choice(a) for _ in range(len(a))]
-        sb = [random.choice(b) for _ in range(len(b))]
-        diffs.append(statistics.fmean(sa) - statistics.fmean(sb))
-    diffs.sort()
-    return statistics.fmean(diffs), diffs[int(0.025 * B)], diffs[int(0.975 * B)]
+def bootstrap_diff(a, b, B=2000):
+    """Descriptive step-weighted difference. No CI without independent run IDs."""
+    if not a or not b: return float("nan"),float("nan"),float("nan")
+    return statistics.fmean(a)-statistics.fmean(b),float("nan"),float("nan")
 
 
 def per_method_per_quintile_zvf(rows: list[dict]) -> dict:
@@ -175,8 +168,8 @@ def main() -> None:
     strat = stratified_zvf(rows)
     per_mq = per_method_per_quintile_zvf(rows)
 
-    # 1. write difficulty strata
-    out1 = RES / "zvf_iter62_difficulty_strata.tsv"
+    # 1. write within-method held-out-accuracy ranks
+    out1 = RES / "zvf_iter62_difficulty_strata_review28_v2.tsv"
     with out1.open("w") as fh:
         fh.write("# Pillar 2 Iter 62 difficulty-stratified ZVF\n")
         fh.write("# Per (method, heldout_acc quintile), mean ZVF.\n")
@@ -201,7 +194,7 @@ def main() -> None:
     print(f"wrote {out1}")
 
     # 2. AERO - GRPO per-quintile ZVF delta
-    out2 = RES / "zvf_iter62_aero_minus_grpo.tsv"
+    out2 = RES / "zvf_iter62_aero_minus_grpo_review28_v2.tsv"
     with out2.open("w") as fh:
         fh.write("# AERO - GRPO ZVF delta per heldout_acc quintile\n")
         fh.write("# Negative = AERO has LOWER ZVF (better signal availability)\n")
@@ -226,7 +219,7 @@ def main() -> None:
     print(f"wrote {out2}")
 
     # 3. Mann-Whitney separability per (method, quintile) of ZVF for collapse vs healthy
-    out3 = RES / "zvf_iter62_quintile_separability.tsv"
+    out3 = RES / "zvf_iter62_quintile_separability_review28_v2.tsv"
     # collapse = any step with collapse flag in trailing-10 windows
     # here we use the per-step "collapse" flag directly
     collapse_zvfs = defaultdict(lambda: defaultdict(list))
@@ -262,11 +255,11 @@ def main() -> None:
     print(f"wrote {out3}")
 
     # 4. one-row-per-method summary
-    out4 = RES / "zvf_iter62_summary.tsv"
+    out4 = RES / "zvf_iter62_summary_review28_v2.tsv"
     with out4.open("w") as fh:
         fh.write("# Pillar 2 Iter 62: per-method ZVF stratification summary\n")
-        fh.write("# mean_zvf_loq = mean ZVF in lowest acc quintile (hard prompts)\n")
-        fh.write("# mean_zvf_hiq = mean ZVF in highest acc quintile (easy prompts)\n")
+        fh.write("# mean_zvf_loq = mean ZVF in lowest acc quintile (low within-method held-out-accuracy ranks)\n")
+        fh.write("# mean_zvf_hiq = mean ZVF in highest acc quintile (high within-method held-out-accuracy ranks)\n")
         fh.write("# delta_hiq_loq = high - low (positive => ZVF grows with accuracy)\n")
         fh.write("# Source: platform_modal/scripts/zvf_iter62.py\n")
         fh.write("method\tn_steps\tn_seeds\tmean_zvf_overall\tmean_zvf_loq\tmean_zvf_q2\t"
@@ -318,7 +311,7 @@ def main() -> None:
         ax2 = axes[1]
         deltas = []
         labels = []
-        with (RES / "zvf_iter62_aero_minus_grpo.tsv").open() as fh:
+        with (RES / "zvf_iter62_aero_minus_grpo_review28_v2.tsv").open() as fh:
             rdr = csv.DictReader((l for l in fh if not l.startswith("#")), delimiter="\t")
             for i, r in enumerate(rdr):
                 deltas.append(float(r["delta"]))
@@ -333,7 +326,7 @@ def main() -> None:
         ax2.grid(True, alpha=0.3, axis="y")
         plt.tight_layout()
         for ext in ("pdf", "png"):
-            p = FIG / f"zvf_iter62_difficulty_strata.{ext}"
+            p = FIG / f"zvf_iter62_difficulty_strata_review28_v2.{ext}"
             plt.savefig(p, bbox_inches="tight")
             print(f"wrote {p}")
         plt.close()
@@ -348,7 +341,7 @@ def main() -> None:
         "aero_grpo_q0_delta": None,
         "aero_grpo_q4_delta": None,
     }
-    with (RES / "zvf_iter62_aero_minus_grpo.tsv").open() as fh:
+    with (RES / "zvf_iter62_aero_minus_grpo_review28_v2.tsv").open() as fh:
         rdr = csv.DictReader((l for l in fh if not l.startswith("#")), delimiter="\t")
         for r in rdr:
             q = int(r["quintile"])
@@ -357,9 +350,9 @@ def main() -> None:
                 findings["aero_grpo_q0_delta"] = d
             if q == 4:
                 findings["aero_grpo_q4_delta"] = d
-    with (RES / "zvf_iter62_iter_meta.json").open("w") as fh:
+    with (RES / "zvf_iter62_iter_meta_review28_v2.json").open("w") as fh:
         json.dump(findings, fh, indent=2)
-    print(f"wrote {RES / 'zvf_iter62_iter_meta.json'}")
+    print(f"wrote {RES / 'zvf_iter62_iter_meta_review28_v2.json'}")
 
 
 if __name__ == "__main__":

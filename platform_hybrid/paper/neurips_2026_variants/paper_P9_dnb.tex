@@ -151,10 +151,11 @@ Table~\ref{tab:claims-tier} maps every claim in the paper to its evidence
 tier and to the artifact files that support it; a per-stack auditability
 matrix is in Table~\ref{tab:artifact-card} (both tables appear immediately
 after the abstract so cross-references resolve in the introduction).
-Inferential conclusions (A-grade) are limited to the mechanical
-$\mathrm{ZVF}$ identity (Section~\ref{sec:zvf-analysis}) and the held-out
-5-seed Qwen3-8B GSM8K control. All other rows are B-grade single-seed case
-studies or C-grade listings; the full per-row training-reward table that
+The mechanical $\mathrm{ZVF}$ identity (Section~\ref{sec:zvf-analysis})
+is a theoretical result, not empirical inference. The separate held-out
+5-seed Qwen3-8B GSM8K control is future-paper evidence and is not admitted
+as inferential evidence in this release. Historical empirical rows remain
+descriptive with unresolved inferential eligibility; the full per-row training-reward table that
 earlier drafts placed in main is now Appendix~\ref{sec:appendix:full-results}.
 
 \subsection{Zero-Variance Fraction: cross-stack diagnostic}
@@ -169,11 +170,12 @@ completions receive identical rewards:
   \mathbf{1}\bigl[\operatorname{Var}_{c \sim \mathcal{C}(p)}\,r(c) = 0\bigr].
 \]
 \textbf{Gradient Utilization} $\mathrm{GU}_t = 1 - \mathrm{ZVF}_t$ is the
-complementary fraction. For binary-outcome tasks with per-prompt accuracy
-$p$, the closed-form identity $\mathrm{ZVF}(p, G) = p^G + (1-p)^G$ holds
-exactly; this is the (A-grade) mechanical theorem. The full derivation
-and a check against every logged group is in
-Appendix~\ref{sec:appendix:zvf-formalization}.
+mixed-reward-group fraction. Under conditionally independent binary
+rollouts at prompt success probability $p$, the expected homogeneous fraction
+is $p^G+(1-p)^G$, not an identity for an observed finite batch. Average this
+quantity over prompt-specific probabilities when prompts are heterogeneous.
+Mixed coefficients do not guarantee a nonzero aggregate parameter gradient.
+See Appendix~\ref{sec:appendix:zvf-formalization}.
 
 \paragraph{Pooled cross-task descriptive correlation.}
 Across $N = 15$ experiments spanning 5 model families and
@@ -185,16 +187,14 @@ We treat this association as descriptive (B-grade), not causal: ZVF is
 mechanically coupled to reward sparsity, group size, and baseline
 accuracy, and the pooled $N{=}15$ sample mixes tasks.
 
-\paragraph{Stratified within-task analysis (consistency note).}
-Stratifying within GSM8K, the apparent monotone relationship does not
-survive: Pearson $r = +0.40$ ($p = 0.09$, $N{=}19$ Tinker GSM8K runs);
-restricted to the 7 model-varying GSM8K cells, $r = +0.13$ ($p = 0.79$,
-$N{=}7$). The pooled negative correlation is therefore a task-identity
-artifact rather than a within-task predictive law. The full stratified
-diagnostic suite (per-task, per-family, per-group-size breakdowns) is
-released alongside this artifact under \texttt{analysis/stratified/};
-within the paper we report only the headline numbers above and refer
-readers to the artifact and to the appendix.
+\paragraph{Same-cohort descriptive analysis.}
+The $N=19$ GSM8K cohort is a subset of the extended $N=29$ pool, not the
+historical $N=15$ pool. In the extended pool, $r=-0.443$ becomes $-0.026$
+with task fixed effects; the GSM8K subset has $r=+0.401$. These estimates
+motivate caution about task confounding without establishing a predictive law.
+A change between the historical and extended pools also changes inclusion,
+so it cannot be attributed entirely to conditioning. See the stratified appendix
+for the reported summaries; immutable inclusion IDs remain required for reuse.
 
 \paragraph{Group-size sweep (B-grade case study).}
 The single-seed group-size sweep on Qwen3-8B/GSM8K
@@ -258,12 +258,14 @@ compute accounting, carbon estimate, data provenance, closed-backend
 acknowledgement, and known methodological limits) is in
 Appendix~\ref{sec:impact_standalone}. In summary: (i) all B-grade rows are
 single-seed and depend on a closed-source Tinker backend; we report them
-descriptively. (ii) Most A-grade evidence is concentrated on
+descriptively. (ii) Most historical empirical evidence is concentrated on
 short-horizon GSM8K with binary verifiable rewards; tool-use,
 code-generation, and non-math coverage are sparser. (iii) Inferential
-claims are limited to the mechanical
-$\mathrm{ZVF} = p^G + (1{-}p)^G$ identity and later, separate five-seed
-Qwen3-8B GSM8K evidence ($+1.3$pp; one-sample seed-level $p{=}0.26$ against
+eligibility is unresolved for the historical cohort. The theoretical
+expectation $\mathbb E[\widehat{\mathrm{ZVF}}] = p^G + (1{-}p)^G$
+assumes conditionally i.i.d.\ binary rewards at fixed $p$; it is not
+an empirical inferential result. Later, separate five-seed
+Qwen3-8B GSM8K evidence is future-paper evidence ($+1.3$pp; one-sample seed-level $p{=}0.26$ against
 a fixed baseline, not a paired-seed or reviewed-record test). (iv) Many
 cross-library comparisons are confounded by
 checkpoint, hardware, or default-config differences and should be read

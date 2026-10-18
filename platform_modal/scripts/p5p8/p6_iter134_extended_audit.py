@@ -15,20 +15,25 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p6_iter134_seed_inconsistency.tsv
   platform_hybrid/experiments/results/p5p8/p6_iter134_cross_panel_companion.tsv
   platform_hybrid/experiments/results/p5p8/p6_iter134_empty_action_gap.tsv
-  platform_hybrid/experiments/results/p5p8/p6_iter134_summary.json
+  platform_hybrid/experiments/results/p5p8/p6_iter134_extended_summary.json
 """
 import csv
 import json
 import pathlib
 from collections import defaultdict, Counter
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
-REG = ROOT / "registry/entries"
-OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
-OUT.mkdir(parents=True, exist_ok=True)
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+ROOT = REPO_ROOT
+REG = ROOT / "platform_hybrid/registry/entries"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
 
 
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
+    if not list(REG.glob("*.json")):
+        raise ValueError("Empty registry")
     # Load all variant_delta entries
     vd = []
     for p in sorted(REG.glob("*.json")):
@@ -186,7 +191,7 @@ def main():
         "n_empty_with_expected_effects": sum(1 for e in empty if e["has_expected_effects"]),
         "n_empty_without_expected_effects": sum(1 for e in empty if not e["has_expected_effects"]),
     }
-    (OUT / "p6_iter134_summary.json").write_text(json.dumps(summary, indent=2))
+    (OUT / "p6_iter134_extended_summary.json").write_text(json.dumps(summary, indent=2))
     print(f"WROTE ci_div={len(ci_div)} seed_incons={len(seed_incons)} "
           f"shape_viol={len(shape_violations)} xp_companion={len(cp_companion)} empty={len(empty)}")
     print(json.dumps(summary, indent=2))

@@ -15,8 +15,8 @@ Stage 1 - Initial Implementation:
 - Verify code runs without errors
 
 Completion criteria:
-- Training loss decreases
-- Validation metrics are reasonable (not random)
+- Training behavior measured and failures diagnosed
+- Validation metrics recorded, including chance-level outcomes
 - Code executes end-to-end without errors
 ```
 
@@ -28,12 +28,12 @@ Stage 2 - Baseline Tuning:
 - Tune learning rate, batch size, and key hyperparameters
 - Test on at least 2 datasets
 - Compare against published baselines
-- Run 3 seeds for statistical significance
+- Run the prespecified seed set; report uncertainty descriptively
 
 Completion criteria:
-- Results competitive with or better than baselines
-- Consistent across multiple seeds
-- Training curves show stable convergence
+- Planned comparisons completed, regardless of direction
+- Variation across the planned seeds reported
+- Training convergence or nonconvergence documented
 ```
 
 ### Stage 3: Creative Research
@@ -48,8 +48,8 @@ Stage 3 - Creative Research:
 - Generate publication-quality figures
 
 Completion criteria:
-- Clear improvement over baselines on most datasets
-- Ablation supports contribution claims
+- Planned baseline comparisons complete, including null or negative results
+- Planned ablations complete; claims reflect supported or unsupported outcomes
 - Figures are informative and well-designed
 ```
 
@@ -61,11 +61,11 @@ Stage 4 - Ablation Studies:
 - Remove/modify each key component one at a time
 - Measure impact on performance
 - Sensitivity analysis for key hyperparameters
-- Report statistical significance (mean ± std over 3+ seeds)
+- Report mean ± std descriptively; inferential claims require the prespecified analysis
 
 Completion criteria:
-- Every claimed contribution verified by ablation
-- Hyperparameter sensitivity is reasonable
+- Every planned ablation completed; unsupported claims removed
+- Hyperparameter sensitivity reported
 - Results table is complete with all comparisons
 ```
 
@@ -88,10 +88,10 @@ or if more experiments are needed.
 ```
 Given the following experiment results and their training curves,
 holistically select the best experiment considering:
-1. Final test performance (primary metric)
+1. Development/validation performance (primary metric)
 2. Training stability (smooth loss curves)
 3. Consistency across seeds
-4. Generalization (train-test gap)
+4. Generalization (train-validation gap)
 
 Experiment results:
 {results_json}
@@ -124,3 +124,7 @@ For each hyperparameter:
 3. Identify which metrics to track
 4. Note any interactions between hyperparameters
 ```
+
+## Research integrity contract v2 (mandatory)
+
+Select candidates on development/validation outcomes only. Confirmatory test outcomes must remain unavailable to adaptive selection. Freeze method, configuration, split, seed set, endpoint, and analysis before confirmation. Previously inspected test sets are development evidence and must be recorded as such. Completion means all planned valid runs and analyses are finished, including negative and inconclusive outcomes. Mean and standard deviation are descriptive; inference requires a prespecified effect, interval/test, experimental unit, and multiplicity correction. Seed counts follow power or precision targets.

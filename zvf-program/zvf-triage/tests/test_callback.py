@@ -1,6 +1,5 @@
 """Unit tests for the ZVFCallback (framework-agnostic path)."""
 
-import numpy as np
 import pytest
 
 from zvf_triage import ZVFCallback, ZVFPanel
@@ -100,8 +99,8 @@ def test_memory_panel_records_history():
 
 def test_dropped_prompts_exposed():
     cb = ZVFCallback(drop_k=2)
-    cb.on_step([0.0, 0.0, 1.0, 0.0], [0, 0, 1, 1])
-    cb.on_step([0.0, 0.0, 1.0, 0.0], [0, 0, 1, 1])
+    cb.on_step([0.0, 0.0, 1.0, 0.0], [0, 0, 1, 1], prompt_ids=[0, 0, 1, 1])
+    cb.on_step([0.0, 0.0, 1.0, 0.0], [0, 0, 1, 1], prompt_ids=[0, 0, 1, 1])
     assert 0 in cb.dropped_prompts
 
 
@@ -139,7 +138,7 @@ def test_as_trl_callback_without_transformers_raises_cleanly():
 def test_panel_log_returns_flat_metrics():
     panel = ZVFPanel(backend="memory")
     cb = ZVFCallback(panel=panel)
-    d = cb.on_step(*_uniform(1.0))
+    cb.on_step(*_uniform(1.0))
     last = panel.history[-1]
     assert last["regime_code"] == 2  # saturation
     assert last["gu"] == 0.0

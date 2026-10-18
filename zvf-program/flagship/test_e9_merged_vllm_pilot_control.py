@@ -307,7 +307,7 @@ class PilotControlTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "authenticated provenance"):
             control.validate_returned_result(tampered_attestation, launch)
 
-    def test_v3_collection_is_idempotent_after_authenticated_success(self) -> None:
+    def test_stateful_timeout_retains_reservation_then_settles_original_job_once(self) -> None:
         launch, result = self._v3_launch_and_result()
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -353,19 +353,48 @@ class PilotControlTests(unittest.TestCase):
                 },
             )
 
-            class ResultCall:
+            class StatefulJob:
+                complete = False
+                collections = 0
                 def get(self, *, timeout: float) -> dict:
-                    self_timeout = timeout
+                    self.collections += 1
+                    if not self.complete:
+                        raise TimeoutError("synthetic job is still running")
                     return result
 
+            job = StatefulJob()
+            fetched_ids = []
+            def fetch(call_id):
+                fetched_ids.append(call_id)
+                return job
             modal = types.ModuleType("modal")
-            modal.FunctionCall = types.SimpleNamespace(from_id=lambda _: ResultCall())
+            modal.FunctionCall = types.SimpleNamespace(from_id=fetch)
+            modal.Function = types.SimpleNamespace(from_name=mock.Mock(
+                side_effect=AssertionError("collection must not respawn a job")))
             original_legacy = control.LEGACY_OUTPUT_DIR
             control.LEGACY_OUTPUT_DIR = root / "legacy"
             try:
                 with mock.patch.dict(sys.modules, {"modal": modal}):
+                    reserved_before = reservations_path.read_bytes()
+                    ledger_before = ledger_path.read_bytes()
+                    for _ in range(2):
+                        with self.assertRaisesRegex(TimeoutError, "still running"):
+                            control.collect_pilot(launch_path, timeout_seconds=0.01)
+                        self.assertEqual(reservations_path.read_bytes(), reserved_before)
+                        self.assertEqual(ledger_path.read_bytes(), ledger_before)
+                        self.assertEqual(json.loads(launch_path.read_text())["status"],
+                                         "REMOTE_CALL_SPAWNED_UNCOLLECTED")
+                    job.complete = True
                     destination = control.collect_pilot(launch_path)
+                    settled_once = ledger_path.read_bytes()
                     self.assertEqual(control.collect_pilot(launch_path), destination)
+                    self.assertEqual(ledger_path.read_bytes(), settled_once)
+                    self.assertEqual(job.collections, 3)
+                    self.assertEqual(fetched_ids, ["fc-v3-success"] * 3)
+                    modal.Function.from_name.assert_not_called()
+                    reservations = json.loads(reservations_path.read_text())["reservations"]
+                    self.assertEqual(len(reservations), 1)
+                    self.assertTrue(reservations[0]["reconciled_to_spend_ledger"])
             finally:
                 control.LEGACY_OUTPUT_DIR = original_legacy
             collection = json.loads((destination / "collection_receipt.json").read_text())
@@ -373,6 +402,39 @@ class PilotControlTests(unittest.TestCase):
             self.assertEqual(collection["legacy_tinker_coverage_increment"], 0)
             ledger = json.loads(ledger_path.read_text())
             self.assertEqual(len(ledger["modal_e9_merged_vllm_pilots"]), 1)
+
+    def test_executed_cpu_preflight_failure_never_resolves_gpu_runner(self) -> None:
+        events = []
+        class FailedPreflight:
+            def remote(self):
+                events.append("cpu_preflight")
+                raise RuntimeError("synthetic CPU preflight failure")
+        def from_name(app, name):
+            events.append(name)
+            if name != "preflight_merged_vllm_allocation":
+                self.fail("GPU runner was resolved after CPU failure")
+            return FailedPreflight()
+        modal = types.ModuleType("modal")
+        modal.Function = types.SimpleNamespace(from_name=from_name)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with mock.patch.dict(os.environ, {
+                "E9_ALLOCATION_ATTESTATION_PUBLIC_KEY_BASE64": "fixture-key",
+                "E9_V3_PROMPT_BUILDER_SHA256": "c" * 64,
+                "E9_V3_DEPLOYMENT_REVISION": "fixture-revision",
+                "E9_V3_SOURCE_BUNDLE_SHA256": "d" * 64,
+            }), mock.patch.object(control, "PAID_LAUNCH_ENABLED", True), mock.patch.object(
+                control, "_validate_campaign_gate",
+                return_value=({"gate": "synthetic"}, self.launch["combined_gpu_cpu_reservation"]),
+            ), mock.patch.dict(sys.modules, {"modal": modal}):
+                with self.assertRaisesRegex(RuntimeError, "CPU preflight failure"):
+                    control.spawn_pilot(competition_id=control.DEFAULT_COMPETITION_ID,
+                        output_dir=root / "arm", spend_ledger_path=root / "spend.json")
+            reservations = json.loads((root / "arm/_pending/spend_reservations.json").read_text())["reservations"]
+            self.assertEqual(len(reservations), 1)
+            self.assertEqual(reservations[0]["status"], "SPAWN_FAILED_RELEASED")
+            self.assertEqual(reservations[0]["reserved_usd"], 0.0)
+        self.assertEqual(events, ["preflight_merged_vllm_allocation", "cpu_preflight"])
 
     def test_spawn_persists_call_id_before_launch_and_recovery_is_idempotent(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

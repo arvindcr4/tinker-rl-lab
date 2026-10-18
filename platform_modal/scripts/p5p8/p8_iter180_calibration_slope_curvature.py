@@ -49,7 +49,7 @@ from _p8_common import (  # noqa: E402
     fit_xgb,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 
 FEATURE_SETS = {
@@ -118,23 +118,28 @@ def ece_within_k(y, p, k_pct):
 
 
 def reliability_slope(y, p):
-    """Calibration slope: linear regression on logit(p) -> logit(y_smooth)
-    (Laplace-smoothed y to avoid +-inf); slope=1.0 means perfectly
-    calibrated in the linear sense. Intercept near 0 means no bias."""
-    eps = 1e-6
-    y_s = (y.astype(float) * (1 - 2 * eps) + eps)  # in (eps, 1-eps)
-    z_lbl = np.log(y_s / (1 - y_s))
-    z_prd = np.log(np.clip(p, eps, 1 - eps) /
-                   np.clip(1 - p, eps, 1 - eps))
-    coef = np.polyfit(z_prd, z_lbl, 1)
-    # intercept b is y - slope*x at x=0
-    slope = float(coef[0])
-    intercept = float(coef[1])
-    return slope, intercept
+    """Binomial calibration logit(P(Y=1)) = intercept + slope*logit(p)."""
+    from scipy.optimize import minimize
+    from scipy.special import expit
+    y = np.asarray(y, dtype=float); p = np.asarray(p, dtype=float)
+    if len(y) != len(p) or len(set(y)) < 2 or not np.isfinite(p).all():
+        return float("nan"), float("nan")
+    x = np.log(np.clip(p, 1e-12, 1-1e-12) / np.clip(1-p, 1e-12, 1-1e-12))
+    if np.ptp(x) < 1e-12 or max(x[y==0]) <= min(x[y==1]) or max(x[y==1]) <= min(x[y==0]):
+        return float("nan"), float("nan")  # constant scores or separation
+    X = np.column_stack([np.ones(len(x)), x])
+    def objective(beta):
+        z = X @ beta
+        return np.logaddexp(0,z).sum() - y @ z
+    result = minimize(objective, [0.,1.], jac=lambda b:X.T @ (expit(X @ b)-y), method="BFGS", options={"gtol":1e-8})
+    if not result.success or not np.isfinite(result.x).all():
+        return float("nan"), float("nan")
+    return float(result.x[1]), float(result.x[0])
 
 
-def curvature_within_k(y, p, k_pct):
-    """Curvature = (mean predicted - actual fraction) on the alerted pool.
+
+def calibration_gap_within_k(y, p, k_pct):
+    """Calibration gap = (mean predicted - actual fraction) on the alerted pool.
     Positive = overconfident; Negative = underconfident; smaller |.| = better."""
     n = len(y)
     k = max(1, int(round(k_pct / 100.0 * n)))
@@ -150,7 +155,7 @@ def ece_within_k_1(y, p):
 
 
 def abs_curv_K1(y, p):
-    return float(abs(curvature_within_k(y, p, 1.0)))
+    return float(abs(calibration_gap_within_k(y, p, 1.0)))
 
 
 def paired_boot_diff_brier(y, p_a, p_b, n_boot=N_BOOT, seed=20260705):
@@ -217,9 +222,9 @@ def main():
             pre_ece_K1 = ece_within_k(yte, p_test_uncal, 1.0)
             platt_ece_K1 = ece_within_k(yte, p_platt, 1.0)
             iso_ece_K1 = ece_within_k(yte, p_iso, 1.0)
-            curv_pre_K1 = curvature_within_k(yte, p_test_uncal, 1.0)
-            curv_platt_K1 = curvature_within_k(yte, p_platt, 1.0)
-            curv_iso_K1 = curvature_within_k(yte, p_iso, 1.0)
+            curv_pre_K1 = calibration_gap_within_k(yte, p_test_uncal, 1.0)
+            curv_platt_K1 = calibration_gap_within_k(yte, p_platt, 1.0)
+            curv_iso_K1 = calibration_gap_within_k(yte, p_iso, 1.0)
             slope, intercept = reliability_slope(yte, p_test_uncal)
 
             cal_rows.append([fset_name, "pre",   s, round(pre_brier, 5),
@@ -329,15 +334,15 @@ def main():
 
     # (a) iso-lowers-brier: 24full
     pt, lo, hi = paired_boot_diff_brier(yte, pre_24full, iso_24full)
-    ci_rows.append(["iso_minus_pre_brier_24full", round(pt, 5),
+    ci_rows.append(["pre_minus_iso_brier_24full", round(pt, 5),
                     round(lo, 5), round(hi, 5),
                     "positive=iso lowers Brier (lower=better); CI excludes 0"])
     pt, lo, hi = paired_boot_diff_brier(yte, pre_20raw, iso_20raw)
-    ci_rows.append(["iso_minus_pre_brier_20raw", round(pt, 5),
+    ci_rows.append(["pre_minus_iso_brier_20raw", round(pt, 5),
                     round(lo, 5), round(hi, 5),
                     "iso lowers Brier on raw-20 too"])
     pt, lo, hi = paired_boot_diff_brier(yte, pre_4sensor, iso_4sensor)
-    ci_rows.append(["iso_minus_pre_brier_4sensor", round(pt, 5),
+    ci_rows.append(["pre_minus_iso_brier_4sensor", round(pt, 5),
                     round(lo, 5), round(hi, 5),
                     "iso lowers Brier on LLM-as-sensor surrogate"])
 
@@ -349,7 +354,7 @@ def main():
 
     # (c) iso-K1%-reliability-gap: 24full
     pt, lo, hi = paired_boot_diff_scalar(yte, pre_24full, iso_24full, ece_within_k_1)
-    ci_rows.append(["iso_minus_pre_eceK1_24full", round(pt, 5),
+    ci_rows.append(["pre_minus_iso_eceK1_24full", round(pt, 5),
                     round(lo, 5), round(hi, 5),
                     "positive=iso lowers within-budget ECE@K=1% on 24full"])
 

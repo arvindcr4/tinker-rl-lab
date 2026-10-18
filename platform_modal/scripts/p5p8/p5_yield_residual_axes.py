@@ -54,12 +54,12 @@ from pathlib import Path
 
 from _p5p7_common import spearman_v1 as spearman
 
-ROOT = Path(__file__).resolve().parents[2]
-CELLS = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
-GT_DIR = ROOT / "experiments" / "results" / "mega_20260704" / "group_tensors"
-MANIFEST_DIR = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
-OUT = ROOT / "experiments" / "results" / "p5p8"
-OUT.mkdir(parents=True, exist_ok=True)
+ROOT = Path(__file__).resolve().parents[3]
+CELLS = ROOT / "platform_hybrid" / "experiments" / "results" / "mega_20260704" / "cells.tsv"
+GT_DIR = ROOT / "platform_hybrid" / "experiments" / "results" / "mega_20260704" / "group_tensors"
+MANIFEST_DIR = ROOT / "platform_hybrid" / "experiments" / "results" / "mega_20260704" / "manifests"
+OUT = ROOT / "platform_hybrid" / "experiments" / "results" / "p5p8/review17_v2"
+
 RNG = random.Random(20260705)
 N_BOOT = 2000
 N_PAIRS = 2000
@@ -84,6 +84,8 @@ ITEMS = [
      lambda K, G: float((K / G).var(ddof=0))),
 ]
 
+
+from p5_review17_stats import json_safe
 
 def load_cells():
     rows = []
@@ -146,8 +148,11 @@ def hamming(a, b):
 
 
 def delta_div(c):
-    p = (c.get("mean_reward") or 0.0) / 100.0
-    p = max(0.0, min(1.0, p))
+    """v2: observed-minus-iid ZVF, fraction units; descriptive plug-in residual."""
+    p = c.get("mean_reward")
+    if p is None or not math.isfinite(float(p)) or not 0 <= float(p) <= 1:
+        raise ValueError("mean_reward must be a finite fraction in [0,1]")
+    p = float(p)
     G = c["G"]
     zvf_iid = p ** G + (1 - p) ** G
     zvf_obs = c.get("zvf")
@@ -157,6 +162,8 @@ def delta_div(c):
 
 
 def main():
+    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    OUT.mkdir(parents=True, exist_ok=True)
     import numpy as np
     print("# === P5 multi-axis yield-residual MIN-REPORT v2.2 (iter 81) ===")
     cells = load_cells()
@@ -324,7 +331,8 @@ def main():
     diffs_keys = list(diffs.keys())
     for b in range(N_BOOT):
         all_pairs = [(i, j) for i in range(n) for j in range(i + 1, n)]
-        sampled = RNG.sample(all_pairs, min(N_PAIRS, len(all_pairs)))
+        sample_ids = [RNG.randrange(n) for _ in range(n)]
+        sampled = [(sample_ids[i], sample_ids[j]) for i in range(n) for j in range(i + 1, n)]
         d_zvf = []
         fp_v21, fp_all, fp_14, fp_15, fp_16, fp_17 = [], [], [], [], [], []
         for i, j in sampled:
@@ -446,6 +454,9 @@ def main():
             f.write("\t".join(str(n_[k]) for k in keys) + "\n")
 
     summary = {
+        "analysis_protocol": "review17-p5-v2",
+        "outcome_leakage": "Fingerprints include observed ZVF-derived features; correlations are descriptive, never prospective validation",
+        "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "n_cells": n,
         "H_bits_v2.0": h_v2_total,
         "H_bits_v2.1": h_v21_total,
@@ -487,7 +498,7 @@ def main():
         ),
     }
     (OUT / "p5_yield_residual_axes_summary.json").write_text(
-        json.dumps(summary, indent=2, default=str))
+        json.dumps(json_safe(summary), indent=2, default=str))
     print("# === iter 81 multi-axis yield-residual: outputs in platform_hybrid/experiments/results/p5p8/ ===")
 
 

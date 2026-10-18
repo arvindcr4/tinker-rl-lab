@@ -1,6 +1,6 @@
 ---
 name: novelty-assessment
-description: Assess research idea novelty through systematic literature search. Multi-round search-evaluate loops with harsh critic persona. Binary novel/not-novel decision with justification. Use before committing to a research direction.
+description: Assess research idea novelty through systematic literature search. Multi-round search-evaluate loops with harsh critic persona. Novel/not-novel/inconclusive decision with justification. Use before committing to a research direction.
 argument-hint: [idea]
 ---
 
@@ -47,8 +47,9 @@ For each round:
 5. Decide: need more searching, or ready to decide
 
 ### Step 3: Make Decision
-- **Novel**: After sufficient searching, no paper significantly overlaps
-- **Not Novel**: Found a paper that significantly overlaps
+- **Novel**: Bounded, adequately covered search found no significant overlap; state search scope and limitations
+- **Not Novel**: Found a verified source that significantly overlaps
+- **Inconclusive**: Search coverage, source access, or claim evidence is insufficient. Record missing evidence and the next search needed; do not increase confidence because a search failed.
 
 ### Step 4: Position the Idea
 If novel, identify:
@@ -69,15 +70,21 @@ formulation, or insight.
 
 ```json
 {
-  "decision": "novel" | "not_novel",
+  "decision": "novel" | "not_novel" | "inconclusive",
+  "evidence_status": "sufficient" | "insufficient_evidence",
+  "search_scope": {"queries": [], "sources": [], "rounds_completed": 0, "limitations": []},
+  "missing_evidence": ["Required for inconclusive: what remains unverified"],
+  "next_searches": ["Required for inconclusive: how to obtain missing evidence"],
   "confidence": "high" | "medium" | "low",
   "justification": "After searching X rounds...",
   "most_similar_papers": [
-    {"title": "...", "year": 2024, "overlap": "..."}
+    {"title": "...", "year": 2024, "overlap": "...", "source_id": "...", "supporting_passage": "...", "scope": "...", "verification_status": "verified|unverified"}
   ],
   "differentiation": "Our idea differs because..."
 }
 ```
+
+For `inconclusive`, require `evidence_status: insufficient_evidence`, nonempty `missing_evidence` and `next_searches`, and describe access/search failures in `search_scope.limitations`. Never force a binary conclusion after reaching the round limit. If the optional automated helper is missing or cannot emit this schema, use the workflow above and report that limitation.
 
 ## Rules
 
@@ -89,3 +96,7 @@ formulation, or insight.
 
 ## Related Skills
 - Upstream: [literature-search](../literature-search/)
+
+## Evidence contract v2
+
+A citation must have claim-to-source support: source identity, supporting passage/page, scope, and verification status. Bibliographic existence alone does not verify a claim. Placeholder entries remain unresolved and block publication validation. Novelty judgments may be inconclusive/insufficient_evidence; failed counter-searches are bounded search outcomes, not increased confidence. Credentials must come from environment variables; never read a personal keys.md file. Resolve helpers from the installed skill package and report missing configuration explicitly.

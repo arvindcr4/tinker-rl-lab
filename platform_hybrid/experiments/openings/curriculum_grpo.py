@@ -6,6 +6,12 @@ waste and learns more per gradient update. Both arms: same base model, same #opt
 steps, same seed, per-step on-policy sampler refresh, held-out eval before/after.
 Logs both arms to W&B (rlvr-openings).
 """
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+from platform_hybrid.experiments.research_contracts import completion_alignment, gsm8k_reward
+
 import os, re, json, random, argparse, warnings
 warnings.filterwarnings("ignore")
 assert os.environ.get("TINKER_API_KEY"), "need TINKER_API_KEY"
@@ -41,23 +47,11 @@ heldout = examples[:args.heldout]; train_pool = examples[args.heldout:]
 print(f"train_pool={len(train_pool)} heldout={len(heldout)} model={args.model}")
 
 def reward(response, answer):
-    r = response.strip()
-    for b in re.findall(r"\\boxed\{([^}]+)\}", r):
-        bc = b.strip().replace(",", "").replace(" ", "")
-        try:
-            if abs(float(bc) - float(answer)) < 0.01: return 1.0
-        except:
-            if bc == answer: return 1.0
-    nums = re.findall(r"[-+]?\d[\d,]*\.?\d*", r)
-    if nums:
-        try:
-            if abs(float(nums[-1].replace(",", "")) - float(answer)) < 0.01: return 1.0
-        except: pass
-    return 0.0
+    return gsm8k_reward(response, answer)
 
 _adv = []
 def loss_fn(data, lp):
-    losses = [(-_adv[i] * lp[i].sum()) for i in range(len(lp))]
+    losses = [(-_adv[i] * (lp[i] * torch.tensor(data[i].loss_fn_inputs["completion_mask"].data, device=lp[i].device)).sum()) for i in range(len(lp))]
     loss = torch.stack(losses).mean()
     return loss, {"loss": loss.item()}
 
@@ -93,20 +87,22 @@ def run_arm(mode):
         while slots < args.batch and attempts < args.batch * args.oversample_cap:
             prompt_text, ans = random.choice(train_pool); attempts += 1; sampled_total += 1
             pid, resp, rews = sample_group(sc, prompt_text, ans, args.group)
+            batch_r.extend(rews)
             mr = sum(rews)/len(rews)
             mixed = 0.0 < mr < 1.0
             if mode == "curriculum" and not mixed:
                 continue  # skip collapsed group, resample
             slots += 1; accepted_total += 1
             sr = (sum((r-mr)**2 for r in rews)/len(rews))**0.5 + 1e-8
-            advs = [(r-mr)/sr for r in rews]; batch_r.extend(rews)
+            advs = [(r-mr)/sr for r in rews]
             for rseq, a in zip(resp.sequences, advs):
-                fid = pid + list(rseq.tokens); tid = fid[1:] + [0]
+                fid, tid, cmask = completion_alignment(pid, list(rseq.tokens))
                 all_data.append(T.Datum(model_input=T.ModelInput.from_ints(fid),
-                    loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)])}))
+                    loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)]), "completion_mask": T.TensorData(data=cmask, dtype="float32", shape=[len(cmask)])}))
                 all_advs.append(a)
         if not all_data:
-            step_rewards.append(0.0); continue
+            zero_loss += 1
+            step_rewards.append(sum(batch_r)/len(batch_r) if batch_r else None); continue
         _adv = all_advs
         res = tc.forward_backward_custom(data=all_data, loss_fn=loss_fn).result()
         tc.optim_step(T.AdamParams(learning_rate=args.lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
@@ -119,7 +115,7 @@ def run_arm(mode):
         sc = tc.create_sampling_client(model_path=ck.path)
         print(f"[{mode}] {step+1}/{args.steps} loss={lv:.3f} reward={avg:.3f} sampled={sampled_total} accepted={accepted_total}")
     ho_after = heldout_acc(sc)
-    return dict(mode=mode, zero_loss_frac=zero_loss/args.steps,
+    return dict(mode=mode, near_zero_scalar_loss_fraction=zero_loss/args.steps,
                 oversample_factor=sampled_total/max(accepted_total,1),
                 heldout_before=ho_before, heldout_after=ho_after,
                 heldout_gain=ho_after-ho_before, step_rewards=step_rewards)
@@ -129,7 +125,7 @@ run = wandb.init(project="rlvr-openings", name=f"curriculum-vs-baseline-{args.mo
 results = {}
 for mode in ["baseline", "curriculum"]:
     r = run_arm(mode); results[mode] = r
-    for k in ["zero_loss_frac","oversample_factor","heldout_before","heldout_after","heldout_gain"]:
+    for k in ["near_zero_scalar_loss_fraction","oversample_factor","heldout_before","heldout_after","heldout_gain"]:
         run.summary[f"{mode}/{k}"] = r[k]
     for s, rw in enumerate(r["step_rewards"]):
         wandb.log({f"{mode}/reward": rw}, step=s)

@@ -72,10 +72,6 @@ def load_step_log_inverse(path: str, task_label: str) -> list[tuple]:
     return [(r, task_label) for r in load_step_log(path)]
 
 
-def window_rewards(R: np.ndarray, n_w: int) -> np.ndarray:
-    """Return mean-R over n_w equal-length windows."""
-
-
 def load_iter108_perrun() -> list[dict[str, Any]]:
     out = []
     with open(ITER108_PERRUN) as fh:

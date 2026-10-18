@@ -18,16 +18,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
-RES = ROOT / "experiments" / "results"
-
-# Source TSVs
-SYN = pd.read_csv(RES / "group_size_iter27_synthesis.tsv", sep="\t")
-EFF = pd.read_csv(RES / "group_size_effect.tsv", sep="\t")
-G4_G32 = pd.read_csv(RES / "group_size_g4_vs_g32_broader_scale.tsv", sep="\t")
+from _paths import RESULTS_DIR as RES
 
 
 def main() -> None:
+    SYN = pd.read_csv(RES / "group_size_iter27_synthesis_v2.tsv", sep="\t")
+    G4_G32 = pd.read_csv(RES / "group_size_g4_vs_g32_broader_scale.tsv", sep="\t")
     # Extend with measured Qwen2.5-0.5B rows for G in {2,4,8,16}
     new_rows = []
     for _, r in SYN.iterrows():
@@ -36,9 +32,12 @@ def main() -> None:
             "source": f"qwen2.5-0.5b_arithmetic_iter27",
             "G": G,
             "n_seeds": int(r["n_seeds"]),
-            "heldout_acc_mean": round(float(r["last10_mean_reward"]), 4),
-            "heldout_acc_ci_low": round(float(r["last10_mean_reward"]) - 1.96 * float(r["last10_se"]), 4),
-            "heldout_acc_ci_high": round(float(r["last10_mean_reward"]) + 1.96 * float(r["last10_se"]), 4),
+            "heldout_acc_mean": float("nan"),
+            "metric": "last10_mean_training_reward",
+            "split": "train",
+            "evidence_kind": "measured",
+            "heldout_acc_ci_low": float("nan"),
+            "heldout_acc_ci_high": float("nan"),
             "mean_zvf": float("nan"),
             "last10_mean": float(r["last10_mean_reward"]),
             "is_measured": "yes",
@@ -76,9 +75,13 @@ def main() -> None:
         })
 
     df_new = pd.DataFrame(new_rows)
-    out = pd.concat([EFF, df_new], ignore_index=True)
-    out_path = RES / "group_size_effect.tsv"
-    out.to_csv(out_path, sep="\t", index=False)
+    if df_new.duplicated(["source","G"]).any():
+        raise ValueError("duplicate source/group identity")
+    out = df_new
+    out_path = RES / "group_size_iter27_effect_extension_v2.tsv"
+    temporary=out_path.with_suffix(".tmp")
+    out.to_csv(temporary, sep="\t", index=False)
+    temporary.replace(out_path)
     print(f"wrote {out_path} with {len(out)} rows ({len(df_new)} new)")
 
 

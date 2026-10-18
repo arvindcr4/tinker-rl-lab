@@ -89,51 +89,35 @@ def load_step_coupling() -> list[dict]:
     return rows
 
 
-def paired_wilcoxon(a: list[float], b: list[float]) -> tuple[float, int]:
-    """One-sided paired Wilcoxon (b<a is the predicted direction for H1).
+def paired_wilcoxon(a: list[float], b: list[float]) -> tuple[float, int, float]:
+    """Exact conditional sign-flip signed-rank test for b < a; zeros excluded.
 
-    Returns (W_minus, n_pairs_minus): the smaller of the rank sums
-    on differences and the count of pairs where b < a (predicted).
+    Returns negative rank sum, predicted wins, and one-sided p-value. Tied
+    absolute differences receive midranks; integer doubled ranks permit exact DP.
+    Independent symmetric paired differences are required for inference.
     """
-    diffs = [bi - ai for ai, bi in zip(a, b)]
-    abs_diffs = [abs(d) for d in diffs]
-    n = len(diffs)
-    order = sorted(range(n), key=lambda i: abs_diffs[i])
-    ranks = [0.0] * n
-    i = 0
-    while i < n:
-        j = i
-        while j < n and abs_diffs[order[j]] == abs_diffs[order[i]]:
-            j += 1
-        r = (i + 1 + j) / 2.0
-        for k in range(i, j):
-            ranks[order[k]] = r
-        i = j
-    # Wilcoxon signed-rank, sum of ranks of *negative* differences
-    # because predicted direction is b<a, i.e. diff < 0
-    W_minus = sum(ranks[k] for k in range(n) if diffs[k] < 0)
-    n_pred = sum(1 for d in diffs if d < 0)
-    return W_minus, n_pred
+    if len(a) != len(b) or not all(math.isfinite(v) for v in a + b):
+        raise ValueError("finite aligned pairs required")
+    diffs = [bi-ai for ai, bi in zip(a, b) if bi != ai]
+    ranks = [1 + sum(abs(x) < abs(d) for x in diffs)
+             + (sum(abs(x) == abs(d) for x in diffs)-1)/2 for d in diffs]
+    observed = round(2 * sum(r for r, d in zip(ranks, diffs) if d < 0))
+    counts = {0: 1}
+    for rank in ranks:
+        updated = dict(counts)
+        for total, count in counts.items():
+            key = total + round(2*rank)
+            updated[key] = updated.get(key, 0) + count
+        counts = updated
+    p = sum(count for total, count in counts.items() if total >= observed) / 2**len(diffs)
+    return observed/2, sum(d < 0 for d in diffs), p
 
 
 def sign_test_binom(n_wins: int, n_total: int, p_one_sided: float = 0.5) -> float:
-    """Exact one-sided binomial p-value for the sign test, no SciPy."""
-    if n_wins > n_total:
-        return 0.0
-    if p_one_sided == 0.5:
-        # Save the binomial coefficient via lgamma
-        log_b = math.lgamma(n_total + 1) - math.lgamma(n_wins + 1) - math.lgamma(n_total - n_wins + 1)
-        cdf = sum(
-            math.exp(
-                math.lgamma(n_total + 1)
-                - math.lgamma(k + 1)
-                - math.lgamma(n_total - k + 1)
-                + n_total * math.log(0.5)
-            )
-            for k in range(n_wins + 1)
-        )
-        return 2 * min(cdf, 0.5)
-    return float("nan")
+    """Exact upper-tail P(wins >= observed), ties excluded by caller."""
+    if not 0 <= n_wins <= n_total or p_one_sided != 0.5:
+        raise ValueError("invalid counts or unsupported null probability")
+    return sum(math.comb(n_total, k) for k in range(n_wins, n_total+1)) / 2**n_total
 
 
 def main() -> None:
@@ -147,7 +131,7 @@ def main() -> None:
         algo = r["algo"]
         task_pool.setdefault(task, {})[f"{algo}_{r['seed']}"] = r["abs_rho_dR_dL"]
     # Build aligned pool
-    pool: list[tuple[float, float]] = []
+    seed_pairs: dict[str, list[tuple[float, float]]] = {}
     for task, m in task_pool.items():
         gr_keys = [k for k in m if k.startswith("grpo_")]
         dr_keys = [k for k in m if k.startswith("dr_grpo_")]
@@ -155,16 +139,18 @@ def main() -> None:
             seed = gk.split("_", 1)[1]
             dk = f"dr_grpo_{seed}"
             if dk in m:
-                pool.append((m[gk], m[dk]))
+                seed_pairs.setdefault(seed, []).append((m[gk], m[dk]))
+    # Seed is the independent run unit; equally weight tasks within each seed.
+    pool = [(sum(a for a, _ in pairs)/len(pairs), sum(b for _, b in pairs)/len(pairs))
+            for _, pairs in sorted(seed_pairs.items())]
+    if len(pool) < 2:
+        raise ValueError("INSUFFICIENT_DATA: at least two paired independent cells required")
     diffs = [b - a for a, b in pool]
-    W_minus, n_pred = paired_wilcoxon([a for a, _ in pool], [b for _, b in pool])
+    W_minus, n_pred, wilcoxon_p = paired_wilcoxon([a for a, _ in pool], [b for _, b in pool])
     mean_gr = sum(a for a, _ in pool) / len(pool)
     mean_dr = sum(b for _, b in pool) / len(pool)
-    cohens_d = (mean_dr - mean_gr) / (
-        (sum((b - a - (sum(diffs) / len(diffs))) ** 2 for a, b in pool) / (len(pool) - 1)) ** 0.5
-        if len(pool) > 1
-        else 1.0
-    )
+    paired_sd = (sum((d - sum(diffs)/len(diffs))**2 for d in diffs)/(len(diffs)-1))**0.5
+    cohens_d = (mean_dr - mean_gr) / paired_sd if paired_sd else 0.0
     h1_row = {
         "hypothesis": "H1_pooled_DR_smaller",
         "n_pairs": len(pool),
@@ -172,12 +158,14 @@ def main() -> None:
         "mean_dr": round(mean_dr, 4),
         "mean_dr_minus_gr": round(mean_dr - mean_gr, 4),
         "W_minus_one_sided": round(W_minus, 1),
+        "wilcoxon_p_one_sided": wilcoxon_p,
+        "inference_caveat": "Exploratory seed-level means across matched tasks; requires independent symmetric seed differences",
         "n_pred_one_sided": n_pred,
         "cohens_d_paired": round(cohens_d, 3),
         "predicted_direction": "Dr.GR smaller (fixed normaliser decouples, learned break does not)",
         "verdict": (
             "FAVOURS"
-            if (mean_dr < mean_gr and n_pred >= math.ceil(0.75 * len(pool)))
+            if (mean_dr < mean_gr and wilcoxon_p < 0.05)
             else "NULL"
         ),
     }
@@ -191,15 +179,10 @@ def main() -> None:
 
     # ---- H4: sign test over all (task, seed) cells ----
     # Predicted direction: Dr.GR < GR |ρ(Δr,ΔL)| (smaller |ρ| = decoupled)
-    n_total = len(pool)
-    n_wins = sum(1 for a, b in pool if b < a)
-    binom_p = 0.5 ** n_total * sum(
-        math.comb(n_total, k) for k in range(n_wins + 1)
-    )
-    binom_p_two_sided = min(2 * binom_p, 1.0) if n_wins <= n_total / 2 else 1.0
-    binom_one_sided = binom_p if n_wins <= n_total / 2 else (
-        sum(math.comb(n_total, k) * 0.5 ** n_total for k in range(n_wins, n_total + 1))
-    )
+    n_total = sum(a != b for a, b in pool)
+    n_wins = sum(b < a for a, b in pool)
+    binom_one_sided = sign_test_binom(n_wins, n_total)
+    binom_p_two_sided = min(1.0, 2 * sign_test_binom(max(n_wins, n_total-n_wins), n_total))
     h4_row = {
         "hypothesis": "H4_sign_test_pooled_8_cells",
         "n_total_cells": n_total,

@@ -70,11 +70,10 @@ class RemoteManifestValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "lacks completion hashes"):
             self.validate(broken)
 
-    def test_duplicate_hash_is_rejected(self):
+    def test_duplicate_output_hash_is_allowed_for_distinct_examples(self):
         broken = copy.deepcopy(self.manifest)
         broken["heldout_trace"][1]["completion_sha256"] = "a" * 64
-        with self.assertRaisesRegex(RuntimeError, "not unique"):
-            self.validate(broken)
+        self.assertIsNone(self.validate(broken))
 
 
 class RecoveryRolloutTests(unittest.TestCase):

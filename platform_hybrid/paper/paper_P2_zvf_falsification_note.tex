@@ -71,12 +71,17 @@ $\sum_k \binom{G}{k}\bar p^k(1-\bar p)^{G-k}\,[h_G(k/G)-\mathbf{1}\{k\in\{0,G\}\
 the observed $+0.1224$. The number therefore cannot evidence ``anti-herding''.
 
 \paragraph{The arithmetic sign flip is Jensen.}
-The synthetic-arithmetic statistic used a \emph{step-mean} success rate:
-$\delta_t=h_G(\bar p_t)-\mathrm{ZVF}_t$. Its expectation under i.i.d.\ rollouts
-with heterogeneous prompts is $h_G(\bar p_t)-\mathbb{E}_i[h_G(p_i)]\le0$ by
-convexity, so a negative mean ($-0.067$, $n=480$ steps; 95\% CI
-$[-0.079,-0.056]$) is expected without any rollout correlation. The two
-``opposite signs'' come from two different estimators, not two regimes.
+The synthetic-arithmetic statistic used an estimated step-mean success rate:
+$\delta_t=h_G(\widehat{\bar p}_t)-\widehat{\mathrm{ZVF}}_t$.
+For latent prompt probabilities, convexity implies
+$h_G(\mathbb E_i[p_i])-\mathbb E_i[h_G(p_i)]\le0$.
+This population inequality cannot be transferred directly to the finite-sample
+statistic: $\mathbb E[h_G(\widehat{\bar p}_t)]$ has nonlinear plug-in bias.
+The reported negative mean $-0.067$ over 480 steps is a descriptive historical
+summary, not proof of correlation or a sign-guaranteed finite-sample result.
+Uncertainty must account for probability estimation and within-run dependence;
+the historical step-iid interval is withheld. The two estimators differ and do
+not by themselves identify two learning regimes.
 
 \section{What the GSM8K groups actually show}
 

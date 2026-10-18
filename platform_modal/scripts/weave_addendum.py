@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import re
 import shutil
+import argparse
+import hashlib
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "platform_tinker/reports/final/capstone_final_report.md"
 FRAG_DIR = ROOT / "platform_tinker/reports/final/addendum"
 BACKUP = REPORT.with_suffix(".md.bak")
@@ -50,28 +52,54 @@ def wrap_subsection(num: str, title: str, body: str) -> str:
     return f"\n#### {num} {title}\n\n{body.strip()}\n"
 
 
+def unique_anchor(text, pattern):
+    matches = list(re.finditer(pattern, text, re.MULTILINE))
+    if len(matches) != 1:
+        raise ValueError(f"expected exactly one anchor {pattern!r}; found {len(matches)}")
+    return matches[0]
+
+
+def managed(payload):
+    return "<!-- weave-v3:begin -->\n" + payload + "<!-- weave-v3:end -->\n"
+
+
 def insert_before(text: str, anchor_pat: str, payload: str) -> str:
-    m = re.search(anchor_pat, text, re.MULTILINE)
-    assert m, f"anchor not found: {anchor_pat!r}"
-    return text[: m.start()] + payload + text[m.start() :]
+    m = unique_anchor(text, anchor_pat)
+    return text[:m.start()] + managed(payload) + text[m.start():]
 
 
 def append_to_section(text: str, start_pat: str, end_pat: str, payload: str) -> str:
-    """Insert `payload` right before the next section header `end_pat`."""
-    ms = re.search(start_pat, text, re.MULTILINE)
-    assert ms, f"start anchor not found: {start_pat!r}"
-    me = re.search(end_pat, text[ms.end() :], re.MULTILINE)
-    assert me, f"end anchor not found: {end_pat!r}"
-    cut = ms.end() + me.start()
-    return text[:cut] + payload + text[cut:]
+    start = unique_anchor(text, start_pat)
+    end = unique_anchor(text, end_pat)
+    if end.start() <= start.end():
+        raise ValueError("section end precedes section start")
+    return text[:end.start()] + managed(payload) + text[end.start():]
 
 
-def main() -> None:
-    shutil.copy2(REPORT, BACKUP)
-    txt = REPORT.read_text()
+MARKER = "<!-- weave-addendum:review27-v2 -->"
+
+
+def transform(txt: str, fragments=None) -> str:
+    """Pure idempotent splice; marker denotes this frozen fragment version."""
+    if MARKER in txt:
+        return txt
+
+    fragments = dict(fragments) if fragments is not None else {name: read_fragment(name) for name in FRAGMENT_NAMES}
+    # Strip only our uniquely delimited generated regions before regenerating.
+    starts = txt.count("<!-- weave-v3:begin -->")
+    ends = txt.count("<!-- weave-v3:end -->")
+    if starts != ends:
+        raise ValueError("unbalanced managed sections")
+    txt, removed = re.subn(r"<!-- weave-v3:begin -->\n.*?<!-- weave-v3:end -->\n", "", txt, flags=re.DOTALL)
+    if removed != starts:
+        raise ValueError("malformed/nested managed sections")
+    txt = re.sub(r"^<!-- weave-addendum:review27-v3:[0-9a-f]{64} -->\n", "", txt)
+    # Validate every report anchor, including replacements, before reading fragments.
+    for pattern in (r"^## 3\. Methodology", r"^### 4\.5\.8 ", r"^### 4\.6 ", r"^### 4\.2 ", r"^### 4\.3 ", r"^### 5\.8 ", r"^### 5\.9 ", r"^### 5\.12 ", r"^### 5\.13 ", r"^### 5\.16 ", r"^## 6\. Summary of Findings$", r"^### 7\.1[^\n]*$"):
+        unique_anchor(txt, pattern)
 
     # --- F-8 Related Work extension → insert §2.7 and §2.8 right before "## 3. Methodology"
-    f8 = strip_top_h3(read_fragment("08-related-work-integration.md"))
+    f8 = strip_top_h3(fragments["08-related-work-integration.md"])
     # Rewrite 10.8.1..10.8.5 as 2.7.1..2.7.5 (variance mitigation stays in §2.7;
     # split PRM/ST-PPO/DAR into §2.8)
     f8 = f8.replace("#### 10.8.1", "#### 2.7.1")
@@ -98,7 +126,7 @@ def main() -> None:
     txt = insert_before(txt, r"^## 3\. Methodology", f8_body + "\n")
 
     # --- F-3 Framework-Gap Deep-Dive → append inside §4.5.8 (before §4.6)
-    f3 = strip_top_h3(read_fragment("03-framework-gap-configs.md"))
+    f3 = strip_top_h3(fragments["03-framework-gap-configs.md"])
     f3 = demote_h3(f3, offset_depth=1)
     f3_wrapped = (
         "\n#### 4.5.8.1 Framework Configuration Disclosure and Retraction "
@@ -111,7 +139,7 @@ def main() -> None:
     txt = append_to_section(txt, r"^### 4\.5\.8 ", r"^### 4\.6 ", f3_wrapped)
 
     # --- F-5 Tool-use + code + ZVF outside math → append inside §4.2 (before §4.3)
-    f5 = strip_top_h3(read_fragment("05-toolcode-zvf-outside-math.md"))
+    f5 = strip_top_h3(fragments["05-toolcode-zvf-outside-math.md"])
     f5 = demote_h3(f5, offset_depth=1)
     f5_wrapped = (
         "\n#### 4.2.1 Reward Design, SFT Warm-Starts, and ZVF Outside "
@@ -125,7 +153,7 @@ def main() -> None:
     txt = append_to_section(txt, r"^### 4\.2 ", r"^### 4\.3 ", f5_wrapped)
 
     # --- F-7 F5 scope clarification + regenerated figures → append inside §5.8 (before §5.9)
-    f7 = strip_top_h3(read_fragment("07-f5-scope-figures.md"))
+    f7 = strip_top_h3(fragments["07-f5-scope-figures.md"])
     f7 = demote_h3(f7, offset_depth=1)
     f7_wrapped = (
         "\n#### 5.8.1 F5 Reframed from Mechanistic to Descriptive; Regenerated "
@@ -139,7 +167,7 @@ def main() -> None:
     txt = append_to_section(txt, r"^### 5\.8 ", r"^### 5\.9 ", f7_wrapped)
 
     # --- F-1 ZVF formalization + partial correlation → append inside §5.12 (before §5.13)
-    f1 = strip_top_h3(read_fragment("01-zvf-formalization.md"))
+    f1 = strip_top_h3(fragments["01-zvf-formalization.md"])
     f1 = demote_h3(f1, offset_depth=1)
     f1_wrapped = (
         "\n#### 5.12.1 Formal Definition, Partial-Correlation Ablation, and "
@@ -154,7 +182,7 @@ def main() -> None:
     txt = append_to_section(txt, r"^### 5\.12 ", r"^### 5\.13 ", f1_wrapped)
 
     # --- F-4 Evidence tiers + F1–F5 survival → append inside §5.16 (before §6)
-    f4 = strip_top_h3(read_fragment("04-statistical-rigor-survival.md"))
+    f4 = strip_top_h3(fragments["04-statistical-rigor-survival.md"])
     f4 = demote_h3(f4, offset_depth=1)
     f4_wrapped = (
         "\n#### 5.16.1 Evidence-Tier Partition and F1–F5 Survival Analysis "
@@ -169,9 +197,9 @@ def main() -> None:
 
     # --- F-2 Group-size reconciliation + F-6 heldout + F-6 base vs instruct
     #     → add as new §§5.17 / 5.18 / 5.19 just before "## 6. Summary"
-    f2 = strip_top_h3(read_fragment("02-group-size-reconcile.md"))
+    f2 = strip_top_h3(fragments["02-group-size-reconcile.md"])
     f2 = demote_h3(f2, offset_depth=1)
-    f6 = strip_top_h3(read_fragment("06-heldout-base-instruct.md"))
+    f6 = strip_top_h3(fragments["06-heldout-base-instruct.md"])
     f6 = demote_h3(f6, offset_depth=1)
     # F-6 was split into 10.6.1 (heldout) and 10.6.2 (base/instruct) and 10.6.3 summary
     f6_heldout = _extract_between(f6, "10.6.1", "10.6.2").strip()
@@ -213,7 +241,7 @@ def main() -> None:
         "`platform_modal/scripts/reviewer_response_score.sh`.\n\n"
     )
     txt = re.sub(
-        r"(^## 6\. Summary of Findings\n)", r"\1" + summary_note,
+        r"(^## 6\. Summary of Findings\n)", r"\1" + managed(summary_note),
         txt, count=1, flags=re.MULTILINE,
     )
 
@@ -233,27 +261,54 @@ def main() -> None:
     )
     # insert as the first bullet under §7.1
     def _inject_under_71(m: re.Match) -> str:
-        return m.group(0) + gaps_note
+        return m.group(0) + managed(gaps_note)
     txt = re.sub(
         r"^### 7\.1[^\n]*\n", _inject_under_71,
         txt, count=1, flags=re.MULTILINE,
     )
 
-    REPORT.write_text(txt)
-    print(f"wrote {REPORT} ({len(txt.splitlines())} lines). backup at {BACKUP}")
+    digest = hashlib.sha256("".join(fragments[name] for name in FRAGMENT_NAMES).encode()).hexdigest()
+    return f"<!-- weave-addendum:review27-v3:{digest} -->\n" + txt
+
+
+FRAGMENT_NAMES = ("01-zvf-formalization.md", "02-group-size-reconcile.md", "03-framework-gap-configs.md", "04-statistical-rigor-survival.md", "05-toolcode-zvf-outside-math.md", "06-heldout-base-instruct.md", "07-f5-scope-figures.md", "08-related-work-integration.md")
+
+
+def main(argv=None) -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", type=Path, default=REPORT)
+    parser.add_argument("--fragments", type=Path, default=FRAG_DIR)
+    parser.add_argument("--output", type=Path, default=REPORT.with_name(REPORT.stem + "_review27_v3.md"))
+    args = parser.parse_args(argv)
+    globals()["FRAG_DIR"] = args.fragments
+    original = args.input.read_text()
+    if MARKER in original:
+        raise ValueError("legacy frozen splice cannot be updated safely; supply its unmodified backup")
+    updated = transform(original)
+    if args.output.exists() and args.output.read_text() == updated:
+        return
+    if args.output.resolve() == args.input.resolve():
+        raise ValueError("use a distinct versioned output; original report is preserved")
+    if args.output.exists():
+        raise ValueError("output differs; choose a new versioned output path")
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = args.output.with_suffix(args.output.suffix + ".tmp")
+    with temporary.open("x") as fh:
+        fh.write(updated)
+    temporary.replace(args.output)
 
 
 def _extract_between(blob: str, start_needle: str, end_needle: str) -> str:
-    a = blob.find(start_needle)
-    b = blob.find(end_needle, a + len(start_needle))
-    assert a >= 0 and b >= 0, f"missing {start_needle!r} or {end_needle!r}"
-    return blob[a:b]
+    start = unique_anchor(blob, r"^.*" + re.escape(start_needle) + r"[^\n]*$")
+    end = unique_anchor(blob, r"^.*" + re.escape(end_needle) + r"[^\n]*$")
+    if end.start() <= start.start():
+        raise ValueError("fragment headings out of order")
+    return blob[start.start():end.start()]
 
 
 def _extract_from(blob: str, needle: str) -> str:
-    a = blob.find(needle)
-    assert a >= 0, f"missing {needle!r}"
-    return blob[a:]
+    match = unique_anchor(blob, r"^.*" + re.escape(needle) + r"[^\n]*$")
+    return blob[match.start():]
 
 
 if __name__ == "__main__":

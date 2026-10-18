@@ -1,0 +1,13 @@
+{
+  "version": "registry-sidecars-v1",
+  "documents": {
+    "delta_aero.amendment.json": {
+      "record_type": "historical_amendment",
+      "sha256": "6b8b7595c7a6419dee3790e9e9c2470860e9e08b0356a10b05b1f161418479ac"
+    },
+    "delta_areal.amendment.json": {
+      "record_type": "historical_amendment",
+      "sha256": "68233a689f80b37d1253531d599a72df6f56b91093f5196a471fae8bad23e7ed"
+    }
+  }
+}

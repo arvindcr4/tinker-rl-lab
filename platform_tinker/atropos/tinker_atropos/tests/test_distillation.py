@@ -1,22 +1,12 @@
-
-import atexit
-try:
-    from codecarbon import EmissionsTracker
-    _tracker = EmissionsTracker()
-    _tracker.start()
-    atexit.register(_tracker.stop)
-except ImportError:
-    pass
-
 import pytest
-from tinker_atropos.trainer import TinkerAtroposTrainer
+from tinker_atropos.dataset import DatasetPreprocessor
 from tinker_atropos.config import TinkerAtroposConfig
 
 
 @pytest.fixture
 def trainer():
     config = TinkerAtroposConfig()
-    trainer = TinkerAtroposTrainer(config=config)
+    trainer = DatasetPreprocessor("http://unused.invalid")
     return trainer
 
 
@@ -64,7 +54,7 @@ class TestDistillFieldNames:
             ],
         )
 
-        _, _, has_distil = trainer.pad_data_to_good_offset(batch)
+        _, _, has_distil, _ = trainer.pad_data_to_good_offset(batch)
         assert has_distil is True
 
     def test_no_distill_without_fields(self, trainer):
@@ -78,7 +68,7 @@ class TestDistillFieldNames:
             scores=[2.0, 1.0],
         )
 
-        _, _, has_distil = trainer.pad_data_to_good_offset(batch)
+        _, _, has_distil, _ = trainer.pad_data_to_good_offset(batch)
         assert has_distil is False
 
 
@@ -96,7 +86,7 @@ class TestDistillAdvantageOverwrite:
             distill_logprobs=[[[-0.1], [-0.1], [-0.8], [-0.6], [-0.4]]],
         )
 
-        datums, _, has_distil = trainer.pad_data_to_good_offset(batch)
+        datums, _, has_distil, _ = trainer.pad_data_to_good_offset(batch)
         assert has_distil is True
         assert len(datums) == 1
 
@@ -129,7 +119,7 @@ class TestDistillAdvantageOverwrite:
             distill_logprobs=[[[-0.2], [-0.2], [-0.7], [-0.5]]],
         )
 
-        datums, _, _ = trainer.pad_data_to_good_offset(batch)
+        datums, _, _, _ = trainer.pad_data_to_good_offset(batch)
         advantages = datums[0].loss_fn_inputs["advantages"].to_torch().tolist()
 
         # First position after shift was logprob=1.0 -> advantage=0.0

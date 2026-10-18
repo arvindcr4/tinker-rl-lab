@@ -12,12 +12,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = "pavlov-verilog-eval-adapter-v2"
+SCHEMA_VERSION = "pavlov-verilog-eval-adapter-v3"
 SUITE_ID = "verilog_eval"
 SUITE_ROLE = "primary_eval"
 _EXPECTED_CATEGORY = "code"
@@ -178,6 +179,9 @@ def _load_authority(contract_path: str | Path | None = None) -> Mapping[str, Any
         raise VerilogEvalBoundaryError(f"authority contract is not valid JSON: {exc}") from exc
     if not isinstance(payload, Mapping):
         raise VerilogEvalBoundaryError("contract must be a JSON object")
+    installed = json.loads((base / "pavlovs_domain_contract.json").read_text(encoding="utf-8"))
+    if payload != installed:
+        raise VerilogEvalBoundaryError("authority must match independently installed contract")
     registry = payload.get("suite_registry")
     if not isinstance(registry, Mapping):
         raise VerilogEvalBoundaryError("contract missing suite_registry")
@@ -428,15 +432,14 @@ def _validate_hf_checkpoints(raw: Any) -> list[dict[str, Any]]:
         observed_stages.add(stage)
 
         url = _require_url(checkpoint.get("url"), f"hf_checkpoints[{index}].url")
-        if checkpoint.get("safe_public_artifact") is not True:
-            raise VerilogEvalBoundaryError(
-                f"hf_checkpoints[{index}].safe_public_artifact must be true"
-            )
         visibility = _require_text(checkpoint.get("visibility"), f"hf_checkpoints[{index}].visibility").lower()
         if visibility not in {"public", "private"}:
             raise VerilogEvalBoundaryError(
                 f"hf_checkpoints[{index}].visibility must be public or private"
             )
+        if checkpoint.get("safe_public_artifact") is not (visibility == "public"):
+            raise VerilogEvalBoundaryError(f"hf_checkpoints[{index}].safe_public_artifact must match visibility")
+
         artifact_key = (repo_url, revision)
         if artifact_key in seen_payload:
             raise VerilogEvalBoundaryError(
@@ -450,7 +453,7 @@ def _validate_hf_checkpoints(raw: Any) -> list[dict[str, Any]]:
                 "revision": revision,
                 "url": url,
                 "stage": stage,
-                "safe_public_artifact": True,
+                "safe_public_artifact": visibility == "public",
                 "visibility": visibility,
             }
         )
@@ -474,8 +477,8 @@ def _validate_costs(raw: Any) -> dict[str, Any]:
     total_usd = raw.get("total_usd")
     if not isinstance(total_usd, (int, float)) or isinstance(total_usd, bool):
         raise VerilogEvalBoundaryError("costs.total_usd must be a number")
-    if total_usd < 0:
-        raise VerilogEvalBoundaryError("costs.total_usd cannot be negative")
+    if not math.isfinite(total_usd) or total_usd < 0:
+        raise VerilogEvalBoundaryError("costs.total_usd must be finite and non-negative")
     if raw.get("paid_work") is True:
         raise VerilogEvalBoundaryError("costs.paid_work is not allowed for offline boundary")
     return {"status": status, "total_usd": float(total_usd)}

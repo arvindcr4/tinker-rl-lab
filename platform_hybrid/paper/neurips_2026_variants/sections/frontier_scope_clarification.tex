@@ -84,19 +84,12 @@ them as \emph{observational} wherever they appear in the main text.
 Upgrading F5 to a strong-evidence claim requires multi-seed, long-horizon
 training at frontier scale. Under the Tinker managed-API pricing regime that
 governed this campaign, a single 100-step GRPO run at $N\geq 70\mathrm{B}$
-with our default group size ($G=8$) consumes roughly $C_{100} \approx
-\$X_{100}$ in managed compute (order-of-magnitude $10^{3}$--$10^{4}$ USD per
-configuration, depending on architecture, rollout length, and whether the
-backbone is dense or MoE). A defensible F5 replication therefore calls for
-\[
-5\ \text{seeds} \times 200\ \text{steps} \times 3\ \text{frontier sizes}
-\;\;\approx\;\; 30\ \text{runs}
-\]
-at an aggregate cost roughly $30 \cdot (200/100) \cdot C_{100}$, i.e.\ 60$\times$
-the budget of the single-seed short runs currently reported. This is outside
-the budget envelope of the present release; we therefore restrict F5 to the
-descriptive tier above and make the cost frontier explicit so that future
-replications can plan accordingly.
+with default group size $G=8$ has an as-yet unverified cost $C_{100}$.
+Five seeds at three sizes imply 15 runs, each of 200 steps: 3,000 optimizer
+steps and, under linear step-cost scaling, $30C_{100}$. This symbolic planning
+quantity is not a dated vendor quote or a spending authorization. Rollout
+length, architecture, billing rules and retries must be included in a verified
+budget before execution. The current evidence remains descriptive.
 
 \subsection{Consequences for downstream claims}
 

@@ -3,7 +3,7 @@ import argparse
 import json
 import sys
 
-from . import parser_v1, parser_v2, parser_v3
+from . import parser_v1, parser_v2, parser_v3, parser_v4
 from .selection import interval
 
 
@@ -12,14 +12,14 @@ def main(argv=None):
     commands = cli.add_subparsers(dest="command", required=True)
     parser = commands.add_parser("parse", help="Parse supplied text; use - for standard input")
     parser.add_argument("text")
-    parser.add_argument("--policy", type=int, choices=(1, 2, 3), default=2)
+    parser.add_argument("--policy", type=int, choices=(1, 2, 3, 4), default=2)
     counts = commands.add_parser("counts", help="Compute a selected-cohort binomial interval")
     counts.add_argument("events", type=int)
     counts.add_argument("denominator", type=int)
     args = cli.parse_args(argv)
     if args.command == "parse":
         text = sys.stdin.read() if args.text == "-" else args.text
-        module = {1: parser_v1, 2: parser_v2, 3: parser_v3}[args.policy]
+        module = {1: parser_v1, 2: parser_v2, 3: parser_v3, 4: parser_v4}[args.policy]
         result = module.parse_answer(parser_v1.strip_terminal_tokens(text))
     else:
         try:

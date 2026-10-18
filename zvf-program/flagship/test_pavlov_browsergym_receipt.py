@@ -264,10 +264,10 @@ class BrowserGymReceiptTests(unittest.TestCase):
         )
         self.assertEqual(first["episode_hash"], first["episode"]["trace_hash"])
 
-    def test_module_has_no_live_runtime_or_network_imports(self) -> None:
+    def test_import_architecture_excludes_network_clients(self) -> None:
         path = Path(receipt.__file__)
         tree = ast.parse(path.read_text(), filename=str(path))
-        forbidden = {"browsergym", "playwright", "tinker", "wandb", "requests", "httpx"}
+        forbidden = {"socket", "urllib", "http", "ftplib", "browsergym", "playwright", "tinker", "wandb", "requests", "httpx"}
         imported = set()
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):

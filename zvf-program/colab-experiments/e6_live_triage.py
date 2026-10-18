@@ -21,7 +21,7 @@ Run:  colab run --gpu T4 --timeout 1800 e6_live_triage.py
 """
 import os
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
-import json, re, random, statistics
+import json, re, random, statistics, time
 import torch, torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -45,7 +45,7 @@ FEWSHOT = [
     {"role": "assistant", "content": "3 + 4 = 7.\n#### 7"},
 ]
 
-# ---- faithful vendored controller (zvf_triage.controller.ZVFController) ----
+# ---- experimental vendored controller (parity not established) (zvf_triage.controller.ZVFController) ----
 def adaptive_fn(z):
     z = min(max(float(z), 0.0), 1.0)
     return 0.5 + (z / 0.4) * 0.5 if z < 0.4 else 1.0 + ((z - 0.4) / 0.6) * 1.0
@@ -64,7 +64,8 @@ class Decision:
 
 class ZVFController:
     """Mirrors the package: step(rewards, group_ids) -> Decision, internal state."""
-    def __init__(self, adaptive_G):
+    def __init__(self, adaptive_G, enable_drop=False):
+        self.enable_drop = enable_drop
         self.adaptive_G = adaptive_G
         self.hist, self.streak, self.dropped = [], {}, set()
         self.global_streak, self.stopped = 0, False
@@ -92,7 +93,7 @@ class ZVFController:
                 continue
             if zv:
                 self.streak[gid] = self.streak.get(gid, 0) + 1
-                if self.streak[gid] >= DROP_K:
+                if self.enable_drop and self.streak[gid] >= DROP_K:
                     self.dropped.add(gid); newly.append(gid)
             else:
                 self.streak[gid] = 0
@@ -173,12 +174,24 @@ def heldout_acc(model, evalset):
     return c / len(evalset)
 
 def run(arm, seed):
+    started = time.monotonic()
+    seen, retained = set(), set()
+    generated_tokens = training_tokens = updates = retained_rollouts = 0
     rng = random.Random(seed); torch.manual_seed(seed)
     pool = make_pool(rng)
-    evalset = heldout_set(rng)
+    # Common disjoint heldout includes both difficulty strata, including drop candidates.
+    evalset = []
+    train_questions = {p["q"] for p in pool}
+    while len(evalset) < HELDOUT_N:
+        for candidate in make_pool(rng):
+            pair = (candidate["q"], candidate["gold"])
+            if pair[0] not in train_questions and pair not in evalset:
+                evalset.append(pair)
+            if len(evalset) == HELDOUT_N:
+                break
     model = AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.bfloat16).to(DEV)
     opt = torch.optim.AdamW(model.parameters(), lr=LR)
-    ctrl = ZVFController(adaptive_G=(arm != "fixed_G"))
+    ctrl = ZVFController(adaptive_G=(arm != "fixed_G"), enable_drop=(arm == "adaptiveG_drop"))
     act_drop = (arm == "adaptiveG_drop")
     pre = heldout_acc(model, evalset)
 
@@ -188,13 +201,19 @@ def run(arm, seed):
         avail = [p for p in pool if not (act_drop and p["id"] in ctrl.dropped)]
         if not avail:
             break
-        batch = rng.sample(avail, min(BATCH_P, len(avail)))
+        # Whole-group final-step policy: never overspend, report remainder.
+        if BUDGET - rollouts < g:
+            break
+        batch = rng.sample(avail, min(BATCH_P, len(avail), (BUDGET-rollouts)//g))
         flat_r, flat_g, groups = [], [], []
         for p in batch:
             pids, gens, rewards = gen_group(model, prompt_of(p["q"]), p["gold"], g)
             rollouts += g
+            seen.add(p["id"])
+            generated_tokens += int((gens != PAD).sum().item())
             flat_r += rewards; flat_g += [p["id"]] * g
             if min(rewards) != max(rewards):
+                retained.add(p["id"]); retained_rollouts += g
                 m = sum(rewards) / g; s = statistics.pvariance(rewards) ** 0.5
                 groups.append((pids, gens, [(r - m) / (s + 1e-6) for r in rewards]))
         # GRPO update (per-term backward = bounded memory)
@@ -205,9 +224,10 @@ def run(arm, seed):
                     lp = seq_logprob(model, pids, gens[i])
                     if lp is not None:
                         (-a * lp).backward(); n_terms += 1
+                        training_tokens += int((gens[i] != PAD).sum().item())
         if n_terms:
-            opt.step()
-        dec = ctrl.step(flat_r, flat_g)        # FAITHFUL controller call
+            opt.step(); updates += 1
+        dec = ctrl.step(flat_r, flat_g)        # experimental controller call
         g = dec.group_size                      # adapt G for next step
         zvf_hist.append(dec.zvf)
         print(f"[e6:{arm:14s} s{seed}] step={step:2d} G={g} ZVF={dec.zvf:.2f} "
@@ -217,7 +237,13 @@ def run(arm, seed):
     out = {"arm": arm, "seed": seed, "heldout_pre": round(pre, 3), "heldout_post": round(post, 3),
            "heldout_delta": round(post - pre, 3), "mean_zvf": round(statistics.mean(zvf_hist), 3) if zvf_hist else None,
            "total_rollouts": rollouts, "opt_steps": step, "dropped": len(ctrl.dropped),
-           "auto_stopped": ctrl.stopped}
+           "auto_stopped": ctrl.stopped, "actual_updates": updates,
+           "protocol_version": "colab-exploratory-v2", "budget_contract": "rollout_cap_whole_groups",
+           "matched_compute": False, "unused_budget": BUDGET-rollouts,
+           "seen_prompt_ids": sorted(seen), "retained_prompt_ids": sorted(retained),
+           "dropped_prompt_ids": sorted(ctrl.dropped), "generated_tokens": generated_tokens,
+           "training_tokens": training_tokens, "retained_rollouts": retained_rollouts,
+           "wall_seconds": time.monotonic()-started}
     del model, opt; torch.cuda.empty_cache()
     return out
 

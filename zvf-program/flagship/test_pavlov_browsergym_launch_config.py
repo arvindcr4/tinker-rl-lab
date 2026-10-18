@@ -62,21 +62,16 @@ class BrowserGymLaunchConfigTests(unittest.TestCase):
         self.assertTrue(any("split_manifest_hash" in error for error in result.errors))
 
     def test_stateful_action_artifact_telemetry_is_required(self) -> None:
-        value = _valid_config()
-        telemetry = value["telemetry"]
         for field in (
-            "per_step_observation_required",
-            "per_step_action_required",
-            "state_hash_required",
-            "action_hash_required",
-            "artifact_digest_required",
-            "terminal_task_success_required",
+            "per_step_observation_required", "per_step_action_required", "state_hash_required",
+            "action_hash_required", "artifact_digest_required", "terminal_task_success_required",
         ):
-            telemetry[field] = False
-        telemetry["artifact_names"] = ["browser_state"]
-        result = config.validate_t3_pilot_config(value)
-        self.assertFalse(result.ok)
-        self.assertTrue(any("telemetry" in error for error in result.errors))
+            with self.subTest(field=field):
+                value = _valid_config()
+                value["telemetry"][field] = False
+                result = config.validate_t3_pilot_config(value)
+                self.assertFalse(result.ok)
+                self.assertTrue(any(field in error for error in result.errors), result.errors)
 
     def test_wandb_requirements_are_exact_and_online_before_tinker(self) -> None:
         value = _valid_config()

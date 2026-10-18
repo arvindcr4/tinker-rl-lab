@@ -1,6 +1,7 @@
-"""Browser checks for the built demo (tinkerrl_demo.html), independent of the page's own claims.
+"""Browser checks for the built demo (dist/index.html), independent of the page's own claims.
 
-Run: python3 tests/test_demo.py   (uses Playwright with the installed Google Chrome)
+Run: npx vite build && python3 tests/test_demo.py
+Uses Playwright with the installed Google Chrome; DEMO_PAGE overrides the built page.
 """
 
 import json
@@ -13,13 +14,24 @@ import sys
 
 HERE = pathlib.Path(__file__).resolve().parent.parent
 ROOT = HERE.parents[2]
-PAGE = "file://" + str(pathlib.Path(os.environ.get("DEMO_PAGE", str(HERE / "tinkerrl_demo.html"))).resolve())
 DATA = json.loads(pathlib.Path(os.environ.get("DEMO_DATA", str(HERE / "src/data.json"))).read_text())
 VIEWS = ["overview", "advantage", "zvf", "samestack", "platform", "answers", "stackdiff", "audit", "viva", "submissions"]
 CHROME = os.environ.get("CHROME_PATH") or shutil.which("chromium") or shutil.which("google-chrome")
 if not CHROME:
     candidate = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
     CHROME = candidate if pathlib.Path(candidate).exists() else None
+
+
+def demo_page():
+    """Require a source build by default; explicit paths remain relative to the caller."""
+    path = pathlib.Path(os.environ.get("DEMO_PAGE", str(HERE / "dist/index.html"))).resolve()
+    if not path.is_file():
+        raise SystemExit(
+            f"Demo page not found: {path}\n"
+            f"Run `npx vite build` from {HERE} before `python3 tests/test_demo.py`, "
+            "or set DEMO_PAGE to an existing built HTML file."
+        )
+    return path.as_uri()
 
 
 def num(text):
@@ -52,6 +64,7 @@ def check(name, ok, detail=""):
 
 
 def main():
+    PAGE = demo_page()
     from playwright.sync_api import sync_playwright
 
     results = []

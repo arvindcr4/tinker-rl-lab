@@ -9,6 +9,15 @@ import { COVERAGE_LABELS, FEEDBACK_VERIFIED_ON, SUBMISSION_FEEDBACK, feedbackFor
 import { PRIMARY_SUBMISSIONS, WORKSHOP_PAPERS, WORKSHOP_PROPOSAL } from '../src/submissions.js';
 
 const here = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+function assertFeedbackDate(value) {
+  assert.match(value, /^\d{4}-\d{2}-\d{2}$/);
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  assert.ok(Number.isFinite(parsed.getTime()), `Invalid calendar date: ${value}`);
+  assert.equal(parsed.toISOString().slice(0, 10), value, `Invalid calendar date: ${value}`);
+  assert.ok(value <= FEEDBACK_VERIFIED_ON, `Date exceeds feedback verification: ${value}`);
+}
+
 const records = [
   { id: 'sample-reviewed', venue: 'Sample conference', kind: 'Main-track paper', title: 'Sample reasoning audit', number: '1', decision: 'Rejected' },
   { id: 'sample-reason', venue: 'Sample workshop', kind: 'Workshop paper', title: 'Other study', number: '2', decision: 'Desk-rejected' },
@@ -94,9 +103,23 @@ test('main-track reviews preserve historical scores, archive dates and later dis
   assert.equal(icicc.authorResponses.length, 0);
 });
 
+test('feedback date validation rejects normalized impossible dates and respects leap years', () => {
+  for (const value of ['2026-02-28', '2024-02-29', '2000-02-29', FEEDBACK_VERIFIED_ON]) {
+    assert.doesNotThrow(() => assertFeedbackDate(value), value);
+  }
+  for (const value of ['2026-02-30', '2026-02-29', '2025-02-29', '1900-02-29', '2026-04-31', '2026-13-01', '2026-00-01', '2026-10-00']) {
+    assert.throws(() => assertFeedbackDate(value), /Invalid calendar date/, value);
+  }
+  for (const value of ['2026-2-28', '2026-02-28T00:00:00Z', 'not-a-date']) {
+    assert.throws(() => assertFeedbackDate(value), value);
+  }
+  const tomorrow = new Date(`${FEEDBACK_VERIFIED_ON}T00:00:00.000Z`);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  assert.throws(() => assertFeedbackDate(tomorrow.toISOString().slice(0, 10)), /exceeds feedback verification/);
+});
+
 test('curated feedback uses allowlisted anonymous fields with no raw correspondence or private identifiers', () => {
   const keys = (object, allowed) => assert.ok(Object.keys(object).every(key => allowed.includes(key)), Object.keys(object).join(', '));
-  const date = value => { assert.match(value, /^\d{4}-\d{2}-\d{2}$/); assert.ok(value <= FEEDBACK_VERIFIED_ON); assert.ok(!Number.isNaN(Date.parse(value))); };
   for (const feedback of Object.values(SUBMISSION_FEEDBACK)) {
     keys(feedback, ['evidence', 'coverage', 'coverageNotes', 'decisionReasons', 'reviews', 'authorResponses', 'authorResponseReceipts', 'notes', 'authorResponseWarning']);
     keys(feedback.coverage, ['reviews', 'decision', 'responses']);
@@ -104,19 +127,19 @@ test('curated feedback uses allowlisted anonymous fields with no raw corresponde
     for (const coverage of Object.values(feedback.coverage)) assert.ok(Object.hasOwn(COVERAGE_LABELS, coverage));
     for (const entry of [...feedback.decisionReasons, ...feedback.reviews, ...feedback.authorResponses, ...feedback.authorResponseReceipts]) {
       keys(entry, ['label', 'date', 'snapshotOn', 'kind', 'points', 'strengths', 'concerns', 'requests', 'scores', 'note']);
-      for (const key of ['date', 'snapshotOn']) if (entry[key]) date(entry[key]);
+      for (const key of ['date', 'snapshotOn']) if (entry[key]) assertFeedbackDate(entry[key]);
     }
     for (const review of feedback.reviews) {
       assert.match(review.label, /^Reviewer [123]( follow-up)?$/);
       for (const score of review.scores || []) {
         keys(score, ['label', 'value', 'scale', 'asOf', 'note']);
-        date(score.asOf);
+        assertFeedbackDate(score.asOf);
       }
     }
     if (feedback.authorResponseWarning) {
       keys(feedback.authorResponseWarning, ['label', 'checkedAt', 'sourceDate', 'sourceBasis', 'text']);
-      date(feedback.authorResponseWarning.checkedAt);
-      date(feedback.authorResponseWarning.sourceDate);
+      assertFeedbackDate(feedback.authorResponseWarning.checkedAt);
+      assertFeedbackDate(feedback.authorResponseWarning.sourceDate);
     }
   }
   const serialized = JSON.stringify(SUBMISSION_FEEDBACK);
@@ -229,4 +252,22 @@ test('feedback text remains escaped and the module never reads or changes experi
   const source = readFileSync(join(here, 'src/submissionFeedback.js'), 'utf8');
   assert.ok(!/\b(?:fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage)\b/.test(source));
   assert.ok(!/from ["'].*(?:data|analysis|stats)\./.test(source));
+});
+
+test('presenter mode enlarges recorded scores to match feedback text and score provenance', () => {
+  const css = readFileSync(join(here, 'src/styles.css'), 'utf8');
+  const fontSizeFor = selector => {
+    let fontSize;
+    for (const [, selectors, declarations] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      if (selectors.split(',').map(value => value.trim()).includes(selector)) {
+        const match = declarations.match(/(?:^|;)\s*font-size:\s*([^;}]+)/);
+        if (match) fontSize = match[1].trim();
+      }
+    }
+    return fontSize;
+  };
+  assert.equal(fontSizeFor('.feedback-scores'), '14px');
+  assert.equal(fontSizeFor(':root.present .feedback-scores'), '17px');
+  assert.equal(fontSizeFor(':root.present .feedback-scores'), fontSizeFor(':root.present .feedback-points'));
+  assert.equal(fontSizeFor(':root.present .feedback-scores'), fontSizeFor(':root.present .small'));
 });

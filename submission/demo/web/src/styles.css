@@ -160,7 +160,7 @@ td.mark.yes { color: var(--good) } td.mark.no { color: var(--bad) }
 .feedback-scores dt { color: var(--muted) }
 .feedback-scores dd { margin: 0 }
 .receipt-only { border-left-style: dashed }
-:root.present .feedback-points { font-size: 17px }
+:root.present .feedback-points, :root.present .feedback-scores { font-size: 17px }
 @media (max-width: 760px) {
   nav.tabs .section-links { display: none }
   nav.tabs .section-picker { display: flex; align-items: center; gap: 12px; padding-block: 10px }

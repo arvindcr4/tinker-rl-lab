@@ -9,10 +9,10 @@ The checked-in `tinkerrl_demo.html` and `src/data.json` are historical artifacts
 ```sh
 npm ci
 python3 build_demo_web.py --output /tmp/samestack-demo.json
-DEMO_DATA=/tmp/samestack-demo.json npm run build
+DEMO_DATA=/tmp/samestack-demo.json npx vite build
 ```
 
-The build writes `dist/index.html` and `tinkerrl_demo.html`. Both are self-contained and open from disk. `npm run data` explicitly replaces `src/data.json` with a new export; it never edits underlying experimental results. Use `--plan /path/to/plan.json` only with a declared versioned analysis plan. Missing historical identity is never inferred from filenames or seed numbers. New runs can be selected with `--results-dir /path/to/environment/protocol` pointing to the leaf directory containing the arm/seed records; completion markers and aggregates are not treated as runs.
+The source-only build writes the self-contained `dist/index.html`, which opens from disk. `npm run build` also replaces the historical `tinkerrl_demo.html`; use it only when that replacement is intended. `npm run data` explicitly replaces `src/data.json` with a new export; it never edits underlying experimental results. Use `--plan /path/to/plan.json` only with a declared versioned analysis plan. Missing historical identity is never inferred from filenames or seed numbers. New runs can be selected with `--results-dir /path/to/environment/protocol` pointing to the leaf directory containing the arm/seed records; completion markers and aggregates are not treated as runs.
 
 Presenter controls: ← / → or 1–9 change views; 0 opens Submissions; P toggles larger text. The header's Shortcuts toggle turns single-key navigation off. Inputs and the mobile section selector keep their native keyboard behavior. A short route is Advantage lab → GRPO vs PPO-style → Real answers → Stack diff.
 
@@ -62,7 +62,8 @@ The provenance footer lists full SHA-256 values for known run records, text side
 ```sh
 node --test tests/test_*.mjs
 python3 tests/test_export.py
-DEMO_PAGE=dist/index.html DEMO_DATA=/tmp/samestack-demo.json python3 tests/test_demo.py
+DEMO_DATA=/tmp/samestack-demo.json npx vite build
+DEMO_DATA=/tmp/samestack-demo.json python3 tests/test_demo.py
 node tests/grade_all.mjs
 ```
 
@@ -72,4 +73,6 @@ node tests/grade_all.mjs
 - Export tests verify the normative analysis path and immutable inputs; browser checks cover all views at 320/375/768/1024/1440px, canonical pending/available states, grader probes, keyboard focus/history, touch targets, reduced motion and text-spacing reflow
 - `grade_all.mjs` is an audit against immutable historical scores. A nonzero exit can indicate genuine disagreement with the repaired grader, not a software regression. `--json --report-only` emits the discrepancies and coverage without failing the export. Never change the grader to force old scores to agree
 
-`npm test` runs unit/contract/export checks, builds the repaired React source to `dist/index.html`, and targets that page for browser checks before the strict historical score audit. This test build does not replace the historical `tinkerrl_demo.html`; the same `DEMO_DATA` input is inherited by Vite and the browser assertions. Python browser checks use `DEMO_PAGE`/`DEMO_DATA` when supplied and can select an installed browser with `CHROME_PATH`.
+`npm test` runs unit/contract/export checks, builds the repaired React source to `dist/index.html`, and targets that page for browser checks before the strict historical score audit. This test build does not replace the historical `tinkerrl_demo.html`; the same `DEMO_DATA` input is inherited by Vite and the browser assertions.
+
+For direct browser checks, run the commands above from this directory after creating the temporary data export in Open and rebuild. `python3 tests/test_demo.py` defaults to `dist/index.html`; a missing page fails with build instructions before importing Playwright or launching a browser. Use `npx vite build` to build without replacing the frozen `tinkerrl_demo.html`. Set the same `DEMO_DATA` for the build and assertions, or omit it from both to check a source build using the historical `src/data.json`. An explicit `DEMO_PAGE=/path/to/built.html` overrides the page (relative paths resolve from the calling directory), and `CHROME_PATH` can select an installed browser. The entrypoint contract tests cover default selection, missing builds and overrides without importing Playwright or launching a browser.

@@ -2179,9 +2179,10 @@ FR-5 & Raw per-group reward tensors are persisted by the
 tensor-instrumented runners (\longtok{tinker\_\allowbreak{}direct\_\allowbreak{}eval.py},
 \longtok{n2\_\allowbreak{}reward\_\allowbreak{}tensor\_\allowbreak{}20260704.py} and the Modal JSONL runners),
 so their diagnostics can be recomputed; the main \longtok{grpo\_cli.py}
-runner records scalar summaries only (§5.3), so this is a design
-requirement for new instrumented runs, not a property of every
-historical run & Phase-1 report \\
+runner records scalar summaries only (§5.3), which cannot reconstruct
+missing tensors, so this is a design requirement for new instrumented
+runs, not a property of every historical run & Phase-1 report;
+availability limits in §4.2 and §5.3 \\
 FR-6 & Sweeps over G, seed and baseline-versus-intervention arms run
 under a fixed wall-clock or token budget & Phase-1 report \\
 FR-7 & For single-GPU models, per-layer LoRA gradient norms are

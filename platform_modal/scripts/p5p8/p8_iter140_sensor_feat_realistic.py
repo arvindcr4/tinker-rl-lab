@@ -11,11 +11,9 @@ release-rate 0.172% positives (note: 24full trained on the full
 RATES {1.44, 1.00, 0.50, 0.10, 0.05}% (rate-preserving IID,
 seed=20260706, per iter-136 protocol).
 
-H1 (PASS expected): iter-124 H3 result (96% firing preservation)
-HOLDS at every rate on a 24full-anchor; rate-conditioning is <
-2 percentage points for the 20raw / 20raw+minmax / 20raw+stat
-backbones -- the LLM-as-sensor 4-aggregate feature set is
-rate-robust at the firing layer.
+H1: exploratory event-set intersection-over-union >= 0.92 at every rate.
+Anchor-event retention and event support are also exported. Empty-event
+comparisons are unavailable; overall agreement is descriptive only.
 
 H2 (NEW): top-K recall @K=1% is rate-conditioned.  At release
 rate all 4 backbones match (sensor features carry signal only
@@ -140,6 +138,16 @@ def pr_auc_at_mask(scores, y, k_pct):
 
 
 
+def event_overlap(anchor, candidate):
+    anchor, candidate = np.asarray(anchor, dtype=bool), np.asarray(candidate, dtype=bool)
+    if anchor.shape != candidate.shape:
+        raise ValueError("fire masks must align")
+    both = int((anchor & candidate).sum())
+    union = int((anchor | candidate).sum())
+    return (both / union if union else None,
+            both / int(anchor.sum()) if anchor.any() else None)
+
+
 def main():
     print(f"[iter140] loading train/test ...")
     Xtr, ytr = load(TRAIN)
@@ -200,6 +208,7 @@ def main():
             n_fset_only = int((~af & ff).sum())
             n_neither = int((~af & ~ff).sum())
             agreement = (n_both + n_neither) / n_te
+            iou, retention = event_overlap(af, ff)
             rows_h1.append({
                 "rate_target": rate,
                 "rate_actual": round(rate_actual, 3),
@@ -214,6 +223,7 @@ def main():
                 "n_fset_only": n_fset_only,
                 "n_neither": n_neither,
                 "agreement": round(agreement, 4),
+                "fire_iou": iou, "anchor_retention": retention,
                 "delta_fires": int(ff.sum() - af.sum()),
                 "p_at_1": round(p_at_1[fset_name], 4),
                 "pr_auc": round(prs[fset_name], 4),
@@ -273,14 +283,11 @@ def main():
     # ------------------------------------------------------------------
     # Verdicts
     # ------------------------------------------------------------------
-    # H1: agreement >= 0.94 at every (rate, non-anchor fset)?  Actually
-    # iter-124's 96% was BOTH-and-NEITHER fraction over the FULL test set
-    # (which itself has a 0.172% pos rate ~release).  We expect agreement
-    # >= 0.92 across all rate x fset cells.
-    agreements = [r["agreement"] for r in rows_h1]
-    h1_min = min(agreements)
-    h1_max = max(agreements)
-    h1_pass = h1_min >= 0.92
+    # Event overlap excludes the dominant true-negative population.
+    agreements = [r["fire_iou"] for r in rows_h1 if r["fire_iou"] is not None]
+    h1_min = min(agreements) if agreements else None
+    h1_max = max(agreements) if agreements else None
+    h1_pass = (h1_min >= 0.92) if len(agreements) == len(rows_h1) else None
 
     # H2: max abs(delta p@1) across rates per fset
     deltas_by_fset = {}
@@ -320,9 +327,9 @@ def main():
         "rate_release_pct": round(100 * float(yte.mean()), 4),
         "feature_sets": list(FEATURE_SETS.keys()),
         "k_pct": K_PCT,
-        "h1_agreement_min": round(h1_min, 4),
-        "h1_agreement_max": round(h1_max, 4),
-        "h1_pass": bool(h1_pass),
+        "h1_fire_iou_min": h1_min,
+        "h1_fire_iou_max": h1_max,
+        "h1_pass": h1_pass,
         "h2_max_delta_p_at_1_per_fset": h2_max_delta,
         "h3_fire_cv_per_rate_pct": h3_cv,
         "rate_summary": rate_summary,
@@ -331,8 +338,8 @@ def main():
     with out_sum.open("w") as f:
         json.dump(summary, f, indent=2)
     print(f"[iter140] wrote {out_sum}")
-    print(f"[iter140 H1] agreement range = [{h1_min:.4f}, {h1_max:.4f}], "
-          f"verdict={'PASS' if h1_pass else 'FAIL'}")
+    print(f"[iter140 H1] fire IoU range = [{h1_min}, {h1_max}], "
+          f"verdict={'UNAVAILABLE' if h1_pass is None else 'PASS' if h1_pass else 'FAIL'}")
     print(f"[iter140 H2] max |delta P@1%| per fset = {h2_max_delta}")
     print(f"[iter140 H3] fire-count CV per rate = {h3_cv}")
     print(f"[iter140] DONE")

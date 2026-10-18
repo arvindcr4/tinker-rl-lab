@@ -235,12 +235,18 @@ def main():
                                     if r["decile"] >= 8])
     h1 = low_deciles_brier.mean() < high_deciles_brier.mean()
 
-    # H2: 24full helps more in HIGH V_std deciles (high-variance regime).
-    # Approximation: deciles 8-10 have highest V_std (V_mean and V_std are
-    # correlated on PCA data). We use the same proxy as H1.
-    # Tighter: |brier_gap| should be larger in high-V_std deciles.
-    h2 = abs(low_deciles_brier.mean()) > abs(high_deciles_brier.mean())
-    # (we expect LLM to fill gaps in low-V_mean regime, so this should FAIL)
+    # H2 uses actual V_std strata, not V_mean as a proxy.
+    std_edges = np.quantile(v_std, np.linspace(0, 1, N_DECILES + 1))
+    std_decile = np.digitize(v_std, std_edges[1:-1])
+    low_std, high_std = std_decile < 3, std_decile >= 7
+    std_gaps = {}
+    for label, mask in [("low", low_std), ("high", high_std)]:
+        std_gaps[label] = float(np.mean([
+            np.mean((probas[("24full", sd)][mask] - yte[mask]) ** 2)
+            - np.mean((probas[("20raw", sd)][mask] - yte[mask]) ** 2)
+            for sd in SEEDS])) if mask.any() else None
+    h2 = (std_gaps["high"] < std_gaps["low"]
+          if all(v is not None for v in std_gaps.values()) else None)
 
     # H3: Per-decile Brier is lower for 24full in >=8/10 deciles.
     # (broad lift: V-stat helps in most deciles)
@@ -273,9 +279,11 @@ def main():
         "h1_low_vmean_more_help": bool(h1),
         "h1_low_mean_gap": float(low_deciles_brier.mean()),
         "h1_high_mean_gap": float(high_deciles_brier.mean()),
-        "h2_high_vstd_more_help": bool(h2),
-        "h2_low_abs": float(abs(low_deciles_brier.mean())),
-        "h2_high_abs": float(abs(high_deciles_brier.mean())),
+        "h2_high_vstd_more_help": h2,
+        "h2_low_vstd_brier_gap": std_gaps["low"],
+        "h2_low_vstd_n": int(low_std.sum()),
+        "h2_high_vstd_brier_gap": std_gaps["high"],
+        "h2_high_vstd_n": int(high_std.sum()),
         "h3_broad_lift_24full_count": int(h3_count),
         "h3_broad_lift_pass": bool(h3),
         "h4_ece_lift_24full_count": int(h4_count),

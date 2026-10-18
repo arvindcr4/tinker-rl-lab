@@ -90,8 +90,10 @@ def make_subsample(Xte, yte, target_rate, rng):
     if n_neg_target <= 0:
         raise ValueError(f"target_rate={target_rate} too high for {n_pos} positives")
     neg_idx_pool = np.where(yte == 0)[0]
-    if n_neg_target >= len(neg_idx_pool):
-        # use all negatives + repeat as needed
+    if n_neg_target == len(neg_idx_pool):
+        return Xte.copy(), yte.copy(), np.arange(len(yte))
+    if n_neg_target > len(neg_idx_pool):
+        # Lower-than-release rates require an explicitly synthetic expanded pool.
         chosen_neg = rng.choice(neg_idx_pool, size=n_neg_target, replace=True)
     else:
         chosen_neg = rng.choice(neg_idx_pool, size=n_neg_target, replace=False)

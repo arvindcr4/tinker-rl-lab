@@ -24,7 +24,7 @@ The curve answers three reviewer questions at once:
       class (raw V_1..V_20 vs LLM-aggregate V_mean, V_std, V_max,
       V_min). Report the LLM-aggregate rank within the top-10.
   G3. Cohort-conditioned attribution: train one tree per cohort
-      (V_mean Q, Amount Q, Time T), extract gain per cohort.
+      (V_mean Q, Amount Q, Time T), measure within-cohort permutation Brier-loss increase.
       Report the cross-cohort Spearman rho of feature-rank.
 
 Inputs
@@ -132,7 +132,7 @@ def spearman_rho(x, y):
     my = ry.mean()
     num = np.sum((rx - mx) * (ry - my))
     den = math.sqrt(np.sum((rx - mx) ** 2) * np.sum((ry - my) ** 2))
-    return float(num / den) if den > 0 else 0.0
+    return float(num / den) if den > 0 else None
 
 
 def bootstrap_ci(values, n_boot=N_BOOT, alpha=0.05, seed=SEED):
@@ -149,6 +149,26 @@ def bootstrap_ci(values, n_boot=N_BOOT, alpha=0.05, seed=SEED):
     lo = means[int(n_boot * alpha / 2)]
     hi = means[int(n_boot * (1 - alpha / 2))]
     return float(sum(values) / n), lo, hi
+
+
+def cohort_permutation_importance(model, X, y, features, seed, repeats=10):
+    """Held-out cohort Brier-loss increase under within-cohort permutation.
+
+    Exploratory attribution, not a causal effect or a training-gain statistic.
+    """
+    if not len(y):
+        raise ValueError("empty cohort")
+    rng = np.random.default_rng(seed)
+    baseline = np.mean((model.predict_proba(X)[:, 1] - y) ** 2)
+    importance = {}
+    for j, feature in enumerate(features):
+        changes = []
+        for _ in range(repeats):
+            permuted = X.copy()
+            permuted[:, j] = X[rng.permutation(len(X)), j]
+            changes.append(np.mean((model.predict_proba(permuted)[:, 1] - y) ** 2) - baseline)
+        importance[feature] = float(np.mean(changes))
+    return importance
 
 
 def main():
@@ -279,13 +299,12 @@ def main():
     cohort_ranks = {}
     for axis_name, strata in cohort_axes.items():
         cohort_ranks[axis_name] = {}
-        # Train on the FULL train set (model architecture is shared)
-        # but stratify test for evaluation
-        model_c, _ = fit_xgb(X_train, y_train, X_test)
-        gain_c = gain_importance(model_c, ALL_FEATURES)
-        rank_order_c = sorted(gain_c, key=lambda f: -gain_c[f])
+        model_c = model_full
         for stratum in sorted(set(strata)):
             mask = strata == stratum
+            gain_c = cohort_permutation_importance(
+                model_c, X_test[mask], y_test[mask], ALL_FEATURES, SEED + int(stratum))
+            rank_order_c = sorted(gain_c, key=lambda f: -gain_c[f])
             n_strat = int(mask.sum())
             n_pos = int(test_df["Class"].values[mask].sum())
             # AUC of the cohort-stratified model
@@ -304,10 +323,10 @@ def main():
                         "rank": rank,
                         "feature": f,
                         "feature_class": "agg" if f in V_AGG else "raw",
-                        "gain": gain_c[f],
+                        "permutation_brier_increase": gain_c[f],
                     }
                 )
-            cohort_ranks[axis_name][stratum] = rank_order_c
+            cohort_ranks[axis_name][stratum] = gain_c
         print(f"  axis={axis_name}: {len(set(strata))} strata, top-3 features = {rank_order_c[:3]}")
 
     cohort_path = RESULTS / "p8_iter92_cohort_gain.tsv"
@@ -324,8 +343,8 @@ def main():
         strata_keys = sorted(strata_ranks.keys())
         for s1, s2 in combinations(strata_keys, 2):
             rho = spearman_rho(
-                [ALL_FEATURES.index(f) for f in strata_ranks[s1]],
-                [ALL_FEATURES.index(f) for f in strata_ranks[s2]],
+                [strata_ranks[s1][f] for f in ALL_FEATURES],
+                [strata_ranks[s2][f] for f in ALL_FEATURES],
             )
             rho_rows.append(
                 {
@@ -392,6 +411,7 @@ def main():
     # ============================================================
     # Summary JSON
     # ============================================================
+    rho_values = [r["spearman_rho_rank"] for r in rho_rows if r["spearman_rho_rank"] is not None]
     summary = {
         "iter": 92,
         "seed": SEED,
@@ -407,10 +427,12 @@ def main():
         "total_raw_gain_fraction": raw_gain_total / total_gain,
         "n_cohort_axes": len(cohort_axes),
         "n_cohort_strata": {k: int(len(set(v))) for k, v in cohort_axes.items()},
+        "cohort_importance_kind": "exploratory held-out permutation Brier-loss increase",
         "rho_rows_n": len(rho_rows),
-        "rho_min": min(r["spearman_rho_rank"] for r in rho_rows) if rho_rows else None,
-        "rho_max": max(r["spearman_rho_rank"] for r in rho_rows) if rho_rows else None,
-        "rho_mean": sum(r["spearman_rho_rank"] for r in rho_rows) / len(rho_rows) if rho_rows else None,
+        "rho_defined_n": len(rho_values),
+        "rho_min": min(rho_values) if rho_values else None,
+        "rho_max": max(rho_values) if rho_values else None,
+        "rho_mean": sum(rho_values) / len(rho_values) if rho_values else None,
     }
     summary_path = RESULTS / "p8_iter92_gain_curve_summary.json"
     with summary_path.open("w") as f:

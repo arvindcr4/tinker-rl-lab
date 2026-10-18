@@ -239,18 +239,7 @@ def main():
         "per_model_at_rho100_with_ci": per_model_ci,
         "per_rho_overall": per_rho,
         "headline": {
-            "falsifiable_claim": (
-                "For binary credit-card fraud under class-prior shift, "
-                "τ*(train) → test transfer gap is detectable at ρ=500 for "
-                "all three models with CIs excluding zero: XGB-20raw +6.55 "
-                "cents/dec, XGB-24full +6.67 cents/dec, XGB-4sensor +2.19 "
-                "cents/dec. The sensor-only surrogate (XGB-4sensor) has the "
-                "smallest absolute gap because τ* lives in a less-precise "
-                "regime where train and test agree; XGB-20raw has the "
-                "largest because τ* lives in a precise regime where small "
-                "score differences flip the alert bit. τ*(train) is a "
-                "fingerprint, not a portable decision rule."
-            ),
+            "current_result": {rk: {m: {"mean": v["mean"], "ci_lo": v["ci_lo"], "ci_hi": v["ci_hi"], "excludes_zero": v["excludes_zero"]} for m, v in records.items()} for rk, records in per_model_ci.items()},
         },
     }
     with open(OUT / "p8_threshold_transfer_summary.json", "w") as fp:

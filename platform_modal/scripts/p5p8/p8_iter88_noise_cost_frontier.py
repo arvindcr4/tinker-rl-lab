@@ -298,7 +298,7 @@ def main() -> None:
             for R in recall_targets:
                 pareto_rows.append(dict(
                     noise_sigma=sigma, model=model, recall_target=R,
-                    cost_at_recall=front[R] if front[R] is not None else -1.0,
+                    cost_at_recall=front[R],
                     infeasible=front[R] is None,
                 ))
     with (RES / "p8_iter88_noise_pareto.tsv").open("w") as f:

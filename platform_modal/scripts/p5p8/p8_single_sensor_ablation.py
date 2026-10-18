@@ -57,6 +57,7 @@ import argparse
 import csv
 import json
 import math
+import hashlib
 import random
 import statistics
 from itertools import combinations
@@ -229,13 +230,12 @@ def main(argv=None):
 
     # ---- AUC / Brier summary -------------------------------------------
     abl_rows = []
-    for name, _, _ in variants:
+    for name, feats, _ in variants:
         s, _ = scores[name]
         a = auc_roc(s, te_labels)
         b = brier(s, te_labels)
         abl_rows.append({"variant": name, "auc": round(a, 4), "brier": round(b, 4),
-                         "n_features": len([f for f in (name.split("+")[1:] or [])
-                                            if f in AGG4]) + 20})
+                         "n_features": len(feats)})
 
     with (RES / f"p8_single_sensor{sfx}.tsv").open("w") as f:
         f.write("variant\tn_features\tauc\tbrier\n")
@@ -274,7 +274,7 @@ def main(argv=None):
     base_models = ["XGB-20raw", "XGB-24full"]
     # Add the best single-sensor tree (chosen by AUC)
     best_single = max(
-        (r for r in abl_rows if "20raw+V_" in r["variant"] or "20raw+V_m" in r["variant"]),
+        (r for r in abl_rows if r["n_features"] == len(RAW20) + 1),
         key=lambda r: r["auc"],
     )["variant"]
     base_models.append(best_single)
@@ -320,7 +320,7 @@ def main(argv=None):
                 s_a, cost_d_a = scores["XGB-24full"]
                 s_b, cost_d_b = scores[model]
             # Bootstrap cost-per-caught
-            rng = random.Random(seed + int(k_pct * 10) + hash(model) % 1000)
+            rng = random.Random(seed + int(k_pct * 10) + int.from_bytes(hashlib.sha256(model.encode()).digest()[:8], "big") % 1000)
             n = len(te_labels)
             diffs = []
             for _ in range(N_BOOT):
@@ -334,12 +334,18 @@ def main(argv=None):
                 if cb == 0 and ca == 0:
                     diffs.append(0.0)
                 elif cb == float("inf") or ca == float("inf"):
-                    diffs.append(0.0)
+                    # Undefined replicates cannot be converted to evidence of a tie.
+                    continue
                 else:
                     diffs.append(ca - cb)
             diffs.sort()
-            lo = diffs[int(0.025 * N_BOOT)]
-            hi = diffs[int(0.975 * N_BOOT) - 1]
+            if len(diffs) != N_BOOT:
+                cost_boot.append({"model": model, "k_pct": k_pct,
+                                  "delta_cost_per_caught": None, "ci_lo": None, "ci_hi": None,
+                                  "excludes_zero": "undefined_no_catches"})
+                continue
+            lo = diffs[int(0.025 * len(diffs))]
+            hi = diffs[max(0, int(0.975 * len(diffs)) - 1)]
             cost_boot.append({"model": model, "k_pct": k_pct,
                               "delta_cost_per_caught": round(diffs[len(diffs) // 2], 4),
                               "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),

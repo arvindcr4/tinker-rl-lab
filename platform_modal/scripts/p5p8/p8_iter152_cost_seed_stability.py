@@ -67,10 +67,8 @@ FEATURE_SETS = {
 
 
 def downsample_positives_iter148(X, y, rate_pct, seed):
-    """Match iter-148 EXACT: n_target_pos = round(n_te * rate_pct / 100)
-    using default_rng(seed)."""
+    """Retain negatives and choose positives for the requested final prevalence."""
     rng = np.random.default_rng(seed)
-    n_te = len(y)
     n_target_pos = max(0, int(round((y == 0).sum() * (rate_pct / 100.0) / (1 - rate_pct / 100.0))))
     pos_idx = np.where(y == 1)[0]
     neg_idx = np.where(y == 0)[0]
@@ -113,12 +111,17 @@ def gradient_band_fire(scores, top_k_mask, g_thr=G_THR):
     return fire & top_k_mask
 
 
-def compute_cell(cost_llm, n_test, caught_xgb, n_llm_grad):
-    """Match iter-148 cpd_grad/cpd_xgb formulas exactly."""
+def compute_cell(cost_llm, n_test, caught_xgb, n_llm_grad, caught_hybrid=None):
+    """All rows pay screening; routed rows additionally pay second-stage cost.
+
+    Without composed second-stage outcomes, hybrid cost-per-catch is unavailable.
+    """
+    if n_test <= 0 or not 0 <= n_llm_grad <= n_test:
+        raise ValueError("invalid cohort or routing counts")
     cpd_xgb = COST_XGB
-    cpd_grad = (n_test * COST_XGB + n_llm_grad * (cost_llm - COST_XGB)) / n_test
-    cppr_xgb = cpd_xgb * n_test / max(1, caught_xgb)
-    cppr_grad = cpd_grad * n_test / max(1, caught_xgb)
+    cpd_grad = (n_test * COST_XGB + n_llm_grad * cost_llm) / n_test
+    cppr_xgb = cpd_xgb * n_test / caught_xgb if caught_xgb else None
+    cppr_grad = cpd_grad * n_test / caught_hybrid if caught_hybrid else None
     acd = cpd_grad / max(1e-12, cpd_xgb)
     return cpd_xgb, cpd_grad, cppr_xgb, cppr_grad, acd
 
@@ -169,7 +172,8 @@ def main():
                     rows.append(dict(
                         seed=seed, rate_pct=rate_pct, tier=tier_name,
                         cost_llm=cost_llm, fset=fset_name,
-                        n_test=n_test, n_pos=n_pos,
+                        n_test=n_test, n_pos=n_pos, actual_rate=n_pos / n_test,
+                        outcome_status="unavailable: no second-stage predictions",
                         n_llm_grad=n_llm_grad, caught_xgb=caught_xgb,
                         k_top=max(1, int(round(K_PCT / 100.0 * n_test))),
                         cpd_xgb=cpd_xgb, cpd_grad=cpd_grad,
@@ -177,7 +181,7 @@ def main():
                     ))
 
     fieldnames = ["seed", "rate_pct", "tier", "cost_llm", "fset",
-                  "n_test", "n_pos", "n_llm_grad", "caught_xgb", "k_top",
+                  "n_test", "n_pos", "actual_rate", "outcome_status", "n_llm_grad", "caught_xgb", "k_top",
                   "cpd_xgb", "cpd_grad", "cppr_xgb", "cppr_grad", "acd"]
     out_cell = RES / "p8_iter152_acd_5seed_per_cell.tsv"
     with out_cell.open("w") as f:
@@ -187,16 +191,16 @@ def main():
             w.writerow({k: r[k] for k in fieldnames})
     print(f"[save] {out_cell}", flush=True)
 
-    # Per (rate, tier) CV across 3 seeds
+    # Per (rate, tier, feature set) CV across 3 seeds, without pooling feature effects
     by_rt = defaultdict(list)
     for r in rows:
-        by_rt[(r["rate_pct"], r["tier"])].append(r["acd"])
+        by_rt[(r["rate_pct"], r["tier"], r["fset"])].append(r["acd"])
     rt_rows = []
-    for (rate_pct, tier), vals in sorted(by_rt.items()):
+    for (rate_pct, tier, fset), vals in sorted(by_rt.items()):
         arr = np.array(vals)
         cv = float(arr.std() / max(1e-12, arr.mean())) if len(vals) > 1 else 0.0
         rt_rows.append(dict(
-            rate_pct=rate_pct, tier=tier, n=len(vals),
+            rate_pct=rate_pct, tier=tier, fset=fset, n=len(vals),
             acd_mean=float(arr.mean()), acd_std=float(arr.std()),
             acd_min=float(arr.min()), acd_max=float(arr.max()),
             acd_cv=cv,
@@ -305,6 +309,7 @@ def main():
 
     summary = dict(
         iter=152,
+        outcome_status="hypothetical routing overhead only; LLM quality and hybrid catches unavailable",
         n_cells_per_seed=len(FEATURE_SETS) * len(LLM_PRICE_TIERS) * len(RATES_PCT),
         n_seeds=len(DOWNSAMPLE_SEEDS),
         n_total_cells=len(rows),

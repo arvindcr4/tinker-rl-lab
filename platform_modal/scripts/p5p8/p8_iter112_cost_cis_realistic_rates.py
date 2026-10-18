@@ -225,6 +225,8 @@ def main():
                 n_llm, pos_at_K, cpd, cpf = vals
                 per_cell_rows.append(dict(
                     rate=tgt, tree=tree_name, rule=rule,
+                    n_test=len(y_d), actual_rate=float(y_d.mean()),
+                    outcome_kind="composed_XGB24_feature_proxy",
                     n_pos=int(y_d.sum()),
                     n_pos_caught_at_K=pos_at_K,
                     n_llm_calls=n_llm,

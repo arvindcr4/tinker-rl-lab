@@ -87,8 +87,10 @@ FEATURE_SETS = {
 
 def downsample(X, y, rate_pct, seed):
     rng = np.random.default_rng(seed)
-    n_te = len(y)
-    n_target_pos = max(1, int(round(n_te * rate_pct / 100.0)))
+    rate = rate_pct / 100.0
+    if not 0 <= rate < 1:
+        raise ValueError("rate must be in [0, 100)")
+    n_target_pos = max(0, int(round((y == 0).sum() * rate / (1 - rate))))
     pos_idx = np.where(y == 1)[0]
     neg_idx = np.where(y == 0)[0]
     keep_pos = pos_idx if len(pos_idx) < n_target_pos else rng.choice(pos_idx, size=n_target_pos, replace=False)
@@ -212,6 +214,7 @@ def main():
                         cost_per_caught = (alerted * tier_cost) / max(1, tp)
                         tau_rows.append({
                             "seed": seed, "rate_pct": rate, "fset": fset_name,
+                            "n_test": len(yte_d), "actual_rate": float(yte_d.mean()),
                             "tier": tier_name, "utility": util,
                             "opt_tau": opt_tau, "n_pos_te": n_pos_te,
                             "tp": tp, "fp": fp, "alerted": alerted,
@@ -220,6 +223,7 @@ def main():
                         })
                         util_rows.append({
                             "seed": seed, "rate_pct": rate, "fset": fset_name,
+                            "n_test": len(yte_d), "actual_rate": float(yte_d.mean()),
                             "tier": tier_name, "utility": util,
                             "opt_util": opt_util,
                             "n_alerted": alerted, "cost_total": alerted * tier_cost,

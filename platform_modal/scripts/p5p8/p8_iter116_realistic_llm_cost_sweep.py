@@ -42,7 +42,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 SEED = 20260705
 
@@ -62,10 +62,17 @@ def load(path):
 
 def cost_at_llm(n_test, n_llm, n_caught, cost_xgb, cost_llm):
     """Return ($/dec, $/caught) at the given cost_xgb, cost_llm."""
-    total = n_test * cost_xgb + n_llm * (cost_llm - cost_xgb)
+    if n_test <= 0 or not 0 <= n_llm <= n_test or not 0 <= n_caught <= n_test:
+        raise ValueError("invalid actual cohort or outcome counts")
+    total = n_test * cost_xgb + n_llm * cost_llm
     cpd = total / n_test
-    cpf = total / max(1, n_caught)
+    cpf = total / n_caught if n_caught else None
     return cpd, cpf
+
+
+def cost_delta(a, b):
+    """Undefined cost-per-catch stays unavailable in comparisons."""
+    return a - b if a is not None and b is not None else None
 
 
 def main():
@@ -80,8 +87,9 @@ def main():
     for cost_llm in COST_LLM_SWEEP:
         ratio = cost_llm / COST_XGB
         for c in cell:
-            n_test_eff = int(round(int(c["n_pos"]) / float(c["rate"])))
-            n_test_eff = max(n_test_eff, 1)
+            if c.get("outcome_kind") != "composed_XGB24_feature_proxy":
+                raise ValueError("regenerate iter112 with composed proxy outcomes; historical counts are not valid evidence")
+            n_test_eff = int(c["n_test"])
             n_llm = int(c["n_llm_calls"])
             n_caught = int(c["n_pos_caught_at_K"])
             cpd, cpf = cost_at_llm(n_test_eff, n_llm, n_caught,
@@ -91,6 +99,9 @@ def main():
                 rate=float(c["rate"]), tree=c["tree"], rule=c["rule"],
                 n_test_eff=n_test_eff, n_llm_calls=n_llm,
                 n_pos_caught_at_K=n_caught,
+                actual_rate=int(c["n_pos"]) / n_test_eff,
+                outcome_kind=c["outcome_kind"],
+                cost_per_catch_status="defined" if n_caught else "no_catches",
                 cpd_usd=cpd, cpf_usd=cpf,
             ))
         # Pairwise deltas at this cost ratio
@@ -106,7 +117,7 @@ def main():
                 ]
                 for a, b in pairs:
                     cpd_d = by_rule[a]["cpd_usd"] - by_rule[b]["cpd_usd"]
-                    cpf_d = by_rule[a]["cpf_usd"] - by_rule[b]["cpf_usd"]
+                    cpf_d = cost_delta(by_rule[a]["cpf_usd"], by_rule[b]["cpf_usd"])
                     pair_rows.append(dict(
                         cost_llm=cost_llm, cost_ratio=ratio,
                         rate=rate, tree=tree, pair=f"{a}_vs_{b}",
@@ -125,8 +136,8 @@ def main():
                     sub = [s for s in sweep_rows if s["cost_llm"] == cost_llm
                            and s["rate"] == rate and s["tree"] == tree]
                     by_rule = {s["rule"]: s for s in sub}
-                    cpf_d = by_rule[rule]["cpf_usd"] - by_rule["xgb_only"]["cpf_usd"]
-                    if cpf_d > 0:  # rule more expensive than xgb-only
+                    cpf_d = cost_delta(by_rule[rule]["cpf_usd"], by_rule["xgb_only"]["cpf_usd"])
+                    if cpf_d is not None and cpf_d > 0:  # rule more expensive than xgb-only
                         flip_ratio = cost_llm
                         break
                 flip_rows.append(dict(
@@ -166,12 +177,12 @@ def main():
                    and s["tree"] == tree and s["rate"] == rate]
             by_rule = {s["rule"]: s for s in sub}
             cpd_d = by_rule["gradient_band"]["cpd_usd"] - by_rule["xgb_only"]["cpd_usd"]
-            cpf_d = by_rule["gradient_band"]["cpf_usd"] - by_rule["xgb_only"]["cpf_usd"]
+            cpf_d = cost_delta(by_rule["gradient_band"]["cpf_usd"], by_rule["xgb_only"]["cpf_usd"])
             h1[f"{tree}_rate{rate}"] = {
                 "cpd_grad_vs_xgb": cpd_d,
                 "cpf_grad_vs_xgb": cpf_d,
                 "grad_wins_cpd": cpd_d <= 0,
-                "grad_wins_cpf": cpf_d <= 0,
+                "grad_wins_cpf": cpf_d is not None and cpf_d <= 0,
             }
     h1_breakeven_count = sum(
         1 for v in h1.values() if v["grad_wins_cpd"] and v["grad_wins_cpf"]
@@ -184,10 +195,10 @@ def main():
         sub = [s for s in sweep_rows if s["cost_llm"] == cost_llm
                and s["tree"] == "XGB-24full" and s["rate"] == 0.0144]
         by_rule = {s["rule"]: s for s in sub}
-        cpf_d = by_rule["gradient_band"]["cpf_usd"] - by_rule["xgb_only"]["cpf_usd"]
+        cpf_d = cost_delta(by_rule["gradient_band"]["cpf_usd"], by_rule["xgb_only"]["cpf_usd"])
         h2[cost_llm] = {
             "cpf_grad_minus_xgb": cpf_d,
-            "grad_pareto_dominates_xgb": cpf_d <= 0,
+            "grad_cost_per_catch_no_higher": cpf_d is not None and cpf_d <= 0,
         }
 
     # H4: at each rate, find cost_ratio where gradient-band recall-preservation
@@ -209,7 +220,7 @@ def main():
         h4[rate] = {
             "cpf_xgb_at_lowest_cost_llm": cpf_xgb,
             "cpf_grad_at_lowest_cost_llm": cpf_grad,
-            "cpf_ratio_grad_over_xgb_at_low_cost": cpf_grad / max(1e-12, cpf_xgb),
+            "cpf_ratio_grad_over_xgb_at_low_cost": cpf_grad / cpf_xgb if cpf_grad is not None and cpf_xgb else None,
         }
 
     # Headline: best rule by (cpd, cpf) per (rate, tree, cost_ratio)
@@ -220,7 +231,8 @@ def main():
                 sub = [s for s in sweep_rows if s["cost_llm"] == cost_llm
                        and s["tree"] == tree and s["rate"] == rate]
                 best_cpd_rule = min(sub, key=lambda s: s["cpd_usd"])["rule"]
-                best_cpf_rule = min(sub, key=lambda s: s["cpf_usd"])["rule"]
+                feasible = [s for s in sub if s["cpf_usd"] is not None]
+                best_cpf_rule = min(feasible, key=lambda s: s["cpf_usd"])["rule"] if feasible else None
                 best_rows.append(dict(
                     rate=rate, tree=tree, cost_llm=cost_llm,
                     cost_ratio=cost_llm / COST_XGB,
@@ -248,8 +260,8 @@ def main():
     summary = {
         "iter": 116,
         "pillar": "P8",
-        "n_train": 50000,
-        "n_test": 10000,
+        "evidence_kind": "composed XGB feature proxy with hypothetical LLM prices; not measured LLM quality",
+        "n_test_by_rate": {str(r["rate"]): r["n_test_eff"] for r in sweep_rows},
         "rates": RATES,
         "trees": TREES,
         "rules": RULES,
@@ -262,7 +274,11 @@ def main():
         "h1_at_cost_llm_0p10": {
             "n_grad_dominates_xgb_both": h1_breakeven_count,
             "n_cells_total": len(h1),
-            "all_xgb_dominates": h1_breakeven_count == 0,
+            "all_xgb_dominates_gradient": (all(
+                v["cpd_grad_vs_xgb"] >= 0 and v["cpf_grad_vs_xgb"] >= 0
+                and (v["cpd_grad_vs_xgb"] > 0 or v["cpf_grad_vs_xgb"] > 0)
+                for v in h1.values())
+                if all(v["cpf_grad_vs_xgb"] is not None for v in h1.values()) else None),
         },
         "h2_gradient_vs_xgb_at_release_rate_xgb24full": h2,
         "h4_cpf_at_lowest_cost_llm_xgb24full": h4,
@@ -286,8 +302,8 @@ def main():
           f"{n_extreme_xgb_only_cpf}/{n_extreme_total} cells.")
     print("[iter116] H2 (XGB-24full, release rate 0.0144) gradient vs xgb on $/caught:")
     for k, v in h2.items():
-        print(f"  cost_llm=${k}: cpf_delta={v['cpf_grad_minus_xgb']:+.6e}  "
-              f"pareto_dominates={v['grad_pareto_dominates_xgb']}")
+        print(f"  cost_llm=${k}: cpf_delta={v['cpf_grad_minus_xgb']}  "
+              f"cost_per_catch_no_higher={v['grad_cost_per_catch_no_higher']}")
 
 
 if __name__ == "__main__":

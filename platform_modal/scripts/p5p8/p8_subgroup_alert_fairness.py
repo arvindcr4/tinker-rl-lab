@@ -51,6 +51,7 @@ Stdlib + numpy + pandas + xgboost + matplotlib. <=290 lines.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -284,7 +285,7 @@ def main() -> None:
         for ka, kb, na, nb in pair_defs:
             rows_b = paired_heterogeneity_bootstrap(
                 scores[ka], scores[kb], y, stratum,
-                K_GLOBAL_PCT, N_BINS, N_BOOT, SEED + hash((strat_label, ka, kb)) % 100000,
+                K_GLOBAL_PCT, N_BINS, N_BOOT, SEED + int.from_bytes(hashlib.sha256(repr((strat_label, ka, kb)).encode()).digest()[:8], "big") % 100000,
             )
             for rb in rows_b:
                 boot_rows.append({
@@ -306,7 +307,7 @@ def main() -> None:
         "rows_boot": int(len(df_b)),
         "excludes_zero_counts": {
             pair: int((df_b[df_b["pair"] == pair]["excludes_zero"] == "YES").sum())
-            for _, _, _, pair in [(k, k, n, f"{n}-{m}") for k, m, n, _ in pair_defs]
+            for pair in sorted(df_b["pair"].unique())
         },
         "headline": "Tree-level per-stratum alert-distribution heterogeneity",
     }

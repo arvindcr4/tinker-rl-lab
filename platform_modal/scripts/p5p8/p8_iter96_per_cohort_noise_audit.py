@@ -340,8 +340,8 @@ def main() -> None:
 
     # Cross-coupling: amount-Q0 had iter-99 worst ECE on XGB-20raw — does it
     # also flip the cost frontier earliest?
-    amount_q0_unfav_sigma = [s for (a, s), sig in first_unfav.items() if a == "Amount_q" and s == 0]
-    vmean_q2_unfav_sigma = [s for (a, s), sig in first_unfav.items() if a == "V_mean_q" and s == 2]
+    amount_q0_unfav_sigma = [sig for (a, s), sig in first_unfav.items() if a == "Amount_q" and s == 0]
+    vmean_q2_unfav_sigma = [sig for (a, s), sig in first_unfav.items() if a == "V_mean_q" and s == 2]
 
     summary = {
         "n_test": int(len(y_te)),

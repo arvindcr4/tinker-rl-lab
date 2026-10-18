@@ -184,19 +184,7 @@ def main():
         "n_thresholds": len(THRESHOLDS),
         "models": list(scores.keys()),
         "thresholds": THRESHOLDS,
-        "falsifiable_claim": (
-            "For binary credit-card fraud with 1.44% positive rate, "
-            "XGB-24full vs XGB-20raw: the RECALL gap is statistically "
-            "detectable at the 95% level in the MODERATE-threshold "
-            "regime (τ ∈ {0.20, 0.25, 0.30, 0.35, 0.45}) -- the four "
-            "aggregates recover +6 to +7 absolute recall points. "
-            "Precision gap is statistically detectable only at τ=0.15 "
-            "(+6.8pp, 95% CI [+0.9, +13.8]). At strict thresholds "
-            "(τ ≥ 0.70) both trees tie on precision (both = 1.0) "
-            "because they recover the same top alerts. The aggregate "
-            "features' value is recall-restoration at the "
-            "moderate-precision operating point, NOT precision gain."
-        ),
+        "current_result": f"Exploratory pointwise intervals detect {len(detectable_prec)} precision and {len(detectable_rec)} recall contrasts; see current threshold records.",
         "n_prec_detectable": len(detectable_prec),
         "n_rec_detectable": len(detectable_rec),
         "prec_detectable_taus": sorted({r["tau"] for r in detectable_prec}),

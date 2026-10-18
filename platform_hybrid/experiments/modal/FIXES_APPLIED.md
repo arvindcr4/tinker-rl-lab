@@ -72,7 +72,8 @@ Note: `run_ppo_gsm8k` completed fine at 3600s but was increased for consistency 
    # Load model ONCE outside the problem loop — avoids re-initializing per problem
    print(f"[{exp}] Loading model on H100 (once for all problems)...")
    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-   if tokenizer.pad_token is None: tokenizer.pad_token = tokenizer.eos_token
+   if tokenizer.pad_token is None:
+       tokenizer.pad_token = tokenizer.eos_token
    model = AutoModelForCausalLM.from_pretrained(
        model_name, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True
    )

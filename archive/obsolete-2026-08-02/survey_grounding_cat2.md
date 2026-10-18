@@ -430,26 +430,28 @@ from typing import Tuple, Optional, List
 # IDEA 2.1: Spectral State-Space Attention (S3-Attn) with Hilbert Kernels
 # ============================================================================
 
+
 class ChebyshevHilbertKernel(nn.Module):
     """
     Projects input vectors into an (M+1)-dimensional continuous Hilbert space
     using Chebyshev polynomials of the first kind T_m(x) = cos(m * arccos(x)).
     """
+
     def __init__(self, degree: int = 16):
         super().__init__()
         self.degree = degree
-        self.register_buffer('orders', torch.arange(degree + 1, dtype=torch.float32))
+        self.register_buffer("orders", torch.arange(degree + 1, dtype=torch.float32))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # x shape: [batch, seq_len, dim]
         # Clamp inputs to [-1, 1] to guarantee real arccos evaluation
         x_clamped = torch.clamp(x, -0.9999, 0.9999)
-        theta = torch.acos(x_clamped) # [batch, seq_len, dim]
-        
+        theta = torch.acos(x_clamped)  # [batch, seq_len, dim]
+
         # Outer product with orders: [batch, seq_len, dim, degree + 1]
-        theta_expanded = theta.unsqueeze(-1) * self.orders # broadcasting
+        theta_expanded = theta.unsqueeze(-1) * self.orders  # broadcasting
         phi = torch.cos(theta_expanded)
-        return phi # [batch, seq_len, dim, M+1]
+        return phi  # [batch, seq_len, dim, M+1]
 
 
 class SpectralStateSpaceAttention(nn.Module):
@@ -457,18 +459,19 @@ class SpectralStateSpaceAttention(nn.Module):
     Idea 2.1: S3-Attn with continuous Hilbert-Space Chebyshev Spectral Kernels
     and LTI State-Space FFT Convolution.
     """
+
     def __init__(self, dim: int, degree: int = 16):
         super().__init__()
         self.dim = dim
         self.degree = degree
         self.hilbert_kernel = ChebyshevHilbertKernel(degree=degree)
-        
+
         # Linear projections
         self.q_proj = nn.Linear(dim, dim)
         self.k_proj = nn.Linear(dim, dim)
         self.v_proj = nn.Linear(dim, dim)
         self.out_proj = nn.Linear(dim, dim)
-        
+
         # State-space transition parameters (HiPPO / S4 initialization)
         # Log-spaced step sizes for state discretization
         self.log_dt = nn.Parameter(torch.linspace(math.log(0.001), math.log(0.1), dim))
@@ -477,38 +480,38 @@ class SpectralStateSpaceAttention(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, N, D = x.shape
         M = self.degree
-        
-        q = torch.tanh(self.q_proj(x)) # Normalize for Chebyshev domain [-1, 1]
+
+        q = torch.tanh(self.q_proj(x))  # Normalize for Chebyshev domain [-1, 1]
         k = torch.tanh(self.k_proj(x))
         v = self.v_proj(x)
-        
+
         # Project Q and K into Hilbert space
-        phi_q = self.hilbert_kernel(q) # [B, N, D, M+1]
-        phi_k = self.hilbert_kernel(k) # [B, N, D, M+1]
-        
+        phi_q = self.hilbert_kernel(q)  # [B, N, D, M+1]
+        phi_k = self.hilbert_kernel(k)  # [B, N, D, M+1]
+
         # Outer product of key features and value vectors: [B, N, D, M+1, D]
-        kv_state = phi_k.unsqueeze(-1) * v.unsqueeze(-2).unsqueeze(-2) # [B, N, D, M+1, D]
+        kv_state = phi_k.unsqueeze(-1) * v.unsqueeze(-2).unsqueeze(-2)  # [B, N, D, M+1, D]
         kv_state_flat = kv_state.reshape(B, N, D * (M + 1) * D)
-        
+
         # Compute continuous state-space impulse response (kernel filter)
-        dt = torch.exp(self.log_dt) # [D]
+        dt = torch.exp(self.log_dt)  # [D]
         A = -torch.exp(self.A_log)  # [M+1] (Negative decay for stability)
-        
+
         # Construct global SSM filter sequence in frequency domain
-        t_seq = torch.arange(N, device=x.device, dtype=torch.float32).unsqueeze(-1) # [N, 1]
+        t_seq = torch.arange(N, device=x.device, dtype=torch.float32).unsqueeze(-1)  # [N, 1]
         # Decay kernel: exp(A * dt * t)
-        decay = torch.exp(t_seq * (A[0] * dt[0])) # [N, 1]
-        
+        decay = torch.exp(t_seq * (A[0] * dt[0]))  # [N, 1]
+
         # FFT Causal Convolution: F^-1( F(KV) * F(ssm_kernel) )
         fft_len = 2 * N
         kv_fft = torch.fft.rfft(kv_state_flat, n=fft_len, dim=1)
         kernel_fft = torch.fft.rfft(decay.repeat(1, kv_state_flat.shape[-1]), n=fft_len, dim=0)
-        
+
         conv_res = torch.fft.irfft(kv_fft * kernel_fft.unsqueeze(0), n=fft_len, dim=1)[:, :N, :]
         conv_res = conv_res.reshape(B, N, D, M + 1, D)
-        
+
         # Query readout o(t) = phi(q)^T h(t)
-        out = torch.einsum('bndm,bndmd->bnd', phi_q, conv_res)
+        out = torch.einsum("bndm,bndmd->bnd", phi_q, conv_res)
         return self.out_proj(out)
 
 
@@ -516,67 +519,75 @@ class SpectralStateSpaceAttention(nn.Module):
 # IDEA 2.2: Dynamic KV-Cache Compressive Quantization (SVD Residual)
 # ============================================================================
 
+
 class DynamicSVDQuantizedKVCache(nn.Module):
     """
     Idea 2.2: Layer-adaptive INT4 dynamic KV-cache quantization with online
     randomized power iteration SVD residual retention.
     """
+
     def __init__(self, dim: int, max_rank: int = 8, alpha: float = 0.1):
         super().__init__()
         self.dim = dim
         self.max_rank = max_rank
         self.alpha = alpha
 
-    def _randomized_power_svd(self, K: torch.Tensor, n_iter: int = 2) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _randomized_power_svd(
+        self, K: torch.Tensor, n_iter: int = 2
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         # K shape: [N, D]
         N, D = K.shape
         r = min(self.max_rank, D)
-        
+
         # Random Gaussian matrix
         omega = torch.randn(D, r, device=K.device, dtype=K.dtype)
-        Y = K @ omega # [N, r]
-        
+        Y = K @ omega  # [N, r]
+
         for _ in range(n_iter):
             Y = K @ (K.T @ Y)
-            
-        Q, _ = torch.linalg.qr(Y) # Orthonormal basis [N, r]
-        B = Q.T @ K # Subspace matrix [r, D]
-        
+
+        Q, _ = torch.linalg.qr(Y)  # Orthonormal basis [N, r]
+        B = Q.T @ K  # Subspace matrix [r, D]
+
         U_small, S, Vh = torch.linalg.svd(B, full_matrices=False)
-        V = Vh.T # Right singular vectors [D, r]
+        V = Vh.T  # Right singular vectors [D, r]
         return S, V
 
-    def quantize_and_compress(self, K: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def quantize_and_compress(
+        self, K: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         # K shape: [N, D]
         N, D = K.shape
         S, V = self._randomized_power_svd(K)
-        
+
         # Determine dynamic singular threshold tau_l
         tau = self.alpha * S[0]
         high_idx = torch.where(S >= tau)[0]
-        
+
         if len(high_idx) == 0:
             high_idx = torch.tensor([0], device=K.device)
-            
-        V_high = V[:, high_idx] # [D, r_high]
-        P_high = V_high @ V_high.T # Projection operator [D, D]
+
+        V_high = V[:, high_idx]  # [D, r_high]
+        P_high = V_high @ V_high.T  # Projection operator [D, D]
         P_low = torch.eye(D, device=K.device) - P_high
-        
+
         # FP16 high-energy principal component
         K_high_fp16 = K @ P_high
-        
+
         # INT4 quantization for low-energy tail
         K_low = K @ P_low
         min_val = K_low.min()
         max_val = K_low.max()
-        scale = (max_val - min_val) / 15.0 # 4-bit range (0 to 15)
+        scale = (max_val - min_val) / 15.0  # 4-bit range (0 to 15)
         scale = torch.clamp(scale, min=1e-8)
-        
+
         K_low_int4 = torch.round((K_low - min_val) / scale).to(torch.uint8)
-        
+
         return K_low_int4, K_high_fp16, torch.tensor([min_val, scale], device=K.device)
 
-    def decompress(self, K_low_int4: torch.Tensor, K_high_fp16: torch.Tensor, params: torch.Tensor) -> torch.Tensor:
+    def decompress(
+        self, K_low_int4: torch.Tensor, K_high_fp16: torch.Tensor, params: torch.Tensor
+    ) -> torch.Tensor:
         min_val, scale = params[0], params[1]
         K_low_dequant = (K_low_int4.to(K_high_fp16.dtype) * scale) + min_val
         return K_low_dequant + K_high_fp16
@@ -586,19 +597,23 @@ class DynamicSVDQuantizedKVCache(nn.Module):
 # IDEA 2.3: Hyperbolic Differential Attention (Poincaré Disk)
 # ============================================================================
 
+
 class PoincareHyperbolicDifferentialAttention(nn.Module):
     """
     Idea 2.3: Embeds query/key vectors into the Poincaré disk model of hyperbolic
     space B^d. Computes hyperbolic geodesics and differential attention noise subtraction.
     """
-    def __init__(self, dim: int, tau1: float = 1.0, tau2: float = 1.5, gamma: float = 0.5, eps: float = 1e-5):
+
+    def __init__(
+        self, dim: int, tau1: float = 1.0, tau2: float = 1.5, gamma: float = 0.5, eps: float = 1e-5
+    ):
         super().__init__()
         self.dim = dim
         self.tau1 = tau1
         self.tau2 = tau2
         self.gamma = gamma
         self.eps = eps
-        
+
         self.q1_proj = nn.Linear(dim, dim)
         self.q2_proj = nn.Linear(dim, dim)
         self.k1_proj = nn.Linear(dim, dim)
@@ -621,15 +636,15 @@ class PoincareHyperbolicDifferentialAttention(nn.Module):
     def poincare_geodesic_distance(self, u: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
         # u: [B, N, D], v: [B, M, D]
         # d_H(u,v) = arcosh( 1 + 2 * ||u-v||^2 / ((1-||u||^2)(1-||v||^2)) )
-        u_sq = torch.sum(u**2, dim=-1, keepdim=True) # [B, N, 1]
-        v_sq = torch.sum(v**2, dim=-1, keepdim=True).transpose(1, 2) # [B, 1, M]
-        
-        diff = u.unsqueeze(2) - v.unsqueeze(1) # [B, N, M, D]
-        diff_sq = torch.sum(diff**2, dim=-1) # [B, N, M]
-        
-        denom = (1.0 - u_sq) * (1.0 - v_sq) # [B, N, M]
+        u_sq = torch.sum(u**2, dim=-1, keepdim=True)  # [B, N, 1]
+        v_sq = torch.sum(v**2, dim=-1, keepdim=True).transpose(1, 2)  # [B, 1, M]
+
+        diff = u.unsqueeze(2) - v.unsqueeze(1)  # [B, N, M, D]
+        diff_sq = torch.sum(diff**2, dim=-1)  # [B, N, M]
+
+        denom = (1.0 - u_sq) * (1.0 - v_sq)  # [B, N, M]
         arg = 1.0 + 2.0 * diff_sq / denom.clamp(min=self.eps)
-        
+
         # Numerical safeguard for arcosh: arcosh(x) = ln(x + sqrt(x^2 - 1))
         arg_clamped = arg.clamp(min=1.0 + self.eps)
         dist = torch.log(arg_clamped + torch.sqrt(arg_clamped**2 - 1.0))
@@ -637,28 +652,28 @@ class PoincareHyperbolicDifferentialAttention(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, N, D = x.shape
-        
+
         # Exponential maps to Poincaré disk
         q1 = self.exp_map_zero(self.q1_proj(x))
         q2 = self.exp_map_zero(self.q2_proj(x))
         k1 = self.exp_map_zero(self.k1_proj(x))
         k2 = self.exp_map_zero(self.k2_proj(x))
-        
+
         v_tan = self.log_map_zero(self.exp_map_zero(self.v_proj(x)))
-        
+
         # Hyperbolic Geodesic Distance Maps
-        dist1 = self.poincare_geodesic_distance(q1, k1) # [B, N, N]
-        dist2 = self.poincare_geodesic_distance(q2, k2) # [B, N, N]
-        
+        dist1 = self.poincare_geodesic_distance(q1, k1)  # [B, N, N]
+        dist2 = self.poincare_geodesic_distance(q2, k2)  # [B, N, N]
+
         # Dual-temperature Softmax
         A1 = F.softmax(-dist1 / self.tau1, dim=-1)
         A2 = F.softmax(-dist2 / self.tau2, dim=-1)
-        
+
         # Differential Attention Subtraction
         A_diff = A1 - self.gamma * A2
-        
+
         # Tangent space aggregation
-        o_tan = A_diff @ v_tan # [B, N, D]
+        o_tan = A_diff @ v_tan  # [B, N, D]
         out = self.exp_map_zero(o_tan)
         return out
 
@@ -667,36 +682,38 @@ class PoincareHyperbolicDifferentialAttention(nn.Module):
 # IDEA 2.4: Locality-Sensitive Spectral Hashing (Bochner-RFF)
 # ============================================================================
 
+
 class SpectralLSHSparseAttention(nn.Module):
     """
     Idea 2.4: Bochner-RFF Locality-Sensitive Spectral Hashing for Sub-Quadratic
     Sparse Attention with Low-Rank Inter-Bucket Tensor Decomposition.
     """
+
     def __init__(self, dim: int, rff_dim: int = 64, num_hashes: int = 4, low_rank: int = 8):
         super().__init__()
         self.dim = dim
         self.rff_dim = rff_dim
         self.num_hashes = num_hashes
         self.low_rank = low_rank
-        
+
         # Bochner RFF parameters
-        self.register_buffer('omega', torch.randn(dim, rff_dim))
-        self.register_buffer('b', torch.rand(rff_dim) * 2 * math.pi)
-        
+        self.register_buffer("omega", torch.randn(dim, rff_dim))
+        self.register_buffer("b", torch.rand(rff_dim) * 2 * math.pi)
+
         # LSH Hash Hyperplanes in spectral space
-        self.register_buffer('W_hash', torch.randn(num_hashes, rff_dim))
-        
+        self.register_buffer("W_hash", torch.randn(num_hashes, rff_dim))
+
         # Low-rank inter-bucket tensor projections
         self.W_u = nn.Linear(rff_dim, low_rank)
         self.W_v = nn.Linear(rff_dim, low_rank)
-        
+
         self.q_proj = nn.Linear(dim, dim)
         self.k_proj = nn.Linear(dim, dim)
         self.v_proj = nn.Linear(dim, dim)
 
     def _rff_transform(self, x: torch.Tensor) -> torch.Tensor:
         # x shape: [B, N, D]
-        proj = x @ self.omega + self.b # [B, N, rff_dim]
+        proj = x @ self.omega + self.b  # [B, N, rff_dim]
         return math.sqrt(2.0 / self.rff_dim) * torch.cos(proj)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -704,28 +721,28 @@ class SpectralLSHSparseAttention(nn.Module):
         q = self.q_proj(x)
         k = self.k_proj(x)
         v = self.v_proj(x)
-        
+
         # Step 1: Bochner RFF Projection
-        z_q = self._rff_transform(q) # [B, N, rff_dim]
+        z_q = self._rff_transform(q)  # [B, N, rff_dim]
         z_k = self._rff_transform(k)
-        
+
         # Step 2: Spectral LSH Bucketing
-        hash_codes = torch.sign(z_q @ self.W_hash.T) # [B, N, num_hashes]
-        
+        hash_codes = torch.sign(z_q @ self.W_hash.T)  # [B, N, num_hashes]
+
         # Step 3: Low-Rank Inter-Bucket Tensor Approximation
-        U_lsh = self.W_u(z_q) # [B, N, r]
-        V_lsh = self.W_v(z_k) # [B, N, r]
-        A_inter = U_lsh @ V_lsh.transpose(1, 2) # [B, N, N]
-        
+        U_lsh = self.W_u(z_q)  # [B, N, r]
+        V_lsh = self.W_v(z_k)  # [B, N, r]
+        A_inter = U_lsh @ V_lsh.transpose(1, 2)  # [B, N, N]
+
         # Step 4: Intra-Bucket Exact Softmax Masking
         # Compute bucket match boolean mask
-        bucket_match = (hash_codes.unsqueeze(2) == hash_codes.unsqueeze(1)).all(dim=-1) # [B, N, N]
-        
+        bucket_match = (hash_codes.unsqueeze(2) == hash_codes.unsqueeze(1)).all(dim=-1)  # [B, N, N]
+
         scores = (q @ k.transpose(1, 2)) / math.sqrt(D)
         scores_masked = scores.masked_fill(~bucket_match, -1e9)
         A_intra = F.softmax(scores_masked, dim=-1)
         A_intra = torch.nan_to_num(A_intra, nan=0.0)
-        
+
         # Combine Intra-bucket exact softmax with Inter-bucket low-rank approximation
         out = (A_intra + 0.1 * A_inter) @ v
         return out
@@ -735,21 +752,23 @@ class SpectralLSHSparseAttention(nn.Module):
 # IDEA 2.5: Infinite-Horizon Stream Attention with Orthogonal Reset
 # ============================================================================
 
+
 class InfiniteStreamOrthogonalResetAttention(nn.Module):
     """
     Idea 2.5: Continuous stream attention with dynamic orthogonal drift reset
     projection P_perp = I - U_m U_m^T and differentiable low-rank summary states.
     """
+
     def __init__(self, dim: int, summary_dim: int = 16, drift_rank: int = 4):
         super().__init__()
         self.dim = dim
         self.summary_dim = summary_dim
         self.drift_rank = drift_rank
-        
+
         # Structured hash projection for summary state
-        self.register_buffer('W_hash', torch.randn(summary_dim, dim))
+        self.register_buffer("W_hash", torch.randn(summary_dim, dim))
         self.summary_proj = nn.Linear(summary_dim, dim)
-        
+
         self.attn = nn.MultiheadAttention(dim, num_heads=4, batch_first=True)
 
     def compute_orthogonal_reset_operator(self, H_chunk: torch.Tensor) -> torch.Tensor:
@@ -757,53 +776,53 @@ class InfiniteStreamOrthogonalResetAttention(nn.Module):
         L, D = H_chunk.shape
         mean_drift = H_chunk.mean(dim=0, keepdim=True)
         centered = H_chunk - mean_drift
-        
+
         # SVD of centered activations to find principal drift direction
         _, _, Vh = torch.linalg.svd(centered, full_matrices=False)
-        U_drift = Vh[:self.drift_rank, :].T # [D, drift_rank]
-        
+        U_drift = Vh[: self.drift_rank, :].T  # [D, drift_rank]
+
         # Projection operator P_perp = I - U U^T
         P_perp = torch.eye(D, device=H_chunk.device) - (U_drift @ U_drift.T)
         return P_perp
 
     def create_summary_state(self, H_chunk: torch.Tensor) -> torch.Tensor:
         # Differentiable mean projection
-        mean_state = H_chunk.mean(dim=0) # [D]
-        summary_raw = F.silu(self.W_hash @ mean_state) # [summary_dim]
-        return self.summary_proj(summary_raw) # [D]
+        mean_state = H_chunk.mean(dim=0)  # [D]
+        summary_raw = F.silu(self.W_hash @ mean_state)  # [summary_dim]
+        return self.summary_proj(summary_raw)  # [D]
 
     def forward_stream_chunks(self, stream_chunks: List[torch.Tensor]) -> List[torch.Tensor]:
         # stream_chunks: List of tensors [B=1, L, D]
         outputs = []
         h_prev_last: Optional[torch.Tensor] = None
-        
+
         for m, chunk in enumerate(stream_chunks):
             L, D = chunk.shape[1], chunk.shape[2]
-            
+
             if h_prev_last is not None:
                 # 1. Extract orthogonal reset operator from past chunk
                 P_perp = self.compute_orthogonal_reset_operator(h_prev_last[0])
-                
+
                 # 2. Extract differentiable summary state
                 S_m = self.create_summary_state(h_prev_last[0])
-                
+
                 # 3. State Reset Transition: h_0 = P_perp * h_last + S_m
                 reset_state = (h_prev_last[0, -1:] @ P_perp) + S_m.unsqueeze(0)
-                
+
                 # Prepend reset state to current chunk context
                 chunk_input = torch.cat([reset_state.unsqueeze(0), chunk], dim=1)
             else:
                 chunk_input = chunk
-                
+
             # Self-attention over chunk
             out_chunk, _ = self.attn(chunk_input, chunk_input, chunk_input)
-            
+
             if h_prev_last is not None:
-                out_chunk = out_chunk[:, 1:, :] # Drop prepended reset token from output
-                
+                out_chunk = out_chunk[:, 1:, :]  # Drop prepended reset token from output
+
             outputs.append(out_chunk)
-            h_prev_last = out_chunk.detach() # Retain activations for next boundary
-            
+            h_prev_last = out_chunk.detach()  # Retain activations for next boundary
+
         return outputs
 
 
@@ -811,50 +830,55 @@ class InfiniteStreamOrthogonalResetAttention(nn.Module):
 # VERIFICATION & UNIT TESTS
 # ============================================================================
 
+
 def run_blueprint_verification():
     print("==========================================================")
     print(" Running Category 2 Architecture Verification Suite...")
     print("==========================================================")
-    
+
     B, N, D = 2, 128, 64
     x = torch.randn(B, N, D)
-    
+
     # 1. Test Idea 2.1: S3-Attn
     s3_attn = SpectralStateSpaceAttention(dim=D, degree=16)
     out21 = s3_attn(x)
     assert out21.shape == (B, N, D), f"Idea 2.1 output shape mismatch: {out21.shape}"
     print(" [✓] Idea 2.1 (S3-Attn Chebyshev Hilbert Kernel) Passed Verification.")
-    
+
     # 2. Test Idea 2.2: Dynamic SVD KV Quantization
     kv_module = DynamicSVDQuantizedKVCache(dim=D, max_rank=8, alpha=0.1)
     K_sample = torch.randn(N, D)
     K_int4, K_fp16, params = kv_module.quantize_and_compress(K_sample)
     K_rec = kv_module.decompress(K_int4, K_fp16, params)
-    rec_error = torch.norm(K_sample - K_rec, p='fro') / torch.norm(K_sample, p='fro')
+    rec_error = torch.norm(K_sample - K_rec, p="fro") / torch.norm(K_sample, p="fro")
     assert rec_error < 0.35, f"Idea 2.2 SVD reconstruction error too high: {rec_error:.4f}"
-    print(f" [✓] Idea 2.2 (Dynamic SVD Residual Quantization) Passed Verification. Relative Error: {rec_error:.4f}")
-    
+    print(
+        f" [✓] Idea 2.2 (Dynamic SVD Residual Quantization) Passed Verification. Relative Error: {rec_error:.4f}"
+    )
+
     # 3. Test Idea 2.3: Hyperbolic Differential Attention
     hyp_attn = PoincareHyperbolicDifferentialAttention(dim=D)
     out23 = hyp_attn(x)
     assert out23.shape == (B, N, D), f"Idea 2.3 output shape mismatch: {out23.shape}"
     assert not torch.isnan(out23).any(), "Idea 2.3 produced NaN values."
     print(" [✓] Idea 2.3 (Hyperbolic Poincaré Differential Attention) Passed Verification.")
-    
+
     # 4. Test Idea 2.4: Spectral LSH Attention
     lsh_attn = SpectralLSHSparseAttention(dim=D, rff_dim=32, num_hashes=4)
     out24 = lsh_attn(x)
     assert out24.shape == (B, N, D), f"Idea 2.4 output shape mismatch: {out24.shape}"
     print(" [✓] Idea 2.4 (Locality-Sensitive Spectral Hashing) Passed Verification.")
-    
+
     # 5. Test Idea 2.5: Stream Orthogonal Reset Attention
     stream_attn = InfiniteStreamOrthogonalResetAttention(dim=D)
     chunks = [torch.randn(1, 64, D) for _ in range(4)]
     stream_outs = stream_attn.forward_stream_chunks(chunks)
     assert len(stream_outs) == 4, f"Idea 2.5 stream chunk count mismatch: {len(stream_outs)}"
-    assert stream_outs[0].shape == (1, 64, D), f"Idea 2.5 chunk shape mismatch: {stream_outs[0].shape}"
+    assert stream_outs[0].shape == (1, 64, D), (
+        f"Idea 2.5 chunk shape mismatch: {stream_outs[0].shape}"
+    )
     print(" [✓] Idea 2.5 (Infinite-Horizon Stream Orthogonal Reset) Passed Verification.")
-    
+
     print("==========================================================")
     print(" ALL CATEGORY 2 INNOVATION BLUEPRINTS VERIFIED CLEAN!")
     print("==========================================================")

@@ -121,9 +121,9 @@ def reward_function(completion, expected_answer):
     if predicted is None:
         return -0.1  # Invalid format
     elif predicted == expected_answer:
-        return 1.0   # Correct
+        return 1.0  # Correct
     else:
-        return 0.0   # Wrong but valid format
+        return 0.0  # Wrong but valid format
 ```
 
 ## References

@@ -64,7 +64,7 @@ async def custom_do_group_rollout(builder, policy):
     if shared_client is None:
         shared_client = TinkerAsyncOpenAIClient(sampling_client, renderer, tokenizer)
     else:
-        shared_client.set_sampling_client(sampling_client)   # refresh after each policy step
+        shared_client.set_sampling_client(sampling_client)  # refresh after each policy step
 
     gen_sem = await maybe_semaphore(cfg.max_concurrent_generation)
     states = await bg_builder.run_group(
@@ -74,6 +74,7 @@ async def custom_do_group_rollout(builder, policy):
         gen_sem=gen_sem,
     )
     return convert_states_to_trajectory_group(states)
+
 
 train.do_group_rollout = custom_do_group_rollout
 ```

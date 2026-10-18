@@ -3952,8 +3952,8 @@ dataset, GPU type, and evaluation results. Template at \texttt{huggingface/MODEL
 
 \begin{itemize}[nosep]
 \item \textbf{Dockerfile:} Containerized environment for all experiments
-\item \textbf{Smoke test:} \texttt{platform_modal/scripts/smoke\_test.sh} validates training pipeline
-\item \textbf{Integration audit:} \texttt{platform_modal/scripts/integration\_audit.py} --- 7 automated checks
+\item \textbf{Smoke test:} \texttt{platform\_modal/scripts/smoke\_test.sh} validates training pipeline
+\item \textbf{Integration audit:} \texttt{platform\_modal/scripts/integration\_audit.py} --- 7 automated checks
 \item \textbf{Claim verification:} \texttt{reproducibility/check\_qwen3\_8b\_claim.py} --- validates headline numbers $\pm$2\,pp
 \item \textbf{Master results:} \texttt{experiments/master\_results.json} (62 rows, schema v3.0)
 \item \textbf{W\&B project:} All training curves logged at \texttt{arvindcr4-pes-university/tinker-rl-lab-world-class}
@@ -4160,7 +4160,7 @@ All experiments ran on the \textbf{Tinker RL platform} using the \textbf{Atropos
     \item \textbf{Fine-tuning:} LoRA (Low-Rank Adaptation) with rank 32, targeting attention and MLP projections. Only $\sim$0.1\% of total parameters modified.
     \item \textbf{Training:} GRPO with group size 16 (16 completions sampled per question), learning rate $4 \times 10^{-5}$, binary reward signal (format + correctness).
     \item \textbf{Checkpointing:} Automatic checkpoint saving every training step via Atropos; training state recoverable from any checkpoint.
-    \item \textbf{Code:} All experiment configs at \texttt{pes-llm-research/tinker-rl-lab/platform_tinker/atropos/configs/}; notebooks at \texttt{platform_tinker/atropos/notebooks/}.
+    \item \textbf{Code:} All experiment configs at \texttt{pes-llm-research/tinker-rl-lab/platform\_tinker/atropos/configs/}; notebooks at \texttt{platform\_tinker/atropos/notebooks/}.
 \end{itemize}
 
 \subsection{Reproducibility Protocol}

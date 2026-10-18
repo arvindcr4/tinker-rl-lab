@@ -149,12 +149,16 @@ where $d_{\max}$ is the maximum degree of the combined quotient polynomial, $|\m
 import numpy as np
 from typing import Dict, List, Tuple, Any
 
+
 class ZKExecutionTraceProver:
     """
     Quantizes continuous agent execution states, constructs AIR trace matrices,
     and generates/verifies STARK execution proofs for tinker-rl-lab agent steps.
     """
-    def __init__(self, field_prime: int = 2**64 - 2**32 + 1, scale_bits: int = 16, fri_queries: int = 40):
+
+    def __init__(
+        self, field_prime: int = 2**64 - 2**32 + 1, scale_bits: int = 16, fri_queries: int = 40
+    ):
         self.p = field_prime
         self.S = 1 << scale_bits
         self.M = fri_queries
@@ -166,32 +170,36 @@ class ZKExecutionTraceProver:
 
     def dequantize(self, field_vec: np.ndarray) -> np.ndarray:
         """Restores finite field elements into float array."""
+
         def _convert(x):
             val = int(x)
             if val > (self.p // 2):
                 val -= self.p
             return float(val) / self.S
-        return np.array([_convert(x) for x in field_vec.flat], dtype=np.float64).reshape(field_vec.shape)
+
+        return np.array([_convert(x) for x in field_vec.flat], dtype=np.float64).reshape(
+            field_vec.shape
+        )
 
     def build_air_trace(self, execution_steps: List[Dict[str, Any]]) -> np.ndarray:
         """
         Unrolls agent step parameters, tool call IDs, and activation vectors
         into trace matrix T of shape (H, W).
         """
-        H = int(2**np.ceil(np.log2(max(len(execution_steps), 8))))  # Pad to power of 2
+        H = int(2 ** np.ceil(np.log2(max(len(execution_steps), 8))))  # Pad to power of 2
         W = 16  # Fixed register width
         trace = np.zeros((H, W), dtype=object)
-        
+
         for idx, step in enumerate(execution_steps):
             trace[idx, 0] = step.get("step_id", idx)
             trace[idx, 1] = step.get("tool_id", 0)
-            args_list = (list(step.get("args", [])) + [0.0]*4)[:4]
+            args_list = (list(step.get("args", [])) + [0.0] * 4)[:4]
             args_q = self.quantize(np.array(args_list))
             trace[idx, 2:6] = args_q
-            out_list = (list(step.get("output", [])) + [0.0]*4)[:4]
+            out_list = (list(step.get("output", [])) + [0.0] * 4)[:4]
             out_q = self.quantize(np.array(out_list))
             trace[idx, 6:10] = out_q
-            
+
         return trace
 
     def generate_proof(self, trace: np.ndarray) -> Dict[str, Any]:
@@ -204,18 +212,18 @@ class ZKExecutionTraceProver:
         constraints_satisfied = True
         for i in range(H - 1):
             # Check step continuity: trace[i+1, 0] == trace[i, 0] + 1 (unless padded)
-            if trace[i+1, 0] > 0 and trace[i+1, 0] != trace[i, 0] + 1:
+            if trace[i + 1, 0] > 0 and trace[i + 1, 0] != trace[i, 0] + 1:
                 constraints_satisfied = False
-                
+
         # Mock STARK proof package
         commitment_root = hash(trace.tobytes()).hex()
         return {
             "proof_type": "zk-STARK-AIR",
             "commitment_root": commitment_root,
             "trace_dimensions": (H, W),
-            "soundness_error_bound": float((16 * H) / self.p + (0.5)**self.M),
+            "soundness_error_bound": float((16 * H) / self.p + (0.5) ** self.M),
             "constraints_valid": constraints_satisfied,
-            "fri_queries": self.M
+            "fri_queries": self.M,
         }
 
     def verify_proof(self, proof: Dict[str, Any], expected_root: str) -> bool:
@@ -281,16 +289,20 @@ This prevents Byzantine agents from introducing cumulative semantic drift across
 import numpy as np
 from typing import List, Dict, Tuple, Optional
 
+
 class PBFTVectorConsensusEngine:
     """
     Implements vector-valued Practical Byzantine Fault Tolerance (PBFT)
     with Krum vector aggregation for multi-agent alignment in tinker-rl-lab.
     """
+
     def __init__(self, num_agents: int, max_faulty: int):
         self.N = num_agents
         self.f = max_faulty
         if self.N < 3 * self.f + 1:
-            raise ValueError(f"PBFT safety requirement violated: N ({self.N}) must be >= 3f + 1 ({3*self.f + 1})")
+            raise ValueError(
+                f"PBFT safety requirement violated: N ({self.N}) must be >= 3f + 1 ({3 * self.f + 1})"
+            )
         self.quorum_size = (2 * self.N) // 3 + 1
 
     def compute_krum(self, proposals: np.ndarray) -> Tuple[int, np.ndarray]:
@@ -300,27 +312,29 @@ class PBFTVectorConsensusEngine:
         """
         N, d = proposals.shape
         assert N == self.N, f"Expected {self.N} proposals, got {N}"
-        
+
         # Compute pairwise distance matrix
         diff = proposals[:, np.newaxis, :] - proposals[np.newaxis, :, :]
-        dist_matrix = np.sum(diff ** 2, axis=-1)  # (N, N)
-        
+        dist_matrix = np.sum(diff**2, axis=-1)  # (N, N)
+
         scores = np.zeros(N)
         num_neighbors = N - self.f - 2
-        
+
         for i in range(N):
             # Sort distances from node i to all other nodes
             sorted_dists = np.sort(dist_matrix[i])
             # Sum distances to the (N - f - 2) closest neighbors (excluding self at index 0)
             scores[i] = np.sum(sorted_dists[1 : 1 + num_neighbors])
-            
+
         best_idx = int(np.argmin(scores))
         return best_idx, proposals[best_idx]
 
-    def validate_quorum_and_commit(self, 
-                                   proposals: Dict[str, np.ndarray], 
-                                   signatures: Dict[str, bytes],
-                                   epsilon_bound: float = 1.5) -> Dict[str, Any]:
+    def validate_quorum_and_commit(
+        self,
+        proposals: Dict[str, np.ndarray],
+        signatures: Dict[str, bytes],
+        epsilon_bound: float = 1.5,
+    ) -> Dict[str, Any]:
         """
         Executes PBFT 3-phase consensus commit over signed agent proposals.
         """
@@ -329,21 +343,21 @@ class PBFTVectorConsensusEngine:
 
         agent_ids = list(proposals.keys())
         vec_matrix = np.array([proposals[aid] for aid in agent_ids])
-        
+
         best_idx, consensus_vec = self.compute_krum(vec_matrix)
         selected_agent = agent_ids[best_idx]
-        
+
         # Verify consensus deviation bound against cluster mean
         cluster_mean = np.mean(vec_matrix, axis=0)
         drift = np.linalg.norm(consensus_vec - cluster_mean)
-        
+
         return {
             "committed": True,
             "consensus_vector": consensus_vec,
             "selected_agent": selected_agent,
             "quorum_count": len(proposals),
             "semantic_drift": float(drift),
-            "drift_within_bound": bool(drift <= epsilon_bound)
+            "drift_within_bound": bool(drift <= epsilon_bound),
         }
 ```
 
@@ -409,28 +423,33 @@ A full provenance verification requires a **Dual Proof** $(\pi_{\text{MMR}}, \pi
 import hashlib
 from typing import List, Dict, Tuple, Optional, Any
 
+
 def blake3_hash(data: bytes) -> bytes:
     """Helper wrapper for BLAKE3/SHA-256 cryptographic hashing."""
     return hashlib.sha256(data).digest()
+
 
 class MMRStateProvenanceLedger:
     """
     Append-only Merkle Mountain Range (MMR) ledger integrated with a Sparse
     Merkle Tree (SMT) Revocation Accumulator for multi-agent provenance in tinker-rl-lab.
     """
+
     def __init__(self):
         self.leaves: List[bytes] = []
         self.smt_revocation_map: Dict[str, int] = {}  # leaf_hex -> status (1=active, 0=revoked)
 
-    def append_state(self, step_idx: int, state_vector: List[float], action_id: int) -> Tuple[int, str]:
+    def append_state(
+        self, step_idx: int, state_vector: List[float], action_id: int
+    ) -> Tuple[int, str]:
         """Appends a new agent execution state to the MMR and initializes SMT status."""
-        state_bytes = f"{step_idx}:{state_vector}:{action_id}".encode('utf-8')
+        state_bytes = f"{step_idx}:{state_vector}:{action_id}".encode("utf-8")
         leaf_hash = blake3_hash(state_bytes)
-        
+
         self.leaves.append(leaf_hash)
         leaf_hex = leaf_hash.hex()
         self.smt_revocation_map[leaf_hex] = 1  # Active by default
-        
+
         return len(self.leaves) - 1, leaf_hex
 
     def revoke_state(self, leaf_hex: str) -> bool:
@@ -450,14 +469,14 @@ class MMRStateProvenanceLedger:
         step = 1
         idx = 0
         while idx < n:
-            peaks.append(blake3_hash(b"".join(self.leaves[idx:min(idx+2, n)])))
+            peaks.append(blake3_hash(b"".join(self.leaves[idx : min(idx + 2, n)])))
             idx += 2
         return peaks
 
     def get_master_root(self) -> str:
         """Computes bagged MMR root hash R_N = H(N || P_1 || ... || P_k)."""
         peaks = self._get_peaks()
-        n_bytes = len(self.leaves).to_bytes(8, byteorder='big')
+        n_bytes = len(self.leaves).to_bytes(8, byteorder="big")
         bagged = blake3_hash(n_bytes + b"".join(peaks))
         return bagged.hex()
 
@@ -466,14 +485,14 @@ class MMRStateProvenanceLedger:
         leaf_hash = self.leaves[leaf_idx]
         leaf_hex = leaf_hash.hex()
         peaks = self._get_peaks()
-        
+
         return {
             "leaf_index": leaf_idx,
             "leaf_hash": leaf_hex,
             "mmr_root": self.get_master_root(),
             "mmr_peaks": [p.hex() for p in peaks],
             "smt_status": self.smt_revocation_map.get(leaf_hex, 0),
-            "is_valid_provenance": self.smt_revocation_map.get(leaf_hex, 0) == 1
+            "is_valid_provenance": self.smt_revocation_map.get(leaf_hex, 0) == 1,
         }
 ```
 
@@ -538,11 +557,13 @@ import hmac
 import hashlib
 from typing import Tuple, Dict, Any
 
+
 class ECDHERatchetSession:
     """
     Implements HKDF ratcheting with forward secrecy and explicit zero-fill
     key memory erasure for inter-agent communication in tinker-rl-lab.
     """
+
     def __init__(self, agent_id: str, remote_agent_id: str):
         self.agent_id = agent_id
         self.remote_agent_id = remote_agent_id
@@ -560,7 +581,7 @@ class ECDHERatchetSession:
         """
         extracted = hmac.new(self.chain_key, dh_secret, hashlib.sha256).digest()
         derived = self._hkdf_expand(extracted, b"agent-ratchet-v1", 64)
-        
+
         message_key = derived[:32]
         new_chain_key = derived[32:]
         self.chain_key = new_chain_key
@@ -569,27 +590,27 @@ class ECDHERatchetSession:
     def send_encrypted_message(self, message: str, dh_secret: bytes) -> Dict[str, Any]:
         """Encrypts message payload and securely erases key buffer post-use."""
         message_key, _ = self.ratchet_step(dh_secret)
-        
+
         # Simulate AEAD encryption (XOR stream cipher + HMAC tag)
-        msg_bytes = message.encode('utf-8')
-        keystream = hashlib.sha256(message_key + self.sequence_num.to_bytes(4, 'big')).digest()
-        ciphertext = bytes(a ^ b for a, b in zip(msg_bytes, keystream[:len(msg_bytes)]))
+        msg_bytes = message.encode("utf-8")
+        keystream = hashlib.sha256(message_key + self.sequence_num.to_bytes(4, "big")).digest()
+        ciphertext = bytes(a ^ b for a, b in zip(msg_bytes, keystream[: len(msg_bytes)]))
         tag = hmac.new(message_key, ciphertext, hashlib.sha256).hexdigest()
-        
+
         seq = self.sequence_num
         self.sequence_num += 1
-        
+
         # Explicit Zero-Fill Erasure of Message Key
         message_key_ba = bytearray(message_key)
         for i in range(len(message_key_ba)):
             message_key_ba[i] = 0
-            
+
         return {
             "sender_id": self.agent_id,
             "recipient_id": self.remote_agent_id,
             "sequence_num": seq,
             "ciphertext": ciphertext.hex(),
-            "hmac_tag": tag
+            "hmac_tag": tag,
         }
 ```
 
@@ -665,11 +686,13 @@ import itertools
 import numpy as np
 from typing import List, Dict, Callable, Any
 
+
 class ShapleyCreditLedger:
     """
     Monte Carlo Shapley value credit assignment engine with simulated zk-SNARK
     settlement verification for multi-agent reinforcement learning in tinker-rl-lab.
     """
+
     def __init__(self, agent_ids: List[str], r_max: float = 100.0):
         self.agents = agent_ids
         self.N = len(agent_ids)
@@ -679,58 +702,60 @@ class ShapleyCreditLedger:
         """
         Computes Hoeffding sample bound M >= (2 * R_max^2 * log(2/delta)) / epsilon^2.
         """
-        return int(np.ceil((2 * (self.r_max ** 2) * np.log(2 / delta)) / (epsilon ** 2)))
+        return int(np.ceil((2 * (self.r_max**2) * np.log(2 / delta)) / (epsilon**2)))
 
-    def estimate_shapley_values(self, 
-                                value_fn: Callable[[List[str]], float], 
-                                num_samples: Optional[int] = None,
-                                epsilon: float = 2.0, 
-                                delta: float = 0.05) -> Dict[str, float]:
+    def estimate_shapley_values(
+        self,
+        value_fn: Callable[[List[str]], float],
+        num_samples: Optional[int] = None,
+        epsilon: float = 2.0,
+        delta: float = 0.05,
+    ) -> Dict[str, float]:
         """
         Estimates Shapley values via Monte Carlo permutation sampling over agent coalitions.
         """
         M = num_samples if num_samples is not None else self.required_samples(epsilon, delta)
         shapley_sums = {aid: 0.0 for aid in self.agents}
-        
+
         for _ in range(M):
             perm = list(np.random.permutation(self.agents))
             current_coalition: List[str] = []
             current_v = value_fn(current_coalition)
-            
+
             for agent in perm:
                 next_coalition = current_coalition + [agent]
                 next_v = value_fn(next_coalition)
                 marginal_contrib = next_v - current_v
                 shapley_sums[agent] += marginal_contrib
-                
+
                 current_coalition = next_coalition
                 current_v = next_v
-                
+
         # Average over M permutations
         shapley_values = {aid: float(shapley_sums[aid] / M) for aid in self.agents}
         return shapley_values
 
-    def generate_zk_settlement_proof(self, 
-                                     shapley_values: Dict[str, float], 
-                                     total_reward: float) -> Dict[str, Any]:
+    def generate_zk_settlement_proof(
+        self, shapley_values: Dict[str, float], total_reward: float
+    ) -> Dict[str, Any]:
         """
         Generates simulated Groth16 zk-SNARK proof verifying Shapley settlement validity.
         """
         allocated_total = sum(shapley_values.values())
         efficiency_satisfied = abs(allocated_total - total_reward) < 1e-4
-        
-        proof_hash = hashlib.sha256(f"{shapley_values}:{total_reward}".encode('utf-8')).hexdigest()
-        
+
+        proof_hash = hashlib.sha256(f"{shapley_values}:{total_reward}".encode("utf-8")).hexdigest()
+
         return {
             "proof_system": "Groth16-BN254",
             "proof_bytes": f"0xzk{proof_hash[:32]}",
             "public_inputs": {
                 "total_reward": total_reward,
                 "allocated_total": allocated_total,
-                "agent_credits": shapley_values
+                "agent_credits": shapley_values,
             },
             "efficiency_axiom_verified": efficiency_satisfied,
-            "verification_status": True if efficiency_satisfied else False
+            "verification_status": True if efficiency_satisfied else False,
         }
 ```
 

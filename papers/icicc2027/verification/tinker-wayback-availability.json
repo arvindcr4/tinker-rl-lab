@@ -1,0 +1,32 @@
+{
+  "checked_at": null,
+  "checked_date": "2026-10-18",
+  "checked_at_note": "The initial audit records the date only; its exact check time was not retained. The archived snapshot timestamp is not the availability-check time.",
+  "verification": {
+    "method": "Retained Internet Archive availability API response plus an HTTPS snapshot read-back reported in citation-review-2026-10-18.md.",
+    "availability_endpoint": "https://archive.org/wayback/available?url=https%3A%2F%2Fthinkingmachines.ai%2Fnews%2Fannouncing-tinker%2F",
+    "availability_response_retained": true,
+    "read_back": {
+      "evidence_status": "Reported by the initial audit note; raw page response and exact retrieval time were not retained.",
+      "method": "Read-only HTTPS retrieval after web-reader rendering failed.",
+      "reported_http_status": 200,
+      "reported_title": "Announcing Tinker",
+      "reported_publication_date": "2025-10-01"
+    },
+    "recheck": {
+      "checked_date": "2026-10-18",
+      "method": "Web-reader open requests to the availability API and archived snapshot URL.",
+      "result": "Both URLs were inaccessible through the web reader; no fresh availability or page-content confirmation was obtained."
+    },
+    "limitation": "This receipt preserves historical reported evidence, not a guarantee of current or future availability."
+  },
+  "url": "https://thinkingmachines.ai/news/announcing-tinker/",
+  "archived_snapshots": {
+    "closest": {
+      "status": "200",
+      "available": true,
+      "url": "http://web.archive.org/web/20261007202106/https://thinkingmachines.ai/news/announcing-tinker/",
+      "timestamp": "20261007202106"
+    }
+  }
+}
